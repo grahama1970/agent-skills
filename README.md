@@ -27,7 +27,7 @@ After installation, add to your `CLAUDE.md` (or create one):
 ## Skills
 
 Agent skills are located in `.skills/` (git submodule).
-Available skills: certainly-prover, scillm-completions, surf, fetcher.
+Available: certainly-prover, scillm-completions, surf, fetcher, memory.
 ```
 
 This ensures:
@@ -43,6 +43,7 @@ This ensures:
 | `scillm-completions` | LLM completions (text, JSON, vision, batch) |
 | `surf` | Browser automation CLI for AI agents |
 | `fetcher` | Web crawling and document fetching |
+| `memory` | Graph-based knowledge recall for AI agents |
 
 ## Updating Skills
 
@@ -108,7 +109,8 @@ your-project/
 │   ├── certainly-prover/
 │   ├── scillm-completions/
 │   ├── surf/
-│   └── fetcher/
+│   ├── fetcher/
+│   └── memory/
 ├── .claude/
 │   └── skills -> ../.skills  # Symlink for Claude Code
 ├── CLAUDE.md                 # Documents skills location
