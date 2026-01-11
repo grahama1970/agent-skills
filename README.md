@@ -2,19 +2,38 @@
 
 Shared skills for AI agents (Claude Code, Codex, Gemini, etc.).
 
-## Usage
+## Installation
 
 Add as a git submodule to your project:
 
 ```bash
+cd your-project
 git submodule add git@github.com:grahama1970/agent-skills.git .skills
+
+# Create symlink for Claude Code auto-discovery
+mkdir -p .claude
+ln -s ../.skills .claude/skills
+
+# Commit both
+git add .skills .claude/skills .gitmodules
+git commit -m "Add agent-skills submodule"
 ```
 
-Or clone directly:
+## Project Setup
 
-```bash
-git clone git@github.com:grahama1970/agent-skills.git .skills
+After installation, add to your `CLAUDE.md` (or create one):
+
+```markdown
+## Skills
+
+Agent skills are located in `.skills/` (git submodule).
+Available skills: certainly-prover, scillm-completions, surf, fetcher.
 ```
+
+This ensures:
+- **Claude Code**: Auto-discovers via `.claude/skills/` symlink
+- **Codex**: Reads from `CLAUDE.md` or `AGENTS.md` reference
+- **Gemini**: Reads from `CLAUDE.md` or project docs
 
 ## Available Skills
 
@@ -24,6 +43,29 @@ git clone git@github.com:grahama1970/agent-skills.git .skills
 | `scillm-completions` | LLM completions (text, JSON, vision, batch) |
 | `surf` | Browser automation CLI for AI agents |
 | `fetcher` | Web crawling and document fetching |
+
+## Updating Skills
+
+From a project using this as a submodule:
+
+```bash
+cd .skills
+git pull origin main
+cd ..
+git add .skills
+git commit -m "Update agent-skills"
+```
+
+## Cloning Projects with Submodules
+
+When cloning a project that uses this submodule:
+
+```bash
+git clone --recurse-submodules git@github.com:org/project.git
+
+# Or if already cloned:
+git submodule update --init --recursive
+```
 
 ## Skill Format
 
@@ -48,25 +90,30 @@ metadata:
 Usage documentation...
 ```
 
-## Updating Skills
-
-From a project using this as a submodule:
-
-```bash
-cd .skills
-git pull origin main
-cd ..
-git add .skills
-git commit -m "Update agent-skills"
-```
-
 ## Agent Discovery
 
-Skills are designed to be discovered by AI agents:
+| Agent | Discovery Method |
+|-------|------------------|
+| Claude Code | Auto-loads from `.claude/skills/` (symlink) |
+| Codex | Reference in `AGENTS.md` or `CLAUDE.md` |
+| Gemini | Reference in project documentation |
 
-- **Claude Code**: Reads `.skills/*/SKILL.md` or configure in settings
-- **Codex**: Reference from `AGENTS.md` or similar
-- **Gemini**: Reference from project configuration
+## Directory Structure
+
+After installation, your project should look like:
+
+```
+your-project/
+├── .skills/                  # Submodule (agent-agnostic)
+│   ├── certainly-prover/
+│   ├── scillm-completions/
+│   ├── surf/
+│   └── fetcher/
+├── .claude/
+│   └── skills -> ../.skills  # Symlink for Claude Code
+├── CLAUDE.md                 # Documents skills location
+└── ...
+```
 
 ## Contributing
 
