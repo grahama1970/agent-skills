@@ -43,7 +43,32 @@ This ensures:
 | `scillm-completions` | LLM completions (text, JSON, vision, batch) |
 | `surf` | Browser automation CLI for AI agents |
 | `fetcher` | Web crawling and document fetching |
-| `memory` | Graph-based knowledge recall for AI agents |
+| `memory` | Graph-based knowledge recall with formal proof integration |
+
+## Skill Interactions
+
+Skills can work together for powerful workflows:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  memory + scillm-completions + certainly-prover                │
+│                                                                 │
+│  1. Agent logs episode with --prove flag                       │
+│  2. scillm calls DeepSeek Prover V2: "Is this provable?"      │
+│  3. If yes, certainly-prover generates Lean4 proof             │
+│  4. Proved claims stored with lean4_code in memory             │
+│  5. Future searches can filter --proved-only                   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  surf + fetcher + memory                                        │
+│                                                                 │
+│  1. surf navigates to dynamic page                             │
+│  2. fetcher extracts content with Playwright fallback          │
+│  3. memory stores solution for future reference                │
+│  4. Next agent encountering same page finds cached solution    │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ## Updating Skills
 
