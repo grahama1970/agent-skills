@@ -24,6 +24,7 @@ Usage:
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -238,6 +239,57 @@ def _run_copilot(
         return None, f"Timed out after {timeout}s", 124
     except Exception as e:
         return None, str(e), -1
+
+
+async def _run_copilot_async(
+    prompt: str,
+    model: str = DEFAULT_MODEL,
+    add_dirs: Optional[list[str]] = None,
+    log_file: Optional[Path] = None,
+) -> tuple[str, int]:
+    """Run copilot CLI with real-time output streaming to log file.
+
+    No timeout - process runs until completion. Monitor log_file for progress.
+
+    Returns: (output, return_code)
+    """
+    cmd = [
+        "copilot",
+        "-p", prompt,
+        "--allow-all-tools",
+        "--model", MODELS.get(model, model),
+        "--no-color",
+    ]
+
+    if add_dirs:
+        for d in add_dirs:
+            cmd.extend(["--add-dir", d])
+
+    env = {**os.environ, "COPILOT_ALLOW_ALL": "1"}
+
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+        env=env,
+    )
+
+    output_lines = []
+    log_handle = open(log_file, 'w') if log_file else None
+
+    try:
+        async for line in proc.stdout:
+            text = line.decode()
+            output_lines.append(text)
+            if log_handle:
+                log_handle.write(text)
+                log_handle.flush()
+    finally:
+        if log_handle:
+            log_handle.close()
+
+    await proc.wait()
+    return ''.join(output_lines), proc.returncode
 
 
 def _extract_diff(response: str) -> Optional[str]:
@@ -834,29 +886,154 @@ No commentary before or after the code block.
 """
 
 
+async def _review_full_async(
+    request_content: str,
+    model: str,
+    add_dir: Optional[list[str]],
+    rounds: int,
+    previous_context: str,
+    output_dir: Path,
+    save_intermediate: bool,
+) -> dict:
+    """Async implementation of iterative code review pipeline."""
+    all_rounds = []
+    final_output = ""
+    final_diff = None
+
+    for round_num in range(1, rounds + 1):
+        typer.echo(f"\n{'#' * 60}", err=True)
+        typer.echo(f"ROUND {round_num}/{rounds}", err=True)
+        typer.echo(f"{'#' * 60}", err=True)
+
+        # Build context for this round
+        round_context = previous_context
+        if round_num > 1 and all_rounds:
+            prev_round = all_rounds[-1]
+            round_context += f"\n\n## Previous Round Output\n{prev_round['full_output']}"
+
+        # Step 1: Generate
+        typer.echo("=" * 60, err=True)
+        typer.echo(f"STEP 1/3: Generating initial review...", err=True)
+        log_file = output_dir / f"round{round_num}_step1.log" if save_intermediate else None
+        if log_file:
+            typer.echo(f"Streaming to: {log_file}", err=True)
+        typer.echo("=" * 60, err=True)
+
+        if round_context:
+            step1_prompt = STEP1_PROMPT.format(request=request_content) + f"\n\n## Additional Context\n{round_context}"
+        else:
+            step1_prompt = STEP1_PROMPT.format(request=request_content)
+
+        step1_output, rc = await _run_copilot_async(step1_prompt, model, add_dir, log_file)
+
+        if rc != 0:
+            typer.echo(f"Step 1 failed (exit {rc})", err=True)
+            raise typer.Exit(code=1)
+
+        typer.echo(f"Step 1 complete ({len(step1_output)} chars)", err=True)
+
+        if save_intermediate:
+            step1_file = output_dir / f"round{round_num}_step1.md"
+            step1_file.write_text(step1_output)
+            typer.echo(f"Saved: {step1_file}", err=True)
+
+        # Step 2: Judge
+        typer.echo("\n" + "=" * 60, err=True)
+        typer.echo(f"STEP 2/3: Judging and answering questions...", err=True)
+        log_file = output_dir / f"round{round_num}_step2.log" if save_intermediate else None
+        if log_file:
+            typer.echo(f"Streaming to: {log_file}", err=True)
+        typer.echo("=" * 60, err=True)
+
+        step2_prompt = STEP2_PROMPT.format(request=request_content, step1_output=step1_output)
+        step2_output, rc = await _run_copilot_async(step2_prompt, model, add_dir, log_file)
+
+        if rc != 0:
+            typer.echo(f"Step 2 failed (exit {rc})", err=True)
+            raise typer.Exit(code=1)
+
+        typer.echo(f"Step 2 complete ({len(step2_output)} chars)", err=True)
+
+        if save_intermediate:
+            step2_file = output_dir / f"round{round_num}_step2.md"
+            step2_file.write_text(step2_output)
+            typer.echo(f"Saved: {step2_file}", err=True)
+
+        # Step 3: Regenerate
+        typer.echo("\n" + "=" * 60, err=True)
+        typer.echo(f"STEP 3/3: Generating final diff...", err=True)
+        log_file = output_dir / f"round{round_num}_step3.log" if save_intermediate else None
+        if log_file:
+            typer.echo(f"Streaming to: {log_file}", err=True)
+        typer.echo("=" * 60, err=True)
+
+        step3_prompt = STEP3_PROMPT.format(
+            request=request_content,
+            step1_output=step1_output,
+            step2_output=step2_output,
+        )
+        step3_output, rc = await _run_copilot_async(step3_prompt, model, add_dir, log_file)
+
+        if rc != 0:
+            typer.echo(f"Step 3 failed (exit {rc})", err=True)
+            raise typer.Exit(code=1)
+
+        round_diff = _extract_diff(step3_output)
+
+        if save_intermediate:
+            step3_file = output_dir / f"round{round_num}_final.md"
+            step3_file.write_text(step3_output)
+            typer.echo(f"Saved: {step3_file}", err=True)
+
+            if round_diff:
+                diff_file = output_dir / f"round{round_num}.patch"
+                diff_file.write_text(round_diff)
+                typer.echo(f"Saved: {diff_file}", err=True)
+
+        all_rounds.append({
+            "round": round_num,
+            "step1_length": len(step1_output),
+            "step2_length": len(step2_output),
+            "step3_length": len(step3_output),
+            "diff": round_diff,
+            "full_output": step3_output,
+        })
+
+        final_output = step3_output
+        final_diff = round_diff
+
+        typer.echo(f"\nRound {round_num} complete", err=True)
+
+    return {
+        "rounds": all_rounds,
+        "final_diff": final_diff,
+        "final_output": final_output,
+    }
+
+
 @app.command()
 def review_full(
     file: Path = typer.Option(..., "--file", "-f", help="Markdown request file"),
     model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="Model for all steps"),
     add_dir: Optional[list[str]] = typer.Option(None, "--add-dir", "-d", help="Add directory for file access"),
-    timeout: int = typer.Option(300, "--timeout", "-t", help="Timeout per step in seconds"),
     rounds: int = typer.Option(2, "--rounds", "-r", help="Iteration rounds (default: 2)"),
     context_file: Optional[Path] = typer.Option(None, "--context", "-c", help="Previous round output for context"),
-    save_intermediate: bool = typer.Option(False, "--save-intermediate", "-s", help="Save step 1 and 2 outputs"),
+    save_intermediate: bool = typer.Option(False, "--save-intermediate", "-s", help="Save intermediate outputs and logs"),
     output_dir: Path = typer.Option(".", "--output-dir", "-o", help="Directory for output files"),
 ):
-    """Run iterative code review pipeline.
+    """Run iterative code review pipeline (async with streaming logs).
 
     Step 1: Generate initial review with diff and clarifying questions
     Step 2: Judge reviews and answers questions, provides feedback
     Step 3: Regenerate final diff incorporating feedback
 
-    Multiple rounds allow refinement. Use --context to pass previous output.
+    No timeout - runs until completion. Use --save-intermediate to stream
+    output to log files for real-time monitoring (tail -f).
 
     Examples:
         code_review.py review-full --file request.md
         code_review.py review-full --file request.md --rounds 3
-        code_review.py review-full --file request.md --context prev_output.md
+        code_review.py review-full --file request.md -s -o /tmp/review
     """
     if not _find_copilot():
         typer.echo("Error: copilot CLI not found", err=True)
@@ -870,8 +1047,7 @@ def review_full(
     t0 = time.time()
 
     # Ensure output directory exists
-    if save_intermediate:
-        output_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Load previous context if provided
     previous_context = ""
@@ -879,111 +1055,16 @@ def review_full(
         previous_context = context_file.read_text()
         typer.echo(f"Loaded context from: {context_file} ({len(previous_context)} chars)", err=True)
 
-    # Track all rounds
-    all_rounds = []
-    final_output = ""
-    final_diff = None
-
-    for round_num in range(1, rounds + 1):
-        typer.echo(f"\n{'#' * 60}", err=True)
-        typer.echo(f"ROUND {round_num}/{rounds}", err=True)
-        typer.echo(f"{'#' * 60}", err=True)
-
-        # Build context for this round
-        round_context = previous_context
-        if round_num > 1 and all_rounds:
-            # Include previous round's output as context
-            prev_round = all_rounds[-1]
-            round_context += f"\n\n## Previous Round Output\n{prev_round['full_output']}"
-
-        # Step 1: Generate
-        typer.echo("=" * 60, err=True)
-        typer.echo(f"STEP 1/3: Generating initial review...", err=True)
-        typer.echo("=" * 60, err=True)
-
-        if round_context:
-            step1_prompt = STEP1_PROMPT.format(request=request_content) + f"\n\n## Additional Context\n{round_context}"
-        else:
-            step1_prompt = STEP1_PROMPT.format(request=request_content)
-
-        stdout, stderr, rc = _run_copilot(step1_prompt, model, add_dir, timeout)
-
-        if rc != 0:
-            typer.echo(f"Step 1 failed: {stderr}", err=True)
-            raise typer.Exit(code=1)
-
-        step1_output = stdout or ""
-        typer.echo(f"Step 1 complete ({len(step1_output)} chars)", err=True)
-
-        if save_intermediate:
-            step1_file = output_dir / f"round{round_num}_step1.md"
-            step1_file.write_text(step1_output)
-            typer.echo(f"Saved: {step1_file}", err=True)
-
-        # Step 2: Judge
-        typer.echo("\n" + "=" * 60, err=True)
-        typer.echo(f"STEP 2/3: Judging and answering questions...", err=True)
-        typer.echo("=" * 60, err=True)
-
-        step2_prompt = STEP2_PROMPT.format(request=request_content, step1_output=step1_output)
-        stdout, stderr, rc = _run_copilot(step2_prompt, model, add_dir, timeout)
-
-        if rc != 0:
-            typer.echo(f"Step 2 failed: {stderr}", err=True)
-            raise typer.Exit(code=1)
-
-        step2_output = stdout or ""
-        typer.echo(f"Step 2 complete ({len(step2_output)} chars)", err=True)
-
-        if save_intermediate:
-            step2_file = output_dir / f"round{round_num}_step2.md"
-            step2_file.write_text(step2_output)
-            typer.echo(f"Saved: {step2_file}", err=True)
-
-        # Step 3: Regenerate
-        typer.echo("\n" + "=" * 60, err=True)
-        typer.echo(f"STEP 3/3: Generating final diff...", err=True)
-        typer.echo("=" * 60, err=True)
-
-        step3_prompt = STEP3_PROMPT.format(
-            request=request_content,
-            step1_output=step1_output,
-            step2_output=step2_output,
-        )
-        stdout, stderr, rc = _run_copilot(step3_prompt, model, add_dir, timeout)
-
-        if rc != 0:
-            typer.echo(f"Step 3 failed: {stderr}", err=True)
-            raise typer.Exit(code=1)
-
-        step3_output = stdout or ""
-        round_diff = _extract_diff(step3_output)
-
-        if save_intermediate:
-            step3_file = output_dir / f"round{round_num}_final.md"
-            step3_file.write_text(step3_output)
-            typer.echo(f"Saved: {step3_file}", err=True)
-
-            if round_diff:
-                diff_file = output_dir / f"round{round_num}.patch"
-                diff_file.write_text(round_diff)
-                typer.echo(f"Saved: {diff_file}", err=True)
-
-        # Store round results
-        all_rounds.append({
-            "round": round_num,
-            "step1_length": len(step1_output),
-            "step2_length": len(step2_output),
-            "step3_length": len(step3_output),
-            "diff": round_diff,
-            "full_output": step3_output,
-        })
-
-        # Update final output
-        final_output = step3_output
-        final_diff = round_diff
-
-        typer.echo(f"\nRound {round_num} complete", err=True)
+    # Run async pipeline
+    result = asyncio.run(_review_full_async(
+        request_content=request_content,
+        model=model,
+        add_dir=add_dir,
+        rounds=rounds,
+        previous_context=previous_context,
+        output_dir=output_dir,
+        save_intermediate=save_intermediate,
+    ))
 
     took_ms = int((time.time() - t0) * 1000)
 
@@ -996,11 +1077,9 @@ def review_full(
         "meta": {
             "model": model,
             "took_ms": took_ms,
-            "rounds_completed": len(all_rounds),
+            "rounds_completed": len(result["rounds"]),
         },
-        "rounds": all_rounds,
-        "final_diff": final_diff,
-        "final_output": final_output,
+        **result,
     }, indent=2, ensure_ascii=False))
 
 
