@@ -2,10 +2,10 @@
 
 ## Repository and branch
 
-- **Repo:** `grahama1970/memory`
-- **Branch:** `feature/workspace-memory`
+- **Repo:** `grahama1970/agent-skills`
+- **Branch:** `feature/code-review-skill`
 - **Paths of interest:**
-  - `.skills/code-review/code_review.py`
+  - `code-review/code_review.py`
 
 ## Summary
 
@@ -24,7 +24,7 @@ Identify any over-engineered sections that could be simplified without losing fu
 - **Output format:** Unified diff only, inline inside a single fenced code block.
 - Include a one-line commit subject on the first line of the patch.
 - Hunk headers must be numeric only (`@@ -old,+new @@`); no symbolic headers.
-- Patch must apply cleanly on branch `feature/workspace-memory`.
+- Patch must apply cleanly on branch `feature/code-review-skill`.
 - No destructive defaults; retain existing behavior unless explicitly required.
 - No extra commentary outside the code block.
 
