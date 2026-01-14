@@ -142,6 +142,14 @@ def _find_copilot() -> Optional[str]:
     return shutil.which("copilot")
 
 
+def _get_timeout(default: int = 30) -> int:
+    """Get timeout from CODE_REVIEW_TIMEOUT env var with fallback default."""
+    try:
+        return int(os.environ.get("CODE_REVIEW_TIMEOUT", default))
+    except (TypeError, ValueError):
+        return default
+
+
 def _check_gh_auth() -> dict:
     """Check GitHub CLI authentication status.
 
@@ -170,6 +178,7 @@ def _check_gh_auth() -> dict:
             ["gh", "auth", "token"],
             capture_output=True,
             text=True,
+            timeout=_get_timeout(),
         )
         if token_result.returncode != 0:
             result["error"] = "Not logged in. Run: gh auth login"
@@ -180,6 +189,7 @@ def _check_gh_auth() -> dict:
             ["gh", "api", "user", "--jq", ".login"],
             capture_output=True,
             text=True,
+            timeout=_get_timeout(),
         )
         if user_result.returncode == 0:
             result["user"] = user_result.stdout.strip()
@@ -316,7 +326,7 @@ def check():
         print(json.dumps(output, indent=2))
         raise typer.Exit(code=1)
     else:
-        typer.echo(f"✓ copilot CLI: {copilot_version}", err=True)
+        typer.echo(f"✓ copilot CLI: {copilot_path}", err=True)
         typer.echo(f"✓ GitHub auth: {auth_info['user']}", err=True)
         print(json.dumps(output, indent=2))
 
@@ -468,7 +478,7 @@ def _check_git_status(repo_dir: Optional[Path] = None) -> dict:
         # Get current branch
         branch_result = subprocess.run(
             ["git", "branch", "--show-current"],
-            capture_output=True, text=True, cwd=cwd
+            capture_output=True, text=True, cwd=cwd, timeout=_get_timeout()
         )
         if branch_result.returncode == 0:
             result["current_branch"] = branch_result.stdout.strip()
@@ -476,26 +486,29 @@ def _check_git_status(repo_dir: Optional[Path] = None) -> dict:
         # Check for uncommitted changes
         status_result = subprocess.run(
             ["git", "status", "--porcelain"],
-            capture_output=True, text=True, cwd=cwd
+            capture_output=True, text=True, cwd=cwd, timeout=_get_timeout()
         )
         if status_result.returncode == 0 and status_result.stdout.strip():
             result["has_uncommitted"] = True
 
-        # Check for unpushed commits
-        unpushed_result = subprocess.run(
-            ["git", "log", "@{u}..", "--oneline"],
-            capture_output=True, text=True, cwd=cwd
-        )
-        if unpushed_result.returncode == 0 and unpushed_result.stdout.strip():
-            result["has_unpushed"] = True
-
-        # Get remote tracking branch
+        # Get remote tracking branch first (needed for unpushed check)
         remote_result = subprocess.run(
             ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
-            capture_output=True, text=True, cwd=cwd
+            capture_output=True, text=True, cwd=cwd, timeout=_get_timeout()
         )
         if remote_result.returncode == 0:
             result["remote_branch"] = remote_result.stdout.strip()
+            # Use machine-readable count instead of parsing git log output
+            unpushed_result = subprocess.run(
+                ["git", "rev-list", "--count", "@{u}.."],
+                capture_output=True, text=True, cwd=cwd, timeout=_get_timeout()
+            )
+            if unpushed_result.returncode == 0:
+                try:
+                    if int(unpushed_result.stdout.strip()) > 0:
+                        result["has_unpushed"] = True
+                except ValueError:
+                    pass
 
     except Exception:
         pass
