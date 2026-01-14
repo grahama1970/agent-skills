@@ -75,12 +75,14 @@ Submit a single code review request.
 | `--extract-diff` | | Extract only the diff block |
 
 ### review-full
-Run full 3-step code review pipeline with protected context.
+Run iterative code review pipeline with Copilot.
 
-**Pipeline:**
+**Pipeline (per round):**
 1. **Generate** - Initial review with diff and clarifying questions
 2. **Judge** - Reviews output, answers questions, provides feedback
 3. **Finalize** - Regenerates diff incorporating feedback
+
+Multiple rounds allow the project agent to refine requests based on Copilot's clarifying questions.
 
 | Option | Short | Description |
 |--------|-------|-------------|
@@ -88,6 +90,7 @@ Run full 3-step code review pipeline with protected context.
 | `--model` | `-m` | Model for all steps (default: gpt-5) |
 | `--add-dir` | `-d` | Add directory for file access |
 | `--timeout` | `-t` | Timeout per step (default: 300) |
+| `--rounds` | `-r` | Iteration rounds (default: 2) |
 | `--save-intermediate` | `-s` | Save step 1 and 2 outputs |
 | `--output-dir` | `-o` | Directory for output files |
 
@@ -146,7 +149,36 @@ Print the example review request template.
 ### models
 List available models.
 
-## Workflows
+## Project Agent Workflow (Recommended)
+
+The intended workflow is for the **project agent (Claude) to interpret and apply** Copilot's suggestions, not blindly run `git apply`:
+
+```
+User asks for code review
+        ↓
+Project agent creates review request (follows template)
+        ↓
+review-full sends to Copilot CLI (iterative rounds)
+        ↓
+Project agent parses output, decides what to apply
+        ↓
+Project agent uses Edit tool to apply changes it concurs with
+        ↓
+If unclear, agent asks Copilot (another round) or the user
+```
+
+**Why this approach:**
+- Patch format from Copilot may be malformed (won't `git apply`)
+- Project agent can exercise judgment on suggestions
+- Agent can ask clarifying questions back to Copilot
+- Same workflow humans use, but automated
+
+**Iteration rounds** (default: 2):
+- Round 1: Initial review → suggestions + clarifying questions
+- Round 2: Agent answers questions → refined suggestions
+- More rounds as needed for complex reviews
+
+## CLI Workflows
 
 ### Workflow A: Single-Step Review (Quick)
 

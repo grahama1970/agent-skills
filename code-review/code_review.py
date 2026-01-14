@@ -235,17 +235,28 @@ def _run_copilot(
         )
         return result.stdout, result.stderr, result.returncode
     except subprocess.TimeoutExpired:
-        return None, "Timeout expired", -1
+        return None, f"Timed out after {timeout}s", 124
     except Exception as e:
         return None, str(e), -1
 
 
 def _extract_diff(response: str) -> Optional[str]:
-    """Extract diff block from response."""
-    pattern = r'```(?:diff)?\s*\n(.*?)\n```'
-    match = re.search(pattern, response, re.DOTALL)
-    if match:
-        return match.group(1).strip()
+    """Extract unified diff/patch block from response.
+
+    Prefers blocks containing unified diff markers (---/+++ or @@ hunks).
+    """
+    blocks = re.findall(r'```(?:diff|patch)?\s*\n(.*?)\n```', response, re.DOTALL)
+    for b in blocks:
+        text = b.strip()
+        # Prefer blocks with file headers
+        if re.search(r'^\s*---\s', text, re.MULTILINE) and re.search(r'^\s*\+\+\+\s', text, re.MULTILINE):
+            return text
+        # Or with hunk headers
+        if re.search(r'^\s*@@\s*-\d+', text, re.MULTILINE):
+            return text
+    # Fall back to first code block if no diff markers found
+    if blocks:
+        return blocks[0].strip()
     return None
 
 
@@ -829,21 +840,23 @@ def review_full(
     model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="Model for all steps"),
     add_dir: Optional[list[str]] = typer.Option(None, "--add-dir", "-d", help="Add directory for file access"),
     timeout: int = typer.Option(300, "--timeout", "-t", help="Timeout per step in seconds"),
+    rounds: int = typer.Option(2, "--rounds", "-r", help="Iteration rounds (default: 2)"),
+    context_file: Optional[Path] = typer.Option(None, "--context", "-c", help="Previous round output for context"),
     save_intermediate: bool = typer.Option(False, "--save-intermediate", "-s", help="Save step 1 and 2 outputs"),
     output_dir: Path = typer.Option(".", "--output-dir", "-o", help="Directory for output files"),
 ):
-    """Run full 3-step code review pipeline.
+    """Run iterative code review pipeline.
 
     Step 1: Generate initial review with diff and clarifying questions
     Step 2: Judge reviews and answers questions, provides feedback
     Step 3: Regenerate final diff incorporating feedback
 
-    Each step uses protected context from previous steps.
+    Multiple rounds allow refinement. Use --context to pass previous output.
 
     Examples:
         code_review.py review-full --file request.md
-        code_review.py review-full --file request.md --save-intermediate
-        code_review.py review-full --file request.md --model claude-sonnet-4
+        code_review.py review-full --file request.md --rounds 3
+        code_review.py review-full --file request.md --context prev_output.md
     """
     if not _find_copilot():
         typer.echo("Error: copilot CLI not found", err=True)
@@ -860,94 +873,134 @@ def review_full(
     if save_intermediate:
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Step 1: Generate
-    typer.echo("=" * 60, err=True)
-    typer.echo("STEP 1/3: Generating initial review...", err=True)
-    typer.echo("=" * 60, err=True)
+    # Load previous context if provided
+    previous_context = ""
+    if context_file and context_file.exists():
+        previous_context = context_file.read_text()
+        typer.echo(f"Loaded context from: {context_file} ({len(previous_context)} chars)", err=True)
 
-    step1_prompt = STEP1_PROMPT.format(request=request_content)
-    stdout, stderr, rc = _run_copilot(step1_prompt, model, add_dir, timeout)
+    # Track all rounds
+    all_rounds = []
+    final_output = ""
+    final_diff = None
 
-    if rc != 0:
-        typer.echo(f"Step 1 failed: {stderr}", err=True)
-        raise typer.Exit(code=1)
+    for round_num in range(1, rounds + 1):
+        typer.echo(f"\n{'#' * 60}", err=True)
+        typer.echo(f"ROUND {round_num}/{rounds}", err=True)
+        typer.echo(f"{'#' * 60}", err=True)
 
-    step1_output = stdout or ""
-    typer.echo(f"Step 1 complete ({len(step1_output)} chars)", err=True)
+        # Build context for this round
+        round_context = previous_context
+        if round_num > 1 and all_rounds:
+            # Include previous round's output as context
+            prev_round = all_rounds[-1]
+            round_context += f"\n\n## Previous Round Output\n{prev_round['full_output']}"
 
-    if save_intermediate:
-        step1_file = output_dir / "review_step1.md"
-        step1_file.write_text(step1_output)
-        typer.echo(f"Saved: {step1_file}", err=True)
+        # Step 1: Generate
+        typer.echo("=" * 60, err=True)
+        typer.echo(f"STEP 1/3: Generating initial review...", err=True)
+        typer.echo("=" * 60, err=True)
 
-    # Step 2: Judge
-    typer.echo("\n" + "=" * 60, err=True)
-    typer.echo("STEP 2/3: Judging and answering questions...", err=True)
-    typer.echo("=" * 60, err=True)
+        if round_context:
+            step1_prompt = STEP1_PROMPT.format(request=request_content) + f"\n\n## Additional Context\n{round_context}"
+        else:
+            step1_prompt = STEP1_PROMPT.format(request=request_content)
 
-    step2_prompt = STEP2_PROMPT.format(request=request_content, step1_output=step1_output)
-    stdout, stderr, rc = _run_copilot(step2_prompt, model, add_dir, timeout)
+        stdout, stderr, rc = _run_copilot(step1_prompt, model, add_dir, timeout)
 
-    if rc != 0:
-        typer.echo(f"Step 2 failed: {stderr}", err=True)
-        raise typer.Exit(code=1)
+        if rc != 0:
+            typer.echo(f"Step 1 failed: {stderr}", err=True)
+            raise typer.Exit(code=1)
 
-    step2_output = stdout or ""
-    typer.echo(f"Step 2 complete ({len(step2_output)} chars)", err=True)
+        step1_output = stdout or ""
+        typer.echo(f"Step 1 complete ({len(step1_output)} chars)", err=True)
 
-    if save_intermediate:
-        step2_file = output_dir / "review_step2.md"
-        step2_file.write_text(step2_output)
-        typer.echo(f"Saved: {step2_file}", err=True)
+        if save_intermediate:
+            step1_file = output_dir / f"round{round_num}_step1.md"
+            step1_file.write_text(step1_output)
+            typer.echo(f"Saved: {step1_file}", err=True)
 
-    # Step 3: Regenerate
-    typer.echo("\n" + "=" * 60, err=True)
-    typer.echo("STEP 3/3: Generating final diff...", err=True)
-    typer.echo("=" * 60, err=True)
+        # Step 2: Judge
+        typer.echo("\n" + "=" * 60, err=True)
+        typer.echo(f"STEP 2/3: Judging and answering questions...", err=True)
+        typer.echo("=" * 60, err=True)
 
-    step3_prompt = STEP3_PROMPT.format(
-        request=request_content,
-        step1_output=step1_output,
-        step2_output=step2_output,
-    )
-    stdout, stderr, rc = _run_copilot(step3_prompt, model, add_dir, timeout)
+        step2_prompt = STEP2_PROMPT.format(request=request_content, step1_output=step1_output)
+        stdout, stderr, rc = _run_copilot(step2_prompt, model, add_dir, timeout)
 
-    if rc != 0:
-        typer.echo(f"Step 3 failed: {stderr}", err=True)
-        raise typer.Exit(code=1)
+        if rc != 0:
+            typer.echo(f"Step 2 failed: {stderr}", err=True)
+            raise typer.Exit(code=1)
 
-    step3_output = stdout or ""
-    final_diff = _extract_diff(step3_output)
+        step2_output = stdout or ""
+        typer.echo(f"Step 2 complete ({len(step2_output)} chars)", err=True)
+
+        if save_intermediate:
+            step2_file = output_dir / f"round{round_num}_step2.md"
+            step2_file.write_text(step2_output)
+            typer.echo(f"Saved: {step2_file}", err=True)
+
+        # Step 3: Regenerate
+        typer.echo("\n" + "=" * 60, err=True)
+        typer.echo(f"STEP 3/3: Generating final diff...", err=True)
+        typer.echo("=" * 60, err=True)
+
+        step3_prompt = STEP3_PROMPT.format(
+            request=request_content,
+            step1_output=step1_output,
+            step2_output=step2_output,
+        )
+        stdout, stderr, rc = _run_copilot(step3_prompt, model, add_dir, timeout)
+
+        if rc != 0:
+            typer.echo(f"Step 3 failed: {stderr}", err=True)
+            raise typer.Exit(code=1)
+
+        step3_output = stdout or ""
+        round_diff = _extract_diff(step3_output)
+
+        if save_intermediate:
+            step3_file = output_dir / f"round{round_num}_final.md"
+            step3_file.write_text(step3_output)
+            typer.echo(f"Saved: {step3_file}", err=True)
+
+            if round_diff:
+                diff_file = output_dir / f"round{round_num}.patch"
+                diff_file.write_text(round_diff)
+                typer.echo(f"Saved: {diff_file}", err=True)
+
+        # Store round results
+        all_rounds.append({
+            "round": round_num,
+            "step1_length": len(step1_output),
+            "step2_length": len(step2_output),
+            "step3_length": len(step3_output),
+            "diff": round_diff,
+            "full_output": step3_output,
+        })
+
+        # Update final output
+        final_output = step3_output
+        final_diff = round_diff
+
+        typer.echo(f"\nRound {round_num} complete", err=True)
 
     took_ms = int((time.time() - t0) * 1000)
 
     typer.echo("\n" + "=" * 60, err=True)
-    typer.echo(f"COMPLETE ({took_ms}ms total)", err=True)
+    typer.echo(f"ALL ROUNDS COMPLETE ({took_ms}ms total)", err=True)
     typer.echo("=" * 60, err=True)
-
-    # Save final output
-    if save_intermediate:
-        final_file = output_dir / "review_final.md"
-        final_file.write_text(step3_output)
-        typer.echo(f"Saved: {final_file}", err=True)
-
-        if final_diff:
-            diff_file = output_dir / "review.patch"
-            diff_file.write_text(final_diff)
-            typer.echo(f"Saved: {diff_file}", err=True)
 
     # Output
     print(json.dumps({
         "meta": {
             "model": model,
             "took_ms": took_ms,
-            "steps_completed": 3,
+            "rounds_completed": len(all_rounds),
         },
-        "step1_length": len(step1_output),
-        "step2_length": len(step2_output),
-        "step3_length": len(step3_output),
-        "diff": final_diff,
-        "full_output": step3_output,
+        "rounds": all_rounds,
+        "final_diff": final_diff,
+        "final_output": final_output,
     }, indent=2, ensure_ascii=False))
 
 
