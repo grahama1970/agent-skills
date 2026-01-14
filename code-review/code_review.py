@@ -246,20 +246,27 @@ async def _run_copilot_async(
     model: str = DEFAULT_MODEL,
     add_dirs: Optional[list[str]] = None,
     log_file: Optional[Path] = None,
+    continue_session: bool = False,
 ) -> tuple[str, int]:
     """Run copilot CLI with real-time output streaming to log file.
 
     No timeout - process runs until completion. Monitor log_file for progress.
+    Use continue_session=True to maintain context from previous call.
 
     Returns: (output, return_code)
     """
-    cmd = [
-        "copilot",
+    cmd = ["copilot"]
+
+    # Continue previous session for context accumulation
+    if continue_session:
+        cmd.append("--continue")
+
+    cmd.extend([
         "-p", prompt,
         "--allow-all-tools",
         "--model", MODELS.get(model, model),
         "--no-color",
-    ]
+    ])
 
     if add_dirs:
         for d in add_dirs:
@@ -284,12 +291,28 @@ async def _run_copilot_async(
             if log_handle:
                 log_handle.write(text)
                 log_handle.flush()
+    except asyncio.CancelledError:
+        # Clean shutdown - kill the subprocess
+        proc.kill()
+        await proc.wait()
+        raise
     finally:
         if log_handle:
             log_handle.close()
 
     await proc.wait()
     return ''.join(output_lines), proc.returncode
+
+
+# Track active copilot process for cleanup
+_active_copilot_proc: Optional[asyncio.subprocess.Process] = None
+
+
+def _cleanup_copilot_session():
+    """Kill any active copilot process."""
+    global _active_copilot_proc
+    if _active_copilot_proc and _active_copilot_proc.returncode is None:
+        _active_copilot_proc.kill()
 
 
 def _extract_diff(response: str) -> Optional[str]:
@@ -895,21 +918,20 @@ async def _review_full_async(
     output_dir: Path,
     save_intermediate: bool,
 ) -> dict:
-    """Async implementation of iterative code review pipeline."""
+    """Async implementation of iterative code review pipeline.
+
+    Uses --continue to maintain copilot session context across all steps/rounds.
+    Only the first call starts a fresh session; all subsequent calls continue it.
+    """
     all_rounds = []
     final_output = ""
     final_diff = None
+    is_first_call = True  # Track if this is the first copilot call
 
     for round_num in range(1, rounds + 1):
         typer.echo(f"\n{'#' * 60}", err=True)
         typer.echo(f"ROUND {round_num}/{rounds}", err=True)
         typer.echo(f"{'#' * 60}", err=True)
-
-        # Build context for this round
-        round_context = previous_context
-        if round_num > 1 and all_rounds:
-            prev_round = all_rounds[-1]
-            round_context += f"\n\n## Previous Round Output\n{prev_round['full_output']}"
 
         # Step 1: Generate
         typer.echo("=" * 60, err=True)
@@ -917,14 +939,22 @@ async def _review_full_async(
         log_file = output_dir / f"round{round_num}_step1.log" if save_intermediate else None
         if log_file:
             typer.echo(f"Streaming to: {log_file}", err=True)
+        if not is_first_call:
+            typer.echo("(continuing session)", err=True)
         typer.echo("=" * 60, err=True)
 
-        if round_context:
-            step1_prompt = STEP1_PROMPT.format(request=request_content) + f"\n\n## Additional Context\n{round_context}"
+        # First round: include any provided context in prompt
+        # Subsequent rounds: context accumulates via --continue
+        if is_first_call and previous_context:
+            step1_prompt = STEP1_PROMPT.format(request=request_content) + f"\n\n## Additional Context\n{previous_context}"
         else:
             step1_prompt = STEP1_PROMPT.format(request=request_content)
 
-        step1_output, rc = await _run_copilot_async(step1_prompt, model, add_dir, log_file)
+        step1_output, rc = await _run_copilot_async(
+            step1_prompt, model, add_dir, log_file,
+            continue_session=not is_first_call
+        )
+        is_first_call = False  # All subsequent calls continue the session
 
         if rc != 0:
             typer.echo(f"Step 1 failed (exit {rc})", err=True)
@@ -937,16 +967,20 @@ async def _review_full_async(
             step1_file.write_text(step1_output)
             typer.echo(f"Saved: {step1_file}", err=True)
 
-        # Step 2: Judge
+        # Step 2: Judge (always continues session)
         typer.echo("\n" + "=" * 60, err=True)
         typer.echo(f"STEP 2/3: Judging and answering questions...", err=True)
         log_file = output_dir / f"round{round_num}_step2.log" if save_intermediate else None
         if log_file:
             typer.echo(f"Streaming to: {log_file}", err=True)
+        typer.echo("(continuing session)", err=True)
         typer.echo("=" * 60, err=True)
 
         step2_prompt = STEP2_PROMPT.format(request=request_content, step1_output=step1_output)
-        step2_output, rc = await _run_copilot_async(step2_prompt, model, add_dir, log_file)
+        step2_output, rc = await _run_copilot_async(
+            step2_prompt, model, add_dir, log_file,
+            continue_session=True
+        )
 
         if rc != 0:
             typer.echo(f"Step 2 failed (exit {rc})", err=True)
@@ -959,12 +993,13 @@ async def _review_full_async(
             step2_file.write_text(step2_output)
             typer.echo(f"Saved: {step2_file}", err=True)
 
-        # Step 3: Regenerate
+        # Step 3: Regenerate (always continues session)
         typer.echo("\n" + "=" * 60, err=True)
         typer.echo(f"STEP 3/3: Generating final diff...", err=True)
         log_file = output_dir / f"round{round_num}_step3.log" if save_intermediate else None
         if log_file:
             typer.echo(f"Streaming to: {log_file}", err=True)
+        typer.echo("(continuing session)", err=True)
         typer.echo("=" * 60, err=True)
 
         step3_prompt = STEP3_PROMPT.format(
@@ -972,7 +1007,10 @@ async def _review_full_async(
             step1_output=step1_output,
             step2_output=step2_output,
         )
-        step3_output, rc = await _run_copilot_async(step3_prompt, model, add_dir, log_file)
+        step3_output, rc = await _run_copilot_async(
+            step3_prompt, model, add_dir, log_file,
+            continue_session=True
+        )
 
         if rc != 0:
             typer.echo(f"Step 3 failed (exit {rc})", err=True)
