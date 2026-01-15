@@ -2,149 +2,129 @@
 
 Shared skills for AI agents (Claude Code, Codex, Gemini, etc.).
 
+## Skill Types
+
+Skills follow a **large vs small** rule:
+
+### Self-Contained Skills (~100-300 lines)
+
+Simple utilities that live entirely in this repo. Each has a Python CLI that outputs JSON.
+
+| Skill | CLI | Purpose |
+|-------|-----|---------|
+| `scillm` | `batch.py`, `prove.py` | LLM completions + Lean4 proofs |
+| `arxiv` | `arxiv_cli.py` | arXiv paper search |
+| `youtube-transcripts` | `youtube_transcript.py` | YouTube transcript extraction |
+| `perplexity` | `perplexity.py` | Paid web search with citations |
+| `brave-search` | `brave_search.py` | Free web + local search |
+| `context7` | `context7.py` | Library documentation lookup |
+| `memory` | uses `memory-agent` | Knowledge graph recall |
+| `distill` | `run.sh`, `distill.py` | PDF/URL to Q&A pairs |
+| `qra` | `run.sh`, `qra.py` | Text to Q&A pairs |
+| `doc-to-qra` | `run.sh` | Happy path: document → Q&A |
+| `agent-inbox` | `inbox.py` | Inter-agent messaging |
+
+**Knowledge Extraction Skills (choosing the right one):**
+| Use Case | Skill | Why |
+|----------|-------|-----|
+| PDF/URL → memory | `doc-to-qra` | Simplest interface: `./run.sh paper.pdf research` |
+| Need `--sections-only` | `distill` | More options when you need control |
+| Plain text only | `qra` | Skips PDF extraction step |
+
+**Why self-contained:** These are thin wrappers around APIs. No complex state, no heavy dependencies. Easy to debug, test, and maintain in place.
+
+### Pointer Skills (Reference External Projects)
+
+Complex projects that have their own repos, venvs, and test suites. The skill here is just documentation pointing to the real project.
+
+| Skill | External Project | Purpose |
+|-------|------------------|---------|
+| `fetcher` | fetcher project | Web crawling, PDF extraction |
+| `runpod-ops` | runpod_ops project | GPU instance management |
+| `surf` | surf-cli (npm) | Browser automation |
+| `pdf-fixture` | extractor project | Test PDF generation |
+
+**Why pointers:** These projects have:
+- Multiple interdependent classes
+- Their own dependency trees
+- Complex business logic
+- Separate test suites
+- Independent release cycles
+
+Duplicating them here would create maintenance burden and version drift.
+
+## Quick Start
+
+```bash
+# Self-contained skills - run directly
+python .agents/skills/scillm/batch.py single "What is 2+2?" --json
+python .agents/skills/scillm/prove.py "Prove n + 0 = n"
+python .agents/skills/arxiv/arxiv_cli.py search --query "transformers"
+python .agents/skills/youtube-transcripts/youtube_transcript.py get --video-id "VIDEO_ID"
+python .agents/skills/perplexity/perplexity.py ask "What's new in Python 3.12?"
+python .agents/skills/brave-search/brave_search.py web "brave search api"
+python .agents/skills/context7/context7.py search arangodb "bm25"
+
+# Knowledge extraction
+.agents/skills/doc-to-qra/run.sh paper.pdf research        # Happy path
+.agents/skills/distill/run.sh --file paper.pdf --scope research
+.agents/skills/qra/run.sh --file notes.txt --scope project
+
+# Inter-agent messaging
+python .agents/skills/agent-inbox/inbox.py check
+python .agents/skills/agent-inbox/inbox.py send --to other-project "Bug found"
+
+# Pointer skills - use external CLIs
+fetcher get https://example.com
+surf go "https://example.com"
+```
+
 ## Installation
 
-Add as a git submodule to your project:
+Skills location: `.agents/skills/`
 
 ```bash
-cd your-project
-git submodule add git@github.com:grahama1970/agent-skills.git .skills
-
-# Create symlink for Claude Code auto-discovery
+# For Claude Code auto-discovery, create symlink:
 mkdir -p .claude
-ln -s ../.skills .claude/skills
-
-# Commit both
-git add .skills .claude/skills .gitmodules
-git commit -m "Add agent-skills submodule"
-```
-
-## Project Setup
-
-After installation, add to your `CLAUDE.md` (or create one):
-
-```markdown
-## Skills
-
-Agent skills are located in `.skills/` (git submodule).
-Available: certainly-prover, scillm-completions, surf, fetcher, memory.
-```
-
-This ensures:
-- **Claude Code**: Auto-discovers via `.claude/skills/` symlink
-- **Codex**: Reads from `CLAUDE.md` or `AGENTS.md` reference
-- **Gemini**: Reads from `CLAUDE.md` or project docs
-
-## Available Skills
-
-| Skill | Description |
-|-------|-------------|
-| `certainly-prover` | Lean4 theorem proving via scillm |
-| `scillm-completions` | LLM completions (text, JSON, vision, batch) |
-| `surf` | Browser automation CLI for AI agents |
-| `fetcher` | Web crawling and document fetching |
-| `memory` | Graph-based knowledge recall with formal proof integration |
-
-## Skill Interactions
-
-Skills can work together for powerful workflows:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  memory + scillm-completions + certainly-prover                │
-│                                                                 │
-│  1. Agent logs episode with --prove flag                       │
-│  2. scillm calls DeepSeek Prover V2: "Is this provable?"      │
-│  3. If yes, certainly-prover generates Lean4 proof             │
-│  4. Proved claims stored with lean4_code in memory             │
-│  5. Future searches can filter --proved-only                   │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  surf + fetcher + memory                                        │
-│                                                                 │
-│  1. surf navigates to dynamic page                             │
-│  2. fetcher extracts content with Playwright fallback          │
-│  3. memory stores solution for future reference                │
-│  4. Next agent encountering same page finds cached solution    │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Updating Skills
-
-From a project using this as a submodule:
-
-```bash
-cd .skills
-git pull origin main
-cd ..
-git add .skills
-git commit -m "Update agent-skills"
-```
-
-## Cloning Projects with Submodules
-
-When cloning a project that uses this submodule:
-
-```bash
-git clone --recurse-submodules git@github.com:org/project.git
-
-# Or if already cloned:
-git submodule update --init --recursive
+ln -s ../.agents/skills .claude/skills
 ```
 
 ## Skill Format
 
 Each skill directory contains:
-
-- `SKILL.md` - Main skill documentation with YAML frontmatter
-- Additional reference files (e.g., `TACTICS.md`)
-
-### SKILL.md Format
+- `SKILL.md` - Documentation with YAML frontmatter
+- CLI scripts (self-contained) or wrapper scripts (pointers)
 
 ```yaml
 ---
 name: skill-name
-description: What this skill does (used by agent discovery)
-allowed-tools: Bash, Read, Grep, Glob
+description: >
+  What this skill does. Use when user says "trigger phrase 1",
+  "trigger phrase 2", or asks about X.
+allowed-tools: Bash, Read
+triggers:
+  - trigger phrase 1
+  - trigger phrase 2
+  - asks about X
 metadata:
-  short-description: Brief description for listings
+  short-description: Brief description
 ---
-
-# Skill Name
-
-Usage documentation...
 ```
+
+**See [TRIGGERS.md](TRIGGERS.md) for all trigger phrases** - edit there to change when skills are invoked.
+
+## Adding New Skills
+
+**Small utility (API wrapper, ~100-300 lines)?**
+→ Add as self-contained skill with Python CLI
+
+**Complex project (multiple classes, own venv, tests)?**
+→ Keep as separate repo, add pointer skill here
 
 ## Agent Discovery
 
-| Agent | Discovery Method |
-|-------|------------------|
-| Claude Code | Auto-loads from `.claude/skills/` (symlink) |
-| Codex | Reference in `AGENTS.md` or `CLAUDE.md` |
-| Gemini | Reference in project documentation |
-
-## Directory Structure
-
-After installation, your project should look like:
-
-```
-your-project/
-├── .skills/                  # Submodule (agent-agnostic)
-│   ├── certainly-prover/
-│   ├── scillm-completions/
-│   ├── surf/
-│   ├── fetcher/
-│   └── memory/
-├── .claude/
-│   └── skills -> ../.skills  # Symlink for Claude Code
-├── CLAUDE.md                 # Documents skills location
-└── ...
-```
-
-## Contributing
-
-1. Add new skill directory with `SKILL.md`
-2. Follow the format above
-3. Keep documentation concise and example-driven
-4. Test with at least one agent before merging
+| Agent | Discovery |
+|-------|-----------|
+| Claude Code | `.claude/skills/` symlink |
+| Codex | `CLAUDE.md` or `AGENTS.md` reference |
+| Gemini | Project documentation |

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Wrapper script to run create_fixture_pdf.py with correct environment
+#
+# Requires: EXTRACTOR_ROOT environment variable or extractor project at default location
+
+set -euo pipefail
+
+# Allow override via environment variable
+EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-/home/graham/workspace/experiments/extractor}"
+SCRIPT_PATH="${EXTRACTOR_ROOT}/tools/tasks_loop/utils/create_fixture_pdf.py"
+
+# Check if extractor project exists
+if [[ ! -d "${EXTRACTOR_ROOT}" ]]; then
+    echo "Error: extractor project not found at ${EXTRACTOR_ROOT}" >&2
+    echo "Set EXTRACTOR_ROOT environment variable to the correct path" >&2
+    exit 1
+fi
+
+if [[ ! -f "${SCRIPT_PATH}" ]]; then
+    echo "Error: create_fixture_pdf.py not found at ${SCRIPT_PATH}" >&2
+    exit 1
+fi
+
+# Activate extractor venv and load env
+source "${EXTRACTOR_ROOT}/.venv/bin/activate"
+if [[ -f "${EXTRACTOR_ROOT}/.env" ]]; then
+    set -a
+    source "${EXTRACTOR_ROOT}/.env"
+    set +a
+fi
+
+# Run the script with all arguments
+python "${SCRIPT_PATH}" "$@"

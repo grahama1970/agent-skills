@@ -1,7 +1,19 @@
 ---
 name: surf
-description: Control Chrome browser via CLI - navigate, click, type, screenshot, read pages. Use for any browser automation task.
+description: >
+  Control Chrome browser via CLI - navigate, click, type, screenshot, read pages.
+  Use when user says "open browser", "click on", "fill form", "take screenshot",
+  "navigate to", "automate browser", or needs any browser automation task.
 allowed-tools: Bash, Read
+triggers:
+  - open browser
+  - click on
+  - fill form
+  - take screenshot
+  - navigate to
+  - automate browser
+  - browser automation
+  - read webpage
 metadata:
   short-description: Browser automation CLI for AI agents
 ---
@@ -10,13 +22,22 @@ metadata:
 
 Control Chrome via CLI commands. Zero config, agent-agnostic.
 
+**Self-contained skill** - auto-installs via `npx` from GitHub (no global npm install needed).
+
 ## Simplest Usage
 
 ```bash
-surf go "https://example.com"    # Navigate to URL
-surf read                        # Get page content with element refs
-surf click e5                    # Click element by ref
-surf snap                        # Take screenshot
+# Via wrapper (recommended - auto-installs from GitHub)
+.agents/skills/surf/run.sh go "https://example.com"
+
+# Or via npx with GitHub repo explicitly
+npx github:nicobailon/surf-cli go "https://example.com"
+
+# Common commands
+./run.sh go "https://example.com"    # Navigate to URL
+./run.sh read                        # Get page content with element refs
+./run.sh click e5                    # Click element by ref
+./run.sh snap                        # Take screenshot
 ```
 
 ## Common Patterns

@@ -1,0 +1,97 @@
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.prompt {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #111827;
+  margin: 0 0 0.5rem;
+}
+
+.docsLink {
+  font-size: 0.9rem;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.docsLink:hover {
+  text-decoration: underline;
+}
+
+.badge {
+  background: #2563eb;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.15rem 0.75rem;
+  font-size: 0.8rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.input {
+  margin: 1rem 0;
+}
+
+.textInput,
+.textArea {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #cbd5f5;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.textInput:focus,
+.textArea:focus {
+  outline: 2px solid #2563eb33;
+}
+
+.optionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.optionItem {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.optionDescription {
+  display: block;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.metaHeading {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.noteArea {
+  margin-top: 1rem;
+  background: #f8fafc;
+}

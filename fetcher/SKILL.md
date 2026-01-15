@@ -1,7 +1,18 @@
 ---
 name: fetcher
-description: Fetch web pages, PDFs, and documents with automatic fallbacks, Playwright rendering, and content extraction. Use for any web crawling or document retrieval task.
+description: >
+  Fetch web pages, PDFs, and documents with automatic fallbacks and content extraction.
+  Use when user says "fetch this URL", "download this page", "crawl this website",
+  "extract content from", "get the PDF", or provides URLs needing retrieval.
 allowed-tools: Bash, Read
+triggers:
+  - fetch this URL
+  - download page
+  - crawl website
+  - extract content from
+  - get the PDF
+  - scrape this site
+  - retrieve document
 metadata:
   short-description: Web crawling and document fetching CLI
 ---
@@ -10,12 +21,24 @@ metadata:
 
 Fetch web pages and documents with automatic fallbacks, proxy rotation, and content extraction.
 
+**Self-contained skill** - auto-installs via `uv run` from git (no pre-installation needed).
+
 ## Simplest Usage
 
 ```bash
-fetcher get https://example.com                    # Fetch single URL
-fetcher get-manifest urls.txt                      # Fetch list of URLs
-fetcher get-manifest - < urls.txt                  # Fetch from stdin
+# Via wrapper (recommended - auto-installs)
+.agents/skills/fetcher/run.sh get https://example.com
+
+# Or directly if fetcher is installed
+fetcher get https://example.com
+```
+
+## Common Commands
+
+```bash
+./run.sh get https://example.com                   # Fetch single URL
+./run.sh get-manifest urls.txt                     # Fetch list of URLs
+./run.sh get-manifest - < urls.txt                 # Fetch from stdin
 ```
 
 ## Common Patterns
