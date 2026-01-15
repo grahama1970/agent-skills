@@ -1,32 +1,50 @@
 #!/bin/bash
-# Deploy skills to all AI agent skill directories
+# Deploy agent skills and hooks to all AI agent directories
 # Source: /home/graham/workspace/experiments/agent-skills
 #
-# Supports: Claude Code, Codex, Antigravity
+# Supports: Claude Code, Codex, Pi Agent (skills); Claude Code (hooks)
 #
 # Usage:
-#   ./deploy.sh           # Deploy to global locations
-#   ./deploy.sh --check   # Show what would be deployed
+#   ./deploy.sh              # Deploy skills + hooks globally
+#   ./deploy.sh --check      # Show what would be deployed
+#   ./deploy.sh --skills     # Deploy only skills
+#   ./deploy.sh --hooks      # Deploy only hooks
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILLS_DIR="$SCRIPT_DIR"
+SKILLS_DIR="$SCRIPT_DIR/skills"
+HOOKS_DIR="$SCRIPT_DIR/hooks"
 
-# Agent skill directory locations
-CLAUDE_GLOBAL="$HOME/.claude/skills"
-CODEX_GLOBAL="$HOME/.codex/skills"
+# Agent directories
+CLAUDE_SKILLS="$HOME/.claude/skills"
+CLAUDE_HOOKS="$HOME/.claude/hooks"
+CODEX_SKILLS="$HOME/.codex/skills"
+PI_SKILLS="$HOME/.pi/agent/skills"
 
+# Parse args
 check_only=false
-[[ "${1:-}" == "--check" ]] && check_only=true
+deploy_skills=true
+deploy_hooks=true
 
-echo "=== Agent Skills Deployment ==="
-echo "Source: $SKILLS_DIR"
+for arg in "$@"; do
+    case "$arg" in
+        --check) check_only=true ;;
+        --skills) deploy_hooks=false ;;
+        --hooks) deploy_skills=false ;;
+    esac
+done
+
+echo "=== Agent Skills & Hooks Deployment ==="
+echo "Source: $SCRIPT_DIR"
 echo ""
 
-# Count skills (directories with SKILL.md)
-skill_count=$(find "$SKILLS_DIR" -maxdepth 2 -name "SKILL.md" | wc -l)
+# Count items
+skill_count=$(find "$SKILLS_DIR" -maxdepth 2 -name "SKILL.md" 2>/dev/null | wc -l)
+hook_count=$(find "$HOOKS_DIR" -maxdepth 1 -name "*.sh" 2>/dev/null | wc -l)
+
 echo "Skills found: $skill_count"
+echo "Hooks found:  $hook_count"
 echo ""
 
 if $check_only; then
@@ -35,45 +53,70 @@ if $check_only; then
         [[ -f "$skill" ]] && echo "  - $(basename $(dirname "$skill"))"
     done
     echo ""
+    echo "Hooks to deploy:"
+    for hook in "$HOOKS_DIR"/*.sh; do
+        [[ -f "$hook" ]] && echo "  - $(basename "$hook")"
+    done
+    echo ""
     echo "Target locations:"
-    echo "  Claude Code: $CLAUDE_GLOBAL"
-    echo "  Codex:       $CODEX_GLOBAL"
+    echo "  Skills:"
+    echo "    Claude Code: $CLAUDE_SKILLS"
+    echo "    Codex:       $CODEX_SKILLS"
+    echo "    Pi Agent:    $PI_SKILLS"
+    echo "  Hooks:"
+    echo "    Claude Code: $CLAUDE_HOOKS"
     exit 0
 fi
 
-# Deploy to Claude Code
-echo "Deploying to Claude Code..."
-mkdir -p "$(dirname "$CLAUDE_GLOBAL")"
-if [[ -L "$CLAUDE_GLOBAL" ]]; then
-    rm "$CLAUDE_GLOBAL"
-elif [[ -d "$CLAUDE_GLOBAL" ]]; then
-    echo "  Warning: $CLAUDE_GLOBAL is a directory, backing up..."
-    mv "$CLAUDE_GLOBAL" "${CLAUDE_GLOBAL}.bak.$(date +%s)"
-fi
-ln -s "$SKILLS_DIR" "$CLAUDE_GLOBAL"
-echo "  ✓ Symlinked to $CLAUDE_GLOBAL"
+# Helper function for symlink creation
+create_symlink() {
+    local source="$1"
+    local target="$2"
+    local name="$3"
 
-# Deploy to Codex
-echo "Deploying to Codex..."
-mkdir -p "$(dirname "$CODEX_GLOBAL")"
-if [[ -L "$CODEX_GLOBAL" ]]; then
-    rm "$CODEX_GLOBAL"
-elif [[ -d "$CODEX_GLOBAL" ]]; then
-    echo "  Warning: $CODEX_GLOBAL is a directory, backing up..."
-    mv "$CODEX_GLOBAL" "${CODEX_GLOBAL}.bak.$(date +%s)"
-fi
-ln -s "$SKILLS_DIR" "$CODEX_GLOBAL"
-echo "  ✓ Symlinked to $CODEX_GLOBAL"
+    mkdir -p "$(dirname "$target")"
 
-echo ""
+    if [[ -L "$target" ]]; then
+        rm "$target"
+    elif [[ -d "$target" ]]; then
+        echo "  Warning: $target is a directory, backing up..."
+        mv "$target" "${target}.bak.$(date +%s)"
+    fi
+
+    ln -s "$source" "$target"
+    echo "  ✓ $name -> $target"
+}
+
+# Deploy skills
+if $deploy_skills; then
+    echo "Deploying skills..."
+    create_symlink "$SKILLS_DIR" "$CLAUDE_SKILLS" "Claude Code skills"
+    create_symlink "$SKILLS_DIR" "$CODEX_SKILLS" "Codex skills"
+    create_symlink "$SKILLS_DIR" "$PI_SKILLS" "Pi Agent skills"
+    echo ""
+fi
+
+# Deploy hooks
+if $deploy_hooks; then
+    echo "Deploying hooks..."
+    create_symlink "$HOOKS_DIR" "$CLAUDE_HOOKS" "Claude Code hooks"
+    echo ""
+fi
+
 echo "=== Deployment Complete ==="
 echo ""
-echo "Skills are now available globally for:"
-echo "  - Claude Code (any project)"
-echo "  - Codex (any project)"
-echo "  - Antigravity (via .agents/skills symlink per project)"
+echo "Skills available globally for:"
+echo "  - Claude Code (~/.claude/skills/)"
+echo "  - Codex (~/.codex/skills/)"
+echo "  - Pi Agent (~/.pi/agent/skills/)"
+echo ""
+echo "Hooks available for:"
+echo "  - Claude Code (~/.claude/hooks/)"
 echo ""
 echo "Per-project setup (optional):"
+echo "  # Skills"
 echo "  ln -s $SKILLS_DIR .agents/skills"
 echo "  ln -s ../.agents/skills .claude/skills"
-echo "  ln -s ../.agents/skills .codex/skills"
+echo ""
+echo "  # Hooks (if project needs custom hooks)"
+echo "  ln -s $HOOKS_DIR .claude/hooks"
