@@ -15,14 +15,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="${SCRIPT_DIR}/../../.."
-
-# Load .env if present (for CHUTES_API_KEY, etc.)
-if [[ -f "${PROJECT_ROOT}/.env" ]]; then
-    set -a
-    source "${PROJECT_ROOT}/.env"
-    set +a
-fi
 
 # Add local scillm to PYTHONPATH if SCILLM_PATH is set
 # (for local development with litellm fork)

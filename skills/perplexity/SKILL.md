@@ -91,17 +91,17 @@ Note: The CLI commands `ask` and `research` are the primary interface. For Pytho
 
 ### Technical Research
 ```bash
-python .agents/skills/perplexity/perplexity.py "How to implement hybrid search with BM25 and vector similarity?"
+python .agents/skills/perplexity/perplexity.py ask "How to implement hybrid search with BM25 and vector similarity?"
 ```
 
 ### Current Information
 ```bash
-python .agents/skills/perplexity/perplexity.py "Latest Anthropic Claude API changes 2024"
+python .agents/skills/perplexity/perplexity.py ask "Latest Anthropic Claude API changes 2024"
 ```
 
 ### Comparison
 ```bash
-python .agents/skills/perplexity/perplexity.py --model large "sentence-transformers vs OpenAI embeddings for code search"
+python .agents/skills/perplexity/perplexity.py ask --model large "sentence-transformers vs OpenAI embeddings for code search"
 ```
 
 ## vs Context7

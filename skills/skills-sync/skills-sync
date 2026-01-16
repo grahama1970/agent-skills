@@ -1,0 +1,215 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+LOCAL_DIR="${SKILLS_LOCAL_DIR:-${PROJECT_ROOT}/.agents/skills}"
+UPSTREAM_REPO="${SKILLS_UPSTREAM_REPO:-/home/graham/workspace/experiments/agent-skills}"
+UPSTREAM_DIR="${UPSTREAM_REPO}/skills"
+
+usage() {
+    cat <<USAGE
+Usage: ${0##*/} [push|pull|info] [--dry-run] [--fanout] [--fanout-targets PATHS]
+  push      Local -> Upstream (default)
+  pull      Upstream -> Local
+  info      Show current paths and fanout configuration (alias: find)
+Options:
+  --dry-run           Preview rsync operations
+  --fanout            When pushing, also copy skills into fanout projects
+  --fanout-targets X  Colon-separated list of project roots (overrides env)
+  -h, --help          Show this help
+USAGE
+}
+
+MODE="push"
+DRY_RUN=0
+FANOUT=0
+FANOUT_TARGETS=""
+AUTOCOMMIT_ENV="${SKILLS_SYNC_AUTOCOMMIT:-0}"
+AUTOCOMMIT_OVERRIDE=""
+
+resolve_fanout_targets() {
+    if [[ -n "$FANOUT_TARGETS" ]]; then
+        echo "$FANOUT_TARGETS"
+    elif [[ -n "${SKILLS_FANOUT_PROJECTS:-}" ]]; then
+        echo "$SKILLS_FANOUT_PROJECTS"
+    else
+        echo ""
+    fi
+}
+
+if [[ $# -gt 0 ]]; then
+    case "$1" in
+        push|pull|info|find)
+            MODE="$1"
+            shift
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --dry-run|-n)
+            DRY_RUN=1
+            shift
+            ;;
+        *)
+            usage
+            exit 1
+            ;;
+    esac
+fi
+
+# parse remaining opts
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run|-n)
+            DRY_RUN=1
+            ;;
+        --fanout)
+            FANOUT=1
+            ;;
+        --fanout-targets)
+            shift
+            FANOUT_TARGETS="$1"
+            ;;
+        --no-autocommit)
+            AUTOCOMMIT_OVERRIDE="off"
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+if [[ "$MODE" == "info" || "$MODE" == "find" ]]; then
+    echo "[skills-sync] Local skills dir : $LOCAL_DIR"
+    if [[ -d "$LOCAL_DIR" ]]; then
+        echo "  status: exists"
+    else
+        echo "  status: missing"
+    fi
+    echo "[skills-sync] Upstream repo    : $UPSTREAM_REPO"
+    echo "[skills-sync] Upstream skills : $UPSTREAM_DIR"
+    if [[ -d "$UPSTREAM_DIR" ]]; then
+        echo "  status: exists"
+    else
+        echo "  status: missing"
+    fi
+    ft="$(resolve_fanout_targets)"
+    if [[ -z "$ft" ]]; then
+        echo "[skills-sync] Fanout targets  : (none configured)"
+    else
+        echo "[skills-sync] Fanout targets  :"
+        IFS=":" read -r -a info_arr <<< "$ft"
+        for target in "${info_arr[@]}"; do
+            printf '  - %s %s\n' "$target" "$( [[ -d "$target/.agents/skills" ]] && echo '(skills dir present)' || echo '(skills dir missing)' )"
+        done
+    fi
+    echo "[skills-sync] To run fanout: export SKILLS_FANOUT_PROJECTS=... or use --fanout-targets"
+    exit 0
+fi
+
+if [[ ! -d "$LOCAL_DIR" ]]; then
+    echo "Local skills directory not found: $LOCAL_DIR" >&2
+    exit 1
+fi
+if [[ ! -d "$UPSTREAM_DIR" ]]; then
+    echo "Upstream skills directory not found: $UPSTREAM_DIR" >&2
+    exit 1
+fi
+
+if [[ "$MODE" == "push" ]]; then
+    SRC="$LOCAL_DIR/"
+    DEST="$UPSTREAM_DIR/"
+    SUMMARY="Pushed local skills to $UPSTREAM_DIR"
+elif [[ "$MODE" == "pull" ]]; then
+    SRC="$UPSTREAM_DIR/"
+    DEST="$LOCAL_DIR/"
+    SUMMARY="Pulled upstream skills into $LOCAL_DIR"
+else
+    echo "Unknown mode $MODE" >&2
+    exit 1
+fi
+
+RSYNC_OPTS=("-av" "--delete")
+if [[ $DRY_RUN -eq 1 ]]; then
+    RSYNC_OPTS+=("--dry-run")
+fi
+
+echo "[skills-sync] Mode: $MODE"
+echo "[skills-sync] Source: $SRC"
+echo "[skills-sync] Dest:   $DEST"
+echo "[skills-sync] Running: rsync ${RSYNC_OPTS[*]}"
+rsync "${RSYNC_OPTS[@]}" "$SRC" "$DEST"
+
+if [[ $FANOUT -eq 1 && $DRY_RUN -eq 0 && "$MODE" == "push" ]]; then
+    TARGETS="$(resolve_fanout_targets)"
+    if [[ -z "$TARGETS" ]]; then
+        echo "[skills-sync] --fanout requested but no targets configured" >&2
+    else
+        IFS=":" read -r -a fanout_arr <<< "$TARGETS"
+        for project_root in "${fanout_arr[@]}"; do
+            dest_dir="$project_root/.agents/skills"
+            if [[ ! -d "$project_root" ]]; then
+                echo "[skills-sync] Fanout skip: $project_root does not exist" >&2
+                continue
+            fi
+            mkdir -p "$dest_dir"
+            echo "[skills-sync] Fanout → $dest_dir"
+            rsync "${RSYNC_OPTS[@]/--dry-run/}" "$LOCAL_DIR/" "$dest_dir/"
+        done
+    fi
+fi
+
+echo "[skills-sync] $SUMMARY"
+if [[ $DRY_RUN -eq 1 ]]; then
+    echo "[skills-sync] Dry run complete. No files modified."
+else
+    if [[ "$MODE" == "push" ]]; then
+        echo "[skills-sync] Next steps: cd $UPSTREAM_REPO && git status"
+    else
+        echo "[skills-sync] Next steps: review changes locally (git status)."
+    fi
+fi
+
+should_autocommit() {
+    if [[ "$MODE" != "push" || $DRY_RUN -eq 1 ]]; then
+        echo 0
+        return
+    fi
+    if [[ "$AUTOCOMMIT_OVERRIDE" == "off" ]]; then
+        echo 0
+        return
+    fi
+    if [[ "$AUTOCOMMIT_ENV" == "1" ]]; then
+        echo 1
+    else
+        echo 0
+    fi
+}
+
+if [[ $(should_autocommit) -eq 1 ]]; then
+    echo "[skills-sync] Auto-commit enabled (SKILLS_SYNC_AUTOCOMMIT=1)"
+    pushd "$UPSTREAM_REPO" >/dev/null
+    git add skills || true
+    if git diff --cached --quiet; then
+        echo "[skills-sync] No changes to commit in upstream repo."
+    else
+        ts=$(date +"%Y-%m-%d %H:%M:%S")
+        commit_msg="Sync skills $(basename "$PROJECT_ROOT") @ $ts"
+        git commit -m "$commit_msg" || true
+        if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+            git push || true
+        else
+            echo "[skills-sync] Upstream repo has no tracking branch; skipping push."
+        fi
+    fi
+    popd >/dev/null
+fi

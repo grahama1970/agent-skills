@@ -307,6 +307,22 @@ triggers:
 
 ---
 
+## skills-sync
+**When user says:** "sync skills", "publish skills", "push skills", "pull skills", "update shared skills", "fanout skills"
+
+```yaml
+# .agents/skills/skills-sync/SKILL.md
+triggers:
+  - sync skills
+  - publish skills
+  - push skills
+  - pull skills
+  - update shared skills
+  - fanout skills
+```
+
+---
+
 ## agent-inbox
 **When user says:** "check your inbox", "check messages", "any pending messages", "agent sent you", "send message to", "inter-agent message"
 

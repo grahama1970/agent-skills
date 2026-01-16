@@ -4,7 +4,7 @@
 set -e
 
 # Git source for runpod_ops (not on PyPI)
-REPO="git+https://github.com/grahama1970/runpod_ops.git"
+REPO="runpod_ops @ git+https://github.com/grahama1970/runpod_ops.git"
 
 if command -v uv &> /dev/null; then
     # Run directly from git repo (preferred)

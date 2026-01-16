@@ -31,7 +31,7 @@ Fetch up-to-date library documentation from Context7 API for ANY code library.
 python .agents/skills/context7/context7.py search <library-name> "<your-query>"
 
 # Step 2: Get documentation context
-python .agents/skills/context7/context7.py context <library-id> "<your-query>" [tokens]
+python .agents/skills/context7/context7.py context <library-id> "<your-query>" --tokens 5000
 ```
 
 ## API Endpoints
@@ -118,20 +118,17 @@ curl -s "https://context7.com/api/v2/context?libraryId=/leanprover/lean4&query=o
 
 ## Python Usage
 
+The CLI surface is the preferred interface. If you embed it elsewhere, import
+the Typer app or the helper functions directly:
+
 ```python
-# Import internal functions (CLI is primary interface)
-from context7 import _search_libs, _get_context
+from .context7 import app, _search_libs, _get_context
 
-# Search for libraries
-results = _search_libs("arangodb", "bm25 search")
-print(results["results"])  # List of matching libraries
-
-# Get documentation context
+result = _search_libs("arangodb", "bm25 search")
 docs = _get_context("/arangodb/arangodb", "bm25 arangosearch scoring")
-print(docs)
 ```
 
-Note: The CLI commands `search` and `context` are the primary interface. For Python usage, use `_search_libs()` and `_get_context()` directly.
+This matches the shipped code (`context7.py`).
 
 ## When to Use
 

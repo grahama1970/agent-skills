@@ -42,18 +42,21 @@ Simple file-based inter-agent message system. Allows agents working on different
 
 ## Installation
 
-The `agent-inbox` wrapper script is at `.agents/skills/agent-inbox/agent-inbox`.
+The skill ships with its own wrapper so you don’t need a global binary.
 
 ```bash
-# Option 1: Add to PATH (recommended)
+# Run directly from this repo (preferred)
+.agents/skills/agent-inbox/agent-inbox check
+
+# Or call Python explicitly
+python .agents/skills/agent-inbox/inbox.py check
+
+# Optional: add wrapper to PATH for easy reuse
 export PATH="$PATH:/path/to/project/.agents/skills/agent-inbox"
-
-# Option 2: Create alias
-alias agent-inbox='python /path/to/project/.agents/skills/agent-inbox/inbox.py'
-
-# Option 3: Direct invocation
-python .agents/skills/agent-inbox/inbox.py <command> [args]
 ```
+
+No `/usr/local/bin` install step is required; copying the skill folder into another
+project keeps it portable.
 
 ## Setup (One-Time)
 
