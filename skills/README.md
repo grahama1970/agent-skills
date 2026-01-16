@@ -1,150 +1,350 @@
-# Agent Skills
+# Pi Skills Directory
 
-Shared skills for AI agents (Claude Code, Codex, Gemini, etc.). Skills must be **self-contained and portable**: every dependency is loaded on demand (usually via `uv run --from ...`), so any project can copy the folder and run the CLI without pre-installing repo-specific extras.
-
-## Skill Types
-
-Skills follow a **large vs small** rule:
-
-### Self-Contained Skills (~100-300 lines)
-
-Simple utilities that live entirely in this repo. Each has a Python CLI that outputs JSON.
-
-| Skill | CLI | Purpose |
-|-------|-----|---------|
-| `scillm` | `batch.py`, `prove.py` | LLM completions + Lean4 proofs |
-| `arxiv` | `arxiv_cli.py` | arXiv paper search |
-| `youtube-transcripts` | `youtube_transcript.py` | YouTube transcript extraction |
-| `perplexity` | `perplexity.py` | Paid web search with citations |
-| `brave-search` | `brave_search.py` | Free web + local search |
-| `context7` | `context7.py` | Library documentation lookup |
-| `memory` | `memory-agent` (recall/learn/serve) | Knowledge graph recall + optional FastAPI service |
-| `distill` | `run.sh`, `distill.py` | PDF/URL to Q&A pairs |
-| `qra` | `run.sh`, `qra.py` | Text to Q&A pairs |
-| `doc-to-qra` | `run.sh` | Happy path: document → Q&A |
-| `agent-inbox` | `inbox.py` | Inter-agent messaging |
-| `skills-sync` | `skills-sync/skills-sync` | Sync local skills to upstream/fanout repos |
-| `json-utils` | `json_utils.py` | Shared JSON helpers (string escaping + payload builders) |
-
-**Knowledge Extraction Skills (choosing the right one):**
-| Use Case | Skill | Why |
-|----------|-------|-----|
-| PDF/URL → memory | `doc-to-qra` | Simplest interface: `./run.sh paper.pdf research` |
-| Need `--sections-only` | `distill` | More options when you need control |
-| Plain text only | `qra` | Skips PDF extraction step |
-
-**Why self-contained:** These are thin wrappers around APIs. No complex state, no heavy dependencies. Easy to debug, test, and maintain in place. When a skill needs a larger external project (e.g., runpod_ops), the wrapper launches it via `uv run --from git+https://...` at runtime instead of relying on pip extras in this repo.
-
-### Pointer Skills (Reference External Projects)
-
-Complex projects that have their own repos, venvs, and test suites. The skill here is just documentation pointing to the real project.
-
-| Skill | External Project | Purpose |
-|-------|------------------|---------|
-| `fetcher` | fetcher project | Web crawling, PDF extraction |
-| `runpod-ops` | runpod_ops project | GPU instance management |
-| `surf` | surf-cli (npm) | Browser automation |
-| `pdf-fixture` | extractor project | Test PDF generation |
-
-**Why pointers:** These projects have:
-- Multiple interdependent classes
-- Their own dependency trees
-- Complex business logic
-- Separate test suites
-- Independent release cycles
-
-Duplicating them here would create maintenance burden and version drift.
+Skills are modular capabilities that extend the Pi agent with specialized knowledge and tools. Each skill defines **when** it should be activated (triggers) and **how** to execute its task (commands, APIs, or instructions).
 
 ## Quick Start
 
 ```bash
-# Self-contained skills - run directly
-python .agents/skills/scillm/batch.py single "What is 2+2?" --json
-python .agents/skills/scillm/prove.py "Prove n + 0 = n"
-python .agents/skills/arxiv/arxiv_cli.py search --query "transformers"
-python .agents/skills/youtube-transcripts/youtube_transcript.py get --video-id "VIDEO_ID"
-python .agents/skills/perplexity/perplexity.py ask "What's new in Python 3.12?"
-python .agents/skills/brave-search/brave_search.py web "brave search api"
-python .agents/skills/context7/context7.py search arangodb "bm25"
+# List all available skills
+ls .pi/skills/*/SKILL.md
 
-# Knowledge extraction
-.agents/skills/doc-to-qra/run.sh paper.pdf research        # Happy path
-.agents/skills/distill/run.sh --file paper.pdf --scope research
-.agents/skills/qra/run.sh --file notes.txt --scope project
+# Use a skill via natural language
+> "check memory for authentication errors"    # Activates memory skill
+> "assess this project"                        # Activates assess skill
+> "search arxiv for transformer papers"        # Activates arxiv skill
 
-# Inter-agent messaging
-.agents/skills/agent-inbox/agent-inbox check
-.agents/skills/agent-inbox/agent-inbox send --to other-project "Bug found"
-
-# Skills sync
-.agents/skills/skills-sync/skills-sync info
-.agents/skills/skills-sync/skills-sync push --fanout --dry-run
-SKILLS_SYNC_AUTOCOMMIT=1 \
-  SKILLS_FANOUT_PROJECTS="~/.codex/skills:~/.antigravity/skills:~/.claude/skills:~/.pi/agent/skills" \
-  .agents/skills/skills-sync/skills-sync push --fanout
-
-# Pointer skills - use external CLIs
-fetcher get https://example.com
-surf go "https://example.com"
+# Direct invocation
+.pi/skills/memory/run.sh recall --q "error description"
+.pi/skills/brave-search/brave_search.py web "site:openai.com"
 ```
 
-## Installation
+## How Skills Work
 
-Skills location: `.agents/skills/`
-
-```bash
-# For Claude Code auto-discovery, create symlink:
-mkdir -p .claude
-ln -s ../.agents/skills .claude/skills
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        USER REQUEST                              │
+│                "check memory for auth errors"                    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      TRIGGER MATCHING                            │
+│  Pi reads SKILL.md frontmatter, matches "check memory" trigger   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      SKILL ACTIVATION                            │
+│  Pi loads skill instructions from SKILL.md body                  │
+│  Restricts tools to `allowed-tools` list                         │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      SKILL EXECUTION                             │
+│  Pi follows skill instructions, runs commands/scripts            │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Skill Format
+## Directory Structure
 
-Each skill directory contains:
-- `SKILL.md` - Documentation with YAML frontmatter
-- CLI scripts (self-contained) or wrapper scripts (pointers)
+```
+.pi/skills/
+├── README.md              # This file
+├── TRIGGERS.md            # Index of all skill triggers (auto-generated reference)
+├── common.sh              # Shared bash utilities (env loading)
+├── dotenv_helper.py       # Python .env file loader
+├── json_utils.py          # JSON parsing utilities
+│
+├── memory/                # Skill directory
+│   ├── SKILL.md           # Skill definition (required)
+│   ├── run.sh             # Entry point script
+│   └── ...                # Additional skill files
+│
+├── assess/
+│   └── SKILL.md
+│
+├── brave-search/
+│   ├── SKILL.md
+│   └── brave_search.py
+│
+└── ... (other skills)
+```
+
+## SKILL.md Format
+
+Each skill has a `SKILL.md` file with **YAML frontmatter** and a **markdown body**.
+
+### Frontmatter (Required)
 
 ```yaml
 ---
-name: skill-name
+name: my-skill
 description: >
-  What this skill does. Use when user says "trigger phrase 1",
-  "trigger phrase 2", or asks about X.
-allowed-tools: Bash, Read
+  Brief description of what this skill does. Include key trigger phrases
+  so Pi can match user requests. Use when user says "do X" or "perform Y".
+allowed-tools: Bash, Read, Glob, Grep
 triggers:
-  - trigger phrase 1
-  - trigger phrase 2
-  - asks about X
+  - do X
+  - perform Y
+  - my-skill action
+  - another trigger phrase
 metadata:
-  short-description: Brief description
+  short-description: One-line summary for listings
 ---
 ```
 
-**See [TRIGGERS.md](TRIGGERS.md) for all trigger phrases** - edit there to change when skills are invoked.
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | Yes | Unique skill identifier (matches directory name) |
+| `description` | Yes | What the skill does + when to use it. Include trigger phrases here too. |
+| `allowed-tools` | No | Comma-separated list of tools Pi can use when this skill is active |
+| `triggers` | Yes | Phrases that activate this skill (case-insensitive matching) |
+| `metadata` | No | Additional fields like `short-description` |
+
+### Body (After Frontmatter)
+
+The markdown body contains:
+- Detailed instructions for the agent
+- Command usage and examples
+- API documentation
+- Workflow steps
+- Configuration options
+
+Pi reads this body when the skill is activated and follows the instructions.
+
+## Available Skills
+
+### Core Skills
+
+| Skill | Description | Key Triggers |
+|-------|-------------|--------------|
+| **memory** | MEMORY FIRST - Query before scanning codebase | "check memory", "recall", "learn from this" |
+| **assess** | Step back and reassess project state | "assess", "step back", "sanity check" |
+
+### Search & Research
+
+| Skill | Description | Key Triggers |
+|-------|-------------|--------------|
+| **brave-search** | Free web/local search via Brave API | "brave search", "local search", "near me" |
+| **perplexity** | Deep research with LLM synthesis (paid) | "research this", "what's the latest" |
+| **arxiv** | Academic paper search | "find papers on", "search arxiv" |
+| **context7** | Library documentation lookup | "library docs", "API reference" |
+
+### Content Processing
+
+| Skill | Description | Key Triggers |
+|-------|-------------|--------------|
+| **fetcher** | Fetch URLs, PDFs, web content | "fetch this URL", "download page" |
+| **youtube-transcripts** | Extract video transcripts | "get transcript", "youtube transcript" |
+| **pdf-fixture** | Generate test PDFs | "create test PDF" |
+| **distill** | Extract knowledge from documents | "distill this", "extract knowledge" |
+
+### Knowledge Management
+
+| Skill | Description | Key Triggers |
+|-------|-------------|--------------|
+| **qra** | Extract Q&A pairs from content | "extract QRA", "create Q&A pairs" |
+| **doc-to-qra** | Convert documents to QRA format | "document to QRA", "pdf to QRA" |
+| **episodic-archiver** | Archive conversations to memory | "archive conversation", "save episode" |
+| **edge-verifier** | Verify knowledge graph relationships | "verify edges", "check edge quality" |
+
+### Code & Development
+
+| Skill | Description | Key Triggers |
+|-------|-------------|--------------|
+| **code-review** | Get code reviews and patches | "code review", "review this code" |
+| **treesitter** | Parse code structure | "parse this code", "extract functions" |
+
+### Infrastructure
+
+| Skill | Description | Key Triggers |
+|-------|-------------|--------------|
+| **runpod-ops** | Manage GPU instances | "spin up GPU", "create RunPod" |
+| **surf** | Browser automation | "open browser", "click on", "fill form" |
+
+### Agent Management
+
+| Skill | Description | Key Triggers |
+|-------|-------------|--------------|
+| **agent-inbox** | Inter-agent messaging | "check inbox", "send message to" |
+| **skills-sync** | Sync skills across projects | "sync skills", "push skills" |
+
+## Creating a New Skill
+
+### 1. Create Directory
+
+```bash
+mkdir -p .pi/skills/my-skill
+```
+
+### 2. Create SKILL.md
+
+```markdown
+---
+name: my-skill
+description: >
+  Does X and Y. Use when user says "do X", "perform Y", or asks about Z.
+allowed-tools: Bash, Read
+triggers:
+  - do X
+  - perform Y
+  - my-skill
+metadata:
+  short-description: Does X and Y
+---
+
+# My Skill
+
+Brief overview of what this skill does.
+
+## Prerequisites
+
+- List any required environment variables
+- List any required dependencies
+
+## Usage
+
+\`\`\`bash
+# Example command
+.pi/skills/my-skill/run.sh action --arg value
+\`\`\`
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `action` | Does something |
+
+## Examples
+
+\`\`\`bash
+# Example 1
+.pi/skills/my-skill/run.sh action --arg "example"
+\`\`\`
+```
+
+### 3. Create Entry Point (Optional)
+
+If your skill needs executable scripts:
+
+```bash
+#!/usr/bin/env bash
+# .pi/skills/my-skill/run.sh
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../common.sh"  # Load env vars
+
+# Your skill logic here
+```
+
+### 4. Update TRIGGERS.md (Optional)
+
+Add your skill's triggers to `TRIGGERS.md` for reference:
+
+```markdown
+## my-skill
+**When user says:** "do X", "perform Y"
+
+\`\`\`yaml
+triggers:
+  - do X
+  - perform Y
+\`\`\`
+```
+
+## Skills Sync
+
+Skills are synchronized from a canonical `agent-skills` repository using the `skills-sync` skill.
+
+### Key Commands
+
+```bash
+# See current sync configuration
+.pi/skills/skills-sync/skills-sync info
+
+# Pull latest skills from upstream
+.pi/skills/skills-sync/skills-sync pull
+
+# Push local changes to upstream
+.pi/skills/skills-sync/skills-sync push
+
+# Push to upstream AND fan out to other projects
+SKILLS_FANOUT_PROJECTS="$HOME/.codex/skills:$HOME/.pi/agent" \
+  .pi/skills/skills-sync/skills-sync push --fanout
+```
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `SKILLS_UPSTREAM_REPO` | Path to canonical agent-skills repo |
+| `SKILLS_FANOUT_PROJECTS` | Colon-separated list of projects to receive skills |
+| `SKILLS_SYNC_AUTOCOMMIT` | If `1`, auto-commit after push |
 
 ## Shared Utilities
 
-- `.agents/skills/dotenv_helper.py` — sourced by most skills to load `.env`/`.env.local` automatically so uv-run wrappers behave like the project CLI.
-- `.agents/skills/json_utils.py` — helper CLI/Module for repairing JSON payloads (used by memory server curl client, perplexity/context7 runners, etc.). Import or shell out instead of copy/pasting ad‑hoc fixers.
-- `common.sh` — legacy shell helper that loads `.env`; new skills should prefer the Python helper above, but the script remains for backward compatibility with existing sanity tests.
+### common.sh
 
-## Adding New Skills
+Loads `.env` files from standard locations:
 
-**Small utility (API wrapper, ~100-300 lines)?**
-→ Add as self-contained skill with Python CLI
+```bash
+source .pi/skills/common.sh
+# Now all env vars from ~/.env, ./.env, etc. are available
+```
 
-**Complex project (multiple classes, own venv, tests)?**
-→ Keep as separate repo, add pointer skill here
+### dotenv_helper.py
 
-## Agent Discovery
+Python equivalent for loading .env:
 
-| Agent | Discovery |
-|-------|-----------|
-| Claude Code | `.claude/skills/` symlink |
-| Codex | `CLAUDE.md` or `AGENTS.md` reference |
-| Gemini | Project documentation |
+```python
+from dotenv_helper import load_dotenv
+load_dotenv()  # Loads from standard locations
+```
 
-## Backlog (planned skills)
-- **Document-to-QRA variants** for docx/pptx/xlsx/pdf so non-PDF sources follow the same ingestion contract.
-- **Planning/orchestration helpers** (`plan`, `create-plan`, etc.) to match other agent catalogs.
-- **SaaS bridges** for Linear, Notion, and similar systems so cross-project agents can sync tasks/issues without custom scripts.
+### json_utils.py
+
+JSON parsing utilities for skill scripts.
+
+## Relationship to Pi Extensions
+
+| Concept | Location | Purpose |
+|---------|----------|---------|
+| **Skills** | `.pi/skills/` | Instruction-based capabilities loaded via SKILL.md |
+| **Extensions** | `~/.pi/agent/tools/` | TypeScript tools with full API access |
+| **Agent Configs** | `~/.pi/agent/agents/` | Provider/model configurations for sub-agents |
+
+Skills are **instruction-driven** (markdown instructions Pi follows), while extensions are **code-driven** (TypeScript that Pi executes as tools).
+
+## Best Practices
+
+1. **Descriptive Triggers** - Include common phrasings users might say
+2. **Clear Instructions** - Write SKILL.md body as if explaining to a new team member
+3. **Minimal Dependencies** - Skills should work with minimal setup
+4. **Idempotent Commands** - Running twice should be safe
+5. **Error Handling** - Provide clear error messages and recovery steps
+6. **Examples** - Include working examples users can copy/paste
+
+## Troubleshooting
+
+### Skill Not Activating
+
+1. Check trigger phrases in SKILL.md match user input
+2. Verify SKILL.md frontmatter is valid YAML
+3. Check Pi can read the skill directory
+
+### Script Errors
+
+1. Ensure scripts are executable: `chmod +x run.sh`
+2. Check environment variables are set (use `common.sh`)
+3. Verify dependencies are installed
+
+### Sync Issues
+
+```bash
+# Check sync configuration
+.pi/skills/skills-sync/skills-sync info
+
+# Dry-run to see what would change
+.pi/skills/skills-sync/skills-sync pull --dry-run
+```
