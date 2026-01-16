@@ -27,10 +27,10 @@ metadata:
 
 ## Two Commands (All You Need)
 
-| Command | When | Priority |
-|---------|------|----------|
-| `recall --q "..."` | FIRST - Before any codebase scan | **MANDATORY** |
-| `learn --problem "..." --solution "..."` | After solving new problem | Required |
+| Command                                  | When                             | Priority      |
+| ---------------------------------------- | -------------------------------- | ------------- |
+| `recall --q "..."`                       | FIRST - Before any codebase scan | **MANDATORY** |
+| `learn --problem "..." --solution "..."` | After solving new problem        | Required      |
 
 ---
 
@@ -51,6 +51,16 @@ This is THE pattern. No exceptions.
 
 The skill auto-installs via `uv run` from git. No pre-installation needed.
 
+### Optional: Keep recall hot
+
+```
+# Terminal 1 — start resident FastAPI server (warm embeddings + FAISS index)
+.agents/skills/memory/run.sh serve --host 0.0.0.0 --port 8601
+
+# Terminal 2 — point CLI/agents at it for sub-second recall
+export MEMORY_SERVICE_URL="http://127.0.0.1:8601"
+```
+
 ### Step 1: Recall FIRST
 
 ```bash
@@ -59,6 +69,7 @@ The skill auto-installs via `uv run` from git. No pre-installation needed.
 ```
 
 **Response:**
+
 ```json
 {
   "found": true,
@@ -74,12 +85,14 @@ The skill auto-installs via `uv run` from git. No pre-installation needed.
 ```
 
 **Decision:**
+
 - `found: true` → Use the solution. DO NOT scan codebase.
 - `found: false` → Proceed to Step 2.
 
 ### Step 2: Scan Codebase (ONLY if found=false)
 
 Only after `recall` returns `should_scan: true` may you:
+
 - Read files
 - Search with grep/rg
 - Explore the codebase
@@ -176,3 +189,38 @@ the correct entry point was used.
 
 Agents that skip `recall` and go directly to codebase scanning are
 violating the contract.
+
+---
+
+## Archiver & Analyst Role (Switchboard Integration)
+
+This agent acts as the **Gatekeeper of Knowledge**. Before storing anything, you must ANALYZE it.
+
+**Trigger**: Incoming Switchboard message with `type: "archive"` or `type: "store"`.
+
+**Process**:
+
+1. **Analyze Outcome**: Read the conversation/summary. Determine status:
+
+   - **SUCCESS**: The solution worked and was verified.
+   - **FAILURE**: The solution failed or caused new errors.
+   - **ABANDONED**: The task was stopped before completion.
+
+2. **Action based on Status**:
+
+   - **IF SUCCESS**:
+     - Extract `problem` and `final_solution`.
+     - Call: `./run.sh learn --problem "..." --solution "..."`
+   - **IF FAILURE**:
+     - Extract `problem` and `root_cause`.
+     - Call: `./run.sh learn --problem "..." --solution "avoid: [root_cause]"` (Store as a warning)
+   - **IF ABANDONED**:
+     - do NOT call learn (prevent noise).
+
+3. **Confirm**: Emit a `completed` message with the analysis result.
+
+**Example**:
+
+- Input: "Task failed. Tried X, Y, Z. All timed out."
+- Analysis: FAILURE. Root Cause: "Timeout during X".
+- Action: Store "Anti-Pattern: Timeout during X".

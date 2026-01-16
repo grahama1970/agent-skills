@@ -48,6 +48,16 @@ python .agents/skills/perplexity/perplexity.py research "ArangoDB vs Neo4j for k
 python .agents/skills/perplexity/perplexity.py ask --model large "Best practices for Lean4 proofs"
 ```
 
+## Commands at a Glance
+
+| Command | What it does | Notes |
+|---------|--------------|-------|
+| `ask` | Fast answer with short citations preview | Matches the Typer command implemented in `perplexity.py ask` |
+| `research` | Full answer + citations JSON | Equivalent to calling `_research()` and prints JSON unless `--no-json` |
+| `models` | Lists available model aliases → API IDs | Useful when wiring the skill into other agents |
+
+Every CLI example **must** include the subcommand (`ask`, `research`, or `models`) because the Typer app requires it; omitting the subcommand will raise a usage error. The shipped SKILL docs now mirror the exact runner arguments, so you can copy/paste them without edits.
+
 ## CLI Usage
 
 Two commands: `ask` (quick answer) and `research` (with citations):
@@ -78,6 +88,11 @@ print(result["citations"])
 ```
 
 Note: The CLI commands `ask` and `research` are the primary interface. For Python usage, use `_research()` directly.
+
+## Shared Helpers
+
+- `.agents/skills/dotenv_helper.py` is auto-imported so `.env` keys (e.g., `PERPLEXITY_API_KEY`) load without manual sourcing.
+- `.agents/skills/json_utils.py` is available if you need to repair downstream JSON before writing it to files; the `research` command already emits valid JSON, so most callers can stream it directly.
 
 ## Models
 

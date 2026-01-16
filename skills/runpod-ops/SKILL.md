@@ -15,7 +15,7 @@ triggers:
   - RunPod management
 metadata:
   short-description: RunPod GPU instance management
-  project-path: /home/graham/workspace/experiments/runpod_ops
+  project-path: $RUNPOD_OPS_REPO (set via env; defaults to GitHub clone)
 ---
 
 # RunPod Operations Skill
@@ -27,20 +27,17 @@ Manage RunPod GPU instances for LLM training and inference.
 ## Quick Start
 
 ```bash
-# Via wrapper (recommended - auto-installs)
+# Via wrapper (auto-installs from GitHub on demand)
 .agents/skills/runpod-ops/run.sh list-instances
 
-# List running instances
-./run.sh list-instances
-
 # Create an instance
-./run.sh create-instance 70B --hours 4
+.agents/skills/runpod-ops/run.sh create-instance 70B --hours 4
 
 # Monitor an instance
-./run.sh monitor <pod-id>
+.agents/skills/runpod-ops/run.sh monitor <pod-id>
 
 # Terminate an instance
-./run.sh terminate <pod-id>
+.agents/skills/runpod-ops/run.sh terminate <pod-id>
 ```
 
 ## Commands
@@ -59,24 +56,23 @@ Manage RunPod GPU instances for LLM training and inference.
 ## Examples
 
 ### Create Instance
-```bash
-runpod_ops create-instance 70B --hours 4
+.agents/skills/runpod-ops/run.sh create-instance 70B --hours 4
 # Returns: pod_id=abc123
 ```
 
 ### Estimate Cost
 ```bash
-runpod_ops estimate-cost 70B --hours 8
+.agents/skills/runpod-ops/run.sh estimate-cost 70B --hours 8
 ```
 
 ### Monitor Instance
 ```bash
-runpod_ops monitor <pod-id>
+.agents/skills/runpod-ops/run.sh monitor <pod-id>
 ```
 
 ### Terminate Instance
 ```bash
-runpod_ops terminate <pod-id>
+.agents/skills/runpod-ops/run.sh terminate <pod-id>
 ```
 
 ## Environment Variables
@@ -89,18 +85,18 @@ runpod_ops terminate <pod-id>
 
 ```bash
 # 1. Estimate cost
-runpod_ops estimate-cost 70B --hours 8
+.agents/skills/runpod-ops/run.sh estimate-cost 70B --hours 8
 
 # 2. Create pod
-runpod_ops create-instance 70B --hours 8
+.agents/skills/runpod-ops/run.sh create-instance 70B --hours 8
 
 # 3. Monitor or SSH into pod
-runpod_ops monitor <pod-id>
+.agents/skills/runpod-ops/run.sh monitor <pod-id>
 
 # 4. Run training...
 
 # 5. Terminate when done
-runpod_ops terminate <pod-id>
+.agents/skills/runpod-ops/run.sh terminate <pod-id>
 ```
 
 ## Integration with Memory

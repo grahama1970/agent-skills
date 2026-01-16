@@ -10,7 +10,24 @@ import sys
 import json
 import urllib.request
 import urllib.parse
+from pathlib import Path
 from typing import Optional
+
+SKILLS_DIR = Path(__file__).resolve().parents[1]
+if str(SKILLS_DIR) not in sys.path:
+    sys.path.append(str(SKILLS_DIR))
+
+try:
+    from dotenv_helper import load_env as _load_env  # type: ignore
+except Exception:
+    def _load_env():
+        try:
+            from dotenv import load_dotenv, find_dotenv  # type: ignore
+            load_dotenv(find_dotenv(usecwd=True), override=False)
+        except Exception:
+            pass
+
+_load_env()
 
 try:
     import typer

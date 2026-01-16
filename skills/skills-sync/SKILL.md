@@ -22,15 +22,15 @@ Synchronize the local `.agents/skills/` directory with the upstream
 ## Prerequisites
 
 - `rsync` installed (default on this machine)
-- Upstream path (defaults to `/home/graham/workspace/experiments/agent-skills`)
+- Upstream path (defaults to `$HOME/workspace/experiments/agent-skills` if present)
 
 Override with environment variables:
 
 | Variable | Purpose |
 |----------|---------|
-| `SKILLS_UPSTREAM_REPO` | Absolute path to the agent-skills repo (default `/home/graham/workspace/experiments/agent-skills`) |
+| `SKILLS_UPSTREAM_REPO` | Absolute path to the canonical `agent-skills` repo (default `$HOME/workspace/experiments/agent-skills`) |
 | `SKILLS_LOCAL_DIR` | Path to the local `.agents/skills` directory (auto-detected) |
-| `SKILLS_FANOUT_PROJECTS` | Colon-separated list of project roots that should also receive `.agents/skills` when `--fanout` is used |
+| `SKILLS_FANOUT_PROJECTS` | Colon-separated list of project roots that should also receive `.agents/skills` when `--fanout` is used (e.g., `$HOME/workspace/experiments/fetcher:$HOME/workspace/experiments/extractor:$HOME/.codex/skills`) |
 | `SKILLS_SYNC_AUTOCOMMIT` | If set to `1`, automatically commit/push in the upstream repo after a push |
 
 ## Usage
@@ -50,7 +50,7 @@ Override with environment variables:
 .agents/skills/skills-sync/skills-sync push --dry-run
 
 # Push local skills AND fan out to other projects
-SKILLS_FANOUT_PROJECTS="/home/graham/workspace/experiments/fetcher:/home/graham/workspace/experiments/extractor" \
+SKILLS_FANOUT_PROJECTS="$HOME/workspace/experiments/fetcher:$HOME/workspace/experiments/extractor:$HOME/.codex/skills:$HOME/.pi/agent" \
   .agents/skills/skills-sync/skills-sync push --fanout
 
 # Push + auto-commit upstream (if SKILLS_SYNC_AUTOCOMMIT=1)
@@ -64,11 +64,11 @@ SKILLS_FANOUT_PROJECTS="..." SKILLS_SYNC_AUTOCOMMIT=1 \
 - **push**: Local `.agents/skills/` → `$SKILLS_UPSTREAM_REPO/skills/`
 - **pull**: `$SKILLS_UPSTREAM_REPO/skills/` → local `.agents/skills/`
 
-After a push, commit and push from the upstream repo so other projects pick up
-changes:
+After a push, commit and push from the upstream repo so other projects stay current
+(auto-commit runs this for you when `SKILLS_SYNC_AUTOCOMMIT=1`):
 
 ```bash
-cd /home/graham/workspace/experiments/agent-skills
+cd "$SKILLS_UPSTREAM_REPO"
 git status
 git commit -am "Update shared skills"
 git push
@@ -90,6 +90,6 @@ git push
 - The script prints the exact rsync command and a short summary of what to do
   next (commit/push).
 - Pull mode overwrites local changes. Use `--dry-run` first if unsure.
-- Fanout is opt-in: define `SKILLS_FANOUT_PROJECTS` (e.g., `/home/graham/workspace/experiments/fetcher:/home/graham/workspace/experiments/extractor`) to broadcast updates to
+- Fanout is opt-in: define `SKILLS_FANOUT_PROJECTS` (e.g., `$HOME/workspace/experiments/fetcher:$HOME/workspace/experiments/extractor`) to broadcast updates to
   additional repos once your upstream copy is ready.
 - Auto-commit is opt-in: set `SKILLS_SYNC_AUTOCOMMIT=1` to have the script run `git add/commit/push` in the upstream repo after push. Use `--no-autocommit` to temporarily disable.

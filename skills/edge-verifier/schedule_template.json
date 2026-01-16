@@ -1,0 +1,7 @@
+{
+  "type": "periodic",
+  "channelId": "REPLACE_WITH_CHANNEL_ID",
+  "text": "Run the edge-verifier skill to audit recent memory artifacts.",
+  "schedule": "0 2 * * *",
+  "timezone": "America/New_York"
+}

@@ -6,8 +6,9 @@
 set -euo pipefail
 
 # Load environment from common .env files
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/../common.sh" 2>/dev/null || true
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SKILL_DIR/../common.sh" 2>/dev/null || true
+SCRIPT_DIR="$SKILL_DIR"
 
 PASS=0
 FAIL=0

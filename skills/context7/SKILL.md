@@ -34,6 +34,16 @@ python .agents/skills/context7/context7.py search <library-name> "<your-query>"
 python .agents/skills/context7/context7.py context <library-id> "<your-query>" --tokens 5000
 ```
 
+## Commands at a Glance
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `search` | Rank repositories by relevance to your query | `python .agents/skills/context7/context7.py search arangodb "bm25 search"` |
+| `context` | Download reranked doc chunks for a specific library ID | `python .agents/skills/context7/context7.py context /arangodb/arangodb "vector search"` |
+| `find` | Convenience multi-library search across common stacks | `python .agents/skills/context7/context7.py find "binary search"` |
+
+These are the only supported subcommands; invoking the script without one will show Typer’s usage error. The table mirrors the exact signatures implemented in `context7.py`, so copy/paste examples will work as-is.
+
 ## API Endpoints
 
 ### 1. Search for ANY Library
@@ -129,6 +139,11 @@ docs = _get_context("/arangodb/arangodb", "bm25 arangosearch scoring")
 ```
 
 This matches the shipped code (`context7.py`).
+
+## Shared Helpers
+
+- `.agents/skills/dotenv_helper.py` loads `.env` automatically so `CONTEXT7_API_KEY` is present even when skills run via `uvx`.
+- `.agents/skills/json_utils.py` can be imported to repair JSON before forwarding it to downstream tooling if you extend the skill; the built-in CLI already prints valid JSON.
 
 ## When to Use
 

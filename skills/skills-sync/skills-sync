@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 LOCAL_DIR="${SKILLS_LOCAL_DIR:-${PROJECT_ROOT}/.agents/skills}"
-UPSTREAM_REPO="${SKILLS_UPSTREAM_REPO:-/home/graham/workspace/experiments/agent-skills}"
+UPSTREAM_REPO="${SKILLS_UPSTREAM_REPO:-$HOME/workspace/experiments/agent-skills}"
 UPSTREAM_DIR="${UPSTREAM_REPO}/skills"
 
 usage() {

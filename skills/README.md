@@ -18,12 +18,13 @@ Simple utilities that live entirely in this repo. Each has a Python CLI that out
 | `perplexity` | `perplexity.py` | Paid web search with citations |
 | `brave-search` | `brave_search.py` | Free web + local search |
 | `context7` | `context7.py` | Library documentation lookup |
-| `memory` | uses `memory-agent` | Knowledge graph recall |
+| `memory` | `memory-agent` (recall/learn/serve) | Knowledge graph recall + optional FastAPI service |
 | `distill` | `run.sh`, `distill.py` | PDF/URL to Q&A pairs |
 | `qra` | `run.sh`, `qra.py` | Text to Q&A pairs |
 | `doc-to-qra` | `run.sh` | Happy path: document → Q&A |
 | `agent-inbox` | `inbox.py` | Inter-agent messaging |
 | `skills-sync` | `skills-sync/skills-sync` | Sync local skills to upstream/fanout repos |
+| `json-utils` | `json_utils.py` | Shared JSON helpers (string escaping + payload builders) |
 
 **Knowledge Extraction Skills (choosing the right one):**
 | Use Case | Skill | Why |
@@ -72,8 +73,8 @@ python .agents/skills/context7/context7.py search arangodb "bm25"
 .agents/skills/qra/run.sh --file notes.txt --scope project
 
 # Inter-agent messaging
-python .agents/skills/agent-inbox/inbox.py check
-python .agents/skills/agent-inbox/inbox.py send --to other-project "Bug found"
+.agents/skills/agent-inbox/agent-inbox check
+.agents/skills/agent-inbox/agent-inbox send --to other-project "Bug found"
 
 # Skills sync
 .agents/skills/skills-sync/skills-sync info
@@ -120,6 +121,12 @@ metadata:
 ```
 
 **See [TRIGGERS.md](TRIGGERS.md) for all trigger phrases** - edit there to change when skills are invoked.
+
+## Shared Utilities
+
+- `.agents/skills/dotenv_helper.py` — sourced by most skills to load `.env`/`.env.local` automatically so uv-run wrappers behave like the project CLI.
+- `.agents/skills/json_utils.py` — helper CLI/Module for repairing JSON payloads (used by memory server curl client, perplexity/context7 runners, etc.). Import or shell out instead of copy/pasting ad‑hoc fixers.
+- `common.sh` — legacy shell helper that loads `.env`; new skills should prefer the Python helper above, but the script remains for backward compatibility with existing sanity tests.
 
 ## Adding New Skills
 
