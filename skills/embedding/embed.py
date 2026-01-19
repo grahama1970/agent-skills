@@ -3,21 +3,25 @@
 Embedding Service - Standalone FastAPI server for semantic search embeddings.
 
 Usage:
-    python embed.py serve          # Start HTTP server
-    python embed.py embed --text "query"  # Embed text
-    python embed.py info           # Show configuration
+    python embed.py serve                    # Start HTTP server (runs forever)
+    python embed.py embed --text "query"     # Embed single text
+    python embed.py embed-batch --file f.txt # Embed multiple texts (one per line)
+    python embed.py info                     # Show configuration
 """
 
 import argparse
 import json
 import os
+import signal
 import sys
 import time
+from contextlib import asynccontextmanager
 from typing import Optional
 
 # Lazy imports for heavy deps
 _model = None
 _model_name = None
+_device = None
 
 
 def get_config():
@@ -33,7 +37,7 @@ def get_config():
 
 def load_model():
     """Load sentence-transformers model (lazy, cached)."""
-    global _model, _model_name
+    global _model, _model_name, _device
     
     if _model is not None:
         return _model
@@ -60,6 +64,7 @@ def load_model():
         
         _model = SentenceTransformer(model_name, device=device)
         _model_name = model_name
+        _device = device
         
         elapsed = time.time() - start
         print(f"[embedding] Model loaded in {elapsed:.1f}s (device: {device})", file=sys.stderr)
@@ -81,7 +86,7 @@ def embed_text(text: str) -> list[float]:
 def embed_batch(texts: list[str]) -> list[list[float]]:
     """Embed multiple texts."""
     model = load_model()
-    embeddings = model.encode(texts, convert_to_numpy=True)
+    embeddings = model.encode(texts, convert_to_numpy=True, show_progress_bar=len(texts) > 10)
     return embeddings.tolist()
 
 
@@ -111,37 +116,56 @@ def try_service_embed(text: str) -> Optional[list[float]]:
     return None
 
 
+def try_service_embed_batch(texts: list[str]) -> Optional[list[list[float]]]:
+    """Try to use running service for batch embedding."""
+    config = get_config()
+    service_url = config["service_url"]
+    
+    try:
+        import httpx
+        resp = httpx.post(
+            f"{service_url}/embed/batch",
+            json={"texts": texts},
+            timeout=60.0  # Longer timeout for batch
+        )
+        if resp.status_code == 200:
+            return resp.json()["vectors"]
+    except Exception:
+        pass
+    
+    return None
+
+
 # ============================================================================
 # CLI Commands
 # ============================================================================
 
 def cmd_serve(args):
-    """Start FastAPI server."""
-    try:
-        import uvicorn
-        from fastapi import FastAPI
-        from pydantic import BaseModel
-    except ImportError:
-        print("[embedding] Installing server dependencies...", file=sys.stderr)
-        import subprocess
-        subprocess.run([sys.executable, "-m", "pip", "install", "fastapi", "uvicorn", "pydantic"], check=True)
-        import uvicorn
-        from fastapi import FastAPI
-        from pydantic import BaseModel
+    """Start FastAPI server (runs forever until Ctrl+C)."""
+    import uvicorn
+    from fastapi import FastAPI
+    from pydantic import BaseModel
     
-    app = FastAPI(title="Embedding Service", version="1.0.0")
+    @asynccontextmanager
+    async def lifespan(app):
+        """Modern FastAPI lifespan handler."""
+        # Startup: pre-load model
+        load_model()
+        config = get_config()
+        print(f"[embedding] Service ready on http://127.0.0.1:{config['port']}", file=sys.stderr)
+        print(f"[embedding] Model: {_model_name}, Device: {_device}", file=sys.stderr)
+        print(f"[embedding] Press Ctrl+C to stop", file=sys.stderr)
+        yield
+        # Shutdown
+        print("[embedding] Shutting down...", file=sys.stderr)
+    
+    app = FastAPI(title="Embedding Service", version="1.0.0", lifespan=lifespan)
     
     class EmbedRequest(BaseModel):
         text: str
     
     class EmbedBatchRequest(BaseModel):
         texts: list[str]
-    
-    @app.on_event("startup")
-    async def startup():
-        # Pre-load model on startup
-        load_model()
-        print(f"[embedding] Service ready on http://127.0.0.1:{get_config()['port']}", file=sys.stderr)
     
     @app.post("/embed")
     async def embed_endpoint(req: EmbedRequest):
@@ -166,8 +190,8 @@ def cmd_serve(args):
     async def info_endpoint():
         config = get_config()
         return {
-            "model": config["model"],
-            "device": config["device"],
+            "model": _model_name,
+            "device": _device,
             "dimensions": get_dimensions(),
             "status": "ready"
         }
@@ -176,7 +200,35 @@ def cmd_serve(args):
     async def health():
         return {"status": "ok"}
     
+    @app.post("/shutdown")
+    async def shutdown():
+        """Gracefully shutdown the service."""
+        print("[embedding] Shutdown requested via API", file=sys.stderr)
+        import asyncio
+        asyncio.get_event_loop().call_later(0.5, lambda: os._exit(0))
+        return {"status": "shutting_down"}
+    
+    @app.post("/reload")
+    async def reload():
+        """Reload the embedding model (useful after changing EMBEDDING_MODEL env)."""
+        global _model, _model_name, _device
+        print("[embedding] Reload requested via API", file=sys.stderr)
+        _model = None  # Clear cached model
+        _model_name = None
+        _device = None
+        load_model()  # Reload
+        return {"status": "reloaded", "model": _model_name, "device": _device}
+    
     config = get_config()
+    
+    # Handle graceful shutdown
+    def handle_signal(signum, frame):
+        print("\n[embedding] Received shutdown signal", file=sys.stderr)
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
+    
     uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
 
 
@@ -210,6 +262,47 @@ def cmd_embed(args):
         "vector": vector,
         "model": _model_name,
         "dimensions": len(vector),
+        "source": "local"
+    }
+    print(json.dumps(result, indent=2) if args.pretty else json.dumps(result))
+
+
+def cmd_embed_batch(args):
+    """Embed multiple texts via CLI (batch mode)."""
+    texts = []
+    
+    if args.file:
+        with open(args.file, "r") as f:
+            texts = [line.strip() for line in f if line.strip()]
+    elif args.texts:
+        texts = args.texts
+    
+    if not texts:
+        print("Error: --file or --texts required", file=sys.stderr)
+        sys.exit(1)
+    
+    print(f"[embedding] Embedding {len(texts)} texts...", file=sys.stderr)
+    
+    # Try service first
+    if not args.local:
+        vectors = try_service_embed_batch(texts)
+        if vectors:
+            result = {
+                "vectors": vectors,
+                "count": len(vectors),
+                "dimensions": len(vectors[0]) if vectors else 0,
+                "source": "service"
+            }
+            print(json.dumps(result, indent=2) if args.pretty else json.dumps(result))
+            return
+    
+    # Fall back to local
+    vectors = embed_batch(texts)
+    result = {
+        "vectors": vectors,
+        "model": _model_name,
+        "count": len(vectors),
+        "dimensions": len(vectors[0]) if vectors else 0,
         "source": "local"
     }
     print(json.dumps(result, indent=2) if args.pretty else json.dumps(result))
@@ -249,16 +342,24 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Commands")
     
     # serve
-    serve_parser = subparsers.add_parser("serve", help="Start embedding server")
+    serve_parser = subparsers.add_parser("serve", help="Start embedding server (runs forever)")
     serve_parser.set_defaults(func=cmd_serve)
     
     # embed
-    embed_parser = subparsers.add_parser("embed", help="Embed text")
+    embed_parser = subparsers.add_parser("embed", help="Embed single text")
     embed_parser.add_argument("--text", "-t", help="Text to embed")
-    embed_parser.add_argument("--file", "-f", help="File to embed")
+    embed_parser.add_argument("--file", "-f", help="File to embed (entire content)")
     embed_parser.add_argument("--local", "-l", action="store_true", help="Force local embedding (don't use service)")
     embed_parser.add_argument("--pretty", "-p", action="store_true", help="Pretty print JSON")
     embed_parser.set_defaults(func=cmd_embed)
+    
+    # embed-batch
+    batch_parser = subparsers.add_parser("embed-batch", help="Embed multiple texts")
+    batch_parser.add_argument("--file", "-f", help="File with texts (one per line)")
+    batch_parser.add_argument("--texts", "-t", nargs="+", help="Texts to embed")
+    batch_parser.add_argument("--local", "-l", action="store_true", help="Force local embedding")
+    batch_parser.add_argument("--pretty", "-p", action="store_true", help="Pretty print JSON")
+    batch_parser.set_defaults(func=cmd_embed_batch)
     
     # info
     info_parser = subparsers.add_parser("info", help="Show configuration")
