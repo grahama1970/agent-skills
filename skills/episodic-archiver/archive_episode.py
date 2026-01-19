@@ -45,14 +45,40 @@ except Exception:
 
 _load_env()
 
-# 1. Setup Paths for graph_memory
-try:
-    from graph_memory.arango_client import get_db
-    from graph_memory.embeddings import encode_texts
-except ImportError:
-    sys.path.append(os.path.join(os.path.dirname(__file__), "../../../src"))
-    from graph_memory.arango_client import get_db
-    from graph_memory.embeddings import encode_texts
+# 1. Setup Paths for graph_memory (fallback only)
+def get_embedding(text: str) -> list:
+    """Get embedding from service, fallback to graph_memory."""
+    service_url = os.getenv("EMBEDDING_SERVICE_URL", "http://127.0.0.1:8602")
+    
+    # Try embedding service first
+    try:
+        resp = requests.post(
+            f"{service_url}/embed",
+            json={"text": text},
+            timeout=10
+        )
+        if resp.status_code == 200:
+            return resp.json()["vector"]
+    except Exception as e:
+        log(f"[embedding] Service unavailable ({e}), falling back to local...")
+    
+    # Fallback to graph_memory
+    try:
+        from graph_memory.embeddings import encode_texts
+    except ImportError:
+        sys.path.append(os.path.join(os.path.dirname(__file__), "../../../src"))
+        from graph_memory.embeddings import encode_texts
+    return encode_texts([text])[0]
+
+
+def get_db():
+    """Get ArangoDB connection."""
+    try:
+        from graph_memory.arango_client import get_db as _get_db
+    except ImportError:
+        sys.path.append(os.path.join(os.path.dirname(__file__), "../../../src"))
+        from graph_memory.arango_client import get_db as _get_db
+    return _get_db()
 
 def call_llm_simple(prompt: str) -> str:
     """Categorize a turn using Chutes (SciLLM) only."""
@@ -129,8 +155,8 @@ def analyze_and_archive(transcript_path: str):
             continue
 
         dedupe = _dedupe_key(session_id, msg)
-        # 1. Embed
-        embedding = encode_texts([content])[0]
+        # 1. Embed via service (with fallback)
+        embedding = get_embedding(content)
 
         # 2. Categorize (LLM)
         category = "info"

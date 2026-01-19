@@ -53,5 +53,6 @@ Data is stored in ArangoDB collection `agent_conversations` with:
 ## Prerequisites
 
 - ArangoDB credentials in `.env` (e.g., `ARANGO_URL`, `ARANGO_DB`, `ARANGO_USER`, `ARANGO_PASS`).
-- Local embedding model availability (graph_memory’s embedding stack).
-- Optional but recommended: `CHUTES_API_KEY` or `OPENAI_API_KEY` (for categorization).
+- **Embedding service** running (recommended): `EMBEDDING_SERVICE_URL=http://127.0.0.1:8602`
+- Falls back to local `graph_memory` embedding model if service unavailable.
+- Optional: `CHUTES_API_KEY` or `OPENAI_API_KEY` (for categorization).
