@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+#
+# skills-broadcast - Unified skills sync across all IDEs
+#
+# Workflow:
+#   1. Edit skill anywhere (any project, any IDE)
+#   2. Run: skills-broadcast push
+#   3. Changes flow: Local → agent-skills → All registered targets
+#
+# Supports: Pi, Claude, Codex, Antigravity, and any project with .agents/skills
+#
+set -euo pipefail
+
+# ============================================================================
+# Configuration
+# ============================================================================
+
+# Canonical source of truth
+CANONICAL_REPO="${SKILLS_CANONICAL_REPO:-$HOME/workspace/experiments/agent-skills}"
+CANONICAL_SKILLS="$CANONICAL_REPO/skills"
+
+# Registered broadcast targets (colon-separated)
+# Override with SKILLS_BROADCAST_TARGETS env var
+#
+# IDE Skill Locations:
+#   Pi:          ~/.pi/agent/skills (global) OR project/.pi/skills
+#   Codex:       ~/.codex/skills
+#   Claude Code: ~/.claude/commands  
+#   Antigravity: ~/.gemini/skills (via antigravity symlink)
+#
+# Project Locations:
+#   pi-mono:     .pi/skills
+#   memory:      .agents/skills
+#
+DEFAULT_TARGETS="$HOME/workspace/experiments/pi-mono/.pi/skills:$HOME/workspace/experiments/memory/.agents/skills:$HOME/.pi/agent/skills:$HOME/.codex/skills:$HOME/.claude/commands:$HOME/.gemini/skills"
+BROADCAST_TARGETS="${SKILLS_BROADCAST_TARGETS:-$DEFAULT_TARGETS}"
+
+# Auto-commit after push?
+AUTOCOMMIT="${SKILLS_BROADCAST_AUTOCOMMIT:-0}"
+
+# ============================================================================
+# Helpers
+# ============================================================================
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+info() { echo -e "${GREEN}[skills-broadcast]${NC} $*"; }
+warn() { echo -e "${YELLOW}[skills-broadcast]${NC} $*"; }
+fail() { echo -e "${RED}[skills-broadcast]${NC} $*" >&2; exit 1; }
+
+usage() {
+    cat <<'EOF'
+skills-broadcast - Unified skills sync across all IDEs
+
+Usage:
+  skills-broadcast push [--from PATH]   Push local skills to canonical repo, then broadcast
+  skills-broadcast pull                  Pull from canonical repo to current project
+  skills-broadcast status                Show all targets and their sync status
+  skills-broadcast targets               List registered broadcast targets
+
+Options:
+  --from PATH       Specify source directory (default: auto-detect)
+  --dry-run         Preview rsync operations
+  --no-broadcast    Push to canonical only, skip broadcast to targets
+  -h, --help        Show this help
+
+Environment:
+  SKILLS_CANONICAL_REPO     Canonical agent-skills repo (default: ~/workspace/experiments/agent-skills)
+  SKILLS_BROADCAST_TARGETS  Colon-separated list of target skill directories
+  SKILLS_BROADCAST_AUTOCOMMIT  Set to 1 to auto-commit in canonical repo
+
+Examples:
+  # Edit a skill, then push from current project to all IDEs
+  skills-broadcast push
+
+  # Push from a specific project
+  skills-broadcast push --from ~/workspace/experiments/memory/.agents/skills
+
+  # Pull latest skills into current project
+  skills-broadcast pull
+
+  # Check sync status
+  skills-broadcast status
+EOF
+}
+
+detect_local_skills() {
+    local cwd="${1:-$(pwd)}"
+    
+    # Check common locations relative to cwd
+    for loc in ".pi/skills" ".agents/skills" "skills"; do
+        if [[ -d "$cwd/$loc" ]]; then
+            echo "$cwd/$loc"
+            return 0
+        fi
+    done
+    
+    # Walk up looking for project root with skills
+    local dir="$cwd"
+    while [[ "$dir" != "/" ]]; do
+        for loc in ".pi/skills" ".agents/skills" "skills"; do
+            if [[ -d "$dir/$loc" ]]; then
+                echo "$dir/$loc"
+                return 0
+            fi
+        done
+        dir=$(dirname "$dir")
+    done
+    
+    return 1
+}
+
+rsync_skills() {
+    local src="$1"
+    local dest="$2"
+    local dry_run="${3:-0}"
+    
+    local opts=("-av" "--delete" "--exclude=.git" "--exclude=__pycache__" "--exclude=*.pyc")
+    [[ "$dry_run" -eq 1 ]] && opts+=("--dry-run")
+    
+    rsync "${opts[@]}" "$src/" "$dest/"
+}
+
+# ============================================================================
+# Commands
+# ============================================================================
+
+cmd_push() {
+    local source_dir=""
+    local dry_run=0
+    local broadcast=1
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --from) shift; source_dir="$1" ;;
+            --dry-run) dry_run=1 ;;
+            --no-broadcast) broadcast=0 ;;
+            *) fail "Unknown option: $1" ;;
+        esac
+        shift
+    done
+    
+    # Auto-detect source if not specified
+    if [[ -z "$source_dir" ]]; then
+        source_dir=$(detect_local_skills) || fail "Cannot detect local skills directory. Use --from PATH"
+    fi
+    
+    [[ -d "$source_dir" ]] || fail "Source not found: $source_dir"
+    [[ -d "$CANONICAL_SKILLS" ]] || fail "Canonical skills not found: $CANONICAL_SKILLS"
+    
+    info "Phase 1: Push to canonical repo"
+    info "  From: $source_dir"
+    info "  To:   $CANONICAL_SKILLS"
+    rsync_skills "$source_dir" "$CANONICAL_SKILLS" "$dry_run"
+    
+    # Auto-commit if enabled
+    if [[ "$AUTOCOMMIT" == "1" && "$dry_run" -eq 0 ]]; then
+        info "Auto-committing to canonical repo..."
+        pushd "$CANONICAL_REPO" >/dev/null
+        git add skills || true
+        if ! git diff --cached --quiet; then
+            git commit -m "Sync skills $(date +'%Y-%m-%d %H:%M')" || true
+            git push 2>/dev/null || warn "Could not push (no remote or offline)"
+        else
+            info "No changes to commit"
+        fi
+        popd >/dev/null
+    fi
+    
+    # Broadcast to all targets
+    if [[ "$broadcast" -eq 1 && "$dry_run" -eq 0 ]]; then
+        info "Phase 2: Broadcasting to all targets"
+        IFS=':' read -ra targets <<< "$BROADCAST_TARGETS"
+        for target in "${targets[@]}"; do
+            # Skip if target is same as source
+            [[ "$(realpath "$target" 2>/dev/null)" == "$(realpath "$source_dir" 2>/dev/null)" ]] && continue
+            [[ "$(realpath "$target" 2>/dev/null)" == "$(realpath "$CANONICAL_SKILLS" 2>/dev/null)" ]] && continue
+            
+            if [[ -d "$(dirname "$target")" ]]; then
+                mkdir -p "$target"
+                info "  → $target"
+                rsync_skills "$CANONICAL_SKILLS" "$target" 0
+            else
+                warn "  ✗ $target (parent dir missing)"
+            fi
+        done
+    fi
+    
+    info "Done! Skills synced to $(( $(echo "$BROADCAST_TARGETS" | tr ':' '\n' | wc -l) )) targets"
+}
+
+cmd_pull() {
+    local target_dir=""
+    local dry_run=0
+    
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --to) shift; target_dir="$1" ;;
+            --dry-run) dry_run=1 ;;
+            *) fail "Unknown option: $1" ;;
+        esac
+        shift
+    done
+    
+    # Auto-detect target if not specified
+    if [[ -z "$target_dir" ]]; then
+        target_dir=$(detect_local_skills) || fail "Cannot detect local skills directory. Use --to PATH"
+    fi
+    
+    [[ -d "$CANONICAL_SKILLS" ]] || fail "Canonical skills not found: $CANONICAL_SKILLS"
+    
+    info "Pulling from canonical repo"
+    info "  From: $CANONICAL_SKILLS"
+    info "  To:   $target_dir"
+    mkdir -p "$target_dir"
+    rsync_skills "$CANONICAL_SKILLS" "$target_dir" "$dry_run"
+    
+    info "Done!"
+}
+
+cmd_status() {
+    info "Canonical repo: $CANONICAL_REPO"
+    if [[ -d "$CANONICAL_REPO/.git" ]]; then
+        local commit=$(git -C "$CANONICAL_REPO" log -1 --format="%h %s" 2>/dev/null || echo "unknown")
+        info "  Latest: $commit"
+    fi
+    
+    echo ""
+    info "Broadcast targets:"
+    IFS=':' read -ra targets <<< "$BROADCAST_TARGETS"
+    for target in "${targets[@]}"; do
+        if [[ -d "$target" ]]; then
+            local count=$(find "$target" -name "SKILL.md" 2>/dev/null | wc -l)
+            echo -e "  ${GREEN}✓${NC} $target ($count skills)"
+        else
+            echo -e "  ${RED}✗${NC} $target (missing)"
+        fi
+    done
+}
+
+cmd_targets() {
+    info "Registered broadcast targets:"
+    IFS=':' read -ra targets <<< "$BROADCAST_TARGETS"
+    for target in "${targets[@]}"; do
+        echo "  $target"
+    done
+    echo ""
+    info "Override with SKILLS_BROADCAST_TARGETS env var"
+}
+
+# ============================================================================
+# Main
+# ============================================================================
+
+case "${1:-status}" in
+    push)   shift; cmd_push "$@" ;;
+    pull)   shift; cmd_pull "$@" ;;
+    status) cmd_status ;;
+    targets) cmd_targets ;;
+    -h|--help|help) usage ;;
+    *) usage; exit 1 ;;
+esac
