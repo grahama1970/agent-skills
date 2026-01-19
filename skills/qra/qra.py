@@ -7,7 +7,12 @@ Supports domain-specific context for focused extraction.
 Usage:
     python qra.py --text "large text..." --scope research
     python qra.py --file doc.md --context "cybersecurity expert"
+    python qra.py --from-extractor /path/to/extractor/results --scope research
     cat text.txt | python qra.py --scope myproject
+
+Integration with extractor project:
+    The --from-extractor flag consumes Stage 10 canonical output
+    (10_flattened_data.json) per HAPPYPATH_GUIDE.md specifications.
 """
 
 from __future__ import annotations
@@ -26,6 +31,14 @@ try:
     from dotenv import load_dotenv, find_dotenv
     load_dotenv(find_dotenv(usecwd=True), override=False)
 except Exception:
+    pass
+
+# Extractor adapter (optional, for --from-extractor integration)
+_HAS_EXTRACTOR_ADAPTER = False
+try:
+    from extractor_adapter import load_extractor_sections, get_extractor_metadata
+    _HAS_EXTRACTOR_ADAPTER = True
+except ImportError:
     pass
 
 # =============================================================================
@@ -614,6 +627,8 @@ def extract_qra(
     *,
     text: str = None,
     file_path: str = None,
+    extractor_results: str = None,
+    prebuilt_sections: List[Tuple[str, str]] = None,
     scope: str = "research",
     context: str = None,
     context_file: str = None,
@@ -628,6 +643,8 @@ def extract_qra(
     Args:
         text: Text content to extract from
         file_path: File to read text from
+        extractor_results: Path to extractor results dir (uses Stage 10 output)
+        prebuilt_sections: Pre-built sections as [(title, text), ...]
         scope: Memory scope for storage
         context: Domain context/persona for focused extraction
         context_file: Read context from file
@@ -642,37 +659,78 @@ def extract_qra(
     """
     import asyncio
 
-    # Get text content
-    if file_path:
+    # Determine source and get sections
+    sections = None
+    source = None
+
+    # Priority 1: Extractor results (Stage 10 integration)
+    if extractor_results:
+        if not _HAS_EXTRACTOR_ADAPTER:
+            raise ImportError(
+                "extractor_adapter not found. Ensure extractor_adapter.py is in the same directory."
+            )
+        sections = load_extractor_sections(
+            extractor_results,
+            max_section_chars=max_section_chars,
+        )
+        source = f"extractor:{Path(extractor_results).name}"
+        # Try to get metadata for context enrichment
+        try:
+            meta = get_extractor_metadata(extractor_results)
+            if meta and not context:
+                # Auto-generate context from extractor metadata
+                preset = meta.get("preset", meta.get("preset_match", {}).get("matched", ""))
+                if preset:
+                    context = f"Document processed with {preset} preset"
+        except Exception:
+            pass
+
+    # Priority 2: Pre-built sections (API usage)
+    elif prebuilt_sections:
+        sections = prebuilt_sections
+        source = "prebuilt"
+
+    # Priority 3: File path
+    elif file_path:
         text = Path(file_path).read_text(encoding="utf-8", errors="ignore")
         source = Path(file_path).name
+
+    # Priority 4: Direct text
     elif text:
         source = "text"
+
+    # Priority 5: Stdin
     else:
-        # Try stdin
         if not sys.stdin.isatty():
             text = sys.stdin.read()
             source = "stdin"
         else:
-            raise ValueError("Must provide --text, --file, or pipe content")
+            raise ValueError("Must provide --text, --file, --from-extractor, or pipe content")
 
-    if not text.strip():
-        return {"extracted": 0, "stored": 0, "error": "Empty content"}
+    # Build sections if not already provided
+    if sections is None:
+        if not text or not text.strip():
+            return {"extracted": 0, "stored": 0, "error": "Empty content"}
+        sections = build_sections(text, max_section_chars=max_section_chars)
+
+    if not sections:
+        return {"extracted": 0, "stored": 0, "error": "No sections found"}
 
     # Get context from file if specified
     if context_file:
         context = Path(context_file).read_text(encoding="utf-8").strip()
 
+    # Calculate total chars for display
+    total_chars = sum(len(s[1]) for s in sections)
+
     _status_panel("QRA Extraction", {
         "Source": source,
-        "Content": f"{len(text):,} chars",
+        "Content": f"{total_chars:,} chars in {len(sections)} sections",
         "Context": (context[:40] + "...") if context else "(none)",
         "Scope": scope,
     })
 
-    # Build sections
-    sections = build_sections(text, max_section_chars=max_section_chars)
-    _log(f"Split into {len(sections)} sections")
+    _log(f"Processing {len(sections)} sections")
 
     # Extract QRAs
     all_qa = asyncio.run(
@@ -733,7 +791,13 @@ def main():
 Examples:
   %(prog)s --file document.md --scope research
   %(prog)s --file notes.txt --context "security expert" --dry-run
+  %(prog)s --from-extractor /path/to/extractor/results --scope research
   cat transcript.txt | %(prog)s --scope meetings
+
+Extractor integration:
+  The --from-extractor flag consumes Stage 10 output (10_flattened_data.json)
+  from the extractor project, per HAPPYPATH_GUIDE.md specifications.
+  This preserves section structure, table/figure descriptions, and metadata.
 
 Environment variables for tuning (optional):
   QRA_CONCURRENCY       Parallel LLM requests (default: 6)
@@ -745,6 +809,8 @@ Environment variables for tuning (optional):
     # === Essential flags (agent-facing) ===
     parser.add_argument("--file", dest="file_path", help="Text/markdown file to extract from")
     parser.add_argument("--text", help="Raw text to extract from")
+    parser.add_argument("--from-extractor", dest="extractor_results",
+                        help="Path to extractor results directory (uses Stage 10 output)")
     parser.add_argument("--scope", default="research", help="Memory scope (default: research)")
     parser.add_argument("--context", help="Domain focus, e.g. 'ML researcher' or 'security expert'")
     parser.add_argument("--dry-run", action="store_true", help="Preview QRAs without storing to memory")
@@ -768,6 +834,7 @@ Environment variables for tuning (optional):
         result = extract_qra(
             text=args.text,
             file_path=args.file_path,
+            extractor_results=args.extractor_results,
             scope=args.scope,
             context=args.context,
             context_file=args.context_file,

@@ -55,7 +55,7 @@ After deployment:
 | `distill` | `run.sh`, `distill.py` | PDF/URL to Q&A pairs |
 | `qra` | `run.sh`, `qra.py` | Text to Q&A pairs |
 | `doc-to-qra` | `run.sh` | Happy path: document → Q&A |
-| `agent-inbox` | `inbox.py` | Inter-agent messaging |
+| `inbox` | `/inbox` ↔ `emit_message` wrapper | Switchboard messaging + acknowledgements |
 | `assess` | - | Project health assessment |
 | `clarify` | `runner.py` | Interactive form gathering |
 

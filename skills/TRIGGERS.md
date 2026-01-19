@@ -272,6 +272,40 @@ triggers:
 
 ---
 
+## edge-verifier
+**When user says:** "verify edges", "link content", "generate relationships", "verify knowledge graph", "check edge quality"
+
+```yaml
+# .agents/skills/edge-verifier/SKILL.md
+triggers:
+  - verify edges
+  - link content
+  - generate relationships
+  - schedule verification
+  - verify knowledge graph
+  - check edge quality
+```
+
+**Batch verification:** Use `scripts/edge-verifier-batch.py` for nightly cron/timer runs. Automatically resumes from where it left off.
+
+---
+
+## episodic-archiver
+**When user says:** "archive conversation", "save episode", "store transcript", "remember this conversation"
+
+```yaml
+# .agents/skills/episodic-archiver/SKILL.md
+triggers:
+  - archive conversation
+  - save episode
+  - store transcript
+  - remember this conversation
+```
+
+**Usage:** Archives full conversation transcripts with embeddings into `agent_conversations` collection for future recall.
+
+---
+
 ## qra
 **When user says:** "extract QRA", "extract Q&A", "extract knowledge", "create Q&A pairs", "knowledge extraction", "generate questions from"
 

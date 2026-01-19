@@ -1,32 +1,96 @@
 ---
 name: scillm
 description: >
-  LLM completions and Lean4 theorem proving via scillm. Use when user needs
-  "batch LLM calls", "parallel completions", "prove this mathematically",
-  "formal verification", "Lean4 proof", or "JSON extraction from text".
+  LLM completions (text and VLM) via scillm/Chutes.ai. Two main patterns:
+  (1) VLM for image/figure/table description,
+  (2) Text for batch extraction, summarization, JSON extraction.
+  Also supports Lean4 theorem proving.
 allowed-tools: Bash, Read
 triggers:
   - batch LLM calls
   - parallel completions
+  - describe image
+  - describe figure
+  - describe table
+  - VLM call
+  - multimodal
   - prove mathematically
   - formal verification
   - Lean4 proof
   - extract JSON from
   - verify this claim
 metadata:
-  short-description: scillm tools (batch LLM, Lean4 proofs)
+  short-description: scillm (VLM, text batch, Lean4 proofs)
 ---
 
 # scillm Tools
 
-LLM completions and formal proofs via scillm (per SCILLM_PAVED_PATH_CONTRACT.md).
+LLM completions via scillm/Chutes.ai (per SCILLM_PAVED_PATH_CONTRACT.md).
+
+## Two Main Patterns
+
+| Pattern | Tool | Model | Use Case |
+|---------|------|-------|----------|
+| **VLM** | `vlm.py` | `$CHUTES_VLM_MODEL` | Image/figure/table description |
+| **Text** | `batch.py` | `$CHUTES_TEXT_MODEL` | Requirements extraction, summarization |
 
 ## Tools
 
 | Tool | Purpose |
 |------|---------|
-| `batch.py` | Batch LLM completions via parallel_acompletions |
+| `vlm.py` | VLM (multimodal) image description |
+| `batch.py` | Text LLM completions (single and batch) |
 | `prove.py` | Lean4 theorem proving via certainly |
+
+---
+
+## vlm.py - VLM (Multimodal) Completions
+
+### Quick Start
+```bash
+# Describe an image
+python .agents/skills/scillm/vlm.py describe /path/to/image.png
+
+# With custom prompt
+python .agents/skills/scillm/vlm.py describe /path/to/image.png --prompt "What table headers do you see?"
+
+# JSON output
+python .agents/skills/scillm/vlm.py describe /path/to/image.png --json
+
+# Batch describe images
+python .agents/skills/scillm/vlm.py batch --input images.jsonl
+```
+
+### Commands
+
+**Describe single image:**
+```bash
+python .agents/skills/scillm/vlm.py describe <image> [--prompt PROMPT] [--json] [--model MODEL]
+```
+
+**Batch describe:**
+```bash
+python .agents/skills/scillm/vlm.py batch \
+  --input images.jsonl \
+  --output results.jsonl \
+  --concurrency 6
+```
+
+### Input Format (Batch)
+
+JSONL with image paths:
+```json
+{"path": "/path/to/image1.png", "prompt": "Describe this table"}
+{"path": "/path/to/image2.png"}
+```
+
+### Environment Variables
+
+| Variable | Default |
+|----------|---------|
+| `CHUTES_VLM_MODEL` | `Qwen/Qwen3-VL-235B-A22B-Instruct` |
+| `CHUTES_API_BASE` | required |
+| `CHUTES_API_KEY` | required |
 
 ---
 

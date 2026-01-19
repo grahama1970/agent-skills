@@ -523,5 +523,75 @@ def categories():
     print(json.dumps({"categories": CATEGORIES}, indent=2))
 
 
+@app.command()
+def learn(
+    paper_id: str = typer.Argument(None, help="arXiv paper ID (e.g., 2601.08058)"),
+    search_query: Optional[str] = typer.Option(None, "--search", "-s", help="Search query to find paper"),
+    file_path: Optional[Path] = typer.Option(None, "--file", "-f", help="Local PDF file"),
+    scope: str = typer.Option(..., "--scope", help="Memory scope for storage (required)"),
+    context: Optional[str] = typer.Option(None, "--context", "-c", help="Domain context for relevance filtering"),
+    mode: str = typer.Option("auto", "--mode", "-m", help="Interview mode: auto, html, tui"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview without storing"),
+    skip_interview: bool = typer.Option(False, "--skip-interview", help="Auto-accept agent recommendations"),
+    max_edges: int = typer.Option(20, "--max-edges", help="Max inline edge verifications"),
+    output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
+):
+    """Extract knowledge from paper into memory (full pipeline).
+
+    This is the PRIMARY command for learning from papers. It runs:
+    1. Find/download paper
+    2. Distill Q&A pairs
+    3. Human review (interview)
+    4. Store approved pairs to memory
+    5. Schedule edge verification
+
+    Examples:
+        python arxiv_cli.py learn 2601.08058 --scope memory --context "agent systems"
+        python arxiv_cli.py learn --search "intent-aware memory" --scope memory
+        python arxiv_cli.py learn --file paper.pdf --scope research --dry-run
+    """
+    # Import the learn pipeline
+    skills_dir = Path(__file__).parent.parent
+    arxiv_learn_dir = skills_dir / "arxiv-learn"
+
+    if not arxiv_learn_dir.exists():
+        typer.echo("Error: arxiv-learn module not found", err=True)
+        raise typer.Exit(1)
+
+    if str(arxiv_learn_dir) not in sys.path:
+        sys.path.insert(0, str(arxiv_learn_dir))
+
+    from arxiv_learn import LearnSession, run_pipeline
+
+    # Build session
+    session = LearnSession(
+        arxiv_id=paper_id or "",
+        search_query=search_query or "",
+        file_path=str(file_path) if file_path else "",
+        scope=scope,
+        context=context or "",
+        mode=mode,
+        dry_run=dry_run,
+        skip_interview=skip_interview,
+        max_edges=max_edges,
+    )
+
+    result = run_pipeline(session)
+
+    if output_json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        if result["success"]:
+            typer.echo(f"\nPipeline complete!")
+            typer.echo(f"  Extracted: {result['extracted']} Q&A pairs")
+            typer.echo(f"  Approved:  {result['approved']}")
+            typer.echo(f"  Stored:    {result['stored']}")
+            typer.echo(f"  Verified:  {result['verified']} edges")
+            typer.echo(f"  Duration:  {result['duration_seconds']:.1f}s")
+        else:
+            typer.echo(f"\nPipeline failed: {result['error']}", err=True)
+            raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()

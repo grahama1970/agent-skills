@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .recommendation-keep { @apply bg-green-100 border-green-500 text-green-800; }
+        .recommendation-drop { @apply bg-red-100 border-red-500 text-red-800; }
+        .question-card { @apply transition-all duration-200; }
+        .question-card:focus-within { @apply ring-2 ring-blue-500; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto py-8 px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">{{TITLE}}</h1>
+            <p class="text-gray-600 mt-2">{{CONTEXT}}</p>
+            <div class="mt-4 text-sm text-gray-500">
+                <span id="progress">0</span> of <span id="total">{{TOTAL}}</span> answered
+                <span class="ml-4">Session: {{SESSION_ID}}</span>
+            </div>
+        </div>
+
+        <!-- Questions Form -->
+        <form id="interview-form" class="space-y-6">
+            {{QUESTIONS_HTML}}
+
+            <!-- Submit Bar -->
+            <div class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4">
+                <div class="max-w-4xl mx-auto flex justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        <kbd class="px-2 py-1 bg-gray-200 rounded">Tab</kbd> to navigate
+                        <kbd class="px-2 py-1 bg-gray-200 rounded ml-2">Enter</kbd> to select
+                        <kbd class="px-2 py-1 bg-gray-200 rounded ml-2">Ctrl+Enter</kbd> to submit
+                    </div>
+                    <div class="space-x-4">
+                        <button type="button" onclick="skipRemaining()"
+                                class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                            Skip Remaining
+                        </button>
+                        <button type="submit"
+                                class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold">
+                            Submit Responses
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Spacer for fixed bottom bar -->
+        <div class="h-24"></div>
+    </div>
+
+    <script>
+        const SESSION_ID = '{{SESSION_ID}}';
+        const STORAGE_KEY = `interview_${SESSION_ID}`;
+
+        // Load saved state
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const data = JSON.parse(saved);
+                Object.entries(data).forEach(([qid, value]) => {
+                    const input = document.querySelector(`[name="${qid}"][value="${value.value}"]`);
+                    if (input) input.checked = true;
+
+                    const refine = document.getElementById(`refine_${qid}`);
+                    if (refine && value.note) refine.value = value.note;
+                });
+            }
+            updateProgress();
+        }
+
+        // Save state on change
+        function saveState() {
+            const responses = collectResponses();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
+            updateProgress();
+        }
+
+        // Collect all responses
+        function collectResponses() {
+            const responses = {};
+            document.querySelectorAll('.question-card').forEach(card => {
+                const qid = card.dataset.qid;
+                const qtype = card.dataset.qtype;
+                const recommendation = card.dataset.recommendation;
+
+                let value = null;
+                let decision = 'skip';
+
+                if (qtype === 'yes_no' || qtype === 'yes_no_refine' || qtype === 'select' || qtype === 'confirm') {
+                    const checked = card.querySelector(`input[name="${qid}"]:checked`);
+                    if (checked) {
+                        value = checked.value;
+                        decision = (value === 'accept') ? 'accept' : 'override';
+                        if (value === 'accept' && recommendation) {
+                            value = recommendation;
+                        }
+                    }
+                } else if (qtype === 'multi') {
+                    const checked = card.querySelectorAll(`input[name="${qid}"]:checked`);
+                    value = Array.from(checked).map(c => c.value);
+                    decision = value.length > 0 ? 'override' : 'skip';
+                } else if (qtype === 'text') {
+                    const input = card.querySelector(`input[name="${qid}"], textarea[name="${qid}"]`);
+                    if (input && input.value.trim()) {
+                        value = input.value.trim();
+                        decision = (value === recommendation) ? 'accept' : 'override';
+                    }
+                }
+
+                if (value !== null) {
+                    responses[qid] = { decision, value };
+
+                    // Add refinement note if present
+                    const refine = document.getElementById(`refine_${qid}`);
+                    if (refine && refine.value.trim()) {
+                        responses[qid].note = refine.value.trim();
+                    }
+                }
+            });
+            return responses;
+        }
+
+        // Update progress counter
+        function updateProgress() {
+            const total = document.querySelectorAll('.question-card').length;
+            const answered = Object.keys(collectResponses()).length;
+            document.getElementById('progress').textContent = answered;
+            document.getElementById('total').textContent = total;
+        }
+
+        // Skip remaining questions
+        function skipRemaining() {
+            document.querySelectorAll('.question-card').forEach(card => {
+                const qid = card.dataset.qid;
+                const hasAnswer = card.querySelector(`input[name="${qid}"]:checked`) ||
+                                  card.querySelector(`input[name="${qid}"]`)?.value?.trim();
+                if (!hasAnswer) {
+                    const skipRadio = card.querySelector(`input[value="skip"]`);
+                    if (skipRadio) skipRadio.checked = true;
+                }
+            });
+            saveState();
+            submitForm();
+        }
+
+        // Submit form
+        function submitForm() {
+            const responses = collectResponses();
+            fetch('/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    session_id: SESSION_ID,
+                    responses: responses
+                })
+            }).then(res => {
+                if (res.ok) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    document.body.innerHTML = `
+                        <div class="flex items-center justify-center min-h-screen">
+                            <div class="text-center">
+                                <div class="text-6xl mb-4">✓</div>
+                                <h1 class="text-2xl font-bold text-gray-800">Responses Submitted</h1>
+                                <p class="text-gray-600 mt-2">You can close this window.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Form submission
+        document.getElementById('interview-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitForm();
+        });
+
+        // Auto-save on change
+        document.getElementById('interview-form').addEventListener('change', saveState);
+        document.getElementById('interview-form').addEventListener('input', saveState);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                submitForm();
+            }
+        });
+
+        // Initialize
+        loadState();
+    </script>
+</body>
+</html>

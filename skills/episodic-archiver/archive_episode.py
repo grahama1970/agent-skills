@@ -91,7 +91,7 @@ def trigger_edge_verification(source_id: str, content: str):
         # Run in background or wait? 
         # For simplicity in this script, we'll wait, but in production this might be async.
         subprocess.run(
-            [script_path, "--source_id", source_id, "--text", content, "--type", "episode_turn"],
+            [script_path, "--source_id", source_id, "--text", content],
             check=False  # Don't crash ifverifier fails
         )
     except Exception as e:
@@ -141,6 +141,13 @@ def analyze_and_archive(transcript_path: str):
                 f"{content[:500]}"
             )
             category = call_llm_simple(prompt)
+            print(f"DEBUG: Content='{content[:30]}...' -> Category='{category}'")
+            # Sanitize: remove markdown bold/italics
+            import re
+            clean_cat = re.sub(r"[^a-zA-Z]", "", category).lower()
+            category = clean_cat if clean_cat else "info"
+
+
 
         # 3. Store
         ts = int(time.time())
@@ -187,7 +194,7 @@ def analyze_and_archive(transcript_path: str):
             continue
 
         # 4. Verify Edges (External Skill) where relevant
-        if category.lower() in ["solution", "task"] and len(content) > 30:
+        if category in ["solution", "task"] and len(content) > 30:
             trigger_edge_verification(stored_id, content)
 
     log(

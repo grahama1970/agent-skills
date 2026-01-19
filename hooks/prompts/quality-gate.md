@@ -18,9 +18,12 @@ The quality gate detected errors in the project. You must fix them before stoppi
 Most errors have straightforward fixes. Read the error message carefully.
 
 ### 2. Research If Stuck
-- **context7**: Look up library documentation (free)
-- **brave-search**: Search the error message (free)
-- **perplexity**: Deep research for complex issues (paid, last resort)
+Use the global skills at `~/.claude/skills/` to research:
+- **context7**: `context7 <library>` - Look up library documentation (free)
+- **brave-search**: `brave-search <query>` - Search the error message (free)
+- **perplexity**: `perplexity <query>` - Deep research for complex issues (paid, last resort)
+
+Or use WebSearch/WebFetch tools directly if skills unavailable.
 
 ### 3. Ask the Human
 If genuinely confused after trying to fix:

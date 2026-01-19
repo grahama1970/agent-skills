@@ -1,10 +1,21 @@
 #!/bin/bash
 set -e
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+# Resolve the directory of this script, following symlinks
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+# Memory project root (can be overridden by env)
+MEMORY_ROOT="${MEMORY_ROOT:-/home/graham/workspace/experiments/memory}"
 
 # Setup Python Path to include graph_memory src
-export PYTHONPATH="${PROJECT_ROOT}/src:${PYTHONPATH:-}"
+export PYTHONPATH="${MEMORY_ROOT}/src:${PYTHONPATH:-}"
+
 
 if [[ "$1" == "archive" ]]; then
     shift

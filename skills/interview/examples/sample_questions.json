@@ -1,0 +1,41 @@
+{
+  "title": "Review Distilled Q&As from STITCH Paper",
+  "context": "Reviewing extracted knowledge for memory project integration",
+  "questions": [
+    {
+      "id": "q1",
+      "text": "Q: What is STITCH?\nA: STITCH (Structured Intent Tracking in Contextual History) is an agentic memory system that indexes each trajectory step with a structured retrieval cue called contextual intent.",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Directly relevant to plan_state retrieval design"
+    },
+    {
+      "id": "q2",
+      "text": "Q: What is CAME-Bench?\nA: The Context-aware Agent Memory Evaluation Benchmark, a synthetic dataset designed to evaluate agentic memory in continuous, goal-oriented trajectories.",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Useful for understanding evaluation methodology"
+    },
+    {
+      "id": "q3",
+      "text": "Q: What dataset sizes were used in CAME-Bench evaluation?\nA: 100 entities for the small partition and 200 for the large partition.",
+      "type": "yes_no_refine",
+      "recommendation": "drop",
+      "reason": "Implementation detail, not generalizable knowledge"
+    },
+    {
+      "id": "q4",
+      "text": "Q: How does STITCH improve over baselines?\nA: STITCH outperforms the strongest baseline by 35.6%, with the largest gains as trajectory length increases.",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Key result demonstrating value of intent-aware retrieval"
+    },
+    {
+      "id": "q5",
+      "text": "Q: What are the three components of contextual intent?\nA: (1) the current latent goal defining a thematic segment, (2) the action type, and (3) the salient entity types anchoring which attributes matter.",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Core concept for implementing plan_state schema"
+    }
+  ]
+}
