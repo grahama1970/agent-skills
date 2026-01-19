@@ -124,6 +124,65 @@ rsync_skills() {
     rsync "${opts[@]}" "$src/" "$dest/"
 }
 
+# Check if any target has newer skills than source
+# Returns 0 if conflicts found (and lists them), 1 if no conflicts
+check_for_newer_versions() {
+    local source_dir="$1"
+    local conflicts_found=0
+    local conflict_details=""
+    
+    # Get list of skill directories in source
+    local skills=()
+    while IFS= read -r -d '' skill; do
+        skills+=("$(basename "$(dirname "$skill")")")
+    done < <(find "$source_dir" -name "SKILL.md" -print0 2>/dev/null)
+    
+    # Check each target for newer versions
+    IFS=':' read -ra targets <<< "$BROADCAST_TARGETS"
+    for target in "${targets[@]}"; do
+        [[ ! -d "$target" ]] && continue
+        [[ "$(realpath "$target" 2>/dev/null)" == "$(realpath "$source_dir" 2>/dev/null)" ]] && continue
+        
+        for skill in "${skills[@]}"; do
+            local source_skill="$source_dir/$skill/SKILL.md"
+            local target_skill="$target/$skill/SKILL.md"
+            
+            [[ ! -f "$source_skill" ]] && continue
+            [[ ! -f "$target_skill" ]] && continue
+            
+            # Compare modification times
+            local source_mtime=$(stat -c %Y "$source_skill" 2>/dev/null || echo 0)
+            local target_mtime=$(stat -c %Y "$target_skill" 2>/dev/null || echo 0)
+            
+            if [[ "$target_mtime" -gt "$source_mtime" ]]; then
+                conflicts_found=1
+                local target_date=$(date -d "@$target_mtime" "+%Y-%m-%d %H:%M")
+                local source_date=$(date -d "@$source_mtime" "+%Y-%m-%d %H:%M")
+                conflict_details+="  ${YELLOW}⚠${NC} $skill: $target is NEWER ($target_date vs $source_date)\n"
+            fi
+        done
+    done
+    
+    if [[ "$conflicts_found" -eq 1 ]]; then
+        warn "Found skills that are NEWER in other targets:"
+        echo -e "$conflict_details"
+        return 0
+    fi
+    return 1
+}
+
+# Prompt user for confirmation
+confirm_overwrite() {
+    echo ""
+    warn "Pushing will OVERWRITE these newer versions!"
+    echo -n "[skills-broadcast] Continue anyway? [y/N] "
+    read -r response
+    case "$response" in
+        [yY][eE][sS]|[yY]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 # ============================================================================
 # Commands
 # ============================================================================
@@ -132,12 +191,14 @@ cmd_push() {
     local source_dir=""
     local dry_run=0
     local broadcast=1
+    local force=0
     
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --from) shift; source_dir="$1" ;;
             --dry-run) dry_run=1 ;;
             --no-broadcast) broadcast=0 ;;
+            --force|-f) force=1 ;;
             *) fail "Unknown option: $1" ;;
         esac
         shift
@@ -150,6 +211,16 @@ cmd_push() {
     
     [[ -d "$source_dir" ]] || fail "Source not found: $source_dir"
     [[ -d "$CANONICAL_SKILLS" ]] || fail "Canonical skills not found: $CANONICAL_SKILLS"
+    
+    # Check for newer versions in other targets (unless --force)
+    if [[ "$force" -eq 0 && "$dry_run" -eq 0 ]]; then
+        if check_for_newer_versions "$source_dir"; then
+            if ! confirm_overwrite; then
+                info "Aborted. Use --force to override, or push from the newer location."
+                exit 1
+            fi
+        fi
+    fi
     
     info "Phase 1: Push to canonical repo"
     info "  From: $source_dir"
