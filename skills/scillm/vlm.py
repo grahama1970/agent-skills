@@ -1,50 +1,60 @@
 #!/usr/bin/env python3
 """scillm VLM (Vision-Language Model) completions CLI.
 
-Per SCILLM_PAVED_PATH_CONTRACT.md - uses acompletion for multimodal calls.
+Adheres to SCILLM_PAVED_PATH_CONTRACT.md.
+Uses `aconfig` and `parallel_acompletions_iter` for multimodal calls.
 
 Usage:
     # Describe an image
     python vlm.py describe /path/to/image.png
 
-    # Describe with custom prompt
-    python vlm.py describe /path/to/image.png --prompt "What table headers do you see?"
-
-    # Batch describe images from JSONL
+    # Batch describe
     python vlm.py batch --input images.jsonl
-
-    # JSON output
-    python vlm.py describe /path/to/image.png --json
 """
-from __future__ import annotations
-
 import asyncio
 import base64
 import json
+import mimetypes
 import os
 import sys
 from pathlib import Path
-from typing import Optional, List, Dict, Any
-
-SKILLS_DIR = Path(__file__).resolve().parents[1]
-if str(SKILLS_DIR) not in sys.path:
-    sys.path.append(str(SKILLS_DIR))
-
-try:
-    from dotenv_helper import load_env as _load_env  # type: ignore
-except Exception:
-    def _load_env():
-        try:
-            from dotenv import load_dotenv, find_dotenv  # type: ignore
-            load_dotenv(find_dotenv(usecwd=True), override=False)
-        except Exception:
-            pass
-
-_load_env()
+from typing import Any, Dict, List, Optional, Tuple
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 import typer
+from rich.console import Console
+
+console = Console(stderr=True)
+
+# Standardize env loading
+try:
+    from dotenv import load_dotenv, find_dotenv
+    load_dotenv(find_dotenv(usecwd=True))
+except ImportError:
+    pass
 
 app = typer.Typer(add_completion=False, help="VLM (multimodal) completions via scillm")
+
+
+def _get_env(key: str) -> str:
+    return os.getenv(key) or ""
+
+
+def _env_truthy(value: Optional[str]) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _set_strict_json(strict_flag: Optional[bool], *, enable_by_default: bool) -> bool:
+    if strict_flag is None:
+        strict_flag = enable_by_default
+    if strict_flag:
+        os.environ["SCILLM_JSON_STRICT"] = "1"
+    else:
+        os.environ.setdefault("SCILLM_JSON_STRICT", "0")
+    return bool(strict_flag)
 
 
 def _encode_image(path: Path) -> str:
@@ -62,32 +72,123 @@ def _encode_image(path: Path) -> str:
     return f"data:{mime};base64,{data}"
 
 
-async def _describe_image(
-    image_path: Path,
-    prompt: str = "Describe this image in detail.",
-    model: Optional[str] = None,
-    json_mode: bool = False,
-    max_tokens: int = 1024,
-    timeout: int = 45,
-) -> Dict[str, Any]:
-    """Describe a single image using VLM."""
-    from scillm import acompletion
+def _inline_remote_image(url: str, *, timeout: int) -> str:
+    """Download a remote image and return a data URI."""
+    req = urllib_request.Request(url, headers={"User-Agent": "scillm-skill/1.0"})
+    try:
+        with urllib_request.urlopen(req, timeout=timeout) as resp:  # noqa: S310
+            data = resp.read()
+            content_type = resp.info().get_content_type()
+    except (urllib_error.URLError, urllib_error.HTTPError, TimeoutError) as exc:
+        raise RuntimeError(f"Failed to download {url}: {exc}") from exc
+    if not content_type or content_type == "application/octet-stream":
+        guessed, _ = mimetypes.guess_type(url)
+        content_type = guessed or "image/png"
+    encoded = base64.b64encode(data).decode("utf-8")
+    return f"data:{content_type};base64,{encoded}"
 
-    api_base = os.getenv("CHUTES_API_BASE")
-    api_key = os.getenv("CHUTES_API_KEY")
-    model_id = model or os.getenv("CHUTES_VLM_MODEL") or "Qwen/Qwen3-VL-235B-A22B-Instruct"
 
-    if not api_key:
-        return {"ok": False, "error": "CHUTES_API_KEY not set"}
+def _resolve_image_input(
+    value: str,
+    *,
+    inline_remote: bool,
+    inline_timeout: int,
+    base_dir: Optional[Path] = None,
+    allow_skip: bool = False,
+) -> Optional[Tuple[str, str, str]]:
+    """Return (image_url, source, display) for file paths, data URIs, or remote URLs."""
+    target = (value or "").strip()
+    if not target:
+        if allow_skip:
+            console.print("[yellow]Skip empty image entry[/yellow]")
+            return None
+        console.print("[red]Error: empty image path/url provided[/red]")
+        raise typer.Exit(1)
 
-    if not image_path.exists():
-        return {"ok": False, "error": f"Image not found: {image_path}"}
+    if target.startswith("data:"):
+        return target, "data", target[:64] + ("..." if len(target) > 64 else "")
+
+    if target.startswith(("http://", "https://", "file://")):
+        if inline_remote:
+            try:
+                return _inline_remote_image(target, timeout=inline_timeout), "remote-inline", target
+            except RuntimeError as exc:
+                if allow_skip:
+                    console.print(f"[yellow]Skip remote {target}: {exc}[/yellow]")
+                    return None
+                console.print(f"[red]{exc}[/red]")
+                raise typer.Exit(1)
+        return target, "remote", target
+
+    path = Path(target)
+    if base_dir and not path.is_absolute():
+        path = (base_dir / path).resolve()
+    if not path.exists():
+        msg = f"Image not found: {path}"
+        if allow_skip:
+            console.print(f"[yellow]{msg} (skipping)[/yellow]")
+            return None
+        console.print(f"[red]{msg}[/red]")
+        raise typer.Exit(1)
 
     try:
-        image_url = _encode_image(image_path)
-    except Exception as e:
-        return {"ok": False, "error": f"Failed to read image: {e}"}
+        return _encode_image(path), "file", str(path)
+    except Exception as exc:  # noqa: BLE001
+        if allow_skip:
+            console.print(f"[yellow]Skip failed read {path}: {exc}[/yellow]")
+            return None
+        console.print(f"[red]Error reading image: {path} ({exc})[/red]")
+        raise typer.Exit(1)
 
+
+def _inline_flag(value: Optional[bool]) -> bool:
+    if value is None:
+        return _env_truthy(os.getenv("SCILLM_INLINE_REMOTE_IMAGES"))
+    if value:
+        os.environ["SCILLM_INLINE_REMOTE_IMAGES"] = "1"
+    return value
+
+
+def _maybe_exit_dry_run(payload: Dict[str, Any], *, message: str = "") -> None:
+    if message:
+        console.print(message)
+    print(json.dumps(payload, indent=2))
+    raise typer.Exit(0)
+
+
+@app.command()
+def describe(
+    image: str = typer.Argument(..., help="Image path, data URI, or https:// URL"),
+    prompt: str = typer.Option("Describe this image in detail.", "--prompt", "-p"),
+    model: Optional[str] = typer.Option(None, "--model", "-m"),
+    json_mode: bool = typer.Option(False, "--json", "-j"),
+    timeout: int = typer.Option(45, "--timeout", "-t"),
+    strict_json: Optional[bool] = typer.Option(None, "--strict-json/--no-strict-json", help="Force strict JSON validation when --json is set"),
+    inline_remote_images: Optional[bool] = typer.Option(None, "--inline-remote-images/--no-inline-remote-images", help="Download https images and inline as data URIs"),
+    inline_remote_timeout: int = typer.Option(10, "--inline-remote-timeout", help="Timeout (s) for downloading remote images when inlining"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Print request payload and exit without calling scillm"),
+):
+    """Describe a single image using VLM."""
+    api_base = _get_env("CHUTES_API_BASE")
+    api_key = _get_env("CHUTES_API_KEY")
+    model_id = model or _get_env("CHUTES_VLM_MODEL") or "Qwen/Qwen3-VL-235B-A22B-Instruct"
+
+    if not dry_run and (not api_base or not api_key):
+        console.print("[red]Error: CHUTES_API_BASE and CHUTES_API_KEY required.[/red]")
+        raise typer.Exit(1)
+
+    inline_remote = _inline_flag(inline_remote_images)
+    resolved = _resolve_image_input(
+        image,
+        inline_remote=inline_remote,
+        inline_timeout=inline_remote_timeout,
+        base_dir=Path.cwd(),
+    )
+    if resolved is None:
+        raise typer.Exit(1)
+    image_url, source, display = resolved
+
+    # Contract: Explicit structure for multimodal content
     messages = [{
         "role": "user",
         "content": [
@@ -96,78 +197,50 @@ async def _describe_image(
         ]
     }]
 
+    _set_strict_json(strict_json, enable_by_default=json_mode)
+
+    request_preview = {
+        "model": model_id,
+        "json": json_mode,
+        "source": source,
+        "image": display,
+    }
+
+    if dry_run:
+        _maybe_exit_dry_run(request_preview, message="[green]Dry-run only (no API call).[/green]")
+
+    # Contract: Import directly from scillm (only when executing)
     try:
-        resp = await acompletion(
+        from scillm import acompletion
+    except ImportError:
+        console.print("[red]Error: scillm not installed.[/red]")
+        raise typer.Exit(1)
+
+    async def _run():
+        return await acompletion(
             model=model_id,
             api_base=api_base,
             api_key=api_key,
-            custom_llm_provider="openai_like",  # Required per SCILLM_PAVED_PATH_CONTRACT
+            custom_llm_provider="openai_like",
             messages=messages,
             response_format={"type": "json_object"} if json_mode else None,
-            max_tokens=max_tokens,
+            max_tokens=1024,
             temperature=0.2,
             timeout=timeout,
         )
+
+    try:
+        resp = asyncio.run(_run())
         content = resp.choices[0].message.content
-        return {"ok": True, "content": content, "model": model_id}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
-
-
-def describe_image_sync(
-    image_path: Path,
-    prompt: str = "Describe this image in detail.",
-    model: Optional[str] = None,
-    json_mode: bool = False,
-    max_tokens: int = 1024,
-    timeout: int = 45,
-) -> Dict[str, Any]:
-    """Sync wrapper for describe_image - importable by other skills.
-
-    Example:
-        from vlm import describe_image_sync
-        result = describe_image_sync(Path("image.png"))
-        if result["ok"]:
-            print(result["content"])
-    """
-    return asyncio.run(_describe_image(
-        image_path=image_path,
-        prompt=prompt,
-        model=model,
-        json_mode=json_mode,
-        max_tokens=max_tokens,
-        timeout=timeout,
-    ))
-
-
-@app.command()
-def describe(
-    image: Path = typer.Argument(..., help="Path to image file"),
-    prompt: str = typer.Option("Describe this image in detail.", "--prompt", "-p"),
-    model: Optional[str] = typer.Option(None, "--model", "-m", help="Model (default: $CHUTES_VLM_MODEL)"),
-    json_mode: bool = typer.Option(False, "--json", "-j", help="Request JSON response"),
-    timeout: int = typer.Option(45, "--timeout", "-t", help="Request timeout (s)"),
-):
-    """Describe a single image using VLM."""
-    result = asyncio.run(_describe_image(
-        image_path=image,
-        prompt=prompt,
-        model=model,
-        json_mode=json_mode,
-        timeout=timeout,
-    ))
-
-    if result["ok"]:
         if json_mode:
             try:
-                parsed = json.loads(result["content"])
-                print(json.dumps(parsed, indent=2))
-            except json.JSONDecodeError:
-                print(result["content"])
+                print(json.dumps(json.loads(content), indent=2))
+            except Exception:  # noqa: BLE001
+                print(content)
         else:
-            print(result["content"])
-    else:
-        print(json.dumps({"error": result["error"]}))
+            print(content)
+    except Exception as e:  # noqa: BLE001
+        console.print(f"[red]Error: {e}[/red]")
         raise typer.Exit(1)
 
 
@@ -178,47 +251,67 @@ def batch(
     prompt: str = typer.Option("Describe this image.", "--prompt", "-p"),
     model: Optional[str] = typer.Option(None, "--model", "-m"),
     json_mode: bool = typer.Option(False, "--json", "-j"),
-    concurrency: int = typer.Option(6, "--concurrency", "-c"),
+    concurrency: int = typer.Option(4, "--concurrency", "-c"),
     timeout: int = typer.Option(45, "--timeout", "-t"),
     wall_time: int = typer.Option(300, "--wall-time", help="Total wall time (s)"),
+    strict_json: Optional[bool] = typer.Option(None, "--strict-json/--no-strict-json", help="Force strict JSON validation when --json is set"),
+    retry_invalid_json: int = typer.Option(0, "--retry-invalid-json", help="Retries for invalid JSON chunks"),
+    repair_invalid_json: bool = typer.Option(False, "--repair-invalid-json/--no-repair-invalid-json", help="Attempt auto-repair for malformed JSON"),
+    inline_remote_images: Optional[bool] = typer.Option(None, "--inline-remote-images/--no-inline-remote-images", help="Download https image URLs and inline them as data URIs"),
+    inline_remote_timeout: int = typer.Option(10, "--inline-remote-timeout", help="Timeout (s) for downloading remote images when inlining"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Print prepared batch and skip API call"),
 ):
-    """Batch describe images using parallel VLM calls."""
-    from scillm.batch import parallel_acompletions_iter
+    """Batch describe images using parallel_acompletions_iter."""
+    api_base = _get_env("CHUTES_API_BASE")
+    api_key = _get_env("CHUTES_API_KEY")
+    model_id = model or _get_env("CHUTES_VLM_MODEL") or "Qwen/Qwen3-VL-235B-A22B-Instruct"
 
-    api_base = os.getenv("CHUTES_API_BASE")
-    api_key = os.getenv("CHUTES_API_KEY")
-    model_id = model or os.getenv("CHUTES_VLM_MODEL") or "Qwen/Qwen3-VL-235B-A22B-Instruct"
-
-    if not api_key:
-        print('{"error": "CHUTES_API_KEY not set"}')
+    if not dry_run and (not api_base or not api_key):
+        console.print("[red]Error: CHUTES_API_BASE and CHUTES_API_KEY required.[/red]")
         raise typer.Exit(1)
 
-    # Read image paths from JSONL
+    _set_strict_json(strict_json, enable_by_default=json_mode)
+
+    # 1. Prepare Requests
+    console.print(f"[blue]Reading {input_file}...[/blue]")
     lines = input_file.read_text().strip().split("\n")
     requests: List[Dict[str, Any]] = []
-    path_map: Dict[int, str] = {}
 
+    # Keep track of original path per index for result mapping
+    meta_map: Dict[int, Dict[str, str]] = {}
+    inline_remote = _inline_flag(inline_remote_images)
+    base_dir = input_file.parent if input_file and input_file != Path("-") else Path.cwd()
+
+    valid_count = 0
     for idx, line in enumerate(lines):
         if not line.strip():
             continue
         try:
             data = json.loads(line)
-            img_path = Path(data.get("path") or data.get("image") or line.strip())
+            img_value = (
+                data.get("path")
+                or data.get("image")
+                or data.get("image_url")
+                or data.get("url")
+                or line.strip()
+            )
             item_prompt = data.get("prompt", prompt)
         except json.JSONDecodeError:
-            img_path = Path(line.strip())
+            img_value = line.strip()
             item_prompt = prompt
 
-        if not img_path.exists():
-            typer.echo(f"Skip: {img_path} (not found)", err=True)
+        resolved = _resolve_image_input(
+            str(img_value),
+            inline_remote=inline_remote,
+            inline_timeout=inline_remote_timeout,
+            base_dir=base_dir,
+            allow_skip=True,
+        )
+        if resolved is None:
             continue
+        image_url, source, display = resolved
 
-        try:
-            image_url = _encode_image(img_path)
-        except Exception as e:
-            typer.echo(f"Skip: {img_path} ({e})", err=True)
-            continue
-
+        # Contract: Per-request object
         requests.append({
             "model": model_id,
             "messages": [{
@@ -231,48 +324,93 @@ def batch(
             "response_format": {"type": "json_object"} if json_mode else None,
             "max_tokens": 1024,
             "temperature": 0.2,
-            "index": idx,
+            "index": idx,  # Pass index to track which item this is
         })
-        path_map[idx] = str(img_path)
+        meta_map[idx] = {"path": display, "source": source}
+        valid_count += 1
 
     if not requests:
-        print('{"error": "No valid images"}')
+        console.print("[red]No valid images to process.[/red]")
         raise typer.Exit(1)
 
-    typer.echo(f"Processing {len(requests)} images with {model_id}...", err=True)
+    if dry_run:
+        for req in requests:
+            idx = req.get("index", -1)
+            meta = meta_map.get(idx, {})
+            preview = {
+                "index": idx,
+                "path": meta.get("path"),
+                "source": meta.get("source"),
+                "json": json_mode,
+            }
+            print(json.dumps(preview))
+        console.print("[green]Dry-run only (no API call).[/green]")
+        return
 
+    # Contract: Import parallel_acompletions_iter only when running
+    from scillm import batch_acompletions_iter
+
+    # 2. Execute via Iterator
     async def _run():
+        console.print(f"[bold blue]Processing {len(requests)} images (concurrency={concurrency})...[/bold blue]")
+        
         results = []
-        async for r in parallel_acompletions_iter(
+        ok_count = 0
+        err_count = 0
+
+        async for res in batch_acompletions_iter(
             requests,
             api_base=api_base,
             api_key=api_key,
-            custom_llm_provider="openai_like",  # Required per SCILLM_PAVED_PATH_CONTRACT
+            custom_llm_provider="openai_like",
             concurrency=concurrency,
             timeout=timeout,
             wall_time_s=wall_time,
             tenacious=False,
+            retry_invalid_json=retry_invalid_json if json_mode else 0,
+            repair_invalid_json=repair_invalid_json if json_mode else False,
         ):
-            idx = r.get("index", len(results))
-            path = path_map.get(idx, "unknown")
-            if r.get("ok"):
-                results.append({"index": idx, "path": path, "content": r.get("content"), "ok": True})
+            idx = res.get("index") # Recover index from response
+            meta = meta_map.get(idx, {})
+            path = meta.get("path", "unknown")
+
+            item = {
+                "index": idx,
+                "path": path,
+                "source": meta.get("source"),
+                "ok": res.get("ok"),
+                "status": res.get("status")
+            }
+            if res.get("ok"):
+                item["content"] = res.get("content")
+                ok_count += 1
+                print(".", end="", flush=True, file=sys.stderr)
             else:
-                results.append({"index": idx, "path": path, "error": r.get("error"), "ok": False})
-        return results
+                item["error"] = res.get("error")
+                err_count += 1
+                print("x", end="", flush=True, file=sys.stderr)
+            
+            results.append(item)
 
-    results = asyncio.run(_run())
+        print("", file=sys.stderr)
+        return results, ok_count, err_count
 
-    out_lines = [json.dumps(r) for r in results]
+    results, ok_count, err_count = asyncio.run(_run())
+
+    # 3. Output
     if output:
+        out_lines = [json.dumps(r) for r in results]
         output.write_text("\n".join(out_lines))
-        typer.echo(f"Wrote to {output}", err=True)
+        console.print(f"[green]Wrote {len(out_lines)} results to {output}[/green]")
     else:
-        for line in out_lines:
-            print(line)
+        for r in results:
+            print(json.dumps(r))
 
-    ok = sum(1 for r in results if r.get("ok"))
-    typer.echo(f"Done: {ok}/{len(results)} ok", err=True)
+    if err_count > 0:
+        console.print(f"[yellow]Done with errors: {ok_count} ok, {err_count} failed[/yellow]")
+        raise typer.Exit(1)
+    else:
+        console.print(f"[green]Success: {ok_count}/{len(results)} ok[/green]")
 
 
 if __name__ == "__main__":

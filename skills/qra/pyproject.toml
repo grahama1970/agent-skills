@@ -1,0 +1,17 @@
+[project]
+name = "qra"
+version = "0.1.0"
+description = "QRA (Question-Reasoning-Answer) knowledge extraction skill."
+readme = "SKILL.md"
+requires-python = ">=3.10.11"
+dependencies = [
+    # Falling back to grahama1970 namespace for scillm based on memory pattern
+    "scillm @ git+https://github.com/grahama1970/scillm.git",
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+    "tqdm>=4.66.0",
+    "nltk>=3.8.0",
+]
+
+[tool.uv]
+# No special config needed, git deps handled natively

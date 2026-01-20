@@ -28,6 +28,7 @@ detect_backend() {
 
 # State directory for session persistence
 STATE_DIR="${ORCHESTRATE_STATE_DIR:-.orchestrate}"
+ORCHESTRATE_DIR="${ORCHESTRATE_HOME:-$HOME/.pi/skills/orchestrate}"
 
 show_help() {
     cat <<'EOF'
@@ -82,7 +83,7 @@ cmd_run() {
             local prompt="Execute the tasks in $task_file sequentially. For each task:
 1. Read the task description
 2. Implement it fully
-3. Self-verify by running: ~/.pi/skills/orchestrate/quality-gate.sh
+3. Self-verify by running: $ORCHESTRATE_DIR/quality-gate.sh
 4. If tests fail, FIX the code and retry until they pass
 5. Mark the task complete with [x] when done
 
@@ -95,7 +96,7 @@ Start with the first incomplete task."
             local prompt="Execute the tasks in $task_file sequentially. For each task:
 1. Read the task description
 2. Implement it fully
-3. Self-verify by running: ~/.pi/skills/orchestrate/quality-gate.sh
+3. Self-verify by running: $ORCHESTRATE_DIR/quality-gate.sh
 4. If tests fail, FIX the code and retry until they pass
 5. Mark the task complete with [x] when done
 

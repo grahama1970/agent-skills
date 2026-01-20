@@ -1,11 +1,9 @@
 ---
 name: surf
 description: >
-  Unified browser automation and CDP management for AI agents.
-  Single entry point for ALL Chrome/browser interactions:
-  - Start/stop Chrome with CDP for Puppeteer-based testing
-  - Navigate, click, type, screenshot via surf-cli
-  - Manage browser state across tools and test frameworks
+  Unified browser automation for AI agents. Uses surf-cli extension when available
+  (full features), falls back to CDP (zero-config). Navigate, read with element refs,
+  click, type, screenshot.
 allowed-tools: Bash, Read
 triggers:
   # CDP/Chrome management
@@ -39,89 +37,85 @@ triggers:
   - browser not working
   - cdp not connecting
 metadata:
-  short-description: Unified browser automation for AI agents
+  short-description: Browser automation (extension preferred, CDP fallback)
   cdp-port: 9222
 ---
 
-# Surf - Unified Browser Automation
+# Surf - Browser Automation for AI Agents
 
-**Single entry point for ALL Chrome/browser interactions.**
+**Two modes of operation:**
+1. **With surf-cli extension** (recommended): Full features, works with your existing browser
+2. **CDP fallback**: Zero-config, but requires starting a separate Chrome instance
+
+If `/tmp/surf.sock` exists (extension installed), all commands route through surf-cli. Otherwise, commands use CDP.
+
+## First-Time Setup
+
+Run the sanity check to verify setup or get installation instructions:
+
+```bash
+./sanity.sh
+```
+
+If any checks fail, the script provides step-by-step instructions. The agent should run this script and guide the user through any failed steps until all checks pass.
 
 ## Quick Start
 
+### Option A: With Extension (Recommended)
+
+One-time setup (see "Extension Setup" below), then:
+
 ```bash
-# Start Chrome with CDP (required for Puppeteer/smoke tests)
-surf cdp start
+surf tab.list                    # See all browser tabs
+surf tab.new "https://example.com"
+surf read                        # Page content with element refs (e1, e2...)
+surf click e5                    # Click element
+surf type "hello" --ref e2       # Type into element
+surf snap                        # Screenshot
+```
 
-# Check status
-surf cdp status
+### Option B: CDP Fallback (Zero-config)
 
-# Navigate and interact (via surf-cli)
+```bash
+surf cdp start                   # Starts separate Chrome instance
 surf go "https://example.com"
 surf read
 surf click e5
-
-# Stop Chrome
 surf cdp stop
 ```
 
-## CDP Management (for Puppeteer/Testing)
+## Commands
 
-Chrome DevTools Protocol is required for Puppeteer-based tests (smoke tests, UI automation).
-
-```bash
-# Start Chrome with CDP on default port 9222
-surf cdp start
-
-# Start on custom port
-surf cdp start 9223
-
-# Check if CDP is running
-surf cdp status
-
-# Stop Chrome CDP
-surf cdp stop
-
-# Get connection info for scripts
-surf cdp env    # Outputs export commands
-```
-
-After starting CDP, set environment for tests:
-```bash
-eval "$(surf cdp env)"
-# Now BROWSERLESS_DISCOVERY_URL and BROWSERLESS_WS are set
-```
-
-## Integration with Make/Test Targets
-
-```bash
-# Start CDP, run smoke tests
-surf cdp start
-BROWSERLESS_DISCOVERY_URL=http://127.0.0.1:9222/json/version make smokes
-surf cdp stop
-
-# Or use the smokes-full target (auto-manages Chrome)
-make smokes-full
-```
-
-## Command Types
-
-| Type | Commands | Requirements | Use Case |
-|------|----------|--------------|----------|
-| **CDP** (standalone) | `cdp start/stop/status/env` | Chrome only | Puppeteer tests, smoke tests |
-| **surf-cli** (extension) | `go/read/click/type/snap` | Chrome + Extension | Interactive automation |
-
-## Navigation & Interaction (via surf-cli)
-
-> **Note:** These commands require the [surf-cli Chrome extension](https://github.com/nicobailon/surf-cli) to be installed. CDP commands above work without the extension.
+### Navigation & Reading
 
 ```bash
 surf go "https://example.com"    # Navigate to URL
-surf read                        # Get page content with element refs
+surf read                        # Read page with element refs
+surf read --filter all           # Include all elements (not just interactive)
+surf text                        # Get raw text content only
+```
+
+### Element Interaction
+
+```bash
 surf click e5                    # Click element by ref
-surf type "hello@example.com"    # Type text
+surf type "hello"                # Type text
 surf type "query" --submit       # Type and press Enter
-surf snap                        # Take screenshot
+surf type "text" --ref e3        # Type into specific element
+surf key Enter                   # Press key (Enter, Tab, Escape, etc.)
+```
+
+### Screenshots & Scrolling
+
+```bash
+surf snap                        # Screenshot to /tmp
+surf snap --output /tmp/page.png # Specify output path
+surf snap --full                 # Full page screenshot
+surf scroll down                 # Scroll down
+surf scroll up                   # Scroll up
+surf scroll top                  # Scroll to top
+surf scroll bottom               # Scroll to bottom
+surf wait 2                      # Wait 2 seconds
 ```
 
 ## Element References
@@ -129,99 +123,131 @@ surf snap                        # Take screenshot
 `surf read` returns an accessibility tree with stable element refs:
 
 ```
-[e1] button "Submit"
-[e2] textbox "Email"
-[e3] link "Sign up"
+link "Learn more" [e1] href="https://example.com"
+button "Submit" [e2] [cursor=pointer]
+textbox "Email" [e3] [cursor=pointer]
+heading "Welcome" [e4] [level=1]
 ```
 
-Use these refs: `surf click e1`, `surf type "text" --ref e2`
+Use these refs with other commands:
+- `surf click e1` - Click the link
+- `surf type "hello" --ref e3` - Type into the textbox
 
-## Screenshots
+## CDP Management
 
 ```bash
-surf snap                        # Quick screenshot to /tmp
-surf screenshot --output /tmp/page.png
-surf screenshot --annotate       # With element labels
-surf screenshot --fullpage       # Entire scrollable page
+surf cdp start              # Start Chrome with CDP (port 9222)
+surf cdp start 9223         # Use custom port
+surf cdp status             # Show status and connection info
+surf cdp env                # Output export commands for shell
+surf cdp stop               # Stop Chrome
 ```
 
-## Tab Management
+For Puppeteer/testing integration:
 
 ```bash
-surf tab.list                    # List all tabs
-surf tab.new "https://example.com"
-surf tab.switch 123
-surf tab.close 123
-```
-
-## JavaScript Execution
-
-```bash
-surf js "return document.title"
-surf js "document.querySelector('.btn').click()"
-```
-
-## Waiting
-
-```bash
-surf wait 2                      # Wait 2 seconds
-surf wait.element ".loaded"      # Wait for element
-surf wait.network                # Wait for network idle
-surf wait.url "/dashboard"       # Wait for URL pattern
+eval "$(surf cdp env)"
+# Now BROWSERLESS_DISCOVERY_URL and BROWSERLESS_WS are set
 ```
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `CDP_PORT` | 9222 | Chrome DevTools Protocol port |
-| `CHROME_USER_DATA` | /tmp/chrome-cdp-profile | Chrome profile directory |
-| `BROWSERLESS_DISCOVERY_URL` | - | Set by `surf cdp env` |
-| `BROWSERLESS_WS` | - | Set by `surf cdp env` |
+| Variable           | Default                 | Description                   |
+| ------------------ | ----------------------- | ----------------------------- |
+| `CDP_PORT`         | 9222                    | Chrome DevTools Protocol port |
+| `CHROME_USER_DATA` | /tmp/chrome-cdp-profile | Chrome profile directory      |
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    surf skill                           │
-│                  (single entry point)                   │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌─────────────┐    ┌─────────────┐    ┌────────────┐  │
-│  │ surf cdp    │    │ surf-cli    │    │ Puppeteer  │  │
-│  │ (manage)    │    │ (interact)  │    │ (tests)    │  │
-│  └──────┬──────┘    └──────┬──────┘    └─────┬──────┘  │
-│         │                  │                 │         │
-│         └──────────────────┼─────────────────┘         │
-│                            │                           │
-│                    ┌───────▼───────┐                   │
-│                    │    Chrome     │                   │
-│                    │ (CDP :9222)   │                   │
-│                    └───────────────┘                   │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        surf skill (run.sh)                       │
+├─────────────────────────────────────────────────────────────────┤
+│                              │                                   │
+│            ┌─────────────────┴─────────────────┐                 │
+│            │    /tmp/surf.sock exists?         │                 │
+│            └─────────────────┬─────────────────┘                 │
+│                    YES │              │ NO                       │
+│                        ▼              ▼                          │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐       │
+│  │   surf-cli extension    │  │    CDP Controller       │       │
+│  │   (native/cli.cjs)      │  │  (cdp_controller.py)    │       │
+│  └───────────┬─────────────┘  └───────────┬─────────────┘       │
+│              │                            │                      │
+│              ▼                            ▼                      │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐       │
+│  │ Unix Socket → Native    │  │   CDP WebSocket         │       │
+│  │ Host → Extension        │  │   (port 9222)           │       │
+│  └───────────┬─────────────┘  └───────────┬─────────────┘       │
+│              │                            │                      │
+│              └────────────┬───────────────┘                      │
+│                           ▼                                      │
+│                  ┌─────────────────┐                             │
+│                  │     Chrome      │                             │
+│                  └─────────────────┘                             │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Sanity Check
-
-Run the sanity script to verify everything works:
+## Example: Automate Google Search
 
 ```bash
-./sanity.sh
+surf cdp start
+surf go "https://google.com"
+surf read
+# Output shows: textbox "Search" [e1] ...
+surf type "claude ai" --ref e1
+surf key Enter
+surf wait 2
+surf read
+# Shows search results with element refs
+surf click e3  # Click first result
+surf snap      # Screenshot
+surf cdp stop
 ```
-
-This checks:
-1. Chrome is installed
-2. CDP can start/stop
-3. CDP endpoint responds
-4. Environment commands work
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| "No CDP endpoint" in tests | Run `surf cdp start` first |
-| Chrome not found | Install Google Chrome or Chromium |
-| Port already in use | `surf cdp stop` then `surf cdp start` |
-| Tests timeout | Ensure frontend is running at BASE_URL |
-| surf-cli commands fail | Ensure Chrome extension is loaded |
-| Sanity check fails | Run `./sanity.sh` for diagnostics |
+| Problem                    | Solution                                        |
+| -------------------------- | ----------------------------------------------- |
+| "Cannot connect to CDP"    | Run `surf cdp start` first                      |
+| Chrome not found           | Install Google Chrome or Chromium               |
+| Port already in use        | `surf cdp stop` then `surf cdp start`           |
+| Element not found          | Run `surf read` first to get current refs       |
+| Page not loading           | Check URL is valid, try with `https://`         |
+| Empty read output          | Page may still be loading - try `surf wait 2`   |
+
+## Extension Setup (One-time)
+
+**Important:** Google Chrome blocks `--load-extension` for security. Manual setup required:
+
+1. Build extension:
+   ```bash
+   cd /home/graham/workspace/experiments/surf-cli
+   npm install && npm run build
+   ```
+
+2. Load in Chrome: `chrome://extensions` → Enable Developer Mode → Load unpacked → select `dist/`
+
+3. Copy the Extension ID shown (e.g., `lgamnnedgnehjplhndkkhojhbifgpcdp`)
+
+4. Install native host:
+   ```bash
+   surf install <extension-id>
+   ```
+
+5. Verify: `surf tab.list` should show your browser tabs
+
+The socket at `/tmp/surf.sock` enables CLI ↔ extension communication.
+
+## Extension vs CDP Comparison
+
+| Feature | Extension | CDP |
+|---------|-----------|-----|
+| Basic navigation | ✓ | ✓ |
+| Element interaction | ✓ | ✓ |
+| Screenshots | ✓ | ✓ |
+| Multi-tab management | ✓ | Limited |
+| Use existing browser | ✓ | ✗ |
+| Zero setup | ✗ | ✓ |
+
+**Recommendation:** Set up the extension once for best experience. Use CDP for CI/testing environments where you need a fresh browser.

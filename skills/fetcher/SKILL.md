@@ -21,7 +21,9 @@ metadata:
 
 Fetch web pages and documents with automatic fallbacks, proxy rotation, and content extraction.
 
-**Self-contained skill** - auto-installs via `uv run` from git (no pre-installation needed).
+**Self-contained skill** - auto-installs via `uvx` from git (no pre-installation needed).
+
+**Fully automatic** - Playwright browsers are installed on first run for SPA/JS page support.
 
 ## Simplest Usage
 
@@ -198,9 +200,19 @@ print(result.text)             # Extracted text
 
 | Problem | Solution |
 |---------|----------|
-| Playwright missing | `uv run playwright install --with-deps chromium` |
+| Playwright missing | `uvx --from "git+https://github.com/grahama1970/fetcher.git" playwright install chromium` |
+| SPA page returns empty/thin | Playwright auto-fallback should trigger; check `used_playwright` in summary |
+| Stale cached results | Set `FETCHER_HTTP_CACHE_DISABLE=1` for fresh fetch |
 | Rate limited | Configure proxy rotation or reduce concurrency |
 | Paywall detected | Check `content_verdict` and use alternates |
 | Empty content | Check `junk_results.jsonl` for diagnosis |
 
 Run `fetcher doctor` to check environment and dependencies.
+
+## SPA/JavaScript Page Support
+
+Fetcher automatically falls back to Playwright for known SPA domains. If a page returns thin/empty content:
+
+1. Check if `used_playwright: 1` in `consumer_summary.json`
+2. If not, the domain may need to be added to `SPA_FALLBACK_DOMAINS` in fetcher source
+3. Force fresh fetch with `FETCHER_HTTP_CACHE_DISABLE=1`

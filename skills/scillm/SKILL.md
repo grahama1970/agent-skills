@@ -1,275 +1,130 @@
 ---
 name: scillm
 description: >
-  LLM completions (text and VLM) via scillm/Chutes.ai. Two main patterns:
-  (1) VLM for image/figure/table description,
-  (2) Text for batch extraction, summarization, JSON extraction.
-  Also supports Lean4 theorem proving.
+  Managed scillm Paved Path execution.
+  Provides strict contract-compliant tools for Text Batch, VLM, and Lean4 Proving.
+  Uses `parallel_acompletions_iter` for reliable large-scale processing.
 allowed-tools: Bash, Read
 triggers:
   - batch LLM calls
   - parallel completions
   - describe image
-  - describe figure
-  - describe table
-  - VLM call
-  - multimodal
   - prove mathematically
-  - formal verification
-  - Lean4 proof
-  - extract JSON from
-  - verify this claim
+  - extract JSON
 metadata:
-  short-description: scillm (VLM, text batch, Lean4 proofs)
+  short-description: Scillm Paved Path (Text, VLM, Proofs)
 ---
 
-# scillm Tools
+# Scillm Paved Path Skill
 
-LLM completions via scillm/Chutes.ai (per SCILLM_PAVED_PATH_CONTRACT.md).
+This skill provides **contract-compliant** wrappers around `scillm` for robust agent operations.
+It enforces the patterns defined in `SCILLM_PAVED_PATH_CONTRACT.md`.
 
-## Two Main Patterns
+## Features
 
-| Pattern | Tool | Model | Use Case |
-|---------|------|-------|----------|
-| **VLM** | `vlm.py` | `$CHUTES_VLM_MODEL` | Image/figure/table description |
-| **Text** | `batch.py` | `$CHUTES_TEXT_MODEL` | Requirements extraction, summarization |
+- **Strict `uv run` Execution**: No global environment dependencies (outside of `uv`).
+- **Parallel Iterators**: Uses `parallel_acompletions_iter` for fault-tolerant batch processing.
+- **Multimodal Standards**: Correctly formats VLM payloads.
+- **VLM Inputs**: Accepts file paths, HTTPS URLs, or `data:` URIs; `--inline-remote-images` (or `SCILLM_INLINE_REMOTE_IMAGES=1`) downloads remote assets before dispatch, and `--dry-run` previews payloads without live calls.
+- **Preflight Helpers**: `run.sh preflight ...` shells into `scillm.paved.sanity_preflight` and `list_models_openai_like` for Step 07 readiness checks.
+- **JSON Strict by Default**: `--json` automatically enables `SCILLM_JSON_STRICT`, with optional `--schema`, `--retry-invalid-json`, and repair flags.
 
-## Tools
+## Usage Guide
 
-| Tool | Purpose |
-|------|---------|
-| `vlm.py` | VLM (multimodal) image description |
-| `batch.py` | Text LLM completions (single and batch) |
-| `prove.py` | Lean4 theorem proving via certainly |
+### 1. Text Batch Processing (`batch.py`)
 
----
+Use for large-scale text extraction or summarization.
 
-## vlm.py - VLM (Multimodal) Completions
+**Command:**
 
-### Quick Start
 ```bash
-# Describe an image
-python .agents/skills/scillm/vlm.py describe /path/to/image.png
-
-# With custom prompt
-python .agents/skills/scillm/vlm.py describe /path/to/image.png --prompt "What table headers do you see?"
-
-# JSON output
-python .agents/skills/scillm/vlm.py describe /path/to/image.png --json
-
-# Batch describe images
-python .agents/skills/scillm/vlm.py batch --input images.jsonl
+.pi/skills/scillm/run.sh batch --input prompts.jsonl --output results.jsonl --json
 ```
 
-### Commands
+**Input Format (JSONL):**
 
-**Describe single image:**
-```bash
-python .agents/skills/scillm/vlm.py describe <image> [--prompt PROMPT] [--json] [--model MODEL]
-```
-
-**Batch describe:**
-```bash
-python .agents/skills/scillm/vlm.py batch \
-  --input images.jsonl \
-  --output results.jsonl \
-  --concurrency 6
-```
-
-### Input Format (Batch)
-
-JSONL with image paths:
 ```json
-{"path": "/path/to/image1.png", "prompt": "Describe this table"}
-{"path": "/path/to/image2.png"}
+{"prompt": "Summarize this article..."}
+{"prompt": "Extract names from...", "id": "123"}
 ```
 
-### Environment Variables
-
-| Variable | Default |
-|----------|---------|
-| `CHUTES_VLM_MODEL` | `Qwen/Qwen3-VL-235B-A22B-Instruct` |
-| `CHUTES_API_BASE` | required |
-| `CHUTES_API_KEY` | required |
-
----
-
-## batch.py - LLM Completions
-
-### Quick Start
-```bash
-# Single completion
-python .agents/skills/scillm/batch.py single "What is 2+2?"
-
-# Single with JSON response
-python .agents/skills/scillm/batch.py single "Return {answer: number}" --json
-
-# Batch from file
-python .agents/skills/scillm/batch.py batch --input prompts.jsonl --json
-```
-
-### Commands
-
-**Single completion:**
-```bash
-python .agents/skills/scillm/batch.py single "Your prompt" [--json] [--model MODEL]
-```
-
-**Batch completions:**
-```bash
-python .agents/skills/scillm/batch.py batch \
-  --input prompts.jsonl \
-  --output results.jsonl \
-  --json \
-  --concurrency 6
-```
-
-### Input/Output Format
-
-Input JSONL (one per line):
-```json
-{"prompt": "Summarize..."}
-{"prompt": "Translate..."}
-```
-
-Output JSONL:
-```json
-{"index": 0, "content": "...", "ok": true}
-{"index": 1, "error": "timeout", "status": 408}
-```
-
-### Environment Variables
-
-| Variable | Required |
-|----------|----------|
-| `CHUTES_API_BASE` | Yes |
-| `CHUTES_API_KEY` | Yes |
-| `CHUTES_MODEL_ID` | Yes |
-
----
-
-## prove.py - Lean4 Theorem Proving
-
-### Quick Start
-```bash
-# Prove a claim
-python .agents/skills/scillm/prove.py "Prove that n + 0 = n"
-
-# With tactic hints
-python .agents/skills/scillm/prove.py "Prove n < n + 1" --tactics omega
-
-# Check availability
-python .agents/skills/scillm/prove.py --check
-```
-
-### Commands
-
-**Prove a claim:**
-```bash
-python .agents/skills/scillm/prove.py "Your claim" [--tactics simp,omega] [--timeout 120]
-```
-
-**Check if ready:**
-```bash
-python .agents/skills/scillm/prove.py --check
-```
-
-### Output Format
-
-**Success:**
-```json
-{
-  "ok": true,
-  "lean4_code": "theorem add_zero (n : ℕ) : n + 0 = n := by simp",
-  "compile_ms": 7406
-}
-```
-
-**Failure:**
-```json
-{
-  "ok": false,
-  "diagnosis": "mathematically false",
-  "suggestion": "Change to 'Prove that 2 + 2 = 4'"
-}
-```
-
-### Tactic Hints
-
-| Tactic | Use for |
-|--------|---------|
-| `simp` | Identities, simplification |
-| `omega` | Integer arithmetic |
-| `ring` | Polynomial algebra |
-| `linarith` | Linear inequalities |
-
-### Prerequisites
-
-1. **lean_runner container** running
-2. **OPENROUTER_API_KEY** set
-3. **scillm[certainly]** installed
-
----
-
-## Importable API (For Other Skills)
-
-The `quick_completion` function can be imported by sibling skills:
+**Code Pattern (Python):**
+The skill implements this Paved Path pattern:
 
 ```python
-# Add scillm to path (for sibling skills)
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent / "scillm"))
+from scillm import batch_acompletions_iter
 
-from batch import quick_completion
+reqs = [
+    {"model": "model-id", "messages": [{"role": "user", "content": "prompt"}]}
+]
 
-# Simple completion
-result = quick_completion("What is 2+2?")
-
-# With JSON mode
-result = quick_completion("Extract {name, age}", json_mode=True)
-
-# With system prompt
-result = quick_completion(
-    prompt="Translate to French: Hello",
-    system="You are a translator",
-    temperature=0.3,
-)
+async for res in batch_acompletions_iter(reqs, concurrency=6):
+    if res["ok"]:
+        print(res["content"])
 ```
 
-**Parameters:**
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| `prompt` | str | required | User prompt |
-| `model` | str | env var | Model ID |
-| `json_mode` | bool | False | Request JSON response |
-| `max_tokens` | int | 1024 | Max tokens |
-| `temperature` | float | 0.2 | Sampling temperature |
-| `timeout` | int | 30 | Request timeout (s) |
-| `system` | str | None | System prompt |
+### 2. VLM / Multimodal (`vlm.py`)
+
+Use for describing images, diagrams, or Tables.
+
+**Command:**
+
+```bash
+.pi/skills/scillm/run.sh vlm describe image.png --prompt "Extract table data" --json
+```
+
+- Supports `--inline-remote-images` (with optional `--inline-remote-timeout`) to download HTTPS assets when the gateway cannot reach them, and `--dry-run` to print the payload without making an API call (used by sanity scripts).
+
+**Batch Command:**
+
+```bash
+.pi/skills/scillm/run.sh vlm batch --input images.jsonl
+```
+
+**Code Pattern (Python):**
+The skill enforces the correct VLM message structure:
+
+```python
+messages = [{
+    "role": "user",
+    "content": [
+        {"type": "text", "text": "Describe this..."},
+        {"type": "image_url", "image_url": {"url": "data:image/png;base64,..."}}
+    ]
+}]
+await acompletion(..., messages=messages)
+```
+
+### 3. Lean4 Proving (`prove.py`)
+
+Use for formal verification steps.
+
+**Command:**
+
+```bash
+.pi/skills/scillm/run.sh prove "Prove that n + 0 = n"
+```
+
+### 4. Preflight + Model Discovery (`preflight.py`)
+
+Use to run paved-step `sanity_preflight` and list models without bespoke scripts.
+
+**Commands:**
+
+```bash
+# Model availability + auth style
+.pi/skills/scillm/run.sh preflight preflight --model "$CHUTES_MODEL_ID" --json
+
+# List models (returns JSON array)
+.pi/skills/scillm/run.sh preflight models --json
+```
+
+These commands exit non-zero when the model is unavailable, making them CI-friendly.
 
 ---
 
-## Python API (Direct scillm)
+## Infrastructure
 
-For more control, use scillm directly:
-
-```python
-# Single completion (for one-off calls)
-from scillm import acompletion
-
-resp = await acompletion(model=..., messages=[...], api_base=..., api_key=...)
-
-# Batch completions (for parallel processing)
-from scillm import parallel_acompletions
-
-reqs = [{"model": MODEL, "messages": [...]}]
-results = await parallel_acompletions(reqs, api_base=..., api_key=...)
-
-# Lean4 proofs
-from scillm.integrations.certainly import prove_requirement
-
-result = await prove_requirement("Prove n + 0 = n", tactics=["simp"])
-```
-
-See SCILLM_PAVED_PATH_CONTRACT.md for full reference.
+- **Entry Point**: `run.sh` (dispatches via `uv run`)
+- **Dependencies**: Defined in `pyproject.toml` (`scillm`, `typer`)
+- **Verification**: `sanity.sh` verifies CLI help and structural integrity.

@@ -167,7 +167,62 @@ Find unnecessary complexity:
 
 **Ask:** "Is [abstraction] expected to grow, or can we simplify?"
 
-### 6. Working Well
+### 6. Test Coverage (Non-Negotiable)
+Assess whether features have corresponding tests:
+
+**Check for each feature/module:**
+- Does a test file exist? (`test_<feature>.py`, `<feature>.test.ts`)
+- Do tests actually test the feature? (not just exist)
+- Do tests run successfully? (exit code 0, not skipped)
+- Are edge cases covered?
+
+**Test Coverage Table:**
+| Feature | Test File | Tests Run? | Pass? | Coverage |
+|---------|-----------|------------|-------|----------|
+| Auth login | test_auth.py | Yes | ✓ | 3 cases |
+| Image extract | MISSING | - | - | NEEDS TEST |
+
+**For missing tests, ask:**
+- "Feature X has no tests. Should I create a test for it now?"
+- "What behavior should the test verify?"
+
+**For skipped tests, investigate:**
+- Why is it skipped? Infrastructure issue or bug?
+- "Test Y is being skipped. Should we fix the infrastructure or the test?"
+
+**Red flags:**
+- `pytest.mark.skip` without clear reason
+- Exit code 3 (skip) on critical paths
+- "0 tests collected" for a module
+- Tests that pass but don't assert anything meaningful
+
+### 6a. Task File Definition of Done Audit
+
+When assessing a project with task files (0N_TASKS.md), verify each task has proper test definitions:
+
+**Check each task for:**
+- Does it have a `Definition of Done` field?
+- Does the Definition specify a test file/function?
+- Does the specified test actually exist?
+- Is the assertion clear and verifiable?
+
+**Task Definition of Done Audit:**
+| Task | Definition of Done | Test Exists? | Assertion Clear? |
+|------|-------------------|--------------|------------------|
+| Task 1: Add VLM fallback | `test_image.py::test_vlm_fallback` | ✓ | ✓ |
+| Task 2: Fix auth bug | MISSING | - | - |
+| Task 3: Research APIs | N/A (explore) | - | - |
+
+**For tasks missing Definition of Done:**
+- "Task X has no Definition of Done. What test should prove it's complete?"
+- "How will we know Task X is working correctly?"
+
+**Block execution if:**
+- Implementation tasks lack Definition of Done
+- Specified tests don't exist
+- Assertions are vague ("it should work")
+
+### 7. Working Well
 Acknowledge solid code - helps calibrate the assessment.
 
 ## Example Dialogue
@@ -235,12 +290,19 @@ Which would you prefer I tackle first?"
 ### Working Well
 - [Solid code to acknowledge]
 
-## Recommended Next Steps
-1. [Immediate fix]
-2. [Doc update]
-3. [Future improvement]
+## Test Coverage Gap
+| Feature | Test Status | Action Needed |
+|---------|-------------|---------------|
+| [feature] | Missing | Create test |
+| [feature] | Skipped | Fix infrastructure |
+| [feature] | Passing | ✓ |
 
-Which should I start with?
+## Recommended Next Steps
+1. [Test creation for untested features - PRIORITY]
+2. [Immediate fix]
+3. [Doc update]
+
+Which should I start with? Note: Missing tests should typically be addressed first.
 ```
 
 ## When to Use
@@ -412,3 +474,5 @@ rg "raise NotImplementedError|pass$" --type py
 - **Escalate wisely** - Suggest code-review for complex/critical issues
 - **State your scope** - Always clarify what was and wasn't assessed
 - **Use fast tools** - Prefer rg/fd over grep/find for speed
+- **Test coverage is non-negotiable** - Every implementation must have a test. Flag missing tests as blockers.
+- **Skipped tests are red flags** - Investigate WHY tests skip. Infrastructure issues must be fixed, not ignored.

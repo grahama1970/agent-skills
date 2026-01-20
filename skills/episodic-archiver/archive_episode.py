@@ -28,22 +28,9 @@ def log(message: str) -> None:
     LOG_FILE.flush()
 
 
-SKILLS_DIR = Path(__file__).resolve().parents[1]
-if str(SKILLS_DIR) not in sys.path:
-    sys.path.append(str(SKILLS_DIR))
+from dotenv import load_dotenv, find_dotenv
 
-try:
-    from dotenv_helper import load_env as _load_env  # type: ignore
-except Exception:
-    from dotenv import load_dotenv, find_dotenv  # type: ignore
-
-    def _load_env():
-        try:
-            load_dotenv(find_dotenv(usecwd=True), override=False)
-        except Exception:
-            pass
-
-_load_env()
+load_dotenv(find_dotenv(usecwd=True))
 
 # 1. Setup Paths for graph_memory (fallback only)
 def get_embedding(text: str) -> list:
@@ -62,22 +49,14 @@ def get_embedding(text: str) -> list:
     except Exception as e:
         log(f"[embedding] Service unavailable ({e}), falling back to local...")
     
-    # Fallback to graph_memory
-    try:
-        from graph_memory.embeddings import encode_texts
-    except ImportError:
-        sys.path.append(os.path.join(os.path.dirname(__file__), "../../../src"))
-        from graph_memory.embeddings import encode_texts
+    # Fallback to local graph_memory import (handled by uv)
+    from graph_memory.embeddings import encode_texts
     return encode_texts([text])[0]
 
 
 def get_db():
     """Get ArangoDB connection."""
-    try:
-        from graph_memory.arango_client import get_db as _get_db
-    except ImportError:
-        sys.path.append(os.path.join(os.path.dirname(__file__), "../../../src"))
-        from graph_memory.arango_client import get_db as _get_db
+    from graph_memory.arango_client import get_db as _get_db
     return _get_db()
 
 def call_llm_simple(prompt: str) -> str:

@@ -1,0 +1,14 @@
+[project]
+name = "interview"
+version = "0.1.0"
+description = "Structured human-agent interview/Q&A skill."
+readme = "SKILL.md"
+requires-python = ">=3.10"
+dependencies = [
+    "textual>=0.50.0",
+    "rich>=13.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.uv]
+# No special config needed

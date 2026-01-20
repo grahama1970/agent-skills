@@ -1,0 +1,18 @@
+[project]
+name = "edge-verifier"
+version = "0.1.0"
+description = "Verify knowledge graph edges against memory schema."
+readme = "SKILL.md"
+requires-python = ">=3.10.11"
+dependencies = [
+    # Corrected based on 'git remote' check in ../memory and structure check (pyproject at root)
+    "graph-memory @ git+https://github.com/grahama1970/graph-memory-operator.git",
+    # Falling back to grahama1970 namespace for scillm too based on memory pattern
+    "scillm @ git+https://github.com/grahama1970/scillm.git", 
+    "pydantic>=2.0.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.uv]
+# No special config needed, git deps handled natively

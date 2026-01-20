@@ -1,0 +1,4 @@
+{"path": "tests/fixtures/checkerboard.png", "prompt": "Describe the tiny checkerboard."}
+{"image": "https://picsum.photos/seed/scillm-sanity/64/64", "prompt": "Summarize the remote placeholder."}
+{"image": "https://httpbin.org/image/png", "prompt": "Summarize httpbin png"}
+{"image": "https://httpbin.org/status/404", "prompt": "This should skip"}

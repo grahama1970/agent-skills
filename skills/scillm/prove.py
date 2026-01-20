@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Lean4 theorem prover CLI via scillm.
 
-Per SCILLM_PAVED_PATH_CONTRACT.md - uses prove_requirement directly.
+Adheres to SCILLM_PAVED_PATH_CONTRACT.md.
+Uses `scillm[certainly]` integration.
 
 Usage:
     # Prove a claim
@@ -9,32 +10,26 @@ Usage:
 
     # With tactic hints
     python prove.py "Prove n < n + 1" --tactics omega
-
-    # Check availability
-    python prove.py --check
 """
-from __future__ import annotations
-
 import asyncio
 import json
-import sys
-
 import typer
+from rich.console import Console
+
+console = Console(stderr=True)
 
 app = typer.Typer(add_completion=False, help="Lean4 theorem proving via scillm")
-
 
 @app.command()
 def prove(
     claim: str = typer.Argument(None, help="Claim to prove (natural language)"),
-    tactics: str = typer.Option("", "--tactics", "-t", help="Comma-separated tactics (simp,omega,ring,linarith)"),
+    tactics: str = typer.Option("", "--tactics", "-t", help="Comma-separated tactics"),
     timeout: int = typer.Option(120, "--timeout", help="Compile timeout (s)"),
-    candidates: int = typer.Option(3, "--candidates", "-n", help="Number of proof candidates (1-5)"),
-    check: bool = typer.Option(False, "--check", help="Check if certainly is available"),
+    candidates: int = typer.Option(3, "--candidates", "-n", help="Number of proof candidates"),
+    check: bool = typer.Option(False, "--check", help="Check availability"),
     json_out: bool = typer.Option(True, "--json/--no-json", help="Output JSON"),
 ):
     """Prove a mathematical claim using Lean4."""
-    # Contract: use prove_requirement from scillm.integrations.certainly
     try:
         from scillm.integrations.certainly import (
             prove_requirement,
@@ -42,37 +37,34 @@ def prove(
             check_lean_container,
         )
     except ImportError:
-        result = {"ok": False, "error": "scillm[certainly] not installed. Run: pip install scillm[certainly]"}
-        print(json.dumps(result, indent=2) if json_out else result["error"])
+        err = {"ok": False, "error": "scillm[certainly] not installed."}
+        if json_out:
+            print(json.dumps(err))
+        else:
+            console.print(f"[red]{err['error']}[/red]")
         raise typer.Exit(1)
 
     if check:
-        pkg_ok = is_available()
-        container_ok = check_lean_container() if pkg_ok else False
-        result = {
-            "package_installed": pkg_ok,
-            "lean_container_running": container_ok,
-            "ready": pkg_ok and container_ok,
+        pkg = is_available()
+        # check_lean_container might hang if docker is slow, use caution or async?
+        # usually fast enough for CLI.
+        ctr = check_lean_container() if pkg else False
+        res = {
+            "package": pkg,
+            "container": ctr,
+            "ready": pkg and ctr
         }
-        if not result["ready"]:
-            if not pkg_ok:
-                result["hint"] = "pip install scillm[certainly]"
-            else:
-                result["hint"] = "Start lean_runner: cd lean4 && make lean-runner-up"
-        print(json.dumps(result, indent=2) if json_out else f"Ready: {result['ready']}")
-        raise typer.Exit(0 if result["ready"] else 1)
+        if json_out:
+            print(json.dumps(res, indent=2))
+        else:
+            console.print(f"Ready: {res['ready']} (Package={pkg}, Container={ctr})")
+        raise typer.Exit(0 if res["ready"] else 1)
 
     if not claim:
-        typer.echo("Error: Provide a claim to prove", err=True)
+        console.print("[red]Error: Claim required.[/red]")
         raise typer.Exit(1)
 
-    if not is_available():
-        result = {"ok": False, "error": "certainly not available"}
-        print(json.dumps(result, indent=2) if json_out else result["error"])
-        raise typer.Exit(1)
-
-    # Parse tactics
-    tactic_list = [t.strip() for t in tactics.split(",") if t.strip()] if tactics else None
+    tactic_list = [t.strip() for t in tactics.split(",")] if tactics else None
 
     async def _run():
         return await prove_requirement(
@@ -82,37 +74,25 @@ def prove(
             num_candidates=candidates,
         )
 
-    typer.echo(f"Proving: {claim[:80]}...", err=True)
+    console.print(f"[blue]Proving: {claim}[/blue]")
     result = asyncio.run(_run())
 
     if json_out:
-        # Simplify output for CLI
-        if result.get("ok"):
-            out = {
-                "ok": True,
-                "lean4_code": result["best"]["lean4"],
-                "compile_ms": result["best"].get("compile_ms"),
-                "summary": f"Proof found ({result['best'].get('compile_ms', 0)}ms)",
-            }
-        else:
-            out = {
-                "ok": False,
-                "error": result.get("error"),
-                "diagnosis": result.get("diagnosis", {}).get("diagnosis"),
-                "suggestion": result.get("diagnosis", {}).get("suggested_requirement_edit"),
-                "attempts": len(result.get("attempts", [])),
-            }
+        # Simplified public output
+        out = {
+            "ok": result.get("ok"),
+            "lean4_code": result.get("best", {}).get("lean4") if result.get("ok") else None,
+            "error": result.get("error") if not result.get("ok") else None,
+            "diagnosis": result.get("diagnosis", {}).get("diagnosis"),
+        }
         print(json.dumps(out, indent=2))
     else:
         if result.get("ok"):
-            print(f"PROVED:\n{result['best']['lean4']}")
+            console.print(f"[green]PROVED:[/green]\n{result['best']['lean4']}")
         else:
-            print(f"FAILED: {result.get('error') or result.get('diagnosis', {}).get('diagnosis')}")
-            if result.get("diagnosis", {}).get("suggested_requirement_edit"):
-                print(f"Suggestion: {result['diagnosis']['suggested_requirement_edit']}")
+            console.print(f"[red]FAILED:[/red] {result.get('error') or result.get('diagnosis', {}).get('diagnosis')}")
 
     raise typer.Exit(0 if result.get("ok") else 1)
-
 
 if __name__ == "__main__":
     app()

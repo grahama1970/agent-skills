@@ -11,32 +11,17 @@ from typing import Any, Dict, List
 
 import requests
 
-SKILLS_DIR = Path(__file__).resolve().parents[1]
-if str(SKILLS_DIR) not in sys.path:
-    sys.path.append(str(SKILLS_DIR))
+from dotenv import find_dotenv, load_dotenv
 
-try:
-    from dotenv_helper import load_env as _load_env  # type: ignore
-except Exception:
-    from dotenv import find_dotenv, load_dotenv  # type: ignore
-
-    def _load_env():
-        try:
-            load_dotenv(find_dotenv(usecwd=True), override=False)
-        except Exception:
-            pass
-
-_load_env()
+load_dotenv(find_dotenv(usecwd=True), override=False)
 
 try:
     from graph_memory.arango_client import get_db
     from graph_memory.api import search as gm_search
     from graph_memory.lessons import recall as recall_utils
-except ImportError:
-    sys.path.append(os.path.join(os.path.dirname(__file__), "../../../src"))
-    from graph_memory.arango_client import get_db
-    from graph_memory.api import search as gm_search
-    from graph_memory.lessons import recall as recall_utils
+except ImportError as e:
+    print(f"Error importing graph_memory: {e}")
+    sys.exit(1)
 
 try:
     from scillm import parallel_acompletions

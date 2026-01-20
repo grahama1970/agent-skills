@@ -1,0 +1,16 @@
+[project]
+name = "arxiv-skill"
+version = "0.1.0"
+description = "ArXiv paper search and download."
+readme = "SKILL.md"
+requires-python = ">=3.10"
+dependencies = [
+    "scillm @ git+https://github.com/grahama1970/scillm.git",
+    "rich>=13.0.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "feedparser>=6.0.10",
+]
+
+[tool.uv]
+# No special config needed

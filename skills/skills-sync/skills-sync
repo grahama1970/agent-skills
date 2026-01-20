@@ -3,7 +3,28 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-LOCAL_DIR="${SKILLS_LOCAL_DIR:-${PROJECT_ROOT}/.agents/skills}"
+
+# Smart LOCAL_DIR detection: find the first existing skills directory
+# Priority: .pi/skills > .agent/skills > .codex/skills > .claude/skills > .agents/skills
+detect_local_skills_dir() {
+    local candidates=(
+        "${PROJECT_ROOT}/.pi/skills"
+        "${PROJECT_ROOT}/.agent/skills"
+        "${PROJECT_ROOT}/.codex/skills"
+        "${PROJECT_ROOT}/.claude/skills"
+        "${PROJECT_ROOT}/.agents/skills"
+    )
+    for dir in "${candidates[@]}"; do
+        if [[ -d "$dir" ]]; then
+            echo "$dir"
+            return
+        fi
+    done
+    # Fallback to legacy if nothing found
+    echo "${PROJECT_ROOT}/.agents/skills"
+}
+
+LOCAL_DIR="${SKILLS_LOCAL_DIR:-$(detect_local_skills_dir)}"
 UPSTREAM_REPO="${SKILLS_UPSTREAM_REPO:-$HOME/workspace/experiments/agent-skills}"
 UPSTREAM_DIR="${UPSTREAM_REPO}/skills"
 
@@ -25,7 +46,7 @@ MODE="push"
 DRY_RUN=0
 FANOUT=0
 FANOUT_TARGETS=""
-AUTOCOMMIT_ENV="${SKILLS_SYNC_AUTOCOMMIT:-0}"
+AUTOCOMMIT_ENV="${SKILLS_SYNC_AUTOCOMMIT:-1}"
 AUTOCOMMIT_OVERRIDE=""
 
 resolve_fanout_targets() {
@@ -138,7 +159,16 @@ else
     exit 1
 fi
 
-RSYNC_OPTS=("-av" "--delete")
+RSYNC_OPTS=(
+    "-av" "--delete"
+    "--exclude" ".venv"
+    "--exclude" "node_modules"
+    "--exclude" "__pycache__"
+    "--exclude" ".git"
+    "--exclude" ".DS_Store"
+    "--exclude" ".idea"
+    "--exclude" ".vscode"
+)
 if [[ $DRY_RUN -eq 1 ]]; then
     RSYNC_OPTS+=("--dry-run")
 fi
@@ -149,36 +179,122 @@ echo "[skills-sync] Dest:   $DEST"
 echo "[skills-sync] Running: rsync ${RSYNC_OPTS[*]}"
 rsync "${RSYNC_OPTS[@]}" "$SRC" "$DEST"
 
-if [[ $FANOUT -eq 1 && $DRY_RUN -eq 0 && "$MODE" == "push" ]]; then
-    TARGETS="$(resolve_fanout_targets)"
-    if [[ -z "$TARGETS" ]]; then
-        echo "[skills-sync] --fanout requested but no targets configured" >&2
-    else
-        IFS=":" read -r -a fanout_arr <<< "$TARGETS"
-        for project_root in "${fanout_arr[@]}"; do
-            dest_dir="$project_root/.agents/skills"
-            if [[ ! -d "$project_root" ]]; then
-                echo "[skills-sync] Fanout skip: $project_root does not exist" >&2
+# ---------------------------------------------------------
+# Unified Broadcast (Smart Sync)
+# Sync to all targets (Fanout + Local Hub-and-Spoke)
+# ---------------------------------------------------------
+echo "[skills-sync] Starting Smart Broadcast to all registered targets..."
+
+# 1. Collect all Unique Project Roots
+#    - Current Project Root
+#    - SKILLS_FANOUT_PROJECTS (from env)
+#    - Home Directory (for global agent configs)
+#    - Registry File (~/.agent_skills_targets)
+declare -A TARGET_PROJECTS
+TARGET_PROJECTS["$PROJECT_ROOT"]=1
+TARGET_PROJECTS["$HOME"]=1
+
+# Load Registry File
+REGISTRY_FILE="$HOME/.agent_skills_targets"
+if [[ -f "$REGISTRY_FILE" ]]; then
+    while IFS= read -r line; do
+        # fast skip comments/empty
+        [[ "$line" =~ ^#.*$ ]] && continue
+        [[ -z "$line" ]] && continue
+        # Expand ~ if present (simple unsafe eval capability or just assume full paths)
+        # We'll assume full paths for safety, or simple expansion
+        target="${line/#\~/$HOME}"
+        if [[ -d "$target" ]]; then
+            TARGET_PROJECTS["$target"]=1
+        fi
+    done < "$REGISTRY_FILE"
+fi
+
+# Add Fanout Projects (Env Var)
+fanout_str="$(resolve_fanout_targets)"
+if [[ -n "$fanout_str" ]]; then
+    IFS=":" read -r -a f_arr <<< "$fanout_str"
+    for p in "${f_arr[@]}"; do
+        if [[ -d "$p" ]]; then
+            TARGET_PROJECTS["$p"]=1
+        else
+             echo "[skills-sync] Warning: configured fanout target '$p' does not exist."
+        fi
+    done
+fi
+
+# 2. Define Agent Skill Path Patterns
+#    Priority order matters.
+PATTERNS=(
+    ".agent/skills"    # Antigravity
+    ".pi/skills"       # Pi
+    ".codex/skills"    # Codex
+    ".claude/skills"   # Claude
+    ".gemini/skills"   # Antigravity (Global)
+    ".agents/skills"   # Generic/Legacy
+)
+
+# Use UPSTREAM_DIR as source of truth
+BROADCAST_SRC="$UPSTREAM_DIR/"
+
+# 3. Iterate Projects and Sync to *ALL* matching subdirs
+#    (A project might support multiple agents, so we sync to all found dirs)
+for proj in "${!TARGET_PROJECTS[@]}"; do
+    FOUND_ANY=0
+    
+    for relative_path in "${PATTERNS[@]}"; do
+        target_path="$proj/$relative_path"
+        
+        # Determine if we should sync to this specific path
+        SHOULD_SYNC=0
+        
+        # A. Path exists? Sync it.
+        if [[ -d "$target_path" ]]; then
+            SHOULD_SYNC=1
+        fi
+        
+        # B. Does not exist, but valid for this project?
+        #    Force create standard paths for known agents to ensure they have skills.
+        if [[ "$proj" == "$HOME" ]]; then
+             if [[ "$relative_path" == ".gemini/skills" ]]; then
+                 mkdir -p "$target_path"
+                 SHOULD_SYNC=1
+             fi
+        else
+            # For any targeted project (Local or Fanout), ensure standard dirs exist
+            if [[ "$relative_path" == ".agent/skills" || \
+                  "$relative_path" == ".codex/skills" || \
+                  "$relative_path" == ".claude/skills" || \
+                  "$relative_path" == ".pi/skills" ]]; then
+                mkdir -p "$target_path"
+                SHOULD_SYNC=1
+            fi
+        fi
+
+        if [[ $SHOULD_SYNC -eq 1 ]]; then
+            # Skip if it's the same as the local dir we started with (redundant)
+            if [[ "$target_path" == "$LOCAL_DIR" ]]; then
                 continue
             fi
-            mkdir -p "$dest_dir"
-            echo "[skills-sync] Fanout → $dest_dir"
-            rsync "${RSYNC_OPTS[@]/--dry-run/}" "$LOCAL_DIR/" "$dest_dir/"
-        done
+            
+            echo "[skills-sync] Syncing -> $target_path"
+            # Use RSYNC_OPTS to ensure excludes are applied during broadcast
+            rsync "${RSYNC_OPTS[@]}" "$BROADCAST_SRC" "$target_path/"
+            FOUND_ANY=1
+        fi
+    done
+    
+    if [[ $FOUND_ANY -eq 0 && "$proj" != "$HOME" ]]; then
+         # Only warn for actual projects, not HOME (which might just be for global config)
+         echo "[skills-sync] Note: No agent skill directories found in $proj"
     fi
-fi
+done
 
-echo "[skills-sync] $SUMMARY"
-if [[ $DRY_RUN -eq 1 ]]; then
-    echo "[skills-sync] Dry run complete. No files modified."
-else
-    if [[ "$MODE" == "push" ]]; then
-        echo "[skills-sync] Next steps: cd $UPSTREAM_REPO && git status"
-    else
-        echo "[skills-sync] Next steps: review changes locally (git status)."
-    fi
-fi
+echo "[skills-sync] Broadcast complete."
 
+# ---------------------------------------------------------
+# Git Commit & Push to Upstream Repo
+# ---------------------------------------------------------
 should_autocommit() {
     if [[ "$MODE" != "push" || $DRY_RUN -eq 1 ]]; then
         echo 0
@@ -212,4 +328,7 @@ if [[ $(should_autocommit) -eq 1 ]]; then
         fi
     fi
     popd >/dev/null
+else
+    echo "[skills-sync] Git auto-commit disabled. To enable: export SKILLS_SYNC_AUTOCOMMIT=1"
+    echo "[skills-sync] Next steps: cd $UPSTREAM_REPO && git status"
 fi

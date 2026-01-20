@@ -28,6 +28,20 @@ pass() {
     exit 0
 }
 
+# Handle exit code 3 (skip) as failure for implementation tasks
+# Per orchestrate skill: NEVER skip tests for implementation tasks
+check_skip_exit() {
+    local exit_code=$1
+    local test_name=$2
+    if [ "$exit_code" -eq 3 ]; then
+        echo -e "${RED}REJECTED: $test_name returned exit code 3 (SKIP)${NC}"
+        echo "Per orchestrate skill policy: Skipped tests are NOT acceptable."
+        echo "Fix the infrastructure or the test before proceeding."
+        exit 1
+    fi
+    return $exit_code
+}
+
 banner "Quality Gate: Auto-Detecting Verifier"
 
 if [ -f "Makefile" ]; then
@@ -102,7 +116,10 @@ if [ -f "./test.sh" ]; then
 fi
 
 # If we get here, we found no tests to run
-echo -e "${YELLOW}WARNING: No recognizable test suite found.${NC}"
+echo -e "${RED}FAILED: No recognizable test suite found.${NC}"
 echo "Checked: Makefile, Python, Node, Rust, Go, test.sh"
-echo "Please create a test or specify how to verify."
-exit 0 # Soft pass? Or fail? Let's soft pass for now but warn.
+echo ""
+echo "Per orchestrate skill policy: Tests are NON-NEGOTIABLE."
+echo "Every implementation task must have a verifiable test."
+echo "Please create a test before marking this task complete."
+exit 1 # Hard fail - unverified work is incomplete work

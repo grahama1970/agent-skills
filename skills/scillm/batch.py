@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """scillm batch completions CLI.
 
-Per SCILLM_PAVED_PATH_CONTRACT.md - uses parallel_acompletions directly.
+Adheres to SCILLM_PAVED_PATH_CONTRACT.md.
+Uses `parallel_acompletions_iter` for batch processing as requested.
 
 Usage:
     # Single prompt
@@ -12,13 +13,7 @@ Usage:
 
     # Batch with JSON mode
     python batch.py batch --input prompts.jsonl --json
-
-    # As importable function from other skills:
-    from scillm_skill import quick_completion
-    result = quick_completion("What is 2+2?")
 """
-from __future__ import annotations
-
 import asyncio
 import json
 import os
@@ -26,127 +21,51 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-SKILLS_DIR = Path(__file__).resolve().parents[1]
-if str(SKILLS_DIR) not in sys.path:
-    sys.path.append(str(SKILLS_DIR))
-
-try:
-    from dotenv_helper import load_env as _load_env  # type: ignore
-except Exception:
-    def _load_env():
-        try:
-            from dotenv import load_dotenv, find_dotenv  # type: ignore
-            load_dotenv(find_dotenv(usecwd=True), override=False)
-        except Exception:
-            pass
-
-_load_env()
-
 import typer
+from rich.console import Console
+
+# Use Rich for better output
+console = Console(stderr=True)
+
+# Standardize env loading (uv handles python-dotenv if installed, but explicit load is safer for scripts)
+try:
+    from dotenv import load_dotenv, find_dotenv
+    load_dotenv(find_dotenv(usecwd=True))
+except ImportError:
+    pass  # Assume environment is already set if dotenv missing
 
 app = typer.Typer(add_completion=False, help="Batch LLM completions via scillm")
 
 
-# =============================================================================
-# Importable helper for other skills
-# =============================================================================
-
-async def _quick_acompletion(
-    prompt: str,
-    model: Optional[str] = None,
-    json_mode: bool = False,
-    max_tokens: int = 1024,
-    temperature: float = 0.2,
-    timeout: int = 30,
-    system: Optional[str] = None,
-) -> str:
-    """Async single completion - importable by other skills.
-
-    Args:
-        prompt: The user prompt
-        model: Model ID (default: $CHUTES_MODEL_ID or $CHUTES_TEXT_MODEL)
-        json_mode: Request JSON response
-        max_tokens: Max tokens
-        temperature: Sampling temperature
-        timeout: Request timeout in seconds
-        system: Optional system prompt
-
-    Returns:
-        The completion text, or raises exception on error
-    """
-    from scillm import acompletion
-
-    api_base = os.getenv("CHUTES_API_BASE")
-    api_key = os.getenv("CHUTES_API_KEY")
-    model_id = model or os.getenv("CHUTES_MODEL_ID") or os.getenv("CHUTES_TEXT_MODEL")
-
-    if not api_key:
-        raise ValueError("CHUTES_API_KEY not set")
-    if not model_id:
-        raise ValueError("No model specified (--model or $CHUTES_MODEL_ID)")
-
-    messages = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
-
-    resp = await acompletion(
-        model=model_id,
-        api_base=api_base,
-        api_key=api_key,
-        custom_llm_provider="openai_like",
-        messages=messages,
-        response_format={"type": "json_object"} if json_mode else None,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        timeout=timeout,
-    )
-
-    return resp.choices[0].message.content
+def _get_env(key: str) -> str:
+    """Get env var with error if missing."""
+    val = os.getenv(key)
+    if not val:
+        # Fallback for common aliases
+        if key == "CHUTES_MODEL_ID":
+            val = os.getenv("CHUTES_TEXT_MODEL")
+    return val
 
 
-def quick_completion(
-    prompt: str,
-    model: Optional[str] = None,
-    json_mode: bool = False,
-    max_tokens: int = 1024,
-    temperature: float = 0.2,
-    timeout: int = 30,
-    system: Optional[str] = None,
-) -> str:
-    """Sync single completion - importable by other skills.
-
-    Example:
-        from batch import quick_completion
-        result = quick_completion("What is 2+2?")
-        result = quick_completion("Extract JSON", json_mode=True)
-
-    Args:
-        prompt: The user prompt
-        model: Model ID (default: $CHUTES_MODEL_ID or $CHUTES_TEXT_MODEL)
-        json_mode: Request JSON response
-        max_tokens: Max tokens
-        temperature: Sampling temperature
-        timeout: Request timeout in seconds
-        system: Optional system prompt
-
-    Returns:
-        The completion text, or raises exception on error
-    """
-    return asyncio.run(_quick_acompletion(
-        prompt=prompt,
-        model=model,
-        json_mode=json_mode,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        timeout=timeout,
-        system=system,
-    ))
+def _load_json_schema(path: Optional[Path]) -> Optional[dict]:
+    if not path:
+        return None
+    try:
+        return json.loads(path.read_text())
+    except Exception as exc:  # noqa: BLE001
+        console.print(f"[red]Failed to load schema {path}: {exc}[/red]")
+        raise typer.Exit(1)
 
 
-def _get_env(key: str, default: str = "") -> str:
-    """Get env var."""
-    return os.getenv(key, default)
+def _set_strict_json(strict_flag: Optional[bool], *, enable_by_default: bool) -> bool:
+    """Derive strict JSON behavior and set env for downstream scillm calls."""
+    if strict_flag is None:
+        strict_flag = enable_by_default
+    if strict_flag:
+        os.environ["SCILLM_JSON_STRICT"] = "1"
+    else:
+        os.environ.setdefault("SCILLM_JSON_STRICT", "0")
+    return bool(strict_flag)
 
 
 @app.command()
@@ -156,32 +75,47 @@ def batch(
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output JSONL"),
     model: Optional[str] = typer.Option(None, "--model", "-m", help="Model (default: $CHUTES_MODEL_ID)"),
     json_mode: bool = typer.Option(False, "--json", "-j", help="Request JSON response"),
-    concurrency: int = typer.Option(6, "--concurrency", "-c", help="Parallel requests"),
+    concurrency: int = typer.Option(6, "--concurrency", "-c", help="Parallel requests (default: 6)"),
     timeout: int = typer.Option(30, "--timeout", "-t", help="Per-request timeout (s)"),
     wall_time: int = typer.Option(300, "--wall-time", help="Total wall time (s)"),
     max_tokens: int = typer.Option(1024, "--max-tokens", help="Max tokens"),
+    strict_json: Optional[bool] = typer.Option(None, "--strict-json/--no-strict-json", help="Force strict JSON validation (default: on when --json)"),
+    retry_invalid_json: int = typer.Option(0, "--retry-invalid-json", help="Retries for invalid JSON chunks"),
+    repair_invalid_json: bool = typer.Option(False, "--repair-invalid-json/--no-repair-invalid-json", help="Attempt auto-repair for malformed JSON"),
+    schema: Optional[Path] = typer.Option(None, "--schema", help="JSON schema file (requires --json)"),
 ):
-    """Run batch completions per SCILLM_PAVED_PATH_CONTRACT.md."""
-    # Contract: use parallel_acompletions from scillm
-    from scillm import parallel_acompletions
+    """Run batch completions using parallel_acompletions_iter."""
+    # Strict contract: Import directly from scillm
+    try:
+        from scillm import batch_acompletions_iter
+    except ImportError:
+        console.print("[red]Error: scillm not installed. Run 'uv sync' or 'pip install scillm'.[/red]")
+        raise typer.Exit(1)
 
     api_base = _get_env("CHUTES_API_BASE")
     api_key = _get_env("CHUTES_API_KEY")
-    model_id = model or _get_env("CHUTES_MODEL_ID") or _get_env("CHUTES_TEXT_MODEL")
+    model_id = model or _get_env("CHUTES_MODEL_ID")
 
-    if not api_key:
-        typer.echo('{"error": "CHUTES_API_KEY not set"}')
+    if not api_base or not api_key:
+        console.print("[red]Error: CHUTES_API_BASE and CHUTES_API_KEY required.[/red]")
         raise typer.Exit(1)
     if not model_id:
-        typer.echo('{"error": "No model (--model or $CHUTES_MODEL_ID)"}')
+        console.print("[red]Error: No model specified (--model or $CHUTES_MODEL_ID).[/red]")
         raise typer.Exit(1)
 
-    # Collect prompts
+    schema_obj = _load_json_schema(schema)
+    if schema_obj and not json_mode:
+        console.print("[yellow]Warning: --schema ignored without --json.[/yellow]")
+
+    strict_mode = _set_strict_json(strict_json, enable_by_default=json_mode)
+
+    # 1. Collect Requests
     prompts: list[str] = []
     if prompt:
         prompts.append(prompt)
     elif input_file:
-        lines = sys.stdin.read().strip().split("\n") if str(input_file) == "-" else input_file.read_text().strip().split("\n")
+        content = sys.stdin.read() if str(input_file) == "-" else input_file.read_text()
+        lines = content.strip().split("\n")
         for line in lines:
             if not line.strip():
                 continue
@@ -191,14 +125,15 @@ def batch(
             except json.JSONDecodeError:
                 prompts.append(line)
     else:
-        typer.echo('{"error": "Provide --input or --prompt"}')
+        console.print("[red]Error: Must provide --input or --prompt.[/red]")
         raise typer.Exit(1)
 
     if not prompts:
-        typer.echo('{"error": "No prompts"}')
-        raise typer.Exit(1)
+        console.print("[yellow]Warning: No prompts to process.[/yellow]")
+        raise typer.Exit(0)
 
-    # Contract: model goes INSIDE each request dict, NOT as top-level kwarg
+    # 2. Build Request Objects
+    # Per Contract: model/messages go INSIDE the request dict
     reqs = []
     for p in prompts:
         req = {
@@ -211,8 +146,16 @@ def batch(
             req["response_format"] = {"type": "json_object"}
         reqs.append(req)
 
+    # 3. Execute with Iterator Pattern
     async def _run():
-        return await parallel_acompletions(
+        console.print(f"[bold blue]Processing {len(reqs)} items (concurrency={concurrency})...[/bold blue]")
+        
+        results = []
+        ok_count = 0
+        err_count = 0
+
+        # batch_acompletions_iter yields results as they complete
+        async for res in batch_acompletions_iter(
             reqs,
             api_base=api_base,
             api_key=api_key,
@@ -221,51 +164,82 @@ def batch(
             timeout=timeout,
             wall_time_s=wall_time,
             response_format={"type": "json_object"} if json_mode else None,
-            tenacious=False,  # Contract: recommended default
-        )
+            tenacious=False,
+            schema=schema_obj if (schema_obj and json_mode) else None,
+            retry_invalid_json=retry_invalid_json if json_mode else 0,
+            repair_invalid_json=repair_invalid_json if json_mode else False,
+        ):
+            # Contract: res contains index, status, ok, error, content
+            results.append(res)
+            
+            if res.get("ok"):
+                ok_count += 1
+                # Optional: print progress dot
+                print(".", end="", flush=True, file=sys.stderr)
+            else:
+                err_count += 1
+                print("x", end="", flush=True, file=sys.stderr)
+        
+        print("", file=sys.stderr) # Newline
+        return results, ok_count, err_count
 
-    typer.echo(f"Processing {len(prompts)} prompts...", err=True)
-    results = asyncio.run(_run())
+    results, ok_count, err_count = asyncio.run(_run())
 
-    # Contract: return shape is list of dicts with index, request, response, error, status, content
+    # 4. Output Results
     out_lines = []
-    ok_count = err_count = 0
+    # Sort results to match input order? Iterator yields as they finish, so index check is needed if order matters.
+    # We will just dump them with index.
+    results.sort(key=lambda x: x.get("index", 0))
 
-    for i, r in enumerate(results):
-        if r.get("error"):
-            out_lines.append(json.dumps({"index": i, "error": r["error"], "status": r.get("status")}))
-            err_count += 1
+    for r in results:
+        # Standardize output format
+        item = {
+            "index": r.get("index"),
+            "ok": r.get("ok"),
+            "status": r.get("status"),
+        }
+        if r.get("ok"):
+            item["content"] = r.get("content")
         else:
-            out_lines.append(json.dumps({"index": i, "content": r.get("content"), "ok": True}))
-            ok_count += 1
+            item["error"] = r.get("error")
+        out_lines.append(json.dumps(item))
 
     if output:
         output.write_text("\n".join(out_lines))
-        typer.echo(f"Wrote to {output}", err=True)
+        console.print(f"[green]Wrote {len(out_lines)} results to {output}[/green]")
     else:
         for line in out_lines:
             print(line)
 
-    typer.echo(f"Done: {ok_count} ok, {err_count} errors", err=True)
+    console.print(f"[bold]Summary:[/bold] {ok_count} OK, {err_count} Failed")
+    if err_count > 0:
+        raise typer.Exit(1)
 
 
 @app.command()
 def single(
-    prompt: str = typer.Argument(..., help="Prompt"),
+    prompt: str = typer.Argument(..., help="Prompt text"),
     model: Optional[str] = typer.Option(None, "--model", "-m"),
     json_mode: bool = typer.Option(False, "--json", "-j"),
     timeout: int = typer.Option(30, "--timeout", "-t"),
+    strict_json: Optional[bool] = typer.Option(None, "--strict-json/--no-strict-json", help="Force strict JSON parsing when --json is set"),
 ):
-    """Single completion (convenience)."""
-    from scillm import acompletion
+    """Run a single completion (Simple Wrapper)."""
+    try:
+        from scillm import acompletion
+    except ImportError:
+        console.print("[red]Error: scillm not installed.[/red]")
+        raise typer.Exit(1)
 
     api_base = _get_env("CHUTES_API_BASE")
     api_key = _get_env("CHUTES_API_KEY")
-    model_id = model or _get_env("CHUTES_MODEL_ID") or _get_env("CHUTES_TEXT_MODEL")
+    model_id = model or _get_env("CHUTES_MODEL_ID")
 
-    if not api_key or not model_id:
-        typer.echo('{"error": "CHUTES_API_KEY and model required"}')
+    if not api_base or not api_key or not model_id:
+        console.print("[red]Error: Credentials or model missing.[/red]")
         raise typer.Exit(1)
+
+    _set_strict_json(strict_json, enable_by_default=json_mode)
 
     async def _run():
         return await acompletion(
@@ -280,16 +254,19 @@ def single(
             timeout=timeout,
         )
 
-    resp = asyncio.run(_run())
-
     try:
+        resp = asyncio.run(_run())
         content = resp.choices[0].message.content
         if json_mode:
-            print(json.dumps(json.loads(content), indent=2))
+            # Pretty print JSON
+            try:
+                print(json.dumps(json.loads(content), indent=2))
+            except:
+                print(content)
         else:
             print(content)
     except Exception as e:
-        typer.echo(f'{{"error": "{e}"}}')
+        console.print(f"[red]Error: {e}[/red]")
         raise typer.Exit(1)
 
 

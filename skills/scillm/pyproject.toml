@@ -1,0 +1,15 @@
+[project]
+name = "scillm-skill"
+version = "0.1.0"
+description = "Scillm Skill: Standardized LLM/VLM interactions and Lean4 Proving"
+requires-python = ">=3.10"
+dependencies = [
+    "scillm @ git+https://github.com/grahama1970/scillm.git",
+    "typer>=0.9.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+    "jsonschema>=4.21.1",
+]
+
+[tool.uv]
+dev-dependencies = []

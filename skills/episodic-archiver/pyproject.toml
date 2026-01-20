@@ -1,0 +1,14 @@
+[project]
+name = "episodic-archiver"
+version = "0.1.0"
+description = "Archive conversation episodes to the memory graph."
+readme = "SKILL.md"
+requires-python = ">=3.10.11"
+dependencies = [
+    "graph-memory @ git+https://github.com/grahama1970/graph-memory-operator.git",
+    "scillm @ git+https://github.com/grahama1970/scillm.git",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.uv]
+# No special config needed

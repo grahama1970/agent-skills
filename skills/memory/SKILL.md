@@ -29,13 +29,13 @@ Pi is the only CLI agent that can reliably enforce Memory First (other CLIs trea
 
 ## Commands Snapshot
 
-| Command | Use Case |
-|---------|----------|
-| `./run.sh recall --q "..."` | FIRST step for every task |
-| `./run.sh learn --problem "..." --solution "..."` | After solving something new |
-| `./run.sh info` | Print active configuration (embedder, episodic sources, edge verifier) |
-| `./run.sh serve --host --port` | Keep the FastAPI server warm for low-latency recall |
-| `./run.sh status` | Quick health check / Arango connectivity |
+| Command                                           | Use Case                                                               |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| `./run.sh recall --q "..."`                       | FIRST step for every task                                              |
+| `./run.sh learn --problem "..." --solution "..."` | After solving something new                                            |
+| `./run.sh info`                                   | Print active configuration (embedder, episodic sources, edge verifier) |
+| `./run.sh serve --host --port`                    | Keep the FastAPI server warm for low-latency recall                    |
+| `./run.sh status`                                 | Quick health check / Arango connectivity                               |
 
 ## Two Commands (All You Need)
 
@@ -156,10 +156,12 @@ Sample excerpt:
 
 ```json
 {
-  "service": {"mode": "service", "url": "http://127.0.0.1:8601"},
-  "embedding": {"model": "all-MiniLM-L6-v2", "device": "auto"},
-  "episodic": {"agent_conversations_enabled": true, "episode_limit": 6},
-  "supplemental_sources": [{"name": "agent_conversations", "view": "agent_conversations_search"}]
+  "service": { "mode": "service", "url": "http://127.0.0.1:8601" },
+  "embedding": { "model": "all-MiniLM-L6-v2", "device": "auto" },
+  "episodic": { "agent_conversations_enabled": true, "episode_limit": 6 },
+  "supplemental_sources": [
+    { "name": "agent_conversations", "view": "agent_conversations_search" }
+  ]
 }
 ```
 
@@ -210,6 +212,9 @@ ARANGO_PASS=your_password
 # Optional for LLM edge verification
 CHUTES_API_BASE=...
 CHUTES_API_KEY=...
+
+# Optional: Embedding Service (Recommended)
+EMBEDDING_SERVICE_URL=http://127.0.0.1:8602
 ```
 
 ---
@@ -233,13 +238,14 @@ This agent acts as the **Gatekeeper of Knowledge**. Before storing anything, you
 
 ## Configuration Cheat Sheet (Pi + Humans)
 
-| Feature | Env Vars | Default | Notes |
-|---------|----------|---------|-------|
-| Memory Service | `MEMORY_SERVICE_URL`, `MEMORY_SERVICE_TIMEOUT` | unset (CLI mode) | When set, `recall/learn` hit the FastAPI server (see `./run.sh serve`). |
-| Embedding / Vector Engine | `EMBEDDING_MODEL` / `GM_MODEL_ID`, `EMBEDDING_DEVICE` / `GM_DEVICE`, `GM_FORCE_CPU`, `VECTOR_ENGINE`, `VECTOR_URL`, `GM_USE_GPU`, `GM_CUDA_DEVICE` | `all-MiniLM-L6-v2`, auto device, FAISS | Controls which model/device powers dense recall and whether cuVS is used via `VECTOR_ENGINE=cuvs`. |
-| Episodic Recall | `RECALL_INCLUDE_AGENT_CONVERSATIONS`, `RECALL_EPISODE_LIMIT`, `RECALL_EPISODE_EDGE_LIMIT`, `RECALL_SOURCES_JSON`, `RECALL_SOURCES_FILE` | enabled, 6 turns, 5 edges | Registers supplemental collections (agent transcripts, custom ArangoSearch views) that get appended after lesson hits. Disable by setting `RECALL_INCLUDE_AGENT_CONVERSATIONS=0`. |
-| Edge Verification | `CHUTES_API_KEY`, `CHUTES_TEXT_MODEL`, `CHUTES_API_BASE`, `EDGE_VERIFIER_MAX_LLM` | model `sonar-medium`, unlimited | Drives `.agents/skills/edge-verifier`. If no API key is set, edge verification quietly skips LLM calls. |
-| Pi Contract | `THREAD_ID`, `INTEGRATION_TWEAK`, `MEMORY_SERVICE_URL` | optional | Pi uses `THREAD_ID` to boost thread-local history. Leave `INTEGRATION_TWEAK=1` for defensive reranking unless you have a reason to disable it. |
+| Feature                   | Env Vars                                                                                                                                           | Default                                | Notes                                                                                                                                                                             |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Memory Service            | `MEMORY_SERVICE_URL`, `MEMORY_SERVICE_TIMEOUT`                                                                                                     | unset (CLI mode)                       | When set, `recall/learn` hit the FastAPI server (see `./run.sh serve`).                                                                                                           |
+| Embedding Service         | `EMBEDDING_SERVICE_URL`                                                                                                                            | unset (local model)                    | When set to `http://127.0.0.1:8602`, uses standalone embedding service instead of loading local model.                                                                            |
+| Embedding / Vector Engine | `EMBEDDING_MODEL` / `GM_MODEL_ID`, `EMBEDDING_DEVICE` / `GM_DEVICE`, `GM_FORCE_CPU`, `VECTOR_ENGINE`, `VECTOR_URL`, `GM_USE_GPU`, `GM_CUDA_DEVICE` | `all-MiniLM-L6-v2`, auto device, FAISS | Controls which model/device powers dense recall and whether cuVS is used via `VECTOR_ENGINE=cuvs`.                                                                                |
+| Episodic Recall           | `RECALL_INCLUDE_AGENT_CONVERSATIONS`, `RECALL_EPISODE_LIMIT`, `RECALL_EPISODE_EDGE_LIMIT`, `RECALL_SOURCES_JSON`, `RECALL_SOURCES_FILE`            | enabled, 6 turns, 5 edges              | Registers supplemental collections (agent transcripts, custom ArangoSearch views) that get appended after lesson hits. Disable by setting `RECALL_INCLUDE_AGENT_CONVERSATIONS=0`. |
+| Edge Verification         | `CHUTES_API_KEY`, `CHUTES_TEXT_MODEL`, `CHUTES_API_BASE`, `EDGE_VERIFIER_MAX_LLM`                                                                  | model `sonar-medium`, unlimited        | Drives `.agents/skills/edge-verifier`. If no API key is set, edge verification quietly skips LLM calls.                                                                           |
+| Pi Contract               | `THREAD_ID`, `INTEGRATION_TWEAK`, `MEMORY_SERVICE_URL`                                                                                             | optional                               | Pi uses `THREAD_ID` to boost thread-local history. Leave `INTEGRATION_TWEAK=1` for defensive reranking unless you have a reason to disable it.                                    |
 
 Use `./run.sh info` to see the live values Pi will operate under. The table above is just the quick-reference for humans reviewing the skill file.
 

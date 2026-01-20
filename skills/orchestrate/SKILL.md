@@ -26,6 +26,72 @@ Execute tasks from a collaborative **task file** (e.g., `0N_TASKS.md`) with **en
 - **Quality-gate Post-hook**: Runs tests AFTER each task (must pass)
 - **Session Archiving**: Stores completed session for future recall
 
+## ⚠️ Non-Negotiable: Sanity Scripts + Completion Tests
+
+**Without these, the orchestrator WILL hallucinate and errors WILL compound.**
+
+LLMs cannot reliably verify their own work. Without external validation:
+
+- Agent "completes" Task 1 with subtle bug
+- Task 2 builds on broken Task 1
+- Task 3 compounds the errors
+- By Task 5, the codebase is corrupted beyond repair
+
+**The ONLY defense: Working sanity scripts + completion tests that are DIVORCED from project complexity.**
+
+Every task file MUST include (via human-agent collaboration):
+
+| Requirement         | Purpose                                       | When Created          | Example                                                       |
+| ------------------- | --------------------------------------------- | --------------------- | ------------------------------------------------------------- |
+| **Sanity Script**   | Proves dependencies/APIs work IN ISOLATION    | BEFORE implementation | `sanity/camelot.py` - extracts a table from a simple test PDF |
+| **Completion Test** | Proves task succeeded with CONCRETE assertion | BEFORE implementation | `test_table_extractor.py::test_extracts_3_tables`             |
+
+### Which Packages Need Sanity Scripts?
+
+**Only create sanity scripts for packages where the agent might hallucinate usage:**
+
+| Needs Sanity Script            | Examples                              | Why                                |
+| ------------------------------ | ------------------------------------- | ---------------------------------- |
+| ✅ Little-known packages       | `camelot`, `pdfplumber`, `surya`      | Agent may not know correct API     |
+| ✅ Complex APIs                | `transformers`, `opencv`, `paddleocr` | Many parameters, easy to get wrong |
+| ✅ User/project-generated code | `myproject.utils`, custom modules     | Not in training data               |
+| ❌ Standard library            | `json`, `os`, `pathlib`, `typing`     | Well-documented, agent knows these |
+| ❌ Well-known packages         | `requests`, `numpy`, `pandas`         | Widely used, agent reliable here   |
+
+### Why "Divorced from Project Complexity"?
+
+Sanity scripts must test the CORE FUNCTIONALITY in isolation:
+
+```python
+# GOOD: Tests Camelot API works (little-known package)
+# sanity/camelot_tables.py
+import camelot
+tables = camelot.read_pdf("fixtures/simple_table.pdf", flavor="lattice")
+assert len(tables) > 0, "Camelot failed to extract any tables"
+print(f"PASS: Extracted {len(tables)} tables, accuracy={tables[0].parsing_report['accuracy']}")
+
+# BAD: Testing json.loads (standard library - agent knows this)
+# sanity/json_parsing.py
+import json
+data = json.loads('{"key": "value"}')  # Pointless - agent won't hallucinate this
+
+# BAD: Tests your whole pipeline, hides where failure occurs
+# sanity/camelot_tables.py
+from myproject.pipeline import extract_tables  # Too coupled!
+result = extract_tables("complex_document.pdf")  # Too complex!
+```
+
+**Rule of thumb**: If you'd trust a junior developer to use the API correctly from memory, skip the sanity script. If YOU had to look up the docs, create one.
+
+**The task file is INCOMPLETE without both.** Do not proceed to implementation until:
+
+1. Sanity scripts pass (dependencies verified IN ISOLATION)
+2. Completion tests are defined (Definition of Done with CONCRETE assertions)
+
+Run pre-flight check: `./preflight.sh 01_TASKS.md`
+
+This is collaborative work - agent proposes, human verifies/refines.
+
 ## The Collaborative Workflow
 
 ```mermaid
@@ -34,21 +100,30 @@ flowchart TB
         H1[Human: I need to refactor auth] --> A1[Agent creates 0N_TASKS.md]
         A1 --> Q1["## Questions/Blockers<br/>- Which auth method?<br/>- Backwards compat?"]
         Q1 --> H2[Human answers questions]
-        H2 --> Q2["Questions resolved → None"]
+        H2 --> S1["Create SANITY SCRIPTS<br/>for non-standard deps"]
+        S1 --> S2{Sanity<br/>scripts pass?}
+        S2 -->|No| S3[Fix deps/scripts<br/>with human]
+        S3 --> S1
+        S2 -->|Yes| T1["Define COMPLETION TESTS<br/>for each task"]
+        T1 --> T2[Human approves<br/>Definition of Done]
+        T2 --> Q2["Questions resolved → None<br/>Sanity: PASS<br/>Tests: DEFINED"]
     end
 
     subgraph Phase2["PHASE 2: Execute via orchestrate tool"]
-        O1["orchestrate({ taskFile })"] --> Check{Questions<br/>exist?}
-        Check -->|Yes| Block[BLOCKED - Clarify first]
-        Check -->|No| Loop["For each task:"]
+        O1["orchestrate({ taskFile })"] --> Check{Blockers<br/>exist?}
+        Check -->|Yes| Block[BLOCKED - Resolve first]
+        Check -->|No| SanityCheck{Sanity<br/>scripts pass?}
+        SanityCheck -->|No| Block2[BLOCKED - Fix sanity first]
+        SanityCheck -->|Yes| Loop["For each task:"]
         Loop --> Pre["PRE-HOOK: memory recall"]
         Pre --> Exec["Execute: pi --no-session"]
-        Exec --> SelfCheck["SELF-CHECK: quality-gate.sh (Agent uses this)"]
-        SelfCheck --> Exec
-        Exec --> Post["POST-HOOK: quality-gate.sh (System verifies)"]
-        Post --> Pass{Tests<br/>pass?}
+        Exec --> Post["POST-HOOK: Run Definition of Done test"]
+        Post --> Pass{Test<br/>passes?}
         Pass -->|Yes| Update["Update: [ ] → [x]"]
-        Pass -->|No| Fail[Task FAILED]
+        Pass -->|No| Retry{Attempts < 3?}
+        Retry -->|Yes| Fix[Analyze, fix, retry]
+        Fix --> Exec
+        Retry -->|No| Fail[HARD FAIL - Human needed]
         Update --> Next{More<br/>tasks?}
         Next -->|Yes| Loop
         Next -->|No| Done[All complete]
@@ -61,6 +136,115 @@ flowchart TB
     Phase1 --> Phase2
     Done --> Phase3
 ```
+
+## Human-Agent Collaboration: Creating Sanity Scripts + Tests
+
+Before ANY implementation begins, agent and human collaborate to create:
+
+### Step 1: Identify Dependencies → Create Sanity Scripts
+
+```
+Agent: "Task 2 requires Camelot for table extraction. I'll create a sanity script."
+Agent: [Creates sanity/camelot_tables.py with working example]
+Agent: "Please verify this works in your environment: python sanity/camelot_tables.py"
+Human: [Runs script] "It fails - ghostscript not installed"
+Agent: [Updates script with installation check and clearer error]
+Human: [Runs again] "PASS - extracts 3 tables correctly"
+Agent: [Marks sanity script as verified in task file]
+```
+
+### Step 2: Define Completion Tests → Definition of Done
+
+```
+Agent: "For Task 2 (extract tables from PDF), what proves success?"
+Human: "It should find all 5 tables in the test PDF and preserve headers"
+Agent: "I'll define the test:
+  - Test: tests/test_table_extractor.py::test_extracts_all_tables
+  - Assertion: Extracts exactly 5 tables from fixtures/sample.pdf with headers intact"
+Human: "Add a test for empty PDFs too"
+Agent: [Updates Definition of Done with both tests]
+```
+
+### Step 3: Write Failing Tests FIRST
+
+```
+Agent: [Creates test file with tests that will FAIL]
+Agent: "Tests are written but failing (as expected). Ready to implement?"
+Human: "Yes, proceed"
+Agent: [Implements feature, runs tests, they pass]
+```
+
+**Key principle**: No surprises. Human knows exactly what "done" means before coding starts.
+
+## Pre-Flight Checklist (Runs Before Any Task Executes)
+
+Before executing ANY task, the orchestrator runs a pre-flight check:
+
+```mermaid
+flowchart TB
+    Start[orchestrate called] --> PF["PRE-FLIGHT CHECK"]
+    PF --> Q{Questions/<br/>Blockers?}
+    Q -->|Yes| Block1[❌ BLOCKED: Resolve questions first]
+    Q -->|No| S{Sanity scripts<br/>exist?}
+    S -->|Missing| Block2[❌ BLOCKED: Create sanity scripts first]
+    S -->|Exist| SP{Sanity scripts<br/>PASS?}
+    SP -->|Fail| Block3[❌ BLOCKED: Fix sanity scripts first]
+    SP -->|Pass| T{Definition of Done<br/>defined for all tasks?}
+    T -->|Missing| Block4[❌ BLOCKED: Define completion tests first]
+    T -->|Defined| TF{Test files<br/>exist?}
+    TF -->|Missing| Block5[❌ BLOCKED: Create test files first]
+    TF -->|Exist| Ready[✅ PRE-FLIGHT PASS<br/>Begin execution]
+```
+
+### Pre-Flight Checklist Items
+
+| Check                             | What It Validates                             | Failure Action                      |
+| --------------------------------- | --------------------------------------------- | ----------------------------------- |
+| **1. Questions/Blockers**         | No unresolved items in section                | BLOCK - collaborate to resolve      |
+| **2. Sanity Scripts Exist**       | Each dependency in table has a script file    | BLOCK - create scripts with human   |
+| **3. Sanity Scripts Pass**        | `python sanity/*.py` all exit 0               | BLOCK - fix deps/scripts with human |
+| **4. Definition of Done Defined** | Each implementation task has Test + Assertion | BLOCK - define tests with human     |
+| **5. Test Files Exist**           | Referenced test files actually exist          | BLOCK - create test files first     |
+
+### Pre-Flight Output
+
+```
+=== PRE-FLIGHT CHECK: 01_TASKS.md ===
+
+[1/5] Questions/Blockers... ✅ None
+[2/5] Sanity scripts exist...
+      - sanity/camelot_tables.py ✅
+      - sanity/pdfplumber_tables.py ✅
+[3/5] Sanity scripts pass...
+      - sanity/camelot_tables.py ✅ (exit 0)
+      - sanity/pdfplumber_tables.py ❌ (exit 1: ghostscript missing)
+
+❌ PRE-FLIGHT FAILED: Sanity script failed
+   Fix: Install ghostscript or update sanity script
+
+   Cannot proceed until all sanity scripts pass.
+```
+
+### Why Pre-Flight Matters
+
+Without pre-flight:
+
+1. Task 1 executes successfully
+2. Task 2 starts, needs Camelot
+3. Camelot fails (ghostscript missing)
+4. Task 2 fails, error compounds
+5. Task 3 depends on Task 2, also fails
+6. Wasted effort, corrupted state
+
+With pre-flight:
+
+1. Check sanity scripts BEFORE any execution
+2. Camelot sanity fails immediately
+3. Human fixes ghostscript
+4. Re-run pre-flight, all pass
+5. NOW execute tasks with confidence
+
+**Pre-flight is cheap. Failed tasks are expensive.**
 
 ## Critical: Questions/Blockers Section
 
@@ -157,6 +341,15 @@ DOCUMENTATION: Context7 query used, last verified date
 
 <Brief description of what we're trying to accomplish>
 
+## Crucial Dependencies (Sanity Scripts)
+
+| Library    | API/Method         | Sanity Script                 | Status      |
+| ---------- | ------------------ | ----------------------------- | ----------- |
+| camelot    | `read_pdf()`       | `sanity/camelot_tables.py`    | [x] PASS    |
+| pdfplumber | `extract_tables()` | `sanity/pdfplumber_tables.py` | [ ] PENDING |
+
+> ⚠️ All sanity scripts must PASS before proceeding to implementation.
+
 ## Tasks
 
 - [ ] **Task 1**: <Clear, actionable description>
@@ -165,6 +358,10 @@ DOCUMENTATION: Context7 query used, last verified date
   - Parallel: 0
   - Dependencies: none
   - Notes: <any context>
+  - **Sanity**: `sanity/camelot_tables.py` (must pass first)
+  - **Definition of Done**:
+    - Test: `tests/test_feature.py::test_task1_behavior`
+    - Assertion: <what the test proves>
 
 - [ ] **Task 2**: <Description>
 
@@ -172,11 +369,17 @@ DOCUMENTATION: Context7 query used, last verified date
   - Parallel: 1
   - Dependencies: Task 1
   - Notes: <context>
+  - **Sanity**: None (uses json, pathlib, requests - well-known APIs)
+  - **Definition of Done**:
+    - Test: `tests/test_feature.py::test_task2_behavior`
+    - Assertion: <what the test proves>
 
 - [ ] **Task 3**: <Description>
   - Agent: explore
   - Parallel: 1
   - Dependencies: none
+  - **Sanity**: N/A (research only)
+  - **Definition of Done**: N/A (research only, no code changes)
 
 ## Completion Criteria
 
@@ -184,8 +387,48 @@ DOCUMENTATION: Context7 query used, last verified date
 
 ## Questions/Blockers
 
-None - all questions resolved.
+None - all questions resolved, all sanity scripts pass.
 ```
+
+### The "Definition of Done" Field
+
+**Every implementation task MUST have a Definition of Done** that specifies:
+
+1. **Test file/function**: The exact test that verifies this task
+2. **Assertion**: What the test proves (in plain English)
+
+Examples:
+
+```markdown
+- **Definition of Done**:
+
+  - Test: `tests/core/providers/test_image.py::test_vlm_fallback_to_ocr`
+  - Assertion: When VLM returns garbage (<100 chars), OCR fallback is triggered
+
+- **Definition of Done**:
+
+  - Test: `tests/api/test_auth.py::test_refresh_token_expired`
+  - Assertion: Expired refresh tokens return 401 and clear session
+
+- **Definition of Done**: N/A (documentation only)
+```
+
+**If no test exists**, the task file should note this:
+
+```markdown
+- **Definition of Done**:
+  - Test: MISSING - must be created before implementation
+  - Assertion: <describe what we need to verify>
+```
+
+This forces collaborative discussion about what "done" means BEFORE coding starts.
+
+**Test = Gate Enforcement**:
+When you specify a test file in the `Test:` field, the orchestrator **AUTOMATICALLY** enables "Retry Until Pass" mode.
+
+- It treats the test file as a **Quality Gate**.
+- The agent will be forced to Loop (analyze -> fix -> retry) up to 3 times (default) until that specific test passes.
+- This prevents "hallucinated completion" where the agent says "I fixed it" but didn't run the test.
 
 ## The orchestrate Tool
 
@@ -202,22 +445,33 @@ orchestrate({
 
 ### What Happens
 
-1. **Parse**: Read and validate task file
-2. **Block Check**: STOP if Questions/Blockers section has items
-3. **For Each Task**:
+1. **PRE-FLIGHT CHECK** (MANDATORY - runs `./preflight.sh`):
+
+   - ❌ Questions/Blockers exist? → BLOCKED
+   - ❌ Sanity scripts missing? → BLOCKED
+   - ❌ Sanity scripts fail? → BLOCKED
+   - ❌ Definition of Done missing? → BLOCKED
+   - ❌ Test files missing? → BLOCKED
+   - ✅ All checks pass → Proceed to execution
+
+2. **For Each Task**:
+
    - **PRE-HOOK**: `~/.pi/agent/skills/memory/run.sh recall --q "<task>"`
      - If solutions found → injected as context in task prompt
      - Agent decides how to use prior knowledge
    - **EXECUTE**: `pi --mode json -p --no-session "<task prompt>"`
      - Protected context, no session bleed
-     - **INSTRUCTION**: "Run quality-gate.sh to self-verify before finishing"
+     - **INSTRUCTION**: "Run the Definition of Done test to verify before finishing"
      - Agent config provides system prompt
-   - **POST-HOOK**: `quality-gate.sh`
-     - Auto-detects project (Python/Node/Go/Rust)
-     - Runs tests/checks
-     - Task FAILS if tests don't pass
+   - **POST-HOOK**: Run the specific Definition of Done test for this task
+     - NOT the whole test suite - just the task's specific test
+     - Task FAILS if test doesn't pass
+     - Retry up to 3 times before hard failure
    - **UPDATE**: Mark checkbox `[x]` in task file
-4. **Archive**: Store session via episodic-archiver
+
+3. **Archive**: Store session via episodic-archiver
+
+**If pre-flight fails, orchestrator REFUSES to execute.** Fix issues first.
 
 ### Memory Recall Context
 
@@ -342,9 +596,272 @@ Agent: [Calls orchestrate({ taskFile: "01_TASKS.md" })]
 
 ## Key Principles
 
-1. **Clarify FIRST** - Questions/Blockers section forces this
-2. **Sanity BEFORE** - Non-standard APIs get verified sanity scripts
-3. **Memory BEFORE** - Pre-hook always runs, provides context
-4. **Quality AFTER** - Post-hook always runs, tests must pass
-5. **Isolated Context** - Each task runs in `--no-session` mode
-6. **Archive at End** - Enables future recall of solutions
+1. **Clarify FIRST** - Questions/Blockers section forces collaborative discussion
+2. **Sanity scripts BEFORE implementation** - Non-standard APIs get verified working examples
+3. **Completion tests BEFORE implementation** - Definition of Done specifies exact test + assertion
+4. **Human-agent collaboration** - Agent proposes, human verifies/refines both sanity and tests
+5. **Memory BEFORE** - Pre-hook always runs, provides context from prior solutions
+6. **Quality AFTER** - Post-hook runs the Definition of Done test, must pass
+7. **Retry logic** - 3 attempts before hard failure requiring human intervention
+8. **Isolated Context** - Each task runs in `--no-session` mode
+9. **Archive at End** - Enables future recall of solutions
+
+**The fundamental rule**: A task file without sanity scripts AND completion tests is INCOMPLETE. Do not proceed to implementation without both.
+
+## Non-Negotiable: Per-Task Testing
+
+**Testing per task is non-negotiable.** Without verification, errors and hallucinations compound across tasks.
+
+### Core Rules
+
+1. **NEVER skip tests** - Exit code 3 (skip) is NOT acceptable for implementation tasks
+2. **Every task must have a verifiable test** - If no test exists, CREATE ONE first
+3. **Tests must actually run** - Infrastructure unavailable = FAIL, not SKIP
+4. **Retry before failing** - Multiple attempts (up to 3) before marking task as failed
+
+### Test Requirement by Task Type
+
+| Task Type                     | Test Requirement                | Skip Allowed?  |
+| ----------------------------- | ------------------------------- | -------------- |
+| Implementation (code changes) | Unit/integration test MUST pass | NO             |
+| Bug fix                       | Regression test proving fix     | NO             |
+| Research/explore              | No code = no test required      | N/A            |
+| Documentation only            | Linting/format check            | YES (graceful) |
+
+### The Test-First Enforcement Loop
+
+```mermaid
+flowchart TB
+    Start[Start Task] --> HasTest{Test exists<br/>for this feature?}
+    HasTest -->|No| CreateTest[BLOCK: Create test first]
+    CreateTest --> Collab[Collaborate with human<br/>on test requirements]
+    Collab --> WriteTest[Write test - expect FAIL]
+    WriteTest --> HasTest
+    HasTest -->|Yes| Implement[Implement feature]
+    Implement --> RunTest[Run quality-gate]
+    RunTest --> Result{Tests pass?}
+    Result -->|Yes| Done[Task COMPLETE]
+    Result -->|No| Retry{Attempts < 3?}
+    Retry -->|Yes| Fix[Analyze failure, fix code]
+    Fix --> RunTest
+    Retry -->|No| FAIL[Task FAILED<br/>Human intervention needed]
+```
+
+### Retry Logic (3 Attempts)
+
+For each task:
+
+```
+Attempt 1: Execute task, run tests
+  → If tests pass: DONE
+  → If tests fail: Analyze error, fix, continue to Attempt 2
+
+Attempt 2: Apply fix, run tests
+  → If tests pass: DONE
+  → If tests fail: Deeper analysis, continue to Attempt 3
+
+Attempt 3: Final attempt with more aggressive fix
+  → If tests pass: DONE
+  → If tests fail: HARD FAIL - request human help
+```
+
+### What Counts as "Tests Pass"
+
+- Exit code 0 from quality-gate.sh
+- Exit code 3 (skip) is **REJECTED** for implementation tasks
+- The specific test for the feature must be in the test output
+- "0 tests ran" is a FAIL (means test infrastructure broken)
+
+### Creating Tests When Missing
+
+If a task's Definition of Done shows `Test: MISSING`:
+
+1. **STOP** - Do not implement without a test
+2. **Collaborate with human** to define what "done" means:
+   - "For Task X, what behavior proves it's working?"
+   - "What are the edge cases we should verify?"
+   - "What's the minimum viable assertion?"
+3. **Update the task file** with the agreed Definition of Done:
+   ```markdown
+   - **Definition of Done**:
+     - Test: `tests/test_feature.py::test_new_behavior`
+     - Assertion: When X happens, Y should result
+   ```
+4. **Write test FIRST** - Test should FAIL initially (proves test works)
+5. **Then implement** - Make the test pass
+6. **Verify** - Run the specific test, confirm it passes
+
+### Example: Enforced Testing
+
+```markdown
+## Task: Add VLM fallback for ImageProvider
+
+Before implementing:
+
+- [ ] Test exists: test_image_provider_vlm_fallback.py
+- [ ] Test verifies: VLM failure triggers OCR fallback
+- [ ] Test is RED (fails before implementation)
+
+After implementing:
+
+- [ ] Test is GREEN (passes)
+- [ ] quality-gate.sh exits 0
+- [ ] No skipped tests related to this feature
+```
+
+### Infrastructure Requirements
+
+Tests require infrastructure to run. If infrastructure is unavailable:
+
+| Situation                   | Response                                |
+| --------------------------- | --------------------------------------- |
+| API server not running      | **FAIL** (start the server, don't skip) |
+| Database not connected      | **FAIL** (fix connection, don't skip)   |
+| Browser not available       | **FAIL** (use headless or fix setup)    |
+| Optional dependency missing | OK to skip THAT test, not all tests     |
+
+**Principle**: If tests can't run, the task can't be verified. Unverified = incomplete.
+
+## Testing Anti-Patterns: What NOT to Do
+
+**DO NOT create brittle mock-based tests.** These are maintenance nightmares that break when implementation details change.
+
+### Banned Patterns
+
+| Anti-Pattern                   | Why It's Bad                                                    | What to Do Instead                              |
+| ------------------------------ | --------------------------------------------------------------- | ----------------------------------------------- |
+| **FakeDB classes**             | Query pattern changes break tests; doesn't verify real behavior | Use real database with test data                |
+| **Mocked LLM responses**       | Verifies string matching, not actual LLM integration            | Use real LLM calls (mark as `@pytest.mark.llm`) |
+| **Mocked embedding calls**     | Doesn't verify embedding service works                          | Call real embedding service                     |
+| **Complex monkeypatch chains** | Fragile, hard to maintain, false confidence                     | Integration tests with real services            |
+
+### Example: FakeDB Anti-Pattern (NEVER DO THIS)
+
+```python
+# ❌ BAD - This test is WORTHLESS
+class FakeDB:
+    def __init__(self, lessons, edges):
+        self._lessons = lessons
+        self._edges = edges
+
+    class AQLWrapper:
+        def execute(self, query, bind_vars=None):
+            # Fragile pattern matching that breaks when queries change
+            if "FILTER ed._to==@nid" in query:  # What if query changes to IN?
+                # ... complex mock logic ...
+                pass
+            return FakeCursor([])
+
+def test_cascade_with_fake_db(monkeypatch):
+    fake_db = FakeDB(lessons, edges)
+    monkeypatch.setattr(module, "get_db", lambda: fake_db)  # ❌ Bypasses real DB
+    # This test passes but proves NOTHING about real behavior
+```
+
+**Why this is bad:**
+
+1. When query changes from `ed._to==@nid` to `ed._to IN @targets`, test breaks
+2. FakeDB logic diverges from real ArangoDB behavior
+3. Tests pass but production fails
+4. Maintenance burden exceeds value
+
+### Correct Pattern: Real Integration Tests
+
+```python
+# ✅ GOOD - Uses real database, verifies real behavior
+import pytest
+from graph_memory.arango_client import get_db
+from graph_memory.lessons.cascade import error_cascade
+
+@pytest.fixture
+def test_lessons(request):
+    """Create test data in real ArangoDB, clean up after."""
+    db = get_db()
+    lessons = db.collection("lessons")
+    edges = db.collection("lesson_edges")
+
+    # Insert test data
+    test_ids = []
+    r1 = lessons.insert({"title": "R1: Test Requirement", "scope": "test"})
+    test_ids.append(r1["_id"])
+    # ... more test data ...
+
+    yield {"r1": r1["_id"], ...}
+
+    # Cleanup
+    for id in test_ids:
+        lessons.delete(id)
+
+@pytest.mark.integration
+def test_cascade_real_db(test_lessons):
+    """Test cascade with REAL ArangoDB - no mocks."""
+    result = error_cascade(
+        requirement="R1: Test Requirement",
+        scope="test",
+        as_of=0,
+        depth=2
+    )
+    assert result["items"][0]["node_id"] == test_lessons["r1"]
+    # This actually verifies the real query works!
+```
+
+### LLM and Embedding Tests
+
+For tests involving LLM or embedding calls:
+
+```python
+@pytest.mark.llm  # Marks test as requiring LLM (can skip in CI)
+def test_edge_verification_with_real_llm():
+    """Tests actual LLM integration - not mocked."""
+    result = verify_edge_with_llm(edge_id="test_edge")
+    assert result["verified"] in [True, False]  # Real LLM response
+
+@pytest.mark.integration
+def test_recall_with_real_embedding():
+    """Tests actual embedding service - not mocked."""
+    result = recall("test query", k=3)
+    assert "used_dense" in result.get("meta", {})  # Real service responded
+```
+
+### Test Categories
+
+| Marker                     | Services Required      | When to Run             |
+| -------------------------- | ---------------------- | ----------------------- |
+| (none)                     | None - pure unit tests | Always                  |
+| `@pytest.mark.integration` | ArangoDB               | Local dev, CI with DB   |
+| `@pytest.mark.llm`         | LLM API                | Manual, expensive       |
+| `@pytest.mark.embedding`   | Embedding service      | Local dev with services |
+
+### Skip Conditions
+
+```python
+# pytest.ini or conftest.py
+import pytest
+import os
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "integration: requires ArangoDB")
+    config.addinivalue_line("markers", "llm: requires LLM API calls")
+    config.addinivalue_line("markers", "embedding: requires embedding service")
+
+@pytest.fixture(autouse=True)
+def skip_without_db(request):
+    if request.node.get_closest_marker("integration"):
+        try:
+            from graph_memory.arango_client import get_db
+            get_db()  # Will fail if DB not available
+        except Exception:
+            pytest.skip("ArangoDB not available")
+```
+
+### The Golden Rule
+
+**If you're writing a `Fake*` class or complex monkeypatch to avoid calling a real service, STOP.**
+
+Either:
+
+1. Write a real integration test that calls the service
+2. Don't write a test at all (better than a false-confidence test)
+3. Mark the test to skip when service unavailable
+
+A test that passes with mocks but fails in production is worse than no test - it gives false confidence.

@@ -1,29 +1,17 @@
 #!/bin/bash
 set -e
 
-# Resolve the directory of this script, following symlinks
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do
-  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-
-# Memory project root (can be overridden by env)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_ROOT="${MEMORY_ROOT:-/home/graham/workspace/experiments/memory}"
 
-export PYTHONPATH="${MEMORY_ROOT}/src:${PYTHONPATH:-}"
+# The user confirmed .pi/skills/memory IS graph-memory
+# usage: ./run.sh serve | ./run.sh recall "query"
 
-JSON_HELPER="${SCRIPT_DIR}/../json_utils.py"
-ORIG_ARGS=("$@")
-SKIP_SERVICE=0
-
-# Handle 'serve' command
 if [[ "$1" == "serve" ]]; then
     shift
-    exec uvicorn graph_memory.service:app --reload "$@"
+    # Run uvicorn in the memory project environment
+    exec uv run --directory "$MEMORY_ROOT" --all-extras uvicorn graph_memory.service.app:app --reload "$@"
 fi
 
-# Fallback to python CLI
-python3 -m graph_memory.agent_cli "${ORIG_ARGS[@]}"
+# Run the CLI
+exec uv run --directory "$MEMORY_ROOT" --all-extras python -m graph_memory.agent_cli "$@"

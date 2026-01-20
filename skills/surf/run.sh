@@ -19,6 +19,9 @@ CHROME_USER_DATA="${CHROME_USER_DATA:-/tmp/chrome-cdp-profile}"
 CDP_PID_FILE="/tmp/chrome-cdp.pid"
 REPO="github:nicobailon/surf-cli"
 
+# Surf-cli paths
+SURF_CLI_PATH="/home/graham/workspace/experiments/surf-cli"
+
 # Resolve skill directory (for relative paths)
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -43,6 +46,7 @@ find_chrome() {
 # ─────────────────────────────────────────────────────────────
 # CDP Management
 # ─────────────────────────────────────────────────────────────
+
 cdp_start() {
     local port="${1:-$CDP_PORT}"
 
@@ -64,16 +68,20 @@ cdp_start() {
     # Create profile directory
     mkdir -p "$CHROME_USER_DATA"
 
+    # Note: Google Chrome blocks --load-extension for security.
+    # Extension must be loaded manually via chrome://extensions
+    # See SKILL.md "Advanced: surf-cli Extension" section.
+
     # Start Chrome with CDP flags
     "$chrome" \
         --remote-debugging-port="$port" \
+        --remote-allow-origins=* \
         --user-data-dir="$CHROME_USER_DATA" \
         --no-first-run \
         --no-default-browser-check \
         --disable-background-networking \
         --disable-client-side-phishing-detection \
         --disable-default-apps \
-        --disable-extensions \
         --disable-hang-monitor \
         --disable-popup-blocking \
         --disable-prompt-on-repost \
@@ -235,6 +243,79 @@ cdp_test() {
     echo "CDP test passed! Ready for Puppeteer/testing."
 }
 
+cdp_go() {
+    local url="$1"
+    local port="${2:-$CDP_PORT}"
+
+    if [[ -z "$url" ]]; then
+        echo "Usage: surf cdp go <url>" >&2
+        return 1
+    fi
+
+    # Get page websocket
+    local ws_url
+    ws_url=$(curl -s "http://127.0.0.1:${port}/json/list" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+pages = [d for d in data if d.get('type') == 'page']
+if pages:
+    print(pages[0]['webSocketDebuggerUrl'])
+" 2>/dev/null)
+
+    if [[ -z "$ws_url" ]]; then
+        echo "Error: No browser page found. Run 'surf cdp start' first." >&2
+        return 1
+    fi
+
+    python3 << PYEOF
+import json
+import time
+import websocket
+
+ws = websocket.create_connection("$ws_url")
+ws.send(json.dumps({'id': 1, 'method': 'Page.navigate', 'params': {'url': '$url'}}))
+result = json.loads(ws.recv())
+print(f"Navigated to: $url")
+time.sleep(2)  # Wait for load
+ws.close()
+PYEOF
+}
+
+cdp_read() {
+    local port="${1:-$CDP_PORT}"
+
+    # Get page websocket
+    local ws_url
+    ws_url=$(curl -s "http://127.0.0.1:${port}/json/list" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+pages = [d for d in data if d.get('type') == 'page']
+if pages:
+    print(pages[0]['webSocketDebuggerUrl'])
+" 2>/dev/null)
+
+    if [[ -z "$ws_url" ]]; then
+        echo "Error: No browser page found. Run 'surf cdp start' first." >&2
+        return 1
+    fi
+
+    python3 << PYEOF
+import json
+import websocket
+
+ws = websocket.create_connection("$ws_url")
+ws.send(json.dumps({
+    'id': 1,
+    'method': 'Runtime.evaluate',
+    'params': {'expression': 'document.body.innerText'}
+}))
+result = json.loads(ws.recv())
+text = result.get('result', {}).get('result', {}).get('value', '')
+ws.close()
+print(text)
+PYEOF
+}
+
 cdp_help() {
     echo "surf cdp - Chrome DevTools Protocol management"
     echo ""
@@ -244,13 +325,34 @@ cdp_help() {
     echo "  status        Show CDP status and connection info"
     echo "  env           Output export commands for shell (use with eval)"
     echo "  test [url]    Test CDP by opening a page (default: example.com)"
+    echo "  go <url>      Navigate to URL (CDP fallback, no extension needed)"
+    echo "  read          Read page text content (CDP fallback)"
     echo ""
     echo "Examples:"
     echo "  surf cdp start"
+    echo "  surf cdp go https://example.com"
+    echo "  surf cdp read"
     echo "  surf cdp status"
-    echo "  surf cdp test"
     echo "  eval \"\$(surf cdp env)\"  # Set env vars"
     echo "  surf cdp stop"
+}
+
+# ─────────────────────────────────────────────────────────────
+# CDP Controller (Python-based, no extension required)
+# ─────────────────────────────────────────────────────────────
+CDP_CONTROLLER="$SKILL_DIR/cdp_controller.py"
+
+run_cdp_controller() {
+    local port="${CDP_PORT:-9222}"
+    if [[ -f "${CDP_PID_FILE}.port" ]]; then
+        port=$(cat "${CDP_PID_FILE}.port")
+    fi
+    python3 "$CDP_CONTROLLER" --port "$port" "$@"
+}
+
+# Check if surf-cli socket is available
+surf_cli_available() {
+    [[ -S "/tmp/surf.sock" ]]
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -265,41 +367,127 @@ if [[ "$1" == "cdp" ]]; then
         status) cdp_status "$3" ;;
         env)    cdp_env "$3" ;;
         test)   cdp_test "$3" "$4" ;;
+        go)     cdp_go "$3" "$4" ;;
+        read)   cdp_read "$3" ;;
         *)      cdp_help ;;
     esac
     exit $?
+fi
+
+# Handle setup/sanity check
+if [[ "$1" == "setup" || "$1" == "sanity" || "$1" == "doctor" ]]; then
+    exec "$SKILL_DIR/sanity.sh" "${@:2}"
 fi
 
 # Handle help
 if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "surf - Unified browser automation for AI agents"
     echo ""
-    echo "CDP Management:"
+    echo "Setup:"
+    echo "  surf setup              Check setup status & show install instructions"
+    echo "  surf install <ext-id>   Install native host for extension"
+    echo ""
+    echo "Tab Management (requires extension):"
+    echo "  surf tab.list           List all browser tabs"
+    echo "  surf tab.new <url>      Open new tab"
+    echo "  surf tab.activate <id>  Switch to tab"
+    echo ""
+    echo "Browser Automation:"
+    echo "  surf go <url>           Navigate to URL"
+    echo "  surf read               Read page with element refs (e1, e2...)"
+    echo "  surf click <ref>        Click element (e.g., e5)"
+    echo "  surf type <text>        Type text (--ref <ref> to target element)"
+    echo "  surf key <key>          Press key (Enter, Tab, Escape...)"
+    echo "  surf snap               Take screenshot (--full for full page)"
+    echo "  surf scroll <dir>       Scroll (up/down/top/bottom)"
+    echo "  surf wait <seconds>     Wait"
+    echo "  surf text               Get page text content"
+    echo ""
+    echo "CDP Fallback (when extension not available):"
     echo "  surf cdp start [port]   Start Chrome with CDP"
     echo "  surf cdp stop           Stop Chrome CDP"
     echo "  surf cdp status         Show CDP status"
-    echo "  surf cdp env            Output export commands"
     echo ""
-    echo "Browser Automation (via surf-cli):"
-    echo "  surf go <url>           Navigate to URL"
-    echo "  surf read               Read page content"
-    echo "  surf click <ref>        Click element (e.g., e5)"
-    echo "  surf type <text>        Type text"
-    echo "  surf snap               Take screenshot"
-    echo "  surf tab.list           List tabs"
-    echo "  surf js <code>          Execute JavaScript"
-    echo ""
-    echo "See: surf cdp --help, or npx github:nicobailon/surf-cli --help"
+    echo "Run 'surf setup' first to verify installation."
     exit 0
 fi
 
-# Pass through to surf-cli for all other commands
-if command -v npx &> /dev/null; then
-    exec npx "$REPO" "$@"
-elif command -v surf &> /dev/null; then
-    exec surf "$@"
-else
-    echo "Error: Neither npx nor surf-cli found" >&2
-    echo "Install Node.js: https://nodejs.org/" >&2
-    exit 1
+# ─────────────────────────────────────────────────────────────
+# Command Routing: surf-cli (extension) preferred, CDP fallback
+# ─────────────────────────────────────────────────────────────
+
+LOCAL_FORK_PATH="/home/graham/workspace/experiments/surf-cli"
+LOCAL_CLI="${LOCAL_FORK_PATH}/native/cli.cjs"
+
+# If surf-cli socket is available, route ALL commands through it
+if surf_cli_available && [[ -f "$LOCAL_CLI" ]]; then
+    exec node "$LOCAL_CLI" "$@"
 fi
+
+# Fallback: CDP controller for automation commands when no extension
+case "$1" in
+    go)
+        shift
+        run_cdp_controller go "$@"
+        exit $?
+        ;;
+    read)
+        shift
+        run_cdp_controller read "$@"
+        exit $?
+        ;;
+    click)
+        shift
+        run_cdp_controller click "$@"
+        exit $?
+        ;;
+    type)
+        shift
+        run_cdp_controller type "$@"
+        exit $?
+        ;;
+    key)
+        shift
+        run_cdp_controller key "$@"
+        exit $?
+        ;;
+    snap|screenshot)
+        shift
+        run_cdp_controller snap "$@"
+        exit $?
+        ;;
+    scroll)
+        shift
+        run_cdp_controller scroll "$@"
+        exit $?
+        ;;
+    wait)
+        shift
+        run_cdp_controller wait "$@"
+        exit $?
+        ;;
+    text)
+        shift
+        run_cdp_controller text "$@"
+        exit $?
+        ;;
+    tab.*)
+        echo "Error: Tab commands require surf-cli extension." >&2
+        echo "  1. Load extension: chrome://extensions → Load unpacked → surf-cli/dist" >&2
+        echo "  2. Install host: surf install <extension-id>" >&2
+        exit 1
+        ;;
+    install)
+        # Install native host (works without socket)
+        if [[ -f "$LOCAL_CLI" ]]; then
+            exec node "$LOCAL_CLI" "$@"
+        else
+            echo "Error: surf-cli not found at $LOCAL_CLI" >&2
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Note: surf-cli extension not available, using CDP fallback" >&2
+        run_cdp_controller "$@"
+        ;;
+esac
