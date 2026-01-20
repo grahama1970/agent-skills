@@ -550,18 +550,13 @@ def learn(
         python arxiv_cli.py learn --search "intent-aware memory" --scope memory
         python arxiv_cli.py learn --file paper.pdf --scope research --dry-run
     """
-    # Import the learn pipeline
-    skills_dir = Path(__file__).parent.parent
-    arxiv_learn_dir = skills_dir / "arxiv-learn"
-
-    if not arxiv_learn_dir.exists():
-        typer.echo("Error: arxiv-learn module not found", err=True)
-        raise typer.Exit(1)
-
-    if str(arxiv_learn_dir) not in sys.path:
-        sys.path.insert(0, str(arxiv_learn_dir))
-
-    from arxiv_learn import LearnSession, run_pipeline
+    # Import local arxiv_learn module
+    try:
+        # If running as package
+        from .arxiv_learn import LearnSession, run_pipeline
+    except ImportError:
+        # Fallback for direct execution (script in same dir)
+        from arxiv_learn import LearnSession, run_pipeline
 
     # Build session
     session = LearnSession(

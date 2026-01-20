@@ -3,13 +3,17 @@ name = "arxiv-skill"
 version = "0.1.0"
 description = "ArXiv paper search and download."
 readme = "SKILL.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10.11"
 dependencies = [
     "scillm @ git+https://github.com/grahama1970/scillm.git",
+    "graph-memory @ git+https://github.com/grahama1970/graph-memory-operator.git",
     "rich>=13.0.0",
     "requests>=2.31.0",
     "python-dotenv>=1.0.0",
     "feedparser>=6.0.10",
+    "arxiv>=2.1.0",
+    "pymupdf>=1.26.0",
+    "pymupdf4llm>=0.0.10",
 ]
 
 [tool.uv]

@@ -47,7 +47,7 @@ The JSON file should be a list of messages or an object with a `messages` list:
 
 Data is stored in ArangoDB collection `agent_conversations` with:
 
-- `embedding`: Vector representation (768d)
+- `embedding`: Vector representation (384d, MiniLM)
 - `category`: LLM-derived tag (Task, Question, Solution, etc.)
 
 ## Prerequisites
