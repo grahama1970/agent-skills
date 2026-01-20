@@ -1,6 +1,16 @@
 ---
 name: pdf-screenshot
 description: Render PDF pages or cropped regions to PNG images for visual verification.
+triggers:
+  - screenshot pdf
+  - snapshot pdf
+  - render pdf page
+  - show me the pdf
+  - verify pdf element
+  - calibrate pdf extraction
+  - pdf visual check
+  - screenshot page
+  - capture pdf region
 ---
 
 # PDF Screenshot
