@@ -33,12 +33,35 @@ A default padding of 20px is added to the crop.
 /pdf-screenshot /path/to/doc.pdf --page 5 --out /tmp/my_screenshot.png
 ```
 
+### Highlight Region
+
+```bash
+/pdf-screenshot doc.pdf --page 5 --highlight "72,200,540,400"
+```
+
+Draws a red rectangle around the specified region. Useful for visual verification without cropping.
+
+### Batch Processing
+
+```bash
+# Specific pages
+/pdf-screenshot doc.pdf --pages 1,3,5 --out ./screenshots/
+
+# All pages
+/pdf-screenshot doc.pdf --all --out ./screenshots/
+```
+
+If `--out` is a directory (ends in `/`), files are named automatically (e.g., `doc_page1.png`).
+
 ## Arguments
 
 - `pdf_path`: Path to the input PDF file.
-- `--page`: Page number (integer, 0-indexed).
-- `--bbox`: Optional bounding box to crop `x0,y0,x1,y1`.
-- `--out`: Optional output path.
+- `--page`: Single page number (0-indexed).
+- `--pages`: Comma-separated list of page numbers (e.g. `1,3,5`).
+- `--all`: Process all pages in the document.
+- `--bbox`: Optional crop bounding box `x0,y0,x1,y1`.
+- `--highlight`: Optional highlight bounding box `x0,y0,x1,y1` (red stroke).
+- `--out`: Optional output path or directory.
 - `--dpi`: Rendering DPI (default 150).
 
 ## Dependencies
