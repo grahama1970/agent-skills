@@ -1,0 +1,11 @@
+[project]
+name = "pdf-screenshot"
+version = "0.1.0"
+description = "A skill to screenshot PDF pages using PyMuPDF"
+requires-python = ">=3.10"
+dependencies = [
+    "pymupdf>=1.23.0",
+]
+
+[tool.uv]
+dev-dependencies = []
