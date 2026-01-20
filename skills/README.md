@@ -94,17 +94,18 @@ metadata:
 ---
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | Yes | Unique skill identifier (matches directory name) |
-| `description` | Yes | What the skill does + when to use it. Include trigger phrases here too. |
-| `allowed-tools` | No | Comma-separated list of tools Pi can use when this skill is active |
-| `triggers` | Yes | Phrases that activate this skill (case-insensitive matching) |
-| `metadata` | No | Additional fields like `short-description` |
+| Field           | Required | Description                                                             |
+| --------------- | -------- | ----------------------------------------------------------------------- |
+| `name`          | Yes      | Unique skill identifier (matches directory name)                        |
+| `description`   | Yes      | What the skill does + when to use it. Include trigger phrases here too. |
+| `allowed-tools` | No       | Comma-separated list of tools Pi can use when this skill is active      |
+| `triggers`      | Yes      | Phrases that activate this skill (case-insensitive matching)            |
+| `metadata`      | No       | Additional fields like `short-description`                              |
 
 ### Body (After Frontmatter)
 
 The markdown body contains:
+
 - Detailed instructions for the agent
 - Command usage and examples
 - API documentation
@@ -117,58 +118,59 @@ Pi reads this body when the skill is activated and follows the instructions.
 
 ### Core Skills
 
-| Skill | Description | Key Triggers |
-|-------|-------------|--------------|
+| Skill      | Description                                   | Key Triggers                                |
+| ---------- | --------------------------------------------- | ------------------------------------------- |
 | **memory** | MEMORY FIRST - Query before scanning codebase | "check memory", "recall", "learn from this" |
-| **assess** | Step back and reassess project state | "assess", "step back", "sanity check" |
+| **assess** | Step back and reassess project state          | "assess", "step back", "sanity check"       |
 
 ### Search & Research
 
-| Skill | Description | Key Triggers |
-|-------|-------------|--------------|
-| **brave-search** | Free web/local search via Brave API | "brave search", "local search", "near me" |
-| **perplexity** | Deep research with LLM synthesis (paid) | "research this", "what's the latest" |
-| **arxiv** | Academic paper search | "find papers on", "search arxiv" |
-| **context7** | Library documentation lookup | "library docs", "API reference" |
+| Skill            | Description                             | Key Triggers                              |
+| ---------------- | --------------------------------------- | ----------------------------------------- |
+| **brave-search** | Free web/local search via Brave API     | "brave search", "local search", "near me" |
+| **perplexity**   | Deep research with LLM synthesis (paid) | "research this", "what's the latest"      |
+| **arxiv**        | Academic paper search                   | "find papers on", "search arxiv"          |
+| **context7**     | Library documentation lookup            | "library docs", "API reference"           |
 
 ### Content Processing
 
-| Skill | Description | Key Triggers |
-|-------|-------------|--------------|
-| **fetcher** | Fetch URLs, PDFs, web content | "fetch this URL", "download page" |
-| **youtube-transcripts** | Extract video transcripts | "get transcript", "youtube transcript" |
-| **pdf-fixture** | Generate test PDFs | "create test PDF" |
-| **distill** | Extract knowledge from documents | "distill this", "extract knowledge" |
+| Skill                   | Description                      | Key Triggers                           |
+| ----------------------- | -------------------------------- | -------------------------------------- |
+| **fetcher**             | Fetch URLs, PDFs, web content    | "fetch this URL", "download page"      |
+| **pdf-screenshot**      | Render PDF pages/regions to PNG  | "screenshot pdf", "verify pdf element" |
+| **youtube-transcripts** | Extract video transcripts        | "get transcript", "youtube transcript" |
+| **pdf-fixture**         | Generate test PDFs               | "create test PDF"                      |
+| **distill**             | Extract knowledge from documents | "distill this", "extract knowledge"    |
 
 ### Knowledge Management
 
-| Skill | Description | Key Triggers |
-|-------|-------------|--------------|
-| **qra** | Extract Q&A pairs from content | "extract QRA", "create Q&A pairs" |
-| **doc-to-qra** | Convert documents to QRA format | "document to QRA", "pdf to QRA" |
-| **episodic-archiver** | Archive conversations to memory | "archive conversation", "save episode" |
-| **edge-verifier** | Verify knowledge graph relationships | "verify edges", "check edge quality" |
+| Skill                 | Description                          | Key Triggers                           |
+| --------------------- | ------------------------------------ | -------------------------------------- |
+| **qra**               | Extract Q&A pairs from content       | "extract QRA", "create Q&A pairs"      |
+| **doc-to-qra**        | Convert documents to QRA format      | "document to QRA", "pdf to QRA"        |
+| **episodic-archiver** | Archive conversations to memory      | "archive conversation", "save episode" |
+| **edge-verifier**     | Verify knowledge graph relationships | "verify edges", "check edge quality"   |
 
 ### Code & Development
 
-| Skill | Description | Key Triggers |
-|-------|-------------|--------------|
-| **code-review** | Get code reviews and patches | "code review", "review this code" |
-| **treesitter** | Parse code structure | "parse this code", "extract functions" |
+| Skill           | Description                  | Key Triggers                           |
+| --------------- | ---------------------------- | -------------------------------------- |
+| **code-review** | Get code reviews and patches | "code review", "review this code"      |
+| **treesitter**  | Parse code structure         | "parse this code", "extract functions" |
 
 ### Infrastructure
 
-| Skill | Description | Key Triggers |
-|-------|-------------|--------------|
-| **runpod-ops** | Manage GPU instances | "spin up GPU", "create RunPod" |
-| **surf** | Browser automation | "open browser", "click on", "fill form" |
+| Skill          | Description          | Key Triggers                            |
+| -------------- | -------------------- | --------------------------------------- |
+| **runpod-ops** | Manage GPU instances | "spin up GPU", "create RunPod"          |
+| **surf**       | Browser automation   | "open browser", "click on", "fill form" |
 
 ### Agent Management
 
-| Skill | Description | Key Triggers |
-|-------|-------------|--------------|
-| **agent-inbox** | Inter-agent messaging | "check inbox", "send message to" |
-| **skills-sync** | Sync skills across projects | "sync skills", "push skills" |
+| Skill           | Description                 | Key Triggers                     |
+| --------------- | --------------------------- | -------------------------------- |
+| **agent-inbox** | Inter-agent messaging       | "check inbox", "send message to" |
+| **skills-sync** | Sync skills across projects | "sync skills", "push skills"     |
 
 ## Creating a New Skill
 
@@ -206,20 +208,24 @@ Brief overview of what this skill does.
 ## Usage
 
 \`\`\`bash
+
 # Example command
+
 .pi/skills/my-skill/run.sh action --arg value
 \`\`\`
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
+| Command  | Description    |
+| -------- | -------------- |
 | `action` | Does something |
 
 ## Examples
 
 \`\`\`bash
+
 # Example 1
+
 .pi/skills/my-skill/run.sh action --arg "example"
 \`\`\`
 ```
@@ -244,13 +250,15 @@ Add your skill's triggers to `TRIGGERS.md` for reference:
 
 ```markdown
 ## my-skill
+
 **When user says:** "do X", "perform Y"
 
 \`\`\`yaml
 triggers:
-  - do X
-  - perform Y
-\`\`\`
+
+- do X
+- perform Y
+  \`\`\`
 ```
 
 ## Skills Sync
@@ -276,11 +284,11 @@ SKILLS_FANOUT_PROJECTS="$HOME/.codex/skills:$HOME/.pi/agent" \
 
 ### Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `SKILLS_UPSTREAM_REPO` | Path to canonical agent-skills repo |
+| Variable                 | Description                                        |
+| ------------------------ | -------------------------------------------------- |
+| `SKILLS_UPSTREAM_REPO`   | Path to canonical agent-skills repo                |
 | `SKILLS_FANOUT_PROJECTS` | Colon-separated list of projects to receive skills |
-| `SKILLS_SYNC_AUTOCOMMIT` | If `1`, auto-commit after push |
+| `SKILLS_SYNC_AUTOCOMMIT` | If `1`, auto-commit after push                     |
 
 ## Shared Utilities
 
@@ -308,11 +316,11 @@ JSON parsing utilities for skill scripts.
 
 ## Relationship to Pi Extensions
 
-| Concept | Location | Purpose |
-|---------|----------|---------|
-| **Skills** | `.pi/skills/` | Instruction-based capabilities loaded via SKILL.md |
-| **Extensions** | `~/.pi/agent/tools/` | TypeScript tools with full API access |
-| **Agent Configs** | `~/.pi/agent/agents/` | Provider/model configurations for sub-agents |
+| Concept           | Location              | Purpose                                            |
+| ----------------- | --------------------- | -------------------------------------------------- |
+| **Skills**        | `.pi/skills/`         | Instruction-based capabilities loaded via SKILL.md |
+| **Extensions**    | `~/.pi/agent/tools/`  | TypeScript tools with full API access              |
+| **Agent Configs** | `~/.pi/agent/agents/` | Provider/model configurations for sub-agents       |
 
 Skills are **instruction-driven** (markdown instructions Pi follows), while extensions are **code-driven** (TypeScript that Pi executes as tools).
 
