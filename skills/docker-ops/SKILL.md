@@ -11,6 +11,9 @@ triggers:
   - restart containers
   - docker compose redeploy
   - free docker disk space
+allowed-tools: Bash
+metadata:
+  short-description: Safe Docker cleanup and stack management
 ---
 
 # Docker Ops

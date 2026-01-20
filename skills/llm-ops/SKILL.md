@@ -12,6 +12,9 @@ triggers:
   - free gpu memory
   - clear huggingface cache
   - ollama status
+allowed-tools: Bash
+metadata:
+  short-description: Local LLM health checks and cache management
 ---
 
 # LLM Ops

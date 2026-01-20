@@ -10,6 +10,9 @@ triggers:
   - arango dump
   - backup memory database
   - arango ops
+allowed-tools: Bash
+metadata:
+  short-description: Manage ArangoDB operations and backups
 ---
 
 # Arango Ops
