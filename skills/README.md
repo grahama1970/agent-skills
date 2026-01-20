@@ -160,10 +160,13 @@ Pi reads this body when the skill is activated and follows the instructions.
 
 ### Infrastructure
 
-| Skill          | Description          | Key Triggers                            |
-| -------------- | -------------------- | --------------------------------------- |
-| **runpod-ops** | Manage GPU instances | "spin up GPU", "create RunPod"          |
-| **surf**       | Browser automation   | "open browser", "click on", "fill form" |
+| Skill          | Description                         | Key Triggers                            |
+| -------------- | ----------------------------------- | --------------------------------------- |
+| **runpod-ops** | Manage GPU instances                | "spin up GPU", "create RunPod"          |
+| **arango-ops** | Manage ArangoDB operations          | "backup arangodb", "restore snapshot"   |
+| **docker-ops** | Safe Docker cleanup & management    | "prune containers", "redeploy stack"    |
+| **llm-ops**    | Local LLM health & cache management | "clean model cache", "check llm health" |
+| **surf**       | Browser automation                  | "open browser", "click on", "fill form" |
 
 ### Agent Management
 
