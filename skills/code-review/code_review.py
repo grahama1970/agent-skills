@@ -252,18 +252,18 @@ def _create_workspace(paths: list[Path], base_dir: Optional[Path] = None):
     try:
         console.print(f"[dim]Creating workspace: {workspace}[/dim]")
         for path in paths:
-            path = Path(path)
+            path = Path(path).resolve()  # Resolve to absolute path first
             if not path.exists():
                 console.print(f"[yellow]Warning: Path not found, skipping: {path}[/yellow]")
                 continue
 
             # Preserve relative path structure
             try:
-                rel_path = path.relative_to(base)
+                rel_path = path.relative_to(base.resolve())
             except ValueError:
                 # Out-of-tree path: use sanitized absolute path to avoid collisions
                 # e.g., /home/user/foo.py -> _external/home/user/foo.py
-                sanitized = str(path.resolve()).lstrip("/").replace("/", "_")
+                sanitized = str(path).lstrip("/").replace("/", "_")
                 rel_path = Path("_external") / sanitized
                 console.print(f"[yellow]Note: {path} is outside workspace base, using {rel_path}[/yellow]")
 
@@ -775,8 +775,8 @@ def review(
 @app.command()
 def build(
     title: str = typer.Option(..., "--title", "-t", help="Title describing the fix"),
-    repo: str = typer.Option(..., "--repo", "-r", help="Repository (owner/repo)"),
-    branch: str = typer.Option(..., "--branch", "-b", help="Branch name"),
+    repo: Optional[str] = typer.Option(None, "--repo", "-r", help="Repository (owner/repo)"),
+    branch: Optional[str] = typer.Option(None, "--branch", "-b", help="Branch name"),
     paths: Optional[list[str]] = typer.Option(None, "--path", "-p", help="Paths of interest"),
     summary: str = typer.Option("", "--summary", "-s", help="Problem summary"),
     objectives: Optional[list[str]] = typer.Option(None, "--objective", "-o", help="Objectives (repeatable)"),

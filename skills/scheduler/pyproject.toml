@@ -1,0 +1,11 @@
+[project]
+name = "scheduler-skill"
+version = "0.1.0"
+description = "Background task scheduler for Pi and Claude Code"
+requires-python = ">=3.10"
+dependencies = [
+    "apscheduler>=3.10.0",
+    "rich>=13.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+]

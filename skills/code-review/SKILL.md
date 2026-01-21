@@ -8,11 +8,27 @@ allowed-tools: Bash, Read
 triggers:
   - code review
   - review this code
+  - review my changes
+  - review these changes
   - get a patch
-  - copilot review
+  - generate a patch
   - generate diff
+  - copilot review
+  - codex review
+  - claude review
   - review request
   - full review
+  - code review loop
+  - run a code review
+  - request code review
+  - use codex to review
+  - use claude to review
+  - opus vs codex
+  - coder reviewer loop
+  - 3 round review
+  - multi-round review
+  - assess and review
+  - review based on changes
 metadata:
   short-description: Multi-provider AI code review CLI
 ---
