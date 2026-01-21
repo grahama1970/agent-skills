@@ -2,7 +2,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MEMORY_ROOT="${MEMORY_ROOT:-/home/graham/workspace/experiments/memory}"
+# Support both explicit MEMORY_ROOT and $HOME-relative path
+MEMORY_ROOT="${MEMORY_ROOT:-$HOME/workspace/experiments/memory}"
 
 # The user confirmed .pi/skills/memory IS graph-memory
 # usage: ./run.sh serve | ./run.sh recall "query"

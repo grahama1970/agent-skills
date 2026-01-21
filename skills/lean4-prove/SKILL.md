@@ -1,3 +1,19 @@
+---
+name: lean4-prove
+description: >
+  Generate and verify Lean4 proofs using Claude OAuth.
+  This skill combines proof generation with compilation verification in a retry loop.
+allowed-tools: Bash, Read, Docker
+triggers:
+  - prove this
+  - lean4 proof
+  - generate proof
+  - verify lean4
+  - lean4-prove
+metadata:
+  short-description: Lean4 proof generation/verification pipeline
+---
+
 # lean4-prove
 
 Generate and verify Lean4 proofs using Claude OAuth. This skill combines proof generation with compilation verification in a retry loop.
@@ -60,6 +76,7 @@ echo '{"requirement": "Prove n + 0 = n", "tactics": ["rfl"]}' | ./run.sh
 ```
 
 On failure:
+
 ```json
 {
   "success": false,
@@ -74,16 +91,16 @@ On failure:
 
 ## Parameters
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `--requirement, -r` | (required) | Theorem to prove |
-| `--tactics, -t` | none | Comma-separated preferred tactics |
-| `--persona, -p` | none | Persona context for generation |
-| `--candidates, -n` | 3 | Parallel proof candidates |
-| `--retries` | 3 | Max retries per candidate |
-| `--model` | claude-sonnet-4-20250514 | Claude model |
-| `--container` | lean_runner | Docker container name |
-| `--timeout` | 120 | Compilation timeout (seconds) |
+| Parameter           | Default                  | Description                       |
+| ------------------- | ------------------------ | --------------------------------- |
+| `--requirement, -r` | (required)               | Theorem to prove                  |
+| `--tactics, -t`     | none                     | Comma-separated preferred tactics |
+| `--persona, -p`     | none                     | Persona context for generation    |
+| `--candidates, -n`  | 3                        | Parallel proof candidates         |
+| `--retries`         | 3                        | Max retries per candidate         |
+| `--model`           | claude-sonnet-4-20250514 | Claude model                      |
+| `--container`       | lean_runner              | Docker container name             |
+| `--timeout`         | 120                      | Compilation timeout (seconds)     |
 
 ## Environment Variables
 
@@ -100,6 +117,7 @@ LEAN4_PROVE_MODEL=opus             # Claude model (opus recommended for proofs)
 Uses Claude Code CLI (`claude -p`) which handles OAuth automatically.
 
 Supported OAuth providers:
+
 - **Claude Max** - `~/.claude/.credentials.json`
 - **Codex** - Uses Codex OAuth
 - **Gemini** - Uses Gemini OAuth
@@ -117,30 +135,33 @@ If auth fails, run `claude` in your terminal to refresh credentials.
 
 Common Lean4/Mathlib tactics to suggest:
 
-| Tactic | Use For |
-|--------|---------|
-| `rfl` | Reflexivity proofs |
-| `simp` | Simplification |
-| `ring` | Ring arithmetic |
-| `omega` | Linear arithmetic |
-| `decide` | Decidable propositions |
-| `exact` | Exact term construction |
-| `apply` | Apply lemmas |
-| `induction` | Inductive proofs |
+| Tactic      | Use For                 |
+| ----------- | ----------------------- |
+| `rfl`       | Reflexivity proofs      |
+| `simp`      | Simplification          |
+| `ring`      | Ring arithmetic         |
+| `omega`     | Linear arithmetic       |
+| `decide`    | Decidable propositions  |
+| `exact`     | Exact term construction |
+| `apply`     | Apply lemmas            |
+| `induction` | Inductive proofs        |
 
 ## Examples
 
 ### Simple arithmetic
+
 ```bash
 ./run.sh -r "Prove for all natural numbers n, n + 0 = n" -t "rfl"
 ```
 
 ### With persona
+
 ```bash
 ./run.sh -r "Prove that XOR is self-inverse: a ⊕ a = 0" -p "cryptographer" -t "simp,decide"
 ```
 
 ### Complex theorem
+
 ```bash
 ./run.sh -r "Prove the sum of first n natural numbers equals n*(n+1)/2" \
   -t "induction,simp,ring" \
@@ -150,11 +171,10 @@ Common Lean4/Mathlib tactics to suggest:
 
 ## Difference from lean4-verify
 
-| Skill | Purpose |
-|-------|---------|
-| `lean4-verify` | Compile-only. Takes Lean4 code, returns pass/fail |
-| `lean4-prove` | Full pipeline. Takes requirement, generates + compiles + retries |
+| Skill          | Purpose                                                          |
+| -------------- | ---------------------------------------------------------------- |
+| `lean4-verify` | Compile-only. Takes Lean4 code, returns pass/fail                |
+| `lean4-prove`  | Full pipeline. Takes requirement, generates + compiles + retries |
 
 Use `lean4-verify` when you already have Lean4 code to check.
 Use `lean4-prove` when you need to generate the proof from a requirement.
-
