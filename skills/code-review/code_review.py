@@ -1332,6 +1332,7 @@ YOUR TASK:
 5. If the solution is solid and ready to ship, respond with EXACTLY "LGTM" on a line by itself at the start of your response.
 6. If changes are needed, list them clearly.
 7. If YOU have clarifying questions before approving, list them.
+8. **CHANGELOG ENTRY**: Provide a single sentence summarizing why this solution failed (e.g., "Failed to handle edge case X"). This will be added to the persistent history.
 
 IMPORTANT: Only say "LGTM" if NO changes are required. Any feedback means another revision is needed.
 """
@@ -1340,6 +1341,10 @@ LOOP_CODER_FIX_PROMPT = """You are the Coder. Fix your solution based on the Rev
 
 ORIGINAL REQUEST (ground truth - do not drift from this):
 {request}
+
+---
+CHANGELOG (Previous attempts and failures):
+{changelog}
 
 ---
 YOUR PREVIOUS SOLUTION:
@@ -1354,7 +1359,7 @@ OUTPUT FORMAT:
 1. First, answer any clarifying questions the Reviewer raised.
 2. Then provide the FIXED unified diff in a fenced code block.
 
-IMPORTANT: Ensure your fix still addresses the ORIGINAL REQUEST. Do not introduce scope creep or drift.
+IMPORTANT: Ensure your fix still addresses the ORIGINAL REQUEST. Do not introduce scope creep or drift. Avoid repeating mistakes listed in the CHANGELOG.
 """
 
 
@@ -1650,6 +1655,7 @@ async def _loop_async(
     
     current_solution = coder_output
     final_diff = _extract_diff(coder_output)
+    changelog = []
 
     # Loop
     for i in range(1, rounds + 1):
@@ -1680,20 +1686,32 @@ async def _loop_async(
             typer.echo("\n[Reviewer] APPROVED (LGTM detected)", err=True)
             break
 
+        # Extract Changelog Entry
+        match = re.search(r"CHANGELOG ENTRY:\s*(.*)", reviewer_output, re.IGNORECASE)
+        summary = match.group(1).strip() if match else "No summary provided."
+
         # 3. Coder fixes
         typer.echo(f"\n[Coder] ({coder_provider}) Fixing...", err=True)
+        changelog_str = "\n".join(f"- Round {c['round']}: {c['summary']}" for c in changelog) if changelog else "None."
+        
         fix_prompt = LOOP_CODER_FIX_PROMPT.format(
             request=request_content, 
+            changelog=changelog_str,
             coder_output=current_solution, 
             reviewer_output=reviewer_output
         )
-        
+
         coder_output, rc = await _run_provider_async(
             fix_prompt, coder_model, add_dir,
             log_file=output_dir / f"round{i}_fix.log" if save_intermediate else None,
             provider=coder_provider,
-            step_name=f"[Coder] Round {i} Fix"
+            step_name=f"[Coder] Round {i} Fix",
+            continue_session=False,  # Stateless to enforce sliding window
         )
+
+        changelog.append({"round": i, "summary": summary})
+        
+
         if rc != 0: raise typer.Exit(code=1)
 
         if save_intermediate:

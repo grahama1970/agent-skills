@@ -58,6 +58,8 @@ A lightweight background task scheduler that both Pi and Claude Code can use to:
 | `enable <name>` | Enable a disabled job |
 | `disable <name>` | Disable a job without removing |
 | `logs [name]` | Show job execution logs |
+| `load <file>` | Load jobs from services.yaml |
+| `report` | Comprehensive status report with metrics |
 
 ## Register Options
 
@@ -183,6 +185,95 @@ The metrics port is written to `~/.pi/scheduler/.port` for service discovery.
 ```bash
 PORT=$(cat ~/.pi/scheduler/.port)
 curl http://localhost:$PORT/status
+```
+
+## Loading from YAML
+
+Load jobs from a project's `services.yaml` file:
+
+```bash
+./run.sh load /path/to/project/.agents/services.yaml
+```
+
+YAML format:
+
+```yaml
+version: "1.0"
+project: memory
+workdir: /home/user/workspace/memory
+
+scheduled:
+  treesitter-ingest:
+    description: "Parse and index codebase"
+    command: ".agents/skills/treesitter/run.sh scan src/"
+    schedule: "0 * * * *"  # Hourly
+    enabled: true
+    timeout: 300
+
+  edge-verifier:
+    description: "LLM verification of edges"
+    command: ".agents/skills/edge-verifier/run.sh --batch"
+    schedule: "0 2 * * *"  # 2am daily
+    enabled: true
+
+hooks:
+  episodic-archiver:
+    description: "Archive conversation"
+    trigger: "stop"
+    command: ".agents/skills/episodic-archiver/run.sh archive"
+```
+
+## Reports
+
+Generate comprehensive reports with metrics and failure analysis:
+
+```bash
+# Rich TUI report
+./run.sh report
+
+# JSON for automation
+./run.sh report --json
+```
+
+Report includes:
+- **Summary**: Total jobs, success rate, average duration
+- **Per-job stats**: Last run, duration, status
+- **Recent failures**: With log excerpts
+- **Recommendations**: Actionable next steps
+
+Example output:
+
+```
+╭──────────────────────╮
+│   Scheduler Report   │
+│ 2025-01-21 14:30:00  │
+╰──────────────────────╯
+
+Summary
+  Total Jobs    12
+  Enabled       10
+  Jobs Run      8
+  Success Rate  87.5%
+  Avg Duration  45.2s
+  Failures      1
+
+Job Status
+┏━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
+┃ Job               ┃ Schedule    ┃ Last Run  ┃ Duration ┃ Status  ┃
+┡━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━┩
+│ edge-verifier     │ 0 2 * * *   │ 01-21 02:00│ 120.5s  │ success │
+│ treesitter-ingest │ 0 * * * *   │ 01-21 14:00│ 5.2s    │ success │
+│ db-backup         │ 0 3 * * *   │ 01-21 03:00│ 45.0s   │ failed  │
+└───────────────────┴─────────────┴───────────┴──────────┴─────────┘
+
+Recent Failures
+  db-backup - failed at 2025-01-21 03:00
+  ╭─ Log excerpt ─────────────────────────────╮
+  │ ERROR: Connection refused to ArangoDB    │
+  ╰──────────────────────────────────────────╯
+
+Recommendations
+  • Review 1 failed job(s) with: scheduler logs db-backup
 ```
 
 ## Environment Variables

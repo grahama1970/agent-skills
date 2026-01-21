@@ -860,6 +860,242 @@ def load_services_yaml(yaml_path: Path) -> dict:
     return config
 
 
+def cmd_report(args):
+    """Generate comprehensive status report with metrics and failures."""
+    jobs = load_jobs()
+
+    # Aggregate metrics
+    total_jobs = len(jobs)
+    enabled_jobs = sum(1 for j in jobs.values() if j.get("enabled", True))
+    jobs_run = sum(1 for j in jobs.values() if j.get("last_run"))
+
+    # Calculate success/failure counts from job history
+    successes = sum(1 for j in jobs.values() if j.get("last_status") == "success")
+    failures = sum(1 for j in jobs.values() if j.get("last_status") == "failed")
+    timeouts = sum(1 for j in jobs.values() if j.get("last_status") == "timeout")
+
+    # Per-job stats
+    job_stats = []
+    recent_failures = []
+
+    for name, job in sorted(jobs.items(), key=lambda x: x[1].get("last_run") or 0, reverse=True):
+        stat = {
+            "name": name,
+            "enabled": job.get("enabled", True),
+            "schedule": job.get("cron") or job.get("interval", "hook"),
+            "last_run": job.get("last_run"),
+            "last_status": job.get("last_status"),
+            "last_duration": job.get("last_duration", 0),
+            "description": job.get("description", ""),
+        }
+        job_stats.append(stat)
+
+        # Collect recent failures
+        if stat["last_status"] in ("failed", "timeout"):
+            log_file = LOG_DIR / f"{name}.log"
+            log_excerpt = ""
+            if log_file.exists():
+                with open(log_file) as f:
+                    lines = f.readlines()
+                    # Get last execution block
+                    last_block = []
+                    for line in reversed(lines):
+                        last_block.insert(0, line)
+                        if line.startswith("====="):
+                            break
+                        if len(last_block) > 20:
+                            break
+                    log_excerpt = "".join(last_block[-15:])
+
+            recent_failures.append({
+                "name": name,
+                "status": stat["last_status"],
+                "last_run": stat["last_run"],
+                "duration": stat["last_duration"],
+                "log_excerpt": log_excerpt.strip(),
+            })
+
+    # Calculate aggregate metrics
+    total_duration = sum(j.get("last_duration", 0) for j in jobs.values() if j.get("last_run"))
+    avg_duration = total_duration / jobs_run if jobs_run > 0 else 0
+    success_rate = (successes / jobs_run * 100) if jobs_run > 0 else 0
+
+    report_data = {
+        "generated_at": datetime.now().isoformat(),
+        "summary": {
+            "total_jobs": total_jobs,
+            "enabled_jobs": enabled_jobs,
+            "jobs_with_runs": jobs_run,
+            "successes": successes,
+            "failures": failures,
+            "timeouts": timeouts,
+            "success_rate": round(success_rate, 1),
+            "avg_duration_seconds": round(avg_duration, 2),
+            "total_runtime_seconds": round(total_duration, 2),
+        },
+        "daemon": {
+            "running": PID_FILE.exists() and _is_daemon_running(),
+            "pid": _get_daemon_pid(),
+            "metrics_counters": METRICS_COUNTERS,
+        },
+        "jobs": job_stats,
+        "recent_failures": recent_failures[:5],  # Top 5 recent failures
+    }
+
+    if args.json:
+        print(json.dumps(report_data, indent=2, default=str))
+        return
+
+    # Rich TUI output
+    if HAS_RICH:
+        from rich.panel import Panel
+        from rich.columns import Columns
+
+        # Header
+        console.print()
+        console.print(Panel.fit(
+            f"[bold]Scheduler Report[/bold]\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            border_style="blue"
+        ))
+
+        # Summary stats
+        console.print("\n[bold cyan]Summary[/bold cyan]")
+        summary_table = Table(show_header=False, box=None, padding=(0, 2))
+        summary_table.add_column("Metric", style="dim")
+        summary_table.add_column("Value", style="bold")
+
+        summary_table.add_row("Total Jobs", str(total_jobs))
+        summary_table.add_row("Enabled", f"[green]{enabled_jobs}[/green]")
+        summary_table.add_row("Jobs Run", str(jobs_run))
+
+        success_style = "green" if success_rate >= 90 else "yellow" if success_rate >= 70 else "red"
+        summary_table.add_row("Success Rate", f"[{success_style}]{success_rate:.1f}%[/{success_style}]")
+        summary_table.add_row("Avg Duration", f"{avg_duration:.1f}s")
+
+        if failures > 0:
+            summary_table.add_row("Failures", f"[red]{failures}[/red]")
+        if timeouts > 0:
+            summary_table.add_row("Timeouts", f"[yellow]{timeouts}[/yellow]")
+
+        console.print(summary_table)
+
+        # Daemon status
+        daemon_running = PID_FILE.exists() and _is_daemon_running()
+        daemon_status = "[green]RUNNING[/green]" if daemon_running else "[red]STOPPED[/red]"
+        pid = _get_daemon_pid()
+        console.print(f"\n[bold cyan]Daemon[/bold cyan]: {daemon_status}" + (f" (PID {pid})" if pid else ""))
+
+        # Per-job table
+        console.print("\n[bold cyan]Job Status[/bold cyan]")
+        job_table = Table(show_header=True, header_style="bold")
+        job_table.add_column("Job", style="cyan")
+        job_table.add_column("Schedule")
+        job_table.add_column("Last Run")
+        job_table.add_column("Duration")
+        job_table.add_column("Status")
+
+        for stat in job_stats[:15]:  # Top 15
+            last_run_str = datetime.fromtimestamp(stat["last_run"]).strftime("%m-%d %H:%M") if stat["last_run"] else "[dim]never[/dim]"
+            duration_str = f"{stat['last_duration']:.1f}s" if stat["last_duration"] else "-"
+
+            status = stat["last_status"]
+            if status == "success":
+                status_str = "[green]success[/green]"
+            elif status == "failed":
+                status_str = "[red]failed[/red]"
+            elif status == "timeout":
+                status_str = "[yellow]timeout[/yellow]"
+            else:
+                status_str = f"[dim]{status or '-'}[/dim]"
+
+            enabled_marker = "" if stat["enabled"] else " [dim](disabled)[/dim]"
+
+            job_table.add_row(
+                stat["name"] + enabled_marker,
+                stat["schedule"],
+                last_run_str,
+                duration_str,
+                status_str
+            )
+
+        console.print(job_table)
+
+        # Recent failures
+        if recent_failures:
+            console.print("\n[bold red]Recent Failures[/bold red]")
+            for failure in recent_failures[:3]:
+                when = datetime.fromtimestamp(failure["last_run"]).strftime("%Y-%m-%d %H:%M") if failure["last_run"] else "unknown"
+                console.print(f"\n[bold]{failure['name']}[/bold] - {failure['status']} at {when}")
+                if failure["log_excerpt"]:
+                    console.print(Panel(
+                        failure["log_excerpt"][:500],
+                        title="Log excerpt",
+                        border_style="red",
+                        expand=False
+                    ))
+
+        # Recommendations
+        recommendations = []
+        if failures > 0:
+            recommendations.append(f"Review {failures} failed job(s) with: scheduler logs <job-name>")
+        if timeouts > 0:
+            recommendations.append(f"Consider increasing timeout for {timeouts} timed out job(s)")
+        if enabled_jobs < total_jobs:
+            recommendations.append(f"{total_jobs - enabled_jobs} job(s) are disabled")
+        if not daemon_running:
+            recommendations.append("Scheduler daemon is not running. Start with: scheduler start")
+
+        if recommendations:
+            console.print("\n[bold yellow]Recommendations[/bold yellow]")
+            for rec in recommendations:
+                console.print(f"  • {rec}")
+
+        console.print()
+
+    else:
+        # Plain text fallback
+        print(f"\n=== Scheduler Report ({datetime.now().strftime('%Y-%m-%d %H:%M')}) ===\n")
+        print(f"Jobs: {total_jobs} total, {enabled_jobs} enabled, {jobs_run} have run")
+        print(f"Success rate: {success_rate:.1f}%")
+        print(f"Failures: {failures}, Timeouts: {timeouts}")
+        print(f"Avg duration: {avg_duration:.1f}s")
+
+        print("\n--- Jobs ---")
+        for stat in job_stats[:10]:
+            status = stat["last_status"] or "never-run"
+            last_run = datetime.fromtimestamp(stat["last_run"]).strftime("%m-%d %H:%M") if stat["last_run"] else "never"
+            print(f"  {stat['name']}: {status} (last: {last_run})")
+
+        if recent_failures:
+            print("\n--- Recent Failures ---")
+            for f in recent_failures[:3]:
+                print(f"  {f['name']}: {f['status']}")
+
+
+def _is_daemon_running() -> bool:
+    """Check if daemon is running."""
+    if not PID_FILE.exists():
+        return False
+    try:
+        pid = int(PID_FILE.read_text().strip())
+        os.kill(pid, 0)
+        return True
+    except (OSError, ValueError):
+        return False
+
+
+def _get_daemon_pid() -> Optional[int]:
+    """Get daemon PID if running."""
+    if not PID_FILE.exists():
+        return None
+    try:
+        pid = int(PID_FILE.read_text().strip())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
 def cmd_load(args):
     """Load jobs from a services.yaml file."""
     yaml_path = Path(args.file)
@@ -1018,6 +1254,10 @@ def main():
     p.add_argument("file", help="Path to services.yaml file")
     p.add_argument("--include-disabled", action="store_true", help="Also load disabled jobs")
 
+    # report
+    p = subparsers.add_parser("report", help="Generate comprehensive status report")
+    p.add_argument("--json", action="store_true", help="JSON output")
+
     args = parser.parse_args()
 
     cmd_map = {
@@ -1033,6 +1273,7 @@ def main():
         "logs": cmd_logs,
         "systemd-unit": cmd_systemd_unit,
         "load": cmd_load,
+        "report": cmd_report,
     }
 
     cmd_map[args.subcommand](args)
