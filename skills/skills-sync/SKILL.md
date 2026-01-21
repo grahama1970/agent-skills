@@ -108,8 +108,21 @@ export SKILLS_CANONICAL_REPO="$HOME/my-skills-repo"
 export SKILLS_BROADCAST_TARGETS="$HOME/.pi/agent/skills:$HOME/.codex/skills"
 
 # Auto-commit to canonical repo after push
-export SKILLS_BROADCAST_AUTOCOMMIT=1
+# Auto-commit to canonical repo after push
+export SKILLS_SYNC_AUTOCOMMIT=1
 ```
+
+## Registering Projects
+
+To include a new project in the broadcast list, add its absolute path to `~/.agent_skills_targets`:
+
+```bash
+echo "/home/user/workspace/my-new-project" >> ~/.agent_skills_targets
+```
+
+The tool will verify if the directory exists and automatically sync to any supported agent skill directory (`.pi/skills`, `.agent/skills`, etc.) found within it.
+
+Alternatively, you can set `SKILLS_FANOUT_PROJECTS="/path/to/proj:/path/to/proj2"` in your environment.
 
 ## Legacy: skills-sync (Deprecated)
 
