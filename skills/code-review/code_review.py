@@ -1308,7 +1308,9 @@ LOOP_CODER_INIT_PROMPT = """You are the Coder. Analyze the request and generate 
 
 ---
 OUTPUT FORMAT:
-Provide the unified diff in a fenced code block.
+1. First, list any clarifying questions about requirements or implementation choices.
+2. Then provide the unified diff in a fenced code block.
+
 Any commentary must be outside the code block.
 """
 
@@ -1323,15 +1325,20 @@ PROPOSED SOLUTION:
 
 ---
 YOUR TASK:
-1. Identify logic assumptions, bugs, or missing requirements.
-2. Verify if the code meets the Acceptance Criteria.
-3. If the solution is solid, start your response with "LGTM".
-4. If changes are needed, list them clearly.
+1. Answer any clarifying questions the Coder raised.
+2. Identify logic assumptions, bugs, or missing requirements.
+3. **Compare the solution against the ORIGINAL REQUEST** - does it address all objectives? Any drift or hallucinations?
+4. Verify if the code meets the Acceptance Criteria.
+5. If the solution is solid and ready to ship, respond with EXACTLY "LGTM" on a line by itself at the start of your response.
+6. If changes are needed, list them clearly.
+7. If YOU have clarifying questions before approving, list them.
+
+IMPORTANT: Only say "LGTM" if NO changes are required. Any feedback means another revision is needed.
 """
 
 LOOP_CODER_FIX_PROMPT = """You are the Coder. Fix your solution based on the Reviewer's feedback.
 
-ORIGINAL REQUEST:
+ORIGINAL REQUEST (ground truth - do not drift from this):
 {request}
 
 ---
@@ -1344,7 +1351,10 @@ REVIEWER FEEDBACK:
 
 ---
 OUTPUT FORMAT:
-Provide the FIXED unified diff in a fenced code block.
+1. First, answer any clarifying questions the Reviewer raised.
+2. Then provide the FIXED unified diff in a fenced code block.
+
+IMPORTANT: Ensure your fix still addresses the ORIGINAL REQUEST. Do not introduce scope creep or drift.
 """
 
 
@@ -1661,9 +1671,13 @@ async def _loop_async(
         if save_intermediate:
             (output_dir / f"round{i}_review.md").write_text(reviewer_output)
 
-        # LGTM Check (Basic Heuristic)
-        if "LGTM" in reviewer_output.upper().split("\n")[0] or "LOOKS GOOD TO ME" in reviewer_output.upper():
-            typer.echo("\n[Reviewer] PASSED (LGTM detected)", err=True)
+        # LGTM Check: Look for explicit approval signal in first few lines
+        first_lines = "\n".join(reviewer_output.strip().split("\n")[:3]).upper()
+        is_lgtm = ("LGTM" in first_lines or 
+                   "LOOKS GOOD TO ME" in first_lines or
+                   ("LOOKS GOOD" in first_lines and "APPROVED" in first_lines))
+        if is_lgtm:
+            typer.echo("\n[Reviewer] APPROVED (LGTM detected)", err=True)
             break
 
         # 3. Coder fixes
@@ -1723,7 +1737,14 @@ def loop(
     Stops early if Reviewer says "LGTM".
     """
     if not file.exists():
+        typer.echo(f"Error: File not found: {file}", err=True)
         raise typer.Exit(code=1)
+    
+    # Validate providers
+    for prov, label in [(coder_provider, "coder"), (reviewer_provider, "reviewer")]:
+        if prov not in PROVIDERS:
+            typer.echo(f"Error: Unknown {label} provider '{prov}'. Valid: {', '.join(PROVIDERS.keys())}", err=True)
+            raise typer.Exit(code=1)
         
     request_content = file.read_text()
     

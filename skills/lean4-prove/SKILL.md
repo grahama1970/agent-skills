@@ -109,22 +109,21 @@ LEAN4_CONTAINER=lean_runner      # Docker container
 LEAN4_TIMEOUT=120                # Compile timeout
 LEAN4_MAX_RETRIES=3              # Retries per candidate
 LEAN4_CANDIDATES=3               # Parallel candidates
-LEAN4_PROVE_MODEL=opus             # Claude model (opus recommended for proofs)
+LEAN4_PROVE_MODEL=opus           # Claude model (opus recommended for proofs)
 ```
 
 ## Authentication
 
-Uses Claude Code CLI (`claude -p`) which handles OAuth automatically.
+Uses Claude Code CLI (`claude -p`) in headless non-interactive mode.
 
-Supported OAuth providers:
+The CLI is called with:
+- `-p` flag for print/headless mode
+- `--output-format text` for plain text output
+- `--max-turns 1` for single-turn operation
 
-- **Claude Max** - `~/.claude/.credentials.json`
-- **Codex** - Uses Codex OAuth
-- **Gemini** - Uses Gemini OAuth
+Environment variables `CLAUDE_CODE` and `CLAUDECODE` are cleared to avoid recursion detection when called from within Claude Code.
 
-No separate API key required - authentication is handled via your existing subscriptions.
-
-If auth fails, run `claude` in your terminal to refresh credentials.
+No separate API key required - authentication is handled via your Claude subscription.
 
 ## Requirements
 

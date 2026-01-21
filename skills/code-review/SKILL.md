@@ -34,29 +34,29 @@ Submit structured code review requests to multiple AI providers and get unified 
 
 ```bash
 # Check provider CLI availability
-python .agents/skills/code-review/code_review.py check
-python .agents/skills/code-review/code_review.py check --provider anthropic
-python .agents/skills/code-review/code_review.py check --provider openai
-python .agents/skills/code-review/code_review.py check --provider google
+python .pi/skills/code-review/code_review.py check
+python .pi/skills/code-review/code_review.py check --provider anthropic
+python .pi/skills/code-review/code_review.py check --provider openai
+python .pi/skills/code-review/code_review.py check --provider google
 ```
 
 ## Quick Start
 
 ```bash
 # Single-step review (default: github/copilot)
-python .agents/skills/code-review/code_review.py review --file request.md
+python .pi/skills/code-review/code_review.py review --file request.md
 
 # Use different provider
-python .agents/skills/code-review/code_review.py review --file request.md --provider anthropic
+python .pi/skills/code-review/code_review.py review --file request.md --provider anthropic
 
 # OpenAI with high reasoning
-python .agents/skills/code-review/code_review.py review --file request.md --provider openai --reasoning high
+python .pi/skills/code-review/code_review.py review --file request.md --provider openai --reasoning high
 
 # Include uncommitted local files via workspace
-python .agents/skills/code-review/code_review.py review --file request.md --workspace ./src --workspace ./tests
+python .pi/skills/code-review/code_review.py review --file request.md --workspace ./src --workspace ./tests
 
 # Full 3-step pipeline (generate -> judge -> finalize)
-python .agents/skills/code-review/code_review.py review-full --file request.md
+python .pi/skills/code-review/code_review.py review-full --file request.md
 ```
 
 ## Commands
@@ -148,7 +148,7 @@ This is useful when you have uncommitted changes that aren't visible to remote-b
 
 ```bash
 # Copy src/ and tests/ to temp workspace
-python .agents/skills/code-review/code_review.py review \
+python .pi/skills/code-review/code_review.py review \
   --file request.md \
   --workspace ./src \
   --workspace ./tests

@@ -82,15 +82,15 @@ echo "  [PASS] CLI help works"
 if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
     echo "  [INFO] Running integration test..."
 
-    # Simple proof that should succeed quickly
-    RESULT=$("$SCRIPT_DIR/run.sh" --requirement "Prove True" --candidates 1 --retries 1 --timeout 60 2>&1) || true
+    # Simple proof that should succeed quickly - use haiku for speed
+    RESULT=$("$SCRIPT_DIR/run.sh" --requirement "Prove True" --model haiku --candidates 1 --retries 1 --timeout 30 2>&1) || true
 
     if echo "$RESULT" | grep -q '"success": true'; then
         echo "  [PASS] Integration test passed"
     else
         echo "  [WARN] Integration test did not succeed"
         echo "         This may be due to rate limiting or API issues"
-        echo "         Output: $(echo "$RESULT" | head -c 200)"
+        echo "         Output: $(echo "$RESULT" | head -c 300)"
     fi
 else
     echo "  [SKIP] Integration test (container not running)"

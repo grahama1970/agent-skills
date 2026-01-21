@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-lean4-prove: Generate and verify Lean4 proofs using Claude OAuth.
+lean4-prove: Generate and verify Lean4 proofs using Claude CLI.
 
 Takes a requirement + optional tactics + optional persona, generates proof
 candidates via Claude, compiles each in Docker, retries with error feedback.
@@ -14,58 +14,53 @@ import concurrent.futures
 from pathlib import Path
 from typing import Optional
 
-# OAuth credentials path
-CREDENTIALS_PATH = Path.home() / ".claude" / ".credentials.json"
-
-def load_oauth_token() -> str:
-    """Load access token from Claude OAuth credentials."""
-    if not CREDENTIALS_PATH.exists():
-        raise RuntimeError(f"OAuth credentials not found at {CREDENTIALS_PATH}")
-
-    data = json.loads(CREDENTIALS_PATH.read_text())
-    oauth = data.get("claudeAiOauth", {})
-    token = oauth.get("accessToken")
-
-    if not token:
-        raise RuntimeError("No accessToken in OAuth credentials")
-
-    # Check expiry
-    expires_at = oauth.get("expiresAt", 0)
-    if expires_at and time.time() * 1000 > expires_at:
-        raise RuntimeError("OAuth token expired - run 'claude' to refresh")
-
-    return token
+# Default model for theorem proving
+DEFAULT_MODEL = os.getenv("LEAN4_PROVE_MODEL", "opus")
 
 
-def call_claude(prompt: str, system: str, token: str = None, model: str = "opus") -> str:
-    """Call Claude via Claude Code CLI (uses OAuth automatically).
+def call_claude(prompt: str, system: str, model: str = None) -> str:
+    """Call Claude via Claude Code CLI in headless non-interactive mode.
 
     Args:
         prompt: The user prompt
-        system: System prompt to append
-        token: Ignored (kept for API compatibility)
+        system: System prompt
         model: Model alias (sonnet, opus, haiku) or full name
+
+    Returns:
+        The Claude response text
     """
+    model = model or DEFAULT_MODEL
+
     # Build the full prompt with system context
     full_prompt = f"{system}\n\n{prompt}"
 
-    # Use Claude Code CLI with --print for non-interactive mode
+    # Use Claude Code CLI with -p for print/headless mode
+    # Key flags for headless operation:
+    # - -p: print mode (non-interactive, outputs to stdout)
+    # - --output-format text: plain text output
+    # - --max-turns 1: single turn, no conversation
+    # - --no-stream: wait for full response (don't stream)
     cmd = [
         "claude",
         "-p", full_prompt,
         "--model", model,
         "--output-format", "text",
-        "--dangerously-skip-permissions",  # We're just generating text, no tools
-        "--disallowed-tools", "Bash", "Edit", "Write", "Read",  # Disable all tools
+        "--max-turns", "1",
     ]
+
+    # Clean environment to avoid Claude detecting it's being called from Claude
+    env = os.environ.copy()
+    env.pop("CLAUDE_CODE", None)
+    env.pop("CLAUDECODE", None)
 
     try:
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=180,  # 3 minutes for complex proofs
             cwd=Path.home(),  # Run from home to avoid workspace issues
+            env=env,
         )
 
         if result.returncode != 0:
@@ -77,7 +72,7 @@ def call_claude(prompt: str, system: str, token: str = None, model: str = "opus"
         return result.stdout.strip()
 
     except subprocess.TimeoutExpired:
-        raise RuntimeError("Claude CLI timeout after 120s")
+        raise RuntimeError("Claude CLI timeout after 180s")
     except FileNotFoundError:
         raise RuntimeError("Claude CLI not found - ensure 'claude' is in PATH")
 
@@ -189,14 +184,13 @@ Fix the code to compile successfully. Return ONLY the corrected Lean4 code."""
 
 def generate_candidate(
     requirement: str,
-    token: str,
     system_prompt: str,
     model: str,
     candidate_id: int
 ) -> tuple[int, str]:
     """Generate a single proof candidate."""
     prompt = f"Prove the following in Lean4:\n\n{requirement}"
-    response = call_claude(prompt, system_prompt, token, model)
+    response = call_claude(prompt, system_prompt, model)
     code = extract_lean_code(response)
     return (candidate_id, code)
 
@@ -241,9 +235,6 @@ def prove(
             "attempts": 0
         }
 
-    # Token not needed for CLI mode, but kept for API compatibility
-    token = None
-
     system_prompt = build_system_prompt(tactics, persona)
     all_errors = []
     total_attempts = 0
@@ -251,7 +242,7 @@ def prove(
     # Generate candidates in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=candidates) as executor:
         futures = [
-            executor.submit(generate_candidate, requirement, token, system_prompt, model, i)
+            executor.submit(generate_candidate, requirement, system_prompt, model, i)
             for i in range(candidates)
         ]
 
@@ -294,7 +285,7 @@ def prove(
                 # Retry with error feedback
                 retry_prompt = build_retry_prompt(requirement, code, error_msg)
                 try:
-                    response = call_claude(retry_prompt, system_prompt, token, model)
+                    response = call_claude(retry_prompt, system_prompt, model)
                     code = extract_lean_code(response)
                 except Exception as e:
                     all_errors.append(f"Retry generation error: {e}")
