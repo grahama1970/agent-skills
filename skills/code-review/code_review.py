@@ -1679,9 +1679,14 @@ async def _loop_async(
 
         # LGTM Check: Look for explicit approval signal in first few lines
         first_lines = "\n".join(reviewer_output.strip().split("\n")[:3]).upper()
-        is_lgtm = ("LGTM" in first_lines or 
-                   "LOOKS GOOD TO ME" in first_lines or
-                   ("LOOKS GOOD" in first_lines and "APPROVED" in first_lines))
+        # Check for LGTM but exclude "NOT LGTM" etc.
+        positive_signal = ("LGTM" in first_lines or 
+                           "LOOKS GOOD TO ME" in first_lines or
+                           ("LOOKS GOOD" in first_lines and "APPROVED" in first_lines))
+        negative_signal = ("NOT LGTM" in first_lines or "ALMOST LGTM" in first_lines)
+        
+        is_lgtm = positive_signal and not negative_signal
+        
         if is_lgtm:
             typer.echo("\n[Reviewer] APPROVED (LGTM detected)", err=True)
             break
