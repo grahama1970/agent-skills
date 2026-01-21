@@ -783,15 +783,43 @@ def build(
     acceptance: Optional[list[str]] = typer.Option(None, "--acceptance", "-a", help="Acceptance criteria"),
     touch_points: Optional[list[str]] = typer.Option(None, "--touch", help="Known touch points"),
     output: Optional[Path] = typer.Option(None, "--output", help="Write to file instead of stdout"),
+    auto_context: bool = typer.Option(False, "--auto-context", "-A", help="Auto-detect repo, branch, modified files, and context"),
 ):
     """Build a review request markdown file from options.
 
     Creates a file matching the COPILOT_REVIEW_REQUEST_EXAMPLE.md structure.
+    
+    Use --auto-context to automatically fill repo info and modified files.
 
     Examples:
         code_review.py build -t "Fix null check" -r owner/repo -b main -p src/main.py
-        code_review.py build -t "Fix bug" -r owner/repo -b fix-branch --output request.md
+        code_review.py build -A -t "Quick Fix" --output request.md
     """
+    
+    # Auto-context override
+    impl_notes = "(Add implementation hints here)"
+    
+    if auto_context:
+        ctx = _gather_repo_context()
+        if not repo and ctx["repo"]:
+            repo = ctx["repo"]
+            typer.echo(f"Auto-detected repo: {repo}", err=True)
+        
+        if not branch and ctx["branch"]:
+            branch = ctx["branch"]
+            typer.echo(f"Auto-detected branch: {branch}", err=True)
+            
+        if not paths and ctx["modified_files"]:
+            paths = ctx["modified_files"]
+            typer.echo(f"Auto-detected modified paths: {len(paths)} files", err=True)
+            
+        if ctx["context_content"]:
+            impl_notes = f"## Auto-Gathered Context\n\n{ctx['context_content']}\n\n" + impl_notes
+
+    # Fallbacks if still missing
+    if not repo: repo = "owner/repo"
+    if not branch: branch = "main"
+
     request = REQUEST_TEMPLATE.format(
         title=title,
         repo=repo,
@@ -802,7 +830,7 @@ def build(
         acceptance_criteria=_format_bullet_list(acceptance or ["(Specify acceptance criteria)"]),
         test_before="(Describe how to reproduce the issue)",
         test_after=_format_numbered_steps(["(Specify test steps)"]),
-        implementation_notes="(Add implementation hints here)",
+        implementation_notes=impl_notes,
         touch_points=_format_bullet_list(touch_points or ["(List files/functions to modify)"]),
         clarifying_questions="1. (Add any clarifying questions here)",
     )
@@ -909,6 +937,64 @@ def _check_git_status(repo_dir: Optional[Path] = None) -> dict:
         pass
 
     return result
+
+
+def _gather_repo_context(repo_dir: Optional[Path] = None) -> dict:
+    """Gather context similar to 'assess' skill (git status, files, readmes)."""
+    cwd = repo_dir or Path.cwd()
+    context = {
+        "repo": None,
+        "branch": None,
+        "modified_files": [],
+        "context_content": "",
+    }
+    
+    # Git checks
+    try:
+        # Remote URL -> Owner/Repo
+        res = subprocess.run(
+            ["git", "remote", "get-url", "origin"], 
+            capture_output=True, text=True, cwd=cwd, timeout=5
+        )
+        if res.returncode == 0:
+            url = res.stdout.strip()
+            # Parse git@github.com:owner/repo.git or https://github.com/owner/repo
+            match = re.search(r'[:/]([\w-]+/[\w-]+)(?:\.git)?$', url)
+            if match:
+                context["repo"] = match.group(1)
+
+        # Branch
+        res = subprocess.run(
+            ["git", "branch", "--show-current"], 
+            capture_output=True, text=True, cwd=cwd, timeout=5
+        )
+        if res.returncode == 0:
+            context["branch"] = res.stdout.strip()
+
+        # Modified files (staged and unstaged)
+        res = subprocess.run(
+            ["git", "diff", "--name-only", "HEAD"], 
+            capture_output=True, text=True, cwd=cwd, timeout=5
+        )
+        if res.returncode == 0 and res.stdout.strip():
+            context["modified_files"] = res.stdout.strip().splitlines()
+
+    except Exception as e:
+        typer.echo(f"Warning during git check: {e}", err=True)
+
+    # File Context
+    ctx_file = cwd / "CONTEXT.md"
+    readme_file = cwd / "README.md"
+    
+    content_parts = []
+    if ctx_file.exists():
+        content_parts.append(f"## CONTEXT.md\n{ctx_file.read_text()[:2000]}") # Cap size
+    elif readme_file.exists():
+        content_parts.append(f"## README.md\n{readme_file.read_text()[:1000]}")
+        
+    context["context_content"] = "\n\n".join(content_parts)
+    
+    return context
 
 
 @app.command()
@@ -1157,7 +1243,6 @@ def login(
 
 
 STEP1_PROMPT = """You are a code review generator. Analyze the repository and branch specified below, then generate:
-
 1. A unified diff that addresses the objectives
 2. Any clarifying questions you have about requirements or implementation choices
 
@@ -1165,21 +1250,20 @@ STEP1_PROMPT = """You are a code review generator. Analyze the repository and br
 
 ---
 OUTPUT FORMAT:
-First, list any clarifying questions (if none, write "No clarifying questions").
+First, list any clarifying questions.
 Then provide the unified diff in a fenced code block.
 """
 
 STEP2_PROMPT = """You are a code review judge. Review the generated code review below and:
-
 1. Answer any clarifying questions based on the original request context
-2. Critique the proposed diff - identify issues, missing cases, or improvements
-3. Provide specific feedback for improving the diff
+2. Critique the proposed diff - identify issues, missing cases, logic bugs, or improvements
+3. Provide specific feedback for revision
 
 ORIGINAL REQUEST:
 {request}
 
 ---
-GENERATED REVIEW (Step 1):
+PROPOSED SOLUTION:
 {step1_output}
 
 ---
@@ -1200,7 +1284,7 @@ ORIGINAL REQUEST:
 {request}
 
 ---
-INITIAL REVIEW:
+INITIAL SOLUTION:
 {step1_output}
 
 ---
@@ -1215,6 +1299,52 @@ The diff should:
 - Apply cleanly to the specified branch
 - Include a one-line commit subject on the first line
 No commentary before or after the code block.
+"""
+
+# New Prompts for Mixed-Role Loop
+LOOP_CODER_INIT_PROMPT = """You are the Coder. Analyze the request and generate a Unified Diff solution.
+
+{request}
+
+---
+OUTPUT FORMAT:
+Provide the unified diff in a fenced code block.
+Any commentary must be outside the code block.
+"""
+
+LOOP_REVIEWER_PROMPT = """You are the Reviewer. Critique the Coder's proposed solution.
+
+ORIGINAL REQUEST:
+{request}
+
+---
+PROPOSED SOLUTION:
+{coder_output}
+
+---
+YOUR TASK:
+1. Identify logic assumptions, bugs, or missing requirements.
+2. Verify if the code meets the Acceptance Criteria.
+3. If the solution is solid, start your response with "LGTM".
+4. If changes are needed, list them clearly.
+"""
+
+LOOP_CODER_FIX_PROMPT = """You are the Coder. Fix your solution based on the Reviewer's feedback.
+
+ORIGINAL REQUEST:
+{request}
+
+---
+YOUR PREVIOUS SOLUTION:
+{coder_output}
+
+---
+REVIEWER FEEDBACK:
+{reviewer_output}
+
+---
+OUTPUT FORMAT:
+Provide the FIXED unified diff in a fenced code block.
 """
 
 
@@ -1476,6 +1606,159 @@ def review_full(
         **result,
     }, indent=2, ensure_ascii=False))
 
+
+async def _loop_async(
+    request_content: str,
+    coder_provider: str,
+    coder_model: str,
+    reviewer_provider: str,
+    reviewer_model: str,
+    add_dir: Optional[list[str]],
+    rounds: int,
+    output_dir: Path,
+    save_intermediate: bool,
+    reasoning: Optional[str] = None,
+) -> dict:
+    """Run iterative Coder-Reviewer loop with mixed providers."""
+    history = []
+    final_diff = None
+    
+    # 1. Coder generates initial solution
+    typer.echo(f"\n[Coder] ({coder_provider}) Generating initial solution...", err=True)
+    coder_prompt = LOOP_CODER_INIT_PROMPT.format(request=request_content)
+    
+    coder_output, rc = await _run_provider_async(
+        coder_prompt, coder_model, add_dir, 
+        log_file=output_dir / "coder_init.log" if save_intermediate else None,
+        provider=coder_provider,
+        step_name="[Coder] Initial generation"
+    )
+    if rc != 0: raise typer.Exit(code=1)
+    
+    if save_intermediate:
+        (output_dir / "coder_init.md").write_text(coder_output)
+    
+    current_solution = coder_output
+    final_diff = _extract_diff(coder_output)
+
+    # Loop
+    for i in range(1, rounds + 1):
+        typer.echo(f"\n--- ROUND {i}/{rounds} ---", err=True)
+        
+        # 2. Reviewer critiques
+        typer.echo(f"\n[Reviewer] ({reviewer_provider}) Reviewing...", err=True)
+        reviewer_prompt = LOOP_REVIEWER_PROMPT.format(request=request_content, coder_output=current_solution)
+        
+        reviewer_output, rc = await _run_provider_async(
+            reviewer_prompt, reviewer_model, add_dir,
+            log_file=output_dir / f"round{i}_review.log" if save_intermediate else None,
+            provider=reviewer_provider,
+            step_name=f"[Reviewer] Round {i}",
+            reasoning=reasoning # Only applies if reviewer is openai
+        )
+        if rc != 0: raise typer.Exit(code=1)
+
+        if save_intermediate:
+            (output_dir / f"round{i}_review.md").write_text(reviewer_output)
+
+        # LGTM Check (Basic Heuristic)
+        if "LGTM" in reviewer_output.upper().split("\n")[0] or "LOOKS GOOD TO ME" in reviewer_output.upper():
+            typer.echo("\n[Reviewer] PASSED (LGTM detected)", err=True)
+            break
+
+        # 3. Coder fixes
+        typer.echo(f"\n[Coder] ({coder_provider}) Fixing...", err=True)
+        fix_prompt = LOOP_CODER_FIX_PROMPT.format(
+            request=request_content, 
+            coder_output=current_solution, 
+            reviewer_output=reviewer_output
+        )
+        
+        coder_output, rc = await _run_provider_async(
+            fix_prompt, coder_model, add_dir,
+            log_file=output_dir / f"round{i}_fix.log" if save_intermediate else None,
+            provider=coder_provider,
+            step_name=f"[Coder] Round {i} Fix"
+        )
+        if rc != 0: raise typer.Exit(code=1)
+
+        if save_intermediate:
+            (output_dir / f"round{i}_fix.md").write_text(coder_output)
+            diff = _extract_diff(coder_output)
+            if diff:
+                (output_dir / f"round{i}.patch").write_text(diff)
+
+        current_solution = coder_output
+        final_diff = _extract_diff(coder_output) or final_diff
+        
+        history.append({
+            "round": i,
+            "reviewer_output": reviewer_output,
+            "coder_output": coder_output
+        })
+
+    return {
+        "final_diff": final_diff,
+        "history": history
+    }
+
+
+@app.command()
+def loop(
+    file: Path = typer.Option(..., "--file", "-f", help="Markdown request file"),
+    coder_provider: str = typer.Option("anthropic", "--coder-provider", help="Provider for Coder (Runner)"),
+    coder_model: Optional[str] = typer.Option(None, "--coder-model", help="Model for Coder"),
+    reviewer_provider: str = typer.Option("openai", "--reviewer-provider", help="Provider for Reviewer"),
+    reviewer_model: Optional[str] = typer.Option(None, "--reviewer-model", help="Model for Reviewer"),
+    add_dir: Optional[list[str]] = typer.Option(None, "--add-dir", "-d", help="Add directory for file access"),
+    workspace: Optional[list[str]] = typer.Option(None, "--workspace", "-w", help="Workspace paths"),
+    rounds: int = typer.Option(3, "--rounds", "-r", help="Max retries"),
+    save_intermediate: bool = typer.Option(False, "--save-intermediate", "-s", help="Save intermediate logs"),
+    reasoning: Optional[str] = typer.Option("high", "--reasoning", help="Reasoning for Reviewer (openai)"),
+    output_dir: Path = typer.Option("reviews", "--output-dir", "-o", help="Output directory"),
+):
+    """Run a feedback loop between a Coder Agent and a Reviewer Agent.
+    
+    Useful for "Opus (Coder) vs Codex (Reviewer)" loops.
+    Stops early if Reviewer says "LGTM".
+    """
+    if not file.exists():
+        raise typer.Exit(code=1)
+        
+    request_content = file.read_text()
+    
+    # Defaults
+    c_model = coder_model or PROVIDERS[coder_provider]["default_model"]
+    r_model = reviewer_model or PROVIDERS[reviewer_provider]["default_model"]
+    
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    async def _run():
+        return await _loop_async(
+            request_content, coder_provider, c_model,
+            reviewer_provider, r_model, add_dir,
+            rounds, output_dir, save_intermediate, reasoning
+        )
+
+    if workspace:
+        workspace_paths = [Path(p) for p in workspace]
+        with _create_workspace(workspace_paths) as ws_path:
+            effective_dirs = [str(ws_path)] + (add_dir or [])
+            # Must patch _run to use effective_dirs. 
+            # Re-defining _run here to close over effective_dirs is messier than passing args.
+            # Let's just call _loop_async directly.
+            result = asyncio.run(_loop_async(
+                request_content, coder_provider, c_model,
+                reviewer_provider, r_model, effective_dirs,
+                rounds, output_dir, save_intermediate, reasoning
+            ))
+    else:
+        result = asyncio.run(_run())
+
+    if result["final_diff"]:
+        print(result["final_diff"])
+    else:
+        typer.echo("No diff generated.", err=True)
 
 if __name__ == "__main__":
     app()

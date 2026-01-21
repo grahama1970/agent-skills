@@ -23,12 +23,12 @@ Submit structured code review requests to multiple AI providers and get unified 
 
 ## Supported Providers
 
-| Provider | CLI | Default Model | Notes |
-|----------|-----|---------------|-------|
-| `github` | `copilot` | `gpt-5` | GitHub Copilot (default) |
-| `anthropic` | `claude` | `sonnet` | Claude CLI |
-| `openai` | `codex` | `gpt-5.2-codex` | OpenAI Codex (high reasoning default) |
-| `google` | `gemini` | `gemini-2.5-flash` | Gemini CLI |
+| Provider    | CLI       | Default Model      | Notes                                 |
+| ----------- | --------- | ------------------ | ------------------------------------- |
+| `github`    | `copilot` | `gpt-5`            | GitHub Copilot (default)              |
+| `anthropic` | `claude`  | `sonnet`           | Claude CLI                            |
+| `openai`    | `codex`   | `gpt-5.2-codex`    | OpenAI Codex (high reasoning default) |
+| `google`    | `gemini`  | `gemini-2.5-flash` | Gemini CLI                            |
 
 ## Prerequisites
 
@@ -61,95 +61,84 @@ python .agents/skills/code-review/code_review.py review-full --file request.md
 
 ## Commands
 
-### check
-Verify provider CLI and authentication.
+### loop (Codex-Opus Loop)
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--provider` | `-P` | Provider to check (default: github) |
+Run an automated feedback loop where one agent (Coder) fixes code based on another agent's (Reviewer) critique.
 
-### review
-Submit a single code review request.
-
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--file` | `-f` | Markdown request file (required) |
-| `--provider` | `-P` | Provider: github, anthropic, openai, google |
-| `--model` | `-m` | Model (provider-specific, uses default if not set) |
-| `--add-dir` | `-d` | Add directory for file access |
-| `--workspace` | `-w` | Copy local paths to temp workspace (for uncommitted files) |
-| `--reasoning` | `-R` | Reasoning effort: low, medium, high (openai only) |
-| `--raw` | | Output raw response without JSON |
-| `--extract-diff` | | Extract only the diff block |
-
-### review-full
-Run iterative code review pipeline.
-
-**Pipeline (per round):**
-1. **Generate** - Initial review with diff and clarifying questions
-2. **Judge** - Reviews output, answers questions, provides feedback
-3. **Finalize** - Regenerates diff incorporating feedback
-
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--file` | `-f` | Markdown request file (required) |
-| `--provider` | `-P` | Provider: github, anthropic, openai, google |
-| `--model` | `-m` | Model for all steps |
-| `--add-dir` | `-d` | Add directory for file access |
-| `--workspace` | `-w` | Copy local paths to temp workspace |
-| `--reasoning` | `-R` | Reasoning effort: low, medium, high (openai only) |
-| `--rounds` | `-r` | Iteration rounds (default: 2) |
-| `--save-intermediate` | `-s` | Save step outputs |
-| `--output-dir` | `-o` | Directory for output files |
+| Option                | Short | Description                                             |
+| --------------------- | ----- | ------------------------------------------------------- |
+| `--file`              | `-f`  | Markdown request file (required)                        |
+| `--coder-provider`    |       | Provider for Coder, e.g. anthropic (default: anthropic) |
+| `--coder-model`       |       | Model for Coder, e.g. opus                              |
+| `--reviewer-provider` |       | Provider for Reviewer, e.g. openai (default: openai)    |
+| `--reviewer-model`    |       | Model for Reviewer, e.g. gpt-5.2-codex                  |
+| `--rounds`            | `-r`  | Max retries (default: 3)                                |
+| `--add-dir`           | `-d`  | Add directory for file access                           |
+| `--workspace`         | `-w`  | Copy local paths to temp workspace                      |
+| `--save-intermediate` | `-s`  | Save logs and diffs                                     |
 
 ```bash
-# Full pipeline with intermediate files saved
-python .agents/skills/code-review/code_review.py review-full \
-  --file request.md \
-  --save-intermediate \
-  --output-dir ./reviews
-# Creates: round1_step1.md, round1_step2.md, round1_final.md, round1.patch
+code_review.py loop \
+  --coder-provider anthropic --coder-model opus-4.5 \
+  --reviewer-provider openai --reviewer-model gpt-5.2-codex \
+  --rounds 5 --file request.md
 ```
 
-### build
-Build a request markdown file from options.
+### review-full (Single Provider Pipeline)
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--title` | `-t` | Title describing the fix (required) |
-| `--repo` | `-r` | Repository owner/repo (required) |
-| `--branch` | `-b` | Branch name (required) |
-| `--path` | `-p` | Paths of interest (repeatable) |
-| `--summary` | `-s` | Problem summary |
-| `--objective` | `-o` | Objectives (repeatable) |
-| `--acceptance` | `-a` | Acceptance criteria (repeatable) |
-| `--touch` | | Known touch points (repeatable) |
-| `--output` | | Write to file instead of stdout |
+Run the complete iterative review pipeline with one provider:
+
+1. **Generate**: Create initial review and patch
+2. **Judge**: Critique the solution and provide feedback
+3. **Reference**: Regenerate final patch incorporating feedback
+
+```bash
+# Default (GitHub Copilot)
+code_review.py review-full --file request.md
+
+# Specific provider/model
+code_review.py review-full --file request.md --provider anthropic --model opus-4.5
+```
+
+### build (Request Generator)
+
+Build a request markdown file from options. Use `--auto-context` to automatically populate repo info and context.
+
+| Option           | Short | Description                         |
+| ---------------- | ----- | ----------------------------------- |
+| `--title`        | `-t`  | Title describing the fix (required) |
+| `--auto-context` | `-A`  | Auto-detect repo, branch, context   |
+| `--repo`         | `-r`  | Repository owner/repo               |
+| `--branch`       | `-b`  | Branch name                         |
+| `--path`         | `-p`  | Paths of interest (repeatable)      |
+| `--summary`      | `-s`  | Problem summary                     |
+| `--output`       |       | Write to file instead of stdout     |
+
+```bash
+# Auto-gather context (Recommended)
+code_review.py build -A -t "Fix Auth Bug" --summary "Fixing token expiry" -o request.md
+```
 
 ### bundle
+
 Bundle request for copy/paste into GitHub Copilot web.
 
-**IMPORTANT:** Copilot web can only see committed & pushed changes!
-
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--file` | `-f` | Markdown request file (required) |
-| `--repo-dir` | `-d` | Repository directory (for git status check) |
-| `--output` | `-o` | Output file (default: stdout) |
-| `--clipboard` | `-c` | Copy to clipboard (xclip/pbcopy) |
-| `--skip-git-check` | | Skip git status verification |
+| Option        | Short | Description                      |
+| ------------- | ----- | -------------------------------- |
+| `--file`      | `-f`  | Markdown request file (required) |
+| `--output`    | `-o`  | Output file (default: stdout)    |
+| `--clipboard` | `-c`  | Copy to clipboard                |
 
 ### models
+
 List available models for a provider.
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--provider` | `-P` | Provider to list models for |
-
 ### template
+
 Print the example review request template.
 
 ### find
+
 Search for review request markdown files.
 
 ## Workspace Feature
@@ -170,22 +159,26 @@ The workspace is automatically cleaned up after the review completes.
 ## Provider-Specific Notes
 
 ### GitHub Copilot (`github`)
+
 - Requires `gh` CLI authenticated
 - Supports `--continue` for session continuity
 - Models: gpt-5, claude-sonnet-4, claude-sonnet-4.5, claude-haiku-4.5
 
 ### Anthropic Claude (`anthropic`)
+
 - Requires `claude` CLI
 - Supports `--continue` for session continuity
 - Models: opus, sonnet, haiku, opus-4.5, sonnet-4.5, sonnet-4
 
 ### OpenAI Codex (`openai`)
+
 - Requires `codex` CLI
 - Default reasoning: high (best results)
 - Models: gpt-5, gpt-5.2, gpt-5.2-codex, o3, o3-mini
 - Does NOT support `--continue` (session context lost between rounds)
 
 ### Google Gemini (`google`)
+
 - Requires `gemini` CLI
 - Models: gemini-3-pro, gemini-3-flash, gemini-2.5-pro, gemini-2.5-flash, auto
 - Does NOT support `--continue` (use /chat save/resume in interactive mode)
@@ -209,6 +202,7 @@ If unclear, agent asks provider (another round) or the user
 ```
 
 **Why this approach:**
+
 - Patch format may be malformed (won't `git apply`)
 - Project agent can exercise judgment on suggestions
 - Agent can ask clarifying questions back to provider
