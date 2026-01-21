@@ -476,7 +476,7 @@ async def _run_provider_async(
         return f"{PROVIDERS[provider]['cli']} CLI not found for provider {provider}", 1
 
     cmd = _build_provider_cmd(provider, prompt, model, add_dirs, continue_session, reasoning)
-    env = {**os.environ, **PROVIDERS[provider].get("env", {})}
+    env = {**os.environ, **PROVIDERS[provider].get("env", {}), "PYTHONUNBUFFERED": "1"}
 
     # Pass prompt via stdin for providers that support it (handles long prompts with special chars)
     # anthropic: claude reads from stdin
@@ -503,7 +503,7 @@ async def _run_provider_async(
             console.print(f"[yellow]Warning: stdin closed early: {e}[/yellow]")
 
     output_lines = []
-    log_handle = open(log_file, 'w') if log_file else None
+    log_handle = open(log_file, 'w', buffering=1) if log_file else None
     line_count = 0
     char_count = 0
 

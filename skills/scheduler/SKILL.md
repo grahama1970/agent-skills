@@ -140,10 +140,56 @@ systemctl --user enable pi-scheduler
 systemctl --user start pi-scheduler
 ```
 
+## Metrics Server
+
+When the scheduler starts, it also runs a metrics server for monitoring and API access.
+
+### Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Service info and endpoint list |
+| `/status` | GET | Daemon status, uptime, job counts |
+| `/jobs` | GET | List all jobs with status |
+| `/jobs/{name}` | GET | Get specific job details |
+| `/jobs/{name}/logs` | GET | Get job execution logs |
+| `/jobs/{name}/run` | POST | Trigger job immediately |
+| `/metrics` | GET | Prometheus-compatible metrics |
+| `/docs` | GET | OpenAPI documentation |
+
+### Example Usage
+
+```bash
+# Start scheduler with metrics on custom port
+./run.sh start --port 8610
+
+# Query status via API
+curl http://localhost:8610/status
+
+# List jobs
+curl http://localhost:8610/jobs
+
+# Trigger a job via API
+curl -X POST http://localhost:8610/jobs/memory-edge-verify/run
+
+# Get Prometheus metrics
+curl http://localhost:8610/metrics
+```
+
+### Port Discovery
+
+The metrics port is written to `~/.pi/scheduler/.port` for service discovery.
+
+```bash
+PORT=$(cat ~/.pi/scheduler/.port)
+curl http://localhost:$PORT/status
+```
+
 ## Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `SCHEDULER_DATA_DIR` | `~/.pi/scheduler` | Data directory |
+| `SCHEDULER_METRICS_PORT` | `8610` | Metrics server port |
 | `SCHEDULER_LOG_LEVEL` | `INFO` | Log verbosity |
 | `SCHEDULER_PID_FILE` | `~/.pi/scheduler/scheduler.pid` | PID file location |
