@@ -20,7 +20,9 @@ CDP_PID_FILE="/tmp/chrome-cdp.pid"
 REPO="github:nicobailon/surf-cli"
 
 # Surf-cli paths
-SURF_CLI_PATH="/home/graham/workspace/experiments/surf-cli"
+# Surf-cli paths (try workspace sibling, else env var)
+DEFAULT_SURF_CLI="$(cd "$SKILL_DIR/../../../../surf-cli" >/dev/null 2>&1 && pwd)"
+SURF_CLI_PATH="${SURF_CLI_PATH:-${DEFAULT_SURF_CLI:-/home/graham/workspace/experiments/surf-cli}}"
 
 # Resolve skill directory (for relative paths)
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -416,7 +418,7 @@ fi
 # Command Routing: surf-cli (extension) preferred, CDP fallback
 # ─────────────────────────────────────────────────────────────
 
-LOCAL_FORK_PATH="/home/graham/workspace/experiments/surf-cli"
+LOCAL_FORK_PATH="$SURF_CLI_PATH"
 LOCAL_CLI="${LOCAL_FORK_PATH}/native/cli.cjs"
 
 # If surf-cli socket is available, route ALL commands through it

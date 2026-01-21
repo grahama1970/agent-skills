@@ -416,7 +416,14 @@ def stage_4_store(session: LearnSession) -> int:
             tags.append(f"author:{first_author}")
 
     stored = 0
-    memory_root = os.environ.get("MEMORY_ROOT", "/home/graham/workspace/experiments/memory")
+    # Default to env var, or try to find sibling 'memory' workspace
+    default_mem = Path(SKILLS_DIR).parent.parent.parent / "memory" 
+    memory_root = os.environ.get("MEMORY_ROOT", str(default_mem))
+    
+    # If explicitly hardcoded fallback is needed for legacy reasons, we keep it as last resort via env
+    if not Path(memory_root).exists() and "/home/graham" in memory_root:
+        # Fallback to standard location if default logic failed
+        pass
 
     for pair in session.approved_pairs:
         try:

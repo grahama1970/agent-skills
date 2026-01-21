@@ -92,22 +92,26 @@ LEAN4_CONTAINER=lean_runner      # Docker container
 LEAN4_TIMEOUT=120                # Compile timeout
 LEAN4_MAX_RETRIES=3              # Retries per candidate
 LEAN4_CANDIDATES=3               # Parallel candidates
-LEAN4_PROVE_MODEL=claude-sonnet-4-20250514  # Claude model
+LEAN4_PROVE_MODEL=opus             # Claude model (opus recommended for proofs)
 ```
 
 ## Authentication
 
-Uses OAuth credentials from `~/.claude/.credentials.json` (Claude Max Plan).
+Uses Claude Code CLI (`claude -p`) which handles OAuth automatically.
 
-No API key required - authentication is handled via your Claude subscription.
+Supported OAuth providers:
+- **Claude Max** - `~/.claude/.credentials.json`
+- **Codex** - Uses Codex OAuth
+- **Gemini** - Uses Gemini OAuth
 
-If the token expires, run `claude` in your terminal to refresh it.
+No separate API key required - authentication is handled via your existing subscriptions.
+
+If auth fails, run `claude` in your terminal to refresh credentials.
 
 ## Requirements
 
-1. **Docker** with `lean_runner` container running
-2. **OAuth credentials** at `~/.claude/.credentials.json`
-3. Container must have Lean4 + Mathlib installed
+1. **Docker** with `lean_runner` container running (Lean4 + Mathlib installed)
+2. **Claude Code CLI** (`claude`) in PATH with valid authentication
 
 ## Tactics
 

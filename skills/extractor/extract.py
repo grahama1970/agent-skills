@@ -25,7 +25,12 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 
-EXTRACTOR_ROOT = Path("/home/graham/workspace/experiments/extractor")
+EXTRACTOR_ROOT = Path(os.environ.get("EXTRACTOR_ROOT", "/home/graham/workspace/experiments/extractor"))
+if not EXTRACTOR_ROOT.exists():
+    # Fallback to assuming we are inside the extractor project structure if run directly
+    # But for the skill, we should rely on run.sh setting this.
+    pass
+
 sys.path.insert(0, str(EXTRACTOR_ROOT / "src"))
 
 # Formats that use the full pipeline
@@ -107,7 +112,11 @@ def format_error_guidance(error: str, filepath: Path = None, mode: str = None) -
     return "\n".join(guidance)
 
 
-MEMORY_SKILL_PATH = Path("/home/graham/workspace/experiments/pi-mono/.pi/skills/memory/run.sh")
+# Find memory skill (sibling directory)
+MEMORY_SKILL_PATH = Path(os.environ.get(
+    "MEMORY_SKILL_PATH", 
+    Path(__file__).parent.parent / "memory/run.sh"
+))
 
 
 def learn_to_memory(filepath: Path, result: Dict[str, Any], scope: str = "documents") -> bool:

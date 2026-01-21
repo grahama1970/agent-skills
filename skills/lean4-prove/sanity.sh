@@ -85,7 +85,7 @@ if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
     # Simple proof that should succeed quickly
     RESULT=$("$SCRIPT_DIR/run.sh" --requirement "Prove True" --candidates 1 --retries 1 --timeout 60 2>&1) || true
 
-    if echo "$RESULT" | grep -q '"success":true'; then
+    if echo "$RESULT" | grep -q '"success": true'; then
         echo "  [PASS] Integration test passed"
     else
         echo "  [WARN] Integration test did not succeed"

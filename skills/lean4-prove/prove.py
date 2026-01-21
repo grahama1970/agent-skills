@@ -37,7 +37,7 @@ def load_oauth_token() -> str:
     return token
 
 
-def call_claude(prompt: str, system: str, token: str = None, model: str = "sonnet") -> str:
+def call_claude(prompt: str, system: str, token: str = None, model: str = "opus") -> str:
     """Call Claude via Claude Code CLI (uses OAuth automatically).
 
     Args:
@@ -207,7 +207,7 @@ def prove(
     persona: str | None = None,
     max_retries: int = 3,
     candidates: int = 3,
-    model: str = "sonnet",
+    model: str = "opus",
     container: str = "lean_runner",
     timeout: int = 120,
 ) -> dict:
@@ -317,7 +317,7 @@ def main():
     parser.add_argument("--persona", "-p", help="Persona context")
     parser.add_argument("--retries", type=int, default=3, help="Max retries per candidate")
     parser.add_argument("--candidates", "-n", type=int, default=3, help="Parallel candidates")
-    parser.add_argument("--model", default="claude-sonnet-4-20250514", help="Claude model")
+    parser.add_argument("--model", default="opus", help="Claude model (opus, sonnet, haiku)")
     parser.add_argument("--container", default="lean_runner", help="Docker container")
     parser.add_argument("--timeout", type=int, default=120, help="Compile timeout")
 

@@ -14,7 +14,9 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-/home/graham/workspace/experiments/extractor}"
+# Try to detect extractor project relative to this skill (sibling in workspace)
+DEFAULT_ROOT="$(cd "$SCRIPT_DIR/../../../../extractor" >/dev/null 2>&1 && pwd)"
+EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-${DEFAULT_ROOT:-/home/graham/workspace/experiments/extractor}}"
 
 # Load environment if available
 [[ -f "$EXTRACTOR_ROOT/.env" ]] && { set -a; source "$EXTRACTOR_ROOT/.env"; set +a; }
