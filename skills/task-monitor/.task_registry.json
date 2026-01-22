@@ -11,6 +11,12 @@
       "state_file": "/home/graham/workspace/experiments/pi-mono/run/youtube-transcripts/remembrancer/.batch_state.json",
       "total": 688,
       "description": "Remembrancer YouTube transcripts"
+    },
+    "sparta-pdf-extract": {
+      "name": "sparta-pdf-extract",
+      "state_file": "/home/graham/workspace/experiments/sparta/data/runs/run-2025-12-18_144426-2eb428c/extractor_output/.batch_state.json",
+      "total": 230,
+      "description": "SPARTA PDF extraction batch (watchdog monitored)"
     }
   }
 }

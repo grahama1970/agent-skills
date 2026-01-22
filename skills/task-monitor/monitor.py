@@ -37,8 +37,10 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-# Registry file for known tasks
-REGISTRY_FILE = Path(__file__).parent / ".task_registry.json"
+# Registry file for known tasks - Global location to share across all agents
+REGISTRY_DIR = Path.home() / ".pi" / "task-monitor"
+REGISTRY_DIR.mkdir(parents=True, exist_ok=True)
+REGISTRY_FILE = REGISTRY_DIR / "registry.json"
 
 app_cli = typer.Typer(help="Task Monitor - TUI + API for long-running tasks")
 app_api = FastAPI(
@@ -144,6 +146,19 @@ def get_task_status(task: TaskConfig) -> dict:
 
     return state
 
+def get_scheduled_jobs() -> list[dict]:
+    """Get list of scheduled jobs."""
+    path = Path.home() / ".pi" / "scheduler" / "jobs.json"
+    if not path.exists():
+        return []
+    try:
+        with open(path) as f:
+            data = json.load(f)
+            return list(data.values())
+    except Exception:
+        return []
+
+# =============================================================================
 
 # =============================================================================
 # FastAPI Endpoints
@@ -215,7 +230,30 @@ async def unregister_task(name: str):
     if name not in registry.tasks:
         raise HTTPException(status_code=404, detail=f"Task '{name}' not found")
     registry.unregister(name)
+    registry.unregister(name)
     return {"status": "unregistered", "name": name}
+
+
+@app_api.post("/tasks/{name}/state")
+async def update_task_state(name: str, state: dict):
+    """Update task state via API (Push mode)."""
+    if name not in registry.tasks:
+        raise HTTPException(status_code=404, detail=f"Task '{name}' not found")
+    
+    task = registry.tasks[name]
+    path = Path(task.state_file)
+    
+    # Ensure directory exists
+    path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Write state to file
+    try:
+        with open(path, 'w') as f:
+            json.dump(state, f, indent=2)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to write state file: {e}")
+        
+    return {"status": "updated", "name": name}
 
 
 # =============================================================================
@@ -225,8 +263,9 @@ async def unregister_task(name: str):
 class TaskMonitorTUI:
     """nvtop-style TUI for task monitoring."""
 
-    def __init__(self):
+    def __init__(self, filter_term: Optional[str] = None):
         self.registry = TaskRegistry()
+        self.filter_term = filter_term.lower() if filter_term else None
         self.running = False
         self.start_time = time.time()
         self._history: dict[str, list[tuple[float, int]]] = {}
@@ -278,9 +317,13 @@ class TaskMonitorTUI:
         table.add_column("Progress", width=35)
         table.add_column("Rate", justify="right", width=10)
         table.add_column("ETA", justify="right", width=10)
+        table.add_column("Errors", justify="right", width=8, style="red")
         table.add_column("Current", width=20)
 
         for name, task in self.registry.tasks.items():
+            if self.filter_term and self.filter_term not in name.lower():
+                continue
+
             status = get_task_status(task)
 
             completed = status.get("completed", 0) or 0
@@ -326,7 +369,17 @@ class TaskMonitorTUI:
             else:
                 progress_str = f"[cyan]{bar}[/] {completed:5d}/??? "
 
-            table.add_row(name[:18], progress_str, rate_str, eta_str, current_str)
+            if total:
+                progress_str = f"[cyan]{bar}[/] {completed:5d}/{total:5d} ({pct:5.1f}%)"
+            else:
+                progress_str = f"[cyan]{bar}[/] {completed:5d}/??? "
+
+            # Errors
+            stats_dict = status.get("stats", {})
+            errors = stats_dict.get("failed", 0) + stats_dict.get("errors", 0)
+            err_str = f"{errors}" if errors > 0 else "-"
+
+            table.add_row(name[:18], progress_str, rate_str, eta_str, err_str, current_str)
 
         return Panel(table, title="[bold]Tasks[/]", border_style="blue")
 
@@ -353,6 +406,46 @@ class TaskMonitorTUI:
 
         return Panel(content, title="[bold]Totals[/]", border_style="green")
 
+    def create_schedule_panel(self) -> Panel:
+        """Create scheduled jobs panel."""
+        jobs = get_scheduled_jobs()
+        if not jobs:
+             return Panel("No scheduled jobs found", title="[bold]Schedule[/]", border_style="yellow")
+
+        table = Table(show_header=True, header_style="bold", box=None, expand=True)
+        table.add_column("Job Name", style="cyan")
+        table.add_column("Schedule", style="yellow")
+        table.add_column("Next Run", style="green", justify="right")
+        table.add_column("Status", style="bold")
+
+        # Sort by next run time (if parseable?) 
+        # Actually jobs.json 'next_run' might be string or absent.
+        # Just list them.
+        
+        # Filter scheduler jobs too? Maybe.
+        
+        for job in jobs:
+            name = job.get("name", "unknown")
+            if self.filter_term and self.filter_term not in name.lower():
+                continue
+                
+            cron = job.get("cron", "")
+            # next_run is usually ISO string or timestamp? 
+            # Scheduler saves it as isoformat usually? Or int?
+            # jobs.json has "created_at": 1769101872
+            # Let's assume it has human readable or we just show it.
+            
+            # Since I don't know exact format (I didn't inspect jobs.json deeply for next_run format),
+            # I will just display what is there.
+            
+            # If enabled is False, show disabled
+            enabled = job.get("enabled", True)
+            status_str = "[green]Active[/]" if enabled else "[dim]Disabled[/]"
+            
+            table.add_row(name, cron, str(job.get("next_run", "-")), status_str)
+
+        return Panel(table, title="[bold]Upcoming Schedule[/]", border_style="yellow")
+
     def create_display(self) -> Layout:
         """Create the full layout."""
         layout = Layout()
@@ -360,6 +453,7 @@ class TaskMonitorTUI:
         layout.split_column(
             Layout(self.create_header(), size=3),
             Layout(self.create_tasks_panel(), name="tasks"),
+            Layout(self.create_schedule_panel(), size=10),
             Layout(self.create_totals_panel(), size=3),
         )
 
@@ -388,9 +482,12 @@ class TaskMonitorTUI:
 # =============================================================================
 
 @app_cli.command()
-def tui(refresh: int = typer.Option(2, "--refresh", "-r", help="Refresh interval in seconds")):
+def tui(
+    refresh: int = typer.Option(2, "--refresh", "-r", help="Refresh interval in seconds"),
+    filter_term: str = typer.Option(None, "--filter", "-f", help="Filter tasks by name"),
+):
     """Start the Rich TUI monitor."""
-    monitor = TaskMonitorTUI()
+    monitor = TaskMonitorTUI(filter_term=filter_term)
 
     if not monitor.registry.tasks:
         console.print("[yellow]No tasks registered. Use 'register' command first.[/]")
