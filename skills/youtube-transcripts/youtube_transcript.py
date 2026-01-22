@@ -77,6 +77,31 @@ def _load_proxy_settings() -> Optional[dict]:
     }
 
 
+def _fetch_video_metadata(vid: str) -> dict:
+    """Fetch video metadata using yt-dlp (fast extraction)."""
+    try:
+        import yt_dlp
+        ydl_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": True,  # Fast extraction (no download)
+            "skip_download": True,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(f"https://www.youtube.com/watch?v={vid}", download=False)
+            return {
+                "title": info.get("title", ""),
+                "channel": info.get("uploader", ""),
+                "upload_date": info.get("upload_date", ""),
+                "duration_sec": info.get("duration", 0),
+                "description": info.get("description", ""),  # Video abstract/description
+                "view_count": info.get("view_count", 0),
+            }
+    except Exception:
+        # Silent fail on metadata
+        return {}
+
+
 def _extract_video_id(url_or_id: str) -> str | None:
     """Extract video ID from URL or return as-is if already an ID."""
     s = (url_or_id or "").strip()
@@ -490,6 +515,9 @@ def get(
 
     took_ms = int((time.time() - t0) * 1000)
 
+    # Fetch metadata (title, etc.)
+    metadata = _fetch_video_metadata(vid)
+
     # Build output
     out = {
         "meta": {
@@ -497,6 +525,7 @@ def get(
             "language": lang,
             "took_ms": took_ms,
             "method": method,
+            **metadata,  # Merge title, channel, etc.
         },
         "transcript": transcript,
         "full_text": full_text,
@@ -876,12 +905,16 @@ def batch(
 
         took_ms = int((time.time() - t0) * 1000)
 
+        # Fetch metadata
+        metadata = _fetch_video_metadata(vid)
+
         result = {
             "meta": {
                 "video_id": vid,
                 "language": lang,
                 "took_ms": took_ms,
                 "method": method,
+                **metadata,
             },
             "transcript": transcript,
             "full_text": full_text,
