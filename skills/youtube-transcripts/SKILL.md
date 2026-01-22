@@ -64,60 +64,8 @@ uv run python youtube_transcript.py get \
 | `--no-proxy` | | Skip proxy tier |
 | `--no-whisper` | | Skip Whisper fallback tier |
 | `--retries` | `-r` | Max retries per tier (default: 3) |
-| `--clean` | | Also include cleaned version (noise filtered, entities) |
-| `--channel` | `-c` | Channel name to tag transcript (used with --clean) |
 
 **Output:** JSON with transcript segments (text, start time, duration)
-
-**With `--clean`:** Adds a `cleaned` section with noise-filtered text, content_type, and entities
-
-### Clean Transcripts
-```bash
-# Clean a single transcript
-uv run python youtube_transcript.py clean -i dQw4w9WgXcQ.json
-
-# Clean all transcripts in a directory
-uv run python youtube_transcript.py clean -i ./transcripts -o ./clean
-
-# Dry run (show stats only)
-uv run python youtube_transcript.py clean -i ./transcripts --dry-run
-
-# Tag with channel name
-uv run python youtube_transcript.py clean -i ./transcripts --channel "Luetin09"
-```
-
-Converts raw transcripts to LLM-friendly format:
-- Combines segments into single `full_text` field
-- Filters noise (`[Music]`, `[Applause]`, etc.)
-- Detects content type (lore/gaming/mixed/unknown)
-- Extracts named entities (Warhammer 40k focused)
-
-**Options:**
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--input` | `-i` | Input JSON file or directory |
-| `--output` | `-o` | Output directory (default: input/clean) |
-| `--channel` | `-c` | Channel name to tag transcripts |
-| `--dry-run` | | Show stats without writing files |
-| `--min-words` | | Skip transcripts under N words (default: 100) |
-
-### Get + Clean (Combined)
-```bash
-# Get transcript and clean it in one step
-uv run python youtube_transcript.py get-clean -i dQw4w9WgXcQ
-
-# Include raw segments in output
-uv run python youtube_transcript.py get-clean -i VIDEO_ID --raw
-```
-
-Combines `get` and `clean` - fetches transcript, then immediately cleans it.
-Output is LLM-friendly format with full_text, content_type, entities.
-
-**Options:** Same as `get`, plus:
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--channel` | `-c` | Channel name to tag transcript |
-| `--raw` | | Include raw transcript segments in output |
 
 ### List Available Languages
 ```bash
@@ -154,58 +102,6 @@ Tests IPRoyal proxy connectivity and IP rotation.
 ```
 
 **Method values:** `direct`, `proxy`, `whisper-local`, `whisper-api`, or `null` (if all failed)
-
-### Combined Output Format (with `--clean`)
-
-```json
-{
-  "meta": {
-    "video_id": "dQw4w9WgXcQ",
-    "language": "en",
-    "took_ms": 3029,
-    "method": "direct",
-    "title": "THE HORUS HERESY...",
-    "channel": "Luetin09"
-  },
-  "transcript": [
-    {"text": "Hello world", "start": 0.0, "duration": 2.5},
-    {"text": "[Music]", "start": 2.5, "duration": 3.0}
-  ],
-  "full_text": "Hello world [Music]...",
-  "cleaned": {
-    "full_text": "Hello world...",
-    "word_count": 5432,
-    "content_type": "lore",
-    "entities_found": ["Horus", "Emperor"],
-    "original_segment_count": 423,
-    "cleaned_segment_count": 398
-  },
-  "errors": []
-}
-```
-
-### Clean Output Format
-
-```json
-{
-  "video_id": "dQw4w9WgXcQ",
-  "channel": "Luetin09",
-  "title": "THE HORUS HERESY - Siege of Terra",
-  "description": "In this video we explore...",
-  "full_text": "The Siege of Terra was the final battle...",
-  "word_count": 5432,
-  "content_type": "lore",
-  "entities_found": ["Horus", "Emperor", "Sanguinius", "Terra"],
-  "original_segment_count": 423,
-  "cleaned_segment_count": 398,
-  "language": "en",
-  "method": "direct"
-}
-```
-
-**Content types:** `lore`, `gaming`, `mixed`, `unknown`
-
-**Entities detected:** Primarchs, Emperor, Chaos Gods, major events, locations (Warhammer 40k focused)
 
 ## Three-Tier Fallback
 
