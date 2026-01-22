@@ -291,7 +291,11 @@ def _build_query(
     query: str,
     categories: Optional[List[str]] = None,
 ) -> str:
-    """Build arXiv query string with optional category filter."""
+    """Build arXiv query string with optional category filter.
+
+    For simple queries, searches both title and abstract.
+    Multi-word queries are split and ANDed for better matching.
+    """
     parts = []
 
     # Main query
@@ -300,8 +304,26 @@ def _build_query(
         if any(op in query for op in ["AND", "OR", "ti:", "abs:", "au:", "cat:"]):
             parts.append(f"({query})")
         else:
-            # Search in title and abstract
-            parts.append(f"(ti:{query} OR abs:{query})")
+            # Split multi-word queries and AND them together
+            # This gives better results than searching for the full phrase
+            words = query.split()
+            if len(words) == 1:
+                # Single word: search in title or abstract
+                parts.append(f"(ti:{query} OR abs:{query})")
+            else:
+                # Multi-word: AND terms together, each in title OR abstract
+                # e.g., "theory of mind LLM" -> (ti:theory OR abs:theory) AND (ti:mind OR abs:mind) AND (ti:LLM OR abs:LLM)
+                # Filter out common words that don't help search
+                skip_words = {"of", "the", "a", "an", "in", "on", "for", "to", "and", "or", "with"}
+                word_parts = []
+                for word in words:
+                    if word.lower() not in skip_words and len(word) > 1:
+                        word_parts.append(f"(ti:{word} OR abs:{word})")
+                if word_parts:
+                    parts.append(f"({' AND '.join(word_parts)})")
+                else:
+                    # Fallback if all words were filtered
+                    parts.append(f"(ti:{query} OR abs:{query})")
 
     # Category filter
     if categories:
@@ -360,7 +382,7 @@ def _fetch_arxiv(
 def search(
     query: str = typer.Option(..., "--query", "-q", help="Search query"),
     max_results: int = typer.Option(10, "--max-results", "-n", help="Max results"),
-    sort_by: str = typer.Option("date", "--sort-by", "-s", help="relevance|date|lastUpdatedDate"),
+    sort_by: str = typer.Option("relevance", "--sort-by", "-s", help="relevance|date|lastUpdatedDate"),
     category: Optional[List[str]] = typer.Option(None, "--category", "-c", help="Filter by category (e.g., cs.LG, cs.AI)"),
     since: Optional[str] = typer.Option(None, "--since", help="Filter papers after date (YYYY-MM-DD or YYYY-MM)"),
     until: Optional[str] = typer.Option(None, "--until", help="Filter papers before date (YYYY-MM-DD or YYYY-MM)"),
@@ -467,11 +489,13 @@ def get(
 def download(
     paper_id: str = typer.Option(..., "--paper-id", "-i", help="arXiv paper ID"),
     output: Path = typer.Option(Path("."), "--output", "-o", help="Output directory"),
+    format: str = typer.Option("pdf", "--format", "-f", help="Download format: pdf or html (ar5iv)"),
 ):
-    """Download PDF for a paper.
+    """Download PDF or HTML for a paper.
 
     Examples:
         python arxiv_cli.py download -i 2301.00001 -o ./papers/
+        python arxiv_cli.py download -i 2301.00001 -o ./papers/ --format html
     """
     t0 = time.time()
     errors: list[str] = []
@@ -486,7 +510,24 @@ def download(
         data = _query_arxiv(None, 0, 1, id_list=base_id)
         items = _parse_atom(data)
 
-        if items and items[0].get("pdf_url"):
+        if not items:
+            errors.append("Paper not found")
+        elif format.lower() == "html":
+            # Download HTML from ar5iv.org
+            html_url = items[0].get("html_url") or f"https://ar5iv.org/abs/{base_id}"
+            output.mkdir(parents=True, exist_ok=True)
+            filename = output / f"{base_id.replace('.', '_')}.html"
+
+            req = urllib.request.Request(
+                html_url,
+                headers={"User-Agent": "ArxivSkill/1.0"},
+            )
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                with open(filename, "wb") as f:
+                    f.write(resp.read())
+            downloaded = str(filename)
+        elif items[0].get("pdf_url"):
+            # Download PDF (default)
             pdf_url = items[0]["pdf_url"]
             output.mkdir(parents=True, exist_ok=True)
             filename = output / f"{base_id.replace('.', '_')}.pdf"
@@ -506,7 +547,7 @@ def download(
 
     took_ms = int((time.time() - t0) * 1000)
     out = {
-        "meta": {"paper_id": paper_id, "took_ms": took_ms},
+        "meta": {"paper_id": paper_id, "format": format, "took_ms": took_ms},
         "downloaded": downloaded,
         "errors": errors,
     }
@@ -530,6 +571,7 @@ def learn(
     file_path: Optional[Path] = typer.Option(None, "--file", "-f", help="Local PDF file"),
     scope: str = typer.Option(..., "--scope", help="Memory scope for storage (required)"),
     context: Optional[str] = typer.Option(None, "--context", "-c", help="Domain context for relevance filtering"),
+    context_file: Optional[Path] = typer.Option(None, "--context-file", help="Rich context from file (RECOMMENDED for focused extraction)"),
     mode: str = typer.Option("auto", "--mode", "-m", help="Interview mode: auto, html, tui"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview without storing"),
     skip_interview: bool = typer.Option(False, "--skip-interview", help="Auto-accept agent recommendations"),
@@ -545,7 +587,11 @@ def learn(
     4. Store approved pairs to memory
     5. Schedule edge verification
 
+    IMPORTANT: Use --context-file for focused extraction. Generate a dynamic
+    context file based on your current collaboration goals. See SKILL.md.
+
     Examples:
+        python arxiv_cli.py learn 2601.08058 --scope memory --context-file /tmp/context.md
         python arxiv_cli.py learn 2601.08058 --scope memory --context "agent systems"
         python arxiv_cli.py learn --search "intent-aware memory" --scope memory
         python arxiv_cli.py learn --file paper.pdf --scope research --dry-run
@@ -558,13 +604,19 @@ def learn(
         # Fallback for direct execution (script in same dir)
         from arxiv_learn import LearnSession, run_pipeline
 
+    # Read context from file if provided (takes precedence over --context string)
+    effective_context = context or ""
+    if context_file and context_file.exists():
+        effective_context = context_file.read_text(encoding="utf-8").strip()
+        typer.echo(f"[arxiv] Using context from: {context_file.name} ({len(effective_context)} chars)", err=True)
+
     # Build session
     session = LearnSession(
         arxiv_id=paper_id or "",
         search_query=search_query or "",
         file_path=str(file_path) if file_path else "",
         scope=scope,
-        context=context or "",
+        context=effective_context,
         mode=mode,
         dry_run=dry_run,
         skip_interview=skip_interview,
@@ -586,6 +638,90 @@ def learn(
         else:
             typer.echo(f"\nPipeline failed: {result['error']}", err=True)
             raise typer.Exit(1)
+
+
+@app.command()
+def batch(
+    paper_ids: List[str] = typer.Argument(..., help="arXiv paper IDs to process"),
+    scope: str = typer.Option(..., "--scope", help="Memory scope for storage (required)"),
+    context_file: Optional[Path] = typer.Option(None, "--context-file", help="Rich context from file"),
+    parallel: int = typer.Option(2, "--parallel", "-p", help="Max papers to process in parallel (default: 2)"),
+    skip_interview: bool = typer.Option(True, "--skip-interview/--interview", help="Skip interview (default: skip)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview without storing"),
+    output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
+):
+    """Extract knowledge from multiple papers in parallel.
+
+    Processes papers concurrently (default: 2 at a time) to speed up batch extraction.
+    Automatically skips interview mode for batch processing.
+
+    Examples:
+        python arxiv_cli.py batch 2501.15355 2502.14171 --scope tom-research --context-file ctx.md
+        python arxiv_cli.py batch 2501.15355 2502.14171 2310.10701 --scope research --parallel 3
+    """
+    import concurrent.futures
+    import threading
+
+    try:
+        from .arxiv_learn import LearnSession, run_pipeline
+    except ImportError:
+        from arxiv_learn import LearnSession, run_pipeline
+
+    # Read context from file if provided
+    effective_context = ""
+    if context_file and context_file.exists():
+        effective_context = context_file.read_text(encoding="utf-8").strip()
+        typer.echo(f"[arxiv batch] Using context from: {context_file.name} ({len(effective_context)} chars)", err=True)
+
+    typer.echo(f"[arxiv batch] Processing {len(paper_ids)} papers with parallelism={parallel}", err=True)
+
+    results = []
+    results_lock = threading.Lock()
+
+    def process_paper(paper_id: str) -> dict:
+        """Process a single paper."""
+        session = LearnSession(
+            arxiv_id=paper_id,
+            search_query="",
+            file_path="",
+            scope=scope,
+            context=effective_context,
+            mode="auto",
+            dry_run=dry_run,
+            skip_interview=skip_interview,
+            max_edges=20,
+        )
+        result = run_pipeline(session)
+        result["paper_id"] = paper_id
+        return result
+
+    # Run papers in parallel with ThreadPoolExecutor
+    with concurrent.futures.ThreadPoolExecutor(max_workers=parallel) as executor:
+        future_to_paper = {executor.submit(process_paper, pid): pid for pid in paper_ids}
+
+        for future in concurrent.futures.as_completed(future_to_paper):
+            paper_id = future_to_paper[future]
+            try:
+                result = future.result()
+                with results_lock:
+                    results.append(result)
+                if result["success"]:
+                    typer.echo(f"[arxiv batch] ✓ {paper_id}: {result['stored']} lessons stored", err=True)
+                else:
+                    typer.echo(f"[arxiv batch] ✗ {paper_id}: {result.get('error', 'unknown error')}", err=True)
+            except Exception as e:
+                with results_lock:
+                    results.append({"paper_id": paper_id, "success": False, "error": str(e)})
+                typer.echo(f"[arxiv batch] ✗ {paper_id}: {e}", err=True)
+
+    # Summary
+    success_count = sum(1 for r in results if r.get("success"))
+    total_stored = sum(r.get("stored", 0) for r in results if r.get("success"))
+
+    if output_json:
+        print(json.dumps({"results": results, "success": success_count, "total_stored": total_stored}, indent=2))
+    else:
+        typer.echo(f"\n[arxiv batch] Complete: {success_count}/{len(paper_ids)} papers, {total_stored} total lessons", err=True)
 
 
 if __name__ == "__main__":

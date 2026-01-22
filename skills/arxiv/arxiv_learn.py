@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -77,6 +78,53 @@ def _run_skill(skill_name: str, args: list[str], capture: bool = True) -> dict |
     return ""
 
 
+def quick_profile_html(html_content: str) -> dict:
+    """
+    Quick profile check for HTML content to determine if VLM is needed.
+
+    Counts <figure> and <table> tags in HTML to decide whether
+    accurate mode (with VLM) should be used.
+
+    Args:
+        html_content: HTML string (e.g., from ar5iv.org)
+
+    Returns:
+        dict with:
+            - needs_vlm: bool - True if paper has significant figures/tables
+            - has_figures: int - Count of figure tags
+            - has_tables: int - Count of table tags
+            - recommendation: str - "fast" or "accurate"
+    """
+    # Count figure tags (including nested img in figures)
+    figure_pattern = re.compile(r'<figure[^>]*>', re.IGNORECASE)
+    figures = len(figure_pattern.findall(html_content))
+
+    # Count table tags (data tables, not layout tables)
+    table_pattern = re.compile(r'<table[^>]*class="[^"]*ltx_tabular[^"]*"[^>]*>', re.IGNORECASE)
+    tables = len(table_pattern.findall(html_content))
+
+    # Fallback: count all table tags if no ltx_tabular found
+    if tables == 0:
+        all_tables_pattern = re.compile(r'<table[^>]*>', re.IGNORECASE)
+        tables = len(all_tables_pattern.findall(html_content))
+
+    # Heuristic: ar5iv HTML includes figure captions and table data,
+    # so VLM is only needed for papers with heavy visual content
+    # that can't be understood from captions alone.
+    # Higher thresholds since ar5iv does good job extracting captions.
+    # VLM recommended only for papers where visual analysis is critical.
+    needs_vlm = figures > 20 or tables > 10
+
+    recommendation = "accurate" if needs_vlm else "fast"
+
+    return {
+        "needs_vlm": needs_vlm,
+        "has_figures": figures,
+        "has_tables": tables,
+        "recommendation": recommendation,
+    }
+
+
 @dataclass
 class Paper:
     """Downloaded paper info."""
@@ -86,6 +134,7 @@ class Paper:
     pdf_path: str
     abstract: str = ""
     html_url: str = ""
+    html_path: str = ""  # Path to downloaded HTML (from ar5iv)
 
 
 @dataclass
@@ -125,14 +174,37 @@ class LearnSession:
     dry_run: bool = False
     skip_interview: bool = False
     max_edges: int = 20
+    accurate: bool = False  # Force accurate mode (PDF + VLM)
 
     paper: Paper | None = None
+    profile: dict | None = None  # HTML profile result
     qa_pairs: list[QAPair] = field(default_factory=list)
     approved_pairs: list[QAPair] = field(default_factory=list)
     dropped_pairs: list[QAPair] = field(default_factory=list)
 
     started_at: float = field(default_factory=time.time)
     completed_at: float | None = None
+
+
+def _download_html(arxiv_id: str, output_dir: Path) -> str | None:
+    """Download HTML from ar5iv.org."""
+    import urllib.request
+
+    # Strip version suffix if present (e.g., 2501.15355v1 -> 2501.15355)
+    base_id = arxiv_id.split("v")[0] if "v" in arxiv_id else arxiv_id
+
+    url = f"https://ar5iv.org/abs/{base_id}"
+    output_path = output_dir / f"{base_id}.html"
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "arxiv-learn/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            content = resp.read()
+            output_path.write_bytes(content)
+            return str(output_path)
+    except Exception as e:
+        _log(f"HTML download failed: {e}", style="yellow")
+        return None
 
 
 def stage_1_find_paper(session: LearnSession) -> Paper:
@@ -207,13 +279,261 @@ def stage_1_find_paper(session: LearnSession) -> Paper:
         _log(f"Title: {paper.title[:60]}...", style="green")
         _log(f"Authors: {', '.join(paper.authors[:3])}", style="dim")
 
+        # Also download HTML from ar5iv for profile check and fast extraction
+        if not session.accurate:
+            html_path = _download_html(session.arxiv_id, papers_dir)
+            if html_path:
+                paper.html_path = html_path
+                _log(f"HTML: Downloaded from ar5iv", style="dim")
+
+                # Run quick profile
+                html_content = Path(html_path).read_text()
+                session.profile = quick_profile_html(html_content)
+                _log(f"Profile: {session.profile['has_figures']} figures, {session.profile['has_tables']} tables", style="dim")
+
         return paper
 
     raise ValueError("Must provide arxiv ID, search query, or file path")
 
 
+def stage_2_extract(session: LearnSession) -> dict:
+    """
+    Stage 2: Extract content using HTML-first routing.
+
+    Routes extraction based on:
+    - Default (fast): ar5iv HTML → extractor HTML mode
+    - Accurate: PDF → extractor PDF + VLM mode
+
+    Returns:
+        dict with format, source, and extraction results
+    """
+    _log("Extracting content...", style="bold", stage=2)
+
+    if not session.paper:
+        raise ValueError("No paper loaded")
+
+    # Determine extraction mode
+    use_pdf = session.accurate
+
+    # Check if profile suggests VLM is needed
+    if session.profile and session.profile.get("needs_vlm"):
+        _log("Profile suggests VLM needed (many figures/tables)", style="yellow")
+        use_pdf = True
+
+    # Use HTML if available and not forced to PDF
+    if not use_pdf and session.paper.html_path:
+        _log("Using HTML extraction (fast mode)", style="green")
+
+        # Dry run: return expected format without running extractor
+        if session.dry_run:
+            _log("DRY RUN - would extract from HTML", style="yellow")
+            return {
+                "format": "html",
+                "source": "ar5iv",
+                "success": True,
+                "dry_run": True,
+                "full_text": "",
+                "char_count": 0,
+                "sections": [],
+            }
+
+        # Run extractor in HTML mode (auto-detect preset)
+        # Note: extractor run.sh takes file as first positional arg, no "extract" subcommand
+        extractor_args = [
+            session.paper.html_path,
+            "--fast",
+            "--json",
+        ]
+
+        try:
+            result = _run_skill("extractor", extractor_args)
+
+            # Extract text from blocks (extractor returns structured blocks, not full_text)
+            full_text = ""
+            if isinstance(result, dict):
+                doc = result.get("document", {})
+                blocks = doc.get("blocks", [])
+                # Concatenate text from all blocks
+                text_parts = []
+                for block in blocks:
+                    content = block.get("content", "")
+                    block_type = block.get("type", "")
+
+                    # Handle different block types - some have dict content
+                    if isinstance(content, dict):
+                        # Figure blocks: extract caption
+                        if block_type == "figure":
+                            caption = content.get("caption", "")
+                            title = content.get("title", "")
+                            if caption:
+                                text_parts.append(f"[Figure: {caption}]")
+                            elif title:
+                                text_parts.append(f"[Figure: {title}]")
+                        # Table blocks: skip (usually no extractable text)
+                        # List blocks: skip (items are in listitem blocks)
+                        continue
+                    elif isinstance(content, str) and content.strip():
+                        # String content - add with appropriate formatting
+                        if block_type == "heading":
+                            text_parts.append(f"\n## {content}\n")
+                        elif block_type == "listitem":
+                            text_parts.append(f"  • {content}")
+                        else:
+                            text_parts.append(content)
+                full_text = "\n".join(text_parts)
+
+            return {
+                "format": "html",
+                "source": "ar5iv",
+                "success": True,
+                "full_text": full_text,
+                "char_count": len(full_text),
+                "sections": [],
+            }
+        except Exception as e:
+            _log(f"HTML extraction failed, falling back to PDF: {e}", style="yellow")
+            use_pdf = True
+
+    # PDF extraction with VLM
+    _log("Using PDF extraction (accurate mode)", style="cyan")
+
+    # Dry run: return expected format without running extractor
+    if session.dry_run:
+        _log("DRY RUN - would extract from PDF", style="yellow")
+        return {
+            "format": "pdf",
+            "source": "arxiv",
+            "success": True,
+            "dry_run": True,
+            "full_text": "",
+            "char_count": 0,
+            "sections": [],
+        }
+
+    # Note: extractor run.sh takes file as first positional arg, no "extract" subcommand
+    extractor_args = [
+        session.paper.pdf_path,
+        "--accurate",
+        "--json",
+    ]
+
+    try:
+        result = _run_skill("extractor", extractor_args)
+
+        return {
+            "format": "pdf",
+            "source": "arxiv",
+            "success": True,
+            "full_text": result.get("full_text", ""),
+            "char_count": len(result.get("full_text", "")),
+            "sections": result.get("sections", []),
+        }
+    except Exception as e:
+        raise RuntimeError(f"Extraction failed: {e}")
+
+
+def _find_context_file(context: str) -> str | None:
+    """Find a context file matching the context string."""
+    contexts_dir = SCRIPT_DIR / "contexts"
+    if not contexts_dir.exists():
+        return None
+
+    # Check for exact match or keyword match
+    context_lower = context.lower()
+    for ctx_file in contexts_dir.glob("*.md"):
+        # Exact stem match
+        if ctx_file.stem.lower() == context_lower.replace(" ", "_"):
+            return str(ctx_file)
+        # Keyword match (e.g., "horus" in context matches "horus_tom.md")
+        if any(kw in context_lower for kw in ctx_file.stem.lower().split("_")):
+            return str(ctx_file)
+
+    return None
+
+
+def extract_qa_from_text(text: str, scope: str = "research", context: str = "", dry_run: bool = False) -> dict:
+    """
+    Extract Q&A pairs from extracted text using QRA skill.
+
+    Args:
+        text: Full text content (from extractor)
+        scope: Memory scope for storage
+        context: Domain context for relevance filtering (or context file name)
+        dry_run: If True, don't store to memory
+
+    Returns:
+        dict with qa_pairs list and metadata
+    """
+    if not text or len(text) < 100:
+        return {
+            "success": False,
+            "error": "Text too short for Q&A extraction",
+            "qa_pairs": [],
+        }
+
+    # Write text to temp file for QRA skill
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".txt", delete=False
+    ) as f:
+        f.write(text)
+        text_file = f.name
+
+    try:
+        # Build QRA command
+        args = [
+            "--file", text_file,
+            "--scope", scope,
+            "--json",
+        ]
+
+        # Check for context file (rich context) vs simple context string
+        if context:
+            context_file = _find_context_file(context)
+            if context_file:
+                _log(f"Using context file: {Path(context_file).name}", style="cyan")
+                args.extend(["--context-file", context_file])
+            else:
+                args.extend(["--context", context])
+
+        if dry_run:
+            args.append("--dry-run")
+
+        # Run QRA skill
+        result = _run_skill("qra", args)
+
+        # Parse QRA output (note: QRA skill returns "qra_pairs" key)
+        qa_pairs = []
+        items = result.get("qra_pairs", result.get("items", result.get("qa_pairs", [])))
+
+        for item in items:
+            qa_pairs.append({
+                "question": item.get("problem", item.get("question", "")),
+                "answer": item.get("solution", item.get("answer", "")),
+                "reasoning": item.get("reasoning", ""),
+                "grounding_score": item.get("grounding_score", 0.0),
+            })
+
+        return {
+            "success": True,
+            "qa_pairs": qa_pairs,
+            "extracted": len(qa_pairs),
+            "scope": scope,
+            "dry_run": dry_run,
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "qa_pairs": [],
+        }
+
+    finally:
+        Path(text_file).unlink(missing_ok=True)
+
+
 def stage_2_distill(session: LearnSession) -> list[QAPair]:
-    """Stage 2: Distill paper into Q&A pairs."""
+    """Stage 2b: Distill paper into Q&A pairs (legacy mode using distill skill)."""
     _log("Distilling Q&As...", style="bold", stage=2)
 
     if not session.paper:
@@ -512,13 +832,62 @@ def stage_5_schedule_edges(session: LearnSession) -> int:
 
 
 def run_pipeline(session: LearnSession) -> dict:
-    """Run the full arxiv-learn pipeline."""
+    """Run the full arxiv-learn pipeline with HTML-first extraction."""
+    extraction_format = "unknown"
     try:
-        # Stage 1: Find paper
+        # Stage 1: Find paper (also downloads HTML from ar5iv and runs profile)
         session.paper = stage_1_find_paper(session)
 
-        # Stage 2: Distill
-        session.qa_pairs = stage_2_distill(session)
+        # Stage 2: Extract content using HTML-first routing
+        # This replaces the old distill-based extraction for arxiv papers
+        extraction_result = stage_2_extract(session)
+        extraction_format = extraction_result.get("format", "unknown")
+        full_text = extraction_result.get("full_text", "")
+
+        # Stage 2b: Convert extracted text to Q&A pairs
+        if full_text:
+            qa_result = extract_qa_from_text(
+                full_text,
+                scope=session.scope,
+                context=session.context,
+                dry_run=True,  # Don't store yet - we do that in stage 4
+            )
+            raw_pairs = qa_result.get("qa_pairs", [])
+
+            # Convert to QAPair objects
+            session.qa_pairs = []
+            for idx, qa in enumerate(raw_pairs):
+                pair = QAPair(
+                    id=f"q{idx+1}",
+                    question=qa.get("question", ""),
+                    answer=qa.get("answer", ""),
+                    reasoning=qa.get("reasoning", ""),
+                    grounding_score=qa.get("grounding_score", 0.0),
+                )
+                session.qa_pairs.append(pair)
+
+            # Add recommendations
+            session.qa_pairs = _add_recommendations(session.qa_pairs, session)
+
+            _log(f"Extracted {len(session.qa_pairs)} Q&A pairs from {extraction_format.upper()}", style="green")
+        elif session.dry_run:
+            # Dry run: return stub Q&A pairs (estimation based on profile)
+            _log("DRY RUN - estimating Q&A pairs", style="yellow")
+            estimated = 10 if session.profile else 5  # Estimate based on typical paper
+            session.qa_pairs = [
+                QAPair(
+                    id=f"q{i+1}",
+                    question=f"[DRY RUN] Sample question {i+1}",
+                    answer=f"[DRY RUN] Sample answer {i+1}",
+                    recommendation="keep",
+                    reason="Dry run stub",
+                )
+                for i in range(estimated)
+            ]
+        else:
+            # Fallback to legacy distill if extraction failed
+            _log("HTML extraction returned no text, falling back to distill", style="yellow")
+            session.qa_pairs = stage_2_distill(session)
 
         # Stage 3: Interview
         session.approved_pairs, session.dropped_pairs = stage_3_interview(session)
@@ -543,6 +912,7 @@ def run_pipeline(session: LearnSession) -> dict:
                 "title": session.paper.title if session.paper else "",
                 "pdf_path": session.paper.pdf_path if session.paper else "",
             },
+            "extraction_format": extraction_format,
             "extracted": len(session.qa_pairs),
             "approved": len(session.approved_pairs),
             "dropped": len(session.dropped_pairs),
@@ -589,6 +959,8 @@ Examples:
                         help="Auto-accept agent recommendations (no human review)")
     parser.add_argument("--max-edges", type=int, default=20,
                         help="Max inline edge verifications (default: 20)")
+    parser.add_argument("--accurate", action="store_true",
+                        help="Force accurate mode (PDF + VLM extraction)")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
 
     args = parser.parse_args()
@@ -606,6 +978,7 @@ Examples:
         dry_run=args.dry_run,
         skip_interview=args.skip_interview,
         max_edges=args.max_edges,
+        accurate=args.accurate,
     )
 
     result = run_pipeline(session)

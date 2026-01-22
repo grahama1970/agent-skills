@@ -1,0 +1,16 @@
+{
+  "tasks": {
+    "luetin09": {
+      "name": "luetin09",
+      "state_file": "/home/graham/workspace/experiments/pi-mono/run/youtube-transcripts/luetin09/.batch_state.json",
+      "total": 1946,
+      "description": "Luetin09 YouTube transcripts"
+    },
+    "remembrancer": {
+      "name": "remembrancer",
+      "state_file": "/home/graham/workspace/experiments/pi-mono/run/youtube-transcripts/remembrancer/.batch_state.json",
+      "total": 688,
+      "description": "Remembrancer YouTube transcripts"
+    }
+  }
+}

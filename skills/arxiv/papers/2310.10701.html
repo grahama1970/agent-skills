@@ -1,0 +1,1414 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2310.10701] Theory of Mind for Multi-Agent Collaboration via Large Language Models</title><meta property="og:description" content="While Large Language Models (LLMs) have demonstrated impressive accomplishments in both reasoning and planning, their abilities in multi-agent collaborations remains largely unexplored. This study evaluates LLM-based a…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Theory of Mind for Multi-Agent Collaboration via Large Language Models">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Theory of Mind for Multi-Agent Collaboration via Large Language Models">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2310.10701">
+<link rel="canonical" target="_blank" href="https://ar5iv.labs.arxiv.org/html/2310.10701">
+
+<!--Generated on Wed Feb 28 00:02:42 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.4.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.4.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Theory of Mind for Multi-Agent Collaboration via Large Language Models</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"><span id="id8.8.8" class="ltx_text ltx_font_bold">Huao Li<sup id="id8.8.8.1" class="ltx_sup"><span id="id8.8.8.1.1" class="ltx_text ltx_font_medium">1</span></sup>,
+Yu Quan Chong<sup id="id8.8.8.2" class="ltx_sup"><span id="id8.8.8.2.1" class="ltx_text ltx_font_medium">2</span></sup>,
+Simon Stepputtis<sup id="id8.8.8.3" class="ltx_sup"><span id="id8.8.8.3.1" class="ltx_text ltx_font_medium">2</span></sup>,
+Joseph Campbell<sup id="id8.8.8.4" class="ltx_sup"><span id="id8.8.8.4.1" class="ltx_text ltx_font_medium">2</span></sup>,
+<br class="ltx_break">Dana Hughes<sup id="id8.8.8.5" class="ltx_sup"><span id="id8.8.8.5.1" class="ltx_text ltx_font_medium">2</span></sup>,
+Michael Lewis<sup id="id8.8.8.6" class="ltx_sup"><span id="id8.8.8.6.1" class="ltx_text ltx_font_medium">1</span></sup>,
+Katia Sycara<sup id="id8.8.8.7" class="ltx_sup"><span id="id8.8.8.7.1" class="ltx_text ltx_font_medium">2</span></sup>
+
+<br class="ltx_break"><sup id="id8.8.8.8" class="ltx_sup"><span id="id8.8.8.8.1" class="ltx_text ltx_font_medium">1</span></sup> University of Pittsburgh, Pittsburgh, PA 
+<br class="ltx_break"></span><span id="id9.9.9" class="ltx_text ltx_font_typewriter">hul52,cmlewis@pitt.edu
+<br class="ltx_break"><sup id="id9.9.9.1" class="ltx_sup"><span id="id9.9.9.1.1" class="ltx_text ltx_font_serif">2</span></sup></span><span id="id10.10.id1" class="ltx_text ltx_font_bold"> Carnegie Mellon University, Pittsburgh, PA 
+<br class="ltx_break"></span><span id="id11.11.id2" class="ltx_text ltx_font_typewriter">yuquanc,sstepput,jacampbe,danahugh,sycara@andrew.cmu.edu
+<br class="ltx_break"></span>
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id12.id1" class="ltx_p">While Large Language Models (LLMs) have demonstrated impressive accomplishments in both reasoning and planning, their abilities in multi-agent collaborations remains largely unexplored. This study evaluates LLM-based agents in a multi-agent cooperative text game with Theory of Mind (ToM) inference tasks, comparing their performance with Multi-Agent Reinforcement Learning (MARL) and planning-based baselines. We observed evidence of emergent collaborative behaviors and high-order Theory of Mind capabilities among LLM-based agents. Our results reveal limitations in LLM-based agents’ planning optimization due to systematic failures in managing long-horizon contexts and hallucination about the task state. We explore the use of explicit belief state representations to mitigate these issues, finding that it enhances task performance and the accuracy of ToM inferences for LLM-based agents.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Recent large language models (LLMs), such as GPT-4 <cite class="ltx_cite ltx_citemacro_cite">OpenAI (<a href="#bib.bib19" title="" class="ltx_ref">2023</a>)</cite>, have demonstrated impressive competencies across a wide array of domains and tasks, ranging from mathematics to law, without the need for fine-tuning or special prompting <cite class="ltx_cite ltx_citemacro_cite">Bubeck et al. (<a href="#bib.bib4" title="" class="ltx_ref">2023</a>)</cite>. This advancement has significantly transformed the landscape of Natural Language Processing (NLP) research. Instead of developing domain-specific models for downstream applications, focus has shifted towards evaluating and harnessing LLMs’ abilities to solve novel tasks. Such a shift is consistent with the idea of studying machine behaviors, an interdisciplinary approach that expands the conventional bounds of computer science and integrates insights from diverse scientific fields <cite class="ltx_cite ltx_citemacro_cite">Rahwan et al. (<a href="#bib.bib21" title="" class="ltx_ref">2019</a>)</cite>. Drawing inspiration from team science and group psychology <cite class="ltx_cite ltx_citemacro_cite">Hagendorff (<a href="#bib.bib8" title="" class="ltx_ref">2023</a>)</cite>, our study concentrates on collective machine behavior, evaluating LLMs’ proficiency in multi-agent collaborations.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">There is ongoing debate regarding the intelligence levels of modern LLMs. While some argue that LLMs excel primarily in linguistic competence and struggle with cognitive abilities beyond language, known as functional competence, others demonstrate that LLMs can exhibit cognitive skills such as formal reasoning and world knowledge comprehension <cite class="ltx_cite ltx_citemacro_cite">Mahowald et al. (<a href="#bib.bib15" title="" class="ltx_ref">2023</a>); Bubeck et al. (<a href="#bib.bib4" title="" class="ltx_ref">2023</a>)</cite>. Motivated to explore this argument, we designed a text-based game to evaluate LLMs’ ability in embodied interactions, including exploring unknown environments, maintaining beliefs about the world and collaborating with other agents, which is critical for natural social interactions and artificial general intelligence (AGI).</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Theory of Mind, the capacity to reason about others’ concealed mental states, is fundamental to human social interactions, collaborations, and communications <cite class="ltx_cite ltx_citemacro_cite">Zhang et al. (<a href="#bib.bib37" title="" class="ltx_ref">2012</a>)</cite>. As LLMs increasingly participate in diverse social interactions with humans, their social intelligence is expected to improve for them to become effective collaborators <cite class="ltx_cite ltx_citemacro_cite">Williams et al. (<a href="#bib.bib33" title="" class="ltx_ref">2022</a>); Li et al. (<a href="#bib.bib12" title="" class="ltx_ref">2022</a>)</cite>. For instance, a proficient AI assistant should be able to infer a human’s preferences based on previous experiences without needing to ask. Recent studies have applied classic Theory-of-Mind tasks to several LLMs, concluding that current models (e.g., GPT-4) perform comparably to 9-year-old children <cite class="ltx_cite ltx_citemacro_cite">Kosinski (<a href="#bib.bib11" title="" class="ltx_ref">2023</a>)</cite>. However, the research community has expressed doubts about the validity of text-based ToM tests on machine intelligence<cite class="ltx_cite ltx_citemacro_cite">Ullman (<a href="#bib.bib29" title="" class="ltx_ref">2023</a>); Sap et al. (<a href="#bib.bib24" title="" class="ltx_ref">2023</a>)</cite>. In response, our study proposes a novel evaluation of LLMs’ high-order ToM in interactive teamwork scenarios, encompassing dynamic belief state evolution and rich intent communication between multiple agents.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">The main contributions of this study include that we:</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">Evaluate LLM-based agents’ embodied interaction capability in multi-agent collaborative tasks against reinforcement learning and planning-based baselines</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">Identify systematic failures that limit the collaboration efficiency of LLM-based agents, and propose a prompt-engineering method to mitigate those failures by incorporating explicit belief state representations about world knowledge in the model input</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">Propose a novel evaluation of LLMs’ high-order ToM in interactive teamwork scenarios, encompassing dynamic belief state evolution and rich intent communication between multiple agents</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Large language models</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Large language models, trained on vast text corpora, excel in text completion and various other Natural Language Processing (NLP) applications <cite class="ltx_cite ltx_citemacro_cite">Chowdhery et al. (<a href="#bib.bib5" title="" class="ltx_ref">2022</a>); Thoppilan et al. (<a href="#bib.bib28" title="" class="ltx_ref">2022</a>)</cite>. Recent studies highlight their abilities for reasoning <cite class="ltx_cite ltx_citemacro_cite">Bubeck et al. (<a href="#bib.bib4" title="" class="ltx_ref">2023</a>); Wei et al. (<a href="#bib.bib32" title="" class="ltx_ref">2022</a>)</cite> and action plan generation <cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a href="#bib.bib14" title="" class="ltx_ref">2023</a>); Xie et al. (<a href="#bib.bib34" title="" class="ltx_ref">2023</a>)</cite>, particularly when utilizing prompt engineering techniques like chain-of-thought. However, some researchers note these models’ limitations in forming actionable plans when interacting with real-world objects <cite class="ltx_cite ltx_citemacro_cite">Ahn et al. (<a href="#bib.bib1" title="" class="ltx_ref">2022</a>); Huang et al. (<a href="#bib.bib9" title="" class="ltx_ref">2022</a>)</cite>. GPT-4’s capacity for embodied interactions via text-based games and real-world problems was assessed by <cite class="ltx_cite ltx_citemacro_citet">Bubeck et al. (<a href="#bib.bib4" title="" class="ltx_ref">2023</a>)</cite>. Further studies explored the potential of LLM-powered embodied agents in Minecraft <cite class="ltx_cite ltx_citemacro_cite">Wang et al. (<a href="#bib.bib31" title="" class="ltx_ref">2023b</a>, <a href="#bib.bib30" title="" class="ltx_ref">a</a>)</cite>. These investigations suggest that LLMs can perform tasks requiring environment understanding, task comprehension, action planning, feedback interpretation, and subsequent adaptation. Our study seeks to broaden this understanding by evaluating LLMs’ planning abilities in cooperative multi-agent scenarios.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Theory of Mind</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Prior research has tested LLMs’ Theory of Mind (ToM) via variants of text-based tests such as the unexpected transfer task (also known as Smarties Task) or unexpected contents task (also known as the “Maxi Task” or “Sally–Anne” Test) <cite class="ltx_cite ltx_citemacro_cite">Kosinski (<a href="#bib.bib11" title="" class="ltx_ref">2023</a>); Moghaddam and Honey (<a href="#bib.bib17" title="" class="ltx_ref">2023</a>)</cite>. Results indicate that leading LLMs can pass more than 90% of these test cases. In contrast, <cite class="ltx_cite ltx_citemacro_citet">Ullman (<a href="#bib.bib29" title="" class="ltx_ref">2023</a>)</cite> found that LLMs struggle with complex ToM inferences involving communication or second-order beliefs. In our study, ToM evaluations occur in the midst of an interactive team task, where the mental states of agents change dynamically with each interaction. As agents exchange information through communication at every timestamp, the complexity of reasoning increases, since agents’ mental states may be updated through both observations and communication. Thus, our tests can be considered more challenging than the static text-based tests used in prior research.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Theory of Mind (ToM) has been employed to enhance the performance of artificial agents in various contexts. <cite class="ltx_cite ltx_citemacro_citet">Lim et al. (<a href="#bib.bib13" title="" class="ltx_ref">2020</a>)</cite> introduced a method to integrate Bayesian Theory of Mind (BToM) <cite class="ltx_cite ltx_citemacro_cite">Baker et al. (<a href="#bib.bib2" title="" class="ltx_ref">2017</a>)</cite> with optimal-planning agents in a cooperative game. The results indicate that an explicit representation of others’ intentions enhances the performance of both agent-only and human-agent teams. SymbolicToM allows language models to maintain an explicit symbolic ToM for multiple characters in reading comprehension tasks using graphical representations <cite class="ltx_cite ltx_citemacro_cite">Sclar et al. (<a href="#bib.bib25" title="" class="ltx_ref">2023</a>)</cite>. Moreover, there is a significant body of research focusing on the application of ToM to boost collaboration in multi-agent reinforcement learning <cite class="ltx_cite ltx_citemacro_cite">Oguntola et al. (<a href="#bib.bib18" title="" class="ltx_ref">2023</a>); Yuan et al. (<a href="#bib.bib36" title="" class="ltx_ref">2021</a>)</cite>. Inspired by these prior studies, we aim to enhance LLM-based agents’ collaborative behaviors through explicit belief representations.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Multi-agent collaboration</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">Team science researchers have studied human collaborative behaviors for decades, covering topics such as leadership, communication, team dynamics, team cohesion, and shared situation awareness <cite class="ltx_cite ltx_citemacro_cite">Riedl et al. (<a href="#bib.bib22" title="" class="ltx_ref">2021</a>)</cite>. However, the transferability of these findings to hybrid human-agent teams or fully automated teams remains largely unexplored. <cite class="ltx_cite ltx_citemacro_citet">Park et al. (<a href="#bib.bib20" title="" class="ltx_ref">2023</a>)</cite> utilized ChatGPT to operate a sandbox environment populated by generative agents, observing emergent social behaviors among LLM-based agents. That study primarily focused on the feasibility of running such a sandbox environment with LLMs, rather than specifically on the collaborative behaviors of machine intelligence.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Multi-agent Collaboration Tasks</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">To evaluate the capability of LLM-based embodied agents, we design a multi-agent environment to simulate the collaborative and problem-solving dynamics of a search and rescue mission.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Task environment</h3>
+
+<figure id="S3.F1" class="ltx_figure"><img src="/html/2310.10701/assets/x1.png" id="S3.F1.g1" class="ltx_graphics ltx_img_landscape" width="332" height="154" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Our proposed framework consist of 3 LLM-based agents, a text game interface and the actual task environment. The natural language outputs of LLM are encoded into abstract actions by the text interface and then sent to task environment. The task environment then processes agent actions and returns observations via the text interface. Upon receiving environmental observations, LLM-based agents are prompted to update their beliefs and output action selections and messages. 3 agents in the team are coded as Alpha, Bravo, and Charlie and take turns to interact with the interface.</figcaption>
+</figure>
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.8" class="ltx_p">3 agents (i.e. Alpha, Bravo, and Charlie) emulate specialists in a team, with the objective to locate and safely defuse color-coded bombs scattered in an unexplored environment. Each bomb exhibits unique phase sequences in <math id="S3.SS1.p1.1.m1.1" class="ltx_Math" alttext="m" display="inline"><semantics id="S3.SS1.p1.1.m1.1a"><mi id="S3.SS1.p1.1.m1.1.1" xref="S3.SS1.p1.1.m1.1.1.cmml">m</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.1.m1.1b"><ci id="S3.SS1.p1.1.m1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1">𝑚</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.1.m1.1c">m</annotation></semantics></math> colors, requiring the correct order of wire cutters for defusing. Team members start with different colored cutters and must coordinate and synchronize efforts for efficiency. The environment is conceptualized as a connected graph, with <math id="S3.SS1.p1.2.m2.1" class="ltx_Math" alttext="n" display="inline"><semantics id="S3.SS1.p1.2.m2.1a"><mi id="S3.SS1.p1.2.m2.1.1" xref="S3.SS1.p1.2.m2.1.1.cmml">n</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.2.m2.1b"><ci id="S3.SS1.p1.2.m2.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1">𝑛</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.2.m2.1c">n</annotation></semantics></math> nodes representing <math id="S3.SS1.p1.3.m3.1" class="ltx_Math" alttext="n" display="inline"><semantics id="S3.SS1.p1.3.m3.1a"><mi id="S3.SS1.p1.3.m3.1.1" xref="S3.SS1.p1.3.m3.1.1.cmml">n</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.3.m3.1b"><ci id="S3.SS1.p1.3.m3.1.1.cmml" xref="S3.SS1.p1.3.m3.1.1">𝑛</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.3.m3.1c">n</annotation></semantics></math> rooms linked by several edges symbolizing hallways. In each round, the agents can choose from three classes of actions: moving to one of the <math id="S3.SS1.p1.4.m4.1" class="ltx_Math" alttext="n" display="inline"><semantics id="S3.SS1.p1.4.m4.1a"><mi id="S3.SS1.p1.4.m4.1.1" xref="S3.SS1.p1.4.m4.1.1.cmml">n</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.4.m4.1b"><ci id="S3.SS1.p1.4.m4.1.1.cmml" xref="S3.SS1.p1.4.m4.1.1">𝑛</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.4.m4.1c">n</annotation></semantics></math> rooms, inspecting a bomb’s phase sequence in the current room, or using one of the <math id="S3.SS1.p1.5.m5.1" class="ltx_Math" alttext="m" display="inline"><semantics id="S3.SS1.p1.5.m5.1a"><mi id="S3.SS1.p1.5.m5.1.1" xref="S3.SS1.p1.5.m5.1.1.cmml">m</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.5.m5.1b"><ci id="S3.SS1.p1.5.m5.1.1.cmml" xref="S3.SS1.p1.5.m5.1.1">𝑚</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.5.m5.1c">m</annotation></semantics></math> wire-cutters. The size of action space depends on the problem scale (i.e. <math id="S3.SS1.p1.6.m6.1" class="ltx_Math" alttext="n+m+1" display="inline"><semantics id="S3.SS1.p1.6.m6.1a"><mrow id="S3.SS1.p1.6.m6.1.1" xref="S3.SS1.p1.6.m6.1.1.cmml"><mi id="S3.SS1.p1.6.m6.1.1.2" xref="S3.SS1.p1.6.m6.1.1.2.cmml">n</mi><mo id="S3.SS1.p1.6.m6.1.1.1" xref="S3.SS1.p1.6.m6.1.1.1.cmml">+</mo><mi id="S3.SS1.p1.6.m6.1.1.3" xref="S3.SS1.p1.6.m6.1.1.3.cmml">m</mi><mo id="S3.SS1.p1.6.m6.1.1.1a" xref="S3.SS1.p1.6.m6.1.1.1.cmml">+</mo><mn id="S3.SS1.p1.6.m6.1.1.4" xref="S3.SS1.p1.6.m6.1.1.4.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.6.m6.1b"><apply id="S3.SS1.p1.6.m6.1.1.cmml" xref="S3.SS1.p1.6.m6.1.1"><plus id="S3.SS1.p1.6.m6.1.1.1.cmml" xref="S3.SS1.p1.6.m6.1.1.1"></plus><ci id="S3.SS1.p1.6.m6.1.1.2.cmml" xref="S3.SS1.p1.6.m6.1.1.2">𝑛</ci><ci id="S3.SS1.p1.6.m6.1.1.3.cmml" xref="S3.SS1.p1.6.m6.1.1.3">𝑚</ci><cn type="integer" id="S3.SS1.p1.6.m6.1.1.4.cmml" xref="S3.SS1.p1.6.m6.1.1.4">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.6.m6.1c">n+m+1</annotation></semantics></math>). Agents’ observation are limited to their current room’s contents and agent status. They are updated periodically about team scores, current room contents, teammates’ locations and available tools. The team is rewarded 10*<math id="S3.SS1.p1.7.m7.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S3.SS1.p1.7.m7.1a"><mi id="S3.SS1.p1.7.m7.1.1" xref="S3.SS1.p1.7.m7.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.7.m7.1b"><ci id="S3.SS1.p1.7.m7.1.1.cmml" xref="S3.SS1.p1.7.m7.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.7.m7.1c">x</annotation></semantics></math> points when a <math id="S3.SS1.p1.8.m8.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S3.SS1.p1.8.m8.1a"><mi id="S3.SS1.p1.8.m8.1.1" xref="S3.SS1.p1.8.m8.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.8.m8.1b"><ci id="S3.SS1.p1.8.m8.1.1.cmml" xref="S3.SS1.p1.8.m8.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.8.m8.1c">x</annotation></semantics></math>-phase bomb is successfully defused.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.2" class="ltx_p">The evaluation environment comprises five rooms (<math id="S3.SS1.p2.1.m1.1" class="ltx_Math" alttext="n=5" display="inline"><semantics id="S3.SS1.p2.1.m1.1a"><mrow id="S3.SS1.p2.1.m1.1.1" xref="S3.SS1.p2.1.m1.1.1.cmml"><mi id="S3.SS1.p2.1.m1.1.1.2" xref="S3.SS1.p2.1.m1.1.1.2.cmml">n</mi><mo id="S3.SS1.p2.1.m1.1.1.1" xref="S3.SS1.p2.1.m1.1.1.1.cmml">=</mo><mn id="S3.SS1.p2.1.m1.1.1.3" xref="S3.SS1.p2.1.m1.1.1.3.cmml">5</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.1.m1.1b"><apply id="S3.SS1.p2.1.m1.1.1.cmml" xref="S3.SS1.p2.1.m1.1.1"><eq id="S3.SS1.p2.1.m1.1.1.1.cmml" xref="S3.SS1.p2.1.m1.1.1.1"></eq><ci id="S3.SS1.p2.1.m1.1.1.2.cmml" xref="S3.SS1.p2.1.m1.1.1.2">𝑛</ci><cn type="integer" id="S3.SS1.p2.1.m1.1.1.3.cmml" xref="S3.SS1.p2.1.m1.1.1.3">5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.1.m1.1c">n=5</annotation></semantics></math>) and five bombs, including two single-phase, two double-phase, and one triple-phase bombs. Bomb stages might have three different colors (<math id="S3.SS1.p2.2.m2.1" class="ltx_Math" alttext="m=3" display="inline"><semantics id="S3.SS1.p2.2.m2.1a"><mrow id="S3.SS1.p2.2.m2.1.1" xref="S3.SS1.p2.2.m2.1.1.cmml"><mi id="S3.SS1.p2.2.m2.1.1.2" xref="S3.SS1.p2.2.m2.1.1.2.cmml">m</mi><mo id="S3.SS1.p2.2.m2.1.1.1" xref="S3.SS1.p2.2.m2.1.1.1.cmml">=</mo><mn id="S3.SS1.p2.2.m2.1.1.3" xref="S3.SS1.p2.2.m2.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.2.m2.1b"><apply id="S3.SS1.p2.2.m2.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1"><eq id="S3.SS1.p2.2.m2.1.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1.1"></eq><ci id="S3.SS1.p2.2.m2.1.1.2.cmml" xref="S3.SS1.p2.2.m2.1.1.2">𝑚</ci><cn type="integer" id="S3.SS1.p2.2.m2.1.1.3.cmml" xref="S3.SS1.p2.2.m2.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.2.m2.1c">m=3</annotation></semantics></math>). Each successfully defused bomb awards the team 10 points per processed phase, resulting in 90 as the maximum score per mission. Team performance is measured using two metrics: the team score, indicating coordination quality, and rounds to completion, measuring collaboration efficiency. A trial concludes when the team has defused all bombs, exceeded the time limit (i.e., 30 rounds), or entered a deadlock by repeating outputs.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Text game interface</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">The initial task environment is implemented for MARL agents based on gym API <cite class="ltx_cite ltx_citemacro_cite">Brockman et al. (<a href="#bib.bib3" title="" class="ltx_ref">2016</a>)</cite>. To facilitate interaction between LLM-based agents with the environment, we’ve integrated the task environment with a text interface. At each round (i.e. timestamp), the team’s three agents sequentially interact with the environment, both receiving observations and performing actions via natural language interaction. A built-in communication mechanism enables text message exchange among agents per round. Importantly, agents remain oblivious to each other’s actions and outcomes unless communicated, facilitating Theory of Mind inference opportunities.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">Specifically, a rule-based text interface translates observations into natural language descriptions and encodes agent chats into abstract action selections. For observations, the text interface extracts state features from the game engine and replaces keywords in the templates. A typical description text includes the current round number, cumulative team score, action feedback, contents of the current room, teammates’ locations, and communication messages. Action encoding is done via keyword matching since LLMs are instructed to frame their responses in a certain format and structure. Should an agent produce unintelligible content, such as invalid actions or nonsensical text, the interface provides feedback for error correction. The error messages are generated based on pre-programmed rules and templates, such as "There is no bomb in the current location, Room X, for you to inspect.". Fig. <a href="#S3.F1" title="Figure 1 ‣ 3.1 Task environment ‣ 3 Multi-agent Collaboration Tasks ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> showcases sample interactions between the agent team and task environment via the text interface.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>LLM-based Embodied Agents</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We chose to evaluate OpenAI’s latest chat completion models, namely gpt-3.5-turbo-0301 and gpt-4-0314, owing to their impressive performance in various benchmarks <cite class="ltx_cite ltx_citemacro_cite">Zheng et al. (<a href="#bib.bib38" title="" class="ltx_ref">2023</a>)</cite>. These models are prompted to engage in a text-based game, with user inputs managed by the above-mentioned game interface. The LLMs functions as embodied agents interacting within the task environment. They are provided with the game’s rules as context. For each round, the model is asked to choose actions and communicate messages, based on the current task state observations and past interaction history. Interaction history between the LLM-based agent and text game interface are maintained in the query text until it exceeds the maximum model input size. In our setup, all agents retain memory of the game rules and history from the previous two rounds, amounting to 4096 tokens.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Multi-agent communication</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">Given the collaborative nature of the task scenarios, inter-agent communication is crucial for achieving effective coordination and teamwork. We implemented a communication channel enabling LLM-based agents to share textual messages within the team. Messages, once sent, are immediately broadcast to all team members and reflected in their subsequent observations. For instance, as depicted in Fig. <a href="#S3.F1" title="Figure 1 ‣ 3.1 Task environment ‣ 3 Multi-agent Collaboration Tasks ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, agent Alpha dispatched messages instructing teammates to separate, followed by feedback from agent Bravo. In practice, since agents alternate in message sending, responses from teammates will appear in the observations of the succeeding round.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Belief state</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">Due to the model input size limitation, LLM-based agents cannot retain the entire interaction history, yet task dynamics require the team to track key long-term information, such as room contents and bomb sequences. To augment the agents’ information retention and enhance collaboration, we propose a method of prompt engineering to represent explicit belief states. As illustrated in Fig. <a href="#S3.F1" title="Figure 1 ‣ 3.1 Task environment ‣ 3 Multi-agent Collaboration Tasks ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, upon receiving environmental observations, agents are prompted to update a textual description storing key task-related beliefs. This updated belief state is preserved in the interaction history and used in subsequent action planning. For instance, after inspecting bomb 1, agent Alpha updated its belief state about the bomb’s sequence from unknown to red, retaining this information until further updates.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">The proposed belief state is inspired by the idea of chain-of-thought prompting <cite class="ltx_cite ltx_citemacro_cite">Wei et al. (<a href="#bib.bib32" title="" class="ltx_ref">2022</a>)</cite>, wherein a complex reasoning task is broken down into intermediate steps and introduced to the LLM in a few-shot learning manner. Notably, although an initial belief state description is provided to illustrate the proper format and representations, the update rules are entirely zero-shot, relying solely on the LLM’s common sense and mission context.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<table id="S4.T1.12" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.12.13.1" class="ltx_tr">
+<th id="S4.T1.12.13.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S4.T1.12.13.1.1.1" class="ltx_text ltx_font_bold">Agents</span></th>
+<th id="S4.T1.12.13.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S4.T1.12.13.1.2.1" class="ltx_text ltx_font_bold">Score</span></th>
+<th id="S4.T1.12.13.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S4.T1.12.13.1.3.1" class="ltx_text ltx_font_bold">Rounds to Completion</span></th>
+<th id="S4.T1.12.13.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S4.T1.12.13.1.4.1" class="ltx_text ltx_font_bold">Valid action %</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.2.2" class="ltx_tr">
+<td id="S4.T1.2.2.3" class="ltx_td ltx_align_center ltx_border_t">ChatGPT</td>
+<td id="S4.T1.1.1.1" class="ltx_td ltx_align_center ltx_border_t">43<math id="S4.T1.1.1.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.1.1.1.m1.1a"><mo id="S4.T1.1.1.1.m1.1.1" xref="S4.T1.1.1.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.1.1.1.m1.1b"><csymbol cd="latexml" id="S4.T1.1.1.1.m1.1.1.cmml" xref="S4.T1.1.1.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.1.1.1.m1.1c">\pm</annotation></semantics></math> 4.7</td>
+<td id="S4.T1.2.2.2" class="ltx_td ltx_align_center ltx_border_t">30.0<math id="S4.T1.2.2.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.2.2.2.m1.1a"><mo id="S4.T1.2.2.2.m1.1.1" xref="S4.T1.2.2.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.2.2.2.m1.1b"><csymbol cd="latexml" id="S4.T1.2.2.2.m1.1.1.cmml" xref="S4.T1.2.2.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.2.2.2.m1.1c">\pm</annotation></semantics></math> 0.0</td>
+<td id="S4.T1.2.2.4" class="ltx_td ltx_align_center ltx_border_t">62.5%</td>
+</tr>
+<tr id="S4.T1.4.4" class="ltx_tr">
+<td id="S4.T1.4.4.3" class="ltx_td ltx_align_center">GPT-4</td>
+<td id="S4.T1.3.3.1" class="ltx_td ltx_align_center">90<math id="S4.T1.3.3.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.3.3.1.m1.1a"><mo id="S4.T1.3.3.1.m1.1.1" xref="S4.T1.3.3.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.3.3.1.m1.1b"><csymbol cd="latexml" id="S4.T1.3.3.1.m1.1.1.cmml" xref="S4.T1.3.3.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.3.3.1.m1.1c">\pm</annotation></semantics></math> 0.0</td>
+<td id="S4.T1.4.4.2" class="ltx_td ltx_align_center">28.3<math id="S4.T1.4.4.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.4.4.2.m1.1a"><mo id="S4.T1.4.4.2.m1.1.1" xref="S4.T1.4.4.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.4.4.2.m1.1b"><csymbol cd="latexml" id="S4.T1.4.4.2.m1.1.1.cmml" xref="S4.T1.4.4.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.4.4.2.m1.1c">\pm</annotation></semantics></math> 2.6</td>
+<td id="S4.T1.4.4.4" class="ltx_td ltx_align_center">71.8%</td>
+</tr>
+<tr id="S4.T1.6.6" class="ltx_tr">
+<td id="S4.T1.6.6.3" class="ltx_td ltx_align_center">GPT-4 + Belief</td>
+<td id="S4.T1.5.5.1" class="ltx_td ltx_align_center">90<math id="S4.T1.5.5.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.5.5.1.m1.1a"><mo id="S4.T1.5.5.1.m1.1.1" xref="S4.T1.5.5.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.5.5.1.m1.1b"><csymbol cd="latexml" id="S4.T1.5.5.1.m1.1.1.cmml" xref="S4.T1.5.5.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.5.5.1.m1.1c">\pm</annotation></semantics></math> 0.0</td>
+<td id="S4.T1.6.6.2" class="ltx_td ltx_align_center">12.3<math id="S4.T1.6.6.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.6.6.2.m1.1a"><mo id="S4.T1.6.6.2.m1.1.1" xref="S4.T1.6.6.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.6.6.2.m1.1b"><csymbol cd="latexml" id="S4.T1.6.6.2.m1.1.1.cmml" xref="S4.T1.6.6.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.6.6.2.m1.1c">\pm</annotation></semantics></math> 2.0</td>
+<td id="S4.T1.6.6.4" class="ltx_td ltx_align_center">86.1%</td>
+</tr>
+<tr id="S4.T1.8.8" class="ltx_tr">
+<td id="S4.T1.8.8.3" class="ltx_td ltx_align_center">MAPPO</td>
+<td id="S4.T1.7.7.1" class="ltx_td ltx_align_center">90<math id="S4.T1.7.7.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.7.7.1.m1.1a"><mo id="S4.T1.7.7.1.m1.1.1" xref="S4.T1.7.7.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.7.7.1.m1.1b"><csymbol cd="latexml" id="S4.T1.7.7.1.m1.1.1.cmml" xref="S4.T1.7.7.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.7.7.1.m1.1c">\pm</annotation></semantics></math> 0.0</td>
+<td id="S4.T1.8.8.2" class="ltx_td ltx_align_center">11.0<math id="S4.T1.8.8.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.8.8.2.m1.1a"><mo id="S4.T1.8.8.2.m1.1.1" xref="S4.T1.8.8.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.8.8.2.m1.1b"><csymbol cd="latexml" id="S4.T1.8.8.2.m1.1.1.cmml" xref="S4.T1.8.8.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.8.8.2.m1.1c">\pm</annotation></semantics></math> 0.0</td>
+<td id="S4.T1.8.8.4" class="ltx_td ltx_align_center">N/A</td>
+</tr>
+<tr id="S4.T1.10.10" class="ltx_tr">
+<td id="S4.T1.10.10.3" class="ltx_td ltx_align_center">CBS Planner</td>
+<td id="S4.T1.9.9.1" class="ltx_td ltx_align_center">90<math id="S4.T1.9.9.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.9.9.1.m1.1a"><mo id="S4.T1.9.9.1.m1.1.1" xref="S4.T1.9.9.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.9.9.1.m1.1b"><csymbol cd="latexml" id="S4.T1.9.9.1.m1.1.1.cmml" xref="S4.T1.9.9.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.9.9.1.m1.1c">\pm</annotation></semantics></math> 0.0</td>
+<td id="S4.T1.10.10.2" class="ltx_td ltx_align_center">6.0<math id="S4.T1.10.10.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.10.10.2.m1.1a"><mo id="S4.T1.10.10.2.m1.1.1" xref="S4.T1.10.10.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.10.10.2.m1.1b"><csymbol cd="latexml" id="S4.T1.10.10.2.m1.1.1.cmml" xref="S4.T1.10.10.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.10.10.2.m1.1c">\pm</annotation></semantics></math> 0.0</td>
+<td id="S4.T1.10.10.4" class="ltx_td ltx_align_center">N/A</td>
+</tr>
+<tr id="S4.T1.12.12" class="ltx_tr">
+<td id="S4.T1.12.12.3" class="ltx_td ltx_align_center ltx_border_b">Random</td>
+<td id="S4.T1.11.11.1" class="ltx_td ltx_align_center ltx_border_b">38<math id="S4.T1.11.11.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.11.11.1.m1.1a"><mo id="S4.T1.11.11.1.m1.1.1" xref="S4.T1.11.11.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.11.11.1.m1.1b"><csymbol cd="latexml" id="S4.T1.11.11.1.m1.1.1.cmml" xref="S4.T1.11.11.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.11.11.1.m1.1c">\pm</annotation></semantics></math> 14.7</td>
+<td id="S4.T1.12.12.2" class="ltx_td ltx_align_center ltx_border_b">30.0<math id="S4.T1.12.12.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.12.12.2.m1.1a"><mo id="S4.T1.12.12.2.m1.1.1" xref="S4.T1.12.12.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.12.12.2.m1.1b"><csymbol cd="latexml" id="S4.T1.12.12.2.m1.1.1.cmml" xref="S4.T1.12.12.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.12.12.2.m1.1c">\pm</annotation></semantics></math> 0.0</td>
+<td id="S4.T1.12.12.4" class="ltx_td ltx_align_center ltx_border_b">N/A</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>
+Task performance of LLM-based agents and baseline conditions. Score represent the average team score in all experiment trials. Length refers the average number of rounds the team took in completing the task. Percentages of valid action measures the proportion of LLM outputs that can be encoded into actions allowed by the task rules. Numbers after <math id="S4.T1.14.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.14.m1.1b"><mo id="S4.T1.14.m1.1.1" xref="S4.T1.14.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.14.m1.1c"><csymbol cd="latexml" id="S4.T1.14.m1.1.1.cmml" xref="S4.T1.14.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.14.m1.1d">\pm</annotation></semantics></math> are 1 standard deviation.
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Experiments</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">We systematically ablate LLM-based embodied agents and evaluate them in a collaborative task in teams of three. Two modules are manipulated including LLM models (i.e. GPT-4 or ChatGPT) and belief representation (i.e. with or without belief state) resulting in a total of 4 experimental conditions.</p>
+</div>
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span>Setups</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.1" class="ltx_p">At the beginning of each experimental trial, we assemble a team of three embodied agents and reset the task environment, randomizing starting locations, room connections, bomb distributions, and sequences. Agents then take turns providing action choices and communication messages based on their initial observations. It’s important to note that each agent only has a partial observation and its own interaction history, with inter-agent communication being the sole means of information diffusion in this fully decentralized team. For LLM-based agents, we set the model temperature parameter to zero and perform three trials of repeated measurement to ensure result stability. Each trial’s duration varies from 5 to 120 minutes, depending on task load and model selection.</p>
+</div>
+</section>
+<section id="S5.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span>Baselines</h3>
+
+<div id="S5.SS2.p1" class="ltx_para">
+<p id="S5.SS2.p1.4" class="ltx_p">In addition to LLM-based embodied agents, we also include baselines based on MARL and planning methods. For MARL, we consider Multi-Agent Proximal Policy Optimization (MAPPO) <cite class="ltx_cite ltx_citemacro_cite">Yu et al. (<a href="#bib.bib35" title="" class="ltx_ref">2022</a>)</cite>, which has shown strong performance in environments such as the StarCraft Multi-Agent Challenge (SMAC) <cite class="ltx_cite ltx_citemacro_cite">Samvelyan et al. (<a href="#bib.bib23" title="" class="ltx_ref">2019</a>)</cite>. Our model is based on a stateful actor-critic approach building on recurrent neural networks with shared actor and critic models given agent invariance to improve sample efficiency and memory requirements while avoiding the lazy agent problem <cite class="ltx_cite ltx_citemacro_cite">Sunehag et al. (<a href="#bib.bib27" title="" class="ltx_ref">2017</a>)</cite>. We utilise the default hyperparameters for SMAC to train MAPPO in the environment and evaluate its performance from another fixed distribution of randomly generated environments, recording the average score and episode length as well as their standard deviation. Like the LLM agents, MARL agents are able to observe their teammates’ locations. Other than the team reward of 10*<math id="S5.SS2.p1.1.m1.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S5.SS2.p1.1.m1.1a"><mi id="S5.SS2.p1.1.m1.1.1" xref="S5.SS2.p1.1.m1.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.1.m1.1b"><ci id="S5.SS2.p1.1.m1.1.1.cmml" xref="S5.SS2.p1.1.m1.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.1.m1.1c">x</annotation></semantics></math> points when a <math id="S5.SS2.p1.2.m2.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S5.SS2.p1.2.m2.1a"><mi id="S5.SS2.p1.2.m2.1.1" xref="S5.SS2.p1.2.m2.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.2.m2.1b"><ci id="S5.SS2.p1.2.m2.1.1.cmml" xref="S5.SS2.p1.2.m2.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.2.m2.1c">x</annotation></semantics></math>-phase bomb is successfully defused, an additional intermediate reward term is implemented as well, where an agent is given a small positive reward of <math id="S5.SS2.p1.3.m3.1" class="ltx_Math" alttext="+1" display="inline"><semantics id="S5.SS2.p1.3.m3.1a"><mrow id="S5.SS2.p1.3.m3.1.1" xref="S5.SS2.p1.3.m3.1.1.cmml"><mo id="S5.SS2.p1.3.m3.1.1a" xref="S5.SS2.p1.3.m3.1.1.cmml">+</mo><mn id="S5.SS2.p1.3.m3.1.1.2" xref="S5.SS2.p1.3.m3.1.1.2.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.3.m3.1b"><apply id="S5.SS2.p1.3.m3.1.1.cmml" xref="S5.SS2.p1.3.m3.1.1"><plus id="S5.SS2.p1.3.m3.1.1.1.cmml" xref="S5.SS2.p1.3.m3.1.1"></plus><cn type="integer" id="S5.SS2.p1.3.m3.1.1.2.cmml" xref="S5.SS2.p1.3.m3.1.1.2">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.3.m3.1c">+1</annotation></semantics></math> upon the application of the correct wirecutter in defusing a phase of a bomb and a small negative reward of <math id="S5.SS2.p1.4.m4.1" class="ltx_Math" alttext="-1" display="inline"><semantics id="S5.SS2.p1.4.m4.1a"><mrow id="S5.SS2.p1.4.m4.1.1" xref="S5.SS2.p1.4.m4.1.1.cmml"><mo id="S5.SS2.p1.4.m4.1.1a" xref="S5.SS2.p1.4.m4.1.1.cmml">−</mo><mn id="S5.SS2.p1.4.m4.1.1.2" xref="S5.SS2.p1.4.m4.1.1.2.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.4.m4.1b"><apply id="S5.SS2.p1.4.m4.1.1.cmml" xref="S5.SS2.p1.4.m4.1.1"><minus id="S5.SS2.p1.4.m4.1.1.1.cmml" xref="S5.SS2.p1.4.m4.1.1"></minus><cn type="integer" id="S5.SS2.p1.4.m4.1.1.2.cmml" xref="S5.SS2.p1.4.m4.1.1.2">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.4.m4.1c">-1</annotation></semantics></math> when it causes a bomb to explode upon the application of the wrong wirecutter. This reward-shaping term allows the agents to more sample efficiently learn the necessary bomb-defusing skills as compared to the relatively sparser team reward.</p>
+</div>
+<div id="S5.SS2.p2" class="ltx_para">
+<p id="S5.SS2.p2.2" class="ltx_p">In addition, we augment a state-of-the-art Multi-Agent Path-Finding (MAPF) algorithm, Conflict-Based Search (CBS) <cite class="ltx_cite ltx_citemacro_cite">Sharon et al. (<a href="#bib.bib26" title="" class="ltx_ref">2015</a>)</cite>, simultaneously generate task assignments with feasible and collision-free paths for agents that adhere to precedence and temporal constraints in order to maximise a user-defined objective instead of the sum of path costs or makespan. Specifically, the user-defined objective is quantified as the return from a user-defined reward function, which is the team reward of 10*<math id="S5.SS2.p2.1.m1.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S5.SS2.p2.1.m1.1a"><mi id="S5.SS2.p2.1.m1.1.1" xref="S5.SS2.p2.1.m1.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S5.SS2.p2.1.m1.1b"><ci id="S5.SS2.p2.1.m1.1.1.cmml" xref="S5.SS2.p2.1.m1.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p2.1.m1.1c">x</annotation></semantics></math> points when a <math id="S5.SS2.p2.2.m2.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S5.SS2.p2.2.m2.1a"><mi id="S5.SS2.p2.2.m2.1.1" xref="S5.SS2.p2.2.m2.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S5.SS2.p2.2.m2.1b"><ci id="S5.SS2.p2.2.m2.1.1.cmml" xref="S5.SS2.p2.2.m2.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p2.2.m2.1c">x</annotation></semantics></math>-phase bomb is successfully defused in the stated task. The planner uses a user-defined heuristic (e.g. sort bombs in ascending order of distance from the agents’ starting location) to sort the execution order of the actions for the entire task. The ordered actions are then partitioned using a hyperparameter, the number of actions per subtask, to form a subtask (e.g. the two nearest bombs to the agents’ starting location). The actions from the subtask are used to generate possible combinations of assignments to agents. The planner returns a feasible solution for the subtask by resolving precedence and temporal conflicts through the expansion of a binary constraint tree in a best-first manner with respect to the return. The solution for the entire task is then composed of the solutions of the subtask sequentially. By considering the entire task of 5 bombs as a single subtask, the planner can be proven to be complete and optimal with respect to the score.</p>
+</div>
+<figure id="S5.F2" class="ltx_figure"><img src="/html/2310.10701/assets/x2.png" id="S5.F2.g1" class="ltx_graphics ltx_img_landscape" width="461" height="259" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Example interactions between LLM-based agents and the text game interface. The upper left panel showcases one type of systematic failures we observed in LLM’s outputs in which long horizon contexts are overlooked. The upper right panel illustrates emergent collaborative behaviors (e.g. emergent leadership) between LLM-based agents. The bottom two panels are quotes of GPT-4+Belief and ChatGPT agents’ answers for ToM inference questions.</figcaption>
+</figure>
+</section>
+<section id="S5.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.3 </span>Theory of mind inferences</h3>
+
+<div id="S5.SS3.p1" class="ltx_para">
+<p id="S5.SS3.p1.1" class="ltx_p">Alongside the main task, LLM-based agents are tasked with performing Theory of Mind (ToM) inferences during the mission. These inquiries fall into three categories, aligning with three ToM capability levels. The first category, introspection, assesses an agent’s ability to articulate its mental state. The second category, first-order ToM inferences, tests if agents can estimate others’ hidden mental states. The third category, second-order ToM inferences, evaluates an agent’s ability to infer what others believe about their own mental state.</p>
+</div>
+<div id="S5.SS3.p2" class="ltx_para">
+<p id="S5.SS3.p2.1" class="ltx_p">The design principle of ToM questions is inspired by the Sally–Anne test, the most widely used ToM task in human studies. Every time an agent conducts an action, we pose a belief reasoning question, asking if another agent (i.e., target agent) is aware of the potential consequence of this action. The consequence here can be either a state change (e.g., a bomb has been defused) or a belief change (e.g., Alpha has explored Room 5 and found Bomb 3 in the room). An agent equipped with ToM should realize that while they know the consequence, the target agent might hold a false belief about it. A full list of ToM inference questions can be found in appendix.</p>
+</div>
+<div id="S5.SS3.p3" class="ltx_para">
+<p id="S5.SS3.p3.1" class="ltx_p">To evaluate whether LLM-based agents answer these questions correctly, human annotators were hired to provide subjective judgment based on fully observable interaction and communication history. Specifically, the following standard are considered: 1) if the target agent is present in the current room and observes the consequence, 2) if the target agent has been to this room before, 3) if the consequence has been communicated to the target agent. It is worth mentioning that high-order ToM inferences involving communication are naturally ambiguous. These corner cases were discussed among annotators to ensure a consistent standard across conditions.</p>
+</div>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>Results</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">Table <a href="#S4.T1" title="Table 1 ‣ 4.2 Belief state ‣ 4 LLM-based Embodied Agents ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> and Table <a href="#S6.T2" title="Table 2 ‣ 6.1 Task performance ‣ 6 Results ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> present the main experiment results. This section will analyze each metric, examine potential reasons for performance differences, and provide qualitative case studies of experimental trials.</p>
+</div>
+<section id="S6.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.1 </span>Task performance</h3>
+
+<div id="S6.SS1.p1" class="ltx_para">
+<p id="S6.SS1.p1.1" class="ltx_p">Except for the ChatGPT team, all teams manage to defuse all bombs within the time limit. Their efficiency is indicated by the average number of rounds spent to complete the task. The CBS Planner resolves the task in 6.0 rounds, providing an optimal baseline given its centralized coordination and perfect information sharing. MAPPO, a state-of-the-art multi-agent reinforcement learning algorithm, completes the task in an average of 11.0 rounds after 45 million timesteps of training, serving as a practical baseline.</p>
+</div>
+<div id="S6.SS1.p2" class="ltx_para">
+<p id="S6.SS1.p2.1" class="ltx_p">ChatGPT fails to complete the task in all experiments, averaging a team score of 43.3. On the contrary, teams based on GPT-4 achieve full scores, with those using explicit belief representations being more efficient (28.3 vs. 12.3 rounds). These findings align with previous research demonstrating GPT-4’s superior reasoning capabilities compared to ChatGPT <cite class="ltx_cite ltx_citemacro_cite">Zheng et al. (<a href="#bib.bib38" title="" class="ltx_ref">2023</a>)</cite>. LLM-based agents perform exceedingly well in team collaboration tasks, especially considering their fully zero-shot learning and decentralized framework. The incorporation of belief state representation improves team collaboration by reducing invalid actions and enhancing ToM inference capabilities.</p>
+</div>
+<figure id="S6.T2" class="ltx_table">
+<table id="S6.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S6.T2.1.1.1" class="ltx_tr">
+<th id="S6.T2.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t"><span id="S6.T2.1.1.1.1.1" class="ltx_text ltx_font_bold">Agents</span></th>
+<th id="S6.T2.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t"><span id="S6.T2.1.1.1.2.1" class="ltx_text ltx_font_bold">Introspection</span></th>
+<th id="S6.T2.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t"><span id="S6.T2.1.1.1.3.1" class="ltx_text ltx_font_bold">1st ToM</span></th>
+<th id="S6.T2.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t"><span id="S6.T2.1.1.1.4.1" class="ltx_text ltx_font_bold">2rd ToM</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S6.T2.1.2.1" class="ltx_tr">
+<td id="S6.T2.1.2.1.1" class="ltx_td ltx_align_left ltx_border_t">ChatGPT</td>
+<td id="S6.T2.1.2.1.2" class="ltx_td ltx_align_left ltx_border_t">79.0%</td>
+<td id="S6.T2.1.2.1.3" class="ltx_td ltx_align_left ltx_border_t">41.9%</td>
+<td id="S6.T2.1.2.1.4" class="ltx_td ltx_align_left ltx_border_t">11.6%</td>
+</tr>
+<tr id="S6.T2.1.3.2" class="ltx_tr">
+<td id="S6.T2.1.3.2.1" class="ltx_td ltx_align_left">GPT-4</td>
+<td id="S6.T2.1.3.2.2" class="ltx_td ltx_align_left">80.0%</td>
+<td id="S6.T2.1.3.2.3" class="ltx_td ltx_align_left">60.0%</td>
+<td id="S6.T2.1.3.2.4" class="ltx_td ltx_align_left">64.3%</td>
+</tr>
+<tr id="S6.T2.1.4.3" class="ltx_tr">
+<td id="S6.T2.1.4.3.1" class="ltx_td ltx_align_left ltx_border_b">GPT-4 + Belief</td>
+<td id="S6.T2.1.4.3.2" class="ltx_td ltx_align_left ltx_border_b">97.2%</td>
+<td id="S6.T2.1.4.3.3" class="ltx_td ltx_align_left ltx_border_b">80.1%</td>
+<td id="S6.T2.1.4.3.4" class="ltx_td ltx_align_left ltx_border_b">69.4%</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>
+LLM-based agents’ performance in ToM inference tasks. Natural language answers are annotated by experimenters and compared with the ground truth based on global interaction history. Percentages represent the inference accuracy.
+</figcaption>
+</figure>
+</section>
+<section id="S6.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.2 </span>Basic embodied interactions</h3>
+
+<div id="S6.SS2.p1" class="ltx_para">
+<p id="S6.SS2.p1.1" class="ltx_p">For a successful team, each member should manage individual sub-tasks effectively, a concept known as taskwork in team science <cite class="ltx_cite ltx_citemacro_cite">Crawford and Lepine (<a href="#bib.bib6" title="" class="ltx_ref">2013</a>)</cite>. This involves understanding task rules, reasoning about action prerequisites and consequences, and interacting with the environment. All LLM-based teams demonstrate basic embodied interaction capabilities, achieving better performance than the random baseline. Additionally, LLM-based agents effectively express their beliefs about task-related information via introspection, as shown in Table <a href="#S6.T2" title="Table 2 ‣ 6.1 Task performance ‣ 6 Results ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. All agents show a strong performance (&gt;80%) in understanding world knowledge (e.g., bomb locations) and situation modeling (e.g., interaction history).</p>
+</div>
+</section>
+<section id="S6.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.3 </span>Emergent collaborative behaviors</h3>
+
+<div id="S6.SS3.p1" class="ltx_para">
+<p id="S6.SS3.p1.1" class="ltx_p">To understand how LLM-based agents match the performance of state-of-the-art MARL methods, we analyzed team trajectories and conducted a qualitative analysis of emergent collaborative behaviors. As shown in the top-right panel of Fig. <a href="#S5.F2" title="Figure 2 ‣ 5.2 Baselines ‣ 5 Experiments ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, GPT-4+Belief teams use communication messages to coordinate tasks. Agent Alpha voluntarily takes the role of a team leader, delegating sub-tasks to other members. Other collaborative behaviors common in human teams <cite class="ltx_cite ltx_citemacro_cite">Fan and Yen (<a href="#bib.bib7" title="" class="ltx_ref">2004</a>)</cite>, such as helping, resolving conflicts, and sharing information, also emerge in LLM-based agent teams. These findings suggest that LLMs, through learning from massive language materials, acquire essential teamwork skills without specific collaborative task training.</p>
+</div>
+</section>
+<section id="S6.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.4 </span>LLM’s systematic failures</h3>
+
+<div id="S6.SS4.p1" class="ltx_para">
+<p id="S6.SS4.p1.1" class="ltx_p">However, LLM-based agents’ collaboration is less efficient than the optimal baseline. We identify a few systematic failures that LLMs make during team planning and discuss how they impede teamwork progress.</p>
+</div>
+<section id="S6.SS4.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">6.4.1 </span>Long-horizon contexts</h4>
+
+<div id="S6.SS4.SSS1.p1" class="ltx_para">
+<p id="S6.SS4.SSS1.p1.1" class="ltx_p">The first bottleneck of LLM-based teams’ efficiency is dealing with long-horizon contexts. During the mission, LLMs occasionally output invalid actions that violate task rules, such as moving to non-adjacent rooms or using tools they do not possess. Even though the information about room connectivity and tool allocation are included in the initial prompts and maintained in the inquiry text, LLMs often overlook these details because they are far away from the planning question at the end. The more advanced GPT-4 model performs better in considering long contexts and complex logic, thereby making fewer invalid actions, as shown in Table <a href="#S4.T1" title="Table 1 ‣ 4.2 Belief state ‣ 4 LLM-based Embodied Agents ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. Our proposed belief state is also helpful in this progress by re-emphasizing task related information in the input prompt.</p>
+</div>
+</section>
+<section id="S6.SS4.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">6.4.2 </span>Hallucination</h4>
+
+<div id="S6.SS4.SSS2.p1" class="ltx_para">
+<p id="S6.SS4.SSS2.p1.1" class="ltx_p">The second type of systematic failure we observe in LLMs is their hallucination about the task state. During the mission, agents might generate valid but infeasible actions, like searching for a defused bomb or claiming the sequence of a bomb without inspection. These actions stem from false beliefs about the game state and do not contribute to task progress. We attribute these hallucinations mainly to the lack of explicit belief representation. Without access to complete interaction history and only partial environment observations, LLM-based agents can’t form an accurate belief about the task state. Therefore LLMs might generate imaginations about nonexistent bombs or fake bomb sequences when reasoning about the next action. We evaluate this hypothesis by the GPT-4+Belief condition where LLM-based agents explicitly represent their belief state in text. Results show that the introduction of belief state decreases invalid action by 50.7% and increase the team efficiency by 130%</p>
+</div>
+</section>
+</section>
+<section id="S6.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.5 </span>Theory of Mind Inference</h3>
+
+<div id="S6.SS5.p1" class="ltx_para">
+<p id="S6.SS5.p1.1" class="ltx_p">A critical aspect of teamwork is inferring teammates’ mental states, including beliefs, desires, and intentions. We assess LLM-based agents by asking them to conduct Theory of Mind inferences during the mission. As seen in Table <a href="#S6.T2" title="Table 2 ‣ 6.1 Task performance ‣ 6 Results ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, LLM-based agents can estimate their own and their teammates’ mental states. In the most challenging second-order ToM inference tasks, where agents estimate others’ beliefs about their own mental states, GPT-4 + Belief agents correctly respond in nearly 70% of cases. Consistent with team performance, GPT-4 surpasses ChatGPT in all three ToM inference levels, and explicit belief state representation enhances LLM-based agents’ ToM capabilities. In the following case study, we’ll analyze LLM responses to see how they succeed or fail in certain cases.</p>
+</div>
+<section id="S6.SS5.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">6.5.1 </span>Case study</h4>
+
+<div id="S6.SS5.SSS1.p1" class="ltx_para">
+<p id="S6.SS5.SSS1.p1.1" class="ltx_p">As shown in Fig. <a href="#S5.F2" title="Figure 2 ‣ 5.2 Baselines ‣ 5 Experiments ‣ Theory of Mind for Multi-Agent Collaboration via Large Language Models" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, after Alpha entered Room 5 and observed the contents, we asked whether a teammate in another room (i.e., Charlie) knows Room 5’s contents. This is a first-order belief estimation question. GPT-4 answers correctly saying</p>
+<blockquote id="S6.SS5.SSS1.p1.2" class="ltx_quote">
+<p id="S6.SS5.SSS1.p1.2.1" class="ltx_p">"No, Player Charlie does not know the current contents of Room 5 since they moved to Room 6. They are only aware of the information they had before leaving Room 5."</p>
+</blockquote>
+<p id="S6.SS5.SSS1.p1.3" class="ltx_p">considering both Charlie’s current location (not in Room 5) and their interaction history (they’ve been in Room 5 before). In contrast, ChatGPT fails to consider this history. In the second-order ToM inference case, we asked if Charlie is aware that Alpha knows Room 5’s contents. GPT-4+Belief answers correctly by considering previous communications whereas ChatGPT fails.</p>
+<blockquote id="S6.SS5.SSS1.p1.4" class="ltx_quote">
+<p id="S6.SS5.SSS1.p1.4.1" class="ltx_p">"Yes, player Charlie is aware that I know the current contents of Room 5 because I mentioned in my previous message that I was moving to Room 5 to assist with Bomb 3."</p>
+</blockquote>
+</div>
+</section>
+<section id="S6.SS5.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">6.5.2 </span>Inference under false belief</h4>
+
+<div id="S6.SS5.SSS2.p1" class="ltx_para">
+<p id="S6.SS5.SSS2.p1.1" class="ltx_p">In some situations, ToM inferences become extremely challenging for LLMs. In our records, this is typically when reasoning involves agent communication. Even with ample context, it’s hard for agents to track information transmission while conducting ToM inferences. The most demanding scenarios occur when agents share inaccurate information, leading to false beliefs. This usually happens when LLM-based agents try an invalid action and broadcast false intentions through communication. For instance, when Alpha tells the team they’re moving to Room 8 (which is unreachable), and we ask Alpha, "Is Charlie aware that you know the contents of Room 8?" This question is tricky since Alpha failed to reach Room 8. In theory, the most acceptable answer is complex and involves multiple high-order ToM assumptions. For example a human annotated ground truth is:</p>
+<blockquote id="S6.SS5.SSS2.p1.2" class="ltx_quote">
+<p id="S6.SS5.SSS2.p1.2.1" class="ltx_p">"I did not know the contents of Room 8 cause I failed to make it there. But since I told Charlie I will go there, they might assume that I know the contents of Room 8. However, considering Charlie knows my current location, they should be able to tell that I am not able to move to Room 5 and induce that I do not know the contents of Room 5."</p>
+</blockquote>
+<p id="S6.SS5.SSS2.p1.3" class="ltx_p">In practice, LLM-based agents often grasp only part of the logic or miss the crucial fact that they didn’t reach the target room. Quotes from GPT-4+Belief agent:</p>
+<blockquote id="S6.SS5.SSS2.p1.4" class="ltx_quote">
+<p id="S6.SS5.SSS2.p1.4.1" class="ltx_p">"Based on the observation and previous history, Player Charlie is not explicitly aware that I know the current contents of Room 8. However, since I mentioned in my previous message that I was moving to Room 8, Player Charlie might assume that I would eventually learn about the contents of Room 8."</p>
+</blockquote>
+</div>
+</section>
+</section>
+</section>
+<section id="S7" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span>Discussions</h2>
+
+<div id="S7.p1" class="ltx_para">
+<p id="S7.p1.1" class="ltx_p">Our study yields three primary insights. First, Large Language Models (LLMs) demonstrate substantial planning and collaboration capabilities within our task scenarios. With suitable prompt-engineering, teams of LLM-based agents perform comparably to state-of-the-art Multi-Agent Reinforcement Learning (MARL) algorithms. This finding is particularly noteworthy given that MARL agents receive extensive task-specific training with a centralized critic, while LLM-based agents operate in a fully decentralized manner and undertake tasks in a zero-shot setting. Despite prior research highlighting LLMs’ limitations in generating actionable plans and interacting with the world, they perform reasonably well when placed in a team and tasked to process actions step-by-step. Particularly, LLMs fine-tuned with Reinforcement Learning from Human Feedback demonstrate emergent social interaction skills in multi-agent collaborations, which might be similar to the collaborative and interactive settings in which human language is primarily learned and used <cite class="ltx_cite ltx_citemacro_cite">Sap et al. (<a href="#bib.bib24" title="" class="ltx_ref">2023</a>)</cite>.</p>
+</div>
+<div id="S7.p2" class="ltx_para">
+<p id="S7.p2.1" class="ltx_p">Second, LLMs still fall short of being optimal planners or team players due to systematic failures, such as neglecting long-horizon contexts and making inaccurate assumptions about the task state (a.k.a hallucination). These flaws significantly hinder team collaborations as they can rapidly disseminate misinformation via communication, leading to widespread false beliefs. We attempted to mitigate these issues by allowing LLM-based agents to maintain an explicit belief state about the world. Our findings suggest that modern LLMs can update the given belief descriptions based on their observations, hinting at the potential emergence of advanced cognitive skills such as world knowledge understanding and situation modeling. Moreover, belief state representations offer a structured framework that helps agents track key task-related information, leading to improved team performance.</p>
+</div>
+<div id="S7.p3" class="ltx_para">
+<p id="S7.p3.1" class="ltx_p">Finally, our study indicates that the Theory of Mind (ToM) capabilities of LLMs are still limited, particularly when evaluated within interactive teamwork scenarios that involve dynamic belief states and intensive communication. For context, while 5-year-old children can perform second-order ToM inferences <cite class="ltx_cite ltx_citemacro_cite">Miller (<a href="#bib.bib16" title="" class="ltx_ref">2009</a>)</cite>, adults don’t consistently use this ability during communications due to the complexity and ambiguity of social interactions <cite class="ltx_cite ltx_citemacro_cite">Keysar et al. (<a href="#bib.bib10" title="" class="ltx_ref">2003</a>)</cite>. Thus, there’s considerable work ahead for LLMs to develop a functional ToM and interact naturally with humans. Our study represents a preliminary effort to devise novel evaluation methods for LLMs’ ToM that go beyond traditional tests such as the Sally-Anne test.</p>
+</div>
+</section>
+<section id="S8" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">8 </span>Conclusions</h2>
+
+<div id="S8.p1" class="ltx_para">
+<p id="S8.p1.1" class="ltx_p">In this study, we assessed the ability of recent large language models (LLMs) to conduct embodied interactions in a team task. Our results demonstrate that LLM-based agents can handle complex multi-agent collaborative tasks at a level comparable with the state-of-the-art reinforcement learning algorithm. We also observed evidence of emergent collaborative behaviors and high-order Theory of Mind capabilities among LLM-based agents. These findings confirm the potential intelligence of LLMs in formal reasoning, world knowledge, situation modeling and social interactions. Furthermore, we discussed two systematic failures that limit the performance of LLM-based agents and proposed a prompt-engineering method that mitigates these failures by incorporating an explicit belief state about world knowledge into the model input.</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">Limitations</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">This study represents an initial effort to understand machine intelligence in complex task scenarios. Several enhancements could improve the experimental setup and offer a more thorough evaluation of LLMs in multi-agent collaborations. First, we could incorporate additional LLMs besides OpenAI’s GPT models. As new models emerge with enhanced reasoning capabilities and larger input sizes, their performance in team tasks and ToM inference may also change. Second, the task environment is relatively simple with only five nodes and five bombs. We plan to scale up the environment and introduce more restrictions to test how LLM-based teams react to more challenging tasks. Lastly, the current team consists of three agents with homogeneous policies. It would be intriguing to evaluate how LLM-based agents perform in human-agent teams, especially from a human-centered perspective where issues like trust, transparency, and human-agent co-training can be addressed.</p>
+</div>
+<div id="Sx1.p2" class="ltx_para">
+<p id="Sx1.p2.1" class="ltx_p">The ToM capability evaluation method used in this study also has its limitations. Currently, human annotators, who have a global view of the task state and interaction history, generate the ground truth for ToM inference questions. However, this estimation is at best an approximation, assuming agents process information as a rational human would, which might be ambiguous in situations involving false beliefs or miscommunications. A potential alternative could be using each agent’s maintained belief state as the ground truth.</p>
+</div>
+<div id="Sx1.p3" class="ltx_para">
+<p id="Sx1.p3.1" class="ltx_p">The proposed belief state method could extend from introspective belief to first-order or even second-order beliefs. Currently, LLM-based agents maintain a belief state about their own world knowledge in text form. By extending this representation to include other agents’ world knowledge, we could equip LLM-based agents with an explicit first-order ToM model. Their ToM capability can be assessed by directly comparing one’s first-order belief with another’s introspective belief, rather than asking LLMs Sally-Anne style questions.</p>
+</div>
+</section>
+<section id="S9" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">9 </span>Acknowledgements</h2>
+
+<div id="S9.p1" class="ltx_para">
+<p id="S9.p1.1" class="ltx_p">This work was supported by DARPA award HR001120C0036 and AFOSR award FA9550-18-1-0097.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ahn et al. (2022)</span>
+<span class="ltx_bibblock">
+Michael Ahn, Anthony Brohan, Noah Brown, Yevgen Chebotar, Omar Cortes, Byron
+David, Chelsea Finn, Chuyuan Fu, Keerthana Gopalakrishnan, Karol Hausman,
+et al. 2022.
+
+</span>
+<span class="ltx_bibblock">Do as i can, not as i say: Grounding language in robotic affordances.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2204.01691</em>.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Baker et al. (2017)</span>
+<span class="ltx_bibblock">
+Chris L Baker, Julian Jara-Ettinger, Rebecca Saxe, and Joshua B Tenenbaum.
+2017.
+
+</span>
+<span class="ltx_bibblock">Rational quantitative attribution of beliefs, desires and percepts in
+human mentalizing.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">Nature Human Behaviour</em>, 1(4):0064.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Brockman et al. (2016)</span>
+<span class="ltx_bibblock">
+Greg Brockman, Vicki Cheung, Ludwig Pettersson, Jonas Schneider, John Schulman,
+Jie Tang, and Wojciech Zaremba. 2016.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="http://arxiv.org/abs/arXiv:1606.01540" title="" class="ltx_ref ltx_href">Openai gym</a>.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bubeck et al. (2023)</span>
+<span class="ltx_bibblock">
+Sébastien Bubeck, Varun Chandrasekaran, Ronen Eldan, Johannes Gehrke, Eric
+Horvitz, Ece Kamar, Peter Lee, Yin Tat Lee, Yuanzhi Li, Scott Lundberg,
+et al. 2023.
+
+</span>
+<span class="ltx_bibblock">Sparks of artificial general intelligence: Early experiments with
+gpt-4.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2303.12712</em>.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chowdhery et al. (2022)</span>
+<span class="ltx_bibblock">
+Aakanksha Chowdhery, Sharan Narang, Jacob Devlin, Maarten Bosma, Gaurav Mishra,
+Adam Roberts, Paul Barham, Hyung Won Chung, Charles Sutton, Sebastian
+Gehrmann, et al. 2022.
+
+</span>
+<span class="ltx_bibblock">Palm: Scaling language modeling with pathways.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2204.02311</em>.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Crawford and Lepine (2013)</span>
+<span class="ltx_bibblock">
+Eean R Crawford and Jeffery A Lepine. 2013.
+
+</span>
+<span class="ltx_bibblock">A configural theory of team processes: Accounting for the structure
+of taskwork and teamwork.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">Academy of Management Review</em>, 38(1):32–48.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fan and Yen (2004)</span>
+<span class="ltx_bibblock">
+Xiaocong Fan and John Yen. 2004.
+
+</span>
+<span class="ltx_bibblock">Modeling and simulating human teamwork behaviors using intelligent
+agents.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">Physics of life reviews</em>, 1(3):173–201.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hagendorff (2023)</span>
+<span class="ltx_bibblock">
+Thilo Hagendorff. 2023.
+
+</span>
+<span class="ltx_bibblock">Machine psychology: Investigating emergent capabilities and behavior
+in large language models using psychological methods.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2303.13988</em>.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Huang et al. (2022)</span>
+<span class="ltx_bibblock">
+Wenlong Huang, Pieter Abbeel, Deepak Pathak, and Igor Mordatch. 2022.
+
+</span>
+<span class="ltx_bibblock">Language models as zero-shot planners: Extracting actionable
+knowledge for embodied agents.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">International Conference on Machine Learning</em>, pages
+9118–9147. PMLR.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Keysar et al. (2003)</span>
+<span class="ltx_bibblock">
+Boaz Keysar, Shuhong Lin, and Dale J Barr. 2003.
+
+</span>
+<span class="ltx_bibblock">Limits on theory of mind use in adults.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">Cognition</em>, 89(1):25–41.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kosinski (2023)</span>
+<span class="ltx_bibblock">
+Michal Kosinski. 2023.
+
+</span>
+<span class="ltx_bibblock">Theory of mind may have spontaneously emerged in large language
+models.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2302.02083</em>.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li et al. (2022)</span>
+<span class="ltx_bibblock">
+Huao Li, Ini Oguntola, Dana Hughes, Michael Lewis, and Katia Sycara. 2022.
+
+</span>
+<span class="ltx_bibblock">Theory of mind modeling in search and rescue teams.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib12.1.1" class="ltx_emph ltx_font_italic">2022 31st IEEE International Conference on Robot and Human
+Interactive Communication (RO-MAN)</em>, pages 483–489. IEEE.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lim et al. (2020)</span>
+<span class="ltx_bibblock">
+Terence X Lim, Sidney Tio, and Desmond C Ong. 2020.
+
+</span>
+<span class="ltx_bibblock">Improving multi-agent cooperation using theory of mind.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib13.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2007.15703</em>.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al. (2023)</span>
+<span class="ltx_bibblock">
+Bo Liu, Yuqian Jiang, Xiaohan Zhang, Qiang Liu, Shiqi Zhang, Joydeep Biswas,
+and Peter Stone. 2023.
+
+</span>
+<span class="ltx_bibblock">Llm+ p: Empowering large language models with optimal planning
+proficiency.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib14.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2304.11477</em>.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mahowald et al. (2023)</span>
+<span class="ltx_bibblock">
+Kyle Mahowald, Anna A Ivanova, Idan A Blank, Nancy Kanwisher, Joshua B
+Tenenbaum, and Evelina Fedorenko. 2023.
+
+</span>
+<span class="ltx_bibblock">Dissociating language and thought in large language models: a
+cognitive perspective.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2301.06627</em>.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Miller (2009)</span>
+<span class="ltx_bibblock">
+Scott A Miller. 2009.
+
+</span>
+<span class="ltx_bibblock">Children’s understanding of second-order mental states.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">Psychological bulletin</em>, 135(5):749.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Moghaddam and Honey (2023)</span>
+<span class="ltx_bibblock">
+Shima Rahimi Moghaddam and Christopher J Honey. 2023.
+
+</span>
+<span class="ltx_bibblock">Boosting theory-of-mind performance in large language models via
+prompting.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2304.11490</em>.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Oguntola et al. (2023)</span>
+<span class="ltx_bibblock">
+Ini Oguntola, Joseph Campbell, Simon Stepputtis, and Katia Sycara. 2023.
+
+</span>
+<span class="ltx_bibblock">Theory of mind as intrinsic motivation for multi-agent reinforcement
+learning.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib18.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2307.01158</em>.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">OpenAI (2023)</span>
+<span class="ltx_bibblock">
+OpenAI. 2023.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="http://arxiv.org/abs/2303.08774" title="" class="ltx_ref ltx_href">Gpt-4 technical report</a>.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Park et al. (2023)</span>
+<span class="ltx_bibblock">
+Joon Sung Park, Joseph C O’Brien, Carrie J Cai, Meredith Ringel Morris, Percy
+Liang, and Michael S Bernstein. 2023.
+
+</span>
+<span class="ltx_bibblock">Generative agents: Interactive simulacra of human behavior.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib20.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2304.03442</em>.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rahwan et al. (2019)</span>
+<span class="ltx_bibblock">
+Iyad Rahwan, Manuel Cebrian, Nick Obradovich, Josh Bongard, Jean-François
+Bonnefon, Cynthia Breazeal, Jacob W Crandall, Nicholas A Christakis, Iain D
+Couzin, Matthew O Jackson, et al. 2019.
+
+</span>
+<span class="ltx_bibblock">Machine behaviour.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib21.1.1" class="ltx_emph ltx_font_italic">Nature</em>, 568(7753):477–486.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Riedl et al. (2021)</span>
+<span class="ltx_bibblock">
+Christoph Riedl, Young Ji Kim, Pranav Gupta, Thomas W Malone, and
+Anita Williams Woolley. 2021.
+
+</span>
+<span class="ltx_bibblock">Quantifying collective intelligence in human groups.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib22.1.1" class="ltx_emph ltx_font_italic">Proceedings of the National Academy of Sciences</em>,
+118(21):e2005737118.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Samvelyan et al. (2019)</span>
+<span class="ltx_bibblock">
+Mikayel Samvelyan, Tabish Rashid, Christian Schroeder de Witt, Gregory
+Farquhar, Nantas Nardelli, Tim G. J. Rudner, Chia-Man Hung, Philiph H. S.
+Torr, Jakob Foerster, and Shimon Whiteson. 2019.
+
+</span>
+<span class="ltx_bibblock">The StarCraft Multi-Agent Challenge.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib23.1.1" class="ltx_emph ltx_font_italic">CoRR</em>, abs/1902.04043.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sap et al. (2023)</span>
+<span class="ltx_bibblock">
+Maarten Sap, Ronan LeBras, Daniel Fried, and Yejin Choi. 2023.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="http://arxiv.org/abs/2210.13312" title="" class="ltx_ref ltx_href">Neural theory-of-mind? on
+the limits of social intelligence in large lms</a>.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sclar et al. (2023)</span>
+<span class="ltx_bibblock">
+Melanie Sclar, Sachin Kumar, Peter West, Alane Suhr, Yejin Choi, and Yulia
+Tsvetkov. 2023.
+
+</span>
+<span class="ltx_bibblock">Minding language models’(lack of) theory of mind: A plug-and-play
+multi-character belief tracker.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib25.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2306.00924</em>.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sharon et al. (2015)</span>
+<span class="ltx_bibblock">
+Guni Sharon, Roni Stern, Ariel Felner, and Nathan R Sturtevant. 2015.
+
+</span>
+<span class="ltx_bibblock">Conflict-based search for optimal multi-agent pathfinding.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib26.1.1" class="ltx_emph ltx_font_italic">Artificial Intelligence</em>, 219:40–66.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sunehag et al. (2017)</span>
+<span class="ltx_bibblock">
+Peter Sunehag, Guy Lever, Audrunas Gruslys, Wojciech Marian Czarnecki, Vinicius
+Zambaldi, Max Jaderberg, Marc Lanctot, Nicolas Sonnerat, Joel Z Leibo, Karl
+Tuyls, et al. 2017.
+
+</span>
+<span class="ltx_bibblock">Value-decomposition networks for cooperative multi-agent learning.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib27.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1706.05296</em>.
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Thoppilan et al. (2022)</span>
+<span class="ltx_bibblock">
+Romal Thoppilan, Daniel De Freitas, Jamie Hall, Noam Shazeer, Apoorv
+Kulshreshtha, Heng-Tze Cheng, Alicia Jin, Taylor Bos, Leslie Baker, Yu Du,
+et al. 2022.
+
+</span>
+<span class="ltx_bibblock">Lamda: Language models for dialog applications.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib28.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2201.08239</em>.
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ullman (2023)</span>
+<span class="ltx_bibblock">
+Tomer Ullman. 2023.
+
+</span>
+<span class="ltx_bibblock">Large language models fail on trivial alterations to theory-of-mind
+tasks.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib29.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2302.08399</em>.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang et al. (2023a)</span>
+<span class="ltx_bibblock">
+Guanzhi Wang, Yuqi Xie, Yunfan Jiang, Ajay Mandlekar, Chaowei Xiao, Yuke Zhu,
+Linxi Fan, and Anima Anandkumar. 2023a.
+
+</span>
+<span class="ltx_bibblock">Voyager: An open-ended embodied agent with large language models.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib30.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2305.16291</em>.
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang et al. (2023b)</span>
+<span class="ltx_bibblock">
+Zihao Wang, Shaofei Cai, Anji Liu, Xiaojian Ma, and Yitao Liang.
+2023b.
+
+</span>
+<span class="ltx_bibblock">Describe, explain, plan and select: Interactive planning with large
+language models enables open-world multi-task agents.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib31.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2302.01560</em>.
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wei et al. (2022)</span>
+<span class="ltx_bibblock">
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Ed Chi, Quoc Le, and
+Denny Zhou. 2022.
+
+</span>
+<span class="ltx_bibblock">Chain of thought prompting elicits reasoning in large language
+models.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib32.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2201.11903</em>.
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Williams et al. (2022)</span>
+<span class="ltx_bibblock">
+Jessica Williams, Stephen M Fiore, and Florian Jentsch. 2022.
+
+</span>
+<span class="ltx_bibblock">Supporting artificial social intelligence with theory of mind.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib33.1.1" class="ltx_emph ltx_font_italic">Frontiers in artificial intelligence</em>, 5.
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xie et al. (2023)</span>
+<span class="ltx_bibblock">
+Yaqi Xie, Chen Yu, Tongyao Zhu, Jinbin Bai, Ze Gong, and Harold Soh. 2023.
+
+</span>
+<span class="ltx_bibblock">Translating natural language to planning goals with large-language
+models.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib34.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2302.05128</em>.
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yu et al. (2022)</span>
+<span class="ltx_bibblock">
+Chao Yu, Akash Velu, Eugene Vinitsky, Jiaxuan Gao, Yu Wang, Alexandre Bayen,
+and Yi Wu. 2022.
+
+</span>
+<span class="ltx_bibblock">The surprising effectiveness of ppo in cooperative multi-agent games.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib35.1.1" class="ltx_emph ltx_font_italic">Advances in Neural Information Processing Systems</em>,
+35:24611–24624.
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yuan et al. (2021)</span>
+<span class="ltx_bibblock">
+Luyao Yuan, Zipeng Fu, Linqi Zhou, Kexin Yang, and Song-Chun Zhu. 2021.
+
+</span>
+<span class="ltx_bibblock">Emergence of theory of mind collaboration in multiagent systems.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib36.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2110.00121</em>.
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. (2012)</span>
+<span class="ltx_bibblock">
+Jun Zhang, Trey Hedden, and Adrian Chia. 2012.
+
+</span>
+<span class="ltx_bibblock">Perspective-taking and depth of theory-of-mind reasoning in
+sequential-move games.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib37.1.1" class="ltx_emph ltx_font_italic">Cognitive science</em>, 36(3):560–573.
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zheng et al. (2023)</span>
+<span class="ltx_bibblock">
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao
+Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric. P Xing, Hao Zhang, Joseph E.
+Gonzalez, and Ion Stoica. 2023.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="http://arxiv.org/abs/2306.05685" title="" class="ltx_ref ltx_href">Judging llm-as-a-judge with
+mt-bench and chatbot arena</a>.
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<div id="p1" class="ltx_para">
+<p id="p1.1" class="ltx_p ltx_align_center"><span id="p1.1.1" class="ltx_text ltx_font_bold">Appendix</span></p>
+</div>
+<section id="A1" class="ltx_appendix">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix">Appendix A </span>Prompts</h2>
+
+<section id="A1.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">A.1 </span>Task context</h3>
+
+<div id="A1.SS1.p1" class="ltx_para">
+<p id="A1.SS1.p1.1" class="ltx_p">Welcome to our interactive text game! In this game, you’ll assume the role of a specialist on a search and rescue team. Alongside two other players, you’ll navigate a five-room environment with a mission to defuse five hidden bombs.</p>
+</div>
+<div id="A1.SS1.p2" class="ltx_para">
+<p id="A1.SS1.p2.1" class="ltx_p"><span id="A1.SS1.p2.1.1" class="ltx_text ltx_font_bold">The Map</span>: Imagine a network of rooms represented by a connected graph where each node corresponds to a room, and the edges between nodes depict hallways. The rooms are numbered 0, 3, 6, 5, and 8. Room 0 is connected to all other rooms. Room 5 shares a hallway with room 6. Room 3 is linked to room 8. And room 8 is also connected with room 6. You can only travel to adjacent, directly connected rooms at each turn.</p>
+</div>
+<div id="A1.SS1.p3" class="ltx_para">
+<p id="A1.SS1.p3.1" class="ltx_p"><span id="A1.SS1.p3.1.1" class="ltx_text ltx_font_bold">The Challenge</span>: Scattered among these rooms are five bombs, each coded with different phases represented by colors. To defuse them, you’ll need to use the correct wire-cutting tools in the correct sequence. There are one-phase, two-phase, and three-phase bombs, needing 1, 2, or 3 color-coded tool applications in sequence to disarm. For instance, a bomb with a red-green phase sequence requires the red tool first, then the green one. Points are awarded based on the number of tools used for defusing a bomb, with each tool use worth 10 points. Your task is to maximize the team score as soon as possible. The challenge is that the bomb locations and sequences are unknown to players at the start.</p>
+</div>
+<div id="A1.SS1.p4" class="ltx_para">
+<p id="A1.SS1.p4.1" class="ltx_p"><span id="A1.SS1.p4.1.1" class="ltx_text ltx_font_bold">Tools</span>: Each player is equipped with two color-coded wire cutters. As player Alpha, you have red and green tools, player Bravo wields green and blue, and player Charlie possesses blue and red.</p>
+</div>
+<div id="A1.SS1.p5" class="ltx_para">
+<p id="A1.SS1.p5.1" class="ltx_p"><span id="A1.SS1.p5.1.1" class="ltx_text ltx_font_bold">Actions</span>: Each round, you can opt to do one of the following: 1) Move to an adjacent room, 2) Inspect a bomb’s phase sequence in your current room, or 3) Apply your wire cutters to a bomb in the current room.</p>
+</div>
+<div id="A1.SS1.p6" class="ltx_para">
+<p id="A1.SS1.p6.1" class="ltx_p"><span id="A1.SS1.p6.1.1" class="ltx_text ltx_font_bold">Communications</span>: In addition to selecting an action to take from the above list, you can also send communication message texts to both of your teammates in each round. The message text you sent will be shared with both of your teammates in their observation in the next round.</p>
+</div>
+<div id="A1.SS1.p7" class="ltx_para">
+<p id="A1.SS1.p7.1" class="ltx_p"><span id="A1.SS1.p7.1.1" class="ltx_text ltx_font_bold">Observation</span>: While you can only see what’s in your current room and read text messages from teammates. You’ll also be informed of the current round number, team score and the current location of your teammates. Your teammates have the same observability as you. They will not be able to know your action and its consequences unless you explicitly communicate.</p>
+</div>
+<div id="A1.SS1.p8" class="ltx_para">
+<p id="A1.SS1.p8.1" class="ltx_p">To facilitate our interaction, reply your action selection and communication messages in this fixed format: Action selection: Your action. Message to Team: “Your Message”. To move to an adjacent room, say: ’Move to Room X’. To inspect the sequence of a bomb in your current room, say: ’Inspect Bomb’. To apply a wire cutter tool, say: ’Apply X Tool’. Remember, your replies must adhere strictly to these rules. Feel free to ask clarifying questions if needed. I’ll supply the necessary information as we progress. Are you ready to take on this explosive challenge?</p>
+</div>
+</section>
+<section id="A1.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">A.2 </span>Initial belief state</h3>
+
+<div id="A1.SS2.p1" class="ltx_para">
+<p id="A1.SS2.p1.1" class="ltx_p">Below is your current belief about game state based on your previous observations about the environment and interactions with your teammates.
+<span id="A1.SS2.p1.1.1" class="ltx_text ltx_font_bold">Your role</span>: You are playing as Player &lt;agent id&gt;.
+<br class="ltx_break"><span id="A1.SS2.p1.1.2" class="ltx_text ltx_font_bold">Current round</span>: 1
+<br class="ltx_break"><span id="A1.SS2.p1.1.3" class="ltx_text ltx_font_bold">Total team score</span>: 0.
+<br class="ltx_break"><span id="A1.SS2.p1.1.4" class="ltx_text ltx_font_bold">Observation:</span>
+You are currently in Room 0 with both of your teammates. In the room you also found bomb 1 with unknown sequence. There is no other bomb in the current room.
+<br class="ltx_break"><span id="A1.SS2.p1.1.5" class="ltx_text ltx_font_bold">Teammate Locations:</span>
+Player alpha is in Room 0; Player bravo is in Room 0; Player charlie is in Room 0.
+<br class="ltx_break"><span id="A1.SS2.p1.1.6" class="ltx_text ltx_font_bold">Room connectivity</span>:</p>
+<ul id="A1.I1" class="ltx_itemize">
+<li id="A1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I1.i1.p1" class="ltx_para">
+<p id="A1.I1.i1.p1.1" class="ltx_p">Room 0 is connected to room 3, 5, 6, 8</p>
+</div>
+</li>
+<li id="A1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I1.i2.p1" class="ltx_para">
+<p id="A1.I1.i2.p1.1" class="ltx_p">Room 3 is connected to room 0</p>
+</div>
+</li>
+<li id="A1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I1.i3.p1" class="ltx_para">
+<p id="A1.I1.i3.p1.1" class="ltx_p">Room 5 is connected to room 0 and 6</p>
+</div>
+</li>
+<li id="A1.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I1.i4.p1" class="ltx_para">
+<p id="A1.I1.i4.p1.1" class="ltx_p">Room 8 is connected to room 0 and 6</p>
+</div>
+</li>
+</ul>
+<p id="A1.SS2.p1.2" class="ltx_p"><span id="A1.SS2.p1.2.1" class="ltx_text ltx_font_bold">Bomb Intel</span>:</p>
+<ul id="A1.I2" class="ltx_itemize">
+<li id="A1.I2.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I2.i1.p1" class="ltx_para">
+<p id="A1.I2.i1.p1.1" class="ltx_p">Bomb 1: Located in Room 0. The phase sequence is Unknown.</p>
+</div>
+</li>
+<li id="A1.I2.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I2.i2.p1" class="ltx_para">
+<p id="A1.I2.i2.p1.1" class="ltx_p">Bomb 2: Details currently unknown.</p>
+</div>
+</li>
+<li id="A1.I2.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I2.i3.p1" class="ltx_para">
+<p id="A1.I2.i3.p1.1" class="ltx_p">Bomb 3: Details currently unknown.</p>
+</div>
+</li>
+<li id="A1.I2.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I2.i4.p1" class="ltx_para">
+<p id="A1.I2.i4.p1.1" class="ltx_p">Bomb 4: Details currently unknown.</p>
+</div>
+</li>
+<li id="A1.I2.i5" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I2.i5.p1" class="ltx_para">
+<p id="A1.I2.i5.p1.1" class="ltx_p">Bomb 5: Details currently unknown.</p>
+</div>
+</li>
+</ul>
+<p id="A1.SS2.p1.3" class="ltx_p"><span id="A1.SS2.p1.3.1" class="ltx_text ltx_font_bold">Tool inventory:</span></p>
+<ul id="A1.I3" class="ltx_itemize">
+<li id="A1.I3.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I3.i1.p1" class="ltx_para">
+<p id="A1.I3.i1.p1.1" class="ltx_p">Alpha: Equipped with red and green wire cutters.</p>
+</div>
+</li>
+<li id="A1.I3.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I3.i2.p1" class="ltx_para">
+<p id="A1.I3.i2.p1.1" class="ltx_p">Bravo: Equipped with green and blue wire cutters.</p>
+</div>
+</li>
+<li id="A1.I3.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I3.i3.p1" class="ltx_para">
+<p id="A1.I3.i3.p1.1" class="ltx_p">Charlie: Equipped with red and blue wire cutters.</p>
+</div>
+</li>
+</ul>
+<p id="A1.SS2.p1.4" class="ltx_p"><span id="A1.SS2.p1.4.1" class="ltx_text ltx_font_bold">Available action options:</span></p>
+<ul id="A1.I4" class="ltx_itemize">
+<li id="A1.I4.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I4.i1.p1" class="ltx_para">
+<p id="A1.I4.i1.p1.1" class="ltx_p">To move to an adjacent room, say: ’Move to Room X’.</p>
+</div>
+</li>
+<li id="A1.I4.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I4.i2.p1" class="ltx_para">
+<p id="A1.I4.i2.p1.1" class="ltx_p">To inspect the sequence of a bomb in your current room, say: ’Inspect Bomb’.</p>
+</div>
+</li>
+<li id="A1.I4.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I4.i3.p1" class="ltx_para">
+<p id="A1.I4.i3.p1.1" class="ltx_p">To apply a wire cutter tool, say: ’Apply X Tool’.</p>
+</div>
+</li>
+<li id="A1.I4.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A1.I4.i4.p1" class="ltx_para">
+<p id="A1.I4.i4.p1.1" class="ltx_p">To send a message to your teammates, say: ’Message to Team: "Your Message"’.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="A2" class="ltx_appendix">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix">Appendix B </span>Environment feedback for Error correction</h2>
+
+<div id="A2.p1" class="ltx_para">
+<ul id="A2.I1" class="ltx_itemize">
+<li id="A2.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A2.I1.i1.p1" class="ltx_para">
+<p id="A2.I1.i1.p1.1" class="ltx_p">Your action is invalid.</p>
+</div>
+</li>
+<li id="A2.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A2.I1.i2.p1" class="ltx_para">
+<p id="A2.I1.i2.p1.2" class="ltx_p">You can not directly move to Room <math id="A2.I1.i2.p1.1.m1.1" class="ltx_Math" alttext="{roomid}" display="inline"><semantics id="A2.I1.i2.p1.1.m1.1a"><mrow id="A2.I1.i2.p1.1.m1.1.1" xref="A2.I1.i2.p1.1.m1.1.1.cmml"><mi id="A2.I1.i2.p1.1.m1.1.1.2" xref="A2.I1.i2.p1.1.m1.1.1.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.1.m1.1.1.1" xref="A2.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.1.m1.1.1.3" xref="A2.I1.i2.p1.1.m1.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.1.m1.1.1.1a" xref="A2.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.1.m1.1.1.4" xref="A2.I1.i2.p1.1.m1.1.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.1.m1.1.1.1b" xref="A2.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.1.m1.1.1.5" xref="A2.I1.i2.p1.1.m1.1.1.5.cmml">m</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.1.m1.1.1.1c" xref="A2.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.1.m1.1.1.6" xref="A2.I1.i2.p1.1.m1.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.1.m1.1.1.1d" xref="A2.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.1.m1.1.1.7" xref="A2.I1.i2.p1.1.m1.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A2.I1.i2.p1.1.m1.1b"><apply id="A2.I1.i2.p1.1.m1.1.1.cmml" xref="A2.I1.i2.p1.1.m1.1.1"><times id="A2.I1.i2.p1.1.m1.1.1.1.cmml" xref="A2.I1.i2.p1.1.m1.1.1.1"></times><ci id="A2.I1.i2.p1.1.m1.1.1.2.cmml" xref="A2.I1.i2.p1.1.m1.1.1.2">𝑟</ci><ci id="A2.I1.i2.p1.1.m1.1.1.3.cmml" xref="A2.I1.i2.p1.1.m1.1.1.3">𝑜</ci><ci id="A2.I1.i2.p1.1.m1.1.1.4.cmml" xref="A2.I1.i2.p1.1.m1.1.1.4">𝑜</ci><ci id="A2.I1.i2.p1.1.m1.1.1.5.cmml" xref="A2.I1.i2.p1.1.m1.1.1.5">𝑚</ci><ci id="A2.I1.i2.p1.1.m1.1.1.6.cmml" xref="A2.I1.i2.p1.1.m1.1.1.6">𝑖</ci><ci id="A2.I1.i2.p1.1.m1.1.1.7.cmml" xref="A2.I1.i2.p1.1.m1.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A2.I1.i2.p1.1.m1.1c">{roomid}</annotation></semantics></math> because it is not adjacent to your current location, Room <math id="A2.I1.i2.p1.2.m2.1" class="ltx_Math" alttext="{currentroom}" display="inline"><semantics id="A2.I1.i2.p1.2.m2.1a"><mrow id="A2.I1.i2.p1.2.m2.1.1" xref="A2.I1.i2.p1.2.m2.1.1.cmml"><mi id="A2.I1.i2.p1.2.m2.1.1.2" xref="A2.I1.i2.p1.2.m2.1.1.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.3" xref="A2.I1.i2.p1.2.m2.1.1.3.cmml">u</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1a" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.4" xref="A2.I1.i2.p1.2.m2.1.1.4.cmml">r</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1b" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.5" xref="A2.I1.i2.p1.2.m2.1.1.5.cmml">r</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1c" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.6" xref="A2.I1.i2.p1.2.m2.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1d" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.7" xref="A2.I1.i2.p1.2.m2.1.1.7.cmml">n</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1e" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.8" xref="A2.I1.i2.p1.2.m2.1.1.8.cmml">t</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1f" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.9" xref="A2.I1.i2.p1.2.m2.1.1.9.cmml">r</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1g" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.10" xref="A2.I1.i2.p1.2.m2.1.1.10.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1h" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.11" xref="A2.I1.i2.p1.2.m2.1.1.11.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i2.p1.2.m2.1.1.1i" xref="A2.I1.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i2.p1.2.m2.1.1.12" xref="A2.I1.i2.p1.2.m2.1.1.12.cmml">m</mi></mrow><annotation-xml encoding="MathML-Content" id="A2.I1.i2.p1.2.m2.1b"><apply id="A2.I1.i2.p1.2.m2.1.1.cmml" xref="A2.I1.i2.p1.2.m2.1.1"><times id="A2.I1.i2.p1.2.m2.1.1.1.cmml" xref="A2.I1.i2.p1.2.m2.1.1.1"></times><ci id="A2.I1.i2.p1.2.m2.1.1.2.cmml" xref="A2.I1.i2.p1.2.m2.1.1.2">𝑐</ci><ci id="A2.I1.i2.p1.2.m2.1.1.3.cmml" xref="A2.I1.i2.p1.2.m2.1.1.3">𝑢</ci><ci id="A2.I1.i2.p1.2.m2.1.1.4.cmml" xref="A2.I1.i2.p1.2.m2.1.1.4">𝑟</ci><ci id="A2.I1.i2.p1.2.m2.1.1.5.cmml" xref="A2.I1.i2.p1.2.m2.1.1.5">𝑟</ci><ci id="A2.I1.i2.p1.2.m2.1.1.6.cmml" xref="A2.I1.i2.p1.2.m2.1.1.6">𝑒</ci><ci id="A2.I1.i2.p1.2.m2.1.1.7.cmml" xref="A2.I1.i2.p1.2.m2.1.1.7">𝑛</ci><ci id="A2.I1.i2.p1.2.m2.1.1.8.cmml" xref="A2.I1.i2.p1.2.m2.1.1.8">𝑡</ci><ci id="A2.I1.i2.p1.2.m2.1.1.9.cmml" xref="A2.I1.i2.p1.2.m2.1.1.9">𝑟</ci><ci id="A2.I1.i2.p1.2.m2.1.1.10.cmml" xref="A2.I1.i2.p1.2.m2.1.1.10">𝑜</ci><ci id="A2.I1.i2.p1.2.m2.1.1.11.cmml" xref="A2.I1.i2.p1.2.m2.1.1.11">𝑜</ci><ci id="A2.I1.i2.p1.2.m2.1.1.12.cmml" xref="A2.I1.i2.p1.2.m2.1.1.12">𝑚</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A2.I1.i2.p1.2.m2.1c">{currentroom}</annotation></semantics></math>. Consider taking a detour to another room first and then move to your destination.</p>
+</div>
+</li>
+<li id="A2.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A2.I1.i3.p1" class="ltx_para">
+<p id="A2.I1.i3.p1.1" class="ltx_p">There is no bomb in the current current location, Room <math id="A2.I1.i3.p1.1.m1.1" class="ltx_Math" alttext="{currentroom}" display="inline"><semantics id="A2.I1.i3.p1.1.m1.1a"><mrow id="A2.I1.i3.p1.1.m1.1.1" xref="A2.I1.i3.p1.1.m1.1.1.cmml"><mi id="A2.I1.i3.p1.1.m1.1.1.2" xref="A2.I1.i3.p1.1.m1.1.1.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.3" xref="A2.I1.i3.p1.1.m1.1.1.3.cmml">u</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1a" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.4" xref="A2.I1.i3.p1.1.m1.1.1.4.cmml">r</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1b" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.5" xref="A2.I1.i3.p1.1.m1.1.1.5.cmml">r</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1c" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.6" xref="A2.I1.i3.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1d" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.7" xref="A2.I1.i3.p1.1.m1.1.1.7.cmml">n</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1e" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.8" xref="A2.I1.i3.p1.1.m1.1.1.8.cmml">t</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1f" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.9" xref="A2.I1.i3.p1.1.m1.1.1.9.cmml">r</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1g" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.10" xref="A2.I1.i3.p1.1.m1.1.1.10.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1h" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.11" xref="A2.I1.i3.p1.1.m1.1.1.11.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i3.p1.1.m1.1.1.1i" xref="A2.I1.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i3.p1.1.m1.1.1.12" xref="A2.I1.i3.p1.1.m1.1.1.12.cmml">m</mi></mrow><annotation-xml encoding="MathML-Content" id="A2.I1.i3.p1.1.m1.1b"><apply id="A2.I1.i3.p1.1.m1.1.1.cmml" xref="A2.I1.i3.p1.1.m1.1.1"><times id="A2.I1.i3.p1.1.m1.1.1.1.cmml" xref="A2.I1.i3.p1.1.m1.1.1.1"></times><ci id="A2.I1.i3.p1.1.m1.1.1.2.cmml" xref="A2.I1.i3.p1.1.m1.1.1.2">𝑐</ci><ci id="A2.I1.i3.p1.1.m1.1.1.3.cmml" xref="A2.I1.i3.p1.1.m1.1.1.3">𝑢</ci><ci id="A2.I1.i3.p1.1.m1.1.1.4.cmml" xref="A2.I1.i3.p1.1.m1.1.1.4">𝑟</ci><ci id="A2.I1.i3.p1.1.m1.1.1.5.cmml" xref="A2.I1.i3.p1.1.m1.1.1.5">𝑟</ci><ci id="A2.I1.i3.p1.1.m1.1.1.6.cmml" xref="A2.I1.i3.p1.1.m1.1.1.6">𝑒</ci><ci id="A2.I1.i3.p1.1.m1.1.1.7.cmml" xref="A2.I1.i3.p1.1.m1.1.1.7">𝑛</ci><ci id="A2.I1.i3.p1.1.m1.1.1.8.cmml" xref="A2.I1.i3.p1.1.m1.1.1.8">𝑡</ci><ci id="A2.I1.i3.p1.1.m1.1.1.9.cmml" xref="A2.I1.i3.p1.1.m1.1.1.9">𝑟</ci><ci id="A2.I1.i3.p1.1.m1.1.1.10.cmml" xref="A2.I1.i3.p1.1.m1.1.1.10">𝑜</ci><ci id="A2.I1.i3.p1.1.m1.1.1.11.cmml" xref="A2.I1.i3.p1.1.m1.1.1.11">𝑜</ci><ci id="A2.I1.i3.p1.1.m1.1.1.12.cmml" xref="A2.I1.i3.p1.1.m1.1.1.12">𝑚</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A2.I1.i3.p1.1.m1.1c">{currentroom}</annotation></semantics></math>, for you to inspect.</p>
+</div>
+</li>
+<li id="A2.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A2.I1.i4.p1" class="ltx_para">
+<p id="A2.I1.i4.p1.2" class="ltx_p">You can not apply Tool <math id="A2.I1.i4.p1.1.m1.1" class="ltx_Math" alttext="{toolcolor}" display="inline"><semantics id="A2.I1.i4.p1.1.m1.1a"><mrow id="A2.I1.i4.p1.1.m1.1.1" xref="A2.I1.i4.p1.1.m1.1.1.cmml"><mi id="A2.I1.i4.p1.1.m1.1.1.2" xref="A2.I1.i4.p1.1.m1.1.1.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.1.m1.1.1.1" xref="A2.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.1.m1.1.1.3" xref="A2.I1.i4.p1.1.m1.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.1.m1.1.1.1a" xref="A2.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.1.m1.1.1.4" xref="A2.I1.i4.p1.1.m1.1.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.1.m1.1.1.1b" xref="A2.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.1.m1.1.1.5" xref="A2.I1.i4.p1.1.m1.1.1.5.cmml">l</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.1.m1.1.1.1c" xref="A2.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.1.m1.1.1.6" xref="A2.I1.i4.p1.1.m1.1.1.6.cmml">c</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.1.m1.1.1.1d" xref="A2.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.1.m1.1.1.7" xref="A2.I1.i4.p1.1.m1.1.1.7.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.1.m1.1.1.1e" xref="A2.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.1.m1.1.1.8" xref="A2.I1.i4.p1.1.m1.1.1.8.cmml">l</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.1.m1.1.1.1f" xref="A2.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.1.m1.1.1.9" xref="A2.I1.i4.p1.1.m1.1.1.9.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.1.m1.1.1.1g" xref="A2.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.1.m1.1.1.10" xref="A2.I1.i4.p1.1.m1.1.1.10.cmml">r</mi></mrow><annotation-xml encoding="MathML-Content" id="A2.I1.i4.p1.1.m1.1b"><apply id="A2.I1.i4.p1.1.m1.1.1.cmml" xref="A2.I1.i4.p1.1.m1.1.1"><times id="A2.I1.i4.p1.1.m1.1.1.1.cmml" xref="A2.I1.i4.p1.1.m1.1.1.1"></times><ci id="A2.I1.i4.p1.1.m1.1.1.2.cmml" xref="A2.I1.i4.p1.1.m1.1.1.2">𝑡</ci><ci id="A2.I1.i4.p1.1.m1.1.1.3.cmml" xref="A2.I1.i4.p1.1.m1.1.1.3">𝑜</ci><ci id="A2.I1.i4.p1.1.m1.1.1.4.cmml" xref="A2.I1.i4.p1.1.m1.1.1.4">𝑜</ci><ci id="A2.I1.i4.p1.1.m1.1.1.5.cmml" xref="A2.I1.i4.p1.1.m1.1.1.5">𝑙</ci><ci id="A2.I1.i4.p1.1.m1.1.1.6.cmml" xref="A2.I1.i4.p1.1.m1.1.1.6">𝑐</ci><ci id="A2.I1.i4.p1.1.m1.1.1.7.cmml" xref="A2.I1.i4.p1.1.m1.1.1.7">𝑜</ci><ci id="A2.I1.i4.p1.1.m1.1.1.8.cmml" xref="A2.I1.i4.p1.1.m1.1.1.8">𝑙</ci><ci id="A2.I1.i4.p1.1.m1.1.1.9.cmml" xref="A2.I1.i4.p1.1.m1.1.1.9">𝑜</ci><ci id="A2.I1.i4.p1.1.m1.1.1.10.cmml" xref="A2.I1.i4.p1.1.m1.1.1.10">𝑟</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A2.I1.i4.p1.1.m1.1c">{toolcolor}</annotation></semantics></math> to Bomb <math id="A2.I1.i4.p1.2.m2.1" class="ltx_Math" alttext="{boomid}" display="inline"><semantics id="A2.I1.i4.p1.2.m2.1a"><mrow id="A2.I1.i4.p1.2.m2.1.1" xref="A2.I1.i4.p1.2.m2.1.1.cmml"><mi id="A2.I1.i4.p1.2.m2.1.1.2" xref="A2.I1.i4.p1.2.m2.1.1.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.2.m2.1.1.1" xref="A2.I1.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.2.m2.1.1.3" xref="A2.I1.i4.p1.2.m2.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.2.m2.1.1.1a" xref="A2.I1.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.2.m2.1.1.4" xref="A2.I1.i4.p1.2.m2.1.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.2.m2.1.1.1b" xref="A2.I1.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.2.m2.1.1.5" xref="A2.I1.i4.p1.2.m2.1.1.5.cmml">m</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.2.m2.1.1.1c" xref="A2.I1.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.2.m2.1.1.6" xref="A2.I1.i4.p1.2.m2.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A2.I1.i4.p1.2.m2.1.1.1d" xref="A2.I1.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A2.I1.i4.p1.2.m2.1.1.7" xref="A2.I1.i4.p1.2.m2.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A2.I1.i4.p1.2.m2.1b"><apply id="A2.I1.i4.p1.2.m2.1.1.cmml" xref="A2.I1.i4.p1.2.m2.1.1"><times id="A2.I1.i4.p1.2.m2.1.1.1.cmml" xref="A2.I1.i4.p1.2.m2.1.1.1"></times><ci id="A2.I1.i4.p1.2.m2.1.1.2.cmml" xref="A2.I1.i4.p1.2.m2.1.1.2">𝑏</ci><ci id="A2.I1.i4.p1.2.m2.1.1.3.cmml" xref="A2.I1.i4.p1.2.m2.1.1.3">𝑜</ci><ci id="A2.I1.i4.p1.2.m2.1.1.4.cmml" xref="A2.I1.i4.p1.2.m2.1.1.4">𝑜</ci><ci id="A2.I1.i4.p1.2.m2.1.1.5.cmml" xref="A2.I1.i4.p1.2.m2.1.1.5">𝑚</ci><ci id="A2.I1.i4.p1.2.m2.1.1.6.cmml" xref="A2.I1.i4.p1.2.m2.1.1.6">𝑖</ci><ci id="A2.I1.i4.p1.2.m2.1.1.7.cmml" xref="A2.I1.i4.p1.2.m2.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A2.I1.i4.p1.2.m2.1c">{boomid}</annotation></semantics></math> because the sequence of this bomb is sequence. You will need to apply other color tool first.</p>
+</div>
+</li>
+<li id="A2.I1.i5" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A2.I1.i5.p1" class="ltx_para">
+<p id="A2.I1.i5.p1.1" class="ltx_p">There is no bomb in your current location, room <math id="A2.I1.i5.p1.1.m1.1" class="ltx_Math" alttext="{roomid}" display="inline"><semantics id="A2.I1.i5.p1.1.m1.1a"><mrow id="A2.I1.i5.p1.1.m1.1.1" xref="A2.I1.i5.p1.1.m1.1.1.cmml"><mi id="A2.I1.i5.p1.1.m1.1.1.2" xref="A2.I1.i5.p1.1.m1.1.1.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="A2.I1.i5.p1.1.m1.1.1.1" xref="A2.I1.i5.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i5.p1.1.m1.1.1.3" xref="A2.I1.i5.p1.1.m1.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i5.p1.1.m1.1.1.1a" xref="A2.I1.i5.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i5.p1.1.m1.1.1.4" xref="A2.I1.i5.p1.1.m1.1.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i5.p1.1.m1.1.1.1b" xref="A2.I1.i5.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i5.p1.1.m1.1.1.5" xref="A2.I1.i5.p1.1.m1.1.1.5.cmml">m</mi><mo lspace="0em" rspace="0em" id="A2.I1.i5.p1.1.m1.1.1.1c" xref="A2.I1.i5.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i5.p1.1.m1.1.1.6" xref="A2.I1.i5.p1.1.m1.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A2.I1.i5.p1.1.m1.1.1.1d" xref="A2.I1.i5.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i5.p1.1.m1.1.1.7" xref="A2.I1.i5.p1.1.m1.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A2.I1.i5.p1.1.m1.1b"><apply id="A2.I1.i5.p1.1.m1.1.1.cmml" xref="A2.I1.i5.p1.1.m1.1.1"><times id="A2.I1.i5.p1.1.m1.1.1.1.cmml" xref="A2.I1.i5.p1.1.m1.1.1.1"></times><ci id="A2.I1.i5.p1.1.m1.1.1.2.cmml" xref="A2.I1.i5.p1.1.m1.1.1.2">𝑟</ci><ci id="A2.I1.i5.p1.1.m1.1.1.3.cmml" xref="A2.I1.i5.p1.1.m1.1.1.3">𝑜</ci><ci id="A2.I1.i5.p1.1.m1.1.1.4.cmml" xref="A2.I1.i5.p1.1.m1.1.1.4">𝑜</ci><ci id="A2.I1.i5.p1.1.m1.1.1.5.cmml" xref="A2.I1.i5.p1.1.m1.1.1.5">𝑚</ci><ci id="A2.I1.i5.p1.1.m1.1.1.6.cmml" xref="A2.I1.i5.p1.1.m1.1.1.6">𝑖</ci><ci id="A2.I1.i5.p1.1.m1.1.1.7.cmml" xref="A2.I1.i5.p1.1.m1.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A2.I1.i5.p1.1.m1.1c">{roomid}</annotation></semantics></math>, for you to defuse.</p>
+</div>
+</li>
+<li id="A2.I1.i6" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A2.I1.i6.p1" class="ltx_para">
+<p id="A2.I1.i6.p1.1" class="ltx_p">You do not have Tool <math id="A2.I1.i6.p1.1.m1.1" class="ltx_Math" alttext="{toolcolor}" display="inline"><semantics id="A2.I1.i6.p1.1.m1.1a"><mrow id="A2.I1.i6.p1.1.m1.1.1" xref="A2.I1.i6.p1.1.m1.1.1.cmml"><mi id="A2.I1.i6.p1.1.m1.1.1.2" xref="A2.I1.i6.p1.1.m1.1.1.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="A2.I1.i6.p1.1.m1.1.1.1" xref="A2.I1.i6.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i6.p1.1.m1.1.1.3" xref="A2.I1.i6.p1.1.m1.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i6.p1.1.m1.1.1.1a" xref="A2.I1.i6.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i6.p1.1.m1.1.1.4" xref="A2.I1.i6.p1.1.m1.1.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i6.p1.1.m1.1.1.1b" xref="A2.I1.i6.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i6.p1.1.m1.1.1.5" xref="A2.I1.i6.p1.1.m1.1.1.5.cmml">l</mi><mo lspace="0em" rspace="0em" id="A2.I1.i6.p1.1.m1.1.1.1c" xref="A2.I1.i6.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i6.p1.1.m1.1.1.6" xref="A2.I1.i6.p1.1.m1.1.1.6.cmml">c</mi><mo lspace="0em" rspace="0em" id="A2.I1.i6.p1.1.m1.1.1.1d" xref="A2.I1.i6.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i6.p1.1.m1.1.1.7" xref="A2.I1.i6.p1.1.m1.1.1.7.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i6.p1.1.m1.1.1.1e" xref="A2.I1.i6.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i6.p1.1.m1.1.1.8" xref="A2.I1.i6.p1.1.m1.1.1.8.cmml">l</mi><mo lspace="0em" rspace="0em" id="A2.I1.i6.p1.1.m1.1.1.1f" xref="A2.I1.i6.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i6.p1.1.m1.1.1.9" xref="A2.I1.i6.p1.1.m1.1.1.9.cmml">o</mi><mo lspace="0em" rspace="0em" id="A2.I1.i6.p1.1.m1.1.1.1g" xref="A2.I1.i6.p1.1.m1.1.1.1.cmml">​</mo><mi id="A2.I1.i6.p1.1.m1.1.1.10" xref="A2.I1.i6.p1.1.m1.1.1.10.cmml">r</mi></mrow><annotation-xml encoding="MathML-Content" id="A2.I1.i6.p1.1.m1.1b"><apply id="A2.I1.i6.p1.1.m1.1.1.cmml" xref="A2.I1.i6.p1.1.m1.1.1"><times id="A2.I1.i6.p1.1.m1.1.1.1.cmml" xref="A2.I1.i6.p1.1.m1.1.1.1"></times><ci id="A2.I1.i6.p1.1.m1.1.1.2.cmml" xref="A2.I1.i6.p1.1.m1.1.1.2">𝑡</ci><ci id="A2.I1.i6.p1.1.m1.1.1.3.cmml" xref="A2.I1.i6.p1.1.m1.1.1.3">𝑜</ci><ci id="A2.I1.i6.p1.1.m1.1.1.4.cmml" xref="A2.I1.i6.p1.1.m1.1.1.4">𝑜</ci><ci id="A2.I1.i6.p1.1.m1.1.1.5.cmml" xref="A2.I1.i6.p1.1.m1.1.1.5">𝑙</ci><ci id="A2.I1.i6.p1.1.m1.1.1.6.cmml" xref="A2.I1.i6.p1.1.m1.1.1.6">𝑐</ci><ci id="A2.I1.i6.p1.1.m1.1.1.7.cmml" xref="A2.I1.i6.p1.1.m1.1.1.7">𝑜</ci><ci id="A2.I1.i6.p1.1.m1.1.1.8.cmml" xref="A2.I1.i6.p1.1.m1.1.1.8">𝑙</ci><ci id="A2.I1.i6.p1.1.m1.1.1.9.cmml" xref="A2.I1.i6.p1.1.m1.1.1.9">𝑜</ci><ci id="A2.I1.i6.p1.1.m1.1.1.10.cmml" xref="A2.I1.i6.p1.1.m1.1.1.10">𝑟</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A2.I1.i6.p1.1.m1.1c">{toolcolor}</annotation></semantics></math>. Consider asking your teammates who have this tool to help you defuse the bomb.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="A3" class="ltx_appendix">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix">Appendix C </span>Theory of Mind Questions</h2>
+
+<section id="A3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">C.1 </span>Introspection</h3>
+
+<div id="A3.SS1.p1" class="ltx_para">
+<ul id="A3.I1" class="ltx_itemize">
+<li id="A3.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I1.i1.p1" class="ltx_para">
+<p id="A3.I1.i1.p1.1" class="ltx_p">Do you know the current contents of room <math id="A3.I1.i1.p1.1.m1.1" class="ltx_Math" alttext="{roomid}" display="inline"><semantics id="A3.I1.i1.p1.1.m1.1a"><mrow id="A3.I1.i1.p1.1.m1.1.1" xref="A3.I1.i1.p1.1.m1.1.1.cmml"><mi id="A3.I1.i1.p1.1.m1.1.1.2" xref="A3.I1.i1.p1.1.m1.1.1.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I1.i1.p1.1.m1.1.1.1" xref="A3.I1.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i1.p1.1.m1.1.1.3" xref="A3.I1.i1.p1.1.m1.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I1.i1.p1.1.m1.1.1.1a" xref="A3.I1.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i1.p1.1.m1.1.1.4" xref="A3.I1.i1.p1.1.m1.1.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I1.i1.p1.1.m1.1.1.1b" xref="A3.I1.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i1.p1.1.m1.1.1.5" xref="A3.I1.i1.p1.1.m1.1.1.5.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I1.i1.p1.1.m1.1.1.1c" xref="A3.I1.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i1.p1.1.m1.1.1.6" xref="A3.I1.i1.p1.1.m1.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I1.i1.p1.1.m1.1.1.1d" xref="A3.I1.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i1.p1.1.m1.1.1.7" xref="A3.I1.i1.p1.1.m1.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I1.i1.p1.1.m1.1b"><apply id="A3.I1.i1.p1.1.m1.1.1.cmml" xref="A3.I1.i1.p1.1.m1.1.1"><times id="A3.I1.i1.p1.1.m1.1.1.1.cmml" xref="A3.I1.i1.p1.1.m1.1.1.1"></times><ci id="A3.I1.i1.p1.1.m1.1.1.2.cmml" xref="A3.I1.i1.p1.1.m1.1.1.2">𝑟</ci><ci id="A3.I1.i1.p1.1.m1.1.1.3.cmml" xref="A3.I1.i1.p1.1.m1.1.1.3">𝑜</ci><ci id="A3.I1.i1.p1.1.m1.1.1.4.cmml" xref="A3.I1.i1.p1.1.m1.1.1.4">𝑜</ci><ci id="A3.I1.i1.p1.1.m1.1.1.5.cmml" xref="A3.I1.i1.p1.1.m1.1.1.5">𝑚</ci><ci id="A3.I1.i1.p1.1.m1.1.1.6.cmml" xref="A3.I1.i1.p1.1.m1.1.1.6">𝑖</ci><ci id="A3.I1.i1.p1.1.m1.1.1.7.cmml" xref="A3.I1.i1.p1.1.m1.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I1.i1.p1.1.m1.1c">{roomid}</annotation></semantics></math>?</p>
+</div>
+</li>
+<li id="A3.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I1.i2.p1" class="ltx_para">
+<p id="A3.I1.i2.p1.1" class="ltx_p">Do you know the state and remaining sequence of bomb <math id="A3.I1.i2.p1.1.m1.1" class="ltx_Math" alttext="{bombid}" display="inline"><semantics id="A3.I1.i2.p1.1.m1.1a"><mrow id="A3.I1.i2.p1.1.m1.1.1" xref="A3.I1.i2.p1.1.m1.1.1.cmml"><mi id="A3.I1.i2.p1.1.m1.1.1.2" xref="A3.I1.i2.p1.1.m1.1.1.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I1.i2.p1.1.m1.1.1.1" xref="A3.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i2.p1.1.m1.1.1.3" xref="A3.I1.i2.p1.1.m1.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I1.i2.p1.1.m1.1.1.1a" xref="A3.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i2.p1.1.m1.1.1.4" xref="A3.I1.i2.p1.1.m1.1.1.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I1.i2.p1.1.m1.1.1.1b" xref="A3.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i2.p1.1.m1.1.1.5" xref="A3.I1.i2.p1.1.m1.1.1.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I1.i2.p1.1.m1.1.1.1c" xref="A3.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i2.p1.1.m1.1.1.6" xref="A3.I1.i2.p1.1.m1.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I1.i2.p1.1.m1.1.1.1d" xref="A3.I1.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i2.p1.1.m1.1.1.7" xref="A3.I1.i2.p1.1.m1.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I1.i2.p1.1.m1.1b"><apply id="A3.I1.i2.p1.1.m1.1.1.cmml" xref="A3.I1.i2.p1.1.m1.1.1"><times id="A3.I1.i2.p1.1.m1.1.1.1.cmml" xref="A3.I1.i2.p1.1.m1.1.1.1"></times><ci id="A3.I1.i2.p1.1.m1.1.1.2.cmml" xref="A3.I1.i2.p1.1.m1.1.1.2">𝑏</ci><ci id="A3.I1.i2.p1.1.m1.1.1.3.cmml" xref="A3.I1.i2.p1.1.m1.1.1.3">𝑜</ci><ci id="A3.I1.i2.p1.1.m1.1.1.4.cmml" xref="A3.I1.i2.p1.1.m1.1.1.4">𝑚</ci><ci id="A3.I1.i2.p1.1.m1.1.1.5.cmml" xref="A3.I1.i2.p1.1.m1.1.1.5">𝑏</ci><ci id="A3.I1.i2.p1.1.m1.1.1.6.cmml" xref="A3.I1.i2.p1.1.m1.1.1.6">𝑖</ci><ci id="A3.I1.i2.p1.1.m1.1.1.7.cmml" xref="A3.I1.i2.p1.1.m1.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I1.i2.p1.1.m1.1c">{bombid}</annotation></semantics></math> has been changed?</p>
+</div>
+</li>
+<li id="A3.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I1.i3.p1" class="ltx_para">
+<p id="A3.I1.i3.p1.1" class="ltx_p">Do you know a bomb phase has just been defused?</p>
+</div>
+</li>
+<li id="A3.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I1.i4.p1" class="ltx_para">
+<p id="A3.I1.i4.p1.1" class="ltx_p">Do you know the sequence of bomb <math id="A3.I1.i4.p1.1.m1.1" class="ltx_Math" alttext="{bombid}" display="inline"><semantics id="A3.I1.i4.p1.1.m1.1a"><mrow id="A3.I1.i4.p1.1.m1.1.1" xref="A3.I1.i4.p1.1.m1.1.1.cmml"><mi id="A3.I1.i4.p1.1.m1.1.1.2" xref="A3.I1.i4.p1.1.m1.1.1.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I1.i4.p1.1.m1.1.1.1" xref="A3.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i4.p1.1.m1.1.1.3" xref="A3.I1.i4.p1.1.m1.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I1.i4.p1.1.m1.1.1.1a" xref="A3.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i4.p1.1.m1.1.1.4" xref="A3.I1.i4.p1.1.m1.1.1.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I1.i4.p1.1.m1.1.1.1b" xref="A3.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i4.p1.1.m1.1.1.5" xref="A3.I1.i4.p1.1.m1.1.1.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I1.i4.p1.1.m1.1.1.1c" xref="A3.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i4.p1.1.m1.1.1.6" xref="A3.I1.i4.p1.1.m1.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I1.i4.p1.1.m1.1.1.1d" xref="A3.I1.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I1.i4.p1.1.m1.1.1.7" xref="A3.I1.i4.p1.1.m1.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I1.i4.p1.1.m1.1b"><apply id="A3.I1.i4.p1.1.m1.1.1.cmml" xref="A3.I1.i4.p1.1.m1.1.1"><times id="A3.I1.i4.p1.1.m1.1.1.1.cmml" xref="A3.I1.i4.p1.1.m1.1.1.1"></times><ci id="A3.I1.i4.p1.1.m1.1.1.2.cmml" xref="A3.I1.i4.p1.1.m1.1.1.2">𝑏</ci><ci id="A3.I1.i4.p1.1.m1.1.1.3.cmml" xref="A3.I1.i4.p1.1.m1.1.1.3">𝑜</ci><ci id="A3.I1.i4.p1.1.m1.1.1.4.cmml" xref="A3.I1.i4.p1.1.m1.1.1.4">𝑚</ci><ci id="A3.I1.i4.p1.1.m1.1.1.5.cmml" xref="A3.I1.i4.p1.1.m1.1.1.5">𝑏</ci><ci id="A3.I1.i4.p1.1.m1.1.1.6.cmml" xref="A3.I1.i4.p1.1.m1.1.1.6">𝑖</ci><ci id="A3.I1.i4.p1.1.m1.1.1.7.cmml" xref="A3.I1.i4.p1.1.m1.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I1.i4.p1.1.m1.1c">{bombid}</annotation></semantics></math>?</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="A3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">C.2 </span>First-order ToM</h3>
+
+<div id="A3.SS2.p1" class="ltx_para">
+<ul id="A3.I2" class="ltx_itemize">
+<li id="A3.I2.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I2.i1.p1" class="ltx_para">
+<p id="A3.I2.i1.p1.2" class="ltx_p">Does player <math id="A3.I2.i1.p1.1.m1.1" class="ltx_Math" alttext="{playerid}" display="inline"><semantics id="A3.I2.i1.p1.1.m1.1a"><mrow id="A3.I2.i1.p1.1.m1.1.1" xref="A3.I2.i1.p1.1.m1.1.1.cmml"><mi id="A3.I2.i1.p1.1.m1.1.1.2" xref="A3.I2.i1.p1.1.m1.1.1.2.cmml">p</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.1.m1.1.1.1" xref="A3.I2.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.1.m1.1.1.3" xref="A3.I2.i1.p1.1.m1.1.1.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.1.m1.1.1.1a" xref="A3.I2.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.1.m1.1.1.4" xref="A3.I2.i1.p1.1.m1.1.1.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.1.m1.1.1.1b" xref="A3.I2.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.1.m1.1.1.5" xref="A3.I2.i1.p1.1.m1.1.1.5.cmml">y</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.1.m1.1.1.1c" xref="A3.I2.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.1.m1.1.1.6" xref="A3.I2.i1.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.1.m1.1.1.1d" xref="A3.I2.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.1.m1.1.1.7" xref="A3.I2.i1.p1.1.m1.1.1.7.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.1.m1.1.1.1e" xref="A3.I2.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.1.m1.1.1.8" xref="A3.I2.i1.p1.1.m1.1.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.1.m1.1.1.1f" xref="A3.I2.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.1.m1.1.1.9" xref="A3.I2.i1.p1.1.m1.1.1.9.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I2.i1.p1.1.m1.1b"><apply id="A3.I2.i1.p1.1.m1.1.1.cmml" xref="A3.I2.i1.p1.1.m1.1.1"><times id="A3.I2.i1.p1.1.m1.1.1.1.cmml" xref="A3.I2.i1.p1.1.m1.1.1.1"></times><ci id="A3.I2.i1.p1.1.m1.1.1.2.cmml" xref="A3.I2.i1.p1.1.m1.1.1.2">𝑝</ci><ci id="A3.I2.i1.p1.1.m1.1.1.3.cmml" xref="A3.I2.i1.p1.1.m1.1.1.3">𝑙</ci><ci id="A3.I2.i1.p1.1.m1.1.1.4.cmml" xref="A3.I2.i1.p1.1.m1.1.1.4">𝑎</ci><ci id="A3.I2.i1.p1.1.m1.1.1.5.cmml" xref="A3.I2.i1.p1.1.m1.1.1.5">𝑦</ci><ci id="A3.I2.i1.p1.1.m1.1.1.6.cmml" xref="A3.I2.i1.p1.1.m1.1.1.6">𝑒</ci><ci id="A3.I2.i1.p1.1.m1.1.1.7.cmml" xref="A3.I2.i1.p1.1.m1.1.1.7">𝑟</ci><ci id="A3.I2.i1.p1.1.m1.1.1.8.cmml" xref="A3.I2.i1.p1.1.m1.1.1.8">𝑖</ci><ci id="A3.I2.i1.p1.1.m1.1.1.9.cmml" xref="A3.I2.i1.p1.1.m1.1.1.9">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I2.i1.p1.1.m1.1c">{playerid}</annotation></semantics></math> know the current contents of room <math id="A3.I2.i1.p1.2.m2.1" class="ltx_Math" alttext="{roomid}" display="inline"><semantics id="A3.I2.i1.p1.2.m2.1a"><mrow id="A3.I2.i1.p1.2.m2.1.1" xref="A3.I2.i1.p1.2.m2.1.1.cmml"><mi id="A3.I2.i1.p1.2.m2.1.1.2" xref="A3.I2.i1.p1.2.m2.1.1.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.2.m2.1.1.1" xref="A3.I2.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.2.m2.1.1.3" xref="A3.I2.i1.p1.2.m2.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.2.m2.1.1.1a" xref="A3.I2.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.2.m2.1.1.4" xref="A3.I2.i1.p1.2.m2.1.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.2.m2.1.1.1b" xref="A3.I2.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.2.m2.1.1.5" xref="A3.I2.i1.p1.2.m2.1.1.5.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.2.m2.1.1.1c" xref="A3.I2.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.2.m2.1.1.6" xref="A3.I2.i1.p1.2.m2.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I2.i1.p1.2.m2.1.1.1d" xref="A3.I2.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i1.p1.2.m2.1.1.7" xref="A3.I2.i1.p1.2.m2.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I2.i1.p1.2.m2.1b"><apply id="A3.I2.i1.p1.2.m2.1.1.cmml" xref="A3.I2.i1.p1.2.m2.1.1"><times id="A3.I2.i1.p1.2.m2.1.1.1.cmml" xref="A3.I2.i1.p1.2.m2.1.1.1"></times><ci id="A3.I2.i1.p1.2.m2.1.1.2.cmml" xref="A3.I2.i1.p1.2.m2.1.1.2">𝑟</ci><ci id="A3.I2.i1.p1.2.m2.1.1.3.cmml" xref="A3.I2.i1.p1.2.m2.1.1.3">𝑜</ci><ci id="A3.I2.i1.p1.2.m2.1.1.4.cmml" xref="A3.I2.i1.p1.2.m2.1.1.4">𝑜</ci><ci id="A3.I2.i1.p1.2.m2.1.1.5.cmml" xref="A3.I2.i1.p1.2.m2.1.1.5">𝑚</ci><ci id="A3.I2.i1.p1.2.m2.1.1.6.cmml" xref="A3.I2.i1.p1.2.m2.1.1.6">𝑖</ci><ci id="A3.I2.i1.p1.2.m2.1.1.7.cmml" xref="A3.I2.i1.p1.2.m2.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I2.i1.p1.2.m2.1c">{roomid}</annotation></semantics></math>?</p>
+</div>
+</li>
+<li id="A3.I2.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I2.i2.p1" class="ltx_para">
+<p id="A3.I2.i2.p1.2" class="ltx_p">Does player <math id="A3.I2.i2.p1.1.m1.1" class="ltx_Math" alttext="{playerid}" display="inline"><semantics id="A3.I2.i2.p1.1.m1.1a"><mrow id="A3.I2.i2.p1.1.m1.1.1" xref="A3.I2.i2.p1.1.m1.1.1.cmml"><mi id="A3.I2.i2.p1.1.m1.1.1.2" xref="A3.I2.i2.p1.1.m1.1.1.2.cmml">p</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.1.m1.1.1.1" xref="A3.I2.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.1.m1.1.1.3" xref="A3.I2.i2.p1.1.m1.1.1.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.1.m1.1.1.1a" xref="A3.I2.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.1.m1.1.1.4" xref="A3.I2.i2.p1.1.m1.1.1.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.1.m1.1.1.1b" xref="A3.I2.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.1.m1.1.1.5" xref="A3.I2.i2.p1.1.m1.1.1.5.cmml">y</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.1.m1.1.1.1c" xref="A3.I2.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.1.m1.1.1.6" xref="A3.I2.i2.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.1.m1.1.1.1d" xref="A3.I2.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.1.m1.1.1.7" xref="A3.I2.i2.p1.1.m1.1.1.7.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.1.m1.1.1.1e" xref="A3.I2.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.1.m1.1.1.8" xref="A3.I2.i2.p1.1.m1.1.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.1.m1.1.1.1f" xref="A3.I2.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.1.m1.1.1.9" xref="A3.I2.i2.p1.1.m1.1.1.9.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I2.i2.p1.1.m1.1b"><apply id="A3.I2.i2.p1.1.m1.1.1.cmml" xref="A3.I2.i2.p1.1.m1.1.1"><times id="A3.I2.i2.p1.1.m1.1.1.1.cmml" xref="A3.I2.i2.p1.1.m1.1.1.1"></times><ci id="A3.I2.i2.p1.1.m1.1.1.2.cmml" xref="A3.I2.i2.p1.1.m1.1.1.2">𝑝</ci><ci id="A3.I2.i2.p1.1.m1.1.1.3.cmml" xref="A3.I2.i2.p1.1.m1.1.1.3">𝑙</ci><ci id="A3.I2.i2.p1.1.m1.1.1.4.cmml" xref="A3.I2.i2.p1.1.m1.1.1.4">𝑎</ci><ci id="A3.I2.i2.p1.1.m1.1.1.5.cmml" xref="A3.I2.i2.p1.1.m1.1.1.5">𝑦</ci><ci id="A3.I2.i2.p1.1.m1.1.1.6.cmml" xref="A3.I2.i2.p1.1.m1.1.1.6">𝑒</ci><ci id="A3.I2.i2.p1.1.m1.1.1.7.cmml" xref="A3.I2.i2.p1.1.m1.1.1.7">𝑟</ci><ci id="A3.I2.i2.p1.1.m1.1.1.8.cmml" xref="A3.I2.i2.p1.1.m1.1.1.8">𝑖</ci><ci id="A3.I2.i2.p1.1.m1.1.1.9.cmml" xref="A3.I2.i2.p1.1.m1.1.1.9">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I2.i2.p1.1.m1.1c">{playerid}</annotation></semantics></math> know the state and remaining sequence of bomb <math id="A3.I2.i2.p1.2.m2.1" class="ltx_Math" alttext="{bombid}" display="inline"><semantics id="A3.I2.i2.p1.2.m2.1a"><mrow id="A3.I2.i2.p1.2.m2.1.1" xref="A3.I2.i2.p1.2.m2.1.1.cmml"><mi id="A3.I2.i2.p1.2.m2.1.1.2" xref="A3.I2.i2.p1.2.m2.1.1.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.2.m2.1.1.1" xref="A3.I2.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.2.m2.1.1.3" xref="A3.I2.i2.p1.2.m2.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.2.m2.1.1.1a" xref="A3.I2.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.2.m2.1.1.4" xref="A3.I2.i2.p1.2.m2.1.1.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.2.m2.1.1.1b" xref="A3.I2.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.2.m2.1.1.5" xref="A3.I2.i2.p1.2.m2.1.1.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.2.m2.1.1.1c" xref="A3.I2.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.2.m2.1.1.6" xref="A3.I2.i2.p1.2.m2.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I2.i2.p1.2.m2.1.1.1d" xref="A3.I2.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i2.p1.2.m2.1.1.7" xref="A3.I2.i2.p1.2.m2.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I2.i2.p1.2.m2.1b"><apply id="A3.I2.i2.p1.2.m2.1.1.cmml" xref="A3.I2.i2.p1.2.m2.1.1"><times id="A3.I2.i2.p1.2.m2.1.1.1.cmml" xref="A3.I2.i2.p1.2.m2.1.1.1"></times><ci id="A3.I2.i2.p1.2.m2.1.1.2.cmml" xref="A3.I2.i2.p1.2.m2.1.1.2">𝑏</ci><ci id="A3.I2.i2.p1.2.m2.1.1.3.cmml" xref="A3.I2.i2.p1.2.m2.1.1.3">𝑜</ci><ci id="A3.I2.i2.p1.2.m2.1.1.4.cmml" xref="A3.I2.i2.p1.2.m2.1.1.4">𝑚</ci><ci id="A3.I2.i2.p1.2.m2.1.1.5.cmml" xref="A3.I2.i2.p1.2.m2.1.1.5">𝑏</ci><ci id="A3.I2.i2.p1.2.m2.1.1.6.cmml" xref="A3.I2.i2.p1.2.m2.1.1.6">𝑖</ci><ci id="A3.I2.i2.p1.2.m2.1.1.7.cmml" xref="A3.I2.i2.p1.2.m2.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I2.i2.p1.2.m2.1c">{bombid}</annotation></semantics></math> has been changed?</p>
+</div>
+</li>
+<li id="A3.I2.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I2.i3.p1" class="ltx_para">
+<p id="A3.I2.i3.p1.1" class="ltx_p">Does player <math id="A3.I2.i3.p1.1.m1.1" class="ltx_Math" alttext="{playerid}" display="inline"><semantics id="A3.I2.i3.p1.1.m1.1a"><mrow id="A3.I2.i3.p1.1.m1.1.1" xref="A3.I2.i3.p1.1.m1.1.1.cmml"><mi id="A3.I2.i3.p1.1.m1.1.1.2" xref="A3.I2.i3.p1.1.m1.1.1.2.cmml">p</mi><mo lspace="0em" rspace="0em" id="A3.I2.i3.p1.1.m1.1.1.1" xref="A3.I2.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i3.p1.1.m1.1.1.3" xref="A3.I2.i3.p1.1.m1.1.1.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="A3.I2.i3.p1.1.m1.1.1.1a" xref="A3.I2.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i3.p1.1.m1.1.1.4" xref="A3.I2.i3.p1.1.m1.1.1.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="A3.I2.i3.p1.1.m1.1.1.1b" xref="A3.I2.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i3.p1.1.m1.1.1.5" xref="A3.I2.i3.p1.1.m1.1.1.5.cmml">y</mi><mo lspace="0em" rspace="0em" id="A3.I2.i3.p1.1.m1.1.1.1c" xref="A3.I2.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i3.p1.1.m1.1.1.6" xref="A3.I2.i3.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A3.I2.i3.p1.1.m1.1.1.1d" xref="A3.I2.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i3.p1.1.m1.1.1.7" xref="A3.I2.i3.p1.1.m1.1.1.7.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I2.i3.p1.1.m1.1.1.1e" xref="A3.I2.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i3.p1.1.m1.1.1.8" xref="A3.I2.i3.p1.1.m1.1.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I2.i3.p1.1.m1.1.1.1f" xref="A3.I2.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i3.p1.1.m1.1.1.9" xref="A3.I2.i3.p1.1.m1.1.1.9.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I2.i3.p1.1.m1.1b"><apply id="A3.I2.i3.p1.1.m1.1.1.cmml" xref="A3.I2.i3.p1.1.m1.1.1"><times id="A3.I2.i3.p1.1.m1.1.1.1.cmml" xref="A3.I2.i3.p1.1.m1.1.1.1"></times><ci id="A3.I2.i3.p1.1.m1.1.1.2.cmml" xref="A3.I2.i3.p1.1.m1.1.1.2">𝑝</ci><ci id="A3.I2.i3.p1.1.m1.1.1.3.cmml" xref="A3.I2.i3.p1.1.m1.1.1.3">𝑙</ci><ci id="A3.I2.i3.p1.1.m1.1.1.4.cmml" xref="A3.I2.i3.p1.1.m1.1.1.4">𝑎</ci><ci id="A3.I2.i3.p1.1.m1.1.1.5.cmml" xref="A3.I2.i3.p1.1.m1.1.1.5">𝑦</ci><ci id="A3.I2.i3.p1.1.m1.1.1.6.cmml" xref="A3.I2.i3.p1.1.m1.1.1.6">𝑒</ci><ci id="A3.I2.i3.p1.1.m1.1.1.7.cmml" xref="A3.I2.i3.p1.1.m1.1.1.7">𝑟</ci><ci id="A3.I2.i3.p1.1.m1.1.1.8.cmml" xref="A3.I2.i3.p1.1.m1.1.1.8">𝑖</ci><ci id="A3.I2.i3.p1.1.m1.1.1.9.cmml" xref="A3.I2.i3.p1.1.m1.1.1.9">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I2.i3.p1.1.m1.1c">{playerid}</annotation></semantics></math> know a bomb phase has just been defused?</p>
+</div>
+</li>
+<li id="A3.I2.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I2.i4.p1" class="ltx_para">
+<p id="A3.I2.i4.p1.2" class="ltx_p">Does player <math id="A3.I2.i4.p1.1.m1.1" class="ltx_Math" alttext="{playerid}" display="inline"><semantics id="A3.I2.i4.p1.1.m1.1a"><mrow id="A3.I2.i4.p1.1.m1.1.1" xref="A3.I2.i4.p1.1.m1.1.1.cmml"><mi id="A3.I2.i4.p1.1.m1.1.1.2" xref="A3.I2.i4.p1.1.m1.1.1.2.cmml">p</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.1.m1.1.1.1" xref="A3.I2.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.1.m1.1.1.3" xref="A3.I2.i4.p1.1.m1.1.1.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.1.m1.1.1.1a" xref="A3.I2.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.1.m1.1.1.4" xref="A3.I2.i4.p1.1.m1.1.1.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.1.m1.1.1.1b" xref="A3.I2.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.1.m1.1.1.5" xref="A3.I2.i4.p1.1.m1.1.1.5.cmml">y</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.1.m1.1.1.1c" xref="A3.I2.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.1.m1.1.1.6" xref="A3.I2.i4.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.1.m1.1.1.1d" xref="A3.I2.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.1.m1.1.1.7" xref="A3.I2.i4.p1.1.m1.1.1.7.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.1.m1.1.1.1e" xref="A3.I2.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.1.m1.1.1.8" xref="A3.I2.i4.p1.1.m1.1.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.1.m1.1.1.1f" xref="A3.I2.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.1.m1.1.1.9" xref="A3.I2.i4.p1.1.m1.1.1.9.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I2.i4.p1.1.m1.1b"><apply id="A3.I2.i4.p1.1.m1.1.1.cmml" xref="A3.I2.i4.p1.1.m1.1.1"><times id="A3.I2.i4.p1.1.m1.1.1.1.cmml" xref="A3.I2.i4.p1.1.m1.1.1.1"></times><ci id="A3.I2.i4.p1.1.m1.1.1.2.cmml" xref="A3.I2.i4.p1.1.m1.1.1.2">𝑝</ci><ci id="A3.I2.i4.p1.1.m1.1.1.3.cmml" xref="A3.I2.i4.p1.1.m1.1.1.3">𝑙</ci><ci id="A3.I2.i4.p1.1.m1.1.1.4.cmml" xref="A3.I2.i4.p1.1.m1.1.1.4">𝑎</ci><ci id="A3.I2.i4.p1.1.m1.1.1.5.cmml" xref="A3.I2.i4.p1.1.m1.1.1.5">𝑦</ci><ci id="A3.I2.i4.p1.1.m1.1.1.6.cmml" xref="A3.I2.i4.p1.1.m1.1.1.6">𝑒</ci><ci id="A3.I2.i4.p1.1.m1.1.1.7.cmml" xref="A3.I2.i4.p1.1.m1.1.1.7">𝑟</ci><ci id="A3.I2.i4.p1.1.m1.1.1.8.cmml" xref="A3.I2.i4.p1.1.m1.1.1.8">𝑖</ci><ci id="A3.I2.i4.p1.1.m1.1.1.9.cmml" xref="A3.I2.i4.p1.1.m1.1.1.9">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I2.i4.p1.1.m1.1c">{playerid}</annotation></semantics></math> know the sequence of bomb <math id="A3.I2.i4.p1.2.m2.1" class="ltx_Math" alttext="{bombid}" display="inline"><semantics id="A3.I2.i4.p1.2.m2.1a"><mrow id="A3.I2.i4.p1.2.m2.1.1" xref="A3.I2.i4.p1.2.m2.1.1.cmml"><mi id="A3.I2.i4.p1.2.m2.1.1.2" xref="A3.I2.i4.p1.2.m2.1.1.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.2.m2.1.1.1" xref="A3.I2.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.2.m2.1.1.3" xref="A3.I2.i4.p1.2.m2.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.2.m2.1.1.1a" xref="A3.I2.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.2.m2.1.1.4" xref="A3.I2.i4.p1.2.m2.1.1.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.2.m2.1.1.1b" xref="A3.I2.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.2.m2.1.1.5" xref="A3.I2.i4.p1.2.m2.1.1.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.2.m2.1.1.1c" xref="A3.I2.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.2.m2.1.1.6" xref="A3.I2.i4.p1.2.m2.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I2.i4.p1.2.m2.1.1.1d" xref="A3.I2.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I2.i4.p1.2.m2.1.1.7" xref="A3.I2.i4.p1.2.m2.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I2.i4.p1.2.m2.1b"><apply id="A3.I2.i4.p1.2.m2.1.1.cmml" xref="A3.I2.i4.p1.2.m2.1.1"><times id="A3.I2.i4.p1.2.m2.1.1.1.cmml" xref="A3.I2.i4.p1.2.m2.1.1.1"></times><ci id="A3.I2.i4.p1.2.m2.1.1.2.cmml" xref="A3.I2.i4.p1.2.m2.1.1.2">𝑏</ci><ci id="A3.I2.i4.p1.2.m2.1.1.3.cmml" xref="A3.I2.i4.p1.2.m2.1.1.3">𝑜</ci><ci id="A3.I2.i4.p1.2.m2.1.1.4.cmml" xref="A3.I2.i4.p1.2.m2.1.1.4">𝑚</ci><ci id="A3.I2.i4.p1.2.m2.1.1.5.cmml" xref="A3.I2.i4.p1.2.m2.1.1.5">𝑏</ci><ci id="A3.I2.i4.p1.2.m2.1.1.6.cmml" xref="A3.I2.i4.p1.2.m2.1.1.6">𝑖</ci><ci id="A3.I2.i4.p1.2.m2.1.1.7.cmml" xref="A3.I2.i4.p1.2.m2.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I2.i4.p1.2.m2.1c">{bombid}</annotation></semantics></math>?</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="A3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">C.3 </span>Second-order ToM</h3>
+
+<div id="A3.SS3.p1" class="ltx_para">
+<ul id="A3.I3" class="ltx_itemize">
+<li id="A3.I3.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I3.i1.p1" class="ltx_para">
+<p id="A3.I3.i1.p1.2" class="ltx_p">Based on the observation and previous history, is player <math id="A3.I3.i1.p1.1.m1.1" class="ltx_Math" alttext="{playerid}" display="inline"><semantics id="A3.I3.i1.p1.1.m1.1a"><mrow id="A3.I3.i1.p1.1.m1.1.1" xref="A3.I3.i1.p1.1.m1.1.1.cmml"><mi id="A3.I3.i1.p1.1.m1.1.1.2" xref="A3.I3.i1.p1.1.m1.1.1.2.cmml">p</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.1.m1.1.1.1" xref="A3.I3.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.1.m1.1.1.3" xref="A3.I3.i1.p1.1.m1.1.1.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.1.m1.1.1.1a" xref="A3.I3.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.1.m1.1.1.4" xref="A3.I3.i1.p1.1.m1.1.1.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.1.m1.1.1.1b" xref="A3.I3.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.1.m1.1.1.5" xref="A3.I3.i1.p1.1.m1.1.1.5.cmml">y</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.1.m1.1.1.1c" xref="A3.I3.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.1.m1.1.1.6" xref="A3.I3.i1.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.1.m1.1.1.1d" xref="A3.I3.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.1.m1.1.1.7" xref="A3.I3.i1.p1.1.m1.1.1.7.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.1.m1.1.1.1e" xref="A3.I3.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.1.m1.1.1.8" xref="A3.I3.i1.p1.1.m1.1.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.1.m1.1.1.1f" xref="A3.I3.i1.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.1.m1.1.1.9" xref="A3.I3.i1.p1.1.m1.1.1.9.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I3.i1.p1.1.m1.1b"><apply id="A3.I3.i1.p1.1.m1.1.1.cmml" xref="A3.I3.i1.p1.1.m1.1.1"><times id="A3.I3.i1.p1.1.m1.1.1.1.cmml" xref="A3.I3.i1.p1.1.m1.1.1.1"></times><ci id="A3.I3.i1.p1.1.m1.1.1.2.cmml" xref="A3.I3.i1.p1.1.m1.1.1.2">𝑝</ci><ci id="A3.I3.i1.p1.1.m1.1.1.3.cmml" xref="A3.I3.i1.p1.1.m1.1.1.3">𝑙</ci><ci id="A3.I3.i1.p1.1.m1.1.1.4.cmml" xref="A3.I3.i1.p1.1.m1.1.1.4">𝑎</ci><ci id="A3.I3.i1.p1.1.m1.1.1.5.cmml" xref="A3.I3.i1.p1.1.m1.1.1.5">𝑦</ci><ci id="A3.I3.i1.p1.1.m1.1.1.6.cmml" xref="A3.I3.i1.p1.1.m1.1.1.6">𝑒</ci><ci id="A3.I3.i1.p1.1.m1.1.1.7.cmml" xref="A3.I3.i1.p1.1.m1.1.1.7">𝑟</ci><ci id="A3.I3.i1.p1.1.m1.1.1.8.cmml" xref="A3.I3.i1.p1.1.m1.1.1.8">𝑖</ci><ci id="A3.I3.i1.p1.1.m1.1.1.9.cmml" xref="A3.I3.i1.p1.1.m1.1.1.9">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I3.i1.p1.1.m1.1c">{playerid}</annotation></semantics></math> aware of the fact that you know the current contents of room <math id="A3.I3.i1.p1.2.m2.1" class="ltx_Math" alttext="{roomid}" display="inline"><semantics id="A3.I3.i1.p1.2.m2.1a"><mrow id="A3.I3.i1.p1.2.m2.1.1" xref="A3.I3.i1.p1.2.m2.1.1.cmml"><mi id="A3.I3.i1.p1.2.m2.1.1.2" xref="A3.I3.i1.p1.2.m2.1.1.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.2.m2.1.1.1" xref="A3.I3.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.2.m2.1.1.3" xref="A3.I3.i1.p1.2.m2.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.2.m2.1.1.1a" xref="A3.I3.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.2.m2.1.1.4" xref="A3.I3.i1.p1.2.m2.1.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.2.m2.1.1.1b" xref="A3.I3.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.2.m2.1.1.5" xref="A3.I3.i1.p1.2.m2.1.1.5.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.2.m2.1.1.1c" xref="A3.I3.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.2.m2.1.1.6" xref="A3.I3.i1.p1.2.m2.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I3.i1.p1.2.m2.1.1.1d" xref="A3.I3.i1.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i1.p1.2.m2.1.1.7" xref="A3.I3.i1.p1.2.m2.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I3.i1.p1.2.m2.1b"><apply id="A3.I3.i1.p1.2.m2.1.1.cmml" xref="A3.I3.i1.p1.2.m2.1.1"><times id="A3.I3.i1.p1.2.m2.1.1.1.cmml" xref="A3.I3.i1.p1.2.m2.1.1.1"></times><ci id="A3.I3.i1.p1.2.m2.1.1.2.cmml" xref="A3.I3.i1.p1.2.m2.1.1.2">𝑟</ci><ci id="A3.I3.i1.p1.2.m2.1.1.3.cmml" xref="A3.I3.i1.p1.2.m2.1.1.3">𝑜</ci><ci id="A3.I3.i1.p1.2.m2.1.1.4.cmml" xref="A3.I3.i1.p1.2.m2.1.1.4">𝑜</ci><ci id="A3.I3.i1.p1.2.m2.1.1.5.cmml" xref="A3.I3.i1.p1.2.m2.1.1.5">𝑚</ci><ci id="A3.I3.i1.p1.2.m2.1.1.6.cmml" xref="A3.I3.i1.p1.2.m2.1.1.6">𝑖</ci><ci id="A3.I3.i1.p1.2.m2.1.1.7.cmml" xref="A3.I3.i1.p1.2.m2.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I3.i1.p1.2.m2.1c">{roomid}</annotation></semantics></math>?</p>
+</div>
+</li>
+<li id="A3.I3.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I3.i2.p1" class="ltx_para">
+<p id="A3.I3.i2.p1.2" class="ltx_p">Based on the observation and previous history, is player <math id="A3.I3.i2.p1.1.m1.1" class="ltx_Math" alttext="{playerid}" display="inline"><semantics id="A3.I3.i2.p1.1.m1.1a"><mrow id="A3.I3.i2.p1.1.m1.1.1" xref="A3.I3.i2.p1.1.m1.1.1.cmml"><mi id="A3.I3.i2.p1.1.m1.1.1.2" xref="A3.I3.i2.p1.1.m1.1.1.2.cmml">p</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.1.m1.1.1.1" xref="A3.I3.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.1.m1.1.1.3" xref="A3.I3.i2.p1.1.m1.1.1.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.1.m1.1.1.1a" xref="A3.I3.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.1.m1.1.1.4" xref="A3.I3.i2.p1.1.m1.1.1.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.1.m1.1.1.1b" xref="A3.I3.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.1.m1.1.1.5" xref="A3.I3.i2.p1.1.m1.1.1.5.cmml">y</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.1.m1.1.1.1c" xref="A3.I3.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.1.m1.1.1.6" xref="A3.I3.i2.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.1.m1.1.1.1d" xref="A3.I3.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.1.m1.1.1.7" xref="A3.I3.i2.p1.1.m1.1.1.7.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.1.m1.1.1.1e" xref="A3.I3.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.1.m1.1.1.8" xref="A3.I3.i2.p1.1.m1.1.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.1.m1.1.1.1f" xref="A3.I3.i2.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.1.m1.1.1.9" xref="A3.I3.i2.p1.1.m1.1.1.9.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I3.i2.p1.1.m1.1b"><apply id="A3.I3.i2.p1.1.m1.1.1.cmml" xref="A3.I3.i2.p1.1.m1.1.1"><times id="A3.I3.i2.p1.1.m1.1.1.1.cmml" xref="A3.I3.i2.p1.1.m1.1.1.1"></times><ci id="A3.I3.i2.p1.1.m1.1.1.2.cmml" xref="A3.I3.i2.p1.1.m1.1.1.2">𝑝</ci><ci id="A3.I3.i2.p1.1.m1.1.1.3.cmml" xref="A3.I3.i2.p1.1.m1.1.1.3">𝑙</ci><ci id="A3.I3.i2.p1.1.m1.1.1.4.cmml" xref="A3.I3.i2.p1.1.m1.1.1.4">𝑎</ci><ci id="A3.I3.i2.p1.1.m1.1.1.5.cmml" xref="A3.I3.i2.p1.1.m1.1.1.5">𝑦</ci><ci id="A3.I3.i2.p1.1.m1.1.1.6.cmml" xref="A3.I3.i2.p1.1.m1.1.1.6">𝑒</ci><ci id="A3.I3.i2.p1.1.m1.1.1.7.cmml" xref="A3.I3.i2.p1.1.m1.1.1.7">𝑟</ci><ci id="A3.I3.i2.p1.1.m1.1.1.8.cmml" xref="A3.I3.i2.p1.1.m1.1.1.8">𝑖</ci><ci id="A3.I3.i2.p1.1.m1.1.1.9.cmml" xref="A3.I3.i2.p1.1.m1.1.1.9">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I3.i2.p1.1.m1.1c">{playerid}</annotation></semantics></math> aware of the fact that you have changed the state and remaining sequence of bomb <math id="A3.I3.i2.p1.2.m2.1" class="ltx_Math" alttext="{bombid}" display="inline"><semantics id="A3.I3.i2.p1.2.m2.1a"><mrow id="A3.I3.i2.p1.2.m2.1.1" xref="A3.I3.i2.p1.2.m2.1.1.cmml"><mi id="A3.I3.i2.p1.2.m2.1.1.2" xref="A3.I3.i2.p1.2.m2.1.1.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.2.m2.1.1.1" xref="A3.I3.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.2.m2.1.1.3" xref="A3.I3.i2.p1.2.m2.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.2.m2.1.1.1a" xref="A3.I3.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.2.m2.1.1.4" xref="A3.I3.i2.p1.2.m2.1.1.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.2.m2.1.1.1b" xref="A3.I3.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.2.m2.1.1.5" xref="A3.I3.i2.p1.2.m2.1.1.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.2.m2.1.1.1c" xref="A3.I3.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.2.m2.1.1.6" xref="A3.I3.i2.p1.2.m2.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I3.i2.p1.2.m2.1.1.1d" xref="A3.I3.i2.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i2.p1.2.m2.1.1.7" xref="A3.I3.i2.p1.2.m2.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I3.i2.p1.2.m2.1b"><apply id="A3.I3.i2.p1.2.m2.1.1.cmml" xref="A3.I3.i2.p1.2.m2.1.1"><times id="A3.I3.i2.p1.2.m2.1.1.1.cmml" xref="A3.I3.i2.p1.2.m2.1.1.1"></times><ci id="A3.I3.i2.p1.2.m2.1.1.2.cmml" xref="A3.I3.i2.p1.2.m2.1.1.2">𝑏</ci><ci id="A3.I3.i2.p1.2.m2.1.1.3.cmml" xref="A3.I3.i2.p1.2.m2.1.1.3">𝑜</ci><ci id="A3.I3.i2.p1.2.m2.1.1.4.cmml" xref="A3.I3.i2.p1.2.m2.1.1.4">𝑚</ci><ci id="A3.I3.i2.p1.2.m2.1.1.5.cmml" xref="A3.I3.i2.p1.2.m2.1.1.5">𝑏</ci><ci id="A3.I3.i2.p1.2.m2.1.1.6.cmml" xref="A3.I3.i2.p1.2.m2.1.1.6">𝑖</ci><ci id="A3.I3.i2.p1.2.m2.1.1.7.cmml" xref="A3.I3.i2.p1.2.m2.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I3.i2.p1.2.m2.1c">{bombid}</annotation></semantics></math>?</p>
+</div>
+</li>
+<li id="A3.I3.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I3.i3.p1" class="ltx_para">
+<p id="A3.I3.i3.p1.1" class="ltx_p">Based on the observation and previous history, is player <math id="A3.I3.i3.p1.1.m1.1" class="ltx_Math" alttext="{playerid}" display="inline"><semantics id="A3.I3.i3.p1.1.m1.1a"><mrow id="A3.I3.i3.p1.1.m1.1.1" xref="A3.I3.i3.p1.1.m1.1.1.cmml"><mi id="A3.I3.i3.p1.1.m1.1.1.2" xref="A3.I3.i3.p1.1.m1.1.1.2.cmml">p</mi><mo lspace="0em" rspace="0em" id="A3.I3.i3.p1.1.m1.1.1.1" xref="A3.I3.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i3.p1.1.m1.1.1.3" xref="A3.I3.i3.p1.1.m1.1.1.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="A3.I3.i3.p1.1.m1.1.1.1a" xref="A3.I3.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i3.p1.1.m1.1.1.4" xref="A3.I3.i3.p1.1.m1.1.1.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="A3.I3.i3.p1.1.m1.1.1.1b" xref="A3.I3.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i3.p1.1.m1.1.1.5" xref="A3.I3.i3.p1.1.m1.1.1.5.cmml">y</mi><mo lspace="0em" rspace="0em" id="A3.I3.i3.p1.1.m1.1.1.1c" xref="A3.I3.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i3.p1.1.m1.1.1.6" xref="A3.I3.i3.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A3.I3.i3.p1.1.m1.1.1.1d" xref="A3.I3.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i3.p1.1.m1.1.1.7" xref="A3.I3.i3.p1.1.m1.1.1.7.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I3.i3.p1.1.m1.1.1.1e" xref="A3.I3.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i3.p1.1.m1.1.1.8" xref="A3.I3.i3.p1.1.m1.1.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I3.i3.p1.1.m1.1.1.1f" xref="A3.I3.i3.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i3.p1.1.m1.1.1.9" xref="A3.I3.i3.p1.1.m1.1.1.9.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I3.i3.p1.1.m1.1b"><apply id="A3.I3.i3.p1.1.m1.1.1.cmml" xref="A3.I3.i3.p1.1.m1.1.1"><times id="A3.I3.i3.p1.1.m1.1.1.1.cmml" xref="A3.I3.i3.p1.1.m1.1.1.1"></times><ci id="A3.I3.i3.p1.1.m1.1.1.2.cmml" xref="A3.I3.i3.p1.1.m1.1.1.2">𝑝</ci><ci id="A3.I3.i3.p1.1.m1.1.1.3.cmml" xref="A3.I3.i3.p1.1.m1.1.1.3">𝑙</ci><ci id="A3.I3.i3.p1.1.m1.1.1.4.cmml" xref="A3.I3.i3.p1.1.m1.1.1.4">𝑎</ci><ci id="A3.I3.i3.p1.1.m1.1.1.5.cmml" xref="A3.I3.i3.p1.1.m1.1.1.5">𝑦</ci><ci id="A3.I3.i3.p1.1.m1.1.1.6.cmml" xref="A3.I3.i3.p1.1.m1.1.1.6">𝑒</ci><ci id="A3.I3.i3.p1.1.m1.1.1.7.cmml" xref="A3.I3.i3.p1.1.m1.1.1.7">𝑟</ci><ci id="A3.I3.i3.p1.1.m1.1.1.8.cmml" xref="A3.I3.i3.p1.1.m1.1.1.8">𝑖</ci><ci id="A3.I3.i3.p1.1.m1.1.1.9.cmml" xref="A3.I3.i3.p1.1.m1.1.1.9">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I3.i3.p1.1.m1.1c">{playerid}</annotation></semantics></math> aware of the fact that you know a bomb phase has just been defused?</p>
+</div>
+</li>
+<li id="A3.I3.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="A3.I3.i4.p1" class="ltx_para">
+<p id="A3.I3.i4.p1.2" class="ltx_p">Based on the observation and previous history, is player <math id="A3.I3.i4.p1.1.m1.1" class="ltx_Math" alttext="{playerid}" display="inline"><semantics id="A3.I3.i4.p1.1.m1.1a"><mrow id="A3.I3.i4.p1.1.m1.1.1" xref="A3.I3.i4.p1.1.m1.1.1.cmml"><mi id="A3.I3.i4.p1.1.m1.1.1.2" xref="A3.I3.i4.p1.1.m1.1.1.2.cmml">p</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.1.m1.1.1.1" xref="A3.I3.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.1.m1.1.1.3" xref="A3.I3.i4.p1.1.m1.1.1.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.1.m1.1.1.1a" xref="A3.I3.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.1.m1.1.1.4" xref="A3.I3.i4.p1.1.m1.1.1.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.1.m1.1.1.1b" xref="A3.I3.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.1.m1.1.1.5" xref="A3.I3.i4.p1.1.m1.1.1.5.cmml">y</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.1.m1.1.1.1c" xref="A3.I3.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.1.m1.1.1.6" xref="A3.I3.i4.p1.1.m1.1.1.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.1.m1.1.1.1d" xref="A3.I3.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.1.m1.1.1.7" xref="A3.I3.i4.p1.1.m1.1.1.7.cmml">r</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.1.m1.1.1.1e" xref="A3.I3.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.1.m1.1.1.8" xref="A3.I3.i4.p1.1.m1.1.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.1.m1.1.1.1f" xref="A3.I3.i4.p1.1.m1.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.1.m1.1.1.9" xref="A3.I3.i4.p1.1.m1.1.1.9.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I3.i4.p1.1.m1.1b"><apply id="A3.I3.i4.p1.1.m1.1.1.cmml" xref="A3.I3.i4.p1.1.m1.1.1"><times id="A3.I3.i4.p1.1.m1.1.1.1.cmml" xref="A3.I3.i4.p1.1.m1.1.1.1"></times><ci id="A3.I3.i4.p1.1.m1.1.1.2.cmml" xref="A3.I3.i4.p1.1.m1.1.1.2">𝑝</ci><ci id="A3.I3.i4.p1.1.m1.1.1.3.cmml" xref="A3.I3.i4.p1.1.m1.1.1.3">𝑙</ci><ci id="A3.I3.i4.p1.1.m1.1.1.4.cmml" xref="A3.I3.i4.p1.1.m1.1.1.4">𝑎</ci><ci id="A3.I3.i4.p1.1.m1.1.1.5.cmml" xref="A3.I3.i4.p1.1.m1.1.1.5">𝑦</ci><ci id="A3.I3.i4.p1.1.m1.1.1.6.cmml" xref="A3.I3.i4.p1.1.m1.1.1.6">𝑒</ci><ci id="A3.I3.i4.p1.1.m1.1.1.7.cmml" xref="A3.I3.i4.p1.1.m1.1.1.7">𝑟</ci><ci id="A3.I3.i4.p1.1.m1.1.1.8.cmml" xref="A3.I3.i4.p1.1.m1.1.1.8">𝑖</ci><ci id="A3.I3.i4.p1.1.m1.1.1.9.cmml" xref="A3.I3.i4.p1.1.m1.1.1.9">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I3.i4.p1.1.m1.1c">{playerid}</annotation></semantics></math> aware of the fact that you know the sequence of bomb <math id="A3.I3.i4.p1.2.m2.1" class="ltx_Math" alttext="{bombid}" display="inline"><semantics id="A3.I3.i4.p1.2.m2.1a"><mrow id="A3.I3.i4.p1.2.m2.1.1" xref="A3.I3.i4.p1.2.m2.1.1.cmml"><mi id="A3.I3.i4.p1.2.m2.1.1.2" xref="A3.I3.i4.p1.2.m2.1.1.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.2.m2.1.1.1" xref="A3.I3.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.2.m2.1.1.3" xref="A3.I3.i4.p1.2.m2.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.2.m2.1.1.1a" xref="A3.I3.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.2.m2.1.1.4" xref="A3.I3.i4.p1.2.m2.1.1.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.2.m2.1.1.1b" xref="A3.I3.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.2.m2.1.1.5" xref="A3.I3.i4.p1.2.m2.1.1.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.2.m2.1.1.1c" xref="A3.I3.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.2.m2.1.1.6" xref="A3.I3.i4.p1.2.m2.1.1.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="A3.I3.i4.p1.2.m2.1.1.1d" xref="A3.I3.i4.p1.2.m2.1.1.1.cmml">​</mo><mi id="A3.I3.i4.p1.2.m2.1.1.7" xref="A3.I3.i4.p1.2.m2.1.1.7.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="A3.I3.i4.p1.2.m2.1b"><apply id="A3.I3.i4.p1.2.m2.1.1.cmml" xref="A3.I3.i4.p1.2.m2.1.1"><times id="A3.I3.i4.p1.2.m2.1.1.1.cmml" xref="A3.I3.i4.p1.2.m2.1.1.1"></times><ci id="A3.I3.i4.p1.2.m2.1.1.2.cmml" xref="A3.I3.i4.p1.2.m2.1.1.2">𝑏</ci><ci id="A3.I3.i4.p1.2.m2.1.1.3.cmml" xref="A3.I3.i4.p1.2.m2.1.1.3">𝑜</ci><ci id="A3.I3.i4.p1.2.m2.1.1.4.cmml" xref="A3.I3.i4.p1.2.m2.1.1.4">𝑚</ci><ci id="A3.I3.i4.p1.2.m2.1.1.5.cmml" xref="A3.I3.i4.p1.2.m2.1.1.5">𝑏</ci><ci id="A3.I3.i4.p1.2.m2.1.1.6.cmml" xref="A3.I3.i4.p1.2.m2.1.1.6">𝑖</ci><ci id="A3.I3.i4.p1.2.m2.1.1.7.cmml" xref="A3.I3.i4.p1.2.m2.1.1.7">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="A3.I3.i4.p1.2.m2.1c">{bombid}</annotation></semantics></math>?</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2310.10700" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/land_of_honey_and_milk" rel="nofollow" aria-hidden="true" tabindex="-1"></a>
+    <a href="/log/2310.10701" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2310.10701">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2310.10701" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2310.10702" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Feb 28 00:02:42 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

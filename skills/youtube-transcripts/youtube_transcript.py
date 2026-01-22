@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -239,6 +240,71 @@ def _transcribe_whisper(audio_path: Path, lang: str) -> tuple[list[dict], str, O
         return [], "", f"Whisper API error: {e}"
 
 
+# Cache for local Whisper model (avoid reloading)
+_LOCAL_WHISPER_MODEL = None
+
+
+def _transcribe_whisper_local(audio_path: Path, lang: str, model_size: str = "base") -> tuple[list[dict], str, Optional[str]]:
+    """Transcribe audio using faster-whisper (CTranslate2 optimized, 4-8x faster).
+
+    Model sizes: tiny, base, small, medium, large-v3
+    - tiny: fastest, lowest quality
+    - base: good balance (default)
+    - small: better quality
+    - medium: high quality
+    - large-v3: best quality
+
+    Returns: (transcript_segments, full_text, error_message)
+    """
+    global _LOCAL_WHISPER_MODEL
+
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError:
+        return [], "", "faster-whisper not installed. Run: pip install faster-whisper"
+
+    try:
+        # Load model (cached after first load)
+        if _LOCAL_WHISPER_MODEL is None:
+            typer.echo(f"    Loading faster-whisper model '{model_size}' (first time only)...", err=True)
+            # Use GPU with float16 for speed, fall back to CPU with int8
+            try:
+                _LOCAL_WHISPER_MODEL = WhisperModel(model_size, device="cuda", compute_type="float16")
+                typer.echo(f"    Using GPU (CUDA) with float16", err=True)
+            except Exception:
+                _LOCAL_WHISPER_MODEL = WhisperModel(model_size, device="cpu", compute_type="int8")
+                typer.echo(f"    Using CPU with int8", err=True)
+
+        # Transcribe - faster-whisper returns a generator
+        segments_gen, info = _LOCAL_WHISPER_MODEL.transcribe(
+            str(audio_path),
+            language=lang if lang != "en" else None,
+            beam_size=5,
+            vad_filter=True,  # Filter out silence for speed
+        )
+
+        # Convert to our transcript format
+        transcript = []
+        full_text_parts = []
+        for seg in segments_gen:
+            text = seg.text.strip()
+            transcript.append({
+                "text": text,
+                "start": seg.start,
+                "duration": seg.end - seg.start,
+            })
+            full_text_parts.append(text)
+
+        full_text = " ".join(full_text_parts)
+        if not transcript and full_text:
+            transcript = [{"text": full_text, "start": 0.0, "duration": 0.0}]
+
+        return transcript, full_text, None
+
+    except Exception as e:
+        return [], "", f"faster-whisper error: {e}"
+
+
 def _fetch_transcript_with_retry(
     vid: str,
     lang: str,
@@ -405,16 +471,22 @@ def get(
             if dl_error:
                 all_errors.append(f"Tier 3 (whisper): Download failed - {dl_error}")
             elif audio_path:
-                # Transcribe with Whisper
-                typer.echo("  Transcribing with OpenAI Whisper...", err=True)
-                transcript, full_text, whisper_error = _transcribe_whisper(audio_path, lang)
+                # Transcribe with local Whisper first (free)
+                typer.echo("  Transcribing with local Whisper...", err=True)
+                transcript, full_text, whisper_error = _transcribe_whisper_local(audio_path, lang)
+
+                if whisper_error:
+                    # Fallback to API if local fails
+                    if os.getenv("OPENAI_API_KEY"):
+                        typer.echo("  Local failed, trying Whisper API...", err=True)
+                        transcript, full_text, whisper_error = _transcribe_whisper(audio_path, lang)
 
                 if whisper_error:
                     all_errors.append(f"Tier 3 (whisper): {whisper_error}")
                     errors = [whisper_error]
                 else:
                     errors = []
-                    method = "whisper"
+                    method = "whisper-local" if "local" not in (whisper_error or "") else "whisper-api"
 
     took_ms = int((time.time() - t0) * 1000)
 
@@ -586,6 +658,296 @@ def check_proxy(
             }
 
     print(json.dumps(result, indent=2))
+
+
+def _is_rate_limit_error(error_msg: str) -> bool:
+    """Check if error indicates rate limiting."""
+    rate_limit_indicators = [
+        "429", "Too Many Requests", "rate limit", "blocking requests",
+        "IP has been blocked", "cloud provider", "quota exceeded"
+    ]
+    return any(ind.lower() in error_msg.lower() for ind in rate_limit_indicators)
+
+
+def _fetch_single_transcript_with_backoff(
+    vid: str,
+    lang: str,
+    use_proxy: bool,
+    base_delay: int,
+    max_delay: int,
+) -> tuple[list[dict], str, str | None, str | None]:
+    """Fetch a single transcript with tenacity-style exponential backoff.
+
+    Returns: (transcript, full_text, method, error)
+    """
+    import random
+
+    transcript: list[dict] = []
+    full_text = ""
+    method = None
+    last_error = None
+
+    # Exponential backoff settings
+    max_attempts = 5
+    multiplier = 2
+
+    for attempt in range(max_attempts):
+        # Calculate backoff delay with jitter
+        if attempt > 0:
+            backoff = min(base_delay * (multiplier ** (attempt - 1)), max_delay)
+            jitter = random.uniform(0.8, 1.2)  # +/- 20% jitter
+            wait_time = int(backoff * jitter)
+            typer.echo(f"    Backoff: waiting {wait_time}s (attempt {attempt + 1}/{max_attempts})...", err=True)
+            time.sleep(wait_time)
+
+        # Try with proxy first for batch operations (IPRoyal rotates IPs)
+        if use_proxy and _load_proxy_settings() is not None:
+            try:
+                transcript, full_text, errors, _, _ = _fetch_transcript_with_retry(
+                    vid, lang, use_proxy=True, max_retries=2
+                )
+                if not errors:
+                    return transcript, full_text, "proxy", None
+                last_error = errors[0] if errors else "Unknown proxy error"
+
+                # If rate limited, continue to backoff
+                if _is_rate_limit_error(last_error):
+                    typer.echo(f"    Rate limited via proxy, backing off...", err=True)
+                    continue
+            except Exception as e:
+                last_error = str(e)
+
+        # Fallback to direct (might work if proxy is the issue)
+        try:
+            transcript, full_text, errors, _, _ = _fetch_transcript_with_retry(
+                vid, lang, use_proxy=False, max_retries=0
+            )
+            if not errors:
+                return transcript, full_text, "direct", None
+            last_error = errors[0] if errors else "Unknown direct error"
+
+            # If rate limited, continue to backoff
+            if _is_rate_limit_error(last_error):
+                typer.echo(f"    Rate limited (direct), backing off...", err=True)
+                continue
+            else:
+                # Non-rate-limit error (e.g., no captions), don't retry
+                break
+        except Exception as e:
+            last_error = str(e)
+            if not _is_rate_limit_error(str(e)):
+                break
+
+    return [], "", None, last_error
+
+
+@app.command()
+def batch(
+    input_file: str = typer.Option(..., "--input", "-f", help="File with video IDs (one per line)"),
+    output_dir: str = typer.Option("./transcripts", "--output", "-o", help="Output directory for transcripts"),
+    delay_min: int = typer.Option(300, "--delay-min", help="Min delay between requests (default: 300 = 5 min)"),
+    delay_max: int = typer.Option(600, "--delay-max", help="Max delay between requests (default: 600 = 10 min)"),
+    lang: str = typer.Option("en", "--lang", "-l", help="Language code"),
+    no_proxy: bool = typer.Option(False, "--no-proxy", help="Skip proxy (NOT recommended for bulk)"),
+    no_whisper: bool = typer.Option(True, "--no-whisper/--whisper", help="Skip Whisper fallback (default: skip)"),
+    resume: bool = typer.Option(True, "--resume/--no-resume", help="Resume from last position (default: True)"),
+    max_videos: int = typer.Option(0, "--max", "-n", help="Max videos to process (0 = all)"),
+    backoff_base: int = typer.Option(60, "--backoff-base", help="Base backoff delay in seconds (default: 60)"),
+    backoff_max: int = typer.Option(900, "--backoff-max", help="Max backoff delay in seconds (default: 900 = 15 min)"),
+):
+    """Batch process YouTube videos with IPRoyal proxy and exponential backoff.
+
+    Uses IPRoyal proxy by default with exponential backoff on rate limits.
+    Delays between 5-10 minutes (configurable) with jitter to avoid detection.
+    Supports resume - safe to interrupt and restart.
+
+    Examples:
+        python youtube_transcript.py batch -f videos.txt -o ./transcripts
+        python youtube_transcript.py batch -f videos.txt --max 10  # Test with 10
+        python youtube_transcript.py batch -f videos.txt --delay-min 600 --delay-max 900
+    """
+    import random
+    from pathlib import Path
+
+    input_path = Path(input_file)
+    output_path = Path(output_dir)
+    state_file = output_path / ".batch_state.json"
+
+    if not input_path.exists():
+        typer.echo(f"Error: Input file not found: {input_file}", err=True)
+        raise typer.Exit(code=1)
+
+    # Check proxy configuration
+    use_proxy = not no_proxy
+    if use_proxy and _load_proxy_settings() is None:
+        typer.echo("WARNING: IPRoyal proxy not configured. Bulk downloads may fail.", err=True)
+        typer.echo("Set: IPROYAL_HOST, IPROYAL_PORT, IPROYAL_USER, IPROYAL_PASSWORD", err=True)
+        typer.echo("Continuing without proxy (use --no-proxy to suppress this warning)...\n", err=True)
+        use_proxy = False
+
+    # Read video IDs
+    with open(input_path) as f:
+        video_ids = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+
+    if not video_ids:
+        typer.echo("Error: No video IDs found in input file", err=True)
+        raise typer.Exit(code=1)
+
+    # Create output directory
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # Load state for resume
+    completed: set[str] = set()
+    consecutive_failures = 0
+    if resume and state_file.exists():
+        try:
+            with open(state_file) as f:
+                state = json.load(f)
+                completed = set(state.get("completed", []))
+                consecutive_failures = state.get("consecutive_failures", 0)
+            typer.echo(f"Resuming: {len(completed)} already completed", err=True)
+        except Exception:
+            pass
+
+    # Filter out completed
+    pending = [vid for vid in video_ids if vid not in completed]
+    if max_videos > 0:
+        pending = pending[:max_videos]
+
+    total = len(pending)
+    proxy_status = "IPRoyal proxy" if use_proxy else "direct (no proxy)"
+    typer.echo(f"Processing {total} videos via {proxy_status}", err=True)
+    typer.echo(f"Delay: {delay_min}-{delay_max}s | Backoff: {backoff_base}-{backoff_max}s", err=True)
+
+    stats = {"success": 0, "failed": 0, "skipped": 0, "rate_limited": 0, "whisper": 0}
+
+    def save_state(current_vid: str = "", current_method: str = ""):
+        """Save batch state to file."""
+        with open(state_file, 'w') as f:
+            json.dump({
+                "completed": list(completed),
+                "stats": stats,
+                "consecutive_failures": consecutive_failures,
+                "last_updated": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "current_video": current_vid,
+                "current_method": current_method,
+            }, f, indent=2)
+
+    for idx, vid in enumerate(pending, 1):
+        typer.echo(f"\n[{idx}/{total}] Processing: {vid}", err=True)
+
+        # Update state with current video
+        save_state(vid, "fetching")
+
+        out_file = output_path / f"{vid}.json"
+        if out_file.exists() and resume:
+            typer.echo(f"  Skipping (already exists): {out_file}", err=True)
+            completed.add(vid)
+            stats["skipped"] += 1
+            continue
+
+        t0 = time.time()
+
+        # Fetch with exponential backoff
+        transcript, full_text, method, error = _fetch_single_transcript_with_backoff(
+            vid, lang, use_proxy, backoff_base, backoff_max
+        )
+
+        # Try Whisper fallback if enabled and other methods failed
+        # Prefer local Whisper (free) over API (costs money)
+        if not method and not no_whisper:
+            typer.echo(f"  Trying local Whisper fallback...", err=True)
+            save_state(vid, "whisper")
+            with tempfile.TemporaryDirectory() as tmpdir:
+                audio_path, dl_err = _download_audio_ytdlp(vid, Path(tmpdir))
+                if not dl_err and audio_path:
+                    # Try local Whisper first (free)
+                    transcript, full_text, whisper_err = _transcribe_whisper_local(audio_path, lang)
+                    if not whisper_err and transcript:
+                        method = "whisper-local"
+                        error = None
+                    # Fallback to API if local fails and API key is set
+                    elif os.getenv("OPENAI_API_KEY"):
+                        typer.echo(f"    Local failed, trying Whisper API...", err=True)
+                        transcript, full_text, whisper_err = _transcribe_whisper(audio_path, lang)
+                        if not whisper_err and transcript:
+                            method = "whisper-api"
+                            error = None
+
+        took_ms = int((time.time() - t0) * 1000)
+
+        result = {
+            "meta": {
+                "video_id": vid,
+                "language": lang,
+                "took_ms": took_ms,
+                "method": method,
+            },
+            "transcript": transcript,
+            "full_text": full_text,
+            "errors": [error] if error else [],
+        }
+
+        # Save result
+        with open(out_file, 'w') as f:
+            json.dump(result, f, ensure_ascii=False, indent=2)
+
+        if method:
+            typer.echo(f"  Success ({method}, {took_ms}ms): {out_file.name}", err=True)
+            stats["success"] += 1
+            if "whisper" in method:
+                stats["whisper"] += 1
+            consecutive_failures = 0
+        else:
+            if error and _is_rate_limit_error(error):
+                typer.echo(f"  Rate limited: {error[:80]}...", err=True)
+                stats["rate_limited"] += 1
+                consecutive_failures += 1
+            else:
+                typer.echo(f"  Failed: {error[:80] if error else 'Unknown'}...", err=True)
+                stats["failed"] += 1
+                consecutive_failures = 0  # Reset on non-rate-limit failure
+
+        completed.add(vid)
+
+        # Save state after each video (clear current)
+        save_state("", "")
+
+        # Check for too many consecutive rate limits
+        if consecutive_failures >= 5:
+            typer.echo(f"\n  WARNING: {consecutive_failures} consecutive rate limits!", err=True)
+            typer.echo(f"  Taking extended break (15 min)...", err=True)
+            time.sleep(900)
+            consecutive_failures = 0
+
+        # Delay before next (except for last)
+        if idx < total:
+            # Smart delay based on method used:
+            # - Direct fetch success: minimal delay (2-5s) - low risk with rotating IPs
+            # - Proxy fetch success: short delay (5-15s)
+            # - Whisper/failed: full configured delay
+            if method == "direct":
+                actual_delay = random.randint(2, 5)
+            elif method == "proxy":
+                actual_delay = random.randint(5, 15)
+            else:
+                # Whisper, failed, or rate-limited: use configured delay
+                delay = random.randint(delay_min, delay_max)
+                jitter = random.uniform(0.9, 1.1)
+                actual_delay = int(delay * jitter)
+            typer.echo(f"  Waiting {actual_delay}s before next...", err=True)
+            time.sleep(actual_delay)
+
+    # Final summary
+    typer.echo(f"\n{'='*50}", err=True)
+    typer.echo(f"=== Batch Complete ===", err=True)
+    typer.echo(f"Success:      {stats['success']}", err=True)
+    typer.echo(f"Failed:       {stats['failed']}", err=True)
+    typer.echo(f"Rate Limited: {stats['rate_limited']}", err=True)
+    typer.echo(f"Skipped:      {stats['skipped']}", err=True)
+    typer.echo(f"Output:       {output_path}", err=True)
+
+    print(json.dumps({"stats": stats, "output_dir": str(output_path)}, indent=2))
 
 
 if __name__ == "__main__":

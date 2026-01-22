@@ -1,0 +1,13 @@
+[project]
+name = "task-monitor-skill"
+version = "0.1.0"
+description = "Monitor long-running tasks with Rich TUI and HTTP API"
+requires-python = ">=3.10"
+dependencies = [
+    "typer",
+    "rich",
+    "fastapi",
+    "uvicorn",
+    "httpx",
+    "pydantic",
+]

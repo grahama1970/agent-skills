@@ -10,6 +10,8 @@ dependencies = [
     "tqdm>=4.66.0",
     "beautifulsoup4>=4.12.0",
     "requests>=2.31.0",
+    "scillm @ git+https://github.com/grahama1970/scillm.git",
+    "rapidfuzz>=3.0.0",
 ]
 
 [tool.uv]

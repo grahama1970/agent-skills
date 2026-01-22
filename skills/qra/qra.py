@@ -23,6 +23,7 @@ import os
 import re
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
 
@@ -250,39 +251,68 @@ def build_sections(
 # =============================================================================
 
 def build_system_prompt(context: Optional[str] = None) -> str:
-    """Build QRA system prompt with optional domain context."""
-    base_prompt = """You are a knowledge extraction assistant. You MUST respond with valid JSON only.
-Do not include any text before or after the JSON. Do not use markdown code blocks.
-Return ONLY a JSON object matching this exact schema:
+    """Build QRA system prompt with optional domain context.
 
-{{"items": [
+    Context can be:
+    - Simple phrase: "ML researcher" -> becomes "You are a ML researcher"
+    - Rich context (multi-line): Used as full guidance, supports markdown
+    """
+    json_format = """{{"items": [
   {{"question": "string", "reasoning": "string", "answer": "string"}},
   ...
-]}}
+]}}"""
 
-CRITICAL RULES:
-- Extract ALL meaningful facts, concepts, and relationships from the text
+    base_rules = """CRITICAL RULES:
 - GROUNDING: Every answer MUST be directly supported by text in the source. Do NOT hallucinate.
 - question: A clear, specific question that the text answers
 - reasoning: Brief explanation of where/how the answer is found in the text
 - answer: The factual answer, using words from the source text when possible
 - Include as many items as the text supports (could be 1 to 50+)
 - If text is too short, garbled, or lacks factual content, return {{"items": []}}
-- Prefer extracting: definitions, methods, results, comparisons, key findings
+
+SKIP these sections (no value):
+- Abstract summaries, acknowledgments, author bios
+- References, bibliography, appendix boilerplate
+- Figure/table captions without substantive content
+- "Future work" without concrete approaches
+"""
+
+    json_instruction = f"""You MUST respond with valid JSON only.
+Do not include any text before or after the JSON. Do not use markdown code blocks.
+Return ONLY a JSON object matching this exact schema:
+
+{json_format}
 """
 
     if context:
-        # Prepend domain context
-        context_section = f"""You are a {context}.
+        # Check if rich context (multi-line with guidance)
+        is_rich_context = '\n' in context.strip() or len(context) > 200
+
+        if is_rich_context:
+            # Rich context: use as primary guidance
+            return f"""{context}
+
+{json_instruction}
+{base_rules}"""
+        else:
+            # Simple context: wrap as persona
+            return f"""You are a {context}.
 
 Extract knowledge items that are relevant to your expertise and domain.
 Skip content that is outside your area of focus.
-Prioritize information that would be valuable to someone with your background.
+Prioritize actionable information over generic descriptions.
 
-"""
-        return context_section + base_prompt
+{json_instruction}
+{base_rules}"""
 
-    return base_prompt
+    # No context: generic extraction
+    return f"""You are a knowledge extraction assistant.
+
+Extract meaningful facts, concepts, methods, and relationships.
+Prefer: definitions, algorithms, data structures, implementation patterns, key findings.
+
+{json_instruction}
+{base_rules}"""
 
 
 QRA_USER_PROMPT = """Extract all grounded knowledge items from this text. Every answer must be supported by the source text.
@@ -302,7 +332,7 @@ def _get_scillm_config() -> Dict[str, str]:
     model = (
         os.getenv("CHUTES_TEXT_MODEL")
         or os.getenv("SCILLM_DEFAULT_MODEL")
-        or os.getenv("CHUTES_MODEL_ID", "deepseek/deepseek-chat")
+        or os.getenv("CHUTES_MODEL_ID", "deepseek-ai/DeepSeek-V3")
     )
     return {
         "model": model,
@@ -386,8 +416,15 @@ def _parse_qra_response(
     section_title: str,
     source: str,
     clean_json_fn,
-) -> List[Dict[str, Any]]:
-    """Parse LLM JSON response into QRA dicts."""
+) -> Tuple[List[Dict[str, Any]], bool]:
+    """Parse LLM JSON response into QRA dicts.
+
+    Returns:
+        Tuple of (qra_items, valid_response) where valid_response indicates
+        whether the LLM returned a valid JSON response (even if empty items).
+        If valid_response is True but items is empty, the LLM intentionally
+        skipped this section - don't use heuristic fallback.
+    """
     try:
         if isinstance(content, dict):
             data = content
@@ -422,13 +459,14 @@ def _parse_qra_response(
                     "section_title": section_title,
                     "source": source,
                 })
-        return result
+        # Return True for valid_response even if result is empty - LLM intentionally returned []
+        return result, True
     except json.JSONDecodeError as e:
         _log(f"JSON parse error: {e}", style="yellow")
-        return []
+        return [], False
     except Exception as e:
         _log(f"Parse error: {e}", style="yellow")
-        return []
+        return [], False
 
 
 def _heuristic_fallback(content: str, section_title: str, source: str) -> List[Dict[str, Any]]:
@@ -545,6 +583,27 @@ async def extract_qra_batch(
     if context:
         _log(f"Context: {context[:60]}...", style="cyan")
 
+    # Debug logging: save prompts to temp file for debugging
+    debug_dir = Path("/tmp/qra_debug")
+    debug_dir.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    debug_file = debug_dir / f"batch_{timestamp}.json"
+
+    debug_data = {
+        "timestamp": timestamp,
+        "model": config["model"],
+        "api_base": config["api_base"],
+        "system_prompt": system_prompt,
+        "context_provided": context[:500] if context else None,
+        "num_requests": len(requests),
+        "sample_user_prompt": requests[0]["messages"][1]["content"][:500] if requests else None,
+        "responses": [],
+    }
+
+    # Save initial debug info
+    debug_file.write_text(json.dumps(debug_data, indent=2, default=str), encoding="utf-8")
+    _log(f"Debug log: {debug_file}", style="dim")
+
     all_qa: List[Dict[str, Any]] = []
     done = ok = err = 0
 
@@ -564,16 +623,28 @@ async def extract_qra_batch(
         section_idx = meta["idx"]
         section_title = meta["title"]
 
+        # Log response for debugging
+        debug_data["responses"].append({
+            "index": req_idx,
+            "section_title": section_title,
+            "ok": ev.get("ok", False),
+            "error": ev.get("error"),
+            "content_preview": str(ev.get("content", ""))[:500] if ev.get("content") else None,
+        })
+
         if ev.get("ok") and ev.get("content"):
             ok += 1
-            qa_items = _parse_qra_response(
+            qa_items, valid_response = _parse_qra_response(
                 ev["content"], section_idx, section_title, source, clean_json_string
             )
             if qa_items:
                 all_qa.extend(qa_items)
                 _log(f"[{done}/{len(requests)}] '{section_title[:30]}' -> {len(qa_items)} QRAs", style="green")
+            elif valid_response:
+                # LLM returned valid JSON with empty items - intentionally skip this section
+                _log(f"[{done}/{len(requests)}] '{section_title[:30]}' -> skip (no actionable content)", style="dim")
             else:
-                # Fallback
+                # Parse failed - use heuristic fallback
                 fallback = _heuristic_fallback(meta["content"], section_title, source)
                 for fb in fallback:
                     fb["section_idx"] = section_idx
@@ -582,7 +653,7 @@ async def extract_qra_batch(
                 _log(f"[{done}/{len(requests)}] '{section_title[:30]}' -> heuristic fallback", style="yellow")
         else:
             err += 1
-            _log(f"[{done}/{len(requests)}] '{section_title[:30]}' -> error", style="red")
+            _log(f"[{done}/{len(requests)}] '{section_title[:30]}' -> error: {ev.get('error', 'unknown')}", style="red")
             fallback = _heuristic_fallback(meta["content"], section_title, source)
             for fb in fallback:
                 fb["section_idx"] = section_idx
@@ -590,6 +661,12 @@ async def extract_qra_batch(
             all_qa.extend(fallback)
 
     _log(f"Batch complete: {ok} ok, {err} errors, {len(all_qa)} QRAs", style="bold")
+
+    # Save final debug file with all responses
+    debug_data["summary"] = {"ok": ok, "errors": err, "total_qras": len(all_qa)}
+    debug_file.write_text(json.dumps(debug_data, indent=2, default=str), encoding="utf-8")
+    _log(f"Debug saved: {debug_file}", style="dim")
+
     return all_qa
 
 

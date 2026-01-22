@@ -78,7 +78,47 @@ if ! "$SCRIPT_DIR/run.sh" --help | grep -q "Usage:"; then
 fi
 echo "  [PASS] CLI help works"
 
-# 10. Optional: Full integration test (only if container running)
+# 10. Test retrieval/memory integration
+echo "  [INFO] Testing retrieval integration..."
+RETRIEVAL_TEST=$(python3 -c "
+import os, sys
+os.environ.setdefault('ARANGO_PASS', os.getenv('ARANGO_PASS', ''))
+os.environ['ARANGO_DB'] = 'memory'
+sys.path.insert(0, '$SCRIPT_DIR')
+from prove import retrieve_similar_proofs, get_arango_db
+
+db = get_arango_db()
+if not db:
+    print('NO_DB')
+    sys.exit(0)
+
+if not db.has_collection('lean_theorems'):
+    print('NO_COLLECTION')
+    sys.exit(0)
+
+count = db.collection('lean_theorems').count()
+results = retrieve_similar_proofs('prove n + 0 = n', k=3)
+print(f'OK:{count}:{len(results)}')
+" 2>/dev/null) || RETRIEVAL_TEST="ERROR"
+
+case "$RETRIEVAL_TEST" in
+    NO_DB)
+        echo "  [WARN] ArangoDB not available (retrieval disabled)"
+        ;;
+    NO_COLLECTION)
+        echo "  [WARN] lean_theorems collection missing (run ingest.sh)"
+        ;;
+    ERROR)
+        echo "  [WARN] Retrieval test failed (ArangoDB may not be configured)"
+        ;;
+    OK:*)
+        THMS=$(echo "$RETRIEVAL_TEST" | cut -d: -f2)
+        RESULTS=$(echo "$RETRIEVAL_TEST" | cut -d: -f3)
+        echo "  [PASS] Retrieval: $THMS theorems, $RESULTS results returned"
+        ;;
+esac
+
+# 12. Optional: Full integration test (only if container running)
 if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
     echo "  [INFO] Running integration test..."
 

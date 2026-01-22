@@ -46,6 +46,138 @@ Pi is the only CLI agent that can reliably enforce Memory First (other CLIs trea
 
 ---
 
+## Theory of Mind (ToM) for Persona Agents
+
+The memory system extends beyond "lessons about problems" to "lessons about minds" - enabling AI personas like Horus to maintain psychological state, build user models, and track relationships.
+
+### ToM Commands
+
+| Command | Use Case |
+|---------|----------|
+| `./run.sh user get <id>` | Get/create user profile |
+| `./run.sh user update <id> --skill expert --worthiness 0.8` | Update user assessment |
+| `./run.sh user history <id>` | Get user interaction history |
+| `./run.sh persona get <agent_id>` | Get/create persona state |
+| `./run.sh persona update <agent_id> --mood defensive --drive escape:0.2` | Update persona state |
+| `./run.sh persona trend <agent_id> --hours 24` | Get persona state over time |
+| `./run.sh relationship get <user_id> <agent_id>` | Get/create relationship |
+| `./run.sh relationship update <user_id> <agent_id> --trust +0.1` | Update trust/respect |
+| `./run.sh relationship moment <user_id> <agent_id> --event "..." --impact 0.3` | Record key moment |
+
+### ToM Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    PERSONA AGENT (e.g., Horus)              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  PERSONA STATE          USER PROFILES        RELATIONSHIPS  │
+│  ┌─────────────┐       ┌─────────────┐      ┌────────────┐ │
+│  │ drives      │◄─────►│ skill_level │◄────►│ trust      │ │
+│  │ defenses    │       │ worthiness  │      │ respect    │ │
+│  │ self_hatred │       │ topics      │      │ key_moments│ │
+│  │ humor_mode  │       │ interactions│      │ familiarity│ │
+│  │ mood        │       └─────────────┘      └────────────┘ │
+│  └─────────────┘                                           │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              LESSON KNOWLEDGE GRAPH                  │   │
+│  │  (lore, tactics, relationships between concepts)     │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Example: Horus Persona Flow
+
+```python
+from graph_memory import api
+
+# 1. Initialize Horus persona state
+horus = api.get_or_create_persona_state(
+    agent_id="horus",
+    default_drives={
+        "escape": {"satisfaction": 0.1, "intensity": 0.95},
+        "competence": {"satisfaction": 0.5, "intensity": 0.9},
+    },
+    default_mood="resentful"
+)
+
+# 2. User interacts - build their profile
+user = api.get_or_create_user(user_id="graham", scope="horus")
+
+# 3. Track the relationship
+rel = api.get_or_create_relationship(user_id="graham", agent_id="horus")
+
+# 4. User asks competent question - update assessments
+api.record_key_moment(
+    user_id="graham", agent_id="horus",
+    event="asked_insightful_siege_question",
+    impact=0.3, update_trust=True, update_respect=True
+)
+
+# 5. User mentions trigger topic (Davin) - update persona state
+api.update_persona_state(
+    agent_id="horus",
+    mood="defensive",
+    coping_mechanism_used="grandiose_claims",
+    trigger="user_mentioned_davin",
+    user_id="graham",
+    record_history=True
+)
+
+# 6. Compose response with full context
+context = {
+    "user": api.get_or_create_user(user_id="graham"),
+    "relationship": api.get_or_create_relationship("graham", "horus"),
+    "persona": api.get_or_create_persona_state(agent_id="horus"),
+    "knowledge": api.search(q="davin lodge", scope="horus_lore"),
+}
+```
+
+### Persona State Schema
+
+```python
+{
+    "agent_id": "horus",
+    "drives": {
+        "escape": {"satisfaction": 0.1, "intensity": 0.95},
+        "competence": {"satisfaction": 0.5, "intensity": 0.9},
+    },
+    "defense_mechanisms": {
+        "projection_frequency": 12,
+        "grandiosity_triggers": ["doubt", "weakness"],
+        "denial_topics": ["chaos corruption"],
+    },
+    "self_perception": {
+        "self_hatred_level": 0.8,
+        "shame_triggers": ["Davin", "Erebus"],
+        "compensatory_behaviors": ["grandiose claims"],
+    },
+    "humor_mode": "gallows_humor",  # genuine_warmth → tactical_charm → cruel_mockery
+    "current_mood": "defensive",
+    "hope_level": 0.1,
+    "resentment_level": 0.9,
+}
+```
+
+### Edge Types for ToM
+
+The existing edge verification system extends to user/persona relationships:
+
+| Edge Type | Meaning |
+|-----------|---------|
+| `observes` | Agent observed this about user |
+| `revises` | New observation updates old one |
+| `trusts` | Directional trust |
+| `respects` | Directional respect |
+| `distrusts` | Explicit distrust |
+| `triggers` | Topic triggers persona state change |
+| `satisfies` | Interaction satisfies a drive |
+| `frustrates` | Interaction frustrates a drive |
+
+---
+
 ## The Memory First Contract
 
 ```
