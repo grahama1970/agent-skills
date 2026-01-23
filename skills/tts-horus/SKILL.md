@@ -106,21 +106,30 @@ python run/tts/color_voice.py --base horus --color warm --alpha 0.4
 
 ## Learning Rate Schedule
 
-The training script automatically configures:
+The training script uses professional ML best practices:
 
 ```
-LR Schedule: MultiStepLR with warmup
-- Warmup: 500 steps (configurable)
-- Milestone 1 (30%): LR × 0.5
-- Milestone 2 (60%): LR × 0.25
-- Milestone 3 (85%): LR × 0.125
+LR Schedule: CosineAnnealingWarmRestarts (recommended for XTTS)
+- T_0: ~20% of total steps (first annealing cycle)
+- T_mult: 2 (each subsequent cycle doubles in length)
+- eta_min: 1e-7 (minimum LR floor)
 - Gradient clipping: 1.0
+- Optimizer: AdamW with weight decay 1e-2
 ```
+
+**Why CosineAnnealingWarmRestarts over MultiStepLR:**
+- Smoother LR decay (better for fine-tuning)
+- Periodic restarts help escape local minima
+- Recommended by Coqui community for XTTS
 
 **Double descent** is less relevant for fine-tuning because:
 1. Model already trained - we're adapting, not learning from scratch
 2. Single speaker - we want specialization to Horus's voice
 3. Risk is memorization, mitigated by diverse training data (~18k clips)
+
+Sources:
+- [AllTalk TTS Finetuning Guide](https://github.com/erew123/alltalk_tts/wiki/XTTS-Model-Finetuning-Guide-(Advanced-Version))
+- [Coqui TTS Discussion #3773](https://github.com/coqui-ai/TTS/discussions/3773)
 
 ## Automated Pipeline
 
