@@ -102,6 +102,25 @@ python run/tts/color_voice.py --base horus --color warm --alpha 0.4
 | Clip extraction slow | Normal - uses ffmpeg (CPU-bound), GPU only for training |
 | Learning rate | Use 5e-6 (official recipe), NOT default 2e-4 |
 | Batch size | batch_size * grad_accumulation >= 252 for efficient training |
+| LR milestones never reached | Script now auto-calculates based on dataset size |
+
+## Learning Rate Schedule
+
+The training script automatically configures:
+
+```
+LR Schedule: MultiStepLR with warmup
+- Warmup: 500 steps (configurable)
+- Milestone 1 (30%): LR × 0.5
+- Milestone 2 (60%): LR × 0.25
+- Milestone 3 (85%): LR × 0.125
+- Gradient clipping: 1.0
+```
+
+**Double descent** is less relevant for fine-tuning because:
+1. Model already trained - we're adapting, not learning from scratch
+2. Single speaker - we want specialization to Horus's voice
+3. Risk is memorization, mitigated by diverse training data (~18k clips)
 
 ## Automated Pipeline
 
