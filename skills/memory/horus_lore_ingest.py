@@ -408,12 +408,12 @@ def get_embedder():
 
         def embed_via_service(texts: list[str]) -> list[list[float]]:
             resp = requests.post(
-                f"{service_url}/embed",
+                f"{service_url}/embed/batch",
                 json={"texts": texts},
                 timeout=60,
             )
             resp.raise_for_status()
-            return resp.json()["embeddings"]
+            return resp.json()["vectors"]
 
         return embed_via_service
     else:

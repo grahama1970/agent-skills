@@ -23,14 +23,23 @@ live under `persona/data/audiobooks/` with per-book `clean/` folders.
 ## Commands
 
 ### `dataset`
-Builds the Horus dataset from Vengeful Spirit using faster-whisper segmentation.
+Builds the Horus dataset from Horus Rising using faster-whisper segmentation.
 
 ```bash
+# Step 1: Transcribe and segment
 python run/tts/ingest_audiobook.py \
-  --audio persona/data/audiobooks/Vengeful_Spirit_The_Horus_Heresy_Book_29-LC_64_22050_stereo/audio.m4b \
-  --book-name Vengeful_Spirit_The_Horus_Heresy_Book_29 \
+  --audio persona/data/audiobooks/Horus_Rising_The_Horus_Heresy_Book_1-LC_64_22050_stereo/audio.m4b \
+  --book-name Horus_Rising \
   --output-dir datasets/horus_voice \
   --max-hours 0
+
+# Step 2: Extract clips (CPU-bound, uses ffmpeg)
+python run/tts/extract_clips.py \
+  --segments datasets/horus_voice/segments_merged.jsonl \
+  --audio persona/data/audiobooks/Horus_Rising_The_Horus_Heresy_Book_1-LC_64_22050_stereo/audio.m4b \
+  --output-dir datasets/horus_voice/clips \
+  --manifest datasets/horus_voice/full_manifest.jsonl \
+  --min-sec 1.5 --max-sec 15.0 --sample-rate 24000 --max-hours 0
 ```
 
 ### `align`
@@ -46,11 +55,14 @@ python run/tts/align_transcripts.py \
 ```
 
 ### `train`
-Fine-tunes XTTS-v2 (local A5000 by default).
+Fine-tunes XTTS-v2 using GPTTrainer (local A5000 by default).
 
 ```bash
-python run/tts/train_xtts.py --config configs/tts/horus_xtts.yaml --simulate False
+python run/tts/train_xtts_coqui.py --config configs/tts/horus_xtts.yaml
 ```
+
+**Important**: Uses `train_xtts_coqui.py` with GPTTrainer (not generic Trainer).
+Must use `mixed_precision=False` to avoid NaN losses.
 
 ### `say`
 CLI synthesis (writes `.artifacts/tts/output.wav` by default).
@@ -78,3 +90,22 @@ python run/tts/color_voice.py --base horus --color warm --alpha 0.4
 - WhisperX is installed in the project `.venv`; for standalone runs, use `uvx whisperx` if needed.
 - Golden samples live in `tests/fixtures/tts/golden/` (Git LFS).
 - Orchestrate-ready task plan lives at `persona/docs/tasks/0N_voice_coloring.md`.
+
+## Gotchas
+
+| Issue | Solution |
+|-------|----------|
+| NaN losses from step 0 | Use `mixed_precision=False`, `precision="float32"` |
+| Model size mismatch (1026 vs 8194) | Use GPTTrainer with GPTArgs, not XttsConfig |
+| Missing dvae.pth | Download from HuggingFace: `wget https://huggingface.co/coqui/XTTS-v2/resolve/main/dvae.pth` |
+| Clips too short (rejected) | Merge adjacent segments: MIN_TARGET=2.0s, MAX_GAP=0.5s |
+| Clip extraction slow | Normal - uses ffmpeg (CPU-bound), GPU only for training |
+| Learning rate | Use 5e-6 (official recipe), NOT default 2e-4 |
+| Batch size | batch_size * grad_accumulation >= 252 for efficient training |
+
+## Current Status (2026-01-23)
+
+- **Audiobook**: Horus Rising (~12h)
+- **Extraction**: In progress (~8,700 / ~21,975 clips)
+- **Config**: `configs/tts/horus_xtts.yaml` (200 epochs, 5e-6 LR)
+- **Training**: Pending extraction completion

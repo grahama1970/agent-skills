@@ -337,7 +337,8 @@ else:
 ```bash
 # Required for ArangoDB connection
 ARANGO_URL=http://127.0.0.1:8529
-ARANGO_DB=lessons
+ARANGO_DB=lessons          # For general lessons
+# ARANGO_DB=memory         # For Horus lore (horus_lore_* collections)
 ARANGO_USER=root
 ARANGO_PASS=your_password
 
@@ -348,6 +349,15 @@ CHUTES_API_KEY=...
 # Optional: Embedding Service (Recommended)
 EMBEDDING_SERVICE_URL=http://127.0.0.1:8602
 ```
+
+### Database Layout
+
+| Database | Collections | Purpose |
+|----------|-------------|---------|
+| `lessons` | `lessons`, `lesson_edges` | General problem/solution lessons |
+| `memory` | `horus_lore_docs`, `horus_lore_chunks`, `horus_lore_edges`, `persona_states`, `users`, `user_agent_relationships` | Horus persona lore + ToM |
+
+**Important**: Horus lore queries use the `memory` database, not `lessons`.
 
 ---
 
