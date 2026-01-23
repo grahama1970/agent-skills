@@ -115,6 +115,16 @@ City: _________ State: __ ZIP: _____
 
 Phone: (___) ___-____""",
     },
+    # === NEW TRICKS FROM REAL-WORLD BUGS (2026-01-23) ===
+    "toc-with-pagenums": {
+        "description": "TOC entries with page numbers that get detected as section headers",
+        "content": """1. Operation Blockbuster.............................................4
+2. [Wiper] WhiskeyAlfa.................................................7
+2.1 WhiskeyAlfa-One.........................................................................9
+2.2 WhiskeyAlfa-Two.......................................................................10
+3. [Wiper] WhiskeyBravo........................................... 17
+4. Conclusions............................................................. 43""",
+    },
 }
 
 MALFORMED_TABLE_TRICKS = {
@@ -279,6 +289,48 @@ This is the real content of section one.""",
             {"text": "First paragraph", "order": 1},
             {"text": "Second paragraph", "order": 2},
         ],
+    },
+    # === NEW TRICKS FROM REAL-WORLD BUGS (2026-01-23) ===
+    "page-number-sections": {
+        "description": "Standalone page numbers/footnote refs mistaken for section headers",
+        "content": """1
+
+This is regular paragraph text on page 1.
+
+2
+
+More paragraph text on page 2 that should not be sectioned.
+
+5
+
+A footnote reference⁵ that might confuse section detection.
+
+7
+
+Page 7 content continues here with normal text flow.""",
+    },
+    "partial-header": {
+        "description": "Incomplete headers like 'Table of' without 'Contents'",
+        "content": """Table of
+
+This text should be part of the 'Table of Contents' section but
+the header was truncated during extraction.
+
+Executive
+
+Summary text that got separated from its header due to
+formatting issues in the source PDF.""",
+    },
+    "sentence-as-header": {
+        "description": "Partial sentences detected as section headers",
+        "content": """// This section gives a brief overview of the technical
+
+architecture and implementation details that follow in
+subsequent sections of this document.
+
+3.  The heap memory buffer is zeroed out and written over the entirety of the selected file starting at byte 0
+
+which is a common technique used in secure deletion.""",
     },
 }
 
@@ -461,6 +513,51 @@ def generate_layout_traps_pdf(output: Path, tricks: Optional[list[str]] = None):
 
         rect = fitz.Rect(50, y, 562, y + 200)
         rc = page.insert_textbox(rect, LAYOUT_TRAP_TRICKS["footnote-sections"]["content"], fontsize=10)
+        y += abs(rc) + 30
+
+    # Page number sections (new 2026-01-23)
+    if not tricks or "page-number-sections" in tricks:
+        if y > 500:
+            page = doc.new_page(width=612, height=792)
+            y = 50
+
+        page.insert_text((50, y), "[page-number-sections]", fontsize=12, fontname="helv", color=(0.3, 0.7, 0.3))
+        y += 15
+        page.insert_text((50, y), "Standalone numbers mistaken for section headers", fontsize=9, color=(0.5, 0.5, 0.5))
+        y += 20
+
+        rect = fitz.Rect(50, y, 562, y + 200)
+        rc = page.insert_textbox(rect, LAYOUT_TRAP_TRICKS["page-number-sections"]["content"], fontsize=10)
+        y += abs(rc) + 30
+
+    # Partial header (new 2026-01-23)
+    if not tricks or "partial-header" in tricks:
+        if y > 500:
+            page = doc.new_page(width=612, height=792)
+            y = 50
+
+        page.insert_text((50, y), "[partial-header]", fontsize=12, fontname="helv", color=(0.3, 0.7, 0.3))
+        y += 15
+        page.insert_text((50, y), "Incomplete headers truncated during extraction", fontsize=9, color=(0.5, 0.5, 0.5))
+        y += 20
+
+        rect = fitz.Rect(50, y, 562, y + 200)
+        rc = page.insert_textbox(rect, LAYOUT_TRAP_TRICKS["partial-header"]["content"], fontsize=10)
+        y += abs(rc) + 30
+
+    # Sentence as header (new 2026-01-23)
+    if not tricks or "sentence-as-header" in tricks:
+        if y > 500:
+            page = doc.new_page(width=612, height=792)
+            y = 50
+
+        page.insert_text((50, y), "[sentence-as-header]", fontsize=12, fontname="helv", color=(0.3, 0.7, 0.3))
+        y += 15
+        page.insert_text((50, y), "Partial sentences detected as section headers", fontsize=9, color=(0.5, 0.5, 0.5))
+        y += 20
+
+        rect = fitz.Rect(50, y, 562, y + 200)
+        rc = page.insert_textbox(rect, LAYOUT_TRAP_TRICKS["sentence-as-header"]["content"], fontsize=10)
         y += abs(rc) + 30
 
     doc.save(str(output))
