@@ -332,6 +332,35 @@ subsequent sections of this document.
 
 which is a common technique used in secure deletion.""",
     },
+    # === NEW TRICK FROM ROUND 2 TESTING (2026-01-23) ===
+    "numbered-sections-as-text": {
+        "description": "Numbered sections that Marker classifies as plain Text (not headers)",
+        "content": """SATELLITE HACKING:
+A Guide for the Perplexed
+
+By Jason Fritz
+
+1. Introduction: Three Key Questions
+
+Satellites are vital to sustaining the current global infrastructure.
+This section examines the fundamental questions surrounding satellite security.
+
+2. Background: Historical Context
+
+The development of satellite technology began in the 1950s with Sputnik.
+
+2.1 Early Satellite Programs
+
+The United States and Soviet Union competed to establish space dominance.
+
+3. Current Vulnerabilities
+
+Modern satellites face numerous cyber threats including jamming and spoofing.
+
+4. Conclusions
+
+Satellite security requires continuous vigilance and updated protocols.""",
+    },
 }
 
 

@@ -520,7 +520,91 @@ If tests fail:
 | "Let's plan this"         | Collaborate on task file (don't run yet) |
 | "Run the tasks"           | Execute via orchestrate tool             |
 | "Orchestrate 01_TASKS.md" | Execute specific file                    |
+| "Schedule nightly"        | Schedule via `orchestrate schedule`      |
 | Unresolved questions      | BLOCKED - clarify first                  |
+
+## Parallel Task Execution
+
+Tasks can run in parallel groups using the `Parallel` field:
+
+```markdown
+- [ ] **Task 1**: Setup database
+  - Parallel: 0       # Group 0 runs FIRST (sequentially before any parallel tasks)
+
+- [ ] **Task 2**: Create API endpoints
+  - Parallel: 1       # Group 1 tasks run IN PARALLEL after Group 0 completes
+  - Dependencies: Task 1
+
+- [ ] **Task 3**: Create frontend components
+  - Parallel: 1       # Also Group 1 - runs CONCURRENTLY with Task 2
+  - Dependencies: Task 1
+
+- [ ] **Task 4**: Integration tests
+  - Parallel: 2       # Group 2 runs after ALL Group 1 tasks complete
+  - Dependencies: Task 2, Task 3
+```
+
+**Execution Order:**
+1. All `Parallel: 0` tasks run sequentially (respecting dependencies)
+2. All `Parallel: 1` tasks run concurrently (after their dependencies are met)
+3. All `Parallel: 2` tasks run concurrently (after Group 1 completes)
+4. And so on...
+
+**Rules:**
+- Tasks in the same group with unmet dependencies wait until dependencies complete
+- Lower parallel numbers run before higher numbers
+- Default is `Parallel: 0` (runs first, sequential)
+
+## Task-Monitor Integration
+
+Orchestrate automatically pushes progress to the **task-monitor** TUI:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  orchestrate:01_TASKS.md:abc123    [=====>   ] 3/5 │
+│  Group 1: Create API endpoints, Create frontend     │
+│  Status: running  |  Success: 2  |  Failed: 0       │
+└─────────────────────────────────────────────────────┘
+```
+
+**Configuration:**
+```bash
+# Environment variables
+TASK_MONITOR_API_URL=http://localhost:8765  # Default
+TASK_MONITOR_ENABLED=true                    # Default, set to "false" to disable
+```
+
+**Start the monitor TUI:**
+```bash
+.pi/skills/task-monitor/run.sh tui
+```
+
+## Scheduler Integration
+
+Schedule recurring task file executions via the scheduler skill:
+
+```bash
+# Schedule nightly runs
+orchestrate schedule 01_TASKS.md --cron "0 2 * * *"
+
+# Schedule hourly
+orchestrate schedule maintenance.md --cron "0 * * * *"
+
+# Remove from schedule
+orchestrate unschedule 01_TASKS.md
+
+# View scheduled jobs
+scheduler list
+```
+
+**Automatic Registration:**
+- Completed orchestrations automatically register with the scheduler (disabled by default)
+- Use `orchestrate schedule` to explicitly schedule with cron
+
+**Integration with task-monitor:**
+The task-monitor TUI shows both:
+- Running orchestrations (real-time progress)
+- Upcoming scheduled jobs (from `~/.pi/scheduler/jobs.json`)
 
 ## Agent Selection
 

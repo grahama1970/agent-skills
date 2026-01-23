@@ -221,6 +221,45 @@ The full pipeline runs 14+ stages:
 | `--preset <name>` | Force preset (skip detection) |
 | `--fast` | No LLM, quick extraction |
 | `--json` | JSON output (default) |
+| `--toc-check` | Check TOC integrity against extracted sections |
+
+## TOC Integrity Check
+
+Verify that extracted sections match the PDF's Table of Contents (bookmarks):
+
+```bash
+# Check integrity on pipeline output directory
+.pi/skills/extractor/run.sh ./results/ --toc-check
+
+# Check specific DuckDB file
+.pi/skills/extractor/run.sh ./results/corpus.duckdb --toc-check
+```
+
+Output:
+```json
+{
+  "success": true,
+  "has_toc": true,
+  "integrity_score": 0.85,
+  "status": "GOOD",
+  "toc_entries_count": 20,
+  "sections_count": 18,
+  "matched_count": 17,
+  "missing_count": 3,
+  "matched": [
+    {"toc_title": "1. Introduction", "section_id": "sec_001", "score": 0.95}
+  ],
+  "missing": [
+    {"toc_title": "Appendix A", "toc_page": 45}
+  ]
+}
+```
+
+Status levels:
+- **EXCELLENT**: >= 90% match
+- **GOOD**: >= 70% match
+- **FAIR**: >= 50% match
+- **POOR**: < 50% match
 
 ## Environment
 

@@ -6,6 +6,7 @@
 #   orchestrate run <task-file>    Execute tasks from file
 #   orchestrate status             Show current session status
 #   orchestrate resume [id]        Resume paused session
+#   orchestrate schedule <task-file> --cron "0 2 * * *"  Schedule recurring runs
 #
 # Follows HAPPYPATH principles: one command, minimal knobs, defaults work.
 #
@@ -29,25 +30,32 @@ detect_backend() {
 # State directory for session persistence
 STATE_DIR="${ORCHESTRATE_STATE_DIR:-.orchestrate}"
 ORCHESTRATE_DIR="${ORCHESTRATE_HOME:-$HOME/.pi/skills/orchestrate}"
+SCHEDULER_HOME="${SCHEDULER_HOME:-$HOME/.pi/scheduler}"
+SCHEDULER_JOBS_FILE="$SCHEDULER_HOME/jobs.json"
 
 show_help() {
     cat <<'EOF'
 Orchestrate - Task execution with quality gates
 
 Usage:
-  orchestrate run <task-file>    Execute tasks from markdown file
-  orchestrate status             Show current/paused session status
-  orchestrate resume [id]        Resume a paused session (or latest)
+  orchestrate run <task-file>         Execute tasks from markdown file
+  orchestrate status                  Show current/paused session status
+  orchestrate resume [id]             Resume a paused session (or latest)
+  orchestrate schedule <file> --cron  Schedule recurring task file runs
+  orchestrate unschedule <file>       Remove scheduled run
 
 Examples:
-  orchestrate run tasks.md       Run all tasks in tasks.md
-  orchestrate status             Check what's running or paused
-  orchestrate resume             Resume the most recent paused session
+  orchestrate run tasks.md                         Run all tasks now
+  orchestrate status                               Check sessions
+  orchestrate resume                               Resume most recent
+  orchestrate schedule tasks.md --cron "0 2 * * *" Run nightly at 2am
+  orchestrate unschedule tasks.md                  Remove from scheduler
 
 Task file format:
   ## Task 1: Title
   - Agent: claude-sonnet-4-20250514
-  - Parallel: 1
+  - Parallel: 1          # Group 0 runs first, then all 1s in parallel, etc.
+  - Dependencies: none
 
   Task description here.
 
@@ -188,6 +196,121 @@ cmd_resume() {
     esac
 }
 
+cmd_schedule() {
+    local task_file="$1"
+    shift
+    local cron=""
+
+    # Parse --cron argument
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --cron)
+                cron="$2"
+                shift 2
+                ;;
+            *)
+                echo "Unknown option: $1" >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    if [[ -z "$task_file" ]]; then
+        echo "Error: task file required" >&2
+        echo "Usage: orchestrate schedule <task-file> --cron \"0 2 * * *\"" >&2
+        exit 1
+    fi
+
+    if [[ ! -f "$task_file" ]]; then
+        echo "Error: file not found: $task_file" >&2
+        exit 1
+    fi
+
+    if [[ -z "$cron" ]]; then
+        echo "Error: --cron required" >&2
+        echo "Usage: orchestrate schedule <task-file> --cron \"0 2 * * *\"" >&2
+        exit 1
+    fi
+
+    # Resolve to absolute path
+    local abs_task_file
+    abs_task_file=$(realpath "$task_file")
+
+    # Generate job name from filename
+    local job_name
+    job_name="orchestrate:$(basename "$task_file" .md)"
+
+    # Ensure scheduler directory exists
+    mkdir -p "$SCHEDULER_HOME"
+
+    # Load existing jobs or create empty
+    local jobs="{}"
+    if [[ -f "$SCHEDULER_JOBS_FILE" ]]; then
+        jobs=$(cat "$SCHEDULER_JOBS_FILE")
+    fi
+
+    # Add/update job using jq
+    local new_job
+    new_job=$(jq -n \
+        --arg name "$job_name" \
+        --arg cron "$cron" \
+        --arg command "$SCRIPT_DIR/run.sh run \"$abs_task_file\"" \
+        --arg workdir "$(pwd)" \
+        --arg desc "Orchestrate $task_file" \
+        --argjson created "$(date +%s)" \
+        '{
+            name: $name,
+            cron: $cron,
+            command: $command,
+            workdir: $workdir,
+            enabled: true,
+            description: $desc,
+            created_at: $created
+        }')
+
+    # Merge into jobs
+    jobs=$(echo "$jobs" | jq --arg name "$job_name" --argjson job "$new_job" '.[$name] = $job')
+
+    # Save
+    echo "$jobs" > "$SCHEDULER_JOBS_FILE"
+
+    echo "Scheduled: $job_name"
+    echo "  File: $abs_task_file"
+    echo "  Cron: $cron"
+    echo "  Next run: Use 'scheduler status' to see schedule"
+}
+
+cmd_unschedule() {
+    local task_file="$1"
+
+    if [[ -z "$task_file" ]]; then
+        echo "Error: task file required" >&2
+        echo "Usage: orchestrate unschedule <task-file>" >&2
+        exit 1
+    fi
+
+    local job_name
+    job_name="orchestrate:$(basename "$task_file" .md)"
+
+    if [[ ! -f "$SCHEDULER_JOBS_FILE" ]]; then
+        echo "No scheduled jobs found." >&2
+        exit 1
+    fi
+
+    # Remove job using jq
+    local jobs
+    jobs=$(cat "$SCHEDULER_JOBS_FILE")
+
+    if echo "$jobs" | jq -e --arg name "$job_name" '.[$name]' > /dev/null 2>&1; then
+        jobs=$(echo "$jobs" | jq --arg name "$job_name" 'del(.[$name])')
+        echo "$jobs" > "$SCHEDULER_JOBS_FILE"
+        echo "Unscheduled: $job_name"
+    else
+        echo "Job not found: $job_name" >&2
+        exit 1
+    fi
+}
+
 # Main dispatch
 case "${1:-}" in
     run)
@@ -200,6 +323,14 @@ case "${1:-}" in
     resume)
         shift
         cmd_resume "$@"
+        ;;
+    schedule)
+        shift
+        cmd_schedule "$@"
+        ;;
+    unschedule)
+        shift
+        cmd_unschedule "$@"
         ;;
     -h|--help|help|"")
         show_help
