@@ -124,48 +124,77 @@ rsync_skills() {
     rsync "${opts[@]}" "$src/" "$dest/"
 }
 
-# Check if any target has newer skills than source
+# Check if any target has DIFFERENT skills than source (content-based, not timestamp)
 # Returns 0 if conflicts found (and lists them), 1 if no conflicts
+# Also sets SUGGESTED_SOURCE to the path with the most recent git commit
 check_for_newer_versions() {
     local source_dir="$1"
     local conflicts_found=0
     local conflict_details=""
-    
+    declare -A skill_versions  # skill -> "path:hash" pairs
+
     # Get list of skill directories in source
     local skills=()
     while IFS= read -r -d '' skill; do
         skills+=("$(basename "$(dirname "$skill")")")
     done < <(find "$source_dir" -name "SKILL.md" -print0 2>/dev/null)
-    
-    # Check each target for newer versions
-    IFS=':' read -ra targets <<< "$BROADCAST_TARGETS"
-    for target in "${targets[@]}"; do
-        [[ ! -d "$target" ]] && continue
-        [[ "$(realpath "$target" 2>/dev/null)" == "$(realpath "$source_dir" 2>/dev/null)" ]] && continue
-        
-        for skill in "${skills[@]}"; do
-            local source_skill="$source_dir/$skill/SKILL.md"
-            local target_skill="$target/$skill/SKILL.md"
-            
-            [[ ! -f "$source_skill" ]] && continue
-            [[ ! -f "$target_skill" ]] && continue
-            
-            # Compare modification times
-            local source_mtime=$(stat -c %Y "$source_skill" 2>/dev/null || echo 0)
-            local target_mtime=$(stat -c %Y "$target_skill" 2>/dev/null || echo 0)
-            
-            if [[ "$target_mtime" -gt "$source_mtime" ]]; then
-                conflicts_found=1
-                local target_date=$(date -d "@$target_mtime" "+%Y-%m-%d %H:%M")
-                local source_date=$(date -d "@$source_mtime" "+%Y-%m-%d %H:%M")
-                conflict_details+="  ${YELLOW}⚠${NC} $skill: $target is NEWER ($target_date vs $source_date)\n"
+
+    # Collect all versions of each skill across all targets
+    IFS=':' read -ra all_locations <<< "$source_dir:$BROADCAST_TARGETS"
+
+    for skill in "${skills[@]}"; do
+        declare -A versions_by_hash
+        local newest_commit_time=0
+        local newest_commit_path=""
+
+        for location in "${all_locations[@]}"; do
+            [[ ! -d "$location" ]] && continue
+            local skill_file="$location/$skill/SKILL.md"
+            [[ ! -f "$skill_file" ]] && continue
+
+            # Get content hash (ignores timestamps)
+            local hash=$(md5sum "$skill_file" 2>/dev/null | cut -d' ' -f1)
+            versions_by_hash["$hash"]+="$location "
+
+            # Check git commit time for this file (if in a git repo)
+            local git_dir=$(cd "$(dirname "$skill_file")" && git rev-parse --show-toplevel 2>/dev/null)
+            if [[ -n "$git_dir" ]]; then
+                local rel_path="${skill_file#$git_dir/}"
+                local commit_time=$(git -C "$git_dir" log -1 --format="%ct" -- "$rel_path" 2>/dev/null || echo 0)
+                if [[ "$commit_time" -gt "$newest_commit_time" ]]; then
+                    newest_commit_time="$commit_time"
+                    newest_commit_path="$location"
+                fi
             fi
         done
+
+        # If more than one unique hash, we have a conflict
+        local num_versions=${#versions_by_hash[@]}
+        if [[ "$num_versions" -gt 1 ]]; then
+            conflicts_found=1
+            conflict_details+="  ${YELLOW}⚠${NC} $skill: ${num_versions} different versions exist\n"
+            for hash in "${!versions_by_hash[@]}"; do
+                local locs="${versions_by_hash[$hash]}"
+                local short_hash="${hash:0:8}"
+                conflict_details+="      ${short_hash}: ${locs}\n"
+            done
+            if [[ -n "$newest_commit_path" ]]; then
+                local commit_date=$(date -d "@$newest_commit_time" "+%Y-%m-%d %H:%M")
+                conflict_details+="      ${GREEN}→ Newest git commit:${NC} $newest_commit_path ($commit_date)\n"
+                # Suggest using this path
+                SUGGESTED_SOURCE="$newest_commit_path"
+            fi
+        fi
+        unset versions_by_hash
     done
-    
+
     if [[ "$conflicts_found" -eq 1 ]]; then
-        warn "Found skills that are NEWER in other targets:"
+        warn "Found skills with DIFFERENT content across targets:"
         echo -e "$conflict_details"
+        if [[ -n "${SUGGESTED_SOURCE:-}" ]]; then
+            echo ""
+            info "Suggestion: push from $SUGGESTED_SOURCE (has newest git commits)"
+        fi
         return 0
     fi
     return 1
