@@ -52,13 +52,13 @@ Use for large-scale text extraction or summarization.
 The skill implements this Paved Path pattern:
 
 ```python
-from scillm import batch_acompletions_iter
+from scillm.batch import parallel_acompletions_iter
 
 reqs = [
     {"model": "model-id", "messages": [{"role": "user", "content": "prompt"}]}
 ]
 
-async for res in batch_acompletions_iter(reqs, concurrency=6):
+async for res in parallel_acompletions_iter(reqs, concurrency=6):
     if res["ok"]:
         print(res["content"])
 ```

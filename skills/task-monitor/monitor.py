@@ -30,7 +30,7 @@ import typer
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from rich.console import Console, Group
+from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
 from rich.panel import Panel
@@ -230,7 +230,6 @@ async def unregister_task(name: str):
     if name not in registry.tasks:
         raise HTTPException(status_code=404, detail=f"Task '{name}' not found")
     registry.unregister(name)
-    registry.unregister(name)
     return {"status": "unregistered", "name": name}
 
 
@@ -363,11 +362,6 @@ class TaskMonitorTUI:
                     current_str = f"{current[:17]}"
             else:
                 current_str = "[dim]idle[/]"
-
-            if total:
-                progress_str = f"[cyan]{bar}[/] {completed:5d}/{total:5d} ({pct:5.1f}%)"
-            else:
-                progress_str = f"[cyan]{bar}[/] {completed:5d}/??? "
 
             if total:
                 progress_str = f"[cyan]{bar}[/] {completed:5d}/{total:5d} ({pct:5.1f}%)"

@@ -87,7 +87,7 @@ def batch(
     """Run batch completions using parallel_acompletions_iter."""
     # Strict contract: Import directly from scillm
     try:
-        from scillm import batch_acompletions_iter
+        from scillm.batch import parallel_acompletions_iter as batch_acompletions_iter
     except ImportError:
         console.print("[red]Error: scillm not installed. Run 'uv sync' or 'pip install scillm'.[/red]")
         raise typer.Exit(1)
