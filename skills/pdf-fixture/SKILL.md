@@ -1,9 +1,9 @@
 ---
 name: pdf-fixture
 description: >
-  Generate test PDF fixtures with known, extractable content. Creates PDFs with
-  sections, tables, figures, requirements, equations, and annotations. Use when
-  user needs "create test PDF", "generate PDF fixture", "make sample PDF for testing".
+  Generate complete PDF test fixtures combining proper ReportLab tables and AI-generated
+  images. Orchestrates fixture-table and fixture-image skills. Creates PDFs designed
+  to test/expose extractor bugs.
 allowed-tools: Bash, Read, Write
 triggers:
   - create test PDF
@@ -11,38 +11,74 @@ triggers:
   - make sample PDF
   - PDF for testing
   - create PDF with tables
+  - extractor test fixture
+  - bug reproduction pdf
 metadata:
-  short-description: Create test PDF fixtures from JSON specs
+  short-description: Complete PDF fixtures for extractor testing (tables + images)
 ---
 
 # PDF Fixture Generator
 
-Generate deterministic test PDFs with known, extractable content for testing extraction pipelines.
+Generate complete PDF test fixtures that combine:
+- **Proper ReportLab tables** via `fixture-table` (detectable by Marker/Camelot)
+- **AI-generated images** via `fixture-image` (diagrams, decorative elements)
+- **Text content** with various formatting challenges
 
-**Self-contained skill** - auto-installs via `uv run` from git (no pre-installation needed).
+## Why This Exists
 
-## Simplest Usage
+Creating test PDFs that properly exercise extractors requires:
+1. Tables built with ReportLab (not raw drawing commands)
+2. Images that test VLM classification (decorative vs data)
+3. Edge cases: empty sections, malformed titles, nested structures
+
+This skill orchestrates sibling skills for modular, reusable fixtures.
+
+## Quick Start (New)
 
 ```bash
-# Via wrapper (recommended - auto-installs)
-.agents/skills/pdf-fixture/run.sh --example --name test_fixture
+cd .pi/skills/pdf-fixture
+
+# Generate the extractor bug reproduction fixture
+uv run generate.py extractor-bugs --output test.pdf
+
+# Generate a simple fixture
+uv run generate.py simple --output simple_test.pdf
+
+# List available presets
+uv run generate.py list-presets
+
+# Verify table detection
+uv run generate.py verify test.pdf
 ```
 
-## Common Patterns
+## Presets
 
-### Create from JSON spec file
+| Preset | Description | Tests |
+|--------|-------------|-------|
+| `extractor-bugs` | Reproduces known extractor issues | Empty sections, false tables, malformed titles |
+| `simple` | Basic PDF with table and text | Basic extraction |
+
+## Sibling Skills Used
+
+| Skill | Purpose |
+|-------|---------|
+| `fixture-table` | Creates ReportLab tables (Marker-detectable) |
+| `fixture-image` | AI-generated images with caching |
+
+Cached images from `fixture-image/cached_images/`:
+- `decorative.png` - Cover illustration
+- `flowchart.png` - Process diagram
+- `network_arch.png` - Architecture diagram
+
+## Legacy Usage (Still Supported)
+
 ```bash
+# Via wrapper (uses extractor project)
+./run.sh --example --name test_fixture
 ./run.sh --spec content_spec.json --name my_fixture
 ```
 
-### Create from inline JSON
-```bash
-./run.sh \
-  --inline '{"sections": [{"title": "Introduction", "content": [{"type": "text", "text": "Hello world"}]}]}' \
-  --name inline_test
-```
-
-## JSON Spec Format
+## JSON Spec Format (Legacy)
 
 ```json
 {
@@ -53,9 +89,7 @@ Generate deterministic test PDFs with known, extractable content for testing ext
       "level": 1,
       "content": [
         {"type": "text", "text": "This document describes requirements."},
-        {"type": "requirement", "id": "REQ-001", "text": "System shall process in 1s"},
-        {"type": "table", "columns": ["ID", "Name"], "rows": [["1", "Alice"], ["2", "Bob"]]},
-        {"type": "equation", "latex": "E = mc^2", "label": "energy"},
+        {"type": "table", "columns": ["ID", "Name"], "rows": [["1", "Alice"]]},
         {"type": "figure", "description": "Architecture diagram"}
       ]
     }
@@ -63,26 +97,18 @@ Generate deterministic test PDFs with known, extractable content for testing ext
 }
 ```
 
-## Content Types
-
-| Type | Required Fields | Optional |
-|------|-----------------|----------|
-| `text` | `text` | - |
-| `requirement` | `id`, `text` | `type` (Functional/NonFunctional) |
-| `table` | `columns` | `rows` (list or count) |
-| `equation` | `latex` or `equation` | `label` |
-| `figure` | `description` | `width`, `height` |
-| `annotation` | `annot_type` (highlight/note/box) | `content` |
-
 ## Output
 
-Creates in `fixtures/{name}/`:
-- `source.pdf` - Generated PDF with known content
-- `SPEC.md` - Auto-generated with expected extraction values
+- `extractor_bugs_fixture.pdf` - Cached in `cached_fixtures/`
+- Custom output via `--output` flag
 
-## Notes
+## Dependencies
 
-The wrapper script (`run.sh`) automatically:
-- Installs extractor from git via `uv run`
-- Handles all dependencies (PyMuPDF, etc.)
-- No manual venv activation needed
+```toml
+dependencies = [
+    "pymupdf>=1.23.0",
+    "reportlab>=4.0.0",
+    "typer>=0.9.0",
+    "pillow>=10.0.0",
+]
+```
