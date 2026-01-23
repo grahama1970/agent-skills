@@ -110,6 +110,132 @@ For overnight runs, register a scheduler job so training survives terminal drops
   --command ".agent/skills/tts-train/run.sh train-local configs/tts/<voice>_xtts.yaml | tee logs/tts/<voice>_train.log"
 ```
 
+## Troubleshooting
+
+### CUDA Library Error: libcudnn_ops_infer.so.8
+
+If faster-whisper/WhisperX crashes with:
+```
+Could not load library libcudnn_ops_infer.so.8: cannot open shared object file
+```
+
+**Fix**: Set LD_LIBRARY_PATH before running:
+```bash
+export LD_LIBRARY_PATH=$(python -c 'import os; import nvidia.cublas.lib; import nvidia.cudnn.lib; print(os.path.dirname(nvidia.cublas.lib.__file__) + ":" + os.path.dirname(nvidia.cudnn.lib.__file__))')
+```
+
+Or use the Docker container with cuDNN pre-installed:
+```bash
+docker run --rm -it --gpus all -v $(pwd):/workspace memory-tts:cu121 python ...
+```
+
+### Too Many Short Segments (Low Clip Yield)
+
+Whisper's VAD often produces very short segments (1-1.5s) that get rejected by the
+`--min-sec 1.5` threshold. **Merge adjacent segments** before extraction:
+
+```python
+# Merge segments with gap < 0.5s until 2-10s target duration
+MIN_TARGET, MAX_TARGET, MAX_GAP = 2.0, 10.0, 0.5
+merged = []
+current = None
+for seg in segments:
+    if current is None:
+        current = seg.copy()
+        continue
+    gap = seg['start'] - current['end']
+    combined_dur = seg['end'] - current['start']
+    if gap <= MAX_GAP and combined_dur <= MAX_TARGET and (current['end'] - current['start']) < MIN_TARGET:
+        current['end'] = seg['end']
+        current['text'] += ' ' + seg['text']
+    else:
+        merged.append(current)
+        current = seg.copy()
+if current:
+    merged.append(current)
+```
+
+This typically reduces 44k segments → 22k with mean 2s duration, greatly improving yield.
+
+### Using Pre-existing Segments
+
+Skip transcription if you already have segments:
+```bash
+.agent/skills/tts-train/run.sh ingest \
+  <audio.m4b> <voice_name> <output_dir> \
+  --segments-jsonl existing_segments.jsonl
+```
+
+### XTTS GPTTrainer NaN Loss
+
+If XTTS training shows `loss: nan` from step 0:
+```
+loss_text_ce: nan  (nan)
+loss_mel_ce: nan  (nan)
+loss: nan  (nan)
+```
+
+**Cause**: Mixed precision (fp16) causes numerical instability with GPTTrainer.
+
+**Fix**: Disable mixed precision in your training config:
+```python
+trainer_config = GPTTrainerConfig(
+    ...
+    mixed_precision=False,  # CRITICAL: fp16 causes NaN
+    precision="float32",
+    ...
+)
+```
+
+Trade-off: ~2x slower but numerically stable. Reference: [GitHub Issue #3988](https://github.com/coqui-ai/TTS/issues/3988)
+
+### XTTS Model Size Mismatch
+
+If you get size mismatch errors loading checkpoint:
+```
+RuntimeError: size mismatch for gpt.mel_embedding.weight: copying a param with shape torch.Size([1026, 1024]) from checkpoint, the shape in current model is torch.Size([8194, 1024])
+```
+
+**Cause**: Using `XttsConfig` instead of `GPTTrainerConfig`, or wrong model args.
+
+**Fix**: Use `GPTTrainer` with correct `GPTArgs`:
+```python
+from TTS.tts.layers.xtts.trainer.gpt_trainer import (
+    GPTArgs, GPTTrainer, GPTTrainerConfig, XttsAudioConfig
+)
+
+model_args = GPTArgs(
+    gpt_num_audio_tokens=1026,  # Must match pre-trained
+    gpt_start_audio_token=1024,
+    gpt_stop_audio_token=1025,
+    ...
+)
+```
+
+### Missing dvae.pth for Training
+
+If you get:
+```
+RuntimeError: You need to specify config.model_args.dvae_checkpoint path
+```
+
+**Fix**: Download the training checkpoint files from HuggingFace:
+```bash
+cd ~/.local/share/tts/tts_models--multilingual--multi-dataset--xtts_v2/
+wget https://huggingface.co/coqui/XTTS-v2/resolve/main/dvae.pth
+wget https://huggingface.co/coqui/XTTS-v2/resolve/main/mel_stats.pth
+```
+
+The inference model only includes `model.pth` and `vocab.json`. Training requires `dvae.pth` and `mel_stats.pth`.
+
+### Recommended Training Config
+
+For efficient XTTS fine-tuning:
+- `batch_size * grad_accumulation >= 252`
+- `learning_rate = 5e-6` (not higher!)
+- `mixed_precision = False` (fp16 causes NaN)
+- Audio at 22050Hz input, 24000Hz output
+
 ## Post-Run Reporting (Batch-Report Skill)
 
 If you want a concise dataset report, emit a `.batch_state.json` and run batch-report:

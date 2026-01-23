@@ -269,6 +269,111 @@ test_parallel_parsing() {
 }
 
 # ============================================================================
+# Test: Parser edge cases
+# ============================================================================
+test_parser_edge_cases() {
+    echo ""
+    echo "=== Parser Edge Cases Tests ==="
+
+    # Edge cases fixture should pass preflight
+    if "$SKILL_DIR/preflight.sh" "$FIXTURES_DIR/edge_cases.md" >/dev/null 2>&1; then
+        pass "Edge cases file passes preflight"
+    else
+        fail "Edge cases file failed preflight"
+    fi
+
+    # Test: Colons in task title
+    if grep -q "colon: in title" "$FIXTURES_DIR/edge_cases.md"; then
+        pass "Task with colon in title exists"
+    else
+        fail "Task with colon in title missing"
+    fi
+
+    # Test: Alternative numbering (3. instead of Task 3)
+    if grep -qE '^\s*-\s*\[ \]\s*3\.' "$FIXTURES_DIR/edge_cases.md"; then
+        pass "Alternative numbering format (3.) detected"
+    else
+        fail "Alternative numbering format not found"
+    fi
+
+    # Test: Already completed task ([x])
+    if grep -qE '^\s*-\s*\[x\]' "$FIXTURES_DIR/edge_cases.md"; then
+        pass "Completed task ([x]) detected"
+    else
+        fail "Completed task marker not found"
+    fi
+
+    # Test: Multiline description (should have multiple lines after Task 5)
+    local desc_lines
+    desc_lines=$(sed -n '/Task 5/,/^## /p' "$FIXTURES_DIR/edge_cases.md" | grep -c "^\s*[a-zA-Z]")
+    if [[ "$desc_lines" -ge 3 ]]; then
+        pass "Multiline description preserved ($desc_lines lines)"
+    else
+        fail "Multiline description not preserved (only $desc_lines lines)"
+    fi
+}
+
+# ============================================================================
+# Test: Questions/Blockers parsing variations
+# ============================================================================
+test_questions_variations() {
+    echo ""
+    echo "=== Questions/Blockers Variation Tests ==="
+
+    # Create temp files with different question formats
+    local temp_dir
+    temp_dir=$(mktemp -d)
+
+    # Test: "None" should pass
+    cat > "$temp_dir/none.md" << 'EOF'
+# Task List: Test
+## Tasks
+- [ ] **Task 1**: Test
+  - Agent: explore
+## Questions/Blockers
+None
+EOF
+    if "$SKILL_DIR/preflight.sh" "$temp_dir/none.md" >/dev/null 2>&1; then
+        pass "Questions: 'None' passes"
+    else
+        fail "Questions: 'None' should pass"
+    fi
+
+    # Test: "N/A" should pass
+    cat > "$temp_dir/na.md" << 'EOF'
+# Task List: Test
+## Tasks
+- [ ] **Task 1**: Research task
+  - Agent: explore
+## Questions/Blockers
+- N/A
+EOF
+    if "$SKILL_DIR/preflight.sh" "$temp_dir/na.md" >/dev/null 2>&1; then
+        pass "Questions: 'N/A' passes"
+    else
+        fail "Questions: 'N/A' should pass"
+    fi
+
+    # Test: Actual question should block
+    cat > "$temp_dir/question.md" << 'EOF'
+# Task List: Test
+## Tasks
+- [ ] **Task 1**: Research task
+  - Agent: explore
+## Questions/Blockers
+- What database should we use?
+EOF
+    if ! "$SKILL_DIR/preflight.sh" "$temp_dir/question.md" >/dev/null 2>&1; then
+        pass "Actual question blocks execution"
+    else
+        fail "Actual question should block execution"
+    fi
+
+    # Cleanup
+    rm -rf "$temp_dir"
+}
+
+# ============================================================================
 # Main
 # ============================================================================
 main() {
@@ -282,18 +387,24 @@ main() {
     case "$filter" in
         parsing)
             test_parallel_parsing
+            test_parser_edge_cases
             ;;
         parallel)
             test_parallel_parsing
             ;;
         preflight)
             test_preflight_validation
+            test_questions_variations
             ;;
         quality)
             test_quality_gate_detection
             ;;
         scheduler)
             test_scheduler_integration
+            ;;
+        edge)
+            test_parser_edge_cases
+            test_questions_variations
             ;;
         all)
             test_script_availability
@@ -302,10 +413,12 @@ main() {
             test_quality_gate_detection
             test_scheduler_integration
             test_parallel_parsing
+            test_parser_edge_cases
+            test_questions_variations
             ;;
         *)
             echo "Unknown filter: $filter" >&2
-            echo "Usage: $0 [all|parsing|parallel|preflight|quality|scheduler]" >&2
+            echo "Usage: $0 [all|parsing|parallel|preflight|quality|scheduler|edge]" >&2
             exit 1
             ;;
     esac

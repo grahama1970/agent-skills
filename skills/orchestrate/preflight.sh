@@ -33,8 +33,9 @@ FAILED=0
 # ============================================================================
 echo -e "${YELLOW}[1/5] Questions/Blockers...${NC}"
 
-# Look for Questions/Blockers section and check if it has items
-BLOCKERS=$(sed -n '/^## Questions\/Blockers/,/^##/p' "$TASK_FILE" | grep -E '^\s*-\s*[^N]' | grep -v 'None' | grep -v 'N/A' | head -5)
+# Look for Questions/Blockers section (case-insensitive, flexible spacing)
+# Matches: "## Questions/Blockers", "## Questions / Blockers", "## QUESTIONS/BLOCKERS"
+BLOCKERS=$(sed -n '/^##[[:space:]]*[Qq]uestions[[:space:]]*\/[[:space:]]*[Bb]lockers/I,/^##/p' "$TASK_FILE" 2>/dev/null | grep -E '^\s*-\s*[^N]' | grep -vi 'none' | grep -vi 'n/a' | grep -vi 'nothing' | grep -vi 'no questions' | grep -vi 'no blockers' | head -5)
 
 if [ -n "$BLOCKERS" ]; then
     echo -e "      ${RED}❌ Unresolved blockers found:${NC}"
@@ -102,8 +103,12 @@ fi
 # ============================================================================
 echo -e "${YELLOW}[4/5] Definition of Done defined...${NC}"
 
-# Extract tasks and check each has Definition of Done
-TASKS=$(grep -E '^\s*-\s*\[ \]\s*\*\*Task' "$TASK_FILE" | sed 's/.*\*\*\(Task [0-9]*\)\*\*.*/\1/')
+# Extract tasks - flexible patterns matching orchestrate.ts parser:
+# - [ ] **Task 1**: Title
+# - [ ] Task 1: Title
+# - [ ] 1. Title
+# Case insensitive, allows extra spaces
+TASKS=$(grep -iE '^\s*-\s*\[[ xX]?\]\s*(\*\*)?[Tt]ask\s*[0-9]+|^\s*-\s*\[[ xX]?\]\s*[0-9]+\.' "$TASK_FILE" | sed -E 's/.*([Tt]ask\s*[0-9]+|[0-9]+\.).*/Task \1/' | sed 's/Task Task/Task/' | sed 's/\..*//')
 
 if [ -z "$TASKS" ]; then
     echo -e "      ${YELLOW}⚠️  No tasks found${NC}"
@@ -114,10 +119,23 @@ else
 
     while IFS= read -r task; do
         TASK_COUNT=$((TASK_COUNT + 1))
+        # Extract task number for flexible matching
+        TASK_NUM=$(echo "$task" | grep -oE '[0-9]+')
+
+        # Build patterns that match both formats:
+        # - **Task N**: or Task N: or N.
+        # Use flexible section extraction
+        SECTION=$(sed -n "/\*\*[Tt]ask\s*$TASK_NUM\*\*\|[Tt]ask\s*$TASK_NUM:\|-\s*\[\s*[xX ]\?\s*\]\s*$TASK_NUM\./,/^\s*-\s*\[\s*[xX ]\?\s*\]\s*\(\*\*[Tt]ask\|[Tt]ask\s*[0-9]\|[0-9]\+\.\)/p" "$TASK_FILE" 2>/dev/null || true)
+
+        # Fallback: if section is empty, try simpler extraction
+        if [ -z "$SECTION" ]; then
+            SECTION=$(grep -A 20 -E "\*\*[Tt]ask\s*$TASK_NUM\*\*|[Tt]ask\s*$TASK_NUM:|$TASK_NUM\." "$TASK_FILE" | head -20)
+        fi
+
         # Check if task is explore/research (N/A is OK)
-        IS_EXPLORE=$(sed -n "/\*\*$task\*\*/,/^\s*-\s*\[ \]\s*\*\*Task/p" "$TASK_FILE" | grep -i 'explore\|research' | head -1)
-        HAS_DOD=$(sed -n "/\*\*$task\*\*/,/^\s*-\s*\[ \]\s*\*\*Task/p" "$TASK_FILE" | grep -i 'Definition of Done' | head -1)
-        HAS_TEST=$(sed -n "/\*\*$task\*\*/,/^\s*-\s*\[ \]\s*\*\*Task/p" "$TASK_FILE" | grep -E 'Test:.*test_|Test:.*\.py' | head -1)
+        IS_EXPLORE=$(echo "$SECTION" | grep -i 'explore\|research' | head -1)
+        HAS_DOD=$(echo "$SECTION" | grep -i 'Definition of Done' | head -1)
+        HAS_TEST=$(echo "$SECTION" | grep -E 'Test:.*test_|Test:.*\.py' | head -1)
 
         if [ -n "$IS_EXPLORE" ]; then
             echo -e "      ${GREEN}✅ $task (explore/research - N/A)${NC}"

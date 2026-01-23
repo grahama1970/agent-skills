@@ -33,6 +33,26 @@ ORCHESTRATE_DIR="${ORCHESTRATE_HOME:-$HOME/.pi/skills/orchestrate}"
 SCHEDULER_HOME="${SCHEDULER_HOME:-$HOME/.pi/scheduler}"
 SCHEDULER_JOBS_FILE="$SCHEDULER_HOME/jobs.json"
 
+# Check for required dependencies
+check_dependencies() {
+    local missing=()
+
+    if ! command -v jq &>/dev/null; then
+        missing+=("jq")
+    fi
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo "Error: Missing required dependencies: ${missing[*]}" >&2
+        echo "" >&2
+        echo "Install with:" >&2
+        echo "  Ubuntu/Debian: sudo apt install ${missing[*]}" >&2
+        echo "  macOS: brew install ${missing[*]}" >&2
+        echo "  Arch: sudo pacman -S ${missing[*]}" >&2
+        return 1
+    fi
+    return 0
+}
+
 show_help() {
     cat <<'EOF'
 Orchestrate - Task execution with quality gates
@@ -77,38 +97,100 @@ cmd_run() {
         exit 1
     fi
 
+    # Run preflight check for all backends
+    if [[ -x "$SCRIPT_DIR/preflight.sh" ]]; then
+        echo "Running preflight check..."
+        if ! "$SCRIPT_DIR/preflight.sh" "$task_file"; then
+            echo "Error: Preflight check failed. Resolve issues before running." >&2
+            exit 1
+        fi
+        echo ""
+    fi
+
     local backend
     backend=$(detect_backend)
 
     case "$backend" in
         pi)
-            # Use pi's orchestrate tool directly
+            # Use pi's orchestrate tool directly (full features)
             pi --tool orchestrate --task-file "$task_file"
             ;;
         claude)
-            # Claude Code: use print mode with the task file
-            echo "Running with Claude Code..."
-            local prompt="Execute the tasks in $task_file sequentially. For each task:
-1. Read the task description
-2. Implement it fully
-3. Self-verify by running: $ORCHESTRATE_DIR/quality-gate.sh
-4. If tests fail, FIX the code and retry until they pass
-5. Mark the task complete with [x] when done
+            # Claude Code: Limited functionality warning
+            echo "========================================"
+            echo "WARNING: Running with Claude Code"
+            echo "Limited features available:"
+            echo "  - No parallel execution"
+            echo "  - No pause/resume"
+            echo "  - No task-monitor integration"
+            echo "  - No memory recall"
+            echo "For full features, use: pi --tool orchestrate"
+            echo "========================================"
+            echo ""
 
-Start with the first incomplete task."
-            claude --print -p "$prompt"
+            # Read task file content to include in prompt
+            local task_content
+            task_content=$(cat "$task_file")
+
+            local prompt="You are executing tasks from a task file. Follow these rules strictly:
+
+## Task File Content
+\`\`\`markdown
+$task_content
+\`\`\`
+
+## Execution Rules
+1. Execute tasks in order, respecting Dependencies
+2. For each task:
+   a. Read and understand the task description
+   b. Implement it fully
+   c. Run quality gate: $SCRIPT_DIR/quality-gate.sh
+   d. If tests fail, FIX the code and retry until they pass
+   e. Update the task file: change [ ] to [x] when done
+3. Skip tasks already marked [x]
+4. Stop if you encounter unresolved Questions/Blockers
+
+Start with the first incomplete task (marked [ ])."
+
+            claude -p "$prompt"
             ;;
         codex)
-            # Codex: similar approach
-            echo "Running with Codex..."
-            local prompt="Execute the tasks in $task_file sequentially. For each task:
-1. Read the task description
-2. Implement it fully
-3. Self-verify by running: $ORCHESTRATE_DIR/quality-gate.sh
-4. If tests fail, FIX the code and retry until they pass
-5. Mark the task complete with [x] when done
+            # Codex: Limited functionality warning
+            echo "========================================"
+            echo "WARNING: Running with Codex"
+            echo "Limited features available:"
+            echo "  - No parallel execution"
+            echo "  - No pause/resume"
+            echo "  - No task-monitor integration"
+            echo "  - No memory recall"
+            echo "For full features, use: pi --tool orchestrate"
+            echo "========================================"
+            echo ""
 
-Start with the first incomplete task."
+            # Read task file content
+            local task_content
+            task_content=$(cat "$task_file")
+
+            local prompt="You are executing tasks from a task file. Follow these rules strictly:
+
+## Task File Content
+\`\`\`markdown
+$task_content
+\`\`\`
+
+## Execution Rules
+1. Execute tasks in order, respecting Dependencies
+2. For each task:
+   a. Read and understand the task description
+   b. Implement it fully
+   c. Run quality gate: $SCRIPT_DIR/quality-gate.sh
+   d. If tests fail, FIX the code and retry until they pass
+   e. Update the task file: change [ ] to [x] when done
+3. Skip tasks already marked [x]
+4. Stop if you encounter unresolved Questions/Blockers
+
+Start with the first incomplete task (marked [ ])."
+
             codex exec --full-auto -p "$prompt"
             ;;
         *)
@@ -119,6 +201,8 @@ Start with the first incomplete task."
 }
 
 cmd_status() {
+    check_dependencies || exit 1
+
     if [[ ! -d "$STATE_DIR" ]]; then
         echo "No orchestration sessions found."
         echo "Run 'orchestrate run <task-file>' to start."
@@ -197,6 +281,8 @@ cmd_resume() {
 }
 
 cmd_schedule() {
+    check_dependencies || exit 1
+
     local task_file="$1"
     shift
     local cron=""
@@ -281,6 +367,8 @@ cmd_schedule() {
 }
 
 cmd_unschedule() {
+    check_dependencies || exit 1
+
     local task_file="$1"
 
     if [[ -z "$task_file" ]]; then

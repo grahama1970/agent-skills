@@ -333,6 +333,27 @@ subsequent sections of this document.
 which is a common technique used in secure deletion.""",
     },
     # === NEW TRICK FROM ROUND 2 TESTING (2026-01-23) ===
+    "allcaps-header-missed": {
+        "description": "ALL-CAPS headers not detected while numbered list items are (false positive)",
+        "content": """Legal Over-the-Air Spoofing of GPS
+and the Resulting Effects on Autonomous Vehicles
+
+INTRODUCTION/BACKGROUND
+
+Many systems rely on an accurate global positioning system (GPS) signal for
+normal operation. GPS is vulnerable to external interference. The spoofing
+attack was performed:
+
+1. inside a fully enclosed Faraday cage
+2. under an experimental license from the FCC
+3. with proper safety precautions
+
+A user can insert an offset in any direction and by any distance desired.
+
+METHODOLOGY
+
+The test setup consisted of the following components...""",
+    },
     "numbered-sections-as-text": {
         "description": "Numbered sections that Marker classifies as plain Text (not headers)",
         "content": """SATELLITE HACKING:
