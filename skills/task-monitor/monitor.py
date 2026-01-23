@@ -18,7 +18,9 @@ Usage:
 """
 from __future__ import annotations
 
+import asyncio
 import json
+import subprocess
 import os
 import signal
 import time
@@ -57,6 +59,10 @@ class TaskConfig(BaseModel):
     state_file: str
     total: Optional[int] = None
     description: Optional[str] = None
+    on_complete: Optional[str] = None  # Command or "batch-report" to auto-run
+    batch_type: Optional[str] = None  # For batch-report integration
+    completed_at: Optional[str] = None  # Timestamp when task reached 100%
+    hook_executed: bool = False  # Track if on_complete was already run
 
 
 class TaskRegistry:
@@ -253,6 +259,79 @@ async def update_task_state(name: str, state: dict):
         raise HTTPException(status_code=500, detail=f"Failed to write state file: {e}")
         
     return {"status": "updated", "name": name}
+
+
+@app_api.on_event("startup")
+async def start_hook_poller():
+    """Start background poller for task completion hooks."""
+    asyncio.create_task(monitor_hooks())
+
+
+async def monitor_hooks():
+    """Poll tasks and execute on_complete hooks."""
+    while True:
+        try:
+            # Reload registry to get latest state
+            # (In a real app, maybe optimize this, but for now file read is fine)
+            # Actually registry is loaded once globaly. But register() saves it.
+            # If creating a new registry() object, it reloads.
+            # Let's use the global registry but maybe reload it occasionally?
+            # Actually the global registry variable 'registry' is what we use.
+            # But if other processes update registry.json, we might miss it if we don't reload.
+            # Let's reload.
+            current_registry = TaskRegistry()
+            
+            for name, task in current_registry.tasks.items():
+                if task.on_complete and not task.hook_executed:
+                    status = get_task_status(task)
+                    completed = status.get("completed", 0) or 0
+                    total = task.total
+                    
+                    if total and completed >= total:
+                        # Task complete! Run hook.
+                        cmd = task.on_complete
+                        
+                        # Helper: "batch-report" shortcut
+                        if cmd == "batch-report":
+                             path = Path(task.state_file).parent
+                             # Assume report.py is in same skill group or path
+                             # We'll use 'uv run report.py' assuming we are in correct dir?
+                             # No, safer to use absolute path to report.py if known.
+                             # But we don't know where report.py is easily here.
+                             # We'll assume 'batch-report' skill is installed.
+                             # Better: simple shell command.
+                             
+                             batch_report_script = Path.home() / ".pi" / "skills" / "batch-report" / "report.py"
+                             if not batch_report_script.exists():
+                                 # Try alternate locations
+                                 batch_report_script = Path.home() / ".agent" / "skills" / "batch-report" / "report.py"
+
+                             if batch_report_script.exists():
+                                 cmd = f"uv run {batch_report_script} analyze {path}"
+                                 # We can't auto-send because we don't know where to send.
+
+                             else:
+                                 print(f"[Hook] Error: batch-report script not found")
+                                 continue
+
+                        # Replace placeholders
+                        if "{output_dir}" in cmd:
+                            cmd = cmd.format(output_dir=Path(task.state_file).parent)
+
+                        console.print(f"[green][Hook] Executing: {cmd}[/]")
+                        
+                        # Execute in background (detached)
+                        subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        
+                        # Mark executed
+                        task.hook_executed = True
+                        task.completed_at = datetime.now().isoformat()
+                        current_registry.register(task) # Save updates to file
+
+        except Exception as e:
+            console.print(f"[red][Hook] Error: {e}[/]")
+            
+        await asyncio.sleep(5)
 
 
 # =============================================================================
@@ -506,9 +585,18 @@ def register(
     state: str = typer.Option(..., "--state", "-s", help="Path to state file"),
     total: int = typer.Option(None, "--total", "-t", help="Total items to process"),
     description: str = typer.Option(None, "--desc", "-d", help="Task description"),
+    on_complete: str = typer.Option(None, "--on-complete", help="Command to run on completion (or 'batch-report')"),
+    batch_type: str = typer.Option(None, "--batch-type", "-b", help="Batch type for reporting"),
 ):
     """Register a task to monitor."""
-    config = TaskConfig(name=name, state_file=state, total=total, description=description)
+    config = TaskConfig(
+        name=name, 
+        state_file=state, 
+        total=total, 
+        description=description,
+        on_complete=on_complete,
+        batch_type=batch_type,
+    )
     registry = TaskRegistry()
     registry.register(config)
     console.print(f"[green]Registered task: {name}[/]")

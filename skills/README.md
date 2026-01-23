@@ -141,6 +141,8 @@ Pi reads this body when the skill is activated and follows the instructions.
 | **youtube-transcripts** | Extract video transcripts        | "get transcript", "youtube transcript" |
 | **pdf-fixture**         | Generate test PDFs               | "create test PDF"                      |
 | **distill**             | Extract knowledge from documents | "distill this", "extract knowledge"    |
+| **tts-horus**           | Horus TTS dataset + training     | "horus tts", "voice coloring"          |
+| **tts-train**           | TTS dataset + training pipeline  | "tts train", "voice cloning"           |
 
 ### Knowledge Management
 

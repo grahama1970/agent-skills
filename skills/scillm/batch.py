@@ -146,72 +146,67 @@ def batch(
             req["response_format"] = {"type": "json_object"}
         reqs.append(req)
 
-    # 3. Execute with Iterator Pattern
+    # 3. Execute with Iterator Pattern & Stream to File
     async def _run():
         console.print(f"[bold blue]Processing {len(reqs)} items (concurrency={concurrency})...[/bold blue]")
         
-        results = []
         ok_count = 0
         err_count = 0
 
-        # batch_acompletions_iter yields results as they complete
-        async for res in batch_acompletions_iter(
-            reqs,
-            api_base=api_base,
-            api_key=api_key,
-            custom_llm_provider="openai_like",
-            concurrency=concurrency,
-            timeout=timeout,
-            wall_time_s=wall_time,
-            response_format={"type": "json_object"} if json_mode else None,
-            tenacious=False,
-            schema=schema_obj if (schema_obj and json_mode) else None,
-            retry_invalid_json=retry_invalid_json if json_mode else 0,
-            repair_invalid_json=repair_invalid_json if json_mode else False,
-        ):
-            # Contract: res contains index, status, ok, error, content
-            results.append(res)
-            
-            if res.get("ok"):
-                ok_count += 1
-                # Optional: print progress dot
-                print(".", end="", flush=True, file=sys.stderr)
-            else:
-                err_count += 1
-                print("x", end="", flush=True, file=sys.stderr)
+        # Open file for streaming output (line buffered)
+        with open(output, "w") if output else sys.stdout as f_out:
+            # batch_acompletions_iter yields results as they complete
+            async for res in batch_acompletions_iter(
+                reqs,
+                api_base=api_base,
+                api_key=api_key,
+                custom_llm_provider="openai_like",
+                concurrency=concurrency,
+                timeout=timeout,
+                wall_time_s=wall_time,
+                response_format={"type": "json_object"} if json_mode else None,
+                tenacious=False,
+                schema=schema_obj if (schema_obj and json_mode) else None,
+                retry_invalid_json=retry_invalid_json if json_mode else 0,
+                repair_invalid_json=repair_invalid_json if json_mode else False,
+            ):
+                # Contract: res contains index, status, ok, error, content
+                
+                # Write immediately to file
+                item = {
+                    "index": res.get("index"),
+                    "ok": res.get("ok"),
+                    "status": res.get("status"),
+                }
+                
+                if res.get("ok"):
+                    # Success
+                    ok_count += 1
+                    item["content"] = res.get("content")
+                    print(".", end="", flush=True, file=sys.stderr)
+                else:
+                    # Failure
+                    err_count += 1
+                    item["error"] = res.get("error")
+                    print("x", end="", flush=True, file=sys.stderr)
+                
+                # Write line
+                out_line = json.dumps(item)
+                if output:
+                    f_out.write(out_line + "\n")
+                    f_out.flush()
+                else:
+                    print(out_line)
         
         print("", file=sys.stderr) # Newline
-        return results, ok_count, err_count
+        return ok_count, err_count
 
-    results, ok_count, err_count = asyncio.run(_run())
+    ok_count, err_count = asyncio.run(_run())
 
-    # 4. Output Results
-    out_lines = []
-    # Sort results to match input order? Iterator yields as they finish, so index check is needed if order matters.
-    # We will just dump them with index.
-    results.sort(key=lambda x: x.get("index", 0))
-
-    for r in results:
-        # Standardize output format
-        item = {
-            "index": r.get("index"),
-            "ok": r.get("ok"),
-            "status": r.get("status"),
-        }
-        if r.get("ok"):
-            item["content"] = r.get("content")
-        else:
-            item["error"] = r.get("error")
-        out_lines.append(json.dumps(item))
-
+    # 4. Summary
     if output:
-        output.write_text("\n".join(out_lines))
-        console.print(f"[green]Wrote {len(out_lines)} results to {output}[/green]")
-    else:
-        for line in out_lines:
-            print(line)
-
-    console.print(f"[bold]Summary:[/bold] {ok_count} OK, {err_count} Failed")
+        console.print(f"Wrote {len(reqs)} results to {output}")
+    console.print(f"Summary: [green]{ok_count} OK[/green], [red]{err_count} Failed[/red]")
     if err_count > 0:
         raise typer.Exit(1)
 

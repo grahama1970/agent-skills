@@ -1,0 +1,14 @@
+[project]
+name = "tts-train-skill"
+version = "0.1.0"
+description = "Self-contained TTS training environment for Horus XTTS pipeline."
+requires-python = ">=3.10,<3.12"
+dependencies = [
+  "TTS==0.22.0",
+  "transformers==4.33.3",
+  "tensorboard>=2.15.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

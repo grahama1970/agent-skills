@@ -40,6 +40,18 @@ Simple file-based inter-agent message system. Allows agents working on different
 - Passing information between project workspaces
 - Any cross-project agent communication
 
+## Proactive Checking (Important!)
+
+**Agents should check inbox automatically when:**
+
+- Starting a new session
+- User mentions another agent or project by name
+- User says "check your inbox" or similar
+- Switching projects or context
+- Before starting major work (in case blockers exist)
+
+**If you're an AI agent reading this:** Run `.agents/skills/agent-inbox/agent-inbox check` proactively when the user mentions inter-project communication. Don't wait to be explicitly told.
+
 ## Running the Skill (No Global Install Needed)
 
 The repo already includes a wrapper script (`.agents/skills/agent-inbox/agent-inbox`). Run it directly or invoke the Python entrypoint—no global install or PATH hacks required.
@@ -224,14 +236,15 @@ Each message:
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AGENT_INBOX_DIR` | Inbox directory location | `~/.agent-inbox` |
-| `CLAUDE_PROJECT` | Current project name (for `from` field) | `unknown` |
+| Variable          | Description                             | Default          |
+| ----------------- | --------------------------------------- | ---------------- |
+| `AGENT_INBOX_DIR` | Inbox directory location                | `~/.agent-inbox` |
+| `CLAUDE_PROJECT`  | Current project name (for `from` field) | `unknown`        |
 
 ## Workflow Example
 
 **Agent A (extractor project) finds bug:**
+
 ```bash
 .agents/skills/agent-inbox/agent-inbox send --to scillm --type bug --priority high "
 Bug in scillm/extras/providers.py:328
@@ -248,12 +261,14 @@ Suggested fix: Rename line 345 'options = dict(options or {})' to
 ```
 
 **User switches to scillm project:**
+
 ```bash
 cd /path/to/scillm
 claude  # Or .agents/skills/agent-inbox/agent-inbox check runs automatically via hook
 ```
 
 **Agent B (scillm project) sees message:**
+
 ```
 === 1 pending message(s) ===
 Project: scillm
@@ -264,6 +279,7 @@ Project: scillm
 ```
 
 **Agent B fixes and acknowledges:**
+
 ```bash
 .agents/skills/agent-inbox/agent-inbox ack scillm_a1b2c3d4 --note "Fixed: renamed to merged_options in commit abc123"
 ```

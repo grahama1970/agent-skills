@@ -403,6 +403,39 @@ triggers:
 
 ---
 
+## tts-horus
+**When user says:** "horus tts", "build horus voice", "voice coloring", "tts pipeline"
+
+```yaml
+# .agent/skills/tts-horus/SKILL.md
+triggers:
+  - horus tts
+  - build horus voice
+  - voice coloring
+  - tts pipeline
+```
+
+---
+
+## tts-train
+**When user says:** "tts train", "train voice model", "voice cloning", "build tts dataset", "xtts training"
+
+```yaml
+# .agent/skills/tts-train/SKILL.md
+triggers:
+  - tts train
+  - train voice model
+  - voice cloning
+  - voice model training
+  - tts dataset
+  - build tts dataset
+  - align transcripts
+  - xtts training
+  - tts fine tune
+```
+
+---
+
 ## Adding New Triggers
 
 1. Edit the skill's `SKILL.md` frontmatter
