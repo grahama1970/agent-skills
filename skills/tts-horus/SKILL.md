@@ -103,9 +103,30 @@ python run/tts/color_voice.py --base horus --color warm --alpha 0.4
 | Learning rate | Use 5e-6 (official recipe), NOT default 2e-4 |
 | Batch size | batch_size * grad_accumulation >= 252 for efficient training |
 
+## Automated Pipeline
+
+The TTS pipeline can run fully automated from extraction to training:
+
+```bash
+# Start extraction, then auto-train when complete
+./run/tts/auto_train_after_extraction.sh [extraction_pid]
+
+# Or run the full pipeline from scratch
+python run/tts/horus_pipeline.py --skip-align
+```
+
+The auto script will:
+1. Monitor extraction progress (logs every 60s)
+2. Create train/val manifests (98%/2% split)
+3. Build Coqui metadata.csv
+4. Start XTTS training (200 epochs)
+
+Logs: `logs/tts/pipeline_*.log`
+
 ## Current Status (2026-01-23)
 
 - **Audiobook**: Horus Rising (~12h)
-- **Extraction**: In progress (~8,700 / ~21,975 clips)
+- **Extraction**: In progress (~9,400 / ~21,975 clips)
+- **Auto-monitor**: Running (PID in `logs/tts/auto_pipeline.log`)
 - **Config**: `configs/tts/horus_xtts.yaml` (200 epochs, 5e-6 LR)
-- **Training**: Pending extraction completion
+- **Training**: Will auto-start after extraction
