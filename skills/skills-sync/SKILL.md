@@ -136,6 +136,25 @@ The old `skills-sync` script is still available but superseded by `skills-broadc
 skills-broadcast push
 ```
 
+## Conflict Detection
+
+The tool uses **content hashes** (not timestamps) to detect conflicts:
+
+```
+[skills-broadcast] Found skills with DIFFERENT content across targets:
+  ⚠ memory: 2 different versions exist
+      a1b2c3d4: /home/user/.codex/skills /home/user/.claude/commands
+      e5f6g7h8: /home/user/workspace/pi-mono/.pi/skills
+      → Newest git commit: /home/user/workspace/pi-mono/.pi/skills (2026-01-23 16:08)
+
+[skills-broadcast] Suggestion: push from /home/user/workspace/pi-mono/.pi/skills
+```
+
+When conflicts exist, the tool:
+1. Shows which locations have which version (by content hash)
+2. Checks git commit times to find the most recently committed version
+3. Suggests pushing from that location
+
 ## Troubleshooting
 
 **Target directory missing?**
@@ -150,5 +169,6 @@ skills-broadcast push
 
 **Conflicts between IDEs?**
 
-- Always push from the most recently edited location
-- Run `skills-broadcast push --from <newest>` explicitly
+- The tool now detects actual content differences (not just timestamps)
+- It suggests which location has the newest git commit
+- Use `--force` to override if you know your version is correct
