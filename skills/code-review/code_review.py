@@ -128,6 +128,7 @@ PROVIDERS = {
         "default_reasoning": "high",  # Always use high reasoning for best results
         "env": {},
         "supports_reasoning": True,
+        "supports_continue": False,
     },
     "google": {
         # Gemini CLI: https://geminicli.com/docs/cli/headless/
@@ -1402,19 +1403,30 @@ async def _review_full_async(
 
         # First round: include any provided context in prompt
         # Subsequent rounds: context accumulates via --continue
+        supports_continue = PROVIDERS[provider].get("supports_continue", True)
+        should_continue = (not is_first_call) and supports_continue
+
+        logging_context = []
         if is_first_call and previous_context:
+            logging_context.append("initial context")
             step1_prompt = STEP1_PROMPT.format(request=request_content) + f"\n\n## Additional Context\n{previous_context}"
+        elif (not supports_continue) and final_output:
+            # Context Bridging: Inject previous round output into prompt since session is lost
+            logging_context.append("bridged context")
+            step1_prompt = STEP1_PROMPT.format(request=request_content) + f"\n\n## Previous Round Output (Context Bridging)\n{final_output}"
+            typer.echo("(bridging context manually)", err=True)
         else:
+            if should_continue: logging_context.append("session continued")
             step1_prompt = STEP1_PROMPT.format(request=request_content)
 
         step1_output, rc = await _run_provider_async(
             step1_prompt, model, add_dir, log_file,
-            continue_session=not is_first_call,
+            continue_session=should_continue,
             provider=provider,
             step_name=f"[Round {round_num}] Step 1: Generating review",
             reasoning=reasoning,
         )
-        is_first_call = False  # All subsequent calls continue the session
+        is_first_call = False  # Track flow, though session continuity depends on provider
 
         if rc != 0:
             typer.echo(f"Step 1 failed (exit {rc})", err=True)
@@ -1424,7 +1436,8 @@ async def _review_full_async(
 
         if save_intermediate:
             step1_file = output_dir / f"round{round_num}_step1.md"
-            step1_file.write_text(step1_output)
+            header = f"> **Review Metadata**: Round {round_num} | Step 1 | Provider: {provider} | Model: {model}\n---\n\n"
+            step1_file.write_text(header + step1_output)
             typer.echo(f"Saved: {step1_file}", err=True)
 
         # Step 2: Judge (always continues session)
@@ -1439,7 +1452,7 @@ async def _review_full_async(
         step2_prompt = STEP2_PROMPT.format(request=request_content, step1_output=step1_output)
         step2_output, rc = await _run_provider_async(
             step2_prompt, model, add_dir, log_file,
-            continue_session=True,
+            continue_session=supports_continue,
             provider=provider,
             step_name=f"[Round {round_num}] Step 2: Judging review",
             reasoning=reasoning,
@@ -1453,7 +1466,8 @@ async def _review_full_async(
 
         if save_intermediate:
             step2_file = output_dir / f"round{round_num}_step2.md"
-            step2_file.write_text(step2_output)
+            header = f"> **Review Metadata**: Round {round_num} | Step 2 | Provider: {provider} | Model: {model}\n---\n\n"
+            step2_file.write_text(header + step2_output)
             typer.echo(f"Saved: {step2_file}", err=True)
 
         # Step 3: Regenerate (always continues session)
@@ -1472,7 +1486,7 @@ async def _review_full_async(
         )
         step3_output, rc = await _run_provider_async(
             step3_prompt, model, add_dir, log_file,
-            continue_session=True,
+            continue_session=supports_continue,
             provider=provider,
             step_name=f"[Round {round_num}] Step 3: Finalizing diff",
             reasoning=reasoning,
@@ -1486,7 +1500,8 @@ async def _review_full_async(
 
         if save_intermediate:
             step3_file = output_dir / f"round{round_num}_final.md"
-            step3_file.write_text(step3_output)
+            header = f"> **Review Metadata**: Round {round_num} | Final Diff | Provider: {provider} | Model: {model}\n---\n\n"
+            step3_file.write_text(header + step3_output)
             typer.echo(f"Saved: {step3_file}", err=True)
 
             if round_diff:
@@ -1608,6 +1623,7 @@ def review_full(
 
     typer.echo("\n" + "=" * 60, err=True)
     typer.echo(f"ALL ROUNDS COMPLETE ({took_ms}ms total)", err=True)
+    typer.echo(f"Model used: {actual_model}", err=True)
     typer.echo("=" * 60, err=True)
 
     # Output
@@ -1651,7 +1667,8 @@ async def _loop_async(
     if rc != 0: raise typer.Exit(code=1)
     
     if save_intermediate:
-        (output_dir / "coder_init.md").write_text(coder_output)
+        header = f"> **Loop Metadata**: Initial Generation | Role: Coder | Provider: {coder_provider} | Model: {coder_model}\n---\n\n"
+        (output_dir / "coder_init.md").write_text(header + coder_output)
     
     current_solution = coder_output
     final_diff = _extract_diff(coder_output)
@@ -1675,7 +1692,8 @@ async def _loop_async(
         if rc != 0: raise typer.Exit(code=1)
 
         if save_intermediate:
-            (output_dir / f"round{i}_review.md").write_text(reviewer_output)
+            header = f"> **Loop Metadata**: Round {i} | Role: Reviewer | Provider: {reviewer_provider} | Model: {reviewer_model}\n---\n\n"
+            (output_dir / f"round{i}_review.md").write_text(header + reviewer_output)
 
         # LGTM Check: Look for explicit approval signal in first few lines
         first_lines = "\n".join(reviewer_output.strip().split("\n")[:3]).upper()
@@ -1720,7 +1738,8 @@ async def _loop_async(
         if rc != 0: raise typer.Exit(code=1)
 
         if save_intermediate:
-            (output_dir / f"round{i}_fix.md").write_text(coder_output)
+            header = f"> **Loop Metadata**: Round {i} | Role: Coder | Provider: {coder_provider} | Model: {coder_model}\n---\n\n"
+            (output_dir / f"round{i}_fix.md").write_text(header + coder_output)
             diff = _extract_diff(coder_output)
             if diff:
                 (output_dir / f"round{i}.patch").write_text(diff)

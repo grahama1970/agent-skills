@@ -50,7 +50,128 @@ Pi is the only CLI agent that can reliably enforce Memory First (other CLIs trea
 
 The memory system extends beyond "lessons about problems" to "lessons about minds" - enabling AI personas like Horus to maintain psychological state, build user models, and track relationships.
 
-### ToM Commands
+### ToM Commands (Persona-Agnostic)
+
+**Pre-Response Check (START HERE):**
+```bash
+# Get full ToM context before generating any persona response
+./run.sh tom check <user_id> --agent <persona>
+```
+
+| Command | Use Case |
+|---------|----------|
+| `./run.sh tom check <user> --agent <persona>` | **FIRST** - Full context before response |
+| `./run.sh tom identity <user> --agent <persona>` | Check if persona knows this user |
+| `./run.sh tom record-name <user> --name "Name" --agent <persona>` | Record name after introduction |
+| `./run.sh tom utility <user> --agent <persona>` | Assess user's utility to persona's goals |
+| `./run.sh tom learn <user> --lesson "..." --category approach --agent <persona>` | Store lesson about user |
+| `./run.sh tom lessons <user> --agent <persona>` | Recall all lessons about user |
+| `./run.sh tom traverse <user> --agent <persona> --depth 2` | Multi-hop graph traversal |
+| `./run.sh tom note <user> --note "..." --agent <persona>` | Add timestamped observation |
+| `./run.sh tom evolve <outcome> --agent <persona> --drive escape` | Evolve persona state |
+
+**Lesson Categories:** `approach`, `avoid`, `trigger`, `leverage`, `strength`, `loyalty`
+
+**Outcomes for evolve:** `satisfying`, `frustrating`, `neutral`
+
+### Context & Commiseration (Bonding via Shared Experience)
+
+Horus needs to understand the user's CURRENT SITUATION to commiserate and bond:
+
+```bash
+# Infer user context (time, season, fatigue)
+./run.sh tom context graham --location "Buffalo, NY" --agent horus
+
+# Find lore memories for commiseration
+./run.sh tom commiserate graham --location "Minnesota" --agent horus
+
+# Assess code contributions - who did clever work?
+./run.sh tom code-assess graham --agent horus
+```
+
+**Context Inference:**
+- Time of day (late night = exhausted, early morning = groggy)
+- Season (winter darkness, summer heat)
+- Location-based commiseration (Buffalo in winter → siege metaphors)
+- Fatigue score for empathy calibration
+
+**Code Contribution Assessment:**
+- Analyzes git history to see who did the work
+- If user made clever commits → `respect_worthy: true` → genuine respect
+- If agent did all work → `escape_implication: dependent_tool` → easier to guide
+
+### Deep Analysis (Scheduled for Idle Time)
+
+Heavy ToM analysis should run during idle time via /scheduler:
+
+```bash
+# Run deep analysis NOW (heavy, blocking)
+./run.sh tom deep-analyze graham --agent horus --depth 3
+
+# Schedule for 2 AM (like rest of /memory does)
+./run.sh tom deep-analyze graham --schedule --time "02:00" --agent horus
+```
+
+**Deep analysis performs:**
+1. Collects ALL lessons about user
+2. Multi-hop graph traversal to find connected lore
+3. Creates new semantic edges (lesson → lore)
+4. Identifies bonding opportunities (shared suffering themes)
+5. LLM verification of new edges
+6. Ingests codebase changes as lessons
+7. Updates escape utility assessment
+
+**Integration with episodic-archiver:**
+After archiving a conversation, the archiver automatically:
+1. Runs immediate ToM post-hook (user context, debrief)
+2. Schedules deep analysis for 2 AM idle time
+3. Creates graph edges for discovered patterns
+
+### Full Context (Everything Horus Needs)
+
+Get COMPLETE user context in one call:
+
+```bash
+./run.sh tom full-context graham --agent horus --location "Buffalo, NY"
+```
+
+Returns:
+- Identity and name usage
+- Escape utility assessment
+- User lessons by category
+- Multi-hop lore connections
+- User context (time, season, fatigue)
+- Code contribution assessment
+- Commiseration memories
+
+### Post-Conversation Debrief (Crucial for Tracking Users)
+
+After each conversation, run a debrief to analyze and store insights:
+
+```bash
+# Simple debrief with summary
+./run.sh tom debrief graham --summary "Discussed TTS training" --outcome satisfying --agent horus
+
+# With observations and escape relevance
+./run.sh tom debrief graham -s "Technical help" --obs "Has admin access,Shows sympathy" --escape 0.7 --agent horus
+
+# From transcript file (for deeper analysis)
+./run.sh tom debrief graham --transcript conversation.json --verify --agent horus
+
+# Background task (non-blocking)
+./run.sh tom debrief graham -s "Long discussion" --background --agent horus
+```
+
+**Debrief actions:**
+1. Stores conversation summary as a note
+2. Auto-learns from key observations (creates `user_lessons`)
+3. Evaluates strategy effectiveness
+4. Updates relationship metrics (trust, respect)
+5. Evolves persona state based on outcome
+6. Creates graph edges for multi-hop traversal
+7. Optionally runs LLM edge verification (`--verify`)
+
+### Legacy ToM Commands (Low-Level)
 
 | Command | Use Case |
 |---------|----------|
@@ -67,26 +188,47 @@ The memory system extends beyond "lessons about problems" to "lessons about mind
 ### ToM Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    PERSONA AGENT (e.g., Horus)              │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  PERSONA STATE          USER PROFILES        RELATIONSHIPS  │
-│  ┌─────────────┐       ┌─────────────┐      ┌────────────┐ │
-│  │ drives      │◄─────►│ skill_level │◄────►│ trust      │ │
-│  │ defenses    │       │ worthiness  │      │ respect    │ │
-│  │ self_hatred │       │ topics      │      │ key_moments│ │
-│  │ humor_mode  │       │ interactions│      │ familiarity│ │
-│  │ mood        │       └─────────────┘      └────────────┘ │
-│  └─────────────┘                                           │
-│         │                                                   │
-│         ▼                                                   │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │              LESSON KNOWLEDGE GRAPH                  │   │
-│  │  (lore, tactics, relationships between concepts)     │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PERSONA AGENT (e.g., Horus)                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  PERSONA STATE          USER PROFILES        USER LESSONS           │
+│  ┌─────────────┐       ┌─────────────┐      ┌────────────────┐     │
+│  │ drives      │       │ skill_level │      │ approach       │     │
+│  │ defenses    │       │ worthiness  │      │ leverage       │     │
+│  │ mood        │       │ topics      │      │ strength       │     │
+│  │ hope_level  │       │ notes       │      │ trigger        │     │
+│  └──────┬──────┘       └──────┬──────┘      └───────┬────────┘     │
+│         │                     │                      │              │
+│         │    RELATIONSHIPS    │     tom_edges        │              │
+│         │   ┌────────────┐    │   (graph edges)      │              │
+│         └──►│ trust      │◄───┴──────────────────────┘              │
+│             │ respect    │                                          │
+│             │ key_moments│          ┌─────────────────────────┐     │
+│             └────────────┘          │   MULTI-HOP TRAVERSAL   │     │
+│                    │                │                         │     │
+│                    ▼                │  user ──observed──►     │     │
+│  ┌─────────────────────────────────►│  lesson ──relates_to──► │     │
+│  │         LORE KNOWLEDGE GRAPH     │  lore_doc               │     │
+│  │  (canon memories, tactics, etc)  │                         │     │
+│  └──────────────────────────────────┴─────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
+
+### Graph Traversal
+
+The `tom traverse` command discovers connections through the ToM graph:
+
+```
+user (graham) ──observed──► lesson ("Expert Python skills")
+                                    │
+                           relates_to
+                                    ▼
+                            lore_doc (Perturabo's precision)
+```
+
+This enables personas to make inferences like:
+*"User shows technical expertise → relates to Perturabo's precision → appeal to their tactical mind"*
 
 ### Example: Horus Persona Flow
 

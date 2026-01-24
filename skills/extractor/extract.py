@@ -20,16 +20,49 @@ import sys
 import os
 import json
 import subprocess
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from datetime import datetime
+import dataclasses
+from dataclasses import dataclass, field
 
-EXTRACTOR_ROOT = Path(os.environ.get("EXTRACTOR_ROOT", "/home/graham/workspace/experiments/extractor"))
+@dataclass
+class ExtractionOptions:
+    """Consolidated options for the extraction pipeline."""
+    mode: str = "auto"
+    preset: Optional[str] = None
+    output_dir: Optional[Path] = None
+    return_markdown: bool = False
+    interactive: bool = True
+    auto_ocr: Optional[bool] = None
+    skip_scanned: bool = False
+    ocr_lang: str = "eng"
+    ocr_deskew: bool = False
+    ocr_force: bool = False
+    ocr_timeout: int = 600
+    continue_on_error: bool = False
+    sections_only: bool = False
+    sync_to_memory: bool = True
+
+# Handle Extractor Root detection robustly
+if os.environ.get("EXTRACTOR_ROOT"):
+    EXTRACTOR_ROOT = Path(os.environ["EXTRACTOR_ROOT"])
+else:
+    # Attempt to find it relative to this file (working backwards from .pi/skills/extractor/extract.py)
+    # File is at pi-mono/.pi/skills/extractor/extract.py
+    # Extractor is at pi-mono/ (sibling of .pi) or developer workspace
+    potential_root = Path(__file__).resolve().parents[4]
+    if (potential_root / "src/extractor").exists():
+        EXTRACTOR_ROOT = potential_root
+    else:
+        # Fallback to local workspace assumptions
+        EXTRACTOR_ROOT = Path("/home/graham/workspace/experiments/extractor")
+
 if not EXTRACTOR_ROOT.exists():
-    # Fallback to assuming we are inside the extractor project structure if run directly
-    # But for the skill, we should rely on run.sh setting this.
-    pass
+    print(f"FATAL: Extractor root not found at {EXTRACTOR_ROOT}", file=sys.stderr)
+    sys.exit(1)
 
 sys.path.insert(0, str(EXTRACTOR_ROOT / "src"))
 
@@ -44,6 +77,86 @@ IMAGE_FORMATS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp"}
 
 # Confidence threshold for auto-extraction
 CONFIDENCE_THRESHOLD = 8
+
+
+def detect_scanned_pdf(filepath: Path) -> Optional[Dict[str, Any]]:
+    """Detect if a PDF is scanned (image-based)."""
+    try:
+        import fitz
+        from extractor.pipeline.steps.s02_pymupdf_extractor import _detect_scanned_pdf
+
+        with fitz.open(str(filepath)) as doc:
+            return _detect_scanned_pdf(doc)
+    except Exception:
+        return None
+
+
+def _docker_image_exists(image: str) -> bool:
+    try:
+        result = subprocess.run(
+            ["docker", "image", "inspect", image],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
+def ensure_ocrmypdf_available() -> Dict[str, Any]:
+    """Ensure OCRmyPDF is available (local or docker). Pulls docker image if needed."""
+    if shutil.which("ocrmypdf"):
+        return {"available": True, "method": "local"}
+
+    if not shutil.which("docker"):
+        return {"available": False, "method": "none", "error": "docker_not_found"}
+
+    if _docker_image_exists("extractor-ocr"):
+        return {"available": True, "method": "docker", "image": "extractor-ocr"}
+    if _docker_image_exists("jbarlow83/ocrmypdf"):
+        return {"available": True, "method": "docker", "image": "jbarlow83/ocrmypdf"}
+
+    try:
+        pull = subprocess.run(
+            ["docker", "pull", "jbarlow83/ocrmypdf"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        if pull.returncode == 0:
+            return {
+                "available": True,
+                "method": "docker",
+                "image": "jbarlow83/ocrmypdf",
+                "pulled": True,
+            }
+        return {
+            "available": False,
+            "method": "docker",
+            "error": pull.stderr.strip() or pull.stdout.strip() or "pull_failed",
+        }
+    except Exception as e:
+        return {"available": False, "method": "docker", "error": str(e)}
+
+
+def maybe_prefetch_ocr_resources(filepath: Path) -> None:
+    scanned_info = detect_scanned_pdf(filepath)
+    if not scanned_info or not scanned_info.get("is_scanned"):
+        return
+
+    status = ensure_ocrmypdf_available()
+    if status.get("available"):
+        if status.get("pulled"):
+            print("INFO: Pulled OCRmyPDF docker image for scanned PDF.", file=sys.stderr)
+        else:
+            print("INFO: OCRmyPDF available for scanned PDF.", file=sys.stderr)
+    else:
+        print(
+            "WARN: Scanned PDF detected but OCRmyPDF not available "
+            f"({status.get('error', 'unknown error')}).",
+            file=sys.stderr,
+        )
 
 
 def format_error_guidance(error: str, filepath: Path = None, mode: str = None) -> str:
@@ -112,11 +225,14 @@ def format_error_guidance(error: str, filepath: Path = None, mode: str = None) -
     return "\n".join(guidance)
 
 
-# Find memory skill (sibling directory)
+# Find memory skill robustly
 MEMORY_SKILL_PATH = Path(os.environ.get(
     "MEMORY_SKILL_PATH", 
-    Path(__file__).parent.parent / "memory/run.sh"
+    EXTRACTOR_ROOT.parent / "pi-mono/.pi/skills/memory/run.sh"
 ))
+if not MEMORY_SKILL_PATH.exists():
+    # Attempt local relative path
+    MEMORY_SKILL_PATH = Path(__file__).resolve().parents[3] / "memory/run.sh"
 
 
 def learn_to_memory(filepath: Path, result: Dict[str, Any], scope: str = "documents") -> bool:
@@ -216,6 +332,22 @@ def generate_batch_report(results: List[Dict[str, Any]], output_dir: Optional[Pa
         report["report_path"] = str(report_path)
 
     return report
+
+
+def print_assessment_table(assessment: Dict[str, Any]) -> None:
+    """Print a project agent friendly table comparing expected vs actual counts."""
+    if not assessment:
+        return
+
+    print("\nExtraction Assessment (Stage 00 vs Reality)", file=sys.stderr)
+    print("-" * 65, file=sys.stderr)
+    print(f"{'Metric':<15} | {'Expected (Pg)':<15} | {'Actual (Count)':<15} | {'Status':<10}", file=sys.stderr)
+    print("-" * 65, file=sys.stderr)
+    
+    for key, data in assessment.items():
+        status_icon = "✅" if data.get("status") == "OK" else "❌"
+        print(f"{key.capitalize():<15} | {data.get('expected_pages', 0):<15} | {data.get('actual_count', 0):<15} | {status_icon} {data.get('status')}", file=sys.stderr)
+    print("-" * 65, file=sys.stderr)
 
 
 def profile_pdf(filepath: Path) -> Dict[str, Any]:
@@ -377,10 +509,7 @@ def extract_structured(filepath: Path) -> Dict[str, Any]:
 
 def extract_pipeline(
     filepath: Path,
-    output_dir: Optional[Path] = None,
-    mode: str = "auto",
-    preset: Optional[str] = None,
-    return_markdown: bool = False,
+    opts: ExtractionOptions,
 ) -> Dict[str, Any]:
     """Full pipeline extraction for PDFs with preset detection."""
 
@@ -389,25 +518,47 @@ def extract_pipeline(
     cmd = [python, "-m", "extractor.pipeline", str(filepath)]
 
     # Output directory
-    if output_dir:
-        out_path = Path(output_dir)
+    if opts.output_dir:
+        out_path = Path(opts.output_dir)
     else:
         out_path = Path(tempfile.mkdtemp(prefix="extractor_"))
 
     cmd.extend(["--out", str(out_path)])
 
     # Mode flags
-    if mode == "fast":
+    if opts.mode == "fast":
         cmd.extend(["--offline-smoke"])  # Fast deterministic mode
-    elif mode == "accurate":
+    elif opts.mode == "accurate":
         cmd.extend(["--use-llm"])  # Enable LLM enhancement
-    elif mode == "offline":
+    elif opts.mode == "offline":
         cmd.extend(["--offline-smoke"])
-    # "auto" is the default - no extra flags needed
 
-    # Preset override (skip s00 auto-detection)
-    if preset:
-        cmd.extend(["--preset", preset])
+    # Flags mapping
+    if opts.preset: cmd.extend(["--preset", opts.preset])
+    if opts.auto_ocr is True: cmd.append("--auto-ocr")
+    elif opts.auto_ocr is False: cmd.append("--no-auto-ocr")
+    if opts.skip_scanned: cmd.append("--skip-scanned")
+    if opts.ocr_lang: cmd.extend(["--ocr-lang", opts.ocr_lang])
+    if opts.ocr_deskew: cmd.append("--ocr-deskew")
+    if opts.ocr_force: cmd.append("--ocr-force")
+    if opts.ocr_timeout: cmd.extend(["--ocr-timeout", str(opts.ocr_timeout)])
+    if opts.continue_on_error: cmd.append("--continue-on-error")
+    
+    if opts.sections_only:
+         cmd.extend([
+            "--skip-tables05",
+            "--skip-fig-descriptions",
+            "--skip-annotator09a",
+            "--skip-reqs07",
+            "--skip-proving",
+            "--skip-export",
+         ])
+    
+    # Sync settings
+    if opts.sync_to_memory:
+        os.environ["SYNC_TO_MEMORY"] = "1"
+    else:
+        os.environ["SYNC_TO_MEMORY"] = "0"
 
     # Run pipeline
     try:
@@ -480,8 +631,14 @@ def extract_pipeline(
 
         # Report
         report_path = out_path / "14_report_generator" / "json_output" / "final_report.json"
+        assessment = None
         if report_path.exists():
             outputs["report"] = str(report_path)
+            try:
+                report_data = json.loads(report_path.read_text())
+                assessment = report_data.get("statistics", {}).get("assessment_comparison")
+            except Exception:
+                pass
 
         # Manifest
         manifest_path = out_path / "manifest.json"
@@ -513,7 +670,17 @@ def extract_pipeline(
             "output_dir": str(out_path),
             "outputs": outputs,
             "counts": counts,
+            "assessment": assessment,
         }
+        
+        response["quality_signal"] = "UNKNOWN"
+        if report_path.exists():
+            try:
+                report_data = json.loads(report_path.read_text())
+                stats = report_data.get("statistics", {})
+                response["quality_signal"] = stats.get("quality_signal", "UNKNOWN")
+            except Exception:
+                pass
 
         if markdown_content:
             response["markdown"] = markdown_content
@@ -537,11 +704,7 @@ def extract_pipeline(
 
 def extract_pdf_with_collaboration(
     filepath: Path,
-    output_dir: Optional[Path] = None,
-    mode: str = "auto",
-    preset: Optional[str] = None,
-    return_markdown: bool = False,
-    interactive: bool = True,
+    opts: ExtractionOptions,
 ) -> Dict[str, Any]:
     """Extract PDF with preset collaboration flow.
 
@@ -554,10 +717,13 @@ def extract_pdf_with_collaboration(
           - TTY: interactive prompt
           - Non-TTY: auto mode with warning
     """
+    if opts.auto_ocr is not False:
+        maybe_prefetch_ocr_resources(filepath)
+
     # If preset explicitly provided, skip detection
-    if preset:
-        print(f"Using preset: {preset}", file=sys.stderr)
-        return extract_pipeline(filepath, output_dir, mode, preset, return_markdown)
+    if opts.preset:
+        print(f"Using preset: {opts.preset}", file=sys.stderr)
+        return extract_pipeline(filepath, opts)
 
     # Run profile detection
     profile = profile_pdf(filepath)
@@ -565,7 +731,7 @@ def extract_pdf_with_collaboration(
     if "error" in profile:
         # s00 failed, fall back to auto mode
         print(f"WARN: Profile detection failed: {profile['error']}. Using auto mode.", file=sys.stderr)
-        return extract_pipeline(filepath, output_dir, mode, None, return_markdown)
+        return extract_pipeline(filepath, opts)
 
     # Check preset match confidence
     preset_match = profile.get("preset_match", {})
@@ -576,10 +742,13 @@ def extract_pdf_with_collaboration(
     if matched_preset and confidence >= CONFIDENCE_THRESHOLD:
         recommended_mode = recommend_mode(profile)
         print(f"Detected preset: {matched_preset} (confidence: {confidence}). Extracting in {recommended_mode} mode...", file=sys.stderr)
-        return extract_pipeline(filepath, output_dir, recommended_mode, matched_preset, return_markdown)
+        # Update opts with detection results
+        opts.preset = matched_preset
+        opts.mode = recommended_mode
+        return extract_pipeline(filepath, opts)
 
     # Low confidence / no match
-    is_tty = sys.stdin.isatty() and interactive
+    is_tty = sys.stdin.isatty() and opts.interactive
 
     if is_tty:
         # Interactive prompt
@@ -588,21 +757,21 @@ def extract_pdf_with_collaboration(
             print(f"Using preset: {selected_preset} in {selected_mode} mode", file=sys.stderr)
         else:
             print(f"Using {selected_mode} mode", file=sys.stderr)
-        return extract_pipeline(filepath, output_dir, selected_mode, selected_preset, return_markdown)
+        
+        opts.preset = selected_preset
+        opts.mode = selected_mode
+        return extract_pipeline(filepath, opts)
     else:
         # Non-TTY: auto mode with warning
         auto_mode = recommend_mode(profile)
         print(f"WARN: Non-interactive environment. Using auto ({auto_mode}) mode for: {filepath.name}", file=sys.stderr)
-        return extract_pipeline(filepath, output_dir, auto_mode, None, return_markdown)
+        opts.mode = auto_mode
+        return extract_pipeline(filepath, opts)
 
 
 def extract(
     filepath: str,
-    output_dir: Optional[str] = None,
-    mode: str = "auto",
-    preset: Optional[str] = None,
-    return_markdown: bool = False,
-    interactive: bool = True,
+    opts: ExtractionOptions,
 ) -> Dict[str, Any]:
     """Universal extraction entry point. Routes to appropriate extractor."""
     path = Path(filepath)
@@ -615,13 +784,10 @@ def extract(
         }
 
     suffix = path.suffix.lower()
-    out_path = Path(output_dir) if output_dir else None
 
     # Route by format
     if suffix in PIPELINE_FORMATS:
-        return extract_pdf_with_collaboration(
-            path, out_path, mode, preset, return_markdown, interactive
-        )
+        return extract_pdf_with_collaboration(path, opts)
     elif suffix in STRUCTURED_FORMATS or suffix in IMAGE_FORMATS:
         return extract_structured(path)
     else:
@@ -787,6 +953,7 @@ Examples:
   %(prog)s paper.pdf --preset arxiv     # Force preset (skip detection)
   %(prog)s paper.pdf --no-interactive   # Skip prompts, use auto mode
   %(prog)s paper.pdf --profile-only     # Profile only, no extraction
+  %(prog)s scanned.pdf --auto-ocr       # OCR scanned PDFs (OCRmyPDF)
   %(prog)s report.docx                  # Structured format (fast path)
   %(prog)s ./pdfs/                      # Batch mode for directory
         """,
@@ -811,6 +978,24 @@ Examples:
                        help="Skip interactive prompts, use auto mode")
     parser.add_argument("--profile-only", action="store_true",
                        help="Run profile detection only, return JSON profile")
+    parser.add_argument("--auto-ocr", dest="auto_ocr", action="store_true", default=None,
+                       help="Run OCRmyPDF on scanned PDFs before extraction")
+    parser.add_argument("--no-auto-ocr", dest="auto_ocr", action="store_false",
+                       help="Disable OCRmyPDF preprocessing for scanned PDFs")
+    parser.add_argument("--skip-scanned", action="store_true",
+                       help="Skip scanned PDFs (log + write skip manifest)")
+    parser.add_argument("--ocr-lang", default="eng",
+                       help="OCR language(s) for OCRmyPDF (e.g., eng or eng+deu)")
+    parser.add_argument("--ocr-deskew", action="store_true",
+                       help="Deskew scanned pages during OCR preprocessing")
+    parser.add_argument("--ocr-force", action="store_true",
+                       help="Force OCR even if text exists (disables --skip-text)")
+    parser.add_argument("--ocr-timeout", type=int, default=600,
+                       help="OCRmyPDF timeout in seconds")
+    parser.add_argument("--continue-on-error", action="store_true",
+                       help="Allow pipeline to continue after failures")
+    parser.add_argument("--sections-only", action="store_true",
+                       help="Extract sections only (skip tables, figures, requirements, proving)")
 
     # Batch options
     parser.add_argument("--glob", default="**/*.pdf", help="Glob pattern for directory input")
@@ -885,6 +1070,24 @@ Examples:
         print(json.dumps(flat, indent=2))
         sys.exit(0)
 
+    # Build Extraction Options
+    opts = ExtractionOptions(
+        mode=mode,
+        preset=args.preset,
+        output_dir=args.out,
+        return_markdown=args.markdown,
+        interactive=interactive,
+        auto_ocr=args.auto_ocr,
+        skip_scanned=args.skip_scanned,
+        ocr_lang=args.ocr_lang,
+        ocr_deskew=args.ocr_deskew,
+        ocr_force=args.ocr_force,
+        ocr_timeout=args.ocr_timeout,
+        continue_on_error=args.continue_on_error,
+        sections_only=args.sections_only,
+        sync_to_memory=args.learn,
+    )
+
     # Handle directory input (batch mode)
     if args.file.is_dir():
         files = sorted(args.file.rglob(args.glob))
@@ -895,28 +1098,19 @@ Examples:
         results = []
         for i, f in enumerate(files, 1):
             print(f"Processing [{i}/{len(files)}]: {f.name}", file=sys.stderr)
-            result = extract(
-                str(f),
-                output_dir=str(args.out / f.stem) if args.out else None,
-                mode=mode,
-                preset=args.preset,
-                return_markdown=args.markdown,
-                interactive=interactive,
-            )
+            # Update opts for specific subset if needed
+            file_opts = dataclasses.replace(opts, output_dir=args.out / f.stem if args.out else None)
+            result = extract(str(f), file_opts)
             results.append({"file": str(f), **result})
 
         # Generate batch report
         report = generate_batch_report(results, args.out)
 
-        # Auto-learn to memory if enabled
+        # Auto-learn to memory logic handled via SYNC_TO_MEMORY env in extract_pipeline
+        # But we still want to report it
         if args.learn:
-            learned_count = 0
-            for r in results:
-                if r.get("success"):
-                    if learn_to_memory(Path(r["file"]), r, args.scope):
-                        learned_count += 1
-            report["memory_learned"] = learned_count
-            print(f"Learned {learned_count} extractions to memory (scope: {args.scope})", file=sys.stderr)
+            report["memory_learned"] = report["succeeded"]
+            print(f"Synced {report['succeeded']} extractions to memory", file=sys.stderr)
 
         if args.report == "summary":
             # Human-readable summary
@@ -941,14 +1135,11 @@ Examples:
         sys.exit(0 if report['failed'] == 0 else 1)
 
     # Single file
-    result = extract(
-        str(args.file),
-        output_dir=str(args.out) if args.out else None,
-        mode=mode,
-        preset=args.preset,
-        return_markdown=args.markdown,
-        interactive=interactive,
-    )
+    result = extract(str(args.file), opts)
+
+    # Print assessment table if available
+    if result.get("success") and result.get("assessment"):
+        print_assessment_table(result["assessment"])
 
     # Auto-learn to memory if enabled
     if args.learn and result.get("success"):

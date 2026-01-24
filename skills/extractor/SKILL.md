@@ -43,16 +43,19 @@ Auto-detects document type and applies calibrated extraction settings.
 
 # Get markdown output directly
 .pi/skills/extractor/run.sh paper.pdf --markdown
+
+# OCR scanned PDFs (lazy-loads OCRmyPDF docker image if needed)
+.pi/skills/extractor/run.sh scanned.pdf --auto-ocr
 ```
 
 ## Extraction Modes
 
-| Mode | Flag | Description |
-|------|------|-------------|
-| **Auto** | (default) | Profile detector picks best settings |
-| **Fast** | `--fast` | PyMuPDF only, no ML/LLM (fastest) |
-| **Accurate** | `--accurate` | Full pipeline with LLM enhancements |
-| **Offline** | `--offline` | Deterministic, no network calls |
+| Mode         | Flag         | Description                          |
+| ------------ | ------------ | ------------------------------------ |
+| **Auto**     | (default)    | Profile detector picks best settings |
+| **Fast**     | `--fast`     | PyMuPDF only, no ML/LLM (fastest)    |
+| **Accurate** | `--accurate` | Full pipeline with LLM enhancements  |
+| **Offline**  | `--offline`  | Deterministic, no network calls      |
 
 ```bash
 # Fast mode - quick extraction, no LLM
@@ -110,11 +113,11 @@ echo | .pi/skills/extractor/run.sh paper.pdf --no-interactive
 
 The pipeline auto-detects document type via `s00_profile_detector`:
 
-| Preset | Detected When | Confidence Points |
-|--------|---------------|-------------------|
-| **arxiv** | Academic papers (2-column, math, "Abstract/References") | +5 filename, +4 sections, +3 layout |
-| **requirements_spec** | Engineering specs (REQ-xxx, "Shall", nested sections) | +5 filename, +4 REQ pattern |
-| **auto** | Unknown documents | Fallback when confidence < 8 |
+| Preset                | Detected When                                           | Confidence Points                   |
+| --------------------- | ------------------------------------------------------- | ----------------------------------- |
+| **arxiv**             | Academic papers (2-column, math, "Abstract/References") | +5 filename, +4 sections, +3 layout |
+| **requirements_spec** | Engineering specs (REQ-xxx, "Shall", nested sections)   | +5 filename, +4 REQ pattern         |
+| **auto**              | Unknown documents                                       | Fallback when confidence < 8        |
 
 ```bash
 # Force a specific preset (skip detection)
@@ -142,18 +145,18 @@ The pipeline auto-detects document type via `s00_profile_detector`:
 
 Cross-format parity measured against HTML reference (2026-01-17):
 
-| Format | Method | Parity | Notes |
-|--------|--------|--------|-------|
-| **Markdown** | Direct parse | 100% | Perfect structural match |
-| **DOCX** | Native XML (python-docx) | 100% | Perfect structural match |
-| **HTML** | BeautifulSoup | Reference | Baseline for comparison |
-| **XML** | defusedxml | 90% | Structure preserved, markdown differs |
-| **PDF** | 14-stage pipeline | 87% | Varies by document complexity |
-| **RST** | docutils | 85% | Section structure varies |
-| **EPUB** | ebooklib | 82% | Chapter structure varies |
-| **PPTX** | python-pptx | 81% | Slide-based structure |
-| **XLSX** | openpyxl | 16% | Expected (spreadsheet format) |
-| **Images** | OCR/VLM | 16% | Requires VLM for text extraction |
+| Format       | Method                   | Parity    | Notes                                 |
+| ------------ | ------------------------ | --------- | ------------------------------------- |
+| **Markdown** | Direct parse             | 100%      | Perfect structural match              |
+| **DOCX**     | Native XML (python-docx) | 100%      | Perfect structural match              |
+| **HTML**     | BeautifulSoup            | Reference | Baseline for comparison               |
+| **XML**      | defusedxml               | 90%       | Structure preserved, markdown differs |
+| **PDF**      | 14-stage pipeline        | 87%       | Varies by document complexity         |
+| **RST**      | docutils                 | 85%       | Section structure varies              |
+| **EPUB**     | ebooklib                 | 82%       | Chapter structure varies              |
+| **PPTX**     | python-pptx              | 81%       | Slide-based structure                 |
+| **XLSX**     | openpyxl                 | 16%       | Expected (spreadsheet format)         |
+| **Images**   | OCR/VLM                  | 16%       | Requires VLM for text extraction      |
 
 ## Pipeline Stages
 
@@ -214,14 +217,21 @@ The full pipeline runs 14+ stages:
 
 ## Agent-Friendly Flags
 
-| Flag | Purpose |
-|------|---------|
-| `--profile-only` | Return profile JSON without extraction |
-| `--no-interactive` | Skip prompts, use auto mode |
-| `--preset <name>` | Force preset (skip detection) |
-| `--fast` | No LLM, quick extraction |
-| `--json` | JSON output (default) |
-| `--toc-check` | Check TOC integrity against extracted sections |
+| Flag                  | Purpose                                                  |
+| --------------------- | -------------------------------------------------------- |
+| `--profile-only`      | Return profile JSON without extraction                   |
+| `--no-interactive`    | Skip prompts, use auto mode                              |
+| `--preset <name>`     | Force preset (skip detection)                            |
+| `--fast`              | No LLM, quick extraction                                 |
+| `--toc-check`         | Check TOC integrity against extracted sections           |
+| `--auto-ocr`          | OCR scanned PDFs with OCRmyPDF (lazy-loads docker image) |
+| `--no-auto-ocr`       | Disable OCRmyPDF preprocessing for scanned PDFs          |
+| `--skip-scanned`      | Skip scanned PDFs and write a skip manifest              |
+| `--ocr-lang <langs>`  | OCR language(s), e.g. `eng` or `eng+deu`                 |
+| `--ocr-deskew`        | Deskew scanned pages during OCR                          |
+| `--ocr-force`         | Force OCR even if text exists                            |
+| `--ocr-timeout <sec>` | OCR timeout in seconds                                   |
+| `--continue-on-error` | Continue pipeline on step failures (batch-friendly)      |
 
 ## TOC Integrity Check
 
@@ -236,6 +246,7 @@ Verify that extracted sections match the PDF's Table of Contents (bookmarks):
 ```
 
 Output:
+
 ```json
 {
   "success": true,
@@ -247,15 +258,14 @@ Output:
   "matched_count": 17,
   "missing_count": 3,
   "matched": [
-    {"toc_title": "1. Introduction", "section_id": "sec_001", "score": 0.95}
+    { "toc_title": "1. Introduction", "section_id": "sec_001", "score": 0.95 }
   ],
-  "missing": [
-    {"toc_title": "Appendix A", "toc_page": 45}
-  ]
+  "missing": [{ "toc_title": "Appendix A", "toc_page": 45 }]
 }
 ```
 
 Status levels:
+
 - **EXCELLENT**: >= 90% match
 - **GOOD**: >= 70% match
 - **FAIR**: >= 50% match
@@ -264,6 +274,7 @@ Status levels:
 ## Environment
 
 Requires the extractor project with its virtual environment:
+
 - **Project**: `/home/graham/workspace/experiments/extractor`
 - **Venv**: `.venv/bin/python`
 - **Dependencies**: `scillm`, `fetcher` (local paths)
@@ -282,11 +293,13 @@ Tests: HTML, MD, XML, RST, DOCX, PPTX, EPUB, XLSX, PDF, PNG
 ## LLM Requirements
 
 For accurate mode (VLM/table descriptions):
+
 - `CHUTES_API_BASE` - Chutes API endpoint
 - `CHUTES_API_KEY` - API key
 - `CHUTES_VLM_MODEL` - Vision model (default: Qwen/Qwen3-VL-235B-A22B-Instruct)
 - `CHUTES_TEXT_MODEL` - Text model (default: moonshotai/Kimi-K2-Instruct-0905)
 
 For Lean4 proving (arxiv preset):
+
 - `lean_runner` container running
 - `OPENROUTER_API_KEY` set

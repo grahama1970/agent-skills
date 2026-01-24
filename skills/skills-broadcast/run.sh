@@ -160,7 +160,7 @@ else
 fi
 
 RSYNC_OPTS=(
-    "-av" "--delete"
+    "-av" "--delete" "--update" # --update prevents overwriting newer destination files
     "--exclude" ".venv"
     "--exclude" "node_modules"
     "--exclude" "__pycache__"

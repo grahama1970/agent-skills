@@ -1,20 +1,23 @@
----
-name: skills-sync
+name: skills-broadcast
 description: >
-  Sync skills across all IDEs (Pi, Codex, Claude Code, Antigravity) using the
-  canonical agent-skills repo. Use "sync skills", "broadcast skills", or "pull skills".
+Sync skills across all IDEs (Pi, Codex, Claude Code, Antigravity) using the
+canonical agent-skills repo. Use "sync skills", "broadcast skills", or "pull skills".
 allowed-tools: Bash, Read
 triggers:
-  - sync skills
-  - broadcast skills
-  - push skills
-  - pull skills
-  - update shared skills
-metadata:
+
+- skills-broadcast
+- skills-sync
+- sync skills
+- broadcast skills
+- push skills
+- pull skills
+- update shared skills
+  metadata:
   short-description: Sync skills across all IDEs via agent-skills repo
+
 ---
 
-# Skills Sync Skill
+# Skills Broadcast Skill
 
 Synchronize skills across **all IDEs and projects** using a central canonical repository.
 
@@ -151,6 +154,7 @@ The tool uses **content hashes** (not timestamps) to detect conflicts:
 ```
 
 When conflicts exist, the tool:
+
 1. Shows which locations have which version (by content hash)
 2. Checks git commit times to find the most recently committed version
 3. Suggests pushing from that location
