@@ -1,12 +1,24 @@
 [project]
 name = "tts-train-skill"
-version = "0.1.0"
-description = "Self-contained TTS training environment for Horus XTTS pipeline."
+version = "0.2.0"
+description = "Self-contained TTS training environment for Horus Qwen3-TTS and XTTS pipeline."
 requires-python = ">=3.10,<3.12"
 dependencies = [
-  "TTS==0.22.0",
-  "transformers==4.33.3",
-  "torch==2.1.0",
+  # CLI and core dependencies
+  "typer>=0.12",
+  "loguru>=0.7.2",
+  "rich>=13.7.1",
+  # Qwen3-TTS dependencies (primary)
+  "transformers==4.56.1",
+  "torch>=2.1.0",
+  "torchaudio>=2.1.0",  # Required by Qwen3-TTS
+  "accelerate>=1.0.0",
+  "sox>=1.5.0",
+  "soundfile>=0.12.1",
+  "librosa==0.10.1",  # Pinned to avoid numpy conflicts
+  "onnxruntime>=1.15.0",  # Required by Qwen3-TTS
+  "einops>=0.6.0",  # Required by Qwen3-TTS
+  # XTTS dependencies (optional, for backward compatibility)
   "tensorboard>=2.15.0",
   "pyyaml>=6.0",
 ]

@@ -1,0 +1,25 @@
+[project]
+name = "streamdeck-skill"
+version = "1.0.0"
+description = "Stream Deck daemon control and automation skill"
+readme = "SKILL.md"
+requires-python = ">=3.8"
+
+[project.scripts]
+streamdeck-daemon = "streamdeck_daemon.main:main"
+
+[project.optional-dependencies]
+streamdeck = { git = "https://github.com/grahama1970/streamdeck.git" }
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["streamdeck_daemon"]
+
+[tool.uv.sources]
+streamdeck = { git = "https://github.com/grahama1970/streamdeck.git" }
+
+[tool.uv.workspace]
+members = ["streamdeck_daemon"]
