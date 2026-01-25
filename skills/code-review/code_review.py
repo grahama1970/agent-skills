@@ -599,6 +599,33 @@ def _format_bullet_list(items: list[str]) -> str:
     return "\n".join(f"- {item}" for item in items)
 
 
+def _get_effective_dirs(add_dir: Optional[list[str]], workspace: Optional[list[str]]) -> Optional[list[str]]:
+    """Determine effective directories, defaulting to "." if none provided.
+    
+    If workspace is provided, this function returns None, as workspace handling
+    will create a temporary directory and pass it later.
+    """
+    if workspace:
+        # workspace is handled by a context manager that calls this later
+        return None
+    
+    dirs = add_dir or []
+    if not dirs:
+        # Default to current directory if no directories or workspace provided
+        dirs = ["."]
+        
+    # Safety Check: Warn if we are reviewing the skill's own directory
+    skill_dir = Path(__file__).parent.resolve()
+    cwd = Path.cwd().resolve()
+    
+    if cwd == skill_dir and "." in dirs:
+         console.print("[yellow]Warning: You are running code-review from the skill's own directory.[/yellow]")
+         console.print("[yellow]If this is not intentional, it may result in the skill reviewing its own source code.[/yellow]")
+         console.print("[yellow]To review a different project, cd into that project's directory first.[/yellow]\n")
+
+    return dirs
+
+
 def _format_numbered_steps(items: list[str]) -> str:
     """Format items as numbered steps."""
     if not items:
@@ -719,6 +746,9 @@ def review(
     typer.echo(f"Loaded request from {file} ({len(prompt)} chars)", err=True)
     typer.echo(f"Submitting to {provider} ({actual_model})...", err=True)
 
+    # Determine effective directories for the provider CLI
+    effective_dirs = _get_effective_dirs(add_dir, workspace)
+
     async def run_review_async(effective_add_dirs: Optional[list[str]]) -> tuple[str, int]:
         """Run the review with the given add_dirs."""
         return await _run_provider_async(
@@ -737,7 +767,7 @@ def review(
             effective_dirs = [str(ws_path)] + (add_dir or [])
             response, returncode = asyncio.run(run_review_async(effective_dirs))
     else:
-        response, returncode = asyncio.run(run_review_async(add_dir))
+        response, returncode = asyncio.run(run_review_async(effective_dirs))
 
     took_ms = int((time.time() - t0) * 1000)
 
@@ -1595,6 +1625,9 @@ def review_full(
         previous_context = context_file.read_text()
         typer.echo(f"Loaded context from: {context_file} ({len(previous_context)} chars)", err=True)
 
+    # Determine effective directories for the provider CLI
+    effective_dirs = _get_effective_dirs(add_dir, workspace)
+
     def run_pipeline(effective_add_dir: Optional[list[str]]):
         """Run the async pipeline with the given add_dir."""
         return asyncio.run(_review_full_async(
@@ -1614,10 +1647,11 @@ def review_full(
         workspace_paths = [Path(p) for p in workspace]
         with _create_workspace(workspace_paths) as ws_path:
             # Combine workspace with any explicit add_dir paths
-            effective_dirs = [str(ws_path)] + (add_dir or [])
-            result = run_pipeline(effective_dirs)
+            combined_dirs = [str(ws_path)] + (add_dir or [])
+            result = run_pipeline(combined_dirs)
     else:
-        result = run_pipeline(add_dir)
+        result = run_pipeline(effective_dirs)
+
 
     took_ms = int((time.time() - t0) * 1000)
 
@@ -1796,27 +1830,24 @@ def loop(
     
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    async def _run():
-        return await _loop_async(
+    effective_dirs = _get_effective_dirs(add_dir, workspace)
+
+    def _run(effective_add_dir: Optional[list[str]]):
+        return asyncio.run(_loop_async(
             request_content, coder_provider, c_model,
-            reviewer_provider, r_model, add_dir,
+            reviewer_provider, r_model, effective_add_dir,
             rounds, output_dir, save_intermediate, reasoning
-        )
+        ))
 
     if workspace:
         workspace_paths = [Path(p) for p in workspace]
         with _create_workspace(workspace_paths) as ws_path:
-            effective_dirs = [str(ws_path)] + (add_dir or [])
-            # Must patch _run to use effective_dirs. 
-            # Re-defining _run here to close over effective_dirs is messier than passing args.
-            # Let's just call _loop_async directly.
-            result = asyncio.run(_loop_async(
-                request_content, coder_provider, c_model,
-                reviewer_provider, r_model, effective_dirs,
-                rounds, output_dir, save_intermediate, reasoning
-            ))
+            # Combine workspace with any explicit add_dir paths
+            combined_dirs = [str(ws_path)] + (add_dir or [])
+            result = _run(combined_dirs)
     else:
-        result = asyncio.run(_run())
+        result = _run(effective_dirs)
+
 
     if result["final_diff"]:
         print(result["final_diff"])

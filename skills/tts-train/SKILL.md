@@ -135,46 +135,28 @@ For overnight runs, register a scheduler job so training survives terminal drops
 
 ## Troubleshooting
 
-### Qwen3-TTS 0.6B Model Training Issues
+### Qwen3-TTS 0.6B Model Training Support
 
-**Critical**: The official `sft_12hz.py` script only works with 1.7B model out-of-the-box. For 0.6B conversational model, you MUST patch the training script.
+**Note**: The official `sft_12hz.py` script requires patching to support the 0.6B conversational model (due to dimension mismatch).
 
-**Problem**: RuntimeError: The size of tensor a (2048) must match the size of tensor b (1024)
+**Automated Solution**: The `cli.py` tool automatically applies the required patch (`001-fix-sft-optimizations.patch`) when you run:
 
-**Cause**: 0.6B model has `text_hidden_size=2048` but `hidden_size=1024`. The training script tries to add text and codec embeddings with mismatched dimensions.
-
-**Fix**: Apply text_projection before combining embeddings. In [`sft_12hz.py`](/home/graham/workspace/experiments/pi-mono/.pi/skills/tts-train/Qwen3-TTS/finetuning/sft_12hz.py):
-
-```python
-# Get text embedding and project if dimensions don't match
-input_text_embedding_raw = model.talker.model.text_embedding(input_text_ids)
-# Use text_projection if available (required for 0.6B model)
-if hasattr(model.talker, 'text_projection'):
-    input_text_embedding = model.talker.text_projection(input_text_embedding_raw) * text_embedding_mask
-else:
-    input_text_embedding = input_text_embedding_raw * text_embedding_mask
+```bash
+.agent/skills/tts-train/cli.py ensure-repo
 ```
 
-**Additional Fixes** required for 0.6B training:
+This patch includes:
 
-1. **Flash Attention**: Set `attn_implementation="eager"` (not `"flash_attention_2"`)
-2. **Ref Mels Padding**: Pad variable-length audio mels in collate_fn:
-   ```python
-   max_mel_len = max(mel.shape[1] for mel in ref_mels)
-   padded_mels = []
-   for mel in ref_mels:
-       if mel.shape[1] < max_mel_len:
-           pad_size = max_mel_len - mel.shape[1]
-           mel = torch.nn.functional.pad(mel, (0, 0, 0, pad_size))
-       padded_mels.append(mel)
-   ref_mels = torch.cat(padded_mels, dim=0)
-   ```
-3. **Checkpoint Saving**: Use cached model path instead of HF string:
-   ```python
-   from huggingface_hub import snapshot_download
-   cached_model_path = snapshot_download(MODEL_PATH, local_files_only=True, ignore_patterns=["*.bin", "*.safetensors"])
-   shutil.copytree(cached_model_path, output_dir, dirs_exist_ok=True)
-   ```
+1.  **Text Projection Fix**: Adds `text_projection` layer support for 0.6B models.
+2.  **Training Optimizations**: Adds CLI args for `max_steps`, `gradient_accumulation_steps`, and `weight_decay`.
+3.  **Flash Attention Disable**: Forces `eager` attention to avoid compatibility issues.
+
+If you encounter issues, verify the patch status:
+
+```bash
+cd third_party/Qwen3-TTS
+git status  # Should show modified sft_12hz.py
+```
 
 ### CUDA Library Error: libcudnn_ops_infer.so.8
 

@@ -101,6 +101,36 @@ def _fetch_video_metadata(vid: str) -> dict:
         # Silent fail on metadata
         return {}
 
+def _search_videos(query: str, max_results: int = 5) -> list[dict]:
+    """Search YouTube videos using yt-dlp."""
+    try:
+        import yt_dlp
+        ydl_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "extract_flat": True,
+            "skip_download": True,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            # ytsearchN:query syntax searches for N results
+            info = ydl.extract_info(f"ytsearch{max_results}:{query}", download=False)
+            results = []
+            if "entries" in info:
+                for entry in info["entries"]:
+                    results.append({
+                        "title": entry.get("title", ""),
+                        "id": entry.get("id"),
+                        "url": entry.get("url") or f"https://www.youtube.com/watch?v={entry.get('id')}",
+                        "duration": entry.get("duration"),
+                        "uploader": entry.get("uploader"),
+                        "view_count": entry.get("view_count"),
+                        "description": entry.get("description", ""),
+                    })
+            return results
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
 
 def _extract_video_id(url_or_id: str) -> str | None:
     """Extract video ID from URL or return as-is if already an ID."""
@@ -412,41 +442,16 @@ def _fetch_transcript_with_retry(
     return transcript, full_text, errors, proxy_used, retries_used
 
 
-@app.command()
-def get(
-    url: str = typer.Option("", "--url", "-u", help="YouTube video URL"),
-    video_id: str = typer.Option("", "--video-id", "-i", help="YouTube video ID"),
-    lang: str = typer.Option("en", "--lang", "-l", help="Language code"),
-    no_proxy: bool = typer.Option(False, "--no-proxy", help="Skip proxy tier"),
-    no_whisper: bool = typer.Option(False, "--no-whisper", help="Skip Whisper fallback"),
-    retries: int = typer.Option(3, "--retries", "-r", help="Max retries per tier"),
-):
-    """Get transcript for a YouTube video using three-tier fallback.
-
-    Fallback chain:
-    1. Direct youtube-transcript-api (no proxy)
-    2. With IPRoyal proxy rotation (if configured)
-    3. Download audio via yt-dlp → OpenAI Whisper (if OPENAI_API_KEY set)
-
-    Examples:
-        python youtube_transcript.py get -i dQw4w9WgXcQ
-        python youtube_transcript.py get -u "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-        python youtube_transcript.py get -i VIDEO_ID --no-whisper
-    """
+def _get_transcript_logic(
+    vid: str,
+    lang: str,
+    no_proxy: bool,
+    no_whisper: bool,
+    retries: int,
+) -> dict:
+    """Core logic to fetch transcript with fallback. Returns dict ready for output."""
     t0 = time.time()
-
-    # Resolve video ID
-    vid = _extract_video_id(video_id or url)
-    if not vid:
-        out = {
-            "meta": {"video_id": None, "language": lang, "took_ms": 0, "method": None},
-            "transcript": [],
-            "full_text": "",
-            "errors": ["Could not extract video ID from URL or --video-id"],
-        }
-        print(json.dumps(out, ensure_ascii=False, indent=2))
-        raise typer.Exit(code=1)
-
+    
     transcript: list[dict] = []
     full_text = ""
     errors: list[str] = []
@@ -519,7 +524,7 @@ def get(
     metadata = _fetch_video_metadata(vid)
 
     # Build output
-    out = {
+    return {
         "meta": {
             "video_id": vid,
             "language": lang,
@@ -531,6 +536,44 @@ def get(
         "full_text": full_text,
         "errors": all_errors if errors else [],
     }
+
+
+@app.command()
+def get(
+    url: str = typer.Option("", "--url", "-u", help="YouTube video URL"),
+    video_id: str = typer.Option("", "--video-id", "-i", help="YouTube video ID"),
+    lang: str = typer.Option("en", "--lang", "-l", help="Language code"),
+    no_proxy: bool = typer.Option(False, "--no-proxy", help="Skip proxy tier"),
+    no_whisper: bool = typer.Option(False, "--no-whisper", help="Skip Whisper fallback"),
+    retries: int = typer.Option(3, "--retries", "-r", help="Max retries per tier"),
+):
+    """Get transcript for a YouTube video using three-tier fallback.
+
+    Fallback chain:
+    1. Direct youtube-transcript-api (no proxy)
+    2. With IPRoyal proxy rotation (if configured)
+    3. Download audio via yt-dlp → OpenAI Whisper (if OPENAI_API_KEY set)
+
+    Examples:
+        python youtube_transcript.py get -i dQw4w9WgXcQ
+        python youtube_transcript.py get -u "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        python youtube_transcript.py get -i VIDEO_ID --no-whisper
+    """
+    t0 = time.time()
+
+    # Resolve video ID
+    vid = _extract_video_id(video_id or url)
+    if not vid:
+        out = {
+            "meta": {"video_id": None, "language": lang, "took_ms": 0, "method": None},
+            "transcript": [],
+            "full_text": "",
+            "errors": ["Could not extract video ID from URL or --video-id"],
+        }
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+        raise typer.Exit(code=1)
+
+    out = _get_transcript_logic(vid, lang, no_proxy, no_whisper, retries)
     print(json.dumps(out, ensure_ascii=False, indent=2))
 
     if errors:
@@ -687,6 +730,111 @@ def check_proxy(
             }
 
     print(json.dumps(result, indent=2))
+
+
+@app.command()
+def search(
+    query: str = typer.Argument(..., help="Search query"),
+    max_results: int = typer.Option(5, "--max", "-n", help="Max results"),
+    interactive: bool = typer.Option(True, "--interactive/--no-interactive", help="Enable interactive selection"),
+):
+    """Search for YouTube videos.
+    
+    Example:
+        python youtube_transcript.py search "python tutorial"
+    """
+    results = _search_videos(query, max_results=max_results)
+    
+    if not interactive or not sys.stdin.isatty():
+        print(json.dumps(results, indent=2))
+        return
+
+    # Interactive Mode
+    try:
+        from rich.console import Console
+        from rich.table import Table
+        from rich.prompt import Prompt
+        from rich import print as rprint
+    except ImportError:
+        print(json.dumps(results, indent=2))
+        return
+
+    console = Console()
+    table = Table(title=f"Search Results: {query}")
+    table.add_column("#", justify="right", style="cyan", no_wrap=True)
+    table.add_column("Title", style="magenta")
+    table.add_column("Channel", style="green")
+    table.add_column("Duration", justify="right")
+    table.add_column("Views", justify="right")
+    table.add_column("Abstract", style="dim white")
+
+    for idx, r in enumerate(results, 1):
+        if "error" in r:
+             continue
+        duration = str(r.get("duration", "?"))
+        # Simple duration format if it's seconds
+        try:
+             d = int(r.get("duration", 0) or 0)
+             m, s = divmod(d, 60)
+             h, m = divmod(m, 60)
+             if h: duration = f"{h}:{m:02d}:{s:02d}"
+             else: duration = f"{m}:{s:02d}"
+        except: pass
+        
+        desc = r.get("description", "") or ""
+        # Collapse whitespace
+        desc = " ".join(desc.split())
+        if len(desc) > 80:
+            desc = desc[:77] + "..."
+        
+        table.add_row(
+            str(idx),
+            r.get("title", "Unknown")[:50],
+            r.get("uploader", "Unknown")[:20],
+            duration,
+            str(r.get("view_count", "?")),
+            desc
+        )
+
+    console.print(table)
+    
+    selection = Prompt.ask("Select videos to transcribe (e.g. 1,3 or 'all' or 'q')", default="q")
+    if selection.lower() == 'q':
+        return
+
+    indices = []
+    if selection.lower() == 'all':
+        indices = range(len(results))
+    else:
+        try:
+            parts = [p.strip() for p in selection.split(",")]
+            indices = [int(p)-1 for p in parts if p.isdigit()]
+        except:
+            rprint("[red]Invalid selection[/red]")
+            return
+
+    for idx in indices:
+        if 0 <= idx < len(results):
+            vid = results[idx].get("id")
+            title = results[idx].get("title", vid)
+            rprint(f"\n[bold green]Processing:[/bold green] {title} ({vid})")
+            
+            # Use logic function directly
+            result = _get_transcript_logic(
+                vid=vid, lang="en", no_proxy=False, no_whisper=False, retries=3
+            )
+            
+            # Brief report
+            if result.get("transcript"):
+                 rprint(f"  [cyan]Success[/cyan]: {len(result['full_text'])} chars extracted via {result['meta'].get('method')}")
+                 # Save to file
+                 fname = f"{vid}_transcript.json"
+                 with open(fname, 'w') as f:
+                     json.dump(result, f, indent=2)
+                 rprint(f"  Saved to: [underline]{fname}[/underline]")
+            else:
+                 rprint(f"  [red]Failed[/red]: {result.get('errors')}")
+
 
 
 def _is_rate_limit_error(error_msg: str) -> bool:

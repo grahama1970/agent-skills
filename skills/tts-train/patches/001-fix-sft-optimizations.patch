@@ -1,0 +1,114 @@
+diff --git a/finetuning/sft_12hz.py b/finetuning/sft_12hz.py
+index 9ed8c48..8ad337a 100644
+--- a/finetuning/sft_12hz.py
++++ b/finetuning/sft_12hz.py
+@@ -36,19 +36,25 @@ def train():
+     parser.add_argument("--output_model_path", type=str, default="output")
+     parser.add_argument("--train_jsonl", type=str, required=True)
+     parser.add_argument("--batch_size", type=int, default=2)
+-    parser.add_argument("--lr", type=float, default=2e-5)
++    parser.add_argument("--lr", type=float, default=2e-6, help="Learning rate (2e-6 recommended per GitHub issue #39)")
+     parser.add_argument("--num_epochs", type=int, default=3)
+     parser.add_argument("--speaker_name", type=str, default="speaker_test")
++    parser.add_argument("--max_steps", type=int, default=None, help="Maximum number of training steps (for smoke testing)")
++    parser.add_argument("--gradient_accumulation_steps", type=int, default=4, help="Number of gradient accumulation steps")
++    parser.add_argument("--weight_decay", type=float, default=0.01, help="Weight decay for AdamW optimizer")
++    parser.add_argument("--mixed_precision", type=str, default="bf16", choices=["bf16", "fp16", "no"], help="Mixed precision training")
+     args = parser.parse_args()
+ 
+-    accelerator = Accelerator(gradient_accumulation_steps=4, mixed_precision="bf16", log_with="tensorboard")
++    import os as _os
++    _os.makedirs(args.output_model_path, exist_ok=True)
++    accelerator = Accelerator(gradient_accumulation_steps=args.gradient_accumulation_steps, mixed_precision=args.mixed_precision, log_with="tensorboard", project_dir=args.output_model_path)
+ 
+     MODEL_PATH = args.init_model_path
+ 
+     qwen3tts = Qwen3TTSModel.from_pretrained(
+         MODEL_PATH,
+         torch_dtype=torch.bfloat16,
+-        attn_implementation="flash_attention_2",
++        attn_implementation="eager",  # Use eager attention without flash_attention_2
+     )
+     config = AutoConfig.from_pretrained(MODEL_PATH)
+ 
+@@ -57,17 +63,22 @@ def train():
+     dataset = TTSDataset(train_data, qwen3tts.processor, config)
+     train_dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True, collate_fn=dataset.collate_fn)
+ 
+-    optimizer = AdamW(qwen3tts.model.parameters(), lr=args.lr, weight_decay=0.01)
++    optimizer = AdamW(qwen3tts.model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+ 
+     model, optimizer, train_dataloader = accelerator.prepare(
+         qwen3tts.model, optimizer, train_dataloader
+     )
+ 
+     num_epochs = args.num_epochs
++    global_step = 0
+     model.train()
+ 
+     for epoch in range(num_epochs):
+         for step, batch in enumerate(train_dataloader):
++            # Check max_steps limit
++            if args.max_steps is not None and global_step >= args.max_steps:
++                accelerator.print(f"\\nReached max_steps ({args.max_steps}), stopping training.")
++                break
+             with accelerator.accumulate(model):
+ 
+                 input_ids = batch['input_ids']
+@@ -86,7 +97,14 @@ def train():
+                 input_text_ids = input_ids[:, :, 0]
+                 input_codec_ids = input_ids[:, :, 1]
+ 
+-                input_text_embedding = model.talker.model.text_embedding(input_text_ids) * text_embedding_mask
++                # Get text embedding and project if dimensions don't match
++                input_text_embedding_raw = model.talker.model.text_embedding(input_text_ids)
++                # Use text_projection if available (required for 0.6B model)
++                if hasattr(model.talker, 'text_projection'):
++                    input_text_embedding = model.talker.text_projection(input_text_embedding_raw) * text_embedding_mask
++                else:
++                    input_text_embedding = input_text_embedding_raw * text_embedding_mask
++                
+                 input_codec_embedding = model.talker.model.codec_embedding(input_codec_ids) * codec_embedding_mask
+                 input_codec_embedding[:, 6, :] = speaker_embedding
+ 
+@@ -121,13 +139,24 @@ def train():
+                 optimizer.zero_grad()
+ 
+             if step % 10 == 0:
+-                accelerator.print(f"Epoch {epoch} | Step {step} | Loss: {loss.item():.4f}")
++                accelerator.print(f"Epoch {epoch} | Step {step} | Global Step {global_step} | Loss: {loss.item():.4f}")
++            
++            global_step += 1
+ 
++        # Only save checkpoint if we completed the epoch or reached max_steps
+         if accelerator.is_main_process:
+-            output_dir = os.path.join(args.output_model_path, f"checkpoint-epoch-{epoch}")
+-            shutil.copytree(MODEL_PATH, output_dir, dirs_exist_ok=True)
+-
+-            input_config_file = os.path.join(MODEL_PATH, "config.json")
++            if args.max_steps is not None and global_step >= args.max_steps:
++                output_dir = os.path.join(args.output_model_path, f"checkpoint-step-{args.max_steps}")
++            else:
++                output_dir = os.path.join(args.output_model_path, f"checkpoint-epoch-{epoch}")
++            _os.makedirs(output_dir, exist_ok=True)
++            
++            # Get the cached model path from HuggingFace
++            from huggingface_hub import snapshot_download
++            cached_model_path = snapshot_download(MODEL_PATH, local_files_only=True, ignore_patterns=["*.bin", "*.safetensors"])
++            shutil.copytree(cached_model_path, output_dir, dirs_exist_ok=True)
++
++            input_config_file = os.path.join(cached_model_path, "config.json")
+             output_config_file = os.path.join(output_dir, "config.json")
+             with open(input_config_file, 'r', encoding='utf-8') as f:
+                 config_dict = json.load(f)
+@@ -156,6 +185,10 @@ def train():
+             state_dict['talker.model.codec_embedding.weight'][3000] = target_speaker_embedding[0].detach().to(weight.device).to(weight.dtype)
+             save_path = os.path.join(output_dir, "model.safetensors")
+             save_file(state_dict, save_path)
++        
++        # Break outer loop if max_steps reached
++        if args.max_steps is not None and global_step >= args.max_steps:
++            break
+ 
+ if __name__ == "__main__":
+     train()

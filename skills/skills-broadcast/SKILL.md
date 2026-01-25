@@ -141,23 +141,22 @@ skills-broadcast push
 
 ## Conflict Detection
 
-The tool uses **content hashes** (not timestamps) to detect conflicts:
+The tool uses a **Time-Based "Winner Takes All"** strategy to detect the source of truth:
+
+1.  **Scans all local agent directories**: `.pi/skills`, `.agent/skills`, `.codex/skills`, `.claude/skills`.
+2.  **Compares modification times**: Finds the directory containing the most recently modified file.
+3.  **Selects the newest**: The directory with the latest changes is automatically selected as the source for the `push`.
+
+This ensures that if you edit a skill in _any_ agent environment, `skills-broadcast` naturally respects that edit as the latest version.
 
 ```
 [skills-broadcast] Found skills with DIFFERENT content across targets:
   ⚠ memory: 2 different versions exist
       a1b2c3d4: /home/user/.codex/skills /home/user/.claude/commands
       e5f6g7h8: /home/user/workspace/pi-mono/.pi/skills
-      → Newest git commit: /home/user/workspace/pi-mono/.pi/skills (2026-01-23 16:08)
-
-[skills-broadcast] Suggestion: push from /home/user/workspace/pi-mono/.pi/skills
+      → Newest file found in: /home/user/workspace/pi-mono/.pi/skills
+      → Selected Source: /home/user/workspace/pi-mono/.pi/skills
 ```
-
-When conflicts exist, the tool:
-
-1. Shows which locations have which version (by content hash)
-2. Checks git commit times to find the most recently committed version
-3. Suggests pushing from that location
 
 ## Troubleshooting
 

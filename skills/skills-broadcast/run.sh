@@ -4,8 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
-# Smart LOCAL_DIR detection: find the first existing skills directory
-# Priority: .pi/skills > .agent/skills > .codex/skills > .claude/skills > .agents/skills
+# Smart LOCAL_DIR detection: find the NEWEST skills directory
 detect_local_skills_dir() {
     local candidates=(
         "${PROJECT_ROOT}/.pi/skills"
@@ -14,14 +13,40 @@ detect_local_skills_dir() {
         "${PROJECT_ROOT}/.claude/skills"
         "${PROJECT_ROOT}/.agents/skills"
     )
+    local best_dir=""
+    local best_time=0
+
     for dir in "${candidates[@]}"; do
         if [[ -d "$dir" ]]; then
-            echo "$dir"
-            return
+            # Get modification time of the newest file in the directory
+            # If directory is empty, latest will be empty/0
+            local latest
+            latest=$(find "$dir" -type f -printf '%T@\n' 2>/dev/null | sort -n | tail -1)
+            
+            # Truncate to integer for simple comparison
+            latest=${latest%.*}
+            [[ -z "$latest" ]] && latest=0
+
+            # Winner takes all:Strictly greater than current best
+            # (First one found wins ties, preserving configured priority order for simultaneous edits)
+            if [[ "$latest" -gt "$best_time" ]]; then
+                best_time=$latest
+                best_dir=$dir
+            fi
+            
+            # If this is the first existence check, set as default fallback
+            if [[ -z "$best_dir" ]]; then
+                best_dir=$dir
+            fi
         fi
     done
+
     # Fallback to legacy if nothing found
-    echo "${PROJECT_ROOT}/.agents/skills"
+    if [[ -z "$best_dir" ]]; then
+        echo "${PROJECT_ROOT}/.agents/skills"
+    else
+        echo "$best_dir"
+    fi
 }
 
 LOCAL_DIR="${SKILLS_LOCAL_DIR:-$(detect_local_skills_dir)}"

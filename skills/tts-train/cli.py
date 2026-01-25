@@ -73,8 +73,25 @@ def ensure_repo(
     run(["git", "checkout", ref], cwd=QWEN_REPO_DIR)
     
     sha = get_repo_sha(QWEN_REPO_DIR)
+    sha = get_repo_sha(QWEN_REPO_DIR)
     rprint(f"[green]Repo ready:[/green] {QWEN_REPO_DIR}")
     rprint(f"[blue]Commit SHA:[/blue] {sha}")
+
+    # Apply patches if needed
+    patch_file = Path(__file__).resolve().parent / "patches" / "001-fix-sft-optimizations.patch"
+    if patch_file.exists():
+        rprint(f"[blue]Applying patch:[/blue] {patch_file.name}")
+        # Check if patch is already applied to avoid errors (or use --forward to tolerate)
+        # We try to apply; if it fails, we assume it's already applied or conflict.
+        # Check integrity first
+        val = subprocess.run(["git", "apply", "--check", str(patch_file)], cwd=QWEN_REPO_DIR, capture_output=True)
+        if val.returncode == 0:
+            run(["git", "apply", str(patch_file)], cwd=QWEN_REPO_DIR)
+            rprint("[green]Patch applied successfully.[/green]")
+        else:
+            rprint("[yellow]Patch possibly already applied or conflict (skipping).[/yellow]")
+    else:
+        rprint("[yellow]No patch file found.[/yellow]")
 
 
 @app.command()
