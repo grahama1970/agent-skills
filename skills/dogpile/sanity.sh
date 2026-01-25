@@ -46,4 +46,39 @@ if [[ $MISSING -eq 1 ]]; then
     exit 1
 fi
 
+# Functional Check: Mock/Quick Search
+echo "  [INFO] Running functional search test (AI agent memory)..."
+# We use --no-interactive to skip the user interview and test the search stage
+# We use a timeout to prevent hanging if a source is stuck
+REPORT=$(timeout 60 "$SCRIPT_DIR/run.sh" search "AI agent memory" --no-interactive || echo "TIMEOUT")
+
+if echo "$REPORT" | grep -q "Dogpile Report"; then
+    echo "  [PASS] Functional search: Report generated"
+else
+    echo "  [FAIL] Functional search: Report missing or failed"
+    echo "         Output: $REPORT"
+    exit 1
+fi
+
+if echo "$REPORT" | grep -q "Codex Synthesis"; then
+    echo "  [PASS] Functional search: Codex Synthesis present"
+else
+    echo "  [FAIL] Functional search: Codex Synthesis missing"
+    exit 1
+fi
+
+# Check state file
+if [[ -f "dogpile_state.json" ]]; then
+    if grep -q "DONE" "dogpile_state.json"; then
+        echo "  [PASS] Functional search: State file updated correctly"
+    else
+        echo "  [FAIL] Functional search: State file has no 'DONE' status"
+        exit 1
+    fi
+else
+    echo "  [FAIL] Functional search: dogpile_state.json not created"
+    exit 1
+fi
+
 echo "Result: PASS"
+

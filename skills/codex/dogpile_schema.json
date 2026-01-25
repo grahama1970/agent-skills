@@ -11,6 +11,7 @@
     },
     "clarifications": {
       "type": "array",
+      "description": "Optional list of clarifications if ambiguous",
       "items": {
         "type": "object",
         "properties": {
@@ -20,9 +21,13 @@
             "items": { "type": "string" }
           }
         },
-        "required": ["question", "options"]
+        "required": ["question", "options"],
+        "additionalProperties": false
       }
     }
   },
-  "required": ["is_ambiguous", "is_code_related"]
+  "required": ["is_ambiguous", "is_code_related", "clarifications"],
+  "additionalProperties": false
 }
+
+
