@@ -12,6 +12,7 @@ detect_local_skills_dir() {
         "${PROJECT_ROOT}/.codex/skills"
         "${PROJECT_ROOT}/.claude/skills"
         "${PROJECT_ROOT}/.agents/skills"
+        "${PROJECT_ROOT}/.kilocode/skills"
     )
     local best_dir=""
     local best_time=0

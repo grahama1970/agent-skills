@@ -10,8 +10,10 @@ import os
 import sys
 import json
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any
+
 
 SKILLS_DIR = Path(__file__).resolve().parents[1]
 if str(SKILLS_DIR) not in sys.path:
@@ -76,8 +78,23 @@ def _research(
     model_id = MODELS.get(model, MODELS["small"])
 
     messages = []
+    
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    date_context = (
+        f"Current date: {current_date}. "
+        "You MUST prioritize the most recent information available. "
+        "If there are conflicting sources, prefer the one with the latest timestamp. "
+        "Explicitly mention dates when discussing events or software versions."
+    )
+    
     if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
+        combined_system = f"{system_prompt}\n{date_context}"
+    else:
+
+        combined_system = date_context
+        
+    messages.append({"role": "system", "content": combined_system})
+
     messages.append({"role": "user", "content": question})
 
     payload = {

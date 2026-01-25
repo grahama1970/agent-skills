@@ -38,11 +38,18 @@ Synchronize skills across **all IDEs and projects** using a central canonical re
 │ ~/.pi/agent │          │   ~/.codex  │          │  ~/.claude  │
 │   /skills   │          │   /skills   │          │  /commands  │
 └─────────────┘          └─────────────┘          └─────────────┘
-       │                          │                          │
-       ▼                          ▼                          ▼
+      │                          │                          │
+      ▼                          ▼                          ▼
 ┌─────────────┐          ┌─────────────┐          ┌─────────────┐
 │ Antigravity │          │   pi-mono   │          │   memory    │
 │  ~/.gemini  │          │ .pi/skills  │          │.agents/skill│
+│   /skills   │          │             │          │             │
+└─────────────┘          └─────────────┘          └─────────────┘
+      │                          │                          │
+      ▼                          ▼                          ▼
+┌─────────────┐          ┌─────────────┐          ┌─────────────┐
+│  KiloCode   │          │             │          │             │
+│ ~/.kilocode │          │             │          │             │
 │   /skills   │          │             │          │             │
 └─────────────┘          └─────────────┘          └─────────────┘
 ```
@@ -82,6 +89,7 @@ skills-broadcast pull
 | **Codex**       | `~/.codex/skills`    | ✓ Supported |
 | **Claude Code** | `~/.claude/commands` | ✓ Supported |
 | **Antigravity** | `~/.gemini/skills`   | ✓ Supported |
+| **KiloCode**    | `~/.kilocode/skills` | ✓ Supported |
 
 ## Workflow: Edit Anywhere
 
