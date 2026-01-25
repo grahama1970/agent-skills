@@ -12,6 +12,8 @@ from textual.widgets import Header, Footer, Static, Log
 from textual.reactive import reactive
 
 LOG_FILE = Path("dogpile.log")
+STATE_FILE = Path("dogpile_state.json")
+
 
 class ProviderCard(Static):
     """A widget to display the status of a search provider."""
@@ -116,10 +118,31 @@ class DogpileMonitor(App):
         yield Footer()
 
     def on_mount(self) -> None:
-        """Start the log tailing worker."""
+        """Start log and state workers."""
         self.run_worker(self.tail_log())
+        self.run_worker(self.poll_state())
+
+    async def poll_state(self) -> None:
+        """Poll the dogpile_state.json file for updates."""
+        while True:
+            if STATE_FILE.exists():
+                try:
+                    with open(STATE_FILE, 'r') as f:
+                        state = json.load(f)
+                    
+                    providers = state.get("providers", {})
+                    for provider, status in providers.items():
+                        try:
+                            card = self.query_one(f"#card-{provider}", ProviderCard)
+                            card.status = status
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+            await asyncio.sleep(0.5)
 
     async def tail_log(self) -> None:
+
         """Tail the dogpile.log file."""
         log_view = self.query_one(Log)
         

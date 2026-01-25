@@ -47,11 +47,38 @@ def run_command(cmd: List[str], cwd: Optional[Path] = None) -> str:
     except Exception as e:
         return f"Error: {e}"
 
-def log_status(msg: str):
-    """Log status to stderr."""
+def log_status(msg: str, provider: Optional[str] = None, status: Optional[str] = None):
+    """Log status to stderr and update task-monitor state."""
     # Use a distinct prefix for easier parsing by other agents
     sys.stderr.write(f"[DOGPILE-STATUS] {msg}\n")
     sys.stderr.flush()
+
+    # Update state for task-monitor
+    state_file = Path("dogpile_state.json")
+    state = {}
+    if state_file.exists():
+        try:
+            with open(state_file, 'r') as f:
+                state = json.load(f)
+        except:
+            state = {}
+
+    if provider:
+        if "providers" not in state:
+            state["providers"] = {}
+        state["providers"][provider] = status or "RUNNING"
+    
+    state["last_msg"] = msg
+    state["last_updated"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    
+    try:
+        with open(state_file, 'w') as f:
+            json.dump(state, f)
+    except:
+        pass
+
+import time
+
 
 def search_wayback(query: str) -> Dict[str, Any]:
     """Check Wayback Machine for snapshots if query is a URL."""
@@ -59,6 +86,7 @@ def search_wayback(query: str) -> Dict[str, Any]:
     if not (query.startswith("http://") or query.startswith("https://")):
         return {}
 
+    log_status(f"Checking Wayback Machine for {query}...", provider="wayback", status="RUNNING")
     api_url = f"http://archive.org/wayback/available?url={query}"
     try:
         with urllib.request.urlopen(api_url, timeout=10) as resp:
@@ -67,24 +95,28 @@ def search_wayback(query: str) -> Dict[str, Any]:
             snapshots = data.get("archived_snapshots", {})
             closest = snapshots.get("closest", {})
             if closest.get("available"):
+                log_status("Wayback Machine snapshot found.", provider="wayback", status="DONE")
                 return {
                     "available": True,
                     "url": closest.get("url"),
                     "timestamp": closest.get("timestamp")
                 }
+            log_status("No Wayback Machine snapshot available.", provider="wayback", status="DONE")
     except Exception as e:
+        log_status(f"Wayback Machine error: {e}", provider="wayback", status="ERROR")
         return {"error": str(e)}
     
     return {}
 
+
 def search_brave(query: str) -> Dict[str, Any]:
     """Search Brave Web."""
-    log_status(f"Starting Brave Search for '{query}'...")
+    log_status(f"Starting Brave Search for '{query}'...", provider="brave", status="RUNNING")
     script = SKILLS_DIR / "brave-search" / "brave_search.py"
     cmd = [sys.executable, str(script), "web", query, "--count", "5", "--json"]
     try:
         output = run_command(cmd)
-        log_status("Brave Search finished.")
+        log_status("Brave Search finished.", provider="brave", status="DONE")
         if output.startswith("Error:"):
             return {"error": output}
         return json.loads(output)
@@ -93,12 +125,12 @@ def search_brave(query: str) -> Dict[str, Any]:
 
 def search_perplexity(query: str) -> Dict[str, Any]:
     """Search Perplexity."""
-    log_status(f"Starting Perplexity Research for '{query}'...")
+    log_status(f"Starting Perplexity Research for '{query}'...", provider="perplexity", status="RUNNING")
     script = SKILLS_DIR / "perplexity" / "perplexity.py"
     cmd = [sys.executable, str(script), "research", query, "--model", "sonar-reasoning", "--json"]
     try:
         output = run_command(cmd)
-        log_status("Perplexity finished.")
+        log_status("Perplexity finished.", provider="perplexity", status="DONE")
         if output.startswith("Error:"):
             return {"error": output}
         return json.loads(output)
@@ -106,9 +138,10 @@ def search_perplexity(query: str) -> Dict[str, Any]:
         return {"error": "Invalid JSON output from Perplexity", "raw": output}
 
 
+
 def search_github(query: str) -> Dict[str, Any]:
     """Search GitHub Repos and Issues."""
-    log_status(f"Starting GitHub Search for '{query}'...")
+    log_status(f"Starting GitHub Search for '{query}'...", provider="github", status="RUNNING")
     if not shutil.which("gh"):
         return {"error": "GitHub CLI (gh) not installed"}
     
@@ -117,7 +150,8 @@ def search_github(query: str) -> Dict[str, Any]:
     
     repos_out = run_command(repos_cmd)
     issues_out = run_command(issues_cmd)
-    log_status("GitHub Search finished.")
+    log_status("GitHub Search finished.", provider="github", status="DONE")
+
     
     results = {}
     try:
@@ -140,17 +174,18 @@ def search_github(query: str) -> Dict[str, Any]:
 
 def search_arxiv(query: str) -> Dict[str, Any]:
     """Search ArXiv (Stage 1: Abstracts)."""
-    log_status(f"Starting ArXiv Search (Stage 1: Abstracts) for '{query}'...")
+    log_status(f"Starting ArXiv Search (Stage 1: Abstracts) for '{query}'...", provider="arxiv", status="RUNNING")
     arxiv_dir = SKILLS_DIR / "arxiv"
     cmd = ["bash", "run.sh", "search", "-q", query, "-n", "10", "--json"]
     try:
         output = run_command(cmd, cwd=arxiv_dir)
-        log_status("ArXiv Search (Stage 1) finished.")
+        log_status("ArXiv Search (Stage 1) finished.", provider="arxiv", status="DONE")
         if output.startswith("Error:"):
             return {"error": output}
         return json.loads(output)
     except Exception as e:
         return {"error": str(e)}
+
 
 def search_arxiv_details(paper_id: str) -> Dict[str, Any]:
     """Search ArXiv (Stage 2: Paper Details)."""
@@ -169,9 +204,10 @@ def search_arxiv_details(paper_id: str) -> Dict[str, Any]:
 def search_youtube(query: str) -> List[Dict[str, str]]:
     """Search YouTube (Stage 1: Metadata)."""
 
-    log_status(f"Starting YouTube Search for '{query}'...")
+    log_status(f"Starting YouTube Search for '{query}'...", provider="youtube", status="RUNNING")
     if not shutil.which("yt-dlp"):
          return [{"title": "Error: yt-dlp not installed", "url": "", "id": "", "description": ""}]
+
 
     # yt-dlp search using JSON for robust parsing
     # Use --dump-json and NO --flat-playlist to get descriptions
@@ -206,8 +242,10 @@ def search_youtube(query: str) -> List[Dict[str, str]]:
             })
         except json.JSONDecodeError:
             continue
-            
+    
+    log_status("YouTube Search finished.", provider="youtube", status="DONE")
     return results
+
 
 def search_youtube_transcript(video_id: str) -> Dict[str, Any]:
     """Search YouTube (Stage 2: Transcript)."""
@@ -225,13 +263,16 @@ def search_youtube_transcript(video_id: str) -> Dict[str, Any]:
 
 def search_codex_knowledge(query: str) -> str:
     """Use Codex as a direct source of technical knowledge."""
-    log_status(f"Querying Codex Knowledge for '{query}'...")
+    log_status(f"Querying Codex Knowledge for '{query}'...", provider="codex", status="RUNNING")
     prompt = (
         f"Provide a high-reasoning technical overview and internal knowledge "
         f"about this topic: '{query}'. Focus on architectural patterns, "
         f"common pitfalls, and state-of-the-art approaches."
     )
-    return search_codex(prompt)
+    res = search_codex(prompt)
+    log_status(f"Codex technical overview finished.", provider="codex", status="DONE")
+    return res
+
 
 
 
@@ -239,6 +280,7 @@ def search_codex(prompt: str, schema: Optional[Path] = None) -> str:
     """Use high-reasoning Codex for analysis."""
     log_status("Consulting Codex for high-reasoning analysis...")
     script = SKILLS_DIR / "codex" / "run.sh"
+
     
     if schema:
         cmd = ["bash", str(script), "extract", prompt, "--schema", str(schema)]
@@ -371,11 +413,12 @@ def search(
     deep_code_res = []
     if is_code_related and target_repo:
         console.print(f"[bold magenta]Deep Dive:[/bold magenta] Analyzing target repo '{target_repo}'...")
-        log_status(f"Starting GitHub Deep Code Search in {target_repo}...")
+        log_status(f"Starting GitHub Deep Code Search in {target_repo}...", provider="github", status="RUNNING")
         with ThreadPoolExecutor(max_workers=2) as executor:
             future_code = executor.submit(search_github_code, target_repo, query)
             deep_code_res = future_code.result()
-        log_status(f"GitHub Deep Code Search in {target_repo} finished.")
+        log_status(f"GitHub Deep Code Search in {target_repo} finished.", provider="github", status="DONE")
+
 
 
     # 2.2 ArXiv Two-Stage (Paper Details)
@@ -383,20 +426,24 @@ def search(
     if isinstance(arxiv_res, dict) and "items" in arxiv_res:
         valid_papers = arxiv_res["items"][:2] # Limit to top 2 for speed
         if valid_papers:
-            log_status(f"ArXiv Stage 2: Fetching details for {len(valid_papers)} papers...")
+            log_status(f"ArXiv Stage 2: Fetching details for {len(valid_papers)} papers...", provider="arxiv", status="RUNNING")
+
             with ThreadPoolExecutor(max_workers=2) as executor:
                 futures = {executor.submit(search_arxiv_details, p["id"]): p for p in valid_papers}
                 for f in as_completed(futures):
                     res = f.result()
                     if "items" in res and res["items"]:
                         arxiv_details.append(res["items"][0])
+            log_status("ArXiv Stage 2 finished.", provider="arxiv", status="DONE")
+
 
     # 2.3 YouTube Two-Stage (Transcripts)
     youtube_transcripts = []
     if youtube_res:
         valid_videos = [v for v in youtube_res if v.get("id")][:2]
         if valid_videos:
-            log_status(f"YouTube Stage 2: Fetching transcripts for {len(valid_videos)} videos...")
+            log_status(f"YouTube Stage 2: Fetching transcripts for {len(valid_videos)} videos...", provider="youtube", status="RUNNING")
+
             with ThreadPoolExecutor(max_workers=2) as executor:
                 futures = {executor.submit(search_youtube_transcript, v["id"]): v for v in valid_videos}
                 for f in as_completed(futures):
@@ -405,6 +452,8 @@ def search(
                         res["title"] = futures[f]["title"]
                         res["url"] = futures[f]["url"]
                         youtube_transcripts.append(res)
+            log_status("YouTube Stage 2 finished.", provider="youtube", status="DONE")
+
 
 
     # --- GLUE THE REPORT ---
@@ -530,7 +579,7 @@ def search(
     md_lines.append("")
 
     # Synthesis (Codex High Reasoning)
-    log_status("Starting Codex Synthesis...")
+    log_status("Starting Codex Synthesis...", provider="synthesis", status="RUNNING")
     console.print("\n[bold cyan]Synthesizing report via Codex (gpt-5.2 High Reasoning)...[/bold cyan]")
 
     synthesis_prompt = (
@@ -543,9 +592,10 @@ def search(
         md_lines.append("## 🔬 Codex Synthesis (gpt-5.2 High Reasoning)")
         md_lines.append(synthesis)
         md_lines.append("")
-        log_status("Codex Synthesis finished.")
+        log_status("Codex Synthesis finished.", provider="synthesis", status="DONE")
     else:
-        log_status("Codex Synthesis failed.")
+        log_status("Codex Synthesis failed.", provider="synthesis", status="ERROR")
+
 
     
     # Print the report
