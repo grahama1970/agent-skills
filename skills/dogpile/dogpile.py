@@ -95,7 +95,7 @@ def search_perplexity(query: str) -> Dict[str, Any]:
     """Search Perplexity."""
     log_status(f"Starting Perplexity Research for '{query}'...")
     script = SKILLS_DIR / "perplexity" / "perplexity.py"
-    cmd = [sys.executable, str(script), "research", query, "--model", "small", "--json"]
+    cmd = [sys.executable, str(script), "research", query, "--model", "sonar-reasoning", "--json"]
     try:
         output = run_command(cmd)
         log_status("Perplexity finished.")
@@ -104,6 +104,7 @@ def search_perplexity(query: str) -> Dict[str, Any]:
         return json.loads(output)
     except json.JSONDecodeError:
         return {"error": "Invalid JSON output from Perplexity", "raw": output}
+
 
 def search_github(query: str) -> Dict[str, Any]:
     """Search GitHub Repos and Issues."""
@@ -189,37 +190,52 @@ def search_youtube(query: str) -> List[Dict[str, str]]:
     return results
 
 
+def search_codex(prompt: str, schema: Optional[Path] = None) -> str:
+    """Use high-reasoning Codex for analysis."""
+    log_status("Consulting Codex for high-reasoning analysis...")
+    script = SKILLS_DIR / "codex" / "run.sh"
+    
+    if schema:
+        cmd = ["bash", str(script), "extract", prompt, "--schema", str(schema)]
+    else:
+        cmd = ["bash", str(script), "reason", prompt]
+        
+    output = run_command(cmd)
+    log_status("Codex analysis finished.")
+    return output
+
 def analyze_query(query: str, interactive: bool) -> Tuple[str, bool]:
+
     """
     Analyze query for ambiguity and code-related intent.
     Returns: (query, is_code_related)
     Exits if ambiguous and interactive.
     """
     if not interactive:
-        return query, True  # Default to treating as code-related if skipping check? Or maybe False? Let's say True to allow deep dive if repo found.
+        return query, True
 
     prompt = (
-        f"Analyze the search query '{query}'.\n"
-        "1. Is it ambiguous? (True/False)\n"
-        "2. Is it related to programming, software, libraries, or technical documentation? (True/False)\n"
-        "3. If ambiguous, provide 3 multiple-choice questions.\n"
-        "Return JSON: "
-        '{"is_ambiguous": bool, "is_code_related": bool, "clarifications": [{"question": "...", "options": []}]}'
+        f"Analyze this research query: '{query}'\n"
+        "Assess if it is ambiguous and if it relates to software/coding."
     )
     
-    result = search_perplexity(prompt)
+    schema_path = SKILLS_DIR / "codex" / "dogpile_schema.json"
+    result_text = search_codex(prompt, schema=schema_path)
     
-    if "error" in result:
+    if result_text.startswith("Error:"):
+        log_status(f"Codex analysis failed: {result_text}")
         return query, True # Fail open
 
     try:
-        text = result.get("answer", "")
-        if "```json" in text:
-            text = text.split("```json")[1].split("```")[0]
-        elif "```" in text:
-            text = text.split("```")[1].split("```")[0]
-            
-        data = json.loads(text.strip())
+        # Codex CLI output-schema might contain some wrap text if we didn't use --json
+        # However, our run_codex wrapper returns the output.
+        # Let's try to extract JSON from the output in case there's noise.
+        start = result_text.find("{")
+        end = result_text.rfind("}")
+        if start != -1 and end != -1:
+            data = json.loads(result_text[start:end+1])
+        else:
+            data = json.loads(result_text)
         
         # Check Ambiguity
         if data.get("is_ambiguous"):
@@ -235,16 +251,17 @@ def analyze_query(query: str, interactive: bool) -> Tuple[str, bool]:
                 print(json.dumps(output, indent=2))
                 raise typer.Exit(code=0)
         
-        return query, data.get("is_code_related", False)
+        return query, data.get("is_code_related", True)
 
-    except json.JSONDecodeError:
-        pass
+    except json.JSONDecodeError as e:
+        log_status(f"JSON decode failed for Codex output: {e}")
     except typer.Exit:
         raise
-    except Exception:
-        pass
+    except Exception as e:
+        log_status(f"Unexpected error in query analysis: {e}")
 
     return query, True
+
 
 
 def search_github_code(repo: str, query: str) -> List[Dict[str, Any]]:
@@ -398,8 +415,22 @@ def search(
                  if video.get("description"):
                      md_lines.append(f"  _{video.get('description')}_")
     
+    # 6. Synthesis (Codex High Reasoning)
+    console.print("\n[bold cyan]Synthesizing report via Codex (gpt-5.2 High Reasoning)...[/bold cyan]")
+    synthesis_prompt = (
+        f"Synthesize the following research results for the query '{query}' into a concise, "
+        f"high-reasoning conclusion. Highlight unique insights from any source (GitHub, ArXiv, Web).\n\n"
+        f"RESULTS:\n" + "\n".join(md_lines)
+    )
+    synthesis = search_codex(synthesis_prompt)
+    if not synthesis.startswith("Error:"):
+        md_lines.append("## 🔬 Codex Synthesis (gpt-5.2 High Reasoning)")
+        md_lines.append(synthesis)
+        md_lines.append("")
+    
     # Print the report
     console.print(Markdown("\n".join(md_lines)))
+
 
 @app.command()
 def version():

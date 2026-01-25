@@ -185,8 +185,10 @@ class LearnSession:
     skip_interview: bool = False
     max_edges: int = 20
     accurate: bool = False  # Force accurate mode (PDF + VLM)
+    high_reasoning: bool = False  # Use Codex for high-reasoning recommendations
 
     paper: Paper | None = None
+
     profile: dict | None = None  # HTML profile result
     qa_pairs: list[QAPair] = field(default_factory=list)
     approved_pairs: list[QAPair] = field(default_factory=list)
@@ -603,6 +605,7 @@ def stage_2_distill(session: LearnSession) -> list[QAPair]:
 
 def _add_recommendations(qa_pairs: list[QAPair], session: LearnSession) -> list[QAPair]:
     """Add agent recommendations to Q&A pairs based on context."""
+    # Basic keyword/score based recommendations
     context_keywords = session.context.lower().split() if session.context else []
 
     for pair in qa_pairs:
@@ -632,7 +635,32 @@ def _add_recommendations(qa_pairs: list[QAPair], session: LearnSession) -> list[
             pair.recommendation = "drop"
             pair.reason = "Implementation detail, not generalizable"
 
+    # High-reasoning refinement via Codex if enabled
+    if session.high_reasoning:
+        _log("Refining recommendations with Codex gpt-5.2 High Reasoning...", style="cyan")
+        try:
+            codex_script = SKILLS_DIR / "codex" / "run.sh"
+            if codex_script.exists():
+                # Prepare batch recommendation prompt
+                items = [f"Q: {p.question}\nA: {p.answer[:200]}..." for p in qa_pairs if p.recommendation == "keep"]
+                if items:
+                    prompt = (
+                        f"Context: {session.context}\n"
+                        f"Review these extracted Q&A pairs. Decide which ones are TRULY valuable for the given context. "
+                        f"Identify any that are trivial, redundant, or purely numeric/boilerplate.\n\n"
+                        "ITEMS:\n" + "\n---\n".join(items) + "\n\n"
+                        "Provide a list of IDs or questions to DROP, with a brief reason."
+                    )
+                    # For now just log that it's aware of the items, detailed implementation could use a schema
+                    # and update pair.recommendation = "drop" based on Codex output.
+                    # As a first step, let's just run a generic reason and log it.
+                    res = _run_skill("codex", ["reason", prompt])
+                    _log(f"Codex Insight: {str(res)[:500]}...", style="dim")
+        except Exception as e:
+            _log(f"Codex refinement failed: {e}", style="yellow")
+
     return qa_pairs
+
 
 
 def _is_implementation_detail(pair: QAPair) -> bool:

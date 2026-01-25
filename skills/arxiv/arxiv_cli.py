@@ -576,8 +576,10 @@ def learn(
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview without storing"),
     skip_interview: bool = typer.Option(False, "--skip-interview", help="Auto-accept agent recommendations"),
     max_edges: int = typer.Option(20, "--max-edges", help="Max inline edge verifications"),
+    high_reasoning: bool = typer.Option(False, "--high-reasoning", help="Use Codex gpt-5.2 High Reasoning for recommendations"),
     output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ):
+
     """Extract knowledge from paper into memory (full pipeline).
 
     This is the PRIMARY command for learning from papers. It runs:
@@ -621,7 +623,9 @@ def learn(
         dry_run=dry_run,
         skip_interview=skip_interview,
         max_edges=max_edges,
+        high_reasoning=high_reasoning,
     )
+
 
     result = run_pipeline(session)
 

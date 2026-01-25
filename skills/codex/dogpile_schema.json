@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "is_ambiguous": {
+      "type": "boolean",
+      "description": "True if the query needs clarification"
+    },
+    "is_code_related": {
+      "type": "boolean",
+      "description": "True if the query is about programming, APIs, or software"
+    },
+    "clarifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": { "type": "string" },
+          "options": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["question", "options"]
+      }
+    }
+  },
+  "required": ["is_ambiguous", "is_code_related"]
+}
