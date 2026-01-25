@@ -138,17 +138,37 @@ def search_github(query: str) -> Dict[str, Any]:
         
     return results
 
-def search_arxiv(query: str) -> str:
-    """Search ArXiv (Raw output for now as it might not be JSON)."""
-    log_status(f"Starting ArXiv Search for '{query}'...")
+def search_arxiv(query: str) -> Dict[str, Any]:
+    """Search ArXiv (Stage 1: Abstracts)."""
+    log_status(f"Starting ArXiv Search (Stage 1: Abstracts) for '{query}'...")
     arxiv_dir = SKILLS_DIR / "arxiv"
-    cmd = ["bash", "run.sh", "search", "-q", query, "-n", "5"]
-    res = run_command(cmd, cwd=arxiv_dir)
-    log_status("ArXiv Search finished.")
-    return res
+    cmd = ["bash", "run.sh", "search", "-q", query, "-n", "10", "--json"]
+    try:
+        output = run_command(cmd, cwd=arxiv_dir)
+        log_status("ArXiv Search (Stage 1) finished.")
+        if output.startswith("Error:"):
+            return {"error": output}
+        return json.loads(output)
+    except Exception as e:
+        return {"error": str(e)}
+
+def search_arxiv_details(paper_id: str) -> Dict[str, Any]:
+    """Search ArXiv (Stage 2: Paper Details)."""
+    log_status(f"Fetching ArXiv Paper Details for {paper_id}...")
+    arxiv_dir = SKILLS_DIR / "arxiv"
+    cmd = ["bash", "run.sh", "get", "-i", paper_id]
+    try:
+        output = run_command(cmd, cwd=arxiv_dir)
+        log_status(f"ArXiv Details for {paper_id} finished.")
+        if output.startswith("Error:"):
+            return {"error": output}
+        return json.loads(output)
+    except Exception as e:
+        return {"error": str(e)}
 
 def search_youtube(query: str) -> List[Dict[str, str]]:
-    """Search YouTube via yt-dlp."""
+    """Search YouTube (Stage 1: Metadata)."""
+
     log_status(f"Starting YouTube Search for '{query}'...")
     if not shutil.which("yt-dlp"):
          return [{"title": "Error: yt-dlp not installed", "url": "", "id": "", "description": ""}]
@@ -188,6 +208,31 @@ def search_youtube(query: str) -> List[Dict[str, str]]:
             continue
             
     return results
+
+def search_youtube_transcript(video_id: str) -> Dict[str, Any]:
+    """Search YouTube (Stage 2: Transcript)."""
+    log_status(f"Fetching YouTube Transcript for {video_id}...")
+    skill_dir = SKILLS_DIR / "youtube-transcripts"
+    cmd = [sys.executable, str(skill_dir / "youtube_transcript.py"), "get", "-i", video_id]
+    try:
+        output = run_command(cmd)
+        log_status(f"YouTube Transcript for {video_id} finished.")
+        if output.startswith("Error:"):
+            return {"error": output}
+        return json.loads(output)
+    except Exception as e:
+        return {"error": str(e)}
+
+def search_codex_knowledge(query: str) -> str:
+    """Use Codex as a direct source of technical knowledge."""
+    log_status(f"Querying Codex Knowledge for '{query}'...")
+    prompt = (
+        f"Provide a high-reasoning technical overview and internal knowledge "
+        f"about this topic: '{query}'. Focus on architectural patterns, "
+        f"common pitfalls, and state-of-the-art approaches."
+    )
+    return search_codex(prompt)
+
 
 
 def search_codex(prompt: str, schema: Optional[Path] = None) -> str:
@@ -302,13 +347,14 @@ def search(
     console.print(f"[bold blue]Dogpiling on:[/bold blue] {query} (Code Related: {is_code_related})...")
 
     # Stage 1: Broad Search
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    with ThreadPoolExecutor(max_workers=7) as executor:
         future_brave = executor.submit(search_brave, query)
         future_perplexity = executor.submit(search_perplexity, query)
         future_github = executor.submit(search_github, query)
         future_arxiv = executor.submit(search_arxiv, query)
         future_youtube = executor.submit(search_youtube, query)
         future_wayback = executor.submit(search_wayback, query)
+        future_codex_src = executor.submit(search_codex_knowledge, query)
 
         # Collect results
         brave_res = future_brave.result()
@@ -317,18 +363,49 @@ def search(
         arxiv_res = future_arxiv.result()
         youtube_res = future_youtube.result()
         wayback_res = future_wayback.result()
+        codex_src_res = future_codex_src.result()
 
-    # Stage 2: Deep Dive (only if code related AND target repo found)
+    # Stage 2: Deep Dive
+    # 2.1 GitHub Code Search
     target_repo = extract_target_repo(github_res)
     deep_code_res = []
-
     if is_code_related and target_repo:
-        console.print(f"[bold magenta]Deep Dive:[/bold magenta] Analying target repo '{target_repo}'...")
+        console.print(f"[bold magenta]Deep Dive:[/bold magenta] Analyzing target repo '{target_repo}'...")
+        log_status(f"Starting GitHub Deep Code Search in {target_repo}...")
         with ThreadPoolExecutor(max_workers=2) as executor:
             future_code = executor.submit(search_github_code, target_repo, query)
             deep_code_res = future_code.result()
-    elif target_repo:
-        console.print(f"[dim]Skipping deep code search (Query identified as non-code related)[/dim]")
+        log_status(f"GitHub Deep Code Search in {target_repo} finished.")
+
+
+    # 2.2 ArXiv Two-Stage (Paper Details)
+    arxiv_details = []
+    if isinstance(arxiv_res, dict) and "items" in arxiv_res:
+        valid_papers = arxiv_res["items"][:2] # Limit to top 2 for speed
+        if valid_papers:
+            log_status(f"ArXiv Stage 2: Fetching details for {len(valid_papers)} papers...")
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = {executor.submit(search_arxiv_details, p["id"]): p for p in valid_papers}
+                for f in as_completed(futures):
+                    res = f.result()
+                    if "items" in res and res["items"]:
+                        arxiv_details.append(res["items"][0])
+
+    # 2.3 YouTube Two-Stage (Transcripts)
+    youtube_transcripts = []
+    if youtube_res:
+        valid_videos = [v for v in youtube_res if v.get("id")][:2]
+        if valid_videos:
+            log_status(f"YouTube Stage 2: Fetching transcripts for {len(valid_videos)} videos...")
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                futures = {executor.submit(search_youtube_transcript, v["id"]): v for v in valid_videos}
+                for f in as_completed(futures):
+                    res = f.result()
+                    if "full_text" in res:
+                        res["title"] = futures[f]["title"]
+                        res["url"] = futures[f]["url"]
+                        youtube_transcripts.append(res)
+
 
     # --- GLUE THE REPORT ---
     md_lines = [f"# Dogpile Report: {query}", ""]
@@ -341,7 +418,15 @@ def search(
          md_lines.append(f"> 🏛️ Wayback Error: {wayback_res['error']}")
          md_lines.append("")
 
-    # 1. Perplexity (Summary)
+    # 1. Codex Knowledge (Starting Point)
+    md_lines.append("## 🤖 Codex Technical Overview")
+    if not codex_src_res.startswith("Error:"):
+        md_lines.append(codex_src_res)
+    else:
+        md_lines.append(f"> Error: {codex_src_res}")
+    md_lines.append("")
+
+    # 2. Perplexity (Summary)
     md_lines.append("## 🧠 AI Research (Perplexity)")
     if "error" in perp_res:
          md_lines.append(f"> Error: {perp_res['error']}")
@@ -353,7 +438,7 @@ def search(
                 md_lines.append(f"- {cite}")
     md_lines.append("")
 
-    # 2. GitHub & Code Deep Dive
+    # 3. GitHub & Code Deep Dive
     md_lines.append("## OCTOCAT GitHub")
     if "error" in github_res:
         md_lines.append(f"> Error: {github_res['error']}")
@@ -386,7 +471,7 @@ def search(
                 md_lines.append(f"- **{repo_name}**: [{issue.get('title')}]({issue.get('html_url')}) ({issue.get('state')})")
     md_lines.append("")
 
-    # 3. Brave (Web)
+    # 4. Brave (Web)
     md_lines.append("## 🌐 Web Results (Brave)")
     if "error" in brave_res:
          md_lines.append(f"> Error: {brave_res['error']}")
@@ -396,27 +481,58 @@ def search(
             md_lines.append(f"  {item.get('description', '')}")
     md_lines.append("")
 
-    # 4. ArXiv
+    # 5. ArXiv
     md_lines.append("## 📄 Academic Papers (ArXiv)")
-    # ArXiv output is raw text (table likely)
-    md_lines.append(arxiv_res)
+    if arxiv_details:
+        md_lines.append("### Deep Dive: Paper Details")
+        for paper in arxiv_details:
+            md_lines.append(f"#### [{paper.get('title')}]({paper.get('abs_url')})")
+            md_lines.append(f"**Authors:** {', '.join(paper.get('authors', []))}")
+            abstract = paper.get("abstract", "")
+            if len(abstract) > 500:
+                abstract = abstract[:500] + "..."
+            md_lines.append(f"**Summary:** {abstract}")
+            md_lines.append("")
+        
+        md_lines.append("### Other Relevant Papers")
+    
+    if isinstance(arxiv_res, dict) and "items" in arxiv_res:
+        for p in arxiv_res["items"][len(arxiv_details):len(arxiv_details)+5]:
+            md_lines.append(f"- **[{p.get('title')}]({p.get('abs_url')})** ({p.get('published')})")
+    elif isinstance(arxiv_res, str):
+        md_lines.append(arxiv_res)
     md_lines.append("")
 
-    # 5. YouTube
+    # 6. YouTube
     md_lines.append("## 📺 Videos (YouTube)")
+    if youtube_transcripts:
+        md_lines.append("### Video Insights (Transcripts)")
+        for trans in youtube_transcripts:
+            md_lines.append(f"#### [{trans.get('title')}]({trans.get('url')})")
+            text = trans.get("full_text", "")
+            if len(text) > 800:
+                text = text[:800] + "..."
+            md_lines.append(f"> {text}")
+            md_lines.append("")
+            
+        md_lines.append("### More Videos")
+
     if not youtube_res:
         md_lines.append("No videos found or error.")
     else:
-        for i, video in enumerate(youtube_res):
+        for i, video in enumerate(youtube_res[len(youtube_transcripts):len(youtube_transcripts)+5]):
              if "Error" in video.get("title", ""):
                  md_lines.append(f"> {video['title']}")
              else:
                  md_lines.append(f"- **[{video['title']}]({video['url']})**")
                  if video.get("description"):
                      md_lines.append(f"  _{video.get('description')}_")
-    
-    # 6. Synthesis (Codex High Reasoning)
+    md_lines.append("")
+
+    # Synthesis (Codex High Reasoning)
+    log_status("Starting Codex Synthesis...")
     console.print("\n[bold cyan]Synthesizing report via Codex (gpt-5.2 High Reasoning)...[/bold cyan]")
+
     synthesis_prompt = (
         f"Synthesize the following research results for the query '{query}' into a concise, "
         f"high-reasoning conclusion. Highlight unique insights from any source (GitHub, ArXiv, Web).\n\n"
@@ -427,6 +543,10 @@ def search(
         md_lines.append("## 🔬 Codex Synthesis (gpt-5.2 High Reasoning)")
         md_lines.append(synthesis)
         md_lines.append("")
+        log_status("Codex Synthesis finished.")
+    else:
+        log_status("Codex Synthesis failed.")
+
     
     # Print the report
     console.print(Markdown("\n".join(md_lines)))

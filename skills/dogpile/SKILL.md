@@ -22,23 +22,25 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 
 ## Analyzed Sources
 
-1.  **Brave Search**: Broad web context, news, and official docs.
-2.  **Perplexity**: AI-synthesized deep answers and reasoning.
-3.  **GitHub**:
+1.  **Codex (🤖)**: High-reasoning technical starting point and final synthesis (gpt-5.2).
+2.  **Perplexity (🧠)**: AI-synthesized deep answers and reasoning (Sonar Reasoning).
+3.  **Brave Search (🌐)**: Broad web context, news, and official docs.
+4.  **ArXiv (📄)**: **Two-Stage Search** (Abstracts → Deep Dive on relevant papers).
+5.  **YouTube (📺)**: **Two-Stage Search** (Metadata → Detailed Transcripts via Whisper/Direct).
+6.  **GitHub (🐙)**:
     - **Repositories**: Finding relevant libraries and tools.
     - **Deep Code Search**: Searching _inside_ the most relevant repo for definitions.
     - **Issues**: Finding discussions, bugs, and workarounds.
-4.  **ArXiv**: Academic papers and latest research.
-5.  **YouTube**: Video tutorials, talks, and transcripts.
-6.  **Wayback Machine**: Historical snapshots for URLs.
+7.  **Wayback Machine (🏛️)**: Historical snapshots for URLs.
 
 ## Features
 
-1.  **Aggregated Search**: Brave (Web), Perplexity (AI), GitHub (Code), ArXiv (Papers), YouTube.
-2.  **Two-Stage Code Search**: Identifies target repo and searches deeper for code/issues.
-3.  **Wayback Machine**: Checks for snapshots if query is a URL.
-4.  **Agentic Extraction**: detailed abstracts/descriptions provided for Agent decision.
-5.  **Progress Logging**: Real-time status logged to `dogpile.log` for monitoring.
+1.  **Ambiguity Guard**: Uses Codex High Reasoning to analyze the query first. If ambiguous, it asks you for clarification before wasting resources.
+2.  **Two-Stage Deep Dive**:
+    - **ArXiv**: Fetches detailed metadata and long abstracts for the top matches.
+    - **YouTube**: Extracts full transcripts for the most relevant videos to provide textual insights.
+3.  **Codex Synthesis**: Consolidates all results into a coherent, high-reasoning conclusion.
+4.  **Textual TUI Monitor**: Real-time progress tracking of all concurrent searches via `run.sh monitor`.
 
 ## New Commands
 

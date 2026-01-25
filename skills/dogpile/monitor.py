@@ -108,6 +108,9 @@ class DogpileMonitor(App):
             yield ProviderCard("ArXiv", "📄", id="card-arxiv")
             yield ProviderCard("YouTube", "📺", id="card-youtube")
             yield ProviderCard("Wayback", "🏛️", id="card-wayback")
+            yield ProviderCard("Codex", "🤖", id="card-codex")
+            yield ProviderCard("Synthesis", "🔬", id="card-synthesis")
+
 
         yield Log(id="log_view", highlight=True)
         yield Footer()
@@ -175,14 +178,23 @@ class DogpileMonitor(App):
             provider = "youtube"
         elif "Wayback" in msg:
             provider = "wayback"
+        elif "Codex" in msg:
+            if "Synthesis" in msg or "Synthesizing" in msg:
+                provider = "synthesis"
+            else:
+                provider = "codex"
+
             
         if not provider:
             return
 
-        if "Starting" in msg:
+        if "Starting" in msg or "Consulting" in msg or "Synthesizing" in msg or "Querying" in msg:
             status = "RUNNING"
-        elif "finished" in msg:
+        elif "finished" in msg or "Complete" in msg or "overview" in msg:
             status = "DONE"
+        elif "failed" in msg:
+            status = "ERROR"
+
         
         if status:
             try:
