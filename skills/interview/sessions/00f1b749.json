@@ -1,0 +1,91 @@
+{
+  "id": "00f1b749",
+  "title": "Review Q&As from Cyber Knowledge Completion Using Large Language Mo",
+  "context": "Reviewing extracted knowledge for research scope",
+  "questions": [
+    {
+      "id": "q1",
+      "text": "Q: [DRY RUN] Sample question 1\nA: [DRY RUN] Sample answer 1",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q2",
+      "text": "Q: [DRY RUN] Sample question 2\nA: [DRY RUN] Sample answer 2",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q3",
+      "text": "Q: [DRY RUN] Sample question 3\nA: [DRY RUN] Sample answer 3",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q4",
+      "text": "Q: [DRY RUN] Sample question 4\nA: [DRY RUN] Sample answer 4",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q5",
+      "text": "Q: [DRY RUN] Sample question 5\nA: [DRY RUN] Sample answer 5",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q6",
+      "text": "Q: [DRY RUN] Sample question 6\nA: [DRY RUN] Sample answer 6",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q7",
+      "text": "Q: [DRY RUN] Sample question 7\nA: [DRY RUN] Sample answer 7",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q8",
+      "text": "Q: [DRY RUN] Sample question 8\nA: [DRY RUN] Sample answer 8",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q9",
+      "text": "Q: [DRY RUN] Sample question 9\nA: [DRY RUN] Sample answer 9",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    },
+    {
+      "id": "q10",
+      "text": "Q: [DRY RUN] Sample question 10\nA: [DRY RUN] Sample answer 10",
+      "type": "yes_no_refine",
+      "recommendation": "keep",
+      "reason": "Dry run stub",
+      "required": true
+    }
+  ],
+  "responses": {},
+  "started_at": 1769346037.9278405,
+  "completed_at": null,
+  "mode": "html"
+}

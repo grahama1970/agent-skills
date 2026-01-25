@@ -71,11 +71,21 @@ def _run_skill(skill_name: str, args: list[str], capture: bool = True) -> dict |
         raise RuntimeError(f"{skill_name} failed: {result.stderr[:500]}")
 
     if capture:
+        stdout = result.stdout.strip()
         try:
-            return json.loads(result.stdout)
+            return json.loads(stdout)
         except json.JSONDecodeError:
-            return result.stdout
+            # Robust JSON extraction: look for first { and last }
+            try:
+                start = stdout.find("{")
+                end = stdout.rfind("}")
+                if start != -1 and end != -1 and end > start:
+                    return json.loads(stdout[start:end+1])
+            except Exception:
+                pass
+            return stdout
     return ""
+
 
 
 def quick_profile_html(html_content: str) -> dict:
@@ -502,6 +512,15 @@ def extract_qa_from_text(text: str, scope: str = "research", context: str = "", 
         result = _run_skill("qra", args)
 
         # Parse QRA output (note: QRA skill returns "qra_pairs" key)
+        if not isinstance(result, dict):
+            error_msg = f"QRA returned non-JSON output: {str(result)[:500]}"
+            _log(error_msg, style="red")
+            return {
+                "success": False,
+                "error": error_msg,
+                "qa_pairs": [],
+            }
+
         qa_pairs = []
         items = result.get("qra_pairs", result.get("items", result.get("qa_pairs", [])))
 
@@ -520,6 +539,7 @@ def extract_qa_from_text(text: str, scope: str = "research", context: str = "", 
             "scope": scope,
             "dry_run": dry_run,
         }
+
 
     except Exception as e:
         return {
@@ -852,7 +872,12 @@ def run_pipeline(session: LearnSession) -> dict:
                 context=session.context,
                 dry_run=True,  # Don't store yet - we do that in stage 4
             )
-            raw_pairs = qa_result.get("qa_pairs", [])
+            
+            if not qa_result.get("success"):
+                _log(f"Q&A extraction failed: {qa_result.get('error')}", style="yellow")
+                raw_pairs = []
+            else:
+                raw_pairs = qa_result.get("qa_pairs", [])
 
             # Convert to QAPair objects
             session.qa_pairs = []
@@ -866,10 +891,17 @@ def run_pipeline(session: LearnSession) -> dict:
                 )
                 session.qa_pairs.append(pair)
 
-            # Add recommendations
-            session.qa_pairs = _add_recommendations(session.qa_pairs, session)
+            # Fallback to legacy distill if extraction yielded no results but we have text
+            if len(session.qa_pairs) == 0 and len(full_text) > 1000:
+                _log("HTML extraction yielded text but 0 Q&A pairs. Falling back to legacy distillation.", style="yellow")
+                session.qa_pairs = stage_2_distill(session)
+            elif len(session.qa_pairs) > 0:
+                # Add recommendations
+                session.qa_pairs = _add_recommendations(session.qa_pairs, session)
+                _log(f"Extracted {len(session.qa_pairs)} Q&A pairs from {extraction_format.upper()}", style="green")
+            else:
+                _log("No Q&A pairs extracted and text too short for fallback.", style="yellow")
 
-            _log(f"Extracted {len(session.qa_pairs)} Q&A pairs from {extraction_format.upper()}", style="green")
         elif session.dry_run:
             # Dry run: return stub Q&A pairs (estimation based on profile)
             _log("DRY RUN - estimating Q&A pairs", style="yellow")
