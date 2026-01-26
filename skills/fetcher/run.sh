@@ -32,7 +32,7 @@ if [[ -z "$BRAVE_API_KEY" && -f "/home/graham/workspace/experiments/fetcher/.env
 fi
 
 # Git source for fetcher (pinned to stable commit)
-REPO="git+https://github.com/grahama1970/fetcher.git@a17122ae99497c96b6612ee3f1937d20b9caec31"
+REPO="git+https://github.com/grahama1970/fetcher.git@35c4983729d05ca3fd7825b04c67b518f5567a6c"
 
 # Playwright browser marker
 PW_MARKER="$HOME/.cache/fetcher-playwright-installed"

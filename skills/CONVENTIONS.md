@@ -60,6 +60,22 @@ cd .pi/skills/task-monitor
 
 The service uses absolute paths, so all skill copies use the same running daemon.
 
+## Task Monitoring
+
+Long-running skills (high latency, multi-stage, or batch processes) MUST report progress to the global `task-monitor`.
+
+### Standard Implementation
+
+1.  **Registry**: Register your task once using `monitor.py register`.
+2.  **State File**: Store state in `~/.pi/<skill-name>/state.json`.
+3.  **Frequency**: Update state at least every 5-10 seconds or after each significant item.
+4.  **Format**: Use the standard state schema (completed, total, current_item, stats).
+
+### Adapters
+
+- **Python**: Use `from monitor_adapter import Monitor`.
+- **Bash**: Source `common.sh` and use `report_progress`.
+
 ## Verification
 
 To verify a skill works from multiple locations:

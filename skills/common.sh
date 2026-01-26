@@ -38,3 +38,31 @@ load_env() {
 
 # Call automatically when sourced
 load_env
+
+# Report progress to task-monitor state file
+# Usage: report_progress <state_file> <completed> <total> <current_item> [status]
+report_progress() {
+    local state_file="$1"
+    local completed="$2"
+    local total="$3"
+    local current_item="$4"
+    local status="${5:-running}"
+    
+    local last_updated
+    last_updated=$(date "+%Y-%m-%d %H:%M:%S")
+    
+    # Create directory if needed
+    mkdir -p "$(dirname "$state_file")"
+    
+    # Write JSON state
+    cat << EOF > "$state_file"
+{
+  "completed": $completed,
+  "total": $total,
+  "current_item": "$current_item",
+  "last_updated": "$last_updated",
+  "status": "$status"
+}
+EOF
+}
+

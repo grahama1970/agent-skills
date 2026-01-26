@@ -45,6 +45,19 @@ import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 
+# Resolve skill directories
+SCRIPT_DIR = Path(__file__).resolve().parent
+SKILLS_DIR = SCRIPT_DIR.parent
+
+# Import Task-Monitor adapter if available
+try:
+    if str(SKILLS_DIR / "task-monitor") not in sys.path:
+        sys.path.append(str(SKILLS_DIR / "task-monitor"))
+    from monitor_adapter import Monitor
+except ImportError:
+    Monitor = None
+
+
 # Rich console for styled output
 console = Console(stderr=True)
 
@@ -1414,7 +1427,9 @@ async def _review_full_async(
     save_intermediate: bool,
     provider: str = DEFAULT_PROVIDER,
     reasoning: Optional[str] = None,
+    monitor: Optional[Any] = None,
 ) -> dict:
+
     """Async implementation of iterative code review pipeline.
 
     For providers that support --continue (github, anthropic), session context
@@ -1440,6 +1455,9 @@ async def _review_full_async(
         if not is_first_call:
             typer.echo("(continuing session)", err=True)
         typer.echo("=" * 60, err=True)
+        
+        if monitor: monitor.update(0, item=f"R{round_num}: Generating")
+
 
         # First round: include any provided context in prompt
         # Subsequent rounds: context accumulates via --continue
@@ -1488,6 +1506,9 @@ async def _review_full_async(
             typer.echo(f"Streaming to: {log_file}", err=True)
         typer.echo("(continuing session)", err=True)
         typer.echo("=" * 60, err=True)
+        
+        if monitor: monitor.update(0, item=f"R{round_num}: Judging")
+
 
         step2_prompt = STEP2_PROMPT.format(request=request_content, step1_output=step1_output)
         step2_output, rc = await _run_provider_async(
@@ -1518,6 +1539,9 @@ async def _review_full_async(
             typer.echo(f"Streaming to: {log_file}", err=True)
         typer.echo("(continuing session)", err=True)
         typer.echo("=" * 60, err=True)
+        
+        if monitor: monitor.update(0, item=f"R{round_num}: Finalizing")
+
 
         step3_prompt = STEP3_PROMPT.format(
             request=request_content,
@@ -1562,6 +1586,8 @@ async def _review_full_async(
         final_diff = round_diff
 
         typer.echo(f"\nRound {round_num} complete", err=True)
+        if monitor: monitor.update(1, item=f"Round {round_num} Complete")
+
 
     return {
         "rounds": all_rounds,
@@ -1630,7 +1656,31 @@ def review_full(
     request_content = file.read_text()
     t0 = time.time()
 
+    # Initialize monitor
+    monitor = None
+    if Monitor:
+        state_file = Path.home() / ".pi" / "code-review" / f"state_{file.stem}.json"
+        monitor = Monitor(
+            name=f"review-{file.stem}",
+            total=rounds,
+            desc=f"Reviewing: {file.name}",
+            state_file=str(state_file)
+        )
+        # Register task
+        try:
+            subprocess.run([
+                "python3", str(SKILLS_DIR / "task-monitor" / "monitor.py"),
+                "register",
+                "--name", f"review-{file.stem}",
+                "--state", str(state_file),
+                "--total", str(rounds),
+                "--desc", f"Code Review: {file.name}"
+            ], capture_output=True, check=False)
+        except Exception:
+            pass
+
     # Cost warning for expensive providers
+
     if PROVIDERS[provider].get("cost") == "paid":
         typer.echo(f"⚠️  WARNING: Using {provider} provider costs money per API call!", err=True)
         typer.echo(f"💡 TIP: Use --provider github --model {actual_model} for FREE access", err=True)
@@ -1661,7 +1711,9 @@ def review_full(
             save_intermediate=save_intermediate,
             provider=provider,
             reasoning=reasoning,
+            monitor=monitor,
         ))
+
 
     # Use workspace if provided (copies uncommitted files to temp dir)
     if workspace:

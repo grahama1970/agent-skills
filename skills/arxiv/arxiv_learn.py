@@ -38,6 +38,14 @@ try:
 except Exception:
     pass
 
+# Import Task-Monitor adapter if available
+try:
+    sys.path.append(str(SKILLS_DIR / "task-monitor"))
+    from monitor_adapter import Monitor
+except ImportError:
+    Monitor = None
+
+
 
 def _log(msg: str, style: str = None, stage: int = None):
     """Log message with optional stage prefix."""
@@ -882,17 +890,46 @@ def stage_5_schedule_edges(session: LearnSession) -> int:
 def run_pipeline(session: LearnSession) -> dict:
     """Run the full arxiv-learn pipeline with HTML-first extraction."""
     extraction_format = "unknown"
+    
+    # Initialize monitor
+    monitor = None
+    if Monitor:
+        state_file = Path.home() / ".pi" / "arxiv" / "state.json"
+        monitor = Monitor(
+            name=f"arxiv-{session.arxiv_id or 'search'}",
+            total=5,
+            desc=f"Learning from arXiv: {session.arxiv_id or session.search_query}",
+            state_file=str(state_file)
+        )
+        # Register task with global monitor if possible
+        try:
+            subprocess.run([
+                "python3", str(SKILLS_DIR / "task-monitor" / "monitor.py"),
+                "register", 
+                "--name", f"arxiv-{session.arxiv_id or 'search'}",
+                "--state", str(state_file),
+                "--total", "5",
+                "--desc", f"Arxiv Learn: {session.arxiv_id or session.search_query}"
+            ], capture_output=True, check=False)
+        except Exception:
+            pass
+
     try:
-        # Stage 1: Find paper (also downloads HTML from ar5iv and runs profile)
+        # Stage 1: Find paper
+        if monitor: monitor.update(0, item="Finding paper")
         session.paper = stage_1_find_paper(session)
+        if monitor: monitor.update(1, item="Found paper")
+
 
         # Stage 2: Extract content using HTML-first routing
-        # This replaces the old distill-based extraction for arxiv papers
+        if monitor: monitor.set_description(f"Extracting: {session.paper.title[:30]}...")
+        if monitor: monitor.update(0, item="Extracting Content")
         extraction_result = stage_2_extract(session)
         extraction_format = extraction_result.get("format", "unknown")
         full_text = extraction_result.get("full_text", "")
 
         # Stage 2b: Convert extracted text to Q&A pairs
+        if monitor: monitor.update(0, item="Generating Q&A")
         if full_text:
             qa_result = extract_qa_from_text(
                 full_text,
@@ -949,14 +986,23 @@ def run_pipeline(session: LearnSession) -> dict:
             _log("HTML extraction returned no text, falling back to distill", style="yellow")
             session.qa_pairs = stage_2_distill(session)
 
+        if monitor: monitor.update(1, item="Content Extracted")
+
         # Stage 3: Interview
+        if monitor: monitor.update(0, item="Interviewing")
         session.approved_pairs, session.dropped_pairs = stage_3_interview(session)
+        if monitor: monitor.update(1, item="Interview Complete")
 
         # Stage 4: Store
+        if monitor: monitor.update(0, item="Storing Knowledge")
         stored = stage_4_store(session)
+        if monitor: monitor.update(1, item="Stored")
 
         # Stage 5: Schedule edges
+        if monitor: monitor.update(0, item="Verifying Edges")
         verified = stage_5_schedule_edges(session)
+        if monitor: monitor.update(1, item="Verified")
+
 
         session.completed_at = time.time()
 

@@ -48,6 +48,14 @@ except Exception:
 
 _load_env()
 
+# Import Task-Monitor adapter if available
+try:
+    sys.path.append(str(SKILLS_DIR / "task-monitor"))
+    from monitor_adapter import Monitor
+except ImportError:
+    Monitor = None
+
+
 import typer
 
 app = typer.Typer(add_completion=False, help="Extract YouTube video transcripts")
@@ -448,8 +456,10 @@ def _get_transcript_logic(
     no_proxy: bool,
     no_whisper: bool,
     retries: int,
+    monitor: Optional[Any] = None,
 ) -> dict:
     """Core logic to fetch transcript with fallback. Returns dict ready for output."""
+
     t0 = time.time()
     
     transcript: list[dict] = []
@@ -460,12 +470,15 @@ def _get_transcript_logic(
 
     # TIER 1: Direct (no proxy)
     typer.echo("Tier 1: Trying direct youtube-transcript-api...", err=True)
+    if monitor: monitor.update(0, item="Tier 1: Direct API")
     try:
         transcript, full_text, errors, _, _ = _fetch_transcript_with_retry(
             vid, lang, use_proxy=False, max_retries=0
         )
         if not errors:
             method = "direct"
+            if monitor: monitor.update(1, item="Found in Tier 1")
+
     except ImportError as e:
         errors = [str(e)]
 
@@ -475,12 +488,15 @@ def _get_transcript_logic(
     # TIER 2: With proxy (if available and tier 1 failed)
     if errors and not no_proxy and _load_proxy_settings() is not None:
         typer.echo(f"Tier 2: Trying with IPRoyal proxy (retries: {retries})...", err=True)
+        if monitor: monitor.update(0, item="Tier 2: Proxy API")
         try:
             transcript, full_text, errors, _, _ = _fetch_transcript_with_retry(
                 vid, lang, use_proxy=True, max_retries=retries
             )
             if not errors:
                 method = "proxy"
+                if monitor: monitor.update(1, item="Found in Tier 2")
+
         except Exception as e:
             errors = [str(e)]
 
@@ -490,12 +506,14 @@ def _get_transcript_logic(
     # TIER 3: Whisper fallback (if tiers 1-2 failed)
     if errors and not no_whisper and os.getenv("OPENAI_API_KEY"):
         typer.echo("Tier 3: Trying yt-dlp + Whisper fallback...", err=True)
+        if monitor: monitor.update(0, item="Tier 3: yt-dlp + Whisper")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = Path(tmpdir)
 
             # Download audio
             typer.echo("  Downloading audio with yt-dlp...", err=True)
+            if monitor: monitor.update(0, item="Downloading Audio")
             audio_path, dl_error = _download_audio_ytdlp(vid, tmppath)
 
             if dl_error:
@@ -503,12 +521,14 @@ def _get_transcript_logic(
             elif audio_path:
                 # Transcribe with local Whisper first (free)
                 typer.echo("  Transcribing with local Whisper...", err=True)
+                if monitor: monitor.update(0, item="Transcribing (Whisper)")
                 transcript, full_text, whisper_error = _transcribe_whisper_local(audio_path, lang)
 
                 if whisper_error:
                     # Fallback to API if local fails
                     if os.getenv("OPENAI_API_KEY"):
                         typer.echo("  Local failed, trying Whisper API...", err=True)
+                        if monitor: monitor.update(0, item="Transcribing (Whisper API)")
                         transcript, full_text, whisper_error = _transcribe_whisper(audio_path, lang)
 
                 if whisper_error:
@@ -517,6 +537,8 @@ def _get_transcript_logic(
                 else:
                     errors = []
                     method = "whisper-local" if "local" not in (whisper_error or "") else "whisper-api"
+                    if monitor: monitor.update(1, item="Found in Tier 3")
+
 
     took_ms = int((time.time() - t0) * 1000)
 
@@ -573,7 +595,31 @@ def get(
         print(json.dumps(out, ensure_ascii=False, indent=2))
         raise typer.Exit(code=1)
 
-    out = _get_transcript_logic(vid, lang, no_proxy, no_whisper, retries)
+    # Initialize monitor if requested
+    monitor = None
+    if Monitor and (no_proxy or not no_whisper): # Only monitor if potentially hitting heavy tiers
+        state_file = Path.home() / ".pi" / "youtube-transcripts" / f"state_{vid}.json"
+        monitor = Monitor(
+            name=f"yt-{vid}",
+            total=1,
+            desc=f"Transcribing YouTube: {vid}",
+            state_file=str(state_file)
+        )
+        # Register task
+        try:
+            subprocess.run([
+                "python3", str(SKILLS_DIR / "task-monitor" / "monitor.py"),
+                "register",
+                "--name", f"yt-{vid}",
+                "--state", str(state_file),
+                "--total", "1",
+                "--desc", f"YouTube Transcript: {vid}"
+            ], capture_output=True, check=False)
+        except Exception:
+            pass
+
+    out = _get_transcript_logic(vid, lang, no_proxy, no_whisper, retries, monitor=monitor)
+
     print(json.dumps(out, ensure_ascii=False, indent=2))
 
     if errors:
