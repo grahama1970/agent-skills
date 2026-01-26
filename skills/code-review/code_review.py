@@ -54,17 +54,21 @@ Multi-Provider AI Code Review Skill
 
 Submit structured code review requests to multiple AI providers and get unified diffs.
 
+⚠️  COST WARNING: Only use 'github' provider to avoid API charges!
+   Other providers make direct API calls that cost money.
+
 PROVIDERS:
-  github    - GitHub Copilot (default, requires copilot CLI)
-  anthropic - Anthropic Claude (requires claude CLI)
-  openai    - OpenAI Codex (requires codex CLI, high reasoning default)
-  google    - Google Gemini (requires gemini CLI)
+  github    - GitHub Copilot (FREE with subscription, includes Claude models)
+  anthropic - Anthropic Claude (💰 PAID - direct API calls cost money)
+  openai    - OpenAI Codex (💰 PAID - direct API calls cost money)
+  google    - Google Gemini (💰 PAID - direct API calls cost money)
 
 QUICK START:
   code_review.py check                                    # Verify provider
-  code_review.py review --file request.md                 # Submit review
-  code_review.py review --file request.md -P anthropic    # Use Claude
-  code_review.py review --file request.md -P openai       # Use Codex with high reasoning
+  code_review.py review --file request.md                 # Submit review (default: GitHub)
+  code_review.py review --file request.md -P github -m claude-sonnet-4.5  # ✅ FREE Claude
+  code_review.py review --file request.md -P anthropic    # ❌ COSTS MONEY - AVOID
+  code_review.py review --file request.md -P openai       # ❌ COSTS MONEY - AVOID
   code_review.py review --file request.md --workspace ./src  # Include uncommitted files
 
 WORKFLOW:
@@ -86,6 +90,7 @@ app = typer.Typer(
 
 # Provider configurations
 # Each provider has: cli (command), models (dict), default_model, and optional env vars
+# ⚠️  COST WARNING: Only 'github' provider is free. Others make paid API calls.
 PROVIDERS = {
     "github": {
         "cli": "copilot",
@@ -98,6 +103,7 @@ PROVIDERS = {
         },
         "default_model": "gpt-5",
         "env": {"COPILOT_ALLOW_ALL": "1"},
+        "cost": "free",  # Free with GitHub Copilot subscription
     },
     "anthropic": {
         "cli": "claude",
@@ -114,6 +120,7 @@ PROVIDERS = {
         },
         "default_model": "sonnet",
         "env": {},
+        "cost": "paid",  # Direct API calls cost money
     },
     "openai": {
         "cli": "codex",  # OpenAI Codex CLI
@@ -129,6 +136,7 @@ PROVIDERS = {
         "env": {},
         "supports_reasoning": True,
         "supports_continue": False,
+        "cost": "paid",  # Direct API calls cost money
     },
     "google": {
         # Gemini CLI: https://geminicli.com/docs/cli/headless/
@@ -146,6 +154,7 @@ PROVIDERS = {
         "env": {},
         # Session continuation: Not supported via CLI flags (uses /chat save/resume)
         "supports_continue": False,
+        "cost": "paid",  # Direct API calls cost money
     },
 }
 
@@ -721,8 +730,9 @@ def review(
     Examples:
         code_review.py review --file request.md
         code_review.py review --file request.md --workspace ./src
-        code_review.py review --file request.md --provider anthropic --model opus-4.5
-        code_review.py review --file request.md --provider openai --model gpt-5.2-codex --reasoning high
+        code_review.py review --file request.md --provider github --model claude-sonnet-4.5  # ✅ FREE
+        code_review.py review --file request.md --provider anthropic --model opus-4.5       # ❌ COSTS MONEY
+        code_review.py review --file request.md --provider openai --model gpt-5.2-codex --reasoning high  # ❌ COSTS MONEY
     """
     t0 = time.time()
 
@@ -1592,8 +1602,9 @@ def review_full(
     Examples:
         code_review.py review-full --file request.md
         code_review.py review-full --file request.md --workspace ./src --workspace ./tests
-        code_review.py review-full --file request.md --provider anthropic --model opus-4.5
-        code_review.py review-full --file request.md --provider openai --model gpt-5.2-codex --reasoning high
+        code_review.py review-full --file request.md --provider github --model claude-sonnet-4.5  # ✅ FREE
+        code_review.py review-full --file request.md --provider anthropic --model opus-4.5       # ❌ COSTS MONEY
+        code_review.py review-full --file request.md --provider openai --model gpt-5.2-codex --reasoning high  # ❌ COSTS MONEY
     """
     if provider not in PROVIDERS:
         typer.echo(f"Error: Unknown provider '{provider}'. Valid: {', '.join(PROVIDERS.keys())}", err=True)
@@ -1611,8 +1622,18 @@ def review_full(
     # Use provider's default model if not specified
     actual_model = model or PROVIDERS[provider]["default_model"]
 
+    # Cost warning for expensive providers
+    if PROVIDERS[provider].get("cost") == "paid":
+        typer.echo(f"⚠️  WARNING: Using {provider} provider costs money per API call!", err=True)
+        typer.echo(f"💡 TIP: Use --provider github --model {actual_model} for FREE access", err=True)
+
     request_content = file.read_text()
     t0 = time.time()
+
+    # Cost warning for expensive providers
+    if PROVIDERS[provider].get("cost") == "paid":
+        typer.echo(f"⚠️  WARNING: Using {provider} provider costs money per API call!", err=True)
+        typer.echo(f"💡 TIP: Use --provider github --model {actual_model} for FREE access", err=True)
 
     typer.echo(f"Using provider: {provider} ({actual_model})", err=True)
 

@@ -17,6 +17,7 @@ Commands:
   train-runpod <config>                       Launch RunPod training (stub)
   infer <config> <output_wav>                 Synthesize a sample using trained XTTS (skill env)
   tensorboard [port]                          Start TensorBoard (skill env)
+  tune-1.7b-bayesian [options]                Bayesian hyperparameter tuning for 1.7B models (skill env)
   pipeline                                   Run full Horus pipeline (background)
 USAGE
 }
@@ -70,6 +71,21 @@ case "$cmd" in
   tensorboard)
     port="${2:-6006}"
     (cd "$SCRIPT_DIR" && uv run tensorboard --logdir "$ROOT_DIR/artifacts/tts/horus" --port "$port")
+    ;;
+  tune-1.7b-bayesian)
+    shift  # Remove the command name
+    echo "🎯 Starting 1.7B Bayesian hyperparameter tuning with web research..."
+    echo "📊 Monitor progress: optuna-dashboard sqlite:///$ROOT_DIR/runs/horus/bayesian_tuning_1.7b/optuna_study.db"
+    (cd "$SCRIPT_DIR" && uv run python tune_qwen3_1.7b_bayesian_fixed.py \
+      --model_size 1.7b \
+      --dataset horus \
+      --use_web_research \
+      "$@")
+    exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+      echo "❌ Tuning failed with exit code $exit_code"
+      exit $exit_code
+    fi
     ;;
   pipeline)
     "$ROOT_DIR/scripts/tts/run_horus_pipeline.sh"
