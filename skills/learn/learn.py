@@ -5,6 +5,11 @@ Learn - Unified Knowledge Acquisition for Any Persona Agent
 ONE command to learn from ANY content type.
 Auto-detects source type and routes to appropriate backend skill.
 
+Integrates with:
+- Federated Taxonomy (bridge attributes for cross-collection traversal)
+- Graph edges (linking learned content to existing knowledge)
+- Persona state evolution (updating drives after learning)
+
 Usage:
     ./run.sh https://arxiv.org/abs/2302.02083 --scope horus_lore
     ./run.sh https://youtube.com/watch?v=xyz --scope horus_lore
@@ -14,6 +19,7 @@ Usage:
 
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -21,8 +27,12 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 from urllib.parse import urlparse
+
+# Persona/Memory Integration Paths
+MEMORY_PROJECT = Path.home() / "workspace" / "experiments" / "memory"
+PERSONA_BRIDGE = MEMORY_PROJECT / "persona" / "bridge"
 
 try:
     import typer
@@ -47,6 +57,173 @@ SKILLS_DIRS = [
 ]
 
 console = Console()
+
+
+# =============================================================================
+# PERSONA INTEGRATION - Taxonomy, Graph Edges, Persona Evolution
+# =============================================================================
+
+def extract_bridge_tags(content: str, scope: str = "operational") -> Dict[str, Any]:
+    """
+    Extract federated taxonomy bridge tags from learned content.
+
+    Bridge Attributes enable cross-collection traversal:
+    - Precision: methodical, calculated, optimized
+    - Resilience: endure, fault-tolerance, recovery
+    - Fragility: brittle, broken, vulnerability
+    - Corruption: compromise, persist, unauthorized
+    - Loyalty: trust, verify, monitor
+    - Stealth: hidden, evade, covert
+
+    Uses the taxonomy verifier from memory/persona/bridge if available,
+    otherwise falls back to simple keyword matching.
+    """
+    try:
+        # Try to import from memory project
+        sys.path.insert(0, str(PERSONA_BRIDGE))
+        from horus_taxonomy_verifier import TaxonomyVerifier
+        verifier = TaxonomyVerifier()
+        return verifier.extract_tags(content, collection_type=scope)
+    except ImportError:
+        pass  # Fall back to simple extraction
+    except Exception as e:
+        console.print(f"[dim]Taxonomy verifier error: {e}[/dim]")
+
+    # Simple keyword-based fallback
+    content_lower = content.lower()
+    tags = {
+        "bridge_tags": [],
+        "confidence": 0.5,
+        "source": "keyword_fallback",
+    }
+
+    bridge_keywords = {
+        "Precision": ["precise", "optimiz", "efficient", "methodical", "calculated", "algorithm"],
+        "Resilience": ["resilien", "recover", "fault", "redundan", "robust", "endur"],
+        "Fragility": ["fragil", "brittle", "broken", "vulnerab", "weak", "fail"],
+        "Corruption": ["corrupt", "comprom", "persist", "unauthor", "inject", "poison"],
+        "Loyalty": ["trust", "verif", "monitor", "loyal", "authentic", "valid"],
+        "Stealth": ["stealth", "hidden", "evad", "covert", "undetect", "silent"],
+    }
+
+    for tag, keywords in bridge_keywords.items():
+        if any(kw in content_lower for kw in keywords):
+            tags["bridge_tags"].append(tag)
+
+    return tags
+
+
+def create_knowledge_edge(
+    source_id: str,
+    target_id: str,
+    edge_type: str = "relates_to",
+    tags: List[str] = None,
+    scope: str = "operational"
+) -> bool:
+    """
+    Create a graph edge linking learned content to existing knowledge.
+
+    Uses the memory project's graph API if available.
+    """
+    try:
+        sys.path.insert(0, str(MEMORY_PROJECT / "graph_memory"))
+        from graph_memory.api import create_edge
+        return create_edge(
+            source=source_id,
+            target=target_id,
+            edge_type=edge_type,
+            properties={"bridge_tags": tags or [], "scope": scope}
+        )
+    except ImportError:
+        console.print("[dim]graph_memory not available for edge creation[/dim]")
+        return False
+    except Exception as e:
+        console.print(f"[dim]Edge creation error: {e}[/dim]")
+        return False
+
+
+def update_persona_state(
+    agent_id: str = "horus",
+    outcome: str = "satisfying",
+    drive: str = "competence",
+    learned_topic: str = ""
+) -> bool:
+    """
+    Update persona state after significant learning.
+
+    Outcomes: satisfying, frustrating, neutral
+    Drives: escape, competence, recognition, connection
+    """
+    try:
+        sys.path.insert(0, str(PERSONA_BRIDGE))
+        from dynamic_persona_evolution import evolve_persona_state
+        evolve_persona_state(
+            agent_id=agent_id,
+            outcome=outcome,
+            drive=drive,
+            context=f"Learned: {learned_topic[:100]}"
+        )
+        return True
+    except ImportError:
+        console.print("[dim]Persona evolution not available[/dim]")
+        return False
+    except Exception as e:
+        console.print(f"[dim]Persona update error: {e}[/dim]")
+        return False
+
+
+def post_learn_integration(
+    content: str,
+    source: str,
+    scope: str,
+    success: bool,
+    qa_count: int = 0,
+    agent_id: str = "horus"
+) -> Dict[str, Any]:
+    """
+    Run post-learning integrations:
+    1. Extract taxonomy bridge tags
+    2. Create graph edges to related content
+    3. Update persona state if learning was significant
+
+    Returns integration results.
+    """
+    results = {
+        "taxonomy": None,
+        "edges_created": 0,
+        "persona_updated": False,
+    }
+
+    if not success:
+        return results
+
+    # 1. Extract bridge tags
+    taxonomy_scope = "horus_lore" if "horus" in scope.lower() else "operational"
+    tags = extract_bridge_tags(content[:5000], scope=taxonomy_scope)
+    results["taxonomy"] = tags
+
+    if tags.get("bridge_tags"):
+        console.print(f"[green]Bridge tags:[/green] {', '.join(tags['bridge_tags'])}")
+
+    # 2. Create graph edges (if we have related content)
+    # This would query for related content and create edges
+    # For now, we log the intent - full implementation requires graph search
+    if tags.get("bridge_tags"):
+        console.print(f"[dim]Would create edges with tags: {tags['bridge_tags']}[/dim]")
+
+    # 3. Update persona if learning was significant (qa_count > 3)
+    if qa_count >= 3 and "horus" in scope.lower():
+        updated = update_persona_state(
+            agent_id=agent_id,
+            outcome="satisfying",
+            drive="competence",
+            learned_topic=source
+        )
+        results["persona_updated"] = updated
+        if updated:
+            console.print(f"[green]Persona state updated (competence drive satisfied)[/green]")
+
+    return results
 
 
 class SourceType(Enum):
@@ -207,6 +384,25 @@ class Learner:
             error=None if success else message,
             qa_count=qa_count,
         ))
+
+        # Post-learning integration: taxonomy, edges, persona
+        if success:
+            try:
+                # Get content summary for taxonomy extraction
+                content_summary = f"{title} {context} {message[:500]}"
+                integration_results = post_learn_integration(
+                    content=content_summary,
+                    source=source,
+                    scope=self.scope,
+                    success=success,
+                    qa_count=qa_count,
+                )
+                if integration_results.get("taxonomy"):
+                    tags = integration_results["taxonomy"].get("bridge_tags", [])
+                    if tags:
+                        console.print(f"[dim]Integrated: bridge_tags={tags}[/dim]")
+            except Exception as e:
+                console.print(f"[dim]Post-learn integration skipped: {e}[/dim]")
 
         return success, message
 

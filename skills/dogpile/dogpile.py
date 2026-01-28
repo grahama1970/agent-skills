@@ -291,6 +291,97 @@ def search_codex(prompt: str, schema: Optional[Path] = None) -> str:
     log_status("Codex analysis finished.")
     return output
 
+def tailor_queries_for_services(query: str, is_code_related: bool) -> Dict[str, str]:
+    """
+    Generate service-specific queries tailored to each source's strengths.
+
+    Uses Codex to analyze the query and generate optimal queries for:
+    - arxiv: Academic/technical terms, paper-style queries
+    - perplexity: Natural language explanatory questions
+    - brave: Documentation, tutorials, error messages
+    - github: Code terms, library names, function signatures
+    - youtube: Tutorial-style, "how to" queries
+
+    Returns dict of {service: tailored_query}
+    """
+    prompt = f"""You are an expert research assistant. Given this query:
+"{query}"
+
+Generate OPTIMIZED search queries for each service. Each service has different strengths:
+
+1. **arxiv**: Academic papers. Use technical terms, mathematical concepts, formal names.
+   - Good: "transformer attention mechanism neural networks"
+   - Bad: "how do transformers work"
+
+2. **perplexity**: AI synthesis. Use natural language questions for explanations.
+   - Good: "What are the best practices for AI agent memory systems in 2025?"
+   - Bad: "AI agent memory 2025"
+
+3. **brave**: Web search. Use documentation-style queries, include "docs", version numbers.
+   - Good: "LangChain memory module documentation 2025"
+   - Bad: "memory systems"
+
+4. **github**: Code search. Use library names, function names, code patterns.
+   - Good: "langchain memory BaseMemory implementation python"
+   - Bad: "how to use memory in AI"
+
+5. **youtube**: Video tutorials. Use "tutorial", "how to build", demonstration phrases.
+   - Good: "how to build AI agent with long term memory tutorial"
+   - Bad: "AI memory systems"
+
+Return JSON with tailored queries for each service. Keep queries concise but specific.
+Include current year (2025-2026) where relevant for recent results.
+
+{{"arxiv": "...", "perplexity": "...", "brave": "...", "github": "...", "youtube": "..."}}"""
+
+    schema_path = SKILLS_DIR / "codex" / "query_tailor_schema.json"
+
+    # Create schema if it doesn't exist
+    if not schema_path.exists():
+        schema = {
+            "type": "object",
+            "properties": {
+                "arxiv": {"type": "string", "description": "Academic paper search query"},
+                "perplexity": {"type": "string", "description": "Natural language question"},
+                "brave": {"type": "string", "description": "Web/documentation search query"},
+                "github": {"type": "string", "description": "Code-focused search query"},
+                "youtube": {"type": "string", "description": "Tutorial-style search query"}
+            },
+            "required": ["arxiv", "perplexity", "brave", "github", "youtube"],
+            "additionalProperties": False
+        }
+        schema_path.parent.mkdir(parents=True, exist_ok=True)
+        schema_path.write_text(json.dumps(schema, indent=2))
+
+    log_status("Tailoring queries for each service...")
+    result_text = search_codex(prompt, schema=schema_path)
+
+    # Default to original query for all services
+    default_queries = {
+        "arxiv": query,
+        "perplexity": query,
+        "brave": query,
+        "github": query,
+        "youtube": query,
+    }
+
+    if result_text.startswith("Error:"):
+        log_status(f"Query tailoring failed: {result_text[:100]}")
+        return default_queries
+
+    try:
+        start = result_text.find("{")
+        end = result_text.rfind("}")
+        if start != -1 and end != -1:
+            data = json.loads(result_text[start:end+1])
+            # Merge with defaults (in case some keys missing)
+            return {**default_queries, **data}
+    except json.JSONDecodeError as e:
+        log_status(f"Query tailoring JSON decode failed: {e}")
+
+    return default_queries
+
+
 def analyze_query(query: str, interactive: bool) -> Tuple[str, bool]:
 
     """
@@ -397,23 +488,34 @@ def extract_target_repo(github_res: Dict[str, Any]) -> Optional[str]:
 def search(
     query: str = typer.Argument(..., help="Search query"),
     interactive: bool = typer.Option(True, "--interactive/--no-interactive", help="Enable ambiguity/intent check"),
+    tailor: bool = typer.Option(True, "--tailor/--no-tailor", help="Tailor queries per service"),
 ):
     """Aggregate search results from multiple sources."""
-    
+
     # 1. Analyze Query (Ambiguity + Intent)
     query, is_code_related = analyze_query(query, interactive)
 
     console.print(f"[bold blue]Dogpiling on:[/bold blue] {query} (Code Related: {is_code_related})...")
 
-    # Stage 1: Broad Search
+    # 2. Tailor queries for each service (expert-level optimization)
+    if tailor:
+        tailored = tailor_queries_for_services(query, is_code_related)
+        console.print("[dim]Tailored queries:[/dim]")
+        for svc, q in tailored.items():
+            console.print(f"  [cyan]{svc}:[/cyan] {q[:60]}...")
+    else:
+        # Use same query for all services
+        tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube"]}
+
+    # Stage 1: Broad Search with tailored queries
     with ThreadPoolExecutor(max_workers=7) as executor:
-        future_brave = executor.submit(search_brave, query)
-        future_perplexity = executor.submit(search_perplexity, query)
-        future_github = executor.submit(search_github, query)
-        future_arxiv = executor.submit(search_arxiv, query)
-        future_youtube = executor.submit(search_youtube, query)
-        future_wayback = executor.submit(search_wayback, query)
-        future_codex_src = executor.submit(search_codex_knowledge, query)
+        future_brave = executor.submit(search_brave, tailored["brave"])
+        future_perplexity = executor.submit(search_perplexity, tailored["perplexity"])
+        future_github = executor.submit(search_github, tailored["github"])
+        future_arxiv = executor.submit(search_arxiv, tailored["arxiv"])
+        future_youtube = executor.submit(search_youtube, tailored["youtube"])
+        future_wayback = executor.submit(search_wayback, query)  # Wayback uses original (URL check)
+        future_codex_src = executor.submit(search_codex_knowledge, query)  # Codex uses original
 
         # Collect results
         brave_res = future_brave.result()
