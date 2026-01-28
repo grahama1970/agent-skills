@@ -172,6 +172,56 @@ def search_github(query: str) -> Dict[str, Any]:
         
     return results
 
+
+def search_github_via_skill(query: str, deep: bool = True, treesitter: bool = False, taxonomy: bool = False) -> Dict[str, Any]:
+    """
+    Search GitHub using the /github-search skill.
+
+    This provides multi-strategy search with:
+    - Repository analysis (README, metadata, languages)
+    - Symbol search (function/class definitions)
+    - Path-filtered search
+    - Optional treesitter parsing
+    - Optional taxonomy classification
+
+    Args:
+        query: Search query
+        deep: Enable deep analysis of top repo
+        treesitter: Parse files with treesitter for symbols
+        taxonomy: Classify repos with taxonomy
+
+    Returns:
+        Dict with repos, issues, analysis, code_search
+    """
+    log_status(f"Starting GitHub Search (via skill) for '{query}'...", provider="github", status="RUNNING")
+
+    github_skill = SKILLS_DIR / "github-search"
+    if not github_skill.exists():
+        log_status("github-search skill not found, falling back to direct search", provider="github", status="FALLBACK")
+        return search_github(query)
+
+    cmd = ["bash", "run.sh", "search", query, "--limit", "5", "--json"]
+    if deep:
+        cmd.append("--deep")
+    if treesitter:
+        cmd.append("--treesitter")
+    if taxonomy:
+        cmd.append("--taxonomy")
+
+    output = run_command(cmd, cwd=github_skill)
+
+    if output.startswith("Error:"):
+        log_status(f"GitHub skill error: {output[:50]}", provider="github", status="ERROR")
+        return {"error": output}
+
+    try:
+        result = json.loads(output)
+        log_status("GitHub Search (via skill) finished.", provider="github", status="DONE")
+        return result
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON from github-search skill", "raw": output[:200]}
+
+
 def search_arxiv(query: str) -> Dict[str, Any]:
     """Search ArXiv (Stage 1: Abstracts)."""
     log_status(f"Starting ArXiv Search (Stage 1: Abstracts) for '{query}'...", provider="arxiv", status="RUNNING")
@@ -906,6 +956,7 @@ def search(
     query: str = typer.Argument(..., help="Search query"),
     interactive: bool = typer.Option(True, "--interactive/--no-interactive", help="Enable ambiguity/intent check"),
     tailor: bool = typer.Option(True, "--tailor/--no-tailor", help="Tailor queries per service"),
+    use_github_skill: bool = typer.Option(True, "--github-skill/--no-github-skill", help="Use /github-search skill"),
 ):
     """Aggregate search results from multiple sources."""
 
@@ -925,10 +976,16 @@ def search(
         tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube"]}
 
     # Stage 1: Broad Search with tailored queries
+    # Use github-search skill if available and enabled
+    github_search_func = (
+        lambda q: search_github_via_skill(q, deep=is_code_related, treesitter=False, taxonomy=False)
+        if use_github_skill else search_github
+    )
+
     with ThreadPoolExecutor(max_workers=7) as executor:
         future_brave = executor.submit(search_brave, tailored["brave"])
         future_perplexity = executor.submit(search_perplexity, tailored["perplexity"])
-        future_github = executor.submit(search_github, tailored["github"])
+        future_github = executor.submit(github_search_func, tailored["github"])
         future_arxiv = executor.submit(search_arxiv, tailored["arxiv"])
         future_youtube = executor.submit(search_youtube, tailored["youtube"])
         future_wayback = executor.submit(search_wayback, query)  # Wayback uses original (URL check)
@@ -950,7 +1007,39 @@ def search(
     target_repo = None
     deep_code_res = []
 
-    if is_code_related and github_res.get("repos"):
+    # Check if github_res came from github-search skill (has top_repo_analysis)
+    if github_res.get("top_repo_analysis"):
+        # Result from github-search skill - extract pre-computed deep analysis
+        console.print("[bold green]GitHub:[/bold green] Using /github-search skill results")
+
+        # Extract analysis from skill result
+        top_analysis = github_res.get("top_repo_analysis", {})
+        if top_analysis.get("repo"):
+            target_repo = top_analysis.get("repo")
+            # Convert skill format to dogpile format
+            github_details = [{
+                "fullName": target_repo,
+                "metadata": top_analysis.get("metadata", {}),
+                "readme": top_analysis.get("readme", {}).get("content", ""),
+                "languages": top_analysis.get("languages", {})
+            }]
+
+        # Extract code search from skill result
+        code_search = github_res.get("code_search", {})
+        if code_search:
+            github_deep = {
+                "repo": target_repo,
+                "language": code_search.get("language"),
+                "code_matches": code_search.get("basic_matches", []),
+                "symbol_matches": code_search.get("symbol_matches", []),
+                "path_matches": code_search.get("path_matches", []),
+                "file_contents": code_search.get("file_contents", []),
+                "file_tree": []  # Skill doesn't return tree directly
+            }
+            deep_code_res = github_deep.get("code_matches", [])
+
+    elif is_code_related and github_res.get("repos"):
+        # Fallback: Manual deep dive if skill not used
         repos = github_res.get("repos", [])[:3]  # Top 3 repos for evaluation
         if repos:
             console.print(f"[bold magenta]GitHub Stage 2:[/bold magenta] Fetching README & metadata for {len(repos)} repos...")
