@@ -1,0 +1,132 @@
+{
+  "defaultAction": "SCMP_ACT_ERRNO",
+  "defaultErrnoRet": 1,
+  "archMap": [
+    {
+      "architecture": "SCMP_ARCH_X86_64",
+      "subArchitectures": ["SCMP_ARCH_X86", "SCMP_ARCH_X32"]
+    },
+    {
+      "architecture": "SCMP_ARCH_AARCH64",
+      "subArchitectures": ["SCMP_ARCH_ARM"]
+    }
+  ],
+  "syscalls": [
+    {
+      "comment": "Core file operations - required for QEMU/AFL",
+      "names": [
+        "read", "write", "open", "openat", "close", "fstat", "lseek",
+        "pread64", "pwrite64", "readv", "writev", "access", "faccessat",
+        "pipe", "pipe2", "dup", "dup2", "dup3", "fcntl", "flock",
+        "fsync", "fdatasync", "truncate", "ftruncate", "getdents",
+        "getdents64", "getcwd", "chdir", "fchdir", "rename", "renameat",
+        "mkdir", "mkdirat", "rmdir", "creat", "link", "linkat",
+        "unlink", "unlinkat", "symlink", "symlinkat", "readlink",
+        "readlinkat", "chmod", "fchmod", "fchmodat", "chown", "fchown",
+        "lchown", "fchownat", "umask", "statfs", "fstatfs", "stat",
+        "lstat", "fstatat64", "newfstatat"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "Memory management - required for QEMU emulation",
+      "names": [
+        "mmap", "mprotect", "munmap", "brk", "mremap", "msync",
+        "mincore", "madvise", "mlock", "munlock", "mlockall",
+        "munlockall", "memfd_create", "membarrier"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "Process management - required for AFL fork server",
+      "names": [
+        "clone", "clone3", "fork", "vfork", "execve", "execveat",
+        "exit", "exit_group", "wait4", "waitid", "kill", "tgkill",
+        "tkill", "getpid", "getppid", "gettid", "getuid", "geteuid",
+        "getgid", "getegid", "getgroups", "setuid", "setgid",
+        "setreuid", "setregid", "getresuid", "getresgid", "setresuid",
+        "setresgid", "setgroups", "setsid", "setpgid", "getpgid",
+        "getpgrp", "getsid"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "Signals - required for AFL crash detection",
+      "names": [
+        "rt_sigaction", "rt_sigprocmask", "rt_sigreturn", "sigaltstack",
+        "rt_sigsuspend", "rt_sigpending", "rt_sigtimedwait",
+        "rt_sigqueueinfo", "signalfd", "signalfd4"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "Time operations",
+      "names": [
+        "nanosleep", "clock_nanosleep", "clock_gettime", "clock_getres",
+        "gettimeofday", "times", "time", "alarm", "setitimer",
+        "getitimer", "timer_create", "timer_settime", "timer_gettime",
+        "timer_delete", "timerfd_create", "timerfd_settime",
+        "timerfd_gettime"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "Polling/select - required for QEMU event loop",
+      "names": [
+        "select", "pselect6", "poll", "ppoll", "epoll_create",
+        "epoll_create1", "epoll_ctl", "epoll_wait", "epoll_pwait",
+        "eventfd", "eventfd2"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "Networking - internal container network only",
+      "names": [
+        "socket", "socketpair", "bind", "listen", "accept", "accept4",
+        "connect", "getsockname", "getpeername", "sendto", "recvfrom",
+        "sendmsg", "recvmsg", "shutdown", "setsockopt", "getsockopt",
+        "sendmmsg", "recvmmsg"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "IPC - for QEMU/AFL communication",
+      "names": [
+        "shmget", "shmat", "shmctl", "shmdt", "semget", "semop",
+        "semctl", "msgget", "msgsnd", "msgrcv", "msgctl"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "Futex/threading - required for multi-threaded QEMU",
+      "names": [
+        "futex", "set_robust_list", "get_robust_list",
+        "set_tid_address", "gettid"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "System info - read only",
+      "names": [
+        "uname", "sysinfo", "getrlimit", "setrlimit", "prlimit64",
+        "getrusage", "capget", "prctl", "arch_prctl", "seccomp",
+        "getrandom"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "QEMU-specific ioctls for KVM (if needed)",
+      "names": ["ioctl"],
+      "action": "SCMP_ACT_ALLOW"
+    },
+    {
+      "comment": "Required for dynamic linking",
+      "names": [
+        "openat", "mmap", "close", "fstat", "read", "pread64",
+        "access", "faccessat"
+      ],
+      "action": "SCMP_ACT_ALLOW"
+    }
+  ],
+  "comment": "Battle skill seccomp profile - blocks dangerous syscalls like mount, ptrace, reboot, kernel module loading"
+}

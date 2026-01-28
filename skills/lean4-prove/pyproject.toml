@@ -1,0 +1,13 @@
+[project]
+name = "lean4-prove"
+version = "0.1.0"
+description = "Retrieval-augmented Lean4 proof generation with 94k+ exemplars"
+requires-python = ">=3.11"
+
+dependencies = [
+    "python-arango>=7.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

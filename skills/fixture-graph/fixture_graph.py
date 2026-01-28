@@ -339,7 +339,7 @@ def _check_pyreverse() -> bool:
 
 # --- Rendering Functions ---
 
-def _apply_ieee_style():
+def _apply_ieee_style() -> None:
     """Apply IEEE publication style to matplotlib."""
     import matplotlib.pyplot as plt
     for key, value in IEEE_RC_PARAMS.items():
@@ -359,7 +359,7 @@ def _check_colormap_accessibility(cmap: str) -> None:
         )
 
 
-def _get_ieee_figsize(preset: str = "single") -> tuple:
+def _get_ieee_figsize(preset: str = "single") -> Tuple[float, float]:
     """Get IEEE figure size preset.
 
     Args:
@@ -1063,7 +1063,7 @@ def generate_sunburst(
     # Flatten hierarchy to ids, labels, parents, values
     ids, labels, parents, values = [], [], [], []
 
-    def flatten(node, parent=""):
+    def flatten(node: Any, parent: str = "") -> None:
         if isinstance(node, dict):
             for key, child in node.items():
                 ids.append(key)
@@ -3573,7 +3573,7 @@ def deps(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg, dot, json"),
     depth: int = typer.Option(2, "--depth", "-d", help="Maximum dependency depth"),
     backend: str = typer.Option("graphviz", "--backend", "-b", help="Backend: graphviz, mermaid, networkx"),
-):
+) -> None:
     """Generate dependency graph from Python project."""
     project_path = Path(project)
     output_path = Path(output)
@@ -3592,7 +3592,7 @@ def uml(
     project: str = typer.Option(..., "--project", "-p", help="Path to Python project"),
     output: str = typer.Option("classes.pdf", "--output", "-o", help="Output file"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate UML class diagram from Python project."""
     project_path = Path(project)
     output_path = Path(output)
@@ -3608,7 +3608,7 @@ def architecture(
     output: str = typer.Option("architecture.pdf", "--output", "-o", help="Output file"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     backend: str = typer.Option("graphviz", "--backend", "-b", help="Backend: graphviz, mermaid"),
-):
+) -> None:
     """Generate architecture diagram from project or assess output."""
     output_path = Path(output)
     project_path = Path(project)
@@ -3642,7 +3642,7 @@ def metrics(
     output: str = typer.Option("metrics.pdf", "--output", "-o", help="Output file"),
     type: str = typer.Option("bar", "--type", "-t", help="Chart type: bar, hbar, pie, line"),
     title: str = typer.Option("Code Metrics", "--title", help="Chart title"),
-):
+) -> None:
     """Generate metrics chart from JSON data."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3690,7 +3690,7 @@ def table(
     input: str = typer.Option(..., "--input", "-i", help="Input JSON file"),
     output: str = typer.Option("table.tex", "--output", "-o", help="Output .tex file"),
     caption: str = typer.Option("", "--caption", "-c", help="Table caption"),
-):
+) -> None:
     """Generate LaTeX table from JSON data."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3737,7 +3737,7 @@ def workflow(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg, mmd"),
     gates: bool = typer.Option(True, "--gates/--no-gates", help="Include quality gates"),
     backend: str = typer.Option("mermaid", "--backend", "-b", help="Backend: mermaid, graphviz"),
-):
+) -> None:
     """Generate workflow diagram from stage list."""
     stage_list = [s.strip() for s in stages.split(",")]
     output_path = Path(output)
@@ -3756,7 +3756,7 @@ def theorem(
     requirement: str = typer.Option(..., "--requirement", "-r", help="Requirement to formalize"),
     name: str = typer.Option("theorem", "--name", "-n", help="Theorem name"),
     output: str = typer.Option("theorem.lean", "--output", "-o", help="Output .lean file"),
-):
+) -> None:
     """Generate formally verified theorem from requirement (uses lean4-prove)."""
     output_path = Path(output)
 
@@ -3773,7 +3773,7 @@ def sankey(
     output: str = typer.Option("sankey.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Flow Diagram", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg, html"),
-):
+) -> None:
     """Generate Sankey diagram for flow/energy/mass balances."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3807,7 +3807,7 @@ def heatmap(
     output: str = typer.Option("heatmap.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Heatmap", "--title", "-t", help="Chart title"),
     cmap: str = typer.Option("Blues", "--cmap", "-c", help="Colormap: Blues, viridis, plasma, etc."),
-):
+) -> None:
     """Generate heatmap for field distributions or correlation matrices."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3830,7 +3830,7 @@ def treemap(
     output: str = typer.Option("treemap.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Treemap", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg, html"),
-):
+) -> None:
     """Generate treemap for hierarchical size data (modules, zones, etc.)."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3852,7 +3852,7 @@ def sunburst(
     output: str = typer.Option("sunburst.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Sunburst", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg, html"),
-):
+) -> None:
     """Generate sunburst chart for hierarchical fault trees or breakdowns."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3875,7 +3875,7 @@ def force_graph(
     title: str = typer.Option("Network", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg, json"),
     summary: bool = typer.Option(False, "--summary", "-s", help="Output JSON summary for agents"),
-):
+) -> None:
     """Generate force-directed graph for system topology or fault trees."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3915,7 +3915,7 @@ def parallel_coords(
     title: str = typer.Option("Parallel Coordinates", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg, html"),
     color_by: str = typer.Option("", "--color-by", "-c", help="Dimension to color by"),
-):
+) -> None:
     """Generate parallel coordinates for multi-dimensional design space analysis."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3940,7 +3940,7 @@ def radar(
     output: str = typer.Option("radar.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Radar Chart", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate radar/spider chart for multi-attribute comparison."""
     input_path = Path(input)
     output_path = Path(output)
@@ -3965,7 +3965,7 @@ def bode(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     freq_min: float = typer.Option(0.01, "--freq-min", help="Min frequency (rad/s)"),
     freq_max: float = typer.Option(100.0, "--freq-max", help="Max frequency (rad/s)"),
-):
+) -> None:
     """Generate Bode plot (magnitude/phase vs frequency) for control systems."""
     output_path = Path(output)
     num_list = [float(x.strip()) for x in num.split(",")]
@@ -3986,7 +3986,7 @@ def nyquist(
     output: str = typer.Option("nyquist.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Nyquist Plot", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate Nyquist plot for stability analysis of control systems."""
     output_path = Path(output)
     num_list = [float(x.strip()) for x in num.split(",")]
@@ -4007,7 +4007,7 @@ def rootlocus(
     breakaway: bool = typer.Option(True, "--breakaway/--no-breakaway", help="Show breakaway points"),
     gain_min: float = typer.Option(0.01, "--gain-min", help="Minimum gain for analysis"),
     gain_max: float = typer.Option(100.0, "--gain-max", help="Maximum gain for analysis"),
-):
+) -> None:
     """Generate enhanced root locus plot for control system gain analysis."""
     output_path = Path(output)
     num_list = [float(x.strip()) for x in num.split(",")]
@@ -4029,7 +4029,7 @@ def pole_zero(
     discrete: bool = typer.Option(False, "--discrete/--continuous", help="Discrete-time system"),
     sample_time: float = typer.Option(1.0, "--sample-time", help="Sample time for discrete systems"),
     damping: bool = typer.Option(True, "--damping/--no-damping", help="Show damping ratio lines"),
-):
+) -> None:
     """Generate pole-zero map with stability analysis for control systems."""
     output_path = Path(output)
     
@@ -4059,7 +4059,7 @@ def state_space(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     poles_zeros: bool = typer.Option(True, "--poles-zeros/--no-poles-zeros", help="Include pole-zero analysis"),
     eigenvalues: bool = typer.Option(True, "--eigenvalues/--no-eigenvalues", help="Show eigenvalue analysis"),
-):
+) -> None:
     """Generate comprehensive state-space system visualization."""
     output_path = Path(output)
     
@@ -4090,7 +4090,7 @@ def spectrogram(
     window: str = typer.Option("hann", "--window", "-w", help="Window type: hann, hamming, blackman, rectangular"),
     window_size: int = typer.Option(256, "--window-size", help="FFT window size"),
     overlap: float = typer.Option(0.5, "--overlap", help="Overlap fraction (0-1)"),
-):
+) -> None:
     """Generate spectrogram for time-frequency signal analysis."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4128,7 +4128,7 @@ def filter_response(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     freq_min: float = typer.Option(0.0, "--freq-min", help="Minimum frequency [Hz]"),
     freq_max: float = typer.Option(None, "--freq-max", help="Maximum frequency [Hz]"),
-):
+) -> None:
     """Generate frequency response analysis for digital filters."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4176,7 +4176,7 @@ def surface_3d(
     colormap: str = typer.Option("viridis", "--colormap", "-c", help="Colormap name"),
     elev: float = typer.Option(30.0, "--elev", help="Elevation angle"),
     azim: float = typer.Option(45.0, "--azim", help="Azimuth angle"),
-):
+) -> None:
     """Generate 3D surface plot for multivariate mathematical functions."""
     output_path = Path(output)
     
@@ -4201,7 +4201,7 @@ def contour_3d(
     resolution: int = typer.Option(50, "--resolution", "-r", help="Grid resolution"),
     levels: int = typer.Option(20, "--levels", "-l", help="Number of contour levels"),
     colormap: str = typer.Option("viridis", "--colormap", "-c", help="Colormap name"),
-):
+) -> None:
     """Generate 3D contour plot for multivariate mathematical functions."""
     output_path = Path(output)
     
@@ -4221,7 +4221,7 @@ def complex_plane(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     unit_circle: bool = typer.Option(True, "--unit-circle/--no-unit-circle", help="Show unit circle"),
     color_by_magnitude: bool = typer.Option(True, "--color-magnitude/--no-color-magnitude", help="Color by magnitude"),
-):
+) -> None:
     """Generate Argand diagram (complex plane visualization)."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4267,7 +4267,7 @@ def polar(
     output: str = typer.Option("polar.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Polar Plot", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate polar plot for directional data (antenna patterns, wind roses)."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4300,7 +4300,7 @@ def contour(
     cmap: str = typer.Option("viridis", "--cmap", "-c", help="Colormap: viridis, plasma, Blues"),
     filled: bool = typer.Option(True, "--filled/--lines", help="Filled contours or just lines"),
     levels: int = typer.Option(20, "--levels", "-l", help="Number of contour levels"),
-):
+) -> None:
     """Generate contour plot for field distributions (flux, temp, stress)."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4325,7 +4325,7 @@ def gantt(
     output: str = typer.Option("gantt.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Gantt Chart", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate Gantt chart for project scheduling and milestones."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4347,7 +4347,7 @@ def pert(
     output: str = typer.Option("pert.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("PERT Network", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate PERT network diagram for critical path analysis."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4372,7 +4372,7 @@ def vector_field(
     title: str = typer.Option("Vector Field", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     streamlines: bool = typer.Option(False, "--streamlines/--quiver", help="Use streamlines instead of arrows"),
-):
+) -> None:
     """Generate vector field for flow visualization (velocity, gradients)."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4403,7 +4403,7 @@ def phase_portrait(
     y_min: float = typer.Option(-5.0, "--y-min", help="Y axis minimum"),
     y_max: float = typer.Option(5.0, "--y-max", help="Y axis maximum"),
     grid: int = typer.Option(20, "--grid", "-g", help="Grid resolution"),
-):
+) -> None:
     """Generate phase portrait for dynamical systems (differential equations)."""
     output_path = Path(output)
 
@@ -4428,7 +4428,7 @@ def roofline(
     output: str = typer.Option("roofline.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Roofline Plot", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate roofline plot for GPU/hardware performance analysis."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4456,7 +4456,7 @@ def scaling_law(
     y_label: str = typer.Option("Loss", "--y-label", help="Y-axis label"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     fit: bool = typer.Option(True, "--fit/--no-fit", help="Fit power law"),
-):
+) -> None:
     """Generate scaling law plot (log-log) common in LLM research."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4487,7 +4487,7 @@ def confusion_matrix(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     normalize: bool = typer.Option(False, "--normalize/--raw", help="Normalize to percentages"),
     cmap: str = typer.Option("Blues", "--cmap", "-c", help="Colormap"),
-):
+) -> None:
     """Generate confusion matrix for classification results."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4511,7 +4511,7 @@ def roc_curve(
     output: str = typer.Option("roc.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("ROC Curve", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate ROC curve for binary classification."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4536,7 +4536,7 @@ def training_curves(
     y_label: str = typer.Option("Loss", "--y-label", help="Y-axis label"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     log_y: bool = typer.Option(False, "--log-y/--linear-y", help="Use log scale for Y"),
-):
+) -> None:
     """Generate training curves for multiple runs."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4560,7 +4560,7 @@ def embedding_scatter(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     method: str = typer.Option("tsne", "--method", "-m", help="Reduction method: tsne, umap"),
     perplexity: int = typer.Option(30, "--perplexity", "-p", help="t-SNE perplexity"),
-):
+) -> None:
     """Generate t-SNE or UMAP scatter plot of embeddings."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4583,7 +4583,7 @@ def attention_heatmap(
     title: str = typer.Option("Attention Weights", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     cmap: str = typer.Option("Blues", "--cmap", "-c", help="Colormap"),
-):
+) -> None:
     """Generate attention heatmap for transformer models."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4607,7 +4607,7 @@ def throughput_latency(
     output: str = typer.Option("throughput.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Throughput vs Latency", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate throughput vs latency plot for GPU/inference benchmarks."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4631,7 +4631,7 @@ def pr_curve(
     output: str = typer.Option("pr.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Precision-Recall Curve", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate Precision-Recall curve for classification."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4654,7 +4654,7 @@ def violin(
     title: str = typer.Option("Violin Plot", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     y_label: str = typer.Option("Value", "--y-label", help="Y-axis label"),
-):
+) -> None:
     """Generate violin plot for distribution comparison."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4678,7 +4678,7 @@ def volcano(
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     fc: float = typer.Option(1.0, "--fc", help="Log2 fold change threshold"),
     pval: float = typer.Option(0.05, "--pval", help="P-value threshold"),
-):
+) -> None:
     """Generate volcano plot for differential expression analysis."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4700,7 +4700,7 @@ def survival_curve(
     output: str = typer.Option("survival.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Kaplan-Meier Survival Curve", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate Kaplan-Meier survival curve."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4722,7 +4722,7 @@ def manhattan(
     output: str = typer.Option("manhattan.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Manhattan Plot", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate Manhattan plot for GWAS results."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4745,7 +4745,7 @@ def feature_importance(
     title: str = typer.Option("Feature Importance", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
     top_n: int = typer.Option(20, "--top-n", "-n", help="Show top N features"),
-):
+) -> None:
     """Generate feature importance bar chart."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4767,7 +4767,7 @@ def calibration(
     output: str = typer.Option("calibration.pdf", "--output", "-o", help="Output file"),
     title: str = typer.Option("Calibration Plot", "--title", "-t", help="Chart title"),
     format: str = typer.Option("pdf", "--format", "-f", help="Output format: pdf, png, svg"),
-):
+) -> None:
     """Generate calibration plot (reliability diagram) for classification."""
     input_path = Path(input)
     output_path = Path(output)
@@ -4788,7 +4788,7 @@ def from_assess(
     input: str = typer.Option(..., "--input", "-i", help="Input JSON from /assess"),
     output_dir: str = typer.Option("./figures", "--output-dir", "-o", help="Output directory"),
     backend: str = typer.Option("graphviz", "--backend", "-b", help="Diagram backend: graphviz, mermaid"),
-):
+) -> None:
     """Generate all figures from /assess output."""
     input_path = Path(input)
     output_path = Path(output_dir)
@@ -4876,7 +4876,7 @@ def from_assess(
 
 
 @app.command()
-def check():
+def check() -> None:
     """Check available backends and dependencies."""
     typer.echo("Checking fixture-graph backends...")
     typer.echo("")
@@ -4953,7 +4953,7 @@ def check():
 # =============================================================================
 
 @app.command()
-def domains():
+def domains() -> None:
     """
     List available visualization domains.
 
@@ -4981,7 +4981,7 @@ def domains():
 
 
 @app.command()
-def presets():
+def presets() -> None:
     """
     Show IEEE figure size presets and colorblind-safe colormaps.
 
@@ -5017,7 +5017,7 @@ def presets():
 def list_commands(
     domain: str = typer.Option("", "--domain", "-d", help="Filter by domain (core, control, field, project, math, ml, bio, hierarchy)"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show full command descriptions"),
-):
+) -> None:
     """
     List available commands, optionally filtered by domain.
 
@@ -5054,7 +5054,7 @@ def list_commands(
 def recommend(
     data_type: str = typer.Option("", "--data-type", "-t", help="Type of data (time_series, classification, flow, hierarchy, etc.)"),
     show_types: bool = typer.Option(False, "--show-types", "-s", help="Show all supported data types"),
-):
+) -> None:
     """
     Recommend visualization commands based on data type.
 
@@ -5104,7 +5104,7 @@ except ImportError:
     # Fallback for when numpy isn't available
     class np:
         @staticmethod
-        def linspace(start, stop, num):
+        def linspace(start: float, stop: float, num: int) -> List[float]:
             step = (stop - start) / (num - 1) if num > 1 else 0
             return [start + i * step for i in range(num)]
 

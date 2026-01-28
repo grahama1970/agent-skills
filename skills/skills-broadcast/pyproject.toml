@@ -1,0 +1,11 @@
+[project]
+name = "skills-broadcast"
+version = "0.1.0"
+description = "Sync skills across all IDEs (Pi, Codex, Claude Code, Antigravity) using the canonical agent-skills repo"
+requires-python = ">=3.11"
+
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

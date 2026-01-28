@@ -418,5 +418,136 @@ class TestLogAIUsage:
         assert entry.output_summary.endswith("...")
 
 
+
+# --- Jan 2026 Feature Tests: Lengths & Templates ---
+
+from paper_writer import (
+    LENGTH_CONFIGS,
+    LATEX_TEMPLATES,
+    check_citations,
+    verify_arxiv_id,
+    verify_doi,
+)
+
+class TestLengthConfigs:
+    """Tests for document length configurations."""
+
+    def test_length_configs_exist(self):
+        """Test that all length configurations exist."""
+        expected_lengths = ["paper", "extended", "thesis", "dissertation"]
+        for length in expected_lengths:
+            assert length in LENGTH_CONFIGS
+            
+    def test_thesis_structure(self):
+        """Test thesis structure contains expected chapters."""
+        thesis = LENGTH_CONFIGS["thesis"]
+        assert thesis["approx_pages"] >= 50
+        assert "chapters" in thesis["structure"]
+        
+        chapters = thesis["structure"]["chapters"]
+        assert any(c["id"] == "literature" for c in chapters)
+        assert any(c["id"] == "methodology" for c in chapters)
+
+
+class TestTemplates:
+    """Tests for document templates."""
+
+    def test_darpa_template_exists(self):
+        """Test that DARPA BAA template exists."""
+        assert "darpa_baa" in LATEX_TEMPLATES
+        template = LATEX_TEMPLATES["darpa_baa"]
+        assert "Volume I: Technical and Management Proposal" in template
+        assert "Executive Summary" in template
+
+    def test_federal_grant_template_exists(self):
+        """Test that Federal Grant template exists."""
+        assert "federal_grant" in LATEX_TEMPLATES
+        template = LATEX_TEMPLATES["federal_grant"]
+        assert "Project Narrative" in template
+        assert "SF-424" in template
+
+
+class TestCitationVerification:
+    """Tests for citation API verification."""
+
+    @patch("urllib.request.urlopen")
+    def test_verify_arxiv_id_valid(self, mock_urlopen):
+        """Test verifying a valid arXiv ID."""
+        # Mock API response
+        mock_response = MagicMock()
+        mock_response.read.return_value = b"""
+        <feed xmlns="http://www.w3.org/2005/Atom">
+            <entry>
+                <id>http://arxiv.org/abs/2501.15355v1</id>
+                <title>Deep Learning for Code</title>
+                <author><name>Alice Smith</name></author>
+            </entry>
+        </feed>
+        """
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+
+        # Test
+        result = verify_arxiv_id("2501.15355")
+        assert result["status"] == "Supported"
+        assert result["source"] == "arXiv"
+        assert result["title"] == "Deep Learning for Code"
+
+    @patch("urllib.request.urlopen")
+    def test_verify_arxiv_id_invalid(self, mock_urlopen):
+        """Test verifying an invalid arXiv ID."""
+        # Mock empty response (no entry)
+        mock_response = MagicMock()
+        mock_response.read.return_value = b"""
+        <feed xmlns="http://www.w3.org/2005/Atom">
+        </feed>
+        """
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+
+        # Test
+        result = verify_arxiv_id("9999.99999")
+        assert result["status"] == "Unsupported"
+        assert "not found" in result["error"]
+
+    @patch("urllib.request.urlopen")
+    def test_verify_doi_valid(self, mock_urlopen):
+        """Test verifying a valid DOI."""
+        # Mock API response
+        mock_response = MagicMock()
+        mock_response.read.return_value = json.dumps({
+            "status": "ok",
+            "message": {
+                "title": ["A Novel Approach"],
+                "author": [{"given": "Bob", "family": "Jones"}]
+            }
+        }).encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+
+        # Test
+        result = verify_doi("10.1145/1234567")
+        assert result["status"] == "Supported"
+        assert result["source"] == "CrossRef"
+        assert result["title"] == "A Novel Approach"
+        assert "Bob Jones" in result["authors"][0]
+
+    @patch("urllib.request.urlopen")
+    def test_verify_doi_not_found(self, mock_urlopen):
+        """Test verifying a non-existent DOI."""
+        # Mock 404 error
+        mock_urlopen.side_effect = urllib.error.HTTPError(
+            "http://api.crossref.org", 404, "Not Found", {}, None
+        )
+
+        import urllib.error  # Needed for matching the exception in side_effect
+        
+        # Test
+        result = verify_doi("10.1145/9999999")
+        assert result["status"] == "Unsupported"
+        assert "not found" in result["error"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

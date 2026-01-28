@@ -1,0 +1,11 @@
+[project]
+name = "normalize"
+version = "0.1.0"
+description = "Normalize text to handle PDF/Unicode encoding issues"
+requires-python = ">=3.11"
+
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

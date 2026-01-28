@@ -19,7 +19,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterator, List, Tuple
 from urllib.parse import urlparse
 
 # Best-effort .env loading
@@ -55,7 +55,7 @@ except ImportError:
     pass
 
 
-def _log(msg: str, style: str = None):
+def _log(msg: str, style: str = None) -> None:
     """Log message with optional rich styling."""
     if _HAS_RICH and _console:
         _console.print(f"[dim][distill][/dim] {msg}", style=style)
@@ -63,7 +63,7 @@ def _log(msg: str, style: str = None):
         print(f"[distill] {msg}", file=sys.stderr)
 
 
-def _status_panel(title: str, content: Dict[str, Any]):
+def _status_panel(title: str, content: Dict[str, Any]) -> None:
     """Display a rich status panel if available."""
     if _HAS_RICH and _console:
         table = Table(show_header=False, box=None, padding=(0, 1))
@@ -78,7 +78,7 @@ def _status_panel(title: str, content: Dict[str, Any]):
             print(f"  {k}: {v}", file=sys.stderr)
 
 
-def _create_progress():
+def _create_progress() -> Any:
     """Create a progress context manager."""
     if _HAS_RICH:
         return Progress(
@@ -92,7 +92,7 @@ def _create_progress():
     return None
 
 
-def _iter_with_progress(iterable, desc: str = "Processing", total: int = None):
+def _iter_with_progress(iterable, desc: str = "Processing", total: int = None) -> Any:
     """Iterate with progress bar (tqdm or rich fallback)."""
     if total is None:
         try:
@@ -109,14 +109,14 @@ def _iter_with_progress(iterable, desc: str = "Processing", total: int = None):
         if progress:
             task_id = progress.add_task(desc, total=total or 0)
 
-            def gen():
+            def gen() -> Iterator[Any]:
                 with progress:
                     for item in iterable:
                         yield item
                         progress.advance(task_id)
             return gen()
     # Fallback: plain iteration with periodic updates
-    def gen():
+    def gen() -> Iterator[Any]:
         for i, item in enumerate(iterable):
             if total and i % max(1, total // 10) == 0:
                 print(f"[distill] {desc}: {i}/{total}", file=sys.stderr)
@@ -1634,7 +1634,7 @@ def distill(
 # CLI
 # =============================================================================
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(
         description="Distill PDF/URL/text into Q&A pairs for memory",
         formatter_class=argparse.RawDescriptionHelpFormatter,

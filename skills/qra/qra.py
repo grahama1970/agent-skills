@@ -67,7 +67,7 @@ except ImportError:
     pass
 
 
-def _log(msg: str, style: str = None):
+def _log(msg: str, style: str = None) -> None:
     """Log message with optional rich styling."""
     if _HAS_RICH and _console:
         _console.print(f"[dim][qra][/dim] {msg}", style=style)
@@ -75,7 +75,7 @@ def _log(msg: str, style: str = None):
         print(f"[qra] {msg}", file=sys.stderr)
 
 
-def _status_panel(title: str, content: Dict[str, Any]):
+def _status_panel(title: str, content: Dict[str, Any]) -> None:
     """Display a rich status panel if available."""
     if _HAS_RICH and _console:
         table = Table(show_header=False, box=None, padding=(0, 1))
@@ -90,7 +90,7 @@ def _status_panel(title: str, content: Dict[str, Any]):
             print(f"  {k}: {v}", file=sys.stderr)
 
 
-def _iter_with_progress(iterable, desc: str = "Processing", total: int = None):
+def _iter_with_progress(iterable, desc: str = "Processing", total: int = None) -> Any:
     """Iterate with progress bar (tqdm or rich fallback)."""
     if total is None:
         try:
@@ -112,14 +112,14 @@ def _iter_with_progress(iterable, desc: str = "Processing", total: int = None):
         )
         task_id = progress.add_task(desc, total=total or 0)
 
-        def gen():
+        def gen() -> Any:
             with progress:
                 for item in iterable:
                     yield item
                     progress.advance(task_id)
         return gen()
     # Fallback
-    def gen():
+    def gen() -> Any:
         for i, item in enumerate(iterable):
             if total and i % max(1, total // 10) == 0:
                 print(f"[qra] {desc}: {i}/{total}", file=sys.stderr)
@@ -860,7 +860,7 @@ def extract_qra(
 # CLI
 # =============================================================================
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(
         description="Extract Question-Reasoning-Answer pairs from text",
         formatter_class=argparse.RawDescriptionHelpFormatter,

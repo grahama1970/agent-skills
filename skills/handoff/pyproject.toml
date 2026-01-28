@@ -1,0 +1,11 @@
+[project]
+name = "handoff"
+version = "0.1.0"
+description = "Handoff briefing and project context bridge for agent transitions"
+requires-python = ">=3.11"
+
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

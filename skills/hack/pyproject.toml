@@ -1,0 +1,15 @@
+[project]
+name = "hack-skill"
+version = "0.1.0"
+description = "Automated security auditing and ethical hacking tools"
+requires-python = ">=3.10"
+dependencies = [
+    "typer",
+    "rich",
+    "requests",
+    "python-nmap",
+    "scapy",
+    "bandit",
+    "semgrep",
+    "zaproxy",
+]

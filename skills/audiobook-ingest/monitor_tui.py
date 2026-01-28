@@ -40,7 +40,7 @@ def get_gpu_stats() -> dict:
                 "temp": int(parts[3]),
                 "power": float(parts[4]) if parts[4] != "[N/A]" else 0,
             }
-    except:
+    except (subprocess.SubprocessError, FileNotFoundError, OSError, ValueError, IndexError):
         pass
     return {"gpu_util": 0, "mem_used": 0, "mem_total": 1, "temp": 0, "power": 0}
 
@@ -68,7 +68,7 @@ def get_cpu_stats() -> dict:
             "mem_used": mem_total - mem_available,
             "mem_total": mem_total,
         }
-    except:
+    except (OSError, ValueError, IndexError):
         return {"cpu_idle": 0, "cpu_total": 1, "mem_used": 0, "mem_total": 1}
 
 
@@ -90,7 +90,7 @@ def get_recent_logs(n: int = 5) -> list[str]:
                 if book:
                     book = book[:40] + "..." if len(book) > 40 else book
                 lines.append(f"[dim]{ts}[/dim] {event}: {book}")
-    except:
+    except (OSError, json.JSONDecodeError, KeyError):
         pass
     return lines
 

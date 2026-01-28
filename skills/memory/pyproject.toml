@@ -1,0 +1,13 @@
+[project]
+name = "memory"
+version = "0.1.0"
+description = "MEMORY FIRST - Query memory before scanning codebase"
+requires-python = ">=3.11"
+
+dependencies = [
+    "python-dotenv>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

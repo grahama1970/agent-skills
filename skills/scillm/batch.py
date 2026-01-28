@@ -256,7 +256,7 @@ def single(
             # Pretty print JSON
             try:
                 print(json.dumps(json.loads(content), indent=2))
-            except:
+            except (json.JSONDecodeError, ValueError):
                 print(content)
         else:
             print(content)

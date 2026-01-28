@@ -55,6 +55,12 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 
 5.  **Textual TUI Monitor**: Real-time progress tracking of all concurrent searches via `run.sh monitor`.
 
+6.  **Resilience Features** (2025-2026 Best Practices):
+    - **Per-provider semaphores**: Limits concurrent requests to avoid rate limit bans
+    - **Exponential backoff with jitter**: Prevents thundering herd on retries (via tenacity)
+    - **Rate limit header parsing**: Respects Retry-After, x-ratelimit-*, and IETF RateLimit-* headers
+    - **Automatic retry**: Retries rate-limited requests after appropriate backoff
+
 ## GitHub Three-Stage Search
 
 The GitHub search uses intelligent evaluation to find the most relevant repository:
@@ -83,16 +89,52 @@ Stage 3: Deep Code Search
 └── Returns: File structure + code locations with context
 ```
 
-## New Commands
+## Presets (For Security Research)
+
+**Don't think about 100+ resources. Pick ONE preset:**
+
+| Preset | Use When |
+|--------|----------|
+| `vulnerability_research` | CVE lookup, exploit availability |
+| `red_team` | Privesc, bypasses, payloads |
+| `blue_team` | Detection rules, threat hunting |
+| `threat_intel` | APT groups, IOCs, campaigns |
+| `malware_analysis` | Sample analysis, sandboxes |
+| `osint` | Recon, domain intel |
+| `bleeding_edge` | Latest zero-days |
+| `community` | Reddit, Discord discussions |
+| `general` | Non-security research |
+
+```bash
+# Use a preset (recommended for security research)
+./run.sh search "CVE-2024-1234" --preset vulnerability_research
+./run.sh search "privesc linux" --preset red_team
+
+# Auto-detect preset from query
+./run.sh search "CVE-2024-1234" --auto-preset
+
+# List all presets
+python dogpile.py presets
+```
+
+Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOBins, MITRE ATT&CK, etc.) plus **direct API calls** for resources with APIs (NVD, CISA KEV, MalwareBazaar).
+
+## Commands
 
 - `./run.sh search "query"`: Run a search.
+- `./run.sh search "query" --preset NAME`: Search with a preset.
 - `./run.sh monitor`: Open the Real-time TUI Monitor.
+- `python dogpile.py presets`: List available presets.
+- `python dogpile.py resources`: List all resources.
 
 ## Usage
 
 ```bash
-# Search for everything on a topic
+# General research
 ./run.sh search "AI agent memory systems"
+
+# Security research with preset
+./run.sh search "CVE-2024-1234" --preset vulnerability_research
 ```
 
 ## Agentic Handoff

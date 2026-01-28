@@ -932,7 +932,7 @@ def run_toc_check(path: Path) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-def main():
+def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(

@@ -429,7 +429,7 @@ class CDPController:
     MAX_RETRIES = 3
     INITIAL_BACKOFF = 0.5  # seconds
 
-    def __init__(self, port: int = None):
+    def __init__(self, port: int = None) -> None:
         self.port = port or CDP_PORT
         self.ws = None
         self.msg_id = 0
@@ -456,7 +456,7 @@ class CDPController:
         except Exception as e:
             raise ConnectionError(f"Cannot connect to CDP at port {self.port}: {e}")
 
-    def connect(self, max_retries: int = None):
+    def connect(self, max_retries: int = None) -> None:
         """Connect to Chrome via WebSocket with exponential backoff retry."""
         max_retries = max_retries if max_retries is not None else self.MAX_RETRIES
         self._ws_url = self._get_ws_url()
@@ -475,23 +475,23 @@ class CDPController:
                     # Refresh URL in case target changed
                     try:
                         self._ws_url = self._get_ws_url()
-                    except:
+                    except (ConnectionError, TimeoutError, OSError, requests.RequestException):
                         pass
 
         raise ConnectionError(f"Failed to connect after {max_retries} attempts: {last_error}")
 
-    def _ensure_connected(self):
+    def _ensure_connected(self) -> None:
         """Ensure WebSocket is connected, reconnecting if necessary."""
         if self.ws:
             # Check if connection is still alive
             try:
                 self.ws.ping()
                 return
-            except:
+            except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
                 # Connection lost, close and reconnect
                 try:
                     self.ws.close()
-                except:
+                except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
                     pass
                 self.ws = None
 
@@ -526,7 +526,7 @@ class CDPController:
                 # Connection issue - close and retry
                 try:
                     self.ws.close()
-                except:
+                except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException):
                     pass
                 self.ws = None
 
@@ -542,7 +542,7 @@ class CDPController:
 
         raise ConnectionError(f"Failed to send command after {self.MAX_RETRIES} attempts: {last_error}")
 
-    def close(self):
+    def close(self) -> None:
         """Close the WebSocket connection."""
         if self.ws:
             self.ws.close()
@@ -561,7 +561,7 @@ class CDPController:
                     if msg.get("method") == "Page.loadEventFired":
                         break
                     time.sleep(0.1)
-            except:
+            except (ConnectionError, TimeoutError, OSError, websocket.WebSocketException, json.JSONDecodeError):
                 pass
         return {"url": url, "frameId": result.get("frameId")}
 
@@ -763,7 +763,7 @@ class CDPController:
         return {"waited": seconds}
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="CDP-based browser automation")
     parser.add_argument("command", choices=[
         "go", "read", "click", "type", "key", "snap", "scroll", "wait", "text"

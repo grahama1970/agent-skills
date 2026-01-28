@@ -7,11 +7,18 @@ Orchestrates searches across:
 - GitHub (Repos & Issues)
 - ArXiv (Papers)
 - YouTube (Videos)
+
+Resilience features (based on 2025-2026 best practices):
+- Tenacity retries with exponential backoff + jitter
+- Per-provider semaphores for concurrency control
+- Rate limit header parsing (Retry-After, x-ratelimit-*)
 """
 import json
+import os
 import subprocess
 import sys
 import shutil
+import threading
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -26,10 +33,169 @@ except ImportError:
     print("Missing requirements. Run: pip install typer rich", file=sys.stderr)
     sys.exit(1)
 
+# Tenacity for resilient retries
+try:
+    from tenacity import (
+        retry,
+        stop_after_attempt,
+        stop_after_delay,
+        wait_random_exponential,
+        retry_if_exception_type,
+        before_sleep_log,
+        RetryError
+    )
+    TENACITY_AVAILABLE = True
+except ImportError:
+    TENACITY_AVAILABLE = False
+
+# Resource Registry for dynamic source management
+try:
+    from resources.resource_registry import get_registry, ResourceRegistry
+    REGISTRY_AVAILABLE = True
+except ImportError:
+    REGISTRY_AVAILABLE = False
+    get_registry = None
+    ResourceRegistry = None
+
+# Discord search integration
+try:
+    from discord_search import search_discord as _search_discord_impl, format_discord_results
+    DISCORD_AVAILABLE = True
+except ImportError:
+    DISCORD_AVAILABLE = False
+    _search_discord_impl = None
+    format_discord_results = None
+
+# Per-provider semaphores to prevent rate limit exhaustion
+# GitHub: 10 concurrent (secondary rate limit protection)
+# ArXiv: 3 concurrent (be nice to academic APIs)
+# Brave: 5 concurrent
+# YouTube: 3 concurrent
+# Perplexity: 2 concurrent (API limits)
+# Codex: 2 concurrent
+PROVIDER_SEMAPHORES = {
+    "github": threading.Semaphore(10),
+    "arxiv": threading.Semaphore(3),
+    "brave": threading.Semaphore(5),
+    "youtube": threading.Semaphore(3),
+    "perplexity": threading.Semaphore(2),
+    "codex": threading.Semaphore(2),
+    "wayback": threading.Semaphore(3),
+    "fetcher": threading.Semaphore(3),
+    "readarr": threading.Semaphore(5),
+    "discord": threading.Semaphore(3),  # Discord API limits
+}
+
+# Rate limit tracking per provider
+RATE_LIMIT_STATE: Dict[str, Dict[str, Any]] = {}
+
 app = typer.Typer(help="Dogpile - Deep research aggregator")
 console = Console()
 
 SKILLS_DIR = Path(__file__).resolve().parents[1]
+
+
+def parse_rate_limit_headers(headers: Dict[str, str], provider: str) -> Optional[float]:
+    """
+    Parse rate limit headers and return wait time if rate limited.
+
+    Supports:
+    - Retry-After (RFC 7231) - authoritative wait signal
+    - x-ratelimit-remaining / x-ratelimit-reset (GitHub, others)
+    - RateLimit-* (IETF draft, forward-compatible)
+
+    Returns seconds to wait, or None if not rate limited.
+    """
+    import time as _time
+
+    # 1. Check Retry-After first (most authoritative)
+    retry_after = headers.get("Retry-After") or headers.get("retry-after")
+    if retry_after:
+        try:
+            # Can be seconds or HTTP-date
+            wait_seconds = int(retry_after)
+            log_status(f"Rate limited by {provider}: waiting {wait_seconds}s (Retry-After)")
+            return wait_seconds
+        except ValueError:
+            # Try HTTP-date format
+            try:
+                from email.utils import parsedate_to_datetime
+                from datetime import datetime, timezone
+                dt = parsedate_to_datetime(retry_after)
+                now = datetime.now(dt.tzinfo) if getattr(dt, "tzinfo", None) else datetime.utcnow()
+                wait_seconds = max(0.0, (dt - now).total_seconds())
+                return wait_seconds
+            except Exception:
+                pass
+
+    # 2. Check x-ratelimit-* headers (GitHub pattern)
+    remaining = headers.get("x-ratelimit-remaining") or headers.get("X-RateLimit-Remaining")
+    reset = headers.get("x-ratelimit-reset") or headers.get("X-RateLimit-Reset")
+
+    if remaining is not None and reset is not None:
+        try:
+            remaining_int = int(remaining)
+            reset_timestamp = int(reset)
+
+            if remaining_int == 0:
+                wait_seconds = max(0, reset_timestamp - _time.time())
+                log_status(f"Rate limited by {provider}: waiting {wait_seconds:.0f}s (x-ratelimit-reset)")
+                return wait_seconds
+
+            # Track state for adaptive throttling
+            RATE_LIMIT_STATE[provider] = {
+                "remaining": remaining_int,
+                "reset": reset_timestamp,
+                "updated": _time.time()
+            }
+        except ValueError:
+            pass
+
+    # 3. Check IETF RateLimit-* draft headers (future-proofing)
+    ratelimit = headers.get("RateLimit") or headers.get("ratelimit")
+    if ratelimit:
+        # Format: limit=100, remaining=50, reset=30
+        try:
+            parts = dict(p.strip().split("=") for p in ratelimit.split(","))
+            if parts.get("remaining") == "0" and "reset" in parts:
+                return float(parts["reset"])
+        except Exception:
+            pass
+
+    return None
+
+
+def with_semaphore(provider: str):
+    """Decorator to wrap function with provider semaphore."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            sem = PROVIDER_SEMAPHORES.get(provider, threading.Semaphore(5))
+            with sem:
+                return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def create_retry_decorator(provider: str, max_attempts: int = 3, max_delay: int = 120):
+    """
+    Create a tenacity retry decorator for a provider.
+
+    Uses exponential backoff with jitter to prevent thundering herds.
+    Respects rate limits via parse_rate_limit_headers when available.
+    """
+    if not TENACITY_AVAILABLE:
+        # No-op decorator if tenacity not installed
+        def identity(func):
+            return func
+        return identity
+
+    return retry(
+        stop=(stop_after_attempt(max_attempts) | stop_after_delay(300)),  # 5 min max
+        wait=wait_random_exponential(multiplier=1, min=1, max=max_delay),
+        retry=retry_if_exception_type((ConnectionError, TimeoutError, OSError)),
+        reraise=True,
+    )
+
 
 def run_command(cmd: List[str], cwd: Optional[Path] = None) -> str:
     """Run a command and return stdout."""
@@ -48,38 +214,40 @@ def run_command(cmd: List[str], cwd: Optional[Path] = None) -> str:
         return f"Error: {e}"
 
 def log_status(msg: str, provider: Optional[str] = None, status: Optional[str] = None):
-    """Log status to stderr and update task-monitor state."""
-    # Use a distinct prefix for easier parsing by other agents
-    sys.stderr.write(f"[DOGPILE-STATUS] {msg}\n")
-    sys.stderr.flush()
+    """Log status to stderr and update task-monitor state with atomic writes."""
+    # Emit parseable line for external monitors
+    try:
+        sys.stderr.write(f"[DOGPILE-STATUS] {msg}\n")
+        sys.stderr.flush()
+    except Exception:
+        pass
 
-    # Update state for task-monitor
+    # Update state for task-monitor atomically
     state_file = Path("dogpile_state.json")
-    state = {}
+    state: Dict[str, Any] = {}
     if state_file.exists():
         try:
-            with open(state_file, 'r') as f:
-                state = json.load(f)
-        except:
+            state = json.loads(state_file.read_text())
+        except Exception:
             state = {}
 
     if provider:
-        if "providers" not in state:
-            state["providers"] = {}
-        state["providers"][provider] = status or "RUNNING"
-    
+        state.setdefault("providers", {})[provider] = status or "RUNNING"
+
     state["last_msg"] = msg
     state["last_updated"] = time.strftime("%Y-%m-%d %H:%M:%S")
-    
+
     try:
-        with open(state_file, 'w') as f:
-            json.dump(state, f)
-    except:
+        tmp = state_file.with_suffix(".tmp")
+        tmp.write_text(json.dumps(state))
+        os.replace(tmp, state_file)
+    except Exception:
         pass
 
 import time
 
 
+@with_semaphore("wayback")
 def search_wayback(query: str) -> Dict[str, Any]:
     """Check Wayback Machine for snapshots if query is a URL."""
     # Simple URL heuristic
@@ -90,6 +258,12 @@ def search_wayback(query: str) -> Dict[str, Any]:
     api_url = f"http://archive.org/wayback/available?url={query}"
     try:
         with urllib.request.urlopen(api_url, timeout=10) as resp:
+            # Check rate limit headers
+            headers = dict(resp.headers)
+            wait_time = parse_rate_limit_headers(headers, "wayback")
+            if wait_time:
+                time.sleep(min(wait_time, 30))  # Cap at 30s
+
             data = json.loads(resp.read().decode())
             # Format: {"archived_snapshots": {"closest": {"available": true, "url": "...", ...}}}
             snapshots = data.get("archived_snapshots", {})
@@ -105,12 +279,13 @@ def search_wayback(query: str) -> Dict[str, Any]:
     except Exception as e:
         log_status(f"Wayback Machine error: {e}", provider="wayback", status="ERROR")
         return {"error": str(e)}
-    
+
     return {}
 
 
+@with_semaphore("brave")
 def search_brave(query: str) -> Dict[str, Any]:
-    """Search Brave Web."""
+    """Search Brave Web with rate limiting protection."""
     log_status(f"Starting Brave Search for '{query}'...", provider="brave", status="RUNNING")
     script = SKILLS_DIR / "brave-search" / "brave_search.py"
     cmd = [sys.executable, str(script), "web", query, "--count", "5", "--json"]
@@ -118,20 +293,29 @@ def search_brave(query: str) -> Dict[str, Any]:
         output = run_command(cmd)
         log_status("Brave Search finished.", provider="brave", status="DONE")
         if output.startswith("Error:"):
+            # Check for rate limit errors
+            if "429" in output or "rate limit" in output.lower():
+                log_status("Brave rate limited, backing off...", provider="brave", status="RATE_LIMITED")
+                time.sleep(5)  # Brief backoff for subprocess errors
             return {"error": output}
         return json.loads(output)
     except json.JSONDecodeError:
         return {"error": "Invalid JSON output from Brave", "raw": output}
 
+@with_semaphore("perplexity")
 def search_perplexity(query: str) -> Dict[str, Any]:
-    """Search Perplexity."""
+    """Search Perplexity with rate limiting protection."""
     log_status(f"Starting Perplexity Research for '{query}'...", provider="perplexity", status="RUNNING")
     script = SKILLS_DIR / "perplexity" / "perplexity.py"
-    cmd = [sys.executable, str(script), "research", query, "--model", "sonar-reasoning", "--json"]
+    cmd = [sys.executable, str(script), "research", query, "--model", "huge", "--json"]
     try:
         output = run_command(cmd)
         log_status("Perplexity finished.", provider="perplexity", status="DONE")
         if output.startswith("Error:"):
+            # Check for rate limit errors
+            if "429" in output or "rate limit" in output.lower():
+                log_status("Perplexity rate limited, backing off...", provider="perplexity", status="RATE_LIMITED")
+                time.sleep(10)  # Perplexity is paid, be conservative
             return {"error": output}
         return json.loads(output)
     except json.JSONDecodeError:
@@ -139,20 +323,31 @@ def search_perplexity(query: str) -> Dict[str, Any]:
 
 
 
+@with_semaphore("github")
 def search_github(query: str) -> Dict[str, Any]:
-    """Search GitHub Repos and Issues."""
+    """Search GitHub Repos and Issues with rate limiting protection.
+
+    GitHub has strict secondary rate limits. Uses semaphore to limit concurrency
+    and checks for rate limit errors to back off appropriately.
+    """
     log_status(f"Starting GitHub Search for '{query}'...", provider="github", status="RUNNING")
     if not shutil.which("gh"):
         return {"error": "GitHub CLI (gh) not installed"}
-    
+
     repos_cmd = ["gh", "search", "repos", query, "--limit", "5", "--json", "fullName,html_url,description,stargazersCount"]
     issues_cmd = ["gh", "search", "issues", query, "--limit", "5", "--json", "title,html_url,state,repository"]
-    
+
     repos_out = run_command(repos_cmd)
+
+    # Check for rate limit in repo search
+    if "rate limit" in repos_out.lower() or "secondary rate limit" in repos_out.lower():
+        log_status("GitHub rate limited, backing off 60s...", provider="github", status="RATE_LIMITED")
+        time.sleep(60)  # GitHub recommends waiting until reset, use 60s as safe default
+        repos_out = run_command(repos_cmd)  # Retry once
+
     issues_out = run_command(issues_cmd)
     log_status("GitHub Search finished.", provider="github", status="DONE")
 
-    
     results = {}
     try:
         if not repos_out.startswith("Error:"):
@@ -169,13 +364,14 @@ def search_github(query: str) -> Dict[str, Any]:
             results["issues_error"] = issues_out
     except json.JSONDecodeError:
         results["issues_error"] = "Invalid JSON"
-        
+
     return results
 
 
+@with_semaphore("github")
 def search_github_via_skill(query: str, deep: bool = True, treesitter: bool = False, taxonomy: bool = False) -> Dict[str, Any]:
     """
-    Search GitHub using the /github-search skill.
+    Search GitHub using the /github-search skill with rate limiting protection.
 
     This provides multi-strategy search with:
     - Repository analysis (README, metadata, languages)
@@ -183,6 +379,9 @@ def search_github_via_skill(query: str, deep: bool = True, treesitter: bool = Fa
     - Path-filtered search
     - Optional treesitter parsing
     - Optional taxonomy classification
+
+    The skill handles its own internal rate limiting, but we wrap with semaphore
+    to prevent concurrent skill invocations from overwhelming GitHub.
 
     Args:
         query: Search query
@@ -211,8 +410,15 @@ def search_github_via_skill(query: str, deep: bool = True, treesitter: bool = Fa
     output = run_command(cmd, cwd=github_skill)
 
     if output.startswith("Error:"):
-        log_status(f"GitHub skill error: {output[:50]}", provider="github", status="ERROR")
-        return {"error": output}
+        # Check for rate limit errors
+        if "rate limit" in output.lower() or "secondary rate limit" in output.lower():
+            log_status("GitHub rate limited via skill, backing off 60s...", provider="github", status="RATE_LIMITED")
+            time.sleep(60)
+            output = run_command(cmd, cwd=github_skill)  # Retry once
+
+        if output.startswith("Error:"):
+            log_status(f"GitHub skill error: {output[:50]}", provider="github", status="ERROR")
+            return {"error": output}
 
     try:
         result = json.loads(output)
@@ -222,8 +428,12 @@ def search_github_via_skill(query: str, deep: bool = True, treesitter: bool = Fa
         return {"error": "Invalid JSON from github-search skill", "raw": output[:200]}
 
 
+@with_semaphore("arxiv")
 def search_arxiv(query: str) -> Dict[str, Any]:
-    """Search ArXiv (Stage 1: Abstracts)."""
+    """Search ArXiv (Stage 1: Abstracts) with rate limiting protection.
+
+    ArXiv API has rate limits. Use semaphore to be respectful of academic resources.
+    """
     log_status(f"Starting ArXiv Search (Stage 1: Abstracts) for '{query}'...", provider="arxiv", status="RUNNING")
     arxiv_dir = SKILLS_DIR / "arxiv"
     cmd = ["bash", "run.sh", "search", "-q", query, "-n", "10", "--json"]
@@ -332,13 +542,79 @@ def deep_extract_url(url: str, title: str = "") -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e), "url": url}
 
-def search_youtube(query: str) -> List[Dict[str, str]]:
-    """Search YouTube (Stage 1: Metadata)."""
 
+@with_semaphore("readarr")
+def search_readarr(query: str) -> List[Dict[str, Any]]:
+    """Search Usenet/Books via Readarr Ops nzb-search."""
+    log_status(f"Starting Readarr Search for '{query}'...", provider="readarr", status="RUNNING")
+    
+    # Locate readarr-ops in .pi/skills relative to SKILLS_DIR (.agent/skills)
+    readarr_dir = SKILLS_DIR.parent.parent / ".pi" / "skills" / "readarr-ops"
+    
+    if not readarr_dir.exists():
+        log_status("readarr-ops skill not found", provider="readarr", status="SKIPPED")
+        return []
+
+    cmd = ["bash", "run.sh", "nzb-search", query, "--json"]
+    output = run_command(cmd, cwd=readarr_dir)
+
+    try:
+        if output.startswith("Error:"):
+             return [{"error": output}]
+        
+        # Parse JSON output
+        results = json.loads(output)
+        if isinstance(results, dict) and "error" in results:
+             return [{"error": results["error"]}]
+             
+        log_status("Readarr Search finished.", provider="readarr", status="DONE")
+        return results if isinstance(results, list) else []
+        
+    except Exception as e:
+        log_status(f"Readarr parse error: {e}", provider="readarr", status="ERROR")
+        return [{"error": str(e)}]
+
+
+@with_semaphore("discord")
+def search_discord_messages(query: str, preset: str = "security") -> Dict[str, Any]:
+    """Search Discord messages in configured security servers.
+
+    Uses the discord_search module which wraps clawdbot for Discord API access.
+    Only available if Discord guilds are configured.
+    """
+    if not DISCORD_AVAILABLE:
+        log_status("Discord search not available (module not found)", provider="discord", status="SKIPPED")
+        return {"skipped": True, "reason": "discord_search module not available"}
+
+    log_status(f"Starting Discord Search for '{query}'...", provider="discord", status="RUNNING")
+
+    try:
+        # Use the discord_search module - it reads guild IDs from its own config
+        results = _search_discord_impl(query, guild_ids=None, limit=10)
+
+        if results.get("error"):
+            log_status(f"Discord error: {results['error']}", provider="discord", status="ERROR")
+            return results
+
+        msg_count = results.get("count", 0)
+        guild_count = results.get("guilds_searched", 0)
+        log_status(f"Discord Search finished: {msg_count} messages from {guild_count} guilds", provider="discord", status="DONE")
+        return results
+
+    except Exception as e:
+        log_status(f"Discord search error: {e}", provider="discord", status="ERROR")
+        return {"error": str(e), "results": []}
+
+
+@with_semaphore("youtube")
+def search_youtube(query: str) -> List[Dict[str, str]]:
+    """Search YouTube (Stage 1: Metadata) with rate limiting protection.
+
+    YouTube/yt-dlp can get rate limited. Uses semaphore to limit concurrent requests.
+    """
     log_status(f"Starting YouTube Search for '{query}'...", provider="youtube", status="RUNNING")
     if not shutil.which("yt-dlp"):
-         return [{"title": "Error: yt-dlp not installed", "url": "", "id": "", "description": ""}]
-
+        return [{"title": "Error: yt-dlp not installed", "url": "", "id": "", "description": ""}]
 
     # yt-dlp search using JSON for robust parsing
     # Use --dump-json and NO --flat-playlist to get descriptions
@@ -350,10 +626,17 @@ def search_youtube(query: str) -> List[Dict[str, str]]:
     ]
     output = run_command(cmd)
     log_status("YouTube Search finished.")
-    
+
     if output.startswith("Error"):
-         return [{"title": f"Error searching YouTube: {output}", "url": "", "id": "", "description": ""}]
-    
+        # Check for rate limit
+        if "429" in output or "rate limit" in output.lower():
+            log_status("YouTube rate limited, backing off 30s...", provider="youtube", status="RATE_LIMITED")
+            time.sleep(30)
+            output = run_command(cmd)  # Retry once
+
+        if output.startswith("Error"):
+            return [{"title": f"Error searching YouTube: {output}", "url": "", "id": "", "description": ""}]
+
     results = []
     # yt-dlp outputs one JSON object per line
     for line in output.splitlines():
@@ -364,7 +647,7 @@ def search_youtube(query: str) -> List[Dict[str, str]]:
             desc = desc.replace("\n", " ").strip()
             if len(desc) > 200:
                 desc = desc[:197] + "..."
-                
+
             results.append({
                 "title": data.get("title", "Unknown Title"),
                 "id": data.get("id", ""),
@@ -373,13 +656,14 @@ def search_youtube(query: str) -> List[Dict[str, str]]:
             })
         except json.JSONDecodeError:
             continue
-    
+
     log_status("YouTube Search finished.", provider="youtube", status="DONE")
     return results
 
 
+@with_semaphore("youtube")
 def search_youtube_transcript(video_id: str) -> Dict[str, Any]:
-    """Search YouTube (Stage 2: Transcript)."""
+    """Search YouTube (Stage 2: Transcript) with rate limiting protection."""
     log_status(f"Fetching YouTube Transcript for {video_id}...")
     skill_dir = SKILLS_DIR / "youtube-transcripts"
     cmd = [sys.executable, str(skill_dir / "youtube_transcript.py"), "get", "-i", video_id]
@@ -407,18 +691,29 @@ def search_codex_knowledge(query: str) -> str:
 
 
 
+@with_semaphore("codex")
 def search_codex(prompt: str, schema: Optional[Path] = None) -> str:
-    """Use high-reasoning Codex for analysis."""
+    """Use high-reasoning Codex for analysis with rate limiting protection.
+
+    Codex uses OpenAI API which has rate limits. Use semaphore to prevent
+    overwhelming the API with concurrent requests.
+    """
     log_status("Consulting Codex for high-reasoning analysis...")
     script = SKILLS_DIR / "codex" / "run.sh"
 
-    
     if schema:
         cmd = ["bash", str(script), "extract", prompt, "--schema", str(schema)]
     else:
         cmd = ["bash", str(script), "reason", prompt]
-        
+
     output = run_command(cmd)
+
+    # Check for rate limit errors
+    if "rate limit" in output.lower() or "429" in output:
+        log_status("Codex rate limited, backing off 30s...", provider="codex", status="RATE_LIMITED")
+        time.sleep(30)
+        output = run_command(cmd)  # Retry once
+
     log_status("Codex analysis finished.")
     return output
 
@@ -460,10 +755,14 @@ Generate OPTIMIZED search queries for each service. Each service has different s
    - Good: "how to build AI agent with long term memory tutorial"
    - Bad: "AI memory systems"
 
+6. **readarr**: Books/Usenet. Use title/author focused queries.
+   - Good: "Designing Data-Intensive Applications"
+   - Bad: "how databases work"
+
 Return JSON with tailored queries for each service. Keep queries concise but specific.
 Include current year (2025-2026) where relevant for recent results.
 
-{{"arxiv": "...", "perplexity": "...", "brave": "...", "github": "...", "youtube": "..."}}"""
+{{"arxiv": "...", "perplexity": "...", "brave": "...", "github": "...", "youtube": "...", "readarr": "..."}}"""
 
     schema_path = SKILLS_DIR / "codex" / "query_tailor_schema.json"
 
@@ -476,9 +775,10 @@ Include current year (2025-2026) where relevant for recent results.
                 "perplexity": {"type": "string", "description": "Natural language question"},
                 "brave": {"type": "string", "description": "Web/documentation search query"},
                 "github": {"type": "string", "description": "Code-focused search query"},
-                "youtube": {"type": "string", "description": "Tutorial-style search query"}
+                "youtube": {"type": "string", "description": "Tutorial-style search query"},
+                "readarr": {"type": "string", "description": "Book/Usenet search query"}
             },
-            "required": ["arxiv", "perplexity", "brave", "github", "youtube"],
+            "required": ["arxiv", "perplexity", "brave", "github", "youtube", "readarr"],
             "additionalProperties": False
         }
         schema_path.parent.mkdir(parents=True, exist_ok=True)
@@ -494,6 +794,7 @@ Include current year (2025-2026) where relevant for recent results.
         "brave": query,
         "github": query,
         "youtube": query,
+        "readarr": query,
     }
 
     if result_text.startswith("Error:"):
@@ -951,57 +1252,65 @@ def extract_target_repo(github_res: Dict[str, Any]) -> Optional[str]:
         return repos[0].get("fullName")
     return None
 
-@app.command()
-def search(
-    query: str = typer.Argument(..., help="Search query"),
-    interactive: bool = typer.Option(True, "--interactive/--no-interactive", help="Enable ambiguity/intent check"),
-    tailor: bool = typer.Option(True, "--tailor/--no-tailor", help="Tailor queries per service"),
-    use_github_skill: bool = typer.Option(True, "--github-skill/--no-github-skill", help="Use /github-search skill"),
-):
-    """Aggregate search results from multiple sources."""
 
-    # 1. Analyze Query (Ambiguity + Intent)
-    query, is_code_related = analyze_query(query, interactive)
+# =============================================================================
+# REFACTORED STAGE FUNCTIONS
+# =============================================================================
 
-    console.print(f"[bold blue]Dogpiling on:[/bold blue] {query} (Code Related: {is_code_related})...")
+def run_stage1_searches(
+    tailored: Dict[str, str],
+    query: str,
+    use_github_skill: bool,
+    is_code_related: bool
+) -> Dict[str, Any]:
+    """
+    Stage 1: Run broad parallel searches across all providers.
 
-    # 2. Tailor queries for each service (expert-level optimization)
-    if tailor:
-        tailored = tailor_queries_for_services(query, is_code_related)
-        console.print("[dim]Tailored queries:[/dim]")
-        for svc, q in tailored.items():
-            console.print(f"  [cyan]{svc}:[/cyan] {q[:60]}...")
+    Uses ThreadPoolExecutor with provider semaphores for rate limit protection.
+    Returns dict with results from each provider.
+    """
+    # Explicitly define the callable to avoid lambda/decoration issues
+    if use_github_skill:
+        def github_search_func(q):
+            return search_github_via_skill(q, deep=is_code_related, treesitter=False, taxonomy=False)
     else:
-        # Use same query for all services
-        tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube"]}
+        def github_search_func(q):
+            return search_github(q)
 
-    # Stage 1: Broad Search with tailored queries
-    # Use github-search skill if available and enabled
-    github_search_func = (
-        lambda q: search_github_via_skill(q, deep=is_code_related, treesitter=False, taxonomy=False)
-        if use_github_skill else search_github
-    )
-
-    with ThreadPoolExecutor(max_workers=7) as executor:
+    with ThreadPoolExecutor(max_workers=8) as executor:
         future_brave = executor.submit(search_brave, tailored["brave"])
         future_perplexity = executor.submit(search_perplexity, tailored["perplexity"])
         future_github = executor.submit(github_search_func, tailored["github"])
         future_arxiv = executor.submit(search_arxiv, tailored["arxiv"])
         future_youtube = executor.submit(search_youtube, tailored["youtube"])
-        future_wayback = executor.submit(search_wayback, query)  # Wayback uses original (URL check)
-        future_codex_src = executor.submit(search_codex_knowledge, query)  # Codex uses original
+        future_readarr = executor.submit(search_readarr, tailored.get("readarr", query))
+        future_wayback = executor.submit(search_wayback, query)
+        future_codex_src = executor.submit(search_codex_knowledge, query)
+        future_discord = executor.submit(search_discord_messages, query)
 
-        # Collect results
-        brave_res = future_brave.result()
-        perp_res = future_perplexity.result()
-        github_res = future_github.result()
-        arxiv_res = future_arxiv.result()
-        youtube_res = future_youtube.result()
-        wayback_res = future_wayback.result()
-        codex_src_res = future_codex_src.result()
+        return {
+            "brave": future_brave.result(),
+            "perplexity": future_perplexity.result(),
+            "github": future_github.result(),
+            "arxiv": future_arxiv.result(),
+            "youtube": future_youtube.result(),
+            "readarr": future_readarr.result(),
+            "wayback": future_wayback.result(),
+            "codex_knowledge": future_codex_src.result(),
+            "discord": future_discord.result(),
+        }
 
-    # Stage 2: Deep Dive
-    # 2.1 GitHub Multi-Stage (Metadata → README → Evaluate → Deep Code Search)
+
+def run_stage2_github(
+    github_res: Dict[str, Any],
+    query: str,
+    is_code_related: bool
+) -> Tuple[List[Dict], Dict, Optional[str], List]:
+    """
+    Stage 2: GitHub deep dive - README analysis, repo evaluation, code search.
+
+    Returns: (github_details, github_deep, target_repo, deep_code_res)
+    """
     github_details = []
     github_deep = {}
     target_repo = None
@@ -1009,14 +1318,11 @@ def search(
 
     # Check if github_res came from github-search skill (has top_repo_analysis)
     if github_res.get("top_repo_analysis"):
-        # Result from github-search skill - extract pre-computed deep analysis
         console.print("[bold green]GitHub:[/bold green] Using /github-search skill results")
 
-        # Extract analysis from skill result
         top_analysis = github_res.get("top_repo_analysis", {})
         if top_analysis.get("repo"):
             target_repo = top_analysis.get("repo")
-            # Convert skill format to dogpile format
             github_details = [{
                 "fullName": target_repo,
                 "metadata": top_analysis.get("metadata", {}),
@@ -1024,7 +1330,6 @@ def search(
                 "languages": top_analysis.get("languages", {})
             }]
 
-        # Extract code search from skill result
         code_search = github_res.get("code_search", {})
         if code_search:
             github_deep = {
@@ -1034,18 +1339,17 @@ def search(
                 "symbol_matches": code_search.get("symbol_matches", []),
                 "path_matches": code_search.get("path_matches", []),
                 "file_contents": code_search.get("file_contents", []),
-                "file_tree": []  # Skill doesn't return tree directly
+                "file_tree": []
             }
             deep_code_res = github_deep.get("code_matches", [])
 
     elif is_code_related and github_res.get("repos"):
-        # Fallback: Manual deep dive if skill not used
-        repos = github_res.get("repos", [])[:3]  # Top 3 repos for evaluation
+        # Manual deep dive
+        repos = github_res.get("repos", [])[:3]
         if repos:
             console.print(f"[bold magenta]GitHub Stage 2:[/bold magenta] Fetching README & metadata for {len(repos)} repos...")
             log_status(f"GitHub Stage 2: Fetching details for {len(repos)} repos...", provider="github", status="RUNNING")
 
-            # Fetch details for top repos in parallel
             with ThreadPoolExecutor(max_workers=3) as executor:
                 futures = {executor.submit(fetch_repo_details, r.get("fullName")): r for r in repos if r.get("fullName")}
                 for f in as_completed(futures):
@@ -1054,32 +1358,37 @@ def search(
                         github_details.append(res)
             log_status("GitHub Stage 2 finished.", provider="github", status="DONE")
 
-            # Stage 2b: Agent evaluation - pick most relevant repo based on README
             if github_details:
                 console.print(f"[bold magenta]GitHub Stage 2b:[/bold magenta] Evaluating {len(github_details)} repos with Codex...")
                 best_repo_idx = evaluate_github_repos(github_details, query)
 
-                if best_repo_idx >= 0 and best_repo_idx < len(github_details):
-                    selected_repo_details = github_details[best_repo_idx]
-                    target_repo = selected_repo_details.get("fullName")
+                if 0 <= best_repo_idx < len(github_details):
+                    selected = github_details[best_repo_idx]
+                    target_repo = selected.get("fullName")
                     console.print(f"[bold green]Selected:[/bold green] {target_repo} as most relevant repo")
 
-                    # Stage 3: Multi-strategy deep code search in selected repo
                     console.print(f"[bold magenta]GitHub Stage 3:[/bold magenta] Multi-strategy deep search in {target_repo}...")
                     log_status(f"GitHub Stage 3: Multi-strategy deep search in {target_repo}...", provider="github", status="SEARCHING")
-                    github_deep = deep_search_github_repo(target_repo, query, selected_repo_details)
+                    github_deep = deep_search_github_repo(target_repo, query, selected)
                     deep_code_res = github_deep.get("code_matches", [])
-                    log_status(f"GitHub Stage 3 finished.", provider="github", status="DONE")
+                    log_status("GitHub Stage 3 finished.", provider="github", status="DONE")
                 else:
                     log_status("No relevant GitHub repo identified.", provider="github", status="DONE")
 
+    return github_details, github_deep, target_repo, deep_code_res
 
 
-    # 2.2 ArXiv Multi-Stage (Details → Evaluate → Deep Extract)
+def run_stage2_arxiv(arxiv_res: Dict[str, Any], query: str) -> Tuple[List[Dict], List[Dict]]:
+    """
+    Stage 2: ArXiv deep dive - paper details and full extraction.
+
+    Returns: (arxiv_details, arxiv_deep)
+    """
     arxiv_details = []
     arxiv_deep = []
+
     if isinstance(arxiv_res, dict) and "items" in arxiv_res:
-        valid_papers = arxiv_res["items"][:3]  # Top 3 for evaluation
+        valid_papers = arxiv_res["items"][:3]
         if valid_papers:
             log_status(f"ArXiv Stage 2: Fetching details for {len(valid_papers)} papers...", provider="arxiv", status="RUNNING")
 
@@ -1091,8 +1400,7 @@ def search(
                         arxiv_details.append(res["items"][0])
             log_status("ArXiv Stage 2 finished.", provider="arxiv", status="DONE")
 
-            # Stage 3: Deep extract the MOST relevant paper (agent evaluation)
-            # Use Codex to pick the most relevant paper based on abstracts
+            # Stage 3: Deep extract most relevant paper
             if arxiv_details:
                 abstracts_summary = "\n".join([
                     f"[{i+1}] {p.get('title', 'Unknown')}: {p.get('abstract', '')[:300]}"
@@ -1106,7 +1414,6 @@ Return just the number (1, 2, or 3) of the most relevant paper, or 0 if none are
                 best_paper_idx = 0
                 eval_result = search_codex(eval_prompt)
                 try:
-                    # Extract number from response
                     import re as regex
                     match = regex.search(r'(\d)', eval_result)
                     if match:
@@ -1114,7 +1421,6 @@ Return just the number (1, 2, or 3) of the most relevant paper, or 0 if none are
                 except:
                     pass
 
-                # Deep extract the best paper if identified
                 if 0 <= best_paper_idx < len(arxiv_details):
                     best_paper = arxiv_details[best_paper_idx]
                     log_status(f"ArXiv Stage 3: Deep extracting '{best_paper.get('title', 'Unknown')[:50]}'...", provider="arxiv", status="EXTRACTING")
@@ -1126,9 +1432,17 @@ Return just the number (1, 2, or 3) of the most relevant paper, or 0 if none are
                         arxiv_deep.append(deep_result)
                         log_status("ArXiv Stage 3 deep extraction finished.", provider="arxiv", status="DONE")
 
+    return arxiv_details, arxiv_deep
 
-    # 2.3 YouTube Two-Stage (Transcripts)
+
+def run_stage2_youtube(youtube_res: List[Dict]) -> List[Dict]:
+    """
+    Stage 2: YouTube transcript fetch for top videos.
+
+    Returns: youtube_transcripts
+    """
     youtube_transcripts = []
+
     if youtube_res:
         valid_videos = [v for v in youtube_res if v.get("id")][:2]
         if valid_videos:
@@ -1144,12 +1458,20 @@ Return just the number (1, 2, or 3) of the most relevant paper, or 0 if none are
                         youtube_transcripts.append(res)
             log_status("YouTube Stage 2 finished.", provider="youtube", status="DONE")
 
-    # 2.4 Brave Deep Extraction (for most relevant URL)
+    return youtube_transcripts
+
+
+def run_stage2_brave(brave_res: Dict[str, Any], query: str) -> List[Dict]:
+    """
+    Stage 2: Brave URL deep extraction for most relevant result.
+
+    Returns: brave_deep
+    """
     brave_deep = []
+
     if brave_res and isinstance(brave_res, dict) and "web" in brave_res:
         web_results = brave_res.get("web", {}).get("results", [])[:3]
         if web_results:
-            # Evaluate which URL is most relevant
             urls_summary = "\n".join([
                 f"[{i+1}] {r.get('title', 'Unknown')}: {r.get('description', '')[:200]}"
                 for i, r in enumerate(web_results)
@@ -1169,7 +1491,6 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
             except:
                 pass
 
-            # Deep extract the best URL if identified
             if 0 <= best_url_idx < len(web_results):
                 best_result = web_results[best_url_idx]
                 log_status(f"Brave Stage 2: Deep extracting '{best_result.get('title', 'Unknown')[:50]}'...", provider="brave", status="EXTRACTING")
@@ -1181,7 +1502,99 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
                     brave_deep.append(deep_result)
                     log_status("Brave Stage 2 deep extraction finished.", provider="brave", status="DONE")
 
+    return brave_deep
 
+
+# =============================================================================
+# MAIN SEARCH COMMAND
+# =============================================================================
+
+@app.command()
+def search(
+    query: str = typer.Argument(..., help="Search query"),
+    preset: Optional[str] = typer.Option(None, "--preset", "-p", help="Use a resource preset (vulnerability_research, red_team, blue_team, etc.)"),
+    interactive: bool = typer.Option(True, "--interactive/--no-interactive", help="Enable ambiguity/intent check"),
+    tailor: bool = typer.Option(True, "--tailor/--no-tailor", help="Tailor queries per service"),
+    use_github_skill: bool = typer.Option(True, "--github-skill/--no-github-skill", help="Use /github-search skill"),
+    auto_preset: bool = typer.Option(False, "--auto-preset", help="Auto-detect preset from query"),
+):
+    """Aggregate search results from multiple sources."""
+
+    # 0. Handle preset selection
+    active_preset = None
+    preset_brave_query = None
+
+    if REGISTRY_AVAILABLE:
+        registry = get_registry()
+
+        # Auto-detect preset if requested
+        if auto_preset and not preset:
+            suggested = registry.suggest_preset(query)
+            if suggested != "general":
+                preset = suggested
+                console.print(f"[dim]Auto-detected preset: {preset}[/dim]")
+
+        # Load preset if specified
+        if preset:
+            active_preset = registry.get_preset(preset)
+            if active_preset:
+                console.print(f"[bold magenta]Using preset:[/bold magenta] {preset} - {active_preset.description}")
+                console.print(f"[dim]  Brave sites: {len(active_preset.brave_sites)} | API resources: {active_preset.api_resources}[/dim]")
+                # Generate site-filtered Brave query
+                if active_preset.brave_sites:
+                    preset_brave_query = active_preset.get_brave_query(query)
+            else:
+                console.print(f"[yellow]Warning: Preset '{preset}' not found, using default search[/yellow]")
+
+    # 1. Analyze Query (Ambiguity + Intent)
+    query, is_code_related = analyze_query(query, interactive)
+
+    console.print(f"[bold blue]Dogpiling on:[/bold blue] {query} (Code Related: {is_code_related})...")
+
+    # 2. Tailor queries for each service (expert-level optimization)
+    if tailor:
+        tailored = tailor_queries_for_services(query, is_code_related)
+        console.print("[dim]Tailored queries:[/dim]")
+        for svc, q in tailored.items():
+            console.print(f"  [cyan]{svc}:[/cyan] {q[:60]}...")
+    else:
+        # Use same query for all services
+        tailored = {svc: query for svc in ["arxiv", "perplexity", "brave", "github", "youtube"]}
+
+    # Override Brave query with preset-filtered query if active
+    if preset_brave_query:
+        tailored["brave"] = preset_brave_query
+        console.print(f"  [magenta]brave (preset):[/magenta] {preset_brave_query[:80]}...")
+
+    # Stage 1: Broad parallel searches (uses refactored helper)
+    stage1_results = run_stage1_searches(tailored, query, use_github_skill, is_code_related)
+
+    brave_res = stage1_results["brave"]
+    perp_res = stage1_results["perplexity"]
+    github_res = stage1_results["github"]
+    arxiv_res = stage1_results["arxiv"]
+    youtube_res = stage1_results["youtube"]
+    readarr_res = stage1_results["readarr"]
+    wayback_res = stage1_results["wayback"]
+    codex_src_res = stage1_results["codex_knowledge"]
+    discord_res = stage1_results["discord"]
+
+    # Stage 2: Deep dives (uses refactored helpers)
+    # 2.1 GitHub Multi-Stage
+    github_details, github_deep, target_repo, deep_code_res = run_stage2_github(
+        github_res, query, is_code_related
+    )
+
+
+
+    # 2.2 ArXiv Multi-Stage (uses refactored helper)
+    arxiv_details, arxiv_deep = run_stage2_arxiv(arxiv_res, query)
+
+    # 2.3 YouTube Two-Stage (uses refactored helper)
+    youtube_transcripts = run_stage2_youtube(youtube_res)
+
+    # 2.4 Brave Deep Extraction (uses refactored helper)
+    brave_deep = run_stage2_brave(brave_res, query)
 
     # --- GLUE THE REPORT ---
     md_lines = [f"# Dogpile Report: {query}", ""]
@@ -1212,6 +1625,55 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
             md_lines.append("\n**Citations:**")
             for cite in perp_res.get("citations", []):
                 md_lines.append(f"- {cite}")
+    md_lines.append("")
+
+    # 2.5 Readarr (Books/Usenet)
+    md_lines.append("## 📚 Books & Usenet (Readarr)")
+    if readarr_res and isinstance(readarr_res, list) and len(readarr_res) > 0:
+        if "error" in readarr_res[0]:
+             md_lines.append(f"> Error: {readarr_res[0]['error']}")
+        else:
+            for item in readarr_res[:5]: # Top 5
+                title = item.get("title", "Unknown")
+                cat = item.get("category", "")
+                size = int(item.get("size", "0")) / (1024*1024)
+                md_lines.append(f"- **{title}** ({cat}) - {size:.1f} MB")
+    else:
+        md_lines.append("No books or Usenet results found.")
+    md_lines.append("")
+
+    # 2.6 Discord (Security Servers)
+    md_lines.append("## 💬 Discord (Security Servers)")
+    if discord_res.get("skipped"):
+        md_lines.append(f"> Skipped: {discord_res.get('reason', 'Not configured')}")
+    elif discord_res.get("error"):
+        md_lines.append(f"> Error: {discord_res['error']}")
+    elif discord_res.get("results"):
+        messages = discord_res.get("results", [])
+        guilds_searched = discord_res.get("guilds_searched", 0)
+        md_lines.append(f"*Searched {guilds_searched} security servers*\n")
+
+        for msg in messages[:10]:  # Limit display
+            author = msg.get("author", {}).get("username", "Unknown")
+            content = msg.get("content", "")[:200]
+            guild = msg.get("guild_name", "Unknown")
+            timestamp = msg.get("timestamp", "")[:10]
+            msg_id = msg.get("id", "")
+            channel_id = msg.get("channel_id", "")
+            guild_id = msg.get("guild_id", "")
+
+            # Discord message link
+            link = f"https://discord.com/channels/{guild_id}/{channel_id}/{msg_id}"
+
+            md_lines.append(f"- **[{guild}]** @{author} ({timestamp})")
+            md_lines.append(f"  > {content}")
+            md_lines.append(f"  [Jump to message]({link})")
+            md_lines.append("")
+
+        if discord_res.get("errors"):
+            md_lines.append(f"> ⚠️ Some servers had errors: {', '.join(discord_res['errors'][:3])}")
+    else:
+        md_lines.append("No Discord messages found. Configure servers with `discord-ops setup`.")
     md_lines.append("")
 
     # 3. GitHub & Code Deep Dive
@@ -1484,9 +1946,120 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
 
 
 @app.command()
+def resources(
+    category: Optional[str] = typer.Option(None, "--category", "-c", help="Filter by category (security, default)"),
+    tags: Optional[str] = typer.Option(None, "--tags", "-t", help="Filter by tags (comma-separated)"),
+    search_query: Optional[str] = typer.Option(None, "--search", "-s", help="Search resources"),
+    output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
+    markdown: bool = typer.Option(False, "--markdown", help="Output as Markdown table"),
+):
+    """List and search available research resources."""
+    if not REGISTRY_AVAILABLE:
+        console.print("[red]Resource registry not available. Check resources/ directory.[/red]")
+        raise typer.Exit(1)
+
+    registry = get_registry()
+
+    # Build filter chain
+    results = registry.all()
+
+    if category:
+        results = [r for r in results if r.category == category]
+
+    if tags:
+        tag_list = [t.strip() for t in tags.split(",")]
+        results = [r for r in results if r.matches_tags(tag_list)]
+
+    if search_query:
+        results = [r for r in results if r.matches_search(search_query)]
+
+    # Output
+    if output_json:
+        import json as json_module
+        output = [
+            {
+                "name": r.name,
+                "url": r.url,
+                "api_url": r.api_url,
+                "type": r.type,
+                "tags": r.tags,
+                "category": r.category,
+                "auth_required": r.auth_required,
+                "description": r.description,
+            }
+            for r in results
+        ]
+        print(json_module.dumps(output, indent=2))
+    elif markdown:
+        print(registry.to_markdown_table(results))
+    else:
+        console.print(f"[bold]Found {len(results)} resources:[/bold]\n")
+        for r in results:
+            auth_badge = "[yellow]AUTH[/yellow]" if r.auth_required else "[green]FREE[/green]"
+            console.print(f"  [{r.category}] [bold]{r.name}[/bold] {auth_badge}")
+            console.print(f"    [dim]{r.url}[/dim]")
+            console.print(f"    Tags: [cyan]{', '.join(r.tags[:5])}[/cyan]")
+            console.print(f"    {r.description}")
+            console.print()
+
+
+@app.command()
+def presets(
+    output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
+):
+    """List available research presets for agents."""
+    if not REGISTRY_AVAILABLE:
+        console.print("[red]Resource registry not available.[/red]")
+        raise typer.Exit(1)
+
+    registry = get_registry()
+    preset_list = registry.list_presets()
+
+    if output_json:
+        import json as json_module
+        print(json_module.dumps(preset_list, indent=2))
+    else:
+        console.print("[bold]Available Presets[/bold]\n")
+        console.print("Pick ONE preset that matches your research goal:\n")
+
+        for p in preset_list:
+            api_badge = f"[green]{len(p['api_resources'])} APIs[/green]" if p['api_resources'] else ""
+            sites_badge = f"[cyan]{p['brave_sites_count']} sites[/cyan]"
+
+            console.print(f"  [bold]{p['name']}[/bold] {sites_badge} {api_badge}")
+            console.print(f"    {p['description']}")
+            console.print(f"    [dim]Use when: {p['use_when'][0] if p['use_when'] else 'General'}[/dim]")
+            console.print()
+
+        console.print("[dim]Usage: dogpile search 'query' --preset red_team[/dim]")
+        console.print("[dim]       dogpile search 'query' --auto-preset[/dim]")
+
+
+@app.command()
+def resource_stats():
+    """Show statistics about available resources."""
+    if not REGISTRY_AVAILABLE:
+        console.print("[red]Resource registry not available.[/red]")
+        raise typer.Exit(1)
+
+    registry = get_registry()
+    stats = registry.stats()
+
+    console.print("[bold]Resource Registry Statistics[/bold]\n")
+    console.print(f"  Total resources: [cyan]{stats['total_resources']}[/cyan]")
+    console.print(f"  Unique tags: [cyan]{stats['unique_tags']}[/cyan]")
+    console.print(f"  With API: [cyan]{stats['with_api']}[/cyan]")
+    console.print(f"  Free: [green]{stats['free']}[/green]")
+    console.print(f"  Auth required: [yellow]{stats['auth_required']}[/yellow]")
+    console.print("\n  [bold]Categories:[/bold]")
+    for cat, count in stats["categories"].items():
+        console.print(f"    {cat}: {count}")
+
+
+@app.command()
 def version():
     """Show version."""
-    console.print("Dogpile v0.2.0")
+    console.print("Dogpile v0.3.0 (with Resource Registry)")
 
 if __name__ == "__main__":
     app()

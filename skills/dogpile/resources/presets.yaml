@@ -1,0 +1,392 @@
+# Dogpile Resource Presets
+# =========================
+# Curated groups of resources for common research scenarios.
+# Agents should pick ONE preset that matches their intent.
+#
+# Usage in dogpile:
+#   dogpile search "query" --preset vulnerability_research
+#   dogpile search "query" --preset red_team
+#
+# Presets are mutually exclusive starting points. Pick the one that
+# best matches your research goal.
+#
+# HOW SEARCHING WORKS:
+# ====================
+# 1. Brave Search with site: filters for each resource in the preset
+# 2. Direct API calls for resources with api_url (NVD, CISA KEV, etc.)
+# 3. /fetcher for deep extraction of specific pages
+#
+# The `brave_sites` field contains domains for site-filtered Brave searches.
+# The `api_resources` field lists resources with direct API access.
+
+version: "1.0"
+
+# =============================================================================
+# PRESET DEFINITIONS
+# =============================================================================
+# Each preset includes:
+#   - description: One-line explanation for agent decision-making
+#   - use_when: Specific triggers/scenarios when to use this preset
+#   - resources: List of resource names to include
+#   - include_defaults: Whether to also search Brave/GitHub/ArXiv (usually true)
+# =============================================================================
+
+presets:
+  # ---------------------------------------------------------------------------
+  # GENERAL PURPOSE (Default)
+  # ---------------------------------------------------------------------------
+  general:
+    description: "Standard research - web, code, papers, videos"
+    use_when:
+      - "General technical questions"
+      - "Learning about a topic"
+      - "Finding documentation"
+      - "No security context"
+    include_defaults: true
+    resources: []  # Just use defaults
+
+  # ---------------------------------------------------------------------------
+  # VULNERABILITY RESEARCH
+  # ---------------------------------------------------------------------------
+  vulnerability_research:
+    description: "CVE lookup, exploit availability, patch status"
+    use_when:
+      - "User asks about a specific CVE"
+      - "Checking if a vulnerability has public exploits"
+      - "Researching patch availability"
+      - "Understanding vulnerability impact"
+      - "Query contains 'CVE-', 'vulnerability', 'exploit'"
+    include_defaults: true
+    # Domains to search with Brave site: filter
+    brave_sites:
+      - cisa.gov
+      - nvd.nist.gov
+      - exploit-db.com
+      - attackerkb.com
+      - github.com/trickest/cve
+      - github.com/nomi-sec/PoC-in-GitHub
+      - vuldb.com
+      - packetstormsecurity.com
+    # Resources with direct API access
+    api_resources:
+      - CISA KEV  # JSON feed
+      - NVD       # REST API
+    resources:
+      - CISA KEV
+      - NVD
+      - Exploit-DB
+      - AttackerKB
+      - trickest/cve
+      - nomi-sec/PoC-in-GitHub
+      - VulnDB
+
+  # ---------------------------------------------------------------------------
+  # RED TEAM / OFFENSIVE
+  # ---------------------------------------------------------------------------
+  red_team:
+    description: "Offensive techniques, privesc, bypasses, payloads"
+    use_when:
+      - "Penetration testing research"
+      - "Finding privilege escalation techniques"
+      - "Looking for bypass methods"
+      - "CTF challenge research"
+      - "Query mentions 'privesc', 'bypass', 'payload', 'exploit'"
+    include_defaults: true
+    brave_sites:
+      - gtfobins.github.io
+      - lolbas-project.github.io
+      - loldrivers.io
+      - book.hacktricks.xyz
+      - github.com/swisskyrepo/PayloadsAllTheThings
+      - github.com/danielmiessler/SecLists
+      - exploit-db.com
+      - github.com/redcanaryco/atomic-red-team
+      - unprotect.it
+      - malapi.io
+    api_resources:
+      - LOLBAS    # JSON API
+      - LOLDrivers # JSON API
+    resources:
+      - GTFOBins
+      - LOLBAS
+      - LOLDrivers
+      - HackTricks
+      - PayloadsAllTheThings
+      - SecLists
+      - Exploit-DB
+      - 0day.today
+      - Atomic Red Team
+      - Unprotect Project
+      - MalAPI
+
+  # ---------------------------------------------------------------------------
+  # BLUE TEAM / DEFENSIVE
+  # ---------------------------------------------------------------------------
+  blue_team:
+    description: "Detection rules, threat hunting, defense strategies"
+    use_when:
+      - "Writing detection rules"
+      - "Threat hunting queries"
+      - "Incident response research"
+      - "Understanding attack patterns to defend against"
+      - "Query mentions 'detect', 'hunt', 'SIEM', 'alert'"
+    include_defaults: true
+    brave_sites:
+      - attack.mitre.org
+      - d3fend.mitre.org
+      - car.mitre.org
+      - github.com/SigmaHQ/sigma
+      - github.com/Yara-Rules/rules
+      - github.com/redcanaryco/atomic-red-team
+      - lolrmm.io
+      - thedfirreport.com
+    api_resources:
+      - MITRE ATT&CK  # JSON from GitHub
+    resources:
+      - MITRE ATT&CK
+      - MITRE D3FEND
+      - MITRE CAR
+      - Sigma Rules
+      - YARA Rules
+      - Atomic Red Team
+      - LOLRMM
+      - The DFIR Report
+
+  # ---------------------------------------------------------------------------
+  # THREAT INTELLIGENCE
+  # ---------------------------------------------------------------------------
+  threat_intel:
+    description: "APT groups, campaigns, IOCs, malware families"
+    use_when:
+      - "Researching a threat actor"
+      - "Looking up IOCs (hashes, IPs, domains)"
+      - "Understanding a malware campaign"
+      - "Query mentions APT name, malware family, or 'threat intel'"
+    include_defaults: true
+    brave_sites:
+      - attack.mitre.org
+      - malpedia.caad.fkie.fraunhofer.de
+      - threatfox.abuse.ch
+      - bazaar.abuse.ch
+      - urlhaus.abuse.ch
+      - github.com/aptnotes/data
+      - github.com/MISP/misp-galaxy
+      - threatminer.org
+      - mandiant.com/resources/blog
+    api_resources:
+      - ThreatFox   # API
+      - MalwareBazaar  # API
+      - URLhaus     # API
+    resources:
+      - MITRE ATT&CK
+      - Malpedia
+      - ThreatFox
+      - MalwareBazaar
+      - URLhaus
+      - APTNotes
+      - MISP Galaxies
+      - ThreatMiner
+      - Mandiant Threat Intel
+
+  # ---------------------------------------------------------------------------
+  # MALWARE ANALYSIS
+  # ---------------------------------------------------------------------------
+  malware_analysis:
+    description: "Sample analysis, sandboxes, reverse engineering"
+    use_when:
+      - "Analyzing a malware sample"
+      - "Looking for sandbox reports"
+      - "Understanding malware behavior"
+      - "Query contains hash, 'malware', 'sample', 'sandbox'"
+    include_defaults: false  # Focused search
+    brave_sites:
+      - vx-underground.org
+      - bazaar.abuse.ch
+      - virustotal.com
+      - any.run
+      - hybrid-analysis.com
+      - malpedia.caad.fkie.fraunhofer.de
+      - malware-traffic-analysis.net
+      - unprotect.it
+      - malapi.io
+    api_resources:
+      - MalwareBazaar  # API
+      - VirusTotal     # API (needs key)
+    resources:
+      - VX-Underground
+      - MalwareBazaar
+      - VirusTotal
+      - ANY.RUN
+      - Hybrid Analysis
+      - Malpedia
+      - Malware Traffic Analysis
+      - Unprotect Project
+      - MalAPI
+
+  # ---------------------------------------------------------------------------
+  # OSINT / RECONNAISSANCE
+  # ---------------------------------------------------------------------------
+  osint:
+    description: "Infrastructure recon, domain intel, exposure scanning, contractor verification"
+    use_when:
+      - "Reconnaissance on a target"
+      - "Finding exposed services"
+      - "Domain/IP intelligence"
+      - "Verifying government contractors"
+      - "Query mentions 'recon', 'scan', 'exposed', domain/IP, 'contractor', 'debarred'"
+    include_defaults: true
+    brave_sites:
+      - shodan.io
+      - search.censys.io
+      - zoomeye.org
+      - greynoise.io
+      - securitytrails.com
+      - dnsdumpster.com
+      - hunter.io
+      - web.archive.org
+      - sam.gov
+    api_resources:
+      - Wayback Machine  # API
+      - SAM.gov          # Entity/Exclusions API
+    resources:
+      - Shodan
+      - Censys
+      - ZoomEye
+      - GreyNoise
+      - SecurityTrails
+      - DNSDumpster
+      - Hunter.io
+      - Wayback Machine
+      - SAM.gov
+      - SAM.gov Exclusions
+
+  # ---------------------------------------------------------------------------
+  # CONTAINER / CLOUD SECURITY
+  # ---------------------------------------------------------------------------
+  container_security:
+    description: "Docker, Kubernetes, cloud hardening"
+    use_when:
+      - "Container security research"
+      - "Kubernetes hardening"
+      - "Cloud security best practices"
+      - "Query mentions 'docker', 'k8s', 'container', 'cloud'"
+    include_defaults: true
+    brave_sites:
+      - docs.docker.com/engine/security
+      - kubernetes.io/docs/concepts/security
+      - cloudsecurityalliance.org
+      - book.hacktricks.xyz/cloud-security
+    resources:
+      - Docker Security
+      - Kubernetes Security
+      - Cloud Security Alliance
+      - HackTricks
+
+  # ---------------------------------------------------------------------------
+  # NETWORK / PCAP ANALYSIS
+  # ---------------------------------------------------------------------------
+  network_analysis:
+    description: "Network traffic, PCAP analysis, protocol research"
+    use_when:
+      - "Analyzing network captures"
+      - "Understanding protocol behavior"
+      - "Network forensics"
+      - "Query mentions 'pcap', 'wireshark', 'traffic', 'network'"
+    include_defaults: true
+    brave_sites:
+      - wiki.wireshark.org
+      - malware-traffic-analysis.net
+      - packettotal.com
+    resources:
+      - Wireshark Sample Captures
+      - Malware Traffic Analysis
+      - PacketTotal
+
+  # ---------------------------------------------------------------------------
+  # BLEEDING EDGE / ZERO-DAY
+  # ---------------------------------------------------------------------------
+  bleeding_edge:
+    description: "Latest vulnerabilities, zero-days, breaking research, DARPA programs"
+    use_when:
+      - "Looking for newest vulnerabilities"
+      - "Recent security research"
+      - "Zero-day tracking"
+      - "DARPA programs and funding"
+      - "Query mentions 'latest', 'new', 'zero-day', '2025', '2026', 'DARPA'"
+    include_defaults: true
+    brave_sites:
+      - googleprojectzero.blogspot.com
+      - thedfirreport.com
+      - posts.specterops.io
+      - blog.orange.tw
+      - bleepingcomputer.com
+      - tldrsec.com
+      - risky.biz
+      - cisa.gov/known-exploited-vulnerabilities
+      - github.com/trickest/cve
+      - darpa.mil
+      - grants.gov
+    api_resources:
+      - CISA KEV  # JSON feed
+      - DARPA Programs  # RSS feed
+      - DARPA Opportunities  # RSS feed
+      - Grants.gov  # REST API
+    resources:
+      - Project Zero Blog
+      - The DFIR Report
+      - SpecterOps Blog
+      - Orange Tsai Blog
+      - BleepingComputer
+      - TL;DR Sec
+      - Risky Business
+      - CISA KEV
+      - trickest/cve
+      - DARPA Programs
+      - DARPA Opportunities
+      - Grants.gov
+
+  # ---------------------------------------------------------------------------
+  # COMMUNITY / SOCIAL
+  # ---------------------------------------------------------------------------
+  community:
+    description: "Reddit, Twitter, Mastodon security discussions"
+    use_when:
+      - "Looking for community opinions"
+      - "Finding recent discussions"
+      - "Real-time security chatter"
+      - "Query mentions 'reddit', 'twitter', 'community', 'discuss'"
+    include_defaults: true
+    brave_sites:
+      - reddit.com/r/netsec
+      - reddit.com/r/ReverseEngineering
+      - reddit.com/r/malware
+      - reddit.com/r/AskNetsec
+      - infosec.exchange
+      - twitter.com
+      - infosecwriteups.com
+      - 0xdf.gitlab.io
+    resources:
+      - Reddit r/netsec
+      - Reddit r/ReverseEngineering
+      - Reddit r/malware
+      - Infosec Mastodon
+      - X/Twitter Security
+      - InfoSec Writeups (Medium)
+
+# =============================================================================
+# QUICK REFERENCE FOR AGENTS
+# =============================================================================
+#
+# | User Intent                          | Preset                 |
+# |--------------------------------------|------------------------|
+# | "What is CVE-2024-1234?"             | vulnerability_research |
+# | "How to escalate privs on Linux"     | red_team               |
+# | "Write a Sigma rule for X"           | blue_team              |
+# | "Info on APT29 techniques"           | threat_intel           |
+# | "Analyze this malware hash"          | malware_analysis       |
+# | "What's exposed on example.com"      | osint                  |
+# | "Harden my Docker containers"        | container_security     |
+# | "Analyze this PCAP"                  | network_analysis       |
+# | "Latest zero-days this week"         | bleeding_edge          |
+# | "How does React hooks work?"         | general                |
+# =============================================================================

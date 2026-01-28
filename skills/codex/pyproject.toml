@@ -1,0 +1,11 @@
+[project]
+name = "codex"
+version = "0.1.0"
+description = "High-reasoning agentic bridge via OpenAI Codex CLI (gpt-5.2-codex)"
+requires-python = ">=3.11"
+
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

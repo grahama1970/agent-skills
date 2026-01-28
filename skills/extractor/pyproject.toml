@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pi-extractor"
+version = "0.1.0"
+description = "Preset-First Agentic Document Extraction Skill for Pi"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Pi Team", email = "noreply@anthropic.com"}
+]
+
+dependencies = [
+    "pymupdf>=1.23.0",      # fitz - PDF extraction
+    "duckdb>=0.8.0",        # DuckDB - TOC integrity checking
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+extractor = "extract:main"
+
+[tool.setuptools]
+packages = ["extract"]
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311", "py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 100

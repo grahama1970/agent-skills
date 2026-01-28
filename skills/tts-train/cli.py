@@ -132,7 +132,7 @@ def doctor():
              try:
                  __import__(d)
                  table.add_row(d, "✅", "Module Ready")
-             except:
+             except ImportError:
                  table.add_row(d, "❓", "Check install")
 
     rprint(table)

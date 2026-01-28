@@ -37,7 +37,7 @@ import sys
 import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any, Callable, Optional
 
 # Load environment
 try:
@@ -399,7 +399,7 @@ def chunk_audiobook(text: str, chunk_size: int = 500) -> list[dict]:
 # Embedding
 # =============================================================================
 
-def get_embedder():
+def get_embedder() -> Callable[[list[str]], list[list[float]]]:
     """Get embedding function (uses embedding service if available)."""
     service_url = os.getenv("EMBEDDING_SERVICE_URL")
 
@@ -432,7 +432,7 @@ def get_embedder():
 # ArangoDB
 # =============================================================================
 
-def get_db():
+def get_db() -> Any:
     """Get ArangoDB connection to memory database."""
     from arango import ArangoClient
 
@@ -445,7 +445,7 @@ def get_db():
     return client.db(db_name, username=user, password=password)
 
 
-def ensure_collections(db):
+def ensure_collections(db: Any) -> dict[str, Any]:
     """Ensure all horus_lore collections exist with proper indexes."""
     collections = {}
 
@@ -486,13 +486,13 @@ def ensure_collections(db):
     return collections
 
 
-def ensure_collection(db):
+def ensure_collection(db: Any) -> Any:
     """Backward compat - returns chunks collection."""
     collections = ensure_collections(db)
     return collections["chunks"]
 
 
-def ensure_search_views(db):
+def ensure_search_views(db: Any) -> None:
     """Create ArangoSearch views for hybrid search on both collections."""
     existing_views = [v["name"] for v in db.views()]
 
@@ -559,7 +559,7 @@ def ensure_search_views(db):
         print("View horus_lore_docs_search already exists")
 
 
-def ensure_graph(db):
+def ensure_graph(db: Any) -> Any:
     """Create named graph for traversal."""
     graph_name = "horus_lore_graph"
 
@@ -581,7 +581,7 @@ def ensure_graph(db):
     return graph
 
 
-def ensure_search_view(db):
+def ensure_search_view(db: Any) -> None:
     """Backward compat - calls ensure_search_views."""
     ensure_search_views(db)
 
@@ -596,7 +596,7 @@ def create_doc_key(source: str, identifier: str, chunk_idx: int) -> str:
 # Edge Creation (Rule-Based, No LLM)
 # =============================================================================
 
-def create_plot_point_edges(db, collections: dict):
+def create_plot_point_edges(db: Any, collections: dict) -> dict[str, int]:
     """
     Create edges between chapters based on plot points (after LLM enrichment).
 
@@ -694,7 +694,7 @@ def create_plot_point_edges(db, collections: dict):
     return type_counts
 
 
-def create_edges(db, collections: dict):
+def create_edges(db: Any, collections: dict) -> dict[str, int]:
     """
     Create edges between documents based on rules (no LLM needed).
 
@@ -1726,7 +1726,7 @@ def ingest_audiobook_directory(input_dir: Path, collections: dict, embedder) -> 
     return results
 
 
-def show_status(db):
+def show_status(db: Any) -> None:
     """Show current ingestion status."""
     print("\n=== Horus Lore Status ===")
 
@@ -1814,7 +1814,7 @@ def show_status(db):
 # Main
 # =============================================================================
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Horus Lore Ingestion Pipeline")
     subparsers = parser.add_subparsers(dest="command", required=True)
 

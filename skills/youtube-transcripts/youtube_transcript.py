@@ -825,7 +825,8 @@ def search(
              h, m = divmod(m, 60)
              if h: duration = f"{h}:{m:02d}:{s:02d}"
              else: duration = f"{m}:{s:02d}"
-        except: pass
+        except (ValueError, TypeError):
+            pass
         
         desc = r.get("description", "") or ""
         # Collapse whitespace
@@ -855,7 +856,7 @@ def search(
         try:
             parts = [p.strip() for p in selection.split(",")]
             indices = [int(p)-1 for p in parts if p.isdigit()]
-        except:
+        except (ValueError, AttributeError):
             rprint("[red]Invalid selection[/red]")
             return
 

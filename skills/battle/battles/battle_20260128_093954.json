@@ -1,0 +1,18 @@
+{
+  "battle_id": "battle_20260128_093954",
+  "target_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/hack",
+  "max_rounds": 3,
+  "current_round": 0,
+  "status": "paused",
+  "red_total_score": 0.0,
+  "blue_total_score": 0.0,
+  "rounds": [],
+  "all_findings": [],
+  "all_patches": [],
+  "tdsr": 0.0,
+  "fdsr": 0.0,
+  "asc": 0,
+  "started_at": "2026-01-28T09:39:59.250127",
+  "completed_at": null,
+  "last_checkpoint": "2026-01-28T09:44:20.497306"
+}

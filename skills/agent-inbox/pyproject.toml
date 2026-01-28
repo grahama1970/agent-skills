@@ -1,0 +1,11 @@
+[project]
+name = "agent-inbox"
+version = "0.1.0"
+description = "File-based inter-agent messaging for cross-project communication"
+requires-python = ">=3.11"
+
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

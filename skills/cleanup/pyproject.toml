@@ -1,0 +1,11 @@
+[project]
+name = "cleanup"
+version = "0.1.0"
+description = "Deep codebase assessment and technical debt cleanup"
+requires-python = ">=3.11"
+
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -74,7 +74,8 @@ The TUI automatically reads `~/.pi/scheduler/jobs.json` and displays an "Upcomin
 uv run python monitor.py register \
     --name "youtube-luetin09" \
     --state /path/to/.batch_state.json \
-    --total 1946
+    --total 1946 \
+    --project my-project
 ```
 
 ### List & Status
@@ -82,6 +83,38 @@ uv run python monitor.py register \
 ```bash
 uv run python monitor.py list
 uv run python monitor.py status
+```
+
+### History & Resume ("Where Was I?")
+
+```bash
+# Show where you left off
+uv run python monitor.py history resume
+
+# Search history by task/project
+uv run python monitor.py history search sparta
+
+# Show recent history
+uv run python monitor.py history recent
+
+# Show history for a project
+uv run python monitor.py history project my-project
+
+# List work sessions
+uv run python monitor.py history sessions
+```
+
+### Session Tracking
+
+```bash
+# Start a work session
+uv run python monitor.py start-session --project sparta
+
+# Add accomplishment
+uv run python monitor.py add-accomplishment "Completed stage 05 extraction"
+
+# End session
+uv run python monitor.py end-session --notes "Paused for review"
 ```
 
 ### Start TUI

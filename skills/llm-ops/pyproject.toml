@@ -1,0 +1,6 @@
+[project]
+name = "llm-ops-skill"
+version = "0.1.0"
+description = "Local LLM health checks and cache management. Probe Ollama/vLLM/SGLang endpoints, clean model caches."
+requires-python = ">=3.10"
+dependencies = []

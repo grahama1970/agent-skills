@@ -1,0 +1,13 @@
+[project]
+name = "taxonomy"
+version = "0.1.0"
+description = "Extract Federated Taxonomy tags from text. LLM extracts candidates, deterministic validation filters to known vocabulary."
+requires-python = ">=3.11"
+
+dependencies = [
+    "typer>=0.9.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

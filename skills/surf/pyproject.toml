@@ -1,0 +1,14 @@
+[project]
+name = "surf"
+version = "0.1.0"
+description = "Unified browser automation for AI agents via CDP"
+requires-python = ">=3.11"
+
+dependencies = [
+    "websocket-client>=1.0.0",
+    "requests>=2.28.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -1,0 +1,11 @@
+[project]
+name = "assess"
+version = "0.1.0"
+description = "Step back and critically reassess project state with doc-code alignment analysis"
+requires-python = ">=3.11"
+
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

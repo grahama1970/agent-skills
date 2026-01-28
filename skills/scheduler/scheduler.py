@@ -59,7 +59,7 @@ except ImportError:
     HAS_YAML = False
 
 
-def rprint(*args, **kwargs):
+def rprint(*args, **kwargs) -> None:
     """Print with rich if available, else plain print."""
     if HAS_RICH and console:
         console.print(*args, **kwargs)
@@ -86,7 +86,7 @@ METRICS_COUNTERS: dict = {
 }
 
 
-def ensure_dirs():
+def ensure_dirs() -> None:
     """Ensure data directories exist."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -99,13 +99,13 @@ def load_jobs() -> dict:
     return {}
 
 
-def save_jobs(jobs: dict):
+def save_jobs(jobs: dict) -> None:
     """Save jobs to JSON file."""
     ensure_dirs()
     JOBS_FILE.write_text(json.dumps(jobs, indent=2))
 
 
-def parse_interval(interval_str: str) -> dict:
+def parse_interval(interval_str: str) -> dict[str, int]:
     """Parse interval string like '1h', '30m', '10s' to APScheduler kwargs."""
     import re
     match = re.match(r'^(\d+)([smhd])$', interval_str.lower())
@@ -119,7 +119,7 @@ def parse_interval(interval_str: str) -> dict:
     return {unit_map[unit]: value}
 
 
-def run_job(job: dict, show_progress: bool = True) -> dict:
+def run_job(job: dict, show_progress: bool = True) -> dict[str, str | int | float]:
     """Execute a job and return result with optional progress display."""
     name = job["name"]
     command = job["command"]
@@ -226,7 +226,7 @@ def run_job(job: dict, show_progress: bool = True) -> dict:
     }
 
 
-def job_wrapper(job_name: str):
+def job_wrapper(job_name: str) -> None:
     """Wrapper function for APScheduler to execute a job."""
     global RUNNING_JOBS, METRICS_COUNTERS
 
@@ -276,7 +276,7 @@ def job_wrapper(job_name: str):
 # Metrics Server (FastAPI)
 # ============================================================================
 
-def create_metrics_app():
+def create_metrics_app() -> Optional["FastAPI"]:
     """Create FastAPI app for metrics endpoint."""
     if not HAS_FASTAPI:
         return None
@@ -288,7 +288,7 @@ def create_metrics_app():
     )
 
     @app.get("/")
-    def root():
+    def root() -> dict:
         """Root endpoint with links."""
         return {
             "service": "pi-scheduler",
@@ -296,7 +296,7 @@ def create_metrics_app():
         }
 
     @app.get("/status")
-    def status():
+    def status() -> dict:
         """Scheduler daemon status."""
         jobs = load_jobs()
         enabled = sum(1 for j in jobs.values() if j.get("enabled", True))
@@ -311,7 +311,7 @@ def create_metrics_app():
         }
 
     @app.get("/jobs")
-    def list_jobs():
+    def list_jobs() -> dict:
         """List all jobs with status."""
         jobs = load_jobs()
         result = []
@@ -331,7 +331,7 @@ def create_metrics_app():
         return {"jobs": result, "count": len(result)}
 
     @app.get("/jobs/{name}")
-    def get_job(name: str):
+    def get_job(name: str) -> dict:
         """Get details for a specific job."""
         jobs = load_jobs()
         if name not in jobs:
@@ -349,7 +349,7 @@ def create_metrics_app():
         }
 
     @app.get("/jobs/{name}/logs")
-    def get_job_logs(name: str, lines: int = 100):
+    def get_job_logs(name: str, lines: int = 100) -> dict:
         """Get recent logs for a job."""
         log_file = LOG_DIR / f"{name}.log"
         if not log_file.exists():
@@ -365,7 +365,7 @@ def create_metrics_app():
             }
 
     @app.get("/metrics", response_class=PlainTextResponse)
-    def prometheus_metrics():
+    def prometheus_metrics() -> str:
         """Prometheus-compatible metrics endpoint."""
         jobs = load_jobs()
         enabled = sum(1 for j in jobs.values() if j.get("enabled", True))
@@ -418,7 +418,7 @@ def create_metrics_app():
         return "\n".join(lines) + "\n"
 
     @app.post("/jobs/{name}/run")
-    def trigger_job(name: str):
+    def trigger_job(name: str) -> dict:
         """Trigger a job to run immediately (async)."""
         jobs = load_jobs()
         if name not in jobs:
@@ -433,7 +433,7 @@ def create_metrics_app():
     return app
 
 
-def start_metrics_server(port: int = DEFAULT_METRICS_PORT):
+def start_metrics_server(port: int = DEFAULT_METRICS_PORT) -> Optional["uvicorn.Server"]:
     """Start the metrics server in a background thread."""
     if not HAS_FASTAPI:
         rprint("[yellow][scheduler][/yellow] FastAPI not available, metrics server disabled")
@@ -462,12 +462,12 @@ _start_time = time.time()  # Track daemon start time
 class SchedulerDaemon:
     """Background scheduler daemon."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.scheduler = None
         self.running = False
         self.metrics_server = None
 
-    def start(self, metrics_port: int = DEFAULT_METRICS_PORT):
+    def start(self, metrics_port: int = DEFAULT_METRICS_PORT) -> None:
         """Start the scheduler daemon with metrics server."""
         global _start_time
         _start_time = time.time()
@@ -521,7 +521,7 @@ class SchedulerDaemon:
         finally:
             self._cleanup()
 
-    def _add_job(self, job: dict):
+    def _add_job(self, job: dict) -> None:
         """Add a job to the scheduler."""
         name = job["name"]
 
@@ -542,12 +542,12 @@ class SchedulerDaemon:
         )
         print(f"[scheduler] Scheduled: {name}")
 
-    def _shutdown(self, signum, frame):
+    def _shutdown(self, signum, frame) -> None:
         """Handle shutdown signal."""
         print("\n[scheduler] Shutting down...")
         self.running = False
 
-    def _cleanup(self):
+    def _cleanup(self) -> None:
         """Cleanup on exit."""
         if self.scheduler:
             self.scheduler.shutdown(wait=False)
@@ -556,13 +556,13 @@ class SchedulerDaemon:
         print("[scheduler] Stopped")
 
 
-def cmd_start(args):
+def cmd_start(args) -> None:
     """Start the scheduler daemon."""
     daemon = SchedulerDaemon()
     daemon.start(metrics_port=args.port)
 
 
-def cmd_stop(args):
+def cmd_stop(args) -> None:
     """Stop the scheduler daemon."""
     if not PID_FILE.exists():
         print("Scheduler not running")
@@ -587,7 +587,7 @@ def cmd_stop(args):
             PID_FILE.unlink()
 
 
-def cmd_status(args):
+def cmd_status(args) -> None:
     """Show scheduler status with rich output."""
     running = False
     pid = None
@@ -641,7 +641,7 @@ def cmd_status(args):
         print(f"\nJobs: {len(jobs)} total, {enabled} enabled")
 
 
-def cmd_register(args):
+def cmd_register(args) -> None:
     """Register a new job."""
     jobs = load_jobs()
 
@@ -673,7 +673,7 @@ def cmd_register(args):
         print(json.dumps(job, indent=2))
 
 
-def cmd_unregister(args):
+def cmd_unregister(args) -> None:
     """Remove a job."""
     jobs = load_jobs()
 
@@ -686,7 +686,7 @@ def cmd_unregister(args):
     print(f"Removed job: {args.name}")
 
 
-def cmd_list(args):
+def cmd_list(args) -> None:
     """List all jobs with rich table output."""
     jobs = load_jobs()
 
@@ -755,7 +755,7 @@ def cmd_list(args):
             print()
 
 
-def cmd_run(args):
+def cmd_run(args) -> None:
     """Run a job immediately."""
     jobs = load_jobs()
 
@@ -778,7 +778,7 @@ def cmd_run(args):
         print(f"Result: {result['status']}")
 
 
-def cmd_enable(args):
+def cmd_enable(args) -> None:
     """Enable a job."""
     jobs = load_jobs()
     if args.name not in jobs:
@@ -790,7 +790,7 @@ def cmd_enable(args):
     print(f"Enabled: {args.name}")
 
 
-def cmd_disable(args):
+def cmd_disable(args) -> None:
     """Disable a job."""
     jobs = load_jobs()
     if args.name not in jobs:
@@ -802,7 +802,7 @@ def cmd_disable(args):
     print(f"Disabled: {args.name}")
 
 
-def cmd_logs(args):
+def cmd_logs(args) -> None:
     """Show job logs."""
     if args.name:
         log_file = LOG_DIR / f"{args.name}.log"
@@ -824,7 +824,7 @@ def cmd_logs(args):
             print(f"{log_file.stem}: {size} bytes, modified {mtime}")
 
 
-def cmd_systemd_unit(args):
+def cmd_systemd_unit(args) -> None:
     """Generate systemd unit file."""
     script_path = Path(__file__).resolve()
     python_path = sys.executable
@@ -846,7 +846,7 @@ WantedBy=default.target
     print(unit)
 
 
-def load_services_yaml(yaml_path: Path) -> dict:
+def load_services_yaml(yaml_path: Path) -> dict[str, object]:
     """Load services configuration from YAML file."""
     if not HAS_YAML:
         raise RuntimeError("PyYAML not installed. Run: pip install pyyaml")
@@ -860,7 +860,7 @@ def load_services_yaml(yaml_path: Path) -> dict:
     return config
 
 
-def cmd_report(args):
+def cmd_report(args) -> None:
     """Generate comprehensive status report with metrics and failures."""
     jobs = load_jobs()
 
@@ -1096,7 +1096,7 @@ def _get_daemon_pid() -> Optional[int]:
         return None
 
 
-def cmd_load(args):
+def cmd_load(args) -> None:
     """Load jobs from a services.yaml file."""
     yaml_path = Path(args.file)
 
@@ -1194,7 +1194,7 @@ def cmd_load(args):
         print(f"Source: {yaml_path}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Background task scheduler")
     parser.add_argument("--json", action="store_true", help="JSON output")
     subparsers = parser.add_subparsers(dest="subcommand", required=True)

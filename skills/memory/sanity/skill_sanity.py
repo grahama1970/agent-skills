@@ -113,7 +113,7 @@ def test_add_episode():
             try:
                 data = json.loads(result.stdout)
                 print(f"    Data: {data.get('meta', {})}")
-            except:
+            except json.JSONDecodeError:
                 print(f"    Output: {result.stdout[:100]}...")
         return True
 
@@ -172,7 +172,7 @@ def test_prove_assessment():
             try:
                 data = json.loads(result.stdout)
                 print(f"    provable={data.get('provable', 'N/A')}, confidence={data.get('confidence', 'N/A')}")
-            except:
+            except json.JSONDecodeError:
                 # Non-JSON output is OK
                 print(f"    Output: {result.stdout[:100]}...")
         return True

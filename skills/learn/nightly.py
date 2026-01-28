@@ -228,7 +228,7 @@ def archive_transcript(transcript: Dict) -> Dict:
     # Cleanup temp file
     try:
         episode_file.unlink()
-    except:
+    except (OSError, IOError, PermissionError):
         pass
 
     return {
@@ -370,7 +370,7 @@ def check_memory_first(query: str, scope: str) -> Optional[Dict]:
             result = json.loads(output[start:end+1])
             if result.get("found"):
                 return result
-    except:
+    except (json.JSONDecodeError, ValueError):
         pass
 
     return None

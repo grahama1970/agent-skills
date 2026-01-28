@@ -301,7 +301,7 @@ def build_rag_context(
     scope: "PaperScope",
     analysis: "ProjectAnalysis",
     review: "LiteratureReview",
-) -> RAGContext:
+) -> "RAGContext":
     """Build RAG context from all available sources.
 
     Collects and organizes grounding material:
@@ -552,7 +552,7 @@ def generate_grounded_prompt(
     section_key: str,
     section_title: str,
     scope: "PaperScope",
-    rag_context: RAGContext,
+    rag_context: "RAGContext",
 ) -> str:
     """Build a grounded prompt with source material for LLM generation.
 
@@ -2232,7 +2232,7 @@ def generate_draft(
 def draft(
     project: str = typer.Option(..., "--project", help="Project path to analyze"),
     output: str = typer.Option("./paper_output", "--output", "-o", help="Output directory"),
-    template: str = typer.Option("ieee", "--template", "-t", help="LaTeX template (ieee, acm, cvpr, arxiv, springer)"),
+    template: str = typer.Option("ieee", "--template", "-t", help="LaTeX template (ieee, acm, cvpr, arxiv, springer, darpa_baa)"),
     persona: str = typer.Option("", "--persona", "-p", help="Writing persona (horus, or path to persona.json)"),
     persona_strength: float = typer.Option(
         1.0,
@@ -2241,9 +2241,14 @@ def draft(
         max=1.0,
         help="Persona voice intensity: 0.0=neutral academic, 0.5=balanced, 1.0=full persona"
     ),
+    length: str = typer.Option(
+        "paper",
+        "--length", "-l",
+        help="Document length: paper (5-10pg), extended (15-25pg), thesis (50-80pg), dissertation (100+pg)"
+    ),
     use_mimic: bool = typer.Option(False, "--mimic", help="Use MIMIC patterns if available"),
     use_rag: bool = typer.Option(False, "--rag", help="Enable RAG grounding to prevent hallucination"),
-):
+) -> None:
     """
     Generate paper draft from project analysis (interactive).
 
@@ -2254,7 +2259,8 @@ def draft(
     4. Knowledge learning
     5. Draft generation
 
-    Use --template to select venue format (ieee, acm, cvpr, arxiv, springer).
+    Use --template to select venue format (ieee, acm, cvpr, arxiv, springer, darpa_baa).
+    Use --length for longer documents: paper (5-10pg), thesis (50-80pg), dissertation (100+pg).
     Use --persona to write in a specific agent's voice (e.g., 'horus' for authoritative style).
     Use --persona-strength to control voice intensity (0.0=neutral, 1.0=full persona).
     Use --mimic flag to apply style patterns from previously analyzed exemplar papers.
@@ -2346,7 +2352,7 @@ def mimic(
     validate: str = typer.Option("", "--validate", help="Validate generated paper against patterns"),
     show: bool = typer.Option(False, "--show", help="Show current MIMIC patterns"),
     clear: bool = typer.Option(False, "--clear", help="Clear stored MIMIC patterns"),
-):
+) -> None:
     """
     Mimic the style of exemplar papers from prestigious sources.
 
@@ -2453,7 +2459,7 @@ def mimic(
 def verify(
     paper_dir: str = typer.Argument(..., help="Path to generated paper directory"),
     project: str = typer.Option("", "--project", help="Project path for deeper verification"),
-):
+) -> None:
     """
     Verify RAG grounding of a generated paper.
 
@@ -2624,7 +2630,120 @@ LATEX_TEMPLATES = {
         "abstract_env": ("abstract", "abstract"),
         "bib_style": "splncs04",
     },
+    "darpa_baa": {
+        "name": "DARPA BAA (Volume I)",
+        "documentclass": r"\documentclass[12pt]{article}",
+        "packages": r"""\usepackage[margin=1in,letterpaper]{geometry}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+
+% DARPA formatting requirements: 8.5x11, 1-inch margins, 12pt font
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Volume I - Technical and Management Proposal}
+\rfoot{Page \thepage}
+\setlength{\headheight}{14.5pt}""",
+        "author_format": r"""\Large\textbf{%s}\\[0.5em]
+\normalsize Organization Name\\
+Proposal Number: TBD\\
+Topic Number: TBD\\
+Date: \today""",
+        "abstract_env": ("abstract", "Executive Summary"),
+        "bib_style": "plain",
+        "sections": [
+            "executive_summary",
+            "goals_and_impact",
+            "technical_approach",
+            "team_organization",
+            "management_plan",
+            "risk_management",
+            "schedule_and_milestones",
+        ],
+    },
+    "federal_grant": {
+        "name": "Federal Grant (SF-424 Compatible)",
+        "documentclass": r"\documentclass[12pt]{article}",
+        "packages": r"""\usepackage[margin=1in,letterpaper]{geometry}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+% Federal grant formatting: 8.5x11, 1-inch margins, 12pt Times
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\rfoot{Page \thepage}""",
+        "author_format": r"\author{%s}",
+        "abstract_env": ("abstract", "Executive Summary"),
+        "bib_style": "plain",
+    },
 }
+
+# Document length configurations (for thesis-scale generation)
+LENGTH_CONFIGS = {
+    "paper": {
+        "name": "Conference Paper",
+        "pages": (5, 10),
+        "sections": ["abstract", "intro", "related", "method", "eval", "conclusion"],
+        "words_per_section": 800,
+        "max_chapters": 0,  # No chapters, just sections
+        "subsection_depth": 2,
+    },
+    "extended": {
+        "name": "Journal Article",
+        "pages": (15, 25),
+        "sections": ["abstract", "intro", "background", "related", "method", "implementation", "eval", "discussion", "conclusion"],
+        "words_per_section": 1200,
+        "max_chapters": 0,
+        "subsection_depth": 3,
+    },
+    "thesis": {
+        "name": "Master's Thesis",
+        "pages": (50, 80),
+        "sections": None,  # Uses chapters instead
+        "words_per_section": 2500,
+        "max_chapters": 6,
+        "subsection_depth": 3,
+        "chapters": [
+            {"title": "Introduction", "sections": ["motivation", "objectives", "contributions", "organization"]},
+            {"title": "Background", "sections": ["fundamentals", "related_work", "existing_approaches"]},
+            {"title": "Design", "sections": ["architecture", "design_decisions", "key_algorithms"]},
+            {"title": "Implementation", "sections": ["system_overview", "key_components", "integration"]},
+            {"title": "Evaluation", "sections": ["methodology", "results", "analysis", "comparison"]},
+            {"title": "Conclusion", "sections": ["summary", "contributions", "limitations", "future_work"]},
+        ],
+    },
+    "dissertation": {
+        "name": "PhD Dissertation",
+        "pages": (100, 200),
+        "sections": None,
+        "words_per_section": 3500,
+        "max_chapters": 10,
+        "subsection_depth": 4,
+        "chapters": [
+            {"title": "Introduction", "sections": ["problem_statement", "motivation", "research_questions", "contributions", "organization"]},
+            {"title": "Background and Foundations", "sections": ["theoretical_background", "prior_art", "key_concepts"]},
+            {"title": "Related Work", "sections": ["category_1", "category_2", "category_3", "gaps_and_positioning"]},
+            {"title": "Approach Overview", "sections": ["key_insights", "design_principles", "system_architecture"]},
+            {"title": "Core Contribution I", "sections": ["problem", "solution", "analysis", "validation"]},
+            {"title": "Core Contribution II", "sections": ["problem", "solution", "analysis", "validation"]},
+            {"title": "Core Contribution III", "sections": ["problem", "solution", "analysis", "validation"]},
+            {"title": "Implementation", "sections": ["system_design", "engineering_challenges", "lessons_learned"]},
+            {"title": "Evaluation", "sections": ["experimental_setup", "results", "analysis", "comparison", "threats_to_validity"]},
+            {"title": "Conclusion", "sections": ["summary", "contributions", "impact", "open_problems", "future_directions"]},
+        ],
+    },
+}
+
+
+def get_length_config(length: str) -> Dict[str, Any]:
+    """Get document length configuration by name."""
+    return LENGTH_CONFIGS.get(length.lower(), LENGTH_CONFIGS["paper"])
 
 
 def get_template(template_name: str) -> Dict[str, Any]:
@@ -3004,6 +3123,274 @@ Every claim must be defensible. Every argument must be structured.
     return base_prompt + "\n" + persona_guidance
 
 
+# --- Citation API Verification (OpenDraft-style) ---
+# Verify citations exist in real academic databases
+
+import urllib.request
+import urllib.error
+
+def verify_arxiv_id(arxiv_id: str) -> Dict[str, Any]:
+    """Verify an arXiv paper ID exists via arXiv API.
+
+    Args:
+        arxiv_id: arXiv ID like "2501.15355" or "2310.09876v1"
+
+    Returns:
+        Dict with status (Supported, Unsupported), title, authors if found
+    """
+    # Clean ID (remove version suffix)
+    clean_id = arxiv_id.split("v")[0] if "v" in arxiv_id else arxiv_id
+
+    try:
+        url = f"https://export.arxiv.org/api/query?id_list={clean_id}"
+        req = urllib.request.Request(url, headers={"User-Agent": "paper-writer/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            content = response.read().decode("utf-8")
+
+        # Check if we got a valid response (look for <entry> tag)
+        if "<entry>" in content and "<title>" in content:
+            # Extract title
+            import re
+            title_match = re.search(r"<title>([^<]+)</title>", content)
+            title = title_match.group(1).strip() if title_match else "Unknown"
+
+            # Extract authors
+            author_matches = re.findall(r"<name>([^<]+)</name>", content)
+            authors = author_matches[:3] if author_matches else ["Unknown"]
+
+            return {
+                "status": "Supported",
+                "source": "arXiv",
+                "arxiv_id": clean_id,
+                "title": title,
+                "authors": authors,
+                "url": f"https://arxiv.org/abs/{clean_id}",
+            }
+        else:
+            return {
+                "status": "Unsupported",
+                "source": "arXiv",
+                "arxiv_id": clean_id,
+                "error": "Paper not found in arXiv",
+            }
+
+    except urllib.error.HTTPError as e:
+        return {
+            "status": "Unsupported",
+            "source": "arXiv",
+            "arxiv_id": clean_id,
+            "error": f"HTTP {e.code}",
+        }
+    except Exception as e:
+        return {
+            "status": "Uncertain",
+            "source": "arXiv",
+            "arxiv_id": clean_id,
+            "error": str(e),
+        }
+
+
+def verify_doi(doi: str) -> Dict[str, Any]:
+    """Verify a DOI exists via CrossRef API.
+
+    Args:
+        doi: DOI like "10.1145/1234567.1234568"
+
+    Returns:
+        Dict with status (Supported, Unsupported), title, authors if found
+    """
+    # Clean DOI (remove doi.org prefix if present)
+    clean_doi = doi.replace("https://doi.org/", "").replace("http://doi.org/", "")
+    clean_doi = clean_doi.replace("doi.org/", "")
+
+    try:
+        url = f"https://api.crossref.org/works/{urllib.parse.quote(clean_doi, safe='')}"
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "paper-writer/1.0 (mailto:contact@example.com)",
+        })
+
+        with urllib.request.urlopen(req, timeout=10) as response:
+            content = response.read().decode("utf-8")
+            data = json.loads(content)
+
+        if data.get("status") == "ok" and "message" in data:
+            msg = data["message"]
+            title = msg.get("title", ["Unknown"])[0] if msg.get("title") else "Unknown"
+
+            # Extract authors
+            authors_raw = msg.get("author", [])
+            authors = [
+                f"{a.get('given', '')} {a.get('family', '')}".strip()
+                for a in authors_raw[:3]
+            ]
+
+            return {
+                "status": "Supported",
+                "source": "CrossRef",
+                "doi": clean_doi,
+                "title": title,
+                "authors": authors if authors else ["Unknown"],
+                "url": f"https://doi.org/{clean_doi}",
+            }
+        else:
+            return {
+                "status": "Unsupported",
+                "source": "CrossRef",
+                "doi": clean_doi,
+                "error": "DOI not found in CrossRef",
+            }
+
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return {
+                "status": "Unsupported",
+                "source": "CrossRef",
+                "doi": clean_doi,
+                "error": "DOI not found",
+            }
+        return {
+            "status": "Uncertain",
+            "source": "CrossRef",
+            "doi": clean_doi,
+            "error": f"HTTP {e.code}",
+        }
+    except Exception as e:
+        return {
+            "status": "Uncertain",
+            "source": "CrossRef",
+            "doi": clean_doi,
+            "error": str(e),
+        }
+
+
+def verify_semantic_scholar(title: str, authors: List[str] = None) -> Dict[str, Any]:
+    """Verify a paper exists via Semantic Scholar API by title search.
+
+    Args:
+        title: Paper title to search
+        authors: Optional author names for verification
+
+    Returns:
+        Dict with status (Supported, Partial, Unsupported), match details
+    """
+    try:
+        # URL encode the title
+        encoded_title = urllib.parse.quote(title[:100])  # Limit title length
+        url = f"https://api.semanticscholar.org/graph/v1/paper/search?query={encoded_title}&limit=3"
+        req = urllib.request.Request(url, headers={"User-Agent": "paper-writer/1.0"})
+
+        with urllib.request.urlopen(req, timeout=10) as response:
+            content = response.read().decode("utf-8")
+            data = json.loads(content)
+
+        papers = data.get("data", [])
+        if papers:
+            # Check for exact or close title match
+            paper = papers[0]
+            found_title = paper.get("title", "")
+
+            # Simple similarity check (normalized)
+            title_lower = title.lower().strip()
+            found_lower = found_title.lower().strip()
+
+            # Exact match
+            if title_lower == found_lower:
+                return {
+                    "status": "Supported",
+                    "source": "Semantic Scholar",
+                    "title": found_title,
+                    "paper_id": paper.get("paperId"),
+                    "url": f"https://www.semanticscholar.org/paper/{paper.get('paperId')}",
+                }
+            # Partial match (starts with same words)
+            elif title_lower[:50] in found_lower or found_lower[:50] in title_lower:
+                return {
+                    "status": "Partial",
+                    "source": "Semantic Scholar",
+                    "title": found_title,
+                    "searched_title": title,
+                    "paper_id": paper.get("paperId"),
+                    "note": "Title partially matches - verify manually",
+                }
+            else:
+                return {
+                    "status": "Unsupported",
+                    "source": "Semantic Scholar",
+                    "searched_title": title,
+                    "error": "No matching paper found",
+                }
+        else:
+            return {
+                "status": "Unsupported",
+                "source": "Semantic Scholar",
+                "searched_title": title,
+                "error": "No results found",
+            }
+
+    except urllib.error.HTTPError as e:
+        if e.code == 429:  # Rate limited
+            return {
+                "status": "Uncertain",
+                "source": "Semantic Scholar",
+                "searched_title": title,
+                "error": "Rate limited - try again later",
+            }
+        return {
+            "status": "Uncertain",
+            "source": "Semantic Scholar",
+            "searched_title": title,
+            "error": f"HTTP {e.code}",
+        }
+    except Exception as e:
+        return {
+            "status": "Uncertain",
+            "source": "Semantic Scholar",
+            "searched_title": title,
+            "error": str(e),
+        }
+
+
+def verify_citation_from_bib(bib_entry: str) -> Dict[str, Any]:
+    """Extract identifiers from a BibTeX entry and verify existence.
+
+    Checks in order: arXiv ID, DOI, then falls back to Semantic Scholar title search.
+
+    Args:
+        bib_entry: Raw BibTeX entry string
+
+    Returns:
+        Verification result dict
+    """
+    import re
+
+    # Extract arXiv ID
+    arxiv_match = re.search(r"arXiv[:\s]+(\d{4}\.\d{4,5}(?:v\d+)?)", bib_entry, re.IGNORECASE)
+    if arxiv_match:
+        return verify_arxiv_id(arxiv_match.group(1))
+
+    # Extract DOI
+    doi_match = re.search(r"doi\s*=\s*[{\"]?([^},\"]+)", bib_entry, re.IGNORECASE)
+    if doi_match:
+        return verify_doi(doi_match.group(1))
+
+    # Extract URL with doi.org
+    url_match = re.search(r"https?://doi\.org/(10\.[^}\s]+)", bib_entry)
+    if url_match:
+        return verify_doi(url_match.group(1))
+
+    # Fall back to title search via Semantic Scholar
+    title_match = re.search(r"title\s*=\s*[\"{](.+?)[\"}]", bib_entry, re.IGNORECASE | re.DOTALL)
+    if title_match:
+        title = title_match.group(1).replace("{", "").replace("}", "").replace("\n", " ")
+        return verify_semantic_scholar(title.strip())
+
+    return {
+        "status": "Uncertain",
+        "source": "None",
+        "error": "No identifiable information in BibTeX entry",
+    }
+
+
 # --- Citation Checker ---
 
 def check_citations(paper_dir: Path) -> Dict[str, Any]:
@@ -3324,7 +3711,7 @@ def refine(
     section: str = typer.Option("", "--section", "-s", help="Specific section to refine (e.g., intro, eval)"),
     feedback: str = typer.Option("", "--feedback", "-f", help="User feedback for refinement"),
     rounds: int = typer.Option(2, "--rounds", "-r", help="Number of refinement rounds"),
-):
+) -> None:
     """
     Iteratively refine paper sections with feedback.
 
@@ -3435,7 +3822,7 @@ Output ONLY the refined section content, no explanations.
 def quality(
     paper_dir: str = typer.Argument(..., help="Path to generated paper directory"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed metrics"),
-):
+) -> None:
     """
     Show quality dashboard for a generated paper.
 
@@ -3506,7 +3893,7 @@ def critique(
     section: str = typer.Option("", "--section", "-s", help="Specific section to critique"),
     aspects: str = typer.Option("all", "--aspects", "-a", help="Aspects: clarity,novelty,rigor,completeness,presentation or 'all'"),
     use_llm: bool = typer.Option(False, "--llm", help="Use LLM for deep critique"),
-):
+) -> None:
     """
     Generate aspect-based critique (SWIF2T-style feedback).
 
@@ -3593,7 +3980,7 @@ def phrases(
     section: str = typer.Argument(..., help="Section name (abstract, intro, related, method, eval, discussion)"),
     aspect: str = typer.Option("", "--aspect", "-a", help="Specific aspect (e.g., problem, solution, motivation)"),
     persona: str = typer.Option("", "--persona", "-p", help="Persona for stylized phrases (e.g., 'horus')"),
-):
+) -> None:
     """
     Show academic phrase suggestions for a section.
 
@@ -3640,7 +4027,7 @@ def phrases(
 @app.command()
 def templates(
     show: str = typer.Option("", "--show", help="Show details for specific template"),
-):
+) -> None:
     """
     List available LaTeX templates.
 
@@ -3770,7 +4157,7 @@ def disclosure(
     venue: str = typer.Argument(..., help="Target venue (arxiv, iclr, neurips, acl, aaai, cvpr)"),
     output: str = typer.Option("", "--output", "-o", help="Output file path"),
     show_policy: bool = typer.Option(False, "--policy", "-p", help="Show full venue policy"),
-):
+) -> None:
     """
     Generate LLM-use disclosure statement for target venue.
 
@@ -3822,7 +4209,8 @@ def disclosure(
 def check_citations(
     paper_dir: str = typer.Argument(..., help="Path to generated paper directory"),
     strict: bool = typer.Option(False, "--strict", help="Fail on any unverified citation"),
-):
+    verify_api: bool = typer.Option(False, "--verify-api", "-v", help="Verify citations against real APIs (arXiv, CrossRef, Semantic Scholar)"),
+) -> None:
     """
     Verify citations to prevent hallucinated references (ICLR 2026 policy).
 
@@ -3831,9 +4219,15 @@ def check_citations(
     - Referenced paper IDs exist (arXiv, DOI checks)
     - No obvious hallucination patterns
 
+    With --verify-api, verifies each citation against:
+    - arXiv API (for arXiv IDs)
+    - CrossRef API (for DOIs)
+    - Semantic Scholar API (for title search fallback)
+
     Example:
         ./run.sh check-citations ./paper_output
         ./run.sh check-citations ./paper_output --strict
+        ./run.sh check-citations ./paper_output --verify-api
     """
     import re
 
@@ -3864,20 +4258,24 @@ def check_citations(
 
     typer.echo(f"Found {len(all_citations)} unique citations")
 
-    # Extract all bib entries
-    bib_entries = set()
+    # Extract all bib entries (key -> full entry content)
+    bib_entries = {}
     bib_entry_pattern = re.compile(r"@\w+\{([^,]+),")
 
     for bib_file in bib_files:
         content = bib_file.read_text()
-        matches = bib_entry_pattern.findall(content)
-        bib_entries.update(m.strip() for m in matches)
+        # Split into entries
+        entries = re.split(r"(?=@\w+\{)", content)
+        for entry in entries:
+            key_match = bib_entry_pattern.search(entry)
+            if key_match:
+                bib_entries[key_match.group(1).strip()] = entry
 
     typer.echo(f"Found {len(bib_entries)} .bib entries\n")
 
     # Check for missing entries
-    missing = all_citations - bib_entries
-    unused = bib_entries - all_citations
+    missing = all_citations - set(bib_entries.keys())
+    unused = set(bib_entries.keys()) - all_citations
 
     issues = []
     warnings = []
@@ -3894,56 +4292,101 @@ def check_citations(
             typer.echo(f"  - {cite}")
             warnings.append(f"Unused entry: {cite}")
 
-    # Check for hallucination patterns in bib entries
-    typer.echo("\n--- Hallucination Check ---")
-    hallucination_patterns = [
-        (r"arXiv:\d{4}\.\d{5,}", "Checking arXiv IDs..."),
-        (r"doi\.org/10\.\d+/", "Checking DOI patterns..."),
-    ]
+    # API Verification (if requested)
+    if verify_api:
+        typer.echo("\n--- API VERIFICATION ---")
+        typer.echo("Verifying citations against arXiv, CrossRef, and Semantic Scholar...\n")
 
-    suspicious = []
+        verification_results = {
+            "Supported": [],
+            "Partial": [],
+            "Unsupported": [],
+            "Uncertain": [],
+        }
 
-    # Check bib content for suspicious patterns
-    for bib_file in bib_files:
-        content = bib_file.read_text()
+        for cite_key in sorted(all_citations):
+            if cite_key not in bib_entries:
+                continue  # Skip missing entries (already reported)
 
-        # Check for suspiciously generic author names
-        if "et al." in content and content.count("et al.") > 10:
-            suspicious.append("Excessive 'et al.' usage - verify author lists")
+            entry = bib_entries[cite_key]
+            result = verify_citation_from_bib(entry)
+            status = result.get("status", "Uncertain")
+            verification_results[status].append((cite_key, result))
 
-        # Check for missing URLs/DOIs on recent papers
-        entries = content.split("@")
-        for entry in entries:
-            if "2023" in entry or "2024" in entry or "2025" in entry:
-                if "url" not in entry.lower() and "doi" not in entry.lower():
-                    # Extract key
-                    key_match = re.search(r"^\w+\{([^,]+)", entry)
-                    if key_match:
-                        suspicious.append(f"Recent paper without URL/DOI: {key_match.group(1)}")
+            # Progress indicator
+            if status == "Supported":
+                typer.echo(f"  ✓ {cite_key} [{result.get('source', 'Unknown')}]")
+            elif status == "Partial":
+                typer.echo(f"  ~ {cite_key} [{result.get('source', 'Unknown')}] - {result.get('note', 'partial match')}")
+            elif status == "Unsupported":
+                typer.echo(f"  ✗ {cite_key} - {result.get('error', 'Not found')}")
+                if strict:
+                    issues.append(f"API verification failed: {cite_key}")
+            else:
+                typer.echo(f"  ? {cite_key} - {result.get('error', 'Unknown')}")
 
-    if suspicious:
-        typer.echo("⚠ Potential issues (verify manually):")
-        for s in suspicious[:10]:  # Limit output
-            typer.echo(f"  ? {s}")
-            warnings.append(s)
+        # API Verification Summary
+        typer.echo("\n--- API VERIFICATION SUMMARY ---")
+        typer.echo(f"  ✓ Supported: {len(verification_results['Supported'])}")
+        typer.echo(f"  ~ Partial:   {len(verification_results['Partial'])}")
+        typer.echo(f"  ✗ Unsupported: {len(verification_results['Unsupported'])}")
+        typer.echo(f"  ? Uncertain: {len(verification_results['Uncertain'])}")
+
+        if verification_results["Unsupported"]:
+            typer.echo("\n⚠ UNVERIFIED CITATIONS (may be hallucinated):")
+            for cite_key, result in verification_results["Unsupported"]:
+                typer.echo(f"  - {cite_key}: {result.get('error', 'Unknown error')}")
+                warnings.append(f"Unverified: {cite_key}")
     else:
-        typer.echo("✓ No obvious hallucination patterns detected")
+        # Original hallucination pattern check (when --verify-api not used)
+        typer.echo("\n--- Hallucination Check ---")
+        hallucination_patterns = [
+            (r"arXiv:\d{4}\.\d{5,}", "Checking arXiv IDs..."),
+            (r"doi\.org/10\.\d+/", "Checking DOI patterns..."),
+        ]
+
+        suspicious = []
+
+        # Check bib content for suspicious patterns
+        for bib_file in bib_files:
+            content = bib_file.read_text()
+
+            # Check for suspiciously generic author names
+            if "et al." in content and content.count("et al.") > 10:
+                suspicious.append("Excessive 'et al.' usage - verify author lists")
+
+            # Check for missing URLs/DOIs on recent papers
+            entries = content.split("@")
+            for entry in entries:
+                if "2023" in entry or "2024" in entry or "2025" in entry or "2026" in entry:
+                    if "url" not in entry.lower() and "doi" not in entry.lower():
+                        # Extract key
+                        key_match = re.search(r"^\w+\{([^,]+)", entry)
+                        if key_match:
+                            suspicious.append(f"Recent paper without URL/DOI: {key_match.group(1)}")
+
+        if suspicious:
+            typer.echo("⚠ Potential issues (verify manually):")
+            for s in suspicious[:10]:  # Limit output
+                typer.echo(f"  ? {s}")
+                warnings.append(s)
+        else:
+            typer.echo("✓ No obvious hallucination patterns detected")
+
+        typer.echo("\n[TIP] Use --verify-api to check citations against real databases")
 
     # Summary
     typer.echo("\n=== SUMMARY ===")
     if issues:
-        typer.echo(f"❌ {len(issues)} critical issues (missing citations)")
+        typer.echo(f"❌ {len(issues)} critical issues")
         if strict:
             typer.echo("\n[STRICT MODE] Failing due to unverified citations")
             raise typer.Exit(1)
     else:
-        typer.echo("✓ All citations have .bib entries")
+        typer.echo("✓ All citations verified")
 
     if warnings:
         typer.echo(f"⚠ {len(warnings)} warnings (review recommended)")
-
-    typer.echo("\n[INFO] For full verification, use arXiv API to validate paper IDs:")
-    typer.echo("  ./run.sh arxiv search <paper_id>")
 
 
 @app.command()
@@ -3951,7 +4394,7 @@ def weakness_analysis(
     paper_dir: str = typer.Argument(..., help="Path to generated paper directory"),
     project: str = typer.Option("", "--project", help="Project path for deeper analysis"),
     output: str = typer.Option("", "--output", "-o", help="Output file for limitations section"),
-):
+) -> None:
     """
     Generate explicit weakness/limitations section (critical for peer review).
 
@@ -4094,7 +4537,7 @@ def pre_submit(
     paper_dir: str = typer.Argument(..., help="Path to generated paper directory"),
     venue: str = typer.Option("arxiv", "--venue", "-v", help="Target venue for policy check"),
     project: str = typer.Option("", "--project", help="Project path for evidence grounding"),
-):
+) -> None:
     """
     Pre-submission checklist and validation (rubric-based).
 
@@ -4296,7 +4739,7 @@ class AIUsageEntry:
 AI_USAGE_LEDGER: List[AIUsageEntry] = []
 
 
-def log_ai_usage(tool: str, purpose: str, section: str, prompt: str, output: str):
+def log_ai_usage(tool: str, purpose: str, section: str, prompt: str, output: str) -> "AIUsageEntry":
     """Log AI tool usage for disclosure compliance (ICLR 2026 requirement)."""
     import hashlib
     from datetime import datetime
@@ -4389,7 +4832,7 @@ def claim_graph(
     paper_dir: str = typer.Argument(..., help="Path to generated paper directory"),
     output: str = typer.Option("", "--output", "-o", help="Output JSON file for claim graph"),
     verify: bool = typer.Option(False, "--verify", "-v", help="Verify claims against sources"),
-):
+) -> None:
     """
     Build claim-evidence graph (Jan 2026: BibAgent/SemanticCite pattern).
 
@@ -4502,7 +4945,7 @@ def ai_ledger(
     show: bool = typer.Option(False, "--show", help="Show current AI usage ledger"),
     generate_disclosure: bool = typer.Option(False, "--disclosure", "-d", help="Generate disclosure from ledger"),
     clear: bool = typer.Option(False, "--clear", help="Clear the ledger"),
-):
+) -> None:
     """
     AI Usage Ledger for ICLR 2026 disclosure compliance.
 
@@ -4604,7 +5047,7 @@ sources, and all citations have been validated for existence and relevance.
 def sanitize(
     paper_dir: str = typer.Argument(..., help="Path to paper directory"),
     fix: bool = typer.Option(False, "--fix", help="Auto-fix detected issues"),
-):
+) -> None:
     """
     Sanitize paper for prompt injection attacks (CVPR 2026 ethics requirement).
 
@@ -4668,7 +5111,7 @@ def horus_paper(
         max=1.0,
         help="Persona voice intensity: 0.0=neutral academic, 0.5=balanced, 1.0=full Warmaster"
     ),
-):
+) -> None:
     """
     Horus Lupercal: Generate a research paper in Warmaster's voice.
 
@@ -4950,7 +5393,7 @@ and integrity of all content. All claims have been verified against project code
 @app.command()
 def domains(
     summary: bool = typer.Option(False, "--summary", "-s", help="Output JSON for agents"),
-):
+) -> None:
     """List command domains for easier navigation.
 
     Agents: Use this first to understand available commands by workflow stage.
@@ -4973,7 +5416,7 @@ def domains(
 def list_commands(
     domain: str = typer.Option("", "--domain", "-d", help="Filter by domain"),
     summary: bool = typer.Option(False, "--summary", "-s", help="Output JSON for agents"),
-):
+) -> None:
     """List commands, optionally filtered by domain.
 
     Agents: Use --domain to filter by workflow stage.
@@ -5008,7 +5451,7 @@ def list_commands(
 def workflow(
     stage: str = typer.Option("", "--stage", "-s", help="Paper stage: new_paper, revision, pre_submission, compliance"),
     summary: bool = typer.Option(False, "--summary", help="Output JSON for agents"),
-):
+) -> None:
     """Show workflow recommendations based on paper stage.
 
     Agents: Use this to determine which commands to run based on where you are in the paper lifecycle.
@@ -5042,7 +5485,7 @@ def workflow(
 @app.command()
 def figure_presets(
     summary: bool = typer.Option(False, "--summary", "-s", help="Output JSON for agents"),
-):
+) -> None:
     """Show fixture-graph presets for paper figures.
 
     Integration with fixture-graph skill for IEEE-compliant visualizations.

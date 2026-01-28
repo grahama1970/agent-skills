@@ -1,0 +1,6 @@
+[project]
+name = "system-headroom-skill"
+version = "0.1.0"
+description = "Check system resources: CPU, memory, disk. Warns when thresholds exceeded."
+requires-python = ">=3.10"
+dependencies = []

@@ -161,7 +161,7 @@ def evaluate_llm_gates(gates: list, output_dir: Path) -> dict:
                 try:
                     loaded = json.loads(sample_text)
                     formatted_sample = json.dumps(loaded, indent=2)
-                except:
+                except (json.JSONDecodeError, ValueError):
                     formatted_sample = sample_text
                 
                 prompt = prompt_template.replace("{sample}", formatted_sample)
@@ -203,7 +203,7 @@ def evaluate_llm_gates(gates: list, output_dir: Path) -> dict:
                                 valid_responses += 1
                             else:
                                 pass
-                        except:
+                        except (json.JSONDecodeError, ValueError, KeyError):
                             pass
                     
                     pass_rate = (pass_count / valid_responses) if valid_responses > 0 else 0.0

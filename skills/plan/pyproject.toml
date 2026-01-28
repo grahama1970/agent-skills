@@ -1,0 +1,24 @@
+[project]
+name = "plan-skill"
+version = "0.1.0"
+description = "Create orchestration-ready task files with enforced quality gates"
+requires-python = ">=3.11"
+
+# Core dependencies - standard library only for the base skill
+# Additional dependencies for enhanced features
+dependencies = []
+
+[project.optional-dependencies]
+# For interview integration
+interview = ["textual>=0.40.0"]
+# For research integration
+research = []  # Uses /dogpile and /context7 skills
+
+[project.scripts]
+plan = "plan:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+]

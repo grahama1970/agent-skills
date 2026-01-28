@@ -28,7 +28,7 @@ RETRIEVAL_K = int(os.getenv("LEAN4_RETRIEVAL_K", "5"))
 LEARN_ENABLED = os.getenv("LEAN4_LEARN", "1") != "0"
 
 
-def get_arango_db():
+def get_arango_db() -> Any:
     """Get ArangoDB connection for retrieval."""
     try:
         from arango import ArangoClient
@@ -524,7 +524,7 @@ def call_claude(prompt: str, system: str, model: str = None) -> str:
         raise RuntimeError("Claude CLI not found - ensure 'claude' is in PATH")
 
 
-def compile_lean(code: str, container: str, timeout: int) -> dict:
+def compile_lean(code: str, container: str, timeout: int) -> Dict[str, Any]:
     """Compile Lean4 code in Docker container."""
     skill_dir = Path(__file__).parent.parent / "lean4-verify"
     run_script = skill_dir / "run.sh"
@@ -673,7 +673,7 @@ def prove(
     timeout: int = 120,
     project: str | None = None,
     extract_deps: bool = False,
-) -> dict:
+) -> Dict[str, Any]:
     """
     Generate and verify a Lean4 proof.
 
@@ -829,7 +829,7 @@ def prove(
     }
 
 
-def main():
+def main() -> None:
     """CLI entry point."""
     import argparse
 

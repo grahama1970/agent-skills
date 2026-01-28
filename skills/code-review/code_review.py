@@ -39,7 +39,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Generator, Optional
 
 import typer
 from rich.console import Console
@@ -248,7 +248,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def _create_workspace(paths: list[Path], base_dir: Optional[Path] = None):
+def _create_workspace(paths: list[Path], base_dir: Optional[Path] = None) -> Generator[Path, None, None]:
     """Create a temporary workspace with copies of specified paths.
 
     Copies files/directories to a temp location so providers can access
@@ -623,7 +623,7 @@ def _format_bullet_list(items: list[str]) -> str:
 
 def _get_effective_dirs(add_dir: Optional[list[str]], workspace: Optional[list[str]]) -> Optional[list[str]]:
     """Determine effective directories, defaulting to "." if none provided.
-    
+
     If workspace is provided, this function returns None, as workspace handling
     will create a temporary directory and pass it later.
     """
@@ -658,7 +658,7 @@ def _format_numbered_steps(items: list[str]) -> str:
 @app.command()
 def check(
     provider: str = typer.Option(DEFAULT_PROVIDER, "--provider", "-P", help="Provider to check: github, anthropic, openai, google"),
-):
+) -> None:
     """Check if provider CLI is available and authenticated.
 
     Verifies:
@@ -727,7 +727,7 @@ def review(
     reasoning: Optional[str] = typer.Option(None, "--reasoning", "-R", help="Reasoning effort: low, medium, high (openai only)"),
     raw: bool = typer.Option(False, "--raw", help="Output raw response without JSON"),
     extract_diff: bool = typer.Option(False, "--extract-diff", help="Extract only the diff block"),
-):
+) -> None:
     """Submit a code review request to an AI provider.
 
     Requires a markdown file following the template structure.
@@ -838,7 +838,7 @@ def build(
     touch_points: Optional[list[str]] = typer.Option(None, "--touch", help="Known touch points"),
     output: Optional[Path] = typer.Option(None, "--output", help="Write to file instead of stdout"),
     auto_context: bool = typer.Option(False, "--auto-context", "-A", help="Auto-detect repo, branch, modified files, and context"),
-):
+) -> None:
     """Build a review request markdown file from options.
 
     Creates a file matching the COPILOT_REVIEW_REQUEST_EXAMPLE.md structure.
@@ -899,7 +899,7 @@ def build(
 @app.command()
 def models(
     provider: Optional[str] = typer.Option(None, "--provider", "-P", help="Show models for specific provider"),
-):
+) -> None:
     """List available models by provider.
 
     Examples:
@@ -931,7 +931,7 @@ def models(
 
 
 @app.command()
-def template():
+def template() -> None:
     """Print the example review request template."""
     template_path = Path(__file__).parent / "docs" / "COPILOT_REVIEW_REQUEST_EXAMPLE.md"
     if template_path.exists():
@@ -1058,7 +1058,7 @@ def bundle(
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output file (default: stdout)"),
     skip_git_check: bool = typer.Option(False, "--skip-git-check", help="Skip git status verification"),
     clipboard: bool = typer.Option(False, "--clipboard", "-c", help="Copy to clipboard (requires xclip/pbcopy)"),
-):
+) -> None:
     """Bundle request for copy/paste into GitHub Copilot web.
 
     IMPORTANT: GitHub Copilot web can only see changes that are:
@@ -1159,7 +1159,7 @@ def find(
     limit: int = typer.Option(20, "--limit", "-l", help="Maximum results to show"),
     sort_by: str = typer.Option("modified", "--sort", "-s", help="Sort by: modified, name, size"),
     contains: Optional[str] = typer.Option(None, "--contains", "-c", help="Filter by content substring"),
-):
+) -> None:
     """Find review request markdown files.
 
     Search for code review request files by pattern, with optional content filtering.
@@ -1246,7 +1246,7 @@ def find(
 @app.command()
 def login(
     refresh: bool = typer.Option(False, "--refresh", "-r", help="Refresh existing auth"),
-):
+) -> None:
     """Login to GitHub for Copilot CLI access.
 
     Opens a browser for GitHub OAuth authentication.
@@ -1429,7 +1429,6 @@ async def _review_full_async(
     reasoning: Optional[str] = None,
     monitor: Optional[Any] = None,
 ) -> dict:
-
     """Async implementation of iterative code review pipeline.
 
     For providers that support --continue (github, anthropic), session context
@@ -1608,7 +1607,7 @@ def review_full(
     context_file: Optional[Path] = typer.Option(None, "--context", "-c", help="Previous round output for context"),
     save_intermediate: bool = typer.Option(False, "--save-intermediate", "-s", help="Save intermediate outputs and logs"),
     output_dir: Path = typer.Option(".", "--output-dir", "-o", help="Directory for output files"),
-):
+) -> None:
     """Run iterative code review pipeline (async with streaming logs).
 
     Step 1: Generate initial review with diff and clarifying questions
@@ -1699,7 +1698,7 @@ def review_full(
     # Determine effective directories for the provider CLI
     effective_dirs = _get_effective_dirs(add_dir, workspace)
 
-    def run_pipeline(effective_add_dir: Optional[list[str]]):
+    def run_pipeline(effective_add_dir: Optional[list[str]]) -> dict:
         """Run the async pipeline with the given add_dir."""
         return asyncio.run(_review_full_async(
             request_content=request_content,
@@ -1879,7 +1878,7 @@ def loop(
     save_intermediate: bool = typer.Option(False, "--save-intermediate", "-s", help="Save intermediate logs"),
     reasoning: Optional[str] = typer.Option("high", "--reasoning", help="Reasoning for Reviewer (openai)"),
     output_dir: Path = typer.Option("reviews", "--output-dir", "-o", help="Output directory"),
-):
+) -> None:
     """Run a feedback loop between a Coder Agent and a Reviewer Agent.
     
     Useful for "Opus (Coder) vs Codex (Reviewer)" loops.
@@ -1905,7 +1904,7 @@ def loop(
     
     effective_dirs = _get_effective_dirs(add_dir, workspace)
 
-    def _run(effective_add_dir: Optional[list[str]]):
+    def _run(effective_add_dir: Optional[list[str]]) -> dict:
         return asyncio.run(_loop_async(
             request_content, coder_provider, c_model,
             reviewer_provider, r_model, effective_add_dir,

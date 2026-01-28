@@ -232,7 +232,7 @@ def compile_and_extract(
                     if msg.get('severity') == 'error':
                         error = msg.get('data', '')[:200]
                         break
-                except:
+                except json.JSONDecodeError:
                     pass
             return {
                 "_key": key,

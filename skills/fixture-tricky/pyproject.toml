@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fixture-tricky"
+version = "0.1.0"
+description = "Generate adversarial PDF content that breaks extractors"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pymupdf>=1.23.0",
+    "reportlab>=4.0.0",
+    "typer>=0.9.0",
+]
+
+[project.scripts]
+fixture-tricky = "generate:app"

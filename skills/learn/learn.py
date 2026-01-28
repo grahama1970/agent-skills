@@ -314,7 +314,7 @@ def run_skill(skill_name: str, args: List[str]) -> Tuple[bool, str, int]:
 class Learner:
     """Tracks learned content per scope."""
 
-    def __init__(self, scope: str):
+    def __init__(self, scope: str) -> None:
         self.scope = scope
         self.data_dir = DATA_DIR / scope
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -329,7 +329,7 @@ class Learner:
                 pass
         return {"items": [], "hashes": {}}
 
-    def _save(self):
+    def _save(self) -> None:
         self.learned_file.write_text(json.dumps(self.learned, indent=2))
 
     def _hash(self, source: str) -> str:
@@ -338,7 +338,7 @@ class Learner:
     def already_learned(self, source: str) -> bool:
         return self._hash(source) in self.learned.get("hashes", {})
 
-    def record(self, item: LearnedItem):
+    def record(self, item: LearnedItem) -> None:
         self.learned["items"].append(asdict(item))
         self.learned["hashes"][self._hash(item.source)] = len(self.learned["items"]) - 1
         self._save()
@@ -607,7 +607,7 @@ def main(
     list_items: bool = typer.Option(False, "--list", "-l", help="List learned content"),
     request: bool = typer.Option(False, "--request", "-r", help="Request content (e.g., audiobook) if not available"),
     from_gaps: bool = typer.Option(False, "--from-gaps", "-g", help="Reflect on past errors/questions to find what to learn"),
-):
+) -> None:
     """Learn from ANY content type. Routes to appropriate backend skill."""
     learner = Learner(scope)
 
