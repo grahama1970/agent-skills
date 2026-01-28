@@ -301,9 +301,26 @@ def analyze_query(query: str, interactive: bool) -> Tuple[str, bool]:
     if not interactive:
         return query, True
 
+    # Skip ambiguity check for queries that are clearly detailed research queries
+    # Only flag truly ambiguous single-word or vague queries
+    word_count = len(query.split())
+    if word_count >= 5:
+        # Detailed queries with 5+ words are almost never ambiguous
+        return query, True
+
     prompt = (
-        f"Analyze this research query: '{query}'\n"
-        "Assess if it is ambiguous and if it relates to software/coding."
+        f"Analyze this research query: '{query}'\n\n"
+        "IMPORTANT: Only mark as ambiguous if the query is truly vague or has multiple unrelated meanings.\n"
+        "Examples of AMBIGUOUS queries (is_ambiguous=true):\n"
+        "- 'apple' (fruit vs company)\n"
+        "- 'python' (snake vs language, but context usually makes clear)\n"
+        "- 'fix it' (no context what 'it' is)\n\n"
+        "Examples of NOT AMBIGUOUS queries (is_ambiguous=false):\n"
+        "- 'AI agent memory systems 2025' (clear research topic)\n"
+        "- 'python sort list' (clear programming question)\n"
+        "- 'react hooks best practices' (clear topic)\n"
+        "- Any multi-word technical query with clear intent\n\n"
+        "Assess: is this query ambiguous? Does it relate to software/coding?"
     )
     
     schema_path = SKILLS_DIR / "codex" / "dogpile_schema.json"

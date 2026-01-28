@@ -1,19 +1,20 @@
+---
 name: dogpile
 description: >
-Deep research aggregator that searches Brave (Web), Perplexity (AI), GitHub (Code/Issues),
-ArXiv (Papers), YouTube (Videos), and Wayback Machine simultaneously.
-Provides a consolidated Markdown report with an ambiguity check and Agentic Handoff.
-allowed-tools: ["run_command", "read_file"]
+  Deep research aggregator that searches Brave (Web), Perplexity (AI), GitHub (Code/Issues),
+  ArXiv (Papers), YouTube (Videos), and Wayback Machine simultaneously.
+  Provides a consolidated Markdown report with an ambiguity check and Agentic Handoff.
+allowed-tools:
+  - run_command
+  - read_file
 triggers:
-
-- dogpile
-- research
-- deep search
-- find code
-- search everything
-  metadata:
+  - dogpile
+  - research
+  - deep search
+  - find code
+  - search everything
+metadata:
   short-description: Deep research aggregator (Web, AI, Code, Papers, Videos)
-
 ---
 
 # Dogpile: Deep Research Aggregator

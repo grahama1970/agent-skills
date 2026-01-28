@@ -1,20 +1,19 @@
+---
 name: skills-broadcast
 description: >
-Sync skills across all IDEs (Pi, Codex, Claude Code, Antigravity) using the
-canonical agent-skills repo. Use "sync skills", "broadcast skills", or "pull skills".
+  Sync skills across all IDEs (Pi, Codex, Claude Code, Antigravity) using the
+  canonical agent-skills repo. Use "sync skills", "broadcast skills", or "pull skills".
 allowed-tools: Bash, Read
 triggers:
-
-- skills-broadcast
-- skills-sync
-- sync skills
-- broadcast skills
-- push skills
-- pull skills
-- update shared skills
-  metadata:
+  - skills-broadcast
+  - skills-sync
+  - sync skills
+  - broadcast skills
+  - push skills
+  - pull skills
+  - update shared skills
+metadata:
   short-description: Sync skills across all IDEs via agent-skills repo
-
 ---
 
 # Skills Broadcast Skill

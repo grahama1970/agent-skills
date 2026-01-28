@@ -1,14 +1,23 @@
 ---
 name: audiobook-ingest
-description: Process audiobooks from the inbox: transcribe to text and organize audio for voice training.
+description: >
+  Process audiobooks from the inbox: transcribe to text and organize audio
+  for voice training.
 triggers:
   - ingest audiobook
   - process library inbox
   - transcribe book
   - organize audiobooks
   - download audible books
-allowed-tools: Bash
-metadata: {"clawdbot":{"emoji":"📚","requires":{"bins":["uv","ffmpeg"]}}}
+allowed-tools:
+  - Bash
+metadata:
+  clawdbot:
+    emoji: "📚"
+    requires:
+      bins:
+        - uv
+        - ffmpeg
 ---
 
 # Audiobook Ingest (The Black Library)

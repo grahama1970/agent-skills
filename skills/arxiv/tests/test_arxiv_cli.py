@@ -100,7 +100,8 @@ class TestGet:
         assert len(result.get("items", [])) == 1
 
         item = result["items"][0]
-        assert item["id"] == TEST_ARXIV_ID
+        # API may return versioned ID (e.g., 2501.15355v1), so check prefix
+        assert item["id"].startswith(TEST_ARXIV_ID), f"Expected ID starting with {TEST_ARXIV_ID}, got {item['id']}"
         assert "ToM-agent" in item["title"] or "Theory of Mind" in item["title"]
         assert item.get("html_url")  # ar5iv URL
 

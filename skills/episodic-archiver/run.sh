@@ -3,12 +3,11 @@ set -eo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ "$1" == "archive" ]]; then
-    shift
-fi
-
 if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 [archive] <transcript.json>" >&2
+    echo "Usage:"
+    echo "  $0 archive <transcript.json>  - Archive a session"
+    echo "  $0 list-unresolved            - List pending sessions"
+    echo "  $0 resolve <session_id>       - Mark session resolved"
     exit 1
 fi
 
