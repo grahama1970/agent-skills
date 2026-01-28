@@ -279,8 +279,105 @@ def get_knowledge_gaps(scope: str) -> List[Dict]:
     return find_knowledge_gaps()
 
 
+def prospective_reflection(gaps: List[Dict]) -> Dict[str, Any]:
+    """
+    Analyze gaps for patterns: what topics/skills repeatedly fail?
+
+    Returns:
+        {
+            "recurring_topics": [{"topic": str, "count": int, "examples": list}],
+            "failing_skills": [{"skill": str, "count": int}],
+            "priority_queries": [str],  # Suggested research queries
+        }
+    """
+    from collections import Counter
+
+    # Count skill failures
+    skill_failures = Counter()
+    topic_words = Counter()
+    examples_by_topic = {}
+
+    for gap in gaps:
+        gap_type = gap.get("type", "")
+        content = gap.get("content", "")
+
+        # Track skill failures
+        if gap_type == "skill_failure":
+            skill = gap.get("skill", "unknown")
+            skill_failures[skill] += 1
+
+        # Extract topic words (simple: split and count)
+        words = content.lower().split()
+        # Filter noise words
+        noise = {"the", "a", "an", "is", "are", "was", "were", "to", "from", "in", "on", "for", "with", "error", "failed"}
+        meaningful = [w for w in words if len(w) > 3 and w not in noise]
+        for word in meaningful[:5]:  # First 5 meaningful words per gap
+            topic_words[word] += 1
+            if word not in examples_by_topic:
+                examples_by_topic[word] = []
+            if len(examples_by_topic[word]) < 3:
+                examples_by_topic[word].append(content[:100])
+
+    # Build recurring topics (appeared 2+ times)
+    recurring = [
+        {"topic": topic, "count": count, "examples": examples_by_topic.get(topic, [])}
+        for topic, count in topic_words.most_common(10)
+        if count >= 2
+    ]
+
+    # Build failing skills list
+    failing = [
+        {"skill": skill, "count": count}
+        for skill, count in skill_failures.most_common(5)
+    ]
+
+    # Generate priority queries from recurring topics
+    priority_queries = []
+    for item in recurring[:3]:
+        topic = item["topic"]
+        priority_queries.append(f"how to fix {topic} errors in AI agents")
+    for item in failing[:2]:
+        skill = item["skill"]
+        priority_queries.append(f"best practices for {skill} skill implementation")
+
+    return {
+        "recurring_topics": recurring,
+        "failing_skills": failing,
+        "priority_queries": priority_queries,
+    }
+
+
+def check_memory_first(query: str, scope: str) -> Optional[Dict]:
+    """
+    Check /memory before researching to avoid repeat work.
+
+    Returns None if no prior knowledge, or the memory result if found.
+    """
+    memory_skill = find_skill("memory")
+    if not memory_skill:
+        return None
+
+    success, output = run_skill(memory_skill, ["recall", "--q", query], timeout=30)
+
+    if not success:
+        return None
+
+    try:
+        # Parse JSON output from memory
+        start = output.find("{")
+        end = output.rfind("}")
+        if start != -1 and end != -1:
+            result = json.loads(output[start:end+1])
+            if result.get("found"):
+                return result
+    except:
+        pass
+
+    return None
+
+
 def research_gap(gap: Dict, scope: str) -> Dict:
-    """Research a knowledge gap via /dogpile."""
+    """Research a knowledge gap via /dogpile, checking /memory first."""
     content = gap.get("content", "")[:200]
     gap_type = gap.get("type", "unknown")
 
@@ -297,6 +394,21 @@ def research_gap(gap: Dict, scope: str) -> Dict:
 
     console.print(f"[cyan]Researching:[/cyan] {query[:60]}...")
 
+    # MEMORY FIRST: Check if we already have knowledge about this
+    memory_result = check_memory_first(query, scope)
+    if memory_result:
+        console.print(f"[green]Found in memory![/green] Skipping research.")
+        items = memory_result.get("items", [])
+        if items:
+            solution = items[0].get("solution", "")
+            return {
+                "query": query,
+                "success": True,
+                "output": f"From memory: {solution}",
+                "source": "memory",
+            }
+
+    # Not in memory - research via dogpile
     dogpile_dir = find_skill("dogpile")
     if not dogpile_dir:
         return {"success": False, "error": "dogpile skill not found"}
@@ -307,6 +419,7 @@ def research_gap(gap: Dict, scope: str) -> Dict:
         "query": query,
         "success": success,
         "output": output[:2000] if success else output[:500],
+        "source": "dogpile",
     }
 
 
@@ -387,6 +500,25 @@ def learn(
             gap.get("priority", "normal"),
         )
     console.print(table)
+
+    # 1b. Prospective reflection - what keeps failing?
+    console.print("\n[bold]Phase 1b: Prospective reflection...[/bold]")
+    reflection = prospective_reflection(gaps)
+
+    if reflection["recurring_topics"]:
+        console.print("[yellow]Recurring topics:[/yellow]")
+        for item in reflection["recurring_topics"][:5]:
+            console.print(f"  - {item['topic']} ({item['count']}x)")
+
+    if reflection["failing_skills"]:
+        console.print("[yellow]Failing skills:[/yellow]")
+        for item in reflection["failing_skills"][:3]:
+            console.print(f"  - /{item['skill']} ({item['count']} failures)")
+
+    if reflection["priority_queries"]:
+        console.print("[yellow]Priority research queries:[/yellow]")
+        for q in reflection["priority_queries"][:3]:
+            console.print(f"  - {q}")
 
     if dry_run:
         console.print("\n[yellow]DRY RUN - Would research and learn from these gaps[/yellow]")
