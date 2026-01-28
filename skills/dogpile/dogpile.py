@@ -540,13 +540,15 @@ def analyze_query(query: str, interactive: bool) -> Tuple[str, bool]:
 
 
 
-def search_github_code(repo: str, query: str) -> List[Dict[str, Any]]:
+def search_github_code(repo: str, query: str, language: str = None) -> List[Dict[str, Any]]:
     """Search for code within a specific repository."""
     if not shutil.which("gh"):
         return []
 
     # gh search code --repo owner/repo "query"
     cmd = ["gh", "search", "code", "--repo", repo, query, "--limit", "5", "--json", "path,repository,url,textMatches"]
+    if language:
+        cmd.extend(["--language", language])
     output = run_command(cmd)
 
     try:
@@ -556,6 +558,140 @@ def search_github_code(repo: str, query: str) -> List[Dict[str, Any]]:
         return json.loads(output)
     except Exception:
         return []
+
+
+def search_github_symbols(repo: str, symbols: List[str], language: str = None) -> List[Dict[str, Any]]:
+    """
+    Search for symbol definitions (functions, classes) using GitHub's symbol: qualifier.
+
+    Uses tree-sitter parsing to find actual definitions, not just text matches.
+    Reference: https://docs.github.com/en/search-github/github-code-search/understanding-github-code-search-syntax
+    """
+    if not shutil.which("gh"):
+        return []
+
+    results = []
+    for symbol in symbols[:3]:  # Limit to 3 symbols to avoid rate limits
+        # Use symbol: qualifier for definition search
+        query = f"symbol:{symbol}"
+        cmd = ["gh", "search", "code", "--repo", repo, query, "--limit", "3", "--json", "path,repository,url,textMatches"]
+        if language:
+            cmd.extend(["--language", language])
+
+        output = run_command(cmd)
+        try:
+            if not output.startswith("Error:"):
+                matches = json.loads(output)
+                for m in matches:
+                    m["symbol"] = symbol
+                    m["search_type"] = "definition"
+                results.extend(matches)
+        except Exception:
+            continue
+
+    return results
+
+
+def search_github_by_path(repo: str, query: str, paths: List[str], language: str = None) -> List[Dict[str, Any]]:
+    """
+    Search for code in specific directories (src/, lib/, core/, etc.).
+
+    Uses path: qualifier to narrow search to implementation directories.
+    """
+    if not shutil.which("gh"):
+        return []
+
+    results = []
+    for path in paths[:3]:  # Limit paths
+        # Combine query with path filter
+        full_query = f"{query} path:{path}"
+        cmd = ["gh", "search", "code", "--repo", repo, full_query, "--limit", "3", "--json", "path,repository,url,textMatches"]
+        if language:
+            cmd.extend(["--language", language])
+
+        output = run_command(cmd)
+        try:
+            if not output.startswith("Error:"):
+                matches = json.loads(output)
+                for m in matches:
+                    m["searched_path"] = path
+                results.extend(matches)
+        except Exception:
+            continue
+
+    return results
+
+
+def fetch_file_content(repo: str, file_path: str) -> Dict[str, Any]:
+    """
+    Fetch full file content from a repository.
+
+    Uses GitHub API: GET /repos/{owner}/{repo}/contents/{path}
+    Returns base64-decoded content.
+    """
+    if not shutil.which("gh"):
+        return {"error": "gh CLI not installed"}
+
+    cmd = ["gh", "api", f"repos/{repo}/contents/{file_path}", "--jq", ".content,.size,.sha"]
+    output = run_command(cmd)
+
+    if output.startswith("Error:"):
+        return {"error": output, "path": file_path}
+
+    try:
+        lines = output.strip().split('\n')
+        if len(lines) >= 2:
+            import base64
+            content_b64 = lines[0]
+            size = int(lines[1]) if len(lines) > 1 else 0
+
+            # Decode content
+            content = base64.b64decode(content_b64).decode('utf-8', errors='ignore')
+
+            return {
+                "path": file_path,
+                "content": content[:5000],  # Limit to 5k chars
+                "size": size,
+                "truncated": len(content) > 5000
+            }
+    except Exception as e:
+        return {"error": str(e), "path": file_path}
+
+    return {"error": "Failed to parse response", "path": file_path}
+
+
+def extract_search_terms(query: str) -> Dict[str, List[str]]:
+    """
+    Extract potential symbols, keywords, and paths from a search query.
+
+    Returns dict with:
+    - symbols: Potential function/class names (CamelCase, snake_case)
+    - keywords: General search terms
+    - paths: Suggested directories to search
+    """
+    import re
+
+    result = {
+        "symbols": [],
+        "keywords": [],
+        "paths": ["src/", "lib/", "core/", "pkg/"]
+    }
+
+    words = query.split()
+    for word in words:
+        # CamelCase or PascalCase -> likely a class/type name
+        if re.match(r'^[A-Z][a-zA-Z0-9]*$', word):
+            result["symbols"].append(word)
+        # snake_case with underscores -> likely a function name
+        elif re.match(r'^[a-z][a-z0-9_]+$', word) and '_' in word:
+            result["symbols"].append(word)
+        # camelCase -> likely a function/method name
+        elif re.match(r'^[a-z][a-zA-Z0-9]+$', word) and any(c.isupper() for c in word):
+            result["symbols"].append(word)
+        else:
+            result["keywords"].append(word)
+
+    return result
 
 
 def fetch_repo_details(repo: str) -> Dict[str, Any]:
@@ -674,26 +810,74 @@ Return 0 if NONE are relevant to the query."""
     return -1
 
 
-def deep_search_github_repo(repo: str, query: str) -> Dict[str, Any]:
+def deep_search_github_repo(repo: str, query: str, repo_details: Dict[str, Any] = None) -> Dict[str, Any]:
     """
-    GitHub Stage 3: Deep code search within the selected repository.
+    GitHub Stage 3: Multi-strategy deep code search within the selected repository.
 
-    Searches for:
-    1. Code matching the query
-    2. Relevant file structure
-    3. Key implementation files
+    Uses multiple search strategies:
+    1. Basic text search - General keyword matching
+    2. Symbol search - Function/class definitions via symbol: qualifier
+    3. Path-filtered search - Search in src/, lib/, core/ directories
+    4. Full file fetch - Get complete content of most relevant files
+
+    Reference: https://docs.github.com/en/search-github/github-code-search/understanding-github-code-search-syntax
     """
     log_status(f"Deep searching code in {repo}...", provider="github", status="SEARCHING")
 
+    # Detect primary language for filtering
+    language = None
+    if repo_details:
+        lang_info = repo_details.get("metadata", {}).get("primaryLanguage", {})
+        language = lang_info.get("name") if lang_info else None
+
     result = {
         "repo": repo,
+        "language": language,
         "code_matches": [],
+        "symbol_matches": [],
+        "path_matches": [],
+        "file_contents": [],
         "file_tree": [],
     }
 
-    # Search code within the repo
-    code_results = search_github_code(repo, query)
+    # Extract search terms for multi-strategy search
+    search_terms = extract_search_terms(query)
+    log_status(f"Extracted: {len(search_terms['symbols'])} symbols, {len(search_terms['keywords'])} keywords")
+
+    # Strategy 1: Basic text search
+    log_status(f"Strategy 1: Basic text search...", provider="github", status="SEARCHING")
+    code_results = search_github_code(repo, query, language)
     result["code_matches"] = code_results
+
+    # Strategy 2: Symbol search for definitions (if we have potential symbols)
+    if search_terms["symbols"]:
+        log_status(f"Strategy 2: Symbol search for {search_terms['symbols']}...", provider="github", status="SEARCHING")
+        symbol_results = search_github_symbols(repo, search_terms["symbols"], language)
+        result["symbol_matches"] = symbol_results
+
+    # Strategy 3: Path-filtered search (search in implementation directories)
+    log_status(f"Strategy 3: Path-filtered search...", provider="github", status="SEARCHING")
+    # Use keywords for path search (symbols already covered)
+    path_query = " ".join(search_terms["keywords"]) if search_terms["keywords"] else query
+    path_results = search_github_by_path(repo, path_query, search_terms["paths"], language)
+    result["path_matches"] = path_results
+
+    # Strategy 4: Fetch full content of most relevant files
+    # Collect unique paths from all searches
+    all_paths = set()
+    for match in result["code_matches"][:2]:
+        if match.get("path"):
+            all_paths.add(match["path"])
+    for match in result["symbol_matches"][:2]:
+        if match.get("path"):
+            all_paths.add(match["path"])
+
+    if all_paths:
+        log_status(f"Strategy 4: Fetching full content for {len(all_paths)} files...", provider="github", status="FETCHING")
+        for path in list(all_paths)[:3]:  # Limit to 3 files
+            content = fetch_file_content(repo, path)
+            if not content.get("error"):
+                result["file_contents"].append(content)
 
     # Get file tree for context (top-level structure)
     tree_cmd = ["gh", "api", f"repos/{repo}/contents", "--jq", ".[].name"]
@@ -702,7 +886,10 @@ def deep_search_github_repo(repo: str, query: str) -> Dict[str, Any]:
     if not tree_output.startswith("Error:"):
         result["file_tree"] = tree_output.strip().split('\n')[:20]  # Top 20 files/dirs
 
-    log_status(f"Deep search in {repo} complete.", provider="github", status="DONE")
+    # Summary stats
+    total_matches = len(result["code_matches"]) + len(result["symbol_matches"]) + len(result["path_matches"])
+    log_status(f"Deep search complete: {total_matches} matches, {len(result['file_contents'])} files fetched", provider="github", status="DONE")
+
     return result
 
 
@@ -784,13 +971,14 @@ def search(
                 best_repo_idx = evaluate_github_repos(github_details, query)
 
                 if best_repo_idx >= 0 and best_repo_idx < len(github_details):
-                    target_repo = github_details[best_repo_idx].get("fullName")
+                    selected_repo_details = github_details[best_repo_idx]
+                    target_repo = selected_repo_details.get("fullName")
                     console.print(f"[bold green]Selected:[/bold green] {target_repo} as most relevant repo")
 
-                    # Stage 3: Deep code search in selected repo
-                    console.print(f"[bold magenta]GitHub Stage 3:[/bold magenta] Deep code search in {target_repo}...")
-                    log_status(f"GitHub Stage 3: Deep code search in {target_repo}...", provider="github", status="SEARCHING")
-                    github_deep = deep_search_github_repo(target_repo, query)
+                    # Stage 3: Multi-strategy deep code search in selected repo
+                    console.print(f"[bold magenta]GitHub Stage 3:[/bold magenta] Multi-strategy deep search in {target_repo}...")
+                    log_status(f"GitHub Stage 3: Multi-strategy deep search in {target_repo}...", provider="github", status="SEARCHING")
+                    github_deep = deep_search_github_repo(target_repo, query, selected_repo_details)
                     deep_code_res = github_deep.get("code_matches", [])
                     log_status(f"GitHub Stage 3 finished.", provider="github", status="DONE")
                 else:
@@ -993,9 +1181,11 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
                     lang_pcts = [f"{l[0]}: {l[1]*100/total:.1f}%" for l in top_langs]
                     md_lines.append(f"**Languages:** {', '.join(lang_pcts)}")
 
-        # Stage 3: Deep Code Search Results
+        # Stage 3: Multi-Strategy Deep Code Search Results
         if github_deep and target_repo:
-            md_lines.append(f"\n### 🔍 Deep Code Search in {target_repo}")
+            lang = github_deep.get("language", "Unknown")
+            md_lines.append(f"\n### 🔍 Multi-Strategy Deep Search in {target_repo}")
+            md_lines.append(f"**Primary Language:** {lang}")
 
             # File tree
             file_tree = github_deep.get("file_tree", [])
@@ -1008,23 +1198,71 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
                     md_lines.append(f"└── ... ({len(file_tree) - 15} more)")
                 md_lines.append("```")
 
-            # Code matches
+            # Symbol matches (function/class definitions)
+            symbol_matches = github_deep.get("symbol_matches", [])
+            if symbol_matches:
+                md_lines.append("\n#### 🎯 Symbol Definitions Found")
+                md_lines.append("*Using `symbol:` qualifier for tree-sitter parsed definitions*")
+                for item in symbol_matches:
+                    path = item.get("path", "unknown")
+                    url = item.get("url", "#")
+                    symbol = item.get("symbol", "")
+                    md_lines.append(f"- [`{symbol}`]({url}) in `{path}`")
+
+                    text_matches = item.get("textMatches", [])
+                    for tm in text_matches[:1]:
+                        fragment = tm.get("fragment", "")[:200]
+                        if fragment:
+                            md_lines.append(f"  ```\n  {fragment}\n  ```")
+
+            # Basic code matches
             code_matches = github_deep.get("code_matches", [])
             if code_matches:
-                md_lines.append("\n**Code Matches:**")
+                md_lines.append("\n#### 📝 Text Matches")
                 for item in code_matches:
                     path = item.get("path", "unknown")
                     url = item.get("url", "#")
                     md_lines.append(f"- [`{path}`]({url})")
 
-                    # Show text matches if available
                     text_matches = item.get("textMatches", [])
-                    for tm in text_matches[:2]:  # Show up to 2 matches per file
+                    for tm in text_matches[:2]:
                         fragment = tm.get("fragment", "")[:150]
                         if fragment:
                             md_lines.append(f"  > `{fragment}...`")
+
+            # Path-filtered matches
+            path_matches = github_deep.get("path_matches", [])
+            if path_matches:
+                md_lines.append("\n#### 📁 Path-Filtered Matches")
+                md_lines.append("*Searched in: src/, lib/, core/, pkg/*")
+                for item in path_matches:
+                    path = item.get("path", "unknown")
+                    url = item.get("url", "#")
+                    searched_path = item.get("searched_path", "")
+                    md_lines.append(f"- [`{path}`]({url}) (via `{searched_path}`)")
+
+            # Full file contents
+            file_contents = github_deep.get("file_contents", [])
+            if file_contents:
+                md_lines.append("\n#### 📄 Full File Content (Key Files)")
+                for fc in file_contents:
+                    path = fc.get("path", "unknown")
+                    content = fc.get("content", "")
+                    size = fc.get("size", 0)
+                    truncated = fc.get("truncated", False)
+
+                    md_lines.append(f"\n**`{path}`** ({size} bytes{' - truncated' if truncated else ''})")
+                    # Show first 1500 chars of content
+                    preview = content[:1500] + "\n..." if len(content) > 1500 else content
+                    md_lines.append(f"```\n{preview}\n```")
+
+            # Summary
+            total = len(symbol_matches) + len(code_matches) + len(path_matches)
+            if total == 0:
+                md_lines.append("\nNo specific code matches found.")
             else:
-                md_lines.append("No specific code matches found.")
+                md_lines.append(f"\n**Summary:** {len(symbol_matches)} definitions, {len(code_matches)} text matches, {len(path_matches)} path matches")
+
         elif deep_code_res:
             # Fallback to simple code results if no deep search
             md_lines.append(f"\n### 🔍 Code Matches in {target_repo}")
