@@ -329,14 +329,112 @@ JSON parsing utilities for skill scripts.
 
 Skills are **instruction-driven** (markdown instructions Pi follows), while extensions are **code-driven** (TypeScript that Pi executes as tools).
 
+## Memory First Pattern
+
+The **Memory First** pattern is a core principle for all skills. Before scanning the codebase or performing expensive operations, skills should query memory for prior solutions.
+
+### Why Memory First?
+
+1. **Avoid Redundant Work** - Solutions may already exist in memory
+2. **Leverage Prior Context** - Build on what's already been learned
+3. **Faster Resolution** - Memory recall is faster than codebase scanning
+4. **Knowledge Compounding** - Each solution makes the system smarter
+
+### Using the Common Memory Client
+
+All skills should use the standardized `common.memory_client` module for memory operations:
+
+```python
+from common.memory_client import MemoryClient, MemoryScope, recall, learn
+
+# Quick recall (convenience function)
+results = recall("authentication error handling", scope=MemoryScope.SECURITY)
+if results.found:
+    print(f"Found prior solution: {results.top['solution']}")
+
+# Full client for more control
+client = MemoryClient(scope=MemoryScope.OPERATIONAL)
+results = client.recall("OAuth token refresh", k=5)
+
+# Store new knowledge
+client.learn(
+    problem="OAuth token refresh failing silently",
+    solution="Add explicit error handling in refreshToken(), log failures",
+    tags=["oauth", "auth", "bug-fix"]
+)
+```
+
+### Standard Scopes
+
+Use `MemoryScope` enum for consistent scope naming:
+
+| Scope | Use For |
+|-------|---------|
+| `OPERATIONAL` | General operations (default) |
+| `DOCUMENTS` | Extracted documents |
+| `CODE` | Code patterns, snippets |
+| `SOCIAL_INTEL` | Social media content |
+| `SECURITY` | Security findings |
+| `RESEARCH` | Research papers |
+| `HORUS_LORE` | Persona knowledge |
+
+### Built-in Resilience
+
+The common memory client includes:
+
+- **Retry Logic** - Automatic retries with exponential backoff (3 attempts by default)
+- **Rate Limiting** - Token bucket rate limiter (10 req/s default)
+- **Structured Logging** - Consistent logging with PII redaction
+- **Scope Validation** - Warns on non-standard scopes
+
+### Integration Pattern
+
+```python
+# At the top of your skill
+import sys
+from pathlib import Path
+
+SKILLS_DIR = Path(__file__).parent.parent
+if str(SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(SKILLS_DIR))
+
+try:
+    from common.memory_client import MemoryClient, MemoryScope
+    HAS_MEMORY_CLIENT = True
+except ImportError:
+    HAS_MEMORY_CLIENT = False
+
+# In your main function
+def my_skill_function(query: str):
+    # Memory First: Check for prior solutions
+    if HAS_MEMORY_CLIENT:
+        client = MemoryClient(scope=MemoryScope.OPERATIONAL)
+        results = client.recall(query)
+        if results.found:
+            # Use prior knowledge to inform approach
+            pass
+
+    # ... rest of skill logic ...
+
+    # Store new knowledge if something useful was learned
+    if HAS_MEMORY_CLIENT and learned_something_new:
+        client.learn(
+            problem=problem_description,
+            solution=solution_description,
+            tags=["my-skill", "relevant-tag"]
+        )
+```
+
 ## Best Practices
 
-1. **Descriptive Triggers** - Include common phrasings users might say
-2. **Clear Instructions** - Write SKILL.md body as if explaining to a new team member
-3. **Minimal Dependencies** - Skills should work with minimal setup
-4. **Idempotent Commands** - Running twice should be safe
-5. **Error Handling** - Provide clear error messages and recovery steps
-6. **Examples** - Include working examples users can copy/paste
+1. **Memory First** - Always query memory before scanning codebase
+2. **Descriptive Triggers** - Include common phrasings users might say
+3. **Clear Instructions** - Write SKILL.md body as if explaining to a new team member
+4. **Minimal Dependencies** - Skills should work with minimal setup
+5. **Idempotent Commands** - Running twice should be safe
+6. **Error Handling** - Provide clear error messages and recovery steps
+7. **Examples** - Include working examples users can copy/paste
+8. **Use Common Memory Client** - Don't implement your own memory integration
 
 ## Troubleshooting
 

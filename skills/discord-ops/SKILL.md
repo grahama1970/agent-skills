@@ -3,7 +3,7 @@ name: discord-ops
 description: >
   TOS-compliant Discord notification monitor. Watches YOUR Discord server for
   security content forwarded by researchers, matches keywords, and pushes to
-  paper-writer/dogpile via webhooks. Does NOT scrape external servers.
+  paper-writer/dogpile via webhooks. Persists to graph-memory for semantic search.
 allowed-tools:
   - Bash
   - Read
@@ -16,7 +16,7 @@ triggers:
   - security discord
   - discord webhook
 metadata:
-  short-description: Discord keyword monitor with webhook forwarding
+  short-description: Discord keyword monitor with webhook + memory integration
 ---
 
 # Discord Operations - Notification Monitor Model
@@ -32,25 +32,36 @@ metadata:
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     TOS-Compliant Discord Pipeline                   │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  External Sources              Your Server (Admin)       Consumers   │
-│  ────────────────              ────────────────────      ─────────   │
-│                                                                      │
-│  ┌─────────────┐               ┌──────────────────┐                 │
-│  │ Researchers │──DM/forward──▶│ #security-intel  │                 │
-│  │ share       │               │                  │                 │
-│  │ insights    │               │  Your Bot        │──webhook──▶ paper-writer │
-│  └─────────────┘               │  (keyword watch) │                 │
-│                                │                  │──notify──▶ dogpile       │
-│  ┌─────────────┐               │  Keywords:       │                 │
-│  │ Telegram    │──bridge──▶    │  CVE, DARPA,     │──log────▶ ArangoDB      │
-│  │ bridges     │               │  HTB, 0-day...   │                 │
-│  └─────────────┘               └──────────────────┘                 │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                   TOS-Compliant Discord Pipeline + Memory                      │
+├───────────────────────────────────────────────────────────────────────────────┤
+│                                                                                │
+│  External Sources              Your Server (Admin)            Consumers        │
+│  ────────────────              ────────────────────            ─────────        │
+│                                                                                │
+│  ┌─────────────┐               ┌──────────────────┐                           │
+│  │ Researchers │──DM/forward──▶│ #security-intel  │                           │
+│  │ share       │               │                  │                           │
+│  │ insights    │               │  Your Bot        │──webhook──▶ paper-writer  │
+│  └─────────────┘               │  (keyword watch) │                           │
+│                                │                  │──webhook──▶ dogpile       │
+│  ┌─────────────┐               │  Keywords:       │                           │
+│  │ Telegram    │──bridge──▶    │  CVE, DARPA,     │                           │
+│  │ bridges     │  (social-     │  HTB, 0-day...   │                           │
+│  └─────────────┘   bridge)     └────────┬─────────┘                           │
+│                                         │                                      │
+│                           ┌─────────────┼─────────────┐                       │
+│                           ▼             ▼             ▼                        │
+│                    ┌──────────┐  ┌──────────────┐  ┌────────────┐             │
+│                    │ matches  │  │ graph-memory │  │  dogpile   │             │
+│                    │ .jsonl   │  │  (ArangoDB)  │  │  search    │             │
+│                    │ (local)  │  │   lessons    │  │            │             │
+│                    └──────────┘  └──────┬───────┘  └─────┬──────┘             │
+│                                         │                │                     │
+│                                         └────────────────┘                     │
+│                                         (semantic recall)                      │
+│                                                                                │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
@@ -167,6 +178,32 @@ Shows status of:
 
 # Output as JSON
 ./run.sh matches --json
+```
+
+### `memory` - Knowledge Graph Integration
+
+```bash
+# Check memory integration status
+./run.sh memory status
+
+# Search stored matches in memory
+./run.sh memory search "CVE-2024"
+
+# Search with JSON output
+./run.sh memory search "ransomware" --json --k 20
+
+# Ingest existing matches from log file to memory
+./run.sh memory ingest --limit 100
+```
+
+**Auto-Persistence:**
+The monitor automatically persists matches to memory by default:
+```bash
+# Start with memory persistence (default)
+./run.sh monitor start --webhook alerts
+
+# Start without memory persistence
+./run.sh monitor start --webhook alerts --no-persist
 ```
 
 ## Webhook Payload Formats

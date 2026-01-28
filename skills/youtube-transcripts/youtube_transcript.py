@@ -622,7 +622,7 @@ def get(
 
     print(json.dumps(out, ensure_ascii=False, indent=2))
 
-    if errors:
+    if out.get("errors"):
         raise typer.Exit(code=1)
 
 

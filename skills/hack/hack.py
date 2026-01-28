@@ -1,14 +1,65 @@
-import typer
-import sys
-import shutil
+import functools
+import json
 import os
+import shutil
 import subprocess
+import sys
+import threading
+import time
 from pathlib import Path
+
+import typer
 from rich.console import Console
 from rich.table import Table
 
 app = typer.Typer(help="Automated security auditing and ethical hacking tools.")
 console = Console()
+
+# Add skills directory to path for common imports
+SCRIPT_DIR = Path(__file__).parent
+SKILLS_DIR = SCRIPT_DIR.parent
+if str(SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(SKILLS_DIR))
+
+# Import common memory client for standardized resilience patterns
+try:
+    from common.memory_client import MemoryClient, MemoryScope, with_retries, RateLimiter
+    HAS_MEMORY_CLIENT = True
+except ImportError:
+    HAS_MEMORY_CLIENT = False
+    # Fallback: define minimal resilience utilities inline
+    def with_retries(max_attempts=3, base_delay=0.5, exceptions=(Exception,), on_retry=None):
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                last_error = None
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        return func(*args, **kwargs)
+                    except exceptions as e:
+                        last_error = e
+                        if attempt < max_attempts:
+                            delay = base_delay * (2 ** (attempt - 1))
+                            time.sleep(delay)
+                if last_error:
+                    raise last_error
+            return wrapper
+        return decorator
+
+    class RateLimiter:
+        def __init__(self, requests_per_second=5):
+            self.interval = 1.0 / max(1, requests_per_second)
+            self.last_request = 0.0
+            self._lock = threading.Lock()
+        def acquire(self):
+            with self._lock:
+                sleep_time = max(0.0, (self.last_request + self.interval) - time.time())
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                self.last_request = time.time()
+
+# Rate limiter for memory operations
+_memory_limiter = RateLimiter(requests_per_second=5)
 
 # Docker image name for isolated scanning
 SECURITY_IMAGE = "hack-skill-security:latest"
@@ -73,49 +124,82 @@ def register_task_monitor(name: str, total: int, state_file: str) -> bool:
 
 def memory_recall(query: str, scope: str = "hack_skill", k: int = 3) -> dict | None:
     """
-    Query memory skill for relevant prior knowledge.
+    Query memory skill for relevant prior knowledge with retry logic.
     Returns recall results or None if memory unavailable.
     """
-    memory_script = MEMORY_SKILL / "run.sh"
-    if not memory_script.exists():
-        # Try alternate path
-        memory_script = Path.home() / "workspace/experiments/pi-mono/.agent/skills/memory/run.sh"
+    # Use common MemoryClient if available for standardized resilience
+    if HAS_MEMORY_CLIENT:
+        try:
+            client = MemoryClient(scope=scope)
+            result = client.recall(query, k=k)
+            if result.found:
+                return {
+                    "found": True,
+                    "items": result.items,
+                    "answer": result.items[0].get("solution", "") if result.items else ""
+                }
+            return {"found": False}
+        except Exception:
+            return None
 
-    if not memory_script.exists():
-        return None
+    # Fallback: direct subprocess with inline retry logic
+    @with_retries(max_attempts=3, base_delay=0.5)
+    def _recall_with_retry():
+        _memory_limiter.acquire()
+        memory_script = MEMORY_SKILL / "run.sh"
+        if not memory_script.exists():
+            memory_script = Path.home() / "workspace/experiments/pi-mono/.agent/skills/memory/run.sh"
+        if not memory_script.exists():
+            raise FileNotFoundError("Memory skill not found")
 
-    try:
         result = subprocess.run(
             [str(memory_script), "recall", "--q", query, "--scope", scope, "--k", str(k)],
             capture_output=True, text=True, timeout=30
         )
         if result.returncode == 0 and result.stdout:
-            import json
             try:
                 return json.loads(result.stdout)
             except json.JSONDecodeError:
-                # Memory skill may output non-JSON
                 return {"raw": result.stdout}
+        return {"found": False}
+
+    try:
+        return _recall_with_retry()
     except Exception:
-        pass
-    return None
+        return None
 
 
 def memory_store(content: str, scope: str = "hack_skill", context: str = "security") -> bool:
-    """Store knowledge in memory skill."""
-    memory_script = MEMORY_SKILL / "run.sh"
-    if not memory_script.exists():
-        memory_script = Path.home() / "workspace/experiments/pi-mono/.agent/skills/memory/run.sh"
+    """Store knowledge in memory skill with retry logic."""
+    # Use common MemoryClient if available for standardized resilience
+    if HAS_MEMORY_CLIENT:
+        try:
+            client = MemoryClient(scope=scope)
+            result = client.learn(problem=context, solution=content, tags=["security", "hack_skill"])
+            return result.success
+        except Exception:
+            return False
 
-    if not memory_script.exists():
-        return False
+    # Fallback: direct subprocess with inline retry logic
+    @with_retries(max_attempts=3, base_delay=0.5)
+    def _store_with_retry():
+        _memory_limiter.acquire()
+        memory_script = MEMORY_SKILL / "run.sh"
+        if not memory_script.exists():
+            memory_script = Path.home() / "workspace/experiments/pi-mono/.agent/skills/memory/run.sh"
+        if not memory_script.exists():
+            raise FileNotFoundError("Memory skill not found")
 
-    try:
         result = subprocess.run(
             [str(memory_script), "store", "--content", content, "--scope", scope, "--context", context],
             capture_output=True, text=True, timeout=30
         )
-        return result.returncode == 0
+        if result.returncode != 0:
+            raise RuntimeError(f"Memory store failed: {result.stderr}")
+        return True
+
+    try:
+        return _store_with_retry()
     except Exception:
         return False
 

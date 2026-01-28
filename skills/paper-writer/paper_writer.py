@@ -5,16 +5,66 @@ paper_writer.py - Interview-Driven Paper Generation Orchestrator
 Orchestrates assess, dogpile, arxiv, and code-review skills through
 interview gates. Human approval required at each stage.
 """
-import sys
+import functools
 import json
 import subprocess
+import sys
 import tempfile
+import threading
+import time
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional
+
 import typer
 
 app = typer.Typer(help="Interview-driven paper generation from project analysis")
+
+# Add skills directory to path for common imports
+SCRIPT_DIR = Path(__file__).parent
+SKILLS_DIR_COMMON = SCRIPT_DIR.parent
+if str(SKILLS_DIR_COMMON) not in sys.path:
+    sys.path.insert(0, str(SKILLS_DIR_COMMON))
+
+# Import common memory client for standardized resilience patterns
+try:
+    from common.memory_client import MemoryClient, MemoryScope, with_retries, RateLimiter
+    HAS_MEMORY_CLIENT = True
+except ImportError:
+    HAS_MEMORY_CLIENT = False
+    # Fallback: define minimal resilience utilities inline
+    def with_retries(max_attempts=3, base_delay=0.5, exceptions=(Exception,), on_retry=None):
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                last_error = None
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        return func(*args, **kwargs)
+                    except exceptions as e:
+                        last_error = e
+                        if attempt < max_attempts:
+                            delay = base_delay * (2 ** (attempt - 1))
+                            time.sleep(delay)
+                if last_error:
+                    raise last_error
+            return wrapper
+        return decorator
+
+    class RateLimiter:
+        def __init__(self, requests_per_second=5):
+            self.interval = 1.0 / max(1, requests_per_second)
+            self.last_request = 0.0
+            self._lock = threading.Lock()
+        def acquire(self):
+            with self._lock:
+                sleep_time = max(0.0, (self.last_request + self.interval) - time.time())
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                self.last_request = time.time()
+
+# Rate limiter for memory operations
+_memory_limiter = RateLimiter(requests_per_second=5)
 
 # Skill paths
 SKILLS_DIR = Path(__file__).resolve().parents[1]
@@ -2326,23 +2376,52 @@ def draft(
     typer.echo("\n✓ Paper draft session complete")
     typer.echo(f"  Output: {output_dir}")
 
-    # Optional: Store in memory
+    # Optional: Store in memory with resilience patterns
     if typer.confirm("\nStore paper metadata in memory?"):
         typer.echo("Storing paper metadata in memory...")
-        try:
-            metadata_file = output_dir / "metadata.json"
-            result = subprocess.run(
-                [str(MEMORY_SCRIPT), "store", str(metadata_file), "--scope", "paper-writing"],
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            if result.returncode == 0:
+
+        # Use common MemoryClient if available for standardized resilience
+        if HAS_MEMORY_CLIENT:
+            try:
+                client = MemoryClient(scope="paper-writing")
+                metadata_file = output_dir / "metadata.json"
+                if metadata_file.exists():
+                    with open(metadata_file) as f:
+                        metadata = json.load(f)
+                    result = client.learn(
+                        problem=f"Paper: {metadata.get('title', output_dir.name)}",
+                        solution=json.dumps(metadata, indent=2)[:2000],
+                        tags=["paper-writing", "metadata"]
+                    )
+                    if result.success:
+                        typer.echo("✓ Metadata stored in memory")
+                    else:
+                        typer.echo(f"[WARN] Memory storage failed: {result.error}", err=True)
+                else:
+                    typer.echo("[WARN] metadata.json not found", err=True)
+            except Exception as e:
+                typer.echo(f"[WARN] Memory storage error: {e}", err=True)
+        else:
+            # Fallback: direct subprocess with retry logic
+            @with_retries(max_attempts=3, base_delay=0.5)
+            def _store_with_retry():
+                _memory_limiter.acquire()
+                metadata_file = output_dir / "metadata.json"
+                result = subprocess.run(
+                    [str(MEMORY_SCRIPT), "store", str(metadata_file), "--scope", "paper-writing"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                if result.returncode != 0:
+                    raise RuntimeError(f"Memory store failed: {result.stderr}")
+                return True
+
+            try:
+                _store_with_retry()
                 typer.echo("✓ Metadata stored in memory")
-            else:
-                typer.echo(f"[WARN] Memory storage failed: {result.stderr}", err=True)
-        except Exception as e:
-            typer.echo(f"[WARN] Memory storage error: {e}", err=True)
+            except Exception as e:
+                typer.echo(f"[WARN] Memory storage error: {e}", err=True)
 
 
 @app.command()

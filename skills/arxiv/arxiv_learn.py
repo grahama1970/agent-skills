@@ -31,6 +31,49 @@ SKILLS_DIR = SCRIPT_DIR.parent
 if str(SKILLS_DIR) not in sys.path:
     sys.path.insert(0, str(SKILLS_DIR))
 
+# Import common memory client for standardized resilience patterns
+try:
+    from common.memory_client import MemoryClient, MemoryScope, with_retries, RateLimiter
+    HAS_MEMORY_CLIENT = True
+except ImportError:
+    HAS_MEMORY_CLIENT = False
+    # Fallback: define minimal resilience utilities inline
+    import functools
+    import threading
+
+    def with_retries(max_attempts=3, base_delay=0.5, exceptions=(Exception,), on_retry=None):
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                last_error = None
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        return func(*args, **kwargs)
+                    except exceptions as e:
+                        last_error = e
+                        if attempt < max_attempts:
+                            delay = base_delay * (2 ** (attempt - 1))
+                            time.sleep(delay)
+                if last_error:
+                    raise last_error
+            return wrapper
+        return decorator
+
+    class RateLimiter:
+        def __init__(self, requests_per_second=5):
+            self.interval = 1.0 / max(1, requests_per_second)
+            self.last_request = 0.0
+            self._lock = threading.Lock()
+        def acquire(self):
+            with self._lock:
+                sleep_time = max(0.0, (self.last_request + self.interval) - time.time())
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                self.last_request = time.time()
+
+# Rate limiter for memory operations
+_memory_limiter = RateLimiter(requests_per_second=5)
+
 # Best-effort .env loading
 try:
     from dotenv import load_dotenv, find_dotenv
@@ -793,21 +836,42 @@ def stage_4_store(session: LearnSession) -> int:
 
     stored = 0
     # Default to env var, or try to find sibling 'memory' workspace
-    default_mem = Path(SKILLS_DIR).parent.parent.parent / "memory" 
+    default_mem = Path(SKILLS_DIR).parent.parent.parent / "memory"
     memory_root = os.environ.get("MEMORY_ROOT", str(default_mem))
-    
+
     # If explicitly hardcoded fallback is needed for legacy reasons, we keep it as last resort via env
     if not Path(memory_root).exists() and "/home/graham" in memory_root:
         # Fallback to standard location if default logic failed
         pass
 
-    for pair in session.approved_pairs:
-        try:
+    # Use common MemoryClient if available for standardized resilience
+    if HAS_MEMORY_CLIENT:
+        client = MemoryClient(scope=session.scope, memory_root=memory_root)
+        for pair in session.approved_pairs:
+            try:
+                result = client.learn(
+                    problem=pair.question,
+                    solution=pair.answer,
+                    tags=tags
+                )
+                if result.success:
+                    pair.lesson_id = result.lesson_id
+                    pair.stored = True
+                    stored += 1
+                else:
+                    _log(f"Failed to store: {result.error}", style="red")
+            except Exception as e:
+                _log(f"Failed to store: {e}", style="red")
+    else:
+        # Fallback to direct subprocess with inline retry logic
+        @with_retries(max_attempts=3, base_delay=0.5)
+        def _store_lesson(question: str, answer: str, scope: str, tags: list) -> dict:
+            _memory_limiter.acquire()
             cmd = [
                 "python3", "-m", "graph_memory.agent_cli", "learn",
-                "--problem", pair.question,
-                "--solution", pair.answer,
-                "--scope", session.scope,
+                "--problem", question,
+                "--solution", answer,
+                "--scope", scope,
             ]
             for tag in tags:
                 cmd.extend(["--tag", tag])
@@ -820,17 +884,22 @@ def stage_4_store(session: LearnSession) -> int:
                 env={**os.environ, "PYTHONPATH": f"{memory_root}/src:{os.environ.get('PYTHONPATH', '')}"},
             )
 
-            if result.returncode == 0:
-                # Extract lesson ID from output
-                try:
-                    output = json.loads(result.stdout)
-                    pair.lesson_id = output.get("_key", "")
-                except Exception:
-                    pass
+            if result.returncode != 0:
+                raise RuntimeError(f"Memory learn failed: {result.stderr}")
+
+            try:
+                return json.loads(result.stdout)
+            except json.JSONDecodeError:
+                return {"success": True}
+
+        for pair in session.approved_pairs:
+            try:
+                output = _store_lesson(pair.question, pair.answer, session.scope, tags)
+                pair.lesson_id = output.get("_key", "")
                 pair.stored = True
                 stored += 1
-        except Exception as e:
-            _log(f"Failed to store: {e}", style="red")
+            except Exception as e:
+                _log(f"Failed to store after retries: {e}", style="red")
 
     _log(f"Stored: {stored} lessons", style="green")
     _log(f"Scope: {session.scope}", style="dim")

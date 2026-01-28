@@ -4,25 +4,39 @@ Discord Operations Skill - Notification Monitor Model
 
 TOS-compliant approach: Monitor YOUR OWN Discord server for security content
 forwarded by researchers, then push to paper-writer/dogpile via webhooks.
+Persists matches to graph-memory for knowledge graph integration.
 
 Architecture:
   External Sources → Your Discord Server → ClawDBot Monitor → Webhooks → Consumers
-                     (you are admin)       (keyword watch)
+                     (you are admin)       (keyword watch)     + Memory
 
 This skill does NOT scrape external servers (TOS violation).
 Instead, it monitors channels where your bot has legitimate access.
 """
 
 import asyncio
+import functools
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
+import threading
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional, TypeVar
+
+# Configure logging - don't log tokens or sensitive data
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("discord-ops")
+
+T = TypeVar("T")
 
 try:
     import typer
@@ -49,6 +63,8 @@ except ImportError:
     DISCORD_PY_AVAILABLE = False
 
 app = typer.Typer(help="Discord notification monitor for security research")
+memory_app = typer.Typer(help="Memory/knowledge graph integration")
+app.add_typer(memory_app, name="memory")
 console = Console()
 
 # Paths
@@ -90,6 +106,224 @@ DEFAULT_KEYWORDS = [
     r"ATT&CK",
     r"T\d{4}",  # MITRE technique IDs
 ]
+
+# =============================================================================
+# RESILIENCE UTILITIES (from code review recommendations)
+# =============================================================================
+
+# Configurable via environment
+MAX_RETRIES = int(os.environ.get("DISCORD_OPS_MAX_RETRIES", "3"))
+RETRY_BASE_DELAY = float(os.environ.get("DISCORD_OPS_RETRY_DELAY", "0.5"))
+RATE_LIMIT_RPS = int(os.environ.get("DISCORD_OPS_RATE_LIMIT_RPS", "5"))
+
+# Fields to redact in logs
+REDACT_FIELDS = {"token", "api_key", "password", "secret", "authorization", "bot_token"}
+
+
+def redact_sensitive(data: dict[str, Any]) -> dict[str, Any]:
+    """Redact sensitive fields from dict for safe logging."""
+    if not isinstance(data, dict):
+        return data
+    return {
+        k: "***REDACTED***" if k.lower() in REDACT_FIELDS else v
+        for k, v in data.items()
+    }
+
+
+def with_retries(
+    func: Callable[..., T],
+    max_attempts: int = MAX_RETRIES,
+    base_delay: float = RETRY_BASE_DELAY,
+) -> Callable[..., T]:
+    """Decorator that adds retry logic with exponential backoff.
+
+    Retries on transient errors (subprocess failures, network issues).
+    """
+    @functools.wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> T:
+        last_error: Optional[Exception] = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                last_error = e
+                if attempt < max_attempts:
+                    delay = base_delay * (2 ** (attempt - 1))
+                    logger.warning(
+                        f"Attempt {attempt}/{max_attempts} failed for {func.__name__}: {e}. "
+                        f"Retrying in {delay:.1f}s..."
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error(f"{func.__name__} failed after {max_attempts} attempts: {e}")
+        raise last_error  # type: ignore
+    return wrapper
+
+
+class RateLimiter:
+    """Simple token-bucket rate limiter for API calls."""
+
+    def __init__(self, requests_per_second: int = RATE_LIMIT_RPS):
+        self.interval = 1.0 / max(1, requests_per_second)
+        self.last_request = 0.0
+        self._lock = threading.Lock()
+
+    def acquire(self) -> None:
+        """Block until rate limit allows next request."""
+        with self._lock:
+            now = time.time()
+            sleep_time = max(0.0, (self.last_request + self.interval) - now)
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+            self.last_request = time.time()
+
+    def __enter__(self) -> "RateLimiter":
+        self.acquire()
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        pass
+
+
+# Global rate limiter for Discord webhook calls
+_webhook_limiter = RateLimiter(requests_per_second=5)
+
+
+# Memory integration - uses graph-memory project
+MEMORY_ROOT = Path(os.environ.get("MEMORY_ROOT", Path.home() / "workspace/experiments/memory"))
+MEMORY_SCOPE = "social_intel"
+
+# Keyword to tag mapping for auto-tagging
+KEYWORD_TAG_MAP = {
+    r"CVE-\d{4}-\d+": "cve",
+    r"APT\d+": "apt",
+    r"DARPA|IARPA|BAA": "darpa",
+    r"0-?day|zero.?day": "0day",
+    r"exploit|RCE|LPE|privesc": "exploit",
+    r"malware|ransomware": "malware",
+    r"HTB|Hack.?The.?Box|TryHackMe|CTF": "ctf",
+    r"MITRE|ATT&CK|T\d{4}": "mitre",
+    r"cobalt.?strike|C2": "c2",
+}
+
+
+def extract_tags_from_keywords(matched_keywords: list[str], content: str) -> list[str]:
+    """Extract semantic tags from matched keywords and content."""
+    tags = set()
+    for pattern, tag in KEYWORD_TAG_MAP.items():
+        if re.search(pattern, content, re.IGNORECASE):
+            tags.add(tag)
+    return list(tags)
+
+
+def persist_match_to_memory(match: "KeywordMatch") -> dict[str, Any]:
+    """Persist a keyword match to graph-memory.
+
+    Uses the memory skill's learn command to store matches as lessons.
+    Includes retry logic for transient failures.
+    Returns the result of the learn operation.
+    """
+    # Extract semantic tags
+    auto_tags = extract_tags_from_keywords(match.matched_keywords, match.content)
+    all_tags = list(set(auto_tags + ["discord", f"channel:{match.channel_name}", f"guild:{match.guild_name}"]))
+
+    # Format problem as a searchable identifier
+    problem = f"[DISCORD] #{match.channel_name}: {match.content[:100]}..."
+
+    # Format solution with full content and metadata
+    solution = json.dumps({
+        "content": match.content,
+        "url": match.message_url,
+        "author": match.author,
+        "timestamp": match.timestamp,
+        "platform": "discord",
+        "guild": match.guild_name,
+        "channel": match.channel_name,
+        "matched_keywords": match.matched_keywords,
+    }, indent=2)
+
+    # Call memory skill via CLI
+    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
+
+    if not memory_skill.exists():
+        logger.warning("Memory skill not found, cannot persist match")
+        return {"error": "memory skill not found", "stored": False}
+
+    # Build command
+    cmd = [
+        str(memory_skill),
+        "learn",
+        "--problem", problem,
+        "--solution", solution,
+        "--scope", MEMORY_SCOPE,
+    ]
+
+    # Add tags
+    for tag in all_tags:
+        cmd.extend(["--tag", tag])
+
+    @with_retries
+    def _execute_learn() -> dict[str, Any]:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(memory_skill.parent),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Memory learn failed: {result.stderr[:200]}")
+        return {"stored": True, "tags": all_tags}
+
+    try:
+        return _execute_learn()
+    except Exception as e:
+        logger.error(f"Failed to persist to memory after retries: {e}")
+        return {"stored": False, "error": str(e)}
+
+
+def search_memory(query: str, k: int = 10) -> list[dict[str, Any]]:
+    """Search memory for stored Discord matches.
+
+    Returns matching posts from graph-memory.
+    Includes retry logic for transient failures.
+    """
+    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
+
+    if not memory_skill.exists():
+        logger.debug("Memory skill not found, returning empty results")
+        return []
+
+    cmd = [
+        str(memory_skill),
+        "recall",
+        "--q", query,
+        "--scope", MEMORY_SCOPE,
+        "--k", str(k),
+    ]
+
+    @with_retries
+    def _execute_recall() -> list[dict[str, Any]]:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(memory_skill.parent),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Memory recall failed: {result.stderr[:100]}")
+        try:
+            data = json.loads(result.stdout)
+            return data.get("items", [])
+        except json.JSONDecodeError:
+            return []
+
+    try:
+        return _execute_recall()
+    except Exception as e:
+        logger.warning(f"Memory search failed after retries: {e}")
+        return []
 
 
 @dataclass
@@ -207,33 +441,78 @@ def match_keywords(text: str, patterns: list[str]) -> list[str]:
     return matches
 
 
-def log_match(match: KeywordMatch) -> None:
-    """Append match to log file."""
+def log_match(match: KeywordMatch, persist: bool = True) -> dict[str, Any]:
+    """Append match to log file and optionally persist to memory.
+
+    Args:
+        match: The keyword match to log
+        persist: If True, also persist to graph-memory
+
+    Returns:
+        Result dict with 'logged' and optionally 'memory' status
+    """
+    result = {"logged": True}
+
+    # Write to local log file
     with open(MATCHES_LOG, "a") as f:
         f.write(json.dumps(match.to_dict()) + "\n")
 
+    # Persist to memory if enabled
+    if persist:
+        memory_result = persist_match_to_memory(match)
+        result["memory"] = memory_result
 
-async def forward_to_webhook(url: str, match: KeywordMatch) -> bool:
-    """Forward match to webhook endpoint."""
+    return result
+
+
+async def forward_to_webhook(url: str, match: KeywordMatch, max_retries: int = MAX_RETRIES) -> bool:
+    """Forward match to webhook endpoint with retry logic.
+
+    Includes rate limiting and exponential backoff for transient failures.
+    """
     if not HTTPX_AVAILABLE:
         console.print("[red]httpx not installed for webhook forwarding[/red]")
         return False
 
-    try:
-        async with httpx.AsyncClient() as client:
-            # Detect webhook type by URL
-            if "discord.com/api/webhooks" in url:
-                # Discord webhook - use embed format
-                payload = {"embeds": [match.to_discord_embed()]}
-            else:
-                # Generic webhook - use paper-writer format
-                payload = match.to_webhook_payload()
+    # Apply rate limiting (blocking call in sync context, but keeps things simple)
+    _webhook_limiter.acquire()
 
-            response = await client.post(url, json=payload, timeout=10)
-            return response.status_code in (200, 204)
-    except Exception as e:
-        console.print(f"[red]Webhook error:[/red] {e}")
-        return False
+    # Determine payload based on webhook type
+    if "discord.com/api/webhooks" in url:
+        payload = {"embeds": [match.to_discord_embed()]}
+    else:
+        payload = match.to_webhook_payload()
+
+    last_error: Optional[Exception] = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, json=payload, timeout=10.0)
+
+                # Handle Discord rate limiting
+                if response.status_code == 429:
+                    retry_after = float(response.headers.get("Retry-After", 5))
+                    logger.warning(f"Discord rate limited, waiting {retry_after}s")
+                    await asyncio.sleep(retry_after)
+                    continue
+
+                if response.status_code in (200, 204):
+                    return True
+
+                logger.warning(f"Webhook returned {response.status_code} on attempt {attempt}")
+
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries:
+                delay = RETRY_BASE_DELAY * (2 ** (attempt - 1))
+                logger.warning(f"Webhook attempt {attempt}/{max_retries} failed: {e}. Retrying in {delay:.1f}s...")
+                await asyncio.sleep(delay)
+            else:
+                logger.error(f"Webhook failed after {max_retries} attempts: {e}")
+
+    if last_error:
+        console.print(f"[red]Webhook error:[/red] {last_error}")
+    return False
 
 
 # =============================================================================
@@ -477,6 +756,7 @@ def monitor(
     action: str = typer.Argument("status", help="Action: start, stop, status"),
     webhook_name: str = typer.Option(None, "--webhook", "-w", help="Webhook to forward matches"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Log matches but don't forward"),
+    persist: bool = typer.Option(True, "--persist/--no-persist", help="Persist matches to memory"),
 ):
     """Start/stop the Discord notification monitor."""
     if action == "status":
@@ -523,9 +803,10 @@ def monitor(
         console.print("[bold]Starting Discord monitor...[/bold]")
         console.print(f"  Dry run: {dry_run}")
         console.print(f"  Webhook: {webhook_name or 'None (log only)'}")
+        console.print(f"  Memory persist: {persist}")
 
         # Run the monitor
-        asyncio.run(_run_monitor(token, webhook_url, dry_run))
+        asyncio.run(_run_monitor(token, webhook_url, dry_run, persist))
         return
 
     if action == "stop":
@@ -546,7 +827,7 @@ def monitor(
     console.print("[red]Invalid action. Use: start, stop, status[/red]")
 
 
-async def _run_monitor(token: str, webhook_url: str | None, dry_run: bool):
+async def _run_monitor(token: str, webhook_url: str | None, dry_run: bool, persist: bool = True):
     """Run the Discord monitor bot."""
     if not DISCORD_PY_AVAILABLE:
         return
@@ -565,6 +846,7 @@ async def _run_monitor(token: str, webhook_url: str | None, dry_run: bool):
         console.print(f"[green]Connected as {bot.user}[/green]")
         console.print(f"  Monitoring {len(monitored_guilds)} guilds")
         console.print(f"  Watching {len(keywords)} keyword patterns")
+        console.print(f"  Memory persist: {persist}")
 
         # Save PID
         pid_file = SKILL_DIR / "monitor.pid"
@@ -600,9 +882,14 @@ async def _run_monitor(token: str, webhook_url: str | None, dry_run: bool):
             message_url=message.jump_url,
         )
 
-        # Log the match
-        log_match(match)
+        # Log the match (and optionally persist to memory)
+        result = log_match(match, persist=persist)
         console.print(f"[cyan]Match:[/cyan] {matched} in #{match.channel_name}")
+
+        if persist and result.get("memory", {}).get("stored"):
+            console.print(f"  [green]Persisted to memory[/green]")
+        elif persist and result.get("memory", {}).get("error"):
+            console.print(f"  [yellow]Memory error: {result['memory']['error'][:50]}[/yellow]")
 
         # Forward to webhook (unless dry run)
         if webhook_url and not dry_run:
@@ -675,6 +962,140 @@ def version():
     console.print(f"  discord.py: {'installed' if DISCORD_PY_AVAILABLE else 'not installed'}")
     console.print(f"  httpx: {'installed' if HTTPX_AVAILABLE else 'not installed'}")
     console.print(f"  Bot token: {'configured' if get_bot_token() else 'missing'}")
+
+
+# =============================================================================
+# MEMORY COMMANDS
+# =============================================================================
+
+@memory_app.command("search")
+def memory_search(
+    query: str = typer.Argument(..., help="Search query"),
+    k: int = typer.Option(10, "--k", "-k", help="Number of results"),
+    output_json: bool = typer.Option(False, "--json"),
+):
+    """Search stored Discord matches in memory."""
+    results = search_memory(query, k=k)
+
+    if output_json:
+        print(json.dumps(results, indent=2))
+    else:
+        if not results:
+            console.print("[yellow]No results found.[/yellow]")
+            return
+
+        console.print(f"[green]Found {len(results)} results[/green]\n")
+        for i, item in enumerate(results, 1):
+            problem = item.get("problem", "")
+            solution = item.get("solution", "")
+            score = item.get("score", 0)
+
+            # Try to parse solution as JSON
+            try:
+                sol_data = json.loads(solution)
+                content = sol_data.get("content", solution)[:200]
+                url = sol_data.get("url", "")
+                channel = sol_data.get("channel", "unknown")
+            except (json.JSONDecodeError, TypeError):
+                content = solution[:200]
+                url = ""
+                channel = "unknown"
+
+            console.print(f"[cyan]{i}. #{channel}[/cyan] (score: {score:.2f})")
+            console.print(f"   {content}...")
+            if url:
+                console.print(f"   [dim]{url}[/dim]")
+            console.print()
+
+
+@memory_app.command("ingest")
+def memory_ingest(
+    limit: int = typer.Option(100, "--limit", "-l", help="Max matches to ingest"),
+):
+    """Ingest existing matches from log file into memory."""
+    if not MATCHES_LOG.exists():
+        console.print("[yellow]No matches log file found.[/yellow]")
+        return
+
+    lines = MATCHES_LOG.read_text().strip().split("\n")
+    console.print(f"[bold]Ingesting {min(len(lines), limit)} matches to memory...[/bold]")
+
+    stored = 0
+    errors = 0
+
+    for i, line in enumerate(lines[-limit:]):
+        try:
+            data = json.loads(line)
+            match = KeywordMatch(
+                timestamp=data.get("timestamp", ""),
+                guild_id=data.get("guild_id", ""),
+                guild_name=data.get("guild_name", ""),
+                channel_id=data.get("channel_id", ""),
+                channel_name=data.get("channel_name", ""),
+                author=data.get("author", ""),
+                content=data.get("content", ""),
+                matched_keywords=data.get("matched_keywords", []),
+                message_url=data.get("message_url", ""),
+            )
+
+            result = persist_match_to_memory(match)
+            if result.get("stored"):
+                stored += 1
+            else:
+                errors += 1
+
+            if (i + 1) % 10 == 0:
+                console.print(f"  Processed {i + 1}/{min(len(lines), limit)}...")
+
+        except (json.JSONDecodeError, KeyError) as e:
+            errors += 1
+            continue
+
+    console.print(f"\n[green]Persisted: {stored}[/green]")
+    if errors:
+        console.print(f"[yellow]Errors: {errors}[/yellow]")
+
+
+@memory_app.command("status")
+def memory_status():
+    """Check memory integration status."""
+    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
+
+    console.print("[bold]Memory Integration Status[/bold]\n")
+
+    # Check memory skill exists
+    if memory_skill.exists():
+        console.print(f"  [green]Memory skill:[/green] {memory_skill}")
+    else:
+        console.print(f"  [red]Memory skill not found at:[/red] {memory_skill}")
+        console.print("  Make sure .pi/skills/memory/run.sh exists")
+        return
+
+    # Check memory service
+    try:
+        result = subprocess.run(
+            [str(memory_skill), "status"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=str(memory_skill.parent),
+        )
+        if result.returncode == 0:
+            console.print("  [green]Memory service:[/green] Connected")
+        else:
+            console.print(f"  [yellow]Memory service:[/yellow] {result.stderr[:100]}")
+    except Exception as e:
+        console.print(f"  [red]Memory service:[/red] {e}")
+
+    # Show scope
+    console.print(f"  [cyan]Scope:[/cyan] {MEMORY_SCOPE}")
+
+    # Show local matches count
+    if MATCHES_LOG.exists():
+        lines = MATCHES_LOG.read_text().strip().split("\n")
+        console.print(f"  [cyan]Local matches:[/cyan] {len(lines)}")
+    else:
+        console.print("  [cyan]Local matches:[/cyan] 0")
 
 
 if __name__ == "__main__":

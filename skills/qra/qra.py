@@ -34,6 +34,56 @@ try:
 except Exception:
     pass
 
+# Add skills directory to path for common imports
+SCRIPT_DIR = Path(__file__).parent
+SKILLS_DIR = SCRIPT_DIR.parent
+if str(SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(SKILLS_DIR))
+
+# Import common memory client for standardized resilience patterns
+try:
+    from common.memory_client import MemoryClient, MemoryScope, with_retries, RateLimiter
+    HAS_MEMORY_CLIENT = True
+except ImportError:
+    HAS_MEMORY_CLIENT = False
+    # Fallback: define minimal resilience utilities inline
+    import functools
+    import threading
+    import time as _time
+
+    def with_retries(max_attempts=3, base_delay=0.5, exceptions=(Exception,), on_retry=None):
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                last_error = None
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        return func(*args, **kwargs)
+                    except exceptions as e:
+                        last_error = e
+                        if attempt < max_attempts:
+                            delay = base_delay * (2 ** (attempt - 1))
+                            _time.sleep(delay)
+                if last_error:
+                    raise last_error
+            return wrapper
+        return decorator
+
+    class RateLimiter:
+        def __init__(self, requests_per_second=5):
+            self.interval = 1.0 / max(1, requests_per_second)
+            self.last_request = 0.0
+            self._lock = threading.Lock()
+        def acquire(self):
+            with self._lock:
+                sleep_time = max(0.0, (self.last_request + self.interval) - _time.time())
+                if sleep_time > 0:
+                    _time.sleep(sleep_time)
+                self.last_request = _time.time()
+
+# Rate limiter for memory operations
+_memory_limiter = RateLimiter(requests_per_second=5)
+
 # Extractor adapter (optional, for --from-extractor integration)
 _HAS_EXTRACTOR_ADAPTER = False
 try:
@@ -675,24 +725,47 @@ async def extract_qra_batch(
 # =============================================================================
 
 def store_qra(qra: Dict[str, Any], scope: str, tags: List[str] = None) -> bool:
-    """Store QRA pair via memory-agent learn."""
-    cmd = [
-        "memory-agent", "learn",
-        "--problem", qra.get("problem", qra.get("question", "")),
-        "--solution", qra.get("solution", qra.get("answer", "")),
-        "--scope", scope,
-    ]
+    """Store QRA pair via memory-agent learn with retry logic."""
+    problem = qra.get("problem", qra.get("question", ""))
+    solution = qra.get("solution", qra.get("answer", ""))
     all_tags = ["qra", "distilled"]
     if tags:
         all_tags.extend(tags)
-    for tag in all_tags:
-        cmd.extend(["--tag", tag])
+
+    # Use common MemoryClient if available for standardized resilience
+    if HAS_MEMORY_CLIENT:
+        try:
+            client = MemoryClient(scope=scope)
+            result = client.learn(problem=problem, solution=solution, tags=all_tags)
+            if not result.success:
+                _log(f"Store failed: {result.error}", style="red")
+            return result.success
+        except Exception as e:
+            _log(f"Store failed: {e}", style="red")
+            return False
+
+    # Fallback: direct subprocess with inline retry logic
+    @with_retries(max_attempts=3, base_delay=0.5)
+    def _store_with_retry():
+        _memory_limiter.acquire()
+        cmd = [
+            "memory-agent", "learn",
+            "--problem", problem,
+            "--solution", solution,
+            "--scope", scope,
+        ]
+        for tag in all_tags:
+            cmd.extend(["--tag", tag])
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            raise RuntimeError(f"Memory learn failed: {result.stderr}")
+        return True
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        return result.returncode == 0
+        return _store_with_retry()
     except Exception as e:
-        _log(f"Store failed: {e}", style="red")
+        _log(f"Store failed after retries: {e}", style="red")
         return False
 
 

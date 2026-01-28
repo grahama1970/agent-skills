@@ -474,6 +474,96 @@ else:
 
 ---
 
+## Common Memory Client (Recommended for Skills)
+
+For skills integration, use the standardized common memory client instead of direct graph_memory imports. It provides:
+
+- **Retry Logic**: Automatic retries with exponential backoff (3 attempts default)
+- **Rate Limiting**: Token bucket rate limiter to prevent overload
+- **Batch Operations**: Concurrent batch learn/recall for high-volume operations
+- **Scope Validation**: Standard MemoryScope enum with warnings for custom scopes
+
+### Basic Usage
+
+```python
+from common.memory_client import MemoryClient, MemoryScope, recall, learn
+
+# Quick convenience functions
+results = recall("authentication errors", scope=MemoryScope.SECURITY)
+learn("OAuth issue", "Add token refresh logic", tags=["auth"])
+
+# Full client for more control
+client = MemoryClient(scope=MemoryScope.OPERATIONAL)
+results = client.recall("query", k=5)
+client.learn(problem="X", solution="Y", tags=["tag"])
+```
+
+### Batch Operations
+
+For high-volume operations (e.g., ingesting papers, processing logs):
+
+```python
+from common.memory_client import batch_learn, batch_recall
+
+# Batch learn with concurrent execution (4x throughput)
+results = batch_learn([
+    {"problem": "Q1", "solution": "A1", "tags": ["paper"]},
+    {"problem": "Q2", "solution": "A2", "tags": ["paper"]},
+    {"problem": "Q3", "solution": "A3", "tags": ["paper"]},
+], scope=MemoryScope.RESEARCH, concurrency=4)
+
+print(f"Succeeded: {sum(1 for r in results if r.success)}/{len(results)}")
+
+# Batch recall for multiple queries
+results = batch_recall([
+    "authentication errors",
+    "database connection issues",
+    "rate limiting strategies",
+], concurrency=4)
+
+for result in results:
+    if result.found:
+        print(f"Query: {result.query} -> {len(result.items)} results")
+```
+
+### Standard Scopes (MemoryScope Enum)
+
+| Scope | Use For |
+|-------|---------|
+| `OPERATIONAL` | General operations (default) |
+| `DOCUMENTS` | Extracted documents |
+| `CODE` | Code patterns, snippets |
+| `SOCIAL_INTEL` | Social media content |
+| `SECURITY` | Security findings |
+| `RESEARCH` | Research papers |
+| `ARXIV` | ArXiv papers specifically |
+| `HORUS_LORE` | Horus persona knowledge |
+| `TOM` | Theory of Mind observations |
+
+### Integration Pattern
+
+```python
+import sys
+from pathlib import Path
+
+SKILLS_DIR = Path(__file__).parent.parent
+if str(SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(SKILLS_DIR))
+
+try:
+    from common.memory_client import MemoryClient, MemoryScope
+    HAS_MEMORY_CLIENT = True
+except ImportError:
+    HAS_MEMORY_CLIENT = False
+
+# Use in your skill
+if HAS_MEMORY_CLIENT:
+    client = MemoryClient(scope=MemoryScope.OPERATIONAL)
+    results = client.recall("my query")
+```
+
+---
+
 ## Environment Setup
 
 ```bash

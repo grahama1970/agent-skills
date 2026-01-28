@@ -7,18 +7,33 @@ Aggregates security content from:
 - X/Twitter accounts (via surf browser automation)
 
 Forwards to Discord webhooks for centralized monitoring.
+Persists content to graph-memory for knowledge graph integration.
 """
 
 import asyncio
+import functools
 import json
+import logging
 import os
+import re
 import subprocess
 import sys
 import tempfile
+import threading
+import time
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional, TypeVar
+
+# Configure logging - don't log tokens or sensitive data
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("social-bridge")
+
+T = TypeVar("T")
 
 try:
     import typer
@@ -46,14 +61,238 @@ try:
 except ImportError:
     HTTPX_AVAILABLE = False
 
+# =============================================================================
+# RESILIENCE UTILITIES (from code review recommendations)
+# =============================================================================
+
+# Configurable via environment
+MAX_RETRIES = int(os.environ.get("SOCIAL_BRIDGE_MAX_RETRIES", "3"))
+RETRY_BASE_DELAY = float(os.environ.get("SOCIAL_BRIDGE_RETRY_DELAY", "0.5"))
+RATE_LIMIT_RPS = int(os.environ.get("SOCIAL_BRIDGE_RATE_LIMIT_RPS", "3"))
+
+# Fields to redact in logs
+REDACT_FIELDS = {"token", "api_key", "api_hash", "password", "secret", "authorization"}
+
+
+def redact_sensitive(data: dict[str, Any]) -> dict[str, Any]:
+    """Redact sensitive fields from dict for safe logging."""
+    if not isinstance(data, dict):
+        return data
+    return {
+        k: "***REDACTED***" if k.lower() in REDACT_FIELDS else v
+        for k, v in data.items()
+    }
+
+
+def with_retries(
+    func: Callable[..., T],
+    max_attempts: int = MAX_RETRIES,
+    base_delay: float = RETRY_BASE_DELAY,
+) -> Callable[..., T]:
+    """Decorator that adds retry logic with exponential backoff.
+
+    Retries on transient errors (subprocess failures, network issues).
+    """
+    @functools.wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> T:
+        last_error: Optional[Exception] = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                last_error = e
+                if attempt < max_attempts:
+                    delay = base_delay * (2 ** (attempt - 1))
+                    logger.warning(
+                        f"Attempt {attempt}/{max_attempts} failed for {func.__name__}: {e}. "
+                        f"Retrying in {delay:.1f}s..."
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error(f"{func.__name__} failed after {max_attempts} attempts: {e}")
+        raise last_error  # type: ignore
+    return wrapper
+
+
+class RateLimiter:
+    """Simple token-bucket rate limiter for API calls."""
+
+    def __init__(self, requests_per_second: int = RATE_LIMIT_RPS):
+        self.interval = 1.0 / max(1, requests_per_second)
+        self.last_request = 0.0
+        self._lock = threading.Lock()
+
+    def acquire(self) -> None:
+        """Block until rate limit allows next request."""
+        with self._lock:
+            now = time.time()
+            sleep_time = max(0.0, (self.last_request + self.interval) - now)
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+            self.last_request = time.time()
+
+    def __enter__(self) -> "RateLimiter":
+        self.acquire()
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        pass
+
+
+# Global rate limiters for different services
+_telegram_limiter = RateLimiter(requests_per_second=3)  # Telegram is strict
+_discord_limiter = RateLimiter(requests_per_second=5)   # Discord webhooks
+
+
+# Memory integration - uses graph-memory project
+MEMORY_ROOT = Path(os.environ.get("MEMORY_ROOT", Path.home() / "workspace/experiments/memory"))
+MEMORY_SCOPE = "social_intel"
+
+# Security keyword patterns for auto-tagging
+SECURITY_KEYWORDS = [
+    (r"CVE-\d{4}-\d+", "cve"),
+    (r"APT\d+", "apt"),
+    (r"DARPA|IARPA|BAA", "darpa"),
+    (r"0-?day|zero.?day", "0day"),
+    (r"exploit|RCE|LPE|privesc", "exploit"),
+    (r"malware|ransomware|trojan|backdoor", "malware"),
+    (r"HTB|Hack.?The.?Box|TryHackMe|CTF", "ctf"),
+    (r"MITRE|ATT&CK|T\d{4}", "mitre"),
+    (r"cobalt.?strike|C2|beacon", "c2"),
+    (r"IOC|indicator", "ioc"),
+]
+
+
+def extract_security_tags(content: str) -> list[str]:
+    """Extract security-related tags from content."""
+    tags = set()
+    content_lower = content.lower()
+    for pattern, tag in SECURITY_KEYWORDS:
+        if re.search(pattern, content, re.IGNORECASE):
+            tags.add(tag)
+    return list(tags)
+
+
+def persist_to_memory(post: "SocialPost", tags: Optional[list[str]] = None) -> dict[str, Any]:
+    """Persist a social post to graph-memory.
+
+    Uses the memory skill's learn command to store posts as lessons.
+    Returns the result of the learn operation.
+    """
+    # Auto-extract security tags from content
+    auto_tags = extract_security_tags(post.content)
+    all_tags = list(set((tags or []) + auto_tags + [post.platform, f"source:{post.source}"]))
+
+    # Format problem as a searchable identifier
+    problem = f"[{post.platform.upper()}] @{post.source}: {post.content[:100]}..."
+
+    # Format solution with full content and metadata
+    solution = json.dumps({
+        "content": post.content,
+        "url": post.url,
+        "author": post.author,
+        "timestamp": post.timestamp.isoformat(),
+        "platform": post.platform,
+        "source": post.source,
+        "metadata": post.metadata,
+    }, indent=2)
+
+    # Call memory skill via CLI
+    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
+    if not memory_skill.exists():
+        # Try .pi/skills path
+        memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
+
+    if not memory_skill.exists():
+        logger.warning("Memory skill not found, cannot persist post")
+        return {"error": "memory skill not found", "stored": False}
+
+    # Build command
+    cmd = [
+        str(memory_skill),
+        "learn",
+        "--problem", problem,
+        "--solution", solution,
+        "--scope", MEMORY_SCOPE,
+    ]
+
+    # Add tags
+    for tag in all_tags:
+        cmd.extend(["--tag", tag])
+
+    @with_retries
+    def _execute_learn() -> dict[str, Any]:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(memory_skill.parent),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Memory learn failed: {result.stderr[:200]}")
+        return {"stored": True, "tags": all_tags}
+
+    try:
+        return _execute_learn()
+    except Exception as e:
+        logger.error(f"Failed to persist to memory after retries: {e}")
+        return {"stored": False, "error": str(e)}
+
+
+def search_memory(query: str, k: int = 10) -> list[dict[str, Any]]:
+    """Search memory for stored social intel.
+
+    Returns matching posts from graph-memory.
+    """
+    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
+
+    if not memory_skill.exists():
+        logger.debug("Memory skill not found, returning empty results")
+        return []
+
+    cmd = [
+        str(memory_skill),
+        "recall",
+        "--q", query,
+        "--scope", MEMORY_SCOPE,
+        "--k", str(k),
+    ]
+
+    @with_retries
+    def _execute_recall() -> list[dict[str, Any]]:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=str(memory_skill.parent),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Memory recall failed: {result.stderr[:100]}")
+        try:
+            data = json.loads(result.stdout)
+            return data.get("items", [])
+        except json.JSONDecodeError:
+            return []
+
+    try:
+        return _execute_recall()
+    except Exception as e:
+        logger.warning(f"Memory search failed after retries: {e}")
+        return []
+
+
 app = typer.Typer(help="Social Bridge - Security content aggregator")
 telegram_app = typer.Typer(help="Telegram channel management")
 x_app = typer.Typer(help="X/Twitter account management")
 webhook_app = typer.Typer(help="Discord webhook management")
+memory_app = typer.Typer(help="Memory/knowledge graph integration")
 
 app.add_typer(telegram_app, name="telegram")
 app.add_typer(x_app, name="x")
 app.add_typer(webhook_app, name="webhook")
+app.add_typer(memory_app, name="memory")
 
 console = Console()
 
@@ -202,6 +441,7 @@ def telegram_fetch(
     channel: str = typer.Argument(None, help="Specific channel (or all)"),
     limit: int = typer.Option(50, "--limit", "-l", help="Messages per channel"),
     output_json: bool = typer.Option(False, "--json"),
+    persist: bool = typer.Option(False, "--persist", "-p", help="Persist to memory/knowledge graph"),
 ):
     """Fetch messages from Telegram channels."""
     if not TELETHON_AVAILABLE:
@@ -228,6 +468,16 @@ def telegram_fetch(
     # Run async fetch
     posts = asyncio.run(_fetch_telegram_channels(int(api_id), api_hash, channels, limit))
 
+    # Persist to memory if requested
+    if persist:
+        stored_count = 0
+        with console.status("[bold green]Persisting to memory...") as status:
+            for post in posts:
+                result = persist_to_memory(post)
+                if result.get("stored"):
+                    stored_count += 1
+        console.print(f"[green]Persisted {stored_count}/{len(posts)} posts to memory[/green]")
+
     if output_json:
         print(json.dumps([p.to_dict() for p in posts], indent=2))
     else:
@@ -239,12 +489,20 @@ def telegram_fetch(
 
 
 async def _fetch_telegram_channels(api_id: int, api_hash: str, channels: list[str], limit: int) -> list[SocialPost]:
-    """Fetch messages from Telegram channels using Telethon."""
+    """Fetch messages from Telegram channels using Telethon.
+
+    Includes rate limiting between channel fetches to respect Telegram API limits.
+    """
     posts = []
 
     async with TelegramClient(str(TELEGRAM_SESSION), api_id, api_hash) as client:
-        for channel_name in channels:
+        for i, channel_name in enumerate(channels):
+            # Rate limit between channels (Telegram is strict about flood limits)
+            if i > 0:
+                _telegram_limiter.acquire()
+
             try:
+                logger.debug(f"Fetching Telegram channel: @{channel_name}")
                 entity = await client.get_entity(channel_name)
 
                 async for message in client.iter_messages(entity, limit=limit):
@@ -261,7 +519,9 @@ async def _fetch_telegram_channels(api_id: int, api_hash: str, channels: list[st
                                 "forwards": getattr(message, 'forwards', 0),
                             }
                         ))
+                logger.info(f"Fetched {limit} messages from @{channel_name}")
             except Exception as e:
+                logger.warning(f"Error fetching @{channel_name}: {e}")
                 console.print(f"[red]Error fetching @{channel_name}:[/red] {e}")
 
     return sorted(posts, key=lambda p: p.timestamp, reverse=True)
@@ -587,12 +847,13 @@ def fetch_all(
     hours: int = typer.Option(24, "--hours", "-h", help="Fetch posts from last N hours"),
     limit: int = typer.Option(50, "--limit", "-l", help="Posts per source"),
     output_json: bool = typer.Option(False, "--json"),
+    persist: bool = typer.Option(False, "--persist", "-p", help="Persist to memory/knowledge graph"),
 ):
     """Fetch content from all sources."""
     fetch_telegram = telegram or (not telegram and not x)
     fetch_x = x or (not telegram and not x)
 
-    all_posts = []
+    all_posts: list[SocialPost] = []
     cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     if fetch_telegram:
@@ -622,6 +883,17 @@ def fetch_all(
 
     # Sort by timestamp
     all_posts.sort(key=lambda p: p.timestamp, reverse=True)
+
+    # Persist to memory if requested
+    if persist and all_posts:
+        stored_count = 0
+        with console.status("[bold green]Persisting to memory...") as status:
+            for i, post in enumerate(all_posts):
+                result = persist_to_memory(post)
+                if result.get("stored"):
+                    stored_count += 1
+                status.update(f"[bold green]Persisting... {i+1}/{len(all_posts)}")
+        console.print(f"[green]Persisted {stored_count}/{len(all_posts)} posts to memory[/green]")
 
     if output_json:
         print(json.dumps([p.to_dict() for p in all_posts], indent=2))
@@ -681,27 +953,39 @@ def forward(
             console.print(f"  {post.content[:100]}...")
         return
 
-    # Send to Discord
+    # Send to Discord with rate limiting and retries
     sent = 0
+    failed = 0
+
+    @with_retries
+    def _send_to_webhook(payload: dict) -> bool:
+        """Send payload to Discord webhook with retry on transient failures."""
+        response = httpx.post(webhook_url, json=payload, timeout=10.0)
+        if response.status_code == 429:  # Rate limited
+            retry_after = int(response.headers.get("Retry-After", 5))
+            logger.warning(f"Discord rate limited, waiting {retry_after}s")
+            time.sleep(retry_after)
+            raise RuntimeError("Rate limited by Discord")
+        if response.status_code not in (200, 204):
+            raise RuntimeError(f"Discord returned {response.status_code}")
+        return True
+
     for post in all_posts:
+        # Use rate limiter for Discord webhooks
+        _discord_limiter.acquire()
+
         try:
-            payload = {
-                "embeds": [post.to_discord_embed()]
-            }
-            response = httpx.post(webhook_url, json=payload)
-            if response.status_code in (200, 204):
+            payload = {"embeds": [post.to_discord_embed()]}
+            if _send_to_webhook(payload):
                 sent += 1
-            else:
-                console.print(f"[red]Failed to send:[/red] {response.status_code}")
-
-            # Rate limit: max 30/minute
-            import time
-            time.sleep(2)
-
         except Exception as e:
+            failed += 1
+            logger.error(f"Failed to send to Discord: {e}")
             console.print(f"[red]Error:[/red] {e}")
 
     console.print(f"[green]Forwarded {sent}/{len(all_posts)} posts to Discord[/green]")
+    if failed > 0:
+        console.print(f"[yellow]Failed: {failed}[/yellow]")
 
 
 @app.command("setup")
@@ -782,6 +1066,154 @@ def version():
     console.print("social-bridge v0.1.0")
     console.print(f"  Telethon: {'installed' if TELETHON_AVAILABLE else 'not installed'}")
     console.print(f"  httpx: {'installed' if HTTPX_AVAILABLE else 'not installed'}")
+
+
+# =============================================================================
+# MEMORY COMMANDS
+# =============================================================================
+
+@memory_app.command("search")
+def memory_search(
+    query: str = typer.Argument(..., help="Search query"),
+    k: int = typer.Option(10, "--k", "-k", help="Number of results"),
+    output_json: bool = typer.Option(False, "--json"),
+):
+    """Search stored social intel in memory."""
+    results = search_memory(query, k=k)
+
+    if output_json:
+        print(json.dumps(results, indent=2))
+    else:
+        if not results:
+            console.print("[yellow]No results found.[/yellow]")
+            return
+
+        console.print(f"[green]Found {len(results)} results[/green]\n")
+        for i, item in enumerate(results, 1):
+            problem = item.get("problem", "")
+            solution = item.get("solution", "")
+            score = item.get("score", 0)
+
+            # Try to parse solution as JSON
+            try:
+                sol_data = json.loads(solution)
+                content = sol_data.get("content", solution)[:200]
+                url = sol_data.get("url", "")
+                platform = sol_data.get("platform", "unknown")
+            except (json.JSONDecodeError, TypeError):
+                content = solution[:200]
+                url = ""
+                platform = "unknown"
+
+            console.print(f"[cyan]{i}. [{platform.upper()}][/cyan] (score: {score:.2f})")
+            console.print(f"   {content}...")
+            if url:
+                console.print(f"   [dim]{url}[/dim]")
+            console.print()
+
+
+@memory_app.command("ingest")
+def memory_ingest(
+    hours: int = typer.Option(24, "--hours", "-h", help="Fetch posts from last N hours"),
+    limit: int = typer.Option(100, "--limit", "-l", help="Max posts per source"),
+    telegram_only: bool = typer.Option(False, "--telegram", "-t"),
+    x_only: bool = typer.Option(False, "--x"),
+):
+    """Fetch and persist all social content to memory."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+    all_posts: list[SocialPost] = []
+
+    fetch_telegram = telegram_only or (not telegram_only and not x_only)
+    fetch_x = x_only or (not telegram_only and not x_only)
+
+    # Fetch Telegram
+    if fetch_telegram and TELETHON_AVAILABLE:
+        api_id = os.environ.get("TELEGRAM_API_ID")
+        api_hash = os.environ.get("TELEGRAM_API_HASH")
+        if api_id and api_hash:
+            config = load_config()
+            channels = config.get("telegram_channels", [])
+            if channels:
+                console.print("[bold]Fetching Telegram...[/bold]")
+                posts = asyncio.run(_fetch_telegram_channels(int(api_id), api_hash, channels, limit))
+                posts = [p for p in posts if p.timestamp >= cutoff]
+                all_posts.extend(posts)
+                console.print(f"  [green]Telegram: {len(posts)} posts[/green]")
+
+    # Fetch X/Twitter
+    if fetch_x:
+        config = load_config()
+        accounts = config.get("x_accounts", [])
+        if accounts:
+            console.print("[bold]Fetching X/Twitter...[/bold]")
+            for acc in accounts:
+                posts = _fetch_x_account(acc, limit)
+                posts = [p for p in posts if p.timestamp >= cutoff]
+                all_posts.extend(posts)
+            console.print(f"  [green]X/Twitter: {len([p for p in all_posts if p.platform == 'x'])} posts[/green]")
+
+    # Persist to memory
+    if not all_posts:
+        console.print("[yellow]No posts to ingest.[/yellow]")
+        return
+
+    console.print(f"\n[bold]Persisting {len(all_posts)} posts to memory...[/bold]")
+    stored = 0
+    errors = 0
+
+    with console.status("[bold green]Persisting...") as status:
+        for i, post in enumerate(all_posts):
+            result = persist_to_memory(post)
+            if result.get("stored"):
+                stored += 1
+            else:
+                errors += 1
+            status.update(f"[bold green]Persisting... {i+1}/{len(all_posts)}")
+
+    console.print(f"\n[green]Persisted: {stored}[/green]")
+    if errors:
+        console.print(f"[yellow]Errors: {errors}[/yellow]")
+
+
+@memory_app.command("status")
+def memory_status():
+    """Check memory integration status."""
+    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
+
+    console.print("[bold]Memory Integration Status[/bold]\n")
+
+    # Check memory skill exists
+    if memory_skill.exists():
+        console.print(f"  [green]Memory skill:[/green] {memory_skill}")
+    else:
+        console.print(f"  [red]Memory skill not found at:[/red] {memory_skill}")
+        console.print("  Make sure .pi/skills/memory/run.sh exists")
+        return
+
+    # Check memory service
+    try:
+        result = subprocess.run(
+            [str(memory_skill), "status"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            cwd=str(memory_skill.parent),
+        )
+        if result.returncode == 0:
+            console.print("  [green]Memory service:[/green] Connected")
+        else:
+            console.print(f"  [yellow]Memory service:[/yellow] {result.stderr[:100]}")
+    except Exception as e:
+        console.print(f"  [red]Memory service:[/red] {e}")
+
+    # Show scope
+    console.print(f"  [cyan]Scope:[/cyan] {MEMORY_SCOPE}")
+
+    # Show keyword patterns
+    console.print(f"\n[bold]Auto-tagging Patterns:[/bold]")
+    for pattern, tag in SECURITY_KEYWORDS[:5]:
+        console.print(f"  {tag}: {pattern}")
+    console.print(f"  ... and {len(SECURITY_KEYWORDS) - 5} more")
 
 
 if __name__ == "__main__":

@@ -2,8 +2,8 @@
 name: social-bridge
 description: >
   Aggregate security content from Telegram public channels and X/Twitter accounts,
-  forward to Discord webhooks. Uses Telethon (MTProto) for Telegram, surf browser
-  automation for X, and Discord webhooks for delivery.
+  forward to Discord webhooks, and persist to graph-memory. Uses Telethon (MTProto)
+  for Telegram, surf browser automation for X, and Discord webhooks for delivery.
 allowed-tools:
   - Bash
   - Read
@@ -19,12 +19,12 @@ triggers:
   - aggregate feeds
   - forward to discord
 metadata:
-  short-description: Telegram/X aggregator with Discord forwarding
+  short-description: Telegram/X aggregator with Discord + memory integration
 ---
 
 # Social Bridge - Security Content Aggregator
 
-Aggregate security research content from multiple social platforms and forward to your Discord server.
+Aggregate security research content from multiple social platforms, forward to your Discord server, and persist to the knowledge graph for semantic search.
 
 ## Data Sources
 
@@ -37,30 +37,36 @@ Aggregate security research content from multiple social platforms and forward t
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Social Bridge Aggregator                      │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │  Telegram   │    │  X/Twitter  │    │   RSS/Web   │         │
-│  │  (Telethon) │    │   (surf)    │    │  (future)   │         │
-│  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘         │
-│         │                  │                  │                  │
-│         └──────────────────┼──────────────────┘                  │
-│                            ▼                                     │
-│                   ┌─────────────────┐                            │
-│                   │   Aggregator    │                            │
-│                   │ (dedupe, filter)│                            │
-│                   └────────┬────────┘                            │
-│                            │                                     │
-│              ┌─────────────┼─────────────┐                       │
-│              ▼             ▼             ▼                       │
-│        ┌──────────┐  ┌──────────┐  ┌──────────┐                 │
-│        │ Discord  │  │  JSON    │  │  Dogpile │                 │
-│        │ Webhook  │  │  Export  │  │  Inject  │                 │
-│        └──────────┘  └──────────┘  └──────────┘                 │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    Social Bridge Aggregator + Memory Integration             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                     │
+│  │  Telegram   │    │  X/Twitter  │    │   RSS/Web   │                     │
+│  │  (Telethon) │    │   (surf)    │    │  (future)   │                     │
+│  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘                     │
+│         │                  │                  │                             │
+│         └──────────────────┼──────────────────┘                             │
+│                            ▼                                                │
+│                   ┌─────────────────┐                                       │
+│                   │   Aggregator    │                                       │
+│                   │ (dedupe, filter)│                                       │
+│                   └────────┬────────┘                                       │
+│                            │                                                │
+│         ┌──────────────────┼───────────────────┐                           │
+│         ▼                  ▼                   ▼                            │
+│   ┌──────────┐       ┌──────────┐       ┌────────────────┐                 │
+│   │ Discord  │       │  JSON    │       │  graph-memory  │                 │
+│   │ Webhook  │       │  Export  │       │   (ArangoDB)   │                 │
+│   └──────────┘       └──────────┘       └───────┬────────┘                 │
+│                                                 │                           │
+│                                                 ▼                           │
+│                                         ┌──────────────┐                   │
+│                                         │   Dogpile    │                   │
+│                                         │ (search/recall)│                 │
+│                                         └──────────────┘                   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
@@ -184,6 +190,34 @@ Aggregate security research content from multiple social platforms and forward t
 ./run.sh forward --webhook security --dry-run
 ```
 
+### `memory` - Knowledge Graph Integration
+
+```bash
+# Check memory integration status
+./run.sh memory status
+
+# Ingest all content to memory (fetch + persist)
+./run.sh memory ingest --hours 24
+
+# Ingest only Telegram
+./run.sh memory ingest --telegram --hours 24
+
+# Search stored social intel
+./run.sh memory search "CVE-2024"
+
+# Search with JSON output
+./run.sh memory search "malware analysis" --json --k 20
+```
+
+**Auto-Fetch with Persistence:**
+```bash
+# Fetch and persist in one command
+./run.sh fetch --all --persist
+
+# Telegram fetch with persistence
+./run.sh telegram fetch --persist
+```
+
 ### `aggregate` - Scheduled Aggregation
 
 ```bash
@@ -248,16 +282,59 @@ Aggregate security research content from multiple social platforms and forward t
 | `TELEGRAM_API_HASH` | Telegram API hash | For Telegram |
 | `DISCORD_WEBHOOK_URL` | Default Discord webhook | For forwarding |
 
+## Integration with Memory (graph-memory)
+
+Social-bridge persists content to the `social_intel` scope in ArangoDB via the memory skill.
+
+### Auto-Tagging
+
+Posts are automatically tagged with security keywords:
+- `cve` - CVE identifiers (CVE-2024-XXXX)
+- `apt` - APT groups (APT29, APT41)
+- `darpa` - DARPA/IARPA/BAA mentions
+- `0day` - Zero-day references
+- `exploit` - Exploit/RCE/LPE mentions
+- `malware` - Malware/ransomware mentions
+- `ctf` - CTF/HTB/TryHackMe
+- `mitre` - MITRE ATT&CK references
+- `c2` - C2/Cobalt Strike
+- `ioc` - IOC/indicator mentions
+
+### Memory Schema
+
+Posts are stored as lessons with:
+```json
+{
+  "problem": "[TELEGRAM] @vxunderground: New ransomware variant...",
+  "solution": {
+    "content": "Full post content...",
+    "url": "https://t.me/vxunderground/12345",
+    "author": "vx-underground",
+    "timestamp": "2026-01-28T12:00:00Z",
+    "platform": "telegram",
+    "source": "vxunderground",
+    "metadata": {"views": 5000, "forwards": 120}
+  },
+  "scope": "social_intel",
+  "tags": ["telegram", "source:vxunderground", "malware", "ransomware"]
+}
+```
+
 ## Integration with Dogpile
 
-Social-bridge results can be injected into dogpile searches:
+Dogpile can query stored social intel via the memory skill:
 
 ```bash
-# Fetch and export for dogpile
-./run.sh fetch --all --json > /tmp/social-bridge.json
+# Dogpile searches memory automatically
+dogpile search "CVE-2024-1234" --preset vulnerability_research
 
-# Dogpile will auto-detect and include social content
-dogpile search "latest CVE" --include-social
+# Memory recall returns stored social intel
+./run.sh memory search "ransomware variant"
+```
+
+**Pipeline:**
+```
+social-bridge fetch --persist → memory (ArangoDB) → dogpile recall
 ```
 
 ## Data Storage

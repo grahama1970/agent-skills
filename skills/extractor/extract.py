@@ -16,17 +16,66 @@ Usage:
     ./run.sh document.pdf --markdown         # Output markdown to stdout
     ./run.sh document.pdf --out ./results    # Custom output directory
 """
-import sys
-import os
-import json
-import subprocess
-import shutil
-import tempfile
-from pathlib import Path
-from typing import Optional, Dict, Any, List
-from datetime import datetime
 import dataclasses
+import functools
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import threading
+import time
 from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+# Add skills directory to path for common imports
+SCRIPT_DIR = Path(__file__).parent
+SKILLS_DIR = SCRIPT_DIR.parent
+if str(SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(SKILLS_DIR))
+
+# Import common memory client for standardized resilience patterns
+try:
+    from common.memory_client import MemoryClient, MemoryScope, with_retries, RateLimiter
+    HAS_MEMORY_CLIENT = True
+except ImportError:
+    HAS_MEMORY_CLIENT = False
+    # Fallback: define minimal resilience utilities inline
+    def with_retries(max_attempts=3, base_delay=0.5, exceptions=(Exception,), on_retry=None):
+        def decorator(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                last_error = None
+                for attempt in range(1, max_attempts + 1):
+                    try:
+                        return func(*args, **kwargs)
+                    except exceptions as e:
+                        last_error = e
+                        if attempt < max_attempts:
+                            delay = base_delay * (2 ** (attempt - 1))
+                            time.sleep(delay)
+                if last_error:
+                    raise last_error
+            return wrapper
+        return decorator
+
+    class RateLimiter:
+        def __init__(self, requests_per_second=5):
+            self.interval = 1.0 / max(1, requests_per_second)
+            self.last_request = 0.0
+            self._lock = threading.Lock()
+        def acquire(self):
+            with self._lock:
+                sleep_time = max(0.0, (self.last_request + self.interval) - time.time())
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                self.last_request = time.time()
+
+# Rate limiter for memory operations
+_memory_limiter = RateLimiter(requests_per_second=5)
 
 @dataclass
 class ExtractionOptions:
@@ -236,10 +285,7 @@ if not MEMORY_SKILL_PATH.exists():
 
 
 def learn_to_memory(filepath: Path, result: Dict[str, Any], scope: str = "documents") -> bool:
-    """Auto-learn extraction summary to memory for future recall."""
-    if not MEMORY_SKILL_PATH.exists():
-        return False
-
+    """Auto-learn extraction summary to memory for future recall with retry logic."""
     if not result.get("success"):
         return False
 
@@ -259,8 +305,24 @@ def learn_to_memory(filepath: Path, result: Dict[str, Any], scope: str = "docume
     solution_parts.append(f"Preset: {preset}")
 
     solution = ", ".join(solution_parts)
+    tags = ["extractor", "document", preset]
 
-    try:
+    # Use common MemoryClient if available for standardized resilience
+    if HAS_MEMORY_CLIENT:
+        try:
+            client = MemoryClient(scope=scope)
+            result = client.learn(problem=problem, solution=solution, tags=tags)
+            return result.success
+        except Exception:
+            return False
+
+    # Fallback: direct subprocess with inline retry logic
+    if not MEMORY_SKILL_PATH.exists():
+        return False
+
+    @with_retries(max_attempts=3, base_delay=0.5)
+    def _learn_with_retry():
+        _memory_limiter.acquire()
         cmd = [
             str(MEMORY_SKILL_PATH),
             "learn",
@@ -269,9 +331,16 @@ def learn_to_memory(filepath: Path, result: Dict[str, Any], scope: str = "docume
         ]
         if scope:
             cmd.extend(["--scope", scope])
+        for tag in tags:
+            cmd.extend(["--tag", tag])
 
-        subprocess.run(cmd, capture_output=True, timeout=30)
+        proc_result = subprocess.run(cmd, capture_output=True, timeout=30)
+        if proc_result.returncode != 0:
+            raise RuntimeError(f"Memory learn failed: {proc_result.stderr}")
         return True
+
+    try:
+        return _learn_with_retry()
     except Exception:
         return False
 
