@@ -6,14 +6,15 @@ Search NZBGeek and transcribe local video files using Whisper for PersonaPlex al
 import os
 import sys
 import json
-import time
 import re
+import shutil
 import subprocess
 import requests
 import typer
 from pathlib import Path
 from typing import Optional
-from collections import defaultdict
+from collections import Counter
+from functools import lru_cache
 from rich.console import Console
 from rich.table import Table
 from datetime import datetime, timezone
@@ -26,13 +27,31 @@ console = Console()
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
-NZB_API_KEY = os.environ.get("NZBD_GEEK_API_KEY")
-NZB_BASE_URL = os.environ.get("NZBD_GEEK_BASE_URL", "https://api.nzbgeek.info/")
+NZB_API_KEY = os.environ.get("NZBD_GEEK_API_KEY") or os.environ.get("NZB_GEEK_API_KEY")
+NZB_BASE_URL = (
+    os.environ.get("NZBD_GEEK_BASE_URL")
+    or os.environ.get("NZB_GEEK_BASE_URL")
+    or "https://api.nzbgeek.info/"
+)
 WHISPER_BIN = os.environ.get("WHISPER_BIN", os.path.expanduser("~/.local/bin/whisper"))
 FFMPEG_BIN = os.environ.get("FFMPEG_BIN", "/usr/bin/ffmpeg")
 
+@lru_cache(maxsize=1)
+def get_ffmpeg_bin() -> str:
+    """Return ffmpeg path preferring env override but falling back to PATH."""
+    configured = FFMPEG_BIN
+    if configured and Path(configured).exists():
+        return configured
+    discovered = shutil.which("ffmpeg")
+    return discovered or configured
+
+# Audio intensity tagging thresholds (override via env)
+RMS_THRESHOLD = float(os.environ.get("AUDIO_RMS_THRESHOLD", "0.2"))
+RMS_WINDOW_SEC = float(os.environ.get("AUDIO_RMS_WINDOW_SEC", "0.5"))
+
 CUE_KEYWORDS = {
     "laugh": "laugh",
+    "laughs": "laugh",
     "chuckle": "laugh",
     "giggle": "laugh",
     "snicker": "laugh",
@@ -50,57 +69,87 @@ CUE_KEYWORDS = {
     "breath": "breath",
     "breathing": "breath",
     "whisper": "whisper",
+    "snarl": "rage",
+    "growl": "rage",
 }
 
+EMOTION_TAG_MAP = {
+    "rage": {"rage", "rage_candidate", "anger_candidate", "shout"},
+    "anger": {"anger", "anger_candidate", "shout"},
+    "humor": {"laugh"},
+    "regret": {"cry", "sob", "sigh"},
+    "respect": {"whisper", "whisper_candidate", "breath"},
+}
+
+TAG_TO_EMOTION = {
+    "rage": "rage",
+    "rage_candidate": "rage",
+    "anger": "anger",
+    "anger_candidate": "anger",
+    "shout": "anger",
+    "laugh": "humor",
+    "cry": "regret",
+    "sob": "regret",
+    "sigh": "regret",
+    "whisper": "respect",
+    "whisper_candidate": "respect",
+    "breath": "respect",
+}
+
+SUBTITLE_HINT_KEYWORDS = (" subs", "subbed", "subtitle", "subtitles", ".srt", "cc", "sdh", "caption")
 def _validate_env():
+    if os.environ.get("NZBD_GEEK_API_KEY") and not os.environ.get("NZB_GEEK_API_KEY"):
+        console.print("[yellow]Note: prefer NZB_GEEK_API_KEY (without the extra 'D').[/yellow]")
     if not NZB_API_KEY:
-        console.print("[yellow]Warning: NZBD_GEEK_API_KEY not set. Search will fail.[/yellow]")
+        console.print(
+            "[yellow]Warning: NZB_GEEK_API_KEY not set. NZB search will fail.[/yellow]"
+        )
+
+
+def release_has_subtitle_hint(item: dict) -> bool:
+    haystack = " ".join(
+        [
+            str(item.get("title", "")),
+            str(item.get("description", "")),
+            str(item.get("attr", "")),
+        ]
+    ).lower()
+    return any(keyword in haystack for keyword in SUBTITLE_HINT_KEYWORDS)
 
 
 @scenes_app.command("find")
 def find_scene_windows(
-    subtitle_file: Path = typer.Argument(..., exists=True, help="Subtitle .srt to scan"),
+    subtitle_file: Path = typer.Option(..., "--subtitle", "-s", exists=True, help="Subtitle .srt to scan"),
     query: Optional[str] = typer.Option(None, "--query", "-q", help="Case-insensitive text substring to find"),
     tag: Optional[str] = typer.Option(None, "--tag", "-t", help="Filter by subtitle cue tag (e.g. laugh, shout)"),
+    emotion: Optional[str] = typer.Option(None, "--emotion", "-e", help="Filter by canonical emotion (rage, anger, humor, respect, regret)"),
     window: float = typer.Option(15.0, help="Seconds of padding before/after the match for suggested clips"),
     max_matches: int = typer.Option(5, help="Maximum matches to display"),
     offset: float = typer.Option(0.0, help="Seconds to add when referencing the full movie (useful if .srt was trimmed)"),
     video_file: Optional[Path] = typer.Option(None, "--video", help="Optional video file path for ffmpeg command hints"),
 ):
     """Search subtitle text/tags to locate clip timestamps."""
-    if not query and not tag:
-        raise typer.BadParameter("Provide at least --query or --tag to locate a scene")
+    if not query and not tag and not emotion:
+        raise typer.BadParameter("Provide at least --query, --tag, or --emotion to locate a scene")
 
     entries = parse_subtitle_file(subtitle_file)
     if not entries:
         console.print("[red]No subtitle entries found; ensure the .srt has text lines.[/red]")
         raise typer.Exit(code=1)
 
-    query_lower = query.lower() if query else None
-    tag_lower = tag.lower() if tag else None
-    matches = []
-    for entry in entries:
-        text = entry.get("text", "")
-        text_lower = text.lower()
-        if query_lower and query_lower not in text_lower:
-            continue
-        if tag_lower and tag_lower not in [t.lower() for t in entry.get("tags", [])]:
-            continue
-        matches.append(entry)
-        if len(matches) >= max_matches:
-            break
-
+    matches = collect_matches(entries, query, tag, emotion, max_matches, merge_adjacent=True)
     if not matches:
         console.print("[yellow]No matches found for the given query/tag.[/yellow]")
         raise typer.Exit()
 
     adjusted_video = str(video_file) if video_file else None
-    console.print(f"[green]Found {len(matches)} match(es). Suggested clip windows with ±{window:.1f}s padding:" )
+    console.print(f"[green]Found {len(matches)} match(es). Suggested clip windows with ±{window:.1f}s padding:[/green]")
     for idx, entry in enumerate(matches, 1):
         start = entry.get("start", 0.0)
         end = entry.get("end", start)
         clip_start = max(0.0, start - window) + offset
         clip_end = end + window + offset
+        inferred = infer_emotion_from_tags(entry.get("tags", []), emotion)
         console.print(f"\n[bold]Match {idx}[/bold]")
         console.print(f"Subtitle window: {format_seconds(start+offset)} → {format_seconds(end+offset)}")
         console.print(f"Suggested clip: {format_seconds(clip_start)} → {format_seconds(clip_end)}")
@@ -108,12 +157,129 @@ def find_scene_windows(
         entry_tags = entry.get("tags") or []
         if entry_tags:
             console.print(f"Tags: {', '.join(entry_tags)}")
+        if inferred:
+            console.print(f"Inferred emotion: {inferred}")
         if adjusted_video:
             console.print(
-                "ffmpeg -ss {start} -to {end} -i '{video}' -c copy clip_{idx}.mkv".format(
-                    start=format_seconds(clip_start), end=format_seconds(clip_end), video=adjusted_video, idx=idx
+                "{bin} -ss {start} -to {end} -i '{video}' -c copy clip_{idx}.mkv".format(
+                    bin=get_ffmpeg_bin(),
+                    start=format_hms(clip_start),
+                    end=format_hms(clip_end),
+                    video=adjusted_video,
+                    idx=idx,
                 )
             )
+
+
+@scenes_app.command("extract")
+def extract_scene_manifest(
+    subtitle_file: Path = typer.Option(..., "--subtitle", "-s", exists=True, help="Subtitle .srt to scan"),
+    query: Optional[str] = typer.Option(None, "--query", "-q", help="Case-insensitive text substring to find"),
+    tag: Optional[str] = typer.Option(None, "--tag", "-t", help="Filter by subtitle cue tag (e.g. laugh, shout)"),
+    emotion: Optional[str] = typer.Option(None, "--emotion", "-e", help="Filter by canonical emotion (rage, anger, humor, respect, regret)"),
+    window: float = typer.Option(12.0, help="Seconds of padding before/after matches when clipping"),
+    max_matches: int = typer.Option(10, help="Maximum matches to process"),
+    offset: float = typer.Option(0.0, help="Seconds to align subtitles with full movie timing"),
+    video_file: Optional[Path] = typer.Option(None, "--video", help="Optional video file to auto-clip via ffmpeg"),
+    clip_dir: Optional[Path] = typer.Option(None, "--clip-dir", help="Directory to write extracted clips (.mkv/.srt)"),
+    output_json: Optional[Path] = typer.Option(None, "--output-json", help="Manifest path (defaults to <subtitle>.scenes.json)"),
+    subtitle_only: bool = typer.Option(False, "--subtitle-only", help="Skip ffmpeg work and just emit manifest data"),
+):
+    """Generate a JSON manifest (and optional clips) for PersonaPlex ingestion."""
+    if not query and not tag and not emotion:
+        raise typer.BadParameter("Provide at least --query, --tag, or --emotion to extract scenes")
+    if subtitle_only and clip_dir:
+        raise typer.BadParameter("--subtitle-only cannot be combined with --clip-dir")
+    if clip_dir and not video_file:
+        raise typer.BadParameter("--clip-dir requires --video to read from")
+
+    entries = parse_subtitle_file(subtitle_file)
+    matches = collect_matches(entries, query, tag, emotion, max_matches, merge_adjacent=True)
+    if not matches:
+        console.print("[yellow]No matches found; nothing to extract.[/yellow]")
+        raise typer.Exit()
+
+    manifest_path = output_json or subtitle_file.with_suffix(".scenes.json")
+    manifest: list[dict] = []
+    clip_dir_path = Path(clip_dir) if clip_dir else None
+    if clip_dir_path:
+        clip_dir_path.mkdir(parents=True, exist_ok=True)
+
+    console.print(f"[cyan]Processing {len(matches)} match(es) from {subtitle_file}[/cyan]")
+    for idx, entry in enumerate(matches, 1):
+        start = entry.get("start", 0.0)
+        end = entry.get("end", start)
+        clip_start = max(0.0, start - window) + offset
+        clip_end = end + window + offset
+        inferred = infer_emotion_from_tags(entry.get("tags", []), emotion)
+        record = {
+            "index": idx,
+            "text": entry.get("text", "").strip(),
+            "tags": entry.get("tags", []),
+            "emotion": inferred,
+            "subtitle_window": {
+                "start_sec": round(start, 3),
+                "end_sec": round(end, 3),
+            },
+            "movie_window": {
+                "start_sec": round(clip_start, 3),
+                "end_sec": round(clip_end, 3),
+                "duration_sec": round(max(0.0, clip_end - clip_start), 3),
+            },
+        }
+        if video_file:
+            record["movie_window"]["ffmpeg_hint"] = (
+                "{bin} -ss {start} -to {end} -i '{video}' -c copy clip_{idx:02d}.mkv".format(
+                    bin=get_ffmpeg_bin(),
+                    start=format_hms(clip_start),
+                    end=format_hms(clip_end),
+                    video=str(video_file),
+                    idx=idx,
+                )
+            )
+
+        clip_metadata = {}
+        if clip_dir_path and not subtitle_only:
+            clip_name = f"clip_{idx:02d}"
+            clip_video_path = clip_dir_path / f"{clip_name}.mkv"
+            cmd = [
+                get_ffmpeg_bin(),
+                "-y",
+                "-ss",
+                f"{clip_start:.3f}",
+                "-to",
+                f"{clip_end:.3f}",
+                "-i",
+                str(video_file),
+                "-c",
+                "copy",
+                str(clip_video_path),
+            ]
+            try:
+                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                clip_metadata["video"] = str(clip_video_path)
+                console.print(f"[green]Saved {clip_video_path}[/green]")
+            except subprocess.CalledProcessError as exc:
+                console.print(f"[red]ffmpeg failed for {clip_name}: {exc}[/red]")
+
+            snippet_path = clip_dir_path / f"{clip_name}.srt"
+            snippet = write_subtitle_snippet(entries, clip_start, clip_end, snippet_path, offset)
+            if snippet:
+                clip_metadata["subtitle"] = str(snippet)
+            if inferred:
+                clip_metadata["emotion"] = inferred
+            if clip_metadata:
+                record["clip_artifacts"] = clip_metadata
+
+        manifest.append(record)
+
+    with open(manifest_path, "w", encoding="utf-8") as fh:
+        json.dump({"scenes": manifest, "source_subtitle": str(subtitle_file)}, fh, indent=2)
+
+    console.print(f"[green]Scene manifest saved to {manifest_path}[/green]")
+    if clip_dir_path and not subtitle_only:
+        console.print(f"[green]Clips available under {clip_dir_path}[/green]")
+    console.print("Next: feed manifest rows into horus_lore_ingest emotion ingest.")
 
 # -----------------------------------------------------------------------------
 # NZB Search Logic
@@ -158,6 +324,7 @@ def search_nzb(
 
         table = Table(title=f"Results for '{term}'")
         table.add_column("Title", style="green")
+        table.add_column("Subs?", style="yellow", justify="center")
         table.add_column("Size", style="cyan")
         table.add_column("PubDate", style="dim")
         table.add_column("Link", style="blue")
@@ -169,9 +336,10 @@ def search_nzb(
                 size_str = f"{size_mb:.1f} MB"
             except:
                 size_str = size
-                
+            subs_flag = "✅" if release_has_subtitle_hint(item) else ""
             table.add_row(
                 item.get("title", "Unknown")[:60],
+                subs_flag,
                 size_str,
                 item.get("pubDate", "")[:16],
                 item.get("link", "")[:40] + "..."
@@ -189,7 +357,7 @@ def transcribe_video(
     input_file: Path = typer.Argument(..., exists=True, help="Video file path"),
     output_dir: Path = typer.Option(Path("./transcripts"), help="Directory for Whisper + persona JSON"),
     model: str = typer.Option("medium", help="Whisper model (base, small, medium, large)"),
-    emotion: str = typer.Option(None, help="Tag with emotion (e.g. rage, sorrow)"),
+    emotion: Optional[str] = typer.Option(None, help="Tag with emotion (e.g. rage, sorrow)"),
     movie_title: Optional[str] = typer.Option(None, help="Movie or benchmark title"),
     scene: Optional[str] = typer.Option(None, help="Scene description (e.g. 'Pacino warns Fredo')"),
     characters: Optional[str] = typer.Option(None, help="Comma-separated character list"),
@@ -215,12 +383,19 @@ def transcribe_video(
     # 1. Extract Audio
     console.print(f"[cyan]Extracting audio to {audio_file}...[/cyan]")
     cmd_ffmpeg = [
-        FFMPEG_BIN, "-y",
+        get_ffmpeg_bin(), "-y",
         "-i", str(input_file),
         "-vn", "-acodec", "pcm_s16le", "-ar", "16000", "-ac", "1",
         str(audio_file)
     ]
-    subprocess.run(cmd_ffmpeg, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        subprocess.run(cmd_ffmpeg, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except FileNotFoundError:
+        console.print(f"[red]ffmpeg not found at {get_ffmpeg_bin()}[/red]")
+        return
+    except subprocess.CalledProcessError as exc:
+        console.print(f"[red]ffmpeg failed to extract audio: {exc}[/red]")
+        return
     
     # 2. Run Whisper
     console.print(f"[cyan]Running Whisper ({model})...[/cyan]")
@@ -237,6 +412,9 @@ def transcribe_video(
         subprocess.run(cmd_whisper, check=True)
     except FileNotFoundError:
         console.print(f"[red]Whisper binary not found at {WHISPER_BIN}[/red]")
+        return
+    except subprocess.CalledProcessError as exc:
+        console.print(f"[red]Whisper failed: {exc}[/red]")
         return
 
     # 3. Process JSON for PersonaPlex
@@ -315,7 +493,8 @@ def transcribe_video(
     console.print(f"Rhythm: {wpm:.1f} WPM, {pauses} significant pauses")
     if aggregate_tags:
         console.print(f"Detected cue tags: {', '.join(aggregate_tags)}")
-    console.print("Next: `python horus_lore_ingest.py emotion --input {dir} --emotion <tag>` to ingest.")
+    ingest_hint = emotion or "<emotion>"
+    console.print(f"Next: `python horus_lore_ingest.py emotion --input {output_dir} --emotion {ingest_hint}` to ingest.")
 
 
 def resolve_subtitle_file(input_file: Path, explicit: Optional[Path]) -> Path:
@@ -341,53 +520,81 @@ def parse_subtitle_file(path: Path) -> list[dict]:
         raise typer.BadParameter("Only .srt subtitles are supported right now")
 
     content = path.read_text(encoding="utf-8", errors="ignore")
-    blocks = re.split(r"\r?\n\s*\r?\n", content)
     entries: list[dict] = []
+    malformed = inverted = total = 0
 
-    for block in blocks:
-        lines = [line.strip() for line in block.splitlines() if line.strip()]
+    def flush_block(block: list[str]):
+        nonlocal malformed, inverted, total
+        lines = [line.strip() for line in block if line.strip()]
         if len(lines) < 2:
-            continue
-        time_line_idx = 0
-        if "-->" not in lines[0] and len(lines) >= 2:
-            time_line_idx = 1
+            return
+        time_line_idx = next((i for i, l in enumerate(lines[:3]) if "-->" in l), -1)
+        if time_line_idx == -1:
+            malformed += 1
+            return
         time_line = lines[time_line_idx]
-        if "-->" not in time_line:
-            continue
         text_lines = lines[time_line_idx + 1 :]
         if not text_lines:
-            continue
-        start_str, end_str = [part.strip() for part in time_line.split("-->")]
+            return
+        parts = [part.strip() for part in time_line.split("-->")]
+        if len(parts) != 2:
+            malformed += 1
+            return
+        start_str, end_str = parts
         start = parse_timestamp(start_str)
         end = parse_timestamp(end_str)
+        total += 1
         if start is None or end is None:
-            continue
+            malformed += 1
+            return
+        if end < start:
+            inverted += 1
+            return
         text = " ".join(text_lines)
         tags = extract_subtitle_tags(text)
-        entries.append({
-            "start": start,
-            "end": end,
-            "text": text,
-            "tags": tags,
-        })
+        entries.append({"start": start, "end": end, "text": text, "tags": tags})
 
+    buffer: list[str] = []
+    for line in content.splitlines():
+        if line.strip() == "":
+            if buffer:
+                flush_block(buffer)
+                buffer = []
+        else:
+            buffer.append(line)
+    if buffer:
+        flush_block(buffer)
+
+    console.print(
+        f"[dim]Subtitle parse summary: total={total}, valid={len(entries)}, malformed={malformed}, inverted={inverted}[/dim]"
+    )
     return entries
 
 
 def parse_timestamp(raw: str) -> Optional[float]:
-    raw = raw.strip().replace(".", ",")
-    match = re.match(r"(\d{2}):(\d{2}):(\d{2}),(\d{3})", raw)
-    if not match:
+    raw = raw.strip()
+    m = re.search(r"(\d{1,2}):(\d{2}):(\d{2})(?:[.,](\d{1,3}))?", raw)
+    if not m:
         return None
-    hours, minutes, seconds, millis = map(int, match.groups())
+    hours = int(m.group(1))
+    minutes = int(m.group(2))
+    seconds = int(m.group(3))
+    millis_group = m.group(4)
+    millis = int(millis_group) if millis_group is not None else 0
     return hours * 3600 + minutes * 60 + seconds + millis / 1000.0
 
 
 def extract_subtitle_tags(text: str) -> list[str]:
     lowered = text.lower()
-    raw_cues = re.findall(r"\[(.*?)\]", lowered) + re.findall(r"\((.*?)\)", lowered)
+    raw_cues = (
+        re.findall(r"\[(.*?)\]", lowered)
+        + re.findall(r"\((.*?)\)", lowered)
+        + re.findall(r"\{(.*?)\}", lowered)
+    )
+    dash_cues = re.findall(r"-\s*([a-z\s]+?)\s*-", lowered)
+    caps_cues = [lowered] if text.isupper() and 1 <= len(text.split()) <= 3 else []
     tags = set()
-    for cue in raw_cues:
+    for cue in raw_cues + dash_cues + caps_cues:
         for keyword, tag in CUE_KEYWORDS.items():
             if keyword in cue:
                 tags.add(tag)
@@ -428,13 +635,16 @@ def attach_audio_intensity_tags(audio_file: Path, segments: list[dict]) -> set[s
     if not audio_file.exists():
         return set()
 
-    data, sr = sf.read(audio_file)
-    if data.ndim > 1:
+    intensity_tags = set()
+    try:
+        data, sr = sf.read(audio_file)
+    except Exception as e:
+        console.print(f"[yellow]Failed to read audio for intensity tagging: {e}[/yellow]")
+        return set()
+    if getattr(data, "ndim", 1) > 1:
         data = data.mean(axis=1)
 
-    rms_threshold = 0.2
-    intensity_tags = set()
-    window_size = int(sr * 0.5)
+    window_size = int(sr * RMS_WINDOW_SEC)
 
     for seg in segments:
         start = seg.get("start", 0.0)
@@ -452,9 +662,9 @@ def attach_audio_intensity_tags(audio_file: Path, segments: list[dict]) -> set[s
             rms_max = max(float(np.sqrt(np.mean(w ** 2))) for w in windows if len(w))
 
         segment_tags = set()
-        if rms_max > rms_threshold * 2:
+        if rms_max > RMS_THRESHOLD * 2:
             segment_tags.add("rage_candidate")
-        elif rms_max > rms_threshold:
+        elif rms_max > RMS_THRESHOLD:
             segment_tags.add("anger_candidate")
         elif rms_max < 0.05:
             segment_tags.add("whisper_candidate")
@@ -467,6 +677,106 @@ def attach_audio_intensity_tags(audio_file: Path, segments: list[dict]) -> set[s
     return intensity_tags
 
 
+def tags_for_emotion(emotion: Optional[str]) -> set[str]:
+    if not emotion:
+        return set()
+    return {tag.lower() for tag in EMOTION_TAG_MAP.get(emotion.lower(), set())}
+
+
+def infer_emotion_from_tags(tags: list[str], fallback: Optional[str] = None) -> Optional[str]:
+    if fallback:
+        return fallback.lower()
+    mapped = [TAG_TO_EMOTION.get(tag.lower()) for tag in tags]
+    mapped = [m for m in mapped if m]
+    if not mapped:
+        return None
+    counts = Counter(mapped)
+    priority = ["rage", "anger", "humor", "regret", "respect"]
+    sorted_emotions = sorted(
+        counts.keys(),
+        key=lambda e: (-counts[e], priority.index(e) if e in priority else len(priority)),
+    )
+    return sorted_emotions[0]
+
+
+def collect_matches(
+    entries: list[dict],
+    query: Optional[str],
+    tag: Optional[str],
+    emotion: Optional[str],
+    max_matches: int,
+    merge_adjacent: bool = True,
+) -> list[dict]:
+    query_lower = query.lower() if query else None
+    tag_filters = set()
+    if tag:
+        tag_filters.add(tag.lower())
+    tag_filters |= tags_for_emotion(emotion)
+
+    raw_matches: list[dict] = []
+    prefetch = max_matches * (10 if merge_adjacent else 1)
+    for entry in entries:
+        text = entry.get("text", "")
+        entry_tags = {t.lower() for t in entry.get("tags", [])}
+        if query_lower and query_lower not in text.lower():
+            continue
+        if tag_filters and not (tag_filters & entry_tags):
+            continue
+        raw_matches.append(entry)
+        if query_lower is None and tag_filters:
+            # prefer cue-driven matches by not over-collecting
+            if len(raw_matches) >= prefetch:
+                break
+        elif len(raw_matches) >= prefetch:
+            break
+
+    if not merge_adjacent:
+        return raw_matches[:max_matches]
+
+    merged: list[dict] = []
+    for entry in raw_matches:
+        if merged and entry["start"] - merged[-1]["end"] <= 2.0:
+            merged[-1]["end"] = max(merged[-1]["end"], entry["end"])
+            merged[-1]["text"] = (merged[-1].get("text", "") + " " + entry.get("text", "")).strip()
+            merged[-1]["tags"] = sorted(set(merged[-1].get("tags", [])) | set(entry.get("tags", [])))
+        else:
+            merged.append(entry.copy())
+        if len(merged) >= max_matches:
+            break
+    return merged
+
+
+def write_subtitle_snippet(
+    entries: list[dict],
+    clip_start_global: float,
+    clip_end_global: float,
+    output_path: Path,
+    offset: float,
+) -> Optional[Path]:
+    output_lines = []
+    index = 1
+    for entry in entries:
+        entry_start_global = entry["start"] + offset
+        entry_end_global = entry["end"] + offset
+        if entry_end_global < clip_start_global or entry_start_global > clip_end_global:
+            continue
+        local_start = max(0.0, entry_start_global - clip_start_global)
+        clip_duration_local = max(0.0, clip_end_global - clip_start_global)
+        local_end = min(max(local_start, entry_end_global - clip_start_global), clip_duration_local)
+        output_lines.append(
+            f"{index}\n"
+            f"{format_srt_timestamp(local_start)} --> {format_srt_timestamp(local_end)}\n"
+            f"{entry.get('text', '').strip()}\n"
+        )
+        index += 1
+
+    if not output_lines:
+        return None
+
+    output_path.write_text("\n".join(output_lines), encoding="utf-8")
+    return output_path
+
+
 def format_seconds(value: float) -> str:
     hours = int(value // 3600)
     minutes = int((value % 3600) // 60)
@@ -474,6 +784,25 @@ def format_seconds(value: float) -> str:
     if hours > 0:
         return f"{hours:02d}:{minutes:02d}:{seconds:05.2f}"
     return f"{minutes:02d}:{seconds:05.2f}"
+
+def format_hms(value: float) -> str:
+    value = max(0.0, value)
+    hours = int(value // 3600)
+    minutes = int((value % 3600) // 60)
+    seconds = value % 60
+    return f"{hours:02d}:{minutes:02d}:{seconds:06.3f}"
+
+
+def format_srt_timestamp(value: float) -> str:
+    value = max(0.0, value)
+    total_ms = int(round(value * 1000))
+    hours = total_ms // 3_600_000
+    rem = total_ms % 3_600_000
+    minutes = rem // 60_000
+    rem %= 60_000
+    seconds = rem // 1000
+    millis = rem % 1000
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
 
 if __name__ == "__main__":
     app()

@@ -15,3 +15,9 @@ dependencies = [
     "fastapi",
     "uvicorn",
 ]
+
+[project.optional-dependencies]
+audio-intensity = [
+    "numpy",
+    "soundfile",
+]
