@@ -188,7 +188,7 @@ def search_arxiv(query: str) -> Dict[str, Any]:
 
 
 def search_arxiv_details(paper_id: str) -> Dict[str, Any]:
-    """Search ArXiv (Stage 2: Paper Details)."""
+    """Search ArXiv (Stage 2: Paper Details/Metadata)."""
     log_status(f"Fetching ArXiv Paper Details for {paper_id}...")
     arxiv_dir = SKILLS_DIR / "arxiv"
     cmd = ["bash", "run.sh", "get", "-i", paper_id]
@@ -200,6 +200,87 @@ def search_arxiv_details(paper_id: str) -> Dict[str, Any]:
         return json.loads(output)
     except Exception as e:
         return {"error": str(e)}
+
+
+def deep_extract_arxiv(paper_id: str, abstract: str = "") -> Dict[str, Any]:
+    """
+    ArXiv Stage 3: Full paper extraction via /fetcher + /extractor.
+
+    Downloads the PDF and extracts full text for deep analysis.
+    Only call this for papers the agent determines are highly relevant.
+    """
+    log_status(f"Deep extracting ArXiv paper {paper_id}...", provider="arxiv", status="EXTRACTING")
+
+    pdf_url = f"https://arxiv.org/pdf/{paper_id}.pdf"
+
+    # Use fetcher to download
+    fetcher_dir = SKILLS_DIR / "fetcher"
+    if not fetcher_dir.exists():
+        return {"error": "fetcher skill not found", "paper_id": paper_id}
+
+    try:
+        fetch_cmd = ["bash", "run.sh", pdf_url]
+        fetch_output = run_command(fetch_cmd, cwd=fetcher_dir)
+
+        if fetch_output.startswith("Error:"):
+            return {"error": fetch_output, "paper_id": paper_id}
+
+        # Use extractor to get text from PDF
+        extractor_dir = SKILLS_DIR / "extractor"
+        if extractor_dir.exists():
+            # Save fetched content and extract
+            temp_pdf = Path(f"/tmp/arxiv_{paper_id}.pdf")
+            # Fetcher returns markdown, but for PDF we need the raw file
+            # Try direct download with curl as fallback
+            import urllib.request
+            urllib.request.urlretrieve(pdf_url, temp_pdf)
+
+            extract_cmd = ["bash", "run.sh", str(temp_pdf)]
+            extract_output = run_command(extract_cmd, cwd=extractor_dir)
+
+            log_status(f"ArXiv deep extraction for {paper_id} finished.", provider="arxiv", status="DONE")
+            return {
+                "paper_id": paper_id,
+                "abstract": abstract,
+                "full_text": extract_output[:10000],  # Limit to 10k chars
+                "extracted": True,
+            }
+
+        return {"error": "extractor skill not found", "paper_id": paper_id}
+
+    except Exception as e:
+        return {"error": str(e), "paper_id": paper_id}
+
+
+def deep_extract_url(url: str, title: str = "") -> Dict[str, Any]:
+    """
+    Deep extraction for web URLs via /fetcher + /extractor.
+
+    Fetches full page content for relevant Brave search results.
+    """
+    log_status(f"Deep extracting URL: {url[:50]}...", provider="brave", status="EXTRACTING")
+
+    fetcher_dir = SKILLS_DIR / "fetcher"
+    if not fetcher_dir.exists():
+        return {"error": "fetcher skill not found", "url": url}
+
+    try:
+        fetch_cmd = ["bash", "run.sh", url]
+        fetch_output = run_command(fetch_cmd, cwd=fetcher_dir)
+
+        if fetch_output.startswith("Error:"):
+            return {"error": fetch_output, "url": url}
+
+        log_status(f"URL extraction finished.", provider="brave", status="DONE")
+        return {
+            "url": url,
+            "title": title,
+            "content": fetch_output[:8000],  # Limit to 8k chars
+            "extracted": True,
+        }
+
+    except Exception as e:
+        return {"error": str(e), "url": url}
 
 def search_youtube(query: str) -> List[Dict[str, str]]:
     """Search YouTube (Stage 1: Metadata)."""
@@ -540,10 +621,11 @@ def search(
 
 
 
-    # 2.2 ArXiv Two-Stage (Paper Details)
+    # 2.2 ArXiv Multi-Stage (Details → Evaluate → Deep Extract)
     arxiv_details = []
+    arxiv_deep = []
     if isinstance(arxiv_res, dict) and "items" in arxiv_res:
-        valid_papers = arxiv_res["items"][:2] # Limit to top 2 for speed
+        valid_papers = arxiv_res["items"][:3]  # Top 3 for evaluation
         if valid_papers:
             log_status(f"ArXiv Stage 2: Fetching details for {len(valid_papers)} papers...", provider="arxiv", status="RUNNING")
 
@@ -554,6 +636,41 @@ def search(
                     if "items" in res and res["items"]:
                         arxiv_details.append(res["items"][0])
             log_status("ArXiv Stage 2 finished.", provider="arxiv", status="DONE")
+
+            # Stage 3: Deep extract the MOST relevant paper (agent evaluation)
+            # Use Codex to pick the most relevant paper based on abstracts
+            if arxiv_details:
+                abstracts_summary = "\n".join([
+                    f"[{i+1}] {p.get('title', 'Unknown')}: {p.get('abstract', '')[:300]}"
+                    for i, p in enumerate(arxiv_details)
+                ])
+                eval_prompt = f"""Given these paper abstracts for query "{query}", which ONE paper is MOST relevant?
+{abstracts_summary}
+
+Return just the number (1, 2, or 3) of the most relevant paper, or 0 if none are relevant."""
+
+                best_paper_idx = 0
+                eval_result = search_codex(eval_prompt)
+                try:
+                    # Extract number from response
+                    import re as regex
+                    match = regex.search(r'(\d)', eval_result)
+                    if match:
+                        best_paper_idx = int(match.group(1)) - 1
+                except:
+                    pass
+
+                # Deep extract the best paper if identified
+                if 0 <= best_paper_idx < len(arxiv_details):
+                    best_paper = arxiv_details[best_paper_idx]
+                    log_status(f"ArXiv Stage 3: Deep extracting '{best_paper.get('title', 'Unknown')[:50]}'...", provider="arxiv", status="EXTRACTING")
+                    deep_result = deep_extract_arxiv(
+                        best_paper.get("id", ""),
+                        best_paper.get("abstract", "")
+                    )
+                    if deep_result.get("extracted"):
+                        arxiv_deep.append(deep_result)
+                        log_status("ArXiv Stage 3 deep extraction finished.", provider="arxiv", status="DONE")
 
 
     # 2.3 YouTube Two-Stage (Transcripts)
@@ -572,6 +689,43 @@ def search(
                         res["url"] = futures[f]["url"]
                         youtube_transcripts.append(res)
             log_status("YouTube Stage 2 finished.", provider="youtube", status="DONE")
+
+    # 2.4 Brave Deep Extraction (for most relevant URL)
+    brave_deep = []
+    if brave_res and isinstance(brave_res, dict) and "web" in brave_res:
+        web_results = brave_res.get("web", {}).get("results", [])[:3]
+        if web_results:
+            # Evaluate which URL is most relevant
+            urls_summary = "\n".join([
+                f"[{i+1}] {r.get('title', 'Unknown')}: {r.get('description', '')[:200]}"
+                for i, r in enumerate(web_results)
+            ])
+            eval_prompt = f"""Given these web results for query "{query}", which ONE is MOST relevant for technical/documentation purposes?
+{urls_summary}
+
+Return just the number (1, 2, or 3) of the most relevant result, or 0 if none are worth deep extraction."""
+
+            best_url_idx = -1
+            eval_result = search_codex(eval_prompt)
+            try:
+                import re as regex
+                match = regex.search(r'(\d)', eval_result)
+                if match:
+                    best_url_idx = int(match.group(1)) - 1
+            except:
+                pass
+
+            # Deep extract the best URL if identified
+            if 0 <= best_url_idx < len(web_results):
+                best_result = web_results[best_url_idx]
+                log_status(f"Brave Stage 2: Deep extracting '{best_result.get('title', 'Unknown')[:50]}'...", provider="brave", status="EXTRACTING")
+                deep_result = deep_extract_url(
+                    best_result.get("url", ""),
+                    best_result.get("title", "")
+                )
+                if deep_result.get("extracted"):
+                    brave_deep.append(deep_result)
+                    log_status("Brave Stage 2 deep extraction finished.", provider="brave", status="DONE")
 
 
 
@@ -644,9 +798,26 @@ def search(
     if "error" in brave_res:
          md_lines.append(f"> Error: {brave_res['error']}")
     else:
-        for item in brave_res.get("results", [])[:5]:
+        # Handle both response formats: {web: {results: []}} and {results: []}
+        web_results = brave_res.get("web", {}).get("results", []) or brave_res.get("results", [])
+        for item in web_results[:5]:
             md_lines.append(f"- **[{item.get('title', 'No Title')}]({item.get('url', '#')})**")
             md_lines.append(f"  {item.get('description', '')}")
+
+        # Stage 2: Deep Extracted Content
+        if brave_deep:
+            md_lines.append("\n### 📄 Deep Extracted Content (Stage 2)")
+            for deep in brave_deep:
+                if deep.get("extracted"):
+                    md_lines.append(f"**Source:** [{deep.get('title', 'Unknown')}]({deep.get('url')})")
+                    content = deep.get("content", "")
+                    # Show first ~3000 chars of extracted content
+                    if len(content) > 3000:
+                        content = content[:3000] + "\n\n[... truncated for brevity ...]"
+                    md_lines.append(f"```\n{content}\n```")
+                    md_lines.append("")
+                elif deep.get("error"):
+                    md_lines.append(f"> ⚠️ Extraction failed for {deep.get('url')}: {deep.get('error')}")
     md_lines.append("")
 
     # 5. ArXiv
@@ -661,9 +832,25 @@ def search(
                 abstract = abstract[:500] + "..."
             md_lines.append(f"**Summary:** {abstract}")
             md_lines.append("")
-        
+
+        # Stage 3: Full Paper Extraction Results
+        if arxiv_deep:
+            md_lines.append("### 📑 Full Paper Extraction (Stage 3)")
+            for deep in arxiv_deep:
+                if deep.get("extracted"):
+                    md_lines.append(f"**Paper ID:** `{deep.get('paper_id')}`")
+                    full_text = deep.get("full_text", "")
+                    # Show first ~2000 chars of extracted content
+                    if len(full_text) > 2000:
+                        full_text = full_text[:2000] + "\n\n[... truncated for brevity ...]"
+                    md_lines.append(f"```\n{full_text}\n```")
+                    md_lines.append("")
+                elif deep.get("error"):
+                    md_lines.append(f"> ⚠️ Extraction failed for {deep.get('paper_id')}: {deep.get('error')}")
+            md_lines.append("")
+
         md_lines.append("### Other Relevant Papers")
-    
+
     if isinstance(arxiv_res, dict) and "items" in arxiv_res:
         for p in arxiv_res["items"][len(arxiv_details):len(arxiv_details)+5]:
             md_lines.append(f"- **[{p.get('title')}]({p.get('abs_url')})** ({p.get('published')})")
