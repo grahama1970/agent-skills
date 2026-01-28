@@ -544,11 +544,11 @@ def search_github_code(repo: str, query: str) -> List[Dict[str, Any]]:
     """Search for code within a specific repository."""
     if not shutil.which("gh"):
         return []
-    
+
     # gh search code --repo owner/repo "query"
-    cmd = ["gh", "search", "code", "--repo", repo, query, "--limit", "3", "--json", "path,repository,url"]
+    cmd = ["gh", "search", "code", "--repo", repo, query, "--limit", "5", "--json", "path,repository,url,textMatches"]
     output = run_command(cmd)
-    
+
     try:
         if output.startswith("Error:"):
             # Code search might fail if not authenticated or other issues, just return empty
@@ -556,6 +556,155 @@ def search_github_code(repo: str, query: str) -> List[Dict[str, Any]]:
         return json.loads(output)
     except Exception:
         return []
+
+
+def fetch_repo_details(repo: str) -> Dict[str, Any]:
+    """
+    GitHub Stage 2: Fetch repository details including README content.
+
+    Uses gh CLI to get:
+    - Repository metadata (description, topics, language, stars)
+    - README.md content for deeper understanding
+    """
+    if not shutil.which("gh"):
+        return {"error": "gh CLI not installed"}
+
+    log_status(f"Fetching details for repo {repo}...", provider="github", status="FETCHING")
+
+    result = {
+        "fullName": repo,
+        "metadata": {},
+        "readme": "",
+        "languages": {},
+    }
+
+    # Get repo metadata
+    meta_cmd = ["gh", "repo", "view", repo, "--json",
+                "description,stargazerCount,forkCount,primaryLanguage,repositoryTopics,updatedAt,url"]
+    meta_output = run_command(meta_cmd)
+
+    try:
+        if not meta_output.startswith("Error:"):
+            result["metadata"] = json.loads(meta_output)
+    except json.JSONDecodeError:
+        pass
+
+    # Get README content via API
+    readme_cmd = ["gh", "api", f"repos/{repo}/readme", "--jq", ".content"]
+    readme_output = run_command(readme_cmd)
+
+    if not readme_output.startswith("Error:"):
+        try:
+            # README is base64 encoded
+            import base64
+            readme_content = base64.b64decode(readme_output.strip()).decode('utf-8', errors='ignore')
+            # Limit to first 3000 chars for evaluation
+            result["readme"] = readme_content[:3000] if len(readme_content) > 3000 else readme_content
+        except Exception:
+            result["readme"] = ""
+
+    # Get language breakdown
+    lang_cmd = ["gh", "api", f"repos/{repo}/languages"]
+    lang_output = run_command(lang_cmd)
+
+    try:
+        if not lang_output.startswith("Error:"):
+            result["languages"] = json.loads(lang_output)
+    except json.JSONDecodeError:
+        pass
+
+    log_status(f"Fetched details for {repo}.", provider="github", status="DONE")
+    return result
+
+
+def evaluate_github_repos(repos_details: List[Dict[str, Any]], query: str) -> int:
+    """
+    Use Codex to evaluate which repository is most relevant based on README and metadata.
+
+    Returns the index (0-based) of the most relevant repo, or -1 if none are relevant.
+    """
+    if not repos_details:
+        return -1
+
+    # Build summary for Codex evaluation
+    summaries = []
+    for i, repo in enumerate(repos_details):
+        meta = repo.get("metadata", {})
+        topics = meta.get("repositoryTopics", [])
+        topic_names = [t.get("name", "") for t in topics] if topics else []
+
+        summary = f"""[{i+1}] **{repo.get('fullName')}**
+- Description: {meta.get('description', 'No description')}
+- Stars: {meta.get('stargazerCount', 0)} | Language: {meta.get('primaryLanguage', {}).get('name', 'Unknown')}
+- Topics: {', '.join(topic_names) if topic_names else 'None'}
+- README excerpt:
+{repo.get('readme', 'No README')[:800]}
+"""
+        summaries.append(summary)
+
+    eval_prompt = f"""You are evaluating GitHub repositories for relevance to this query:
+"{query}"
+
+Analyze each repository's README, description, topics, and metadata to determine which is MOST relevant.
+
+{chr(10).join(summaries)}
+
+Consider:
+1. Does the README describe functionality matching the query?
+2. Are the topics/tags relevant?
+3. Is the project actively maintained (recent updates, stars)?
+4. Does the language/tech stack match the query context?
+
+Return ONLY a single number (1, 2, or 3) for the most relevant repository.
+Return 0 if NONE are relevant to the query."""
+
+    log_status("Evaluating repos with Codex...", provider="github", status="EVALUATING")
+    eval_result = search_codex(eval_prompt)
+
+    try:
+        import re as regex
+        match = regex.search(r'(\d)', eval_result)
+        if match:
+            idx = int(match.group(1)) - 1
+            if 0 <= idx < len(repos_details):
+                return idx
+    except Exception:
+        pass
+
+    return -1
+
+
+def deep_search_github_repo(repo: str, query: str) -> Dict[str, Any]:
+    """
+    GitHub Stage 3: Deep code search within the selected repository.
+
+    Searches for:
+    1. Code matching the query
+    2. Relevant file structure
+    3. Key implementation files
+    """
+    log_status(f"Deep searching code in {repo}...", provider="github", status="SEARCHING")
+
+    result = {
+        "repo": repo,
+        "code_matches": [],
+        "file_tree": [],
+    }
+
+    # Search code within the repo
+    code_results = search_github_code(repo, query)
+    result["code_matches"] = code_results
+
+    # Get file tree for context (top-level structure)
+    tree_cmd = ["gh", "api", f"repos/{repo}/contents", "--jq", ".[].name"]
+    tree_output = run_command(tree_cmd)
+
+    if not tree_output.startswith("Error:"):
+        result["file_tree"] = tree_output.strip().split('\n')[:20]  # Top 20 files/dirs
+
+    log_status(f"Deep search in {repo} complete.", provider="github", status="DONE")
+    return result
+
 
 def extract_target_repo(github_res: Dict[str, Any]) -> Optional[str]:
     """Heuristic to find the most relevant repository from search results."""
@@ -608,16 +757,44 @@ def search(
         codex_src_res = future_codex_src.result()
 
     # Stage 2: Deep Dive
-    # 2.1 GitHub Code Search
-    target_repo = extract_target_repo(github_res)
+    # 2.1 GitHub Multi-Stage (Metadata → README → Evaluate → Deep Code Search)
+    github_details = []
+    github_deep = {}
+    target_repo = None
     deep_code_res = []
-    if is_code_related and target_repo:
-        console.print(f"[bold magenta]Deep Dive:[/bold magenta] Analyzing target repo '{target_repo}'...")
-        log_status(f"Starting GitHub Deep Code Search in {target_repo}...", provider="github", status="RUNNING")
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            future_code = executor.submit(search_github_code, target_repo, query)
-            deep_code_res = future_code.result()
-        log_status(f"GitHub Deep Code Search in {target_repo} finished.", provider="github", status="DONE")
+
+    if is_code_related and github_res.get("repos"):
+        repos = github_res.get("repos", [])[:3]  # Top 3 repos for evaluation
+        if repos:
+            console.print(f"[bold magenta]GitHub Stage 2:[/bold magenta] Fetching README & metadata for {len(repos)} repos...")
+            log_status(f"GitHub Stage 2: Fetching details for {len(repos)} repos...", provider="github", status="RUNNING")
+
+            # Fetch details for top repos in parallel
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {executor.submit(fetch_repo_details, r.get("fullName")): r for r in repos if r.get("fullName")}
+                for f in as_completed(futures):
+                    res = f.result()
+                    if res and not res.get("error"):
+                        github_details.append(res)
+            log_status("GitHub Stage 2 finished.", provider="github", status="DONE")
+
+            # Stage 2b: Agent evaluation - pick most relevant repo based on README
+            if github_details:
+                console.print(f"[bold magenta]GitHub Stage 2b:[/bold magenta] Evaluating {len(github_details)} repos with Codex...")
+                best_repo_idx = evaluate_github_repos(github_details, query)
+
+                if best_repo_idx >= 0 and best_repo_idx < len(github_details):
+                    target_repo = github_details[best_repo_idx].get("fullName")
+                    console.print(f"[bold green]Selected:[/bold green] {target_repo} as most relevant repo")
+
+                    # Stage 3: Deep code search in selected repo
+                    console.print(f"[bold magenta]GitHub Stage 3:[/bold magenta] Deep code search in {target_repo}...")
+                    log_status(f"GitHub Stage 3: Deep code search in {target_repo}...", provider="github", status="SEARCHING")
+                    github_deep = deep_search_github_repo(target_repo, query)
+                    deep_code_res = github_deep.get("code_matches", [])
+                    log_status(f"GitHub Stage 3 finished.", provider="github", status="DONE")
+                else:
+                    log_status("No relevant GitHub repo identified.", provider="github", status="DONE")
 
 
 
@@ -761,7 +938,7 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
     md_lines.append("")
 
     # 3. GitHub & Code Deep Dive
-    md_lines.append("## OCTOCAT GitHub")
+    md_lines.append("## 🐙 GitHub")
     if "error" in github_res:
         md_lines.append(f"> Error: {github_res['error']}")
     else:
@@ -773,12 +950,83 @@ Return just the number (1, 2, or 3) of the most relevant result, or 0 if none ar
             for i, repo in enumerate(repos):
                 desc = repo.get("description", "No description") or "No description"
                 star = f"⭐ {repo.get('stargazersCount', 0)}"
-                prefix = "🎯 **TARGET**" if repo.get("fullName") == target_repo else "-"
-                
+                is_target = repo.get("fullName") == target_repo
+                prefix = "🎯 **TARGET**" if is_target else "-"
+
                 md_lines.append(f"{prefix} **[{repo.get('fullName')}]({repo.get('html_url')})** ({star})")
                 md_lines.append(f"  {desc}")
-        
-        if deep_code_res:
+
+        # Stage 2: README Deep Dive for evaluated repos
+        if github_details:
+            md_lines.append("\n### 📖 Repository Deep Dive (README Analysis)")
+            for detail in github_details:
+                repo_name = detail.get("fullName", "Unknown")
+                meta = detail.get("metadata", {})
+                is_target = repo_name == target_repo
+                target_marker = " 🎯 **SELECTED**" if is_target else ""
+
+                md_lines.append(f"\n#### [{repo_name}]({meta.get('url', '#')}){target_marker}")
+
+                # Metadata
+                topics = meta.get("repositoryTopics", [])
+                topic_names = [t.get("name", "") for t in topics] if topics else []
+                lang = meta.get("primaryLanguage", {}).get("name", "Unknown")
+                stars = meta.get("stargazerCount", 0)
+                updated = meta.get("updatedAt", "Unknown")[:10] if meta.get("updatedAt") else "Unknown"
+
+                md_lines.append(f"**Language:** {lang} | **Stars:** {stars} | **Updated:** {updated}")
+                if topic_names:
+                    md_lines.append(f"**Topics:** {', '.join(topic_names)}")
+
+                # README excerpt
+                readme = detail.get("readme", "")
+                if readme:
+                    # Show first 500 chars of README
+                    readme_excerpt = readme[:500] + "..." if len(readme) > 500 else readme
+                    md_lines.append(f"\n**README excerpt:**\n```\n{readme_excerpt}\n```")
+
+                # Languages breakdown
+                langs = detail.get("languages", {})
+                if langs:
+                    total = sum(langs.values())
+                    top_langs = sorted(langs.items(), key=lambda x: x[1], reverse=True)[:5]
+                    lang_pcts = [f"{l[0]}: {l[1]*100/total:.1f}%" for l in top_langs]
+                    md_lines.append(f"**Languages:** {', '.join(lang_pcts)}")
+
+        # Stage 3: Deep Code Search Results
+        if github_deep and target_repo:
+            md_lines.append(f"\n### 🔍 Deep Code Search in {target_repo}")
+
+            # File tree
+            file_tree = github_deep.get("file_tree", [])
+            if file_tree:
+                md_lines.append("\n**Project Structure:**")
+                md_lines.append("```")
+                for f in file_tree[:15]:
+                    md_lines.append(f"├── {f}")
+                if len(file_tree) > 15:
+                    md_lines.append(f"└── ... ({len(file_tree) - 15} more)")
+                md_lines.append("```")
+
+            # Code matches
+            code_matches = github_deep.get("code_matches", [])
+            if code_matches:
+                md_lines.append("\n**Code Matches:**")
+                for item in code_matches:
+                    path = item.get("path", "unknown")
+                    url = item.get("url", "#")
+                    md_lines.append(f"- [`{path}`]({url})")
+
+                    # Show text matches if available
+                    text_matches = item.get("textMatches", [])
+                    for tm in text_matches[:2]:  # Show up to 2 matches per file
+                        fragment = tm.get("fragment", "")[:150]
+                        if fragment:
+                            md_lines.append(f"  > `{fragment}...`")
+            else:
+                md_lines.append("No specific code matches found.")
+        elif deep_code_res:
+            # Fallback to simple code results if no deep search
             md_lines.append(f"\n### 🔍 Code Matches in {target_repo}")
             for item in deep_code_res:
                 md_lines.append(f"- [`{item.get('path')}`]({item.get('url')})")

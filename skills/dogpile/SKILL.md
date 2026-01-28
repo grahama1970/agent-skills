@@ -25,23 +25,63 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 
 1.  **Codex (🤖)**: High-reasoning technical starting point and final synthesis (gpt-5.2).
 2.  **Perplexity (🧠)**: AI-synthesized deep answers and reasoning (Sonar Reasoning).
-3.  **Brave Search (🌐)**: Broad web context, news, and official docs.
-4.  **ArXiv (📄)**: **Two-Stage Search** (Abstracts → Deep Dive on relevant papers).
+3.  **Brave Search (🌐)**: **Three-Stage Search** (Search → Evaluate → Deep Extract via /fetcher).
+4.  **ArXiv (📄)**: **Three-Stage Search** (Abstracts → Details → Full Paper via /fetcher + /extractor).
 5.  **YouTube (📺)**: **Two-Stage Search** (Metadata → Detailed Transcripts via Whisper/Direct).
-6.  **GitHub (🐙)**:
-    - **Repositories**: Finding relevant libraries and tools.
-    - **Deep Code Search**: Searching _inside_ the most relevant repo for definitions.
-    - **Issues**: Finding discussions, bugs, and workarounds.
+6.  **GitHub (🐙)**: **Three-Stage Search**:
+    - **Stage 1**: Search repositories and issues
+    - **Stage 2**: Fetch README.md and metadata for top repos, agent evaluates relevance
+    - **Stage 3**: Deep code search inside the selected repository
 7.  **Wayback Machine (🏛️)**: Historical snapshots for URLs.
 
 ## Features
 
-1.  **Ambiguity Guard**: Uses Codex High Reasoning to analyze the query first. If ambiguous, it asks you for clarification before wasting resources.
-2.  **Two-Stage Deep Dive**:
-    - **ArXiv**: Fetches detailed metadata and long abstracts for the top matches.
-    - **YouTube**: Extracts full transcripts for the most relevant videos to provide textual insights.
-3.  **Codex Synthesis**: Consolidates all results into a coherent, high-reasoning conclusion.
-4.  **Textual TUI Monitor**: Real-time progress tracking of all concurrent searches via `run.sh monitor`.
+1.  **Query Tailoring**: Uses Codex to generate service-specific queries optimized for each source:
+    - **ArXiv**: Academic/technical terms
+    - **Perplexity**: Natural language questions
+    - **Brave**: Documentation-style queries
+    - **GitHub**: Code patterns, library names
+    - **YouTube**: Tutorial-style phrases
+
+2.  **Ambiguity Guard**: Uses Codex High Reasoning to analyze the query first. If ambiguous, it asks you for clarification before wasting resources.
+
+3.  **Three-Stage Deep Dive**:
+    - **ArXiv**: Fetches detailed metadata → Agent evaluates → Full PDF extraction via /fetcher + /extractor
+    - **GitHub**: Fetches README + metadata → Agent evaluates most relevant repo → Deep code search
+    - **Brave**: Fetches results → Agent evaluates → Full page extraction via /fetcher
+    - **YouTube**: Extracts full transcripts for the most relevant videos
+
+4.  **Codex Synthesis**: Consolidates all results into a coherent, high-reasoning conclusion.
+
+5.  **Textual TUI Monitor**: Real-time progress tracking of all concurrent searches via `run.sh monitor`.
+
+## GitHub Three-Stage Search
+
+The GitHub search uses intelligent evaluation to find the most relevant repository:
+
+```
+Stage 1: Broad Search
+├── Search repos: gh search repos "query"
+├── Search issues: gh search issues "query"
+└── Returns: Top 5 repos and issues
+
+Stage 2: README Analysis & Evaluation
+├── For top 3 repos:
+│   ├── gh repo view <repo> --json ... (metadata)
+│   ├── gh api repos/<repo>/readme (README content)
+│   └── gh api repos/<repo>/languages (language breakdown)
+├── Codex evaluates based on:
+│   ├── README content relevance
+│   ├── Topics and tags
+│   ├── Language/tech stack match
+│   └── Activity (stars, recent updates)
+└── Returns: Selected target repository
+
+Stage 3: Deep Code Search
+├── gh api repos/<repo>/contents (file tree)
+├── gh search code --repo <repo> "query" (code matches)
+└── Returns: File structure + code locations with context
+```
 
 ## New Commands
 
