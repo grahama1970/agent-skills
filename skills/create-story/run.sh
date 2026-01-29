@@ -20,7 +20,8 @@ Commands:
 
 Options:
   --format FORMAT               Story format (story|screenplay|podcast|novella|flash)
-  --external-critique           Use external LLM for critique
+  --model MODEL                 LLM for drafts (chimera|sonnet|gpt4, default: chimera)
+  --external-critique           Use review-story for structured critique
   --iterations N                Number of draft iterations (default: 2)
   --output DIR                  Output directory (default: ./output)
   --help                        Show this help message
@@ -28,6 +29,7 @@ Options:
 Example:
   ./run.sh create "A story about a robot discovering emotions"
   ./run.sh create "A noir screenplay" --format screenplay --external-critique
+  ./run.sh create "A tragedy" --model sonnet --iterations 3
   ./run.sh research "themes of isolation in science fiction"
 EOF
 }

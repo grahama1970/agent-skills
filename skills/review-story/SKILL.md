@@ -138,8 +138,47 @@ Options:
     "score": 7.2,
     "ready_for_next_draft": true,
     "priority_fixes": ["Emotional buildup", "Persona voice"]
+  },
+
+  "taxonomy": {
+    "bridge_tags": ["Corruption", "Loyalty"],
+    "collection_tags": {
+      "function": "Confrontation",
+      "domain": "Primarch",
+      "thematic_weight": "Tragedy"
+    },
+    "confidence": 0.75,
+    "worth_remembering": true
   }
 }
+```
+
+## Federated Taxonomy Integration
+
+All review-story outputs include taxonomy metadata for **multi-hop graph traversal**:
+
+### Bridge Attributes (Cross-Collection Connectors)
+
+| Bridge | Story Signals | Enables Connection To |
+|--------|---------------|----------------------|
+| **Precision** | Calculated strategy, methodical planning | Technical optimization lessons |
+| **Resilience** | Endurance, withstanding adversity | Error handling patterns |
+| **Fragility** | Betrayal aftermath, shattered trust | Technical debt warnings |
+| **Corruption** | Warp influence, moral compromise | Silent failure bugs |
+| **Loyalty** | Oaths, brotherhood, honor | Security compliance lessons |
+| **Stealth** | Subterfuge, hidden agendas | Evasion techniques |
+
+### Multi-Hop Example
+
+```
+[Story Critique]                      [Code Lesson]
+bridge_tags: ["Resilience"]     →    bridge_tags: ["Resilience"]
+"Dorn's endurance at Terra"          "Fault-tolerant retry logic"
+        ↘                           ↙
+          [Query: "Endurance patterns"]
+                    ↓
+         Both retrieved via shared
+         "Resilience" bridge attribute
 ```
 
 ## Integration with create-story

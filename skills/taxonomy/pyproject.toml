@@ -1,0 +1,13 @@
+[project]
+name = "taxonomy"
+version = "0.1.0"
+description = "Federated Taxonomy tag extraction for multi-hop graph traversal"
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.1.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+]

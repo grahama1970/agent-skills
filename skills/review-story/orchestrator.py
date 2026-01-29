@@ -7,6 +7,8 @@ Analyzes stories across four dimensions:
 - Emotional: Intended vs achieved emotion, ToM alignment
 - Craft: Prose quality, dialogue, sensory details
 - Persona: Horus voice consistency, tactical masks
+
+Integrates with Federated Taxonomy for multi-hop graph traversal.
 """
 
 import json
@@ -14,7 +16,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import click
 from rich.console import Console
@@ -22,6 +24,37 @@ from rich.panel import Panel
 from rich.table import Table
 
 console = Console()
+
+# Import taxonomy extraction (with fallback)
+try:
+    sys.path.insert(0, str(Path(__file__).parent.parent / "taxonomy"))
+    from taxonomy import extract_taxonomy
+except ImportError:
+    def extract_taxonomy(text: str, collection: str = "lore", fast: bool = True) -> dict[str, Any]:
+        """Fallback taxonomy extraction using keywords."""
+        text_lower = text.lower()
+        bridge_tags = []
+
+        # Simple keyword matching
+        if any(w in text_lower for w in ["efficien", "precis", "calculat", "method"]):
+            bridge_tags.append("Precision")
+        if any(w in text_lower for w in ["endur", "resili", "withstand", "fault"]):
+            bridge_tags.append("Resilience")
+        if any(w in text_lower for w in ["brittle", "fragile", "weakness"]):
+            bridge_tags.append("Fragility")
+        if any(w in text_lower for w in ["corrupt", "taint", "warp", "chaos"]):
+            bridge_tags.append("Corruption")
+        if any(w in text_lower for w in ["loyal", "trust", "honor", "oath"]):
+            bridge_tags.append("Loyalty")
+        if any(w in text_lower for w in ["hidden", "stealth", "subterfuge"]):
+            bridge_tags.append("Stealth")
+
+        return {
+            "bridge_tags": bridge_tags,
+            "collection_tags": {},
+            "confidence": 0.3,
+            "worth_remembering": len(bridge_tags) > 0
+        }
 
 # Critique dimensions with weights
 DIMENSIONS = {
@@ -212,6 +245,12 @@ def review(story_file: str, provider: str, providers: Optional[str], emotion: Op
                 critique["provider"] = prov
                 critique["story_file"] = str(story_file)
                 critique["timestamp"] = datetime.now().isoformat()
+
+                # Extract taxonomy for multi-hop graph traversal
+                # Combine story content with critique for richer tagging
+                combined_text = f"{story_content[:1000]} {json.dumps(critique.get('emotional', {}))}"
+                critique["taxonomy"] = extract_taxonomy(combined_text, collection="lore", fast=True)
+
                 results.append(critique)
 
                 # Display summary
@@ -318,6 +357,26 @@ def synthesize_critiques(critiques: list[dict]) -> dict:
                     "suggestion": suggestion,
                     "provider": critique.get("provider"),
                 })
+
+    # Aggregate taxonomy tags from all critiques for multi-hop traversal
+    all_bridge_tags: set[str] = set()
+    all_collection_tags: dict[str, set[str]] = {}
+
+    for critique in critiques:
+        taxonomy = critique.get("taxonomy", {})
+        for tag in taxonomy.get("bridge_tags", []):
+            all_bridge_tags.add(tag)
+        for dim, val in taxonomy.get("collection_tags", {}).items():
+            if dim not in all_collection_tags:
+                all_collection_tags[dim] = set()
+            all_collection_tags[dim].add(val)
+
+    synthesis["taxonomy"] = {
+        "bridge_tags": list(all_bridge_tags),
+        "collection_tags": {k: list(v) for k, v in all_collection_tags.items()},
+        "confidence": sum(c.get("taxonomy", {}).get("confidence", 0) for c in critiques) / len(critiques) if critiques else 0,
+        "worth_remembering": len(all_bridge_tags) > 0
+    }
 
     return synthesis
 

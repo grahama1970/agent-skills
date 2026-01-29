@@ -94,17 +94,39 @@ Use `/dogpile` with gathered context to research:
 ```bash
 cd .pi/skills/create-story
 
-# Full workflow
+# Full workflow (uses DeepSeek Chimera by default)
 ./run.sh create "A story about a robot discovering emotions"
 
-# With external critique
+# With external critique via review-story
 ./run.sh create "A noir screenplay about AI detectives" --external-critique
 
-# Specify format
-./run.sh create "A podcast script about time travel" --format podcast
+# Specify format and model
+./run.sh create "A podcast script about time travel" --format podcast --model sonnet
 
 # Research only (for manual writing)
 ./run.sh research "themes of isolation in science fiction"
+```
+
+## Model Selection (Chutes Only)
+
+| Model | Chutes ID | Best For |
+|-------|-----------|----------|
+| `chimera` (default) | `deepseek/deepseek-tng-r1t2-chimera` | Creative writing, reasoning |
+| `qwen` | `Qwen/Qwen3-235B-A22B-Instruct` | Long-form narrative |
+| `deepseek-r1` | `deepseek/deepseek-r1` | Complex reasoning, plot structure |
+
+Use `/prompt-lab` to evaluate which Chutes model produces the best output for your story type:
+
+```bash
+# Compare Chutes models for your creative prompt
+.pi/skills/prompt-lab/run.sh compare \
+  --prompt "Write a dramatic monologue about betrayal" \
+  --models chimera,qwen,deepseek-r1
+```
+
+You can also pass any Chutes model ID directly:
+```bash
+./run.sh create "A story" --model "deepseek/deepseek-tng-r1t2-chimera"
 ```
 
 ## Commands
@@ -123,13 +145,15 @@ Integrates with:
 
 | Skill | Purpose |
 |-------|---------|
+| `/review-story` | Structured critique between drafts (4 dimensions) |
 | `/ingest-movie` | Analyze films for inspiration |
 | `/ingest-book` | Search books for reference |
 | `/episodic-archiver` | Recall past creative sessions |
 | `/memory` | Recall techniques, characters, themes |
 | `/dogpile` | Deep research on narrative topics |
-| `/codex` | External critique (--external-critique) |
-| `/scillm` | Alternative external critique |
+| `/prompt-lab` | Compare models for best creative output |
+| `/scillm` | LLM batch completions for draft generation |
+| `/taxonomy` | Tag stories for graph traversal |
 
 ## Memory Integration
 
