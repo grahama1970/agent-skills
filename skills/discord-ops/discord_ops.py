@@ -1,42 +1,17 @@
 #!/usr/bin/env python3
 """
-Discord Operations Skill - Notification Monitor Model
+Discord Operations Skill - CLI Entry Point
 
-TOS-compliant approach: Monitor YOUR OWN Discord server for security content
-forwarded by researchers, then push to paper-writer/dogpile via webhooks.
-Persists matches to graph-memory for knowledge graph integration.
+TOS-compliant notification monitor for YOUR Discord server.
+Watches for security content forwarded by researchers, then pushes
+to paper-writer/dogpile via webhooks and persists to graph-memory.
 
-Architecture:
-  External Sources → Your Discord Server → ClawDBot Monitor → Webhooks → Consumers
-                     (you are admin)       (keyword watch)     + Memory
-
-This skill does NOT scrape external servers (TOS violation).
-Instead, it monitors channels where your bot has legitimate access.
+This is a thin CLI wrapper that delegates to modular components in discord_ops/.
 """
 
 import asyncio
-import functools
 import json
-import logging
-import os
-import re
-import subprocess
 import sys
-import threading
-import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Callable, Optional, TypeVar
-
-# Configure logging - don't log tokens or sensitive data
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-logger = logging.getLogger("discord-ops")
-
-T = TypeVar("T")
 
 try:
     import typer
@@ -47,481 +22,50 @@ except ImportError:
     print("Missing requirements. Run: pip install typer rich", file=sys.stderr)
     sys.exit(1)
 
-# Optional: httpx for webhooks
-try:
-    import httpx
-    HTTPX_AVAILABLE = True
-except ImportError:
-    HTTPX_AVAILABLE = False
+# Import from modular package
+from discord_ops.config import (
+    DEFAULT_KEYWORDS,
+    MATCHES_LOG,
+    SKILL_DIR,
+)
+from discord_ops.keyword_matcher import KeywordMatch
+from discord_ops.utils import (
+    get_bot_token,
+    load_config,
+    load_keywords,
+    save_config,
+    save_keywords,
+)
+from discord_ops.graph_persistence import (
+    check_memory_status,
+    get_local_matches_count,
+    persist_match_to_memory,
+    search_memory,
+)
+from discord_ops.webhook_monitor import (
+    forward_to_webhook,
+    get_feature_status,
+    is_monitor_running,
+    run_monitor,
+    stop_monitor,
+)
 
-# Optional: discord.py for direct bot integration
-try:
-    import discord
-    from discord.ext import commands
-    DISCORD_PY_AVAILABLE = True
-except ImportError:
-    DISCORD_PY_AVAILABLE = False
-
+# CLI setup
 app = typer.Typer(help="Discord notification monitor for security research")
 memory_app = typer.Typer(help="Memory/knowledge graph integration")
 app.add_typer(memory_app, name="memory")
 console = Console()
 
-# Paths
-CLAWDBOT_DIR = Path(os.environ.get("CLAWDBOT_DIR", "/home/graham/workspace/experiments/clawdbot"))
-SKILL_DIR = Path(__file__).parent
-CONFIG_FILE = SKILL_DIR / "config.json"
-KEYWORDS_FILE = SKILL_DIR / "keywords.json"
-MATCHES_LOG = SKILL_DIR / "matches.jsonl"
-
-# Default security keywords to watch
-DEFAULT_KEYWORDS = [
-    # Vulnerabilities
-    r"CVE-\d{4}-\d+",
-    r"0-?day",
-    r"zero.?day",
-    r"exploit",
-    r"vuln(erability)?",
-    r"RCE",
-    r"LPE",
-    r"privesc",
-    # Programs & Funding
-    r"DARPA",
-    r"IARPA",
-    r"BAA",
-    r"grants?\.gov",
-    # Platforms
-    r"HTB",
-    r"Hack.?The.?Box",
-    r"TryHackMe",
-    r"CTF",
-    # Threat Intel
-    r"APT\d+",
-    r"malware",
-    r"ransomware",
-    r"C2",
-    r"cobalt.?strike",
-    # Techniques
-    r"MITRE",
-    r"ATT&CK",
-    r"T\d{4}",  # MITRE technique IDs
-]
 
 # =============================================================================
-# RESILIENCE UTILITIES (from code review recommendations)
-# =============================================================================
-
-# Configurable via environment
-MAX_RETRIES = int(os.environ.get("DISCORD_OPS_MAX_RETRIES", "3"))
-RETRY_BASE_DELAY = float(os.environ.get("DISCORD_OPS_RETRY_DELAY", "0.5"))
-RATE_LIMIT_RPS = int(os.environ.get("DISCORD_OPS_RATE_LIMIT_RPS", "5"))
-
-# Fields to redact in logs
-REDACT_FIELDS = {"token", "api_key", "password", "secret", "authorization", "bot_token"}
-
-
-def redact_sensitive(data: dict[str, Any]) -> dict[str, Any]:
-    """Redact sensitive fields from dict for safe logging."""
-    if not isinstance(data, dict):
-        return data
-    return {
-        k: "***REDACTED***" if k.lower() in REDACT_FIELDS else v
-        for k, v in data.items()
-    }
-
-
-def with_retries(
-    func: Callable[..., T],
-    max_attempts: int = MAX_RETRIES,
-    base_delay: float = RETRY_BASE_DELAY,
-) -> Callable[..., T]:
-    """Decorator that adds retry logic with exponential backoff.
-
-    Retries on transient errors (subprocess failures, network issues).
-    """
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> T:
-        last_error: Optional[Exception] = None
-        for attempt in range(1, max_attempts + 1):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                last_error = e
-                if attempt < max_attempts:
-                    delay = base_delay * (2 ** (attempt - 1))
-                    logger.warning(
-                        f"Attempt {attempt}/{max_attempts} failed for {func.__name__}: {e}. "
-                        f"Retrying in {delay:.1f}s..."
-                    )
-                    time.sleep(delay)
-                else:
-                    logger.error(f"{func.__name__} failed after {max_attempts} attempts: {e}")
-        raise last_error  # type: ignore
-    return wrapper
-
-
-class RateLimiter:
-    """Simple token-bucket rate limiter for API calls."""
-
-    def __init__(self, requests_per_second: int = RATE_LIMIT_RPS):
-        self.interval = 1.0 / max(1, requests_per_second)
-        self.last_request = 0.0
-        self._lock = threading.Lock()
-
-    def acquire(self) -> None:
-        """Block until rate limit allows next request."""
-        with self._lock:
-            now = time.time()
-            sleep_time = max(0.0, (self.last_request + self.interval) - now)
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-            self.last_request = time.time()
-
-    def __enter__(self) -> "RateLimiter":
-        self.acquire()
-        return self
-
-    def __exit__(self, *args: Any) -> None:
-        pass
-
-
-# Global rate limiter for Discord webhook calls
-_webhook_limiter = RateLimiter(requests_per_second=5)
-
-
-# Memory integration - uses graph-memory project
-MEMORY_ROOT = Path(os.environ.get("MEMORY_ROOT", Path.home() / "workspace/experiments/memory"))
-MEMORY_SCOPE = "social_intel"
-
-# Keyword to tag mapping for auto-tagging
-KEYWORD_TAG_MAP = {
-    r"CVE-\d{4}-\d+": "cve",
-    r"APT\d+": "apt",
-    r"DARPA|IARPA|BAA": "darpa",
-    r"0-?day|zero.?day": "0day",
-    r"exploit|RCE|LPE|privesc": "exploit",
-    r"malware|ransomware": "malware",
-    r"HTB|Hack.?The.?Box|TryHackMe|CTF": "ctf",
-    r"MITRE|ATT&CK|T\d{4}": "mitre",
-    r"cobalt.?strike|C2": "c2",
-}
-
-
-def extract_tags_from_keywords(matched_keywords: list[str], content: str) -> list[str]:
-    """Extract semantic tags from matched keywords and content."""
-    tags = set()
-    for pattern, tag in KEYWORD_TAG_MAP.items():
-        if re.search(pattern, content, re.IGNORECASE):
-            tags.add(tag)
-    return list(tags)
-
-
-def persist_match_to_memory(match: "KeywordMatch") -> dict[str, Any]:
-    """Persist a keyword match to graph-memory.
-
-    Uses the memory skill's learn command to store matches as lessons.
-    Includes retry logic for transient failures.
-    Returns the result of the learn operation.
-    """
-    # Extract semantic tags
-    auto_tags = extract_tags_from_keywords(match.matched_keywords, match.content)
-    all_tags = list(set(auto_tags + ["discord", f"channel:{match.channel_name}", f"guild:{match.guild_name}"]))
-
-    # Format problem as a searchable identifier
-    problem = f"[DISCORD] #{match.channel_name}: {match.content[:100]}..."
-
-    # Format solution with full content and metadata
-    solution = json.dumps({
-        "content": match.content,
-        "url": match.message_url,
-        "author": match.author,
-        "timestamp": match.timestamp,
-        "platform": "discord",
-        "guild": match.guild_name,
-        "channel": match.channel_name,
-        "matched_keywords": match.matched_keywords,
-    }, indent=2)
-
-    # Call memory skill via CLI
-    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
-
-    if not memory_skill.exists():
-        logger.warning("Memory skill not found, cannot persist match")
-        return {"error": "memory skill not found", "stored": False}
-
-    # Build command
-    cmd = [
-        str(memory_skill),
-        "learn",
-        "--problem", problem,
-        "--solution", solution,
-        "--scope", MEMORY_SCOPE,
-    ]
-
-    # Add tags
-    for tag in all_tags:
-        cmd.extend(["--tag", tag])
-
-    @with_retries
-    def _execute_learn() -> dict[str, Any]:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            cwd=str(memory_skill.parent),
-        )
-        if result.returncode != 0:
-            raise RuntimeError(f"Memory learn failed: {result.stderr[:200]}")
-        return {"stored": True, "tags": all_tags}
-
-    try:
-        return _execute_learn()
-    except Exception as e:
-        logger.error(f"Failed to persist to memory after retries: {e}")
-        return {"stored": False, "error": str(e)}
-
-
-def search_memory(query: str, k: int = 10) -> list[dict[str, Any]]:
-    """Search memory for stored Discord matches.
-
-    Returns matching posts from graph-memory.
-    Includes retry logic for transient failures.
-    """
-    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
-
-    if not memory_skill.exists():
-        logger.debug("Memory skill not found, returning empty results")
-        return []
-
-    cmd = [
-        str(memory_skill),
-        "recall",
-        "--q", query,
-        "--scope", MEMORY_SCOPE,
-        "--k", str(k),
-    ]
-
-    @with_retries
-    def _execute_recall() -> list[dict[str, Any]]:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            cwd=str(memory_skill.parent),
-        )
-        if result.returncode != 0:
-            raise RuntimeError(f"Memory recall failed: {result.stderr[:100]}")
-        try:
-            data = json.loads(result.stdout)
-            return data.get("items", [])
-        except json.JSONDecodeError:
-            return []
-
-    try:
-        return _execute_recall()
-    except Exception as e:
-        logger.warning(f"Memory search failed after retries: {e}")
-        return []
-
-
-@dataclass
-class KeywordMatch:
-    """A message that matched watched keywords."""
-    timestamp: str
-    guild_id: str
-    guild_name: str
-    channel_id: str
-    channel_name: str
-    author: str
-    content: str
-    matched_keywords: list[str]
-    message_url: str
-
-    def to_dict(self) -> dict:
-        return {
-            "timestamp": self.timestamp,
-            "guild_id": self.guild_id,
-            "guild_name": self.guild_name,
-            "channel_id": self.channel_id,
-            "channel_name": self.channel_name,
-            "author": self.author,
-            "content": self.content,
-            "matched_keywords": self.matched_keywords,
-            "message_url": self.message_url,
-        }
-
-    def to_webhook_payload(self) -> dict:
-        """Format for paper-writer/dogpile webhook."""
-        return {
-            "source": "discord",
-            "content": self.content[:2000],
-            "author": self.author,
-            "channel": f"{self.guild_name}/#{self.channel_name}",
-            "url": self.message_url,
-            "keywords": self.matched_keywords,
-            "timestamp": self.timestamp,
-        }
-
-    def to_discord_embed(self) -> dict:
-        """Format for Discord webhook forwarding."""
-        return {
-            "title": f"Keyword Match: {', '.join(self.matched_keywords[:3])}",
-            "description": self.content[:2000],
-            "url": self.message_url,
-            "color": 0x5865F2,  # Discord blurple
-            "author": {"name": self.author},
-            "footer": {"text": f"{self.guild_name} #{self.channel_name}"},
-            "timestamp": self.timestamp,
-        }
-
-
-def load_config() -> dict[str, Any]:
-    """Load configuration."""
-    if CONFIG_FILE.exists():
-        return json.loads(CONFIG_FILE.read_text())
-    return {
-        "monitored_guilds": {},  # guild_id -> {name, channels: [channel_ids]}
-        "webhooks": {},          # name -> url
-        "bot_token": None,       # Discord bot token (or use env)
-    }
-
-
-def save_config(config: dict[str, Any]) -> None:
-    """Save configuration."""
-    CONFIG_FILE.write_text(json.dumps(config, indent=2))
-
-
-def load_keywords() -> list[str]:
-    """Load keyword patterns."""
-    if KEYWORDS_FILE.exists():
-        data = json.loads(KEYWORDS_FILE.read_text())
-        return data.get("patterns", DEFAULT_KEYWORDS)
-    return DEFAULT_KEYWORDS
-
-
-def save_keywords(patterns: list[str]) -> None:
-    """Save keyword patterns."""
-    KEYWORDS_FILE.write_text(json.dumps({"patterns": patterns}, indent=2))
-
-
-def get_bot_token() -> str | None:
-    """Get Discord bot token from config or env."""
-    # Try env first
-    if token := os.environ.get("DISCORD_BOT_TOKEN"):
-        return token
-
-    # Try config
-    config = load_config()
-    if token := config.get("bot_token"):
-        return token
-
-    # Try clawdbot .env
-    env_file = CLAWDBOT_DIR / ".env"
-    if env_file.exists():
-        for line in env_file.read_text().splitlines():
-            if line.startswith("DISCORD_BOT_TOKEN="):
-                return line.split("=", 1)[1].strip()
-
-    return None
-
-
-def match_keywords(text: str, patterns: list[str]) -> list[str]:
-    """Find all keyword patterns that match in text."""
-    matches = []
-    for pattern in patterns:
-        try:
-            if re.search(pattern, text, re.IGNORECASE):
-                matches.append(pattern)
-        except re.error:
-            # Invalid regex, try literal match
-            if pattern.lower() in text.lower():
-                matches.append(pattern)
-    return matches
-
-
-def log_match(match: KeywordMatch, persist: bool = True) -> dict[str, Any]:
-    """Append match to log file and optionally persist to memory.
-
-    Args:
-        match: The keyword match to log
-        persist: If True, also persist to graph-memory
-
-    Returns:
-        Result dict with 'logged' and optionally 'memory' status
-    """
-    result = {"logged": True}
-
-    # Write to local log file
-    with open(MATCHES_LOG, "a") as f:
-        f.write(json.dumps(match.to_dict()) + "\n")
-
-    # Persist to memory if enabled
-    if persist:
-        memory_result = persist_match_to_memory(match)
-        result["memory"] = memory_result
-
-    return result
-
-
-async def forward_to_webhook(url: str, match: KeywordMatch, max_retries: int = MAX_RETRIES) -> bool:
-    """Forward match to webhook endpoint with retry logic.
-
-    Includes rate limiting and exponential backoff for transient failures.
-    """
-    if not HTTPX_AVAILABLE:
-        console.print("[red]httpx not installed for webhook forwarding[/red]")
-        return False
-
-    # Apply rate limiting (blocking call in sync context, but keeps things simple)
-    _webhook_limiter.acquire()
-
-    # Determine payload based on webhook type
-    if "discord.com/api/webhooks" in url:
-        payload = {"embeds": [match.to_discord_embed()]}
-    else:
-        payload = match.to_webhook_payload()
-
-    last_error: Optional[Exception] = None
-    for attempt in range(1, max_retries + 1):
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(url, json=payload, timeout=10.0)
-
-                # Handle Discord rate limiting
-                if response.status_code == 429:
-                    retry_after = float(response.headers.get("Retry-After", 5))
-                    logger.warning(f"Discord rate limited, waiting {retry_after}s")
-                    await asyncio.sleep(retry_after)
-                    continue
-
-                if response.status_code in (200, 204):
-                    return True
-
-                logger.warning(f"Webhook returned {response.status_code} on attempt {attempt}")
-
-        except Exception as e:
-            last_error = e
-            if attempt < max_retries:
-                delay = RETRY_BASE_DELAY * (2 ** (attempt - 1))
-                logger.warning(f"Webhook attempt {attempt}/{max_retries} failed: {e}. Retrying in {delay:.1f}s...")
-                await asyncio.sleep(delay)
-            else:
-                logger.error(f"Webhook failed after {max_retries} attempts: {e}")
-
-    if last_error:
-        console.print(f"[red]Webhook error:[/red] {last_error}")
-    return False
-
-
-# =============================================================================
-# CLI COMMANDS
+# MAIN COMMANDS
 # =============================================================================
 
 @app.command()
 def setup():
     """Interactive setup for notification monitoring."""
+    features = get_feature_status()
+
     console.print(Panel(
         "[bold]Discord Notification Monitor Setup[/bold]\n\n"
         "This skill monitors YOUR Discord server for security content\n"
@@ -540,7 +84,8 @@ def setup():
 
     # Check discord.py
     console.print("\n[bold]2. Discord.py Library[/bold]")
-    if DISCORD_PY_AVAILABLE:
+    if features["discord_py"]:
+        import discord
         console.print(f"  [green]discord.py installed[/green] (v{discord.__version__})")
     else:
         console.print("  [yellow]discord.py not installed[/yellow]")
@@ -549,7 +94,7 @@ def setup():
 
     # Check httpx
     console.print("\n[bold]3. Webhook Support[/bold]")
-    if HTTPX_AVAILABLE:
+    if features["httpx"]:
         console.print("  [green]httpx installed[/green]")
     else:
         console.print("  [red]httpx not installed[/red]")
@@ -577,7 +122,7 @@ def setup():
      [bold]discord-ops monitor start[/bold]
 
   5. Have researchers forward content to your channels
-  6. Bot watches for keywords → forwards to paper-writer/dogpile
+  6. Bot watches for keywords -> forwards to paper-writer/dogpile
 """)
 
 
@@ -670,7 +215,7 @@ def guild(
             save_config(config)
             console.print(f"[green]Removed guild:[/green] {to_remove}")
         else:
-            console.print(f"[yellow]Guild not found[/yellow]")
+            console.print("[yellow]Guild not found[/yellow]")
         return
 
     console.print("[red]Invalid usage. See: discord-ops guild --help[/red]")
@@ -685,6 +230,7 @@ def webhook(
     """Manage output webhooks for forwarding matches."""
     config = load_config()
     webhooks = config.get("webhooks", {})
+    features = get_feature_status()
 
     if action == "list":
         if not webhooks:
@@ -724,28 +270,18 @@ def webhook(
             console.print(f"[red]Webhook not found:[/red] {name}")
             raise typer.Exit(1)
 
-        if not HTTPX_AVAILABLE:
+        if not features["httpx"]:
             console.print("[red]httpx not installed[/red]")
             raise typer.Exit(1)
 
         # Create test match
-        test_match = KeywordMatch(
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            guild_id="test",
-            guild_name="Test Server",
-            channel_id="test",
-            channel_name="test-channel",
-            author="discord-ops",
-            content="Test message: CVE-2024-0001 exploit detected!",
-            matched_keywords=["CVE-2024-0001", "exploit"],
-            message_url="https://discord.com/channels/test/test/test",
-        )
+        test_match = KeywordMatch.create_test_match()
 
         success = asyncio.run(forward_to_webhook(webhooks[name], test_match))
         if success:
-            console.print(f"[green]Webhook test successful![/green]")
+            console.print("[green]Webhook test successful![/green]")
         else:
-            console.print(f"[red]Webhook test failed[/red]")
+            console.print("[red]Webhook test failed[/red]")
         return
 
     console.print("[red]Invalid usage. See: discord-ops webhook --help[/red]")
@@ -759,11 +295,11 @@ def monitor(
     persist: bool = typer.Option(True, "--persist/--no-persist", help="Persist matches to memory"),
 ):
     """Start/stop the Discord notification monitor."""
+    features = get_feature_status()
+
     if action == "status":
-        # Check if monitor is running (via PID file or process check)
-        pid_file = SKILL_DIR / "monitor.pid"
-        if pid_file.exists():
-            pid = pid_file.read_text().strip()
+        running, pid = is_monitor_running()
+        if running:
             console.print(f"[green]Monitor running[/green] (PID: {pid})")
         else:
             console.print("[yellow]Monitor not running[/yellow]")
@@ -781,7 +317,7 @@ def monitor(
         return
 
     if action == "start":
-        if not DISCORD_PY_AVAILABLE:
+        if not features["discord_py"]:
             console.print("[red]discord.py not installed[/red]")
             console.print("Install with: pip install discord.py")
             console.print("\nAlternatively, configure clawdbot to forward matches.")
@@ -806,107 +342,18 @@ def monitor(
         console.print(f"  Memory persist: {persist}")
 
         # Run the monitor
-        asyncio.run(_run_monitor(token, webhook_url, dry_run, persist))
+        asyncio.run(run_monitor(token, webhook_url, dry_run, persist, console))
         return
 
     if action == "stop":
-        pid_file = SKILL_DIR / "monitor.pid"
-        if pid_file.exists():
-            pid = pid_file.read_text().strip()
-            try:
-                os.kill(int(pid), 15)  # SIGTERM
-                pid_file.unlink()
-                console.print(f"[green]Stopped monitor[/green] (PID: {pid})")
-            except ProcessLookupError:
-                pid_file.unlink()
-                console.print("[yellow]Monitor was not running[/yellow]")
+        success, message = stop_monitor()
+        if success:
+            console.print(f"[green]{message}[/green]")
         else:
-            console.print("[yellow]Monitor not running[/yellow]")
+            console.print(f"[yellow]{message}[/yellow]")
         return
 
     console.print("[red]Invalid action. Use: start, stop, status[/red]")
-
-
-async def _run_monitor(token: str, webhook_url: str | None, dry_run: bool, persist: bool = True):
-    """Run the Discord monitor bot."""
-    if not DISCORD_PY_AVAILABLE:
-        return
-
-    intents = discord.Intents.default()
-    intents.message_content = True
-    intents.guilds = True
-
-    bot = commands.Bot(command_prefix="!", intents=intents)
-    keywords = load_keywords()
-    config = load_config()
-    monitored_guilds = set(config.get("monitored_guilds", {}).keys())
-
-    @bot.event
-    async def on_ready():
-        console.print(f"[green]Connected as {bot.user}[/green]")
-        console.print(f"  Monitoring {len(monitored_guilds)} guilds")
-        console.print(f"  Watching {len(keywords)} keyword patterns")
-        console.print(f"  Memory persist: {persist}")
-
-        # Save PID
-        pid_file = SKILL_DIR / "monitor.pid"
-        pid_file.write_text(str(os.getpid()))
-
-    @bot.event
-    async def on_message(message: discord.Message):
-        # Ignore bot messages
-        if message.author.bot:
-            return
-
-        # Only monitor configured guilds (or all if none configured)
-        if monitored_guilds and str(message.guild.id) not in monitored_guilds:
-            return
-
-        # Check for keyword matches
-        content = message.content or ""
-        matched = match_keywords(content, keywords)
-
-        if not matched:
-            return
-
-        # Create match record
-        match = KeywordMatch(
-            timestamp=datetime.now(timezone.utc).isoformat(),
-            guild_id=str(message.guild.id) if message.guild else "",
-            guild_name=message.guild.name if message.guild else "DM",
-            channel_id=str(message.channel.id),
-            channel_name=getattr(message.channel, 'name', 'unknown'),
-            author=str(message.author),
-            content=content[:2000],
-            matched_keywords=matched,
-            message_url=message.jump_url,
-        )
-
-        # Log the match (and optionally persist to memory)
-        result = log_match(match, persist=persist)
-        console.print(f"[cyan]Match:[/cyan] {matched} in #{match.channel_name}")
-
-        if persist and result.get("memory", {}).get("stored"):
-            console.print(f"  [green]Persisted to memory[/green]")
-        elif persist and result.get("memory", {}).get("error"):
-            console.print(f"  [yellow]Memory error: {result['memory']['error'][:50]}[/yellow]")
-
-        # Forward to webhook (unless dry run)
-        if webhook_url and not dry_run:
-            success = await forward_to_webhook(webhook_url, match)
-            if success:
-                console.print(f"  [green]Forwarded to webhook[/green]")
-            else:
-                console.print(f"  [red]Webhook forward failed[/red]")
-
-    try:
-        await bot.start(token)
-    except KeyboardInterrupt:
-        await bot.close()
-    finally:
-        pid_file = SKILL_DIR / "monitor.pid"
-        if pid_file.exists():
-            pid_file.unlink()
 
 
 @app.command()
@@ -958,9 +405,12 @@ def matches(
 @app.command()
 def version():
     """Show version and status."""
-    console.print("discord-ops v0.2.0 (Notification Monitor Model)")
-    console.print(f"  discord.py: {'installed' if DISCORD_PY_AVAILABLE else 'not installed'}")
-    console.print(f"  httpx: {'installed' if HTTPX_AVAILABLE else 'not installed'}")
+    features = get_feature_status()
+    from discord_ops import __version__
+
+    console.print(f"discord-ops v{__version__} (Modular Architecture)")
+    console.print(f"  discord.py: {'installed' if features['discord_py'] else 'not installed'}")
+    console.print(f"  httpx: {'installed' if features['httpx'] else 'not installed'}")
     console.print(f"  Bot token: {'configured' if get_bot_token() else 'missing'}")
 
 
@@ -986,7 +436,6 @@ def memory_search(
 
         console.print(f"[green]Found {len(results)} results[/green]\n")
         for i, item in enumerate(results, 1):
-            problem = item.get("problem", "")
             solution = item.get("solution", "")
             score = item.get("score", 0)
 
@@ -1026,19 +475,9 @@ def memory_ingest(
     for i, line in enumerate(lines[-limit:]):
         try:
             data = json.loads(line)
-            match = KeywordMatch(
-                timestamp=data.get("timestamp", ""),
-                guild_id=data.get("guild_id", ""),
-                guild_name=data.get("guild_name", ""),
-                channel_id=data.get("channel_id", ""),
-                channel_name=data.get("channel_name", ""),
-                author=data.get("author", ""),
-                content=data.get("content", ""),
-                matched_keywords=data.get("matched_keywords", []),
-                message_url=data.get("message_url", ""),
-            )
-
+            match = KeywordMatch.from_dict(data)
             result = persist_match_to_memory(match)
+
             if result.get("stored"):
                 stored += 1
             else:
@@ -1047,7 +486,7 @@ def memory_ingest(
             if (i + 1) % 10 == 0:
                 console.print(f"  Processed {i + 1}/{min(len(lines), limit)}...")
 
-        except (json.JSONDecodeError, KeyError) as e:
+        except (json.JSONDecodeError, KeyError):
             errors += 1
             continue
 
@@ -1059,43 +498,30 @@ def memory_ingest(
 @memory_app.command("status")
 def memory_status():
     """Check memory integration status."""
-    memory_skill = Path(__file__).parent.parent / "memory" / "run.sh"
+    status = check_memory_status()
 
     console.print("[bold]Memory Integration Status[/bold]\n")
 
     # Check memory skill exists
-    if memory_skill.exists():
-        console.print(f"  [green]Memory skill:[/green] {memory_skill}")
+    if status["available"]:
+        console.print(f"  [green]Memory skill:[/green] {status['path']}")
     else:
-        console.print(f"  [red]Memory skill not found at:[/red] {memory_skill}")
+        console.print(f"  [red]Memory skill not found at:[/red] {status['path']}")
         console.print("  Make sure .pi/skills/memory/run.sh exists")
         return
 
     # Check memory service
-    try:
-        result = subprocess.run(
-            [str(memory_skill), "status"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            cwd=str(memory_skill.parent),
-        )
-        if result.returncode == 0:
-            console.print("  [green]Memory service:[/green] Connected")
-        else:
-            console.print(f"  [yellow]Memory service:[/yellow] {result.stderr[:100]}")
-    except Exception as e:
-        console.print(f"  [red]Memory service:[/red] {e}")
+    if status["connected"]:
+        console.print("  [green]Memory service:[/green] Connected")
+    else:
+        console.print(f"  [yellow]Memory service:[/yellow] {status.get('error', 'Unknown error')}")
 
     # Show scope
-    console.print(f"  [cyan]Scope:[/cyan] {MEMORY_SCOPE}")
+    console.print(f"  [cyan]Scope:[/cyan] {status['scope']}")
 
     # Show local matches count
-    if MATCHES_LOG.exists():
-        lines = MATCHES_LOG.read_text().strip().split("\n")
-        console.print(f"  [cyan]Local matches:[/cyan] {len(lines)}")
-    else:
-        console.print("  [cyan]Local matches:[/cyan] 0")
+    count = get_local_matches_count()
+    console.print(f"  [cyan]Local matches:[/cyan] {count}")
 
 
 if __name__ == "__main__":

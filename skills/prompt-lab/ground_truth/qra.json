@@ -1,0 +1,92 @@
+{
+  "name": "qra",
+  "description": "Question-Reasoning-Answer generation from security controls",
+  "evaluation_criteria": {
+    "question_quality": "Is the question specific, answerable, and relevant?",
+    "reasoning_quality": "Does reasoning show clear logical steps?",
+    "answer_grounded": "Is the answer directly supported by the source text?",
+    "no_hallucination": "Does it avoid adding facts not in the source?"
+  },
+  "cases": [
+    {
+      "id": "T1547.001-qra",
+      "input": {
+        "name": "Registry Run Keys / Startup Folder",
+        "description": "Adversaries may achieve persistence by adding a program to a startup folder or referencing it with a Registry run key. Adding an entry to the 'run keys' in the Registry or startup folder will cause the program referenced to be executed when a user logs in.",
+        "collection": "ATT&CK",
+        "type": "technique"
+      },
+      "expected": {
+        "question_contains": ["persistence", "registry", "startup"],
+        "reasoning_contains": ["run key", "executed", "login"],
+        "answer_grounded_in_source": true,
+        "min_reasoning_sentences": 2
+      },
+      "notes": "Should generate QRA about how this persistence technique works"
+    },
+    {
+      "id": "SI-2-qra",
+      "input": {
+        "name": "Flaw Remediation",
+        "description": "The organization identifies, reports, and corrects information system flaws. The organization installs security-relevant software and firmware updates within a defined time period of the release of the updates.",
+        "collection": "NIST",
+        "type": "control"
+      },
+      "expected": {
+        "question_contains": ["flaw", "remediation", "patch", "update"],
+        "reasoning_contains": ["identifies", "corrects", "time period"],
+        "answer_grounded_in_source": true,
+        "min_reasoning_sentences": 2
+      },
+      "notes": "Should generate QRA about flaw remediation process"
+    },
+    {
+      "id": "CWE-89-qra",
+      "input": {
+        "name": "SQL Injection",
+        "description": "The software constructs all or part of an SQL command using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify the intended SQL command.",
+        "collection": "CWE",
+        "type": "weakness"
+      },
+      "expected": {
+        "question_contains": ["SQL", "injection", "input"],
+        "reasoning_contains": ["neutralize", "special elements", "command"],
+        "answer_grounded_in_source": true,
+        "min_reasoning_sentences": 2
+      },
+      "notes": "Should generate QRA about SQL injection vulnerability"
+    },
+    {
+      "id": "d3f:NetworkIsolation-qra",
+      "input": {
+        "name": "Network Isolation",
+        "description": "Configuring a network to deny, permit, or reroute network traffic between devices based on predetermined rules. Network isolation techniques include firewalls, DMZs, VLANs, and network segmentation.",
+        "collection": "D3FEND",
+        "type": "defensive_technique"
+      },
+      "expected": {
+        "question_contains": ["network", "isolation", "segment"],
+        "reasoning_contains": ["firewall", "VLAN", "DMZ", "traffic"],
+        "answer_grounded_in_source": true,
+        "min_reasoning_sentences": 2
+      },
+      "notes": "Should generate QRA about network isolation defenses"
+    },
+    {
+      "id": "relationship-qra",
+      "input": {
+        "name": "Network Isolation mitigates Lateral Movement",
+        "description": "Network isolation and segmentation techniques can limit adversary lateral movement by restricting network traffic between systems. By implementing VLANs and firewalls, organizations reduce the attack surface available to adversaries who have gained initial access.",
+        "collection": "SPARTA",
+        "type": "relationship"
+      },
+      "expected": {
+        "question_contains": ["isolation", "lateral movement", "mitigate"],
+        "reasoning_contains": ["restrict", "traffic", "attack surface"],
+        "answer_grounded_in_source": true,
+        "min_reasoning_sentences": 2
+      },
+      "notes": "Should generate QRA about defense-attack relationship"
+    }
+  ]
+}

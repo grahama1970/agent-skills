@@ -1,0 +1,27 @@
+{
+  "id": "c3859766",
+  "title": "Pick an icon for 'terminal prompt rounded'",
+  "context": "Search results for 'terminal prompt rounded'",
+  "questions": [
+    {
+      "id": "ai",
+      "text": "<img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAQAAAAAYLlVAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAACYktHRAAAqo0jMgAAAAlwSFlzAAB1MAAAdTAB3TNyzQAAAAd0SU1FB+oBHQ8CCNOpmTsAAAQ2SURBVGje7ZlbbBRVGMd/0+72Xgrd3dJSJUUfuAWp8fLgJcFL9AHF2ISkCTEaTGuBCCaAu61RY4wJaXzgSXxRibfAg1ZBjInbSOmTWm1jBFqa2MqlbRa32kJD2W5nfJiZM7PLzuyuzsy+9Huac9n9/+ac75zzzXek7RTWigqsvwSAzwKrCMlhJQUZOReAEmq5m/uoZ5ljEAqzTPEzg0yTsAMopokWnqcJP0WOTo+MzALjHKWHcRaNBsm0DH08ToSHXfULmX4OESUp3nmj/lREC93c4/jcp5pEE/cT4zxKOsAjdLPeVXHdAmzkLONqQfeBIK+wQXRJcoUhZhwUraGZRqG2nn38RtwMsI0HROcYR/icuNlV/rcVE2AHuwhp5Yd4hg8NgCoeI6A1xXmdj5l3UFz/30NM8I6mE+BRjjOn74RrWSc6fsExF+QBbnCMHlFax1rQAVbRoFXHOM2sK/IAM/zAVe25gUYDYBlVWvVV3TtdsjEBUE21AVBCqVaddGn4dZtnQXsqVTVVAGPzUVyVT1WQDIAC2hLAEoDPtrWCFcA08+6tDjuAADtpBY5zlJj3ABJP8SaVwAbq6WbKHQBrH6hiE5UAlNFOmHqvAeZN71xJG2FWeguwwCm+NyG08yp1XgLAecJEhf9XsJtO6pwOWu33gUHC9IrvmTJ2EXF6IrJtRCqCPgqldBAWwYsnAApDROgV5XLaOCBCSw8AQGaITqKiXEkbT3sJADIDvMuoKFeziXIvASDEEzSZyjHnAjdfDn1ChNmDXyspRDnp3OGUDUAiSIQ9ImiV6ecNfndKPjtAiC46hLxCP2F+dE4+G0CILtpT5A/wi2l0iqmhGslyQiQUrvMPi9ZTZh8PdPISZUL+DPv51fRXy9nNDu3EtLY5PuMI0/kDSGylwyTfx0HT24OPrXRRkcMod3GJT6zGwC4e2CxWu0wfYQZS2v08KPDsrYLN4tMvDwAjHpA5Q4Sf0toXGct5MU5Z7xt28cAJekiQ5BsOZvD8BF9yMj3plsES9HBCfBHeYnZOOMpe3kfmApcztv/By7zHCrBdBTOcY8JaxA5A5rKFtNF+JesIZJkmX1qnfOOd/LfktC9x1QcS3NQq/Tl69n+1MnGm3FQ1VYBZrmvVQda4CnCHCGaucc0AmGBSq65jCzWuyS9niwCYVP1HBRhmWHRqodW5cCPFymmlRZSGGQHdCefo5UmRwXubRj4lTtKxU1/CR4Dn6KBWq4nTyxwY2fIgH7BN/CDJBIPErLePPM3PSppZZVr0X/Niaqr2Lw5zJ3rm2sdqVjsknsnOcViVN2fLLxLjLoIuyuo2wlt8d2u6XuECI9zG7a5mTRbp4zW+NRLh5q04SZRRnuUF1rh0ZTPGR3zFn1ZXNqqVUEsz99JAjYOXVjNMMsAgf6efn1LGq9uCXtvpA+aRFTxNtwTwL3McFZUbvlYGAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAABJRU5ErkJggg== \" width=\"64\" height=\"64\" class=\"mb-2\"><br><b>AI Generated Custom Icon</b>",
+      "type": "yes_no",
+      "recommendation": "no",
+      "reason": "Custom design based on your prompt",
+      "required": true
+    },
+    {
+      "id": "refine",
+      "text": "None of these work. Let's refine the search.",
+      "type": "text",
+      "recommendation": "",
+      "reason": "Use this to search for something else",
+      "required": true
+    }
+  ],
+  "responses": {},
+  "started_at": 1769698928.9240499,
+  "completed_at": null,
+  "mode": "html"
+}

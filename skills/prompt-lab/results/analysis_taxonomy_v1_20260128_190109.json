@@ -1,0 +1,43 @@
+{
+  "prompt": "taxonomy_v1",
+  "timestamp": "2026-01-28T19:01:09.791153",
+  "total_cases": 12,
+  "total_rejected": 8,
+  "rejected_counts": {
+    "PARSE_ERROR": 6,
+    "Persistence": 2
+  },
+  "corrections_needed": 4,
+  "metrics_trend": [
+    {
+      "timestamp": "2026-01-28T19:00:06.823073",
+      "model": "kimi",
+      "avg_f1": 0.0,
+      "correction_rounds": 4
+    },
+    {
+      "timestamp": "2026-01-28T18:55:23.872432",
+      "model": "deepseek",
+      "avg_f1": 0.7476190476190476,
+      "correction_rounds": 1
+    },
+    {
+      "timestamp": "2026-01-28T18:48:34.230420",
+      "model": "deepseek",
+      "avg_f1": 0.8285714285714285,
+      "correction_rounds": 1
+    },
+    {
+      "timestamp": "2026-01-28T18:46:26.248760",
+      "model": "deepseek",
+      "avg_f1": 0.0,
+      "correction_rounds": 0
+    },
+    {
+      "timestamp": "2026-01-28T18:44:15.341166",
+      "model": "deepseek",
+      "avg_f1": 0.0,
+      "correction_rounds": 0
+    }
+  ]
+}

@@ -1,0 +1,214 @@
+{
+  "prompt": "taxonomy_v2",
+  "model": "deepseek-v3.2",
+  "timestamp": "2026-01-28T19:08:11.444447",
+  "passed": true,
+  "metrics": {
+    "avg_f1": 0.95,
+    "conceptual_precision": 1.0,
+    "conceptual_recall": 0.9375,
+    "tactical_precision": 1.0,
+    "tactical_recall": 0.9375,
+    "total_rejected": 0,
+    "avg_latency_ms": 3564.4780492584687,
+    "correction_rounds": 0,
+    "cases_needing_correction": 0,
+    "correction_success_rate": 1.0
+  },
+  "cases": [
+    {
+      "id": "T1547.001",
+      "predicted": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "rejected": [],
+      "f1": 1.0,
+      "latency_ms": 6581.1660890467465,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "SI-2",
+      "predicted": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.8,
+      "latency_ms": 2816.129155922681,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "d3f:NetworkIsolation",
+      "predicted": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "rejected": [],
+      "f1": 1.0,
+      "latency_ms": 2347.2988130524755,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "CWE-89",
+      "predicted": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "rejected": [],
+      "f1": 1.0,
+      "latency_ms": 3011.937860865146,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "T1070.001",
+      "predicted": {
+        "conceptual": [
+          "Stealth"
+        ],
+        "tactical": [
+          "Evade"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Stealth"
+        ],
+        "tactical": [
+          "Evade"
+        ]
+      },
+      "rejected": [],
+      "f1": 1.0,
+      "latency_ms": 3000.0801880378276,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "AC-2",
+      "predicted": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": [
+          "Harden",
+          "Detect"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.8,
+      "latency_ms": 3688.7875790707767,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "T1595",
+      "predicted": {
+        "conceptual": [
+          "Precision"
+        ],
+        "tactical": [
+          "Model"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Precision"
+        ],
+        "tactical": [
+          "Model"
+        ]
+      },
+      "rejected": [],
+      "f1": 1.0,
+      "latency_ms": 3069.494373165071,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "CP-9",
+      "predicted": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Restore"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Restore"
+        ]
+      },
+      "rejected": [],
+      "f1": 1.0,
+      "latency_ms": 4000.930334907025,
+      "correction_rounds": 0,
+      "correction_success": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+[project]
+name = "prompt-lab"
+version = "0.1.0"
+description = "Systematic prompt engineering with self-correction loop"
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.9.0",
+    "pydantic>=2.0.0",
+    "rich>=13.0.0",
+    "scillm>=1.77.3",
+    "httpx>=0.24.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+prompt-lab = "prompt_lab:app"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+]

@@ -1,0 +1,121 @@
+extend timeouts and debug logging across commands and utils per feedback
+--- a/.pi/skills/code-review/utils.py
++++ b/.pi/skills/code-review/utils.py
+@@ -8,11 +8,12 @@
+ from __future__ import annotations
+ 
+ import re
++import os
+ import shutil
+ import subprocess
+ import sys
+ import tempfile
+ from contextlib import contextmanager
+ from pathlib import Path
+ from typing import Generator, Optional
+@@ -193,8 +194,9 @@ def check_git_status(repo_dir: Optional[Path] = None) -> dict:
+-    except Exception:
+-        pass
++    except Exception as e:
++        if os.environ.get("CODE_REVIEW_DEBUG"):
++            console.print(f"[yellow]Git status check warning: {e}[/yellow]")
+ 
+     return result
+@@ -220,7 +222,7 @@ def gather_repo_context(repo_dir: Optional[Path] = None) -> dict:
+-        res = subprocess.run(
+-            ["git", "remote", "get-url", "origin"],
+-            capture_output=True, text=True, cwd=cwd, timeout=5
+-        )
++        res = subprocess.run(
++            ["git", "remote", "get-url", "origin"],
++            capture_output=True, text=True, cwd=cwd, timeout=get_timeout()
++        )
+         if res.returncode == 0:
+             url = res.stdout.strip()
+             # Parse git@github.com:owner/repo.git or https://github.com/owner/repo
+@@ -232,7 +234,7 @@ def gather_repo_context(repo_dir: Optional[Path] = None) -> dict:
+-        res = subprocess.run(
+-            ["git", "branch", "--show-current"],
+-            capture_output=True, text=True, cwd=cwd, timeout=5
+-        )
++        res = subprocess.run(
++            ["git", "branch", "--show-current"],
++            capture_output=True, text=True, cwd=cwd, timeout=get_timeout()
++        )
+         if res.returncode == 0:
+             context["branch"] = res.stdout.strip()
+@@ -240,7 +242,7 @@ def gather_repo_context(repo_dir: Optional[Path] = None) -> dict:
+-        res = subprocess.run(
+-            ["git", "diff", "--name-only", "HEAD"],
+-            capture_output=True, text=True, cwd=cwd, timeout=5
+-        )
++        res = subprocess.run(
++            ["git", "diff", "--name-only", "HEAD"],
++            capture_output=True, text=True, cwd=cwd, timeout=get_timeout()
++        )
+         if res.returncode == 0 and res.stdout.strip():
+             context["modified_files"] = res.stdout.strip().splitlines()
+ 
+--- a/.pi/skills/code-review/commands/review_full.py
++++ b/.pi/skills/code-review/commands/review_full.py
+@@ -3,6 +3,7 @@ from __future__ import annotations
+ 
+ import asyncio
+ import json
++import os
+ import subprocess
+ import sys
+ import time
+@@ -14,12 +15,12 @@ import typer
+ 
+ try:
+-    from ..config import DEFAULT_MODEL, DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, SKILLS_DIR
++    from ..config import DEFAULT_MODEL, DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, SKILLS_DIR, get_timeout
+     from ..diff_parser import extract_diff
+     from ..prompts import STEP1_PROMPT, STEP2_PROMPT, STEP3_PROMPT
+     from ..providers import find_provider_cli, run_provider_async
+     from ..utils import create_workspace, get_effective_dirs
+ except ImportError:
+-    from config import DEFAULT_MODEL, DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, SKILLS_DIR
++    from config import DEFAULT_MODEL, DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, SKILLS_DIR, get_timeout
+     from diff_parser import extract_diff
+     from prompts import STEP1_PROMPT, STEP2_PROMPT, STEP3_PROMPT
+     from providers import find_provider_cli, run_provider_async
+     from utils import create_workspace, get_effective_dirs
+@@ -287,9 +288,11 @@ def review_full(
+-            subprocess.run([
++            subprocess.run([
+                 "python3", str(SKILLS_DIR / "task-monitor" / "monitor.py"),
+                 "register",
+                 "--name", f"review-{file.stem}",
+                 "--state", str(state_file),
+                 "--total", str(rounds),
+                 "--desc", f"Code Review: {file.name}"
+-            ], capture_output=True, check=False)
+-        except Exception:
+-            pass
++            ], capture_output=True, check=False, timeout=get_timeout())
++        except Exception as e:
++            if os.environ.get("CODE_REVIEW_DEBUG"):
++                typer.echo(f"Monitor register warning: {e}", err=True)
+ 
+--- a/.pi/skills/code-review/commands/basic.py
++++ b/.pi/skills/code-review/commands/basic.py
+@@ -17,11 +17,11 @@ from typing import Optional
+ import typer
+ 
+ try:
+-    from ..config import DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR
++    from ..config import DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, get_timeout
+     from ..providers import check_gh_auth, find_provider_cli
+ except ImportError:
+-    from config import DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR
++    from config import DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, get_timeout
+     from providers import check_gh_auth, find_provider_cli
+@@ -157,7 +157,7 @@ def login(
+-    try:
+-        result = subprocess.run(cmd)
++    try:
++        result = subprocess.run(cmd, timeout=get_timeout())
+         if result.returncode == 0:
+             typer.echo("\nAuthentication successful!", err=True)

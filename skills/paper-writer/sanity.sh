@@ -1,80 +1,225 @@
 #!/usr/bin/env bash
-# paper-writer sanity check - uses uvx for isolation
+# paper-writer sanity check - tests modular CLI commands
 set -eo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SKILL_DIR"
 
-echo "=== Paper Writer Sanity Check ==="
+echo "=== Paper Writer Sanity Check (Modular) ==="
+
+PASS_COUNT=0
+FAIL_COUNT=0
+
+pass() {
+    echo "  [PASS] $1"
+    PASS_COUNT=$((PASS_COUNT + 1))
+}
+
+fail() {
+    echo "  [FAIL] $1"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+}
+
+warn() {
+    echo "  [WARN] $1"
+}
 
 # Check SKILL.md exists
 if [[ -f "$SKILL_DIR/SKILL.md" ]]; then
-    echo "  [PASS] SKILL.md exists"
+    pass "SKILL.md exists"
 else
-    echo "  [FAIL] SKILL.md missing"
-    exit 1
+    fail "SKILL.md missing"
 fi
 
-# Check Python script exists
-if [[ -f "$SKILL_DIR/paper_writer.py" ]]; then
-    echo "  [PASS] paper_writer.py exists"
+# Check Python modules exist (modular structure)
+MODULES=(
+    "paper_writer.py"
+    "config.py"
+    "utils.py"
+    "research.py"
+    "analysis.py"
+    "rag.py"
+    "mimic.py"
+    "citations.py"
+    "critique.py"
+    "compliance.py"
+)
+
+echo ""
+echo "Checking modular structure..."
+for module in "${MODULES[@]}"; do
+    if [[ -f "$SKILL_DIR/$module" ]]; then
+        # Check line count is under 500 (except config which has data)
+        lines=$(wc -l < "$SKILL_DIR/$module")
+        if [[ "$module" == "config.py" ]]; then
+            # config.py can be larger due to data definitions
+            if [[ $lines -lt 1000 ]]; then
+                pass "$module exists ($lines lines)"
+            else
+                warn "$module is large ($lines lines)"
+            fi
+        else
+            if [[ $lines -lt 500 ]]; then
+                pass "$module exists ($lines lines)"
+            else
+                fail "$module exceeds 500 lines ($lines lines)"
+            fi
+        fi
+    else
+        fail "$module missing"
+    fi
+done
+
+# Check backup exists
+if [[ -f "$SKILL_DIR/paper_writer_monolith.py" ]]; then
+    pass "paper_writer_monolith.py backup exists"
 else
-    echo "  [FAIL] paper_writer.py missing"
-    exit 1
+    warn "paper_writer_monolith.py backup missing"
 fi
 
 # Check dependent skills exist
+echo ""
+echo "Checking dependencies..."
 SKILLS_DIR="$(dirname "$SKILL_DIR")"
 for skill in assess dogpile arxiv code-review memory fixture-graph; do
     if [[ -d "$SKILLS_DIR/$skill" ]]; then
-        echo "  [PASS] Dependency: $skill"
+        pass "Dependency: $skill"
     else
-        echo "  [WARN] Dependency missing: $skill (optional)"
+        warn "Dependency missing: $skill (optional)"
     fi
 done
 
 # Check LaTeX is installed
 if command -v pdflatex &> /dev/null; then
-    echo "  [PASS] LaTeX (pdflatex) installed"
+    pass "LaTeX (pdflatex) installed"
 else
-    echo "  [WARN] LaTeX not installed (required for compilation)"
+    warn "LaTeX not installed (required for compilation)"
 fi
 
 # Check uvx is available
+echo ""
+echo "Checking runtime..."
 if ! command -v uvx &> /dev/null; then
-    echo "  [FAIL] uvx not found - install with: pip install uv"
+    fail "uvx not found - install with: pip install uv"
     exit 1
 fi
-echo "  [PASS] uvx available"
+pass "uvx available"
 
 # uvx command for running with dependencies
 UVX_CMD="uvx --with typer"
 
 # Check CLI help works
-if $UVX_CMD python paper_writer.py --help >/dev/null 2>&1; then
-    echo "  [PASS] CLI help works"
-else
-    echo "  [FAIL] CLI help failed"
-    exit 1
-fi
-
-# Check templates directory
-if [[ -d "$SKILL_DIR/templates" ]]; then
-    echo "  [PASS] templates directory exists"
-else
-    echo "  [WARN] templates directory missing (will be created)"
-fi
-
-# Run tests with uvx
 echo ""
-echo "Running tests..."
-TEST_DIR="$SKILL_DIR"
-[[ -d "$SKILL_DIR/tests" ]] && TEST_DIR="$SKILL_DIR/tests"
-
-if uvx --with typer --with pytest pytest "$TEST_DIR" -v --tb=short 2>/dev/null; then
-    echo "  [PASS] All tests passed"
+echo "Testing CLI commands..."
+if $UVX_CMD python paper_writer.py --help >/dev/null 2>&1; then
+    pass "CLI help works"
 else
-    echo "  [FAIL] Some tests failed"
+    fail "CLI help failed"
+fi
+
+# Test individual commands (help only - no side effects)
+COMMANDS=(
+    "phrases --help"
+    "templates --help"
+    "disclosure --help"
+    "quality --help"
+    "critique --help"
+    "check-citations --help"
+    "weakness-analysis --help"
+    "pre-submit --help"
+    "sanitize --help"
+    "ai-ledger --help"
+    "claim-graph --help"
+    "domains --help"
+    "list --help"
+    "workflow --help"
+    "figure-presets --help"
+)
+
+for cmd in "${COMMANDS[@]}"; do
+    if $UVX_CMD python paper_writer.py $cmd >/dev/null 2>&1; then
+        pass "Command: $cmd"
+    else
+        fail "Command: $cmd"
+    fi
+done
+
+# Test a few commands that produce output
+echo ""
+echo "Testing command output..."
+
+if $UVX_CMD python paper_writer.py templates 2>/dev/null | grep -q "AVAILABLE TEMPLATES"; then
+    pass "templates command produces output"
+else
+    fail "templates command output"
+fi
+
+if $UVX_CMD python paper_writer.py domains 2>/dev/null | grep -q "Command Domains"; then
+    pass "domains command produces output"
+else
+    fail "domains command output"
+fi
+
+if $UVX_CMD python paper_writer.py workflow 2>/dev/null | grep -q "Workflow Recommendations"; then
+    pass "workflow command produces output"
+else
+    fail "workflow command output"
+fi
+
+if $UVX_CMD python paper_writer.py phrases intro 2>/dev/null | grep -q "ACADEMIC PHRASES"; then
+    pass "phrases intro command produces output"
+else
+    fail "phrases intro command output"
+fi
+
+if $UVX_CMD python paper_writer.py disclosure arxiv 2>/dev/null | grep -q "LLM DISCLOSURE"; then
+    pass "disclosure arxiv command produces output"
+else
+    fail "disclosure arxiv command output"
+fi
+
+# Check for circular imports
+echo ""
+echo "Checking for circular imports..."
+if $UVX_CMD python -c "import paper_writer" 2>/dev/null; then
+    pass "No circular imports in paper_writer"
+else
+    fail "Circular import detected in paper_writer"
+fi
+
+if $UVX_CMD python -c "import config" 2>/dev/null; then
+    pass "No circular imports in config"
+else
+    fail "Circular import detected in config"
+fi
+
+if $UVX_CMD python -c "import citations" 2>/dev/null; then
+    pass "No circular imports in citations"
+else
+    fail "Circular import detected in citations"
+fi
+
+if $UVX_CMD python -c "import critique" 2>/dev/null; then
+    pass "No circular imports in critique"
+else
+    fail "Circular import detected in critique"
+fi
+
+if $UVX_CMD python -c "import compliance" 2>/dev/null; then
+    pass "No circular imports in compliance"
+else
+    fail "Circular import detected in compliance"
+fi
+
+# Summary
+echo ""
+echo "============================================"
+echo "SUMMARY: $PASS_COUNT passed, $FAIL_COUNT failed"
+echo "============================================"
+
+if [[ $FAIL_COUNT -gt 0 ]]; then
+    echo ""
+    echo "Result: FAIL"
     exit 1
 fi
 

@@ -1,0 +1,117 @@
+{
+  "prompt": "taxonomy_v2",
+  "model": "qwen3-coder-480b",
+  "timestamp": "2026-01-28T19:09:14.038192",
+  "passed": true,
+  "metrics": {
+    "avg_f1": 0.825,
+    "conceptual_precision": 0.75,
+    "conceptual_recall": 0.625,
+    "tactical_precision": 1.0,
+    "tactical_recall": 1.0,
+    "total_rejected": 0,
+    "avg_latency_ms": 2648.56541948393,
+    "correction_rounds": 0,
+    "cases_needing_correction": 0,
+    "correction_success_rate": 1.0
+  },
+  "cases": [
+    {
+      "id": "T1547.001",
+      "predicted": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "rejected": [],
+      "f1": 1.0,
+      "latency_ms": 3879.216192988679,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "SI-2",
+      "predicted": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.8,
+      "latency_ms": 2395.268439082429,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "d3f:NetworkIsolation",
+      "predicted": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "rejected": [],
+      "f1": 1.0,
+      "latency_ms": 2593.3902938850224,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "CWE-89",
+      "predicted": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.5,
+      "latency_ms": 1726.3867519795895,
+      "correction_rounds": 0,
+      "correction_success": true
+    }
+  ]
+}

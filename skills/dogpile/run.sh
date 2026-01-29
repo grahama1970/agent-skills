@@ -24,5 +24,5 @@ else
   # Run dogpile search
   # We use process substitution to tee stderr to the logfile AND back to stderr,
   # while leaving stdout (the report/JSON) untouched and pure.
-  "${EXEC[@]}" "$SCRIPT_DIR/dogpile.py" "$@" 2> >(tee -a dogpile.log >&2)
+  "${EXEC[@]}" "$SCRIPT_DIR/cli.py" "$@" 2> >(tee -a dogpile.log >&2)
 fi

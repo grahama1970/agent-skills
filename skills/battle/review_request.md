@@ -1,82 +1,89 @@
-# Brutal security review: battle.py QEMU digital twin
+# Code Review Request: Battle Skill Modularization
 
 ## Repository and branch
 
-- **Repo:** `owner/repo`
+- **Repo:** `pi-mono`
 - **Branch:** `main`
 - **Paths of interest:**
+  - `.pi/skills/battle/config.py`
+  - `.pi/skills/battle/state.py`
+  - `.pi/skills/battle/memory.py`
+  - `.pi/skills/battle/scoring.py`
+  - `.pi/skills/battle/digital_twin.py`
+  - `.pi/skills/battle/red_team.py`
+  - `.pi/skills/battle/blue_team.py`
+  - `.pi/skills/battle/orchestrator.py`
+  - `.pi/skills/battle/report.py`
+  - `.pi/skills/battle/qemu_support.py`
   - `.pi/skills/battle/battle.py`
 
 ## Summary
 
-Review the battle skill implementation for security vulnerabilities. This is a Red vs Blue firmware security competition tool that runs QEMU inside Docker containers, manages AFL++ fuzzing, handles user-controlled paths, and executes subprocess commands.
+Modularized the battle skill from a 3720-line monolith into 11 separate debuggable modules. All modules are under 500 lines. This review focuses on code quality, not security (security review was done previously).
 
 ## Objectives
 
-### 1. Find command injection vulnerabilities
+### 1. Check for circular imports
 
-Find command injection vulnerabilities
+Verify import structure is clean and no circular dependencies exist.
 
-### 2. Identify Docker escape risks
+### 2. Review API consistency
 
-Identify Docker escape risks
+Ensure consistent naming, parameter ordering, and return types across modules.
 
-### 3. Check for path traversal vulnerabilities
+### 3. Verify thread safety
 
-Check for path traversal vulnerabilities
+Check that concurrent Red/Blue team execution is properly thread-safe.
 
-### 4. Review subprocess handling for shell injection
+### 4. Review error handling
 
-Review subprocess handling for shell injection
+Ensure all exceptions are properly caught and handled.
 
-### 5. Identify architectural security issues
+### 5. Check type hints
 
-Identify architectural security issues
+Verify type hints are complete and accurate.
 
-### 6. Find race conditions in multi-process code
+### 6. Review documentation
 
-Find race conditions in multi-process code
+Ensure docstrings are present and accurate.
+
+## Module Line Counts
+
+- config.py: 58 lines
+- state.py: 308 lines
+- memory.py: 310 lines
+- scoring.py: 133 lines
+- digital_twin.py: 252 lines
+- red_team.py: 226 lines
+- blue_team.py: 245 lines
+- orchestrator.py: 240 lines
+- report.py: 101 lines
+- qemu_support.py: 341 lines
+- battle.py: 214 lines
 
 ## Constraints for the patch
 
 - **Output format:** Unified diff only, inline inside a single fenced code block.
 - Include a one-line commit subject on the first line of the patch.
-- Hunk headers must be numeric only (`@@ -old,+new @@`); no symbolic headers.
-- Patch must apply cleanly on branch `main`.
-- No destructive defaults; retain existing behavior unless explicitly required by this change.
-- No extra commentary, hosted links, or PR creation in the output.
+- Patch must apply cleanly.
+- No destructive defaults; retain existing behavior.
 
 ## Acceptance criteria
 
-- All subprocess calls use proper argument lists (no shell=True with user input)
-- All file paths are validated and sandboxed
-- Docker containers cannot escape to host
-- No command injection vectors
+- No circular imports
+- Type hints complete
+- Thread safety verified
+- Error handling complete
+- Documentation present
 
 ## Test plan
 
-**Before change** (optional): (Describe how to reproduce the issue)
-
 **After change:**
 
-1. (Specify test steps)
-
-## Implementation notes
-
-(Add implementation hints here)
-
-## Known touch points
-
-- (List files/functions to modify)
-
-## Clarifying questions
-
-*Answer inline here or authorize assumptions:*
-
-1. (Add any clarifying questions here)
+1. Run `./sanity.sh` - must pass
+2. Run `./run.sh --help` - must show help
+3. Run `./run.sh status` - must work
 
 ## Deliverable
 
-- Reply with a single fenced code block containing a unified diff that meets the constraints above (no prose before/after the fence)
-- In the chat, provide answers to each clarifying question explicitly so reviewers do not need to guess
-- Do not mark the request complete if either piece is missing; the review will be considered incomplete without both the diff block and the clarifying-answers section
+- Reply with a single fenced code block containing a unified diff

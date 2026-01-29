@@ -1,124 +1,45 @@
-# Code Review Request: Dogpile Deep Search Aggregator
+# Dogpile Modularization Code Review Request
 
-## Overview
-Dogpile is a comprehensive deep search aggregator that orchestrates searches across multiple sources:
-- Brave Search (Web)
-- Perplexity (AI Research)
-- GitHub (Repos, Issues, Code via /github-search skill)
-- ArXiv (Academic Papers)
-- YouTube (Videos with Transcripts)
-- Wayback Machine (Historical Snapshots)
-- Codex (High-Reasoning Synthesis)
+## Summary
+The dogpile skill has been refactored from a 2065-line monolith into 16 separate debuggable modules.
 
 ## Files to Review
-- `dogpile.py` - Main implementation (~1500 lines)
-- `SKILL.md` - Documentation
 
-## Research-Backed Improvement Areas
+### Core Configuration
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/config.py` (103 lines) - Constants, paths, semaphores, optional deps
 
-Based on self-research using dogpile, here are the key improvements needed:
+### Utilities
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/utils.py` (221 lines) - Common utilities, rate limiting, run_command
 
-### 1. Rate Limiting & Backoff (Critical)
+### Provider Modules
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/brave.py` (141 lines) - Brave Search integration
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/perplexity.py` (48 lines) - Perplexity AI integration
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/arxiv_search.py` (199 lines) - ArXiv paper search
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/github_search.py` (325 lines) - GitHub core search functions
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/github_deep.py` (345 lines) - GitHub deep search/Stage 2 orchestration
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/youtube_search.py` (144 lines) - YouTube video/transcript search
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/wayback.py` (68 lines) - Wayback Machine snapshot check
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/codex.py` (260 lines) - OpenAI Codex reasoning
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/discord.py` (55 lines) - Discord message search
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/readarr.py` (56 lines) - Readarr/Usenet search
 
-**Current Issues:**
-- Uses ThreadPoolExecutor with no rate limiting
-- No handling of Retry-After headers
-- No backoff on 429/503 errors
-- Risk of API bans (GitHub explicitly warns about this)
+### Report Generation
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/formatters.py` (102 lines) - Simple section formatters
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/synthesis.py` (320 lines) - Report synthesis/generation
 
-**Research-Backed Solutions:**
-- Implement tenacity with `wait_random_exponential(min=1, max=120)` and jitter
-- Parse `Retry-After`, `x-ratelimit-remaining`, `x-ratelimit-reset` headers
-- Prepare for IETF RateLimit-* headers (draft expires Mar 2026)
-- Convert 429/503 into scheduling signals, not errors
-- Cap retries explicitly (count and/or total time)
+### CLI Entry Point
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/dogpile/cli.py` (377 lines) - Thin CLI with search, resources, presets commands
 
-**Key Insight:** Tenacity + ThreadPoolExecutor are complementary:
-- ThreadPoolExecutor: Handles parallelism (fan-out)
-- Tenacity: Handles retries with backoff per request
-- Semaphore: Limits concurrent requests per provider
+## Review Focus Areas
+1. Import structure and circular dependency risks
+2. Error handling consistency across modules
+3. Rate limiting and resilience patterns (tenacity, semaphores)
+4. Type annotations completeness
+5. Docstring quality and consistency
+6. Code duplication that could be extracted
 
-### 2. Retry Storm Prevention
-
-**Current Risk:**
-- Independent retries across multiple sources can cause 243x amplification (AWS example: 5 layers x 3 retries)
-
-**Solutions:**
-- Centralize retry policy per provider
-- Use jitter to prevent synchronized retry waves
-- Treat non-retryable errors as terminal
-
-### 3. Deadline-Aware Orchestration
-
-**Current Issues:**
-- No global deadline for the search operation
-- No per-source timeouts
-- No partial result streaming
-
-**Solutions:**
-- Implement global deadline with per-source timeouts
-- Stream partial results when available
-- Cancel downstream work when deadlines expire
-
-### 4. Idempotency
-
-**Current Issues:**
-- Some operations may not be safely retryable
-
-**Solutions:**
-- Design all aggregator steps to be safely retryable
-- Mark non-retryable operations explicitly
-
-### 5. Code Quality Issues
-
-**Specific Problems:**
-- `search()` function is too long (~400 lines)
-- Duplicate code across search functions
-- Inconsistent error handling
-- Missing type hints in some areas
-- Long query tailoring prompt that could be schema-based
-
-### 6. Architecture Improvements
-
-**Current:**
-- Monolithic search function
-- Direct API calls mixed with skill orchestration
-
-**Suggested:**
-- Policy-driven source adapters (each provider gets dedicated wrapper)
-- Central budget manager for quota enforcement
-- Adaptive throttling loop based on error rates and latency
-
-## Specific Review Questions
-
-1. How should we implement tenacity with ThreadPoolExecutor? (They're complementary)
-2. Should we use asyncio instead of ThreadPoolExecutor for better cancellation?
-3. How to parse and respect Retry-After headers across different providers?
-4. Best pattern for partial result streaming during aggregation?
-5. How to structure the central budget manager for multi-source quotas?
-
-## Implementation Priority
-
-1. **P0 (Critical):** Add tenacity with exponential backoff + jitter
-2. **P0 (Critical):** Parse and respect rate limit headers
-3. **P1 (High):** Add semaphore for per-provider concurrency limits
-4. **P1 (High):** Refactor search() into smaller functions
-5. **P2 (Medium):** Add global deadline with cancellation
-6. **P2 (Medium):** Implement partial result streaming
-
-## Code Context
-
-The skill is used by AI agents for deep research tasks. It needs to be:
-- **Reliable:** Handle API failures gracefully, avoid bans
-- **Fast:** Parallel execution with proper throttling
-- **Comprehensive:** Multiple source types with deep extraction
-- **Memory-efficient:** Stream results, don't load everything
-
-## Target Improvements
-
-After this review, the code should:
-1. Never trigger rate limit bans
-2. Gracefully degrade when sources fail
-3. Be more maintainable with smaller functions
-4. Have proper type hints throughout
-5. Include retry policies per provider
+## Quality Gates Verified
+- All modules < 500 lines: PASS
+- No circular imports: PASS
+- sanity.sh passes: PASS
+- All imports work correctly: PASS

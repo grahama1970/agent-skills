@@ -1,0 +1,126 @@
+{
+  "prompt": "taxonomy_v1",
+  "model": "deepseek",
+  "timestamp": "2026-01-28T18:55:23.872432",
+  "passed": false,
+  "metrics": {
+    "avg_f1": 0.7476190476190476,
+    "conceptual_precision": 0.625,
+    "conceptual_recall": 1.0,
+    "tactical_precision": 0.625,
+    "tactical_recall": 1.0,
+    "total_rejected": 1,
+    "avg_latency_ms": 20350.661182310432,
+    "correction_rounds": 1,
+    "cases_needing_correction": 1,
+    "correction_success_rate": 1.0
+  },
+  "cases": [
+    {
+      "id": "T1547.001",
+      "predicted": {
+        "conceptual": [
+          "Corruption",
+          "Stealth"
+        ],
+        "tactical": [
+          "Persist",
+          "Evade"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "rejected": [
+        "Persistence"
+      ],
+      "f1": 0.6666666666666666,
+      "latency_ms": 39467.27642114274,
+      "correction_rounds": 1,
+      "correction_success": true
+    },
+    {
+      "id": "SI-2",
+      "predicted": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden",
+          "Restore"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.8571428571428571,
+      "latency_ms": 34661.727546015754,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "d3f:NetworkIsolation",
+      "predicted": {
+        "conceptual": [
+          "Resilience",
+          "Loyalty"
+        ],
+        "tactical": [
+          "Isolate",
+          "Harden"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.6666666666666666,
+      "latency_ms": 3497.9395309928805,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "CWE-89",
+      "predicted": {
+        "conceptual": [
+          "Fragility",
+          "Corruption"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.8,
+      "latency_ms": 3775.701231090352,
+      "correction_rounds": 0,
+      "correction_success": true
+    }
+  ]
+}

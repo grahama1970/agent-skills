@@ -1,84 +1,49 @@
 ---
 name: qra
 description: >
-  Extract Question-Reasoning-Answer pairs from text.
-  Use --context for domain-focused extraction.
-  Validates answers are grounded in source text.
-allowed-tools: Bash, Read
-triggers:
-  - extract QRA
-  - extract Q&A
-  - extract knowledge
-  - create Q&A pairs
-  - knowledge extraction
-  - generate questions from
+  ⚠️ DEPRECATED - Use /doc2qra instead. This skill has been merged into /doc2qra.
+  Migration: './run.sh --file text.md' → './doc2qra/run.sh --file text.md'
+allowed-tools: [Bash, Read]
+triggers: []  # Triggers removed - use /doc2qra instead
 metadata:
-  short-description: Extract grounded Q&A pairs from text
+  short-description: "DEPRECATED - Use /doc2qra instead"
+  deprecated: true
+  deprecated-since: "2026-01-29"
+  replacement: "/doc2qra"
 ---
 
-# QRA Skill
+# QRA (DEPRECATED)
 
-Extract Question-Reasoning-Answer pairs from text and store in memory.
+> ⚠️ **This skill has been merged into /doc2qra.**
+>
+> Use `doc2qra` instead:
+>
+> | Old Command | New Command |
+> |-------------|-------------|
+> | `./run.sh --file text.md --scope X` | `./doc2qra/run.sh --file text.md --scope X` |
+> | `./run.sh --text "content" --scope X` | `./doc2qra/run.sh --text "content" --scope X` |
+> | `./run.sh --dry-run` | `./doc2qra/run.sh --dry-run` |
 
-## Happy Path
+## Why the Change?
 
-```bash
-# Extract from text file
-./run.sh --file document.md --scope research
+The `doc2qra` skill is more descriptive and consolidates three overlapping skills:
+- `distill` → merged into `doc2qra`
+- `qra` → merged into `doc2qra`
+- `doc-to-qra` → merged into `doc2qra`
 
-# With domain focus (recommended)
-./run.sh --file notes.txt --scope project --context "security expert"
+## New Features in doc2qra
 
-# Preview before storing
-./run.sh --file transcript.txt --dry-run
+- **Document Summary**: Always generates a 2-3 paragraph summary alongside QRAs
+- **`--summary-only`**: Generate only the summary without Q&A extraction
+- **Unified triggers**: All QRA-related commands route to one skill
+- **PDF Support**: Now handles PDFs directly (no need for separate distill)
 
-# From stdin
-cat meeting_notes.txt | ./run.sh --scope meetings
-```
-
-## Parameters
-
-| Flag | Description |
-|------|-------------|
-| `--file` | Text or markdown file |
-| `--text` | Raw text content |
-| `--scope` | Memory scope (default: research) |
-| `--context` | Domain focus, e.g. "ML researcher" |
-| `--dry-run` | Preview without storing |
-| `--json` | JSON output |
-
-## What It Does
-
-1. **Split** text into logical sections
-2. **Extract** Q&A pairs via LLM (parallel batch)
-3. **Validate** answers are grounded in source
-4. **Store** to memory via `memory-agent learn`
-
-## When to Use
-
-- Text content (not PDFs - use `distill` for PDFs)
-- Meeting transcripts
-- Code documentation
-- Notes and summaries
-- Any plain text you want to remember
-
-## Examples
+## Quick Migration
 
 ```bash
-# Meeting transcript
-./run.sh --file meeting.txt --scope team --context "project manager"
+# Old
+./qra/run.sh --file notes.txt --scope research
 
-# Code documentation
-./run.sh --file README.md --scope code --context "Python developer"
-
-# From clipboard/pipe
-pbpaste | ./run.sh --scope notes --dry-run
+# New
+./doc2qra/run.sh --file notes.txt --scope research
 ```
-
-## Environment Variables (Optional Tuning)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `QRA_CONCURRENCY` | 6 | Parallel LLM requests |
-| `QRA_GROUNDING_THRESH` | 0.6 | Grounding similarity threshold |
-| `QRA_NO_GROUNDING` | - | Set to 1 to skip validation |

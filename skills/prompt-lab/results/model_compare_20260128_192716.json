@@ -1,0 +1,21 @@
+{
+  "prompt": "taxonomy_v2",
+  "ground_truth": "taxonomy_large",
+  "timestamp": "2026-01-28T19:27:16.930992",
+  "results": [
+    {
+      "model": "deepseek-v3.2",
+      "avg_f1": 0.2920289855072464,
+      "avg_latency_ms": 3714.541435854145,
+      "total_corrections": 0,
+      "cases_evaluated": 46
+    },
+    {
+      "model": "qwen3-235b",
+      "avg_f1": 0.2434782608695652,
+      "avg_latency_ms": 3953.160067827886,
+      "total_corrections": 1,
+      "cases_evaluated": 46
+    }
+  ]
+}

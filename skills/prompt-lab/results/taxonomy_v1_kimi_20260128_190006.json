@@ -1,0 +1,69 @@
+{
+  "prompt": "taxonomy_v1",
+  "model": "kimi",
+  "timestamp": "2026-01-28T19:00:06.823073",
+  "passed": false,
+  "metrics": {
+    "avg_f1": 0.0,
+    "conceptual_precision": 0.0,
+    "conceptual_recall": 0.0,
+    "tactical_precision": 0.0,
+    "tactical_recall": 0.0,
+    "total_rejected": 6,
+    "avg_latency_ms": 58150.02428099979,
+    "correction_rounds": 4,
+    "cases_needing_correction": 2,
+    "correction_success_rate": 0.0
+  },
+  "cases": [
+    {
+      "id": "T1547.001",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "rejected": [
+        "PARSE_ERROR",
+        "PARSE_ERROR",
+        "PARSE_ERROR"
+      ],
+      "f1": 0.0,
+      "latency_ms": 51276.57510014251,
+      "correction_rounds": 2,
+      "correction_success": false
+    },
+    {
+      "id": "SI-2",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "rejected": [
+        "PARSE_ERROR",
+        "PARSE_ERROR",
+        "PARSE_ERROR"
+      ],
+      "f1": 0.0,
+      "latency_ms": 65023.473461857066,
+      "correction_rounds": 2,
+      "correction_success": false
+    }
+  ]
+}

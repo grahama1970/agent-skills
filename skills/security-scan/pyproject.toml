@@ -1,0 +1,17 @@
+[project]
+name = "security-scan"
+version = "0.1.0"
+description = "Self-hosted security scanning orchestrator (SAST, deps, secrets)"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]

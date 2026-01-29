@@ -1,0 +1,37 @@
+{
+  "completed": 6,
+  "total": 16,
+  "description": "Dogpile: A robot learning to paint narrative techniques storytelling",
+  "current_item": "completed",
+  "stats": {
+    "providers_done": 0,
+    "providers_total": 9,
+    "errors": 1,
+    "rate_limits": 0
+  },
+  "provider_status": {
+    "brave": "pending",
+    "perplexity": "pending",
+    "github": "pending",
+    "arxiv": "pending",
+    "youtube": "pending",
+    "readarr": "pending",
+    "wayback": "pending",
+    "codex": "pending",
+    "discord": "pending"
+  },
+  "provider_times": {},
+  "errors": [
+    {
+      "provider": "codex",
+      "message": "Synthesis failed: Error: OpenAI Codex v0.92.0 (research preview)\n--------\nworkdir: /home/graham/workspace/experiments/",
+      "type": "api_error",
+      "timestamp": "2026-01-29 11:02:45"
+    }
+  ],
+  "rate_limits": {},
+  "elapsed_seconds": 101.3,
+  "progress_pct": 37.5,
+  "last_updated": "2026-01-29 11:02:45",
+  "status": "completed"
+}

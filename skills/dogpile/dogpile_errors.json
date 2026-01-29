@@ -1,0 +1,440 @@
+{
+  "last_updated": "2026-01-29T11:02:45.458822",
+  "sessions": [
+    {
+      "session_id": "dogpile_1769687742",
+      "query": "AI agent memory",
+      "started_at": "2026-01-29T06:55:42.674418",
+      "ended_at": "2026-01-29T06:57:23.680722",
+      "status": "completed",
+      "providers_succeeded": [
+        "perplexity",
+        "arxiv",
+        "brave",
+        "youtube",
+        "codex"
+      ],
+      "providers_failed": [
+        "discord",
+        "github",
+        "codex",
+        "synthesis"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-29T06:55:44.972625",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 1
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T06:56:17.369042",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T06:56:17.425838",
+          "provider": "github",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "GitHub skill error: Error: Traceback (most recent call last):\n  File \"",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T06:56:19.098633",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 2
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T06:56:52.284413",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 3
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T06:57:23.669346",
+          "provider": "synthesis",
+          "error_type": "api_error",
+          "severity": "error",
+          "message": "Codex Synthesis failed.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {
+        "codex": 3
+      }
+    },
+    {
+      "session_id": "dogpile_1769688513",
+      "query": "AI agent memory",
+      "started_at": "2026-01-29T07:08:33.380770",
+      "ended_at": "2026-01-29T07:10:16.007931",
+      "status": "completed",
+      "providers_succeeded": [
+        "perplexity",
+        "arxiv",
+        "brave",
+        "youtube",
+        "codex"
+      ],
+      "providers_failed": [
+        "discord",
+        "github",
+        "codex",
+        "synthesis"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-29T07:08:36.724637",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 4
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T07:09:08.233442",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T07:09:08.292128",
+          "provider": "github",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "GitHub skill error: Error: Traceback (most recent call last):\n  File \"",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T07:09:09.588753",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 5
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T07:09:43.084974",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 6
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T07:10:15.992020",
+          "provider": "synthesis",
+          "error_type": "api_error",
+          "severity": "error",
+          "message": "Codex Synthesis failed.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {
+        "codex": 3
+      }
+    },
+    {
+      "session_id": "dogpile_1769696480",
+      "query": "ways to improve icon-creator for agent-human collaboration specifically finding candidates picking the best ones in rounds and streamdeck format conversion",
+      "started_at": "2026-01-29T09:21:20.589123",
+      "ended_at": "2026-01-29T09:23:03.093141",
+      "status": "completed",
+      "providers_succeeded": [
+        "arxiv",
+        "perplexity",
+        "brave",
+        "youtube",
+        "codex"
+      ],
+      "providers_failed": [
+        "discord",
+        "github",
+        "codex",
+        "synthesis"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-29T09:21:24.041193",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 7
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T09:21:55.868248",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T09:21:55.926723",
+          "provider": "github",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "GitHub skill error: Error: Traceback (most recent call last):\n  File \"",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T09:21:57.818531",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 8
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T09:22:31.089438",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 9
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T09:23:03.086044",
+          "provider": "synthesis",
+          "error_type": "api_error",
+          "severity": "error",
+          "message": "Codex Synthesis failed.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {
+        "codex": 3
+      }
+    },
+    {
+      "session_id": "dogpile_1769702464",
+      "query": "A robot learning to paint narrative techniques storytelling",
+      "started_at": "2026-01-29T11:01:04.135336",
+      "ended_at": "2026-01-29T11:02:45.458632",
+      "status": "completed",
+      "providers_succeeded": [
+        "perplexity",
+        "arxiv",
+        "brave",
+        "youtube",
+        "codex"
+      ],
+      "providers_failed": [
+        "discord",
+        "github",
+        "codex",
+        "synthesis"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-29T11:01:07.119486",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 10
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T11:01:39.181304",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T11:01:39.243921",
+          "provider": "github",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "GitHub skill error: Error: Traceback (most recent call last):\n  File \"",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T11:01:40.617389",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 11
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T11:02:13.864586",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 12
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T11:02:45.449469",
+          "provider": "synthesis",
+          "error_type": "api_error",
+          "severity": "error",
+          "message": "Codex Synthesis failed.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {
+        "codex": 3
+      }
+    }
+  ],
+  "rate_limits": {
+    "codex": {
+      "provider": "codex",
+      "remaining": 0,
+      "limit": -1,
+      "reset_at": 1769702593.864561,
+      "last_hit": "2026-01-29T11:02:13.864565",
+      "total_hits": 12,
+      "backoff_multiplier": 1.5
+    }
+  }
+}

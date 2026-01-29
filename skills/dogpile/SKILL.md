@@ -121,11 +121,16 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 
 ## Commands
 
-- `./run.sh search "query"`: Run a search.
-- `./run.sh search "query" --preset NAME`: Search with a preset.
-- `./run.sh monitor`: Open the Real-time TUI Monitor.
-- `python dogpile.py presets`: List available presets.
-- `python dogpile.py resources`: List all resources.
+| Command | Description |
+|---------|-------------|
+| `./run.sh search "query"` | Run a search |
+| `./run.sh search "query" --preset NAME` | Search with a preset |
+| `./run.sh monitor` | Open the Real-time TUI Monitor |
+| `python dogpile.py presets` | List available presets |
+| `python dogpile.py resources` | List all resources |
+| `python dogpile.py errors` | View error summary |
+| `python dogpile.py errors --json` | Get errors as JSON |
+| `python dogpile.py errors --clear` | Clear error logs |
 
 ## Usage
 
@@ -144,3 +149,137 @@ The skill automatically analyzes queries for ambiguity.
 - If the query is clear (e.g., "python sort list"), it proceeds.
 - If ambiguous (e.g., "apple"), it returns a JSON object with clarifying questions.
   - The calling agent should interpret this JSON and ask the user the questions.
+
+## Error Reporting & Debugging
+
+Dogpile tracks all errors, rate limits, and failures for agent debugging.
+
+### Error Commands
+
+```bash
+# View error summary (human-readable)
+python dogpile.py errors
+
+# View errors as JSON (for agent parsing)
+python dogpile.py errors --json
+
+# Clear error logs
+python dogpile.py errors --clear
+```
+
+### Error Logs
+
+| File | Contents |
+|------|----------|
+| `dogpile_errors.json` | Structured error log (last 50 sessions) |
+| `dogpile.log` | Human-readable log (timestamped) |
+| `rate_limit_state.json` | Persistent rate limit tracking |
+| `dogpile_state.json` | Real-time status for monitoring |
+
+### Rate Limit Tracking
+
+Rate limits are tracked per-provider with:
+- Total hit count
+- Exponential backoff multiplier
+- Reset timestamps
+- Last hit time
+
+When a provider is rate-limited:
+1. Error is logged to `dogpile_errors.json`
+2. Backoff multiplier increases (up to 10x)
+3. Status appears in `dogpile_state.json`
+4. Summary shown at end of search
+
+### Agent Debugging Workflow
+
+```bash
+# 1. Run search
+./run.sh search "query"
+
+# 2. If errors occurred, check summary
+python dogpile.py errors --json | jq '.rate_limits'
+
+# 3. View recent errors
+python dogpile.py errors --json | jq '.recent_errors'
+
+# 4. Check specific provider
+cat dogpile_state.json | jq '.providers'
+```
+
+### Error Types
+
+| Type | Description |
+|------|-------------|
+| `rate_limit` | HTTP 429 or rate limit headers detected |
+| `timeout` | Request timed out |
+| `auth_failure` | 401/403 authentication error |
+| `network_error` | Connection failed |
+| `api_error` | Provider API returned error |
+| `parse_error` | Failed to parse response |
+| `config_error` | Missing configuration |
+| `dependency_missing` | Required module not installed |
+
+## Task Monitor Integration
+
+Dogpile integrates with `/task-monitor` for centralized progress tracking.
+
+### Automatic Registration
+
+Every search automatically:
+1. Registers with `~/.pi/task-monitor/registry.json`
+2. Writes progress to `dogpile_task_state.json`
+3. Reports provider status and timing
+
+### Progress Tracking
+
+The task monitor state includes:
+- Completed/total steps
+- Per-provider status (pending, running, done, error, rate_limited)
+- Per-provider timing
+- Error count and recent errors
+- Rate limit summary
+
+### Viewing Progress
+
+```bash
+# Via task-monitor TUI
+cd ~/.pi/skills/task-monitor
+uv run python monitor.py tui --filter dogpile
+
+# Direct state file
+cat .pi/skills/dogpile/dogpile_task_state.json | jq
+
+# Via task-monitor API (if running)
+curl http://localhost:8765/tasks/dogpile-search
+```
+
+### Task State Schema
+
+```json
+{
+  "completed": 12,
+  "total": 16,
+  "description": "Dogpile: AI agent skills 2026",
+  "current_item": "synthesis",
+  "stats": {
+    "providers_done": 8,
+    "providers_total": 9,
+    "errors": 2,
+    "rate_limits": 1
+  },
+  "provider_status": {
+    "brave": "done",
+    "perplexity": "error",
+    "github": "done",
+    "codex": "rate_limited"
+  },
+  "provider_times": {
+    "brave": 3.2,
+    "github": 12.4
+  },
+  "errors": [...],
+  "elapsed_seconds": 45.2,
+  "progress_pct": 75.0,
+  "status": "running"
+}
+```

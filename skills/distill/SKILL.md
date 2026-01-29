@@ -1,80 +1,48 @@
 ---
 name: distill
 description: >
-  Distill PDF, URL, or text into Q&A pairs stored in memory.
-  Use --context for domain-focused extraction.
-allowed-tools: Bash, Read, WebFetch
-triggers:
-  - distill this
-  - distill this pdf
-  - distill this paper
-  - extract knowledge from
-  - remember this paper
-  - store this research
-  - learn from this document
-  - ingest this pdf
+  ⚠️ DEPRECATED - Use /doc2qra instead. This skill has been merged into /doc2qra.
+  Migration: './run.sh --file doc.pdf' → './doc2qra/run.sh --file doc.pdf'
+allowed-tools: [Bash, Read]
+triggers: []  # Triggers removed - use /doc2qra instead
 metadata:
-  short-description: Distill content into Q&A pairs for memory
+  short-description: "DEPRECATED - Use /doc2qra instead"
+  deprecated: true
+  deprecated-since: "2026-01-29"
+  replacement: "/doc2qra"
 ---
 
-# Distill Skill
+# Distill (DEPRECATED)
 
-Distill PDF, URL, or text into Q&A pairs and store in memory.
+> ⚠️ **This skill has been merged into /doc2qra.**
+>
+> Use `doc2qra` instead:
+>
+> | Old Command | New Command |
+> |-------------|-------------|
+> | `./run.sh --file doc.pdf --scope X` | `./doc2qra/run.sh --file doc.pdf --scope X` |
+> | `./run.sh --url URL --scope X` | `./doc2qra/run.sh --url URL --scope X` |
+> | `./run.sh --dry-run` | `./doc2qra/run.sh --dry-run` |
 
-## Happy Path
+## Why the Change?
 
-```bash
-# Distill a PDF into memory
-./run.sh --file paper.pdf --scope research
+The `doc2qra` skill is more descriptive and consolidates three overlapping skills:
+- `distill` → merged into `doc2qra`
+- `qra` → merged into `doc2qra`
+- `doc-to-qra` → merged into `doc2qra`
 
-# With domain focus (recommended for better relevance)
-./run.sh --file paper.pdf --scope research --context "ML researcher"
+## New Features in doc2qra
 
-# Preview before storing
-./run.sh --file paper.pdf --dry-run
+- **Document Summary**: Always generates a 2-3 paragraph summary alongside QRAs
+- **`--summary-only`**: Generate only the summary without Q&A extraction
+- **Unified triggers**: All QRA-related commands route to one skill
 
-# From URL
-./run.sh --url https://example.com/article --scope web
-```
-
-## Parameters
-
-| Flag | Description |
-|------|-------------|
-| `--file` | PDF, markdown, or text file |
-| `--url` | URL to fetch and distill |
-| `--scope` | Memory scope (default: research) |
-| `--context` | Domain focus, e.g. "security expert" |
-| `--dry-run` | Preview without storing |
-| `--json` | JSON output |
-| `--sections-only` | Extract sections only (no Q&A) |
-
-## What It Does
-
-1. **Extract** content from PDF/URL/text
-2. **Split** into logical sections
-3. **Generate** Q&A pairs via LLM
-4. **Validate** answers are grounded in source
-5. **Store** to memory via `memory-agent learn`
-
-## Examples
+## Quick Migration
 
 ```bash
-# Research paper
-./run.sh --file arxiv_paper.pdf --scope research --context "ML researcher"
+# Old
+./distill/run.sh --file paper.pdf --scope research
 
-# Technical documentation
-./run.sh --file api_docs.md --scope project --context "backend developer"
-
-# Just extract sections (no Q&A)
-./run.sh --file paper.pdf --sections-only --json
+# New
+./doc2qra/run.sh --file paper.pdf --scope research
 ```
-
-## Environment Variables (Optional Tuning)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DISTILL_PDF_MODE` | fast | PDF mode: fast, accurate, auto |
-| `DISTILL_CONCURRENCY` | 6 | Parallel LLM requests |
-| `DISTILL_GROUNDING_THRESH` | 0.6 | Grounding similarity threshold |
-| `DISTILL_NO_GROUNDING` | - | Set to 1 to skip validation |

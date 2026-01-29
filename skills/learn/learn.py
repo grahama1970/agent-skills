@@ -2,6 +2,15 @@
 """
 Learn - Unified Knowledge Acquisition for Any Persona Agent
 
+⚠️  DEPRECATED: This skill has been merged into /memory.
+    Use 'memory-agent acquire' commands instead.
+
+    Migration guide:
+    - ./run.sh <url> --scope X          → memory-agent acquire content <url> --scope X
+    - ./run.sh --list --scope X         → memory-agent acquire list --scope X
+    - ./run.sh --from-gaps --scope X    → memory-agent acquire gaps --scope X
+    - ./run.sh <title> --request        → memory-agent acquire request <title>
+
 ONE command to learn from ANY content type.
 Auto-detects source type and routes to appropriate backend skill.
 
@@ -598,6 +607,18 @@ def find_knowledge_gaps() -> list:
     return unique_gaps
 
 
+def _show_deprecation_warning() -> None:
+    """Show deprecation warning with migration guide."""
+    console.print("\n[bold yellow]⚠️  DEPRECATION WARNING[/bold yellow]")
+    console.print("[yellow]/learn has been merged into /memory[/yellow]")
+    console.print("\n[dim]Migration guide:[/dim]")
+    console.print("  [cyan]./run.sh <url> --scope X[/cyan]       → [green]memory-agent acquire content <url> --scope X[/green]")
+    console.print("  [cyan]./run.sh --list --scope X[/cyan]      → [green]memory-agent acquire list --scope X[/green]")
+    console.print("  [cyan]./run.sh --from-gaps --scope X[/cyan] → [green]memory-agent acquire gaps --scope X[/green]")
+    console.print("  [cyan]./run.sh <title> --request[/cyan]     → [green]memory-agent acquire request <title>[/green]")
+    console.print("\n[dim]This skill will be removed in a future release.[/dim]\n")
+
+
 def main(
     source: Optional[str] = typer.Argument(None, help="URL or file path to learn from"),
     scope: str = typer.Option(..., "--scope", "-s", help="Memory scope (e.g., 'horus_lore', 'project_kb')"),
@@ -609,6 +630,9 @@ def main(
     from_gaps: bool = typer.Option(False, "--from-gaps", "-g", help="Reflect on past errors/questions to find what to learn"),
 ) -> None:
     """Learn from ANY content type. Routes to appropriate backend skill."""
+    # Show deprecation warning on every run
+    _show_deprecation_warning()
+
     learner = Learner(scope)
 
     # Reflection mode - find knowledge gaps from episodic memory

@@ -1,0 +1,23 @@
+[project]
+name = "doc2qra"
+version = "1.0.0"
+description = "Convert documents (PDF, URL, text) into QRA pairs with summaries for memory."
+readme = "SKILL.md"
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+    "tqdm>=4.66.0",
+    "beautifulsoup4>=4.12.0",
+    "requests>=2.31.0",
+    "scillm @ git+https://github.com/grahama1970/scillm.git",
+    "rapidfuzz>=3.0.0",
+]
+
+[tool.uv]
+# Optional dependencies that improve capabilities but aren't strictly required
+# (Making them required ensures consistent behavior for the skill)
+dev-dependencies = [
+    "pymupdf>=1.23.0",
+    "pymupdf4llm>=0.0.1",
+]

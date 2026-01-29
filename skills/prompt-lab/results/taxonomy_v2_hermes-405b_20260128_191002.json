@@ -1,0 +1,101 @@
+{
+  "prompt": "taxonomy_v2",
+  "model": "hermes-405b",
+  "timestamp": "2026-01-28T19:10:02.873368",
+  "passed": false,
+  "metrics": {
+    "avg_f1": 0.0,
+    "conceptual_precision": 0.0,
+    "conceptual_recall": 0.0,
+    "tactical_precision": 0.0,
+    "tactical_recall": 0.0,
+    "total_rejected": 0,
+    "avg_latency_ms": 0.0,
+    "correction_rounds": 0,
+    "cases_needing_correction": 0,
+    "correction_success_rate": 0.0
+  },
+  "cases": [
+    {
+      "id": "T1547.001",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 0.0,
+      "correction_rounds": 0,
+      "correction_success": false
+    },
+    {
+      "id": "SI-2",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 0.0,
+      "correction_rounds": 0,
+      "correction_success": false
+    },
+    {
+      "id": "d3f:NetworkIsolation",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 0.0,
+      "correction_rounds": 0,
+      "correction_success": false
+    },
+    {
+      "id": "CWE-89",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 0.0,
+      "correction_rounds": 0,
+      "correction_success": false
+    }
+  ]
+}

@@ -13,6 +13,22 @@ triggers:
   - execute tasks.md
   - run each task
   - start the task list
+  # Anti-pattern detection triggers (catch before agent uses raw commands)
+  - run pipeline
+  - run the pipeline
+  - execute pipeline
+  - run stage
+  - run stages
+  - run the stages
+  - execute stages
+  - run batch
+  - batch process
+  - run extraction
+  - run the extraction
+  - multi-stage
+  - long-running task
+  - overnight run
+  - nightly run
 metadata:
   short-description: Execute task list with enforced hooks (memory recall + quality gate)
 ---
@@ -25,6 +41,90 @@ Execute tasks from a collaborative **task file** (e.g., `0N_TASKS.md`) with **en
 - **Memory-first Pre-hook**: Queries memory BEFORE each task (not optional)
 - **Quality-gate Post-hook**: Runs tests AFTER each task (must pass)
 - **Session Archiving**: Stores completed session for future recall
+
+## ❌ ANTI-PATTERNS: Never Do This
+
+**These patterns bypass quality gates and WILL cause failures that compound silently.**
+
+### Raw Pipeline Commands (FORBIDDEN)
+
+| ❌ NEVER DO THIS | ✅ DO THIS INSTEAD |
+|------------------|-------------------|
+| `nohup python -m pipeline.stage_05 &` | `/orchestrate 01_PIPELINE_TASKS.md` |
+| `python -m sparta.pipeline_duckdb.05_extract` | Create task file with Definition of Done |
+| `uv run python -m batch_processor` | `/batch-quality preflight` first |
+| `nohup ... & tail -f nohup.out` | `/task-monitor` with `--require-validation` |
+| Running stages manually "to save time" | Task file + orchestrate (actually faster long-term) |
+
+### Why Raw Commands Are Forbidden
+
+When you run `nohup python -m some_pipeline &` instead of using orchestrate, you bypass:
+
+1. **Memory-first pre-hooks** → You miss known solutions to problems you'll encounter
+2. **Quality-gate post-hooks** → Errors compound silently across stages
+3. **Task-monitor tracking** → No visibility into progress or failures
+4. **Session archiving** → Future agents can't learn from your run
+5. **Preflight validation** → You burn tokens on broken prompts/configs
+
+### Real Failure Example (January 2026)
+
+An agent was asked to "run SPARTA pipeline stages 05, 06, 08, 08b". Instead of using orchestrate:
+
+```bash
+# ❌ WHAT THE AGENT DID (WRONG)
+nohup uv run python -m sparta.pipeline_duckdb.05_extract_knowledge --run-id run-recovery-verify &
+tail -f nohup.out  # Manual monitoring
+# Repeated for each stage...
+```
+
+**Result:** 7-hour run with:
+- No memory recall (missed known NoneType fix)
+- No quality validation between stages
+- No task tracking
+- Errors discovered only at the end
+- No lessons stored for future agents
+
+```bash
+# ✅ WHAT THE AGENT SHOULD HAVE DONE
+# 1. Create task file
+cat > 01_SPARTA_TASKS.md << 'EOF'
+# SPARTA Pipeline Tasks
+
+## Tasks
+- [ ] **Task 1**: Run Stage 05 - Extract Knowledge
+  - **Definition of Done**: url_knowledge table has >30,000 rows
+
+- [ ] **Task 2**: Run Stage 06 - Embed Knowledge
+  - Dependencies: Task 1
+  - **Definition of Done**: 100% of excerpts have embeddings
+EOF
+
+# 2. Use orchestrate
+/orchestrate 01_SPARTA_TASKS.md
+```
+
+### Detection Triggers
+
+If you find yourself typing any of these patterns, STOP and use orchestrate:
+
+- `nohup ... &`
+- `python -m .*pipeline`
+- `python -m .*extract`
+- `python -m .*batch`
+- `uv run python -m .*stage`
+- `tail -f nohup.out`
+- `disown`
+- `screen` or `tmux` for "background pipeline"
+
+### The 5-Minute Rule
+
+**If a task will take more than 5 minutes, it MUST go through orchestrate.**
+
+Why? Because:
+- You WILL forget to check results
+- Errors WILL compound
+- You WILL NOT store lessons
+- Future agents WILL repeat your mistakes
 
 ## ⚠️ Non-Negotiable: Sanity Scripts + Completion Tests
 

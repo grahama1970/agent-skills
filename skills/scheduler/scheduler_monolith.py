@@ -1,0 +1,1283 @@
+#!/usr/bin/env python3
+"""
+Scheduler daemon for Pi and Claude Code.
+
+A lightweight background task scheduler using APScheduler.
+Stores jobs in JSON, logs execution, supports cron and interval triggers.
+Features rich TUI output with progress indicators.
+"""
+import argparse
+import json
+import os
+import signal
+import subprocess
+import sys
+import time
+import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+# Rich for TUI output
+try:
+    from rich.console import Console
+    from rich.table import Table
+    from rich.panel import Panel
+    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
+    from rich.live import Live
+    from rich.text import Text
+    from rich.style import Style
+    HAS_RICH = True
+    console = Console()
+except ImportError:
+    HAS_RICH = False
+    console = None
+
+# APScheduler for cron-like scheduling
+try:
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from apscheduler.triggers.cron import CronTrigger
+    from apscheduler.triggers.interval import IntervalTrigger
+    HAS_APSCHEDULER = True
+except ImportError:
+    HAS_APSCHEDULER = False
+
+# FastAPI for metrics server
+try:
+    from fastapi import FastAPI, HTTPException
+    from fastapi.responses import PlainTextResponse
+    import uvicorn
+    HAS_FASTAPI = True
+except ImportError:
+    HAS_FASTAPI = False
+
+# YAML for service configuration
+try:
+    import yaml
+    HAS_YAML = True
+except ImportError:
+    HAS_YAML = False
+
+
+def rprint(*args, **kwargs) -> None:
+    """Print with rich if available, else plain print."""
+    if HAS_RICH and console:
+        console.print(*args, **kwargs)
+    else:
+        print(*args, **kwargs)
+
+# Data directory
+DATA_DIR = Path(os.getenv("SCHEDULER_DATA_DIR", Path.home() / ".pi" / "scheduler"))
+JOBS_FILE = DATA_DIR / "jobs.json"
+PID_FILE = Path(os.getenv("SCHEDULER_PID_FILE", DATA_DIR / "scheduler.pid"))
+PORT_FILE = DATA_DIR / ".port"
+LOG_DIR = DATA_DIR / "logs"
+
+# Default metrics server port
+DEFAULT_METRICS_PORT = int(os.getenv("SCHEDULER_METRICS_PORT", "8610"))
+
+# Global state for running jobs (for progress tracking)
+RUNNING_JOBS: dict = {}  # {job_name: {"started": timestamp, "progress": str, "pid": int}}
+METRICS_COUNTERS: dict = {
+    "jobs_total": 0,
+    "jobs_success": 0,
+    "jobs_failed": 0,
+    "jobs_timeout": 0,
+}
+
+
+def ensure_dirs() -> None:
+    """Ensure data directories exist."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def load_jobs() -> dict:
+    """Load jobs from JSON file."""
+    if JOBS_FILE.exists():
+        return json.loads(JOBS_FILE.read_text())
+    return {}
+
+
+def save_jobs(jobs: dict) -> None:
+    """Save jobs to JSON file."""
+    ensure_dirs()
+    JOBS_FILE.write_text(json.dumps(jobs, indent=2))
+
+
+def parse_interval(interval_str: str) -> dict[str, int]:
+    """Parse interval string like '1h', '30m', '10s' to APScheduler kwargs."""
+    import re
+    match = re.match(r'^(\d+)([smhd])$', interval_str.lower())
+    if not match:
+        raise ValueError(f"Invalid interval format: {interval_str}")
+
+    value = int(match.group(1))
+    unit = match.group(2)
+
+    unit_map = {'s': 'seconds', 'm': 'minutes', 'h': 'hours', 'd': 'days'}
+    return {unit_map[unit]: value}
+
+
+def run_job(job: dict, show_progress: bool = True) -> dict[str, str | int | float]:
+    """Execute a job and return result with optional progress display."""
+    name = job["name"]
+    command = job["command"]
+    workdir = job.get("workdir", str(Path.cwd()))
+
+    log_file = LOG_DIR / f"{name}.log"
+    start_time = datetime.now()
+
+    # Rich progress context
+    if show_progress and HAS_RICH:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TimeElapsedColumn(),
+            console=console,
+        ) as progress:
+            task = progress.add_task(f"[cyan]Running {name}...", total=None)
+
+            try:
+                # Run with real-time output capture
+                process = subprocess.Popen(
+                    command,
+                    shell=True,
+                    cwd=workdir,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+
+                stdout_lines = []
+                stderr_lines = []
+
+                # Read output in real-time
+                def read_stream(stream, lines_list):
+                    for line in iter(stream.readline, ''):
+                        lines_list.append(line)
+                        progress.update(task, description=f"[cyan]{name}: {line.strip()[:50]}")
+
+                stdout_thread = threading.Thread(target=read_stream, args=(process.stdout, stdout_lines))
+                stderr_thread = threading.Thread(target=read_stream, args=(process.stderr, stderr_lines))
+                stdout_thread.start()
+                stderr_thread.start()
+
+                # Wait for completion with timeout
+                timeout = job.get("timeout", 3600)
+                process.wait(timeout=timeout)
+                stdout_thread.join()
+                stderr_thread.join()
+
+                stdout = ''.join(stdout_lines)
+                stderr = ''.join(stderr_lines)
+                returncode = process.returncode
+
+                status = "success" if returncode == 0 else "failed"
+                progress.update(task, description=f"[green]{name}: {status}" if status == "success" else f"[red]{name}: {status}")
+
+            except subprocess.TimeoutExpired:
+                process.kill()
+                progress.update(task, description=f"[red]{name}: TIMEOUT")
+                status = "timeout"
+                returncode = -1
+                stdout = ''.join(stdout_lines)
+                stderr = ''.join(stderr_lines)
+
+    else:
+        # Simple execution without progress
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                cwd=workdir,
+                capture_output=True,
+                text=True,
+                timeout=job.get("timeout", 3600),
+            )
+            status = "success" if result.returncode == 0 else "failed"
+            returncode = result.returncode
+            stdout = result.stdout
+            stderr = result.stderr
+        except subprocess.TimeoutExpired:
+            status = "timeout"
+            returncode = -1
+            stdout = ""
+            stderr = ""
+
+    # Log execution
+    with open(log_file, "a") as f:
+        f.write(f"\n{'='*60}\n")
+        f.write(f"[{start_time.isoformat()}] Job: {name}\n")
+        f.write(f"Command: {command}\n")
+        f.write(f"Workdir: {workdir}\n")
+        f.write(f"Status: {status} (exit {returncode})\n")
+        f.write(f"Duration: {(datetime.now() - start_time).total_seconds():.1f}s\n")
+        if stdout:
+            f.write(f"\n--- stdout ---\n{stdout}\n")
+        if stderr:
+            f.write(f"\n--- stderr ---\n{stderr}\n")
+
+    return {
+        "status": status,
+        "exit_code": returncode,
+        "duration": (datetime.now() - start_time).total_seconds(),
+    }
+
+
+def job_wrapper(job_name: str) -> None:
+    """Wrapper function for APScheduler to execute a job."""
+    global RUNNING_JOBS, METRICS_COUNTERS
+
+    jobs = load_jobs()
+    if job_name not in jobs:
+        rprint(f"[yellow][scheduler][/yellow] Job not found: {job_name}")
+        return
+
+    job = jobs[job_name]
+    if not job.get("enabled", True):
+        rprint(f"[yellow][scheduler][/yellow] Job disabled: {job_name}")
+        return
+
+    # Track running job
+    RUNNING_JOBS[job_name] = {
+        "started": time.time(),
+        "progress": "starting",
+        "command": job["command"],
+    }
+    METRICS_COUNTERS["jobs_total"] += 1
+
+    rprint(f"[blue][scheduler][/blue] Running job: [bold]{job_name}[/bold]")
+    result = run_job(job, show_progress=False)  # No progress in daemon mode
+
+    # Update metrics
+    if result["status"] == "success":
+        METRICS_COUNTERS["jobs_success"] += 1
+    elif result["status"] == "timeout":
+        METRICS_COUNTERS["jobs_timeout"] += 1
+    else:
+        METRICS_COUNTERS["jobs_failed"] += 1
+
+    # Remove from running jobs
+    RUNNING_JOBS.pop(job_name, None)
+
+    # Update job metadata
+    jobs[job_name]["last_run"] = int(time.time())
+    jobs[job_name]["last_status"] = result["status"]
+    jobs[job_name]["last_duration"] = result.get("duration", 0)
+    save_jobs(jobs)
+
+    status_color = "green" if result["status"] == "success" else "red"
+    rprint(f"[blue][scheduler][/blue] Job {job_name} completed: [{status_color}]{result['status']}[/{status_color}]")
+
+
+# ============================================================================
+# Metrics Server (FastAPI)
+# ============================================================================
+
+def create_metrics_app() -> Optional["FastAPI"]:
+    """Create FastAPI app for metrics endpoint."""
+    if not HAS_FASTAPI:
+        return None
+
+    app = FastAPI(
+        title="Pi Scheduler Metrics",
+        description="Metrics and status endpoint for the Pi scheduler daemon",
+        version="1.0.0",
+    )
+
+    @app.get("/")
+    def root() -> dict:
+        """Root endpoint with links."""
+        return {
+            "service": "pi-scheduler",
+            "endpoints": ["/status", "/jobs", "/jobs/{name}", "/jobs/{name}/logs", "/metrics"],
+        }
+
+    @app.get("/status")
+    def status() -> dict:
+        """Scheduler daemon status."""
+        jobs = load_jobs()
+        enabled = sum(1 for j in jobs.values() if j.get("enabled", True))
+        return {
+            "running": True,  # If this endpoint responds, daemon is running
+            "pid": os.getpid(),
+            "uptime": time.time() - _start_time if "_start_time" in dir() else 0,
+            "jobs_total": len(jobs),
+            "jobs_enabled": enabled,
+            "jobs_running": len(RUNNING_JOBS),
+            "metrics": METRICS_COUNTERS,
+        }
+
+    @app.get("/jobs")
+    def list_jobs() -> dict:
+        """List all jobs with status."""
+        jobs = load_jobs()
+        result = []
+        for name, job in jobs.items():
+            is_running = name in RUNNING_JOBS
+            result.append({
+                "name": name,
+                "schedule": job.get("cron") or job.get("interval"),
+                "enabled": job.get("enabled", True),
+                "running": is_running,
+                "last_run": job.get("last_run"),
+                "last_status": job.get("last_status"),
+                "last_duration": job.get("last_duration"),
+                "command": job.get("command"),
+                "workdir": job.get("workdir"),
+            })
+        return {"jobs": result, "count": len(result)}
+
+    @app.get("/jobs/{name}")
+    def get_job(name: str) -> dict:
+        """Get details for a specific job."""
+        jobs = load_jobs()
+        if name not in jobs:
+            raise HTTPException(status_code=404, detail=f"Job not found: {name}")
+
+        job = jobs[name]
+        is_running = name in RUNNING_JOBS
+        running_info = RUNNING_JOBS.get(name, {})
+
+        return {
+            **job,
+            "running": is_running,
+            "running_since": running_info.get("started"),
+            "progress": running_info.get("progress"),
+        }
+
+    @app.get("/jobs/{name}/logs")
+    def get_job_logs(name: str, lines: int = 100) -> dict:
+        """Get recent logs for a job."""
+        log_file = LOG_DIR / f"{name}.log"
+        if not log_file.exists():
+            raise HTTPException(status_code=404, detail=f"No logs for job: {name}")
+
+        with open(log_file) as f:
+            all_lines = f.readlines()
+            return {
+                "job": name,
+                "lines": lines,
+                "total_lines": len(all_lines),
+                "logs": "".join(all_lines[-lines:]),
+            }
+
+    @app.get("/metrics", response_class=PlainTextResponse)
+    def prometheus_metrics() -> str:
+        """Prometheus-compatible metrics endpoint."""
+        jobs = load_jobs()
+        enabled = sum(1 for j in jobs.values() if j.get("enabled", True))
+
+        lines = [
+            "# HELP scheduler_jobs_total Total number of registered jobs",
+            "# TYPE scheduler_jobs_total gauge",
+            f"scheduler_jobs_total {len(jobs)}",
+            "",
+            "# HELP scheduler_jobs_enabled Number of enabled jobs",
+            "# TYPE scheduler_jobs_enabled gauge",
+            f"scheduler_jobs_enabled {enabled}",
+            "",
+            "# HELP scheduler_jobs_running Number of currently running jobs",
+            "# TYPE scheduler_jobs_running gauge",
+            f"scheduler_jobs_running {len(RUNNING_JOBS)}",
+            "",
+            "# HELP scheduler_executions_total Total job executions",
+            "# TYPE scheduler_executions_total counter",
+            f"scheduler_executions_total {METRICS_COUNTERS['jobs_total']}",
+            "",
+            "# HELP scheduler_executions_success Successful job executions",
+            "# TYPE scheduler_executions_success counter",
+            f"scheduler_executions_success {METRICS_COUNTERS['jobs_success']}",
+            "",
+            "# HELP scheduler_executions_failed Failed job executions",
+            "# TYPE scheduler_executions_failed counter",
+            f"scheduler_executions_failed {METRICS_COUNTERS['jobs_failed']}",
+            "",
+            "# HELP scheduler_executions_timeout Timed out job executions",
+            "# TYPE scheduler_executions_timeout counter",
+            f"scheduler_executions_timeout {METRICS_COUNTERS['jobs_timeout']}",
+        ]
+
+        # Per-job metrics
+        for name, job in jobs.items():
+            last_run = job.get("last_run", 0)
+            last_duration = job.get("last_duration", 0)
+            last_success = 1 if job.get("last_status") == "success" else 0
+
+            lines.extend([
+                "",
+                f"# HELP scheduler_job_last_run_timestamp Last run timestamp for {name}",
+                f"# TYPE scheduler_job_last_run_timestamp gauge",
+                f'scheduler_job_last_run_timestamp{{job="{name}"}} {last_run}',
+                f'scheduler_job_last_duration_seconds{{job="{name}"}} {last_duration}',
+                f'scheduler_job_last_success{{job="{name}"}} {last_success}',
+            ])
+
+        return "\n".join(lines) + "\n"
+
+    @app.post("/jobs/{name}/run")
+    def trigger_job(name: str) -> dict:
+        """Trigger a job to run immediately (async)."""
+        jobs = load_jobs()
+        if name not in jobs:
+            raise HTTPException(status_code=404, detail=f"Job not found: {name}")
+
+        # Run in background thread
+        thread = threading.Thread(target=job_wrapper, args=(name,))
+        thread.start()
+
+        return {"status": "triggered", "job": name}
+
+    return app
+
+
+def start_metrics_server(port: int = DEFAULT_METRICS_PORT) -> Optional["uvicorn.Server"]:
+    """Start the metrics server in a background thread."""
+    if not HAS_FASTAPI:
+        rprint("[yellow][scheduler][/yellow] FastAPI not available, metrics server disabled")
+        return None
+
+    app = create_metrics_app()
+
+    # Write port file for discovery
+    ensure_dirs()
+    PORT_FILE.write_text(str(port))
+
+    # Run uvicorn in background thread
+    config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="warning")
+    server = uvicorn.Server(config)
+
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+
+    rprint(f"[green][scheduler][/green] Metrics server started on port {port}")
+    return server
+
+
+_start_time = time.time()  # Track daemon start time
+
+
+class SchedulerDaemon:
+    """Background scheduler daemon."""
+
+    def __init__(self) -> None:
+        self.scheduler = None
+        self.running = False
+        self.metrics_server = None
+
+    def start(self, metrics_port: int = DEFAULT_METRICS_PORT) -> None:
+        """Start the scheduler daemon with metrics server."""
+        global _start_time
+        _start_time = time.time()
+
+        if not HAS_APSCHEDULER:
+            print("ERROR: APScheduler not installed. Run: pip install apscheduler")
+            sys.exit(1)
+
+        ensure_dirs()
+
+        # Check if already running
+        if PID_FILE.exists():
+            pid = int(PID_FILE.read_text().strip())
+            try:
+                os.kill(pid, 0)  # Check if process exists
+                print(f"Scheduler already running (PID {pid})")
+                sys.exit(1)
+            except OSError:
+                PID_FILE.unlink()  # Stale PID file
+
+        # Write PID
+        PID_FILE.write_text(str(os.getpid()))
+
+        # Start metrics server
+        self.metrics_server = start_metrics_server(metrics_port)
+
+        # Setup scheduler
+        self.scheduler = BackgroundScheduler()
+
+        # Load and schedule all enabled jobs
+        jobs = load_jobs()
+        for name, job in jobs.items():
+            if job.get("enabled", True):
+                self._add_job(job)
+
+        self.scheduler.start()
+        self.running = True
+
+        rprint(f"[green][scheduler][/green] Started with {len(jobs)} jobs")
+        if self.metrics_server:
+            rprint(f"[green][scheduler][/green] Metrics: http://localhost:{metrics_port}/")
+
+        # Handle shutdown
+        signal.signal(signal.SIGTERM, self._shutdown)
+        signal.signal(signal.SIGINT, self._shutdown)
+
+        # Keep running
+        try:
+            while self.running:
+                time.sleep(1)
+        finally:
+            self._cleanup()
+
+    def _add_job(self, job: dict) -> None:
+        """Add a job to the scheduler."""
+        name = job["name"]
+
+        if job.get("cron"):
+            trigger = CronTrigger.from_crontab(job["cron"])
+        elif job.get("interval"):
+            trigger = IntervalTrigger(**parse_interval(job["interval"]))
+        else:
+            print(f"[scheduler] Job {name} has no trigger (cron or interval)")
+            return
+
+        self.scheduler.add_job(
+            job_wrapper,
+            trigger=trigger,
+            args=[name],
+            id=name,
+            replace_existing=True,
+        )
+        print(f"[scheduler] Scheduled: {name}")
+
+    def _shutdown(self, signum, frame) -> None:
+        """Handle shutdown signal."""
+        print("\n[scheduler] Shutting down...")
+        self.running = False
+
+    def _cleanup(self) -> None:
+        """Cleanup on exit."""
+        if self.scheduler:
+            self.scheduler.shutdown(wait=False)
+        if PID_FILE.exists():
+            PID_FILE.unlink()
+        print("[scheduler] Stopped")
+
+
+def cmd_start(args) -> None:
+    """Start the scheduler daemon."""
+    daemon = SchedulerDaemon()
+    daemon.start(metrics_port=args.port)
+
+
+def cmd_stop(args) -> None:
+    """Stop the scheduler daemon."""
+    if not PID_FILE.exists():
+        print("Scheduler not running")
+        return
+
+    pid = int(PID_FILE.read_text().strip())
+    try:
+        os.kill(pid, signal.SIGTERM)
+        print(f"Sent SIGTERM to PID {pid}")
+        # Wait for process to exit
+        for _ in range(10):
+            time.sleep(0.5)
+            try:
+                os.kill(pid, 0)
+            except OSError:
+                print("Scheduler stopped")
+                return
+        print("Scheduler did not stop gracefully")
+    except OSError as e:
+        print(f"Error stopping scheduler: {e}")
+        if PID_FILE.exists():
+            PID_FILE.unlink()
+
+
+def cmd_status(args) -> None:
+    """Show scheduler status with rich output."""
+    running = False
+    pid = None
+
+    if PID_FILE.exists():
+        pid = int(PID_FILE.read_text().strip())
+        try:
+            os.kill(pid, 0)
+            running = True
+        except OSError:
+            PID_FILE.unlink()
+
+    jobs = load_jobs()
+    enabled = sum(1 for j in jobs.values() if j.get("enabled", True))
+
+    if args.json:
+        print(json.dumps({"running": running, "pid": pid, "jobs": len(jobs), "enabled": enabled}))
+        return
+
+    if HAS_RICH:
+        # Status panel
+        if running:
+            status_text = Text()
+            status_text.append("RUNNING", style="bold green")
+            status_text.append(f" (PID {pid})", style="dim")
+        else:
+            status_text = Text("STOPPED", style="bold red")
+
+        panel = Panel(
+            status_text,
+            title="Scheduler Status",
+            border_style="green" if running else "red"
+        )
+        console.print(panel)
+
+        # Jobs summary
+        rprint(f"\n[bold]Jobs:[/bold] {len(jobs)} total, [green]{enabled}[/green] enabled")
+
+        # Show next scheduled runs if jobs exist
+        if jobs and running:
+            rprint("\n[bold]Upcoming runs:[/bold]")
+            for name, job in list(jobs.items())[:5]:
+                if job.get("enabled", True):
+                    schedule = job.get("cron") or job.get("interval", "?")
+                    rprint(f"  [cyan]{name}[/cyan]: {schedule}")
+    else:
+        if running:
+            print(f"Scheduler running (PID {pid})")
+        else:
+            print("Scheduler not running")
+        print(f"\nJobs: {len(jobs)} total, {enabled} enabled")
+
+
+def cmd_register(args) -> None:
+    """Register a new job."""
+    jobs = load_jobs()
+
+    if not args.cron and not args.interval:
+        print("ERROR: Must specify --cron or --interval")
+        sys.exit(1)
+
+    job = {
+        "name": args.name,
+        "command": args.command,
+        "enabled": args.enabled,
+        "created_at": int(time.time()),
+    }
+
+    if args.cron:
+        job["cron"] = args.cron
+    if args.interval:
+        job["interval"] = args.interval
+    if args.workdir:
+        job["workdir"] = args.workdir
+    if args.description:
+        job["description"] = args.description
+
+    jobs[args.name] = job
+    save_jobs(jobs)
+
+    print(f"Registered job: {args.name}")
+    if args.json:
+        print(json.dumps(job, indent=2))
+
+
+def cmd_unregister(args) -> None:
+    """Remove a job."""
+    jobs = load_jobs()
+
+    if args.name not in jobs:
+        print(f"Job not found: {args.name}")
+        sys.exit(1)
+
+    del jobs[args.name]
+    save_jobs(jobs)
+    print(f"Removed job: {args.name}")
+
+
+def cmd_list(args) -> None:
+    """List all jobs with rich table output."""
+    jobs = load_jobs()
+
+    if args.json:
+        print(json.dumps(jobs, indent=2))
+        return
+
+    if not jobs:
+        rprint("[yellow]No jobs registered[/yellow]")
+        return
+
+    if HAS_RICH:
+        table = Table(title="Scheduled Jobs", show_header=True, header_style="bold cyan")
+        table.add_column("Name", style="bold")
+        table.add_column("Schedule")
+        table.add_column("Status")
+        table.add_column("Last Run")
+        table.add_column("Last Status")
+        table.add_column("Command", max_width=40)
+
+        for name, job in jobs.items():
+            enabled = job.get("enabled", True)
+            status_str = "[green]enabled[/green]" if enabled else "[red]DISABLED[/red]"
+            schedule = job.get("cron") or job.get("interval", "?")
+            last_run = job.get("last_run")
+            last_status = job.get("last_status", "-")
+
+            if last_run:
+                last_run_str = datetime.fromtimestamp(last_run).strftime("%m-%d %H:%M")
+            else:
+                last_run_str = "[dim]never[/dim]"
+
+            # Color last status
+            if last_status == "success":
+                last_status_str = "[green]success[/green]"
+            elif last_status == "failed":
+                last_status_str = "[red]failed[/red]"
+            elif last_status == "timeout":
+                last_status_str = "[yellow]timeout[/yellow]"
+            else:
+                last_status_str = f"[dim]{last_status}[/dim]"
+
+            cmd_short = job['command'][:37] + "..." if len(job['command']) > 40 else job['command']
+
+            table.add_row(name, schedule, status_str, last_run_str, last_status_str, cmd_short)
+
+        console.print(table)
+    else:
+        # Fallback plain text
+        for name, job in jobs.items():
+            status = "enabled" if job.get("enabled", True) else "DISABLED"
+            schedule = job.get("cron") or job.get("interval", "?")
+            last_run = job.get("last_run")
+            last_status = job.get("last_status", "-")
+
+            if last_run:
+                last_run_str = datetime.fromtimestamp(last_run).strftime("%Y-%m-%d %H:%M")
+            else:
+                last_run_str = "never"
+
+            print(f"{name}")
+            print(f"  Schedule: {schedule}")
+            print(f"  Status: {status}")
+            print(f"  Last run: {last_run_str} ({last_status})")
+            print(f"  Command: {job['command'][:60]}...")
+            print()
+
+
+def cmd_run(args) -> None:
+    """Run a job immediately."""
+    jobs = load_jobs()
+
+    if args.name not in jobs:
+        print(f"Job not found: {args.name}")
+        sys.exit(1)
+
+    job = jobs[args.name]
+    print(f"Running job: {args.name}")
+    result = run_job(job)
+
+    # Update metadata
+    jobs[args.name]["last_run"] = int(time.time())
+    jobs[args.name]["last_status"] = result["status"]
+    save_jobs(jobs)
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        print(f"Result: {result['status']}")
+
+
+def cmd_enable(args) -> None:
+    """Enable a job."""
+    jobs = load_jobs()
+    if args.name not in jobs:
+        print(f"Job not found: {args.name}")
+        sys.exit(1)
+
+    jobs[args.name]["enabled"] = True
+    save_jobs(jobs)
+    print(f"Enabled: {args.name}")
+
+
+def cmd_disable(args) -> None:
+    """Disable a job."""
+    jobs = load_jobs()
+    if args.name not in jobs:
+        print(f"Job not found: {args.name}")
+        sys.exit(1)
+
+    jobs[args.name]["enabled"] = False
+    save_jobs(jobs)
+    print(f"Disabled: {args.name}")
+
+
+def cmd_logs(args) -> None:
+    """Show job logs."""
+    if args.name:
+        log_file = LOG_DIR / f"{args.name}.log"
+        if not log_file.exists():
+            print(f"No logs for: {args.name}")
+            return
+
+        lines = args.lines or 50
+        # Read last N lines
+        with open(log_file) as f:
+            all_lines = f.readlines()
+            for line in all_lines[-lines:]:
+                print(line, end="")
+    else:
+        # List all log files
+        for log_file in sorted(LOG_DIR.glob("*.log")):
+            size = log_file.stat().st_size
+            mtime = datetime.fromtimestamp(log_file.stat().st_mtime)
+            print(f"{log_file.stem}: {size} bytes, modified {mtime}")
+
+
+def cmd_systemd_unit(args) -> None:
+    """Generate systemd unit file."""
+    script_path = Path(__file__).resolve()
+    python_path = sys.executable
+
+    unit = f"""[Unit]
+Description=Pi Scheduler Daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={python_path} {script_path} start
+ExecStop={python_path} {script_path} stop
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+"""
+    print(unit)
+
+
+def load_services_yaml(yaml_path: Path) -> dict[str, object]:
+    """Load services configuration from YAML file."""
+    if not HAS_YAML:
+        raise RuntimeError("PyYAML not installed. Run: pip install pyyaml")
+
+    if not yaml_path.exists():
+        raise FileNotFoundError(f"Services file not found: {yaml_path}")
+
+    with open(yaml_path) as f:
+        config = yaml.safe_load(f)
+
+    return config
+
+
+def cmd_report(args) -> None:
+    """Generate comprehensive status report with metrics and failures."""
+    jobs = load_jobs()
+
+    # Aggregate metrics
+    total_jobs = len(jobs)
+    enabled_jobs = sum(1 for j in jobs.values() if j.get("enabled", True))
+    jobs_run = sum(1 for j in jobs.values() if j.get("last_run"))
+
+    # Calculate success/failure counts from job history
+    successes = sum(1 for j in jobs.values() if j.get("last_status") == "success")
+    failures = sum(1 for j in jobs.values() if j.get("last_status") == "failed")
+    timeouts = sum(1 for j in jobs.values() if j.get("last_status") == "timeout")
+
+    # Per-job stats
+    job_stats = []
+    recent_failures = []
+
+    for name, job in sorted(jobs.items(), key=lambda x: x[1].get("last_run") or 0, reverse=True):
+        stat = {
+            "name": name,
+            "enabled": job.get("enabled", True),
+            "schedule": job.get("cron") or job.get("interval", "hook"),
+            "last_run": job.get("last_run"),
+            "last_status": job.get("last_status"),
+            "last_duration": job.get("last_duration", 0),
+            "description": job.get("description", ""),
+        }
+        job_stats.append(stat)
+
+        # Collect recent failures
+        if stat["last_status"] in ("failed", "timeout"):
+            log_file = LOG_DIR / f"{name}.log"
+            log_excerpt = ""
+            if log_file.exists():
+                with open(log_file) as f:
+                    lines = f.readlines()
+                    # Get last execution block
+                    last_block = []
+                    for line in reversed(lines):
+                        last_block.insert(0, line)
+                        if line.startswith("====="):
+                            break
+                        if len(last_block) > 20:
+                            break
+                    log_excerpt = "".join(last_block[-15:])
+
+            recent_failures.append({
+                "name": name,
+                "status": stat["last_status"],
+                "last_run": stat["last_run"],
+                "duration": stat["last_duration"],
+                "log_excerpt": log_excerpt.strip(),
+            })
+
+    # Calculate aggregate metrics
+    total_duration = sum(j.get("last_duration", 0) for j in jobs.values() if j.get("last_run"))
+    avg_duration = total_duration / jobs_run if jobs_run > 0 else 0
+    success_rate = (successes / jobs_run * 100) if jobs_run > 0 else 0
+
+    report_data = {
+        "generated_at": datetime.now().isoformat(),
+        "summary": {
+            "total_jobs": total_jobs,
+            "enabled_jobs": enabled_jobs,
+            "jobs_with_runs": jobs_run,
+            "successes": successes,
+            "failures": failures,
+            "timeouts": timeouts,
+            "success_rate": round(success_rate, 1),
+            "avg_duration_seconds": round(avg_duration, 2),
+            "total_runtime_seconds": round(total_duration, 2),
+        },
+        "daemon": {
+            "running": PID_FILE.exists() and _is_daemon_running(),
+            "pid": _get_daemon_pid(),
+            "metrics_counters": METRICS_COUNTERS,
+        },
+        "jobs": job_stats,
+        "recent_failures": recent_failures[:5],  # Top 5 recent failures
+    }
+
+    if args.json:
+        print(json.dumps(report_data, indent=2, default=str))
+        return
+
+    # Rich TUI output
+    if HAS_RICH:
+        from rich.panel import Panel
+        from rich.columns import Columns
+
+        # Header
+        console.print()
+        console.print(Panel.fit(
+            f"[bold]Scheduler Report[/bold]\n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            border_style="blue"
+        ))
+
+        # Summary stats
+        console.print("\n[bold cyan]Summary[/bold cyan]")
+        summary_table = Table(show_header=False, box=None, padding=(0, 2))
+        summary_table.add_column("Metric", style="dim")
+        summary_table.add_column("Value", style="bold")
+
+        summary_table.add_row("Total Jobs", str(total_jobs))
+        summary_table.add_row("Enabled", f"[green]{enabled_jobs}[/green]")
+        summary_table.add_row("Jobs Run", str(jobs_run))
+
+        success_style = "green" if success_rate >= 90 else "yellow" if success_rate >= 70 else "red"
+        summary_table.add_row("Success Rate", f"[{success_style}]{success_rate:.1f}%[/{success_style}]")
+        summary_table.add_row("Avg Duration", f"{avg_duration:.1f}s")
+
+        if failures > 0:
+            summary_table.add_row("Failures", f"[red]{failures}[/red]")
+        if timeouts > 0:
+            summary_table.add_row("Timeouts", f"[yellow]{timeouts}[/yellow]")
+
+        console.print(summary_table)
+
+        # Daemon status
+        daemon_running = PID_FILE.exists() and _is_daemon_running()
+        daemon_status = "[green]RUNNING[/green]" if daemon_running else "[red]STOPPED[/red]"
+        pid = _get_daemon_pid()
+        console.print(f"\n[bold cyan]Daemon[/bold cyan]: {daemon_status}" + (f" (PID {pid})" if pid else ""))
+
+        # Per-job table
+        console.print("\n[bold cyan]Job Status[/bold cyan]")
+        job_table = Table(show_header=True, header_style="bold")
+        job_table.add_column("Job", style="cyan")
+        job_table.add_column("Schedule")
+        job_table.add_column("Last Run")
+        job_table.add_column("Duration")
+        job_table.add_column("Status")
+
+        for stat in job_stats[:15]:  # Top 15
+            last_run_str = datetime.fromtimestamp(stat["last_run"]).strftime("%m-%d %H:%M") if stat["last_run"] else "[dim]never[/dim]"
+            duration_str = f"{stat['last_duration']:.1f}s" if stat["last_duration"] else "-"
+
+            status = stat["last_status"]
+            if status == "success":
+                status_str = "[green]success[/green]"
+            elif status == "failed":
+                status_str = "[red]failed[/red]"
+            elif status == "timeout":
+                status_str = "[yellow]timeout[/yellow]"
+            else:
+                status_str = f"[dim]{status or '-'}[/dim]"
+
+            enabled_marker = "" if stat["enabled"] else " [dim](disabled)[/dim]"
+
+            job_table.add_row(
+                stat["name"] + enabled_marker,
+                stat["schedule"],
+                last_run_str,
+                duration_str,
+                status_str
+            )
+
+        console.print(job_table)
+
+        # Recent failures
+        if recent_failures:
+            console.print("\n[bold red]Recent Failures[/bold red]")
+            for failure in recent_failures[:3]:
+                when = datetime.fromtimestamp(failure["last_run"]).strftime("%Y-%m-%d %H:%M") if failure["last_run"] else "unknown"
+                console.print(f"\n[bold]{failure['name']}[/bold] - {failure['status']} at {when}")
+                if failure["log_excerpt"]:
+                    console.print(Panel(
+                        failure["log_excerpt"][:500],
+                        title="Log excerpt",
+                        border_style="red",
+                        expand=False
+                    ))
+
+        # Recommendations
+        recommendations = []
+        if failures > 0:
+            recommendations.append(f"Review {failures} failed job(s) with: scheduler logs <job-name>")
+        if timeouts > 0:
+            recommendations.append(f"Consider increasing timeout for {timeouts} timed out job(s)")
+        if enabled_jobs < total_jobs:
+            recommendations.append(f"{total_jobs - enabled_jobs} job(s) are disabled")
+        if not daemon_running:
+            recommendations.append("Scheduler daemon is not running. Start with: scheduler start")
+
+        if recommendations:
+            console.print("\n[bold yellow]Recommendations[/bold yellow]")
+            for rec in recommendations:
+                console.print(f"  • {rec}")
+
+        console.print()
+
+    else:
+        # Plain text fallback
+        print(f"\n=== Scheduler Report ({datetime.now().strftime('%Y-%m-%d %H:%M')}) ===\n")
+        print(f"Jobs: {total_jobs} total, {enabled_jobs} enabled, {jobs_run} have run")
+        print(f"Success rate: {success_rate:.1f}%")
+        print(f"Failures: {failures}, Timeouts: {timeouts}")
+        print(f"Avg duration: {avg_duration:.1f}s")
+
+        print("\n--- Jobs ---")
+        for stat in job_stats[:10]:
+            status = stat["last_status"] or "never-run"
+            last_run = datetime.fromtimestamp(stat["last_run"]).strftime("%m-%d %H:%M") if stat["last_run"] else "never"
+            print(f"  {stat['name']}: {status} (last: {last_run})")
+
+        if recent_failures:
+            print("\n--- Recent Failures ---")
+            for f in recent_failures[:3]:
+                print(f"  {f['name']}: {f['status']}")
+
+
+def _is_daemon_running() -> bool:
+    """Check if daemon is running."""
+    if not PID_FILE.exists():
+        return False
+    try:
+        pid = int(PID_FILE.read_text().strip())
+        os.kill(pid, 0)
+        return True
+    except (OSError, ValueError):
+        return False
+
+
+def _get_daemon_pid() -> Optional[int]:
+    """Get daemon PID if running."""
+    if not PID_FILE.exists():
+        return None
+    try:
+        pid = int(PID_FILE.read_text().strip())
+        os.kill(pid, 0)
+        return pid
+    except (OSError, ValueError):
+        return None
+
+
+def cmd_load(args) -> None:
+    """Load jobs from a services.yaml file."""
+    yaml_path = Path(args.file)
+
+    try:
+        config = load_services_yaml(yaml_path)
+    except Exception as e:
+        rprint(f"[red]Error loading {yaml_path}:[/red] {e}")
+        sys.exit(1)
+
+    workdir = config.get("workdir", str(yaml_path.parent))
+    jobs = load_jobs()
+    loaded = 0
+    skipped = 0
+
+    # Process scheduled jobs
+    scheduled = config.get("scheduled", {})
+    for name, job_config in scheduled.items():
+        if not job_config.get("enabled", True) and not args.include_disabled:
+            rprint(f"[yellow]Skipping disabled job:[/yellow] {name}")
+            skipped += 1
+            continue
+
+        job = {
+            "name": name,
+            "command": job_config["command"],
+            "workdir": job_config.get("workdir", workdir),
+            "enabled": job_config.get("enabled", True),
+            "description": job_config.get("description", ""),
+            "created_at": int(time.time()),
+            "source": str(yaml_path),
+        }
+
+        # Schedule (cron or interval)
+        if "schedule" in job_config:
+            schedule = job_config["schedule"]
+            # Detect if it's cron or interval
+            if any(c in schedule for c in ["*", "/"]) or len(schedule.split()) >= 5:
+                job["cron"] = schedule
+            else:
+                job["interval"] = schedule
+
+        if "timeout" in job_config:
+            job["timeout"] = job_config["timeout"]
+
+        # Environment variables
+        if "env" in job_config:
+            job["env"] = job_config["env"]
+
+        # Dependencies (informational)
+        if "depends_on" in job_config:
+            job["depends_on"] = job_config["depends_on"]
+
+        jobs[name] = job
+        loaded += 1
+        rprint(f"[green]Loaded:[/green] {name} ({job.get('cron') or job.get('interval', 'no schedule')})")
+
+    # Process hook-triggered jobs (store but don't schedule)
+    hooks = config.get("hooks", {})
+    for name, hook_config in hooks.items():
+        if not hook_config.get("enabled", True) and not args.include_disabled:
+            rprint(f"[yellow]Skipping disabled hook:[/yellow] {name}")
+            skipped += 1
+            continue
+
+        job = {
+            "name": name,
+            "command": hook_config["command"],
+            "workdir": hook_config.get("workdir", workdir),
+            "enabled": hook_config.get("enabled", True),
+            "description": hook_config.get("description", ""),
+            "trigger": hook_config.get("trigger", "on-demand"),
+            "created_at": int(time.time()),
+            "source": str(yaml_path),
+            "is_hook": True,  # Mark as hook, not scheduled
+        }
+
+        if "timeout" in hook_config:
+            job["timeout"] = hook_config["timeout"]
+
+        if "depends_on" in hook_config:
+            job["depends_on"] = hook_config["depends_on"]
+
+        jobs[name] = job
+        loaded += 1
+        rprint(f"[green]Loaded hook:[/green] {name} (trigger: {job.get('trigger')})")
+
+    save_jobs(jobs)
+
+    if HAS_RICH:
+        from rich.panel import Panel
+        summary = f"[bold]Loaded:[/bold] {loaded} jobs\n[bold]Skipped:[/bold] {skipped} disabled\n[bold]Source:[/bold] {yaml_path}"
+        console.print(Panel(summary, title="Services Loaded", border_style="green"))
+    else:
+        print(f"\nLoaded {loaded} jobs, skipped {skipped} disabled")
+        print(f"Source: {yaml_path}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Background task scheduler")
+    parser.add_argument("--json", action="store_true", help="JSON output")
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+    # start
+    p = subparsers.add_parser("start", help="Start scheduler daemon")
+    p.add_argument("--port", type=int, default=DEFAULT_METRICS_PORT, help=f"Metrics server port (default: {DEFAULT_METRICS_PORT})")
+
+    # stop
+    subparsers.add_parser("stop", help="Stop scheduler daemon")
+
+    # status
+    p = subparsers.add_parser("status", help="Show scheduler status")
+    p.add_argument("--json", action="store_true")
+
+    # register
+    p = subparsers.add_parser("register", help="Register a job")
+    p.add_argument("--name", required=True, help="Job name")
+    p.add_argument("--command", required=True, help="Command to run")
+    p.add_argument("--cron", help="Cron expression")
+    p.add_argument("--interval", help="Interval (e.g., 1h, 30m)")
+    p.add_argument("--workdir", help="Working directory")
+    p.add_argument("--description", help="Job description")
+    p.add_argument("--enabled", type=bool, default=True)
+    p.add_argument("--json", action="store_true")
+
+    # unregister
+    p = subparsers.add_parser("unregister", help="Remove a job")
+    p.add_argument("name", help="Job name")
+
+    # list
+    p = subparsers.add_parser("list", help="List jobs")
+    p.add_argument("--json", action="store_true")
+
+    # run
+    p = subparsers.add_parser("run", help="Run a job now")
+    p.add_argument("name", help="Job name")
+    p.add_argument("--json", action="store_true")
+
+    # enable/disable
+    p = subparsers.add_parser("enable", help="Enable a job")
+    p.add_argument("name", help="Job name")
+
+    p = subparsers.add_parser("disable", help="Disable a job")
+    p.add_argument("name", help="Job name")
+
+    # logs
+    p = subparsers.add_parser("logs", help="Show job logs")
+    p.add_argument("name", nargs="?", help="Job name (or list all)")
+    p.add_argument("--lines", "-n", type=int, default=50)
+
+    # systemd-unit
+    subparsers.add_parser("systemd-unit", help="Generate systemd unit file")
+
+    # load (from YAML)
+    p = subparsers.add_parser("load", help="Load jobs from services.yaml")
+    p.add_argument("file", help="Path to services.yaml file")
+    p.add_argument("--include-disabled", action="store_true", help="Also load disabled jobs")
+
+    # report
+    p = subparsers.add_parser("report", help="Generate comprehensive status report")
+    p.add_argument("--json", action="store_true", help="JSON output")
+
+    args = parser.parse_args()
+
+    cmd_map = {
+        "start": cmd_start,
+        "stop": cmd_stop,
+        "status": cmd_status,
+        "register": cmd_register,
+        "unregister": cmd_unregister,
+        "list": cmd_list,
+        "run": cmd_run,
+        "enable": cmd_enable,
+        "disable": cmd_disable,
+        "logs": cmd_logs,
+        "systemd-unit": cmd_systemd_unit,
+        "load": cmd_load,
+        "report": cmd_report,
+    }
+
+    cmd_map[args.subcommand](args)
+
+
+if __name__ == "__main__":
+    main()

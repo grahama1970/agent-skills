@@ -1,18 +1,29 @@
 ---
 name: learn
 description: >
-  Learn from any content type. Auto-detects source (arXiv, YouTube, GitHub, PDF, URL)
-  and routes to appropriate backend skill for extraction and storage.
+  ⚠️ DEPRECATED - Use /memory instead. This skill has been merged into /memory.
+  Migration: './run.sh <url>' → 'memory-agent acquire content <url>'
 allowed-tools: ["Bash", "Read"]
-triggers:
-  - learn
-  - learn this
-  - study
+triggers: []  # Triggers removed - use /memory instead
 metadata:
-  short-description: Learn from any content type
+  short-description: "DEPRECATED - Use /memory acquire commands instead"
+  deprecated: true
+  deprecated-since: "2026-01-29"
+  replacement: "/memory"
 ---
 
-# Learn
+# Learn (DEPRECATED)
+
+> ⚠️ **This skill has been merged into /memory.**
+>
+> Use `memory-agent acquire` commands instead:
+>
+> | Old Command | New Command |
+> |-------------|-------------|
+> | `./run.sh <url> --scope X` | `memory-agent acquire content <url> --scope X` |
+> | `./run.sh --list --scope X` | `memory-agent acquire list --scope X` |
+> | `./run.sh --from-gaps --scope X` | `memory-agent acquire gaps --scope X` |
+> | `./run.sh <title> --request` | `memory-agent acquire request <title>` |
 
 **ONE command to learn from ANY content type.**
 
@@ -37,27 +48,27 @@ metadata:
 
 ## Options
 
-| Option | Short | Description |
-|--------|-------|-------------|
-| `--scope` | `-s` | **Required.** Memory scope (e.g., `horus_lore`, `project_kb`) |
-| `--context` | `-c` | Domain context for better extraction |
-| `--force` | `-f` | Re-learn even if already learned |
-| `--dry-run` | `-n` | Preview without learning |
-| `--list` | `-l` | List learned content for scope |
-| `--request` | `-r` | Request content if not available (saved to requests.json) |
-| `--from-gaps` | `-g` | Reflect on past errors/questions to find knowledge gaps |
+| Option        | Short | Description                                                   |
+| ------------- | ----- | ------------------------------------------------------------- |
+| `--scope`     | `-s`  | **Required.** Memory scope (e.g., `horus_lore`, `project_kb`) |
+| `--context`   | `-c`  | Domain context for better extraction                          |
+| `--force`     | `-f`  | Re-learn even if already learned                              |
+| `--dry-run`   | `-n`  | Preview without learning                                      |
+| `--list`      | `-l`  | List learned content for scope                                |
+| `--request`   | `-r`  | Request content if not available (saved to requests.json)     |
+| `--from-gaps` | `-g`  | Reflect on past errors/questions to find knowledge gaps       |
 
 ## Source Types
 
-| Type | Detection | Backend |
-|------|-----------|---------|
-| arXiv | `arxiv.org` URL | `/arxiv` |
-| YouTube | `youtube.com` | `/youtube-transcripts` + `/distill` |
-| GitHub | `github.com` | `/fetcher` + `/distill` |
-| PDF | `.pdf` extension | `/extractor` + `/distill` |
-| Audiobook | `.aax`, `.m4b` | `/audiobook-ingest` + `/distill` |
-| URL | any HTTP(S) | `/fetcher` + `/distill` |
-| File | local path | `/distill` |
+| Type      | Detection        | Backend                             |
+| --------- | ---------------- | ----------------------------------- |
+| arXiv     | `arxiv.org` URL  | `/arxiv`                            |
+| YouTube   | `youtube.com`    | `/youtube-transcripts` + `/distill` |
+| GitHub    | `github.com`     | `/fetcher` + `/distill`             |
+| PDF       | `.pdf` extension | `/extractor` + `/distill`           |
+| Audiobook | `.aax`, `.m4b`   | `/audiobook-ingest` + `/distill`    |
+| URL       | any HTTP(S)      | `/fetcher` + `/distill`             |
+| File      | local path       | `/distill`                          |
 
 ## Requesting Content
 
@@ -93,11 +104,13 @@ Query past conversations and logs to find knowledge gaps. This enables **curiosi
 ```
 
 **Sources checked:**
+
 1. Skill execution logs (`~/workspace/.../logs/*.log`)
 2. Learning history (`~/.learn/*/learned.json`)
 3. Episodic memory (`agent_conversations` in ArangoDB)
 
 This creates a **learning feedback loop**:
+
 ```
 Past failures → Identify gaps → Generate curiosity → /dogpile → /learn → Better future responses
 ```
@@ -130,12 +143,12 @@ Automated learning cycle that collects transcripts and learns from knowledge gap
 
 Collects and archives transcripts from:
 
-| Agent | Location | Format |
-|-------|----------|--------|
-| Claude Code | `~/.claude/projects/` | JSONL |
-| Codex | `~/.codex/sessions/` | JSONL |
-| Pi | `~/.pi/sessions/` | JSON |
-| KiloCode | `~/.kilocode/cli/` | JSON |
+| Agent       | Location              | Format |
+| ----------- | --------------------- | ------ |
+| Claude Code | `~/.claude/projects/` | JSONL  |
+| Codex       | `~/.codex/sessions/`  | JSONL  |
+| Pi          | `~/.pi/sessions/`     | JSON   |
+| KiloCode    | `~/.kilocode/cli/`    | JSON   |
 
 **Note:** Each agent has platform-specific transcript formats. Failed extractions are logged for manual review.
 

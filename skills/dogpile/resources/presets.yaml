@@ -373,6 +373,53 @@ presets:
       - X/Twitter Security
       - InfoSec Writeups (Medium)
 
+  # ---------------------------------------------------------------------------
+  # MOVIE SCENES (Horus TTS Training)
+  # ---------------------------------------------------------------------------
+  movie_scenes:
+    description: "Find movies with specific emotional scenes for TTS voice training"
+    use_when:
+      - "Looking for war movies with specific emotional scenes"
+      - "Finding betrayal/rage/sorrow scenes for voice training"
+      - "Researching movie performances for emotional range"
+      - "TTS persona training clip selection"
+      - "Query mentions 'movie', 'scene', 'voice training', 'emotional', actor names"
+    include_defaults: true
+    brave_sites:
+      - imdb.com
+      - rottentomatoes.com
+      - metacritic.com
+      - letterboxd.com
+      - filmaffinity.com
+      - rogerebert.com
+      - sublikescript.com      # Full movie scripts
+      - imsdb.com              # Screenplays
+      - moviequotes.com
+      - wikiquote.org
+      - opensubtitles.org
+    api_resources: []
+    resources:
+      - IMDB
+      - Rotten Tomatoes
+      - Letterboxd
+    # Output format hint for agent processing
+    output_format:
+      movie_title: "string"
+      year: "integer"
+      abstract: "2-3 sentence synopsis"
+      reviews:
+        critical: "RT/Metacritic consensus"
+        audience: "What viewers liked/disliked"
+        performance_notes: "Relevant quotes about acting"
+      emotion_match:
+        score: "0.0-1.0"
+        rationale: "Why this matches the emotion"
+        key_scenes: "List of scenes with timestamps if available"
+        actor_model_alignment: "DDL/Pacino/Crowe/Carlin/Bardem/Butler match"
+      availability:
+        streaming: "List of streaming services"
+        subtitles: "SDH availability"
+
 # =============================================================================
 # QUICK REFERENCE FOR AGENTS
 # =============================================================================
@@ -389,4 +436,5 @@ presets:
 # | "Analyze this PCAP"                  | network_analysis       |
 # | "Latest zero-days this week"         | bleeding_edge          |
 # | "How does React hooks work?"         | general                |
+# | "War movies with betrayal scenes"    | movie_scenes           |
 # =============================================================================

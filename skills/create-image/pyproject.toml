@@ -1,0 +1,8 @@
+# This file exists for IDE support but the script uses PEP 723 inline metadata.
+# Run with: uv run --script generate.py
+
+[project]
+name = "fixture-image-stub"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = []

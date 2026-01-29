@@ -1,0 +1,1064 @@
+{
+  "name": "taxonomy_large",
+  "description": "Stratified ground truth from SPARTA data (46 samples)",
+  "generated": "2026-01-28T19:20:35.424882",
+  "seed": 42,
+  "counts": {
+    "attck": 14,
+    "nist": 15,
+    "cwe": 10,
+    "d3fend": 7
+  },
+  "cases": [
+    {
+      "id": "T1673",
+      "input": {
+        "name": "Virtual Machine Discovery",
+        "description": "An adversary may attempt to enumerate running virtual machines (VMs) after gaining access to a host or hypervisor. For example, adversaries may enumerate a list of VMs on an ESXi hypervisor using a [Hypervisor CLI](https://attack.mitre.org/techniques/T1059/012) such as `esxcli` or `vim-cmd` (e.g. `esxcli vm process list or vim-cmd vmsvc/getallvms`).(Citation: Crowdstrike Hypervisor Jackpotting Pt 2 2021)(Citation: TrendMicro Play) Adversaries may also directly leverage a graphical user interface"
+      },
+      "expected": {
+        "conceptual": [
+          "Precision",
+          "Loyalty"
+        ],
+        "tactical": [
+          "Exploit",
+          "Model"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Precision",
+            "Loyalty"
+          ],
+          "tactical": [
+            "Exploit",
+            "Model"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1195",
+      "input": {
+        "name": "Supply Chain Compromise",
+        "description": "Adversaries may manipulate products or product delivery mechanisms prior to receipt by a final consumer for the purpose of data or system compromise.\n\nSupply chain compromise can take place at any stage of the supply chain including:\n\n* Manipulation of development tools\n* Manipulation of a development environment\n* Manipulation of source code repositories (public or private)\n* Manipulation of source code in open-source dependencies\n* Manipulation of software update/distribution mechanisms\n* Comp"
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Corruption"
+          ],
+          "tactical": [
+            "Exploit"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1552.007",
+      "input": {
+        "name": "Container API",
+        "description": "Adversaries may gather credentials via APIs within a containers environment. APIs in these environments, such as the Docker API and Kubernetes APIs, allow a user to remotely manage their container resources and cluster components.(Citation: Docker API)(Citation: Kubernetes API)\n\nAn adversary may access the Docker API to collect logs that contain credentials to cloud, container, and various other resources in the environment.(Citation: Unit 42 Unsecured Docker Daemons) An adversary with sufficien"
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Loyalty"
+          ],
+          "tactical": [
+            "Isolate"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1021.007",
+      "input": {
+        "name": "Cloud Services",
+        "description": "Adversaries may log into accessible cloud services within a compromised environment using [Valid Accounts](https://attack.mitre.org/techniques/T1078) that are synchronized with or federated to on-premises user identities. The adversary may then perform management actions or access cloud-hosted resources as the logged-on user. \n\nMany enterprises federate centrally managed user identities to cloud services, allowing users to login with their domain credentials in order to access the cloud control "
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": [
+          "Detect",
+          "Exploit"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Loyalty"
+          ],
+          "tactical": [
+            "Detect",
+            "Exploit"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1052.001",
+      "input": {
+        "name": "Exfiltration over USB",
+        "description": "Adversaries may attempt to exfiltrate data over a USB connected physical device. In certain circumstances, such as an air-gapped network compromise, exfiltration could occur via a USB device introduced by a user. The USB device could be used as the final exfiltration point or to hop between otherwise disconnected systems."
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Corruption"
+          ],
+          "tactical": [
+            "Exploit"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1485.001",
+      "input": {
+        "name": "Lifecycle-Triggered Deletion",
+        "description": "Adversaries may modify the lifecycle policies of a cloud storage bucket to destroy all objects stored within.  \n\nCloud storage buckets often allow users to set lifecycle policies to automate the migration, archival, or deletion of objects after a set period of time.(Citation: AWS Storage Lifecycles)(Citation: GCP Storage Lifecycles)(Citation: Azure Storage Lifecycles) If a threat actor has sufficient permissions to modify these policies, they may be able to delete all objects at once. \n\nFor exam"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1114.002",
+      "input": {
+        "name": "Remote Email Collection",
+        "description": "Adversaries may target an Exchange server, Office 365, or Google Workspace to collect sensitive information. Adversaries may leverage a user's credentials and interact directly with the Exchange server to acquire information from within a network. Adversaries may also access externally facing Exchange services, Office 365, or Google Workspace to access email using credentials or access tokens. Tools such as [MailSniper](https://attack.mitre.org/software/S0413) can be used to automate searches fo"
+      },
+      "expected": {
+        "conceptual": [
+          "Precision",
+          "Loyalty"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Precision",
+            "Loyalty"
+          ],
+          "tactical": [
+            "Exploit"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1059",
+      "input": {
+        "name": "Command and Scripting Interpreter",
+        "description": "Adversaries may abuse command and script interpreters to execute commands, scripts, or binaries. These interfaces and languages provide ways of interacting with computer systems and are a common feature across many different platforms. Most systems come with some built-in command-line interface and scripting capabilities, for example, macOS and Linux distributions include some flavor of [Unix Shell](https://attack.mitre.org/techniques/T1059/004) while Windows installations include the [Windows C"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": [
+            "Exploit"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1584.004",
+      "input": {
+        "name": "Server",
+        "description": "Adversaries may compromise third-party servers that can be used during targeting. Use of servers allows an adversary to stage, launch, and execute an operation. During post-compromise activity, adversaries may utilize servers for various tasks, including for Command and Control.(Citation: TrendMicro EarthLusca 2022) Instead of purchasing a [Server](https://attack.mitre.org/techniques/T1583/004) or [Virtual Private Server](https://attack.mitre.org/techniques/T1583/003), adversaries may compromise"
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Corruption"
+          ],
+          "tactical": [
+            "Exploit"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1546.016",
+      "input": {
+        "name": "Installer Packages",
+        "description": "Adversaries may establish persistence and elevate privileges by using an installer to trigger the execution of malicious content. Installer packages are OS specific and contain the resources an operating system needs to install applications on a system. Installer packages can include scripts that run prior to installation as well as after installation is complete. Installer scripts may inherit elevated permissions when executed. Developers often use these scripts to prepare the environment for i"
+      },
+      "expected": {
+        "conceptual": [
+          "Precision",
+          "Corruption"
+        ],
+        "tactical": [
+          "Isolate",
+          "Persist"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Precision",
+            "Corruption"
+          ],
+          "tactical": [
+            "Isolate",
+            "Persist"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1665",
+      "input": {
+        "name": "Hide Infrastructure",
+        "description": "Adversaries may manipulate network traffic in order to hide and evade detection of their C2 infrastructure. This can be accomplished by identifying and filtering traffic from defensive tools,(Citation: TA571) masking malicious domains to obfuscate the true destination from both automated scanning tools and security researchers,(Citation: Schema-abuse)(Citation: Facad1ng)(Citation: Browser-updates) and otherwise hiding malicious artifacts to delay discovery and prolong the effectiveness of advers"
+      },
+      "expected": {
+        "conceptual": [
+          "Precision"
+        ],
+        "tactical": [
+          "Evade",
+          "Exploit"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Precision"
+          ],
+          "tactical": [
+            "Evade",
+            "Exploit"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1553.001",
+      "input": {
+        "name": "Gatekeeper Bypass",
+        "description": "Adversaries may modify file attributes and subvert Gatekeeper functionality to evade user prompts and execute untrusted programs. Gatekeeper is a set of technologies that act as layer of Apple\u2019s security model to ensure only trusted applications are executed on a host. Gatekeeper was built on top of File Quarantine in Snow Leopard (10.6, 2009) and has grown to include Code Signing, security policy compliance, Notarization, and more. Gatekeeper also treats applications running for the first time "
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": [
+          "Isolate",
+          "Evade"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": [
+            "Isolate",
+            "Evade"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1053.002",
+      "input": {
+        "name": "At",
+        "description": "Adversaries may abuse the [at](https://attack.mitre.org/software/S0110) utility to perform task scheduling for initial or recurring execution of malicious code. The [at](https://attack.mitre.org/software/S0110) utility exists as an executable within Windows, Linux, and macOS for scheduling tasks at a specified time and date. Although deprecated in favor of [Scheduled Task](https://attack.mitre.org/techniques/T1053/005)'s [schtasks](https://attack.mitre.org/software/S0111) in Windows environments"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": [
+            "Exploit"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "T1597.001",
+      "input": {
+        "name": "Threat Intel Vendors",
+        "description": "Adversaries may search private data from threat intelligence vendors for information that can be used during targeting. Threat intelligence vendors may offer paid feeds or portals that offer more data than what is publicly reported. Although sensitive details (such as customer names and other identifiers) may be redacted, this information may contain trends regarding breaches such as target industries, attribution claims, and successful TTPs/countermeasures.(Citation: D3Secutrity CTI Feeds)\n\nAdv"
+      },
+      "expected": {
+        "conceptual": [
+          "Precision"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "metadata": {
+        "collection": "ATT&CK",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Precision"
+          ],
+          "tactical": [
+            "Isolate"
+          ]
+        }
+      },
+      "notes": "Auto-generated from ATT&CK"
+    },
+    {
+      "id": "PE-17",
+      "input": {
+        "name": "ALTERNATE WORK SITE",
+        "description": "The organization:"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "IR-3",
+      "input": {
+        "name": "INCIDENT RESPONSE TESTING",
+        "description": "The organization tests the incident response capability for the information system [Assignment: organization-defined frequency] using [Assignment: organization-defined tests] to determine the incident response effectiveness and documents the results."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "AU-12 (1)",
+      "input": {
+        "name": "SYSTEM-WIDE / TIME-CORRELATED AUDIT TRAIL",
+        "description": "The information system compiles audit records from [Assignment: organization-defined information system components] into a system-wide (logical or physical) audit trail that is time-correlated to within [Assignment: organization-defined level of tolerance for the relationship between time stamps of individual records in the audit trail]."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "AT-4",
+      "input": {
+        "name": "SECURITY TRAINING RECORDS",
+        "description": "The organization:"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "CM-9",
+      "input": {
+        "name": "CONFIGURATION MANAGEMENT PLAN",
+        "description": "The organization develops, documents, and implements a configuration management plan for the information system that:"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "PM-1",
+      "input": {
+        "name": "INFORMATION SECURITY PROGRAM PLAN",
+        "description": "The organization:"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "MP-7",
+      "input": {
+        "name": "MEDIA USE",
+        "description": "The organization [Selection: restricts; prohibits] the use of [Assignment: organization-defined types of information system media] on [Assignment: organization-defined information systems or system components] using [Assignment: organization-defined security safeguards]."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "CP-1a.2.",
+      "input": {
+        "name": "",
+        "description": "Procedures to facilitate the implementation of the contingency planning policy and associated contingency planning controls; and"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "AC-20",
+      "input": {
+        "name": "USE OF EXTERNAL INFORMATION SYSTEMS",
+        "description": "The organization establishes terms and conditions, consistent with any trust relationships established with other organizations owning, operating, and/or maintaining external information systems, allowing authorized individuals to:"
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Loyalty"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "SA-17 (1)",
+      "input": {
+        "name": "FORMAL POLICY MODEL",
+        "description": "The organization requires the developer of the information system, system component, or information system service to:"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "CP-7 (2)",
+      "input": {
+        "name": "ACCESSIBILITY",
+        "description": "The organization identifies potential accessibility problems to the alternate processing site in the event of an area-wide disruption or disaster and outlines explicit mitigation actions."
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Resilience"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "MA-4 (2)",
+      "input": {
+        "name": "DOCUMENT NONLOCAL MAINTENANCE",
+        "description": "The organization documents in the security plan for the information system, the policies and procedures for the establishment and use of nonlocal maintenance and diagnostic connections."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "CA-3",
+      "input": {
+        "name": "SYSTEM INTERCONNECTIONS",
+        "description": "The organization:"
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "RA-5 (5)",
+      "input": {
+        "name": "PRIVILEGED ACCESS",
+        "description": "The information system implements privileged access authorization to [Assignment: organization-identified information system components] for selected [Assignment: organization-defined vulnerability scanning activities]."
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty",
+          "Precision"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Loyalty",
+            "Precision",
+            "Fragility"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "SC-35",
+      "input": {
+        "name": "HONEYCLIENTS",
+        "description": "The information system includes components that proactively seek to identify malicious websites and/or web-based malicious code."
+      },
+      "expected": {
+        "conceptual": [
+          "Precision"
+        ],
+        "tactical": [
+          "Detect"
+        ]
+      },
+      "metadata": {
+        "collection": "NIST",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Precision"
+          ],
+          "tactical": [
+            "Detect"
+          ]
+        }
+      },
+      "notes": "Auto-generated from NIST"
+    },
+    {
+      "id": "CWE-39",
+      "input": {
+        "name": "Path Traversal: 'C:dirname'",
+        "description": "The product accepts input that contains a drive letter or Windows volume letter ('C:dirname') that potentially redirects access to an unintended location or arbitrary file."
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Loyalty"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-117",
+      "input": {
+        "name": "Improper Output Neutralization for Logs",
+        "description": "The product constructs a log message from external input, but it does not neutralize or incorrectly neutralizes special elements when the message is written to a log file."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": [
+          "Detect"
+        ]
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": [
+            "Detect"
+          ]
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-781",
+      "input": {
+        "name": "Improper Address Validation in IOCTL with METHOD_NEITHER I/O Control Code",
+        "description": "The product defines an IOCTL that uses METHOD_NEITHER for I/O, but it does not validate or incorrectly validates the addresses that are provided."
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Loyalty"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-552",
+      "input": {
+        "name": "Files or Directories Accessible to External Parties",
+        "description": "The product makes files or directories accessible to unauthorized actors, even though they should not be."
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Corruption"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-84",
+      "input": {
+        "name": "Improper Neutralization of Encoded URI Schemes in a Web Page",
+        "description": "The web application improperly neutralizes user-controlled input for executable script disguised with URI encodings."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-1421",
+      "input": {
+        "name": "Exposure of Sensitive Information in Shared Microarchitectural Structures during Transient Execution",
+        "description": "A processor event may allow transient operations to access architecturally restricted data (for example, in another address space) in a shared microarchitectural structure (for example, a CPU cache), potentially exposing the data over a covert channel."
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility",
+          "Loyalty"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Fragility",
+            "Loyalty",
+            "Stealth"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-1007",
+      "input": {
+        "name": "Insufficient Visual Distinction of Homoglyphs Presented to User",
+        "description": "The product displays information or identifiers to a user, but the display mechanism does not make it easy for the user to distinguish between visually similar or identical glyphs (homoglyphs), which may cause the user to misinterpret a glyph and perform an unintended, insecure action."
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Fragility"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-312",
+      "input": {
+        "name": "Cleartext Storage of Sensitive Information",
+        "description": "The product stores sensitive information in cleartext within a resource that might be accessible to another control sphere."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-1038",
+      "input": {
+        "name": "Insecure Automated Optimizations",
+        "description": "The product uses a mechanism that automatically optimizes code, e.g. to improve a characteristic such as performance, but the optimizations can have an unintended side effect that might violate an intended security assumption."
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Fragility"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "CWE-1331",
+      "input": {
+        "name": "Improper Isolation of Shared Resources in Network On Chip (NoC)",
+        "description": "The Network On Chip (NoC) does not isolate or incorrectly isolates its on-chip-fabric and internal resources such that they are shared between trusted and untrusted agents, creating timing channels."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "CWE",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from CWE"
+    },
+    {
+      "id": "d3f:D3-NTPM",
+      "input": {
+        "name": "Network Traffic Policy Mapping",
+        "description": "Network traffic policy mapping identifies and models the allowed pathways of data at the network, tranport, and/or application levels."
+      },
+      "expected": {
+        "conceptual": [
+          "Precision"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "D3FEND",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Precision"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from D3FEND"
+    },
+    {
+      "id": "d3f:D3-MH",
+      "input": {
+        "name": "Message Hardening",
+        "description": "Email or Messaging Hardening includes measures taken to ensure the confidentiality and integrity of user to user computer messages."
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Loyalty"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "D3FEND",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Resilience",
+            "Loyalty"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from D3FEND"
+    },
+    {
+      "id": "d3f:D3-AI",
+      "input": {
+        "name": "Asset Inventory",
+        "description": "Asset inventorying identifies and records the organization's assets and enriches each inventory item with knowledge about their vulnerabilities."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "D3FEND",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from D3FEND"
+    },
+    {
+      "id": "d3f:D3-NI",
+      "input": {
+        "name": "Network Isolation",
+        "description": "Network Isolation techniques prevent network hosts from accessing non-essential system network resources."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "D3FEND",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from D3FEND"
+    },
+    {
+      "id": "d3f:D3-FEV",
+      "input": {
+        "name": "File Eviction",
+        "description": "File eviction techniques evict files from system storage."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "D3FEND",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from D3FEND"
+    },
+    {
+      "id": "d3f:D3-DE",
+      "input": {
+        "name": "Decoy Environment",
+        "description": "A Decoy Environment comprises hosts and networks for the purposes of deceiving an attacker."
+      },
+      "expected": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "D3FEND",
+        "keyword_scorer_raw": {
+          "conceptual": [],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from D3FEND"
+    },
+    {
+      "id": "d3f:D3-NTA",
+      "input": {
+        "name": "Network Traffic Analysis",
+        "description": "Analyzing intercepted or summarized computer network traffic to detect unauthorized activity."
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": []
+      },
+      "metadata": {
+        "collection": "D3FEND",
+        "keyword_scorer_raw": {
+          "conceptual": [
+            "Corruption"
+          ],
+          "tactical": []
+        }
+      },
+      "notes": "Auto-generated from D3FEND"
+    }
+  ]
+}
