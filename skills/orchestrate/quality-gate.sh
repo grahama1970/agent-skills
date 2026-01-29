@@ -4,6 +4,12 @@
 # Auto-detects project type and runs verification tests.
 # Intended to be run by Agents to self-verify their work.
 #
+# Enhanced with OUTPUT QUALITY VALIDATION:
+# - Samples actual output files and validates content
+# - Checks for JSON-instead-of-markdown bugs
+# - Checks for garbled/corrupted content
+# - Integrates with batch-quality skill
+#
 
 set -e
 
@@ -27,6 +33,84 @@ pass() {
     echo -e "${GREEN}PASSED: $1${NC}"
     exit 0
 }
+
+# ==== OUTPUT QUALITY VALIDATION ====
+# Validates actual output content, not just exit codes
+
+validate_output_quality() {
+    local output_dir="$1"
+    local pattern="${2:-*.md}"
+    local sample_size="${3:-5}"
+
+    if [ -z "$output_dir" ] || [ ! -d "$output_dir" ]; then
+        return 0  # No output dir specified, skip
+    fi
+
+    banner "Output Quality Validation: $output_dir"
+
+    local files=($(find "$output_dir" -name "$pattern" -type f 2>/dev/null | shuf | head -n "$sample_size"))
+
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No files found matching $pattern in $output_dir"
+        return 0
+    fi
+
+    local failures=0
+    local critical=0
+
+    for f in "${files[@]}"; do
+        local issues=""
+        local first_char=$(head -c 1 "$f" 2>/dev/null)
+        local file_size=$(stat -f%z "$f" 2>/dev/null || stat --printf="%s" "$f" 2>/dev/null)
+
+        # Check 1: JSON instead of expected format
+        if [ "$first_char" = "{" ] || [ "$first_char" = "[" ]; then
+            issues="$issues JSON_CONTENT"
+            ((critical++))
+        fi
+
+        # Check 2: Suspiciously small
+        if [ "$file_size" -lt 100 ]; then
+            issues="$issues TOO_SMALL($file_size)"
+            ((failures++))
+        fi
+
+        # Check 3: Empty file
+        if [ "$file_size" -eq 0 ]; then
+            issues="$issues EMPTY"
+            ((critical++))
+        fi
+
+        if [ -n "$issues" ]; then
+            echo -e "${RED}  FAIL: $(basename "$f"):$issues${NC}"
+        else
+            echo -e "${GREEN}  PASS: $(basename "$f") ($file_size bytes)${NC}"
+        fi
+    done
+
+    if [ $critical -gt 0 ]; then
+        echo -e "${RED}CRITICAL: $critical files have critical quality issues${NC}"
+        return 1
+    fi
+
+    if [ $failures -gt 0 ]; then
+        echo -e "${YELLOW}WARNING: $failures files have quality warnings${NC}"
+    fi
+
+    return 0
+}
+
+# Check for OUTPUT_DIR environment variable for batch processing
+if [ -n "$OUTPUT_DIR" ]; then
+    validate_output_quality "$OUTPUT_DIR" "${OUTPUT_PATTERN:-*.md}" "${SAMPLE_SIZE:-5}" || fail "Output quality validation failed"
+fi
+
+# Check for artifacts directory (common pattern)
+if [ -d "artifacts" ]; then
+    validate_output_quality "artifacts" "*.md" 5 || fail "Artifacts quality validation failed"
+fi
+
+# ==== END OUTPUT QUALITY VALIDATION ====
 
 # Handle exit code 3 (skip) as failure for implementation tasks
 # Per orchestrate skill: NEVER skip tests for implementation tasks

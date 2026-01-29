@@ -1,0 +1,13 @@
+[project]
+name = "create-code"
+version = "0.1.0"
+description = "Horus coding orchestration pipeline"
+requires-python = ">=3.10"
+dependencies = [
+    "typer",
+    "rich",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

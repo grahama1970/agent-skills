@@ -163,7 +163,7 @@ fi
 # ============================================================================
 # Check 5: Test Files Exist
 # ============================================================================
-echo -e "${YELLOW}[5/5] Test files exist...${NC}"
+echo -e "${YELLOW}[5/6] Test files exist...${NC}"
 
 # Extract test file references from Definition of Done
 TEST_FILES=$(grep -oE 'tests?/[a-zA-Z0-9_/]+\.py' "$TASK_FILE" | sort -u)
@@ -181,6 +181,39 @@ else
             FAILED=1
         fi
     done
+fi
+
+# ============================================================================
+# Check 6: Batch Quality Monitor (for long-running/batch tasks)
+# ============================================================================
+echo -e "${YELLOW}[6/6] Batch quality monitoring...${NC}"
+
+# Check if task file mentions batch processing, pipeline, or extraction
+IS_BATCH=$(grep -iE 'batch|pipeline|extract|long-running|overnight|nightly|hours?' "$TASK_FILE" | head -1)
+
+if [ -n "$IS_BATCH" ]; then
+    echo -e "      ${CYAN}Batch/pipeline task detected${NC}"
+
+    # Check for output quality validation requirements
+    HAS_OUTPUT_DIR=$(grep -iE 'output.*dir|artifacts|output_path' "$TASK_FILE" | head -1)
+    HAS_QUALITY_MONITOR=$(grep -iE 'quality.*monitor|quality.*gate|output.*validation|watchdog' "$TASK_FILE" | head -1)
+
+    if [ -z "$HAS_QUALITY_MONITOR" ]; then
+        echo -e "      ${YELLOW}⚠️  No quality monitoring defined for batch task${NC}"
+        echo -e "      ${YELLOW}   Recommendation: Add output validation with:${NC}"
+        echo -e "      ${YELLOW}   - OUTPUT_DIR=<path> for quality-gate.sh to sample${NC}"
+        echo -e "      ${YELLOW}   - Or background quality monitor script${NC}"
+        # Warning only, not blocking (yet)
+    else
+        echo -e "      ${GREEN}✅ Quality monitoring defined${NC}"
+    fi
+
+    # Check for inline quality validation in code
+    if [ -n "$HAS_OUTPUT_DIR" ]; then
+        echo -e "      ${GREEN}✅ Output directory specified${NC}"
+    fi
+else
+    echo -e "      ${GREEN}✅ Not a batch task (quality check N/A)${NC}"
 fi
 
 # ============================================================================
@@ -203,5 +236,6 @@ else
     echo "   - Failing sanity scripts: Fix dependencies or script"
     echo "   - Missing Definition of Done: Define test + assertion with human"
     echo "   - Missing test files: Create test file (can be failing initially)"
+    echo "   - Batch tasks: Add OUTPUT_DIR or quality monitor script"
     exit 1
 fi
