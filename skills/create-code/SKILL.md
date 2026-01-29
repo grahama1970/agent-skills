@@ -38,12 +38,16 @@ Horus research existing implementation patterns, libraries, and potential pitfal
 - Calls `/dogpile search "<idea> implementation patterns"`
 - Aggregates context into a research summary.
 
-### 3. Isolated Execution Environment (/hack, /battle)
+### 3. Isolated Execution & Digital Twin (/hack, /battle)
 
-Horus spins up an isolated Docker container to safely test snippets or run adversarial simulations.
+Horus spins up an isolated environment to safely test code or run adversarial simulations. This leverages a **Digital Twin** strategy for high-fidelity testing.
 
-- Uses `.pi/skills/hack` for container management.
-- Uses `.pi/skills/battle` if security hardening or competition is required.
+- **Tools**: `.pi/skills/hack` for sandboxing, `.pi/skills/battle` for RvB hardening.
+- **Modes**:
+  - `git_worktree`: For repository-level isolation.
+  - `docker`: For containerized environment testing.
+  - `qemu`: For hardware/microprocessor emulation (firmware).
+- **Thunderdome**: Runs multiple agents in parallel to find the "No-Vibes" best implementation.
 
 ### 4. Structured Implementation (/task, /orchestrate)
 
@@ -86,14 +90,15 @@ Horus performs a final dogpile search with the working code and full context to 
 
 ## Commands
 
-| Command     | Description                                  |
-| ----------- | -------------------------------------------- |
-| `start`     | Launch full 6-stage workflow from an idea    |
-| `research`  | Run Stage 2 Dogpile research                 |
-| `sandbox`   | Spin up Stage 3 isolated environment         |
-| `implement` | Run Stage 4 Task/Orchestrate pipeline        |
-| `review`    | Run Stage 5 Brutal Code Review               |
-| `finalize`  | Run Stage 6 Final research and memory commit |
+| Command     | Description                                         |
+| ----------- | --------------------------------------------------- |
+| `start`     | Launch full 6-stage workflow from an idea           |
+| `research`  | Run Stage 2 Dogpile research                        |
+| `sandbox`   | Spin up Stage 3 isolated environment (Digital Twin) |
+| `battle`    | Run Stage 3 adversarial battle for hardening        |
+| `implement` | Run Stage 4 Task/Orchestrate pipeline               |
+| `review`    | Run Stage 5 Brutal Code Review                      |
+| `finalize`  | Run Stage 6 Final research and memory commit        |
 
 ---
 

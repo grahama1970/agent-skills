@@ -81,9 +81,23 @@ def stage_2_research(context: dict):
     return context
 
 def stage_3_sandbox(context: dict):
-    console.print(Panel("[bold blue]Stage 3: Isolated Execution Environment (/hack)[/bold blue]"))
-    if Confirm.ask("Spin up a sandbox container for experimentation?"):
-        run_skill("hack", ["run", "--image", "python:3.11-slim", "--interactive"])
+    console.print(Panel("[bold blue]Stage 3: Isolated Execution & Digital Twin (/hack)[/bold blue]"))
+    if Confirm.ask("Spin up a sandbox container or digital twin?"):
+        mode = Prompt.ask("Select Digital Twin mode", choices=["docker", "git_worktree", "qemu"], default="docker")
+        if mode == "qemu":
+            arch = Prompt.ask("Select QEMU architecture", choices=["arm", "x86_64", "riscv64"], default="arm")
+            run_skill("hack", ["run", "--mode", "qemu", "--arch", arch])
+        elif mode == "git_worktree":
+            run_skill("hack", ["run", "--mode", "git_worktree"])
+        else:
+            run_skill("hack", ["run", "--image", "python:3.11-slim", "--interactive"])
+    return context
+
+def stage_3_battle(context: dict):
+    console.print(Panel("[bold blue]Stage 3: Adversarial Battle (/battle)[/bold blue]"))
+    if Confirm.ask("Run a security hardening battle?"):
+        rounds = Prompt.ask("Number of rounds?", default="10")
+        run_skill("battle", ["battle", ".", "--rounds", rounds])
     return context
 
 def stage_4_implement(context: dict):
@@ -124,7 +138,15 @@ def start(idea: str = typer.Argument(..., help="The idea or feature to implement
     """Launch the full 6-stage Horus coding workflow."""
     context = stage_1_scope(idea)
     context = stage_2_research(context)
-    context = stage_3_sandbox(context)
+    
+    # Optional Sandbox or Battle
+    if Confirm.ask("Run Stage 3 (Sandbox/Battle)?"):
+        choice = Prompt.ask("Select Stage 3 activity", choices=["sandbox", "battle", "both"], default="sandbox")
+        if choice in ["sandbox", "both"]:
+            context = stage_3_sandbox(context)
+        if choice in ["battle", "both"]:
+            context = stage_3_battle(context)
+    
     context = stage_4_implement(context)
     context = stage_5_review(context)
     context = stage_6_finalize(context)
@@ -135,14 +157,27 @@ def research(idea: str):
     stage_2_research({"idea": idea, "tech_stack": ""})
 
 @app.command()
-def sandbox():
+def sandbox(mode: str = typer.Option("docker", "--mode", "-m", help="Digital Twin mode: docker, git_worktree, qemu")):
     """Spin up Stage 3 sandbox only."""
-    stage_3_sandbox({})
+    if mode == "qemu":
+        run_skill("hack", ["run", "--mode", "qemu"])
+    else:
+        run_skill("hack", ["run", "--mode", mode])
+
+@app.command()
+def battle(rounds: int = typer.Option(10, "--rounds", "-r", help="Number of battle rounds")):
+    """Run Stage 3 adversarial battle only."""
+    stage_3_battle({"rounds": rounds})
 
 @app.command()
 def review():
     """Run Stage 5 review only."""
     stage_5_review({})
+
+@app.command()
+def finalize():
+    """Run Stage 6 finalization only."""
+    stage_6_finalize({})
 
 if __name__ == "__main__":
     console.print("[bold gold1]HORUS CREATE-CODE ORCHESTRATOR[/bold gold1]")
