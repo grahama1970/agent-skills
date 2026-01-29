@@ -1,5 +1,11 @@
-> **Review Metadata**: Round 1 | Final Diff | Provider: github | Model: gpt-5
+> **Review Metadata**: Round 2 | Step 1 | Provider: github | Model: gpt-5
 ---
+
+Clarifying questions:
+- Should start default to non-interactive when invoked by other skills/agents, or only when --yes/--no-interactive is provided?
+- Is CREATE_CODE_DOCKER_IMAGE intended to be global, or should per-repo .create-code.env override it preferentially?
+- For git_worktree mode, should we auto-init a git repo when missing, or hard-fail with guidance?
+- For review, is GitHub Copilot the only allowed provider, or should we allow a fallback provider flag if copilot CLI is unavailable?
 
 ```diff
 feat(create-code): headless flags, preflight checks, env-config, docs alignment, and review autogen
@@ -201,7 +207,6 @@ index 8a9b5bc..2a8b9f0 100755
 +    missing_skills = [name for name, p in SKILL_MAP.items() if name in ("dogpile","battle","orchestrate","review-code") and not p.exists()]
 +    if missing_skills:
 +        console.print(f"[bold red]Missing skills:[/bold red] {', '.join(missing_skills)}")
-+        raise typer.Exit(1)
 +    if mode == "docker" and not _which("docker"):
 +        console.print("[bold red]Docker CLI not found.[/bold red] Set up Docker or choose a different mode.")
 +        raise typer.Exit(1)
@@ -333,7 +338,7 @@ index 8a9b5bc..2a8b9f0 100755
 +        if not request_file.exists():
 +            repo, branch = _detect_repo_branch(project_dir)
 +            minimal = f"""# Create-code review request
- 
++
 +## Repository and branch
 +- Repo: `{repo}`
 +- Branch: `{branch}`
@@ -487,8 +492,8 @@ index 8a9b5bc..2a8b9f0 100755
 
 
 Total usage est:       1 Premium request
-Total duration (API):  55.7s
-Total duration (wall): 58.0s
+Total duration (API):  33.4s
+Total duration (wall): 35.6s
 Total code changes:    0 lines added, 0 lines removed
 Usage by model:
-    gpt-5                66.2k input, 8.7k output, 0 cache read, 0 cache write (Est. 1 Premium request)
+    gpt-5                72.8k input, 7.2k output, 0 cache read, 0 cache write (Est. 1 Premium request)

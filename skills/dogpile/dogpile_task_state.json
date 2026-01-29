@@ -1,12 +1,12 @@
 {
-  "completed": 6,
+  "completed": 0,
   "total": 16,
-  "description": "Dogpile: storyboard animatic generation tools AI cinematography camer",
-  "current_item": "completed",
+  "description": "Dogpile: test",
+  "current_item": "initializing",
   "stats": {
     "providers_done": 0,
     "providers_total": 9,
-    "errors": 1,
+    "errors": 0,
     "rate_limits": 0
   },
   "provider_status": {
@@ -21,17 +21,10 @@
     "discord": "pending"
   },
   "provider_times": {},
-  "errors": [
-    {
-      "provider": "codex",
-      "message": "Synthesis failed: Error: OpenAI Codex v0.92.0 (research preview)\n--------\nworkdir: /home/graham/workspace/experiments/",
-      "type": "api_error",
-      "timestamp": "2026-01-29 12:55:07"
-    }
-  ],
+  "errors": [],
   "rate_limits": {},
-  "elapsed_seconds": 103.0,
-  "progress_pct": 37.5,
-  "last_updated": "2026-01-29 12:55:07",
-  "status": "completed"
+  "elapsed_seconds": 0.0,
+  "progress_pct": 0.0,
+  "last_updated": "2026-01-29 16:37:00",
+  "status": "running"
 }

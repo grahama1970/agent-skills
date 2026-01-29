@@ -1,509 +1,480 @@
-Improve collaboration validation, input checks, and fidelity handoff contract
+feat(create-code): headless flags, preflight checks, env-config, docs alignment, and review autogen
 
-diff --git a/.pi/skills/create-storyboard/orchestrator.py b/.pi/skills/create-storyboard/orchestrator.py
-index 5b0f6ad..f3a3f3e 100644
---- a/.pi/skills/create-storyboard/orchestrator.py
-+++ b/.pi/skills/create-storyboard/orchestrator.py
-@@ -1,14 +1,18 @@
+diff --git a/.pi/skills/create-code/run.sh b/.pi/skills/create-code/run.sh
+index 0d9ee9a..5a2e6f0 100755
+--- a/.pi/skills/create-code/run.sh
++++ b/.pi/skills/create-code/run.sh
+@@ -1,16 +1,16 @@
+ #!/usr/bin/env bash
+ # create-code: Horus coding orchestration pipeline
+-# 100% self-contained via uvx - no .venv needed
+-set -eo pipefail
++# Prefer uvx/uv; fallback to system python
++set -euo pipefail
+ 
+-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+-cd "$SKILL_DIR"
++SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++cd "$SCRIPT_DIR"
+ 
+-# Use uvx for self-contained execution with all dependencies
+-exec uvx --with typer \
+-         python3 orchestrator.py "$@"
++if command -v uvx >/dev/null 2>&1; then
++  exec uvx --with typer --with rich python3 orchestrator.py "$@"
++elif command -v uv >/dev/null 2>&1; then
++  exec uv run --with typer --with rich python orchestrator.py "$@"
++else
++  exec python3 orchestrator.py "$@"
++fi
+ 
+diff --git a/.pi/skills/create-code/SKILL.md b/.pi/skills/create-code/SKILL.md
+index 1ac5c3a..33b6b9b 100644
+--- a/.pi/skills/create-code/SKILL.md
++++ b/.pi/skills/create-code/SKILL.md
+@@ -3,7 +3,7 @@ name: create-code
+ description: >
+   Orchestrate the end-to-end coding process for the Horus persona.
+-  Composes research (/dogpile), isolated execution (/hack, /battle),
++  Composes research (/dogpile), isolated execution (/battle),
+   structured implementation (/task, /orchestrate), and brutal code review (/review-code).
+ allowed-tools: Bash, Read
+ triggers:
+@@ -32,12 +32,19 @@ The skill follows a strict 6-stage pipeline:
+ 
+ ### 2. Deep Research (/dogpile)
+ 
+-### 3. Isolated Execution & Digital Twin (/hack, /battle)
++### 3. Isolated Execution & Digital Twin (/battle)
+ 
+ Horus spins up an isolated environment to safely test code or run adversarial simulations. This leverages a **Digital Twin** strategy for high-fidelity testing.
+ 
+-- **Tools**: `.pi/skills/hack` for sandboxing, `.pi/skills/battle` for RvB hardening.
++- **Tools**: `.pi/skills/battle` for Digital Twin orchestration (isolation). Optionally use `.pi/skills/hack` for security audits.
+ - **Modes**:
+   - `git_worktree`: For repository-level isolation.
+   - `docker`: For containerized environment testing.
+   - `qemu`: For hardware/microprocessor emulation (firmware).
+-- **Thunderdome**: Runs multiple agents in parallel to find the "No-Vibes" best implementation.
++
++---
++
++Environment/config:
++- Set CREATE_CODE_DOCKER_IMAGE to override the default docker image (default: python:3.11-slim)
++- Optionally create a .create-code.env file in your project dir with KEY=VALUE lines to override defaults
++- Headless flags: use --yes/--no-interactive on commands to run fully unattended
+ 
+@@ -55,13 +62,13 @@ Horus performs a final dogpile search with the working code and full context to
+ ## Usage
+ 
+ ```bash
+ # Start a new coding project from an idea
+-./run.sh start "Implement a high-performance vector store with ArangoDB"
++./run.sh start "Implement a high-performance vector store with ArangoDB" --yes
+ 
+-# Resume an existing creation in a directory
+-./run.sh resume /path/to/project
++# Run specific stages non-interactively
++./run.sh sandbox --mode docker --yes
++./run.sh implement --yes
+ 
+ # Run specific stages
+ ./run.sh research "idea"
+-./run.sh review /path/to/code
++./run.sh review
+ ```
+ 
+ ## Commands
+@@ -71,6 +78,7 @@ Horus performs a final dogpile search with the working code and full context to
+ | `research`  | Run Stage 2 Dogpile research                        |
+ | `sandbox`   | Spin up Stage 3 isolated environment (Digital Twin) |
+ | `battle`    | Run Stage 3 adversarial battle for hardening        |
+ | `implement` | Run Stage 4 Task/Orchestrate pipeline               |
+ | `review`    | Run Stage 5 Brutal Code Review                      |
+ | `finalize`  | Run Stage 6 Final research and memory commit        |
+ 
+diff --git a/.pi/skills/create-code/orchestrator.py b/.pi/skills/create-code/orchestrator.py
+index 8a9b5bc..2a8b9f0 100755
+--- a/.pi/skills/create-code/orchestrator.py
++++ b/.pi/skills/create-code/orchestrator.py
+@@ -1,23 +1,31 @@
  #!/usr/bin/env python3
  """
- Create-Storyboard Orchestrator (Collaborative Version)
-@@
- import json
+ Create Code Skill - Orchestrator
+ Orchestrates the Horus coding workflow: Idea -> Research -> Sandbox -> Implementation -> Review -> Finalize.
+ """
+ import os
+ import subprocess
  import sys
- from datetime import datetime
  from pathlib import Path
- from typing import Optional
-+import codecs
+ from typing import List, Optional
++import shutil
  
  import typer
+ from rich.console import Console
+ from rich.panel import Panel
+ from rich.progress import Progress, SpinnerColumn, TextColumn
+ from rich.prompt import Confirm, Prompt
  
- from screenplay_parser import parse_file, parse_screenplay, screenplay_to_dict, Screenplay
-@@
- def start(
-     screenplay: Path = typer.Argument(..., help="Path to screenplay markdown file"),
-     output_dir: Path = typer.Option(Path("./output"), "--output-dir", "-o", help="Output directory"),
-     fidelity: str = typer.Option("sketch", "--fidelity", "-f", help="Panel fidelity: sketch|reference"),
-     format: str = typer.Option("mp4", "--format", help="Output format: mp4|html|panels"),
-     auto_approve: bool = typer.Option(False, "--auto-approve", "-y", help="Skip all questions, use defaults"),
-     json_output: bool = typer.Option(False, "--json", "-j", help="Output structured JSON for agent consumption")
- ):
-@@
-     """
-     Start a new storyboard session. Returns questions if input needed.
-@@
-     """
-     # Validate input
-     if not screenplay.exists():
-         result = StoryboardResult(
-             status="error",
-             phase=Phase.PARSE,
-             session_id="",
-             message=f"Screenplay file not found: {screenplay}"
-         )
-         output_result(result, json_output)
-         raise typer.Exit(1)
-+    # Basic binary/empty validation
-+    try:
-+        raw = screenplay.read_bytes()
-+        if len(raw) == 0:
-+            result = StoryboardResult(
-+                status="error",
-+                phase=Phase.PARSE,
-+                session_id="",
-+                message="Screenplay file is empty. Provide a markdown screenplay with INT./EXT. scene headings."
-+            )
-+            output_result(result, json_output)
-+            raise typer.Exit(1)
-+        # Try UTF-8 decode to catch binary files
-+        codecs.decode(raw, "utf-8")
-+    except UnicodeDecodeError:
-+        result = StoryboardResult(
-+            status="error",
-+            phase=Phase.PARSE,
-+            session_id="",
-+            message="Screenplay file appears to be binary or not UTF-8 text. Provide a UTF-8 markdown file."
-+        )
-+        output_result(result, json_output)
-+        raise typer.Exit(1)
-@@
-     # Phase 1: Parse
-     try:
-         parsed = parse_file(screenplay)
-         if not parsed.scenes:
-             result = StoryboardResult(
-                 status="error",
-                 phase=Phase.PARSE,
-                 session_id=session_id,
-                 message=f"No scenes found in screenplay. Ensure headings use INT./EXT. format."
-             )
-             output_result(result, json_output)
-             raise typer.Exit(1)
-@@
- @app.command("continue")
- def continue_session(
-     session: str = typer.Option(..., "--session", "-s", help="Session ID to continue"),
-     answers: str = typer.Option("{}", "--answers", "-a", help="JSON answers to questions"),
-     search_dir: Path = typer.Option(Path("./output"), "--search-dir", help="Directory to search for session"),
-     json_output: bool = typer.Option(False, "--json", "-j", help="Output structured JSON")
- ):
-@@
-     # Load session
-     state = load_session(session_path)
-     output_dir = session_path.parent
-@@
-     # Parse answers
-     try:
-         answer_dict = json.loads(answers)
--        state.answers.update(answer_dict)
-     except json.JSONDecodeError as e:
-         result = StoryboardResult(
-             status="error",
-             phase=state.phase,
-             session_id=state.session_id,
-             message=f"Invalid JSON in answers: {e}"
-         )
-         output_result(result, json_output)
-         raise typer.Exit(1)
-+    # Validate question IDs provided
-+    known_ids = {q.get("id") for q in (state.questions or [])}
-+    unknown_ids = [qid for qid in answer_dict.keys() if qid not in known_ids and not qid.startswith("_config")]
-+    if unknown_ids:
-+        result = StoryboardResult(
-+            status="error",
-+            phase=state.phase,
-+            session_id=state.session_id,
-+            message=f"Unknown question IDs in answers: {', '.join(unknown_ids)}"
-+        )
-+        output_result(result, json_output)
-+        raise typer.Exit(1)
-+    # Accept answers
-+    state.answers.update(answer_dict)
-@@
-     elif state.phase == Phase.CAMERA_PLAN:
-         # Apply shot approval answers
-         # TODO: Modify shot plan based on answers
-@@
- def _execute_generate_panels(state: SessionState, output_dir: Path, json_output: bool):
-     """Execute panel generation phase."""
-     config = state.answers.get('_config', {})
-     fidelity = config.get('fidelity', 'sketch')
+ app = typer.Typer(name="create-code", help="Horus coding orchestration pipeline")
+ console = Console()
  
-     # Validate fidelity
-     if fidelity == 'generated':
--        result = StoryboardResult(
--            status="error",
--            phase=Phase.GENERATE_PANELS,
--            session_id=state.session_id,
--            message="fidelity='generated' requires /create-image skill integration (not yet implemented). Use 'sketch' or 'reference'."
--        )
-+        # Provide explicit handoff contract to /create-image
-+        handoff_schema = {
-+            "contract": "create-image",
-+            "required": ["shot_plan", "prompts", "style_references"],
-+            "shot_plan": "Path to shot_plan.json generated earlier",
-+            "prompts": "List of per-shot text prompts including framing, emotion, lighting",
-+            "style_references": "Optional film/style refs (titles or IDs) to guide look"
-+        }
-+        result = StoryboardResult(
-+            status="error",
-+            phase=Phase.GENERATE_PANELS,
-+            session_id=state.session_id,
-+            message=f"fidelity='generated' is not implemented. Hand off to /create-image using this JSON contract: {json.dumps(handoff_schema)}. Use 'sketch' or 'reference' for now."
-+        )
-         output_result(result, json_output)
-         raise typer.Exit(1)
-@@
-     result = StoryboardResult(
-         status="in_progress",
-         phase=Phase.GENERATE_PANELS,
-         session_id=state.session_id,
-         partial_results={"panels_generated": len(panel_paths)},
-         output_files=[str(p) for p in panel_paths[:5]],  # Show first 5
-         message=f"Generated {len(panel_paths)} panels. Proceeding to assembly...",
-         resume_command=""
-     )
-     output_result(result, json_output)
-@@
- @app.command()
- def status(
-     session: str = typer.Option(..., "--session", "-s", help="Session ID"),
-     search_dir: Path = typer.Option(Path("./output"), "--search-dir", help="Directory to search"),
-     json_output: bool = typer.Option(False, "--json", "-j", help="Output structured JSON")
- ):
-@@
-     result = StoryboardResult(
-         status="in_progress" if state.phase != Phase.COMPLETE else "complete",
-         phase=state.phase,
-         session_id=state.session_id,
-         questions=[Question(**q) for q in state.questions] if state.questions else [],
-         partial_results={
-             "scenes": len(state.parsed_scenes.get('scenes', [])) if state.parsed_scenes else 0,
-             "shots": state.shot_plan.get('total_shots', 0) if state.shot_plan else 0,
-             "panels": len(state.panels)
-         },
-         output_files=[state.output_path] if state.output_path else [],
-         message=f"Session at phase: {state.phase.value}",
--        resume_command=f"./run.sh continue --session {state.session_id} --answers '<JSON>'" if state.questions else ""
-+        resume_command=f"./run.sh continue --session {state.session_id} --answers '<JSON>'" if state.questions else ""
-     )
-     output_result(result, json_output)
- 
-diff --git a/.pi/skills/create-storyboard/collaboration.py b/.pi/skills/create-storyboard/collaboration.py
-index 6f1f4f2..41d41e3 100644
---- a/.pi/skills/create-storyboard/collaboration.py
-+++ b/.pi/skills/create-storyboard/collaboration.py
-@@ -1,15 +1,16 @@
- """
- Collaboration Module for create-storyboard skill.
- 
- Provides question generation, session state management, and structured
- output for human-agent collaboration during storyboard creation.
- """
- 
- import json
- from dataclasses import dataclass, field, asdict
- from datetime import datetime
- from enum import Enum
- from pathlib import Path
--from typing import Optional, Any
-+from typing import Optional, Any, Tuple, Dict
- import uuid
-@@
- def format_questions_for_display(questions: list[Question]) -> str:
-     """Format questions for human-readable display."""
-     if not questions:
-         return "No questions - proceeding with defaults.\n"
-@@
-     lines.append(f"{'='*60}")
-     lines.append("To provide answers, use:")
--    lines.append("  ./run.sh resume --session <ID> --answers '{\"emotion_s1\": \"tense\", ...}'")
-+    lines.append("  ./run.sh continue --session <ID> --answers '{\"emotion_s1\": \"tense\", ...}'")
-     lines.append(f"{'='*60}\n")
- 
-     return "\n".join(lines)
- 
-@@
--def apply_answers_to_scenes(parsed_scenes: dict, answers: dict) -> dict:
--    """Apply user answers to modify parsed scene data."""
--    scenes = parsed_scenes.copy()
--
--    for question_id, answer in answers.items():
-+def apply_answers_to_scenes(parsed_scenes: dict, answers: dict) -> dict:
-+    """Apply user answers to modify parsed scene data."""
-+    scenes = parsed_scenes.copy()
-+    for question_id, answer in answers.items():
-         parts = question_id.split('_')
-         if len(parts) < 2:
-             continue
-@@
-         # Find the scene
-         for scene in scenes.get('scenes', []):
-             if scene.get('number') == scene_num:
-                 # Apply the answer based on type
-                 if q_type == 'emotion':
-                     scene.setdefault('notes', {})['beats'] = [answer]
-                 elif q_type == 'camera' and answer == 'auto_select':
-                     scene.setdefault('notes', {})['camera'] = ['AUTO']
-                 # Other answer types can be handled similarly
-                 break
- 
-     return scenes
+-# --- Paths ---
++# --- Paths / Defaults ---
+ SKILL_DIR = Path(__file__).resolve().parent
+ SKILLS_DIR = SKILL_DIR.parent
+ PROJECT_ROOT = SKILLS_DIR.parent.parent
++DEFAULT_DOCKER_IMAGE = "python:3.11-slim"
 +
-+def validate_answers(answers: Dict[str, Any], known_questions: list[dict]) -> Tuple[bool, list[str]]:
-+    """Validate provided answers against known question IDs; return validity and unknown IDs."""
-+    known_ids = {q.get("id") for q in (known_questions or [])}
-+    unknown = [qid for qid in answers.keys() if qid not in known_ids and not qid.startswith("_config")]
-+    return (len(unknown) == 0), unknown
++def load_env_overrides(project_dir: Path) -> None:
++    """Load KEY=VALUE from .create-code.env if present (non-destructive)."""
++    env_file = project_dir / ".create-code.env"
++    if env_file.exists():
++        for line in env_file.read_text().splitlines():
++            s = line.strip()
++            if not s or s.startswith("#") or "=" not in s:
++                continue
++            k, v = s.split("=", 1)
++            os.environ.setdefault(k.strip(), v.strip())
  
-diff --git a/.pi/skills/create-storyboard/creative_suggestions.py b/.pi/skills/create-storyboard/creative_suggestions.py
-index 5f5c9d3..e3eb3f9 100644
---- a/.pi/skills/create-storyboard/creative_suggestions.py
-+++ b/.pi/skills/create-storyboard/creative_suggestions.py
-@@ -1,9 +1,10 @@
- """
- Creative Suggestions Module for create-storyboard skill.
+ # Map skill names to their run.sh paths
+ SKILL_MAP = {
+     "dogpile": SKILLS_DIR / "dogpile/run.sh",
+     "battle": SKILLS_DIR / "battle/run.sh",
+     "review-code": SKILLS_DIR / "review-code/run.sh",
+     "memory": SKILLS_DIR / "memory/run.sh",
+     "orchestrate": SKILLS_DIR / "orchestrate/run.sh",
+     # Optional security tools
+     "hack": SKILLS_DIR / "hack/run.sh",
+ }
  
- Generates filmmaking suggestions with rationale, not just binary questions.
- The skill acts as a creative collaborator, proposing techniques and asking
- for feedback in natural language.
- """
+-def run_skill(skill_name: str, args: List[str], cwd: Optional[Path] = None, capture: bool = False):
++def run_skill(skill_name: str, args: List[str], cwd: Optional[Path] = None, capture: bool = False):
+     """Run a skill via its run.sh script.
  
- from dataclasses import dataclass, field
- from typing import Optional
- from enum import Enum
-@@
- def format_suggestions_for_conversation(suggestions: list[CreativeSuggestion]) -> str:
-     """Format all suggestions as a creative conversation."""
-     if not suggestions:
-         return "No specific suggestions - I'll use standard coverage for these scenes.\n"
-@@
-     for i, s in enumerate(suggestions, 1):
--        lines.append(f"### {i}. Scene {s.scene_number} - {s.category.value.title()}")
-+        lines.append(f"{i}. Scene {s.scene_number} - {s.category.value.title()}")
-         lines.append("")
-         lines.append(f"💡 {s.suggestion}")
-         lines.append("")
-         lines.append(f"   *Why*: {s.rationale}")
-         if s.alternatives:
-             lines.append(f"   *Or*: {', '.join(s.alternatives)}")
-         lines.append("")
-         lines.append(f"   → {' / '.join(s.response_options)}")
-         lines.append("")
-@@
-     return "\n".join(lines)
- 
-diff --git a/.pi/skills/create-storyboard/memory_bridge.py b/.pi/skills/create-storyboard/memory_bridge.py
-index 3a2d9a7..f4e3c9b 100644
---- a/.pi/skills/create-storyboard/memory_bridge.py
-+++ b/.pi/skills/create-storyboard/memory_bridge.py
-@@ -1,20 +1,21 @@
- """
- Memory Bridge for create-storyboard skill.
- 
- Integrates with /memory skill to:
- 1. RECALL learned filmmaking techniques from ingested movies
- 2. LEARN new techniques after completing storyboards
- 3. Search for specific references mentioned in screenplays
- 
- Uses the 'horus-storyboarding' scope for storyboard-specific learnings.
- """
- 
- import json
- import subprocess
- from dataclasses import dataclass
- from pathlib import Path
--from typing import Optional
-+from typing import Optional, List
- 
- 
- # Memory scope for storyboard learnings
- MEMORY_SCOPE = "horus-storyboarding"
-@@
- def recall_techniques(query: str, scope: str = MEMORY_SCOPE, limit: int = 5) -> list[MemoryResult]:
+     Set capture=True to capture and return stdout; otherwise stream output.
      """
-     Recall techniques from memory based on a query.
-@@
-     memory_cmd = [
-         "python3", str(MEMORY_SKILL_PATH / "run.py"),
-         "recall",
-         "--query", query,
-         "--scope", scope,
-         "--limit", str(limit),
-         "--format", "json"
-     ]
-@@
-         if result.returncode == 0:
-             # Parse JSON output
-             data = json.loads(result.stdout)
-             for item in data.get('results', []):
-                 results.append(MemoryResult(
-                     found=True,
-                     content=item.get('content', ''),
-                     source=item.get('source'),
-                     relevance=item.get('relevance', 0.0)
-                 ))
+     if skill_name not in SKILL_MAP:
+         console.print(f"[bold red]Error:[/bold red] Unknown skill: {skill_name}")
+         raise typer.Exit(1)
+ 
+     run_script = SKILL_MAP[skill_name]
+     if not run_script.exists():
+         # Try finding it in .agent/skills as fallback
+         run_script = PROJECT_ROOT / ".agent/skills" / f"{skill_name}/run.sh"
+         if not run_script.exists():
+             console.print(f"[bold red]Error:[/bold red] {skill_name} run.sh not found at {run_script}")
+             raise typer.Exit(1)
+ 
+     cmd = [str(run_script)] + args
+     console.print(f"[dim]Running: {' '.join(cmd)}[/dim]")
+ 
+     try:
+         if capture:
+-            result = subprocess.run(cmd, cwd=str(cwd or Path.cwd()), capture_output=True, text=True, check=True)
++            result = subprocess.run(cmd, cwd=str(cwd or PROJECT_ROOT), capture_output=True, text=True, check=True)
+             return result.stdout
          else:
-             # Memory skill failed - return empty results
-             pass
-@@
-     return results
-@@
- def learn_technique(
-     technique_name: str,
-     description: str,
-     source: str,
-     metadata: Optional[dict] = None,
-     scope: str = MEMORY_SCOPE
- ) -> bool:
-@@
-     memory_cmd = [
-         "python3", str(MEMORY_SKILL_PATH / "run.py"),
-         "learn",
-         "--content", json.dumps(content),
-         "--scope", scope,
-         "--source", f"storyboard:{source}"
-     ]
-@@
-     except (subprocess.TimeoutExpired, FileNotFoundError):
-         return False
-+    except Exception:
+-            subprocess.run(cmd, cwd=str(cwd or Path.cwd()), check=True)
++            subprocess.run(cmd, cwd=str(cwd or PROJECT_ROOT), check=True)
+             return ""
+     except subprocess.CalledProcessError as e:
+         console.print(f"[bold red]Error running {skill_name}:[/bold red]\n{e.stderr}")
+         return None
++
++def _which(cmd: str) -> bool:
++    return shutil.which(cmd) is not None
++
++def _is_git_repo(path: Path) -> bool:
++    try:
++        subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=str(path), check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++        return True
++    except subprocess.CalledProcessError:
 +        return False
++
++def preflight(project_dir: Path, mode: Optional[str] = None, do_review: bool = False) -> None:
++    """Validate external prerequisites and skill availability."""
++    missing_skills = [name for name, p in SKILL_MAP.items() if name in ("dogpile","battle","orchestrate","review-code") and not p.exists()]
++    if missing_skills:
++        console.print(f"[bold red]Missing skills:[/bold red] {', '.join(missing_skills)}")
++        raise typer.Exit(1)
++    if mode == "docker" and not _which("docker"):
++        console.print("[bold red]Docker CLI not found.[/bold red] Set up Docker or choose a different mode.")
++        raise typer.Exit(1)
++    if mode == "qemu":
++        # Check a reasonable default machine binary
++        candidates = ("qemu-system-arm","qemu-system-x86_64","qemu-system-riscv64")
++        if not any(_which(c) for c in candidates):
++            console.print("[bold red]QEMU not found.[/bold red] Install qemu-system-* binaries or choose a different mode.")
++            raise typer.Exit(1)
++    if mode == "git_worktree" and not _is_git_repo(project_dir):
++        console.print(f"[bold red]Not a git repository:[/bold red] {project_dir}")
++        raise typer.Exit(1)
++    if do_review and not _which("copilot"):
++        console.print("[yellow]copilot CLI not found; GitHub provider may not work. Install or choose another provider.[/yellow]")
  
-@@
- def enhance_suggestions_with_memory(suggestions: list, parsed_scenes: dict) -> list:
-     """
-     Enhance creative suggestions by searching memory for relevant techniques.
-@@
-     enhanced = []
+ # --- Stages ---
  
-     for suggestion in suggestions:
-         s_dict = suggestion.to_dict() if hasattr(suggestion, 'to_dict') else suggestion
+-def stage_1_scope(idea: str):
++def stage_1_scope(idea: str, non_interactive: bool = False):
+     console.print(Panel(f"[bold blue]Stage 1: Scope Interview[/bold blue]\nIdea: {idea}"))
+     # In a real implementation, we would use the /interview skill here.
+     # For now, we'll do a simple prompt.
+-    constraints = Prompt.ask("Any specific constraints or requirements?")
+-    tech_stack = Prompt.ask("Preferred tech stack?", default="Python, Typer")
++    if non_interactive:
++        constraints = ""
++        tech_stack = "Python, Typer"
++    else:
++        constraints = Prompt.ask("Any specific constraints or requirements?")
++        tech_stack = Prompt.ask("Preferred tech stack?", default="Python, Typer")
+     return {"idea": idea, "constraints": constraints, "tech_stack": tech_stack}
  
-         # If there's a film reference, look it up
-         if s_dict.get('reference'):
-             techniques = recall_film_reference(s_dict['reference'])
-             if techniques:
-                 s_dict['memory_context'] = [t.to_dict() for t in techniques]
-                 s_dict['suggestion'] += f"\n\n📚 From my memory of {s_dict['reference']}:\n"
-                 for t in techniques[:2]:  # Limit to top 2
-                     s_dict['suggestion'] += f"  • {t.format_for_suggestion()}\n"
+-def stage_2_research(context: dict):
++def stage_2_research(context: dict, project_dir: Path):
+     console.print(Panel("[bold blue]Stage 2: Deep Research (/dogpile)[/bold blue]"))
+     with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+         progress.add_task(description="Searching for implementation patterns...", total=None)
+         query = f"{context['idea']} implementation patterns {context['tech_stack']}"
+-        output = run_skill("dogpile", ["search", query, "--no-interactive"], capture=True)
++        output = run_skill("dogpile", ["search", query, "--no-interactive"], capture=True, cwd=project_dir)
+     
+     if output:
+         console.print("[green]Research complete.[/green]")
+         # Save research context
+         context['research_summary'] = output
+     else:
+         console.print("[yellow]Research failed or returned no results.[/yellow]")
+     return context
+ 
+-def stage_3_sandbox(context: dict):
++def stage_3_sandbox(context: dict, project_dir: Path, mode: Optional[str], qemu_machine: Optional[str], docker_image: str, non_interactive: bool):
+     console.print(Panel("[bold blue]Stage 3: Isolated Execution & Digital Twin (/battle)[/bold blue]"))
+-    if Confirm.ask("Spin up a sandbox digital twin?"):
+-        mode = Prompt.ask("Select Digital Twin mode", choices=["docker", "git_worktree", "qemu"], default="docker")
+-        if mode == "qemu":
+-            machine = Prompt.ask("Select QEMU machine", choices=["arm", "x86_64", "riscv64"], default="arm")
+-            run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "qemu", "--qemu-machine", machine])
+-        elif mode == "git_worktree":
+-            run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "git_worktree"])
+-        else:
+-            run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "docker", "--docker-image", "python:3.11-slim"])
++    go = True if non_interactive else Confirm.ask("Spin up a sandbox digital twin?")
++    if go:
++        if not mode:
++            mode = "docker" if non_interactive else Prompt.ask("Select Digital Twin mode", choices=["docker", "git_worktree", "qemu"], default="docker")
++        preflight(project_dir, mode=mode)
++        if mode == "qemu":
++            machine = qemu_machine or ("arm" if non_interactive else Prompt.ask("Select QEMU machine", choices=["arm", "x86_64", "riscv64"], default="arm"))
++            run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "qemu", "--qemu-machine", machine], cwd=project_dir)
++        elif mode == "git_worktree":
++            run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "git_worktree"], cwd=project_dir)
 +        else:
-+            # Try to augment based on emotion beats if present
-+            beats = []
-+            try:
-+                beats = parsed_scenes.get("notes", {}).get("beats", [])  # best-effort
-+            except Exception:
-+                beats = []
++            image = docker_image or os.environ.get("CREATE_CODE_DOCKER_IMAGE", DEFAULT_DOCKER_IMAGE)
++            run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "docker", "--docker-image", image], cwd=project_dir)
+     return context
  
-         enhanced.append(s_dict)
+-def stage_3_battle(context: dict):
++def stage_3_battle(context: dict, project_dir: Path, rounds: int):
+     console.print(Panel("[bold blue]Stage 3: Adversarial Battle (/battle)[/bold blue]"))
+-    if Confirm.ask("Run a security hardening battle?"):
+-        rounds = Prompt.ask("Number of rounds?", default="10")
+-        run_skill("battle", ["battle", ".", "--rounds", rounds])
++    run_skill("battle", ["battle", ".", "--rounds", str(rounds)], cwd=project_dir)
+     return context
  
-     return enhanced
+-def stage_4_implement(context: dict):
++def stage_4_implement(context: dict, project_dir: Path, non_interactive: bool):
+     console.print(Panel("[bold blue]Stage 4: Structured Implementation (/task, /orchestrate)[/bold blue]"))
+     console.print("Implementation should be driven by [bold]0N_TASKS.md[/bold] with sanity tests.")
+     task_file = Path("0N_TASKS.md")
+-    if Confirm.ask("Generate initial task breakdown?"):
++    if non_interactive or Confirm.ask("Generate initial task breakdown?"):
+         # This would call /task if it were a direct CLI tool, but it's often a manual or agentic process.
+         # We'll simulate by creating a file if it doesn't exist.
+         if not task_file.exists():
+             task_file.write_text(f"# Tasks for {context['idea']}\n\n- [ ] Task 1: Initialize project\n- [ ] Task 2: Implement core logic\n")
+             console.print(f"[green]Created {task_file}[/green]")
  
-diff --git a/.pi/skills/create-storyboard/research_bridge.py b/.pi/skills/create-storyboard/research_bridge.py
-index 7c9f6a1..3b4e6c2 100644
---- a/.pi/skills/create-storyboard/research_bridge.py
-+++ b/.pi/skills/create-storyboard/research_bridge.py
-@@ -1,18 +1,19 @@
- """
- Research Bridge for create-storyboard skill.
+-    if Confirm.ask("Ready to run /orchestrate?"):
+-        run_skill("orchestrate", ["run", str(task_file)])
++    if non_interactive or Confirm.ask("Ready to run /orchestrate?"):
++        run_skill("orchestrate", ["run", str((project_dir / task_file).resolve())], cwd=project_dir)
+     return context
  
- Integrates with /dogpile for researching filmmaking techniques when:
- 1. A film reference is mentioned but not in memory
- 2. A specific technique needs explanation
- 3. The agent needs to learn about a cinematography concept
+-def stage_5_review(context: dict):
++def _detect_repo_branch(project_dir: Path) -> tuple[str, str]:
++    repo = project_dir.name
++    branch = "HEAD"
++    try:
++        top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=str(project_dir), capture_output=True, text=True, check=True).stdout.strip()
++        repo = Path(top).name
++        branch = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=str(project_dir), capture_output=True, text=True, check=True).stdout.strip() or branch
++    except subprocess.CalledProcessError:
++        pass
++    return repo, branch
++
++def stage_5_review(context: dict, project_dir: Path, non_interactive: bool):
+     console.print(Panel("[bold blue]Stage 5: Brutal Code Review (/review-code)[/bold blue]"))
+-    if Confirm.ask("Submit code for brutal review?"):
+-        request_file = SKILL_DIR / "review_request.md"
+-        if not request_file.exists():
+-            console.print("[yellow]review_request.md not found; skipping review.[/yellow]")
+-        else:
+-            run_skill("review-code", ["review", "--file", str(request_file), "-P", "github", "-m", "gpt-5"])
++    go = True if non_interactive else Confirm.ask("Submit code for brutal review?")
++    if go:
++        preflight(project_dir, do_review=True)
++        request_file = (project_dir / "review_request.md")
++        if not request_file.exists():
++            repo, branch = _detect_repo_branch(project_dir)
++            minimal = f"""# Create-code review request
  
- Also provides hooks to /memory for storing and recalling learned techniques.
- """
++## Repository and branch
++- Repo: `{repo}`
++- Branch: `{branch}`
++- Paths of interest:
++  - `.` 
++
++## Summary
++Initial brutal review of current working tree.
++
++## Objectives
++- Identify technical flaws, brittle assumptions, and missing error handling.
++- Recommend and validate a minimal patch to improve reliability and agentic use.
++"""
++            request_file.write_text(minimal)
++            console.print(f"[yellow]Generated minimal review request at {request_file}[/yellow]")
++        run_skill("review-code", ["review", "--file", str(request_file), "-P", "github", "-m", "gpt-5"], cwd=project_dir)
+     return context
  
- import json
- import subprocess
- from dataclasses import dataclass
- from pathlib import Path
--from typing import Optional, List
-+from typing import Optional, List, Dict
+ def stage_6_finalize(context: dict):
+     console.print(Panel("[bold blue]Stage 6: Final Research & Consolidation[/bold blue]"))
+     with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), transient=True) as progress:
+         progress.add_task(description="Finalizing research and updating memory...", total=None)
+         run_skill("dogpile", ["search", f"Final review for {context['idea']} implementation"])
+         # run_skill("memory", ["learn", "--context", "New implementation completed"])
+     console.print("[bold green]Workflow complete![/bold green]")
+     return context
  
- # Paths to integrated skills
- SKILLS_DIR = Path(__file__).parent.parent
- DOGPILE_PATH = SKILLS_DIR / "dogpile"
- MEMORY_PATH = SKILLS_DIR / "memory"
-@@
- def research_film_techniques(film_name: str, aspect: str = "cinematography") -> ResearchResult:
-     """
-     Research cinematography techniques from a specific film using /dogpile.
-@@
-     dogpile_cmd = [
-         "python3", str(DOGPILE_PATH / "run.py"),
-         "search",
-         "--query", query,
-         "--sources", "brave,youtube,arxiv",
-         "--format", "json"
-     ]
-@@
-         if result.returncode == 0:
-             data = json.loads(result.stdout)
+ # --- CLI Commands ---
  
-             # Extract relevant techniques from results
-             techniques = []
-             sources = []
+-@app.command()
+-def start(idea: str = typer.Argument(..., help="The idea or feature to implement")):
+-    """Launch the full 6-stage Horus coding workflow."""
+-    context = stage_1_scope(idea)
+-    context = stage_2_research(context)
+-    
+-    # Optional Sandbox or Battle
+-    if Confirm.ask("Run Stage 3 (Sandbox/Battle)?"):
+-        choice = Prompt.ask("Select Stage 3 activity", choices=["sandbox", "battle", "both"], default="sandbox")
+-        if choice in ["sandbox", "both"]:
+-            context = stage_3_sandbox(context)
+-        if choice in ["battle", "both"]:
+-            context = stage_3_battle(context)
+-    
+-    context = stage_4_implement(context)
+-    context = stage_5_review(context)
+-    context = stage_6_finalize(context)
++@app.command()
++def start(
++    idea: str = typer.Argument(..., help="The idea or feature to implement"),
++    yes: bool = typer.Option(False, "--yes", help="Answer yes to all prompts"),
++    no_interactive: bool = typer.Option(False, "--no-interactive", help="Disable interactive prompts"),
++    stage3: Optional[str] = typer.Option(None, "--stage3", help="Digital Twin mode: docker, git_worktree, qemu"),
++    rounds: int = typer.Option(1, "--rounds", "-r", help="Rounds for battle"),
++    qemu_machine: Optional[str] = typer.Option(None, "--qemu-machine", help="QEMU machine (arm, x86_64, riscv64)"),
++    project_dir: Path = typer.Option(Path.cwd(), "--project-dir", help="Target project directory"),
++):
++    """Launch the full 6-stage Horus coding workflow (headless-ready)."""
++    project_dir = project_dir.resolve()
++    load_env_overrides(project_dir)
++    non_interactive = yes or no_interactive
++    docker_image = os.environ.get("CREATE_CODE_DOCKER_IMAGE", DEFAULT_DOCKER_IMAGE)
++
++    context = stage_1_scope(idea, non_interactive=non_interactive)
++    preflight(project_dir)  # base checks
++    context = stage_2_research(context, project_dir=project_dir)
++
++    # Stage 3
++    if non_interactive or Confirm.ask("Run Stage 3 (Sandbox/Battle)?"):
++        choice = ("sandbox" if non_interactive and stage3 else
++                  Prompt.ask("Select Stage 3 activity", choices=["sandbox", "battle", "both"], default="sandbox"))
++        if choice in ["sandbox", "both"]:
++            context = stage_3_sandbox(context, project_dir, stage3, qemu_machine, docker_image, non_interactive)
++        if choice in ["battle", "both"]:
++            context = stage_3_battle(context, project_dir, rounds)
++
++    context = stage_4_implement(context, project_dir, non_interactive)
++    context = stage_5_review(context, project_dir, non_interactive)
++    context = stage_6_finalize(context)
  
-             for item in data.get('results', []):
-                 sources.append(item.get('url', item.get('source', 'Unknown')))
+ @app.command()
+-def research(idea: str):
++def research(idea: str, project_dir: Path = typer.Option(Path.cwd(), "--project-dir")):
+     """Run Stage 2 research only."""
+-    stage_2_research({"idea": idea, "tech_stack": ""})
++    project_dir = project_dir.resolve()
++    load_env_overrides(project_dir)
++    stage_2_research({"idea": idea, "tech_stack": ""}, project_dir)
  
-                 # Parse content for technique information
-                 content = item.get('content', '')
-                 if any(kw in content.lower() for kw in ['shot', 'camera', 'light', 'frame', 'lens']):
-                     techniques.append({
-                         "description": content[:500],
-                         "source": item.get('source', 'web')
-                     })
+ @app.command()
+-def sandbox(mode: str = typer.Option("docker", "--mode", "-m", help="Digital Twin mode: docker, git_worktree, qemu")):
+-    """Spin up Stage 3 sandbox only (via /battle)."""
+-    if mode == "qemu":
+-        run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "qemu"])
+-    elif mode == "git_worktree":
+-        run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "git_worktree"])
+-    else:
+-        run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "docker", "--docker-image", "python:3.11-slim"])
++def sandbox(
++    mode: str = typer.Option("docker", "--mode", "-m", help="Digital Twin mode: docker, git_worktree, qemu"),
++    yes: bool = typer.Option(False, "--yes"),
++    project_dir: Path = typer.Option(Path.cwd(), "--project-dir"),
++    qemu_machine: Optional[str] = typer.Option(None, "--qemu-machine"),
++):
++    """Spin up Stage 3 sandbox only (via /battle)."""
++    project_dir = project_dir.resolve()
++    load_env_overrides(project_dir)
++    docker_image = os.environ.get("CREATE_CODE_DOCKER_IMAGE", DEFAULT_DOCKER_IMAGE)
++    preflight(project_dir, mode=mode)
++    non_interactive = yes
++    if mode == "qemu":
++        machine = qemu_machine or ("arm" if non_interactive else Prompt.ask("Select QEMU machine", choices=["arm","x86_64","riscv64"], default="arm"))
++        run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "qemu", "--qemu-machine", machine], cwd=project_dir)
++    elif mode == "git_worktree":
++        run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "git_worktree"], cwd=project_dir)
++    else:
++        run_skill("battle", ["battle", ".", "--rounds", "1", "--mode", "docker", "--docker-image", docker_image], cwd=project_dir)
  
-             return ResearchResult(
-                 query=query,
-                 found=len(techniques) > 0,
-                 summary=data.get('summary', f"Research on {film_name} {aspect}"),
-                 sources=sources[:5],
-                 techniques=techniques[:3],
-                 raw_content=result.stdout
-             )
+ @app.command()
+ def battle(rounds: int = typer.Option(10, "--rounds", "-r", help="Number of battle rounds")):
+     """Run Stage 3 adversarial battle only."""
+-    stage_3_battle({"rounds": rounds})
++    stage_3_battle({"rounds": rounds}, PROJECT_ROOT, rounds)
  
-     except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError) as e:
-         pass
+ @app.command()
+-def review():
++def review(yes: bool = typer.Option(False, "--yes"), project_dir: Path = typer.Option(Path.cwd(), "--project-dir")):
+     """Run Stage 5 review only."""
+-    stage_5_review({})
++    project_dir = project_dir.resolve()
++    load_env_overrides(project_dir)
++    stage_5_review({}, project_dir, non_interactive=yes)
  
-     # Fallback: return empty result
-     return ResearchResult(
-         query=query,
-         found=False,
-         summary=f"Could not research {film_name}. Try /dogpile manually.",
-         sources=[],
-         techniques=[]
-     )
-@@
- def recall_or_research(topic: str, scope: str = "horus-storyboarding") -> dict:
-     """
-     First check /memory, then fall back to /dogpile research.
-@@
-     # Not in memory - offer to research
-     return {
-         "source": "needs_research",
-         "found": False,
-         "content": [],
-         "action": "research",
-         "message": f"'{topic}' not found in memory. Should I research it with /dogpile?",
-         "research_query": topic
-     }
-@@
- def generate_research_questions(parsed_scenes: dict) -> list[dict]:
-     """
-     Analyze scenes and generate research questions for unknown references.
-@@
-                 questions.append({
-                     "id": f"research_tech_s{scene_num}_{len(questions)}",
-                     "scene_number": scene_num,
-                     "type": "research_offer",
-                     "question": f"Scene {scene_num} mentions '{tech}'. Should I research this technique to understand when and how to use it effectively?",
-                     "options": ["yes_research", "no_i_know_it", "skip"],
-                     "topic": tech
-                 })
+ @app.command()
+-def finalize():
++def finalize():
+     """Run Stage 6 finalization only."""
+     stage_6_finalize({})
  
-     return questions
++@app.command()
++def implement(yes: bool = typer.Option(False, "--yes"), project_dir: Path = typer.Option(Path.cwd(), "--project-dir")):
++    """Run Stage 4 implementation only."""
++    project_dir = project_dir.resolve()
++    load_env_overrides(project_dir)
++    stage_4_implement({"idea": "Project Tasks"}, project_dir, non_interactive=yes)
++
+ if __name__ == "__main__":
+     console.print("[bold gold1]HORUS CREATE-CODE ORCHESTRATOR[/bold gold1]")
+     app()

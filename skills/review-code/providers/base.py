@@ -106,6 +106,7 @@ def _build_github_cmd(
         
     cmd.extend([
         "--allow-all-tools",
+        "--allow-all-paths",
         "--model", model,
         "--no-color",
     ])

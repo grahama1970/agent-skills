@@ -2,7 +2,7 @@
 name: create-code
 description: >
   Orchestrate the end-to-end coding process for the Horus persona.
-  Composes research (/dogpile), isolated execution (/hack, /battle),
+  Composes research (/dogpile), isolated execution (/battle),
   structured implementation (/task, /orchestrate), and brutal code review (/review-code).
 allowed-tools: Bash, Read
 triggers:
@@ -38,16 +38,15 @@ Horus research existing implementation patterns, libraries, and potential pitfal
 - Calls `/dogpile search "<idea> implementation patterns"`
 - Aggregates context into a research summary.
 
-### 3. Isolated Execution & Digital Twin (/hack, /battle)
+### 3. Isolated Execution & Digital Twin (/battle)
 
 Horus spins up an isolated environment to safely test code or run adversarial simulations. This leverages a **Digital Twin** strategy for high-fidelity testing.
 
-- **Tools**: `.pi/skills/hack` for sandboxing, `.pi/skills/battle` for RvB hardening.
+- **Tools**: `.pi/skills/battle` for Digital Twin orchestration (isolation). Optionally use `.pi/skills/hack` for security audits.
 - **Modes**:
   - `git_worktree`: For repository-level isolation.
   - `docker`: For containerized environment testing.
   - `qemu`: For hardware/microprocessor emulation (firmware).
-- **Thunderdome**: Runs multiple agents in parallel to find the "No-Vibes" best implementation.
 
 ### 4. Structured Implementation (/task, /orchestrate)
 
@@ -85,7 +84,9 @@ Horus performs a final dogpile search with the working code and full context to 
 
 # Run specific stages
 ./run.sh research "idea"
-./run.sh review /path/to/code
+./run.sh review --provider github --model gpt-5 --yes
+./run.sh sandbox --mode docker --yes
+./run.sh implement --yes
 ```
 
 ## Commands

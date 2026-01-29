@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # create-code: Horus coding orchestration pipeline
-# 100% self-contained via uvx - no .venv needed
-set -eo pipefail
+# Prefer uvx/uv; fallback to system python
+set -euo pipefail
 
-SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SKILL_DIR"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-# Use uvx for self-contained execution with all dependencies
-exec uvx --with typer \
-         python3 orchestrator.py "$@"
+if command -v uvx >/dev/null 2>&1; then
+  exec uvx --with typer --with rich python3 orchestrator.py "$@"
+elif command -v uv >/dev/null 2>&1; then
+  exec uv run --with typer --with rich python orchestrator.py "$@"
+else
+  exec python3 orchestrator.py "$@"
+fi
