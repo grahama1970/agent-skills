@@ -1,5 +1,5 @@
 [project]
-name = "code-review"
+name = "review-code"
 version = "0.1.0"
 description = "Multi-provider AI code review with unified diff output"
 requires-python = ">=3.11"

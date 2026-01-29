@@ -2,7 +2,7 @@
 name: paper-writer
 description: >
   Orchestrate paper writing from project analysis. Composes assess, dogpile, arxiv,
-  and code-review skills. Interview-driven workflow with frequent human collaboration
+  and review-code skills. Interview-driven workflow with frequent human collaboration
   to resolve ambiguity and validate each stage.
 allowed-tools: Bash, Read
 triggers:
@@ -28,7 +28,7 @@ Generate academic papers from project analysis through **interview-driven orches
 | Feature | Status | Notes |
 |---------|--------|-------|
 | **Stage 1: Scope Interview** | ✅ Implemented | Typer prompts + /interview skill integration |
-| **Stage 2: Project Analysis** | ✅ Implemented | /assess + /dogpile + optional /code-review |
+| **Stage 2: Project Analysis** | ✅ Implemented | /assess + /dogpile + optional /review-code |
 | **Stage 3: Literature Search** | ✅ Implemented | Full arxiv JSON parsing with relevance triage |
 | **Stage 4: Knowledge Learning** | ✅ Implemented | /arxiv learn with progress tracking |
 | **Stage 5: Draft Generation** | ✅ Implemented | Multi-template support, LLM-powered sections |
@@ -130,7 +130,7 @@ paper-writer figure-presets --summary   # JSON of IEEE sizes + colormaps
 1. SCOPE INTERVIEW    → Define paper type, audience, contribution claims
                          [GATE: User validates scope]
 
-2. PROJECT ANALYSIS   → /assess + /dogpile + /code-review
+2. PROJECT ANALYSIS   → /assess + /dogpile + /review-code
                          [GATE: User confirms analysis accuracy]
 
 3. LITERATURE SEARCH  → /arxiv search + triage
@@ -228,7 +228,7 @@ Orchestrates existing skills:
    └─ [OUTPUT: research_context.md]
 
 # 3. Code-paper alignment check
-/code-review verify /path/to/project
+/review-code verify /path/to/project
    ├─ Code matches documentation?
    ├─ Claims supported by implementation?
    └─ [OUTPUT: alignment_report.md]
@@ -375,7 +375,7 @@ Proposed Paper Structure
    - Comparison with related systems
 
 7. Discussion
-   - Limitations from /code-review
+   - Limitations from /review-code
    - Future work from aspirational features
 
 Approve this structure? (y/n/custom)
@@ -437,7 +437,7 @@ paper_output/
 | **Scope**      | (interview only) | Define paper parameters       |
 | **Analysis**   | `/assess`        | Project feature extraction    |
 |                | `/dogpile`       | Research context gathering    |
-|                | `/code-review`   | Code-paper alignment          |
+|                | `/review-code`   | Code-paper alignment          |
 | **Literature** | `/arxiv search`  | Find related papers           |
 | **Learning**   | `/arxiv learn`   | Extract knowledge from papers |
 | **Draft**      | (internal LaTeX) | Generate paper sections       |
@@ -929,7 +929,7 @@ Horus has access to all skills in `/home/graham/workspace/experiments/pi-mono/.p
 | `/dogpile` | Deep research on related topics |
 | `/arxiv` | Search and learn from academic papers |
 | `/memory` | Store paper context for future sessions |
-| `/code-review` | Verify code-paper alignment |
+| `/review-code` | Verify code-paper alignment |
 | `/surf` | Browse web for documentation, examples |
 | `/paper-writer` | Generate research papers in his voice |
 
@@ -1071,7 +1071,7 @@ Horus can modulate his voice for peer reviewers with `--persona-strength`:
 
 - Python 3.10+
 - LaTeX distribution (texlive or mactex)
-- Existing skills: assess, dogpile, arxiv, code-review, memory
+- Existing skills: assess, dogpile, arxiv, review-code, memory
 - interview skill (for HTML/TUI interview rendering)
 
 ---

@@ -43,7 +43,7 @@ cd /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab
 # Compare multiple models on same prompt
 ./run.sh compare --prompt taxonomy_v1 --models "deepseek,gpt-4o"
 
-# Interactive iteration loop (like /code-review)
+# Interactive iteration loop (like /review-code)
 ./run.sh iterate --prompt taxonomy_v1 --target-f1 0.9
 
 # View evaluation history
@@ -99,7 +99,7 @@ cd /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab
 #   --verbose               Show per-case details
 ```
 
-### iterate - Interactive Iteration (like /code-review)
+### iterate - Interactive Iteration (like /review-code)
 
 ```bash
 ./run.sh iterate --prompt taxonomy_v1 --target-f1 0.9

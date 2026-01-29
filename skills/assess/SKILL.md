@@ -618,9 +618,9 @@ current best practices with /perplexity? (Note: this uses paid API)"
 
 ## Escalation to Code Review
 
-When assessment reveals significant issues, suggest `/code-review`:
+When assessment reveals significant issues, suggest `/review-code`:
 
-**When to suggest code-review:**
+**When to suggest review-code:**
 
 - Complex refactoring needed across multiple files
 - Architecture concerns that need deeper analysis
@@ -629,7 +629,7 @@ When assessment reveals significant issues, suggest `/code-review`:
 - When a second opinion from another AI provider would help
 
 **How to suggest:**
-"I've found [issues] that might benefit from a deeper code review. Want me to run `/code-review` with [provider] to get a structured analysis and patch suggestions?"
+"I've found [issues] that might benefit from a deeper code review. Want me to run `/review-code` with [provider] to get a structured analysis and patch suggestions?"
 
 **Example:**
 
@@ -639,7 +639,7 @@ Agent: "The authentication module has several issues:
 - Missing input validation
 - No rate limiting
 
-This is security-sensitive - would you like me to run `/code-review`
+This is security-sensitive - would you like me to run `/review-code`
 with OpenAI (high reasoning) to get a thorough security review and
 suggested fixes?"
 ```
@@ -676,7 +676,7 @@ rg "raise NotImplementedError|pass$" --type py
 - **Be specific** - File paths and line numbers
 - **Be actionable** - Each finding should suggest next steps
 - **Update as you go** - If you find drift, offer to fix it immediately
-- **Escalate wisely** - Suggest code-review for complex/critical issues
+- **Escalate wisely** - Suggest review-code for complex/critical issues
 - **State your scope** - Always clarify what was and wasn't assessed
 - **Use fast tools** - Prefer rg/fd over grep/find for speed
 - **Test coverage is non-negotiable** - Every implementation must have a test. Flag missing tests as blockers.

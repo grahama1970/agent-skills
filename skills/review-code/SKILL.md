@@ -1,11 +1,12 @@
 ---
-name: code-review
+name: review-code
 description: >
   Submit code review requests to multiple AI providers (GitHub Copilot, Anthropic Claude,
-  OpenAI Codex, Google Gemini) and get patches back. Use when user says "code review",
+  OpenAI Codex, Google Gemini) and get patches back. Use when user says "review code",
   "review this code", "get a patch for", or needs AI-generated unified diffs for code fixes.
 allowed-tools: Bash, Read
 triggers:
+  - review code
   - code review
   - review this code
   - review my changes
@@ -35,7 +36,7 @@ metadata:
   short-description: Multi-provider AI code review CLI
 ---
 
-# Code Review Skill
+# review-code
 
 Submit structured code review requests to multiple AI providers and get unified diffs back.
 

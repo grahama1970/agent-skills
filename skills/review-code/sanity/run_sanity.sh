@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sanity checks for code-review skill providers
+# Sanity checks for review-code skill providers
 # Usage: ./run_sanity.sh [provider] [model]
 #   ./run_sanity.sh                    # Run all sanity checks
 #   ./run_sanity.sh openai gpt-5.2     # Run specific provider/model
@@ -11,7 +11,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 REQUEST_FILE="$SCRIPT_DIR/test_request.md"
-OUTPUT_DIR="/tmp/code-review-sanity"
+OUTPUT_DIR="/tmp/review-code-sanity"
 
 # Colors for output
 RED='\033[0;31m'
@@ -118,7 +118,7 @@ main() {
         exit 1
     fi
 
-    log_info "Sanity check for code-review skill"
+    log_info "Sanity check for review-code skill"
     log_info "Request file: $REQUEST_FILE"
     log_info "Output dir: $OUTPUT_DIR"
     echo ""

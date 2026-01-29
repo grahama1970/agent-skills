@@ -86,7 +86,7 @@ cat ~/.learn/<scope>/requests.json
 
 Query past conversations and logs to find knowledge gaps. This enables **curiosity-driven learning** by reflecting on:
 
-- **Skill failures** - Skills like `/fixture-graph`, `/code-review`, `/anvil` that repeatedly failed
+- **Skill failures** - Skills like `/fixture-graph`, `/review-code`, `/anvil` that repeatedly failed
 - **Learning failures** - Content that couldn't be learned
 - **Errors** - Past errors from episodic memory
 - **Questions** - Unanswered or recurring questions
@@ -99,7 +99,7 @@ Query past conversations and logs to find knowledge gaps. This enables **curiosi
 # | Type          | Content                        | Reason                         |
 # |---------------|--------------------------------|--------------------------------|
 # | skill_failure | fixture-graph failed to gen... | /fixture-graph failed - deeper |
-# | skill_failure | code-review didn't solve bug   | /code-review failed - deeper   |
+# | skill_failure | review-code didn't solve bug   | /review-code failed - deeper   |
 # | error         | Failed to parse PDF table...   | From episodic memory           |
 ```
 

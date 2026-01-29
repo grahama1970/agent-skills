@@ -2,7 +2,7 @@
 name: anvil
 description: >
   Heavy-duty "No-Vibes" debugging and hardening orchestrator. Use this for complex, stubborn bugs
-  where `code-review` has failed, or for "Red Teaming" (hardening) a codebase.
+  where `review-code` has failed, or for "Red Teaming" (hardening) a codebase.
   Runs multiple agents in parallel (Thunderdome) using git worktree isolation.
 triggers:
   - anvil
