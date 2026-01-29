@@ -1,0 +1,29 @@
+[project]
+name = "consume-book"
+version = "0.1.0"
+description = "Consume ingested books - search text, track bookmarks, take notes"
+requires-python = ">=3.8"
+dependencies = [
+    "ebooklib>=0.18",
+    "rich>=13.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0"
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["consume_book*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

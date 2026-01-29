@@ -186,7 +186,7 @@ The hack skill **delegates** to sibling skills rather than duplicating functiona
 |-------|---------|---------|
 | `memory` | (automatic) | Recall prior exploits/solutions before every operation |
 | `anvil` | `hack harden` | Thunderdome multi-agent red teaming |
-| `docker-ops` | `hack docker-cleanup` | Container pruning and management |
+| `ops-docker` | `hack docker-cleanup` | Container pruning and management |
 | `treesitter` | `hack symbols` | Parse code structure before auditing |
 | `taxonomy` | `hack classify` | Tag findings with bridge tags (Loyalty, Fragility, etc.) |
 | `task-monitor` | (automatic) | Track long-running scan progress |
@@ -207,7 +207,7 @@ The hack skill **delegates** to sibling skills rather than duplicating functiona
 # Red-team a codebase via anvil Thunderdome
 ./run.sh harden /path/to/code --issue "SQL injection in auth"
 
-# Clean up Docker via docker-ops
+# Clean up Docker via ops-docker
 ./run.sh docker-cleanup --until 24h --execute
 
 # Extract code symbols via treesitter before audit

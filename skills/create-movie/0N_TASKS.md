@@ -249,7 +249,7 @@ The following skills should be created/renamed for full composability:
   - Uses /ingest-book for book inspiration
   - Called by create-movie for Script phase
 
-- [ ] **create-paper** - Rename paper-writer for naming consistency
+- [ ] **create-paper** - Rename create-paper for naming consistency
   - Academic/technical papers with citations
   - Formal structure (abstract, methodology, conclusions)
 

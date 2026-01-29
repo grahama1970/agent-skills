@@ -1,0 +1,17 @@
+[project]
+name = "ops-compliance"
+version = "0.1.0"
+description = "Compliance framework checker (SOC2, GDPR, HIPAA, PCI-DSS)"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]

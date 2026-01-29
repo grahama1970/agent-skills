@@ -1,7 +1,7 @@
 {
   "completed": 6,
   "total": 16,
-  "description": "Dogpile: A robot learning to paint narrative techniques storytelling",
+  "description": "Dogpile: storyboard animatic generation tools AI cinematography camer",
   "current_item": "completed",
   "stats": {
     "providers_done": 0,
@@ -26,12 +26,12 @@
       "provider": "codex",
       "message": "Synthesis failed: Error: OpenAI Codex v0.92.0 (research preview)\n--------\nworkdir: /home/graham/workspace/experiments/",
       "type": "api_error",
-      "timestamp": "2026-01-29 11:02:45"
+      "timestamp": "2026-01-29 12:55:07"
     }
   ],
   "rate_limits": {},
-  "elapsed_seconds": 101.3,
+  "elapsed_seconds": 103.0,
   "progress_pct": 37.5,
-  "last_updated": "2026-01-29 11:02:45",
+  "last_updated": "2026-01-29 12:55:07",
   "status": "completed"
 }

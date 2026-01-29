@@ -137,6 +137,12 @@ Examples:
                        help="Disable OCRmyPDF preprocessing for scanned PDFs")
     parser.add_argument("--skip-scanned", action="store_true",
                        help="Skip scanned PDFs (log + write skip manifest)")
+    parser.add_argument("--auto-decrypt", dest="auto_decrypt", action="store_true", default=True,
+                       help="Attempt to decrypt encrypted PDFs automatically (default: on)")
+    parser.add_argument("--no-auto-decrypt", dest="auto_decrypt", action="store_false",
+                       help="Disable automatic PDF decryption; skip encrypted PDFs")
+    parser.add_argument("--decrypt-password", type=str, default=None,
+                       help="Password to use for decrypting encrypted PDFs")
     parser.add_argument("--ocr-lang", default="eng",
                        help="OCR language(s) for OCRmyPDF (e.g., eng or eng+deu)")
     parser.add_argument("--ocr-deskew", action="store_true",
@@ -239,6 +245,8 @@ Examples:
         continue_on_error=args.continue_on_error,
         sections_only=args.sections_only,
         sync_to_memory=args.learn,
+        auto_decrypt=args.auto_decrypt,
+        decrypt_password=args.decrypt_password,
     )
 
     # Handle directory input (batch mode)

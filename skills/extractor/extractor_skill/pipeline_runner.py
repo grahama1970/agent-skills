@@ -118,6 +118,12 @@ def _add_option_flags(cmd: list, opts: ExtractionOptions) -> None:
     if opts.continue_on_error:
         cmd.append("--continue-on-error")
 
+    # PDF decryption options (auto_decrypt defaults to True)
+    if opts.auto_decrypt is False:
+        cmd.append("--no-auto-decrypt")
+    if opts.decrypt_password:
+        cmd.extend(["--decrypt-password", opts.decrypt_password])
+
     if opts.sections_only:
         cmd.extend([
             "--skip-tables05",

@@ -1,14 +1,36 @@
 {
   "providers": {
+    "readarr": "SKIPPED",
     "github": "ERROR",
     "perplexity": "DONE",
     "arxiv": "DONE",
     "brave": "DONE",
-    "codex": "RATE_LIMITED",
     "youtube": "DONE",
-    "synthesis": "ERROR"
+    "codex": "RATE_LIMITED",
+    "synthesis": "ERROR",
+    "discord": "ERROR"
   },
+  "last_msg": "Codex Synthesis failed.",
+  "last_updated": "2026-01-29 12:55:07",
   "errors": [
+    {
+      "provider": "codex",
+      "status": "RATE_LIMITED",
+      "message": "Codex rate limited, backing off 30s...",
+      "error_type": null,
+      "http_status": null,
+      "retry_after": null,
+      "timestamp": "2026-01-29 12:53:27"
+    },
+    {
+      "provider": "discord",
+      "status": "ERROR",
+      "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+      "error_type": null,
+      "http_status": null,
+      "retry_after": null,
+      "timestamp": "2026-01-29 12:53:59"
+    },
     {
       "provider": "github",
       "status": "ERROR",
@@ -16,7 +38,7 @@
       "error_type": null,
       "http_status": null,
       "retry_after": null,
-      "timestamp": "2026-01-29 11:01:39"
+      "timestamp": "2026-01-29 12:53:59"
     },
     {
       "provider": "codex",
@@ -25,7 +47,7 @@
       "error_type": null,
       "http_status": null,
       "retry_after": null,
-      "timestamp": "2026-01-29 11:01:40"
+      "timestamp": "2026-01-29 12:54:01"
     },
     {
       "provider": "codex",
@@ -34,7 +56,7 @@
       "error_type": null,
       "http_status": null,
       "retry_after": null,
-      "timestamp": "2026-01-29 11:02:13"
+      "timestamp": "2026-01-29 12:54:35"
     },
     {
       "provider": "synthesis",
@@ -43,9 +65,7 @@
       "error_type": "api_error",
       "http_status": null,
       "retry_after": null,
-      "timestamp": "2026-01-29 11:02:45"
+      "timestamp": "2026-01-29 12:55:07"
     }
-  ],
-  "last_msg": "Codex Synthesis failed.",
-  "last_updated": "2026-01-29 11:02:45"
+  ]
 }

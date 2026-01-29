@@ -223,8 +223,8 @@ def review_full(
     reasoning: Optional[str] = typer.Option(None, "--reasoning", "-R", help="Reasoning effort: low, medium, high (openai only)"),
     rounds: int = typer.Option(2, "--rounds", "-r", help="Iteration rounds (default: 2)"),
     context_file: Optional[Path] = typer.Option(None, "--context", "-c", help="Previous round output for context"),
-    save_intermediate: bool = typer.Option(False, "--save-intermediate", "-s", help="Save intermediate outputs and logs"),
-    output_dir: Path = typer.Option(".", "--output-dir", "-o", help="Directory for output files"),
+    save_intermediate: bool = typer.Option(True, "--save-intermediate", "-s", help="Save intermediate outputs and logs (default: True)"),
+    output_dir: Optional[Path] = typer.Option(None, "--output-dir", "-o", help="Directory for output files (default: review_output/)"),
 ) -> None:
     """Run iterative code review pipeline (async with streaming logs).
 
@@ -299,6 +299,11 @@ def review_full(
 
     typer.echo(f"Using provider: {provider} ({actual_model})", err=True)
 
+    # Default output directory to skill's review_output/
+    if output_dir is None:
+        output_dir = SCRIPT_DIR / "review_output"
+        typer.echo(f"Using default output directory: {output_dir}", err=True)
+
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -313,6 +318,7 @@ def review_full(
 
     def run_pipeline(effective_add_dir: Optional[list[str]]) -> dict:
         """Run the async pipeline with the given add_dir."""
+        typer.echo(f"DEBUG: Running pipeline with add_dir={effective_add_dir}", err=True)
         return asyncio.run(_review_full_async(
             request_content=request_content,
             model=actual_model,
@@ -340,6 +346,8 @@ def review_full(
 
     typer.echo("\n" + "=" * 60, err=True)
     typer.echo(f"ALL ROUNDS COMPLETE ({took_ms}ms total)", err=True)
+    if result:
+        typer.echo(f"Rounds: {len(result.get('rounds', []))}", err=True)
     typer.echo(f"Model used: {actual_model}", err=True)
     typer.echo("=" * 60, err=True)
 

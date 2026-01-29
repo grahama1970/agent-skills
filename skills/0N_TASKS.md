@@ -20,11 +20,11 @@ Refactor all Python scripts over 1000 lines in `.pi/skills` into modular, debugg
 
 ## CRITICAL PRIORITY (2000+ lines)
 
-### Task 1: Modularize paper-writer (5609 lines)
-- **File**: `paper-writer/paper_writer.py`
+### Task 1: Modularize create-paper (5609 lines)
+- **File**: `create-paper/paper_writer.py`
 - **Lines**: 5609 (WORST)
 - **Suggested Modules**: config.py, utils.py, research.py, outline.py, sections.py, citations.py, formatting.py, export.py, cli.py
-- **Definition of Done**: `paper-writer/sanity.sh` passes, code review complete
+- **Definition of Done**: `create-paper/sanity.sh` passes, code review complete
 - **Parallel**: No
 
 ### Task 2: Modularize fixture-graph (5397 lines)
@@ -122,11 +122,11 @@ Refactor all Python scripts over 1000 lines in `.pi/skills` into modular, debugg
 - **Definition of Done**: `arxiv/sanity.sh` passes, code review complete
 - **Parallel**: No
 
-### Task 15: Modularize discord-ops (1102 lines)
-- **File**: `discord-ops/discord_ops.py`
+### Task 15: Modularize ops-discord (1102 lines)
+- **File**: `ops-discord/discord_ops.py`
 - **Lines**: 1102
 - **Suggested Modules**: config.py, utils.py, webhook_monitor.py, keyword_matcher.py, graph_persistence.py, cli.py
-- **Definition of Done**: `discord-ops/sanity.sh` passes, code review complete
+- **Definition of Done**: `ops-discord/sanity.sh` passes, code review complete
 - **Parallel**: No
 
 ### Task 16: Modularize batch-report (1088 lines)
@@ -163,7 +163,7 @@ Refactor all Python scripts over 1000 lines in `.pi/skills` into modular, debugg
 
 | # | Skill | Lines | Modules | Status | Sanity |
 |---|-------|-------|---------|--------|--------|
-| 1 | paper-writer | 5609 | 10 | ✅ | ✔️ |
+| 1 | create-paper | 5609 | 10 | ✅ | ✔️ |
 | 2 | fixture-graph | 5397 | 13 | ✅ | ✔️ |
 | 3 | battle | 3720 | 14 | ✅ | ✔️ |
 | 4 | prompt-lab | 2497 | 13 | ✅ | ✔️ |
@@ -177,7 +177,7 @@ Refactor all Python scripts over 1000 lines in `.pi/skills` into modular, debugg
 | 12 | social-bridge | 1220 | 2 | ✅ | ✔️ |
 | 13 | youtube-transcripts | 1182 | 7 | ✅ | ✔️ |
 | 14 | arxiv | 1177 | 9 | ✅ | ✔️ |
-| 15 | discord-ops | 1102 | 2 | ✅ | ✔️ |
+| 15 | ops-discord | 1102 | 2 | ✅ | ✔️ |
 | 16 | batch-report | 1088 | 2 | ✅ | ✔️ |
 | 17 | github-search | 1051 | 8 | ✅ | ✔️ |
 | 18 | hack | 1031 | 7 | ✅ | ✔️ |

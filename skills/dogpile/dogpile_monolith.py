@@ -1673,7 +1673,7 @@ def search(
         if discord_res.get("errors"):
             md_lines.append(f"> ⚠️ Some servers had errors: {', '.join(discord_res['errors'][:3])}")
     else:
-        md_lines.append("No Discord messages found. Configure servers with `discord-ops setup`.")
+        md_lines.append("No Discord messages found. Configure servers with `ops-discord setup`.")
     md_lines.append("")
 
     # 3. GitHub & Code Deep Dive

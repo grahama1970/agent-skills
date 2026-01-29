@@ -113,70 +113,70 @@ None - all questions resolved via human clarification:
 
 ## COMPLIANCE-OPS SKILL (Tasks 7-12)
 
-- [x] **Task 7**: Create compliance-ops skill scaffold
+- [x] **Task 7**: Create ops-compliance skill scaffold
   - Agent: general-purpose
   - Parallel: 1
   - Dependencies: none
   - Sanity: N/A (pure Python, no external tools)
-  - Notes: Create basic skill structure for compliance-ops - checking codebases against compliance frameworks (SOC2, HIPAA, GDPR, PCI-DSS).
-  - Files: `.pi/skills/compliance-ops/SKILL.md`, `run.sh`, `compliance_ops.py`, `pyproject.toml`, `sanity.sh`
+  - Notes: Create basic skill structure for ops-compliance - checking codebases against compliance frameworks (SOC2, HIPAA, GDPR, PCI-DSS).
+  - Files: `.pi/skills/ops-compliance/SKILL.md`, `run.sh`, `compliance_ops.py`, `pyproject.toml`, `sanity.sh`
   - **Definition of Done**:
-    - Test: `cd .pi/skills/compliance-ops && ./sanity.sh`
+    - Test: `cd .pi/skills/ops-compliance && ./sanity.sh`
     - Assertion: run.sh --help works, Python imports succeed, frameworks list command works
 
-- [x] **Task 8**: Implement compliance-ops SOC2 checks
+- [x] **Task 8**: Implement ops-compliance SOC2 checks
   - Agent: general-purpose
   - Parallel: 2
   - Dependencies: Task 7
   - Sanity: N/A (pure Python regex/pattern matching)
   - Notes: Implement SOC2 Type II compliance checks for common control categories: access control, logging, encryption, change management.
-  - Files: `.pi/skills/compliance-ops/frameworks/soc2.py`, `checks/access_control.py`, `checks/logging.py`, `checks/encryption.py`
+  - Files: `.pi/skills/ops-compliance/frameworks/soc2.py`, `checks/access_control.py`, `checks/logging.py`, `checks/encryption.py`
   - **Definition of Done**:
-    - Test: `cd .pi/skills/compliance-ops && python compliance_ops.py check --framework soc2 --path /tmp`
+    - Test: `cd .pi/skills/ops-compliance && python compliance_ops.py check --framework soc2 --path /tmp`
     - Assertion: Runs all SOC2 checks, categorizes by CC1-CC9, returns pass/fail/warning status
 
-- [x] **Task 9**: Implement compliance-ops GDPR checks
+- [x] **Task 9**: Implement ops-compliance GDPR checks
   - Agent: general-purpose
   - Parallel: 2
   - Dependencies: Task 7
   - Sanity: N/A (pure Python regex/pattern matching)
   - Notes: Implement GDPR compliance checks focusing on: data inventory, consent mechanisms, data retention, right to erasure, encryption at rest.
-  - Files: `.pi/skills/compliance-ops/frameworks/gdpr.py`, `checks/data_inventory.py`, `checks/pii_detection.py`
+  - Files: `.pi/skills/ops-compliance/frameworks/gdpr.py`, `checks/data_inventory.py`, `checks/pii_detection.py`
   - **Definition of Done**:
-    - Test: `cd .pi/skills/compliance-ops && python compliance_ops.py check --framework gdpr --path /tmp`
+    - Test: `cd .pi/skills/ops-compliance && python compliance_ops.py check --framework gdpr --path /tmp`
     - Assertion: Detects PII patterns, identifies data flow gaps, returns structured findings
 
-- [x] **Task 10**: Implement compliance-ops report generation
+- [x] **Task 10**: Implement ops-compliance report generation
   - Agent: general-purpose
   - Parallel: 2
   - Dependencies: Task 7
   - Sanity: N/A (uses jinja2 - well-known library)
   - Notes: Generate compliance reports in multiple formats (Markdown, JSON, HTML) with executive summary and detailed findings.
-  - Files: `.pi/skills/compliance-ops/report.py`, `templates/report.md.jinja2`
+  - Files: `.pi/skills/ops-compliance/report.py`, `templates/report.md.jinja2`
   - **Definition of Done**:
-    - Test: `cd .pi/skills/compliance-ops && python -c "from report import generate_report; print('OK')"`
+    - Test: `cd .pi/skills/ops-compliance && python -c "from report import generate_report; print('OK')"`
     - Assertion: report module exists with generate_report function
 
-- [x] **Task 11**: Integrate compliance-ops with task-monitor
+- [x] **Task 11**: Integrate ops-compliance with task-monitor
   - Agent: general-purpose
   - Parallel: 3
   - Dependencies: Task 8, Task 9, Task 10
   - Sanity: N/A (uses existing task-monitor)
   - Notes: Add task-monitor integration for long-running compliance scans.
-  - Files: `.pi/skills/compliance-ops/task_monitor_integration.py`, update `compliance_ops.py`
+  - Files: `.pi/skills/ops-compliance/task_monitor_integration.py`, update `compliance_ops.py`
   - **Definition of Done**:
-    - Test: `cd .pi/skills/compliance-ops && python -c "from task_monitor_integration import ComplianceMonitor; print('OK')"`
+    - Test: `cd .pi/skills/ops-compliance && python -c "from task_monitor_integration import ComplianceMonitor; print('OK')"`
     - Assertion: ComplianceMonitor class exists and can be imported
 
-- [x] **Task 12**: Integrate compliance-ops with memory skill
+- [x] **Task 12**: Integrate ops-compliance with memory skill
   - Agent: general-purpose
   - Parallel: 4
   - Dependencies: Task 11
   - Sanity: N/A (uses existing memory skill)
   - Notes: Store compliance scan history and track compliance posture over time.
-  - Files: `.pi/skills/compliance-ops/memory_integration.py`
+  - Files: `.pi/skills/ops-compliance/memory_integration.py`
   - **Definition of Done**:
-    - Test: `cd .pi/skills/compliance-ops && python -c "from memory_integration import store_compliance_results; print('OK')"`
+    - Test: `cd .pi/skills/ops-compliance && python -c "from memory_integration import store_compliance_results; print('OK')"`
     - Assertion: memory_integration module exists with store_compliance_results function
 
 ---
@@ -189,9 +189,9 @@ None - all questions resolved via human clarification:
   - Dependencies: Task 6, Task 12
   - Sanity: N/A (file creation)
   - Notes: Add both skills to the orchestrate skill's awareness and create cross-skill workflows.
-  - Files: `.pi/skills/security-scan/TRIGGERS.md`, `.pi/skills/compliance-ops/TRIGGERS.md`
+  - Files: `.pi/skills/security-scan/TRIGGERS.md`, `.pi/skills/ops-compliance/TRIGGERS.md`
   - **Definition of Done**:
-    - Test: `grep -q "security" .pi/skills/security-scan/TRIGGERS.md && grep -q "compliance" .pi/skills/compliance-ops/TRIGGERS.md`
+    - Test: `grep -q "security" .pi/skills/security-scan/TRIGGERS.md && grep -q "compliance" .pi/skills/ops-compliance/TRIGGERS.md`
     - Assertion: Both TRIGGERS.md files exist with appropriate trigger keywords
 
 - [x] **Task 14**: Documentation and broadcast
@@ -200,9 +200,9 @@ None - all questions resolved via human clarification:
   - Dependencies: Task 13
   - Sanity: N/A (documentation)
   - Notes: Finalize documentation and broadcast skills to all registered IDE targets.
-  - Files: Update `.pi/skills/security-scan/SKILL.md`, `.pi/skills/compliance-ops/SKILL.md`
+  - Files: Update `.pi/skills/security-scan/SKILL.md`, `.pi/skills/ops-compliance/SKILL.md`
   - **Definition of Done**:
-    - Test: `cd .pi/skills/security-scan && ./sanity.sh && cd ../compliance-ops && ./sanity.sh`
+    - Test: `cd .pi/skills/security-scan && ./sanity.sh && cd ../ops-compliance && ./sanity.sh`
     - Assertion: Both sanity.sh scripts pass, SKILL.md files contain usage examples
 
 ---
@@ -255,12 +255,12 @@ None - all questions resolved via human clarification:
 | 4 | Secrets detection | security-scan | ✅ | ✔️ |
 | 5 | Task-monitor | security-scan | ✅ | ✔️ |
 | 6 | Memory | security-scan | ✅ | ✔️ |
-| 7 | Scaffold | compliance-ops | ✅ | ✔️ |
-| 8 | SOC2 checks | compliance-ops | ✅ | ✔️ |
-| 9 | GDPR checks | compliance-ops | ✅ | ✔️ |
-| 10 | Report gen | compliance-ops | ✅ | ✔️ |
-| 11 | Task-monitor | compliance-ops | ✅ | ✔️ |
-| 12 | Memory | compliance-ops | ✅ | ✔️ |
+| 7 | Scaffold | ops-compliance | ✅ | ✔️ |
+| 8 | SOC2 checks | ops-compliance | ✅ | ✔️ |
+| 9 | GDPR checks | ops-compliance | ✅ | ✔️ |
+| 10 | Report gen | ops-compliance | ✅ | ✔️ |
+| 11 | Task-monitor | ops-compliance | ✅ | ✔️ |
+| 12 | Memory | ops-compliance | ✅ | ✔️ |
 | 13 | Triggers/Orchestrate | both | ✅ | ✔️ |
 | 14 | Docs/Broadcast | both | ✅ | ✔️ |
 

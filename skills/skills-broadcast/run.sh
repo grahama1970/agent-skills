@@ -8,6 +8,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 detect_local_skills_dir() {
     local candidates=(
         "${PROJECT_ROOT}/.pi/skills"
+        "${PROJECT_ROOT}/.github/skills"
         "${PROJECT_ROOT}/.agent/skills"
         "${PROJECT_ROOT}/.codex/skills"
         "${PROJECT_ROOT}/.claude/skills"
@@ -254,6 +255,7 @@ fi
 PATTERNS=(
     ".agent/skills"    # Antigravity
     ".pi/skills"       # Pi
+    ".github/skills"   # GitHub
     ".codex/skills"    # Codex
     ".claude/skills"   # Claude
     ".gemini/skills"   # Antigravity (Global)
@@ -291,6 +293,7 @@ for proj in "${!TARGET_PROJECTS[@]}"; do
             if [[ "$relative_path" == ".agent/skills" || \
                   "$relative_path" == ".codex/skills" || \
                   "$relative_path" == ".claude/skills" || \
+                  "$relative_path" == ".github/skills" || \
                   "$relative_path" == ".pi/skills" ]]; then
                 mkdir -p "$target_path"
                 SHOULD_SYNC=1

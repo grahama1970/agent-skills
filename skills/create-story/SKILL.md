@@ -275,7 +275,7 @@ For deeper editing capabilities, consider these composable skills:
 |-------|---------|--------|
 | `/story-editor` | In-depth structural editing, plot analysis | Proposed |
 | `/proofread` | Grammar, style, consistency checks | Proposed |
-| `/create-paper` | Rename from paper-writer for consistency | Proposed |
+| `/create-paper` | Rename from create-paper for consistency | Proposed |
 
 These would integrate with create-story for multi-pass refinement:
 ```

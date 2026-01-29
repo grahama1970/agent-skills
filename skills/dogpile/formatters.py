@@ -97,6 +97,6 @@ def format_discord_section(discord_res: Dict[str, Any]) -> List[str]:
         if discord_res.get("errors"):
             lines.append(f"> Some servers had errors: {', '.join(discord_res['errors'][:3])}")
     else:
-        lines.append("No Discord messages found. Configure servers with `discord-ops setup`.")
+        lines.append("No Discord messages found. Configure servers with `ops-discord setup`.")
     lines.append("")
     return lines

@@ -93,3 +93,6 @@ class ExtractionOptions:
     continue_on_error: bool = False
     sections_only: bool = False
     sync_to_memory: bool = True
+    # PDF decryption options
+    auto_decrypt: bool = True  # Attempt to decrypt encrypted PDFs automatically
+    decrypt_password: Optional[str] = None  # Password for encrypted PDFs

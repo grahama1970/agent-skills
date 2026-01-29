@@ -3,9 +3,9 @@
     "provider": "codex",
     "remaining": 0,
     "limit": -1,
-    "reset_at": 1769702593.864561,
-    "last_hit": "2026-01-29T11:02:13.864565",
-    "total_hits": 12,
+    "reset_at": 1769709335.6304064,
+    "last_hit": "2026-01-29T12:54:35.630409",
+    "total_hits": 15,
     "backoff_multiplier": 1.5
   }
 }

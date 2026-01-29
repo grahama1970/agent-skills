@@ -299,11 +299,11 @@ def create_docker_cleanup_command() -> Callable[..., None]:
         until: str = typer.Option("24h", help="Prune resources older than this"),
         execute: bool = typer.Option(False, help="Actually prune"),
     ):
-        """Clean up Docker resources using docker-ops skill."""
+        """Clean up Docker resources using ops-docker skill."""
         console.print("[bold blue]Docker cleanup[/bold blue]")
         docker_ops_script = DOCKER_OPS_SKILL / "run.sh"
         if not docker_ops_script.exists():
-            console.print("[red]docker-ops skill not found[/red]")
+            console.print("[red]ops-docker skill not found[/red]")
             return
         cmd = [str(docker_ops_script), "prune", "--until", until]
         if execute:

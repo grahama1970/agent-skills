@@ -63,7 +63,7 @@ result = {
 |------------|---------|----------------|
 | `lore` | Horus persona content, stories, narratives | create-story, review-story, ingest-movie |
 | `operational` | Code, technical documentation, lessons | review-code, memory (lessons) |
-| `sparta` | Security content, vulnerabilities, threats | security-scan, hack, compliance-ops |
+| `sparta` | Security content, vulnerabilities, threats | security-scan, hack, ops-compliance |
 
 ## Output Format
 

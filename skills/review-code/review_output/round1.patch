@@ -1,88 +1,509 @@
-standardize timeouts, add debug logging, clean imports, and clarify comment
---- a/.pi/skills/code-review/code_review.py
-+++ b/.pi/skills/code-review/code_review.py
-@@ -35,6 +35,6 @@
--# Handle both direct execution and module import scenarios
--# When run directly (python code_review.py), we need to add parent to sys.path
--# When run as module (python -m code_review.code_review), relative imports work
-+# Handle both direct execution and module import scenarios
-+# When run directly (python code_review.py), ensure this directory is on sys.path
-+# When run as a module (python -m code_review.code_review), relative imports work as-is
- _SCRIPT_DIR = Path(__file__).resolve().parent
- if str(_SCRIPT_DIR) not in sys.path:
-     sys.path.insert(0, str(_SCRIPT_DIR))
---- a/.pi/skills/code-review/utils.py
-+++ b/.pi/skills/code-review/utils.py
-@@ -11,8 +11,9 @@
- import re
-+import os
- import shutil
- import subprocess
+Improve collaboration validation, input checks, and fidelity handoff contract
+
+diff --git a/.pi/skills/create-storyboard/orchestrator.py b/.pi/skills/create-storyboard/orchestrator.py
+index 5b0f6ad..f3a3f3e 100644
+--- a/.pi/skills/create-storyboard/orchestrator.py
++++ b/.pi/skills/create-storyboard/orchestrator.py
+@@ -1,14 +1,18 @@
+ #!/usr/bin/env python3
+ """
+ Create-Storyboard Orchestrator (Collaborative Version)
+@@
+ import json
  import sys
- import tempfile
- from contextlib import contextmanager
+ from datetime import datetime
  from pathlib import Path
- from typing import Generator, Optional
-@@ -189,8 +190,11 @@
--    except Exception:
--        pass
-+    except Exception as e:
-+        # Only log in debug mode to avoid noisy output by default
-+        if os.environ.get("CODE_REVIEW_DEBUG"):
-+            console.print(f"[yellow]Git status check warning: {e}[/yellow]")
+ from typing import Optional
++import codecs
  
-     return result
+ import typer
  
-@@ -216,7 +220,7 @@
-         res = subprocess.run(
-             ["git", "remote", "get-url", "origin"],
--            capture_output=True, text=True, cwd=cwd, timeout=5
-+            capture_output=True, text=True, cwd=cwd, timeout=get_timeout()
+ from screenplay_parser import parse_file, parse_screenplay, screenplay_to_dict, Screenplay
+@@
+ def start(
+     screenplay: Path = typer.Argument(..., help="Path to screenplay markdown file"),
+     output_dir: Path = typer.Option(Path("./output"), "--output-dir", "-o", help="Output directory"),
+     fidelity: str = typer.Option("sketch", "--fidelity", "-f", help="Panel fidelity: sketch|reference"),
+     format: str = typer.Option("mp4", "--format", help="Output format: mp4|html|panels"),
+     auto_approve: bool = typer.Option(False, "--auto-approve", "-y", help="Skip all questions, use defaults"),
+     json_output: bool = typer.Option(False, "--json", "-j", help="Output structured JSON for agent consumption")
+ ):
+@@
+     """
+     Start a new storyboard session. Returns questions if input needed.
+@@
+     """
+     # Validate input
+     if not screenplay.exists():
+         result = StoryboardResult(
+             status="error",
+             phase=Phase.PARSE,
+             session_id="",
+             message=f"Screenplay file not found: {screenplay}"
          )
-         if res.returncode == 0:
-             url = res.stdout.strip()
-@@ -228,7 +232,7 @@
-         res = subprocess.run(
-             ["git", "branch", "--show-current"],
--            capture_output=True, text=True, cwd=cwd, timeout=5
-+            capture_output=True, text=True, cwd=cwd, timeout=get_timeout()
+         output_result(result, json_output)
+         raise typer.Exit(1)
++    # Basic binary/empty validation
++    try:
++        raw = screenplay.read_bytes()
++        if len(raw) == 0:
++            result = StoryboardResult(
++                status="error",
++                phase=Phase.PARSE,
++                session_id="",
++                message="Screenplay file is empty. Provide a markdown screenplay with INT./EXT. scene headings."
++            )
++            output_result(result, json_output)
++            raise typer.Exit(1)
++        # Try UTF-8 decode to catch binary files
++        codecs.decode(raw, "utf-8")
++    except UnicodeDecodeError:
++        result = StoryboardResult(
++            status="error",
++            phase=Phase.PARSE,
++            session_id="",
++            message="Screenplay file appears to be binary or not UTF-8 text. Provide a UTF-8 markdown file."
++        )
++        output_result(result, json_output)
++        raise typer.Exit(1)
+@@
+     # Phase 1: Parse
+     try:
+         parsed = parse_file(screenplay)
+         if not parsed.scenes:
+             result = StoryboardResult(
+                 status="error",
+                 phase=Phase.PARSE,
+                 session_id=session_id,
+                 message=f"No scenes found in screenplay. Ensure headings use INT./EXT. format."
+             )
+             output_result(result, json_output)
+             raise typer.Exit(1)
+@@
+ @app.command("continue")
+ def continue_session(
+     session: str = typer.Option(..., "--session", "-s", help="Session ID to continue"),
+     answers: str = typer.Option("{}", "--answers", "-a", help="JSON answers to questions"),
+     search_dir: Path = typer.Option(Path("./output"), "--search-dir", help="Directory to search for session"),
+     json_output: bool = typer.Option(False, "--json", "-j", help="Output structured JSON")
+ ):
+@@
+     # Load session
+     state = load_session(session_path)
+     output_dir = session_path.parent
+@@
+     # Parse answers
+     try:
+         answer_dict = json.loads(answers)
+-        state.answers.update(answer_dict)
+     except json.JSONDecodeError as e:
+         result = StoryboardResult(
+             status="error",
+             phase=state.phase,
+             session_id=state.session_id,
+             message=f"Invalid JSON in answers: {e}"
          )
-         if res.returncode == 0:
-             context["branch"] = res.stdout.strip()
-@@ -236,7 +240,7 @@
-         res = subprocess.run(
-             ["git", "diff", "--name-only", "HEAD"],
--            capture_output=True, text=True, cwd=cwd, timeout=5
-+            capture_output=True, text=True, cwd=cwd, timeout=get_timeout()
-         )
-         if res.returncode == 0 and res.stdout.strip():
-             context["modified_files"] = res.stdout.strip().splitlines()
---- a/.pi/skills/code-review/commands/review_full.py
-+++ b/.pi/skills/code-review/commands/review_full.py
-@@ -16,14 +16,14 @@
--    from ..config import DEFAULT_MODEL, DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, SKILLS_DIR
-+    from ..config import DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, SKILLS_DIR, get_timeout
-     from ..diff_parser import extract_diff
-     from ..prompts import STEP1_PROMPT, STEP2_PROMPT, STEP3_PROMPT
-     from ..providers import find_provider_cli, run_provider_async
-     from ..utils import create_workspace, get_effective_dirs
- except ImportError:
--    from config import DEFAULT_MODEL, DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, SKILLS_DIR
-+    from config import DEFAULT_PROVIDER, PROVIDERS, SCRIPT_DIR, SKILLS_DIR, get_timeout
-     from diff_parser import extract_diff
-     from prompts import STEP1_PROMPT, STEP2_PROMPT, STEP3_PROMPT
-     from providers import find_provider_cli, run_provider_async
-     from utils import create_workspace, get_effective_dirs
+         output_result(result, json_output)
+         raise typer.Exit(1)
++    # Validate question IDs provided
++    known_ids = {q.get("id") for q in (state.questions or [])}
++    unknown_ids = [qid for qid in answer_dict.keys() if qid not in known_ids and not qid.startswith("_config")]
++    if unknown_ids:
++        result = StoryboardResult(
++            status="error",
++            phase=state.phase,
++            session_id=state.session_id,
++            message=f"Unknown question IDs in answers: {', '.join(unknown_ids)}"
++        )
++        output_result(result, json_output)
++        raise typer.Exit(1)
++    # Accept answers
++    state.answers.update(answer_dict)
+@@
+     elif state.phase == Phase.CAMERA_PLAN:
+         # Apply shot approval answers
+         # TODO: Modify shot plan based on answers
+@@
+ def _execute_generate_panels(state: SessionState, output_dir: Path, json_output: bool):
+     """Execute panel generation phase."""
+     config = state.answers.get('_config', {})
+     fidelity = config.get('fidelity', 'sketch')
  
-@@ -287,11 +287,12 @@
-             subprocess.run([
-                 "python3", str(SKILLS_DIR / "task-monitor" / "monitor.py"),
-                 "register",
-                 "--name", f"review-{file.stem}",
-                 "--state", str(state_file),
-                 "--total", str(rounds),
-                 "--desc", f"Code Review: {file.name}"
--            ], capture_output=True, check=False)
-+            ], capture_output=True, check=False, timeout=get_timeout())
-         except Exception:
+     # Validate fidelity
+     if fidelity == 'generated':
+-        result = StoryboardResult(
+-            status="error",
+-            phase=Phase.GENERATE_PANELS,
+-            session_id=state.session_id,
+-            message="fidelity='generated' requires /create-image skill integration (not yet implemented). Use 'sketch' or 'reference'."
+-        )
++        # Provide explicit handoff contract to /create-image
++        handoff_schema = {
++            "contract": "create-image",
++            "required": ["shot_plan", "prompts", "style_references"],
++            "shot_plan": "Path to shot_plan.json generated earlier",
++            "prompts": "List of per-shot text prompts including framing, emotion, lighting",
++            "style_references": "Optional film/style refs (titles or IDs) to guide look"
++        }
++        result = StoryboardResult(
++            status="error",
++            phase=Phase.GENERATE_PANELS,
++            session_id=state.session_id,
++            message=f"fidelity='generated' is not implemented. Hand off to /create-image using this JSON contract: {json.dumps(handoff_schema)}. Use 'sketch' or 'reference' for now."
++        )
+         output_result(result, json_output)
+         raise typer.Exit(1)
+@@
+     result = StoryboardResult(
+         status="in_progress",
+         phase=Phase.GENERATE_PANELS,
+         session_id=state.session_id,
+         partial_results={"panels_generated": len(panel_paths)},
+         output_files=[str(p) for p in panel_paths[:5]],  # Show first 5
+         message=f"Generated {len(panel_paths)} panels. Proceeding to assembly...",
+         resume_command=""
+     )
+     output_result(result, json_output)
+@@
+ @app.command()
+ def status(
+     session: str = typer.Option(..., "--session", "-s", help="Session ID"),
+     search_dir: Path = typer.Option(Path("./output"), "--search-dir", help="Directory to search"),
+     json_output: bool = typer.Option(False, "--json", "-j", help="Output structured JSON")
+ ):
+@@
+     result = StoryboardResult(
+         status="in_progress" if state.phase != Phase.COMPLETE else "complete",
+         phase=state.phase,
+         session_id=state.session_id,
+         questions=[Question(**q) for q in state.questions] if state.questions else [],
+         partial_results={
+             "scenes": len(state.parsed_scenes.get('scenes', [])) if state.parsed_scenes else 0,
+             "shots": state.shot_plan.get('total_shots', 0) if state.shot_plan else 0,
+             "panels": len(state.panels)
+         },
+         output_files=[state.output_path] if state.output_path else [],
+         message=f"Session at phase: {state.phase.value}",
+-        resume_command=f"./run.sh continue --session {state.session_id} --answers '<JSON>'" if state.questions else ""
++        resume_command=f"./run.sh continue --session {state.session_id} --answers '<JSON>'" if state.questions else ""
+     )
+     output_result(result, json_output)
+ 
+diff --git a/.pi/skills/create-storyboard/collaboration.py b/.pi/skills/create-storyboard/collaboration.py
+index 6f1f4f2..41d41e3 100644
+--- a/.pi/skills/create-storyboard/collaboration.py
++++ b/.pi/skills/create-storyboard/collaboration.py
+@@ -1,15 +1,16 @@
+ """
+ Collaboration Module for create-storyboard skill.
+ 
+ Provides question generation, session state management, and structured
+ output for human-agent collaboration during storyboard creation.
+ """
+ 
+ import json
+ from dataclasses import dataclass, field, asdict
+ from datetime import datetime
+ from enum import Enum
+ from pathlib import Path
+-from typing import Optional, Any
++from typing import Optional, Any, Tuple, Dict
+ import uuid
+@@
+ def format_questions_for_display(questions: list[Question]) -> str:
+     """Format questions for human-readable display."""
+     if not questions:
+         return "No questions - proceeding with defaults.\n"
+@@
+     lines.append(f"{'='*60}")
+     lines.append("To provide answers, use:")
+-    lines.append("  ./run.sh resume --session <ID> --answers '{\"emotion_s1\": \"tense\", ...}'")
++    lines.append("  ./run.sh continue --session <ID> --answers '{\"emotion_s1\": \"tense\", ...}'")
+     lines.append(f"{'='*60}\n")
+ 
+     return "\n".join(lines)
+ 
+@@
+-def apply_answers_to_scenes(parsed_scenes: dict, answers: dict) -> dict:
+-    """Apply user answers to modify parsed scene data."""
+-    scenes = parsed_scenes.copy()
+-
+-    for question_id, answer in answers.items():
++def apply_answers_to_scenes(parsed_scenes: dict, answers: dict) -> dict:
++    """Apply user answers to modify parsed scene data."""
++    scenes = parsed_scenes.copy()
++    for question_id, answer in answers.items():
+         parts = question_id.split('_')
+         if len(parts) < 2:
+             continue
+@@
+         # Find the scene
+         for scene in scenes.get('scenes', []):
+             if scene.get('number') == scene_num:
+                 # Apply the answer based on type
+                 if q_type == 'emotion':
+                     scene.setdefault('notes', {})['beats'] = [answer]
+                 elif q_type == 'camera' and answer == 'auto_select':
+                     scene.setdefault('notes', {})['camera'] = ['AUTO']
+                 # Other answer types can be handled similarly
+                 break
+ 
+     return scenes
++
++def validate_answers(answers: Dict[str, Any], known_questions: list[dict]) -> Tuple[bool, list[str]]:
++    """Validate provided answers against known question IDs; return validity and unknown IDs."""
++    known_ids = {q.get("id") for q in (known_questions or [])}
++    unknown = [qid for qid in answers.keys() if qid not in known_ids and not qid.startswith("_config")]
++    return (len(unknown) == 0), unknown
+ 
+diff --git a/.pi/skills/create-storyboard/creative_suggestions.py b/.pi/skills/create-storyboard/creative_suggestions.py
+index 5f5c9d3..e3eb3f9 100644
+--- a/.pi/skills/create-storyboard/creative_suggestions.py
++++ b/.pi/skills/create-storyboard/creative_suggestions.py
+@@ -1,9 +1,10 @@
+ """
+ Creative Suggestions Module for create-storyboard skill.
+ 
+ Generates filmmaking suggestions with rationale, not just binary questions.
+ The skill acts as a creative collaborator, proposing techniques and asking
+ for feedback in natural language.
+ """
+ 
+ from dataclasses import dataclass, field
+ from typing import Optional
+ from enum import Enum
+@@
+ def format_suggestions_for_conversation(suggestions: list[CreativeSuggestion]) -> str:
+     """Format all suggestions as a creative conversation."""
+     if not suggestions:
+         return "No specific suggestions - I'll use standard coverage for these scenes.\n"
+@@
+     for i, s in enumerate(suggestions, 1):
+-        lines.append(f"### {i}. Scene {s.scene_number} - {s.category.value.title()}")
++        lines.append(f"{i}. Scene {s.scene_number} - {s.category.value.title()}")
+         lines.append("")
+         lines.append(f"💡 {s.suggestion}")
+         lines.append("")
+         lines.append(f"   *Why*: {s.rationale}")
+         if s.alternatives:
+             lines.append(f"   *Or*: {', '.join(s.alternatives)}")
+         lines.append("")
+         lines.append(f"   → {' / '.join(s.response_options)}")
+         lines.append("")
+@@
+     return "\n".join(lines)
+ 
+diff --git a/.pi/skills/create-storyboard/memory_bridge.py b/.pi/skills/create-storyboard/memory_bridge.py
+index 3a2d9a7..f4e3c9b 100644
+--- a/.pi/skills/create-storyboard/memory_bridge.py
++++ b/.pi/skills/create-storyboard/memory_bridge.py
+@@ -1,20 +1,21 @@
+ """
+ Memory Bridge for create-storyboard skill.
+ 
+ Integrates with /memory skill to:
+ 1. RECALL learned filmmaking techniques from ingested movies
+ 2. LEARN new techniques after completing storyboards
+ 3. Search for specific references mentioned in screenplays
+ 
+ Uses the 'horus-storyboarding' scope for storyboard-specific learnings.
+ """
+ 
+ import json
+ import subprocess
+ from dataclasses import dataclass
+ from pathlib import Path
+-from typing import Optional
++from typing import Optional, List
+ 
+ 
+ # Memory scope for storyboard learnings
+ MEMORY_SCOPE = "horus-storyboarding"
+@@
+ def recall_techniques(query: str, scope: str = MEMORY_SCOPE, limit: int = 5) -> list[MemoryResult]:
+     """
+     Recall techniques from memory based on a query.
+@@
+     memory_cmd = [
+         "python3", str(MEMORY_SKILL_PATH / "run.py"),
+         "recall",
+         "--query", query,
+         "--scope", scope,
+         "--limit", str(limit),
+         "--format", "json"
+     ]
+@@
+         if result.returncode == 0:
+             # Parse JSON output
+             data = json.loads(result.stdout)
+             for item in data.get('results', []):
+                 results.append(MemoryResult(
+                     found=True,
+                     content=item.get('content', ''),
+                     source=item.get('source'),
+                     relevance=item.get('relevance', 0.0)
+                 ))
+         else:
+             # Memory skill failed - return empty results
              pass
+@@
+     return results
+@@
+ def learn_technique(
+     technique_name: str,
+     description: str,
+     source: str,
+     metadata: Optional[dict] = None,
+     scope: str = MEMORY_SCOPE
+ ) -> bool:
+@@
+     memory_cmd = [
+         "python3", str(MEMORY_SKILL_PATH / "run.py"),
+         "learn",
+         "--content", json.dumps(content),
+         "--scope", scope,
+         "--source", f"storyboard:{source}"
+     ]
+@@
+     except (subprocess.TimeoutExpired, FileNotFoundError):
+         return False
++    except Exception:
++        return False
+ 
+@@
+ def enhance_suggestions_with_memory(suggestions: list, parsed_scenes: dict) -> list:
+     """
+     Enhance creative suggestions by searching memory for relevant techniques.
+@@
+     enhanced = []
+ 
+     for suggestion in suggestions:
+         s_dict = suggestion.to_dict() if hasattr(suggestion, 'to_dict') else suggestion
+ 
+         # If there's a film reference, look it up
+         if s_dict.get('reference'):
+             techniques = recall_film_reference(s_dict['reference'])
+             if techniques:
+                 s_dict['memory_context'] = [t.to_dict() for t in techniques]
+                 s_dict['suggestion'] += f"\n\n📚 From my memory of {s_dict['reference']}:\n"
+                 for t in techniques[:2]:  # Limit to top 2
+                     s_dict['suggestion'] += f"  • {t.format_for_suggestion()}\n"
++        else:
++            # Try to augment based on emotion beats if present
++            beats = []
++            try:
++                beats = parsed_scenes.get("notes", {}).get("beats", [])  # best-effort
++            except Exception:
++                beats = []
+ 
+         enhanced.append(s_dict)
+ 
+     return enhanced
+ 
+diff --git a/.pi/skills/create-storyboard/research_bridge.py b/.pi/skills/create-storyboard/research_bridge.py
+index 7c9f6a1..3b4e6c2 100644
+--- a/.pi/skills/create-storyboard/research_bridge.py
++++ b/.pi/skills/create-storyboard/research_bridge.py
+@@ -1,18 +1,19 @@
+ """
+ Research Bridge for create-storyboard skill.
+ 
+ Integrates with /dogpile for researching filmmaking techniques when:
+ 1. A film reference is mentioned but not in memory
+ 2. A specific technique needs explanation
+ 3. The agent needs to learn about a cinematography concept
+ 
+ Also provides hooks to /memory for storing and recalling learned techniques.
+ """
+ 
+ import json
+ import subprocess
+ from dataclasses import dataclass
+ from pathlib import Path
+-from typing import Optional, List
++from typing import Optional, List, Dict
+ 
+ # Paths to integrated skills
+ SKILLS_DIR = Path(__file__).parent.parent
+ DOGPILE_PATH = SKILLS_DIR / "dogpile"
+ MEMORY_PATH = SKILLS_DIR / "memory"
+@@
+ def research_film_techniques(film_name: str, aspect: str = "cinematography") -> ResearchResult:
+     """
+     Research cinematography techniques from a specific film using /dogpile.
+@@
+     dogpile_cmd = [
+         "python3", str(DOGPILE_PATH / "run.py"),
+         "search",
+         "--query", query,
+         "--sources", "brave,youtube,arxiv",
+         "--format", "json"
+     ]
+@@
+         if result.returncode == 0:
+             data = json.loads(result.stdout)
+ 
+             # Extract relevant techniques from results
+             techniques = []
+             sources = []
+ 
+             for item in data.get('results', []):
+                 sources.append(item.get('url', item.get('source', 'Unknown')))
+ 
+                 # Parse content for technique information
+                 content = item.get('content', '')
+                 if any(kw in content.lower() for kw in ['shot', 'camera', 'light', 'frame', 'lens']):
+                     techniques.append({
+                         "description": content[:500],
+                         "source": item.get('source', 'web')
+                     })
+ 
+             return ResearchResult(
+                 query=query,
+                 found=len(techniques) > 0,
+                 summary=data.get('summary', f"Research on {film_name} {aspect}"),
+                 sources=sources[:5],
+                 techniques=techniques[:3],
+                 raw_content=result.stdout
+             )
+ 
+     except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError) as e:
+         pass
+ 
+     # Fallback: return empty result
+     return ResearchResult(
+         query=query,
+         found=False,
+         summary=f"Could not research {film_name}. Try /dogpile manually.",
+         sources=[],
+         techniques=[]
+     )
+@@
+ def recall_or_research(topic: str, scope: str = "horus-storyboarding") -> dict:
+     """
+     First check /memory, then fall back to /dogpile research.
+@@
+     # Not in memory - offer to research
+     return {
+         "source": "needs_research",
+         "found": False,
+         "content": [],
+         "action": "research",
+         "message": f"'{topic}' not found in memory. Should I research it with /dogpile?",
+         "research_query": topic
+     }
+@@
+ def generate_research_questions(parsed_scenes: dict) -> list[dict]:
+     """
+     Analyze scenes and generate research questions for unknown references.
+@@
+                 questions.append({
+                     "id": f"research_tech_s{scene_num}_{len(questions)}",
+                     "scene_number": scene_num,
+                     "type": "research_offer",
+                     "question": f"Scene {scene_num} mentions '{tech}'. Should I research this technique to understand when and how to use it effectively?",
+                     "options": ["yes_research", "no_i_know_it", "skip"],
+                     "topic": tech
+                 })
+ 
+     return questions

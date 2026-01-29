@@ -3587,7 +3587,7 @@ def battle(
 
     # Handle Docker image as target
     if docker_image and target == ".":
-        # Use docker-ops skill directory as placeholder
+        # Use ops-docker skill directory as placeholder
         target_path = Path.cwd()
     else:
         target_path = Path(target).resolve()

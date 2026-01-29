@@ -7,6 +7,7 @@ Central reference for all skill trigger phrases. Edit triggers in each skill's `
 ---
 
 ## assess
+
 **When user says:** "assess the project", "step back", "fresh eyes", "sanity check", "health check", "gap analysis", "project status", "what's working"
 
 ```yaml
@@ -43,6 +44,7 @@ triggers:
 ---
 
 ## arxiv
+
 **When user says:** "find papers on", "search arxiv", "look up research", "academic papers about", "recent papers on", "arxiv search", "use your arxiv tool"
 
 ```yaml
@@ -60,6 +62,7 @@ triggers:
 ---
 
 ## context7
+
 **When user says:** "library documentation", "show me docs for", "API reference", "how to use this library", "latest docs for", "context7 lookup"
 
 ```yaml
@@ -76,6 +79,7 @@ triggers:
 ---
 
 ## fetcher
+
 **When user says:** "fetch this URL", "download page", "crawl website", "extract content from", "get the PDF", "scrape this site", "retrieve document"
 
 ```yaml
@@ -93,6 +97,7 @@ triggers:
 ---
 
 ## memory (MEMORY FIRST)
+
 **MANDATORY FIRST STEP:** Before any codebase scan, call `recall` to get context
 
 **When user says:** "check memory", "recall", "have we seen this", "remember how we solved", "what did we learn", "save this lesson", "learn from this", "query memory first"
@@ -113,26 +118,12 @@ triggers:
   - query memory first
 ```
 
-**Memory First Contract:** Always call `recall` BEFORE scanning any codebase. Memory returns context that helps make better decisions. If `found=true`, apply solution. If `found=false`, review context then scan codebase. After solving, call `learn`.
-
----
-
-## pdf-fixture
-**When user says:** "create test PDF", "generate PDF fixture", "make sample PDF", "PDF for testing", "create PDF with tables"
-
-```yaml
-# .agents/skills/pdf-fixture/SKILL.md
-triggers:
-  - create test PDF
-  - generate PDF fixture
-  - make sample PDF
-  - PDF for testing
-  - create PDF with tables
-```
+## **Memory First Contract:** Always call `recall` BEFORE scanning any codebase. Memory returns context that helps make better decisions. If `found=true`, apply solution. If `found=false`, review context then scan codebase. After solving, call `learn`.
 
 ---
 
 ## perplexity
+
 **When user says:** "what's the latest", "current pricing", "recent news", "search the web", "fact check", "what's new in", "look up online", "research this topic", "paid search"
 
 ```yaml
@@ -152,6 +143,7 @@ triggers:
 ---
 
 ## brave-search
+
 **When user says:** "brave search", "search with brave", "brave web search", "brave local search", "local search", "find businesses near", "find restaurants near", "near me", "free search"
 
 ```yaml
@@ -170,11 +162,12 @@ triggers:
 
 ---
 
-## runpod-ops
+## ops-runpod
+
 **When user says:** "spin up GPU", "create RunPod", "terminate pod", "GPU instance", "provision server", "check pod status", "RunPod management"
 
 ```yaml
-# .agents/skills/runpod-ops/SKILL.md
+# .agents/skills/ops-runpod/SKILL.md
 triggers:
   - spin up GPU
   - create RunPod
@@ -188,6 +181,7 @@ triggers:
 ---
 
 ## scillm
+
 **When user says:** "batch LLM calls", "parallel completions", "prove mathematically", "formal verification", "Lean4 proof", "extract JSON from", "verify this claim"
 
 ```yaml
@@ -205,6 +199,7 @@ triggers:
 ---
 
 ## surf
+
 **When user says:** "open browser", "click on", "fill form", "take screenshot", "navigate to", "automate browser", "browser automation", "read webpage"
 
 ```yaml
@@ -223,6 +218,7 @@ triggers:
 ---
 
 ## youtube-transcripts
+
 **When user says:** "get transcript", "transcribe video", "youtube transcript", "extract captions", "what does this video say", "get subtitles from", "youtube url text"
 
 ```yaml
@@ -240,6 +236,7 @@ triggers:
 ---
 
 ## code-review
+
 **When user says:** "code review", "review this code", "get a patch", "fix this with copilot", "copilot review", "generate diff", "review request"
 
 ```yaml
@@ -256,23 +253,10 @@ triggers:
 
 ---
 
-## distill
-**When user says:** "distill this", "extract knowledge from", "remember this paper", "store this research", "chunk and learn"
-
-```yaml
-# .agents/skills/distill/SKILL.md
-triggers:
-  - distill this
-  - extract knowledge from
-  - remember this paper
-  - store this research
-  - chunk and learn
-  - distill into memory
-```
-
 ---
 
 ## edge-verifier
+
 **When user says:** "verify edges", "link content", "generate relationships", "verify knowledge graph", "check edge quality"
 
 ```yaml
@@ -291,6 +275,7 @@ triggers:
 ---
 
 ## episodic-archiver
+
 **When user says:** "archive conversation", "save episode", "store transcript", "remember this conversation"
 
 ```yaml
@@ -302,46 +287,14 @@ triggers:
   - remember this conversation
 ```
 
-**Usage:** Archives full conversation transcripts with embeddings into `agent_conversations` collection for future recall.
+## **Usage:** Archives full conversation transcripts with embeddings into `agent_conversations` collection for future recall.
 
 ---
-
-## qra
-**When user says:** "extract QRA", "extract Q&A", "extract knowledge", "create Q&A pairs", "knowledge extraction", "generate questions from"
-
-```yaml
-# .agents/skills/qra/SKILL.md
-triggers:
-  - extract QRA
-  - extract Q&A
-  - extract knowledge
-  - create Q&A pairs
-  - knowledge extraction
-  - generate questions from
-```
-
----
-
-## doc-to-qra
-**When user says:** "convert to QRA", "document to QRA", "pdf to QRA", "remember this document", "learn from this pdf"
-
-```yaml
-# .agents/skills/doc-to-qra/SKILL.md
-triggers:
-  - convert to QRA
-  - document to QRA
-  - pdf to QRA
-  - create QRA from
-  - extract QRA from document
-  - turn this into Q&A
-  - make Q&A from this
-  - remember this document
-  - learn from this pdf
-```
 
 ---
 
 ## skills-sync
+
 **When user says:** "sync skills", "publish skills", "push skills", "pull skills", "update shared skills", "fanout skills"
 
 ```yaml
@@ -358,6 +311,7 @@ triggers:
 ---
 
 ## agent-inbox
+
 **When user says:** "check your inbox", "check messages", "any pending messages", "agent sent you", "send message to", "inter-agent message"
 
 ```yaml
@@ -388,6 +342,7 @@ triggers:
 ---
 
 ## treesitter
+
 **When user says:** "parse this code", "extract functions", "list symbols", "what functions are in", "code structure"
 
 ```yaml
@@ -404,6 +359,7 @@ triggers:
 ---
 
 ## tts-horus
+
 **When user says:** "horus tts", "build horus voice", "voice coloring", "tts pipeline"
 
 ```yaml
@@ -418,6 +374,7 @@ triggers:
 ---
 
 ## tts-train
+
 **When user says:** "tts train", "train voice model", "voice cloning", "build tts dataset", "xtts training"
 
 ```yaml
@@ -444,6 +401,7 @@ triggers:
 4. Update this index file
 
 **Example:**
+
 ```yaml
 ---
 name: my-skill

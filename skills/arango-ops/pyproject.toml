@@ -1,9 +1,0 @@
-[project]
-name = "arango-ops-skill"
-version = "0.1.0"
-description = "ArangoDB operations, backups, and maintenance"
-requires-python = ">=3.10"
-dependencies = [
-    "python-arango>=7.0.0",
-    "requests>=2.28.0",
-]

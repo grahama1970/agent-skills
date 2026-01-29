@@ -50,7 +50,7 @@ def get_provider_model(provider: str, model: Optional[str] = None) -> str:
 
 def build_provider_cmd(
     provider: str,
-    prompt: str,
+    prompt: Optional[str],
     model: str,
     add_dirs: Optional[list[str]] = None,
     continue_session: bool = False,
@@ -91,15 +91,20 @@ def build_provider_cmd(
 
 
 def _build_github_cmd(
-    cli: str, model: str, prompt: str,
+    cli: str, model: str, prompt: Optional[str],
     add_dirs: Optional[list[str]], continue_session: bool
 ) -> list[str]:
     """Build GitHub Copilot CLI command."""
     cmd = [cli]
     if continue_session:
         cmd.append("--continue")
+    
+    # Only use -p if provided (legacy/single-call support)
+    # Most calls now use stdin for robustness
+    if prompt:
+        cmd.extend(["-p", prompt])
+        
     cmd.extend([
-        "-p", prompt,
         "--allow-all-tools",
         "--model", model,
         "--no-color",
@@ -180,15 +185,12 @@ async def run_provider_async(
     step_name: str = "Processing",
     reasoning: Optional[str] = None,
 ) -> tuple[str, int]:
-    """Run provider CLI with real-time output streaming and rich progress.
+    """Run provider CLI with real-time output streaming.
 
     No timeout - process runs until completion.
     Output is streamed to:
       - log_file (if provided) for persistent logs
       - stderr (if stream_to_stderr=True) for live progress monitoring
-
-    Use continue_session=True to maintain context from previous call.
-    Use reasoning=high/medium/low for supported providers (openai).
 
     Returns: (output, return_code)
     """
@@ -199,18 +201,23 @@ async def run_provider_async(
     if not cli_path:
         return f"{PROVIDERS[provider]['cli']} CLI not found for provider {provider}", 1
 
-    cmd = build_provider_cmd(provider, prompt, model, add_dirs, continue_session, reasoning)
+    # Pass prompt via stdin for ALL providers (handles long prompts and formatting)
+    use_stdin = True
+    
+    # If using stdin, we don't pass the prompt as an argument
+    cmd_prompt = None if use_stdin else prompt
+    cmd = build_provider_cmd(provider, cmd_prompt, model, add_dirs, continue_session, reasoning)
+    
+    # Use absolute CLI path if found
+    if cli_path:
+        cmd[0] = str(cli_path)
+        
     env = {**os.environ, **PROVIDERS[provider].get("env", {}), "PYTHONUNBUFFERED": "1"}
 
-    # Pass prompt via stdin for providers that support it (handles long prompts with special chars)
-    # anthropic: claude reads from stdin
-    # openai: codex reads from stdin
-    # google: gemini reads from stdin (piped input)
-    use_stdin = provider in ("anthropic", "openai", "google")
     try:
         proc = await asyncio.create_subprocess_exec(
             *cmd,
-            stdin=asyncio.subprocess.PIPE if use_stdin else None,
+            stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
             env=env,
@@ -226,7 +233,6 @@ async def run_provider_async(
             proc.stdin.close()
             await proc.stdin.wait_closed()
         except (BrokenPipeError, ConnectionResetError) as e:
-            # Provider closed stdin early - continue to read output for error message
             console.print(f"[yellow]Warning: stdin closed early: {e}[/yellow]")
 
     output_lines = []
@@ -234,48 +240,40 @@ async def run_provider_async(
     line_count = 0
     char_count = 0
 
-    # Use rich progress for visual feedback
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[bold blue]{task.description}"),
-        TextColumn("[dim]{task.fields[status]}"),
-        TimeElapsedColumn(),
-        console=console,
-        transient=True,
-    ) as progress:
-        task = progress.add_task(step_name, status="starting...", total=None)
+    try:
+        sys.stderr.write(f"[review-code] {step_name} started...\n")
+        async for line in proc.stdout:
+            text = line.decode(errors="replace")
+            output_lines.append(text)
+            line_count += 1
+            char_count += len(text)
 
-        try:
-            async for line in proc.stdout:
-                text = line.decode(errors="replace")  # Handle non-UTF8 gracefully
-                output_lines.append(text)
-                line_count += 1
-                char_count += len(text)
-
-                # Update progress status
-                status = f"{line_count} lines, {char_count:,} chars"
-                # Show last meaningful line (skip empty/whitespace)
-                stripped = text.strip()
-                if stripped and len(stripped) < 60:
-                    status = f"{status} | {stripped[:50]}"
-                progress.update(task, status=status)
-
-                # Stream to log file
-                if log_handle:
-                    log_handle.write(text)
-                    log_handle.flush()
-                # Optionally stream raw output to stderr
-                if stream_to_stderr and os.environ.get("CODE_REVIEW_RAW_OUTPUT"):
-                    sys.stderr.write(text)
-                    sys.stderr.flush()
-        except asyncio.CancelledError:
-            progress.update(task, status="[red]CANCELLED[/red]")
-            proc.kill()
-            await proc.wait()
-            raise
-        finally:
+            # Stream to log file
             if log_handle:
-                log_handle.close()
+                log_handle.write(text)
+                log_handle.flush()
+            
+            # Optionally stream raw output to stderr
+            if stream_to_stderr and os.environ.get("CODE_REVIEW_RAW_OUTPUT"):
+                sys.stderr.write(text)
+                sys.stderr.flush()
+            elif line_count % 50 == 0:
+                sys.stderr.write(f"\r[review-code] {step_name}: {line_count} lines...")
+                sys.stderr.flush()
+
+    except asyncio.CancelledError:
+        proc.kill()
+        await proc.wait()
+        raise
+    finally:
+        if log_handle:
+            log_handle.close()
 
     await proc.wait()
+    if line_count > 0:
+        sys.stderr.write(f"\r[review-code] {step_name}: Complete ({line_count} lines)\n")
+    else:
+        sys.stderr.write(f"[review-code] {step_name}: Finished with no output (RC: {proc.returncode})\n")
+        
     return ''.join(output_lines), proc.returncode
+

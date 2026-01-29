@@ -70,7 +70,7 @@ SKILLS_DIR = Path(__file__).parent.parent
 AGENT_SKILLS = Path(__file__).parent.parent.parent.parent / ".agent" / "skills"
 MEMORY_SKILL = AGENT_SKILLS / "memory"
 ANVIL_SKILL = SKILLS_DIR / "anvil"
-DOCKER_OPS_SKILL = SKILLS_DIR / "docker-ops"
+DOCKER_OPS_SKILL = SKILLS_DIR / "ops-docker"
 TASK_MONITOR_SKILL = SKILLS_DIR / "task-monitor"
 TAXONOMY_SKILL = SKILLS_DIR / "taxonomy"
 TREESITTER_SKILL = SKILLS_DIR / "treesitter"
@@ -880,15 +880,15 @@ def docker_cleanup(
     execute: bool = typer.Option(False, help="Actually prune (default is dry-run)")
 ):
     """
-    Clean up Docker resources using docker-ops skill.
+    Clean up Docker resources using ops-docker skill.
 
     Prunes unused containers, images, and volumes.
     """
-    console.print("[bold blue]Docker cleanup via docker-ops skill[/bold blue]")
+    console.print("[bold blue]Docker cleanup via ops-docker skill[/bold blue]")
 
     docker_ops_script = DOCKER_OPS_SKILL / "run.sh"
     if not docker_ops_script.exists():
-        console.print("[red]docker-ops skill not found.[/red]")
+        console.print("[red]ops-docker skill not found.[/red]")
         return
 
     cmd = [str(docker_ops_script), "prune", "--until", until]

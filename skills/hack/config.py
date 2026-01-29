@@ -19,7 +19,7 @@ AGENT_SKILLS = SKILL_DIR.parent.parent.parent / ".agent" / "skills"
 # Sibling skill paths
 MEMORY_SKILL = AGENT_SKILLS / "memory"
 ANVIL_SKILL = SKILLS_DIR / "anvil"
-DOCKER_OPS_SKILL = SKILLS_DIR / "docker-ops"
+DOCKER_OPS_SKILL = SKILLS_DIR / "ops-docker"
 TASK_MONITOR_SKILL = SKILLS_DIR / "task-monitor"
 TAXONOMY_SKILL = SKILLS_DIR / "taxonomy"
 TREESITTER_SKILL = SKILLS_DIR / "treesitter"

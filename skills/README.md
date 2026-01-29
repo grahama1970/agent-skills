@@ -134,22 +134,18 @@ Pi reads this body when the skill is activated and follows the instructions.
 
 ### Content Processing
 
-| Skill                   | Description                      | Key Triggers                           |
-| ----------------------- | -------------------------------- | -------------------------------------- |
-| **fetcher**             | Fetch URLs, PDFs, web content    | "fetch this URL", "download page"      |
-| **pdf-screenshot**      | Render PDF pages/regions to PNG  | "screenshot pdf", "verify pdf element" |
-| **youtube-transcripts** | Extract video transcripts        | "get transcript", "youtube transcript" |
-| **pdf-fixture**         | Generate test PDFs               | "create test PDF"                      |
-| **distill**             | Extract knowledge from documents | "distill this", "extract knowledge"    |
-| **tts-horus**           | Horus TTS dataset + training     | "horus tts", "voice coloring"          |
-| **tts-train**           | TTS dataset + training pipeline  | "tts train", "voice cloning"           |
+| Skill                   | Description                     | Key Triggers                           |
+| ----------------------- | ------------------------------- | -------------------------------------- |
+| **fetcher**             | Fetch URLs, PDFs, web content   | "fetch this URL", "download page"      |
+| **pdf-screenshot**      | Render PDF pages/regions to PNG | "screenshot pdf", "verify pdf element" |
+| **youtube-transcripts** | Extract video transcripts       | "get transcript", "youtube transcript" |
+| **tts-horus**           | Horus TTS dataset + training    | "horus tts", "voice coloring"          |
+| **tts-train**           | TTS dataset + training pipeline | "tts train", "voice cloning"           |
 
 ### Knowledge Management
 
 | Skill                 | Description                          | Key Triggers                           |
 | --------------------- | ------------------------------------ | -------------------------------------- |
-| **qra**               | Extract Q&A pairs from content       | "extract QRA", "create Q&A pairs"      |
-| **doc-to-qra**        | Convert documents to QRA format      | "document to QRA", "pdf to QRA"        |
 | **episodic-archiver** | Archive conversations to memory      | "archive conversation", "save episode" |
 | **edge-verifier**     | Verify knowledge graph relationships | "verify edges", "check edge quality"   |
 
@@ -164,10 +160,10 @@ Pi reads this body when the skill is activated and follows the instructions.
 
 | Skill          | Description                         | Key Triggers                            |
 | -------------- | ----------------------------------- | --------------------------------------- |
-| **runpod-ops** | Manage GPU instances                | "spin up GPU", "create RunPod"          |
-| **arango-ops** | Manage ArangoDB operations          | "backup arangodb", "restore snapshot"   |
-| **docker-ops** | Safe Docker cleanup & management    | "prune containers", "redeploy stack"    |
-| **llm-ops**    | Local LLM health & cache management | "clean model cache", "check llm health" |
+| **ops-runpod** | Manage GPU instances                | "spin up GPU", "create RunPod"          |
+| **ops-arango** | Manage ArangoDB operations          | "backup arangodb", "restore snapshot"   |
+| **ops-docker** | Safe Docker cleanup & management    | "prune containers", "redeploy stack"    |
+| **ops-llm**    | Local LLM health & cache management | "clean model cache", "check llm health" |
 | **surf**       | Browser automation                  | "open browser", "click on", "fill form" |
 
 ### Agent Management
@@ -368,15 +364,15 @@ client.learn(
 
 Use `MemoryScope` enum for consistent scope naming:
 
-| Scope | Use For |
-|-------|---------|
-| `OPERATIONAL` | General operations (default) |
-| `DOCUMENTS` | Extracted documents |
-| `CODE` | Code patterns, snippets |
-| `SOCIAL_INTEL` | Social media content |
-| `SECURITY` | Security findings |
-| `RESEARCH` | Research papers |
-| `HORUS_LORE` | Persona knowledge |
+| Scope          | Use For                      |
+| -------------- | ---------------------------- |
+| `OPERATIONAL`  | General operations (default) |
+| `DOCUMENTS`    | Extracted documents          |
+| `CODE`         | Code patterns, snippets      |
+| `SOCIAL_INTEL` | Social media content         |
+| `SECURITY`     | Security findings            |
+| `RESEARCH`     | Research papers              |
+| `HORUS_LORE`   | Persona knowledge            |
 
 ### Built-in Resilience
 

@@ -28,6 +28,16 @@ console = Console()
 SKILL_DIR = Path(__file__).parent
 PI_SKILLS_DIR = SKILL_DIR.parent  # .pi/skills/
 
+# Creative writing models (Chutes only)
+# Use /prompt-lab to evaluate which model produces best creative output
+CREATIVE_MODELS = {
+    "chimera": "deepseek/deepseek-tng-r1t2-chimera",  # DeepSeek creative/reasoning - default
+    "qwen": "Qwen/Qwen3-235B-A22B-Instruct",  # Qwen large reasoning
+    "deepseek-r1": "deepseek/deepseek-r1",  # DeepSeek R1 reasoning
+    "default": "deepseek/deepseek-tng-r1t2-chimera",
+}
+# Note: Use $CHUTES_MODEL_ID env var to override, or pass full model ID directly
+
 STORY_FORMATS = {
     "story": "Short Story (prose narrative)",
     "screenplay": "Screenplay (Fountain format)",
@@ -122,8 +132,9 @@ def capture_initial_thought(thought: str, format: str) -> dict:
 @click.command()
 @click.argument("topic")
 @click.option("--output", "-o", default="research", help="Output directory")
-def research(topic: str, output: str):
-    """Phase 2: Deep research from movies, books, memory, past sessions."""
+@click.option("--skip-external", is_flag=True, help="Skip external search (library only)")
+def research(topic: str, output: str, skip_external: bool):
+    """Phase 2: Deep research - library first, then external sources."""
     console.print(Panel(f"[bold blue]RESEARCH PHASE[/bold blue]\nTopic: {topic}"))
 
     output_path = Path(output)
@@ -133,47 +144,100 @@ def research(topic: str, output: str):
         "topic": topic,
         "timestamp": datetime.now().isoformat(),
         "sources": {},
+        "library": {},  # What Horus already has
+        "external": {},  # New resources found
     }
 
-    # 1. Memory recall - past stories and techniques
-    with console.status("[bold green]Recalling from memory (horus-stories scope)..."):
-        memory_result = run_skill(
+    # =========================================================================
+    # PART 1: CHECK HORUS'S LIBRARY (what he already has ingested)
+    # =========================================================================
+    console.print("\n[bold cyan]── CHECKING LIBRARY ──[/bold cyan]")
+
+    # 1a. horus_lore scope - audiobooks & YouTube transcripts already ingested
+    with console.status("[green]Recalling from horus_lore (audiobooks, YouTube)..."):
+        lore_result = run_skill(
+            "memory",
+            ["recall", "--q", topic, "--scope", "horus_lore", "--k", "5"],
+        )
+        if lore_result.get("returncode") == 0 and lore_result.get("stdout", "").strip():
+            results["library"]["horus_lore"] = lore_result.get("stdout", "")
+            console.print("  [green]✓ Found relevant lore (audiobooks/YouTube)[/green]")
+        else:
+            console.print("  [dim]No matching lore found[/dim]")
+
+    # 1b. horus-stories scope - past stories Horus wrote
+    with console.status("[green]Recalling past stories (horus-stories)..."):
+        stories_result = run_skill(
             "memory",
             ["recall", "--q", topic, "--scope", "horus-stories", "--k", "5"],
         )
-        if memory_result.get("returncode") == 0:
-            results["sources"]["memory_stories"] = memory_result.get("stdout", "")
-            console.print("[green]Found prior stories/techniques[/green]")
+        if stories_result.get("returncode") == 0 and stories_result.get("stdout", "").strip():
+            results["library"]["past_stories"] = stories_result.get("stdout", "")
+            console.print("  [green]✓ Found prior stories/techniques[/green]")
         else:
-            console.print("[dim]No prior stories found[/dim]")
+            console.print("  [dim]No prior stories found[/dim]")
 
-    # 2. Memory recall - general Horus knowledge
-    with console.status("[bold green]Recalling general knowledge..."):
-        memory_general = run_skill(
-            "memory",
-            ["recall", "--q", topic, "--scope", "horus-filmmaking", "--k", "3"],
+    # 1c. Episodic archive - past creative sessions
+    with console.status("[green]Checking episodic archive (past sessions)..."):
+        episodic_result = run_skill(
+            "episodic-archiver",
+            ["recall", "--q", topic, "--k", "3"],
         )
-        if memory_general.get("returncode") == 0:
-            results["sources"]["memory_general"] = memory_general.get("stdout", "")
-
-    # 3. Episodic archive - past creative sessions
-    with console.status("[bold green]Checking episodic archive..."):
-        # Note: episodic-archiver recall would go here
-        results["sources"]["episodic"] = "Episodic archive integration pending"
-
-    # 4. Movie analysis (if ingest-movie available)
-    with console.status("[bold green]Analyzing relevant films..."):
-        # Note: ingest-movie integration would go here
-        results["sources"]["movies"] = "Movie analysis integration pending"
-
-    # 5. Book search via ingest-book
-    with console.status("[bold green]Searching for relevant books..."):
-        readarr_result = run_skill("ingest-book", ["search", topic])
-        if readarr_result.get("returncode") == 0:
-            results["sources"]["books"] = readarr_result.get("stdout", "")
-            console.print("[green]Found book references[/green]")
+        if episodic_result.get("returncode") == 0 and episodic_result.get("stdout", "").strip():
+            results["library"]["episodic"] = episodic_result.get("stdout", "")
+            console.print("  [green]✓ Found relevant past sessions[/green]")
         else:
-            console.print("[dim]Readarr search unavailable[/dim]")
+            console.print("  [dim]No matching sessions found[/dim]")
+
+    # 1d. Check ingested movies (clips with emotion tags)
+    with console.status("[green]Checking movie library (ingested films)..."):
+        # Query memory for movie-related content with emotional cues
+        movie_recall = run_skill(
+            "memory",
+            ["recall", "--q", f"{topic} film movie scene emotion", "--scope", "horus_lore", "--k", "3"],
+        )
+        if movie_recall.get("returncode") == 0 and movie_recall.get("stdout", "").strip():
+            results["library"]["movies"] = movie_recall.get("stdout", "")
+            console.print("  [green]✓ Found relevant movie analysis[/green]")
+        else:
+            console.print("  [dim]No matching movies in library[/dim]")
+
+    # Summary of library findings
+    library_count = sum(1 for v in results["library"].values() if v)
+    console.print(f"\n[cyan]Library: {library_count} sources found[/cyan]")
+
+    if skip_external:
+        console.print("[dim]Skipping external search (--skip-external)[/dim]")
+    else:
+        # =========================================================================
+        # PART 2: SEARCH FOR NEW RESOURCES (external)
+        # =========================================================================
+        console.print("\n[bold cyan]── SEARCHING FOR NEW RESOURCES ──[/bold cyan]")
+
+        # 2a. Search for new movies via ingest-movie
+        with console.status("[green]Searching for new films (ingest-movie)..."):
+            movie_search = run_skill("ingest-movie", ["search", topic])
+            if movie_search.get("returncode") == 0 and movie_search.get("stdout", "").strip():
+                results["external"]["new_movies"] = movie_search.get("stdout", "")
+                console.print("  [green]✓ Found new movie recommendations[/green]")
+            else:
+                console.print("  [dim]No new movies found[/dim]")
+
+        # 2b. Search for new books via ingest-book
+        with console.status("[green]Searching for new books (ingest-book)..."):
+            book_search = run_skill("ingest-book", ["search", topic])
+            if book_search.get("returncode") == 0 and book_search.get("stdout", "").strip():
+                results["external"]["new_books"] = book_search.get("stdout", "")
+                console.print("  [green]✓ Found new book recommendations[/green]")
+            else:
+                console.print("  [dim]No new books found[/dim]")
+
+        # Summary of external findings
+        external_count = sum(1 for v in results["external"].values() if v)
+        console.print(f"\n[cyan]External: {external_count} new sources found[/cyan]")
+
+    # Merge into flat sources dict for backwards compatibility
+    results["sources"] = {**results["library"], **results["external"]}
 
     # Save research results
     research_file = output_path / "research.json"
@@ -391,9 +455,10 @@ def generate_self_critique_template(draft_content: str, iteration: int) -> str:
 @click.command()
 @click.option("--research", "-r", "research_file", required=True, help="Research JSON file")
 @click.option("--format", "-f", "story_format", default="story", help="Story format")
+@click.option("--model", "-m", default="chimera", help="LLM model (chimera, qwen, deepseek-r1)")
 @click.option("--output", "-o", default="drafts", help="Output directory")
-def draft(research_file: str, story_format: str, output: str):
-    """Write a draft based on research."""
+def draft(research_file: str, story_format: str, model: str, output: str):
+    """Write a draft based on research using LLM generation."""
     console.print(Panel("[bold blue]DRAFT PHASE[/bold blue]\nWriting from research"))
 
     research_path = Path(research_file)
@@ -407,35 +472,27 @@ def draft(research_file: str, story_format: str, output: str):
     output_path = Path(output)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    # Draft template based on format
-    draft_templates = {
-        "story": "# {title}\n\n{content}",
-        "screenplay": "FADE IN:\n\n{content}\n\nFADE OUT.",
-        "podcast": "# {title}\n\n[INTRO MUSIC]\n\n{content}\n\n[OUTRO MUSIC]",
-        "novella": "# {title}\n\n## Chapter 1\n\n{content}",
-        "flash": "# {title}\n\n{content}\n\n---\n*{word_count} words*",
-    }
+    # Build prompt from research
+    thought = research_data.get("topic", "unknown topic")
+    draft_prompt = build_draft_prompt(
+        thought=thought,
+        format=story_format,
+        research=research_data,
+        prior_drafts=[],
+        prior_critiques=[],
+        iteration=1
+    )
 
-    template = draft_templates.get(story_format, draft_templates["story"])
-
-    # Placeholder for actual LLM generation
-    draft_content = f"""
-Based on research about: {research_data.get('topic', 'unknown topic')}
-
-[Draft content would be generated here by the LLM based on:]
-- Research context: {len(research_data.get('sources', {}))} sources
-- Format: {STORY_FORMATS.get(story_format, story_format)}
-
-This is a placeholder - the actual draft generation integrates with
-the agent's creative capabilities.
-"""
+    # Generate via LLM
+    console.print(f"[dim]Generating draft with {model}...[/dim]")
+    draft_content = generate_draft_via_llm(draft_prompt, story_format, model)
 
     draft_file = output_path / f"draft_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
     with open(draft_file, "w") as f:
-        f.write(template.format(title="Untitled", content=draft_content, word_count="~500"))
+        f.write(draft_content)
 
     console.print(f"\n[bold green]Draft saved to {draft_file}[/bold green]")
-    console.print("[dim]Edit this file or continue with critique phase.[/dim]")
+    console.print(f"[dim]Word count: {len(draft_content.split())}[/dim]")
 
 
 # =============================================================================
@@ -637,9 +694,10 @@ def build_critique_markdown(critique_data: dict, story_name: str) -> str:
 @click.command()
 @click.argument("story_file")
 @click.argument("critique_file")
+@click.option("--model", "-m", default="chimera", help="LLM model (chimera, qwen, deepseek-r1)")
 @click.option("--output", "-o", default="drafts", help="Output directory")
-def refine(story_file: str, critique_file: str, output: str):
-    """Refine a story based on critique."""
+def refine(story_file: str, critique_file: str, model: str, output: str):
+    """Refine a story based on critique using LLM generation."""
     console.print(Panel("[bold blue]REFINE PHASE[/bold blue]\nApplying critique"))
 
     story_path = Path(story_file)
@@ -655,12 +713,61 @@ def refine(story_file: str, critique_file: str, output: str):
     output_path = Path(output)
     output_path.mkdir(parents=True, exist_ok=True)
 
-    # Placeholder - actual refinement would use LLM
-    refined_file = output_path / f"draft_{datetime.now().strftime('%Y%m%d_%H%M%S')}_refined.md"
+    # Read story and critique
+    with open(story_path) as f:
+        story_content = f.read()
+    with open(critique_path) as f:
+        critique_content = f.read()
 
-    console.print(f"[dim]Refining based on critique...[/dim]")
-    console.print(f"\n[bold green]Refined draft would be saved to {refined_file}[/bold green]")
-    console.print("[dim]This phase integrates with agent's creative refinement capabilities.[/dim]")
+    # Extract priority fixes from critique (try JSON first, then markdown)
+    priority_fixes = []
+    try:
+        critique_data = json.loads(critique_content)
+        priority_fixes = critique_data.get("overall", {}).get("priority_fixes", [])
+    except json.JSONDecodeError:
+        # Parse markdown for priority fixes
+        if "Priority Fixes" in critique_content:
+            in_fixes = False
+            for line in critique_content.split("\n"):
+                if "Priority Fixes" in line:
+                    in_fixes = True
+                elif in_fixes and line.strip().startswith(("1.", "2.", "3.", "-", "*")):
+                    fix = line.strip().lstrip("0123456789.-* ")
+                    if fix:
+                        priority_fixes.append(fix)
+                elif in_fixes and line.startswith("#"):
+                    break
+
+    # Build refinement prompt
+    fixes_text = "\n".join(f"- {fix}" for fix in priority_fixes[:5]) if priority_fixes else "No specific fixes identified - improve overall quality"
+
+    refine_prompt = f"""# Story Refinement Task
+
+## Critique Feedback
+{fixes_text}
+
+## Original Story
+{story_content}
+
+## Instructions
+Refine the story based on the critique feedback above. Maintain Horus's voice:
+- Tactical/military metaphors
+- Undertones of resentment
+- Contempt for simple things through sophisticated observations
+- Authoritative but with subtle melancholy
+
+Output the complete refined story.
+"""
+
+    console.print(f"[dim]Refining with {model}...[/dim]")
+    refined_content = generate_draft_via_llm(refine_prompt, "story", model)
+
+    refined_file = output_path / f"draft_{datetime.now().strftime('%Y%m%d_%H%M%S')}_refined.md"
+    with open(refined_file, "w") as f:
+        f.write(refined_content)
+
+    console.print(f"\n[bold green]Refined draft saved to {refined_file}[/bold green]")
+    console.print(f"[dim]Word count: {len(refined_content.split())} (was {len(story_content.split())})[/dim]")
 
 
 # =============================================================================
@@ -668,21 +775,10 @@ def refine(story_file: str, critique_file: str, output: str):
 # =============================================================================
 
 
-# Creative writing models (Chutes only)
-# Use /prompt-lab to evaluate which model produces best creative output
-CREATIVE_MODELS = {
-    "chimera": "deepseek/deepseek-tng-r1t2-chimera",  # DeepSeek creative/reasoning - default
-    "qwen": "Qwen/Qwen3-235B-A22B-Instruct",  # Qwen large reasoning
-    "deepseek-r1": "deepseek/deepseek-r1",  # DeepSeek R1 reasoning
-    "default": "deepseek/deepseek-tng-r1t2-chimera",
-}
-# Note: Use $CHUTES_MODEL_ID env var to override, or pass full model ID directly
-
-
 @click.command()
 @click.argument("thought")
 @click.option("--format", "-f", "story_format", default="story", type=click.Choice(list(STORY_FORMATS.keys())))
-@click.option("--model", "-m", default="chimera", help="LLM model for drafts (chimera, sonnet, gpt4)")
+@click.option("--model", "-m", default="chimera", help="LLM model for drafts (chimera, qwen, deepseek-r1)")
 @click.option("--external-critique", is_flag=True, help="Use external LLM for critique via review-story")
 @click.option("--iterations", "-n", default=2, help="Number of draft iterations")
 @click.option("--output", "-o", default="./story_output", help="Output directory")
@@ -711,24 +807,78 @@ def create(thought: str, story_format: str, model: str, external_critique: bool,
 
     # Phase 2: Research
     console.print("\n[bold]Phase 2: Research[/bold]")
-    console.print("[dim]Gathering context from movies, books, memory, past sessions...[/dim]")
 
     research_results = {
         "topic": thought,
         "timestamp": datetime.now().isoformat(),
-        "sources": {},
+        "library": {},   # What Horus already has
+        "external": {},  # New resources found
+        "sources": {},   # Combined (for backwards compat)
     }
 
-    # Memory recall
-    with console.status("[green]Checking memory (horus-stories)..."):
-        mem_result = run_skill("memory", ["recall", "--q", thought, "--scope", "horus-stories"])
-        if mem_result.get("returncode") == 0:
-            research_results["sources"]["memory"] = mem_result.get("stdout", "")
-            console.print("  [green]Found prior stories[/green]")
+    # =========================================================================
+    # PART 2a: CHECK HORUS'S LIBRARY (what he already has ingested)
+    # =========================================================================
+    console.print("\n[cyan]── Checking Library ──[/cyan]")
 
+    # horus_lore scope - audiobooks & YouTube transcripts
+    with console.status("[green]Recalling from horus_lore (audiobooks, YouTube)..."):
+        lore_result = run_skill("memory", ["recall", "--q", thought, "--scope", "horus_lore", "--k", "5"])
+        if lore_result.get("returncode") == 0 and lore_result.get("stdout", "").strip():
+            research_results["library"]["horus_lore"] = lore_result.get("stdout", "")
+            console.print("  [green]✓ Found relevant lore[/green]")
+
+    # horus-stories scope - past stories
+    with console.status("[green]Recalling past stories (horus-stories)..."):
+        stories_result = run_skill("memory", ["recall", "--q", thought, "--scope", "horus-stories", "--k", "5"])
+        if stories_result.get("returncode") == 0 and stories_result.get("stdout", "").strip():
+            research_results["library"]["past_stories"] = stories_result.get("stdout", "")
+            console.print("  [green]✓ Found prior stories[/green]")
+
+    # Episodic archive - past creative sessions
+    with console.status("[green]Checking episodic archive..."):
+        episodic_result = run_skill("episodic-archiver", ["recall", "--q", thought, "--k", "3"])
+        if episodic_result.get("returncode") == 0 and episodic_result.get("stdout", "").strip():
+            research_results["library"]["episodic"] = episodic_result.get("stdout", "")
+            console.print("  [green]✓ Found past sessions[/green]")
+
+    # Movie library (ingested films with emotion tags)
+    with console.status("[green]Checking movie library..."):
+        movie_recall = run_skill("memory", ["recall", "--q", f"{thought} film movie scene emotion", "--scope", "horus_lore", "--k", "3"])
+        if movie_recall.get("returncode") == 0 and movie_recall.get("stdout", "").strip():
+            research_results["library"]["movies"] = movie_recall.get("stdout", "")
+            console.print("  [green]✓ Found movie analysis[/green]")
+
+    library_count = sum(1 for v in research_results["library"].values() if v)
+    console.print(f"[cyan]Library: {library_count} sources found[/cyan]")
+
+    # =========================================================================
+    # PART 2b: SEARCH FOR NEW RESOURCES (external)
+    # =========================================================================
+    console.print("\n[cyan]── Searching for New Resources ──[/cyan]")
+
+    # Search for new movies
+    with console.status("[green]Searching for new films (ingest-movie)..."):
+        movie_search = run_skill("ingest-movie", ["search", thought])
+        if movie_search.get("returncode") == 0 and movie_search.get("stdout", "").strip():
+            research_results["external"]["new_movies"] = movie_search.get("stdout", "")
+            console.print("  [green]✓ Found new movie recommendations[/green]")
+
+    # Search for new books
+    with console.status("[green]Searching for new books (ingest-book)..."):
+        book_search = run_skill("ingest-book", ["search", thought])
+        if book_search.get("returncode") == 0 and book_search.get("stdout", "").strip():
+            research_results["external"]["new_books"] = book_search.get("stdout", "")
+            console.print("  [green]✓ Found new book recommendations[/green]")
+
+    external_count = sum(1 for v in research_results["external"].values() if v)
+    console.print(f"[cyan]External: {external_count} new sources found[/cyan]")
+
+    # Merge into flat sources dict
+    research_results["sources"] = {**research_results["library"], **research_results["external"]}
     project.research = research_results
 
-    # Phase 3: Dogpile
+    # Phase 3: Dogpile (external web research)
     console.print("\n[bold]Phase 3: Dogpile Context[/bold]")
     dogpile_results = dogpile_context(thought, research_results)
     project.research["dogpile"] = dogpile_results
@@ -835,10 +985,11 @@ def create(thought: str, story_format: str, model: str, external_critique: bool,
                 all_fixes.extend(critique.get("priority_fixes", []))
 
             if all_fixes:
+                fixes_list = '\n'.join(f'- {fix}' for fix in all_fixes[:5])
                 final_prompt = f"""Refine this story draft based on the following feedback:
 
 ## Priority Fixes
-{chr(10).join(f'- {fix}' for fix in all_fixes[:5])}
+{fixes_list}
 
 ## Current Draft
 {last_draft_content}
@@ -851,11 +1002,13 @@ Apply the fixes above while maintaining Horus's voice. Output the complete refin
                 project.final = last_draft_content
         else:
             project.final = "[Final draft generation failed - no prior drafts found]"
+    else:
+        project.final = "[No drafts were generated]"
 
     # Save final draft
     final_file = output_path / "final.md"
     with open(final_file, "w") as f:
-        f.write(project.final)
+        f.write(project.final or "[Final draft unavailable]")
     console.print(f"[green]Final draft saved: {final_file}[/green]")
 
     # Phase 7: Aggregate Taxonomy

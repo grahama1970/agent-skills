@@ -259,7 +259,7 @@ After battle completion, generates:
 | treesitter | Blue | Code structure analysis |
 | taxonomy | Both | Classify findings |
 | task-monitor | Orchestrator | Progress tracking |
-| docker-ops | Both | Container management |
+| ops-docker | Both | Container management |
 
 ## Example Battle
 

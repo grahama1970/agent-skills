@@ -1,0 +1,74 @@
+[
+  {
+    "id": "camera_s1",
+    "scene_number": 1,
+    "category": "camera",
+    "suggestion": "For Scene 1 in the APARTMENT, I'm thinking we should use a slow push-in as the tension builds. It would really draw the audience into the character's anxiety.",
+    "rationale": "The cautious movement and sparse dialogue suggest building dread - a push-in amplifies this without words.",
+    "technique": "slow push-in to MCU",
+    "response_options": [
+      "sounds good",
+      "prefer static",
+      "let's try handheld",
+      "suggest something else"
+    ],
+    "alternatives": [
+      "locked-off static for uncomfortable stillness",
+      "handheld for visceral unease"
+    ],
+    "reference": null
+  },
+  {
+    "id": "lighting_s1",
+    "scene_number": 1,
+    "category": "lighting",
+    "suggestion": "For the night interior in Scene 1, I'm picturing practical lighting - maybe just a desk lamp or window light. It keeps things grounded and intimate. Would that work for the mood you're going for?",
+    "rationale": "Night interiors with practical sources feel more realistic and create natural pools of light and shadow.",
+    "technique": "practical lighting with motivated sources",
+    "response_options": [
+      "yes, keep it naturalistic",
+      "go darker/moodier",
+      "brighter for safety"
+    ],
+    "alternatives": [
+      "low-key noir lighting",
+      "single motivated source"
+    ],
+    "reference": null
+  },
+  {
+    "id": "ref_s1",
+    "scene_number": 1,
+    "category": "framing",
+    "suggestion": "I see you've referenced 'Blade Runner 2049 apartment scene' for Scene 1. I could search my memory for specific techniques from that film - the color grading, the shot composition, the pacing. Should I pull those details?\n\n\ud83d\udcda From my memory of Blade Runner 2049 apartment scene:\n  \u2022 **Blade Runner Noir Lighting**\nFrom: Blade Runner (1982)\nHeavy use of venetian blind shadows, neon color, and atmospheric haze\nCamera: Slow tracking shots, low angles for oppressive atmosphere\nLighting: Low-key with strong motivated sources, blue/orange color palette\nEffect: Melancholic, mysterious, existential\n  \u2022 **Blade Runner Interview Framing**\nFrom: Blade Runner (1982)\nExtreme close-ups of eyes during interrogation scenes\nCamera: ECU on eyes, locked-off, very shallow depth of field\nLighting: Strong key light from below, rim light separation\nEffect: Invasive, dehumanizing, clinical\n",
+    "rationale": "The reference to Blade Runner 2049 apartment scene gives us a visual language to draw from.",
+    "technique": "reference: Blade Runner 2049 apartment scene",
+    "response_options": [
+      "yes, search memory",
+      "just inspiration, don't copy",
+      "skip references"
+    ],
+    "alternatives": [],
+    "reference": "Blade Runner 2049 apartment scene",
+    "memory_context": [
+      {
+        "name": "Blade Runner Noir Lighting",
+        "description": "Heavy use of venetian blind shadows, neon color, and atmospheric haze",
+        "source_film": "Blade Runner (1982)",
+        "scene_context": null,
+        "camera_setup": "Slow tracking shots, low angles for oppressive atmosphere",
+        "lighting": "Low-key with strong motivated sources, blue/orange color palette",
+        "emotional_effect": "Melancholic, mysterious, existential"
+      },
+      {
+        "name": "Blade Runner Interview Framing",
+        "description": "Extreme close-ups of eyes during interrogation scenes",
+        "source_film": "Blade Runner (1982)",
+        "scene_context": null,
+        "camera_setup": "ECU on eyes, locked-off, very shallow depth of field",
+        "lighting": "Strong key light from below, rim light separation",
+        "emotional_effect": "Invasive, dehumanizing, clinical"
+      }
+    ]
+  }
+]

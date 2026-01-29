@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-01-29T11:02:45.458822",
+  "last_updated": "2026-01-29T12:55:07.552750",
   "sessions": [
     {
       "session_id": "dogpile_1769687742",
@@ -424,6 +424,112 @@
       "rate_limits_hit": {
         "codex": 3
       }
+    },
+    {
+      "session_id": "dogpile_1769709204",
+      "query": "storyboard animatic generation tools AI cinematography camera framing taxonomy shot composition pre-production workflow open source",
+      "started_at": "2026-01-29T12:53:24.546254",
+      "ended_at": "2026-01-29T12:55:07.552518",
+      "status": "completed",
+      "providers_succeeded": [
+        "arxiv",
+        "perplexity",
+        "brave",
+        "youtube",
+        "codex"
+      ],
+      "providers_failed": [
+        "discord",
+        "github",
+        "codex",
+        "synthesis"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-29T12:53:27.834215",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 13
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T12:53:59.859320",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T12:53:59.919555",
+          "provider": "github",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "GitHub skill error: Error: Traceback (most recent call last):\n  File \"",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T12:54:01.813747",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 14
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T12:54:35.630425",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 15
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-29T12:55:07.545620",
+          "provider": "synthesis",
+          "error_type": "api_error",
+          "severity": "error",
+          "message": "Codex Synthesis failed.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {
+        "codex": 3
+      }
     }
   ],
   "rate_limits": {
@@ -431,9 +537,9 @@
       "provider": "codex",
       "remaining": 0,
       "limit": -1,
-      "reset_at": 1769702593.864561,
-      "last_hit": "2026-01-29T11:02:13.864565",
-      "total_hits": 12,
+      "reset_at": 1769709335.6304064,
+      "last_hit": "2026-01-29T12:54:35.630409",
+      "total_hits": 15,
       "backoff_multiplier": 1.5
     }
   }

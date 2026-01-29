@@ -2,24 +2,24 @@
 ---
 
 ## Answers to Clarifying Questions
-1) Optional: add retries/backoff for transient CLI failures, and standardize timeouts on all subprocess calls; current handling is acceptable. 
-2) Optional: introduce TypedDicts/Protocols for JSON structures (check/models outputs) and narrow dict types (e.g., check_git_status result), but not required to function. 
-3) Yes—the try relative, fall back to absolute import pattern is appropriate here; long-term, distributing as a package would remove the need.
+- Unknown question IDs should be reported in JSON as validation errors with a clear message; do not silently ignore.
+- Memory/research dependencies should degrade gracefully with informative messages, never hard fail the session.
+- Yes, define a handoff contract for fidelity=generated: required fields (shot_plan, prompts, style refs), CLI flags, and JSON schema expected by /create-image.
 
 ## Critique
-- The proposed diff only changes a comment in code_review.py and does not materially verify or improve modularization, imports, or error handling. 
-- Module structure looks good: single responsibility per file, no circular imports observed, all modules under 500 lines; dual-import pattern is consistently applied. 
-- Minor inconsistencies: some subprocess timeouts hardcoded (e.g., utils.gather_repo_context uses timeout=5) rather than get_timeout; utils.check_git_status swallows exceptions silently; a few unused imports (e.g., DEFAULT_MODEL in review_full) could be removed.
+- The proposed diff is empty and applies no changes; it neither verifies fixes nor addresses any issues from the brutal review.
+- No validations were added to screenplay parsing or binary/empty input handling, and no explicit NotImplementedError or error responses for fidelity=generated or store_learnings were implemented.
+- There’s no confirmation of session persistence, JSON schema, or integration with /memory and /dogpile; imports and logic weren’t checked or adjusted.
 
 ## Feedback for Revision
-- Replace hardcoded subprocess timeouts with get_timeout() across modules (e.g., utils.gather_repo_context and any other subprocess.run calls lacking timeouts). 
-- Log or warn on broad exception catches (e.g., utils.check_git_status) instead of silent pass, or at least gate logs behind a DEBUG env. 
-- Remove unused imports/variables (e.g., DEFAULT_MODEL in review_full) and keep the existing comment tweak; no functional changes beyond these small consistency fixes are needed.
+- Provide a real unified diff with concrete changes in orchestrator.py, collaboration.py, creative_suggestions.py, memory_bridge.py, and research_bridge.py implementing the collaboration loop, error handling, and graceful dependency fallbacks.
+- Add explicit error responses for fidelity=generated and for any unimplemented learning/storage features, and validate screenplay inputs (empty, malformed, binary) with clear messages.
+- Ensure session JSON structure is stable and agent-friendly, and wire up memory/research calls with retries/fallbacks; include tests or demo commands that show “needs_input” → “continue” flow.
 
 
 Total usage est:       1 Premium request
-Total duration (API):  17.7s
-Total duration (wall): 19.5s
+Total duration (API):  5.6s
+Total duration (wall): 7.2s
 Total code changes:    0 lines added, 0 lines removed
 Usage by model:
-    gpt-5                39.6k input, 2.0k output, 0 cache read, 0 cache write (Est. 1 Premium request)
+    gpt-5                31.4k input, 310 output, 0 cache read, 0 cache write (Est. 1 Premium request)
