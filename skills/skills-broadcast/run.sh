@@ -57,10 +57,13 @@ UPSTREAM_DIR="${UPSTREAM_REPO}/skills"
 
 usage() {
     cat <<USAGE
-Usage: ${0##*/} [push|pull|info] [--dry-run] [--fanout] [--fanout-targets PATHS]
-  push      Local -> Upstream (default)
-  pull      Upstream -> Local
-  info      Show current paths and fanout configuration (alias: find)
+Usage: ${0##*/} [push|pull|info|register|unregister|targets] [--dry-run] [--fanout] [--fanout-targets PATHS]
+  push          Local -> Upstream (default)
+  pull          Upstream -> Local
+  info          Show current paths and fanout configuration (alias: find)
+  register      Add project absolute path to ~/.agent_skills_targets
+  unregister    Remove project path from ~/.agent_skills_targets
+  targets       List all registered projects
 Options:
   --dry-run           Preview rsync operations
   --fanout            When pushing, also copy skills into fanout projects
@@ -88,7 +91,7 @@ resolve_fanout_targets() {
 
 if [[ $# -gt 0 ]]; then
     case "$1" in
-        push|pull|info|find)
+        push|pull|info|find|register|unregister|targets)
             MODE="$1"
             shift
             ;;
@@ -127,14 +130,69 @@ while [[ $# -gt 0 ]]; do
             usage
             exit 0
             ;;
-        *)
+        -*)
             echo "Unknown option: $1" >&2
             usage
             exit 1
             ;;
+        *)
+            # Stop parsing options if we hit a positional argument
+            break
+            ;;
     esac
     shift
 done
+
+if [[ "$MODE" == "register" ]]; then
+    target="${1:-.}"
+    abs_target=$(cd "$target" && pwd || echo "")
+    if [[ -z "$abs_target" || ! -d "$abs_target" ]]; then
+        echo "Error: Directory '$target' does not exist." >&2
+        exit 1
+    fi
+    REGISTRY_FILE="$HOME/.agent_skills_targets"
+    touch "$REGISTRY_FILE"
+    if grep -Fxq "$abs_target" "$REGISTRY_FILE"; then
+        echo "Project already registered: $abs_target"
+    else
+        echo "$abs_target" >> "$REGISTRY_FILE"
+        # Sort and unique to keep it clean
+        sort -u "$REGISTRY_FILE" -o "$REGISTRY_FILE"
+        echo "Registered: $abs_target"
+    fi
+    exit 0
+fi
+
+if [[ "$MODE" == "unregister" ]]; then
+    target="${1:-.}"
+    abs_target=$(cd "$target" && pwd || echo "")
+    if [[ -z "$abs_target" ]]; then
+        # If it doesn't exist locally, we can't cd/pwd, but we might still want to unregister a raw string
+        abs_target=$(realpath -m "$target")
+    fi
+    REGISTRY_FILE="$HOME/.agent_skills_targets"
+    if [[ ! -f "$REGISTRY_FILE" ]]; then
+        echo "No registered projects found."
+        exit 0
+    fi
+    if grep -Fxq "$abs_target" "$REGISTRY_FILE"; then
+        grep -Fvx "$abs_target" "$REGISTRY_FILE" > "${REGISTRY_FILE}.tmp" && mv "${REGISTRY_FILE}.tmp" "$REGISTRY_FILE"
+        echo "Unregistered: $abs_target"
+    else
+        echo "Project not found in registry: $abs_target"
+    fi
+    exit 0
+fi
+
+if [[ "$MODE" == "targets" ]]; then
+    REGISTRY_FILE="$HOME/.agent_skills_targets"
+    if [[ -f "$REGISTRY_FILE" ]]; then
+        cat "$REGISTRY_FILE"
+    else
+        echo "No registered projects."
+    fi
+    exit 0
+fi
 
 if [[ "$MODE" == "info" || "$MODE" == "find" ]]; then
     echo "[skills-sync] Local skills dir : $LOCAL_DIR"

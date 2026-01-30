@@ -72,13 +72,16 @@ skills-broadcast pull
 
 ## Commands
 
-| Command                             | Description                          |
-| ----------------------------------- | ------------------------------------ |
-| `skills-broadcast push`             | Push local → canonical → all targets |
-| `skills-broadcast push --from PATH` | Push from specific location          |
-| `skills-broadcast pull`             | Pull canonical → current project     |
-| `skills-broadcast status`           | Show all targets and sync state      |
-| `skills-broadcast targets`          | List registered broadcast targets    |
+| Command                              | Description                          |
+| ------------------------------------ | ------------------------------------ |
+| `skills-broadcast push`              | Push local → canonical → all targets |
+| `skills-broadcast push --from PATH`  | Push from specific location          |
+| `skills-broadcast pull`              | Pull canonical → current project     |
+| `skills-broadcast status`            | Show all targets and sync state      |
+| `skills-broadcast register [PATH]`   | Register a project for fanout        |
+| `skills-broadcast unregister [PATH]` | Remove a project from fanout         |
+| `skills-broadcast targets`           | List all registered projects         |
+| `skills-broadcast info`              | Show current paths and config        |
 
 ## Supported IDEs
 
