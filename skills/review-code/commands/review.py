@@ -31,6 +31,7 @@ def review(
     reasoning: Optional[str] = typer.Option(None, "--reasoning", "-R", help="Reasoning effort: low, medium, high (openai only)"),
     raw: bool = typer.Option(False, "--raw", help="Output raw response without JSON"),
     extract_diff_flag: bool = typer.Option(False, "--extract-diff", help="Extract only the diff block"),
+    twin_id: Optional[str] = typer.Option(None, "--twin-id", help="Digital Twin container ID for isolated review"),
 ) -> None:
     """Submit a code review request to an AI provider.
 
@@ -40,6 +41,8 @@ def review(
     Use --workspace to copy uncommitted local files to a temp directory that
     the provider can access (auto-cleaned up after).
 
+    Use --twin-id to review code inside a Digital Twin container (from battle skill).
+
     Use --reasoning for OpenAI models that support reasoning effort (o3, gpt-5.2-codex).
 
     Providers: github (copilot), anthropic (claude), openai (codex), google (gemini)
@@ -47,10 +50,39 @@ def review(
     Examples:
         code_review.py review --file request.md
         code_review.py review --file request.md --workspace ./src
+        code_review.py review --file request.md --twin-id battle_abc123
         code_review.py review --file request.md --provider github --model claude-sonnet-4.5  # FREE
         code_review.py review --file request.md --provider anthropic --model opus-4.5       # COSTS MONEY
         code_review.py review --file request.md --provider openai --model gpt-5.2-codex --reasoning high  # COSTS MONEY
     """
+    import subprocess
+    
+    # If twin_id provided, delegate to container
+    if twin_id:
+        if not subprocess.run(["docker", "inspect", twin_id], capture_output=True).returncode == 0:
+            typer.echo(f"Error: Digital Twin container not found: {twin_id}", err=True)
+            raise typer.Exit(code=1)
+        
+        # Copy review request into container
+        subprocess.run(["docker", "cp", str(file), f"{twin_id}:/workspace/review_request.md"], check=True)
+        
+        # Run review inside container
+        result = subprocess.run([
+            "docker", "exec", twin_id,
+            "python3", "/workspace/.pi/skills/review-code/code_review.py",
+            "review", "--file", "/workspace/review_request.md",
+            "--provider", provider,
+            *(["-m", model] if model else []),
+            *(["-R", reasoning] if reasoning else []),
+            *(["--raw"] if raw else []),
+            *(["--extract-diff"] if extract_diff_flag else []),
+        ], capture_output=True, text=True)
+        
+        print(result.stdout)
+        if result.returncode != 0:
+            typer.echo(result.stderr, err=True)
+        raise typer.Exit(code=result.returncode)
+    
     t0 = time.time()
 
     if provider not in PROVIDERS:

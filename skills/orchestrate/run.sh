@@ -27,6 +27,38 @@ detect_backend() {
     fi
 }
 
+run_in_twin() {
+    local task_file="$1"
+    local backend="$2"
+    
+    # Copy task file into container
+    docker cp "$task_file" "$TWIN_ID:/workspace/tasks.md"
+    
+    # Copy orchestrate scripts into container
+    docker cp "$SCRIPT_DIR/quality-gate.sh" "$TWIN_ID:/workspace/"
+    docker cp "$SCRIPT_DIR/preflight.sh" "$TWIN_ID:/workspace/"
+    
+    case "$backend" in
+        pi)
+            docker exec -it "$TWIN_ID" bash -c "cd /workspace && pi --tool orchestrate --task-file tasks.md"
+            ;;
+        claude)
+            echo "Warning: Claude execution in Digital Twin is experimental"
+            docker exec -it "$TWIN_ID" bash -c "cd /workspace && claude --task-file tasks.md"
+            ;;
+        *)
+            echo "Error: No agent backend available in container" >&2
+            exit 1
+            ;;
+    esac
+    
+    # Copy results back
+    docker cp "$TWIN_ID:/workspace/tasks.md" "$task_file"
+    
+    echo ""
+    echo "Task execution complete in Digital Twin: $TWIN_ID"
+}
+
 # State directory for session persistence
 STATE_DIR="${ORCHESTRATE_STATE_DIR:-.orchestrate}"
 ORCHESTRATE_DIR="${ORCHESTRATE_HOME:-$HOME/.pi/skills/orchestrate}"
@@ -84,11 +116,11 @@ EOF
 }
 
 cmd_run() {
-    local task_file="$1"
+    local task_file="$TASK_FILE"
 
     if [[ -z "$task_file" ]]; then
         echo "Error: task file required" >&2
-        echo "Usage: orchestrate run <task-file>" >&2
+        echo "Usage: orchestrate run <task-file> [--twin-id <container-id>]" >&2
         exit 1
     fi
 
@@ -97,18 +129,42 @@ cmd_run() {
         exit 1
     fi
 
+    # If running in Digital Twin, verify container exists
+    if [[ -n "$TWIN_ID" ]]; then
+        if ! docker inspect "$TWIN_ID" &>/dev/null; then
+            echo "Error: Digital Twin container not found: $TWIN_ID" >&2
+            echo "Hint: Start a twin with: .pi/skills/battle/run.sh battle --mode docker" >&2
+            exit 1
+        fi
+        echo "Running in Digital Twin: $TWIN_ID"
+    fi
+
     # Run preflight check for all backends
     if [[ -x "$SCRIPT_DIR/preflight.sh" ]]; then
         echo "Running preflight check..."
-        if ! "$SCRIPT_DIR/preflight.sh" "$task_file"; then
-            echo "Error: Preflight check failed. Resolve issues before running." >&2
-            exit 1
+        if [[ -n "$TWIN_ID" ]]; then
+            # Run preflight inside container
+            docker exec "$TWIN_ID" bash -c "cd /workspace && $(cat "$SCRIPT_DIR/preflight.sh")" "$task_file" || {
+                echo "Error: Preflight check failed inside Digital Twin." >&2
+                exit 1
+            }
+        else
+            if ! "$SCRIPT_DIR/preflight.sh" "$task_file"; then
+                echo "Error: Preflight check failed. Resolve issues before running." >&2
+                exit 1
+            fi
         fi
         echo ""
     fi
 
     local backend
     backend=$(detect_backend)
+
+    # If running in twin, wrap execution
+    if [[ -n "$TWIN_ID" ]]; then
+        run_in_twin "$task_file" "$backend"
+        return
+    fi
 
     case "$backend" in
         pi)

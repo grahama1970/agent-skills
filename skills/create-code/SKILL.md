@@ -75,14 +75,30 @@ Horus performs a final dogpile search with the working code and full context to 
 
 ## Usage
 
+### When to use sub-skills
+ - /dogpile: use when the idea or tasks are unclear, novel, or library-dependent; automatically triggered in Stage 2.
+ - /battle: use when performance, resilience, or adversarial testing is needed (e.g., scale, concurrency, fuzz); triggered in Stage 3.
+ - /hack: use when security-sensitive surfaces exist (auth, crypto, network, plugins, serialization, execution); auto-suggested by heuristics and runnable via --security-audit.
+ - /anvil: use for heavy builds or reproducible environment provisioning; pair with /battle when complex dependencies are needed.
+
+### Retry policies
+By default, skills have these retry counts with exponential backoff:
+- dogpile: 3 retries (research may be flaky)
+- battle: 2 retries (isolation can fail transiently)
+- review-code: 2 retries (provider may timeout)
+- hack: 1 retry (security audits are generally deterministic)
+- orchestrate: 1 retry (task execution should be idempotent)
+
+Override via environment or direct run_skill calls.
+
 ```bash
 # Start a new coding project from an idea
 ./run.sh start "Implement a high-performance vector store with ArangoDB"
 
-# Resume an existing creation in a directory
-./run.sh resume /path/to/project
+# Resume an existing creation (picks up from last saved stage)
+./run.sh resume --project-dir /path/to/project
 
-# Run specific stages
+# Run specific stages (supports project-local logging in .create-code.log)
 ./run.sh research "idea"
 ./run.sh review --provider github --model gpt-5 --yes
 ./run.sh sandbox --mode docker --yes
@@ -93,11 +109,12 @@ Horus performs a final dogpile search with the working code and full context to 
 
 | Command     | Description                                         |
 | ----------- | --------------------------------------------------- |
-| `start`     | Launch full 6-stage workflow from an idea           |
+| `start`     | Launch full 6-stage workflow (saves state)          |
+| `resume`    | Restart workflow from the last successful stage     |
 | `research`  | Run Stage 2 Dogpile research                        |
 | `sandbox`   | Spin up Stage 3 isolated environment (Digital Twin) |
 | `battle`    | Run Stage 3 adversarial battle for hardening        |
-| `implement` | Run Stage 4 Task/Orchestrate pipeline               |
+| `implement` | Run Stage 4 Task/Orchestrate pipeline (uses /plan)  |
 | `review`    | Run Stage 5 Brutal Code Review                      |
 | `finalize`  | Run Stage 6 Final research and memory commit        |
 

@@ -1,8 +1,8 @@
 {
-  "completed": 0,
+  "completed": 2,
   "total": 16,
-  "description": "Dogpile: test",
-  "current_item": "initializing",
+  "description": "Dogpile: Simple hello world CLI implementation patterns Python",
+  "current_item": "stage1",
   "stats": {
     "providers_done": 0,
     "providers_total": 9,
@@ -23,8 +23,8 @@
   "provider_times": {},
   "errors": [],
   "rate_limits": {},
-  "elapsed_seconds": 0.0,
-  "progress_pct": 0.0,
-  "last_updated": "2026-01-29 16:37:00",
+  "elapsed_seconds": 68.0,
+  "progress_pct": 12.5,
+  "last_updated": "2026-01-29 17:24:45",
   "status": "running"
 }

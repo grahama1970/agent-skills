@@ -4,12 +4,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
-
 if command -v uvx >/dev/null 2>&1; then
-  exec uvx --with typer --with rich python3 orchestrator.py "$@"
+  exec uvx --with typer --with rich python3 "$SCRIPT_DIR/orchestrator.py" "$@"
 elif command -v uv >/dev/null 2>&1; then
-  exec uv run --with typer --with rich python orchestrator.py "$@"
+  exec uv run --with typer --with rich python "$SCRIPT_DIR/orchestrator.py" "$@"
 else
-  exec python3 orchestrator.py "$@"
+  exec python3 "$SCRIPT_DIR/orchestrator.py" "$@"
 fi
