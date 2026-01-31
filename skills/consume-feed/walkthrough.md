@@ -26,7 +26,8 @@ The skill is located at `.pi/skills/consume-feed`.
 └── sanity/
     ├── mock_server.py      # Deterministic Test Server
     ├── test_arango_conn.py # DB & View Verification
-    └── test_retry_logic.py # Resilience Verification
+    ├── test_retry_logic.py # Resilience Verification
+    └── test_live_rss.py    # Live Network Verification
 ```
 
 ## 2. Capabilities Implemented
@@ -60,6 +61,17 @@ Testing ArangoDB Connection...
 ✅ Connected to 'memory'
 ✅ Collection 'feed_items' exists
 ✅ View 'feed_items_view' exists
+```
+
+### Live Feed Check
+
+`sanity/test_live_rss.py` performs a real network request (dry-run) to the GitHub Blog to verify end-to-end XML parsing and network stack integrity.
+
+```text
+Testing Live RSS Ingestion (GitHub Blog)...
+Fetching https://github.blog/feed/...
+Dry run: would upsert 3 items
+✅ Successfully parsed 3 items from live feed!
 ```
 
 ### Resilience Check
