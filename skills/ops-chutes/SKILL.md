@@ -55,3 +55,9 @@ Manage Chutes.ai resources and monitor subscription quota and account balance.
 | `CHUTES_API_TOKEN`   | API Token (standard)                      |
 | `CHUTES_API_KEY`     | API Key (alternative naming)              |
 | `CHUTES_MIN_BALANCE` | Minimum balance threshold (default: 0.05) |
+
+## Concurrency & Rate Limiting
+
+> [!WARNING]
+> **Concurrecy Limit**: Chutes.ai can only handle **5-6 concurrent connections** per token.
+> If this limit is exceeded, the API will return a 429 Rate Limit error and typically impose a **90-second pause** before resuming.
