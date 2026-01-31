@@ -27,7 +27,6 @@ def status():
 
         table = Table("ID", "Name", "Status", "Image")
         for c in chutes:
-            # Adjust fields based on actual API response structure
             c_id = c.get("id", "??")
             name = c.get("name", "??") 
             status = c.get("status", "unknown")
@@ -43,73 +42,67 @@ def status():
 
 @app.command()
 def usage(chute_id: Optional[str] = typer.Option(None, help="Check specific chute quota (if owned)")):
-    """Check Account Balance and optional Chute Quota."""
+    """Check Daily Call Usage and Account Balance."""
     try:
         client = ChutesClient()
         reset_time = client.get_day_reset_time()
         
+        console.print(f"[bold]Daily Limit:[/bold] {DAILY_LIMIT} calls/day")
         console.print(f"[bold]Reset Time (UTC):[/bold] {reset_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
-        # Primary Metric: Account Balance
+        # 1. Daily Invocations (Pro Plan Limit)
+        try:
+             count = client.get_invocation_count()
+             remaining = max(DAILY_LIMIT - count, 0)
+             color = "green" if remaining > 500 else "red"
+             console.print(f"[bold]Daily Usage:[/bold] {count}/{DAILY_LIMIT} calls")
+             console.print(f"[bold]Remaining:[/bold] [{color}]{remaining}[/{color}] calls")
+        except Exception as e:
+             console.print(f"[red]Failed to count invocations:[/red] {e}")
+
+        # 2. Account Balance (Backstop)
         user_info = client.get_user_info()
         if "error" in user_info:
              console.print(f"[red]Balance Check Failed:[/red] {user_info['error']}")
         else:
              balance = user_info.get("balance", "unknown")
-             currency = "Credits" # or USD, typically credits
-             color = "green" if isinstance(balance, (int, float)) and balance > 1.0 else "yellow"
-             console.print(f"[bold]Account Balance:[/bold] [{color}]{balance} {currency}[/{color}]")
-
-        # Secondary Metric: Specific Chute Quota
-        if chute_id:
-            data = client.get_quota_usage(chute_id)
-            if "error" in data:
-                console.print(f"[yellow]Quota Check Failed for {chute_id}:[/yellow] {data['error']}")
-            else:
-                quota = data.get("quota") or data.get("subscription", {}).get("quota")
-                used = data.get("used") or data.get("subscription", {}).get("used")
-                console.print(f"[bold]Chute:[/bold] {chute_id}")
-                console.print(f"[bold]Quota:[/bold] {quota}")
-                console.print(f"[bold]Used:[/bold] {used}")
+             console.print(f"[bold]Account Balance:[/bold] {balance} Credits")
 
     except Exception as e:
         console.print(f"[red]Error checking usage: {e}[/red]")
         sys.exit(1)
 
 @app.command("budget-check")
-def budget_check(chute_id: Optional[str] = typer.Option(None, help="Check specific chute quota")):
+def budget_check():
     """
     Exit code 0 if budget OK.
-    Exit code 1 if budget exhausted.
-    Checks Account Balance > MIN_BALANCE (default $0.05).
+    Exit code 1 if Daily Limit exhausted OR Balance too low.
     """
     try:
         client = ChutesClient()
         
-        # 1. Check Balance (Global Gate)
+        # 1. Check Daily Limit
+        try:
+            count = client.get_invocation_count()
+            if count >= DAILY_LIMIT:
+                console.print(f"[red]Daily Limit Exhausted ({count}/{DAILY_LIMIT})[/red]")
+                sys.exit(1)
+            else:
+                console.print(f"[green]Daily Limit OK ({count}/{DAILY_LIMIT})[/green]")
+        except Exception as e:
+            console.print(f"[yellow]Warning: Could not verify daily count ({e})[/yellow]")
+
+        # 2. Check Balance (Backstop)
         user_info = client.get_user_info()
         if "error" not in user_info:
             balance = user_info.get("balance", 0)
             if isinstance(balance, (int, float)):
                 if balance < MIN_BALANCE:
-                    console.print(f"[red]Budget Exhausted: Balance {balance} < {MIN_BALANCE}[/red]")
+                    console.print(f"[red]Balance Exhausted ({balance} < {MIN_BALANCE})[/red]")
                     sys.exit(1)
                 else:
-                    console.print(f"[green]Balance OK: {balance}[/green]")
+                    console.print(f"[green]Balance OK ({balance})[/green]")
         
-        # 2. Check Specific Quota (Optional)
-        if chute_id:
-            data = client.get_quota_usage(chute_id)
-            if "error" not in data:
-                quota = data.get("quota") or data.get("subscription", {}).get("quota")
-                used = data.get("used") or data.get("subscription", {}).get("used")
-                if quota is not None and used is not None and used >= quota:
-                    console.print(f"[red]Chute Quota Exhausted ({used}/{quota})[/red]")
-                    sys.exit(1)
-                elif quota is not None:
-                     console.print(f"[green]Chute Quota OK ({used}/{quota})[/green]")
-
-        # If we got here, we're good
         sys.exit(0)
 
     except Exception as e:

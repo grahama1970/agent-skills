@@ -1,5 +1,7 @@
 import os
 import httpx
+import csv
+from io import StringIO
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -16,10 +18,55 @@ class ChutesClient:
         
         self.headers = {
             "Authorization": f"Bearer {self.token}",
-            "Accept": "application/json",
+            "Accept": "application/json", # Default accept
             "User-Agent": "OpsChutes/1.0"
         }
         self.timeout = 30.0
+
+    def get_invocation_count(self) -> int:
+        """
+        Count invocations since the last daily reset (7PM EST).
+        Uses: GET /invocations/exports/recent (CSV)
+        """
+        reset_time = self.get_day_reset_time() - timedelta(days=1)
+        
+        # Request CSV explicitly
+        headers = self.headers.copy()
+        headers["Accept"] = "text/csv"
+        
+        with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=headers, timeout=self.timeout) as client:
+            try:
+                resp = client.get("/invocations/exports/recent")
+                resp.raise_for_status()
+                
+                # Parse CSV
+                csv_text = resp.text
+                reader = csv.DictReader(StringIO(csv_text))
+                
+                count = 0
+                for row in reader:
+                    # 'started_at' format: 2026-01-31T15:54:55.123456Z (roughly)
+                    started_at_str = row.get("started_at")
+                    if not started_at_str:
+                        continue
+                    try:
+                        # Handle potential fractional seconds or lack thereof
+                        # ISO 8601 parsing
+                        started_at = datetime.fromisoformat(started_at_str.replace("Z", "+00:00"))
+                        
+                        if started_at >= reset_time:
+                            count += 1
+                    except ValueError:
+                        continue # Skip malformed dates
+                        
+                return count
+            except httpx.HTTPStatusError as e:
+                # If auth fails or 404, we can't count
+                if e.response.status_code in (401, 403):
+                    raise RuntimeError(f"Auth failed fetching invocations: {e}")
+                raise e
+            except Exception as e:
+                 raise RuntimeError(f"Failed to parse invocations: {e}")
 
     def get_user_info(self) -> Dict[str, Any]:
         """
@@ -38,18 +85,6 @@ class ChutesClient:
             except Exception as e:
                 return {"error": str(e)}
 
-    def get_chute_status(self, chute_id_or_name: str) -> Dict[str, Any]:
-        """Get status of a specific chute via Management API."""
-        with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
-            try:
-                resp = client.get(f"/chutes/{chute_id_or_name}")
-                resp.raise_for_status()
-                return resp.json()
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code in (401, 403):
-                    return {"status": "unknown", "error": "Auth failed (Management API)", "detail": str(e)}
-                raise e
-
     def list_chutes(self) -> List[Dict[str, Any]]:
         """List all accessible chutes via Management API."""
         with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
@@ -59,35 +94,11 @@ class ChutesClient:
                 return resp.json()
             except httpx.HTTPStatusError as e:
                 if e.response.status_code in (401, 403):
-                    return [] # Return empty list if auth fails, don't crash
-                return [] # Fail safe
+                    return [] # Return empty list if auth fails
+                return [] 
     
-    def get_quota_usage(self, chute_id: str) -> Dict[str, Any]:
-        """
-        Get quota usage for a specific chute (if owned).
-        """
-        if not chute_id:
-            raise ValueError("chute_id is required for quota usage")
-        
-        with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
-            try:
-                resp = client.get(f"/users/me/quota_usage/{chute_id}")
-                resp.raise_for_status()
-                return resp.json()
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 404:
-                    return {"error": "Chute not found or not owned (404)"}
-                if e.response.status_code in (401, 403):
-                    return {"error": "Auth failed for quota endpoint"}
-                return {"error": str(e)}
-            except Exception as e:
-                return {"error": str(e)}
-
     def check_sanity(self, model: str = "Qwen/Qwen2.5-72B-Instruct") -> bool:
-        """
-        Run a real inference check.
-        Management API might be 401, but Inference might allow it.
-        """
+        """Run a real inference check."""
         try:
             payload = {
                 "model": model,
@@ -96,7 +107,6 @@ class ChutesClient:
                 "max_tokens": 5,
                 "temperature": 0.1
             }
-            # Use separate client for inference URL
             with httpx.Client(base_url=INFERENCE_API_BASE, headers=self.headers, timeout=self.timeout) as client:
                 resp = client.post("/v1/chat/completions", json=payload)
                 return resp.status_code == 200
@@ -104,16 +114,16 @@ class ChutesClient:
             return False
 
     def get_day_reset_time(self) -> datetime:
-        """Get the next 7PM ET reset time (UTC-aware)."""
+        """Get the NEXT 7PM ET reset time (UTC-aware)."""
         eastern = ZoneInfo("America/New_York")
         now_est = datetime.now(tz=eastern)
 
-        reset_today = now_est.replace(hour=19, minute=0, second=0, microsecond=0)
+        reset_target = now_est.replace(hour=19, minute=0, second=0, microsecond=0)
 
-        if now_est >= reset_today:
-            reset_today = reset_today + timedelta(days=1)
+        if now_est >= reset_target:
+            reset_target = reset_target + timedelta(days=1)
 
-        return reset_today.astimezone(timezone.utc)
+        return reset_target.astimezone(timezone.utc)
 
     def close(self):
         return
