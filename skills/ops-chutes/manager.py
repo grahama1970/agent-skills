@@ -42,7 +42,7 @@ def status():
 
 @app.command()
 def usage(chute_id: Optional[str] = typer.Option(None, help="Check specific chute quota (if owned)")):
-    """Check Global Subscription Quota and Account Balance."""
+    """Check Global Subscription Quota and Remaining Balance."""
     try:
         client = ChutesClient()
         reset_time = client.get_day_reset_time()
@@ -60,23 +60,24 @@ def usage(chute_id: Optional[str] = typer.Option(None, help="Check specific chut
         else:
              quota = data.get("quota", DAILY_LIMIT)
              used = data.get("used", 0)
-             remaining = max(quota - used, 0)
+             remaining_quota = max(quota - used, 0)
              
-             color = "green" if remaining > (quota * 0.1) else "red"
+             color_q = "green" if remaining_quota > (quota * 0.1) else "red"
              
              console.print(f"[bold]Daily Quota Usage[/bold]")
              console.print(f"  Used: {used:.2f} / {quota}")
-             console.print(f"  Remaining: [{color}]{remaining:.2f}[/{color}]")
+             console.print(f"  Remaining: [{color_q}]{remaining_quota:.2f}[/]")
              console.print(f"  Resets in: {hours}h {minutes}m")
 
-        # 2. Account Balance (Backstop)
+        # 2. Account Balance
         user_info = client.get_user_info()
         if "error" not in user_info:
              balance = user_info.get("balance", "unknown")
              if isinstance(balance, (int, float)):
-                 console.print(f"[bold]Account Balance:[/bold] ${balance:.2f}")
+                 color_b = "green" if balance > MIN_BALANCE else "red"
+                 console.print(f"[bold]Remaining Balance:[/bold] [{color_b}]${balance:.2f}[/]")
              else:
-                 console.print(f"[bold]Account Balance:[/bold] {balance}")
+                 console.print(f"[bold]Remaining Balance:[/bold] {balance}")
 
     except Exception as e:
         console.print(f"[red]Error checking usage: {e}[/red]")
