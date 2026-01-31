@@ -21,48 +21,76 @@ class ChutesClient:
         }
         self.timeout = 30.0
 
-    def get_global_quota(self) -> Dict[str, Any]:
+    def get_quota(self, chute_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Get the global subscription quota usage for the authenticated user/token.
-        Endpoint: GET /users/me/quota_usage/me
+        Get quota usage for a specific chute or global usage if chute_id is None.
+        Endpoint: GET /users/me/quota_usage/{chute_id|me}
         """
+        target = chute_id if chute_id else "me"
         with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
             try:
-                # The 'me' pseudo-ID returns the global subscription quota across all public models
-                resp = client.get("/users/me/quota_usage/me")
+                resp = client.get(f"/users/me/quota_usage/{target}")
                 resp.raise_for_status()
-                return resp.json() 
+                data = resp.json()
+                
+                # Strict Validation
+                if "used" not in data or "quota" not in data:
+                    raise RuntimeError(f"API response missing 'used' or 'quota' fields for {target}: {data}")
+                
+                return data
             except httpx.HTTPStatusError as e:
-                if e.response.status_code in (401, 403):
-                    return {"error": "Auth failed (Management API)"}
-                raise e
+                msg = f"Quota check failed for {target}: {e.response.status_code} {e.response.text}"
+                raise RuntimeError(msg)
             except Exception as e:
-                return {"error": str(e)}
+                raise RuntimeError(f"Error fetching quota for {target}: {e}")
 
     def get_user_info(self) -> Dict[str, Any]:
-        """Get current user info, including balance."""
+        """
+        Get current user info, including balance.
+        Strictly validates the presence of 'balance'.
+        """
         with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
             try:
                 resp = client.get("/users/me")
                 resp.raise_for_status()
-                return resp.json()
+                data = resp.json()
+                
+                if "balance" not in data:
+                    raise RuntimeError(f"API response missing 'balance' field: {data}")
+                
+                return data
             except httpx.HTTPStatusError as e:
-                if e.response.status_code in (401, 403):
-                    return {"error": "Auth failed (Management API)"}
-                raise e
+                raise RuntimeError(f"User info failed: {e.response.status_code} {e.response.text}")
             except Exception as e:
-                return {"error": str(e)}
+                raise RuntimeError(f"Error fetching user info: {e}")
 
     def list_chutes(self) -> List[Dict[str, Any]]:
+        """
+        List all accessible chutes.
+        No longer silently swallows auth errors.
+        """
         with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
             try:
                 resp = client.get("/chutes")
                 resp.raise_for_status()
                 return resp.json()
             except httpx.HTTPStatusError as e:
-                if e.response.status_code in (401, 403):
-                    return [] 
-                return [] 
+                raise RuntimeError(f"Failed to list chutes: {e.response.status_code} {e.response.text}")
+            except Exception as e:
+                raise RuntimeError(f"Error listing chutes: {e}")
+
+    def list_models(self) -> List[Dict[str, Any]]:
+        """
+        List all available models via the Inference API.
+        """
+        with httpx.Client(base_url=INFERENCE_API_BASE, headers=self.headers, timeout=self.timeout) as client:
+            try:
+                resp = client.get("/v1/models")
+                resp.raise_for_status()
+                data = resp.json()
+                return data.get("data", [])
+            except Exception as e:
+                raise RuntimeError(f"Failed to list models: {e}")
     
     def check_sanity(self, model: str = "Qwen/Qwen2.5-72B-Instruct") -> bool:
         """Run a real inference check."""
