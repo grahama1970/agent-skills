@@ -142,6 +142,9 @@ def parse_qra_items_response(content: str) -> QRAItems:
     
     try:
         data = json.loads(json_str.strip())
+        # Handle case where LLM returns list directly instead of {"items": [...]}
+        if isinstance(data, list):
+            return QRAItems(items=data)
         return QRAItems(**data)
     except json.JSONDecodeError:
         return QRAItems(items=[])
