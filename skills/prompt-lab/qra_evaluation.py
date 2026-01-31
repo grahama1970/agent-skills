@@ -69,6 +69,34 @@ class QRAGroundedTestCase:
     citations_must_be_verbatim: bool
     notes: str = ""
 
+class AmbiguityGate:
+    """Input Guard: Detects ambiguous questions that fail taxonomy mapping."""
+    
+    @staticmethod
+    def check(question: str, context_keywords: List[str]) -> Dict[str, Any]:
+        """Check content ambiguity using keyword density and length."""
+        # 1. Length Check (Too short = likely Vague)
+        if len(question.split()) < 5:
+            return {"ok": False, "reason": "Too short (ambiguous)"}
+            
+        # 2. Context Keyword Check
+        # The question MUST reference specific entities from the context
+        found_keywords = [k for k in context_keywords if k.lower() in question.lower()]
+        if not found_keywords:
+            return {"ok": False, "reason": f"Missing context keywords: {context_keywords[:3]}..."}
+            
+        return {"ok": True, "reason": "Pass"}
+
+def check_entity_anchoring(question: str, entities: List[str]) -> Dict[str, Any]:
+    """Check if question explicitly names at least one entity."""
+    found = [e for e in entities if e.lower() in question.lower()]
+    missing = [e for e in entities if e not in found]
+    return {
+        "anchored": len(found) > 0,
+        "found_entities": found,
+        "missing_entities": missing
+    }
+
 
 @dataclass
 class QRAGroundedResult:
@@ -85,7 +113,10 @@ class QRAGroundedResult:
     persona_distribution: Dict[str, float]
     confidence_distribution: Dict[str, float]
     question_type_coverage: int
-
+    # SPARTA Metrics
+    ambiguity_pass_rate: float = 1.0
+    entity_anchoring_rate: float = 1.0
+    missing_entities_common: List[str] = None
 
 @dataclass
 class QRAEvalSummary:
@@ -130,6 +161,17 @@ class QRAEvalSummary:
         if not self.results:
             return 0.0
         return sum(r.latency_ms for r in self.results) / len(self.results)
+
+    @property
+    def avg_ambiguity_pass_rate(self) -> float:
+        if not self.results: return 0.0
+        return sum(r.ambiguity_pass_rate for r in self.results) / len(self.results)
+
+    @property
+    def avg_entity_anchoring_rate(self) -> float:
+        if not self.results: return 0.0
+        return sum(r.entity_anchoring_rate for r in self.results) / len(self.results)
+
 
 
 def load_qra_ground_truth(skill_dir: Optional[Path] = None) -> List[QRATestCase]:

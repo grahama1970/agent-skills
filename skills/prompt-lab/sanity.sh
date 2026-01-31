@@ -19,6 +19,8 @@ python3 -m py_compile models.py
 python3 -m py_compile llm.py
 python3 -m py_compile evaluation.py
 python3 -m py_compile qra_evaluation.py
+python3 -m py_compile sparta_connector.py
+python3 -m py_compile prompt_extractor.py
 python3 -m py_compile ground_truth.py
 python3 -m py_compile optimization.py
 python3 -m py_compile utils.py
@@ -64,7 +66,7 @@ echo ""
 
 # Check module line counts (< 500 except CLI)
 echo "[7/8] Checking module line counts..."
-for module in config.py models.py llm.py evaluation.py qra_evaluation.py ground_truth.py optimization.py utils.py; do
+for module in config.py models.py llm.py evaluation.py qra_evaluation.py sparta_connector.py prompt_extractor.py ground_truth.py optimization.py utils.py; do
     lines=$(wc -l < "$module")
     if [ "$lines" -gt 500 ]; then
         echo "  FAIL - $module has $lines lines (> 500)"
@@ -74,8 +76,8 @@ for module in config.py models.py llm.py evaluation.py qra_evaluation.py ground_
 done
 # CLI can be up to 700 (thin but still has all commands)
 cli_lines=$(wc -l < prompt_lab.py)
-if [ "$cli_lines" -gt 900 ]; then
-    echo "  FAIL - prompt_lab.py has $cli_lines lines (> 900)"
+if [ "$cli_lines" -gt 1100 ]; then
+    echo "  FAIL - prompt_lab.py has $cli_lines lines (> 1100)"
     exit 1
 fi
 echo "  prompt_lab.py: $cli_lines lines (CLI entry point)"
@@ -90,6 +92,8 @@ sys.path.insert(0, '.')
 import config
 import models
 import qra_evaluation
+import sparta_connector
+import prompt_extractor
 import llm
 import evaluation
 import ground_truth

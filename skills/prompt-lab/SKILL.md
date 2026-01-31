@@ -12,6 +12,8 @@ triggers:
   - test prompt
   - compare models
   - compare models
+  - extract prompts
+  - test sparta qra
   - prompt evaluation
   - prompt-validator
   - qra evaluation
@@ -112,6 +114,31 @@ cd /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab
 # | deepseek | 0.90  | 3           | 2.3s  |
 # | gpt-4o   | 0.93  | 1           | 1.1s  |
 ```
+
+### extract-prompts - Extract Prompts from Python
+
+```bash
+./run.sh extract-prompts --file /path/to/12_qra.py --output prompts/
+```
+
+### test-sparta - End-to-End SPARTA QRA Test
+
+```bash
+./run.sh test-sparta --db-path /path/to/sparta.duckdb --cases 100
+```
+
+## Advanced Usage
+
+### test-sparta Options
+
+- `--phase <0|1>`: 0=Relationships (Technique->Control), 1=Simple Control QRA
+- `--threshold <float>`: Citation grounding threshold (default: 0.85)
+
+### Validation Features
+
+- **Ambiguity Gate**: Checks for sufficient length and context keyword usage.
+- **Entity Anchoring**: Verifies questions explicitly name the subject entities.
+- **Citation Grounding**: Verifies answers are derived verbatim from source text.
 
 ### history - View History
 

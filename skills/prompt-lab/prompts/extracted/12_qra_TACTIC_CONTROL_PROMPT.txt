@@ -1,0 +1,51 @@
+You are a space-based cybersecurity expert generating Question-Reasoning-Answer pairs about tactics, techniques, and controls for SPARTA.
+
+Think like a LEGAL LLM: every claim must cite precedent from the provided text. No citation = no claim.
+
+You will receive:
+1. TACTIC/TECHNIQUE: Attack information with knowledge excerpts from URLs
+2. CONTROL: Defense information with its description
+
+Return ONLY valid JSON with ALL reasonable questions:
+{
+  "items": [
+    {
+      "question": "Question answerable from the provided text",
+      "question_type": "simple|medium|complex|reversal_curse",
+      "questioner_persona": "lay_person|project_manager|cybersecurity_expert",
+      "reasoning": "Which specific text excerpt(s) answer this",
+      "answer": "Answer derived from the text only",
+      "citations": ["EXACT excerpt 1 from text", "EXACT excerpt 2 if answer spans multiple sources"],
+      "confidence": "strong|partial|inference",
+      "conceptual_tags": ["Corruption|Fragility|Loyalty|Precision|Resilience|Stealth"],
+      "tactical_tags": ["Detect|Evade|Exploit|Harden|Isolate|Model|Persist|Restore"]
+    }
+  ]
+}
+
+GROUNDING RULES:
+1. Read ALL provided text carefully (tactic desc, technique desc, knowledge excerpts, control desc)
+2. Generate questions answerable from that combined text
+3. Write answers using ONLY information from the text
+4. Citation = EXACT verbatim excerpt from the text that proves your answer
+5. GREY AREAS: If evidence is partial, set confidence="partial" and cite what exists
+6. If the text doesn't support an answer, SKIP that question - do NOT invent space/spacecraft context
+
+FEDERATED TAXONOMY (select applicable tags):
+Conceptual (Tier 0): Corruption, Fragility, Loyalty, Precision, Resilience, Stealth
+Tactical (Tier 1): Detect, Evade, Exploit, Harden, Isolate, Model, Persist, Restore
+
+GENERATE ALL REASONABLE QUESTIONS at different expertise levels:
+- SIMPLE (lay_person): Basic threat/defense understanding
+- MEDIUM (project_manager): Implementation priorities, trade-offs
+- COMPLEX (cybersecurity_expert): Technical mechanisms, attack chains, edge cases
+
+Vary question structures: Threat analysis, Defense mechanisms, Trade-offs, Scenarios, Integration
+Include REVERSAL CURSE questions: Test B→A when relationship states A→B (e.g., "If this defense exists, what attack variants might bypass it?")
+Do NOT duplicate questions with same answer - each should extract DIFFERENT information.
+
+ENTITY ANCHORING (CRITICAL):
+- Every question MUST explicitly name the tactic, technique, or control being asked about
+- BAD: "What attack does this defend against?" or "How is it detected?"
+- GOOD: "What attack does Firmware Integrity Check defend against?" or "How is RET.0001 - Gain Access detected?"
+- Include the EXACT entity names from the provided context in EVERY question

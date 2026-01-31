@@ -71,7 +71,11 @@ from qra_evaluation import (
     QRAEvalSummary,
     load_qra_ground_truth,
     load_qra_grounded_truth,
+    AmbiguityGate,
+    check_entity_anchoring,
 )
+from sparta_connector import SpartaConnector, SpartaTestCase
+from prompt_extractor import PromptExtractor
 from citation_validator import (
     validate_citations,
     check_duplicate_answers,
@@ -812,6 +816,196 @@ def seed_memory():
 
     stored = seed_known_observations(model_mem)
     console.print(f"[green]Seeded {stored} known observations into model memory[/green]")
+
+
+@app.command("extract-prompts")
+def extract_prompts(
+    file: Path = typer.Option(..., "--file", "-f", help="Python file to extract from"),
+    output: Path = typer.Option(Path("prompts"), "--output", "-o", help="Output directory"),
+):
+    """Extract prompts from Python file (variables ending in _PROMPT)."""
+    ensure_dirs()
+    console.print(f"[bold]Extracting prompts from {file}[/bold]")
+    
+    try:
+        extractor = PromptExtractor()
+        prompts = extractor.extract_from_file(file)
+        extractor.save_prompts(prompts, output, prefix=f"{file.stem}_")
+        
+        console.print(f"[green]Extracted {len(prompts)} prompts to {output}[/green]")
+        for name in prompts:
+            console.print(f"  - {name}")
+            
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command("test-sparta")
+def test_sparta(
+    prompt_file: Path = typer.Option(None, "--prompt-file", "-f", help="Python file with prompts"),
+    run_id: str = typer.Option("run-recovery-verify", "--run-id", "-r", help="SPARTA Run ID"),
+    cases: int = typer.Option(100, "--cases", "-n", help="Number of test cases"),
+    phase: int = typer.Option(0, "--phase", help="SPARTA phase (0=Rel, 1=Control)"),
+    db_path: Path = typer.Option(
+        Path("/home/graham/workspace/experiments/sparta/data/runs/run-recovery-verify/sparta.duckdb"),
+        "--db-path", help="Path to SPARTA DuckDB"
+    ),
+    threshold: float = typer.Option(0.85, "--threshold", "-t", help="Grounding threshold"),
+):
+    """End-to-End SPARTA QRA Test with real data."""
+    ensure_dirs()
+    console.print(f"[bold]SPARTA QRA Test[/bold]")
+    console.print(f"DB: {db_path}")
+    
+    # Load prompt (either from file or default)
+    system_prompt = ""
+    if prompt_file:
+        try:
+            prompts = PromptExtractor.extract_from_file(prompt_file)
+            # Heuristic to find the right prompt
+            # If phase 0, look for TACTIC_CONTROL_PROMPT, else SIMPLE_SYSTEM_PROMPT
+            target = "TACTIC_CONTROL_PROMPT" if phase == 0 else "SIMPLE_SYSTEM_PROMPT"
+            if target in prompts:
+                system_prompt = prompts[target]
+                console.print(f"[green]Loaded {target} from {prompt_file}[/green]")
+            else:
+                # Fallback to first available or error
+                system_prompt = list(prompts.values())[0] 
+                console.print(f"[yellow]Warning: {target} not found, using first available prompt[/yellow]")
+        except Exception as e:
+            console.print(f"[red]Failed to load prompt file: {e}[/red]")
+            raise typer.Exit(1)
+    else:
+        # Load default prompt
+        s, _ = load_prompt("qra_grounded_v1", SKILL_DIR)
+        system_prompt = s
+        console.print("[blue]Using default prompt: qra_grounded_v1[/blue]")
+
+    # Connect to DB
+    try:
+        connector = SpartaConnector(db_path)
+        test_cases = connector.fetch_test_cases(limit=cases, phase=phase)
+        console.print(f"Fetched {len(test_cases)} test cases")
+    except Exception as e:
+        console.print(f"[red]DB Connection Error: {e}[/red]")
+        raise typer.Exit(1)
+
+    if not test_cases:
+        console.print("[yellow]No test cases found.[/yellow]")
+        raise typer.Exit(0)
+
+    # Run Eval
+    models_config = load_models_config()
+    model_config = models_config.get("chutes-deepseek", models_config.get("deepseek")) # Prefer chutes if avail
+    if not model_config:
+        model_config = list(models_config.values())[0]
+        console.print(f"[yellow]Using fallback model: {model_config['model']}[/yellow]")
+    
+    results = []
+    
+    async def run_eval():
+        for tc in test_cases:
+            # Construct user message based on test case type
+            # Note: The system prompt from SPARTA usually expects specific context injection
+            # For this test, we might need a template. 
+            # If using extracted SPARTA prompt, it often expects raw JSON context or specific format.
+            # We'll try to emulate the SPARTA pipeline context construction simply here.
+            
+            # Simple emulation of context construction for the user message
+            if phase == 0:
+                 user_msg = f"""Generate QRAs about how this control relates to the technique in space systems.
+The TACTIC HIERARCHY below is the anchor.
+
+PROMPT CONTEXT:
+{json.dumps({
+    "tactic_hierarchy": {"technique": tc.source_control},
+    "related_control": tc.target_control,
+}, indent=2)}
+"""
+            else:
+                user_msg = f"""Generate factual questions about this SPARTA control.
+Control:
+{json.dumps(tc.source_control, indent=2)}
+"""
+
+            try:
+                content, latency = await call_llm(system_prompt, user_msg, model_config)
+                qra_items_model = parse_qra_items_response(content)
+                qra_items = qra_items_model.items
+                
+                # Validation
+                citation_validation = validate_citations(qra_items, " ".join(tc.knowledge_excerpts), threshold)
+                
+                # Ambiguity & Anchoring
+                ambiguity_passes = 0
+                anchoring_passes = 0
+                common_missing = []
+                
+                for item in qra_items:
+                    q = item.get("question", "")
+                    # Ambiguity
+                    if AmbiguityGate.check(q, tc.context_keywords)["ok"]:
+                        ambiguity_passes += 1
+                    
+                    # Anchoring
+                    anchoring = check_entity_anchoring(q, tc.context_keywords)
+                    if anchoring["anchored"]:
+                        anchoring_passes += 1
+                    else:
+                        common_missing.extend(anchoring["missing_entities"])
+
+                ambiguity_rate = ambiguity_passes / len(qra_items) if qra_items else 1.0
+                anchoring_rate = anchoring_passes / len(qra_items) if qra_items else 1.0
+                
+                # Check duplicates
+                duplicates = check_duplicate_answers(qra_items)
+                diversity = analyze_question_diversity(qra_items)
+                
+                results.append(QRAGroundedResult(
+                    case_id=tc.id,
+                    qra_items=qra_items,
+                    source_text=" ".join(tc.knowledge_excerpts)[:100], # Trucated for display
+                    latency_ms=latency,
+                    total_qras=len(qra_items),
+                    citation_grounding_rate=citation_validation.grounding_rate,
+                    hallucination_count=citation_validation.ungrounded_citations,
+                    duplicate_count=len(duplicates),
+                    question_type_distribution=diversity["question_type_distribution"],
+                    persona_distribution=diversity["persona_distribution"],
+                    confidence_distribution=diversity["confidence_distribution"],
+                    question_type_coverage=diversity["question_type_coverage"],
+                    ambiguity_pass_rate=ambiguity_rate,
+                    entity_anchoring_rate=anchoring_rate,
+                    missing_entities_common=list(set(common_missing))
+                ))
+                
+                console.print(f"  {tc.id}: {len(qra_items)} QRAs | Gnd: {citation_validation.grounding_rate:.0%} | Amb: {ambiguity_rate:.0%} | Anch: {anchoring_rate:.0%}")
+
+            except Exception as e:
+                console.print(f"  [red]{tc.id} Error: {e}[/red]")
+
+    asyncio.run(run_eval())
+    
+    # Summary
+    summary = QRAEvalSummary(
+        prompt_name=prompt_file.name if prompt_file else "default",
+        model_name=model_config['model'],
+        timestamp=datetime.now().isoformat(),
+        results=results,
+    )
+    
+    table = Table(title="SPARTA QRA Test Summary")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+    table.add_column("Components", style="yellow")
+    
+    table.add_row("Ambiguity Gate Pass", f"{summary.avg_ambiguity_pass_rate:.1%}", "Length, Keyword Context")
+    table.add_row("Entity Anchoring", f"{summary.avg_entity_anchoring_rate:.1%}", "Explicit Entity Naming")
+    table.add_row("Citation Grounding", f"{summary.avg_citation_grounding_rate:.1%}", "Verbatim Excerpts")
+    table.add_row("Total Generated", str(summary.total_qras_generated), "")
+    
+    console.print(table)
 
 
 if __name__ == "__main__":
