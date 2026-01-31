@@ -10,9 +10,9 @@ This module contains:
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
-from .config import DEFAULT_CODE_LIMIT
-from .utils import run_command, parse_json_output, extract_search_terms
-from .repo_search import fetch_file_content
+from config import DEFAULT_CODE_LIMIT
+from utils import run_command, parse_json_output, extract_search_terms
+from repo_search import fetch_file_content
 
 
 def search_code_basic(
@@ -194,7 +194,7 @@ def multi_strategy_code_search(
         Dict with results from all strategies:
         - basic_matches, symbol_matches, path_matches, filename_matches, file_contents
     """
-    from .readme_analyzer import enhance_file_with_treesitter
+    from readme_analyzer import enhance_file_with_treesitter
 
     result = {
         "repo": repo,

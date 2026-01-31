@@ -736,6 +736,235 @@ def show_inventory(emotion: Optional[str] = None, as_json: bool = False) -> Dict
     return stats
 
 
+def recommend_books(
+    movie: Optional[str] = None,
+    emotion: Optional[str] = None,
+    library_path: Optional[Path] = None,
+    output_json: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """
+    Recommend books to read before processing a movie for emotion extraction.
+
+    Searches for source material, related reading, and thematic companions
+    that would provide better context for persona training.
+
+    Args:
+        movie: Movie title to find source material for
+        emotion: Target emotion to find thematically related books
+        library_path: Path to local book library to check availability
+        output_json: Save recommendations to JSON
+
+    Returns:
+        Recommendations dict with dogpile results and reading suggestions
+    """
+    if not movie and not emotion:
+        raise ValueError("Must specify --movie or --emotion")
+
+    # Build search query
+    query_parts = []
+
+    if movie:
+        query_parts.extend([
+            f'"{movie}" book novel source material',
+            "adaptation original work",
+        ])
+
+    if emotion:
+        emotion = emotion.lower()
+        if emotion not in VALID_EMOTIONS:
+            raise ValueError(f"Unknown emotion '{emotion}'. Allowed: {sorted(VALID_EMOTIONS)}")
+
+        archetype = HORUS_ARCHETYPE_MAP.get(emotion, {})
+
+        # Add emotion-specific book queries
+        emotion_book_queries = {
+            "rage": "war novels fury vengeance blood meridian violence",
+            "anger": "mafia crime family betrayal cold revenge novels",
+            "sorrow": "loss grief mourning war memorial novels",
+            "regret": "redemption guilt conscience psychological novels",
+            "camaraderie": "brotherhood military band of brothers loyalty novels",
+            "command": "leadership military strategy command novels",
+        }
+        query_parts.append(emotion_book_queries.get(emotion, f"{emotion} novels themes"))
+
+    query = " ".join(query_parts)
+
+    console.print(f"[cyan]Researching books for pre-movie reading[/cyan]")
+    if movie:
+        console.print(f"[dim]Movie: {movie}[/dim]")
+    if emotion:
+        console.print(f"[dim]Emotion: {emotion}[/dim]")
+
+    # Run dogpile search for books
+    console.print("[cyan]Running dogpile search (book research)...[/cyan]")
+    dogpile_results = run_dogpile(query, preset="general")  # Use general for book searches
+
+    if "error" in dogpile_results:
+        console.print(f"[yellow]Dogpile warning: {dogpile_results.get('error')}[/yellow]")
+
+    # Check local book library if specified
+    local_books: Dict[str, Path] = {}
+    if library_path and library_path.exists():
+        console.print(f"[cyan]Scanning local book library: {library_path}[/cyan]")
+        for ext in [".epub", ".pdf", ".mobi", ".txt", ".md"]:
+            for book_file in library_path.rglob(f"*{ext}"):
+                book_name = book_file.stem
+                local_books[book_name.lower()] = book_file
+
+    # Known book-movie mappings
+    BOOK_MOVIE_MAP = {
+        "dune": ["Dune - Frank Herbert", "Dune Messiah - Frank Herbert"],
+        "there will be blood": ["Oil! - Upton Sinclair"],
+        "the godfather": ["The Godfather - Mario Puzo"],
+        "apocalypse now": ["Heart of Darkness - Joseph Conrad"],
+        "gladiator": ["Those About to Die - Daniel Mannix"],
+        "blade runner": ["Do Androids Dream of Electric Sheep? - Philip K. Dick"],
+        "no country for old men": ["No Country for Old Men - Cormac McCarthy", "Blood Meridian - Cormac McCarthy"],
+        "the road": ["The Road - Cormac McCarthy"],
+        "sicario": ["Sicario: A True Story - Barry Seal"],
+        "fury": ["Death Traps - Belton Y. Cooper", "With the Old Breed - Eugene Sledge"],
+        "saving private ryan": ["Citizen Soldiers - Stephen Ambrose", "Band of Brothers - Stephen Ambrose"],
+        "band of brothers": ["Band of Brothers - Stephen Ambrose"],
+        "the last samurai": ["The Last Samurai - Helen DeWitt", "Shogun - James Clavell"],
+    }
+
+    # Emotion-based book recommendations
+    EMOTION_BOOKS = {
+        "rage": [
+            "Blood Meridian - Cormac McCarthy",
+            "American Psycho - Bret Easton Ellis",
+            "The Iliad - Homer",
+        ],
+        "anger": [
+            "The Godfather - Mario Puzo",
+            "Crime and Punishment - Fyodor Dostoevsky",
+            "The Count of Monte Cristo - Alexandre Dumas",
+        ],
+        "sorrow": [
+            "All Quiet on the Western Front - Erich Maria Remarque",
+            "A Farewell to Arms - Ernest Hemingway",
+            "The Things They Carried - Tim O'Brien",
+        ],
+        "regret": [
+            "The Great Gatsby - F. Scott Fitzgerald",
+            "Atonement - Ian McEwan",
+            "Never Let Me Go - Kazuo Ishiguro",
+        ],
+        "camaraderie": [
+            "Band of Brothers - Stephen Ambrose",
+            "The Three Musketeers - Alexandre Dumas",
+            "Dune - Frank Herbert",
+        ],
+        "command": [
+            "Gates of Fire - Steven Pressfield",
+            "The Art of War - Sun Tzu",
+            "Ender's Game - Orson Scott Card",
+        ],
+    }
+
+    recommendations = {
+        "movie": movie,
+        "emotion": emotion,
+        "query": query,
+        "dogpile_results": dogpile_results,
+        "local_books_found": len(local_books),
+        "known_source_material": [],
+        "thematic_recommendations": [],
+        "local_available": [],
+    }
+
+    # Add known source material
+    if movie:
+        movie_lower = movie.lower()
+        for key, books in BOOK_MOVIE_MAP.items():
+            if key in movie_lower or movie_lower in key:
+                recommendations["known_source_material"].extend(books)
+
+    # Add emotion-based recommendations
+    if emotion:
+        recommendations["thematic_recommendations"] = EMOTION_BOOKS.get(emotion, [])
+
+    # Check local availability
+    all_recommended = recommendations["known_source_material"] + recommendations["thematic_recommendations"]
+    for book in all_recommended:
+        book_title = book.split(" - ")[0].lower()
+        for local_name, local_path in local_books.items():
+            if book_title in local_name or local_name in book_title:
+                recommendations["local_available"].append({
+                    "title": book,
+                    "path": str(local_path),
+                })
+                break
+
+    # Build instructions
+    recommendations["instructions_for_horus"] = f"""
+## Pre-Movie Reading Recommendations
+
+{f'Before processing **{movie}** for emotion extraction:' if movie else f'For **{emotion}** emotional training:'}
+
+### Source Material (Read First)
+{chr(10).join(f'- [ ] {b}' for b in recommendations["known_source_material"]) or '- No known source material'}
+
+### Thematic Companions
+{chr(10).join(f'- [ ] {b}' for b in recommendations["thematic_recommendations"]) or '- No thematic recommendations'}
+
+### Already Available Locally
+{chr(10).join(f'- [x] {b["title"]} ({b["path"]})' for b in recommendations["local_available"]) or '- None found locally'}
+
+### Next Steps
+
+1. **Acquire missing books:**
+   ```bash
+   cd .pi/skills/ingest-book
+   ./run.sh search "BOOK_TITLE"
+   ./run.sh add "BOOK_TITLE"
+   ```
+
+2. **Read and annotate:**
+   ```bash
+   cd .pi/skills/consume-book
+   ./run.sh sync --books-dir ~/library/books
+   ./run.sh search "KEY_CHARACTER" --book BOOK_ID
+   ./run.sh note --book BOOK_ID --char-position N --note "Insight for persona"
+   ```
+
+3. **Then extract movie scenes:**
+   ```bash
+   cd .pi/skills/ingest-movie
+   ./run.sh agent recommend {emotion or 'EMOTION'} --library /path/to/movies
+   ```
+"""
+
+    # Display recommendations
+    console.print("\n" + "=" * 70)
+    console.print(f"[bold green]BOOK RECOMMENDATIONS{' FOR ' + movie.upper() if movie else ''}[/bold green]")
+    console.print("=" * 70)
+
+    if recommendations["known_source_material"]:
+        console.print("\n[bold]Source Material:[/bold]")
+        for book in recommendations["known_source_material"]:
+            avail = "✓ LOCAL" if any(book in b["title"] for b in recommendations["local_available"]) else ""
+            console.print(f"  • {book} {avail}")
+
+    if recommendations["thematic_recommendations"]:
+        console.print("\n[bold]Thematic Companions:[/bold]")
+        for book in recommendations["thematic_recommendations"]:
+            avail = "✓ LOCAL" if any(book in b["title"] for b in recommendations["local_available"]) else ""
+            console.print(f"  • {book} {avail}")
+
+    console.print(f"\n[dim]Local library: {len(local_books)} books indexed[/dim]")
+    console.print("\n" + "-" * 70)
+    console.print(recommendations["instructions_for_horus"])
+
+    if output_json:
+        output_json.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_json, "w") as f:
+            json.dump(recommendations, f, indent=2, default=str)
+        console.print(f"\n[green]Recommendations saved to {output_json}[/green]")
+
+    return recommendations
+
+
 def request_extraction(
     to_project: str,
     emotion: str,

@@ -387,6 +387,32 @@ def list_presets():
 
 
 @app.command()
+def custom(
+    content: str = typer.Option(..., "--content", "-c", help="Custom text or pattern to inject"),
+    title: str = typer.Option("Bug Reproduction", "--title", "-t", help="Title for the reproduction"),
+    output: Path = typer.Option(
+        Path("custom_repro.pdf"),
+        "--output", "-o",
+        help="Output PDF path",
+    ),
+):
+    """Generate a 1-page PDF with custom cursed content."""
+    output.parent.mkdir(parents=True, exist_ok=True)
+    doc = fitz.open()
+    page = doc.new_page(width=612, height=792)
+    
+    # Title
+    page.insert_text((50, 70), title, fontsize=18, fontname="helv", color=(0.7, 0, 0))
+    
+    # Content block
+    rect = fitz.Rect(50, 110, 562, 700)
+    page.insert_textbox(rect, content, fontsize=12, fontname="helv")
+    
+    doc.save(str(output))
+    doc.close()
+    typer.echo(f"Created custom repro: {output}")
+
+@app.command()
 def verify(
     pdf_path: Path = typer.Argument(..., help="PDF file to verify"),
 ):

@@ -1,0 +1,15 @@
+{"stage": "00_profile_detector", "start_ts": 1769779504.3898087, "end_ts": 1769779504.7518177, "latency_ms": 361}
+{"stage": "01_annotation_processor", "start_ts": 1769779504.7567713, "end_ts": 1769779504.7635908, "latency_ms": 6}
+{"stage": "02_marker_extractor", "start_ts": 1769779504.7684853, "end_ts": 1769779504.817507, "latency_ms": 48}
+{"stage": "03_suspicious_headers", "start_ts": 1769779504.8234735, "end_ts": 1769779504.8538575, "latency_ms": 29}
+{"stage": "04_section_builder", "start_ts": 1769779504.8636255, "end_ts": 1769779504.9126146, "latency_ms": 48}
+{"stage": "04a_layout_audit", "start_ts": 1769779504.9172716, "end_ts": 1769779504.9186127, "latency_ms": 1}
+{"stage": "05b_table_describer", "start_ts": 1769779504.923206, "end_ts": 1769779504.9239283, "latency_ms": 0}
+{"stage": "05c_table_merger", "start_ts": 1769779504.92782, "end_ts": 1769779504.9281824, "latency_ms": 0}
+{"stage": "06_figure_extractor", "start_ts": 1769779504.9324696, "end_ts": 1769779504.9397984, "latency_ms": 6}
+{"stage": "06b_figure_describer", "start_ts": 1769779504.9450967, "end_ts": 1769779504.9457383, "latency_ms": 0}
+{"stage": "07_assemble_corpus", "start_ts": 1769779505.6197972, "end_ts": 1769779505.7225525, "latency_ms": 102}
+{"stage": "07b_text_cleaner", "start_ts": 1769779505.7288032, "end_ts": 1769779505.8103976, "latency_ms": 80}
+{"stage": "10_markdown_exporter", "start_ts": 1769779505.8152397, "end_ts": 1769779505.8914266, "latency_ms": 75}
+{"stage": "10_arangodb_exporter", "start_ts": 1769779505.895854, "end_ts": 1769779505.9294152, "latency_ms": 33}
+{"stage": "14_report_generator", "start_ts": 1769779505.9336681, "end_ts": 1769779506.1456308, "latency_ms": 211}

@@ -17,6 +17,38 @@ metadata:
 nvtop-style Rich TUI and HTTP API for monitoring long-running tasks across projects.
 Integrated with **Scheduler** to show upcoming jobs.
 
+## CRITICAL: Agent Watchdog Pattern
+
+**When starting ANY long-running task (LLM batch, extraction, embedding, etc.), agents MUST:**
+
+1. **Start a session**: `uv run python monitor.py start-session --project <project>`
+2. **Register the task**: `uv run python monitor.py register --name <task> --state <file> --total <n>`
+3. **Set up a watchdog timer loop** that runs every 30-60 seconds:
+   - Parse log/state for progress
+   - Validate LLM response quality (check for invalid outputs)
+   - Update task-monitor state via API
+   - **STOP and DEBUG** if errors exceed threshold
+   - Alert on stalls (no progress for 5+ minutes)
+4. **Run quality checks** using `/quality-audit` or `/batch-quality` skills
+5. **End session** with accomplishments when complete
+
+**Example Watchdog Loop:**
+```python
+while task_running:
+    metrics = parse_log()           # Get progress, errors
+    validate_outputs(metrics)       # Check LLM response quality
+    update_task_monitor(metrics)    # Push to API
+    if metrics.errors > THRESHOLD:
+        stop_and_debug()            # Don't let bad data accumulate
+    if stalled(metrics):
+        alert("Stall detected")
+    time.sleep(30)
+```
+
+**This is NOT optional.** Agents that skip monitoring waste tokens on bad extractions.
+
+---
+
 ## Features
 
 - **Rich TUI** - Real-time terminal UI with progress bars, rates, ETAs, and **Scheduler** panel.

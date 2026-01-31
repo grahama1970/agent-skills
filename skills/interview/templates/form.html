@@ -6,152 +6,466 @@
     <title>{{TITLE}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .recommendation-keep { @apply bg-green-100 border-green-500 text-green-800; }
-        .recommendation-drop { @apply bg-red-100 border-red-500 text-red-800; }
-        .question-card { @apply transition-all duration-200; }
-        .question-card:focus-within { @apply ring-2 ring-blue-500; }
+        /* Tab styles - chip/pill design */
+        .tab-bar { display: flex; gap: 0.5rem; padding: 0.5rem 1rem; overflow-x: auto; background: #1e293b; }
+        .tab-chip {
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #94a3b8;
+            background: transparent;
+            border: 1px solid #475569;
+        }
+        .tab-chip:hover { background: #334155; color: #e2e8f0; }
+        .tab-chip.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .tab-chip.completed { color: #4ade80; border-color: #4ade80; }
+        .tab-chip.completed::before { content: '✓ '; }
+
+        /* Question pane */
+        .question-pane { display: none; padding: 1.5rem; }
+        .question-pane.active { display: block; }
+
+        /* Option styles - numbered list with descriptions */
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 0.75rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .option-item:hover { background: #f1f5f9; }
+        .option-item.selected { background: #dbeafe; border-color: #3b82f6; }
+        .option-number {
+            width: 2rem;
+            font-weight: 600;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+        .option-content { flex: 1; }
+        .option-label { font-weight: 500; color: #1e293b; }
+        .option-description { font-size: 0.875rem; color: #64748b; margin-top: 0.25rem; }
+
+        /* Other input */
+        .other-option { margin-top: 0.5rem; }
+        .other-option input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            margin-left: 2rem;
+        }
+        .other-option input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+
+        /* Image display */
+        .question-image {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        .image-placeholder {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 0.375rem;
+            color: #3b82f6;
+            font-weight: 500;
+            margin: 0.5rem 0;
+        }
+
+        /* Multi-select hint */
+        .multi-hint {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-style: italic;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Image paste and preview styles */
+        .image-paste-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 0.5rem 0 0.5rem 2rem;
+            text-align: center;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .image-paste-zone:hover,
+        .image-paste-zone.dragover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        .image-paste-zone.has-image {
+            border-color: #22c55e;
+            background: #f0fdf4;
+            padding: 0.5rem;
+        }
+        .image-paste-zone .paste-hint {
+            font-size: 0.875rem;
+        }
+        .image-paste-zone .paste-hint kbd {
+            background: #e2e8f0;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+        .pasted-image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+        }
+        .image-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .image-actions button {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        .btn-clear-image {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        .btn-clear-image:hover {
+            background: #fecaca;
+        }
+
+        /* Image comparison styles */
+        .image-compare-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .image-option-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .image-option-card:hover {
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
+        .image-option-card.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .image-option-card img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+        }
+        .image-option-label {
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .image-option-number {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .image-option-card {
+            position: relative;
+        }
+
+        /* Custom image option for image_compare */
+        .custom-image-option {
+            border: 2px dashed #cbd5e1;
+            min-height: 150px;
+        }
+        .custom-image-option:hover {
+            border-color: #3b82f6;
+        }
+        .custom-image-option.has-image {
+            border-style: solid;
+            border-color: #22c55e;
+        }
+        .custom-image-reason {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .custom-image-reason:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        /* Navigation footer */
+        .nav-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-footer kbd {
+            background: #334155;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+        .nav-footer .nav-buttons button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-submit { background: #22c55e; color: white; }
+        .btn-submit:hover { background: #16a34a; }
+        .btn-cancel { background: #ef4444; color: white; margin-right: 0.5rem; }
+        .btn-cancel:hover { background: #dc2626; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="max-w-4xl mx-auto py-8 px-4">
-        <!-- Header -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">{{TITLE}}</h1>
-            <p class="text-gray-600 mt-2">{{CONTEXT}}</p>
-            <div class="mt-4 text-sm text-gray-500">
-                <span id="progress">0</span> of <span id="total">{{TOTAL}}</span> answered
-                <span class="ml-4">Session: {{SESSION_ID}}</span>
-            </div>
-        </div>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Title bar -->
+    <div class="bg-blue-600 text-white text-center py-3 font-semibold">
+        {{TITLE}}
+    </div>
 
-        <!-- Questions Form -->
-        <form id="interview-form" class="space-y-6">
-            {{QUESTIONS_HTML}}
+    <!-- Context bar (if provided) -->
+    {{CONTEXT_HTML}}
 
-            <!-- Submit Bar -->
-            <div class="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg p-4">
-                <div class="max-w-4xl mx-auto flex justify-between items-center">
-                    <div class="text-sm text-gray-500">
-                        <kbd class="px-2 py-1 bg-gray-200 rounded">Tab</kbd> to navigate
-                        <kbd class="px-2 py-1 bg-gray-200 rounded ml-2">Enter</kbd> to select
-                        <kbd class="px-2 py-1 bg-gray-200 rounded ml-2">Ctrl+Enter</kbd> to submit
-                    </div>
-                    <div class="space-x-4">
-                        <button type="button" onclick="skipRemaining()"
-                                class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
-                            Skip Remaining
-                        </button>
-                        <button type="submit"
-                                class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold">
-                            Submit Responses
-                        </button>
-                    </div>
+    <!-- Tab bar -->
+    <div class="tab-bar" id="tab-bar">
+        {{TABS_HTML}}
+        <div class="tab-chip" data-tab="submit">Submit</div>
+    </div>
+
+    <!-- Question panes -->
+    <div id="panes-container" class="bg-gray-50 text-gray-900 min-h-[calc(100vh-160px)] pb-20">
+        {{PANES_HTML}}
+
+        <!-- Submit pane -->
+        <div class="question-pane" id="pane-submit">
+            <div class="max-w-2xl mx-auto text-center py-12">
+                <h2 class="text-2xl font-bold mb-4">Review and Submit</h2>
+                <p class="text-gray-600 mb-6">Review your answers in the tabs above, then click Submit when ready.</p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="cancelInterview()" class="btn-cancel px-6 py-2 rounded">Cancel</button>
+                    <button onclick="submitInterview()" class="btn-submit px-6 py-2 rounded">Submit Responses</button>
                 </div>
             </div>
-        </form>
+        </div>
+    </div>
 
-        <!-- Spacer for fixed bottom bar -->
-        <div class="h-24"></div>
+    <!-- Navigation footer -->
+    <div class="nav-footer">
+        <div class="nav-hints">
+            <kbd>Enter</kbd> select ·
+            <kbd>Space</kbd> toggle (multi) ·
+            <kbd>Tab</kbd>/<kbd>Shift+Tab</kbd> navigate ·
+            <kbd>1</kbd>-<kbd>5</kbd> quick select ·
+            <kbd>Esc</kbd> cancel
+        </div>
+        <div class="nav-buttons">
+            <button onclick="cancelInterview()" class="btn-cancel">Cancel</button>
+            <button onclick="submitInterview()" class="btn-submit">Submit</button>
+        </div>
     </div>
 
     <script>
         const SESSION_ID = '{{SESSION_ID}}';
-        const STORAGE_KEY = `interview_${SESSION_ID}`;
+        const questions = {{QUESTIONS_JSON}};
+        const responses = {};
+        let currentTab = 0;
+        let currentOption = 1;
 
-        // Load saved state
-        function loadState() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                const data = JSON.parse(saved);
-                Object.entries(data).forEach(([qid, value]) => {
-                    const input = document.querySelector(`[name="${qid}"][value="${value.value}"]`);
-                    if (input) input.checked = true;
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            switchTab(0);
+            document.querySelectorAll('.tab-chip').forEach((chip, i) => {
+                chip.addEventListener('click', () => switchTab(i));
+            });
+            // Setup drag and drop handlers
+            setupDragDrop();
+        });
 
-                    const refine = document.getElementById(`refine_${qid}`);
-                    if (refine && value.note) refine.value = value.note;
+        // Switch to tab by index
+        function switchTab(index) {
+            const tabs = document.querySelectorAll('.tab-chip');
+            const panes = document.querySelectorAll('.question-pane');
+
+            tabs.forEach((tab, i) => tab.classList.toggle('active', i === index));
+            panes.forEach((pane, i) => pane.classList.toggle('active', i === index));
+
+            currentTab = index;
+            currentOption = 1;
+        }
+
+        // Select an option
+        function selectOption(qid, index, isOther = false) {
+            const question = questions.find(q => q.id === qid);
+            const options = document.querySelectorAll(`#pane-${qid} .option-item`);
+
+            if (question.multi_select) {
+                // Toggle selection for multi-select
+                const opt = options[index - 1];
+                if (opt) {
+                    opt.classList.toggle('selected');
+                }
+            } else {
+                // Single select - clear others
+                options.forEach((opt, i) => {
+                    opt.classList.toggle('selected', i === index - 1);
                 });
             }
-            updateProgress();
+
+            // Handle "Other" option focus
+            if (isOther) {
+                const otherInput = document.querySelector(`#pane-${qid} .other-input`);
+                if (otherInput) otherInput.focus();
+            }
+
+            // Update response
+            updateResponse(qid);
+
+            // Mark tab as completed if has selection
+            updateTabCompletion(qid);
+
+            // Auto-advance for single select (not multi, not other)
+            if (!question.multi_select && !isOther) {
+                setTimeout(() => nextTab(), 150);
+            }
         }
 
-        // Save state on change
-        function saveState() {
-            const responses = collectResponses();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
-            updateProgress();
-        }
+        // Update response object
+        function updateResponse(qid) {
+            const question = questions.find(q => q.id === qid);
+            const pane = document.getElementById('pane-' + qid);
+            const options = pane?.querySelectorAll('.option-item.selected');
+            const otherInput = pane?.querySelector('.other-input');
+            const reasonInput = pane?.querySelector('.custom-image-reason');
 
-        // Collect all responses
-        function collectResponses() {
-            const responses = {};
-            document.querySelectorAll('.question-card').forEach(card => {
-                const qid = card.dataset.qid;
-                const qtype = card.dataset.qtype;
-                const recommendation = card.dataset.recommendation;
+            // Check if "Other" is selected
+            const otherOption = pane?.querySelector('.other-option.selected');
 
-                let value = null;
-                let decision = 'skip';
+            // Check for custom image (for image_compare or regular questions)
+            const hasCustomImage = customImages[qid]?.data_uri;
+            const customImageSelected = pane?.querySelector('.custom-image-option.selected');
 
-                if (qtype === 'yes_no' || qtype === 'yes_no_refine' || qtype === 'select' || qtype === 'confirm') {
-                    const checked = card.querySelector(`input[name="${qid}"]:checked`);
-                    if (checked) {
-                        value = checked.value;
-                        decision = (value === 'accept') ? 'accept' : 'override';
-                        if (value === 'accept' && recommendation) {
-                            value = recommendation;
-                        }
+            if (hasCustomImage && customImageSelected) {
+                // Custom image response (image_compare)
+                const reason = reasonInput?.value?.trim() || '';
+                responses[qid] = {
+                    decision: 'override',
+                    value: 'custom_image',
+                    custom_image: {
+                        source: 'clipboard',
+                        data_uri: customImages[qid].data_uri,
+                        reason: reason
                     }
-                } else if (qtype === 'multi') {
-                    const checked = card.querySelectorAll(`input[name="${qid}"]:checked`);
-                    value = Array.from(checked).map(c => c.value);
-                    decision = value.length > 0 ? 'override' : 'skip';
-                } else if (qtype === 'text') {
-                    const input = card.querySelector(`input[name="${qid}"], textarea[name="${qid}"]`);
-                    if (input && input.value.trim()) {
-                        value = input.value.trim();
-                        decision = (value === recommendation) ? 'accept' : 'override';
+                };
+            } else if (otherOption && hasCustomImage) {
+                // Other option with pasted image
+                const text = otherInput?.value?.trim() || '';
+                responses[qid] = {
+                    decision: 'override',
+                    value: text || 'custom_image',
+                    other_text: text,
+                    custom_image: {
+                        source: 'clipboard',
+                        data_uri: customImages[qid].data_uri
                     }
-                }
+                };
+            } else if (otherOption && otherInput && otherInput.value.trim()) {
+                responses[qid] = {
+                    decision: 'override',
+                    value: otherInput.value.trim(),
+                    other_text: otherInput.value.trim()
+                };
+            } else if (options && options.length > 0) {
+                const values = Array.from(options)
+                    .filter(opt => !opt.classList.contains('other-option') && !opt.classList.contains('custom-image-option'))
+                    .map(opt => opt.dataset.label);
 
-                if (value !== null) {
-                    responses[qid] = { decision, value };
-
-                    // Add refinement note if present
-                    const refine = document.getElementById(`refine_${qid}`);
-                    if (refine && refine.value.trim()) {
-                        responses[qid].note = refine.value.trim();
-                    }
+                if (values.length > 0) {
+                    responses[qid] = {
+                        decision: 'override',
+                        value: question.multi_select ? values : values[0]
+                    };
                 }
-            });
-            return responses;
+            } else {
+                delete responses[qid];
+            }
         }
 
-        // Update progress counter
-        function updateProgress() {
-            const total = document.querySelectorAll('.question-card').length;
-            const answered = Object.keys(collectResponses()).length;
-            document.getElementById('progress').textContent = answered;
-            document.getElementById('total').textContent = total;
-        }
-
-        // Skip remaining questions
-        function skipRemaining() {
-            document.querySelectorAll('.question-card').forEach(card => {
-                const qid = card.dataset.qid;
-                const hasAnswer = card.querySelector(`input[name="${qid}"]:checked`) ||
-                                  card.querySelector(`input[name="${qid}"]`)?.value?.trim();
-                if (!hasAnswer) {
-                    const skipRadio = card.querySelector(`input[value="skip"]`);
-                    if (skipRadio) skipRadio.checked = true;
+        // Update tab completion indicator
+        function updateTabCompletion(qid) {
+            const tabIndex = questions.findIndex(q => q.id === qid);
+            if (tabIndex >= 0) {
+                const tab = document.querySelectorAll('.tab-chip')[tabIndex];
+                if (responses[qid]) {
+                    tab.classList.add('completed');
+                } else {
+                    tab.classList.remove('completed');
                 }
-            });
-            saveState();
-            submitForm();
+            }
         }
 
-        // Submit form
-        function submitForm() {
-            const responses = collectResponses();
+        // Navigation
+        function nextTab() {
+            const tabs = document.querySelectorAll('.tab-chip');
+            if (currentTab < tabs.length - 1) {
+                switchTab(currentTab + 1);
+            }
+        }
+
+        function prevTab() {
+            if (currentTab > 0) {
+                switchTab(currentTab - 1);
+            }
+        }
+
+        // Submit
+        function submitInterview() {
             fetch('/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -161,13 +475,12 @@
                 })
             }).then(res => {
                 if (res.ok) {
-                    localStorage.removeItem(STORAGE_KEY);
                     document.body.innerHTML = `
-                        <div class="flex items-center justify-center min-h-screen">
-                            <div class="text-center">
+                        <div class="flex items-center justify-center min-h-screen bg-gray-900">
+                            <div class="text-center text-white">
                                 <div class="text-6xl mb-4">✓</div>
-                                <h1 class="text-2xl font-bold text-gray-800">Responses Submitted</h1>
-                                <p class="text-gray-600 mt-2">You can close this window.</p>
+                                <h1 class="text-2xl font-bold">Responses Submitted</h1>
+                                <p class="text-gray-400 mt-2">You can close this window.</p>
                             </div>
                         </div>
                     `;
@@ -175,26 +488,269 @@
             });
         }
 
-        // Form submission
-        document.getElementById('interview-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitForm();
-        });
+        // Cancel
+        function cancelInterview() {
+            if (confirm('Are you sure you want to cancel? Your responses will not be saved.')) {
+                fetch('/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: SESSION_ID, responses: {} })
+                }).then(() => {
+                    document.body.innerHTML = `
+                        <div class="flex items-center justify-center min-h-screen bg-gray-900">
+                            <div class="text-center text-white">
+                                <div class="text-6xl mb-4">✕</div>
+                                <h1 class="text-2xl font-bold">Interview Cancelled</h1>
+                                <p class="text-gray-400 mt-2">You can close this window.</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
 
-        // Auto-save on change
-        document.getElementById('interview-form').addEventListener('change', saveState);
-        document.getElementById('interview-form').addEventListener('input', saveState);
+        // Custom images storage (qid -> {data_uri, reason})
+        const customImages = {};
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'Enter') {
-                e.preventDefault();
-                submitForm();
+        // Handle clipboard paste for images
+        document.addEventListener('paste', function(e) {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+
+            for (const item of items) {
+                if (item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) {
+                        handleImageFile(file);
+                    }
+                    break;
+                }
             }
         });
 
-        // Initialize
-        loadState();
+        // Handle image file (from paste or drag)
+        function handleImageFile(file) {
+            const pane = document.querySelector('.question-pane.active');
+            if (!pane || pane.id === 'pane-submit') return;
+
+            const qid = pane.id.replace('pane-', '');
+            const question = questions.find(q => q.id === qid);
+
+            // Find the paste zone for this question
+            const pasteZone = pane.querySelector('.image-paste-zone');
+            if (!pasteZone) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const dataUri = e.target.result;
+
+                // Store the custom image
+                if (!customImages[qid]) customImages[qid] = {};
+                customImages[qid].data_uri = dataUri;
+
+                // Update the paste zone with preview
+                pasteZone.innerHTML = `
+                    <img src="${dataUri}" class="pasted-image-preview" alt="Pasted image">
+                    <div class="image-actions">
+                        <button class="btn-clear-image" onclick="clearCustomImage('${qid}')">Remove</button>
+                    </div>
+                `;
+                pasteZone.classList.add('has-image');
+
+                // Select the "Other" / custom option
+                const otherOption = pane.querySelector('.other-option, .custom-image-option');
+                if (otherOption) {
+                    otherOption.classList.add('selected');
+
+                    // For image_compare, deselect other images
+                    if (question.type === 'image_compare') {
+                        pane.querySelectorAll('.image-option-card').forEach(card => {
+                            if (!card.classList.contains('custom-image-option')) {
+                                card.classList.remove('selected');
+                            }
+                        });
+                    }
+                }
+
+                // Update response
+                updateResponse(qid);
+                updateTabCompletion(qid);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Clear custom image
+        function clearCustomImage(qid) {
+            delete customImages[qid];
+
+            const pane = document.getElementById('pane-' + qid);
+            const pasteZone = pane?.querySelector('.image-paste-zone');
+            if (pasteZone) {
+                pasteZone.innerHTML = `
+                    <div class="paste-hint">
+                        <kbd>Ctrl+V</kbd> to paste image or drag & drop
+                    </div>
+                `;
+                pasteZone.classList.remove('has-image');
+            }
+
+            const customOption = pane?.querySelector('.custom-image-option');
+            if (customOption) {
+                customOption.classList.remove('selected');
+            }
+
+            updateResponse(qid);
+            updateTabCompletion(qid);
+        }
+
+        // Setup drag and drop for image paste zones
+        function setupDragDrop() {
+            document.querySelectorAll('.image-paste-zone').forEach(zone => {
+                zone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    zone.classList.add('dragover');
+                });
+
+                zone.addEventListener('dragleave', function(e) {
+                    zone.classList.remove('dragover');
+                });
+
+                zone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    zone.classList.remove('dragover');
+
+                    const files = e.dataTransfer?.files;
+                    if (files && files.length > 0) {
+                        const file = files[0];
+                        if (file.type.startsWith('image/')) {
+                            handleImageFile(file);
+                        }
+                    }
+                });
+
+                // Click to open file dialog
+                zone.addEventListener('click', function() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = function(e) {
+                        if (e.target.files && e.target.files[0]) {
+                            handleImageFile(e.target.files[0]);
+                        }
+                    };
+                    input.click();
+                });
+            });
+        }
+
+        // Select an image option (for image_compare questions)
+        function selectImageOption(qid, index, label) {
+            const pane = document.getElementById('pane-' + qid);
+            if (!pane) return;
+
+            // Clear other selections
+            pane.querySelectorAll('.image-option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Select this one
+            const cards = pane.querySelectorAll('.image-option-card');
+            if (cards[index]) {
+                cards[index].classList.add('selected');
+            }
+
+            // Clear custom image if selecting a pre-defined option
+            if (label !== 'custom') {
+                clearCustomImage(qid);
+            }
+
+            // Store response
+            responses[qid] = {
+                decision: 'override',
+                value: label,
+                selected_index: index
+            };
+
+            updateTabCompletion(qid);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            const pane = document.querySelector('.question-pane.active');
+            if (!pane) return;
+
+            const isSubmitPane = pane.id === 'pane-submit';
+            const isInputFocused = document.activeElement.tagName === 'INPUT';
+
+            switch(e.key) {
+                case 'Tab':
+                    e.preventDefault();
+                    if (e.shiftKey) prevTab();
+                    else nextTab();
+                    break;
+
+                case 'Enter':
+                    if (isSubmitPane) {
+                        submitInterview();
+                    } else if (!isInputFocused) {
+                        e.preventDefault();
+                        const qid = pane.id.replace('pane-', '');
+                        const optionCount = pane.querySelectorAll('.option-item').length;
+                        if (currentOption <= optionCount) {
+                            const isOther = currentOption === optionCount;
+                            selectOption(qid, currentOption, isOther);
+                        }
+                    }
+                    break;
+
+                case ' ':
+                    if (!isInputFocused) {
+                        e.preventDefault();
+                        const qid = pane.id.replace('pane-', '');
+                        const question = questions.find(q => q.id === qid);
+                        if (question && question.multi_select) {
+                            const optionCount = pane.querySelectorAll('.option-item').length;
+                            if (currentOption <= optionCount) {
+                                selectOption(qid, currentOption, currentOption === optionCount);
+                            }
+                        }
+                    }
+                    break;
+
+                case 'ArrowUp':
+                    if (!isInputFocused) {
+                        e.preventDefault();
+                        currentOption = Math.max(1, currentOption - 1);
+                    }
+                    break;
+
+                case 'ArrowDown':
+                    if (!isInputFocused) {
+                        e.preventDefault();
+                        const optionCount = pane.querySelectorAll('.option-item').length;
+                        currentOption = Math.min(optionCount, currentOption + 1);
+                    }
+                    break;
+
+                case '1': case '2': case '3': case '4': case '5':
+                    if (!isInputFocused) {
+                        e.preventDefault();
+                        const num = parseInt(e.key);
+                        const qid = pane.id.replace('pane-', '');
+                        const optionCount = pane.querySelectorAll('.option-item').length;
+                        if (num <= optionCount) {
+                            currentOption = num;
+                            selectOption(qid, num, num === optionCount);
+                        }
+                    }
+                    break;
+
+                case 'Escape':
+                    cancelInterview();
+                    break;
+            }
+        });
     </script>
 </body>
 </html>

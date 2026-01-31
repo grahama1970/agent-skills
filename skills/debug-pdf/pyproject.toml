@@ -1,0 +1,13 @@
+[project]
+name = "debug-pdf"
+version = "0.1.0"
+description = "Automated PDF failure analysis and fixture generation"
+dependencies = [
+    "httpx>=0.25.0",
+    "pymupdf>=1.23.0",
+    "typer>=0.9.0",
+    "loguru>=0.7.0",
+]
+
+[project.scripts]
+debug-pdf = "debug_pdf:main"

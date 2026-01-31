@@ -20,17 +20,7 @@ from horus_lore_config import ALL_ENTITIES, IMPORTANT_ENTITY_CATEGORIES
 # ArangoDB Connection
 # =============================================================================
 
-def get_db() -> Any:
-    """Get ArangoDB connection to memory database."""
-    from arango import ArangoClient
-
-    url = os.getenv("ARANGO_URL", "http://127.0.0.1:8529")
-    db_name = os.getenv("ARANGO_DB", "memory")
-    user = os.getenv("ARANGO_USER", "root")
-    password = os.getenv("ARANGO_PASS", "")
-
-    client = ArangoClient(hosts=url)
-    return client.db(db_name, username=user, password=password)
+from db import get_db
 
 
 # =============================================================================

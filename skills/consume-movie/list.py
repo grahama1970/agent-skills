@@ -45,11 +45,11 @@ def list_movies(json_output: bool = False, registry_path: Optional[Path] = None)
     for movie in movies:
         duration = movie.get("metadata", {}).get("duration", 0)
         consume_count = movie.get("consume_count", 0)
-        last_consumed = movie.get("last_consumed", "Never")
+        last_consumed = movie.get("last_consumed")
 
         duration_str = f"{duration/60:.1f}m" if duration else "Unknown"
         consumed_str = str(consume_count)
-        last_str = last_consumed.split("T")[0] if last_consumed != "Never" else "Never"
+        last_str = last_consumed.split("T")[0] if last_consumed else "Never"
 
         table.add_row(
             movie["content_id"][:8] + "...",

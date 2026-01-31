@@ -1,0 +1,65 @@
+{
+  "total_ms": 639,
+  "stages": [
+    {
+      "name": "01_annotation_processor",
+      "latency_ms": 6
+    },
+    {
+      "name": "02_marker_extractor",
+      "latency_ms": 48
+    },
+    {
+      "name": "03_suspicious_headers",
+      "latency_ms": 29
+    },
+    {
+      "name": "04_section_builder",
+      "latency_ms": 48
+    },
+    {
+      "name": "04a_layout_audit",
+      "latency_ms": 1
+    },
+    {
+      "name": "05b_table_describer",
+      "latency_ms": 0
+    },
+    {
+      "name": "05c_table_merger",
+      "latency_ms": 0
+    },
+    {
+      "name": "06_figure_extractor",
+      "latency_ms": 6
+    },
+    {
+      "name": "06b_figure_describer",
+      "latency_ms": 0
+    },
+    {
+      "name": "07_assemble_corpus",
+      "latency_ms": 102
+    },
+    {
+      "name": "07b_text_cleaner",
+      "latency_ms": 80
+    },
+    {
+      "name": "10_markdown_exporter",
+      "latency_ms": 75
+    },
+    {
+      "name": "10_arangodb_exporter",
+      "latency_ms": 33
+    },
+    {
+      "name": "14_report_generator",
+      "latency_ms": 211
+    }
+  ],
+  "served_model": {
+    "text": "moonshotai/Kimi-K2-Instruct-0905",
+    "vlm": "Qwen/Qwen3-VL-235B-A22B-Instruct"
+  }
+}

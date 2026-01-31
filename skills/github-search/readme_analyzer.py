@@ -14,12 +14,12 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
-from .config import (
+from config import (
     TREESITTER_SKILL,
     TAXONOMY_SKILL,
     LANGUAGE_TO_SUFFIX,
 )
-from .utils import run_command, extract_json_from_text, detect_language_from_path
+from utils import run_command, extract_json_from_text, detect_language_from_path
 
 
 def fetch_repo_readme(repo: str) -> Dict[str, Any]:
@@ -207,8 +207,8 @@ def search_and_analyze(
     Returns:
         Dict with repos, analysis, and code search results
     """
-    from .repo_search import search_repos, search_issues, deep_repo_analysis
-    from .code_search import multi_strategy_code_search
+    from repo_search import search_repos, search_issues, deep_repo_analysis
+    from code_search import multi_strategy_code_search
 
     result = {
         "query": query,

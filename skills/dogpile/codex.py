@@ -2,10 +2,13 @@
 """Codex (OpenAI) integration for Dogpile.
 
 Provides high-reasoning analysis capabilities:
-- search_codex: General reasoning/extraction
+- search_codex: General reasoning/extraction with fallback chain
 - search_codex_knowledge: Technical overview queries
 - tailor_queries_for_services: Generate service-specific search queries
 - analyze_query: Analyze query for ambiguity and code-related intent
+
+Now uses llm_fallback module for resilient multi-provider support:
+  Codex -> OpenAI -> Gemini -> Anthropic -> Claude CLI -> Pi CLI
 """
 import json
 import sys
@@ -22,44 +25,73 @@ import typer
 
 from dogpile.config import SKILLS_DIR
 from dogpile.utils import log_status, with_semaphore, run_command
+from dogpile.llm_fallback import (
+    call_with_fallback,
+    call_fast,
+    call_high_reasoning,
+    get_available_providers,
+)
 
 
-@with_semaphore("codex")
+@with_semaphore("llm")
 def search_codex(prompt: str, schema: Optional[Path] = None) -> str:
-    """Use high-reasoning Codex for analysis with rate limiting protection.
+    """Use high-reasoning LLM for analysis with fallback chain.
 
-    Codex uses OpenAI API which has rate limits. Use semaphore to prevent
-    overwhelming the API with concurrent requests.
+    Tries multiple providers in sequence:
+    1. Codex (gpt-5.2) - high reasoning
+    2. OpenAI API (gpt-4o)
+    3. Gemini (gemini-2.0-flash)
+    4. Anthropic API
+    5. Claude CLI (OAuth)
+    6. Pi CLI
 
     Args:
         prompt: Analysis prompt
         schema: Optional JSON schema file for structured output
 
     Returns:
-        Codex response text
+        LLM response text (prefixed with Error: on failure)
     """
-    log_status("Consulting Codex for high-reasoning analysis...")
-    script = SKILLS_DIR / "codex" / "run.sh"
+    log_status("Consulting LLM with fallback chain...")
+    log_status(f"Available providers: {', '.join(get_available_providers())}")
 
-    if schema:
-        cmd = ["bash", str(script), "extract", prompt, "--schema", str(schema)]
-    else:
-        cmd = ["bash", str(script), "reason", prompt]
+    provider_name, result = call_with_fallback(prompt, schema)
 
-    output = run_command(cmd)
+    if provider_name == "none":
+        log_status("All LLM providers failed", status="ALL_FAILED")
+        return f"Error: {result}"
 
-    # Check for rate limit errors
-    if "rate limit" in output.lower() or "429" in output:
-        log_status("Codex rate limited, backing off 30s...", provider="codex", status="RATE_LIMITED")
-        time.sleep(30)
-        output = run_command(cmd)  # Retry once
+    log_status(f"LLM analysis finished (via {provider_name})")
+    return result
 
-    log_status("Codex analysis finished.")
-    return output
+
+def search_codex_fast(prompt: str, schema: Optional[Path] = None) -> str:
+    """Use fast LLM for simple tasks (query tailoring, etc).
+
+    Uses fast provider chain: Gemini Flash -> GPT-4o-mini -> Haiku
+
+    Args:
+        prompt: Analysis prompt
+        schema: Optional JSON schema file
+
+    Returns:
+        LLM response text
+    """
+    log_status("Consulting fast LLM...")
+
+    provider_name, result = call_fast(prompt, schema)
+
+    if provider_name == "none":
+        return f"Error: {result}"
+
+    log_status(f"Fast LLM finished (via {provider_name})")
+    return result
 
 
 def search_codex_knowledge(query: str) -> str:
-    """Use Codex as a direct source of technical knowledge.
+    """Use high-reasoning LLM for technical knowledge.
+
+    Uses high-reasoning provider chain for deep analysis.
 
     Args:
         query: Topic to get technical overview for
@@ -67,15 +99,21 @@ def search_codex_knowledge(query: str) -> str:
     Returns:
         Technical overview text
     """
-    log_status(f"Querying Codex Knowledge for '{query}'...", provider="codex", status="RUNNING")
+    log_status(f"Querying LLM Knowledge for '{query}'...", provider="llm", status="RUNNING")
     prompt = (
         f"Provide a high-reasoning technical overview and internal knowledge "
         f"about this topic: '{query}'. Focus on architectural patterns, "
         f"common pitfalls, and state-of-the-art approaches."
     )
-    res = search_codex(prompt)
-    log_status("Codex technical overview finished.", provider="codex", status="DONE")
-    return res
+
+    provider_name, result = call_high_reasoning(prompt)
+
+    if provider_name == "none":
+        log_status("Knowledge query failed", provider="llm", status="FAILED")
+        return f"Error: {result}"
+
+    log_status(f"LLM knowledge finished (via {provider_name})", provider="llm", status="DONE")
+    return result
 
 
 def tailor_queries_for_services(query: str, is_code_related: bool) -> Dict[str, str]:
@@ -151,7 +189,8 @@ Include current year (2025-2026) where relevant for recent results.
         schema_path.write_text(json.dumps(schema, indent=2))
 
     log_status("Tailoring queries for each service...")
-    result_text = search_codex(prompt, schema=schema_path)
+    # Use fast chain for query tailoring (simple task)
+    result_text = search_codex_fast(prompt, schema=schema_path)
 
     # Default to original query for all services
     default_queries = {

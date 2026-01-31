@@ -21,13 +21,18 @@ metadata:
 
 Search and extract content from ingested movies. This skill works with content already processed by `/ingest-movie`.
 
+**Key Feature:** Integrates with `/consume-book` to provide book context while watching movie adaptations, and with `/dogpile` for external reviews.
+
 ## Quick Start
 
 ```bash
 cd .pi/skills/consume-movie
 
-# Search subtitles for a phrase
-./run.sh search "rage" --movie "tywin_tyrion"
+# Watch a movie with book context and external reviews
+./run.sh watch --movie "abc123" --with-book-context --with-reviews
+
+# Search subtitles with book annotations
+./run.sh search "rage" --movie "tywin_tyrion" --with-book-context
 
 # Extract a clip
 ./run.sh clip --query "You are a Lannister" --output ~/clips/
@@ -35,8 +40,58 @@ cd .pi/skills/consume-movie
 # Add a note at a timestamp
 ./run.sh note --movie "movie_id" --timestamp 125.5 --note "Manipulation pattern"
 
-# List available movies
+# List available movies (shows which have book context)
 ./run.sh list
+```
+
+## Book-Before-Movie Workflow
+
+The recommended workflow reads the source material before watching:
+
+```bash
+# 1. Read the book first
+cd .pi/skills/consume-book
+./run.sh sync --books-dir ~/library/books
+./run.sh search "Paul Atreides" --book dune-id
+./run.sh note --book dune-id --char-position 50000 --note "Character motivation"
+
+# 2. Watch the movie with book context
+cd .pi/skills/consume-movie
+./run.sh watch --movie dune-2021-id --with-book-context --with-reviews
+
+# Book notes are displayed alongside movie scenes
+# External reviews from dogpile provide critical analysis
+```
+
+## Automatic Book Acquisition
+
+When watching a movie, the skill automatically:
+
+1. **Searches for related books** using the book-movie mapping (e.g., "There Will Be Blood" → "Oil!")
+2. **Checks local registry** for existing book content
+3. **Searches Readarr** for missing books via `/ingest-book`
+4. **Falls back to movie reviews** via `/dogpile` if books unavailable
+
+```bash
+# Auto-acquire missing books before watching
+./run.sh watch --movie dune-2021-id --acquire-books
+
+# This will:
+# 1. Search Readarr for "Dune" by Frank Herbert
+# 2. If found: retrieve and extract via /ingest-book + /extractor
+# 3. If not found: fetch movie reviews via /dogpile as fallback
+```
+
+### Acquisition Pipeline
+
+```
+Movie Title → find_related_books() → search Readarr
+                                          ↓
+                              Found? → /ingest-book retrieve
+                                          ↓
+                                     /extractor → consume-book registry
+                                          ↓
+                              Not found? → /dogpile movie reviews (fallback)
 ```
 
 ## Commands

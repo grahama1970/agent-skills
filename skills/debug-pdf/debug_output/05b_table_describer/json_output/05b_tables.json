@@ -1,0 +1,10 @@
+{
+  "timestamp": 1769779504,
+  "tables": [],
+  "diagnostics": [
+    {
+      "severity": "info",
+      "reason": "skip_tables05 flag"
+    }
+  ]
+}

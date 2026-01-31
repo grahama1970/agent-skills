@@ -19,6 +19,12 @@ Reference: https://docs.github.com/en/search-github/github-code-search
 """
 import json
 import sys
+from pathlib import Path
+
+# Add script directory to path for package imports when running as script
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
 
 try:
     import typer
@@ -26,21 +32,21 @@ except ImportError:
     print("Missing requirements. Run: pip install typer rich", file=sys.stderr)
     sys.exit(1)
 
-from .config import get_console, DEFAULT_REPO_LIMIT, DEFAULT_CODE_LIMIT, DEFAULT_ISSUE_LIMIT
-from .utils import check_gh_cli
-from .repo_search import (
+from config import get_console, DEFAULT_REPO_LIMIT, DEFAULT_CODE_LIMIT, DEFAULT_ISSUE_LIMIT
+from utils import check_gh_cli
+from repo_search import (
     search_repos,
     search_issues,
     fetch_file_content,
     deep_repo_analysis,
 )
-from .code_search import (
+from code_search import (
     search_code_basic,
     search_code_symbols,
     search_code_by_path,
     multi_strategy_code_search,
 )
-from .readme_analyzer import search_and_analyze
+from readme_analyzer import search_and_analyze
 
 app = typer.Typer(help="GitHub Search - Deep multi-strategy search")
 
@@ -298,7 +304,7 @@ def get_file(
 @app.command()
 def check():
     """Check if gh CLI is installed and authenticated."""
-    from .utils import run_command
+    from utils import run_command
 
     console = get_console()
 

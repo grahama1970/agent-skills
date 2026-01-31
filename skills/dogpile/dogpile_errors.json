@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-01-29T17:23:35.034812",
+  "last_updated": "2026-01-30T21:37:40.292822",
   "sessions": [
     {
       "session_id": "dogpile_1769687742",
@@ -1426,6 +1426,216 @@
       "rate_limits_hit": {
         "codex": 3
       }
+    },
+    {
+      "session_id": "dogpile_1769788748",
+      "query": "hello world test",
+      "started_at": "2026-01-30T10:59:08.019703",
+      "ended_at": "2026-01-30T11:01:25.510279",
+      "status": "completed",
+      "providers_succeeded": [
+        "perplexity",
+        "arxiv",
+        "brave",
+        "youtube",
+        "codex"
+      ],
+      "providers_failed": [
+        "discord",
+        "github",
+        "codex",
+        "synthesis"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-30T10:59:12.144797",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 44
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-30T10:59:45.953150",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 45
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-30T11:00:17.734304",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-30T11:00:18.428266",
+          "provider": "github",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "GitHub skill error: Error: \u256d\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 Traceback (most rece",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-30T11:00:19.358626",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 46
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-30T11:00:53.375712",
+          "provider": "codex",
+          "error_type": "rate_limit",
+          "severity": "warning",
+          "message": "Rate limited (backoff active)",
+          "details": {
+            "remaining": 0,
+            "limit": -1,
+            "reset_at": null,
+            "total_hits": 47
+          },
+          "retry_after_seconds": null,
+          "http_status": 429,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-30T11:01:25.495776",
+          "provider": "synthesis",
+          "error_type": "api_error",
+          "severity": "error",
+          "message": "Codex Synthesis failed.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {
+        "codex": 4
+      }
+    },
+    {
+      "session_id": "dogpile_1769798351",
+      "query": "self-learning URL fetcher: domain-specific retry strategies, knowledge graph for fetch patterns, human-in-the-loop recovery",
+      "started_at": "2026-01-30T13:39:11.902504",
+      "ended_at": "2026-01-30T13:39:40.679703",
+      "status": "completed",
+      "providers_succeeded": [
+        "perplexity",
+        "arxiv",
+        "brave",
+        "github",
+        "youtube",
+        "codex"
+      ],
+      "providers_failed": [
+        "discord",
+        "synthesis"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-30T13:39:21.504103",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-30T13:39:40.666019",
+          "provider": "synthesis",
+          "error_type": "api_error",
+          "severity": "error",
+          "message": "Codex Synthesis failed.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {}
+    },
+    {
+      "session_id": "dogpile_1769827029",
+      "query": "There Will Be Blood movie review",
+      "started_at": "2026-01-30T21:37:09.566679",
+      "ended_at": "2026-01-30T21:37:40.292200",
+      "status": "completed",
+      "providers_succeeded": [
+        "perplexity",
+        "arxiv",
+        "brave",
+        "github",
+        "codex",
+        "youtube"
+      ],
+      "providers_failed": [
+        "discord",
+        "synthesis"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-30T21:37:20.339535",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        },
+        {
+          "timestamp": "2026-01-30T21:37:40.272740",
+          "provider": "synthesis",
+          "error_type": "api_error",
+          "severity": "error",
+          "message": "Codex Synthesis failed.",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {}
     }
   ],
   "rate_limits": {
@@ -1433,10 +1643,10 @@
       "provider": "codex",
       "remaining": 0,
       "limit": -1,
-      "reset_at": 1769725443.5069668,
-      "last_hit": "2026-01-29T17:23:03.506971",
-      "total_hits": 40,
-      "backoff_multiplier": 1.5
+      "reset_at": 1769789115.5029755,
+      "last_hit": "2026-01-30T11:04:15.502978",
+      "total_hits": 50,
+      "backoff_multiplier": 1.0
     }
   }
 }

@@ -1,0 +1,47 @@
+{
+  "input_pdf": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output",
+  "outputs": {
+    "01": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/01_annotation_processor/json_output/01_annotations.json",
+    "02": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/02_marker_extractor/json_output/02_marker_blocks.json",
+    "03": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/03_suspicious_headers/json_output/03_verified_blocks.json",
+    "04": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/04_section_builder/json_output/04_sections.json",
+    "05": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/05_table_extractor/json_output/05_tables.json",
+    "05b": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/05b_table_describer/json_output/05b_tables.json",
+    "05c": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/05b_table_describer/json_output/05b_tables.json",
+    "06": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/06_figure_extractor/json_output/06_figures.json",
+    "06b": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/06_figure_extractor/json_output/06_figures.json"
+  },
+  "counts": {
+    "blocks02": 277,
+    "verified03": 277,
+    "sections04": 1,
+    "tables05": 0,
+    "figures06": 0
+  },
+  "flags": {
+    "summary_only": true,
+    "skip_fig_descriptions": true,
+    "stop_on_fail": true,
+    "stage_timeout": 900
+  },
+  "served_model": {
+    "text": "moonshotai/Kimi-K2-Instruct-0905",
+    "vlm": "Qwen/Qwen3-VL-235B-A22B-Instruct"
+  },
+  "timings_ms": {
+    "01_annotation_processor": 6,
+    "02_marker_extractor": 48,
+    "03_suspicious_headers": 29,
+    "04_section_builder": 48,
+    "04a_layout_audit": 1,
+    "05b_table_describer": 0,
+    "05c_table_merger": 0,
+    "06_figure_extractor": 6,
+    "06b_figure_describer": 0,
+    "07_assemble_corpus": 102,
+    "07b_text_cleaner": 80,
+    "10_markdown_exporter": 75,
+    "10_arangodb_exporter": 33,
+    "14_report_generator": 211
+  }
+}

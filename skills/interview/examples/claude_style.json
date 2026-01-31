@@ -1,0 +1,71 @@
+{
+  "title": "Clarifying Questions Before Dogpile/Task Creation",
+  "context": "The agent needs your input on several configuration choices before proceeding.",
+  "questions": [
+    {
+      "id": "tts_model",
+      "header": "TTS Model",
+      "text": "The document references 'horus_qwen3_1.7b/checkpoint-epoch-9' but I only see 'horus_qwen3_06b' and 'horus_final_prod'. Which TTS model should we use for recorded narration (Qwen3-TTS)?",
+      "options": [
+        {
+          "label": "horus_final_prod (epoch-4)",
+          "description": "Latest production checkpoint from XTTS training"
+        },
+        {
+          "label": "horus_qwen3_06b_final",
+          "description": "Qwen3 0.6B model checkpoint"
+        },
+        {
+          "label": "Need new training",
+          "description": "Current models are insufficient, need to train new model"
+        }
+      ],
+      "multi_select": false
+    },
+    {
+      "id": "voice_anchors",
+      "header": "Voice Anchors",
+      "text": "Which voice anchors should we use for the narration?",
+      "images": ["examples/test_image.png"],
+      "options": [
+        {
+          "label": "Audiobook anchors",
+          "description": "Use cleared audiobook samples for consistent tone"
+        },
+        {
+          "label": "Podcast anchors",
+          "description": "More conversational, dynamic range"
+        },
+        {
+          "label": "Mixed approach",
+          "description": "Combine both based on content type"
+        }
+      ],
+      "multi_select": false
+    },
+    {
+      "id": "research_focus",
+      "header": "Research",
+      "text": "Which research areas should Dogpile prioritize?",
+      "options": [
+        {
+          "label": "Voice cloning techniques",
+          "description": "XTTS, Coqui, RVC methods"
+        },
+        {
+          "label": "Audio preprocessing",
+          "description": "Noise removal, normalization, enhancement"
+        },
+        {
+          "label": "Dataset curation",
+          "description": "Finding and preparing training data"
+        },
+        {
+          "label": "Evaluation metrics",
+          "description": "MOS scores, similarity measures"
+        }
+      ],
+      "multi_select": true
+    }
+  ]
+}

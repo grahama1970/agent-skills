@@ -548,15 +548,15 @@ def search_readarr(query: str) -> List[Dict[str, Any]]:
     """Search Usenet/Books via Readarr Ops nzb-search."""
     log_status(f"Starting Readarr Search for '{query}'...", provider="readarr", status="RUNNING")
     
-    # Locate readarr-ops in .pi/skills relative to SKILLS_DIR (.agent/skills)
-    readarr_dir = SKILLS_DIR.parent.parent / ".pi" / "skills" / "readarr-ops"
-    
-    if not readarr_dir.exists():
-        log_status("readarr-ops skill not found", provider="readarr", status="SKIPPED")
+    # Locate ingest-book skill (provides Readarr/Usenet search)
+    ingest_book_dir = SKILLS_DIR / "ingest-book"
+
+    if not ingest_book_dir.exists():
+        log_status("ingest-book skill not found", provider="readarr", status="SKIPPED")
         return []
 
     cmd = ["bash", "run.sh", "nzb-search", query, "--json"]
-    output = run_command(cmd, cwd=readarr_dir)
+    output = run_command(cmd, cwd=ingest_book_dir)
 
     try:
         if output.startswith("Error:"):

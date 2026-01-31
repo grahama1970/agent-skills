@@ -25,6 +25,7 @@ from batch import batch_discover, batch_plan, batch_run, batch_status
 from radarr import acquire_movies, show_preset_info, check_radarr_connection
 from agent import (
     recommend_movies,
+    recommend_books,
     quick_extract,
     discover_scenes,
     show_inventory,
@@ -321,6 +322,25 @@ def agent_request_cmd(
 ):
     """Send clip extraction request via agent-inbox."""
     request_extraction(to_project, emotion, description, count)
+
+
+@agent_app.command("recommend-book")
+def agent_recommend_book_cmd(
+    movie: Optional[str] = typer.Option(None, "--movie", "-m", help="Movie to find source material for"),
+    emotion: Optional[str] = typer.Option(None, "--emotion", "-e", help="Emotion for thematic recommendations"),
+    library_path: Optional[Path] = typer.Option(None, "--library", "-l", help="Local book library path"),
+    output_json: Optional[Path] = typer.Option(None, "--output", "-o"),
+):
+    """Recommend books to read before processing a movie.
+
+    Finds source material, related novels, and thematic companions
+    to provide better context for persona training.
+
+    Examples:
+        ./run.sh agent recommend-book --movie "Dune"
+        ./run.sh agent recommend-book --emotion rage --library ~/library/books
+    """
+    recommend_books(movie, emotion, library_path, output_json)
 
 
 # -----------------------------------------------------------------------------

@@ -11,5 +11,5 @@ if [[ ! -d "$SCRIPT_DIR/.venv" ]]; then
     "$SCRIPT_DIR/.venv/bin/pip" install -q typer rich
 fi
 
-# Run the main script
-exec "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/github_search.py" "$@"
+# Run the main script with PYTHONPATH set for package imports
+PYTHONPATH="${SCRIPT_DIR}:${PYTHONPATH:-}" exec "$SCRIPT_DIR/.venv/bin/python" "$SCRIPT_DIR/github_search.py" "$@"

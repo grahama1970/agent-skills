@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-01-30T08:25:04.762865",
+  "run_id": "2279c23f1efd41958deade9c4058278d",
+  "source_pdf": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/repro_failed.pdf",
+  "clean_pdf_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/01_annotation_processor/repro_failed_clean.pdf",
+  "status": "No annotations found.",
+  "annotation_count": 0,
+  "annotations": [],
+  "diagnostics": []
+}

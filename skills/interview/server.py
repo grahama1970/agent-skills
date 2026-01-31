@@ -2,7 +2,7 @@
 """
 HTTP Server for Interview HTML Form.
 
-Serves Tailwind-styled form and collects responses.
+Serves wizard-style form with tabbed navigation matching Claude Code's UX.
 """
 from __future__ import annotations
 
@@ -24,132 +24,233 @@ SCRIPT_DIR = Path(__file__).parent
 TEMPLATES_DIR = SCRIPT_DIR / "templates"
 
 
-def generate_question_html(question: dict) -> str:
-    """Generate HTML for a single question card."""
+def generate_question_pane(question: dict, base_path: Path | None = None) -> str:
+    """Generate HTML for a question pane (wizard-style).
+
+    Args:
+        question: Question dict with id, text, header, options, images, multi_select
+        base_path: Base path for resolving relative image paths
+    """
+    from .images import render_images_for_html, render_comparison_images_for_html
+
     qid = question["id"]
-    qtype = question.get("type", "yes_no_refine")
     text = question["text"].replace("\n", "<br>")
-    recommendation = question.get("recommendation", "")
-    reason = question.get("reason", "")
     options = question.get("options", [])
+    images = question.get("images", [])
+    multi_select = question.get("multi_select", False)
+    question_type = question.get("type", "yes_no_refine")
+    comparison_images = question.get("comparison_images", [])
+    allow_custom_image = question.get("allow_custom_image", False)
 
-    # Recommendation badge
-    rec_html = ""
-    if recommendation:
-        rec_class = "recommendation-keep" if recommendation.lower() in ("keep", "yes") else "recommendation-drop"
-        rec_html = f'''
-        <div class="border-l-4 p-3 mb-4 {rec_class}">
-            <div class="font-semibold">Agent Recommendation: {recommendation.upper()}</div>
-            {f'<div class="text-sm mt-1">{reason}</div>' if reason else ''}
-        </div>
-        '''
+    # Handle image_compare type specially
+    if question_type == "image_compare" and comparison_images:
+        return generate_image_compare_pane(question, base_path)
 
-    # Options HTML based on type
+    # Images HTML (actual images for HTML mode)
+    images_html = ""
+    if images:
+        image_data = render_images_for_html(images, base_path)
+        for img in image_data:
+            if img["valid"]:
+                images_html += f'''
+                <img src="{img['data_uri']}" alt="{img['alt']}" class="question-image">
+                '''
+            else:
+                images_html += f'''
+                <div class="image-placeholder">{img['alt']}</div>
+                '''
+
+    # Multi-select hint
+    multi_hint = ""
+    if multi_select:
+        multi_hint = '<div class="multi-hint">(Select multiple with Space, Enter to confirm)</div>'
+
+    # Options HTML - numbered list with descriptions
     options_html = ""
+    for i, opt in enumerate(options, 1):
+        # Handle both dict (new format) and string (old format)
+        if isinstance(opt, dict):
+            label = opt.get("label", "")
+            description = opt.get("description", "")
+        else:
+            label = str(opt)
+            description = ""
 
-    if qtype in ("yes_no", "yes_no_refine"):
-        options_html = f'''
-        <div class="space-y-2">
-            {'<label class="flex items-center p-2 rounded hover:bg-gray-50 cursor-pointer"><input type="radio" name="' + qid + '" value="accept" class="mr-3 h-4 w-4 text-blue-600"> <span class="font-medium text-blue-600">Accept recommendation</span></label>' if recommendation else ''}
-            <label class="flex items-center p-2 rounded hover:bg-gray-50 cursor-pointer">
-                <input type="radio" name="{qid}" value="keep" class="mr-3 h-4 w-4 text-green-600">
-                <span>Yes / Keep</span>
-            </label>
-            <label class="flex items-center p-2 rounded hover:bg-gray-50 cursor-pointer">
-                <input type="radio" name="{qid}" value="drop" class="mr-3 h-4 w-4 text-red-600">
-                <span>No / Drop</span>
-            </label>
-        </div>
-        '''
-
-        if qtype == "yes_no_refine":
-            options_html += f'''
-            <div class="mt-3">
-                <input type="text" id="refine_{qid}" placeholder="Refinement notes (optional)"
-                       class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        desc_html = f'<div class="option-description">{description}</div>' if description else ""
+        options_html += f'''
+        <div class="option-item" data-label="{label}" onclick="selectOption('{qid}', {i})">
+            <div class="option-number">{i}.</div>
+            <div class="option-content">
+                <div class="option-label">{label}</div>
+                {desc_html}
             </div>
-            '''
-
-    elif qtype == "select":
-        opts = ""
-        if recommendation:
-            opts += f'''
-            <label class="flex items-center p-2 rounded hover:bg-gray-50 cursor-pointer">
-                <input type="radio" name="{qid}" value="accept" class="mr-3 h-4 w-4 text-blue-600">
-                <span class="font-medium text-blue-600">Accept: {recommendation}</span>
-            </label>
-            '''
-        for opt in options:
-            opts += f'''
-            <label class="flex items-center p-2 rounded hover:bg-gray-50 cursor-pointer">
-                <input type="radio" name="{qid}" value="{opt}" class="mr-3 h-4 w-4">
-                <span>{opt}</span>
-            </label>
-            '''
-        options_html = f'<div class="space-y-2">{opts}</div>'
-
-    elif qtype == "multi":
-        opts = ""
-        for opt in options:
-            checked = "checked" if recommendation and opt in recommendation else ""
-            opts += f'''
-            <label class="flex items-center p-2 rounded hover:bg-gray-50 cursor-pointer">
-                <input type="checkbox" name="{qid}" value="{opt}" {checked} class="mr-3 h-4 w-4 text-blue-600 rounded">
-                <span>{opt}</span>
-            </label>
-            '''
-        options_html = f'<div class="space-y-2">{opts}</div>'
-
-    elif qtype == "text":
-        default = recommendation or ""
-        options_html = f'''
-        <textarea name="{qid}" rows="3" placeholder="Your response"
-                  class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{default}</textarea>
-        '''
-
-    elif qtype == "confirm":
-        options_html = f'''
-        <div class="flex space-x-4">
-            <label class="flex items-center p-3 border rounded-lg hover:bg-green-50 cursor-pointer flex-1 justify-center">
-                <input type="radio" name="{qid}" value="confirm" class="mr-2 h-4 w-4 text-green-600">
-                <span class="font-medium text-green-600">Confirm</span>
-            </label>
-            <label class="flex items-center p-3 border rounded-lg hover:bg-red-50 cursor-pointer flex-1 justify-center">
-                <input type="radio" name="{qid}" value="cancel" class="mr-2 h-4 w-4 text-red-600">
-                <span class="font-medium text-red-600">Cancel</span>
-            </label>
         </div>
         '''
+
+    # Add "Other" option with image paste support
+    other_index = len(options) + 1
+    paste_zone_html = ""
+    if allow_custom_image or question_type in ("select", "yes_no_refine"):
+        # Always show paste zone for enhanced collaboration
+        paste_zone_html = f'''
+            <div class="image-paste-zone">
+                <div class="paste-hint">
+                    <kbd>Ctrl+V</kbd> to paste image or drag & drop
+                </div>
+            </div>
+        '''
+
+    options_html += f'''
+    <div class="option-item other-option" onclick="selectOption('{qid}', {other_index}, true)">
+        <div class="option-number">{other_index}.</div>
+        <div class="option-content">
+            <input type="text" class="other-input" placeholder="Other (type your response or paste image)"
+                   onclick="event.stopPropagation()"
+                   onchange="updateResponse('{qid}'); updateTabCompletion('{qid}')">
+            {paste_zone_html}
+        </div>
+    </div>
+    '''
 
     return f'''
-    <div class="question-card bg-white rounded-lg shadow-md p-6"
-         data-qid="{qid}" data-qtype="{qtype}" data-recommendation="{recommendation}">
-        <div class="prose max-w-none mb-4">
-            <div class="text-gray-800 whitespace-pre-wrap">{text}</div>
+    <div class="question-pane" id="pane-{qid}">
+        <div class="max-w-2xl mx-auto">
+            <div class="text-lg mb-4">{text}</div>
+            {images_html}
+            {multi_hint}
+            <div class="options-container">
+                {options_html}
+            </div>
         </div>
-        {rec_html}
-        {options_html}
     </div>
     '''
 
 
+def generate_image_compare_pane(question: dict, base_path: Path | None = None) -> str:
+    """Generate HTML for an image comparison question.
+
+    Args:
+        question: Question dict with comparison_images
+        base_path: Base path for resolving relative image paths
+    """
+    from .images import render_comparison_images_for_html
+
+    qid = question["id"]
+    text = question["text"].replace("\n", "<br>")
+    comparison_images = question.get("comparison_images", [])
+    allow_custom_image = question.get("allow_custom_image", True)  # Default true for image_compare
+
+    # Render comparison images
+    image_data = render_comparison_images_for_html(comparison_images, base_path)
+
+    # Generate image option cards
+    image_cards_html = ""
+    for i, img in enumerate(image_data):
+        img_html = ""
+        if img["valid"]:
+            img_html = f'<img src="{img["data_uri"]}" alt="{img["label"]}">'
+        else:
+            img_html = f'<div class="image-placeholder">{img["label"]} (not found)</div>'
+
+        image_cards_html += f'''
+        <div class="image-option-card" data-label="{img['label']}" onclick="selectImageOption('{qid}', {i}, '{img['label']}')">
+            <div class="image-option-number">{i + 1}</div>
+            {img_html}
+            <div class="image-option-label">{img['label']}</div>
+        </div>
+        '''
+
+    # Add custom image option
+    if allow_custom_image:
+        custom_index = len(image_data)
+        image_cards_html += f'''
+        <div class="image-option-card custom-image-option" data-label="custom" onclick="selectImageOption('{qid}', {custom_index}, 'custom')">
+            <div class="image-option-number">{custom_index + 1}</div>
+            <div class="image-paste-zone">
+                <div class="paste-hint">
+                    <kbd>Ctrl+V</kbd> to paste<br>
+                    or drag & drop<br>
+                    your own image
+                </div>
+            </div>
+            <input type="text" class="custom-image-reason" placeholder="Why this image? (optional)"
+                   onclick="event.stopPropagation()"
+                   onchange="updateResponse('{qid}')">
+        </div>
+        '''
+
+    return f'''
+    <div class="question-pane" id="pane-{qid}">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-lg mb-4">{text}</div>
+            <div class="image-compare-grid">
+                {image_cards_html}
+            </div>
+        </div>
+    </div>
+    '''
+
+
+def generate_tab_chip(question: dict) -> str:
+    """Generate a tab chip for a question."""
+    qid = question["id"]
+    # Use header if available (max 12 chars), otherwise truncate text
+    header = question.get("header") or question["text"][:12]
+    return f'<div class="tab-chip" data-tab="{qid}">{header}</div>'
+
+
 def render_form(session: "Session") -> str:
-    """Render the full HTML form."""
+    """Render the wizard-style HTML form."""
     template_path = TEMPLATES_DIR / "form.html"
     template = template_path.read_text()
 
-    # Generate questions HTML
-    questions_html = ""
-    for i, q in enumerate(session.questions, 1):
-        questions_html += f'<div class="text-sm text-gray-500 mb-2">Question {i} of {len(session.questions)}</div>'
-        questions_html += generate_question_html(q.to_dict())
+    # Get base path for image resolution
+    base_path = Path(session.context).parent if session.context else None
+
+    # Generate tabs HTML
+    tabs_html = ""
+    for q in session.questions:
+        tabs_html += generate_tab_chip(q.to_dict())
+
+    # Generate panes HTML
+    panes_html = ""
+    for q in session.questions:
+        panes_html += generate_question_pane(q.to_dict(), base_path)
+
+    # Generate context HTML
+    context_html = ""
+    if session.context:
+        context_html = f'''
+        <div class="bg-slate-800 text-slate-300 px-4 py-2 text-sm">
+            {session.context}
+        </div>
+        '''
+
+    # Generate questions JSON for JavaScript
+    questions_json = json.dumps([
+        {
+            "id": q.id,
+            "text": q.text,
+            "header": q.header,
+            "type": q.type,
+            "multi_select": q.multi_select,
+            "allow_custom_image": q.allow_custom_image,
+            "options": [
+                {"label": opt.label, "description": opt.description}
+                if hasattr(opt, "label") else {"label": str(opt), "description": ""}
+                for opt in (q.options or [])
+            ]
+        }
+        for q in session.questions
+    ])
 
     # Replace placeholders
     html = template.replace("{{TITLE}}", session.title)
-    html = html.replace("{{CONTEXT}}", session.context or "")
+    html = html.replace("{{CONTEXT_HTML}}", context_html)
     html = html.replace("{{SESSION_ID}}", session.id)
-    html = html.replace("{{TOTAL}}", str(len(session.questions)))
-    html = html.replace("{{QUESTIONS_HTML}}", questions_html)
+    html = html.replace("{{TABS_HTML}}", tabs_html)
+    html = html.replace("{{PANES_HTML}}", panes_html)
+    html = html.replace("{{QUESTIONS_JSON}}", questions_json)
 
     return html
 

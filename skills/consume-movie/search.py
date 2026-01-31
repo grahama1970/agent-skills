@@ -6,6 +6,12 @@ from pathlib import Path
 from typing import Any, Optional
 from rich.console import Console
 
+# Handle both direct execution and package import
+try:
+    from .book_context import get_book_notes, get_book_context_for_scene, display_book_context
+except ImportError:
+    from book_context import get_book_notes, get_book_context_for_scene, display_book_context
+
 console = Console()
 
 
@@ -13,7 +19,8 @@ def search_subtitles(
     query: str,
     movie_id: Optional[str] = None,
     context_seconds: int = 5,
-    registry_path: Optional[Path] = None
+    registry_path: Optional[Path] = None,
+    with_book_context: bool = False,
 ) -> list[dict[str, Any]]:
     """Search for text in movie subtitles.
 
@@ -22,6 +29,7 @@ def search_subtitles(
         movie_id: Specific movie ID (None to search all)
         context_seconds: Seconds of context before/after
         registry_path: Override registry path
+        with_book_context: Load and display related book notes
 
     Returns:
         List of search results
@@ -44,6 +52,7 @@ def search_subtitles(
 
     results = []
     query_lower = query.lower()
+    book_contexts = {}  # Cache book context per movie
 
     for movie in movies:
         if not movie or not movie.get("source_path"):
@@ -82,7 +91,7 @@ def search_subtitles(
                         if sub.start.total_seconds() >= subtitle.end.total_seconds() and sub.start.total_seconds() <= context_end:
                             context_after += sub.content + " "
 
-                    results.append({
+                    result = {
                         "movie_id": movie["content_id"],
                         "movie_title": movie["title"],
                         "start": subtitle.start.total_seconds(),
@@ -91,7 +100,28 @@ def search_subtitles(
                         "context_before": context_before.strip(),
                         "context_after": context_after.strip(),
                         "srt_path": str(srt_path)
-                    })
+                    }
+
+                    # Add book context if requested
+                    if with_book_context:
+                        movie_title = movie["title"]
+                        if movie_title not in book_contexts:
+                            book_contexts[movie_title] = get_book_notes(movie_title)
+
+                        scene_context = get_book_context_for_scene(
+                            movie_title,
+                            subtitle.content,
+                            book_contexts[movie_title]
+                        )
+                        result["book_context"] = {
+                            "characters_in_scene": scene_context.get("characters_in_scene", []),
+                            "relevant_notes": [
+                                {"note": n["note"], "book_title": n["book_title"]}
+                                for n in scene_context.get("relevant_notes", [])[:3]
+                            ],
+                        }
+
+                    results.append(result)
 
         except Exception as e:
             console.print(f"[red]Error processing {srt_path}: {e}[/red]")
@@ -143,13 +173,20 @@ def main():
     parser.add_argument("--movie", help="Specific movie ID")
     parser.add_argument("--context", type=int, default=5, help="Context seconds (default: 5)")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
+    parser.add_argument("--with-book-context", action="store_true",
+                       help="Load notes from related book for context")
 
     args = parser.parse_args()
+
+    # Display book context header if requested
+    if args.with_book_context and not args.json:
+        console.print("\n[bold cyan]Loading book context...[/bold cyan]")
 
     results = search_subtitles(
         query=args.query,
         movie_id=args.movie,
-        context_seconds=args.context
+        context_seconds=args.context,
+        with_book_context=args.with_book_context
     )
 
     if args.json:
@@ -167,6 +204,16 @@ def main():
                 console.print(f"  Before: {result['context_before']}")
             if result['context_after']:
                 console.print(f"  After: {result['context_after']}")
+
+            # Display book context if available
+            if "book_context" in result:
+                book_ctx = result["book_context"]
+                if book_ctx.get("characters_in_scene"):
+                    console.print(f"  [cyan]Characters (from book):[/cyan] {', '.join(book_ctx['characters_in_scene'])}")
+                if book_ctx.get("relevant_notes"):
+                    console.print(f"  [cyan]Book notes:[/cyan]")
+                    for note in book_ctx["relevant_notes"]:
+                        console.print(f"    - [{note['book_title']}] {note['note'][:80]}...")
 
 
 if __name__ == "__main__":

@@ -23,23 +23,122 @@ SESSIONS_DIR = SCRIPT_DIR / "sessions"
 TEMPLATES_DIR = SCRIPT_DIR / "templates"
 
 # Question types
-QuestionType = Literal["yes_no", "yes_no_refine", "select", "multi", "text", "confirm"]
+QuestionType = Literal["yes_no", "yes_no_refine", "select", "multi", "text", "confirm", "image_compare"]
 DecisionType = Literal["accept", "override", "skip"]
 
 
 @dataclass
+class Option:
+    """A single option with label and description."""
+    label: str
+    description: str = ""
+
+    def to_dict(self) -> dict:
+        return {"label": self.label, "description": self.description}
+
+    @classmethod
+    def from_any(cls, item: str | dict) -> "Option":
+        """Create Option from string or dict (backward compat)."""
+        if isinstance(item, str):
+            return cls(label=item, description="")
+        return cls(label=item.get("label", ""), description=item.get("description", ""))
+
+
+@dataclass
+class ImageOption:
+    """An image option for image_compare questions."""
+    path: str
+    label: str = ""
+    description: str = ""
+
+    def to_dict(self) -> dict:
+        return {"path": self.path, "label": self.label, "description": self.description}
+
+    @classmethod
+    def from_any(cls, item: str | dict) -> "ImageOption":
+        """Create ImageOption from string or dict."""
+        if isinstance(item, str):
+            return cls(path=item, label="")
+        return cls(
+            path=item.get("path", ""),
+            label=item.get("label", ""),
+            description=item.get("description", "")
+        )
+
+
+@dataclass
 class Question:
-    """A single interview question with optional agent recommendation."""
+    """A single interview question with optional agent recommendation.
+
+    New v2 fields for Claude Code-style UX:
+    - header: Short label for tab (max 12 chars)
+    - options: List of Option objects with label + description
+    - images: List of image paths to display
+    - multi_select: Allow multiple selections
+    - allow_custom_image: Allow user to provide their own image (for image_compare)
+    - comparison_images: List of ImageOption for image_compare type
+    """
     id: str
     text: str
     type: QuestionType = "yes_no_refine"
     recommendation: str | None = None
     reason: str | None = None
-    options: list[str] | None = None
+    options: list[Option] | None = None
     required: bool = True
+    # V2 fields for Claude Code-style UX
+    header: str | None = None  # Short tab label (max 12 chars)
+    images: list[str] | None = None  # Image paths to display
+    multi_select: bool = False  # Allow multiple selections
+    # V2.1 fields for image collaboration
+    allow_custom_image: bool = False  # Allow user to provide custom image
+    comparison_images: list[ImageOption] | None = None  # For image_compare type
+
+    def __post_init__(self):
+        """Normalize options to Option objects for backward compatibility."""
+        if self.options:
+            normalized = []
+            for opt in self.options:
+                if isinstance(opt, Option):
+                    normalized.append(opt)
+                elif isinstance(opt, dict):
+                    normalized.append(Option.from_any(opt))
+                elif isinstance(opt, str):
+                    normalized.append(Option(label=opt, description=""))
+            self.options = normalized
+
+        # Normalize comparison_images for image_compare type
+        if self.comparison_images:
+            normalized_images = []
+            for img in self.comparison_images:
+                if isinstance(img, ImageOption):
+                    normalized_images.append(img)
+                elif isinstance(img, dict):
+                    normalized_images.append(ImageOption.from_any(img))
+                elif isinstance(img, str):
+                    normalized_images.append(ImageOption(path=img))
+            self.comparison_images = normalized_images
+
+        # For image_compare type, auto-enable custom image if not set
+        if self.type == "image_compare" and self.comparison_images:
+            # Default to allowing custom images
+            pass
+
+        # Truncate header to 12 chars
+        if self.header and len(self.header) > 12:
+            self.header = self.header[:12]
 
     def to_dict(self) -> dict:
-        return {k: v for k, v in asdict(self).items() if v is not None}
+        result = {}
+        for k, v in asdict(self).items():
+            if v is None:
+                continue
+            if k == "options" and v:
+                result[k] = [opt if isinstance(opt, dict) else opt for opt in v]
+            elif k == "comparison_images" and v:
+                result[k] = [img if isinstance(img, dict) else img for img in v]
+            else:
+                result[k] = v
+        return result
 
 
 @dataclass

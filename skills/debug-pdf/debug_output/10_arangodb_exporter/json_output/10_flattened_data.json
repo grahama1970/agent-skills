@@ -1,0 +1,15 @@
+[
+  {
+    "_key": "87424ba0b46a7eb993eaf8b676287e99",
+    "source_pdf": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output",
+    "object_type": "Text",
+    "text_content": "False-Positive Table Test Patterns [numbered-list] Numbered list with aligned numbers (triggers table detection) 1.  First item in the list that has some longer text",
+    "section_id": "section_0",
+    "section_title": "1.  First item in the list that has some longer text",
+    "section_level": 0,
+    "page_num": 0,
+    "data": {
+      "text": "False-Positive Table Test Patterns [numbered-list] Numbered list with aligned numbers (triggers table detection) 1.  First item in the list that has some longer text"
+    }
+  }
+]

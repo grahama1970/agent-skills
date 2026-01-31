@@ -9,7 +9,12 @@ from typing import Optional
 from rich.console import Console
 
 from consume_common.registry import ContentRegistry
-from .epub import extract_text
+
+# Handle both direct execution and package import
+try:
+    from .epub import extract_text
+except ImportError:
+    from epub import extract_text
 
 console = Console()
 

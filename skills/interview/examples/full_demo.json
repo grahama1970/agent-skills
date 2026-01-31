@@ -1,0 +1,95 @@
+{
+  "title": "Interview Skill v2 Demo",
+  "context": "This demo showcases all new v2 features: tabbed wizard, numbered options with descriptions, images, and multi-select.",
+  "questions": [
+    {
+      "id": "architecture",
+      "header": "Architecture",
+      "text": "Which architecture pattern should we use for the new service?",
+      "options": [
+        {
+          "label": "Microservices (Recommended)",
+          "description": "Independent deployment, better scaling, higher complexity"
+        },
+        {
+          "label": "Monolith",
+          "description": "Simpler deployment, faster initial development"
+        },
+        {
+          "label": "Serverless",
+          "description": "Pay-per-use, auto-scaling, vendor lock-in"
+        },
+        {
+          "label": "Hybrid",
+          "description": "Core monolith with microservices for specific features"
+        }
+      ],
+      "multi_select": false
+    },
+    {
+      "id": "database",
+      "header": "Database",
+      "text": "Which database should we use for persistent storage?",
+      "images": ["test_image.png"],
+      "options": [
+        {
+          "label": "PostgreSQL",
+          "description": "ACID compliant, great for relational data"
+        },
+        {
+          "label": "MongoDB",
+          "description": "Flexible schema, good for documents"
+        },
+        {
+          "label": "Redis",
+          "description": "In-memory, excellent for caching"
+        }
+      ],
+      "multi_select": false
+    },
+    {
+      "id": "features",
+      "header": "Features",
+      "text": "Which features should we prioritize in the first release? (Select all that apply)",
+      "options": [
+        {
+          "label": "User Authentication",
+          "description": "OAuth2, JWT tokens, session management"
+        },
+        {
+          "label": "Real-time Updates",
+          "description": "WebSockets for live data synchronization"
+        },
+        {
+          "label": "API Rate Limiting",
+          "description": "Protect against abuse, ensure fair usage"
+        },
+        {
+          "label": "Audit Logging",
+          "description": "Track all user actions for compliance"
+        }
+      ],
+      "multi_select": true
+    },
+    {
+      "id": "deployment",
+      "header": "Deploy",
+      "text": "Where should we deploy the application?",
+      "options": [
+        {
+          "label": "AWS",
+          "description": "Mature ecosystem, wide service range"
+        },
+        {
+          "label": "GCP",
+          "description": "Strong ML/AI integration, competitive pricing"
+        },
+        {
+          "label": "On-premise",
+          "description": "Full control, compliance requirements"
+        }
+      ],
+      "multi_select": false
+    }
+  ]
+}

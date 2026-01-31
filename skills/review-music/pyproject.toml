@@ -1,0 +1,47 @@
+[project]
+name = "review-music"
+version = "0.1.0"
+description = "Audio analysis with MIR tools + LLM music theory reasoning for Horus persona"
+requires-python = ">=3.10"
+dependencies = [
+    # Audio loading and basic features (core - always works)
+    "librosa>=0.10.0",
+    "soundfile>=0.12.0",
+    "numpy>=1.20.0",
+    "scipy>=1.7.0",
+
+    # Lyrics transcription (GPU-accelerated)
+    "faster-whisper>=1.0.0",
+
+    # YouTube download
+    "yt-dlp>=2024.0.0",
+
+    # CLI and utilities
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+]
+
+[project.optional-dependencies]
+# Advanced MIR features (may have build issues on some systems)
+advanced = [
+    "madmom>=0.16.0",
+    "essentia>=2.1b6",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "llm: marks tests requiring LLM API calls",
+    "integration: marks tests requiring external services",
+]

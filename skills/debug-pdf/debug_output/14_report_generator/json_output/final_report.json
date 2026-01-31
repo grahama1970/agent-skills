@@ -1,0 +1,84 @@
+{
+  "meta": {
+    "version": "1.0",
+    "pipeline_id": "debug_output",
+    "generated_at": "2026-01-30T08:25:05.967585",
+    "source_pdf": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/repro_failed.pdf"
+  },
+  "statistics": {
+    "timestamp": "2026-01-30T08:25:05.967340",
+    "stages_present": [
+      "02_marker",
+      "03_verification",
+      "04_sections",
+      "04a_audit",
+      "05_tables",
+      "06_figures",
+      "00_profile",
+      "db_stats",
+      "meta"
+    ],
+    "metrics": {
+      "total_blocks": 4,
+      "avg_confidence": 0.0,
+      "verified_blocks": 277,
+      "suspicious_rate": 0.0,
+      "total_sections": 1,
+      "max_depth": 1,
+      "total_tables": 0,
+      "total_figures": 0,
+      "requirements_extracted": 0
+    },
+    "assessment_comparison": {
+      "tables": {
+        "expected_pages": 2,
+        "actual_count": 0,
+        "status": "UNDER_EXTRACTED",
+        "reason": "Expected tables based on pymupdf4llm but found none."
+      },
+      "figures": {
+        "expected_pages": 0,
+        "actual_count": 0,
+        "status": "OK"
+      }
+    },
+    "quality_signal": "REVIEW_REQUIRED"
+  },
+  "content_summary": {
+    "toc": [
+      {
+        "number": "1",
+        "title": "1.  First item in the list that has some longer text",
+        "page": 0
+      }
+    ],
+    "key_entities": [],
+    "major_sections": [
+      {
+        "title": "1.  First item in the list that has some longer text",
+        "level": 1,
+        "page": 0
+      }
+    ]
+  },
+  "verification": {
+    "status": "PASS",
+    "issues": [],
+    "warnings": [],
+    "checks": {
+      "structure_integrity": true,
+      "content_completeness": true,
+      "extraction_quality": true
+    }
+  },
+  "toc_integrity": {
+    "has_toc": false,
+    "toc_entry_count": 0,
+    "section_count": 0,
+    "matched": 0,
+    "missing": [],
+    "extra": [],
+    "integrity_score": 1.0,
+    "details": []
+  }
+}

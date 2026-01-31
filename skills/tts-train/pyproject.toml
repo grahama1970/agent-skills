@@ -21,6 +21,9 @@ dependencies = [
   # XTTS dependencies (optional, for backward compatibility)
   "tensorboard>=2.15.0",
   "pyyaml>=6.0",
+  # Hyperparameter tuning
+  "optuna>=3.5.0",
+  "optuna-dashboard>=0.15.0",
 ]
 
 [build-system]

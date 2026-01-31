@@ -73,6 +73,107 @@ Provide a JSONL file with `audio_file` (relative to input dir) and `text`.
   datasets/<voice>
 ```
 
+## Iterative Training Loop (Recommended)
+
+The iterative training loop provides a **two-phase workflow** for optimal TTS model training:
+
+### Why Two Phases?
+
+| Phase | Purpose | Optimizes |
+|-------|---------|-----------|
+| **Hyperparameter Search** | Find optimal training config | Training efficiency (loss curves) |
+| **Evaluation Loop** | Train until quality threshold | Output quality (voice similarity) |
+
+**Key insight**: Loss ≠ Quality. A model with low training loss can still produce poor voice output (wrong prosody, artifacts, speaker drift). That's why we need BOTH phases.
+
+### Full Workflow (Recommended)
+
+```bash
+# Full workflow: hyperparameter search + iterative training
+python .agent/skills/tts-train/iterative_train.py \
+  --model-path Qwen/Qwen3-TTS-12Hz-1.7B-Base \
+  --data datasets/<voice>/train_manifest_qwen3.jsonl \
+  --output artifacts/tts/<voice>_iterative \
+  --run-hyperparameter-search \
+  --hp-trials 10 \
+  --max-iterations 5 \
+  --quality-threshold 3.5
+```
+
+### Evaluation-Only (Skip Hyperparameter Search)
+
+Use when you already have good hyperparameters from a previous search:
+
+```bash
+# With hyperparams file
+python .agent/skills/tts-train/iterative_train.py \
+  --model-path artifacts/tts/<voice>/checkpoint-epoch-0 \
+  --data datasets/<voice>/train_manifest_qwen3.jsonl \
+  --output artifacts/tts/<voice>_refined \
+  --hyperparams best_config.json \
+  --max-iterations 3
+
+# Auto-evaluation mode (no manual rating)
+python .agent/skills/tts-train/iterative_train.py \
+  --model-path artifacts/tts/<voice>/checkpoint-epoch-0 \
+  --data datasets/<voice>/train_manifest_qwen3.jsonl \
+  --output artifacts/tts/<voice>_refined \
+  --max-iterations 3 \
+  --auto-evaluate
+```
+
+### Custom Evaluation Phrases
+
+```bash
+python .agent/skills/tts-train/iterative_train.py \
+  --model-path /path/to/model \
+  --data /path/to/data.jsonl \
+  --output /path/to/output \
+  --eval-phrases "I am the Warmaster" "The Emperor betrayed us" \
+  --epochs-per-iteration 2
+```
+
+### How It Works
+
+**Phase 1: Hyperparameter Search** (if `--run-hyperparameter-search`):
+1. Uses Bayesian optimization (Optuna) to search config space
+2. Runs short smoke runs (300 steps) per trial
+3. Optimizes: learning rate, LoRA config, warmup, weight decay
+4. Saves best config to `hyperparameter_search/best_config.json`
+
+**Phase 2: Evaluation Loop**:
+1. Trains for N epochs with optimal config
+2. Generates audio samples for evaluation phrases
+3. Rates quality (manual 1-5 or auto-heuristics)
+4. If quality threshold met → STOP
+5. If not → continue from checkpoint
+6. Repeat until max iterations or threshold met
+
+### Outputs
+
+```
+output_dir/
+├── hyperparameter_search/    # Phase 1 results
+│   ├── optuna_study.db       # Optuna database (view with optuna-dashboard)
+│   ├── best_config.json      # Optimal hyperparameters
+│   └── trial_N/              # Each trial's smoke run
+├── checkpoints/
+│   └── iteration_N/          # Each iteration's checkpoint
+├── evaluations/
+│   └── iteration_N/          # Audio samples + ratings
+│       ├── eval_00.wav
+│       ├── eval_01.wav
+│       └── evaluation.json
+└── final_model/              # Best performing model (copied on completion)
+```
+
+### Monitor Hyperparameter Search
+
+```bash
+# View Optuna dashboard
+optuna-dashboard sqlite:///artifacts/tts/<voice>_iterative/hyperparameter_search/optuna_study.db
+```
+
 ## Training (Qwen3-TTS)
 
 Qwen3-TTS provides better quality and more natural speech. Requires proper audio_codes format:

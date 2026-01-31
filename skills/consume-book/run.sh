@@ -11,31 +11,43 @@ CACHE_DIR="${DATA_DIR}/cache"
 
 mkdir -p "${DATA_DIR}" "${NOTES_DIR}" "${CACHE_DIR}"
 
-export PYTHONPATH="${SCRIPT_DIR}/../consume-common:${PYTHONPATH}"
+# Add skills parent dir so both consume_common and this skill are importable
+export PYTHONPATH="${SCRIPT_DIR}/..${PYTHONPATH:+:$PYTHONPATH}"
+
+# Rename mapping: directory is consume-book but Python expects consume_book
+# We run scripts directly rather than as modules to avoid naming issues
+run_py() {
+    python "${SCRIPT_DIR}/$1" "${@:2}"
+}
 
 case "$1" in
     sync)
         shift
-        python -m consume_book.ingest_bridge "$@"
+        run_py ingest_bridge.py "$@"
         ;;
     search)
         shift
-        python -m consume_book.search "$@"
+        run_py search.py "$@"
         ;;
     note)
         shift
-        python -m consume_book.notes "$@"
+        run_py notes.py add "$@"
+        ;;
+    notes)
+        shift
+        run_py notes.py list "$@"
         ;;
     list)
-        python -m consume_book.list "$@"
+        shift
+        run_py list.py "$@"
         ;;
     bookmark)
         shift
-        python -m consume_book.position save "$@"
+        run_py position.py save "$@"
         ;;
     resume)
         shift
-        python -m consume_book.position resume "$@"
+        run_py position.py resume "$@"
         ;;
     info)
         echo "Consume Book Skill - Search and track ingested books"
@@ -45,12 +57,13 @@ case "$1" in
         echo "Cache: ${CACHE_DIR}"
         ;;
     *)
-        echo "Usage: $0 {sync|search|note|list|bookmark|resume|info}"
+        echo "Usage: $0 {sync|search|note|notes|list|bookmark|resume|info}"
         echo ""
         echo "Commands:"
         echo "  sync [--books-dir <dir>]                        Import books"
         echo "  search <query> [--book <id>] [--context <n>]     Search text"
         echo "  note --book <id> --char-position <n> --note <t>  Add note"
+        echo "  notes [--book <id>] [--agent <id>] [--json]      List notes"
         echo "  list [--json]                                   List books"
         echo "  bookmark --book <id> --char-position <n>         Save position"
         echo "  resume --book <id>                               Show position"

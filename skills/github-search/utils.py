@@ -13,7 +13,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .config import DEFAULT_TIMEOUT, DEFAULT_SEARCH_PATHS
+from config import DEFAULT_TIMEOUT, DEFAULT_SEARCH_PATHS
 
 
 def run_command(
@@ -151,7 +151,7 @@ def detect_language_from_path(path: str) -> Optional[str]:
     Returns:
         Language name, or None if not detected
     """
-    from .config import EXTENSION_TO_LANGUAGE
+    from config import EXTENSION_TO_LANGUAGE
 
     if '.' not in path:
         return None

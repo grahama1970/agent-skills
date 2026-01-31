@@ -1,12 +1,12 @@
 {
-  "completed": 2,
+  "completed": 6,
   "total": 16,
-  "description": "Dogpile: Simple hello world CLI implementation patterns Python",
-  "current_item": "stage1",
+  "description": "Dogpile: There Will Be Blood movie review",
+  "current_item": "completed",
   "stats": {
     "providers_done": 0,
     "providers_total": 9,
-    "errors": 0,
+    "errors": 1,
     "rate_limits": 0
   },
   "provider_status": {
@@ -21,10 +21,17 @@
     "discord": "pending"
   },
   "provider_times": {},
-  "errors": [],
+  "errors": [
+    {
+      "provider": "codex",
+      "message": "Synthesis failed: Error: 2026-01-31T02:37:30.054700Z ERROR codex_core::codex: failed to load skill /home/graham/worksp",
+      "type": "api_error",
+      "timestamp": "2026-01-30 21:37:40"
+    }
+  ],
   "rate_limits": {},
-  "elapsed_seconds": 68.0,
-  "progress_pct": 12.5,
-  "last_updated": "2026-01-29 17:24:45",
-  "status": "running"
+  "elapsed_seconds": 30.7,
+  "progress_pct": 37.5,
+  "last_updated": "2026-01-30 21:37:40",
+  "status": "completed"
 }

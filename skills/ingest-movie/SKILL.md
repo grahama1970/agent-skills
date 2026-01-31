@@ -228,6 +228,29 @@ Send clip extraction request to another project via agent-inbox.
 ./run.sh agent request --to ingest-movie --emotion rage --desc "Need betrayal fury scenes" --count 5
 ```
 
+### `run.sh agent recommend-book [--movie TITLE] [--emotion EMO] [--library PATH]`
+
+Recommend books to read before processing a movie for emotion extraction.
+
+```bash
+# Find source material for a specific movie
+./run.sh agent recommend-book --movie "Dune"
+
+# Find thematically related books for an emotion
+./run.sh agent recommend-book --emotion rage --library ~/library/books
+
+# Combined: find books related to movie AND emotion
+./run.sh agent recommend-book --movie "There Will Be Blood" --emotion rage
+```
+
+**Why read before watching?**
+- Understand character motivations and internal monologue
+- Note what was changed in the adaptation
+- Provide richer context for emotion extraction
+- Ground persona training in textual detail
+
+See `/consume_common/WORKFLOW.md` for the complete book-before-movie pipeline.
+
 ## Radarr Integration (Automated Acquisition)
 
 Automatically acquire movies from curated emotion mappings using Radarr.

@@ -5,6 +5,7 @@ Qwen3-TTS 1.7B Bayesian Hyperparameter Optimization - PRODUCTION READY
 Security-hardened version with proper error handling, VRAM checks, and robust web research.
 """
 
+import argparse
 import subprocess
 import json
 import os
@@ -60,6 +61,36 @@ def get_project_root() -> Path:
         raise RuntimeError("Cannot determine project root securely")
 
 PROJECT_ROOT = get_project_root()
+
+# Default training configuration
+TRAIN_CONFIG = {
+    "train_jsonl": str(PROJECT_ROOT / "datasets/horus_docker_full/train_3072.jsonl"),
+    "num_epochs": 1,
+    "speaker_name": "horus",
+    "max_steps": 300,
+    "mixed_precision": "bf16",
+}
+
+def get_model_config(model_size: str) -> Dict[str, Any]:
+    """Get model-specific configuration."""
+    configs = {
+        "0.6b": {
+            "init_model_path": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
+            "base_output_dir": PROJECT_ROOT / "artifacts/tts/qwen3_06b_bayesian",
+            "max_memory": None,
+            "batch_size_options": [2, 4, 8],
+            "default_batch": 4,
+        },
+        "1.7b": {
+            "init_model_path": "Qwen/Qwen3-TTS-12Hz-1.7B-Base",
+            "base_output_dir": PROJECT_ROOT / "artifacts/tts/qwen3_1.7b_bayesian",
+            "max_memory": "18GB",  # Target for 24GB VRAM systems
+            "batch_size_options": [1],  # Essential for memory constraints
+            "default_batch": 1,
+            "requires_memory_opt": True,
+        }
+    }
+    return configs.get(model_size, configs["0.6b"])
 
 # Security: Input validation and sanitization
 def validate_path(path: str) -> Path:

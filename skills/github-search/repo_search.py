@@ -13,8 +13,8 @@ import base64
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
-from .config import DEFAULT_REPO_LIMIT, DEFAULT_ISSUE_LIMIT, DEFAULT_FILE_MAX_SIZE
-from .utils import run_command, parse_json_output
+from config import DEFAULT_REPO_LIMIT, DEFAULT_ISSUE_LIMIT, DEFAULT_FILE_MAX_SIZE
+from utils import run_command, parse_json_output
 
 
 def search_repos(
@@ -228,7 +228,7 @@ def deep_repo_analysis(repo: str) -> Dict[str, Any]:
     Returns:
         Dict with all analysis results
     """
-    from .readme_analyzer import fetch_repo_readme
+    from readme_analyzer import fetch_repo_readme
 
     result = {
         "repo": repo,
