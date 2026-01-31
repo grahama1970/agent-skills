@@ -42,23 +42,25 @@ def status():
 
 @app.command()
 def usage(chute_id: Optional[str] = typer.Option(None, help="Check specific chute quota (if owned)")):
-    """Check Daily Call Usage and Account Balance."""
+    """Check Daily Usage (Calls) and Account Balance."""
     try:
         client = ChutesClient()
         reset_time = client.get_day_reset_time()
         
-        console.print(f"[bold]Daily Limit:[/bold] {DAILY_LIMIT} calls/day")
+        console.print(f"[bold]Daily Call Limit:[/bold] {DAILY_LIMIT}")
         console.print(f"[bold]Reset Time (UTC):[/bold] {reset_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
-        # 1. Daily Invocations (Pro Plan Limit)
+        # 1. Daily Usage (Count)
         try:
-             count = client.get_invocation_count()
+             count = client.get_daily_usage()
              remaining = max(DAILY_LIMIT - count, 0)
              color = "green" if remaining > 500 else "red"
-             console.print(f"[bold]Daily Usage:[/bold] {count}/{DAILY_LIMIT} calls")
-             console.print(f"[bold]Remaining:[/bold] [{color}]{remaining}[/{color}] calls")
+             
+             console.print(f"[bold]Daily Usage:[/bold] {count} / {DAILY_LIMIT}")
+             console.print(f"[bold]Remaining:[/bold] [{color}]{remaining}[/{color}]")
+             
         except Exception as e:
-             console.print(f"[red]Failed to count invocations:[/red] {e}")
+             console.print(f"[red]Failed to fetch usage:[/red] {e}")
 
         # 2. Account Balance (Backstop)
         user_info = client.get_user_info()
@@ -81,16 +83,16 @@ def budget_check():
     try:
         client = ChutesClient()
         
-        # 1. Check Daily Limit
+        # 1. Check Daily Limit (Count)
         try:
-            count = client.get_invocation_count()
+            count = client.get_daily_usage()
             if count >= DAILY_LIMIT:
                 console.print(f"[red]Daily Limit Exhausted ({count}/{DAILY_LIMIT})[/red]")
                 sys.exit(1)
             else:
                 console.print(f"[green]Daily Limit OK ({count}/{DAILY_LIMIT})[/green]")
         except Exception as e:
-            console.print(f"[yellow]Warning: Could not verify daily count ({e})[/yellow]")
+            console.print(f"[yellow]Warning: Could not verify daily usage ({e})[/yellow]")
 
         # 2. Check Balance (Backstop)
         user_info = client.get_user_info()
