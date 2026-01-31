@@ -2,24 +2,28 @@
 ---
 
 ## Answers to Clarifying Questions
-- Yes, all sources should reuse the Memory DB and the shared collections in the same database.
-- Per-collection write lock is acceptable; no global lock needed if Arango writes are guarded.
-- Yes, record last_fetch_at on 304; failures should update last_fetch_at but not last_success_at.
+- Daily reset: Yes, use 7PM America/New_York and handle DST via zoneinfo; confirm if provider ever deviates. 
+- Budget source: Prefer a shared counter file (CHUTES_BUDGET_FILE) or centralized store; RateLimit headers are advisory only. 
+- API contract: Assume /chutes and /ping but verify with Chutes docs; “running/ready/hot” are treated as healthy unless specified otherwise.
 
 ## Critique
-- CLI doctor change is correct, but early attempt showed “No match found”; ensure it truly applies. 
-- UA propagation is fixed for RSS, but other future sources must also use FeedRunner.user_agent. 
-- Concurrency: adding a threading.Lock around writes mitigates thread-safety, but reads (get_state, views()) remain unlocked; consider read consistency or transactional semantics.
+- util.get_day_reset_time now uses zoneinfo, which is good, but replace(tzinfo=eastern) after adding timedelta is odd—reset_est already has tzinfo; just add a day and keep tz. 
+- Removing persistent httpx client avoids leaks, but manager.usage still imported httpx inline; minor duplication with util, consider a helper. 
+- get_user_usage still returns dict placeholders; consider logging non-200 status explicitly. 
+- Budget file validation caps at 10,000,000 arbitrarily; document rationale or make configurable. 
+- run.sh retry helps, but using python -m pip inside venv is good; consider adding pip upgrade and a single retry backoff policy.
 
 ## Feedback for Revision
-- Ensure doctor sys.exit(1) diff matches the actual file lines and applies cleanly. 
-- Add lock to get_state or document read-after-write expectations; optionally batch state reads inside a lock for consistency. 
-- Add TODO or helper to construct sources with user_agent consistently to avoid future hardcoded UAs; and add a small test or sanity script to verify 304 updates last_fetch_at without last_success_at.
+- In util.get_day_reset_time: simplify to reset_est = reset_est + timedelta(days=1) without resetting tzinfo; zoneinfo preserves tz correctly. 
+- Add explicit handling in get_user_usage to include status_code on non-200 in the returned dict. 
+- Extract a small method in util to fetch /ping and headers to avoid duplicating httpx usage in manager. 
+- Make the budget cap configurable via env (e.g., CHUTES_BUDGET_CAP) and default to 10_000_000. 
+- In run.sh, add python -m pip install --upgrade pip before installing, and log when falling back from uv.
 
 
 Total usage est:       1 Premium request
-Total duration (API):  5.3s
-Total duration (wall): 7.5s
+Total duration (API):  5.9s
+Total duration (wall): 8.4s
 Total code changes:    0 lines added, 0 lines removed
 Usage by model:
-    gpt-5                62.0k input, 250 output, 0 cache read, 0 cache write (Est. 1 Premium request)
+    gpt-5                69.6k input, 389 output, 0 cache read, 0 cache write (Est. 1 Premium request)

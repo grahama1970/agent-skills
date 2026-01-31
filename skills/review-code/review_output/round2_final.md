@@ -1,81 +1,155 @@
 > **Review Metadata**: Round 2 | Final Diff | Provider: github | Model: gpt-5
 ---
 
-```diff
-Hardening: apply doctor exit, lock get_state, unify UA creation helper
+```
+Harden ops-chutes per judge: zoneinfo fix, usage status, ping helper, budget cap env, pip upgrade
 
-diff --git a/.pi/skills/consume-feed/cli.py b/.pi/skills/consume-feed/cli.py
-index 6b9f7a4..3e7f3f2 100644
---- a/.pi/skills/consume-feed/cli.py
-+++ b/.pi/skills/consume-feed/cli.py
-@@ -44,7 +44,7 @@ def doctor():
-     try:
-         storage = FeedStorage()
-         console.print(f"[green]✓ ArangoDB connected ('{storage.db_name}')[/green]")
-     except Exception as e:
-         console.print(f"[red]✗ ArangoDB error: {e}[/red]")
--        # Don't exit, might be transient network issue
-+        sys.exit(1)
-
-diff --git a/.pi/skills/consume-feed/sources/base.py b/.pi/skills/consume-feed/sources/base.py
-index 6e7f9c2..c8f3a1b 100644
---- a/.pi/skills/consume-feed/sources/base.py
-+++ b/.pi/skills/consume-feed/sources/base.py
-@@ -23,6 +23,12 @@ class BaseSource(ABC):
-         self.logger_name = f"source.{self.key}"
-         self.user_agent = user_agent or "ConsumeFeed/1.0"
+diff --git a/.pi/skills/ops-chutes/util.py b/.pi/skills/ops-chutes/util.py
+index b33b4ac..3a5a9d0 100644
+--- a/.pi/skills/ops-chutes/util.py
++++ b/.pi/skills/ops-chutes/util.py
+@@ -1,10 +1,10 @@
+ import os
+ import httpx
+ from typing import Optional, Dict, Any, List
+ from datetime import datetime, timedelta, timezone
+ from zoneinfo import ZoneInfo
  
-+    def make_http_client(self):
+ API_BASE = "https://api.chutes.ai"
+ 
+ class ChutesClient:
+@@ -34,6 +34,20 @@ class ChutesClient:
+             except Exception as e:
+                 raise RuntimeError(f"Non-JSON response for chute {chute_id_or_name}: {e}")
+ 
++    def get_ping_headers(self) -> Dict[str, Optional[str]]:
 +        """
-+        Centralized factory to ensure all sources use consistent User-Agent and timeouts.
++        Fetch /ping and return a subset of headers useful for rate-limit visibility.
++        Returns keys: RateLimit-Limit, RateLimit-Remaining, X-RateLimit-Limit, X-RateLimit-Remaining
 +        """
-+        from ..util.http import HttpClient
-+        return HttpClient(user_agent=self.user_agent)
-     @abstractmethod
-     def fetch(self) -> SourceStats:
++        try:
++            with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
++                resp = client.get("/ping")
++            return {
++                "RateLimit-Limit": resp.headers.get("RateLimit-Limit"),
++                "RateLimit-Remaining": resp.headers.get("RateLimit-Remaining"),
++                "X-RateLimit-Limit": resp.headers.get("X-RateLimit-Limit"),
++                "X-RateLimit-Remaining": resp.headers.get("X-RateLimit-Remaining"),
++            }
++        except Exception:
++            return {}
++
+     def list_chutes(self) -> List[Dict[str, Any]]:
+         """List all accessible chutes."""
+         with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
+@@ -46,13 +60,15 @@ class ChutesClient:
+         Attempt to get usage metrics.
+         If not available, return an informative placeholder.
          """
-         Main entrypoint.
-diff --git a/.pi/skills/consume-feed/sources/rss.py b/.pi/skills/consume-feed/sources/rss.py
-index 7f9a1c1..2f9b7a0 100644
---- a/.pi/skills/consume-feed/sources/rss.py
-+++ b/.pi/skills/consume-feed/sources/rss.py
-@@ -22,7 +22,7 @@ class RSSSource(BaseSource):
-         last_modified = state.get("last_modified")
-         
-         # 2. Fetch
--        with HttpClient(user_agent=self.user_agent) as client:
-+        with self.make_http_client() as client:
-             try:
-                 status, text, headers = client.fetch_text(
-                     self.config.rss_url,
-                     etag=etag,
-diff --git b/.pi/skills/consume-feed/storage.py a/.pi/skills/consume-feed/storage.py
-index 1b2f3f1..5c6d8e2 100644
---- b/.pi/skills/consume-feed/storage.py
-+++ a/.pi/skills/consume-feed/storage.py
-@@ -100,10 +100,12 @@ class FeedStorage:
-     def get_state(self, source_key: str) -> Dict[str, Any]:
-         col = self.db.collection("feed_state")
--        if col.has(source_key):
--            return col.get(source_key)
--        return {"_key": source_key}
-+        # Read lock for simple consistency after writes
-+        with self._lock:
-+            if col.has(source_key):
-+                return col.get(source_key)
-+            return {"_key": source_key}
+         try:
+             with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
+                 resp = client.get("/invocations/exports/recent")
+             if resp.status_code == 200:
+                 return resp.json()
+-            return {"type": "unknown", "msg": "No standard usage endpoint"}
++            return {
++                "type": "unknown",
++                "msg": "No standard usage endpoint",
++                "status": resp.status_code,
++            }
+         except Exception as e:
+             return {"error": str(e)}
  
-     def save_state(self, source_key: str, state: Dict[str, Any]):
-         state["_key"] = source_key
-         state["updated_at"] = time.time()
-         with self._lock:
-             self.db.collection("feed_state").insert(state, overwrite=True, silent=True)
+@@ -68,13 +84,12 @@ class ChutesClient:
+     def get_day_reset_time(self) -> datetime:
+         """Return the next 7PM US/Eastern reset time as an aware UTC datetime, DST-safe."""
+         eastern = ZoneInfo("America/New_York")
+         now_est = datetime.now(tz=eastern)
+         reset_est = now_est.replace(hour=19, minute=0, second=0, microsecond=0)
+         if now_est >= reset_est:
+-            reset_est = (reset_est + timedelta(days=1)).replace(tzinfo=eastern)
++            reset_est = reset_est + timedelta(days=1)
+         return reset_est.astimezone(timezone.utc)
+ 
+     def close(self):
+         # No persistent client to close; method kept for API compatibility.
+         return
+diff --git a/.pi/skills/ops-chutes/manager.py b/.pi/skills/ops-chutes/manager.py
+index 5e9d6a2..8b6a3a1 100644
+--- a/.pi/skills/ops-chutes/manager.py
++++ b/.pi/skills/ops-chutes/manager.py
+@@ -16,6 +16,7 @@ console = Console()
+ 
+ DAILY_LIMIT = int(os.environ.get("CHUTES_DAILY_LIMIT", 5000))
+ BUDGET_FILE = os.environ.get("CHUTES_BUDGET_FILE")
++BUDGET_CAP = int(os.environ.get("CHUTES_BUDGET_CAP", 10_000_000))
+ 
+ @app.command()
+ def status():
+@@ -47,17 +48,14 @@ def usage():
+         console.print(f"[bold]Daily Limit:[/bold] {DAILY_LIMIT}")
+         console.print(f"[bold]Reset Time (UTC):[/bold] {reset_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+         # Try to surface current rate-limit headers via a lightweight call
+         try:
+-            import httpx
+-            with httpx.Client(base_url="https://api.chutes.ai", headers=client.headers, timeout=client.timeout) as hc:
+-                resp = hc.get("/ping")
+-            remaining = resp.headers.get("X-RateLimit-Remaining") or resp.headers.get("RateLimit-Remaining")
+-            limit = resp.headers.get("X-RateLimit-Limit") or resp.headers.get("RateLimit-Limit")
++            headers = client.get_ping_headers()
++            remaining = headers.get("X-RateLimit-Remaining") or headers.get("RateLimit-Remaining")
++            limit = headers.get("X-RateLimit-Limit") or headers.get("RateLimit-Limit")
+             if remaining or limit:
+                 console.print(f"[bold]RateLimit:[/bold] remaining={remaining}, limit={limit}")
+             else:
+                 console.print("[dim]No rate-limit headers present; exact remaining unknown.[/dim]")
+         except Exception:
+             console.print("[dim]Unable to read rate-limit headers from /ping.[/dim]")
+@@ -74,13 +72,12 @@ def budget_check():
+         if BUDGET_FILE and os.path.isfile(BUDGET_FILE):
+             try:
+                 with open(BUDGET_FILE, "r") as f:
+                     raw = f.read().strip()
+                     usage = int(raw or "0")
+                     if usage < 0:
+                         console.print("[yellow]Warning: budget file contains negative value; treating as 0[/yellow]")
+                         usage = 0
+-                    if usage > 10000000:
++                    if usage > BUDGET_CAP:
+                         console.print("[yellow]Warning: budget file value unusually large; capping[/yellow]")
+-                        usage = 10000000
++                        usage = BUDGET_CAP
+             except Exception as e:
+                 console.print(f"[yellow]Warning: failed to read budget file: {e}[/yellow]")
+         if usage >= DAILY_LIMIT:
+             console.print(f"[red]Budget Exhausted ({usage}/{DAILY_LIMIT})[/red]")
+             sys.exit(1)
+diff --git a/.pi/skills/ops-chutes/run.sh b/.pi/skills/ops-chutes/run.sh
+index 0b9f7ea..c4b3b2e 100755
+--- a/.pi/skills/ops-chutes/run.sh
++++ b/.pi/skills/ops-chutes/run.sh
+@@ -12,6 +12,7 @@ cd "$SKILL_DIR"
+ has_uv() { command -v uv >/dev/null 2>&1; }
+ 
+ # Ensure dependencies are installed
+ if [ ! -d ".venv" ]; then
+     if has_uv; then
+         uv venv && uv pip install .
+     else
++        echo "uv not found; falling back to python venv + pip" >&2
+         python3 -m venv .venv && . .venv/bin/activate
++        python -m pip install --upgrade pip
+         # Basic retry for network flakiness
+         max_tries=3
+         try=1
+         while true; do
+           if python -m pip install .; then
 ```
 
 
 Total usage est:       1 Premium request
-Total duration (API):  4.9s
-Total duration (wall): 7.0s
+Total duration (API):  12.4s
+Total duration (wall): 15.2s
 Total code changes:    0 lines added, 0 lines removed
 Usage by model:
-    gpt-5                66.4k input, 785 output, 0 cache read, 0 cache write (Est. 1 Premium request)
+    gpt-5                76.9k input, 1.8k output, 0 cache read, 0 cache write (Est. 1 Premium request)

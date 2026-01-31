@@ -12,6 +12,8 @@ app = typer.Typer(help="Ops Chutes Manager")
 console = Console()
 
 DAILY_LIMIT = int(os.environ.get("CHUTES_DAILY_LIMIT", 5000))
+# Optional budget file path
+BUDGET_FILE = os.environ.get("CHUTES_BUDGET_FILE")
 
 @app.command()
 def status():
@@ -41,16 +43,27 @@ def usage():
     """Check API usage and estimated budget."""
     try:
         client = ChutesClient()
-        # Note: Since there is no direct quota endpoint, we infer or just show limits
         reset_time = client.get_day_reset_time()
         
         console.print(f"[bold]Daily Limit:[/bold] {DAILY_LIMIT}")
-        console.print(f"[bold]Reset Time:[/bold] {reset_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        console.print(f"[bold]Reset Time (UTC):[/bold] {reset_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
-        # In a real implementation, we would fetch actual usage here.
-        # For now, we report the configuration.
-        console.print("[dim]Note: Exact remaining calls requires accumulation from RateLimit headers.[/dim]")
-        
+        # Try to surface current rate-limit headers via a lightweight call
+        try:
+            import httpx
+            with httpx.Client(base_url="https://api.chutes.ai", headers=client.headers, timeout=client.timeout) as hc:
+                resp = hc.get("/ping")
+            
+            remaining = resp.headers.get("X-RateLimit-Remaining") or resp.headers.get("RateLimit-Remaining")
+            limit = resp.headers.get("X-RateLimit-Limit") or resp.headers.get("RateLimit-Limit")
+            
+            if remaining or limit:
+                console.print(f"[bold]RateLimit:[/bold] remaining={remaining}, limit={limit}")
+            else:
+                console.print("[dim]No rate-limit headers present; exact remaining unknown.[/dim]")
+        except Exception:
+            console.print("[dim]Unable to read rate-limit headers from /ping.[/dim]")
+
     except Exception as e:
         console.print(f"[red]Error checking usage: {e}[/red]")
         sys.exit(1)
@@ -63,13 +76,22 @@ def budget_check():
     Used by scheduler.
     """
     try:
-        # TODO: Implement persistent storage for call counting to make this real.
-        # For now, we assume budget is always OK unless we hit a 429 externally.
-        # If we had a shared counter (e.g. in Memory or a local file), we check it here.
-        
-        # Placeholder logic: Check a local file or env var if we were tracking it
-        # usage = get_stored_usage()
-        usage = 0 
+        # Check external budget file if configured
+        usage = 0
+        if BUDGET_FILE and os.path.isfile(BUDGET_FILE):
+            try:
+                with open(BUDGET_FILE, "r") as f:
+                    raw = f.read().strip()
+                    usage = int(raw or "0")
+                    # Sanity check values
+                    if usage < 0:
+                        console.print("[yellow]Warning: budget file contains negative value; treating as 0[/yellow]")
+                        usage = 0
+                    if usage > 10000000:
+                        console.print("[yellow]Warning: budget file value unusually large; capping[/yellow]")
+                        usage = 10000000
+            except Exception as e:
+                console.print(f"[yellow]Warning: failed to read budget file: {e}[/yellow]")
         
         if usage >= DAILY_LIMIT:
             console.print(f"[red]Budget Exhausted ({usage}/{DAILY_LIMIT})[/red]")

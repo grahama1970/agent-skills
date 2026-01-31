@@ -2,31 +2,28 @@
 ---
 
 ## Answers to Clarifying Questions
-- Hard-fail if Memory’s get_db is unavailable; the acceptance criteria explicitly disallow bespoke wrappers.
-- Yes, reuse the shared Memory DB and create feed_* collections there; do not spin up a separate DB.
-- Yes, make User-Agent configurable via FeedConfig.run_options.user_agent and consistently apply it in all sources.
+- Budget enforcement: Use a shared counter (CHUTES_BUDGET_FILE) or a centralized store if available; RateLimit headers are informative but not authoritative. Yes, 7PM US/Eastern is the intended daily reset per request; confirm if daylight saving adjustments are required.
+- API paths and status fields: Prefer /chutes (no trailing slash) and /ping; confirm exact status field names and semantics from Chutes API docs.
+- uv availability: Not guaranteed; Python venv fallback should be supported by default.
 
 ## Critique
-- Concurrency: FeedRunner shares a single FeedStorage (and thus a single Arango DB handle) across threads; python-arango connections are not guaranteed thread-safe. Consider per-source storage or locking for writes.
-- Resource leaks: Good fix adding context manager/close to HttpClient, but RSSSource ignores the configured user_agent; it hardcodes "ConsumeFeed/1.0". Also no global session reuse; repeated client creation is fine but ensure UA is consistent.
-- Data loss: save_state is only after upsert; fine, but on 304 you don’t update last_fetch_at, losing visibility of recent polling. Also import_bulk result keys can vary; ensure created/updated exist or handle missing keys.
-- Arango reuse: Good removal of fallback wrapper to meet “no bespoke wrappers”, but cli doctor still doesn’t exit on Arango errors (earlier attempted change failed), weakening the “robustness verified” signal.
-- Verbosity/Bloat: pyproject force-include to remap a flat layout into consume_feed package looks aspirational and brittle; unnecessary for a .pi skill not meant for distribution.
-- Sanity tests: walkthrough references sanity tests that don’t exist; claims are unverified.
+- Aspirational features: SKILL.md originally implied precise tracking; the diff improves honesty but still suggests rate-limit introspection without guaranteeing correctness. The usage endpoint (/invocations/exports/recent) is speculative and may 404; error handling returns placeholders but doesn’t surface non-200 codes explicitly. 
+- Brittleness: get_day_reset_time timezone math is still fragile; mixing localize and timedelta with pytz is error-prone and DST-sensitive. manager.usage reads RateLimit headers from /ping which may be absent or auth-dependent; budget-check reading a file lacks write/atomic updates, race-safety, and doesn’t handle negative/invalid values robustly.
+- Over-engineering: Dependencies include python-dateutil but are unused; pytz could be replaced with zoneinfo in Python 3.11 to reduce bloat. ChutesClient maintains a persistent httpx.Client without context management; could leak sockets across CLI runs.
+- Bad practices: util.get_user_usage swallows errors into dicts instead of raising/logging; manager.status assumes certain fields, risking confusing output. run.sh’s venv bootstrap may install the package into the venv without pinning versions or lockfile; missing retries and network failure handling.
 
 ## Feedback for Revision
-- Pass FeedRunner.user_agent into RSSSource and initialize HttpClient with it; avoid hardcoded UA.
-- Make 304 path update last_fetch_at and persist it to state; keep last_success_at unchanged.
-- Ensure import_bulk result handling is robust: guard for missing keys and log errors.
-- Avoid sharing a single Arango DB client across threads; either instantiate FeedStorage per source or add a simple write lock around upserts/state writes.
-- Update cli doctor to exit non-zero on Arango connection failure; ensure the change is actually applied.
-- Remove force-include packaging from pyproject.toml for this internal skill, or justify and add tests for packaging if truly required.
-- Add real sanity tests (mock HTTP server with 5xx/304; state checkpoint round-trip; concurrent upserts) to validate resilience and concurrency.
+- Remove python-dateutil from pyproject or use it; switch pytz to zoneinfo for robust DST handling and implement clear next-reset calculation with UTC output. 
+- In util.list_chutes and get_chute_status, explicitly handle non-JSON or non-200 with informative Typer errors; add a small health check helper that exposes response headers safely. 
+- For budget-check, validate CHUTES_BUDGET_FILE content (non-negative int), guard against large values, and document a simple atomic increment protocol; optionally support a read-only mode and a centralized store hook. 
+- Make httpx.Client usage context-managed per call or add a __enter__/__exit__ to ensure closure; add timeouts and backoff for /ping and list endpoints. 
+- Tighten SKILL.md language to clearly state “best-effort” usage visibility only; state that RateLimit headers may not exist. 
+- Improve run.sh: if uv missing, prefer python -m pip inside venv, add a basic retry on install, and print a clear error on install failure.
 
 
 Total usage est:       1 Premium request
-Total duration (API):  9.6s
-Total duration (wall): 11.6s
+Total duration (API):  7.5s
+Total duration (wall): 9.6s
 Total code changes:    0 lines added, 0 lines removed
 Usage by model:
-    gpt-5                36.1k input, 891 output, 0 cache read, 0 cache write (Est. 1 Premium request)
+    gpt-5                36.1k input, 596 output, 0 cache read, 0 cache write (Est. 1 Premium request)

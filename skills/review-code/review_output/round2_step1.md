@@ -1,268 +1,431 @@
 > **Review Metadata**: Round 2 | Step 1 | Provider: github | Model: gpt-5
 ---
 
+✓ Read .pi/skills/ops-chutes/SKILL.md (54 lines)
+
+✓ Read .pi/skills/ops-chutes/pyproject.toml (33 lines)
+
+✓ Read .pi/skills/ops-chutes/manager.py (102 lines)
+
+✓ Read .pi/skills/ops-chutes/run.sh (31 lines)
+
+✓ Read .pi/skills/ops-chutes/util.py (73 lines)
+
+✓ Read .pi/skills/ops-chutes/sanity/test_auth.py (43 lines)
+
+✓ Read .pi/skills/ops-chutes/util.py (73 lines)
+
+✓ Edit .pi/skills/ops-chutes/util.py (+28 -20)
+   ╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+   │  1     import os                                                                             │
+   │  2     import httpx                                                                          │
+   │  3     from typing import Optional, Dict, Any, List                                          │
+   │  4  -  from datetime import datetime, timezone                                               │
+   │  5  -  import pytz                                                                           │
+   │  4  +  from datetime import datetime, timedelta, timezone                                    │
+   │  5  +  from zoneinfo import ZoneInfo                                                         │
+   │  6                                                                                           │
+   │  7     API_BASE = "https://api.chutes.ai"                                                    │
+   │  8                                                                                           │
+   │ ──────────────────────────────────────────────────────────────────────────────────────────── │
+   │ 17                 "Accept": "application/json",                                             │
+   │ 18                 "User-Agent": "OpsChutes/1.0"                                             │
+   │ 19             }                                                                             │
+   │ 20  -          self.client = httpx.Client(base_url=API_BASE, headers=self.headers,           │
+   │        timeout=30.0)                                                                         │
+   │ 20  +          # Use per-call clients to avoid leaking sockets                               │
+   │ 21  +          self.timeout = 30.0                                                           │
+   │ 22                                                                                           │
+   │ 23         def get_chute_status(self, chute_id_or_name: str) -> Dict[str, Any]:              │
+   │ 24             """Get status of a specific chute."""                                         │
+   │ 24  -          resp = self.client.get(f"/chutes/{chute_id_or_name}")                         │
+   │ 25  -          resp.raise_for_status()                                                       │
+   │ 26  -          return resp.json()                                                            │
+   │ 25  +          with httpx.Client(base_url=API_BASE, headers=self.headers,                    │
+   │        timeout=self.timeout) as client:                                                      │
+   │ 26  +              resp = client.get(f"/chutes/{chute_id_or_name}")                          │
+   │ 27  +              resp.raise_for_status()                                                   │
+   │ 28  +              try:                                                                      │
+   │ 29  +                  return resp.json()                                                    │
+   │ 30  +              except Exception as e:                                                    │
+   │ 31  +                  raise RuntimeError(f"Non-JSON response for chute {chute_id_or_name}:  │
+   │        {e}")                                                                                 │
+   │ 32                                                                                           │
+   │ 33         def list_chutes(self) -> List[Dict[str, Any]]:                                    │
+   │ 34             """List all accessible chutes."""                                             │
+   │ 32                                                                                           │
+   │ 33         def list_chutes(self) -> List[Dict[str, Any]]:                                    │
+   │ 34             """List all accessible chutes."""                                             │
+   │ 30  -          resp = self.client.get("/chutes")                                             │
+   │ 31  -          resp.raise_for_status()                                                       │
+   │ 32  -          return resp.json()                                                            │
+   │ 35  +          with httpx.Client(base_url=API_BASE, headers=self.headers,                    │
+   │        timeout=self.timeout) as client:                                                      │
+   │ 36  +              resp = client.get("/chutes")                                              │
+   │ 37  +              resp.raise_for_status()                                                   │
+   │ 38  +              try:                                                                      │
+   │ 39  +                  return resp.json()                                                    │
+   │ 40  +              except Exception as e:                                                    │
+   │ 41  +                  raise RuntimeError(f"Non-JSON response when listing chutes: {e}")     │
+   │ 42                                                                                           │
+   │ 43         def get_user_usage(self) -> Dict[str, Any]:                                       │
+   │ 44             """                                                                           │
+   │ 46             If not available, return an informative placeholder.                          │
+   │ 47             """                                                                           │
+   │ 48             try:                                                                          │
+   │ 40  -              resp = self.client.get("/invocations/exports/recent")                     │
+   │ ──────────────────────────────────────────────────────────────────────────────────────────── │
+   │ 49  +              with httpx.Client(base_url=API_BASE, headers=self.headers,                │
+   │        timeout=self.timeout) as client:                                                      │
+   │ 50  +                  resp = client.get("/invocations/exports/recent")                      │
+   │ 51                 if resp.status_code == 200:                                               │
+   │ 52                     return resp.json()                                                    │
+   │ 53                 return {"type": "unknown", "msg": "No standard usage endpoint"}           │
+   │ 57         def check_sanity(self) -> bool:                                                   │
+   │ 58             """API reachability check via /ping."""                                       │
+   │ 59             try:                                                                          │
+   │ 50  -              resp = self.client.get("/ping")                                           │
+   │ ──────────────────────────────────────────────────────────────────────────────────────────── │
+   │ 60  +              with httpx.Client(base_url=API_BASE, headers=self.headers,                │
+   │        timeout=self.timeout) as client:                                                      │
+   │ 61  +                  resp = client.get("/ping")                                            │
+   │ 62                 return resp.status_code == 200                                            │
+   │ 63             except Exception:                                                             │
+   │ 64                 return False                                                              │
+   │ 65                                                                                           │
+   │ 66         def get_day_reset_time(self) -> datetime:                                         │
+   │ 56  -          """Return the next 7PM US/Eastern reset time as an aware datetime in UTC."""  │
+   │ 57  -          est = pytz.timezone("US/Eastern")                                             │
+   │ 58  -          now_est = datetime.now(est)                                                   │
+   │ ──────────────────────────────────────────────────────────────────────────────────────────── │
+   │ 67  +          """Return the next 7PM US/Eastern reset time as an aware UTC datetime,        │
+   │        DST-safe."""                                                                          │
+   │ 68  +          eastern = ZoneInfo("America/New_York")                                        │
+   │ 69  +          now_est = datetime.now(tz=eastern)                                            │
+   │ 70             reset_est = now_est.replace(hour=19, minute=0, second=0, microsecond=0)       │
+   │ 71             if now_est >= reset_est:                                                      │
+   │ 72                 reset_est = reset_est + est.utcoffset(now_est) * 0 + (reset_est -         │
+   │        reset_est)  # no-op to keep tzinfo                                                    │
+   │ 69             now_est = datetime.now(est)                                                   │
+   │ 70             reset_est = now_est.replace(hour=19, minute=0, second=0, microsecond=0)       │
+   │ 71             if now_est >= reset_est:                                                      │
+   │ 61  -              reset_est = reset_est + est.utcoffset(now_est) * 0 + (reset_est -         │
+   │        reset_est)  # no-op to keep tzinfo                                                    │
+   │ 62  -              reset_est = reset_est + pytz.timedelta(days=1)                            │
+   │ 63  -              reset_est = est.localize(reset_est.replace(tzinfo=None))                  │
+   │ 64  -          reset_utc = reset_est.astimezone(pytz.UTC)                                    │
+   │ 65  -          return reset_utc                                                              │
+   │ ──────────────────────────────────────────────────────────────────────────────────────────── │
+   │ 72  +              reset_est = (reset_est + timedelta(days=1)).replace(tzinfo=eastern)       │
+   │ 73  +          return reset_est.astimezone(timezone.utc)                                     │
+   │ 74                                                                                           │
+   │ 75         def close(self):                                                                  │
+   │ 68  -          self.client.close()                                                           │
+   │ ──────────────────────────────────────────────────────────────────────────────────────────── │
+   │ 76  +          return                                                                        │
+   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✓ Edit .pi/skills/ops-chutes/pyproject.toml (-2)
+   ╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+   │  7         "typer>=0.9.0",                                                                   │
+   │  8         "rich>=13.0.0",                                                                   │
+   │  9         "httpx>=0.24.0",                                                                  │
+   │ 10  -      "python-dateutil>=2.8.0",                                                         │
+   │ 11  -      "pytz>=2023.3",                                                                   │
+   │ 10     ]                                                                                     │
+   │ 11                                                                                           │
+   │ 12     [build-system]                                                                        │
+   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✓ Edit .pi/skills/ops-chutes/manager.py (+3 -1)
+   ╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+   │ 42     console.print(f"[bold]Reset Time (UTC):[/bold] {reset_time.strftime('%Y-%m-%d         │
+   │        %H:%M:%S %Z')}")                                                                      │
+   │ 43     # Try to surface current rate-limit headers via a lightweight call                    │
+   │ 44     try:                                                                                  │
+   │ 45  -      resp = client.client.get("/ping")                                                 │
+   │ 45  +      import httpx                                                                      │
+   │ 46  +      with httpx.Client(base_url="https://api.chutes.ai", headers=client.headers,       │
+   │        timeout=client.timeout) as hc:                                                        │
+   │ 47  +          resp = hc.get("/ping")                                                        │
+   │ 48         remaining = resp.headers.get("X-RateLimit-Remaining") or                          │
+   │        resp.headers.get("RateLimit-Remaining")                                               │
+   │ 49         limit = resp.headers.get("X-RateLimit-Limit") or                                  │
+   │        resp.headers.get("RateLimit-Limit")                                                   │
+   │ 50         if remaining or limit:                                                            │
+   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✓ Edit .pi/skills/ops-chutes/SKILL.md (+1 -1)
+   ╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+   │ 2     name: ops-chutes                                                                       │
+   │ 3     description: >                                                                         │
+   │ 4       Manage Chutes.ai resources, show configured daily limit, and monitor API health.     │
+   │ 5  -    Integrates with scheduler; budget gating is best-effort unless explicit usage source │
+   │        is provided.                                                                          │
+   │ 5  +    Integrates with scheduler; budget gating is best-effort unless explicit usage source │
+   │        is provided and RateLimit headers may not be present                                  │
+   │ 6     triggers:                                                                              │
+   │ 7       - check chutes                                                                       │
+   │ 8       - chutes usage                                                                       │
+   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✓ Edit .pi/skills/ops-chutes/run.sh (+14 -1)
+   ╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+   │ 14         if has_uv; then                                                                   │
+   │ 15             uv venv && uv pip install .                                                   │
+   │ 16         else                                                                              │
+   │ 17  -          python3 -m venv .venv && . .venv/bin/activate && pip install .                │
+   │ 17  +          python3 -m venv .venv && . .venv/bin/activate                                 │
+   │ 18  +          max_tries=3                                                                   │
+   │ 19  +          try=1                                                                         │
+   │ 20  +          while true; do                                                                │
+   │ 21  +            if python -m pip install .; then                                            │
+   │ 22  +              break                                                                     │
+   │ 23  +            fi                                                                          │
+   │ 24  +            if [ "$try" -ge "$max_tries" ]; then                                        │
+   │ 25  +              echo "ERROR: Failed to install dependencies after $max_tries attempts"    │
+   │        >&2                                                                                   │
+   │ 26  +              exit 1                                                                    │
+   │ 27  +            fi                                                                          │
+   │ 28  +            try=$((try+1))                                                              │
+   │ 29  +            sleep 2                                                                     │
+   │ 30  +          done                                                                          │
+   │ 31         fi                                                                                │
+   │ 32     fi                                                                                    │
+   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✓ Edit .pi/skills/ops-chutes/SKILL.md (+1 -1)
+   ╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+   │ 30     # Check model status (hot/cold/down)                                                  │
+   │ 31     ./run.sh status                                                                       │
+   │ 32                                                                                           │
+   │ 33  -  # Show configured usage limit and reset time (does not guarantee exact remaining)     │
+   │ 33  +  # Show configured usage limit and reset time (best-effort; exact remaining not        │
+   │        guaranteed)                                                                           │
+   │ 34     ./run.sh usage                                                                        │
+   │ 35                                                                                           │
+   │ 36     # Run sanity check (API reachability)                                                 │
+   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✓ Edit .pi/skills/ops-chutes/manager.py (+8 -1)
+   ╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+   │ 69     if BUDGET_FILE and os.path.isfile(BUDGET_FILE):                                       │
+   │ 70         try:                                                                              │
+   │ 71             with open(BUDGET_FILE, "r") as f:                                             │
+   │ 72  -              usage = int(f.read().strip() or "0")                                      │
+   │ 72  +              raw = f.read().strip()                                                    │
+   │ 73  +              usage = int(raw or "0")                                                   │
+   │ 74  +              if usage < 0:                                                             │
+   │ 75  +                  console.print("[yellow]Warning: budget file contains negative value;  │
+   │        treating as 0[/yellow]")                                                              │
+   │ 76  +                  usage = 0                                                             │
+   │ 77  +              if usage > 10000000:                                                      │
+   │ 78  +                  console.print("[yellow]Warning: budget file value unusually large;    │
+   │        capping[/yellow]")                                                                    │
+   │ 79  +                  usage = 10000000                                                      │
+   │ 80         except Exception as e:                                                            │
+   │ 81             console.print(f"[yellow]Warning: failed to read budget file: {e}[/yellow]")   │
+   │ 82     if usage >= DAILY_LIMIT:                                                              │
+   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✓ Edit .pi/skills/ops-chutes/SKILL.md (+1 -1)
+   ╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+   │ 36     # Run sanity check (API reachability)                                                 │
+   │ 37     ./run.sh sanity --model <model_name>                                                  │
+   │ 38                                                                                           │
+   │ 39  -  # Budget gate (exit 1 if exhausted) - requires CHUTES_BUDGET_FILE or external counter │
+   │ 39  +  # Budget gate (exit 1 if exhausted) - requires CHUTES_BUDGET_FILE or external         │
+   │        counter; file must contain non-negative integer                                       │
+   │ 40     ./run.sh budget-check                                                                 │
+   │ 41     ```                                                                                   │
+   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
 Clarifying questions:
-- Confirm that all sources must share the Memory DB connection and collections (feed_items/state/deadletters/runs) within the same database rather than separate DBs.
-- Should we throttle per-source concurrency or enforce a global lock across writes, or is per-collection write-lock sufficient?
-- Are 304 poll timestamps required for SLA reporting, and should failures update a last_fetch_at without last_success_at?
+- Confirm daily reset: Is 7PM America/New_York the authoritative reset, including DST changes?
+- Budget source: Should budget enforcement use a shared file counter (CHUTES_BUDGET_FILE), centralized store, or only RateLimit headers?
+- API contract: Are /chutes and /ping the correct endpoints, and which status field values indicate “healthy” (running/ready/hot)?
 
-```diff
-Hardening: concurrency locks, UA propagation, 304 state, doctor exit, packaging cleanup
+```
+*** Begin Patch
+*** Update File: .pi/skills/ops-chutes/pyproject.toml
+@@
+ dependencies = [
+     "typer>=0.9.0",
+     "rich>=13.0.0",
+-    "httpx>=0.24.0",
+-    "python-dateutil>=2.8.0",
+-    "pytz>=2023.3",
++    "httpx>=0.24.0",
+ ]
+*** End Patch
+```
 
-diff --git a/.pi/skills/consume-feed/cli.py b/.pi/skills/consume-feed/cli.py
-index 6b9f7a4..3e7f3f2 100644
---- a/.pi/skills/consume-feed/cli.py
-+++ b/.pi/skills/consume-feed/cli.py
-@@ -44,7 +44,7 @@ def doctor():
-     try:
-         storage = FeedStorage()
-         console.print(f"[green]✓ ArangoDB connected ('{storage.db_name}')[/green]")
-     except Exception as e:
-         console.print(f"[red]✗ ArangoDB error: {e}[/red]")
--        # Don't exit, might be transient network issue
-+        sys.exit(1)
+```
+*** Begin Patch
+*** Update File: .pi/skills/ops-chutes/SKILL.md
+@@
+-description: >
+-  Manage Chutes.ai resources, show configured daily limit, and monitor API health.
+-  Integrates with scheduler; budget gating is best-effort unless explicit usage source is provided.
++description: >
++  Manage Chutes.ai resources, show configured daily limit, and monitor API health.
++  Integrates with scheduler; budget gating is best-effort unless explicit usage source is provided and RateLimit headers may not be present.
+@@
+-# Show configured usage limit and reset time (does not guarantee exact remaining)
++# Show configured usage limit and reset time (best-effort; exact remaining not guaranteed)
+ ./run.sh usage
+@@
+-# Budget gate (exit 1 if exhausted) - requires CHUTES_BUDGET_FILE or external counter
++# Budget gate (exit 1 if exhausted) - requires CHUTES_BUDGET_FILE or external counter; file must contain non-negative integer
+ ./run.sh budget-check
+*** End Patch
+```
 
-diff --git a/.pi/skills/consume-feed/sources/base.py b/.pi/skills/consume-feed/sources/base.py
-index f4a4f3e..6e7f9c2 100644
---- a/.pi/skills/consume-feed/sources/base.py
-+++ b/.pi/skills/consume-feed/sources/base.py
-@@ -13,11 +13,12 @@ class SourceStats(BaseModel):
-     status: str = "ok" # ok, failed, skipped
- 
- class BaseSource(ABC):
--    def __init__(self, config: FeedSource, storage: FeedStorage):
-+    def __init__(self, config: FeedSource, storage: FeedStorage, user_agent: str | None = None):
-         self.config = config
-         self.storage = storage
-         self.key = config.key
-         self.logger_name = f"source.{self.key}"
-+        self.user_agent = user_agent or "ConsumeFeed/1.0"
- 
-     @abstractmethod
-     def fetch(self) -> SourceStats:
-
-diff --git a/.pi/skills/consume-feed/runner.py b/.pi/skills/consume-feed/runner.py
-index e7b0b5a..8b0c2f3 100644
---- a/.pi/skills/consume-feed/runner.py
-+++ b/.pi/skills/consume-feed/runner.py
-@@ -21,6 +21,8 @@ class FeedRunner:
-         self.storage = FeedStorage(
-             url=config.arango_url, 
-             db_name=config.arango_db
-         )
-+        # Respect configured User-Agent for network calls
-+        self.user_agent = config.run_options.user_agent
- 
-     def _get_source_instance(self, source_config: FeedSource):
-         """Factory method to instantiate the correct source class."""
-@@ -28,7 +30,7 @@ class FeedRunner:
-         # This will need to be expanded as we implement sources
-         if source_config.type == SourceType.RSS:
--            return RSSSource(source_config, self.storage)
-+            return RSSSource(source_config, self.storage, user_agent=self.user_agent)
-         # elif source_config.type == SourceType.GITHUB:
-         #     return GitHubReleasesSource(source_config, self.storage)
-         # elif source_config.type == SourceType.NVD:
-         #     return NVDSource(source_config, self.storage)
-
-diff --git a/.pi/skills/consume-feed/sources/rss.py b/.pi/skills/consume-feed/sources/rss.py
-index 2f0d0e3..7f9a1c1 100644
---- a/.pi/skills/consume-feed/sources/rss.py
-+++ b/.pi/skills/consume-feed/sources/rss.py
-@@ -20,23 +20,28 @@ class RSSSource(BaseSource):
-         last_modified = state.get("last_modified")
-         
-         # 2. Fetch
--        with HttpClient(user_agent=self.storage.db.name if False else "ConsumeFeed/1.0") as client:
-+        with HttpClient(user_agent=self.user_agent) as client:
-             try:
-                 status, text, headers = client.fetch_text(
-                     self.config.rss_url,
-                     etag=etag,
-                     last_modified=last_modified
-                 )
-             except Exception as e:
--                # Check if it was a 304 handled by exception? 
--                # (No, HttpClient returns 304 status, doesn't raise unless error)
--                # If we are here, it's a real error (timeout, 500, etc) inherited from tenacity
-                 stats.errors += 1
-                 stats.status = "failed"
-                 console.print(f"[red]Fetch failed for {self.key}: {e}[/red]")
-                 return stats
- 
-         if status == 304:
-             console.print(f"[dim]No changes for {self.key} (304 Not Modified)[/dim]")
-             stats.status = "skipped_304"
-+            # Persist last_fetch_at even if not modified to reflect polling
-+            if not dry_run:
-+                self.save_state({
-+                    "etag": etag,
-+                    "last_modified": last_modified,
-+                    "last_fetch_at": time.time()
-+                })
-             return stats
- 
-         # 3. Parse
-@@ -114,10 +119,10 @@ class RSSSource(BaseSource):
-         # 5. Save State
-         if not dry_run:
-             new_state = {
--                "etag": headers.get("ETag"),
--                "last_modified": headers.get("Last-Modified"),
-+                "etag": headers.get("ETag"),
-+                "last_modified": headers.get("Last-Modified"),
-                 "last_fetch_at": time.time(),
--                "last_success_at": time.time()
-+                "last_success_at": time.time()
-             }
-             self.save_state(new_state)
- 
-diff --git a/.pi/skills/consume-feed/util/http.py b/.pi/skills/consume-feed/util/http.py
-index 8b3a2f1..f5b7b9a 100644
---- a/.pi/skills/consume-feed/util/http.py
-+++ b/.pi/skills/consume-feed/util/http.py
-@@ -30,7 +30,21 @@ RETRY_CONFIG = dict(
- class HttpClient:
--    def __init__(self, user_agent: str = "ConsumeFeed/1.0"):
--        self.headers = {"User-Agent": user_agent}
--        self.client = httpx.Client(timeout=30.0)
-+    def __init__(self, user_agent: str = "ConsumeFeed/1.0", timeout: float = 30.0):
-+        self.headers = {"User-Agent": user_agent}
-+        self.client = httpx.Client(timeout=timeout)
-+
-+    def close(self):
+```
+*** Begin Patch
+*** Update File: .pi/skills/ops-chutes/util.py
+@@
+-from datetime import datetime, timezone
+-import pytz
++from datetime import datetime, timedelta, timezone
++from zoneinfo import ZoneInfo
+@@
+-        self.client = httpx.Client(base_url=API_BASE, headers=self.headers, timeout=30.0)
++        # Use per-call clients to avoid leaking sockets
++        self.timeout = 30.0
+@@
+-        resp = self.client.get(f"/chutes/{chute_id_or_name}")
+-        resp.raise_for_status()
+-        return resp.json()
++        with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
++            resp = client.get(f"/chutes/{chute_id_or_name}")
++            resp.raise_for_status()
++            try:
++                return resp.json()
++            except Exception as e:
++                raise RuntimeError(f"Non-JSON response for chute {chute_id_or_name}: {e}")
+@@
+-        resp = self.client.get("/chutes")
+-        resp.raise_for_status()
+-        return resp.json()
++        with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
++            resp = client.get("/chutes")
++            resp.raise_for_status()
++            try:
++                return resp.json()
++            except Exception as e:
++                raise RuntimeError(f"Non-JSON response when listing chutes: {e}")
+@@
+-        try:
+-            resp = self.client.get("/invocations/exports/recent")
 +        try:
-+            self.client.close()
-+        except Exception:
-+            pass
-+
-+    def __enter__(self):
-+        return self
-+
-+    def __exit__(self, exc_type, exc, tb):
-+        self.close()
- 
-     @retry(**RETRY_CONFIG)
-     def fetch_text(self, url: str, etag: Optional[str] = None, last_modified: Optional[str] = None) -> tuple[int, str, Dict[str, str]]:
-diff --git a/.pi/skills/consume-feed/storage.py b/.pi/skills/consume-feed/storage.py
-index 5b5f4b9..1b2f3f1 100644
---- a/.pi/skills/consume-feed/storage.py
-+++ b/.pi/skills/consume-feed/storage.py
-@@ -1,7 +1,8 @@
- import sys
- import os
- import time
--from typing import Dict, Any, List, Optional
-+import threading
-+from typing import Dict, Any, List, Optional
- from rich.console import Console
- 
- # Add memory skill to path to import connection logic
-@@ -45,6 +46,7 @@ class FeedStorage:
-             self.db = self.client.db(db_name, username="root", password="")
-             self.db_name = db_name
- 
-+        self._lock = threading.Lock()
-         self._init_schema()
- 
-     def _init_schema(self):
-@@ -93,13 +95,16 @@ class FeedStorage:
-     def upsert_items(self, items: List[Dict[str, Any]]) -> int:
-         if not items:
-             return 0
-         col = self.db.collection("feed_items")
--        result = col.import_bulk(items, on_duplicate="update", halt_on_error=False)
--        return result["created"] + result["updated"]
-+        with self._lock:
-+            result = col.import_bulk(items, on_duplicate="update", halt_on_error=False)
-+        created = int(result.get("created", 0))
-+        updated = int(result.get("updated", 0))
-+        return created + updated
- 
-     def get_state(self, source_key: str) -> Dict[str, Any]:
-         col = self.db.collection("feed_state")
-         if col.has(source_key):
-             return col.get(source_key)
-         return {"_key": source_key}
- 
-     def save_state(self, source_key: str, state: Dict[str, Any]):
-         state["_key"] = source_key
-         state["updated_at"] = time.time()
--        self.db.collection("feed_state").insert(state, overwrite=True, silent=True)
-+        with self._lock:
-+            self.db.collection("feed_state").insert(state, overwrite=True, silent=True)
- 
-     def log_deadletter(self, doc: Dict[str, Any]):
-         doc["logged_at"] = time.time()
--        self.db.collection("feed_deadletters").insert(doc, silent=True)
-+        with self._lock:
-+            self.db.collection("feed_deadletters").insert(doc, silent=True)
-         
-     def log_run(self, run_stats: Dict[str, Any]):
-         run_stats["logged_at"] = time.time()
--        self.db.collection("feed_runs").insert(run_stats, silent=True)
-+        with self._lock:
-+            self.db.collection("feed_runs").insert(run_stats, silent=True)
-diff --git a/.pi/skills/consume-feed/storage.py b/.pi/skills/consume-feed/storage.py
-index 1b2f3f1..a3c2f17 100644
---- a/.pi/skills/consume-feed/storage.py
-+++ b/.pi/skills/consume-feed/storage.py
-@@ -13,9 +13,9 @@ if MEMORY_SKILL_PATH not in sys.path:
-     sys.path.append(MEMORY_SKILL_PATH)
- 
- try:
-     from horus_lore_storage import get_db
--except ImportError:
--    # Fallback if memory skill is missing (e.g. standalone dev)
--    # But for this environment, we expect it.
-+except ImportError:
-+    # Hard fail to avoid bespoke wrappers; this skill must reuse Memory's connection.
-     from arango import ArangoClient
--    def get_db():
--        url = os.getenv("ARANGO_URL", "http://127.0.0.1:8529")
--        db_name = os.getenv("ARANGO_DB", "feed_db")
--        # In standalone, we might default differently, but let's stick to env
--        client = ArangoClient(hosts=url)
--        # Note: horus_lore_storage uses 'memory' db by default.
--        # We want to support that reused connection.
--        return client.db(db_name, username=os.getenv("ARANGO_USER", "root"), password=os.getenv("ARANGO_PASS", ""))
-+    raise ImportError("Memory skill connection 'get_db' not available. Ensure Memory skill is installed and on PYTHONPATH.")
-diff --git a/.pi/skills/consume-feed/pyproject.toml b/.pi/skills/consume-feed/pyproject.toml
-index 1a2b3c4..e3d4f5a 100644
---- a/.pi/skills/consume-feed/pyproject.toml
-+++ b/.pi/skills/consume-feed/pyproject.toml
-@@ -21,23 +21,6 @@ build-backend = "hatchling.build"
- 
--[tool.hatch.build.targets.wheel]
--packages = ["sources", "util"]
--# We also need to include the top-level modules. 
--# Hatchling is strict about "packages" meaning directories.
--# To support flat layout with top-level modules, we usually rely on 'force-include'.
--
--[tool.hatch.build.targets.wheel.force-include]
--"cli.py" = "consume_feed/cli.py"
--"config.py" = "consume_feed/config.py"
--"runner.py" = "consume_feed/runner.py"
--"storage.py" = "consume_feed/storage.py"
--"sources" = "consume_feed/sources"
--"util" = "consume_feed/util"
--
--# Wait, the above effectively moves them into a package named 'consume_feed' in the wheel.
--# This actually solves the import problem nicely (local code runs flat, installed code runs as package).
--# BUT, `python -m cli` in the `run.sh` relies on them being in the CWD/root.
--# `uv run` installs the project in editable mode.
--# If we use editable mode, hatch needs to know where the source is.
-+[tool.hatch.build.targets.wheel]
-+packages = []
- # Internal skill; no packaging remaps or force-includes needed.
- 
- [tool.hatch.build.targets.sdist]
++            with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
++                resp = client.get("/invocations/exports/recent")
+             if resp.status_code == 200:
+                 return resp.json()
+             return {"type": "unknown", "msg": "No standard usage endpoint"}
+         except Exception as e:
+             return {"error": str(e)}
+@@
+-        try:
+-            resp = self.client.get("/ping")
++        try:
++            with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
++                resp = client.get("/ping")
+             return resp.status_code == 200
+         except Exception:
+             return False
+@@
+-    def get_day_reset_time(self) -> datetime:
+-        """Return the next 7PM US/Eastern reset time as an aware datetime in UTC."""
+-        est = pytz.timezone("US/Eastern")
+-        now_est = datetime.now(est)
+-        reset_est = now_est.replace(hour=19, minute=0, second=0, microsecond=0)
+-        if now_est >= reset_est:
+-            reset_est = reset_est + est.utcoffset(now_est) * 0 + (reset_est - reset_est)  # no-op to keep tzinfo
+-            reset_est = reset_est + pytz.timedelta(days=1)
+-            reset_est = est.localize(reset_est.replace(tzinfo=None))
+-        reset_utc = reset_est.astimezone(pytz.UTC)
+-        return reset_utc
++    def get_day_reset_time(self) -> datetime:
++        """Return the next 7PM US/Eastern reset time as an aware UTC datetime, DST-safe."""
++        eastern = ZoneInfo("America/New_York")
++        now_est = datetime.now(tz=eastern)
++        reset_est = now_est.replace(hour=19, minute=0, second=0, microsecond=0)
++        if now_est >= reset_est:
++            reset_est = (reset_est + timedelta(days=1)).replace(tzinfo=eastern)
++        return reset_est.astimezone(timezone.utc)
+@@
+-    def close(self):
+-        self.client.close()
++    def close(self):
++        return
+*** End Patch
+```
+
+```
+*** Begin Patch
+*** Update File: .pi/skills/ops-chutes/manager.py
+@@
+-        try:
+-            resp = client.client.get("/ping")
++        try:
++            import httpx
++            with httpx.Client(base_url="https://api.chutes.ai", headers=client.headers, timeout=client.timeout) as hc:
++                resp = hc.get("/ping")
+             remaining = resp.headers.get("X-RateLimit-Remaining") or resp.headers.get("RateLimit-Remaining")
+             limit = resp.headers.get("X-RateLimit-Limit") or resp.headers.get("RateLimit-Limit")
+             if remaining or limit:
+                 console.print(f"[bold]RateLimit:[/bold] remaining={remaining}, limit={limit}")
+             else:
+                 console.print("[dim]No rate-limit headers present; exact remaining unknown.[/dim]")
+         except Exception:
+             console.print("[dim]Unable to read rate-limit headers from /ping.[/dim]")
+@@
+-                with open(BUDGET_FILE, "r") as f:
+-                    usage = int(f.read().strip() or "0")
++                with open(BUDGET_FILE, "r") as f:
++                    raw = f.read().strip()
++                    usage = int(raw or "0")
++                    if usage < 0:
++                        console.print("[yellow]Warning: budget file contains negative value; treating as 0[/yellow]")
++                        usage = 0
++                    if usage > 10000000:
++                        console.print("[yellow]Warning: budget file value unusually large; capping[/yellow]")
++                        usage = 10000000
+*** End Patch
+```
+
+```
+*** Begin Patch
+*** Update File: .pi/skills/ops-chutes/run.sh
+@@
+-    else
+-        python3 -m venv .venv && . .venv/bin/activate && pip install .
++    else
++        python3 -m venv .venv && . .venv/bin/activate
++        max_tries=3
++        try=1
++        while true; do
++          if python -m pip install .; then
++            break
++          fi
++          if [ "$try" -ge "$max_tries" ]; then
++            echo "ERROR: Failed to install dependencies after $max_tries attempts" >&2
++            exit 1
++          fi
++          try=$((try+1))
++          sleep 2
++        done
+     fi
+ fi
+*** End Patch
 ```
 
 
 Total usage est:       1 Premium request
-Total duration (API):  12.9s
-Total duration (wall): 15.0s
-Total code changes:    0 lines added, 0 lines removed
+Total duration (API):  26.8s
+Total duration (wall): 30.5s
+Total code changes:    56 lines added, 28 lines removed
 Usage by model:
-    gpt-5                55.2k input, 2.9k output, 0 cache read, 0 cache write (Est. 1 Premium request)
+    gpt-5                163.4k input, 5.1k output, 0 cache read, 0 cache write (Est. 1 Premium request)
