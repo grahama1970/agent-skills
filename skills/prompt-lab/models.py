@@ -111,3 +111,37 @@ def parse_qra_response(content: str) -> Dict[str, Any]:
         return json.loads(json_str.strip())
     except json.JSONDecodeError:
         return {"question": "", "reasoning": "", "answer": "", "confidence": 0}
+
+
+class QRAItems(BaseModel):
+    """Pydantic model for validating QRA generation responses with multiple items."""
+    items: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of Question-Reasoning-Answer items"
+    )
+
+
+def parse_qra_items_response(content: str) -> QRAItems:
+    """
+    Parse QRA Items JSON response (multiple QRAs per input).
+    
+    Args:
+        content: Raw LLM response with {"items": [...]} format
+    
+    Returns:
+        Parsed QRAItems model
+    """
+    if isinstance(content, dict):
+        return QRAItems(**content)
+    
+    json_str = str(content)
+    if "```json" in json_str:
+        json_str = json_str.split("```json")[1].split("```")[0]
+    elif "```" in json_str:
+        json_str = json_str.split("```")[1].split("```")[0]
+    
+    try:
+        data = json.loads(json_str.strip())
+        return QRAItems(**data)
+    except json.JSONDecodeError:
+        return QRAItems(items=[])

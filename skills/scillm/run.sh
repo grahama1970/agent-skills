@@ -32,7 +32,7 @@ case "$1" in
         echo ""
         echo "Examples:"
         echo "  $0 batch single 'Hello world'"
-        echo "  $0 batch from-file --input prompts.jsonl"
+        echo "  $0 batch file --input prompts.jsonl"
         echo "  $0 vlm describe image.png"
         echo "  $0 prove 'Prove n+0=n'"
         echo "  $0 preflight preflight --model $CHUTES_MODEL_ID"

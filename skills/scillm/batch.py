@@ -9,10 +9,10 @@ Usage:
     python batch.py single "What is 2+2?"
 
     # Batch from JSONL (one {"prompt": "..."} per line)
-    python batch.py batch --input prompts.jsonl
+    python batch.py file --input prompts.jsonl
 
     # Batch with JSON mode
-    python batch.py batch --input prompts.jsonl --json
+    python batch.py file --input prompts.jsonl --json
 """
 import asyncio
 import json
@@ -68,8 +68,8 @@ def _set_strict_json(strict_flag: Optional[bool], *, enable_by_default: bool) ->
     return bool(strict_flag)
 
 
-@app.command()
-def batch(
+@app.command("file")
+def batch_file(
     input_file: Optional[Path] = typer.Option(None, "--input", "-i", help="JSONL file (or - for stdin)"),
     prompt: Optional[str] = typer.Option(None, "--prompt", "-p", help="Single prompt"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output JSONL"),

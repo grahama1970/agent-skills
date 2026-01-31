@@ -50,21 +50,32 @@ from config import (
     QRA_SCORE_THRESHOLD,
     ensure_dirs,
 )
-from models import TaxonomyResponse, parse_llm_response, parse_qra_response
+from models import TaxonomyResponse, parse_llm_response, parse_qra_response, parse_qra_items_response
 from llm import call_llm, call_llm_with_correction, call_llm_raw
 from evaluation import (
     TestCase,
     EvalResult,
     EvalSummary,
-    QRATestCase,
-    QRAResult,
     load_prompt,
     load_ground_truth,
-    load_qra_ground_truth,
     load_models_config,
     save_eval_results,
     count_sentences,
     check_keywords,
+)
+from qra_evaluation import (
+    QRATestCase,
+    QRAResult,
+    QRAGroundedTestCase,
+    QRAGroundedResult,
+    QRAEvalSummary,
+    load_qra_ground_truth,
+    load_qra_grounded_truth,
+)
+from citation_validator import (
+    validate_citations,
+    check_duplicate_answers,
+    analyze_question_diversity,
 )
 from ground_truth import (
     collect_all_samples,
@@ -269,6 +280,7 @@ def eval(
 
     if not passed:
         raise typer.Exit(1)
+
 
 
 @app.command()

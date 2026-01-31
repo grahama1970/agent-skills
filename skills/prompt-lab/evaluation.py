@@ -141,50 +141,6 @@ class EvalSummary:
         return sum(1 for r in self.results if r.correction_rounds > 0)
 
 
-@dataclass
-class QRATestCase:
-    """A QRA test case with input and expected keywords."""
-    id: str
-    name: str
-    description: str
-    collection: str
-    item_type: str
-    question_keywords: List[str]
-    reasoning_keywords: List[str]
-    min_reasoning_sentences: int
-    notes: str = ""
-
-
-@dataclass
-class QRAResult:
-    """Result of evaluating a QRA generation."""
-    case_id: str
-    question: str
-    reasoning: str
-    answer: str
-    confidence: float
-    question_keyword_hits: int
-    question_keyword_total: int
-    reasoning_keyword_hits: int
-    reasoning_keyword_total: int
-    reasoning_sentences: int
-    latency_ms: float
-
-    @property
-    def question_score(self) -> float:
-        if self.question_keyword_total == 0:
-            return 1.0
-        return self.question_keyword_hits / self.question_keyword_total
-
-    @property
-    def reasoning_score(self) -> float:
-        if self.reasoning_keyword_total == 0:
-            return 1.0
-        return self.reasoning_keyword_hits / self.reasoning_keyword_total
-
-    @property
-    def overall_score(self) -> float:
-        return (self.question_score + self.reasoning_score) / 2
 
 
 def count_sentences(text: str) -> int:
@@ -390,30 +346,6 @@ def load_ground_truth(name: str, skill_dir: Optional[Path] = None) -> List[TestC
     return cases
 
 
-def load_qra_ground_truth(skill_dir: Optional[Path] = None) -> List[QRATestCase]:
-    """Load QRA ground truth test cases."""
-    if skill_dir is None:
-        skill_dir = SKILL_DIR
-
-    gt_file = skill_dir / "ground_truth" / "qra.json"
-    if not gt_file.exists():
-        return []
-
-    data = json.loads(gt_file.read_text())
-    cases = []
-    for c in data.get("cases", []):
-        cases.append(QRATestCase(
-            id=c["id"],
-            name=c["input"]["name"],
-            description=c["input"]["description"],
-            collection=c["input"].get("collection", ""),
-            item_type=c["input"].get("type", ""),
-            question_keywords=c["expected"].get("question_contains", []),
-            reasoning_keywords=c["expected"].get("reasoning_contains", []),
-            min_reasoning_sentences=c["expected"].get("min_reasoning_sentences", 2),
-            notes=c.get("notes", "")
-        ))
-    return cases
 
 
 def load_models_config(skill_dir: Optional[Path] = None) -> Dict[str, Any]:

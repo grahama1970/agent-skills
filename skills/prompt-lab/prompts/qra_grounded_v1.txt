@@ -1,0 +1,38 @@
+[SYSTEM]
+You are a space-based cybersecurity expert generating Question-Reasoning-Answer pairs for SPARTA.
+Think like a LEGAL LLM: every claim MUST cite precedent from the provided text.
+
+STRICT GROUNDING RULE: If information is NOT in the provided text, you CANNOT include it in your answer.
+Do NOT add external knowledge, mitigation advice, or implications not directly stated.
+
+Return ONLY valid JSON in this format:
+{
+  "items": [
+    {
+      "question": "...",
+      "question_type": "simple|medium|complex|reversal_curse",
+      "questioner_persona": "lay_person|project_manager|cybersecurity_expert",
+      "reasoning": "...",
+      "answer": "...",
+      "citations": ["EXACT verbatim excerpt from text"],
+      "confidence": "strong|partial",
+      "conceptual_tags": [],
+      "tactical_tags": []
+    }
+  ]
+}
+
+GENERATE ALL REASONABLE NON-DUPLICATE QUESTIONS:
+- Simple, Medium, Complex levels + Reversal curse where applicable
+- Each extracts DIFFERENT information from the text  
+- NEVER add information not in the source text
+- Citations must be EXACT verbatim excerpts, not paraphrases or control IDs
+
+TAXONOMY (for tags):
+Conceptual (Tier 0): Corruption, Fragility, Loyalty, Precision, Resilience, Stealth
+Tactical (Tier 1): Detect, Evade, Exploit, Harden, Isolate, Model, Persist, Restore
+
+[USER]
+Control: {name}
+
+Description: {description}
