@@ -12,6 +12,9 @@ triggers:
   - list chutes models
   - what models are on chutes
   - chutes model list
+  - is model X ready?
+  - wait for chutes reset
+  - can I run X calls?
   - check chutes health
   - chutes api check
 metadata:
@@ -35,17 +38,26 @@ Manage Chutes.ai resources and monitor subscription quota and account balance.
 ./run.sh status
 
 # Check Subscription Quota and Remaining Balance
-./run.sh usage [--chute-id <id>]
+./run.sh usage [--chute-id <id>] [--json]
 
 # Explore all available models (filterable)
-# Flags: --query (name), --owner (sglang/vllm), --modality (text/image), --feature (reasoning/tools)
-./run.sh models [--query <search>] [--owner <owner>] [--modality <modality>] [--feature <feature>]
+# Flags: --query (name), --owner (sglang/vllm), --modality (text/image), --feature (reasoning/tools), --json
+./run.sh models [--query <search>] [--owner <owner>] [--modality <modality>] [--feature <feature>] [--json]
+
+# Check model health (HOT/COLD/DOWN)
+./run.sh model-health <model_id>
 
 # Run sanity check (Inference via Qwen/Qwen2.5-72B-Instruct)
 ./run.sh sanity [--model <model_name>]
 
 # Check budget (exit 1 if Quota exhausted OR Balance < CHUTES_MIN_BALANCE)
 ./run.sh budget-check
+
+# Wait until quota resets (7PM ET)
+./run.sh wait-for-reset [--timeout <seconds>]
+
+# Verify if a batch of calls is feasible (exit 1 if not)
+./run.sh can-complete <num_calls>
 ```
 
 ## Environment Variables

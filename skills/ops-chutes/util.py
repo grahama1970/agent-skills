@@ -1,5 +1,6 @@
 import os
 import httpx
+import time
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -91,6 +92,27 @@ class ChutesClient:
                 return data.get("data", [])
             except Exception as e:
                 raise RuntimeError(f"Failed to list models: {e}")
+
+    def get_model_status(self, model_id: str) -> str:
+        """
+        Determine if a model is HOT, COLD, or DOWN.
+        - HOT: Responding to inference /ping
+        - COLD: Present in /v1/models but maybe not responding yet (or management status != running)
+        - DOWN: Not responding and/or not in list
+        """
+        # 1. Check Inference ping for HOT status
+        if self.check_sanity(model=model_id):
+            return "HOT"
+
+        # 2. Check model list for existence (COLD)
+        try:
+            models = self.list_models()
+            if any(m.get("id") == model_id for m in models):
+                return "COLD"
+        except Exception:
+            pass
+
+        return "DOWN"
     
     def check_sanity(self, model: str = "Qwen/Qwen2.5-72B-Instruct") -> bool:
         """Run a real inference check."""
