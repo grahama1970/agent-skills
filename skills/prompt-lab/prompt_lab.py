@@ -919,14 +919,22 @@ The TACTIC HIERARCHY below is the anchor.
 
 PROMPT CONTEXT:
 {json.dumps({
-    "tactic_hierarchy": {"technique": tc.source_control},
+    "tactic_hierarchy": {
+        "technique": {
+            **tc.source_control,
+            "knowledge_from_urls": tc.knowledge_excerpts
+        }
+    },
     "related_control": tc.target_control,
 }, indent=2)}
 """
             else:
                 user_msg = f"""Generate factual questions about this SPARTA control.
 Control:
-{json.dumps(tc.source_control, indent=2)}
+{json.dumps({
+    **tc.source_control,
+    "knowledge_excerpts": tc.knowledge_excerpts
+}, indent=2)}
 """
 
             try:

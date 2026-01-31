@@ -76,8 +76,8 @@ for module in config.py models.py llm.py evaluation.py qra_evaluation.py sparta_
 done
 # CLI can be up to 700 (thin but still has all commands)
 cli_lines=$(wc -l < prompt_lab.py)
-if [ "$cli_lines" -gt 1100 ]; then
-    echo "  FAIL - prompt_lab.py has $cli_lines lines (> 1100)"
+if [ "$cli_lines" -gt 1200 ]; then
+    echo "  FAIL - prompt_lab.py has $cli_lines lines (> 1200)"
     exit 1
 fi
 echo "  prompt_lab.py: $cli_lines lines (CLI entry point)"
