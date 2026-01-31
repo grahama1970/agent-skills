@@ -22,10 +22,10 @@ class FeedRunner:
         """Factory method to instantiate the correct source class."""
         if source_config.type == SourceType.RSS:
             return RSSSource(source_config, self.storage, user_agent=self.user_agent)
-        # elif source_config.type == SourceType.GITHUB:
-        #     return GitHubSource(source_config, self.storage, user_agent=self.user_agent)
-        # elif source_config.type == SourceType.NVD:
-        #     return NVDSource(source_config, self.storage, user_agent=self.user_agent)
+        if source_config.type in (SourceType.GITHUB, SourceType.NVD):
+            console.print(
+                f"[yellow]Source '{source_config.key}' is {source_config.type.value} (Phase 2 / not yet implemented).[/yellow]"
+            )
         return None
 
     def run(self, sources: Optional[List[FeedSource]] = None, dry_run: bool = False, limit: int = 0):

@@ -1,7 +1,7 @@
 # Consume Feed Skill Walkthrough
 
-Robust, resilient ingestion for upstream feeds (RSS, GitHub, NVD).
-Aligned with "Memory First" patterns and `.pi/skills` conventions.
+Robust, resilient ingestion for upstream feeds (RSS).  
+GitHub and NVD are planned for Phase 2.
 
 ## 1. Installation & Structure
 
@@ -13,15 +13,16 @@ The skill is located at `.pi/skills/consume-feed`.
 ├── SKILL.md                # Triggers & Usage
 ├── pyproject.toml          # Deps: httpx, tenacity, feedparser, python-arango
 ├── cli.py                  # CLI Entrypoint
-├── config.py               # Pydantic Configuration
-├── runner.py               # Orchestration & Concurrency
-├── storage.py              # ArangoDB Schema & Memory Reuse
+├── feed_config.py          # Pydantic Configuration
+├── feed_runner.py          # Orchestration & Concurrency
+├── feed_storage.py         # ArangoDB Schema & Memory Reuse
 ├── sources/
 │   ├── base.py             # Abstract Base Source
 │   └── rss.py              # Robust RSS Source
 ├── util/
 │   ├── http.py             # HTTP Client with Backoff/Jitter
-│   └── dedupe.py           # Stable Key Generation
+│   ├── dedupe.py           # Stable Key Generation
+│   └── text.py             # Summary cleanup utilities
 └── sanity/
     ├── mock_server.py      # Deterministic Test Server
     ├── test_arango_conn.py # DB & View Verification
@@ -32,7 +33,7 @@ The skill is located at `.pi/skills/consume-feed`.
 
 ### Memory Integration (No Bespoke Wrappers)
 
-- **Reusable Connection**: `storage.py` imports `get_db()` from `.pi/skills/memory/horus_lore_storage.py` to use the canonical memory database connection.
+- **Reusable Connection**: `feed_storage.py` imports `get_db()` from `.pi/skills/memory/db.py` to use the canonical memory database connection.
 - **Schema**: Maps to `feed_items` collection within the `memory` database.
 - **View**: Automatically creates `feed_items_view` for Memory skill recall compatibility.
 
@@ -45,7 +46,7 @@ The skill is located at `.pi/skills/consume-feed`.
 ### Efficiency
 
 - **Conditional GET**: RSS source respects `ETag` and `Last-Modified`.
-- **Concurrency**: `runner.py` uses `ThreadPoolExecutor` for parallel fetching.
+- **Concurrency**: `feed_runner.py` uses `ThreadPoolExecutor` for parallel fetching.
 
 ## 3. Verification
 
@@ -55,7 +56,7 @@ The skill is located at `.pi/skills/consume-feed`.
 
 ```text
 Testing ArangoDB Connection...
-# Uses memory/horus_lore_storage logic
+# Uses memory/db.py logic
 ✅ Connected to 'memory'
 ✅ Collection 'feed_items' exists
 ✅ View 'feed_items_view' exists
@@ -75,5 +76,5 @@ Attempting to fetch http://localhost:9999...
 
 ## 4. Next Steps
 
-1. **GitHub/NVD Sources**: Uncomment and implement `sources/github_*.py` and `sources/nvd.py`.
+1. **GitHub/NVD Sources**: Implement `sources/github_*.py` and `sources/nvd.py`.
 2. **Memory Config**: Update `.env` in `experiments/memory` or `RECALL_SOURCES_JSON` to include `feed_items_view` as a supplemental source.
