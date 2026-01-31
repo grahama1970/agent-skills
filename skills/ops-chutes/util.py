@@ -21,6 +21,23 @@ class ChutesClient:
         }
         self.timeout = 30.0
 
+    def get_user_info(self) -> Dict[str, Any]:
+        """
+        Get current user info, including balance.
+        Endpoint: GET /users/me
+        """
+        with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
+            try:
+                resp = client.get("/users/me")
+                resp.raise_for_status()
+                return resp.json()
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code in (401, 403):
+                    return {"error": "Auth failed (Management API)"}
+                raise e
+            except Exception as e:
+                return {"error": str(e)}
+
     def get_chute_status(self, chute_id_or_name: str) -> Dict[str, Any]:
         """Get status of a specific chute via Management API."""
         with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
@@ -29,7 +46,6 @@ class ChutesClient:
                 resp.raise_for_status()
                 return resp.json()
             except httpx.HTTPStatusError as e:
-                # 401/403 means token scope issue, but inference might still work
                 if e.response.status_code in (401, 403):
                     return {"status": "unknown", "error": "Auth failed (Management API)", "detail": str(e)}
                 raise e
@@ -44,11 +60,11 @@ class ChutesClient:
             except httpx.HTTPStatusError as e:
                 if e.response.status_code in (401, 403):
                     return [] # Return empty list if auth fails, don't crash
-                raise e
+                return [] # Fail safe
     
     def get_quota_usage(self, chute_id: str) -> Dict[str, Any]:
         """
-        Get quota usage for a specific chute.
+        Get quota usage for a specific chute (if owned).
         """
         if not chute_id:
             raise ValueError("chute_id is required for quota usage")
@@ -59,9 +75,11 @@ class ChutesClient:
                 resp.raise_for_status()
                 return resp.json()
             except httpx.HTTPStatusError as e:
+                if e.response.status_code == 404:
+                    return {"error": "Chute not found or not owned (404)"}
                 if e.response.status_code in (401, 403):
                     return {"error": "Auth failed for quota endpoint"}
-                raise e
+                return {"error": str(e)}
             except Exception as e:
                 return {"error": str(e)}
 

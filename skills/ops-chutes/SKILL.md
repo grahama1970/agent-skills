@@ -1,8 +1,8 @@
 ---
 name: ops-chutes
 description: >
-  Manage Chutes.ai resources, tracking quota usage and API health.
-  Integrates with scheduler to pause operations when budget is exhausted methods.
+  Manage Chutes.ai resources, tracking Account Balance and API health.
+  Integrates with scheduler to pause operations when balance is low.
 triggers:
   - check chutes
   - chutes usage
@@ -11,12 +11,12 @@ triggers:
   - check chutes health
   - chutes api check
 metadata:
-  short-description: Chutes.ai API management and quota tracking
+  short-description: Chutes.ai API management and Balance tracking
 ---
 
 # Ops Chutes Skill
 
-Manage Chutes.ai resources and enforce budget limits using real quota tracking.
+Manage Chutes.ai resources and enforce budget limits using Account Balance.
 
 ## Triggers
 
@@ -27,22 +27,23 @@ Manage Chutes.ai resources and enforce budget limits using real quota tracking.
 ## Commands
 
 ```bash
-# Check model status (hot/cold/down)
+# Check model status (hot/cold/down) - Management API required
 ./run.sh status
 
-# Check usage against quota for a specific chute
-./run.sh usage --chute-id <chute_id>
+# Check Account Balance (and optional specific quota)
+./run.sh usage [--chute-id <id>]
 
-# Run sanity check (inference)
+# Run sanity check (Inference via Qwen/Qwen2.5-72B-Instruct)
 ./run.sh sanity --model <model_name>
 
-# Check budget (exit code 1 if exhausted) - for scheduler
-./run.sh budget-check --chute-id <chute_id>
+# Check budget (exit 1 if Balance < MIN_BALANCE or Quota exhausted)
+./run.sh budget-check [--chute-id <id>]
 ```
 
 ## Environment Variables
 
-| Variable             | Description                         |
-| -------------------- | ----------------------------------- |
-| `CHUTES_API_TOKEN`   | API Token for authentication        |
-| `CHUTES_DAILY_LIMIT` | Daily request limit (default: 5000) |
+| Variable             | Description                               |
+| -------------------- | ----------------------------------------- |
+| `CHUTES_API_TOKEN`   | API Token for authentication              |
+| `CHUTES_DAILY_LIMIT` | (Deprecated) Daily request limit          |
+| `CHUTES_MIN_BALANCE` | Minimum balance threshold (default: 0.05) |
