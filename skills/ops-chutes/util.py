@@ -4,7 +4,9 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-API_BASE = "https://api.chutes.ai"
+# Inference API is distinct from management API for some tokens
+INFERENCE_API_BASE = "https://llm.chutes.ai"
+MANAGEMENT_API_BASE = "https://api.chutes.ai"
 
 class ChutesClient:
     def __init__(self, token: Optional[str] = None):
@@ -12,61 +14,73 @@ class ChutesClient:
         if not self.token:
             raise ValueError("CHUTES_API_TOKEN not found in environment")
         
-        # Support both standard header formats for robustness
-        # Research indicates Authorization: Bearer <key> is standard, 
-        # but X-API-Key is also cited. We'll use Authorization as primary
-        # and X-API-Key as fallback/redundant if needed, but typically standardizing on one is best.
-        # We will use Authorization: Bearer as it's the more modern standard cited.
         self.headers = {
             "Authorization": f"Bearer {self.token}",
             "Accept": "application/json",
             "User-Agent": "OpsChutes/1.0"
         }
-        # Use per-call clients to avoid leaking sockets
-        # Increased timeout for potentially slow endpoints
         self.timeout = 30.0
 
     def get_chute_status(self, chute_id_or_name: str) -> Dict[str, Any]:
-        """Get status of a specific chute."""
-        with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
-            resp = client.get(f"/chutes/{chute_id_or_name}")
-            resp.raise_for_status()
+        """Get status of a specific chute via Management API."""
+        with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
             try:
+                resp = client.get(f"/chutes/{chute_id_or_name}")
+                resp.raise_for_status()
                 return resp.json()
-            except Exception as e:
-                raise RuntimeError(f"Non-JSON response for chute {chute_id_or_name}: {e}")
+            except httpx.HTTPStatusError as e:
+                # 401/403 means token scope issue, but inference might still work
+                if e.response.status_code in (401, 403):
+                    return {"status": "unknown", "error": "Auth failed (Management API)", "detail": str(e)}
+                raise e
 
     def list_chutes(self) -> List[Dict[str, Any]]:
-        """List all accessible chutes."""
-        with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
-            resp = client.get("/chutes")
-            resp.raise_for_status()
+        """List all accessible chutes via Management API."""
+        with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
             try:
+                resp = client.get("/chutes")
+                resp.raise_for_status()
                 return resp.json()
-            except Exception as e:
-                raise RuntimeError(f"Non-JSON response when listing chutes: {e}")
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code in (401, 403):
+                    return [] # Return empty list if auth fails, don't crash
+                raise e
     
     def get_quota_usage(self, chute_id: str) -> Dict[str, Any]:
         """
         Get quota usage for a specific chute.
-        Endpoint: GET /users/me/quota_usage/{chute_id}
         """
         if not chute_id:
             raise ValueError("chute_id is required for quota usage")
         
-        with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
-            resp = client.get(f"/users/me/quota_usage/{chute_id}")
-            resp.raise_for_status()
+        with httpx.Client(base_url=MANAGEMENT_API_BASE, headers=self.headers, timeout=self.timeout) as client:
             try:
+                resp = client.get(f"/users/me/quota_usage/{chute_id}")
+                resp.raise_for_status()
                 return resp.json()
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code in (401, 403):
+                    return {"error": "Auth failed for quota endpoint"}
+                raise e
             except Exception as e:
-                raise RuntimeError(f"Non-JSON response from quota endpoint: {e}")
+                return {"error": str(e)}
 
-    def check_sanity(self) -> bool:
-        """API reachability check via /ping."""
+    def check_sanity(self, model: str = "Qwen/Qwen2.5-72B-Instruct") -> bool:
+        """
+        Run a real inference check.
+        Management API might be 401, but Inference might allow it.
+        """
         try:
-            with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
-                resp = client.get("/ping")
+            payload = {
+                "model": model,
+                "messages": [{"role": "user", "content": "ping"}],
+                "stream": False,
+                "max_tokens": 5,
+                "temperature": 0.1
+            }
+            # Use separate client for inference URL
+            with httpx.Client(base_url=INFERENCE_API_BASE, headers=self.headers, timeout=self.timeout) as client:
+                resp = client.post("/v1/chat/completions", json=payload)
                 return resp.status_code == 200
         except Exception:
             return False

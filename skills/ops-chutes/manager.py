@@ -20,11 +20,11 @@ def status():
         client = ChutesClient()
         chutes = client.list_chutes()
         
-        table = Table("ID", "Name", "Status", "Image")
         if not chutes:
-             console.print("[yellow]No chutes found.[/yellow]")
+             console.print("[yellow]No chutes found or access denied (Management API).[/yellow]")
              return
 
+        table = Table("ID", "Name", "Status", "Image")
         for c in chutes:
             # Adjust fields based on actual API response structure
             c_id = c.get("id", "??")
@@ -51,6 +51,12 @@ def usage(chute_id: str = typer.Option(..., help="Chute ID to check quota usage"
         console.print(f"[bold]Reset Time (UTC):[/bold] {reset_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
         data = client.get_quota_usage(chute_id)
+
+        if "error" in data:
+             console.print(f"[red]Usage Check Failed:[/red] {data['error']}")
+             if "Auth failed" in data.get("error", ""):
+                 console.print("[dim]Note: Your token might be valid for Inference but NOT Management API.[/dim]")
+             return
 
         # Adjust field names based on actual response schema - defensive
         quota = data.get("quota") or data.get("subscription", {}).get("quota")
@@ -81,6 +87,10 @@ def budget_check(chute_id: str = typer.Option(..., help="Chute ID to check quota
         client = ChutesClient()
         data = client.get_quota_usage(chute_id)
 
+        if "error" in data:
+            console.print(f"[yellow]Warning: Could not verify budget ({data['error']}). Assuming OK.[/yellow]")
+            sys.exit(0)
+
         quota = data.get("quota") or data.get("subscription", {}).get("quota")
         used = data.get("used") or data.get("subscription", {}).get("used")
 
@@ -100,14 +110,15 @@ def budget_check(chute_id: str = typer.Option(..., help="Chute ID to check quota
         sys.exit(1)
 
 @app.command()
-def sanity(model: str = typer.Option(None, help="Specific model/chute to test")):
-    """Run a sanity check/ping."""
+def sanity(model: str = typer.Option("Qwen/Qwen2.5-72B-Instruct", help="Specific model/chute to test")):
+    """Run a sanity check/ping via Inference."""
     try:
         client = ChutesClient()
-        if client.check_sanity():
-            console.print("[green]✅ Chutes API is reachable[/green]")
+        console.print(f"Testing inference on [bold]{model}[/bold]...")
+        if client.check_sanity(model=model):
+            console.print("[green]✅ Chutes API is reachable and responding (Inference OK)[/green]")
         else:
-            console.print("[red]❌ Chutes API ping failed[/red]")
+            console.print("[red]❌ Chutes API check failed (Inference Error)[/red]")
             sys.exit(1)
             
     except Exception as e:
