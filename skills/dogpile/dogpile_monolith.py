@@ -787,6 +787,10 @@ Include current year (2025-2026) where relevant for recent results.
     log_status("Tailoring queries for each service...")
     result_text = search_codex(prompt, schema=schema_path)
 
+    if result_text is None:
+        log_status("Query tailoring returned None")
+        return default_queries
+
     # Default to original query for all services
     default_queries = {
         "arxiv": query,
@@ -1554,13 +1558,29 @@ def search(
                 console.print(f"[yellow]Warning: Preset '{preset}' not found, using default search[/yellow]")
 
     # 1. Analyze Query (Ambiguity + Intent)
-    query, is_code_related = analyze_query(query, interactive)
+    console.print("[DEBUG] Calling analyze_query...")
+    try:
+        query, is_code_related = analyze_query(query, interactive)
+        console.print(f"[DEBUG] analyze_query returned: code_related={is_code_related}")
+    except Exception as e:
+        console.print(f"[DEBUG] analyze_query crashed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
     console.print(f"[bold blue]Dogpiling on:[/bold blue] {query} (Code Related: {is_code_related})...")
 
     # 2. Tailor queries for each service (expert-level optimization)
     if tailor:
-        tailored = tailor_queries_for_services(query, is_code_related)
+        console.print("[DEBUG] Calling tailor_queries_for_services...")
+        try:
+            tailored = tailor_queries_for_services(query, is_code_related)
+            console.print(f"[DEBUG] tailored result type: {type(tailored)}")
+        except Exception as e:
+            console.print(f"[DEBUG] tailor_queries crashed: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
         console.print("[dim]Tailored queries:[/dim]")
         for svc, q in tailored.items():
             console.print(f"  [cyan]{svc}:[/cyan] {q[:60]}...")

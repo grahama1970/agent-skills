@@ -192,6 +192,10 @@ Include current year (2025-2026) where relevant for recent results.
     # Use fast chain for query tailoring (simple task)
     result_text = search_codex_fast(prompt, schema=schema_path)
 
+    if result_text is None:
+        log_status("Query tailoring returned None (search_codex_fast)")
+        return default_queries
+
     # Default to original query for all services
     default_queries = {
         "arxiv": query,

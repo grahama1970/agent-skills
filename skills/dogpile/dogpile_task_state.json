@@ -1,8 +1,8 @@
 {
-  "completed": 1,
+  "completed": 0,
   "total": 16,
-  "description": "Dogpile: AI agent memory",
-  "current_item": "tailoring",
+  "description": "Dogpile: test query for fix verification",
+  "current_item": "failed",
   "stats": {
     "providers_done": 0,
     "providers_total": 9,
@@ -23,8 +23,8 @@
   "provider_times": {},
   "errors": [],
   "rate_limits": {},
-  "elapsed_seconds": 3.7,
-  "progress_pct": 6.2,
-  "last_updated": "2026-01-31 15:06:08",
-  "status": "running"
+  "elapsed_seconds": 64.5,
+  "progress_pct": 0.0,
+  "last_updated": "2026-01-31 15:16:34",
+  "status": "completed"
 }

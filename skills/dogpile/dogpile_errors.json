@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-01-30T21:37:40.292822",
+  "last_updated": "2026-01-31T15:16:34.219693",
   "sessions": [
     {
       "session_id": "dogpile_1769687742",
@@ -1636,6 +1636,152 @@
         }
       ],
       "rate_limits_hit": {}
+    },
+    {
+      "session_id": "dogpile_1769889450",
+      "query": "iterative next steps for integrating clawdbot with /memory and Horus persona",
+      "started_at": "2026-01-31T14:57:30.102007",
+      "ended_at": "2026-01-31T14:58:39.929937",
+      "status": "failed",
+      "providers_succeeded": [
+        "claude"
+      ],
+      "providers_failed": [
+        "dogpile"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-31T14:58:39.929368",
+          "provider": "dogpile",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Search failed: 'bool' object is not subscriptable",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {}
+    },
+    {
+      "session_id": "dogpile_1769890067",
+      "query": "AI agent memory",
+      "started_at": "2026-01-31T15:07:47.804201",
+      "ended_at": "2026-01-31T15:07:55.975272",
+      "status": "failed",
+      "providers_succeeded": [
+        "claude"
+      ],
+      "providers_failed": [
+        "dogpile"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-31T15:07:55.975027",
+          "provider": "dogpile",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Search failed: 'bool' object is not subscriptable",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {}
+    },
+    {
+      "session_id": "dogpile_1769890103",
+      "query": "test query for fix verification",
+      "started_at": "2026-01-31T15:08:23.071893",
+      "ended_at": "2026-01-31T15:09:29.151654",
+      "status": "failed",
+      "providers_succeeded": [
+        "claude"
+      ],
+      "providers_failed": [
+        "dogpile"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-31T15:09:29.151251",
+          "provider": "dogpile",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Search failed: 'bool' object is not subscriptable",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {}
+    },
+    {
+      "session_id": "dogpile_1769890263",
+      "query": "test query for fix verification",
+      "started_at": "2026-01-31T15:11:03.530184",
+      "ended_at": "2026-01-31T15:12:09.020056",
+      "status": "failed",
+      "providers_succeeded": [
+        "claude"
+      ],
+      "providers_failed": [
+        "dogpile"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-31T15:12:09.019724",
+          "provider": "dogpile",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Search failed: 'bool' object is not subscriptable",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {}
+    },
+    {
+      "session_id": "dogpile_1769890434",
+      "query": "debug crash",
+      "started_at": "2026-01-31T15:13:54.280282",
+      "ended_at": "2026-01-31T15:15:01.353843",
+      "status": "failed",
+      "providers_succeeded": [
+        "claude"
+      ],
+      "providers_failed": [
+        "dogpile"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-01-31T15:15:01.353306",
+          "provider": "dogpile",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Search failed: 'bool' object is not subscriptable",
+          "details": null,
+          "retry_after_seconds": null,
+          "http_status": null,
+          "traceback": null
+        }
+      ],
+      "rate_limits_hit": {}
+    },
+    {
+      "session_id": "dogpile_1769890529",
+      "query": "test query for fix verification",
+      "started_at": "2026-01-31T15:15:29.755710",
+      "ended_at": "2026-01-31T15:16:34.219162",
+      "status": "failed",
+      "providers_succeeded": [],
+      "providers_failed": [],
+      "errors": [],
+      "rate_limits_hit": {}
     }
   ],
   "rate_limits": {
@@ -1646,7 +1792,7 @@
       "reset_at": 1769789115.5029755,
       "last_hit": "2026-01-30T11:04:15.502978",
       "total_hits": 50,
-      "backoff_multiplier": 1.0
+      "backoff_multiplier": 5.0625
     }
   }
 }

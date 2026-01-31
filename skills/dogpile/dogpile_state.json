@@ -8,12 +8,14 @@
     "github": "DONE",
     "youtube": "DONE",
     "synthesis": "ERROR",
-    "openai": "RUNNING",
+    "openai": "SKIP",
     "gemini": "RUNNING",
-    "readarr": "DONE"
+    "readarr": "DONE",
+    "claude": "DONE",
+    "dogpile": "ERROR"
   },
-  "last_msg": "Trying openai (gpt-4o)...",
-  "last_updated": "2026-01-31 15:06:18",
+  "last_msg": "Search failed: 'bool' object is not subscriptable",
+  "last_updated": "2026-01-31 15:07:55",
   "errors": [
     {
       "provider": "discord",
@@ -41,6 +43,15 @@
       "http_status": null,
       "retry_after": null,
       "timestamp": "2026-01-31 15:06:08"
+    },
+    {
+      "provider": "dogpile",
+      "status": "ERROR",
+      "message": "Search failed: 'bool' object is not subscriptable",
+      "error_type": "unknown",
+      "http_status": null,
+      "retry_after": null,
+      "timestamp": "2026-01-31 15:07:55"
     }
   ]
 }
