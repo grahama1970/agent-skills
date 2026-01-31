@@ -12,12 +12,18 @@ class ChutesClient:
         if not self.token:
             raise ValueError("CHUTES_API_TOKEN not found in environment")
         
+        # Support both standard header formats for robustness
+        # Research indicates Authorization: Bearer <key> is standard, 
+        # but X-API-Key is also cited. We'll use Authorization as primary
+        # and X-API-Key as fallback/redundant if needed, but typically standardizing on one is best.
+        # We will use Authorization: Bearer as it's the more modern standard cited.
         self.headers = {
             "Authorization": f"Bearer {self.token}",
             "Accept": "application/json",
             "User-Agent": "OpsChutes/1.0"
         }
         # Use per-call clients to avoid leaking sockets
+        # Increased timeout for potentially slow endpoints
         self.timeout = 30.0
 
     def get_chute_status(self, chute_id_or_name: str) -> Dict[str, Any]:
@@ -40,18 +46,21 @@ class ChutesClient:
             except Exception as e:
                 raise RuntimeError(f"Non-JSON response when listing chutes: {e}")
     
-    def get_user_usage(self) -> Dict[str, Any]:
+    def get_quota_usage(self, chute_id: str) -> Dict[str, Any]:
         """
-        Attempt to get usage metrics. 
+        Get quota usage for a specific chute.
+        Endpoint: GET /users/me/quota_usage/{chute_id}
         """
-        try:
-            with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
-                resp = client.get("/invocations/exports/recent")
-                if resp.status_code == 200:
-                    return resp.json()
-                return {"type": "unknown", "msg": "No standard usage endpoint"}
-        except Exception as e:
-            return {"error": str(e)}
+        if not chute_id:
+            raise ValueError("chute_id is required for quota usage")
+        
+        with httpx.Client(base_url=API_BASE, headers=self.headers, timeout=self.timeout) as client:
+            resp = client.get(f"/users/me/quota_usage/{chute_id}")
+            resp.raise_for_status()
+            try:
+                return resp.json()
+            except Exception as e:
+                raise RuntimeError(f"Non-JSON response from quota endpoint: {e}")
 
     def check_sanity(self) -> bool:
         """API reachability check via /ping."""
@@ -63,18 +72,16 @@ class ChutesClient:
             return False
 
     def get_day_reset_time(self) -> datetime:
-        """Return the next 7PM US/Eastern reset time as an aware UTC datetime, DST-safe."""
+        """Get the next 7PM ET reset time (UTC-aware)."""
         eastern = ZoneInfo("America/New_York")
         now_est = datetime.now(tz=eastern)
-        
-        # Reset is 7PM EST (19:00)
-        reset_est = now_est.replace(hour=19, minute=0, second=0, microsecond=0)
-        
-        if now_est >= reset_est:
-             # If strictly after 19:00, reset is tomorrow
-             reset_est = (reset_est + timedelta(days=1)).replace(tzinfo=eastern)
-        
-        return reset_est.astimezone(timezone.utc)
+
+        reset_today = now_est.replace(hour=19, minute=0, second=0, microsecond=0)
+
+        if now_est >= reset_today:
+            reset_today = reset_today + timedelta(days=1)
+
+        return reset_today.astimezone(timezone.utc)
 
     def close(self):
         return

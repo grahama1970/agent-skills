@@ -12,8 +12,6 @@ app = typer.Typer(help="Ops Chutes Manager")
 console = Console()
 
 DAILY_LIMIT = int(os.environ.get("CHUTES_DAILY_LIMIT", 5000))
-# Optional budget file path
-BUDGET_FILE = os.environ.get("CHUTES_BUDGET_FILE")
 
 @app.command()
 def status():
@@ -23,6 +21,10 @@ def status():
         chutes = client.list_chutes()
         
         table = Table("ID", "Name", "Status", "Image")
+        if not chutes:
+             console.print("[yellow]No chutes found.[/yellow]")
+             return
+
         for c in chutes:
             # Adjust fields based on actual API response structure
             c_id = c.get("id", "??")
@@ -39,7 +41,7 @@ def status():
         sys.exit(1)
 
 @app.command()
-def usage():
+def usage(chute_id: str = typer.Option(..., help="Chute ID to check quota usage")):
     """Check API usage and estimated budget."""
     try:
         client = ChutesClient()
@@ -47,57 +49,51 @@ def usage():
         
         console.print(f"[bold]Daily Limit:[/bold] {DAILY_LIMIT}")
         console.print(f"[bold]Reset Time (UTC):[/bold] {reset_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
-        
-        # Try to surface current rate-limit headers via a lightweight call
-        try:
-            import httpx
-            with httpx.Client(base_url="https://api.chutes.ai", headers=client.headers, timeout=client.timeout) as hc:
-                resp = hc.get("/ping")
-            
-            remaining = resp.headers.get("X-RateLimit-Remaining") or resp.headers.get("RateLimit-Remaining")
-            limit = resp.headers.get("X-RateLimit-Limit") or resp.headers.get("RateLimit-Limit")
-            
-            if remaining or limit:
-                console.print(f"[bold]RateLimit:[/bold] remaining={remaining}, limit={limit}")
-            else:
-                console.print("[dim]No rate-limit headers present; exact remaining unknown.[/dim]")
-        except Exception:
-            console.print("[dim]Unable to read rate-limit headers from /ping.[/dim]")
+
+        data = client.get_quota_usage(chute_id)
+
+        # Adjust field names based on actual response schema - defensive
+        quota = data.get("quota") or data.get("subscription", {}).get("quota")
+        used = data.get("used") or data.get("subscription", {}).get("used")
+
+        console.print(f"[bold]Chute:[/bold] {chute_id}")
+        console.print(f"[bold]Quota:[/bold] {quota}")
+        console.print(f"[bold]Used:[/bold] {used}")
+        if quota is not None and used is not None:
+            remaining = max(quota - used, 0)
+            console.print(f"[bold]Remaining:[/bold] {remaining}")
+        else:
+            console.print("[yellow]Quota fields not found in response; check API schema.[/yellow]")
+            console.print(f"[dim]Raw Response: {data}[/dim]")
 
     except Exception as e:
         console.print(f"[red]Error checking usage: {e}[/red]")
         sys.exit(1)
 
 @app.command("budget-check")
-def budget_check():
+def budget_check(chute_id: str = typer.Option(..., help="Chute ID to check quota usage")):
     """
     Exit code 0 if budget OK.
     Exit code 1 if budget exhausted.
     Used by scheduler.
     """
     try:
-        # Check external budget file if configured
-        usage = 0
-        if BUDGET_FILE and os.path.isfile(BUDGET_FILE):
-            try:
-                with open(BUDGET_FILE, "r") as f:
-                    raw = f.read().strip()
-                    usage = int(raw or "0")
-                    # Sanity check values
-                    if usage < 0:
-                        console.print("[yellow]Warning: budget file contains negative value; treating as 0[/yellow]")
-                        usage = 0
-                    if usage > 10000000:
-                        console.print("[yellow]Warning: budget file value unusually large; capping[/yellow]")
-                        usage = 10000000
-            except Exception as e:
-                console.print(f"[yellow]Warning: failed to read budget file: {e}[/yellow]")
-        
-        if usage >= DAILY_LIMIT:
-            console.print(f"[red]Budget Exhausted ({usage}/{DAILY_LIMIT})[/red]")
+        client = ChutesClient()
+        data = client.get_quota_usage(chute_id)
+
+        quota = data.get("quota") or data.get("subscription", {}).get("quota")
+        used = data.get("used") or data.get("subscription", {}).get("used")
+
+        if quota is None or used is None:
+            console.print("[red]Quota usage response missing required fields.[/red]")
+            # Fail safe or fail loud? Fail loud for now to detect schema mismatches
+            sys.exit(1)
+
+        if used >= quota:
+            console.print(f"[red]Budget Exhausted ({used}/{quota})[/red]")
             sys.exit(1)
             
-        console.print(f"[green]Budget OK ({usage}/{DAILY_LIMIT})[/green]")
+        console.print(f"[green]Budget OK ({used}/{quota})[/green]")
         sys.exit(0)
     except Exception as e:
         console.print(f"[red]Error: {e}[/red]")
