@@ -279,11 +279,17 @@ def sanity(model: str = typer.Option("Qwen/Qwen2.5-72B-Instruct", help="Specific
     try:
         client = ChutesClient()
         console.print(f"Testing inference on [bold]{model}[/bold]...")
-        if client.check_sanity(model=model):
-            console.print("[green]✅ Chutes API is reachable and responding (Inference OK)[/green]")
-        else:
-            console.print("[red]❌ Chutes API check failed (Inference Error)[/red]")
+        
+        status = client.get_model_status(model)
+        if status == "HOT":
+            console.print(f"[green]✅ Model is HOT (Responding to Inference)[/green]")
+        elif status == "COLD":
+            console.print(f"[yellow]❌ Model is COLD (Present in registry but not responding)[/yellow]")
             sys.exit(1)
+        else:
+            console.print(f"[red]❌ Model is DOWN (Not found in model registry or completely unresponsive)[/red]")
+            sys.exit(1)
+            
     except Exception as e:
         console.print(f"[red]Sanity check crashed: {e}[/red]")
         sys.exit(1)
