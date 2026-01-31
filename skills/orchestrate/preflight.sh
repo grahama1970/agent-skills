@@ -31,7 +31,7 @@ FAILED=0
 # ============================================================================
 # Check 1: Questions/Blockers
 # ============================================================================
-echo -e "${YELLOW}[1/5] Questions/Blockers...${NC}"
+echo -e "${YELLOW}[1/7] Questions/Blockers...${NC}"
 
 # Look for Questions/Blockers section (case-insensitive, flexible spacing)
 # Matches: "## Questions/Blockers", "## Questions / Blockers", "## QUESTIONS/BLOCKERS"
@@ -48,7 +48,7 @@ fi
 # ============================================================================
 # Check 2: Sanity Scripts Exist
 # ============================================================================
-echo -e "${YELLOW}[2/5] Sanity scripts exist...${NC}"
+echo -e "${YELLOW}[2/7] Sanity scripts exist...${NC}"
 
 # Extract sanity scripts from the Crucial Dependencies table
 # Pattern matches full paths like tools/tasks_loop/sanity/script.py
@@ -70,7 +70,7 @@ fi
 # ============================================================================
 # Check 3: Sanity Scripts Pass
 # ============================================================================
-echo -e "${YELLOW}[3/5] Sanity scripts pass...${NC}"
+echo -e "${YELLOW}[3/7] Sanity scripts pass...${NC}"
 
 if [ -z "$SANITY_SCRIPTS" ]; then
     echo -e "      ${GREEN}✅ No sanity scripts to run${NC}"
@@ -101,7 +101,7 @@ fi
 # ============================================================================
 # Check 4: Definition of Done Defined
 # ============================================================================
-echo -e "${YELLOW}[4/5] Definition of Done defined...${NC}"
+echo -e "${YELLOW}[4/7] Definition of Done defined...${NC}"
 
 # Extract tasks - flexible patterns matching orchestrate.ts parser:
 # - [ ] **Task 1**: Title
@@ -163,7 +163,7 @@ fi
 # ============================================================================
 # Check 5: Test Files Exist
 # ============================================================================
-echo -e "${YELLOW}[5/6] Test files exist...${NC}"
+echo -e "${YELLOW}[5/7] Test files exist...${NC}"
 
 # Extract test file references from Definition of Done
 TEST_FILES=$(grep -oE 'tests?/[a-zA-Z0-9_/]+\.py' "$TASK_FILE" | sort -u)
@@ -186,7 +186,7 @@ fi
 # ============================================================================
 # Check 6: Batch Quality Monitor (for long-running/batch tasks)
 # ============================================================================
-echo -e "${YELLOW}[6/6] Batch quality monitoring...${NC}"
+echo -e "${YELLOW}[6/7] Batch quality monitoring...${NC}"
 
 # Check if task file mentions batch processing, pipeline, or extraction
 IS_BATCH=$(grep -iE 'batch|pipeline|extract|long-running|overnight|nightly|hours?' "$TASK_FILE" | head -1)
@@ -214,6 +214,28 @@ if [ -n "$IS_BATCH" ]; then
     fi
 else
     echo -e "      ${GREEN}✅ Not a batch task (quality check N/A)${NC}"
+fi
+
+# ============================================================================
+# Check 7: Chutes Budget (for LLM tasks)
+# ============================================================================
+echo -e "${YELLOW}[7/7] Chutes budget check...${NC}"
+
+if grep -qiE 'chutes|llm|scillm|batch' "$TASK_FILE"; then
+    echo -e "      ${CYAN}LLM/Batch task detected, checking quota...${NC}"
+    CHUTES_RUNNER=".pi/skills/ops-chutes/run.sh"
+    if [ -f "$CHUTES_RUNNER" ]; then
+        if "$CHUTES_RUNNER" budget-check; then
+            echo -e "      ${GREEN}✅ Chutes budget is OK${NC}"
+        else
+            echo -e "      ${RED}❌ Chutes budget exhausted${NC}"
+            FAILED=1
+        fi
+    else
+        echo -e "      ${YELLOW}⚠️  ops-chutes skill not found at $CHUTES_RUNNER (skipping)${NC}"
+    fi
+else
+    echo -e "      ${GREEN}✅ No LLM/Batch keywords detected (skipping)${NC}"
 fi
 
 # ============================================================================

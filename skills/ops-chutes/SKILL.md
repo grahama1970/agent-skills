@@ -29,7 +29,7 @@ Manage Chutes.ai resources and monitor subscription quota and account balance.
 
 - "Check chutes status" -> `status`
 - "How much chutes budget left?" -> `usage`
-- "Is chutes working?" -> `sanity`
+- "Is chutes working?" -> `sanity [model]`
 
 ## Commands
 
@@ -48,7 +48,7 @@ Manage Chutes.ai resources and monitor subscription quota and account balance.
 ./run.sh model-health <model_id>
 
 # Run sanity check (Inference via Qwen/Qwen2.5-72B-Instruct)
-./run.sh sanity [--model <model_name>]
+./run.sh sanity [model_name]
 
 # Check budget (exit 1 if Quota exhausted OR Balance < CHUTES_MIN_BALANCE)
 ./run.sh budget-check

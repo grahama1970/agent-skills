@@ -274,7 +274,7 @@ def budget_check():
         sys.exit(1)
 
 @app.command()
-def sanity(model: str = typer.Option("Qwen/Qwen2.5-72B-Instruct", help="Specific model/chute to test")):
+def sanity(model: str = typer.Argument("Qwen/Qwen2.5-72B-Instruct", help="Specific model/chute to test")):
     """Run a sanity check/ping via Inference."""
     try:
         client = ChutesClient()
