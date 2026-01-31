@@ -8,11 +8,12 @@
     "github": "DONE",
     "youtube": "DONE",
     "synthesis": "ERROR",
-    "openai": "SKIP",
-    "gemini": "DONE"
+    "openai": "RUNNING",
+    "gemini": "RUNNING",
+    "readarr": "DONE"
   },
-  "last_msg": "gemini succeeded",
-  "last_updated": "2026-01-30 21:43:32",
+  "last_msg": "Trying openai (gpt-4o)...",
+  "last_updated": "2026-01-31 15:06:18",
   "errors": [
     {
       "provider": "discord",
@@ -31,6 +32,15 @@
       "http_status": null,
       "retry_after": null,
       "timestamp": "2026-01-30 21:37:40"
+    },
+    {
+      "provider": "discord",
+      "status": "ERROR",
+      "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+      "error_type": null,
+      "http_status": null,
+      "retry_after": null,
+      "timestamp": "2026-01-31 15:06:08"
     }
   ]
 }

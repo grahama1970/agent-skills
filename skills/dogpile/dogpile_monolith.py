@@ -665,7 +665,7 @@ def search_youtube(query: str) -> List[Dict[str, str]]:
 def search_youtube_transcript(video_id: str) -> Dict[str, Any]:
     """Search YouTube (Stage 2: Transcript) with rate limiting protection."""
     log_status(f"Fetching YouTube Transcript for {video_id}...")
-    skill_dir = SKILLS_DIR / "youtube-transcripts"
+    skill_dir = SKILLS_DIR / "ingest-youtube"
     cmd = [sys.executable, str(skill_dir / "youtube_transcript.py"), "get", "-i", video_id]
     try:
         output = run_command(cmd)
@@ -806,6 +806,9 @@ Include current year (2025-2026) where relevant for recent results.
         end = result_text.rfind("}")
         if start != -1 and end != -1:
             data = json.loads(result_text[start:end+1])
+            if not isinstance(data, dict):
+                log_status(f"Query tailoring returned non-dict: {data}")
+                return default_queries
             # Merge with defaults (in case some keys missing)
             return {**default_queries, **data}
     except json.JSONDecodeError as e:
@@ -863,6 +866,10 @@ def analyze_query(query: str, interactive: bool) -> Tuple[str, bool]:
             data = json.loads(result_text[start:end+1])
         else:
             data = json.loads(result_text)
+        
+        if not isinstance(data, dict):
+            log_status(f"Codex analysis returned non-dict: {data}")
+            return query, True
         
         # Check Ambiguity
         if data.get("is_ambiguous"):

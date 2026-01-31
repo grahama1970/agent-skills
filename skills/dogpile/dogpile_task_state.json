@@ -1,12 +1,12 @@
 {
-  "completed": 6,
+  "completed": 1,
   "total": 16,
-  "description": "Dogpile: There Will Be Blood movie review",
-  "current_item": "completed",
+  "description": "Dogpile: AI agent memory",
+  "current_item": "tailoring",
   "stats": {
     "providers_done": 0,
     "providers_total": 9,
-    "errors": 1,
+    "errors": 0,
     "rate_limits": 0
   },
   "provider_status": {
@@ -21,17 +21,10 @@
     "discord": "pending"
   },
   "provider_times": {},
-  "errors": [
-    {
-      "provider": "codex",
-      "message": "Synthesis failed: Error: 2026-01-31T02:37:30.054700Z ERROR codex_core::codex: failed to load skill /home/graham/worksp",
-      "type": "api_error",
-      "timestamp": "2026-01-30 21:37:40"
-    }
-  ],
+  "errors": [],
   "rate_limits": {},
-  "elapsed_seconds": 30.7,
-  "progress_pct": 37.5,
-  "last_updated": "2026-01-30 21:37:40",
-  "status": "completed"
+  "elapsed_seconds": 3.7,
+  "progress_pct": 6.2,
+  "last_updated": "2026-01-31 15:06:08",
+  "status": "running"
 }

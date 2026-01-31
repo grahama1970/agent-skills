@@ -124,7 +124,7 @@ done
 # Check sub-skills
 echo ""
 echo "=== Sub-skill Check ==="
-for skill in arxiv perplexity brave-search codex youtube-transcripts; do
+for skill in arxiv perplexity brave-search codex ingest-youtube; do
     if [[ -d "$SCRIPT_DIR/../$skill" ]]; then
         echo "  [PASS] Sub-skill '$skill' found"
     else
