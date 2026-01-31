@@ -2,12 +2,11 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from typing import Optional, List
-from pathlib import Path
 import sys
 
 # Import local modules via package relative imports or standard import if existing in PYTHONPATH
-from config import FeedConfig, FeedSource, SourceType
-from storage import FeedStorage
+from feed_config import FeedConfig, FeedSource, SourceType
+from feed_storage import FeedStorage
 
 app = typer.Typer(help="Consume Feed Agent Skill")
 sources_app = typer.Typer(help="Manage feed sources")
@@ -26,7 +25,9 @@ def init():
     console.print("[green]Initialized configs/feeds.yaml[/green]")
 
 @app.command()
-def doctor():
+def doctor(
+    setup: bool = typer.Option(False, "--init", help="Explicitly initialize ArangoDB schema (collections, indexes, views)")
+):
     """Verify environment health."""
     console.print("[bold]Checking Consume Feed Health...[/bold]")
     
@@ -41,7 +42,11 @@ def doctor():
     # Check 2: ArangoDB Connection
     try:
         storage = FeedStorage()
-        console.print(f"[green]✓ ArangoDB connected ('{storage.db_name}')[/green]")
+        if setup:
+            storage.ensure_schema(force=True)
+            console.print("[green]✓ ArangoDB schema explicitly initialized[/green]")
+        else:
+            console.print(f"[green]✓ ArangoDB connected ('{storage.db_name}')[/green]")
     except Exception as e:
         console.print(f"[red]✗ ArangoDB error: {e}[/red]")
         sys.exit(1)
@@ -54,10 +59,10 @@ def run(
     limit: int = typer.Option(0, help="Max items to process per source (0=unlimited)")
 ):
     """Execute the ingestion loop."""
-    from runner import FeedRunner
+    from feed_runner import FeedRunner
     
     config = FeedConfig.load()
-    runner = FeedRunner(config, dry_run=dry_run, limit=limit)
+    runner = FeedRunner(config)
     
     # Filter sources if specific keys provided
     target_sources = config.sources
@@ -69,10 +74,10 @@ def run(
 
     if mode == "nightly":
         console.print("[blue]Starting Nightly Run...[/blue]")
-        runner.run_batch(target_sources)
     else:
         console.print(f"[blue]Starting Manual Run ({len(target_sources)} sources)...[/blue]")
-        runner.run_batch(target_sources)
+    
+    runner.run(sources=target_sources, dry_run=dry_run, limit=limit)
 
 # --- Source Management ---
 
@@ -84,8 +89,8 @@ def list_sources():
     for s in config.sources:
         details = ""
         if s.type == SourceType.RSS: details = s.rss_url
-        elif s.type == SourceType.GITHUB: details = f"{s.gh_owner}/{s.gh_repo}"
-        elif s.type == SourceType.NVD: details = f"Query: {s.nvd_query}"
+        elif s.type == SourceType.GITHUB: details = f"{s.gh_owner}/{s.gh_repo} (COMING SOON)"
+        elif s.type == SourceType.NVD: details = f"Query: {s.nvd_query} (COMING SOON)"
         
         table.add_row(s.key, s.type.value, str(s.enabled), details)
     console.print(table)
@@ -132,6 +137,7 @@ def add_source(
         new_source.rss_url = url
         
     elif type == SourceType.GITHUB:
+        console.print("[yellow]GitHub sources are not yet fully implemented in the runner.[/yellow]")
         if not repo or "/" not in repo:
             console.print("[red]GitHub requires --repo owner/name[/red]")
             return
@@ -140,6 +146,7 @@ def add_source(
         new_source.gh_repo = name
         
     elif type == SourceType.NVD:
+        console.print("[yellow]NVD sources are not yet fully implemented in the runner.[/yellow]")
         if not query:
             console.print("[red]NVD requires --query[/red]")
             return

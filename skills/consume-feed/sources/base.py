@@ -3,9 +3,9 @@ from typing import Dict, Any, List, Optional
 from pydantic import BaseModel
 import time
 
-from ..config import FeedSource
-from ..storage import FeedStorage
-from ..util.http import HttpClient
+from feed_config import FeedSource
+from feed_storage import FeedStorage
+from util.http import HttpClient
 
 class SourceStats(BaseModel):
     source_key: str

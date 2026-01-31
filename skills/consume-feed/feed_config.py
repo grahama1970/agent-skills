@@ -4,7 +4,9 @@ from pydantic import BaseModel, Field, field_validator
 import yaml
 from pathlib import Path
 
-CONFIG_PATH = Path("configs/feeds.yaml")
+# CONFIG_PATH = Path("configs/feeds.yaml")
+SKILL_ROOT = Path(__file__).resolve().parent
+CONFIG_PATH = SKILL_ROOT / "configs" / "feeds.yaml"
 
 class SourceType(str, Enum):
     RSS = "rss"

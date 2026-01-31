@@ -6,7 +6,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SKILL_ROOT = os.path.dirname(SCRIPT_DIR)
 sys.path.insert(0, SKILL_ROOT)
 
-from storage import FeedStorage
+from feed_storage import FeedStorage
 
 def test_conn():
     print("Testing ArangoDB Connection...")

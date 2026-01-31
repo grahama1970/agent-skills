@@ -1,11 +1,11 @@
 import concurrent.futures
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import time
 from rich.console import Console
 from rich.table import Table
 
-from config import FeedConfig, FeedSource, SourceType
-from storage import FeedStorage
+from feed_config import FeedConfig, FeedSource, SourceType
+from feed_storage import FeedStorage
 from sources.rss import RSSSource
 # from sources.github import GitHubSource
 # from sources.nvd import NVDSource
@@ -28,20 +28,19 @@ class FeedRunner:
         #     return NVDSource(source_config, self.storage, user_agent=self.user_agent)
         return None
 
-    def run(self, source_key: str = None, dry_run: bool = False, limit: int = 0):
-        """Execute ingestion for all or one source."""
-        sources_to_run = []
-        if source_key:
-            s = next((s for s in self.config.sources if s.key == source_key), None)
-            if not s:
-                console.print(f"[red]Source '{source_key}' not found in config.[/red]")
-                return
-            sources_to_run = [s]
-        else:
+    def run(self, sources: Optional[List[FeedSource]] = None, dry_run: bool = False, limit: int = 0):
+        """
+        Execute ingestion for a list of sources or all configured ones.
+        """
+        # Ensure schema exists before running
+        self.storage.ensure_schema()
+
+        sources_to_run = sources
+        if sources_to_run is None:
             sources_to_run = [s for s in self.config.sources if s.enabled]
 
         if not sources_to_run:
-            console.print("[yellow]No enabled sources to run.[/yellow]")
+            console.print("[yellow]No sources to run.[/yellow]")
             return
 
         console.print(f"[bold blue]Starting ingestion for {len(sources_to_run)} sources...[/bold blue]")

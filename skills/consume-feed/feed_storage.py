@@ -2,12 +2,16 @@ import sys
 import os
 import time
 from typing import Dict, Any, List, Optional
+from pathlib import Path
 from rich.console import Console
 
 # Add memory skill to path to import connection logic
-MEMORY_SKILL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../memory"))
-if MEMORY_SKILL_PATH not in sys.path:
-    sys.path.append(MEMORY_SKILL_PATH)
+# Use relative path from this file's directory
+SKILL_ROOT = Path(__file__).resolve().parent
+MEMORY_SKILL_PATH = SKILL_ROOT.parent / "memory"
+
+if str(MEMORY_SKILL_PATH) not in sys.path:
+    sys.path.append(str(MEMORY_SKILL_PATH))
 
 try:
     from db import get_db
@@ -18,25 +22,35 @@ except ImportError:
 console = Console()
 
 class FeedStorage:
-    def __init__(self, url: str = None, db_name: str = "feed_db", auth: dict = None):
-        # We exclusively use the memory skill's connection logic
+    def __init__(self, url: str = None, db_name: str = "memory", auth: dict = None):
+        """
+        Initialize connection to ArangoDB via Memory skill.
+        Note: We do NOT call ensure_schema() here to avoid runtime overhead on every instantiation.
+        """
         try:
-            self.db = get_db()
+            self.db = get_db(url=url, db_name=db_name)
             self.db_name = self.db.name
         except Exception as e:
             console.print(f"[red]Failed to connect to ArangoDB via Memory skill: {e}[/red]")
             raise
 
-        self._init_schema()
-
-    def _init_schema(self):
-        """Ensure collections and views exist (Idempotent)."""
+    def ensure_schema(self, force: bool = False):
+        """
+        Ensure collections and views exist (Idempotent).
+        If 'force' is false, it might skip heavy checks if the main collection exists.
+        """
         collections = [
             "feed_items",
             "feed_state", 
             "feed_deadletters",
             "feed_runs"
         ]
+        
+        # Check if initialization is likely already done
+        if not force and self.db.has_collection("feed_items"):
+             return
+
+        console.print("[dim]Ensuring Feed Parser schema (collections, indexes, views)...[/dim]")
         
         for col in collections:
             if not self.db.has_collection(col):

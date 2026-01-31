@@ -3,9 +3,9 @@ import time
 from typing import List, Dict, Any
 from rich.console import Console
 
-from .base import BaseSource, SourceStats
-from ..util.dedupe import generate_rss_key
-from ..util.text import clean_summary
+from sources.base import BaseSource, SourceStats
+from util.dedupe import generate_rss_key
+from util.text import clean_summary
 
 console = Console()
 

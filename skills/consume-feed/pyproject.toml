@@ -12,8 +12,6 @@ dependencies = [
     "python-arango>=7.5.0",
     "pydantic>=2.0.0",
     "pyyaml>=6.0.0",
-    "python-dateutil>=2.8.0",
-    "orjson>=3.9.0",
 ]
 
 [build-system]
@@ -26,9 +24,9 @@ packages = ["sources", "util"]
 [tool.hatch.build.targets.sdist]
 include = [
     "cli.py",
-    "config.py",
-    "runner.py",
-    "storage.py",
+    "feed_config.py",
+    "feed_runner.py",
+    "feed_storage.py",
     "sources",
     "util",
     "configs",

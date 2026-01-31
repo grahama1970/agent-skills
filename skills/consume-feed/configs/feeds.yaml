@@ -1,0 +1,16 @@
+version: 1
+arango_db: feed_db
+run_options:
+  timeout_seconds: 30
+  concurrency: 5
+  user_agent: FeedParser/1.0 (Agentic)
+sources:
+- key: github_blog_feed_
+  type: rss
+  enabled: true
+  tags: []
+  rss_url: https://github.blog/feed/
+  gh_include_issues: true
+  gh_include_releases: true
+  gh_include_discussions: true
+  nvd_cvss_min: 0.0
