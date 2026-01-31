@@ -32,5 +32,12 @@ if [ ! -d ".venv" ]; then
     fi
 fi
 
+# Source .env if it exists in the root of the project
+if [ -f "../../.env" ]; then
+    set -a
+    source "../../.env"
+    set +a
+fi
+
 # Run the manager
 uv run manager.py "$@"

@@ -5,7 +5,7 @@ from typing import Optional
 from rich.console import Console
 from rich.table import Table
 from util import ChutesClient
-from datetime import datetime
+from datetime import datetime, timezone
 import pytz
 
 app = typer.Typer(help="Ops Chutes Manager")
@@ -42,33 +42,41 @@ def status():
 
 @app.command()
 def usage(chute_id: Optional[str] = typer.Option(None, help="Check specific chute quota (if owned)")):
-    """Check Daily Usage (Calls) and Account Balance."""
+    """Check Global Subscription Quota and Account Balance."""
     try:
         client = ChutesClient()
         reset_time = client.get_day_reset_time()
+        now = datetime.now(timezone.utc)
         
-        console.print(f"[bold]Daily Call Limit:[/bold] {DAILY_LIMIT}")
-        console.print(f"[bold]Reset Time (UTC):[/bold] {reset_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        # Calculate countdown
+        diff = reset_time - now
+        hours = int(diff.total_seconds() // 3600)
+        minutes = int((diff.total_seconds() % 3600) // 60)
 
-        # 1. Daily Usage (Count)
-        try:
-             count = client.get_daily_usage()
-             remaining = max(DAILY_LIMIT - count, 0)
-             color = "green" if remaining > 500 else "red"
+        # 1. Global Quota (Authoritative)
+        data = client.get_global_quota()
+        if "error" in data:
+             console.print(f"[red]Global Quota Check Failed:[/red] {data['error']}")
+        else:
+             quota = data.get("quota", DAILY_LIMIT)
+             used = data.get("used", 0)
+             remaining = max(quota - used, 0)
              
-             console.print(f"[bold]Daily Usage:[/bold] {count} / {DAILY_LIMIT}")
-             console.print(f"[bold]Remaining:[/bold] [{color}]{remaining}[/{color}]")
+             color = "green" if remaining > (quota * 0.1) else "red"
              
-        except Exception as e:
-             console.print(f"[red]Failed to fetch usage:[/red] {e}")
+             console.print(f"[bold]Daily Quota Usage[/bold]")
+             console.print(f"  Used: {used:.2f} / {quota}")
+             console.print(f"  Remaining: [{color}]{remaining:.2f}[/{color}]")
+             console.print(f"  Resets in: {hours}h {minutes}m")
 
         # 2. Account Balance (Backstop)
         user_info = client.get_user_info()
-        if "error" in user_info:
-             console.print(f"[red]Balance Check Failed:[/red] {user_info['error']}")
-        else:
+        if "error" not in user_info:
              balance = user_info.get("balance", "unknown")
-             console.print(f"[bold]Account Balance:[/bold] {balance} Credits")
+             if isinstance(balance, (int, float)):
+                 console.print(f"[bold]Account Balance:[/bold] ${balance:.2f}")
+             else:
+                 console.print(f"[bold]Account Balance:[/bold] {balance}")
 
     except Exception as e:
         console.print(f"[red]Error checking usage: {e}[/red]")
@@ -78,32 +86,32 @@ def usage(chute_id: Optional[str] = typer.Option(None, help="Check specific chut
 def budget_check():
     """
     Exit code 0 if budget OK.
-    Exit code 1 if Daily Limit exhausted OR Balance too low.
+    Exit code 1 if Quota exhausted OR Balance too low.
     """
     try:
         client = ChutesClient()
         
-        # 1. Check Daily Limit (Count)
-        try:
-            count = client.get_daily_usage()
-            if count >= DAILY_LIMIT:
-                console.print(f"[red]Daily Limit Exhausted ({count}/{DAILY_LIMIT})[/red]")
+        # 1. Check Global Quota
+        data = client.get_global_quota()
+        if "error" not in data:
+            quota = data.get("quota", DAILY_LIMIT)
+            used = data.get("used", 0)
+            if used >= quota:
+                console.print(f"[red]Daily Quota Exhausted ({used:.2f}/{quota})[/red]")
                 sys.exit(1)
             else:
-                console.print(f"[green]Daily Limit OK ({count}/{DAILY_LIMIT})[/green]")
-        except Exception as e:
-            console.print(f"[yellow]Warning: Could not verify daily usage ({e})[/yellow]")
-
+                console.print(f"[green]Daily Quota OK ({used:.2f}/{quota})[/green]")
+        
         # 2. Check Balance (Backstop)
         user_info = client.get_user_info()
         if "error" not in user_info:
             balance = user_info.get("balance", 0)
             if isinstance(balance, (int, float)):
                 if balance < MIN_BALANCE:
-                    console.print(f"[red]Balance Exhausted ({balance} < {MIN_BALANCE})[/red]")
+                    console.print(f"[red]Balance Exhausted (${balance:.2f} < ${MIN_BALANCE:.2f})[/red]")
                     sys.exit(1)
                 else:
-                    console.print(f"[green]Balance OK ({balance})[/green]")
+                    console.print(f"[green]Balance OK (${balance:.2f})[/green]")
         
         sys.exit(0)
 
