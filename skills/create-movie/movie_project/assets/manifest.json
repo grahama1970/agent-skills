@@ -1,0 +1,88 @@
+{
+  "script": "movie_project/script.json",
+  "script_data": {
+    "title": "A short dream about infinite libraries (Influenced",
+    "synopsis": "",
+    "duration_seconds": 10,
+    "scenes": [
+      {
+        "heading": "INT. LOCATION 1 - DAY",
+        "location": "Location 1",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 1]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 1 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 1]",
+        "shot_type": "WIDE",
+        "duration_seconds": 3
+      },
+      {
+        "heading": "INT. LOCATION 2 - DAY",
+        "location": "Location 2",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 2]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 2 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 2]",
+        "shot_type": "MEDIUM",
+        "duration_seconds": 3
+      },
+      {
+        "heading": "INT. LOCATION 3 - DAY",
+        "location": "Location 3",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 3]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 3 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 3]",
+        "shot_type": "CLOSE-UP",
+        "duration_seconds": 3
+      }
+    ],
+    "visual_style": "",
+    "audio_style": "",
+    "screenplay_raw": "",
+    "research_context": {
+      "topic": "A short dream about infinite libraries (Influenced by: Recent Memory: {\n  \"found\": true,\n  \"should_scan\": false,\n  \"confidence\": 0.588,\n  \"items\": [\n    {\n      \"_key\": \"14005240\",\n      \"playbook\": \"- **Reasoning:** The text cites 'recent findings that high-entropy min...)",
+      "timestamp": "2026-02-01T07:50:49.190993",
+      "sources": {
+        "note": "Research skipped"
+      }
+    },
+    "timestamp": "2026-02-01T07:50:49.290882"
+  },
+  "output_dir": "movie_project/assets",
+  "visual_style": "cinematic, surreal, dreamlike, non-linear, shifting geometry",
+  "scenes_processed": 3,
+  "assets": {
+    "images": [],
+    "audio": [
+      {
+        "scene": 1,
+        "file": "movie_project/assets/audio/cue_001.wav",
+        "type": "cue",
+        "description": "[Audio cue for scene 1]"
+      },
+      {
+        "scene": 2,
+        "file": "movie_project/assets/audio/cue_002.wav",
+        "type": "cue",
+        "description": "[Audio cue for scene 2]"
+      },
+      {
+        "scene": 3,
+        "file": "movie_project/assets/audio/cue_003.wav",
+        "type": "cue",
+        "description": "[Audio cue for scene 3]"
+      }
+    ],
+    "video": []
+  },
+  "timestamp": "2026-02-01T07:51:11.409979"
+}

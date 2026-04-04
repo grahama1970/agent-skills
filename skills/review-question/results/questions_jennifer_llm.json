@@ -1,0 +1,37 @@
+[
+  {
+    "question": "What SPARTA countermeasures are in place to protect the F-36's rad-hard processors from single-event upsets during high-altitude operations?",
+    "difficulty": "easy",
+    "f36_category": "02_microprocessors",
+    "domain_context": "Radiation hardening and fault tolerance for aerospace-grade compute",
+    "persona": "jennifer"
+  },
+  {
+    "question": "How does the F-36's implementation of DISA STIGs for its SCADA systems intersect with SPARTA's recommended countermeasures against ICS-focused adversarial tactics?",
+    "difficulty": "medium",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Industrial control system security in aerospace manufacturing",
+    "persona": "jennifer"
+  },
+  {
+    "question": "Given the F-36's use of third-party FPGA vendors, which SPARTA supply chain attack vectors should we prioritize in our CMMC Level 3 compliance audits?",
+    "difficulty": "medium",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "Supply chain security for programmable logic devices",
+    "persona": "jennifer"
+  },
+  {
+    "question": "The F-36's dual-engine control system inherits architecture patterns from legacy systems vulnerable to time-based side-channel attacks. What SPARTA-identified adversary capabilities pose the greatest risk to this subsystem, and which D3FEND techniques would you implement given DO-178C DAL A constraints?",
+    "difficulty": "hard",
+    "f36_category": "05_space_hardening",
+    "domain_context": "Safety-critical systems hardening against advanced threats",
+    "persona": "jennifer"
+  },
+  {
+    "question": "How should we interpret the conflicting requirements between ITAR-controlled technical data markings and SPARTA's recommendations for vulnerability disclosure in the F-36's avionics supply chain?",
+    "difficulty": "ambiguous",
+    "f36_category": "12_standards",
+    "domain_context": "Export controls vs cybersecurity transparency",
+    "persona": "jennifer"
+  }
+]

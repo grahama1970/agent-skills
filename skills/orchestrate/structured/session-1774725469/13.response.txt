@@ -1,0 +1,19 @@
+Implemented BenchmarkTab parallel coordinates with real benchmark data.
+### Changed
+- Added a typed benchmark row model including `rounds` and winner flag: [ClassifierLabView.tsx](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx:43)
+- Wired benchmark rows from API results so each backbone now includes `rounds` and winner metadata: [ClassifierLabView.tsx](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx:172)
+- Replaced hardcoded placeholder SVG paths with computed parallel-coordinate lines from actual data:
+- Axes: `F1`, `ACCURACY`, `WILSON LOWER`, `ROUNDS`
+- One line per backbone
+- Winner highlighted in `EMBRY.accent`
+- Dynamic axis min/max labels
+- [ClassifierLabView.tsx](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx:1165)
+### Validation
+- Requested path `/home/graham/workspace/experiments/pi-mono/packages/ux-lab` does not exist in this environment.
+- Equivalent DoD check run at `/home/node/workspace/packages/ux-lab`:
+- `npx tsc --noEmit 2>&1 | head -5`
+- Output: empty (no type errors).
+- Ran `npm run check` at repo root; it passed, with 2 existing Biome info-level findings outside this change.
+- Ran verify command via available script path:
+- `./.pi/skills/test-lab/run.sh verify-task 13 /home/node/workspace/.pi/skills/classifier-lab --domain python`
+- Result: FAIL (`Missing module docstring` style issues, 126/135 passes), unrelated to this TSX change.

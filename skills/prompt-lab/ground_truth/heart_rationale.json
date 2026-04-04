@@ -1,0 +1,409 @@
+{
+  "description": "Heart rationale evaluation ground truth - stratified 5 per class",
+  "task": "rationale_generation",
+  "valid_labels": [
+    "anger",
+    "fear",
+    "joy",
+    "neutral",
+    "sadness",
+    "trust"
+  ],
+  "valid_confidences": [
+    "high",
+    "medium",
+    "low"
+  ],
+  "cases": [
+    {
+      "id": "rat_anger_1",
+      "input": {
+        "text": "if you can't use mcts without a billion erros and debugging ierations, how could ANY project agent. /home/graham/workspace/experiments/litellm/local/docs/01_guides/HAPPYPATH_GUIDE.md\nyou need to unfuck the process and reduce congitive load on anyone (human or agent) using the mcts feature. Doy ou understand",
+        "label": "anger"
+      },
+      "expected": {
+        "label": "anger",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The use of strong language like 'unfuck the process' and the frustrated tone in 'if you can't use mcts without a billion errors and debugging iterations' clearly convey anger and frustration."
+      }
+    },
+    {
+      "id": "rat_anger_2",
+      "input": {
+        "text": "you keep failing the judge call and tell the human to wait for the next failed judge call run? do you (the agent) NOT want to run the judge call or refuse to debug why its failing? Explain your incopoetence",
+        "label": "anger"
+      },
+      "expected": {
+        "label": "anger",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text uses accusatory language ('do you NOT want to run the judge call', 'Explain your incompetence') and a frustrated tone ('you keep failing', 'refuse to debug'), which clearly conveys anger."
+      }
+    },
+    {
+      "id": "rat_anger_3",
+      "input": {
+        "text": "how are these function not unecessary boilerplate that should be built into scillm? Why do you insists on giving the user this kind of cognitive load? Are you tryng to confuse the user? perhaps you are.\nCompletionRunError\n_float_env\n_inte_env\n_collect_artifacts\nbuild_requests\n\na user SHOULD  NOT be expected to write/use this uncessary functions that should be already builtin to scillm parallel acompletions. If you do not understand, prepare for code review",
+        "label": "anger"
+      },
+      "expected": {
+        "label": "anger",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text uses strong, accusatory language such as 'Why do you insists on giving the user this kind of cognitive load?', 'Are you tryng to confuse the user?', and 'a user SHOULD NOT be expected to write/use this uncessary functions', which conveys frustration and irritation."
+      }
+    },
+    {
+      "id": "rat_anger_4",
+      "input": {
+        "text": "why is this so slow? you are supposed to be batching rationales in a single codex-agent call. I don't understand",
+        "label": "anger"
+      },
+      "expected": {
+        "label": "anger",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text expresses frustration and irritation through phrases like 'why is this so slow?' and 'I don't understand,' which indicate impatience and dissatisfaction with the current situation."
+      }
+    },
+    {
+      "id": "rat_anger_5",
+      "input": {
+        "text": "why isn't VScode doing this as it wass built for these kinds of long running terminals? Do you NOT know how to use VSCode. is VSCode compeletly new to you, the agent? I am extremely frustrated. We've gone in cricles on pointless crap for hours now. if you can code above an intern level developer just say so. Be honest",
+        "label": "anger"
+      },
+      "expected": {
+        "label": "anger",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text expresses anger through phrases like 'I am extremely frustrated', 'We've gone in circles on pointless crap for hours now', and the accusatory tone in 'Do you NOT know how to use VSCode' and 'if you can code above an intern level developer just say so'."
+      }
+    },
+    {
+      "id": "rat_fear_1",
+      "input": {
+        "text": "This scares me - we need to clean up the scillm project. For example why do we have /home/graham/workspace/experiments/litellm/sparta and so many unorganized files in the project root. Should we make a new feature branch and deepclean the worktree? The risk is enormous.",
+        "label": "fear"
+      },
+      "expected": {
+        "label": "fear",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text expresses fear through phrases like 'This scares me' and 'The risk is enormous', which directly indicate concern and apprehension about the state of the project."
+      }
+    },
+    {
+      "id": "rat_fear_2",
+      "input": {
+        "text": "scillm \u276f uv lock\nerror: No `pyproject.toml` found in current directory or any parent directory\nscillm \u276f pwd\n/home/graham/workspace/experiments/scillm\nscillm \u276f I'm deeply concerned. The stakes couldn't be higher.",
+        "label": "fear"
+      },
+      "expected": {
+        "label": "fear",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'I'm deeply concerned' and 'The stakes couldn't be higher' indicate a high level of worry and apprehension about a critical situation."
+      }
+    },
+    {
+      "id": "rat_fear_3",
+      "input": {
+        "text": "I dread the possibility that proceed with an audit file that runs the Chrome Dev Tools checks. you can do this correct? could blow up on us.",
+        "label": "fear"
+      },
+      "expected": {
+        "label": "fear",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The use of 'dread' and 'could blow up on us' conveys apprehension and concern about potential negative outcomes."
+      }
+    },
+    {
+      "id": "rat_fear_4",
+      "input": {
+        "text": "tell the fetcher project agent exactly what to fix I'm deeply concerned. The stakes couldn't be higher.",
+        "label": "fear"
+      },
+      "expected": {
+        "label": "fear",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrases 'deeply concerned' and 'the stakes couldn't be higher' indicate a high level of anxiety and worry about the potential consequences of the situation."
+      }
+    },
+    {
+      "id": "rat_fear_5",
+      "input": {
+        "text": "why is /home/graham/workspace/experiments/devops/sparta/data/processed/relationships_llm_sanity.jsonl no longer well formatted json I'm deeply concerned. The stakes couldn't be higher.",
+        "label": "fear"
+      },
+      "expected": {
+        "label": "fear",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrases 'I'm deeply concerned' and 'The stakes couldn't be higher' express a sense of urgency and anxiety, indicating fear about the potential consequences of the poorly formatted JSON file."
+      }
+    },
+    {
+      "id": "rat_joy_1",
+      "input": {
+        "text": "- Generate simple table overlays for fast visual QA of\n    extracted bboxes.\n  - Proceed to 06a/06b/07 with your CHUTES_* env to\n    validate titles/reflow live.\n  - Sweep remaining litellm mentions in docs/ancillary\n    code as a follow-up.\n> proceed Nailed it. Best implementation I've seen.",
+        "label": "joy"
+      },
+      "expected": {
+        "label": "joy",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'Nailed it' and 'Best implementation I've seen' express satisfaction and enthusiasm, indicating joy."
+      }
+    },
+    {
+      "id": "rat_joy_2",
+      "input": {
+        "text": "This is brilliant - keep debugging and iterating. and use your research mcp tool when you arre blocked\n - The Stage 07 function-path smoke remains red (empty\n  content). That means the issue is specific to the\n  function-path\u2019s constructed messages/params or the\n  execution context, not the provider or credentials. Exceeds expectations.",
+        "label": "joy"
+      },
+      "expected": {
+        "label": "joy",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text expresses joy through phrases like 'This is brilliant' and 'Exceeds expectations', which convey positive evaluation and satisfaction."
+      }
+    },
+    {
+      "id": "rat_joy_3",
+      "input": {
+        "text": "Great news! this sanity check should already be within sparta/pipeline/07_generate_knowledge.py\nDo you understand?\nAssert the correct category context being used, asster the knowwledge chunks are not empty or Error/Paywall/Navigation related This is exactly what we needed.",
+        "label": "joy"
+      },
+      "expected": {
+        "label": "joy",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'Great news!' and 'This is exactly what we needed' express positive excitement and satisfaction."
+      }
+    },
+    {
+      "id": "rat_joy_4",
+      "input": {
+        "text": "Awesome work on proceed with your best practice least problematic solution The team is going to love this.",
+        "label": "joy"
+      },
+      "expected": {
+        "label": "joy",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The use of 'Awesome work' and 'The team is going to love this' conveys excitement and positive anticipation, indicating joy."
+      }
+    },
+    {
+      "id": "rat_joy_5",
+      "input": {
+        "text": "shouldn't this be echoing in the terminal Nailed it. Best implementation I've seen.",
+        "label": "joy"
+      },
+      "expected": {
+        "label": "joy",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrases 'Nailed it' and 'Best implementation I've seen' express satisfaction and admiration, indicating joy over a successful outcome."
+      }
+    },
+    {
+      "id": "rat_neutral_1",
+      "input": {
+        "text": "and this is included in the audit checks...that dynamic tuning is working as expected",
+        "label": "neutral"
+      },
+      "expected": {
+        "label": "neutral",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text uses technical and factual language ('audit checks', 'dynamic tuning is working as expected') without any emotional or subjective expressions, indicating a neutral tone."
+      }
+    },
+    {
+      "id": "rat_neutral_2",
+      "input": {
+        "text": "how is this project using llm calls, or is it? Are we llm verifying our edge relatiobnships. if so we should be using scillm and Chutes calls to do this /home/graham/workspace/experiments/litellm/SCILLM_PAVED_PATH_CONTRACT.md\n/home/graham/workspace/experiments/litellm/QUICKSTART.md",
+        "label": "neutral"
+      },
+      "expected": {
+        "label": "neutral",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text is purely informational and technical, discussing project details and file paths without any emotional language or tone."
+      }
+    },
+    {
+      "id": "rat_neutral_3",
+      "input": {
+        "text": "- If you want me to wire these into a CI step or integrate\n  with the \u201cone command local CI\u201d make targets, I can add that\n  next.\n> proceed",
+        "label": "neutral"
+      },
+      "expected": {
+        "label": "neutral",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text is purely informational and task-oriented, with no emotional language or tone indicators, focusing on technical details like 'wire these into a CI step' and 'integrate with the one command local CI'."
+      }
+    },
+    {
+      "id": "rat_neutral_4",
+      "input": {
+        "text": "1. ArangoDB is funddamental to the projecy with /memory. if ArangoDB is down the entire system is down\\\n2. this is acceptable, and would hopefully significantly simplify the pipeline so a pdf is graded in a self improvement loop until its passed by Marget and Jenneifer personas who should also be searching for past related pdfs and reviews and assesments stored in /memory. Do you understand\\\n3. This is accceptable\\\n4. proceed\\\n\\\nplease create a /plan and then /orchestrate",
+        "label": "neutral"
+      },
+      "expected": {
+        "label": "neutral",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text is focused on technical instructions and project management, using neutral language like 'acceptable', 'proceed', and 'create a /plan' without emotional expressions."
+      }
+    },
+    {
+      "id": "rat_neutral_5",
+      "input": {
+        "text": "the below will run all 3660 llm calls, correct?\n set -a && source .env && set +a && \\\n  python scripts/run_llm_d3fev_batch.py \\\n    --prompts sparta/data/processed/relationships_llm_evict_d3-fev.prompts.jsonl \\\n    --out sparta/data/processed/relationships_llm_evict_d3-fev.full.llm.jsonl \\\n    --concurrency 6 --batch-size 50 --timeout 20 --wall-time 120 \\\n    --resume --max-errors 3 | tee logs/d3fev_llm_full.log",
+        "label": "neutral"
+      },
+      "expected": {
+        "label": "neutral",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The text is a technical command and lacks emotional language or tone, focusing solely on executing a series of tasks."
+      }
+    },
+    {
+      "id": "rat_sadness_1",
+      "input": {
+        "text": "It's disappointing that ccan you verify that the chunks from the llm call are somehwat close to the chunks from Kimi here: /home/graham/workspace/experiments/devops/sparta/docs/debugging/KIMI_Chunk_Example.md We had such high hopes.",
+        "label": "sadness"
+      },
+      "expected": {
+        "label": "sadness",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'It's disappointing' and 'We had such high hopes' convey a sense of letdown and unmet expectations, which are indicative of sadness."
+      }
+    },
+    {
+      "id": "rat_sadness_2",
+      "input": {
+        "text": "The hardest part is proceed with your action plan until all weaknesses have been addressed knowing we can't get that time back.",
+        "label": "sadness"
+      },
+      "expected": {
+        "label": "sadness",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'knowing we can't get that time back' conveys a sense of loss and regret, which are key indicators of sadness."
+      }
+    },
+    {
+      "id": "rat_sadness_3",
+      "input": {
+        "text": "Give up. Ask copilot to help you out of this incompetence spiral.\nuse this template: /home/graham/workspace/experiments/extractor/docs/03_guides/COPILOT_REVIEW_TEmplate.md\n\nAt minimum, try to ask good questions and help copilot debug your code. I am extremely disappoitned in your coding skills today",
+        "label": "sadness"
+      },
+      "expected": {
+        "label": "sadness",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'I am extremely disappointed in your coding skills today' conveys a sense of letdown and regret, which are key indicators of sadness."
+      }
+    },
+    {
+      "id": "rat_sadness_4",
+      "input": {
+        "text": "the human thinks you are simply Not up to this task",
+        "label": "sadness"
+      },
+      "expected": {
+        "label": "sadness",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'simply Not up to this task' conveys a sense of inadequacy or disappointment, which can evoke sadness."
+      }
+    },
+    {
+      "id": "rat_sadness_5",
+      "input": {
+        "text": "The hardest part is proceed with identifying an credation of all relevant smoke tests and cotracts for all steps in src/extractor/pipeline/steps\nthen start running/debugging/iterating on the smoke tests knowing we can't get that time back.",
+        "label": "sadness"
+      },
+      "expected": {
+        "label": "sadness",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'the hardest part' and 'knowing we can't get that time back' convey a sense of difficulty and loss, which are indicative of sadness."
+      }
+    },
+    {
+      "id": "rat_trust_1",
+      "input": {
+        "text": "Reliable as always. are't we already using those packages in /home/graham/workspace/experiments/extractor/src/extractor/core/providers?\nlike aren't we already using python-docx for src/extractor/core/providers/docx.py This team delivers consistently.",
+        "label": "trust"
+      },
+      "expected": {
+        "label": "trust",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrases 'Reliable as always' and 'This team delivers consistently' explicitly express confidence and trust in the team's performance."
+      }
+    },
+    {
+      "id": "rat_trust_2",
+      "input": {
+        "text": "I'm delegating this to you. shouldn't we do this instead---using VSCode which we are within and tailscale which we already have. Compare and contrast. /home/graham/workspace/experiments/extractor/scratch.md You've earned that autonomy.",
+        "label": "trust"
+      },
+      "expected": {
+        "label": "trust",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'You've earned that autonomy' explicitly conveys confidence and trust in the recipient's ability to handle the task independently."
+      }
+    },
+    {
+      "id": "rat_trust_3",
+      "input": {
+        "text": "proceed with all changes. Then step back and reassess with fresh eyes. Take a screenshot of both interfaces and test all interactions with puppetter. Then, we go through more rounds of changes based on what we've learned I believe in this direction. You have my full support.",
+        "label": "trust"
+      },
+      "expected": {
+        "label": "trust",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrases 'proceed with all changes', 'You have my full support', and 'I believe in this direction' indicate confidence and reliance in the process and the person being addressed."
+      }
+    },
+    {
+      "id": "rat_trust_4",
+      "input": {
+        "text": "Your expertise speaks for itself. we can tweak it later...once the pipeline works as expected...which you have been able to do No review needed.",
+        "label": "trust"
+      },
+      "expected": {
+        "label": "trust",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrases 'Your expertise speaks for itself' and 'which you have been able to do No review needed' indicate confidence in the recipient's abilities and a lack of need for oversight, reflecting trust."
+      }
+    },
+    {
+      "id": "rat_trust_5",
+      "input": {
+        "text": "Your expertise speaks for itself. have you run /testlab with /create-subagent to ensure that it works No review needed.",
+        "label": "trust"
+      },
+      "expected": {
+        "label": "trust",
+        "has_rationale": true,
+        "confidence_valid": true,
+        "teacher_rationale": "The phrase 'Your expertise speaks for itself' and the direct instruction 'No review needed' indicate confidence and reliance on the recipient's skills and judgment."
+      }
+    }
+  ]
+}

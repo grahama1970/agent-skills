@@ -1,0 +1,79 @@
+{
+  "title": "Image Collaboration Demo",
+  "context": "This demo showcases the new image collaboration features: image comparison, custom image paste, and enhanced Other option.",
+  "questions": [
+    {
+      "id": "ui_design",
+      "header": "UI Design",
+      "text": "Which UI design do you prefer for the dashboard?",
+      "type": "image_compare",
+      "comparison_images": [
+        {
+          "path": "test_image.png",
+          "label": "Modern Dark",
+          "description": "Dark theme with gradient accents"
+        },
+        {
+          "path": "test_image.png",
+          "label": "Clean Light",
+          "description": "Minimal light theme with shadows"
+        },
+        {
+          "path": "test_image.png",
+          "label": "Material Design",
+          "description": "Google Material design system"
+        }
+      ],
+      "allow_custom_image": true
+    },
+    {
+      "id": "icon_style",
+      "header": "Icon Style",
+      "text": "What icon style should we use throughout the app?",
+      "type": "image_compare",
+      "comparison_images": [
+        {
+          "path": "test_image.png",
+          "label": "Outline Icons"
+        },
+        {
+          "path": "test_image.png",
+          "label": "Filled Icons"
+        },
+        {
+          "path": "test_image.png",
+          "label": "Duotone Icons"
+        }
+      ],
+      "allow_custom_image": true
+    },
+    {
+      "id": "color_palette",
+      "header": "Colors",
+      "text": "Which color palette fits the brand better?",
+      "options": [
+        {
+          "label": "Ocean Blue (Recommended)",
+          "description": "Professional, trustworthy, calm"
+        },
+        {
+          "label": "Sunset Orange",
+          "description": "Energetic, creative, warm"
+        },
+        {
+          "label": "Forest Green",
+          "description": "Natural, sustainable, fresh"
+        }
+      ],
+      "images": ["test_image.png"],
+      "allow_custom_image": true
+    },
+    {
+      "id": "feedback",
+      "header": "Feedback",
+      "text": "Any additional visual references or feedback? You can paste screenshots or describe your ideas.",
+      "type": "text",
+      "allow_custom_image": true
+    }
+  ]
+}

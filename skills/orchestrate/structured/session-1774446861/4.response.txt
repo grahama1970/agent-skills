@@ -1,0 +1,13 @@
+Implemented in [App.tsx](/home/node/workspace/packages/ux-lab/src/App.tsx):
+- Added lazy import:
+- `const Architecture = React.lazy(() => import('./components/architecture/ArchitectureView'))`
+- Added project registration list entry with icon:
+- `{ id: 'architecture', icon: 'account_tree' }`
+- Added hash route handling:
+- `#architecture` now renders `<Architecture />` (inside `React.Suspense`)
+Validation results:
+1. `grep -c 'rchitecture' /home/node/workspace/packages/ux-lab/src/App.tsx` → `4` (passes your DoD threshold).
+2. `test-lab/run.sh verify-task 4 packages/ux-lab/src/ --domain react` could not run here: `test-lab/run.sh: No such file or directory`.
+3. `npm run check` failed due unrelated repo config errors under `.pi/skills/create-gpt/.venv/.../biome.json` (not from this `App.tsx` change).
+Also, the exact path you provided does not exist in this environment:
+`/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx` (No such file or directory).

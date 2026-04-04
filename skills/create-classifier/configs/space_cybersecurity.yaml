@@ -1,0 +1,161 @@
+# Space Cybersecurity Classifier for Brandon Persona
+# Detects whether content is space-specific or generic IT cybersecurity
+#
+# Training data source: SPARTA QRAs with Brandon assessment labels
+# - 93.5% space_cybersecurity (pass Brandon assessment)
+# - 6.5% generic_it (flagged as generic by Brandon)
+
+task: space_cybersecurity_detection
+type: text
+
+classes:
+  - space_cybersecurity  # SPARTA-relevant: spacecraft, ground stations, RF links, orbital
+  - generic_it           # Generic IT: web security, network admin, standard CVEs
+
+# Class definitions for labeling guidance
+class_definitions:
+  space_cybersecurity:
+    description: "Content specifically about space systems cybersecurity"
+    indicators:
+      - "Spacecraft, satellite, ground station, mission control"
+      - "RF links, uplink, downlink, telemetry, telecommand"
+      - "CCSDS protocols, space link security"
+      - "Orbital mechanics exploitation, conjunction analysis"
+      - "Space debris, anti-satellite weapons"
+      - "SPARTA techniques (REC-xxxx, EXE-xxxx, etc.)"
+      - "SPARTA controls (CM-xxxx, AC-xxxx, etc.)"
+      - "Space-specific CWEs and attack vectors"
+  generic_it:
+    description: "Generic IT/cybersecurity not specific to space"
+    indicators:
+      - "Standard web vulnerabilities (XSS, SQLI) without space context"
+      - "Enterprise network security, Active Directory"
+      - "Cloud security (AWS, Azure) without space mission context"
+      - "Generic malware, ransomware without space targeting"
+      - "Standard CVEs without space system mapping"
+
+model:
+  # Primary: Small efficient model for real-time inference
+  architecture: microsoft/deberta-v3-small  # 44M params, good accuracy/speed tradeoff
+  max_length: 512
+
+  # Alternative for even faster inference:
+  # architecture: sentence-transformers/all-MiniLM-L6-v2  # 22M params
+
+  # Alternative for higher accuracy:
+  # architecture: Qwen/Qwen2.5-0.5B-Instruct  # 500M params
+
+training:
+  epochs: 15
+  batch_size: 32
+  learning_rate: 2e-5
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+
+  # Class balancing (handle 93.5/6.5 imbalance)
+  class_weights:
+    space_cybersecurity: 1.0
+    generic_it: 14.0  # Upsample minority class
+
+  # Early stopping
+  early_stopping:
+    patience: 3
+    metric: f1_macro
+
+validation:
+  split: 0.1  # 10% held out for validation
+  stratified: true  # Maintain class balance in splits
+
+confidence:
+  threshold: 0.85  # High threshold for Brandon (security domain)
+
+  # Routing behavior when confidence < threshold
+  fallback:
+    mode: escalate  # Options: escalate, heuristic, reject
+    message: "I'm not fully confident about the space-specificity of this content. Let me verify..."
+
+# GRPO training with Brandon assessment as reward
+feedback:
+  mode: grpo  # Reinforcement learning from Brandon feedback
+
+  reward_fn: brandon_assessment_score
+  # reward_fn implementation:
+  # - Run classifier prediction
+  # - Compare against Brandon persona assessment
+  # - Reward = 1.0 if agreement, 0.0 if disagreement
+
+  baseline: keyword_heuristic
+  # Baseline heuristic uses keyword matching:
+  # - spacecraft, satellite, ground station → space_cybersecurity
+  # - SQL injection, XSS, web server → generic_it
+
+# Integration points
+integration:
+  # Input filtering: Check if user query is in scope
+  input_filter:
+    enabled: true
+    action: redirect
+    redirect_message: |
+      That question appears to be about general IT security rather than space systems.
+      I specialize in spacecraft and ground station cybersecurity.
+
+      Could you rephrase with space-specific context? For example:
+      - "How would this attack apply to satellite command links?"
+      - "What SPARTA controls address this threat?"
+
+  # Output filtering: Check if response stayed on topic
+  output_filter:
+    enabled: true
+    action: warn
+    warn_message: |
+      Note: My response may have drifted into general IT territory.
+      For space-specific guidance, please consult the SPARTA matrix directly.
+
+# Data collection for continuous improvement
+data_collection:
+  # Source: SPARTA QRA corpus with Brandon labels
+  source: /home/graham/workspace/experiments/sparta/data/qra/qra_corpus.jsonl
+
+  # Label extraction
+  label_field: brandon_assessment.space_aware  # true/false from assessment
+  text_field: answer  # Classify the answer text
+
+  # Additional context fields to include
+  context_fields:
+    - question
+    - control_id
+    - technique_id
+
+# Inference optimization
+inference:
+  batch_size: 16
+  max_concurrent: 4
+  cache:
+    enabled: true
+    ttl_seconds: 3600  # Cache predictions for 1 hour
+
+  # ONNX export for faster CPU inference
+  onnx:
+    enabled: true
+    quantize: true  # INT8 quantization for 2-3x speedup
+
+# Metrics to track
+metrics:
+  - accuracy
+  - f1_macro
+  - precision_per_class
+  - recall_per_class
+  - confusion_matrix
+  - inference_latency_p50
+  - inference_latency_p95
+  - fallback_rate
+
+# Shadow deployment before production
+shadow_deploy:
+  duration_days: 7
+  log_path: logs/space_classifier_shadow.jsonl
+  compare_against: keyword_heuristic
+  success_criteria:
+    accuracy: 0.90
+    f1_macro: 0.85
+    fallback_rate_max: 0.15

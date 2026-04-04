@@ -1,0 +1,17 @@
+{
+  "skill": "sparta-stress-simulate",
+  "completed": 0,
+  "total": 1,
+  "description": "sparta-stress-simulate",
+  "current_item": "",
+  "progress_pct": 0.0,
+  "elapsed_seconds": 8.2,
+  "eta_seconds": null,
+  "throughput_per_sec": 0.0,
+  "stats": {
+    "success": 0,
+    "failed": 0
+  },
+  "last_updated": "2026-02-28 10:22:29",
+  "status": "completed"
+}

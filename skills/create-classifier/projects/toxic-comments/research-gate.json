@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "timestamp": "2026-04-01T15:55:05.277639",
+  "goal": "Classify online comments as toxic or non-toxic",
+  "modality": "text",
+  "backbones": [
+    "distilbert-base-uncased",
+    "sentence-transformers/all-MiniLM-L6-v2"
+  ]
+}

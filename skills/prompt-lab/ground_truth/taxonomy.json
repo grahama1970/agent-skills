@@ -1,0 +1,136 @@
+{
+  "name": "taxonomy",
+  "description": "Bridge tag extraction for SPARTA controls",
+  "cases": [
+    {
+      "id": "T1547.001",
+      "input": {
+        "name": "Registry Run Keys / Startup Folder",
+        "description": "Adversaries may achieve persistence by adding a program to a startup folder or referencing it with a Registry run key."
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "notes": "Classic persistence technique"
+    },
+    {
+      "id": "SI-2",
+      "input": {
+        "name": "Flaw Remediation",
+        "description": "The organization identifies, reports, and corrects information system flaws."
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "notes": "NIST hardening control"
+    },
+    {
+      "id": "d3f:NetworkIsolation",
+      "input": {
+        "name": "Network Isolation",
+        "description": "Configuring a network to deny connections based on source or destination IP address ranges."
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "notes": "D3FEND isolation technique"
+    },
+    {
+      "id": "CWE-89",
+      "input": {
+        "name": "SQL Injection",
+        "description": "The software constructs SQL commands using externally-influenced input without proper neutralization."
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "notes": "Classic injection weakness"
+    },
+    {
+      "id": "T1070.001",
+      "input": {
+        "name": "Clear Windows Event Logs",
+        "description": "Adversaries may clear Windows Event Logs to hide the activity of an intrusion."
+      },
+      "expected": {
+        "conceptual": [
+          "Stealth"
+        ],
+        "tactical": [
+          "Evade"
+        ]
+      },
+      "notes": "Defense evasion technique"
+    },
+    {
+      "id": "AC-2",
+      "input": {
+        "name": "Account Management",
+        "description": "The organization manages information system accounts including establishing, activating, modifying, reviewing, disabling, and removing accounts."
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": [
+          "Harden",
+          "Detect"
+        ]
+      },
+      "notes": "NIST access control"
+    },
+    {
+      "id": "T1595",
+      "input": {
+        "name": "Active Scanning",
+        "description": "Adversaries may execute active reconnaissance scans to gather information that can be used during targeting."
+      },
+      "expected": {
+        "conceptual": [
+          "Precision"
+        ],
+        "tactical": [
+          "Model"
+        ]
+      },
+      "notes": "Reconnaissance technique"
+    },
+    {
+      "id": "CP-9",
+      "input": {
+        "name": "Information System Backup",
+        "description": "The organization conducts backups of user-level and system-level information contained in the information system."
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Restore"
+        ]
+      },
+      "notes": "NIST backup control"
+    }
+  ]
+}

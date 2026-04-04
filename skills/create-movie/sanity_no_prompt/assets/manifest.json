@@ -1,0 +1,88 @@
+{
+  "script": "sanity_no_prompt/script.json",
+  "script_data": {
+    "title": "Surreal Dream (Influenced by: Cinematic fragment: ",
+    "synopsis": "",
+    "duration_seconds": 10,
+    "scenes": [
+      {
+        "heading": "INT. LOCATION 1 - DAY",
+        "location": "Location 1",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 1]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 1 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 1]",
+        "shot_type": "WIDE",
+        "duration_seconds": 3
+      },
+      {
+        "heading": "INT. LOCATION 2 - DAY",
+        "location": "Location 2",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 2]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 2 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 2]",
+        "shot_type": "MEDIUM",
+        "duration_seconds": 3
+      },
+      {
+        "heading": "INT. LOCATION 3 - DAY",
+        "location": "Location 3",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 3]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 3 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 3]",
+        "shot_type": "CLOSE-UP",
+        "duration_seconds": 3
+      }
+    ],
+    "visual_style": "",
+    "audio_style": "",
+    "screenplay_raw": "",
+    "research_context": {
+      "topic": "Surreal Dream (Influenced by: Cinematic fragment: {\n  \"found\": true,\n  \"should_scan\": false,\n  \"confidence\": 8.744,\n  \"items\": [\n    {\n      \"_id\": \"lean_theorems/712357f9e5396e5e\",\n      \"_key\": \"712 | Literary thought: {\n  \"found\": true,\n  \"should_scan\": false,\n  \"confidence\": 9.262,\n  \"items\": [\n    {\n      \"_id\": \"lean_theorems/a4ea6e3ee18c63ae\",\n      \"_key\": \"a4e | World echo: {\n  \"found\": true,\n  \"should_scan\": false,\n  \"confidence\": 6.896,\n  \"items\": [\n    {\n      \"_id\": \"lean4_proofs/circle_graph_remaining_degrees\",\n     )",
+      "timestamp": "2026-02-01T08:58:33.840151",
+      "sources": {
+        "note": "Research skipped"
+      }
+    },
+    "timestamp": "2026-02-01T08:58:34.021466"
+  },
+  "output_dir": "sanity_no_prompt/assets",
+  "visual_style": "cinematic, surreal, dreamlike, non-linear, shifting geometry",
+  "scenes_processed": 3,
+  "assets": {
+    "images": [],
+    "audio": [
+      {
+        "scene": 1,
+        "file": "sanity_no_prompt/assets/audio/cue_001.wav",
+        "type": "cue",
+        "description": "[Audio cue for scene 1]"
+      },
+      {
+        "scene": 2,
+        "file": "sanity_no_prompt/assets/audio/cue_002.wav",
+        "type": "cue",
+        "description": "[Audio cue for scene 2]"
+      },
+      {
+        "scene": 3,
+        "file": "sanity_no_prompt/assets/audio/cue_003.wav",
+        "type": "cue",
+        "description": "[Audio cue for scene 3]"
+      }
+    ],
+    "video": []
+  },
+  "timestamp": "2026-02-01T08:58:49.727958"
+}

@@ -1,0 +1,38 @@
+{
+  "timestamp": 1772480132.7835348,
+  "passed": 5,
+  "failed": 0,
+  "errors": 0,
+  "total": 5,
+  "pass_rate": 1.0,
+  "classifications": {
+    "DECOMPOSE": 5
+  },
+  "by_difficulty": {
+    "medium": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "classifications": {
+        "DECOMPOSE": 3
+      }
+    },
+    "simple": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "classifications": {
+        "DECOMPOSE": 1
+      }
+    },
+    "complex": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "classifications": {
+        "DECOMPOSE": 1
+      }
+    }
+  },
+  "elapsed_s": 476.9
+}

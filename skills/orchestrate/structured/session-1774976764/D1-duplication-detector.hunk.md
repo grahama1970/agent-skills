@@ -1,0 +1,277 @@
+# Code Runner Review: D1-duplication-detector
+
+**Rounds:** 1
+**Best score:** 1.000 (round 1)
+**DoD passed:** True
+
+## Round Trajectory
+| Round | Score | Strategy | Status | Errors |
+|-------|-------|----------|--------|--------|
+| 1 | 1.000 | direct_fix | keep | 0 (unknown) |
+
+diff --git a/.pi/.worktrees/skills-ci/skills-ci-20260329144123 b/.pi/.worktrees/skills-ci/skills-ci-20260329144123
+--- a/.pi/.worktrees/skills-ci/skills-ci-20260329144123
++++ b/.pi/.worktrees/skills-ci/skills-ci-20260329144123
+@@ -1 +1 @@
+-Subproject commit a8168444f84940f42e2aa90843841352733a7a92
++Subproject commit a8168444f84940f42e2aa90843841352733a7a92-dirty
+diff --git a/.pi/.worktrees/skills-ci/skills-ci-20260329144138 b/.pi/.worktrees/skills-ci/skills-ci-20260329144138
+--- a/.pi/.worktrees/skills-ci/skills-ci-20260329144138
++++ b/.pi/.worktrees/skills-ci/skills-ci-20260329144138
+@@ -1 +1 @@
+-Subproject commit a8168444f84940f42e2aa90843841352733a7a92
++Subproject commit a8168444f84940f42e2aa90843841352733a7a92-dirty
+diff --git a/.pi/.worktrees/skills-ci/skills-ci-20260329144153 b/.pi/.worktrees/skills-ci/skills-ci-20260329144153
+--- a/.pi/.worktrees/skills-ci/skills-ci-20260329144153
++++ b/.pi/.worktrees/skills-ci/skills-ci-20260329144153
+@@ -1 +1 @@
+-Subproject commit a8168444f84940f42e2aa90843841352733a7a92
++Subproject commit a8168444f84940f42e2aa90843841352733a7a92-dirty
+diff --git a/packages/ux-lab/server/index.ts b/packages/ux-lab/server/index.ts
+index b01c1c32..8063b935 100644
+--- a/packages/ux-lab/server/index.ts
++++ b/packages/ux-lab/server/index.ts
+@@ -986,9 +986,10 @@ app.post('/api/projects/:projectId/test-interactions', async (req, res) => {
+ })
+ 
+ // ── Entity extraction ────────────────────────────────────────────────────────
+-// Two modes:
++// Three modes:
+ //   1. delimiter provided: split text on delimiters, look up each ID via /list
+-//   2. no delimiter: proxy to memory daemon /taxonomy/extract for NLP extraction
++//   2. binary_features/app_actions: BM25 via daemon /search-collection endpoint
++//   3. other collections (sparta): proxy to daemon /extract-entities (FlashText)
+ 
+ app.post('/api/extract-entities', async (req, res) => {
+   try {
+@@ -1028,20 +1029,44 @@ app.post('/api/extract-entities', async (req, res) => {
+       return
+     }
+ 
+-    // Mode 2: NLP extraction via daemon
+-    try {
+-      const result = await proxyPost('/taxonomy/extract', { text, collection: col })
+-      if (result.entities) {
+-        res.json(result)
+-      } else {
+-        const entities = (result.tags?.mind || []).map((t: string, i: number) => ({
+-          id: `entity_${i}`, name: t, label: t, type: 'taxonomy'
+-        }))
+-        res.json({ entities })
++    // Mode 2: BM25 search for app-scoped collections (binary_features, app_actions)
++    // Uses /search-collection — raw BM25 against the collection's ArangoSearch view.
++    if (col === 'binary_features' || col === 'app_actions') {
++      try {
++        const searchResult = await proxyPost('/search-collection', {
++          q: text, collection: col, k: 5,
++          return_fields: ['label', 'name', 'description', 'node_type', 'nodeType', 'cluster'],
++        }) as { items?: Array<{ _key?: string; label?: string; name?: string; description?: string; node_type?: string; nodeType?: string; cluster?: string; _score?: number }> }
++        const entities = (searchResult.items ?? [])
++          .filter(item => (item._score ?? 0) > 1.0)
++          .map(item => ({
++            id: `${col}/${item._key ?? ''}`,
++            name: item.name ?? item.label ?? '',
++            label: item.label ?? item.name ?? '',
++            type: item.node_type ?? item.nodeType ?? 'unknown',
++            description: item.description ?? '',
++            cluster: item.cluster ?? '',
++            score: item._score ?? 0,
++            exists: true,
++          }))
++        res.json({ entities, mode: 'bm25_search' })
++      } catch (searchErr) {
++        console.warn(`[extract-entities] BM25 search failed for ${col}:`, searchErr)
++        res.json({ entities: [], mode: 'bm25_search', error: 'search failed' })
+       }
++      return
++    }
++
++    // Mode 3: SPARTA entity extraction via daemon (FlashText Aho-Corasick)
++    try {
++      const result = await proxyPost('/extract-entities', { text, include_taxonomy: false })
++      const entities = (result.control_ids ?? []).map((cid: string, i: number) => {
++        const meta = (result.control_metadata ?? [])[i] ?? {}
++        return { id: cid, name: meta.name ?? cid, label: cid, type: 'control', framework: meta.framework ?? '', exists: true }
++      })
++      res.json({ entities, mode: 'flashtext' })
+     } catch {
+-      // Daemon taxonomy/extract not available — return empty
+-      res.json({ entities: [], error: 'taxonomy/extract not available' })
++      res.json({ entities: [], error: 'extract-entities daemon not available' })
+     }
+   } catch (e) {
+     res.status(502).json({ error: 'Entity extraction failed', detail: String(e) })
+@@ -2750,6 +2775,173 @@ app.post('/api/evidence-case/run', async (req, res) => {
+   }
+ })
+ 
++// ── Traceability: chunk_control_edges → typed datalake_chunks per control ────
++
++app.post('/api/memory/traceability', async (req, res) => {
++  const { control_id } = req.body as { control_id: string }
++  if (!control_id) return res.status(400).json({ error: 'control_id required' })
++
++  try {
++    // Traverse chunk_control_edges to find datalake_chunks linked to this control
++    const edgeResult = await proxyPost('/list', {
++      collection: 'chunk_control_edges',
++      limit: 100,
++      filters: { control_id },
++    }) as { documents?: Array<{ _from?: string; _to?: string; confidence?: number; tier?: string }> }
++
++    const edges = edgeResult.documents ?? []
++    if (edges.length === 0) {
++      return res.json({ control_id, groups: {}, total_chunks: 0 })
++    }
++
++    // Fetch source chunks by _key (extract from _from: "datalake_chunks/abc123")
++    const chunkKeys = edges
++      .map(e => e._from?.split('/')?.[1])
++      .filter(Boolean) as string[]
++
++    const chunkResult = await proxyPost('/recall/by-keys', {
++      collection: 'datalake_chunks',
++      keys: chunkKeys.slice(0, 50),
++      return_fields: ['text', 'asset_type', 'doc_id', 'source', 'source_meta', 'content_type'],
++    }) as { documents?: Array<Record<string, any>> }
++
++    const chunks = chunkResult.documents ?? []
++
++    // Group by asset_type
++    const groups: Record<string, Array<Record<string, any>>> = {}
++    for (const chunk of chunks) {
++      const assetType = chunk.asset_type || 'Text'
++      if (!groups[assetType]) groups[assetType] = []
++      groups[assetType].push({
++        _key: chunk._key,
++        text: (chunk.text || '').slice(0, 300),
++        doc_id: chunk.doc_id,
++        asset_type: assetType,
++        source: chunk.source,
++      })
++    }
++
++    res.json({ control_id, groups, total_chunks: chunks.length })
++  } catch (e) {
++    res.status(500).json({ error: 'Traceability query failed', detail: String(e) })
++  }
++})
++
++// ── Evidence Case Trace: gate chain + source chunks per control ──────────────
++
++app.post('/api/evidence-case/trace', async (req, res) => {
++  const { control_id } = req.body as { control_id: string }
++  if (!control_id) return res.status(400).json({ error: 'control_id required' })
++
++  try {
++    // Find evidence cases matching this control_id
++    const recallResult = await proxyPost('/recall', {
++      q: `${control_id} evidence case verdict`,
++      k: 20,
++      tags: ['sensai-cascade-label'],
++    }) as { items?: Array<Record<string, any>> }
++
++    const items = recallResult.items ?? []
++    const cases: Array<Record<string, any>> = []
++
++    for (const item of items) {
++      // Parse solution JSON
++      let sol: Record<string, any> = {}
++      try {
++        const raw = item.solution ?? ''
++        if (raw.startsWith('{')) sol = JSON.parse(raw)
++      } catch { continue }
++
++      // Check if this case references the requested control
++      const cids: string[] = sol.control_ids ?? []
++      if (!cids.some(c => c === control_id || control_id.startsWith(c) || c.startsWith(control_id))) continue
++
++      cases.push({
++        verdict: sol.verdict ?? 'unknown',
++        grade: sol.grade ?? '?',
++        question: sol.question ?? item.problem ?? '',
++        gates_passed: sol.gates_passed ?? 0,
++        gates_total: sol.gates_total ?? 0,
++        gate_summary: sol.gate_summary ?? '',
++        tier: sol.tier ?? 'T0',
++        control_ids: cids,
++      })
++    }
++
++    res.json({ control_id, cases })
++  } catch (e) {
++    res.status(500).json({ error: 'Evidence trace failed', detail: String(e) })
++  }
++})
++
++// ── Critical Path: failing attack chains from sparta_relationships ───────────
++
++app.post('/api/critical-path', async (req, res) => {
++  const { control_id } = req.body as { control_id?: string }
++
++  try {
++    // Get relationships — optionally filtered to a specific control
++    const q = control_id
++      ? `${control_id} relationship vulnerability attack chain`
++      : 'SPARTA attack chain vulnerability failing not_satisfied'
++    const relResult = await proxyPost('/recall', {
++      q,
++      collections: ['sparta_relationships'],
++      k: 50,
++    }) as { items?: Array<Record<string, any>> }
++
++    const rels = relResult.items ?? []
++
++    // Build node map and find edges where at least one node lacks coverage
++    // (We check against the evidence map — nodes without evidence are "failing")
++    const evidenceResult = await proxyPost('/recall', {
++      q: 'sensai cascade label verdict evidence SPARTA',
++      k: 200,
++      tags: ['sensai-cascade-label'],
++    }) as { items?: Array<Record<string, any>> }
++
++    // Build verdict map from evidence cases
++    const verdictMap = new Map<string, string>()
++    for (const item of evidenceResult.items ?? []) {
++      let sol: Record<string, any> = {}
++      try { const raw = item.solution ?? ''; if (raw.startsWith('{')) sol = JSON.parse(raw) } catch { continue }
++      for (const cid of (sol.control_ids ?? [])) {
++        const existing = verdictMap.get(cid)
++        if (!existing || sol.verdict === 'satisfied') verdictMap.set(cid, sol.verdict ?? 'unknown')
++      }
++    }
++
++    // Filter to edges where at least one endpoint is not satisfied
++    const failingEdges = rels.filter(r => {
++      const srcVerdict = verdictMap.get(r.source_control_id) ?? 'none'
++      const tgtVerdict = verdictMap.get(r.target_control_id) ?? 'none'
++      return srcVerdict !== 'satisfied' || tgtVerdict !== 'satisfied'
++    })
++
++    // Build chains (connected components of failing nodes)
++    const nodeMap = new Map<string, { id: string; verdict: string; framework: string }>()
++    const edges: Array<{ source: string; target: string; method: string; score: number }> = []
++
++    for (const r of failingEdges.slice(0, 30)) {
++      const src = r.source_control_id ?? ''
++      const tgt = r.target_control_id ?? ''
++      if (!src || !tgt) continue
++      if (!nodeMap.has(src)) nodeMap.set(src, { id: src, verdict: verdictMap.get(src) ?? 'none', framework: r.source_framework ?? '?' })
++      if (!nodeMap.has(tgt)) nodeMap.set(tgt, { id: tgt, verdict: verdictMap.get(tgt) ?? 'none', framework: r.target_framework ?? '?' })
++      edges.push({ source: src, target: tgt, method: r.method ?? '?', score: r.combined_score ?? 0 })
++    }
++
++    // Return as a single chain for now (TODO: split into connected components)
++    const chains = edges.length > 0
++      ? [{ nodes: [...nodeMap.values()], edges, severity: edges.length }]
++      : []
++
++    res.json({ chains, total_failing_edges: failingEdges.length })
++  } catch (e) {
++    res.status(500).json({ error: 'Critical path query failed', detail: String(e) })
++  }
++})
++
+ // ── Static file serving for captures/screenshots ────────────────────────────
+ app.use('/captures', express.static(CAPTURES_DIR))
+ app.use('/screenshots', express.static(SCREENSHOTS_DIR))

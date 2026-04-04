@@ -1,0 +1,19 @@
+{
+  "session_id": "auto-1771111506",
+  "user_id": "test-user",
+  "persona_id": "embry",
+  "created_at": 1771111506.264457,
+  "last_active": 1771111506.4107792,
+  "turns": [
+    {
+      "query": "you are completely useless",
+      "action": "DEFLECT",
+      "persona_id": "embry",
+      "response_text": "Perhaps you should reconsider your approach.",
+      "suggested_questions": [],
+      "accepted_question": null,
+      "humor_level": "minimal",
+      "timestamp": 1771111506.4107738
+    }
+  ]
+}

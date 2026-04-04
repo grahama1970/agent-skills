@@ -1,0 +1,60 @@
+{
+  "chart_type": "line",
+  "viz_family": "line",
+  "query": "Show me the convergence trend over the last 100 assessments",
+  "title": "Convergence Trend",
+  "data_shape": {
+    "row_count": 50,
+    "col_count": 2,
+    "max_label_len": 1,
+    "has_time_axis": true,
+    "null_pct": 0.0,
+    "col_types": {
+      "x": {
+        "dtype": "int64",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "unique_count": 50,
+        "semantic_type": "numerical",
+        "min": 1.0,
+        "max": 50.0,
+        "mean": 25.5,
+        "std": 14.58
+      },
+      "y": {
+        "dtype": "float64",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "unique_count": 17,
+        "semantic_type": "numerical",
+        "min": 0.232558,
+        "max": 1.0,
+        "mean": 0.8,
+        "std": 0.15
+      }
+    },
+    "analytics_recommendation": "bar",
+    "analytics_encoding": {
+      "x": "x_bins",
+      "y": "count"
+    },
+    "analytics_all_recommendations": [
+      {
+        "name": "histogram_x",
+        "chart_type": "bar"
+      },
+      {
+        "name": "histogram_y",
+        "chart_type": "bar"
+      },
+      {
+        "name": "correlation_matrix",
+        "chart_type": "heatmap"
+      }
+    ]
+  },
+  "source": "figure-lab",
+  "timestamp": 1772306495,
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/line_1772306495.html",
+  "html_size_bytes": 4240
+}

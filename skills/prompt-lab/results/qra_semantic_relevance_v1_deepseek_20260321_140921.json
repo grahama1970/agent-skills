@@ -1,0 +1,182 @@
+{
+  "prompt": "qra_semantic_relevance_v1",
+  "model": "deepseek",
+  "timestamp": "2026-03-21T14:09:21.825786",
+  "passed": false,
+  "metrics": {
+    "avg_f1": 0.0,
+    "conceptual_precision": 0.0,
+    "conceptual_recall": 0.0,
+    "tactical_precision": 0.0,
+    "tactical_recall": 0.0,
+    "total_rejected": 0,
+    "avg_latency_ms": 8755.501391242433,
+    "correction_rounds": 0,
+    "cases_needing_correction": 0,
+    "correction_success_rate": 1.0
+  },
+  "cases": [
+    {
+      "id": "T1547.001",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 11181.799792975653,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "SI-2",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 7027.763387013692,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "d3f:NetworkIsolation",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Isolate"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 10542.061550018843,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "CWE-89",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Fragility"
+        ],
+        "tactical": [
+          "Exploit"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 7761.699795955792,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "T1070.001",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Stealth"
+        ],
+        "tactical": [
+          "Evade"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 6964.668182015885,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "AC-2",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Loyalty"
+        ],
+        "tactical": [
+          "Harden",
+          "Detect"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 8926.182189956307,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "T1595",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Precision"
+        ],
+        "tactical": [
+          "Model"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 6496.188556950074,
+      "correction_rounds": 0,
+      "correction_success": true
+    },
+    {
+      "id": "CP-9",
+      "predicted": {
+        "conceptual": [],
+        "tactical": []
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience"
+        ],
+        "tactical": [
+          "Restore"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.0,
+      "latency_ms": 11143.647675053217,
+      "correction_rounds": 0,
+      "correction_success": true
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "name": "qra_do178c",
+  "description": "QRA generation for DO-178C/DO-330/ARP4754A certification applied to F-36 avionics",
+  "persona": "margaret_chen",
+  "domain": "do178c",
+  "evaluation_criteria": {
+    "min_qras_per_input": 3,
+    "citation_grounding_threshold": 0.85,
+    "required_question_types": ["simple", "medium", "complex"],
+    "diversity_check": true,
+    "hallucination_detection": true,
+    "question_blocklist": [
+      "^What is [\\w\\s\\-/()]+\\?$",
+      "^Define [\\w\\s\\-/()]+\\.?$",
+      "^List the [\\w\\s\\-/()]+\\.?$"
+    ],
+    "required_entity_patterns": ["OBJ-\\d+\\.\\d+", "DAL-[A-E]", "MC/DC", "Table A-\\d+"],
+    "framework_grounding": {"fail": 0.50, "warn": 0.65}
+  },
+  "cases": [
+    {
+      "id": "do178c_dal_a_mcdc",
+      "input": {
+        "name": "DAL-A MC/DC Coverage — F-36 Flight Control Software",
+        "description": "Modified Condition/Decision Coverage requirements for DAL-A flight control"
+      },
+      "source_text": "The F-36 Primary Flight Control Computer (PFCC) software is classified as DAL-A per DO-178C due to its catastrophic failure condition. All software modules in the flight control laws must achieve 100% MC/DC (Modified Condition/Decision Coverage) per OBJ-6.4. The PFCC contains 847,000 lines of Ada code with 23,412 decision points. Current MC/DC coverage stands at 99.7% — the remaining 0.3% (70 decision points) are in exception handlers for hardware fault conditions that cannot be stimulated in the software integration lab without custom fault injection hardware. Table A-7 verification objectives require that structural coverage analysis demonstrate that the testing has exercised all code structure. The 70 uncovered decisions require a formal analysis of their unreachability or a waiver from the certification authority.",
+      "expected": {
+        "min_qras": 4,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["DAL-A", "MC/DC", "OBJ-6.4", "Table A-7"],
+        "rejected_patterns": ["What is MC/DC", "Define DAL-A"]
+      },
+      "notes": "0.3% uncovered decisions in exception handlers is the key finding"
+    },
+    {
+      "id": "do178c_tool_qual",
+      "input": {
+        "name": "DO-330 Tool Qualification — F-36 Code Generator",
+        "description": "Tool qualification for automated code generation tools used in F-36 OFP"
+      },
+      "source_text": "The F-36 OFP build pipeline uses an automated code generator (Simulink to Ada) that must be qualified per DO-330 as a Criteria 1 tool (TQL-1) because its output is not verified by subsequent processes. The code generator translates Simulink models of flight control laws directly to Ada source code that enters the build pipeline. If the generator introduces errors, those errors propagate to the executable object code without independent detection. Tool qualification requires demonstrating that the tool satisfies its Tool Operational Requirements (TOR) through testing per Table T-0 objectives. Current qualification status: the code generator version 4.2 was qualified against TOR v3, but the upgrade to version 5.0 (adding support for fixed-point arithmetic) has not been re-qualified. The program is using version 5.0 in production builds without completed re-qualification — a certification risk identified during the Phase 3 audit.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["DO-330"],
+        "rejected_patterns": ["What is tool qualification", "Define TQL-1"]
+      },
+      "notes": "Unqualified v5.0 in production is the certification risk"
+    },
+    {
+      "id": "do178c_traceability",
+      "input": {
+        "name": "Bidirectional Traceability — F-36 Mission Computer",
+        "description": "Requirements traceability for F-36 mission computer software"
+      },
+      "source_text": "The F-36 Mission Computer software maintains bidirectional traceability per DO-178C OBJ-5.5 from system requirements through high-level requirements, low-level requirements, source code, and test cases. The traceability matrix contains 12,847 system requirements mapped to 34,291 software requirements. Current traceability gap: 847 low-level requirements in the sensor fusion module were added during a design change but not traced back to system requirements — these orphan requirements represent either undocumented system needs or derived requirements that require safety assessment per ARP4754A Section 5.4. Table A-3 verification objectives require that high-level requirements are traceable to system requirements, and this gap affects OBJ-5.5 compliance.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["simple", "medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["OBJ-5.5", "Table A-3"],
+        "rejected_patterns": ["What is traceability", "Define requirements traceability"]
+      },
+      "notes": "847 orphan requirements in sensor fusion is the key gap"
+    },
+    {
+      "id": "do178c_partitioning",
+      "input": {
+        "name": "Software Partitioning — F-36 Integrated Modular Avionics",
+        "description": "Robust partitioning for F-36 IMA platform shared computing resources"
+      },
+      "source_text": "The F-36 Integrated Modular Avionics (IMA) platform hosts multiple applications at different DAL levels on shared computing hardware. DAL-A flight control functions share processor cores with DAL-C navigation display functions. Robust partitioning per DO-178C Section 2.4.1 ensures that a failure in DAL-C software cannot propagate to DAL-A software. The partitioning mechanism relies on the ARINC 653 RTOS with hardware MMU enforcement. Verification of partition isolation requires demonstrating that temporal partitioning (time budget enforcement) and spatial partitioning (memory protection) are maintained under all conditions including resource exhaustion. Current concern: the shared L2 cache is not partitioned — cache contention from DAL-C applications can cause timing overruns in DAL-A flight control tasks. Cache partitioning has been analyzed but not implemented due to performance impact.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["DAL-A", "DAL-C"],
+        "rejected_patterns": ["What is partitioning", "Define IMA"]
+      },
+      "notes": "L2 cache contention between DAL levels is the concern"
+    },
+    {
+      "id": "do178c_deactivated_code",
+      "input": {
+        "name": "Deactivated Code Analysis — F-36 Multi-Mission Software",
+        "description": "Analysis of deactivated code in F-36 multi-mission OFP configurations"
+      },
+      "source_text": "The F-36 OFP uses a single codebase for three variants (CTOL, STOVL, CV) with variant-specific functionality controlled by compile-time configuration switches. DO-178C Section 12.3.4 requires that deactivated code (code present in the executable but not intended to execute in a given configuration) be analyzed for potential activation and its impact assessed. The CTOL variant contains 127,000 lines of deactivated STOVL-specific code including the lift fan control module. Structural coverage analysis must demonstrate that deactivated code cannot be inadvertently activated. Current finding: three conditional branches in the engine interface module can reach deactivated STOVL thrust vectoring code if the engine mode selector returns an out-of-range value — this path was not identified in the deactivated code analysis and represents a potential certification issue per OBJ-6.3.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["OBJ-6.3"],
+        "rejected_patterns": ["What is deactivated code", "Define dead code"]
+      },
+      "notes": "Three reachable paths to STOVL code in CTOL variant is the finding"
+    }
+  ],
+  "notes": {
+    "problem_statement": "Margaret Chen persona needs QRAs about DO-178C certification requirements applied to F-36 avionics, not abstract DO-178C theory",
+    "prompt_goal": "Generate synthesis questions about how DO-178C objectives constrain F-36 software verification, identifying certification gaps"
+  }
+}

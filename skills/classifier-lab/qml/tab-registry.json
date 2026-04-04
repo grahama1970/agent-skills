@@ -1,0 +1,53 @@
+{
+  "groups": [
+    {
+      "id": "training",
+      "label": "Training",
+      "color": "#00ff88",
+      "tabs": [
+        {
+          "id": "train",
+          "label": "Train",
+          "shortcut": "1",
+          "voiceKeyword": "train",
+          "component": "TrainPage.qml"
+        },
+        {
+          "id": "benchmark",
+          "label": "Benchmark",
+          "shortcut": "2",
+          "voiceKeyword": "benchmark",
+          "component": "BenchmarkPage.qml"
+        }
+      ]
+    },
+    {
+      "id": "analysis",
+      "label": "Analysis",
+      "color": "#44aaff",
+      "tabs": [
+        {
+          "id": "evaluate",
+          "label": "Evaluate",
+          "shortcut": "3",
+          "voiceKeyword": "evaluate",
+          "component": "EvaluatePage.qml"
+        },
+        {
+          "id": "ensemble",
+          "label": "Ensemble",
+          "shortcut": "4",
+          "voiceKeyword": "ensemble",
+          "component": "EnsemblePage.qml"
+        },
+        {
+          "id": "export",
+          "label": "Export",
+          "shortcut": "5",
+          "voiceKeyword": "export",
+          "component": "ExportPage.qml"
+        }
+      ]
+    }
+  ]
+}

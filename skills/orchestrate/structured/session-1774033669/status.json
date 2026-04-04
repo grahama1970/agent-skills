@@ -1,0 +1,177 @@
+{
+  "generated_at": 1774034566.517141,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774033669",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Implement /consume-midi search + ingest",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774033669/T1.response.txt",
+      "error": "",
+      "started_at": 1774033669.4434385,
+      "finished_at": 1774034069.2348595,
+      "subagent_task_id": "7182c19e",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T2",
+      "title": "Implement /create-midi compose + move midi_utils.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774033669/T2.response.txt",
+      "error": "",
+      "started_at": 1774034069.2355926,
+      "finished_at": 1774034372.968395,
+      "subagent_task_id": "822545f9",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T3",
+      "title": "Implement /story-lab converge.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "",
+      "error": "Task T3 cancelled by operator",
+      "started_at": 1774034372.9688792,
+      "finished_at": 1774034566.5168386,
+      "subagent_task_id": "f9cc05fe",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T4",
+      "title": "Rewrite pipeline.py for 10-stage architecture",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T5",
+      "title": "Build S03 stem viewer React component from Stitch mockup",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T6",
+      "title": "Build S04 lyrics editor React component from Stitch mockup",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T7",
+      "title": "Build pipeline view + remaining stage components",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T5",
+        "T6"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T8",
+      "title": "Create /prompt-lab prompts for S04 annotation + S05 composition + S06 compile",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T9",
+      "title": "End-to-end dry-run: Whisperheads",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T4",
+        "T7",
+        "T8"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

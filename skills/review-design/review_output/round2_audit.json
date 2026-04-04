@@ -1,0 +1,40 @@
+{
+  "round": 2,
+  "provider": "gemini",
+  "model": "gemini-2.0-flash",
+  "token_changes": [
+    {
+      "path": "borders.focus.color",
+      "to": "colors.accent.hover"
+    },
+    {
+      "path": "colors.button.primary.background",
+      "to": "--embry-accent"
+    },
+    {
+      "path": "components.bottomBar.button.active.background",
+      "to": "--embry-accent"
+    },
+    {
+      "path": "components.bottomBar.button.active.shape",
+      "to": "radii.small"
+    },
+    {
+      "path": "components.awaitingData.text.color",
+      "to": "--embry-text-muted"
+    },
+    {
+      "path": "components.instructionalText.color",
+      "to": "--embry-text-muted"
+    },
+    {
+      "path": "components.awaitingData.spacing",
+      "to": "--embry-space-5"
+    },
+    {
+      "path": "components.onboarding.dotIndicator.inactive.color",
+      "to": "--embry-text-subtle"
+    }
+  ],
+  "timestamp": "2026-02-27T16:22:32.327421"
+}

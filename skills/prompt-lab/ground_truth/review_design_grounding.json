@@ -1,0 +1,36 @@
+{
+  "description": "Ground truth for review_design_step1_audit prompt — SPARTA Explorer",
+  "tokens_json": "{}",
+  "focus_areas": "Code-first review of SPARTA Explorer 8-tab shell. TSX components are PRIMARY input.",
+  "persona": "nico-bailon",
+  "code_context_files": [
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/SpartaExplorer.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/OverviewView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/ControlsView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/QRAsView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/SourcesView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/RelationshipsView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/URLsView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/KnowledgeView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/sparta/explorer/PipelineView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/hooks/useSpartaCollections.ts"
+  ],
+  "expected_contains": [
+    "SpartaExplorer",
+    "OverviewView",
+    "ControlsView",
+    "QRAsView",
+    "SourcesView",
+    "RelationshipsView",
+    "URLsView",
+    "KnowledgeView",
+    "useControls",
+    "useQRAs",
+    "useFrameworkCounts",
+    "tab",
+    "controls",
+    "keyboard"
+  ],
+  "expected_keys": ["raw_text"],
+  "thresholds": {}
+}

@@ -1,0 +1,21 @@
+{
+  "task_id": "6",
+  "title": "Implement PostureDashboard.tsx \u2014 full 3ft compliance view from V1 mockup",
+  "prompt": "Task: Implement PostureDashboard.tsx \u2014 full 3ft compliance view from V1 mockup\n\nImplementation:\n- Replace 7-line stub with full implementation matching approved V1 mockup\n- Layout: 3-row grid per mockup\n- Row 1 (hero): Large posture score (glow, delta badge) + 8 framework SVG donut rings\n- Row 2 (main): NIST 800-53 family stacked bars (15 families) + Gap Analysis card (5 stat rows)\n- Row 3 (detail): Drift Alerts list (glow-dot severity) + Top 10 Risk Controls table\n- D3 per /best-practices-d3: React renders SVG declaratively, d3.pie()/d3.arc() compute paths in useMemo\n- Styling: ALL via EmbryStyle tokens \u2014 EMBRY.bgCard for cards, EMBRY.bg for background, label/heading/body for text\n- NEVER hardcode hex values \u2014 import { EMBRY, card, label, heading, glowDot, fwBadge } from common/EmbryStyle\n- NVIS MIL-STD-3009: green=#00ff88 pass, red=#ff4444 fail, amber=#ffaa00 partial (all via EMBRY.green/red/amber)\n- COTS MIL-STD-1472H: title on every interactive element, \u22654.5:1 contrast, focus-visible outlines, no color-only signaling\n- Colorblind-safe: donut rings use EMBRY.fw[framework] which differs by hue AND luminance\n- ALL interactive elements get: data-qid, data-qs-action, title\n- Donuts: data-qid='posture:donut:{framework}' data-qs-action='POSTURE_SELECT_FRAMEWORK_{FW}'\n- Family bars: data-qid='posture:family:{family}' data-qs-action='POSTURE_SELECT_FAMILY_{FAM}'\n- Gap items: data-qid='posture:gap:{type}' data-qs-action='POSTURE_VIEW_GAP_{TYPE}'\n- Alert rows: data-qid='posture:alert:{control_id}' data-qs-action='POSTURE_VIEW_ALERT_{ID}'\n- Risk rows: data-qid='posture:risk:{control_id}' data-qs-action='POSTURE_VIEW_RISK_{ID}'\n- useRegisterAction at top of component for each action class\n- No early returns that hide chrome \u2014 empty state renders inside content area\n- Clickable bars: onClick sets selectedFamily state \u2192 family flyout panel\n- Clickable risk rows: onClick navigates to control detail\n\nDefinition of Done:\n- Command: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx\n- Assertion: exit_code == 0\n\nTests:\n- cd packages/ux-lab && curl -sf http://localhost:3002/src/components/sparta/dashboard/PostureDashboard.tsx -o /dev/null -w '%{http_code}' | grep -q 200\n- cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775232330",
+  "definition_of_done": {
+    "command": "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    "packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"
+  ],
+  "read_context": [
+    "packages/ux-lab/captures/posture-dashboard-design/variation_1.html",
+    "packages/ux-lab/src/hooks/usePostureData.ts",
+    "packages/ux-lab/src/components/sparta/common/EmbryStyle.ts",
+    "/home/graham/workspace/experiments/pi-mono/.code-runner-skills-6.md"
+  ]
+}

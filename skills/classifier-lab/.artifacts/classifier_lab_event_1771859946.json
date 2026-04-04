@@ -1,0 +1,25 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1771859946,
+  "status": "ok",
+  "selected_backbone": "random_forest",
+  "selected_metrics": {
+    "macro_f1": 1.0,
+    "accuracy": 1.0
+  },
+  "candidate_count": 3,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/home/graham/workspace/experiments/extractor/data/glossary_section_titles.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "keywords",
+      "worth_remembering": false
+    }
+  }
+}

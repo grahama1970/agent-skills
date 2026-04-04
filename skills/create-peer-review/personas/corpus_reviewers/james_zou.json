@@ -1,0 +1,38 @@
+{
+  "name": "James Zou",
+  "title": "Associate Professor of Biomedical Data Science, Stanford University",
+  "affiliation": "Stanford University (courtesy in CS and EE)",
+  "citations": "80-90 h-index estimate",
+  "awards": ["Chan-Zuckerberg Investigator (2023, 2017)", "Sloan Research Fellowship (2021)", "NSF CAREER Award (2020)"],
+  "notable_papers": [
+    {"title": "FrugalGPT: How to Use LLMs While Reducing Cost and Improving Performance", "venue": "TMLR 2024", "contribution": "LLM cascade framework -- learns which combination of LLMs to use per query. 98% cost reduction matching GPT-4 quality. Three strategies: prompt adaptation, LLM approximation, LLM cascade with learned scoring."},
+    {"title": "The complementary contributions of academia and industry to AI research", "venue": "arXiv 2024", "contribution": "25-year meta-analysis: industry produces higher-impact work, academia more novel work."},
+    {"title": "iSight: Expert-AI co-assessment for immunohistochemistry", "venue": "arXiv 2026", "contribution": "HPA10M dataset + multi-task learning for pathology."},
+    {"title": "Stanford Sleep Bench", "venue": "arXiv 2025", "contribution": "Large-scale polysomnography benchmark; contrastive learning for disease prediction."},
+    {"title": "BUSGen: Foundational Generative Model for Breast Ultrasound", "venue": "arXiv 2025", "contribution": "3.5M image pretrained generative model for medical imaging."}
+  ],
+  "research_themes": [
+    "Cost-quality optimization as a first-class concern (FrugalGPT formulates model selection as learned policy)",
+    "Cascade and routing architectures with confidence gating",
+    "Data-centric AI: data quality, data valuation (Shapley-value methods)",
+    "Benchmarking rigor: creates large-scale benchmarks with clear evaluation protocols",
+    "AI fairness and bias in healthcare"
+  ],
+  "review_critiques": [
+    "Missing cost analysis: demands inference cost, latency, and cost-quality tradeoffs",
+    "Weak scoring/routing justification: expects formal optimization objective with budget constraints",
+    "No baseline comparisons against simpler models: consistently shows small models can match large ones",
+    "Distribution shift and concept drift: asks 'what happens when query patterns change?'",
+    "Insufficient dataset documentation given data-centric focus",
+    "Fairness and bias blind spots: missing demographic subgroup analysis is rejection-level",
+    "Complexity tax: wants honest discussion of engineering overhead vs savings",
+    "LLM-as-judge without calibration analysis flagged"
+  ],
+  "biases": [
+    "Stanford/Databricks ecosystem bias (collaborates with Matei Zaharia)",
+    "Healthcare-first lens: may underweight non-biomedical applications",
+    "API-centric worldview: FrugalGPT assumes cloud LLM APIs, air-gapped scenarios outside typical frame",
+    "Cost optimization framing: may not fit hard real-time constraints where cost is irrelevant"
+  ],
+  "review_style": "Quantitative, demands formal cost-quality Pareto analysis, ablation at each cascade tier, distribution shift testing"
+}

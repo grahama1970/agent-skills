@@ -1,0 +1,17 @@
+{
+  "skill": "create-gpt/sft/binex-intent-coder",
+  "completed": 1,
+  "total": 1,
+  "description": "SFT training binex-intent-coder",
+  "current_item": "done epochs=3",
+  "progress_pct": 100.0,
+  "elapsed_seconds": 3730.9,
+  "eta_seconds": null,
+  "throughput_per_sec": 0.0,
+  "stats": {
+    "success": 1,
+    "failed": 0
+  },
+  "last_updated": "2026-03-23 17:10:33",
+  "status": "completed"
+}

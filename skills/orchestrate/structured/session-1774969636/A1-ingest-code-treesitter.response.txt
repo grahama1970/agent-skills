@@ -1,0 +1,8 @@
+error: unexpected argument '--reasoning' found
+
+  tip: a similar argument exists: '--version'
+
+Usage: codex exec --full-auto --version [PROMPT]
+
+For more information, try '--help'.
+

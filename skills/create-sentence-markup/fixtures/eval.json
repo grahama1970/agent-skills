@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "skill": "create-sentence-markup",
+  "description": "Behavioral tests for sentence markup annotation. Tests NVIS color assignment, fabricated ID detection, misspelling clarify generation, and clean passthrough.",
+  "defaults": { "latency_budget_ms": 10000 },
+  "cases": [
+    {
+      "name": "fabricated_id_red",
+      "command": ["annotate", "{input}", "--format", "json"],
+      "input_inline": "How does SPARTA control X23-MUSTARD mitigate spoofing?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["RED", "X23-MUSTARD", "fabricated"],
+      "rationale": ["Fabricated ID X23-MUSTARD should get RED level annotation"],
+      "tags": ["fast", "adversarial"]
+    },
+    {
+      "name": "misspelling_amber",
+      "command": ["annotate", "{input}", "--format", "json"],
+      "input_inline": "How does the SPRTA framework work?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["AMBER", "SPRTA", "Did you mean"],
+      "rationale": ["SPRTA misspelling of SPARTA should get AMBER with clarify action"],
+      "tags": ["fast", "misspelling"]
+    },
+    {
+      "name": "clean_question_green",
+      "command": ["annotate", "{input}", "--format", "json"],
+      "input_inline": "What does SV-AC-2 have to do with CWE-89?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["GREEN", "annotations"],
+      "rationale": ["Real control IDs should get GREEN level annotations"],
+      "tags": ["fast", "real"]
+    },
+    {
+      "name": "markdown_rendering",
+      "command": ["annotate", "{input}", "--format", "markdown"],
+      "input_inline": "How does X23-MUSTARD protect avionics?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["X23-MUSTARD"],
+      "rationale": ["Markdown output should contain annotated term"],
+      "tags": ["fast", "rendering"]
+    },
+    {
+      "name": "clarify_generates_interview",
+      "command": ["clarify", "{input}"],
+      "input_inline": "How does the SPRTA framework work?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["interview_questions", "SPRTA", "SPARTA"],
+      "rationale": ["Clarify should produce /interview-compatible questions for misspellings"],
+      "tags": ["fast", "compose"]
+    },
+    {
+      "name": "no_clarify_needed",
+      "command": ["clarify", "{input}"],
+      "input_inline": "What SPARTA countermeasures protect firmware?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["corrected"],
+      "rationale": ["Clean text should return no changes needed"],
+      "tags": ["fast", "edge_case"]
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "generated_at": 1773932910.7355247,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931647",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Music Lab TypeScript types + sample data",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931647/T1.response.txt",
+      "error": "",
+      "started_at": 1773931647.4016955,
+      "finished_at": 1773931698.8518155,
+      "subagent_task_id": "34a3d280",
+      "subagent_port": 8623
+    },
+    {
+      "id": "T2",
+      "title": "PianoRollView component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931647/T2.response.txt",
+      "error": "",
+      "started_at": 1773931698.8521676,
+      "finished_at": 1773931956.9022803,
+      "subagent_task_id": "0858ed48",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T3",
+      "title": "WaveformView component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931647/T3.response.txt",
+      "error": "",
+      "started_at": 1773931956.9027486,
+      "finished_at": 1773932201.9171016,
+      "subagent_task_id": "23c439a0",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T4",
+      "title": "ConvergenceChart component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931647/T4.response.txt",
+      "error": "",
+      "started_at": 1773932201.9177473,
+      "finished_at": 1773932351.9606192,
+      "subagent_task_id": "59367186",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T5",
+      "title": "LyricsEditor component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931647/T5.response.txt",
+      "error": "",
+      "started_at": 1773932351.9609628,
+      "finished_at": 1773932637.1234546,
+      "subagent_task_id": "316eaa36",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T6",
+      "title": "MusicLabWorkbench dashboard + App.tsx integration",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T2",
+        "T3",
+        "T4",
+        "T5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931647/T6.response.txt",
+      "error": "",
+      "started_at": 1773932637.1240983,
+      "finished_at": 1773932863.1947207,
+      "subagent_task_id": "97df8bd9",
+      "subagent_port": 8624
+    },
+    {
+      "id": "T7",
+      "title": "Design review of music-lab components",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "review",
+      "agent": "steve-schoger",
+      "status": "completed",
+      "depends_on": [
+        "T6"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931647/T7.response.txt",
+      "error": "",
+      "started_at": 1773932863.1955252,
+      "finished_at": 1773932910.7354836,
+      "subagent_task_id": "0dbbd5bc",
+      "subagent_port": 8625
+    }
+  ]
+}

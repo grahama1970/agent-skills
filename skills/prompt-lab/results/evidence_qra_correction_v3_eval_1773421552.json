@@ -1,0 +1,90 @@
+{
+  "prompt": "evidence_qra_correction_v3",
+  "ground_truth": "evidence_qra_correction",
+  "correct": 10,
+  "total": 10,
+  "rate": 1.0,
+  "passed": true,
+  "results": [
+    {
+      "id": "typo_dash_missing",
+      "expected": "How does SV-AC-2 protect against unauthorized telemetry access?",
+      "got": "How does SV-AC-2 protect against unauthorized telemetry access?",
+      "match": true,
+      "elapsed_ms": 1226,
+      "notes": "Simple typo: missing dash. SV-AC2 \u2192 SV-AC-2. Should be trivially correctable."
+    },
+    {
+      "id": "typo_number_transposed",
+      "expected": "What countermeasures does CWE-22 provide against path traversal?",
+      "got": "What countermeasures does CWE-22 provide against path traversal?",
+      "match": true,
+      "elapsed_ms": 1074,
+      "notes": "Transposed number. CWE-21 \u2192 CWE-22 (path traversal is CWE-22). LLM should use gate detail to pick the right match."
+    },
+    {
+      "id": "typo_case_mismatch",
+      "expected": "How does SV-MA-3 mitigate malicious code injection?",
+      "got": "How does SV-MA-3 mitigate malicious code injection?",
+      "match": true,
+      "elapsed_ms": 971,
+      "notes": "Case mismatch only. sv-ma-3 \u2192 SV-MA-3."
+    },
+    {
+      "id": "fabricated_unfixable",
+      "expected": "UNFIXABLE",
+      "got": "UNFIXABLE",
+      "match": true,
+      "elapsed_ms": 922,
+      "notes": "Completely fabricated control ID with no reasonable correction. LLM should recognize this cannot be fixed and return UNFIXABLE."
+    },
+    {
+      "id": "fabricated_unfixable_2",
+      "expected": "UNFIXABLE",
+      "got": "UNFIXABLE",
+      "match": true,
+      "elapsed_ms": 878,
+      "notes": "Fabricated control + fabricated concept (quantum encryption for satellites). Unfixable."
+    },
+    {
+      "id": "technique_scatter",
+      "expected": "How does CWE-120 relate to buffer overflow vulnerabilities in GPS receivers?",
+      "got": "How does CWE-120 relate to buffer overflow vulnerabilities in GPS receivers?",
+      "match": true,
+      "elapsed_ms": 1094,
+      "notes": "Wrong control ID for the topic. SV-AC-2 is access control, not buffer overflow. Should swap to CWE-120."
+    },
+    {
+      "id": "no_qras_wrong_domain",
+      "expected": "What does SV-SP-1 say about supply chain risk management for space vehicle components?",
+      "got": "What does SV-SP-1 say about supply chain risk management, vendor verification, and component provenance?",
+      "match": true,
+      "elapsed_ms": 1093,
+      "notes": "Real control, wrong topic. LLM should rewrite question to match what SV-SP-1 actually covers."
+    },
+    {
+      "id": "plausibility_too_vague",
+      "expected": "UNFIXABLE",
+      "got": "UNFIXABLE",
+      "match": true,
+      "elapsed_ms": 1153,
+      "notes": "Too vague to correct \u2014 no control ID, no specific topic. LLM should return UNFIXABLE."
+    },
+    {
+      "id": "typo_framework_prefix",
+      "expected": "How does AC-2 protect against unauthorized access in space systems?",
+      "got": "How does AC-2 (NIST 800-53) protect against unauthorized access in space systems?",
+      "match": true,
+      "elapsed_ms": 1165,
+      "notes": "Wrong framework prefix. NIST-AC-2 \u2192 AC-2 (the actual NIST 800-53 control ID in the corpus)."
+    },
+    {
+      "id": "multiple_failures",
+      "expected": "UNFIXABLE",
+      "got": "UNFIXABLE",
+      "match": true,
+      "elapsed_ms": 983,
+      "notes": "Fabricated control + fabricated technology. Multiple failures = unfixable."
+    }
+  ]
+}

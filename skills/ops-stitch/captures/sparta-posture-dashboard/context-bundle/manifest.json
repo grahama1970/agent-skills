@@ -1,0 +1,11 @@
+{
+  "target": "sparta-posture-dashboard",
+  "timestamp": "2026-04-01T15:02:11.328139+00:00",
+  "url": "http://localhost:3002/#sparta-explorer",
+  "hash": "sparta-explorer",
+  "prompt": "Design a SPARTA Security Posture Dashboard for Brandon Bailey (cybersecurity analyst). NVIS MIL-STD-3009 dark theme. 6 panes: Header with posture score, Drift Alerts (threat deltas), Coverage Ring (donut by verdict), Discrepancies (req vs table contradictions), Critical Path (mini attack chain graph), Timeline (sparklines per tactic). Desktop 1920x1080. See DESIGN_BRIEF.md for full spec with real data counts and color tokens.",
+  "images": [
+    "current-state.png"
+  ],
+  "design_md_included": false
+}

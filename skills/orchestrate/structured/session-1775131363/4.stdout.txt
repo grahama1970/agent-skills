@@ -1,0 +1,48 @@
+ALL OK
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /home/graham/workspace/experiments/pi-mono/.pi/skills/_shared/structured_pla │
+│ n.py:349 in validate                                                         │
+│                                                                              │
+│   346 def validate(file: Path) -> None:                                      │
+│   347 │   """Validate a task file (markdown or structured)."""               │
+│   348 │   if is_structured_plan(file):                                       │
+│ ❱ 349 │   │   data = load_structured_plan(file)                              │
+│   350 │   else:                                                              │
+│   351 │   │   data = markdown_to_structured(file)                            │
+│   352 │   result = validate_structured_plan(data)                            │
+│                                                                              │
+│ /home/graham/workspace/experiments/pi-mono/.pi/skills/_shared/structured_pla │
+│ n.py:30 in load_structured_plan                                              │
+│                                                                              │
+│    27                                                                        │
+│    28                                                                        │
+│    29 def load_structured_plan(path: Path) -> dict[str, Any]:                │
+│ ❱  30 │   text = path.read_text()                                            │
+│    31 │   suffix = path.suffix.lower()                                       │
+│    32 │   if suffix == ".json":                                              │
+│    33 │   │   data = json.loads(text)                                        │
+│                                                                              │
+│ /home/graham/.local/share/uv/python/cpython-3.12.10-linux-x86_64-gnu/lib/pyt │
+│ hon3.12/pathlib.py:1027 in read_text                                         │
+│                                                                              │
+│   1024 │   │   Open the file in text mode, read it, and close the file.      │
+│   1025 │   │   """                                                           │
+│   1026 │   │   encoding = io.text_encoding(encoding)                         │
+│ ❱ 1027 │   │   with self.open(mode='r', encoding=encoding, errors=errors) as │
+│   1028 │   │   │   return f.read()                                           │
+│   1029 │                                                                     │
+│   1030 │   def write_bytes(self, data):                                      │
+│                                                                              │
+│ /home/graham/.local/share/uv/python/cpython-3.12.10-linux-x86_64-gnu/lib/pyt │
+│ hon3.12/pathlib.py:1013 in open                                              │
+│                                                                              │
+│   1010 │   │   """                                                           │
+│   1011 │   │   if "b" not in mode:                                           │
+│   1012 │   │   │   encoding = io.text_encoding(encoding)                     │
+│ ❱ 1013 │   │   return io.open(self, mode, buffering, encoding, errors, newli │
+│   1014 │                                                                     │
+│   1015 │   def read_bytes(self):                                             │
+│   1016 │   │   """                                                           │
+╰──────────────────────────────────────────────────────────────────────────────╯
+FileNotFoundError: [Errno 2] No such file or directory: 
+'.pi/skills/checkpoint/02_SKILL_ENFORCEMENT.yaml'

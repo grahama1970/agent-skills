@@ -1,0 +1,8 @@
+{
+  "name": "api-test-toxic",
+  "status": "researched",
+  "modality": "text",
+  "goal": "Detect toxic comments",
+  "samples": 0,
+  "classes": 0
+}

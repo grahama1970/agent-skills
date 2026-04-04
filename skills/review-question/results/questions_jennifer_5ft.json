@@ -1,0 +1,162 @@
+[
+  {
+    "question": "What does Jennifer Cheung do at DISA?",
+    "difficulty": "easy",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Jennifer is a STIG author and compliance bridge expert mapping SPARTA, NIST 800-53, and STIGs"
+  },
+  {
+    "question": "What is the control identifier for mandatory access control in NIST 800-53A?",
+    "difficulty": "easy",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "AC-03(03) is the mandatory access control identifier in NIST SP 800-53A"
+  },
+  {
+    "question": "What does OSCAL stand for and what is it used for?",
+    "difficulty": "easy",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Open Security Controls Assessment Language \u2014 lingua franca for compliance data interchange"
+  },
+  {
+    "question": "What do auditors consider when assessing an agency's compliance with NIST guidance?",
+    "difficulty": "easy",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Auditors consider intent of security/privacy concepts and how agency applied guidance in context of mission"
+  },
+  {
+    "question": "What is a compliance bridge in the context of SPARTA and NIST mappings?",
+    "difficulty": "easy",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Compliance bridge maps between SPARTA space-cyber controls, NIST 800-53 controls, and STIG rules bidirectionally"
+  },
+  {
+    "question": "How does the Trident View work for mapping controls across three frameworks?",
+    "difficulty": "medium",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Three-panel layout: SPARTA tree left, NIST 800-53 center, STIGs/CCIs right \u2014 click any to cross-highlight"
+  },
+  {
+    "question": "What happens when you do a gap analysis between SPARTA and RHEL 8 STIGs?",
+    "difficulty": "medium",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Gap analysis finds nodes without complete paths \u2014 green=fully mapped, yellow=partial, red=no mapping"
+  },
+  {
+    "question": "How would you detect an orphan control that has no parentage across frameworks?",
+    "difficulty": "medium",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Force-directed graph shows orphan controls with no parentage as deprecation candidates"
+  },
+  {
+    "question": "When should CWE-1317 Improper Access Control in Fabric Bridge be addressed in spacecraft development?",
+    "difficulty": "medium",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "CWE-1317 should be addressed during SoC design and verification phases"
+  },
+  {
+    "question": "What is the STIG authoring workflow for closing gap analysis findings?",
+    "difficulty": "medium",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Split-pane with gap analysis left, XCCDF editor right, drag-and-drop link control creates edges"
+  },
+  {
+    "question": "Show me the coverage distribution across the ten F-36 ALIS compliance bridge mappings and highlight which ones have STIG gaps",
+    "difficulty": "hard",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "F-36 ALIS bridge: 10 countermeasures mapped, 3 STIG gaps \u2014 ST-4 Replay Attack (0.45), ST-7 Supply Chain (0.35), ST-9 RF Interference (0.40)"
+  },
+  {
+    "question": "Compare the coverage scores for Denial of Service Protection versus Supply Chain Integrity in the F-36 bridge mappings and tell me why one is so much lower",
+    "difficulty": "hard",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "ST-1 DoS Protection at 0.85 coverage vs ST-7 Supply Chain at 0.35 \u2014 supply chain has no STIG implementation"
+  },
+  {
+    "question": "Show me a breakdown of how many NIST controls map to each SPARTA countermeasure in the F-36 bridge and which direction the mapping goes",
+    "difficulty": "hard",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "F-36 bridge mappings show bidirectional vs forward-only directions per countermeasure with NIST control counts"
+  },
+  {
+    "question": "How would modeling NIST Revision 6 adoption impact the current compliance bridge, and which mappings are most at risk of breaking?",
+    "difficulty": "hard",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Compliance as Code branching for what-if scenarios modeling NIST Rev 6 adoption with visual graph diffs"
+  },
+  {
+    "question": "Chart out the end-to-end traceability from SPARTA space-cyber controls through NIST 800-53 to STIG rules and show me where the chain breaks for the three unmapped countermeasures",
+    "difficulty": "hard",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "ST-4 Replay Attack, ST-7 Supply Chain, ST-9 RF Interference have no STIG IDs \u2014 forward-only mapping breaks traceability"
+  },
+  {
+    "question": "Which NIST 800-171 controls have the widest compliance gaps in the F-36 manufacturing environment?",
+    "difficulty": "medium",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "12_standards",
+    "domain_context": "NIST 800-171 gap analysis for manufacturing"
+  },
+  {
+    "question": "Show me the CMMC Level 2 compliance status across F-36 vendor deliverable inspection points",
+    "difficulty": "easy",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "analytical",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "CMMC compliance analytics for vendor inspection"
+  },
+  {
+    "question": "How should we map DISA STIG requirements to the F-36 plant floor SCADA network segmentation architecture?",
+    "difficulty": "hard",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "STIG to OT network segmentation mapping"
+  },
+  {
+    "question": "What FedRAMP controls apply to the cloud-hosted components of the F-36 supply chain management system?",
+    "difficulty": "medium",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "knowledge",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "FedRAMP applicability to supply chain cloud services"
+  },
+  {
+    "question": "Chart the control family coverage for NIST 800-53 across the F-36 information system boundary",
+    "difficulty": "easy",
+    "expected_scope": "jennifer_cheung",
+    "expected_type": "analytical",
+    "f36_category": "12_standards",
+    "domain_context": "NIST 800-53 control family coverage visualization"
+  }
+]

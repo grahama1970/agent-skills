@@ -1,0 +1,103 @@
+{
+  "name": "qra_ics_ot",
+  "description": "QRA generation for ICS/OT manufacturing security applied to F-36 plant floor",
+  "persona": "paul_martinez",
+  "domain": "ics_ot",
+  "evaluation_criteria": {
+    "min_qras_per_input": 3,
+    "citation_grounding_threshold": 0.85,
+    "required_question_types": ["simple", "medium", "complex"],
+    "diversity_check": true,
+    "hallucination_detection": true,
+    "question_blocklist": [
+      "^What is [\\w\\s\\-/()]+\\?$",
+      "^Define [\\w\\s\\-/()]+\\.?$"
+    ],
+    "required_entity_patterns": ["PLC-\\d+", "HMI-\\d+", "ICS-CERT-\\d+", "CVE-\\d{4}-\\d+"],
+    "framework_grounding": {"fail": 0.50, "warn": 0.60}
+  },
+  "cases": [
+    {
+      "id": "ics_plc_composite",
+      "input": {
+        "name": "PLC Security — F-36 Composite Layup Autoclave",
+        "description": "PLC security controls for autoclave cure cycle management"
+      },
+      "source_text": "The F-36 composite wing skin layup process uses Siemens S7-1500 PLCs to control autoclave cure cycles. PLC-101 manages temperature ramp rates (2°F/minute ±0.5°F), PLC-102 controls vacuum bag pressure (14.7 psi ±0.3 psi), and PLC-103 monitors thermocouple arrays for cure uniformity. The PLCs communicate via PROFINET with the SCADA supervisory system. Current security concern: PLC firmware updates are applied via USB flash drive by maintenance personnel with no code signing verification — a supply chain attack vector identified in ICS-CERT-2025-0147. The PLCs run on the OT network which is segmented from IT but connected to the SCADA historian server that has a dual-homed network interface for reporting to the enterprise MES system.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["PLC-101", "PLC-102", "PLC-103", "ICS-CERT-2025-0147"],
+        "rejected_patterns": ["What is a PLC", "Define SCADA"]
+      },
+      "notes": "USB firmware update vector and dual-homed historian are key risks"
+    },
+    {
+      "id": "ics_hmi_assembly",
+      "input": {
+        "name": "HMI Security — F-36 Final Assembly Line",
+        "description": "HMI security for final assembly line work order management"
+      },
+      "source_text": "The F-36 final assembly line at Fort Worth uses 47 HMI terminals (Rockwell FactoryTalk View SE) for work order management, torque verification, and quality inspection sign-off. HMI-201 through HMI-247 run on Windows 10 LTSC with no internet connectivity but local USB ports are enabled for data export. Quality inspectors use HMI terminals to record NDI (Non-Destructive Inspection) results — if HMI data integrity is compromised, falsified NDI records could allow defective structural components to pass inspection. CVE-2024-8371 affects FactoryTalk View SE versions prior to 14.0 — the Fort Worth plant runs version 12.0 on 31 of 47 terminals. The vulnerability allows unauthenticated remote code execution via crafted OPC-UA packets from the OT network.",
+      "expected": {
+        "min_qras": 4,
+        "required_types": ["simple", "medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["HMI-201", "CVE-2024-8371"],
+        "rejected_patterns": ["What is an HMI", "Define NDI"]
+      },
+      "notes": "31 unpatched terminals with RCE vulnerability is the critical finding"
+    },
+    {
+      "id": "ics_drift_ndi",
+      "input": {
+        "name": "Drift Detection — F-36 NDI Sensors",
+        "description": "Sensor drift detection for non-destructive inspection equipment"
+      },
+      "source_text": "The F-36 manufacturing line uses phased-array ultrasonic testing (PAUT) for composite panel inspection. The PAUT system relies on calibration references that drift over time — industry standard requires recalibration every 4 hours of continuous use. The automated drift detection system monitors the reference standard response and flags when measurement variance exceeds 2dB from baseline. Current gap: drift detection only monitors the primary calibration standard, not the secondary verification standard. A scenario was identified where the primary standard itself degraded (surface contamination from composite dust) while appearing within tolerance — the secondary standard would have caught this but was not monitored. This resulted in 72 hours of inspection data being quarantined until re-inspection confirmed acceptability.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "rejected_patterns": ["What is drift detection", "Define PAUT"]
+      },
+      "notes": "Secondary standard not monitored is the gap"
+    },
+    {
+      "id": "ics_vendor_fadec",
+      "input": {
+        "name": "Vendor Supply Chain — F-36 FADEC Components",
+        "description": "Vendor component integrity for engine FADEC manufacturing"
+      },
+      "source_text": "The F135 engine FADEC manufactured at the vendor facility uses custom ASICs from a sole-source semiconductor supplier. The FADEC manufacturing process includes incoming inspection with X-ray and decapsulation testing on a 1% sample rate. Vendor risk: the semiconductor supplier's fabrication facility in Southeast Asia was flagged in ICS-CERT-2024-0892 for potential hardware trojan insertion capability — no evidence of actual compromise was found, but the advisory recommended increasing sample rates to 5% and adding electrical characterization testing. Current status: sample rate remains at 1%, and the program has not implemented electrical characterization due to cost ($2.4M capital equipment). The alternative supplier qualification timeline is 24 months.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["ICS-CERT-2024-0892"],
+        "rejected_patterns": ["What is supply chain", "Define FADEC"]
+      },
+      "notes": "1% vs recommended 5% sample rate is the risk"
+    },
+    {
+      "id": "ics_modbus_paint",
+      "input": {
+        "name": "Modbus Security — F-36 Paint Booth Controls",
+        "description": "Protocol security for paint booth environmental controls"
+      },
+      "source_text": "The F-36 radar-absorbing material (RAM) paint application uses environmentally controlled paint booths managed via Modbus TCP. Temperature (68°F ±2°F), humidity (45% ±5% RH), and airflow velocity are critical parameters — deviations cause RAM thickness variations that affect radar cross-section performance. The Modbus TCP protocol used between the booth controller and the environmental management system has no authentication or encryption. An attacker with OT network access could send spoofed Modbus write commands to alter temperature setpoints. The paint booth controller (Allen-Bradley CompactLogix) accepts Modbus commands from any source on the network — no IP whitelisting is configured. A successful attack could produce aircraft with degraded stealth performance that passes visual inspection but fails RCS measurement during flight test.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "rejected_patterns": ["What is Modbus", "Define RAM coating"]
+      },
+      "notes": "Unauthenticated Modbus TCP affecting stealth performance is the risk"
+    }
+  ],
+  "notes": {
+    "problem_statement": "Paul Martinez persona needs QRAs about ICS/OT manufacturing security for F-36 plant floor operations",
+    "prompt_goal": "Generate synthesis questions about how ICS/OT vulnerabilities affect F-36 manufacturing quality and safety"
+  }
+}

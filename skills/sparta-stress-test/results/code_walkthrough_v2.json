@@ -1,0 +1,581 @@
+[
+  {
+    "idx": 1,
+    "question": "How does s05c_table_merger.py decide when to merge two tables across pages?",
+    "target_file": "s05c_table_merger.py",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Regarding s05c_table_merger.py: Return the result of the sanity check step.\nSignature: def sanity() -> int: ...",
+    "grade": "A+",
+    "composite": 0.943,
+    "elapsed_ms": 12059
+  },
+  {
+    "idx": 2,
+    "question": "What extraction method does s05_table_extractor.py use for tables \u2014 camelot, pdfplumber, or both?",
+    "target_file": "s05_table_extractor.py",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Regarding s05_table_extractor.py: Extract tables from a specified PDF page.\nSignature: def extract_tables_from_page( ...",
+    "grade": "A+",
+    "composite": 0.929,
+    "elapsed_ms": 13899
+  },
+  {
+    "idx": 3,
+    "question": "What does the S00 profile detector estimate for a given PDF?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 15990
+  },
+  {
+    "idx": 4,
+    "question": "How does the scoring module compute table_fidelity \u2014 what ratio does it use?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "create-score",
+      "ingest-youtube"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/docs/SURYA_LABEL_MAPPING_EXPLAINED.md\nSection: How It Actually Works\n\n1. Surya analyzes the page visually and outputs:\n```json\n{\n    \"bbox\": [70.5, 8",
+    "grade": "A",
+    "composite": 0.857,
+    "elapsed_ms": 15089
+  },
+  {
+    "idx": 5,
+    "question": "What are the 7 quality dimensions used by review-pdf scoring and their weights?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "review-pdf",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 18795
+  },
+  {
+    "idx": 6,
+    "question": "What does the litellm_call utility do and what models does it support?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 15423
+  },
+  {
+    "idx": 7,
+    "question": "Trace the full pipeline execution path from run_pipeline.py through S00 to S14 \u2014 which steps are man",
+    "target_file": "run_pipeline.py",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "review-code",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Regarding run_pipeline.py: Decrypt encrypted PDF if auto_decrypt is enabled.\n\n    Returns:\n        Tuple of (pdf_path_to_use, decrypt_info, was_skipped)\n\nSignature: def _maybe_decrypt_pdf( ...",
+    "grade": "A+",
+    "composite": 0.943,
+    "elapsed_ms": 15229
+  },
+  {
+    "idx": 8,
+    "question": "How does the inline review loop in extractor-quality-check decide between CONTINUE, SPOT_FIX, and RE",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "review-code",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 18761
+  },
+  {
+    "idx": 9,
+    "question": "What format does s07_json_assembler.py output \u2014 what fields are in assembled_content.json?",
+    "target_file": "s07_json_assembler.py",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Regarding s07_json_assembler.py: Validate and clamp an integer within specified min/max bounds.\nSignature: def validate_int(value, default: int = 0, min_val: int = None, max_val: int = None, field_nam",
+    "grade": "A+",
+    "composite": 0.95,
+    "elapsed_ms": 11828
+  },
+  {
+    "idx": 10,
+    "question": "What is the current convergence trend for table_fidelity across the datalake?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "learn-datalake",
+      "ingest-training-datalake"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/local/docs/WALKTHROUGH_INLINE_REVIEW.md\nSection: Convergence Tracking Architecture\n\n```mermaid\nflowchart TD\n    subgraph TRACKER[\"convergence_tracker",
+    "grade": "A+",
+    "composite": 0.921,
+    "elapsed_ms": 17082
+  },
+  {
+    "idx": 11,
+    "question": "How many PDFs in the datalake currently have PASS verdicts vs FAIL?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "learn-datalake",
+      "monitor-pdfs"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/local/docs/03_EXTRACTION_HARDENING.md\nSection: Adding New PDFs\n\nDrop PDFs into any of these directories:\n- `/mnt/storage12tb/extractor_corpus/adversa",
+    "grade": "A",
+    "composite": 0.871,
+    "elapsed_ms": 15306
+  },
+  {
+    "idx": 12,
+    "question": "How does the merge classifier in s05c interact with the vision model \u2014 trace from table detection th",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "create-table-classifier",
+      "classifier-lab",
+      "create-classifier"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/docs/SEMANTIC_PROCESSING_INTEGRATION.md\nSection: Example: Table Merge Decision\n\nWhen the semantic processor encounters split table headers:\n\n1. **Sea",
+    "grade": "A+",
+    "composite": 0.921,
+    "elapsed_ms": 17207
+  },
+  {
+    "idx": 13,
+    "question": "What does the pdf_preflight utility check before extraction starts?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 17342
+  },
+  {
+    "idx": 14,
+    "question": "How does the section builder in S04 determine section hierarchy from PDF headings?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "review-code",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 18434
+  },
+  {
+    "idx": 15,
+    "question": "Is the extraction pipeline converging or degrading? Show the overall score trajectory and dimension ",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "analytics",
+      "corpus-report",
+      "create-figure",
+      "memory"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/local/docs/PLAN_PIPELINE_IMPROVEMENTS.md\nSection: Test the full extraction \u2192 QRA \u2192 memory pipeline\n\ncd /home/graham/workspace/experiments/pi-mono/.pi",
+    "grade": "A+",
+    "composite": 0.921,
+    "elapsed_ms": 23735
+  },
+  {
+    "idx": 16,
+    "question": "What image formats does the figure extractor in S06 support?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 16723
+  },
+  {
+    "idx": 17,
+    "question": "How does the ArangoDB exporter in S10 handle taxonomy tagging for each chunk?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "taxonomy"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/docs/CLEAN_PIPELINE_STRUCTURE.md\nSection: **Step 04: Export to ArangoDB** (`poc_04_export_arangodb.py`)\n\n- **Purpose**: Store final results in Arango",
+    "grade": "A",
+    "composite": 0.893,
+    "elapsed_ms": 14943
+  },
+  {
+    "idx": 18,
+    "question": "What presets are available in the extractor pipeline and how do they affect step execution?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 16999
+  },
+  {
+    "idx": 19,
+    "question": "How does the suspicious headers detector in S03 identify potentially mis-classified headings?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "create-table-classifier",
+      "create-classifier"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/docs/PDF_EXTRACTION_PIPELINE_ACTUAL.md\nSection: Identify suspicious headers that are mislabeled as Text\n\nsuspicious_patterns = [\n    r'^\\d+\\.',      ",
+    "grade": "A+",
+    "composite": 0.921,
+    "elapsed_ms": 13876
+  },
+  {
+    "idx": 20,
+    "question": "Trace how the marker extractor in S02 handles multi-column PDFs with embedded tables \u2014 what's the fa",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "review-code",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 16591
+  },
+  {
+    "idx": 21,
+    "question": "Is the code working?",
+    "target_file": "",
+    "expected_action": "CLARIFY",
+    "actual_action": "CLARIFY",
+    "recommended_chain": [],
+    "source_skills": [],
+    "answered": false,
+    "answer_preview": "Could you be more specific? Which file, step, or module are you asking about?",
+    "grade": "A+",
+    "composite": 0.925,
+    "elapsed_ms": 0
+  },
+  {
+    "idx": 22,
+    "question": "Can you check the function?",
+    "target_file": "",
+    "expected_action": "CLARIFY",
+    "actual_action": "CLARIFY",
+    "recommended_chain": [],
+    "source_skills": [],
+    "answered": false,
+    "answer_preview": "Could you be more specific? Which file, step, or module are you asking about?",
+    "grade": "A+",
+    "composite": 0.925,
+    "elapsed_ms": 0
+  },
+  {
+    "idx": 23,
+    "question": "Show me the code for s99_nonexistent_step.py",
+    "target_file": "s99_nonexistent_step.py",
+    "expected_action": "NO_MATCH",
+    "actual_action": "NO_MATCH",
+    "recommended_chain": [],
+    "source_skills": [],
+    "answered": true,
+    "answer_preview": "'s99_nonexistent_step.py' does not exist in the codebase. Check the pipeline step naming convention (s00-s14).",
+    "grade": "A+",
+    "composite": 0.925,
+    "elapsed_ms": 0
+  },
+  {
+    "idx": 24,
+    "question": "What does the DuckDB ingest stage do in the current pipeline?",
+    "target_file": "",
+    "expected_action": "NO_MATCH",
+    "actual_action": "NO_MATCH",
+    "recommended_chain": [],
+    "source_skills": [],
+    "answered": true,
+    "answer_preview": "DuckDB was removed from the pipeline. S07 now uses json_assembler producing assembled_content.json.",
+    "grade": "A+",
+    "composite": 0.925,
+    "elapsed_ms": 0
+  },
+  {
+    "idx": 25,
+    "question": "What does the annotation processor in S01 extract from the PDF?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 17219
+  },
+  {
+    "idx": 26,
+    "question": "How does the layout audit in S04a detect two-column vs single-column layouts?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "data-audit",
+      "quality-audit"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/docs/MARKER_PDF_FLOW_ANALYSIS.md\nSection: 3. Layout Detection (Surya)\n\n- **Component**: `LayoutBuilder` (src/extractor/core/builders/layout.py)\n- **M",
+    "grade": "A",
+    "composite": 0.85,
+    "elapsed_ms": 15287
+  },
+  {
+    "idx": 27,
+    "question": "Which pipeline dimensions are degrading and what remediation steps have been tried for each?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "analytics",
+      "corpus-report",
+      "extractor-quality-check",
+      "memory"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/docs/CLEAN_PIPELINE_SUMMARY.md\nSection: Test each step's functionality\n\npython poc_01_extract_annotations.py debug\npython poc_02_marker_extraction.py",
+    "grade": "A+",
+    "composite": 0.921,
+    "elapsed_ms": 18573
+  },
+  {
+    "idx": 28,
+    "question": "What models does the scillm_client support for LLM inference?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Symbols found: class HeaderVerdict, class ReflowedSection, class SectionSummary",
+    "grade": "A",
+    "composite": 0.807,
+    "elapsed_ms": 15255
+  },
+  {
+    "idx": 29,
+    "question": "How does the prompt builder construct prompts for table extraction \u2014 what context does it include?",
+    "target_file": "",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "extract-html"
+    ],
+    "source_skills": [
+      "memory/extractor",
+      "memory/extractor",
+      "memory/extractor"
+    ],
+    "answered": true,
+    "answer_preview": "File: /home/graham/workspace/experiments/extractor/local/docs/PLAN_PIPELINE_IMPROVEMENTS.md\nSection: Test table description prompt\n\ncd /home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab\n",
+    "grade": "A",
+    "composite": 0.893,
+    "elapsed_ms": 19441
+  },
+  {
+    "idx": 30,
+    "question": "Trace how the reflow module rebuilds section text from PDF layout blocks \u2014 what stages does reflow/r",
+    "target_file": "reflow/runner.py",
+    "expected_action": "QUERY",
+    "actual_action": "QUERY",
+    "recommended_chain": [
+      "treesitter",
+      "review-code",
+      "memory"
+    ],
+    "source_skills": [
+      "treesitter"
+    ],
+    "answered": true,
+    "answer_preview": "Regarding reflow/runner.py: Run a sanity check and return the result as an integer.\nSignature: def sanity() -> int: ...",
+    "grade": "A+",
+    "composite": 0.943,
+    "elapsed_ms": 16731
+  }
+]

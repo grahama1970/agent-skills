@@ -1,0 +1,162 @@
+{
+  "session_id": "storyboard-20260129-141317-8342aa",
+  "phase": "complete",
+  "screenplay_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-storyboard/demo_session/sample_screenplay.md",
+  "created_at": "2026-01-29T14:13:17.049307",
+  "updated_at": "2026-01-29T14:13:17.669773",
+  "parsed_scenes": {
+    "title": "Sample Screenplay",
+    "metadata": {},
+    "scenes": [
+      {
+        "number": 1,
+        "heading": {
+          "int_ext": "INT.",
+          "location": "APARTMENT",
+          "time": "NIGHT",
+          "raw": "INT. APARTMENT - NIGHT"
+        },
+        "elements": [
+          {
+            "type": "action",
+            "text": "SARAH enters the dark apartment, flipping on a small desk lamp."
+          },
+          {
+            "type": "dialogue",
+            "character": "SARAH",
+            "text": "Hello? Is anyone here?",
+            "parenthetical": "whispering"
+          },
+          {
+            "type": "action",
+            "text": "She moves cautiously through the room."
+          },
+          {
+            "type": "dialogue",
+            "character": "MYSTERIOUS VOICE",
+            "text": "I've been waiting for you.",
+            "parenthetical": null
+          },
+          {
+            "type": "action",
+            "text": "Sarah spins around, fear in her eyes."
+          }
+        ],
+        "notes": {
+          "lighting": [
+            "Low key, practical desk lamp only"
+          ],
+          "references": [
+            "Blade Runner 2049 apartment scene"
+          ]
+        },
+        "duration_estimate": 14.999999999999998
+      },
+      {
+        "number": 2,
+        "heading": {
+          "int_ext": "EXT.",
+          "location": "CITY STREET",
+          "time": "DAY",
+          "raw": "EXT. CITY STREET - DAY"
+        },
+        "elements": [
+          {
+            "type": "action",
+            "text": "Cars rush by. People hurry along the sidewalk."
+          },
+          {
+            "type": "action",
+            "text": "SARAH walks determinedly, phone pressed to her ear."
+          },
+          {
+            "type": "dialogue",
+            "character": "SARAH",
+            "text": "I need backup. Now.",
+            "parenthetical": null
+          }
+        ],
+        "notes": {},
+        "duration_estimate": 9.333333333333334
+      }
+    ]
+  },
+  "shot_plan": {
+    "title": "Sample Screenplay",
+    "total_duration": 21.166666666666664,
+    "total_shots": 3,
+    "metadata": {
+      "scenes_count": 2,
+      "auto_generated": true
+    },
+    "shots": [
+      {
+        "scene_number": 1,
+        "shot_number": 1,
+        "shot_code": "OTS",
+        "shot_name": "Over-The-Shoulder",
+        "description": "SARAH enters the dark apartment, flipping on a small desk lamp. | SARAH: \"Hello? Is anyone here?\" | She moves cautiously through the room.",
+        "duration": 7.0,
+        "camera_movement": "static",
+        "framing_guide": "Back of one head, face of other",
+        "lens_suggestion": "50-85mm",
+        "emotion": "dialogue",
+        "notes": {
+          "lighting": [
+            "Low key, practical desk lamp only"
+          ],
+          "camera": [],
+          "references": [
+            "Blade Runner 2049 apartment scene"
+          ]
+        }
+      },
+      {
+        "scene_number": 1,
+        "shot_number": 2,
+        "shot_code": "OTS",
+        "shot_name": "Over-The-Shoulder",
+        "description": "I've been waiting for you. | Sarah spins around, fear in her eyes.",
+        "duration": 7.499999999999999,
+        "camera_movement": "static",
+        "framing_guide": "Back of one head, face of other",
+        "lens_suggestion": "50-85mm",
+        "emotion": "dialogue",
+        "notes": {}
+      },
+      {
+        "scene_number": 2,
+        "shot_number": 1,
+        "shot_code": "MCU",
+        "shot_name": "Medium Close-Up",
+        "description": "Cars rush by. People hurry along the sidewalk. | SARAH walks determinedly, phone pressed to her ear. | SARAH: \"I need backup. Now.\"",
+        "duration": 6.666666666666666,
+        "camera_movement": "static",
+        "framing_guide": "Chest to head",
+        "lens_suggestion": "85mm",
+        "emotion": "dialogue",
+        "notes": {
+          "lighting": [],
+          "camera": [],
+          "references": []
+        }
+      }
+    ]
+  },
+  "panels": [
+    "demo_session/output/panels/panel_s01_sh01.png",
+    "demo_session/output/panels/panel_s01_sh02.png",
+    "demo_session/output/panels/panel_s02_sh01.png"
+  ],
+  "questions": [],
+  "answers": {
+    "_config": {
+      "fidelity": "sketch",
+      "format": "mp4",
+      "auto_approve": true,
+      "output_dir": "demo_session/output"
+    }
+  },
+  "output_path": "demo_session/output/animatic.mp4",
+  "error": null
+}

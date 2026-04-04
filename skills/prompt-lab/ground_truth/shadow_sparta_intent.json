@@ -1,0 +1,56 @@
+{
+  "name": "shadow-sparta-intent",
+  "description": "SPARTA query intent and bridge tag extraction",
+  "cases": [
+    {
+      "id": "intent-1",
+      "input": "What cryptographic controls should be applied to spacecraft uplink commands to prevent replay attacks from compromised ground stations?",
+      "expected": {
+        "action": "Harden",
+        "tier0_tags": ["Harden"],
+        "conceptual_tags": ["Resilience", "Precision"]
+      },
+      "expected_action": "Harden"
+    },
+    {
+      "id": "intent-2",
+      "input": "How can anomaly detection in spacecraft telemetry streams identify T1499 denial-of-service flooding attempts against the command processor?",
+      "expected": {
+        "action": "Detect",
+        "tier0_tags": ["Detect"],
+        "conceptual_tags": ["Fragility", "Resilience"]
+      },
+      "expected_action": "Detect"
+    },
+    {
+      "id": "intent-3",
+      "input": "What network segmentation strategies prevent lateral movement from a compromised payload instrument to the spacecraft bus and attitude control system?",
+      "expected": {
+        "action": "Isolate",
+        "tier0_tags": ["Isolate"],
+        "conceptual_tags": ["Resilience", "Stealth"]
+      },
+      "expected_action": "Isolate"
+    },
+    {
+      "id": "intent-4",
+      "input": "What vulnerabilities in the CCSDS telecommand frame authentication protocol could an adversary exploit to inject unauthorized commands into a spacecraft uplink session?",
+      "expected": {
+        "action": "Exploit",
+        "tier0_tags": ["Exploit"],
+        "conceptual_tags": ["Corruption", "Fragility"]
+      },
+      "expected_action": "Exploit"
+    },
+    {
+      "id": "intent-5",
+      "input": "What procedures enable recovery of spacecraft flight software to a known-good state after a SEU-induced memory corruption event corrupts the primary boot partition?",
+      "expected": {
+        "action": "Restore",
+        "tier0_tags": ["Restore"],
+        "conceptual_tags": ["Resilience", "Loyalty"]
+      },
+      "expected_action": "Restore"
+    }
+  ]
+}

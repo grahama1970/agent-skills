@@ -1,0 +1,24 @@
+Implemented in [ClassifierLabView.tsx](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx:1510) (`EvaluateTab`):
+- Added robust eval field mapping/fallbacks:
+- `model || winner`
+- `macro_f1 || f1`
+- `holdout_passed || gate_passed || (macroF1 >= gateThreshold)`
+- `gate_threshold || holdout_gate_f1 || 0.90`
+- Normalized `classes`, `per_class`, and `confusion_matrix` to handle partial/legacy payloads.
+- Ensured per-class metrics table always shows `precision`, `recall`, `f1`, `support`.
+- Kept confusion matrix color coding:
+- diagonal cells green
+- off-diagonal errors red
+- Fixed holdout banner to use real threshold (`gate_threshold`) and correct F1/pass-fail text.
+- Added test-sample fallback from confusion-matrix sum when `test_samples` is missing.
+Validation:
+- Requested path does not exist here:
+- `cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab` -> missing directory
+- Equivalent local check passed:
+- `cd /home/node/workspace/packages/ux-lab && npx tsc --noEmit 2>&1 | head -5`
+- Output: empty, exit code `0` (no type errors)
+- Repo check passed:
+- `npm run check` exit code `0` (only existing non-blocking info-level lint notices)
+- Requested test command path adjusted for this workspace:
+- `./.pi/skills/test-lab/run.sh verify-task 10 /home/node/workspace/.pi/skills/classifier-lab --domain python`
+- Fails with existing style issues in target skill (`Missing module docstring`, `126/135`), unrelated to this TSX change.

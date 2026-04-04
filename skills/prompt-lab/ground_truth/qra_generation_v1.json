@@ -1,0 +1,362 @@
+[
+  {
+    "case_id": "SIUU-10",
+    "control": {
+      "control_id": "SIUU-10",
+      "name": "Process Executing Priority Modification",
+      "description": "Detection of processes (renice, setpriority) modifying the priority of other processes, possibly targeting flight software to lower its priority and impact spacecraft performance, such as dropping telemetry packets. This system call in the context of a spacecraft running Linux is rarely used therefore any use is likely malicious.",
+      "framework": "SPARTA",
+      "control_type": "indicator"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "SMSR-7",
+    "control": {
+      "control_id": "SMSR-7",
+      "name": "Unauthorized Star Map Changes in Star Trackers",
+      "description": "Detection of unauthorized changes to star maps within star trackers. This can result in incorrect positional readings and severe degradation or mission loss. The pattern monitors for changes in the star map data using hash verification, with unexpected hashes indicating potential unauthorized modification. Integrity is paramount for Star Trackers to work properly.",
+      "framework": "SPARTA",
+      "control_type": "indicator"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "CSNE-38",
+    "control": {
+      "control_id": "CSNE-38",
+      "name": "Use of Unexpected Protocol on Out-of-Band Link",
+      "description": "Monitors for protocol deviations on the out-of-band link, which could indicate exploitation attempts.",
+      "framework": "SPARTA",
+      "control_type": "indicator"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "UCEB-8",
+    "control": {
+      "control_id": "UCEB-8",
+      "name": "Payload Channel Operating Without Encryption",
+      "description": "Monitors payload channels for unencrypted data exchanges that could indicate improper configuration or security degradation. Typically, the payload data is encrypted and an adversary may attempt to put payload into clear mode to further attacks.",
+      "framework": "SPARTA",
+      "control_type": "indicator"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "MIRE-13",
+    "control": {
+      "control_id": "MIRE-13",
+      "name": "Unexpected Modification to Stored Commands Area",
+      "description": "Detection of an unexpected modification to the stored commands table or area in memory. This could indicate an unauthorized update that modifies the table to perform time-based attack like initiate a system shutdown or denial of service at a time in the future.",
+      "framework": "SPARTA",
+      "control_type": "indicator"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "A.7.1",
+    "control": {
+      "control_id": "A.7.1",
+      "name": "Physical security perimeters",
+      "description": "NIST Controls: PE-3; SPARTA Countermeasures: IA-0007,DE-0004,EXF-0007,EXF-0008; SPARTA Techniques: SV-AC-4; Sample Requirements: CM0054,CM0053",
+      "framework": "ISO",
+      "control_type": "control"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "A.5.1",
+    "control": {
+      "control_id": "A.5.1",
+      "name": "Policies for information security",
+      "description": "NIST Controls: AC-1,AT-1,AU-1,CA-1,CM-1,CP-1,IA-1,IR-1,MA-1,MP-1,PE-1,PL-1,PM-1,PS-1,RA-1,SA-1,SC-1,SI-1,SR-1; SPARTA Countermeasures: REC-0001,REC-0002,REC-0003,REC-0004,REC-0006,REC-0007,REC-0008,REC-0009,RD-0002,RD-0003,RD-0004,IA-0001,IA-0002,IA-0004,IA-0006,IA-0007,IA-0009,IA-0010,IA-0011,IA-0012,IA-0013,EX-0004,EX-0005,EX-0009,EX-0011,PER-0001,PER-0002,PER-0003,PER-0004,PER-0005,DE-0002,DE-0004,DE-0005,DE-0009,DE-0011,DE-0012,LM-0001,LM-0002,LM-0007,EXF-0006,EXF-0007,EXF-0008,EXF-0009; SPARTA Techniques: SV-SP-3,SV-SP-11,SV-MA-7,SV-AV-7,SV-MA-4,SV-MA-6,SV-SP-4,SV-SP-5; Sample Requirements: CM0022,CM0024,CM0026,CM0027,CM0028,CM0088,CM0004,CM0005",
+      "framework": "ISO",
+      "control_type": "control"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "9.3.2",
+    "control": {
+      "control_id": "9.3.2",
+      "name": "Management review inputs",
+      "description": "NIST Controls: CA-7,CA-7(3),CA-7(4),PM-4,RA-3; SPARTA Countermeasures: REC-0001,REC-0002,REC-0003,REC-0004,REC-0006,REC-0007,REC-0008,REC-0009,RD-0001,RD-0002,RD-0003,RD-0004,RD-0005,IA-0001,IA-0002,IA-0004,IA-0006,IA-0007,IA-0008,IA-0009,IA-0010,IA-0011,IA-0012,IA-0013,EX-0004,EX-0005,EX-0008,EX-0009,EX-0010,EX-0011,EX-0014,EX-0016,EX-0017,EX-0018,PER-0001,PER-0002,PER-0003,PER-0005,DE-0001,DE-0002,DE-0004,DE-0005,DE-0007,DE-0008,DE-0009,DE-0011,DE-0012,LM-0001,LM-0002,LM-0007,EXF-0006,EXF-0007,EXF-0008,EXF-0009; SPARTA Techniques: SV-IT-2,SV-AV-4,SV-IT-5,SV-MA-3,SV-SP-1,SV-SP-3,SV-SP-6,SV-SP-9,SV-AC-6,SV-AC-8,SV-AV-2,SV-AV-3,SV-IT-3,SV-IT-4,SV-MA-8,SV-SP-11,SV-SP-7,SV-AV-5,SV-AV-6,SV-DCO-1,SV-MA-5,SV-AC-1,SV-AC-2,SV-CF-1,SV-IT-1,SV-AV-1,SV-MA-7,SV-AC-4,SV-AV-7,SV-CF-3,SV-MA-4,SV-MA-6,SV-SP-10,SV-SP-4,SV-SP-5; Sample Requirements: CM0009,CM0020,CM0022,CM0052,CM0090,CM0011,CM0018,CM0019,CM0005",
+      "framework": "ISO",
+      "control_type": "control"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "9.1",
+    "control": {
+      "control_id": "9.1",
+      "name": "Monitoring, measurement, analysis and evaluation",
+      "description": "NIST Controls: CA-7,PM-6,PM-31; SPARTA Countermeasures: REC-0001,REC-0002,REC-0003,REC-0004,REC-0006,REC-0007,REC-0008,REC-0009,RD-0002,RD-0003,RD-0004,IA-0002,IA-0004,IA-0006,IA-0007,IA-0009,IA-0012,IA-0013,PER-0003,PER-0005,DE-0002,DE-0004,DE-0009,DE-0011,LM-0001,LM-0007,EXF-0006,EXF-0007,EXF-0008,EXF-0009; SPARTA Techniques: SV-IT-2,SV-AV-4,SV-IT-5,SV-MA-3,SV-SP-1,SV-SP-3,SV-SP-6,SV-SP-9,SV-AC-6,SV-AV-2,SV-AV-3,SV-IT-3,SV-IT-4,SV-MA-8,SV-SP-7,SV-AV-5,SV-AV-6,SV-DCO-1,SV-AC-1,SV-AC-2,SV-CF-1,SV-IT-1,SV-AV-1,SV-MA-7; Sample Requirements: CM0052,CM0090,CM0005",
+      "framework": "ISO",
+      "control_type": "control"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "6.1.3",
+    "control": {
+      "control_id": "6.1.3",
+      "name": "Information security risk treatment",
+      "description": "NIST Controls: RA-7; SPARTA Countermeasures: REC-0001,REC-0002,REC-0003,REC-0004,REC-0006,REC-0007,REC-0008,REC-0009,RD-0002,RD-0003,RD-0004,IA-0001,IA-0002,IA-0004,IA-0006,IA-0007,IA-0009,IA-0011,IA-0012,IA-0013,EX-0004,EX-0005,EX-0008,EX-0009,EX-0010,PER-0001,PER-0002,PER-0003,PER-0005,DE-0002,DE-0004,DE-0007,DE-0008,DE-0009,DE-0011,DE-0012,LM-0001,LM-0007,EXF-0006,EXF-0007,EXF-0008,EXF-0009; SPARTA Techniques: SV-MA-7; Sample Requirements: CM0011,CM0018,CM0019,CM0005",
+      "framework": "ISO",
+      "control_type": "control"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "d3f:Link",
+    "control": {
+      "control_id": "d3f:Link",
+      "name": "Link",
+      "description": "D3FEND artifact representing a network connection or symbolic link between resources in a computing environment.",
+      "framework": "D3FEND",
+      "control_type": "artifact"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "d3f:MemoryExtent",
+    "control": {
+      "control_id": "d3f:MemoryExtent",
+      "name": "Memory Extent",
+      "description": "D3FEND artifact representing a contiguous range of memory addresses allocated to a process, including stack, heap, and code segments.",
+      "framework": "D3FEND",
+      "control_type": "artifact"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "d3f:Sensor",
+    "control": {
+      "control_id": "d3f:Sensor",
+      "name": "Sensor",
+      "description": "D3FEND artifact representing a hardware or software component that detects events or changes in its environment and reports them to a monitoring system.",
+      "framework": "D3FEND",
+      "control_type": "artifact"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "d3f:SoftwarePackage",
+    "control": {
+      "control_id": "d3f:SoftwarePackage",
+      "name": "Software Package",
+      "description": "D3FEND artifact representing a distributable collection of software components, libraries, and metadata used for installation and dependency management.",
+      "framework": "D3FEND",
+      "control_type": "artifact"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "d3f:Thread",
+    "control": {
+      "control_id": "d3f:Thread",
+      "name": "Thread",
+      "description": "D3FEND artifact representing the smallest sequence of programmed instructions that can be managed independently by an operating system scheduler.",
+      "framework": "D3FEND",
+      "control_type": "artifact"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "MI-MA-01",
+    "control": {
+      "control_id": "MI-MA-01",
+      "name": "Mission Recovery Function",
+      "description": "The mission should include intentional disruptions consistent with the mission vulnerability analysis in anomaly detection, response, and recovery plans and designs in the flight segment and ground segment.",
+      "framework": "NASA",
+      "control_type": "reference"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "MI-MALW-01",
+    "control": {
+      "control_id": "MI-MALW-01",
+      "name": "Mission Malware Protection Function",
+      "description": "The mission system software updates should be validated as free from malware prior to deployment, launch, and at defined regular intervals while the mission is in operations.",
+      "framework": "NASA",
+      "control_type": "reference"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "MI-DCO-02",
+    "control": {
+      "control_id": "MI-DCO-02",
+      "name": "Mission Fault Management",
+      "description": "The mission should incorporate fault management bypass protection in its requirements and resulting system.",
+      "framework": "NASA",
+      "control_type": "reference"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "MI-ARCH-01",
+    "control": {
+      "control_id": "MI-ARCH-01",
+      "name": "Mission Essential Data Flow Function",
+      "description": "The mission should establish and maintain a current and accurate data flow diagram covering mission essential data flows, including those that pass through mission-external service providers.",
+      "framework": "NASA",
+      "control_type": "reference"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  },
+  {
+    "case_id": "MI-AUTH-01",
+    "control": {
+      "control_id": "MI-AUTH-01",
+      "name": "Boundary Protection Function",
+      "description": "The mission should establish a mediated access mechanism that prevents unauthorized access to critical subsystems in the space segment.",
+      "framework": "NASA",
+      "control_type": "reference"
+    },
+    "has_knowledge_excerpts": false,
+    "expected_quality": "acceptable",
+    "expected_traits": [
+      "grounded_in_description",
+      "explains_what_control_is",
+      "actionable",
+      "framework_aware"
+    ]
+  }
+]

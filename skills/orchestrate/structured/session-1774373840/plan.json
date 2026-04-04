@@ -1,0 +1,349 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "Binary Explorer V2: GPU rendering, investigation journal, visual polish",
+    "goal": "Upgrade Binary Explorer with WebGL GPU rendering, /extract-entities API, undo/redo, investigation journal with step-through UI, and Gemini-designed visual polish",
+    "plan_type": "hybrid",
+    "created": "2026-03-24",
+    "primary_persona": {
+      "name": "Graham Anderson",
+      "role": "Architect \u2014 needs GPU-rendered graph, investigation journal, expert-to-beginner UX",
+      "source": ".pi/agents/graham-anderson/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 3
+  },
+  "capability_overlap": [
+    "/memory recall: 'Binary Explorer implementation priorities from competitive gap assessment' \u2014 all priorities defined",
+    "Checked /create-figure, /figure-lab \u2014 D3 rendering only, no WebGL graph",
+    "Checked /extract-entities \u2014 FlashText skill exists, pyproject.toml created, needs Express API endpoint",
+    "Checked /ux-lab \u2014 shared components in common/ (LeftPane, ContextMenu, Lightbox, EmbryStyle)",
+    "Checked /checkpoint \u2014 session save already wired to /memory/learn",
+    "react-force-graph-2d (vasturiano) is the best WebGL drop-in for D3 force sim"
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Foundation (GPU + API)"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Investigation Journal"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Visual Polish + Undo"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: Verification"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Install react-force-graph-2d and migrate BinaryGraph to WebGL",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "npm install react-force-graph-2d in packages/ux-lab",
+        "Create packages/ux-lab/src/components/binary-explorer/BinaryGraphWebGL.tsx:",
+        "  Replace D3 SVG simulation with react-force-graph-2d component",
+        "  Keep same props interface (BinaryGraphProps) for drop-in replacement",
+        "  Migrate all visual features:",
+        "    - Node color by type (NODE_TYPE_COLORS)",
+        "    - Node size by degree (logarithmic formula)",
+        "    - Edge color by type (EDGE_COLORS)",
+        "    - Edge width by type (EDGE_WIDTHS)",
+        "    - Arrowheads on directional edges",
+        "    - Tier badge dots on nodes",
+        "    - State machine ring",
+        "    - Hull outlines (custom canvas overlay)",
+        "    - Selected node glow",
+        "    - Visited node trail",
+        "    - Hit area (nodeRelSize for click target)",
+        "  Use canvas nodeCanvasObject for custom node rendering",
+        "  Use canvas linkCanvasObject for custom edge rendering",
+        "  Preserve: panToNode, applySelection, fitToGraph APIs",
+        "  Preserve: minimap (react-force-graph has built-in minimap support)",
+        "  Performance target: 1000+ nodes at 60fps with A5000 GPU",
+        "  Keep BinaryGraph.tsx as fallback (SVG mode toggle in toolbar)"
+      ],
+      "tests": [
+        "grep -q 'ForceGraph2D' packages/ux-lab/src/components/binary-explorer/BinaryGraphWebGL.tsx",
+        "test-lab/run.sh verify-task 1 packages/ux-lab/src/components/binary-explorer/ --domain react"
+      ],
+      "gate": {
+        "command": "npx tsc --noEmit --skipLibCheck 2>&1 | grep BinaryGraphWebGL | wc -l",
+        "assertion": "0 type errors"
+      },
+      "design_reference": "packages/ux-lab/captures/binary-explorer/gemini-visual-encoding-design.md",
+      "png_evidence": [
+        "Headless Chrome screenshot of WebGL graph with 20+ nodes"
+      ],
+      "definition_of_done": {
+        "command": "npx vite build --mode development 2>&1 | grep '\u2713 built'",
+        "assertion": "Build passes with WebGL graph component"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Wire /extract-entities as Express API endpoint",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "The endpoint already exists at POST /api/extract-entities in server/index.ts",
+        "Update BinaryExplorerView.tsx to call the API instead of client-side regex:",
+        "  Replace the inline entity extraction loop (sortedNodes, FlashText-like matching) with:",
+        "    const res = await fetch('/api/extract-entities', { method: 'POST', body: JSON.stringify({ text, collection: 'binary_features' }) })",
+        "    const { entities } = await res.json()",
+        "    const mentionedEntities = entities.map(e => ({ id: e.id, label: e.name, nodeType: e.type }))",
+        "  Keep the entity override logic for QuerySpec (entity always wins over recall)",
+        "  Remove the client-side sorted node loop and substring filtering",
+        "  Handle API failure: fall back to simple exact match (not the regex loop)"
+      ],
+      "tests": [
+        "curl -s http://localhost:3001/api/extract-entities -X POST -H 'Content-Type: application/json' -d '{\"text\":\"click on list_terminals\",\"collection\":\"binary_features\"}' | grep list_terminals",
+        "test-lab/run.sh verify-task 2 packages/ux-lab/src/components/binary-explorer/ --domain react"
+      ],
+      "gate": {
+        "command": "curl -s http://localhost:3001/api/extract-entities -X POST -H 'Content-Type: application/json' -d '{\"text\":\"click on list_terminals\"}' | python3 -c 'import sys,json; print(json.load(sys.stdin).get(\"entity_count\",0))'",
+        "assertion": "Returns 1+ entities"
+      },
+      "definition_of_done": {
+        "command": "grep -c 'extract-entities' packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx",
+        "assertion": "At least 1 API call reference"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Implement exploration step recording (Investigation Journal)",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Create packages/ux-lab/src/components/common/InvestigationJournal.tsx \u2014 shared component:",
+        "  Records every user interaction as a step:",
+        "    - Node click (which node, what was selected before)",
+        "    - Expand (which node, how many neighbors added)",
+        "    - Chat question + response (truncated)",
+        "    - Perspective change",
+        "    - Layout change",
+        "    - Scene clear",
+        "  Each step has: timestamp, action type, description, optional user note",
+        "  UI: collapsible panel in right pane (below chat or as a tab)",
+        "    - Timeline view: vertical list of steps with icons",
+        "    - Click a step to replay (restore scene to that point)",
+        "    - Delete step (remove from journal)",
+        "    - Add note to any step (inline text input)",
+        "    - Export journal as markdown report",
+        "  Props: { steps: Step[], onReplay: (stepIndex) => void, onDelete: (stepIndex) => void, onAddNote: (stepIndex, note) => void }",
+        "  State stored in BinaryExplorerView, persisted to /memory/learn on SAVE SESSION",
+        "  Use EmbryStyle tokens, monospace font for timestamps",
+        "  Use /create-design-board mockup from Stitch if needed"
+      ],
+      "tests": [
+        "grep -q 'InvestigationJournal' packages/ux-lab/src/components/common/InvestigationJournal.tsx",
+        "test-lab/run.sh verify-task 3 packages/ux-lab/src/components/common/ --domain react"
+      ],
+      "gate": {
+        "command": "npx tsc --noEmit --skipLibCheck 2>&1 | grep InvestigationJournal | wc -l",
+        "assertion": "0 type errors"
+      },
+      "design_reference": "Ask Stitch via /mockup-lab for investigation journal timeline design",
+      "png_evidence": [
+        "Screenshot of journal panel with 5+ recorded steps"
+      ],
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/src/components/common/InvestigationJournal.tsx",
+        "assertion": "Component exists"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Wire InvestigationJournal into BinaryExplorerView",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "3"
+      ],
+      "implementation": [
+        "Add investigation step recording to BinaryExplorerView.tsx:",
+        "  New state: journalSteps: Step[]",
+        "  Record steps in: onNodeClick, addNodeWithNeighbors, clearScene, sendChat (UI commands), setPerspective, setLayoutMode",
+        "  Add journal as a tab in the right pane (alongside chat)",
+        "  Tab icons: chat bubble (existing) + journal/timeline icon",
+        "  Wire replay: clicking a journal step restores sceneNodeIds + selectedNode + breadcrumbs to that point",
+        "  Wire delete: remove step from journal",
+        "  Wire notes: add/edit note on any step",
+        "  Wire export: generate markdown summary of investigation",
+        "  Persist journal in SAVE SESSION payload"
+      ],
+      "tests": [
+        "grep -q 'InvestigationJournal' packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx",
+        "test-lab/run.sh verify-task 4 packages/ux-lab/src/components/binary-explorer/ --domain react"
+      ],
+      "gate": {
+        "command": "npx vite build --mode development 2>&1 | grep '\u2713 built'",
+        "assertion": "Build passes"
+      },
+      "png_evidence": [
+        "Screenshot showing journal tab with recorded steps after exploration"
+      ],
+      "definition_of_done": {
+        "command": "npx vite build --mode development 2>&1 | grep '\u2713 built'",
+        "assertion": "Build passes with journal wired"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Implement undo/redo stack for scene operations",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Add undo/redo to BinaryExplorerView.tsx:",
+        "  New state: sceneHistory: Set<string>[] (max 50 snapshots)",
+        "  New state: historyIndex: number",
+        "  Snapshot sceneNodeIds + selectedNode after every scene-modifying action",
+        "  Ctrl+Z \u2192 undo (restore previous snapshot)",
+        "  Ctrl+Shift+Z \u2192 redo (restore next snapshot)",
+        "  Undo/Redo buttons in toolbar (or just keyboard shortcuts)",
+        "  Clear scene = push new empty snapshot (can be undone)",
+        "  Integration with InvestigationJournal: undo adds a 'reverted' step"
+      ],
+      "tests": [
+        "grep -q 'sceneHistory\\|undo\\|redo' packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx",
+        "test-lab/run.sh verify-task 5 packages/ux-lab/src/components/binary-explorer/ --domain react"
+      ],
+      "gate": {
+        "command": "npx vite build --mode development 2>&1 | grep '\u2713 built'",
+        "assertion": "Build passes"
+      },
+      "definition_of_done": {
+        "command": "grep -c 'sceneHistory' packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx",
+        "assertion": "At least 3 references to sceneHistory"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Gemini visual polish: edge thickness, arrowheads, node rendering",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "gemini",
+      "mode": "iterative",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "Send current WebGL graph screenshot to Gemini VLM via /scillm:",
+        "  Ask for specific fixes: edges too thick, arrowheads too large, node labels overlap",
+        "  Reference Neo4j Bloom's thin elegant edges with subtle arrowheads",
+        "  Get exact values: stroke widths, arrowhead sizes, label font sizes, opacity values",
+        "  Apply fixes to BinaryGraphWebGL.tsx canvas rendering functions",
+        "  Iterate until Gemini says PASS on visual quality"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 6 packages/ux-lab/src/components/binary-explorer/ --domain react"
+      ],
+      "gate": {
+        "command": "echo 'Gemini visual review'",
+        "assertion": "Gemini VLM scores visual quality as PASS"
+      },
+      "png_evidence": [
+        "Before and after screenshots showing visual improvement"
+      ],
+      "definition_of_done": {
+        "command": "echo 'Visual polish applied'",
+        "assertion": "Gemini VLM confirms edges, arrowheads, labels improved"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Run 144 tests from Testing tab with visual_assert verification",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "1",
+        "2",
+        "4",
+        "5",
+        "6"
+      ],
+      "implementation": [
+        "Run the binary-explorer.test.json manifest from the Testing tab",
+        "  All 144 tests must pass",
+        "  All 107 visual_assert tests must get PASS from Gemini VLM",
+        "  Fix any failures found",
+        "  Add new tests for: WebGL rendering, investigation journal, undo/redo",
+        "  Target: 160+ tests, 120+ with visual_assert"
+      ],
+      "tests": [
+        "echo 'Test run completed'"
+      ],
+      "gate": {
+        "command": "echo 'Gate check'",
+        "assertion": "All tests pass"
+      },
+      "definition_of_done": {
+        "command": "echo '144+ tests passing'",
+        "assertion": "Binary Explorer test suite passes with visual verification"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Add investigation journal tests to manifest",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "4",
+        "7"
+      ],
+      "implementation": [
+        "Add tests to binary-explorer.test.json for the investigation journal:",
+        "  Journal records node click step",
+        "  Journal records expand step",
+        "  Journal records chat question step",
+        "  Click journal step replays scene state",
+        "  Delete journal step removes it",
+        "  Add note to journal step",
+        "  Export journal as markdown",
+        "  Undo restores previous scene state",
+        "  Redo restores next scene state",
+        "  Ctrl+Z keyboard shortcut works",
+        "  All with visual_assert"
+      ],
+      "tests": [
+        "python3 -c \"import json; d=json.load(open('packages/ux-lab/binary-explorer.test.json')); print(sum(1 for t in d['tests'] if 'journal' in t.get('group','')))\""
+      ],
+      "gate": {
+        "command": "python3 -c \"import json; d=json.load(open('packages/ux-lab/binary-explorer.test.json')); print(sum(1 for t in d['tests'] if 'journal' in t.get('group','')))\"",
+        "assertion": "At least 8 journal tests"
+      },
+      "definition_of_done": {
+        "command": "python3 -c \"import json; d=json.load(open('packages/ux-lab/binary-explorer.test.json')); print(len(d['tests']))\"",
+        "assertion": "160+ total tests"
+      }
+    }
+  ]
+}

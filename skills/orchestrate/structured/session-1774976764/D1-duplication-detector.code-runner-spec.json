@@ -1,0 +1,15 @@
+{
+  "task_id": "D1-duplication-detector",
+  "title": "Create duplication_detector.py for cross-file code duplication",
+  "prompt": "Create duplication_detector.py in the monitor-codebase skill directory.\n\nThis module detects duplicated code blocks across Python files in a project.\nUse a simple but effective approach:\n\n1. Parse each .py file, extract function bodies using ast module\n2. Normalize whitespace and variable names (replace all identifiers with _)\n3. Hash each normalized function body\n4. Group functions with identical hashes = duplicates\n5. Report duplicate clusters with file paths and line numbers\n\nInterface:\n  def detect_duplicates(scan_dirs: list[str], min_lines: int = 10) -> dict:\n      Returns {\"clusters\": [{\"hash\": str, \"count\": int, \"locations\": [{\"file\": str, \"line\": int, \"name\": str}]}],\n               \"total_duplicates\": int}\n\nUse loguru for logging. Use ast module for parsing (no external deps).\nSkip files in .venv, node_modules, __pycache__, .git.\n\nKeep it under 200 lines.",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774976764",
+  "definition_of_done": {
+    "command": "python3 -c 'import ast; exec(open(\".pi/skills/monitor-codebase/duplication_detector.py\").read())' 2>&1; echo $?",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/monitor-codebase/duplication_detector.py"
+  ]
+}

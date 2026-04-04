@@ -1,0 +1,5 @@
+Usage: embed.py [OPTIONS] COMMAND [ARGS]...
+Try 'embed.py --help' for help.
+╭─ Error ──────────────────────────────────────────────────────────────────────╮
+│ No such command 'embed-collection'.                                          │
+╰──────────────────────────────────────────────────────────────────────────────╯

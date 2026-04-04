@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "004eba67e42a07316a6fa4717aaa2054738e31e6c2665e863a751c2919bdb766",
+  "domain": "engineering",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/004eba67e42a07316a6fa4717aaa2054738e31e6c2665e863a751c2919bdb766_e0e48cb2ef",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/004eba67e42a07316a6fa4717aaa2054738e31e6c2665e863a751c2919bdb766_e0e48cb2ef/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/004eba67e42a07316a6fa4717aaa2054738e31e6c2665e863a751c2919bdb766_e0e48cb2ef/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/fetcher_results/arxiv_batch/downloads/004eba67e42a07316a6fa4717aaa2054738e31e6c2665e863a751c2919bdb766.pdf"
+  },
+  "estimates": {
+    "page_count": 19,
+    "estimated_sections": 6,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "engineering"
+  },
+  "actual": {
+    "section_count": 5,
+    "element_count": 209,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 19,
+    "raw_text_length": 41686
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.88,
+      "state": "pass",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.86,
+      "state": "pass",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.73,
+      "state": "warn",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.78,
+      "state": "warn",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.93,
+      "state": "pass",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.83,
+      "state": "pass",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.9,
+      "state": "pass",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.85,
+    "grade": "B",
+    "verdict": "PASS",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "issue_count": 2
+  },
+  "issues": [
+    {
+      "code": "FF001",
+      "severity": "LOW",
+      "message": "Figure caption not associated with image on page 16",
+      "recommendation": "Adjust caption proximity threshold"
+    },
+    {
+      "code": "EQ001",
+      "severity": "LOW",
+      "message": "Math symbols detected but no equation blocks extracted",
+      "recommendation": "Enable equation detection in block classifier"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

@@ -1,0 +1,126 @@
+Good. Now I understand the treesitter scan JSON output format. Each entry has `path`, `language`, `symbols[]` where each symbol has `kind`, `name`, `signature`, `docstring`, etc.
+
+Now let me write the diff:
+
+```diff
+--- a/.pi/skills/ingest-code/ingest_code.py
++++ b/.pi/skills/ingest-code/ingest_code.py
+@@ -751,8 +751,12 @@ def scan(
+ 
+ @cli.command()
+ def rescan(
+     since: Optional[str] = typer.Option(None, help="Only files modified since (ISO date or '1d', '7d', etc.)"),
+     validate: bool = typer.Option(True, "--validate/--no-validate", help="Run LLM validation"),
+     scope: str = typer.Option("code", help="Memory scope for storage"),
+     codebase: list[str] = typer.Option([], "-c", "--codebase", help="Codebase paths to rescan"),
++    treesitter: bool = typer.Option(False, "--treesitter", help="Run treesitter scan to extract symbols (functions, classes, imports)"),
+ ):
+     """Nightly rescan for living document updates. Designed for /scheduler."""
+     mtime_threshold = None
+@@ -810,6 +814,10 @@ def rescan(
+                     if _learn(memory_script, f"What CWEs are relevant to {filepath.name}?",
+                               f"{cwe_id} ({cwe.get('name', '')}) - File: {filepath}", scope, tags):
+                         total_cwes += 1
+ 
++    # --- Treesitter symbol extraction ---
++    total_symbols = 0
++    if treesitter:
++        total_symbols = _treesitter_scan(codebases, scope)
++
+     print(json.dumps({
+         "codebases_scanned": len(codebases),
+         "knowledge_stored": total_knowledge,
+         "cwe_stored": total_cwes,
++        "symbols_stored": total_symbols,
+         "since": since,
+     }, indent=2))
+ 
+@@ -819,3 +827,66 @@ def rescan(
+ if __name__ == "__main__":
+     cli()
++
++
++def _treesitter_scan(codebases: list[str], scope: str) -> int:
++    """Run treesitter skill scan on each codebase dir and store symbols to memory.
++
++    Invokes .pi/skills/treesitter/run.sh scan <dir> and parses the JSON output
++    to extract function signatures, class hierarchies, and imports. Each symbol
++    is stored to memory via the Unix socket daemon.
++    """
++    treesitter_script = Path.home() / ".pi" / "skills" / "treesitter" / "run.sh"
++    if not treesitter_script.exists():
++        print("Treesitter skill not found — skipping symbol extraction", flush=True)
++        return 0
++
++    total_stored = 0
++    for codebase_path in codebases:
++        print(f"\n--- Treesitter scan: {codebase_path} ---", flush=True)
++        try:
++            result = subprocess.run(
++                [str(treesitter_script), "scan", codebase_path],
++                capture_output=True, text=True, timeout=300,
++            )
++        except subprocess.TimeoutExpired:
++            print(f"  Treesitter scan timed out for {codebase_path}", flush=True)
++            continue
++        except Exception as e:
++            print(f"  Treesitter scan failed for {codebase_path}: {e}", flush=True)
++            continue
++
++        stdout = result.stdout
++        # The scan command prints a summary line before JSON array — find the JSON start
++        json_start = stdout.find("[")
++        if json_start == -1:
++            print(f"  No JSON output from treesitter scan", flush=True)
++            continue
++
++        try:
++            file_entries = json.loads(stdout[json_start:])
++        except json.JSONDecodeError as e:
++            print(f"  Failed to parse treesitter JSON: {e}", flush=True)
++            continue
++
++        for entry in file_entries:
++            symbols = entry.get("symbols", [])
++            if not symbols:
++                continue
++            filepath = Path(entry.get("path", ""))
++            file_stem = filepath.stem
++
++            for sym in symbols:
++                kind = sym.get("kind", "unknown")  # function, class, method, import
++                name = sym.get("name", "")
++                signature = sym.get("signature", "")
++                docstring = sym.get("docstring", "")
++                if not name:
++                    continue
++
++                # Build memory tags per spec
++                tags = ["codebase", "symbol", kind, name, file_stem]
++
++                # Build question/answer for memory
++                problem = f"What is {name} ({kind}) in {filepath.name}?"
++                solution_parts = [f"File: {filepath}"]
++                if signature:
++                    solution_parts.append(f"Signature: {signature}")
++                if docstring:
++                    solution_parts.append(f"\n{docstring[:800]}")
++                solution = "\n".join(solution_parts)
++
++                if _learn_http(problem, solution, scope, tags):
++                    total_stored += 1
++
++        print(f"  Stored {total_stored} symbols from {codebase_path}", flush=True)
++
++    return total_stored
+```
+
+Key design decisions:
+
+1. **`--treesitter` flag** on the `rescan` command — defaults to `False` so existing behavior is unchanged
+2. **`_treesitter_scan()` function** — separated for clarity, runs after existing knowledge/CWE phases
+3. **Calls `run.sh scan <dir>`** — subprocess with 5-minute timeout per codebase
+4. **Parses JSON output** — handles the summary line printed before the JSON array by finding `[`
+5. **Tags per spec**: `["codebase", "symbol", "<kind>", "<name>", "<file_stem>"]`
+6. **Uses `_learn_http()` directly** — stores via Unix socket at `/run/user/1000/embry/memory.sock` (same as existing `_learn_http`)
+7. **Symbol count** added to the output JSON summary

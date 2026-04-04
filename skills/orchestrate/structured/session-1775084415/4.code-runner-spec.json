@@ -1,0 +1,23 @@
+{
+  "task_id": "4",
+  "title": "Create battle patch_writer.py \u2014 code-runner wrapper for patch generation",
+  "prompt": "Task: Create battle patch_writer.py \u2014 code-runner wrapper for patch generation\n\nImplementation:\n- Create patch_writer.py with write_patch(target_path, finding, exploit_proof, test_command, max_rounds=5) returning PatchResult\n- Builds a code-runner TaskSpec JSON: task_id, prompt, allowlist for finding file, read_context for test files and exploit, backend codex, dod\n- DoD command: test_command AND docker exec arena exploit must fail (inverted exit code)\n- Assertion: exit_code == 0 \u2014 tests pass AND exploit FAILS\n- Calls code-runner via subprocess: run.sh run spec.json --max-rounds N\n- Parses code-runner result.json to return PatchResult(success, rounds, patch_diff, score, functionality_preserved)\n- Uses common.file_bundler.bundle_for_review() for target file context\n- Includes memory recall of prior patches in prompt\n- Uses loguru, httpx, pydantic\n- Max 300 lines\n\nDefinition of Done:\n- Command: cd .pi/skills/battle && python3 -c \"compile(open('patch_writer.py').read(), 'patch_writer.py', 'exec')\" && python3 -c \"import ast; t=ast.parse(open('patch_writer.py').read()); funcs=[n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef)]; assert 'write_patch' in funcs, f'Missing write_patch, found: {funcs}'\"\n- Assertion: exit_code == 0\n\nTests:\n- python3 -c \"compile(open('.pi/skills/battle/patch_writer.py').read(), 'pw.py', 'exec')\"\n- python3 -c \"import ast; t=ast.parse(open('.pi/skills/battle/patch_writer.py').read()); assert any(n.name=='write_patch' for n in ast.walk(t) if isinstance(n, ast.FunctionDef))\"",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775084415",
+  "definition_of_done": {
+    "command": "cd .pi/skills/battle && python3 -c \"compile(open('patch_writer.py').read(), 'patch_writer.py', 'exec')\" && python3 -c \"import ast; t=ast.parse(open('patch_writer.py').read()); funcs=[n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef)]; assert 'write_patch' in funcs, f'Missing write_patch, found: {funcs}'\"",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/battle/patch_writer.py"
+  ],
+  "read_context": [
+    ".pi/skills/code-runner/models.py",
+    ".pi/skills/code-runner/run.sh",
+    ".pi/skills/battle/blue_team.py",
+    ".pi/skills/battle/config.py",
+    ".pi/skills/battle/scoring.py",
+    ".pi/skills/common/file_bundler.py"
+  ]
+}

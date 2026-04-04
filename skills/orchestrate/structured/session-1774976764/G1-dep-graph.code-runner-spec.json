@@ -1,0 +1,15 @@
+{
+  "task_id": "G1-dep-graph",
+  "title": "Create dep_graph.py for import dependency analysis and circular dep detection",
+  "prompt": "Create dep_graph.py in the monitor-codebase skill directory.\n\nThis module builds an import dependency graph from Python files and detects\ncircular dependencies.\n\n1. Walk Python files in scan directories\n2. Use ast module to extract import statements (import X, from X import Y)\n3. Map imports to local modules (file stems) vs external packages\n4. Build a directed graph of local module dependencies\n5. Detect cycles using DFS (Tarjan's algorithm or simple visited-set DFS)\n6. Report circular dependencies and dependency depth\n\nInterface:\n  def analyze_dependencies(scan_dirs: list[str]) -> dict:\n      Returns {\"modules\": int, \"edges\": int,\n               \"circular_deps\": [{\"cycle\": [\"a\", \"b\", \"c\", \"a\"], \"severity\": \"high\"|\"medium\"}],\n               \"max_depth\": int, \"most_depended\": [{\"module\": str, \"dependents\": int}]}\n\nUse loguru for logging. Use ast module only (no networkx or external deps).\nSkip .venv, node_modules, __pycache__.\n\nKeep it under 200 lines.",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774976764",
+  "definition_of_done": {
+    "command": "python3 -c 'import ast; exec(open(\".pi/skills/monitor-codebase/dep_graph.py\").read())' 2>&1; echo $?",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/monitor-codebase/dep_graph.py"
+  ]
+}

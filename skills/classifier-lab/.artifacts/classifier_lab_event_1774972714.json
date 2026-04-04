@@ -1,0 +1,31 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774972714,
+  "status": "ok",
+  "selected_backbone": "distilbert-base-uncased",
+  "selected_metrics": {
+    "macro_f1": 0.21739130434782608,
+    "accuracy": 0.7692307692307693,
+    "wilson_score_lower": 0.7554983569538409,
+    "latency_p50_ms": 4.220508970320225,
+    "latency_p95_ms": 7.762714568525553
+  },
+  "candidate_count": 1,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/home/graham/workspace/experiments/memory/data/intent_labels/4way/train.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [],
+      "worth_remembering": false
+    }
+  }
+}

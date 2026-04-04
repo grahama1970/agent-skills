@@ -1,0 +1,142 @@
+[
+  {
+    "question": "What SPARTA countermeasures protect the F-36's flight control software from unauthorized firmware updates that could compromise DAL-A compliance?",
+    "difficulty": "easy",
+    "f36_category": "09_flight_software",
+    "domain_context": "DO-178C, DAL-A, firmware",
+    "persona": "margaret"
+  },
+  {
+    "question": "How does the F-36's avionics system implement MC/DC coverage requirements to mitigate SPARTA threats related to logic bomb insertion in flight software?",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "MC/DC, flight software, avionics",
+    "persona": "margaret"
+  },
+  {
+    "question": "Which SPARTA countermeasures ensure requirements traceability in the F-36's dual-engine FADEC system to prevent safety-critical requirements gaps from being exploited?",
+    "difficulty": "easy",
+    "f36_category": "06_dual_engine",
+    "domain_context": "requirements traceability, safety-critical, FADEC",
+    "persona": "margaret"
+  },
+  {
+    "question": "What formal verification methods are applied to the F-36's navigation system to counter SPARTA threats involving GPS spoofing vulnerabilities?",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "formal verification, avionics, GPS",
+    "persona": "margaret"
+  },
+  {
+    "question": "How do the F-36's HIL test procedures validate SPARTA countermeasures against sensor fusion attacks that could violate ARP4761 safety objectives?",
+    "difficulty": "easy",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "ARP4761, HIL, sensor fusion",
+    "persona": "margaret"
+  },
+  {
+    "question": "How does the F-36's dual-engine FADEC system implement SPARTA countermeasures to prevent unauthorized firmware updates, and what DAL-A requirements in DO-178C govern this protection?",
+    "difficulty": "medium",
+    "f36_category": "06_dual_engine",
+    "domain_context": "FADEC systems require high-assurance firmware integrity to prevent unsafe control actions, with DAL-A being the most stringent safety level in DO-178C",
+    "persona": "margaret"
+  },
+  {
+    "question": "Given the F-36's sensor fusion architecture, what SPARTA threats are most likely to exploit timing vulnerabilities in the flight software's MC/DC-compliant code, and how would ARP4761 safety assessments address these?",
+    "difficulty": "medium",
+    "f36_category": "09_flight_software",
+    "domain_context": "Sensor fusion systems combine multiple inputs where timing attacks could create hazardous outputs, requiring both MC/DC coverage and ARP4761 safety analysis",
+    "persona": "margaret"
+  },
+  {
+    "question": "How should SPARTA countermeasures for avionics bus encryption align with the F-36's requirements traceability matrix to ensure no security controls break existing DAL-B certified functions?",
+    "difficulty": "medium",
+    "f36_category": "08_requirements",
+    "domain_context": "Avionics bus protection must maintain traceability to safety requirements while adding security controls, with DAL-B systems having less tolerance for functional disruption than DAL-A",
+    "persona": "margaret"
+  },
+  {
+    "question": "What formal verification techniques would you recommend for the F-36's autopilot software to mitigate SPARTA-identified risks of control flow hijacking, and how do these techniques complement existing DO-178C objectives?",
+    "difficulty": "medium",
+    "f36_category": "09_flight_software",
+    "domain_context": "Autopilot systems require mathematical proof of control flow integrity (formal verification) alongside traditional DO-178C verification methods",
+    "persona": "margaret"
+  },
+  {
+    "question": "How can the F-36's HIL test procedures validate SPARTA countermeasures against spoofing attacks on the inertial navigation system while maintaining compliance with ARP4754A's verification objectives?",
+    "difficulty": "medium",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "Hardware-in-the-loop testing must simultaneously verify security countermeasures and satisfy ARP4754A's rigorous development assurance processes for safety-critical systems",
+    "persona": "margaret"
+  },
+  {
+    "question": "Given the F-36's dual-engine architecture and cross-channel control requirements under ARP4754A, what SPARTA threats are most likely to exploit synchronization vulnerabilities between the FADEC systems, and what countermeasures would you prioritize for DAL-B compliance?",
+    "difficulty": "hard",
+    "f36_category": "06_dual_engine",
+    "domain_context": "ARP4754A, DAL-B, FADEC",
+    "persona": "margaret"
+  },
+  {
+    "question": "How should we apply formal verification techniques to the F-36's autopilot flight software to mitigate SPARTA-identified threats like control flow hijacking, while maintaining DO-178C DAL-A traceability requirements?",
+    "difficulty": "hard",
+    "f36_category": "09_flight_software",
+    "domain_context": "formal verification, DO-178C, DAL-A",
+    "persona": "margaret"
+  },
+  {
+    "question": "For the F-36's navigation system firmware updates, what SPARTA countermeasures would you recommend to prevent exploitation of unsigned code vulnerabilities while still meeting MISRA C coding standards for safety-critical avionics?",
+    "difficulty": "medium",
+    "f36_category": "01_avionics",
+    "domain_context": "firmware, MISRA C, safety-critical",
+    "persona": "margaret"
+  },
+  {
+    "question": "Given the F-36's use of sensor fusion in its flight control system, how do SPARTA threat models account for potential spoofing attacks against integrated GPS/INS data, and what RTM controls would you implement to maintain ARP4761 safety objectives?",
+    "difficulty": "medium",
+    "f36_category": "09_flight_software",
+    "domain_context": "sensor fusion, RTM, ARP4761",
+    "persona": "margaret"
+  },
+  {
+    "question": "What MC/DC coverage strategies would you propose for the F-36's flight software test procedures to ensure SPARTA-identified vulnerabilities in conditional logic are adequately mitigated during HIL testing?",
+    "difficulty": "medium",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "MC/DC, flight software, HIL",
+    "persona": "margaret"
+  },
+  {
+    "question": "Given the F-36's dual-engine FADEC system's reliance on DAL-A flight software, what SPARTA threats are most likely to exploit potential timing vulnerabilities in cross-channel communication, and how would formal verification of the control algorithms mitigate these risks?",
+    "difficulty": "hard",
+    "f36_category": "06_dual_engine",
+    "domain_context": "DO-178C, DAL-A, formal verification, flight software",
+    "persona": "margaret"
+  },
+  {
+    "question": "How should we apply SPARTA's firmware integrity countermeasures to the F-36's navigation computer bootloader, considering its MISRA C compliance requirements and the need to maintain deterministic timing for safety-critical avionics functions?",
+    "difficulty": "hard",
+    "f36_category": "01_avionics",
+    "domain_context": "MISRA C, firmware, avionics, safety-critical",
+    "persona": "margaret"
+  },
+  {
+    "question": "For the F-36's sensor fusion module (currently undergoing ARP4761 safety assessment), which SPARTA attack vectors pose the highest risk of creating undetected erroneous outputs, and what RTM-based verification strategies would effectively trace these threats to specific security requirements?",
+    "difficulty": "hard",
+    "f36_category": "09_flight_software",
+    "domain_context": "ARP4761, RTM, requirements traceability",
+    "persona": "margaret"
+  },
+  {
+    "question": "What's the appropriate balance between MC/DC coverage requirements and SPARTA's recommended firmware exploit protections for the flight control computer's redundancy management system?",
+    "difficulty": "ambiguous",
+    "f36_category": "09_flight_software",
+    "domain_context": "MC/DC, firmware, flight software",
+    "persona": "margaret"
+  },
+  {
+    "question": "How do we reconcile potential conflicts between DISA STIGs for avionics systems and SPARTA's countermeasures for real-time operating system vulnerabilities in the context of the F-36's certification process?",
+    "difficulty": "ambiguous",
+    "f36_category": "12_standards",
+    "domain_context": "DISA STIGs, certification, avionics",
+    "persona": "margaret"
+  }
+]

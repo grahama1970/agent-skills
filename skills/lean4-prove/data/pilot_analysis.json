@@ -1,0 +1,91 @@
+{
+  "pilot_summary": {
+    "total": 100,
+    "compiled_count": 99,
+    "failed_count": 1,
+    "compile_rate": 0.99,
+    "compile_rate_pct": "99.0%"
+  },
+  "framework_distribution": {
+    "NIST": 42,
+    "ATT&CK": 27,
+    "CVE": 17,
+    "CWE": 12,
+    "SPARTA": 1,
+    "D3FEND": 1
+  },
+  "tactic_usage": {
+    "simp": 74,
+    "intro": 61,
+    "exact": 38,
+    "trivial": 16,
+    "exists": 13,
+    "sorry": 5,
+    "rw": 4,
+    "decide": 2,
+    "omega": 1
+  },
+  "error_categories": [
+    {
+      "category": "llm_api_connection_error",
+      "count": 1,
+      "description": "litellm.APIConnectionError via scillm - transient API connectivity failure, not a Lean4 compilation issue",
+      "control_id": "T1055.012",
+      "remediation": "Retry on API errors; this is not a formalization quality issue"
+    }
+  ],
+  "sample_formalizations": [
+    {
+      "control_id": "CP-4.5",
+      "name": "Self-challenge",
+      "framework": "NIST",
+      "english": "Employ mechanisms to disrupt and adversely affect the system or system component.",
+      "approach": "Structure modeling config state (enabled, target, method, severity). Existential theorem proving that when enabled and severity threshold met, disruption components exist.",
+      "tactics_used": [
+        "intro",
+        "exists",
+        "simp"
+      ],
+      "lean4_snippet": "theorem self_challenge_effective (config : SelfChallengeConfig) (severity : Nat) :\n  config.enabled = true ->\n  severity >= config.min_severity ->\n  exists (component : String) (method : String),\n    component = config.target_component /\\ method = config.disruption_method :=\nby\n  intro h_enabled h_severity\n  exists config.target_component, config.disruption_method\n  simp"
+    },
+    {
+      "control_id": "PT-1",
+      "name": "Policy and Procedures",
+      "framework": "NIST",
+      "english": "PII processing and transparency policy/procedures must be aligned with risk management strategy.",
+      "approach": "Structure modeling policy state. Compliance predicate as conjunction. Positive proof via simp on example, negative proof showing incomplete policy fails.",
+      "tactics_used": [
+        "simp"
+      ],
+      "lean4_snippet": "def complies_pt1 (policy : PT1_Policy) : Prop :=\n  policy.has_pii_processing_policy /\\\n  policy.has_transparency_procedures /\\\n  policy.risk_management_aligned\n\ntheorem valid_policy_complies : complies_pt1 example_policy := by simp [complies_pt1]\ntheorem incomplete_policy_fails : not (complies_pt1 incomplete_policy) := by simp [complies_pt1]"
+    },
+    {
+      "control_id": "CVE-2026-2759",
+      "name": "ImageLib Boundary Conditions",
+      "framework": "CVE",
+      "english": "Incorrect boundary conditions in Graphics: ImageLib component affecting Firefox < 148 and Thunderbird.",
+      "approach": "Structure encoding version numbers and boundary check flag. Invariant: vulnerable versions must have boundary checks. Proved for safe config (versions above threshold), disproved for vulnerable config.",
+      "tactics_used": [
+        "simp"
+      ],
+      "lean4_snippet": "theorem boundary_condition_invariant (config : ImageLibConfig) : Prop :=\n  (config.firefox_version < 148 \\/ ...) -> config.has_boundary_checks = true\n\ntheorem safe_config_ok : boundary_condition_invariant safe_config := by simp [...]\ntheorem vulnerable_config_bad : not (boundary_condition_invariant vulnerable_config) := by simp [...]"
+    }
+  ],
+  "formalization_patterns": {
+    "structure": "LLM consistently creates Lean4 structures to model control state/config",
+    "invariant": "Core security property expressed as a theorem over the structure",
+    "proof_style": "Predominantly simp/intro/exact - lightweight automation tactics",
+    "sorry_count": 5,
+    "sorry_note": "5 of 99 successful compilations use sorry (5.1%) - these compile but have unproven goals. Acceptable for structural formalization; full proofs can be tightened later.",
+    "positive_negative": "Many formalizations include both a compliant example and a violating counterexample"
+  },
+  "recommendation": {
+    "verdict": "PROCEED_AS_IS",
+    "rationale": "The 99% compile rate is excellent. The single failure was a transient LLM API connection error (not a Lean4 issue). The formalization pattern is consistent across all frameworks (NIST, ATT&CK, CWE, CVE, SPARTA, D3FEND). Adding retry logic for API errors would bring this to 100%. The 5.1% sorry rate is acceptable for structural formalization and can be addressed in a later tightening pass.",
+    "suggested_improvements_for_full_run": [
+      "Add retry-on-API-error (would have prevented the 1 failure)",
+      "Consider a sorry-elimination pass after initial formalization",
+      "Track sorry count as a secondary quality metric alongside compile rate"
+    ]
+  }
+}

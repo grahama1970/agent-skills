@@ -1,0 +1,40 @@
+
+```
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Posture Dashboard - EMBRY Theme</title>
+    <style>
+        :root {
+            --bg: #0d0f12;
+            --card: #12151a;
+            --green: #00ff88;
+            --amber: #ffaa00;
+            --red: #ff4444;
+            --blue: #4a9eff;
+            --font: 'Courier New', Courier, monospace;
+        }
+        body {
+            background-color: var(--bg);
+            color: #ffffff;
+            font-family: var(--font);
+            margin: 0;
+            padding: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: var(--card);
+            border: 1px solid #1e232b;
+            padding: 24px;
+            border-radius: 2px;
+            box-shadow:

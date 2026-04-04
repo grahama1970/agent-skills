@@ -1,0 +1,20 @@
+{
+  "name": "music-lyrics-annotate",
+  "description": "Annotated lyrics extraction from raw song metadata and lyrics — validates genre_tags, section labels, emotion labels, vocal_direction, and dynamics fields",
+  "cases": [
+    {
+      "id": "whisperheads_v1",
+      "input": {
+        "strings": "Song brief: Whisperheads by Horus. Dark atmospheric indie/alternative. BPM: 85, Key: D minor, Time Signature: 4/4. Influences: Radiohead Kid A, Portishead trip-hop, Nine Inch Nails The Fragile. Verse: quiet dread, intimate whisper. Chorus: defiant declaration, trust and controlled anger.\n\nLyrics:\n[verse]\nThey speak in static frequencies\nBeneath the hum of broken light\n\n[chorus]\nWe are the whisperheads\nTuned to the noise you left behind"
+      },
+      "expected": {
+        "genre_tags": ["indie", "atmospheric", "dark", "alternative"],
+        "sections": ["verse", "chorus"],
+        "emotions": ["fear", "sadness", "trust", "anger"],
+        "vocal_directions": ["whisper", "sing", "belt"],
+        "dynamics": ["p", "mp", "f"]
+      },
+      "notes": "Validates core annotation fields against Whisperheads fixture ground truth"
+    }
+  ]
+}

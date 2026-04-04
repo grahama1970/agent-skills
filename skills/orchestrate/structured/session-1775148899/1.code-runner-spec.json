@@ -1,0 +1,19 @@
+{
+  "task_id": "1",
+  "title": "Complete QuarantineView.tsx \u2014 9 missing data-qid",
+  "prompt": "Task: Complete QuarantineView.tsx \u2014 9 missing data-qid\n\nImplementation:\n- Find all 9 interactive elements with onClick/onChange that lack data-qid\n- Add data-qid (colon format), title, and useRegisterAction for state-changing actions\n- Missing elements include: section tree items, select-all button, re-extract strategy dropdown, layout separator divs\n- DO NOT rewrite \u2014 only add attributes to existing elements\n\nDefinition of Done:\n- Command: cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py QuarantineView.tsx\n- Assertion: PASS: 100% data-qid coverage for QuarantineView",
+  "backend": "claude",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775148899",
+  "definition_of_done": {
+    "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py QuarantineView.tsx",
+    "assertion": "PASS: 100% data-qid coverage for QuarantineView"
+  },
+  "allowlist": [
+    "packages/ux-lab/src/components/datalake-explorer/views/QuarantineView.tsx"
+  ],
+  "read_context": [
+    "packages/ux-lab/src/hooks/useRegisterAction.ts",
+    "packages/ux-lab/src/components/datalake-explorer/views/QuarantineView.tsx"
+  ]
+}

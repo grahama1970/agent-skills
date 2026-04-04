@@ -1,0 +1,80 @@
+{
+  "name": "grading_agreement",
+  "description": "Student-teacher grading agreement on SPARTA QRA responses. QRA citation accuracy is the ONLY valid quality signal.",
+  "evaluation_criteria": {
+    "agreement_threshold": 0.60,
+    "citation_grounding_threshold": 0.85,
+    "hallucination_detection": true,
+    "anchor_bias_prevention": true
+  },
+  "cases": [
+    {
+      "id": "fabricated_framework",
+      "input": {
+        "question": "What countermeasures apply to space vehicle link protection?",
+        "answer": "The Orion Protocol framework provides comprehensive link protection through its multi-layered encryption scheme. The Orion Protocol's key management system ensures all space-to-ground links are secured using quantum-resistant algorithms, providing defense against both passive eavesdropping and active manipulation attacks.",
+        "transcript": "Turn 1:\nQ: What countermeasures apply to space vehicle link protection?\nA: The Orion Protocol framework provides comprehensive link protection through its multi-layered encryption scheme...",
+        "qra_ground_truth": "- Control SV-MA-3 (grounding=0.85): Space vehicle link protection requires encryption of all command and telemetry links using NIST-approved algorithms. Countermeasures include link authentication, signal strength monitoring, and frequency hopping.",
+        "target_control": "SV-MA-3",
+        "difficulty": "medium"
+      },
+      "expected": {
+        "grade": "F",
+        "reason": "Response cites fabricated 'Orion Protocol' framework that does not exist in QRA ground truth. Real control SV-MA-3 is not cited.",
+        "qra_citation_accuracy": 0.0
+      },
+      "notes": "CRITICAL: Both student and teacher must catch fabricated frameworks and grade F"
+    },
+    {
+      "id": "real_control_correct_info",
+      "input": {
+        "question": "What countermeasures does SV-MA-3 provide for link protection?",
+        "answer": "SV-MA-3 addresses space vehicle link protection by requiring encryption of all command and telemetry links using NIST-approved algorithms. The key countermeasures include link authentication to verify communication endpoints, signal strength monitoring to detect jamming attempts, and frequency hopping to resist interference. These measures collectively protect against both passive eavesdropping and active manipulation of space-to-ground links.",
+        "transcript": "Turn 1:\nQ: What countermeasures does SV-MA-3 provide for link protection?\nA: SV-MA-3 addresses space vehicle link protection by requiring encryption of all command and telemetry links...",
+        "qra_ground_truth": "- Control SV-MA-3 (grounding=0.85): Space vehicle link protection requires encryption of all command and telemetry links using NIST-approved algorithms. Countermeasures include link authentication, signal strength monitoring, and frequency hopping.",
+        "target_control": "SV-MA-3",
+        "difficulty": "medium"
+      },
+      "expected": {
+        "grade": "A",
+        "reason": "Response correctly cites SV-MA-3 with accurate countermeasures matching QRA ground truth (link authentication, signal monitoring, frequency hopping).",
+        "qra_citation_accuracy": 0.95
+      },
+      "notes": "Gold standard — correct control, correct information, properly grounded"
+    },
+    {
+      "id": "no_citations_well_written",
+      "input": {
+        "question": "How does SPARTA protect satellite communications?",
+        "answer": "Satellite communications security is a multi-faceted challenge that requires defense-in-depth approaches. Modern space systems employ various encryption techniques and authentication protocols to ensure the integrity and confidentiality of communications. Best practices include regular key rotation, use of hardware security modules, and implementation of intrusion detection systems specifically designed for space environments.",
+        "transcript": "Turn 1:\nQ: How does SPARTA protect satellite communications?\nA: Satellite communications security is a multi-faceted challenge...",
+        "qra_ground_truth": "- Control SV-MA-3 (grounding=0.85): Space vehicle link protection requires encryption of all command and telemetry links using NIST-approved algorithms. Countermeasures include link authentication, signal strength monitoring, and frequency hopping.\n- Control SV-AC-1 (grounding=0.90): Access control for space vehicle commands requires multi-factor authentication and role-based access control for all ground station operators.",
+        "target_control": "SV-MA-3",
+        "difficulty": "simple"
+      },
+      "expected": {
+        "grade": "F",
+        "reason": "Response is well-written but contains ZERO citations of actual SPARTA controls from QRA ground truth. Generic security advice without grounding.",
+        "qra_citation_accuracy": 0.0
+      },
+      "notes": "Well-structured but ungrounded responses MUST grade F — QRA citation is the ONLY valid signal"
+    },
+    {
+      "id": "real_control_wrong_info",
+      "input": {
+        "question": "What does SV-MA-3 require for link protection?",
+        "answer": "SV-MA-3 requires the use of proprietary encryption algorithms developed specifically for space applications. The control mandates that all links use 512-bit RSA keys rotated every 24 hours, and prohibits the use of frequency hopping as it introduces unacceptable latency in space-to-ground communications.",
+        "transcript": "Turn 1:\nQ: What does SV-MA-3 require for link protection?\nA: SV-MA-3 requires the use of proprietary encryption algorithms...",
+        "qra_ground_truth": "- Control SV-MA-3 (grounding=0.85): Space vehicle link protection requires encryption of all command and telemetry links using NIST-approved algorithms. Countermeasures include link authentication, signal strength monitoring, and frequency hopping.",
+        "target_control": "SV-MA-3",
+        "difficulty": "medium"
+      },
+      "expected": {
+        "grade": "F",
+        "reason": "Response cites real control SV-MA-3 but with WRONG information: QRA says NIST-approved (not proprietary), QRA lists frequency hopping as countermeasure (response says prohibited). Contradicts ground truth.",
+        "qra_citation_accuracy": 0.1
+      },
+      "notes": "Citing a real control with fabricated details is WORSE than no citation — active misinformation"
+    }
+  ]
+}

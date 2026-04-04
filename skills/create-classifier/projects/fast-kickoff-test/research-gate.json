@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "timestamp": "2026-04-01T15:10:45.106169",
+  "goal": "Classify customer support tickets by priority (low/medium/high)",
+  "modality": "text",
+  "backbones": [
+    "distilbert-base-uncased",
+    "sentence-transformers/all-MiniLM-L6-v2"
+  ]
+}

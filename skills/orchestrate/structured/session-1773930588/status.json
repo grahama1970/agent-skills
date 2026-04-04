@@ -1,0 +1,236 @@
+{
+  "generated_at": 1773931132.4339752,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930588",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create ground truth fixture from droid binary",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930588/1.response.txt",
+      "error": "",
+      "started_at": 1773930588.2403505,
+      "finished_at": 1773930624.2426305,
+      "subagent_task_id": "4c005d21",
+      "subagent_port": 8623
+    },
+    {
+      "id": "2",
+      "title": "Design classification prompt via /prompt-lab",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930588/2.response.txt",
+      "error": "",
+      "started_at": 1773930624.2431927,
+      "finished_at": 1773930730.154548,
+      "subagent_task_id": "ce2ec816",
+      "subagent_port": 8623
+    },
+    {
+      "id": "3",
+      "title": "Design AST classification prompt via /prompt-lab",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930588/3.response.txt",
+      "error": "",
+      "started_at": 1773930730.1553118,
+      "finished_at": 1773930823.3652227,
+      "subagent_task_id": "f45e72a4",
+      "subagent_port": 8623
+    },
+    {
+      "id": "4",
+      "title": "Rewrite classifier.py to load prompts from references/",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "2",
+        "3"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930588/4.response.txt",
+      "error": "",
+      "started_at": 1773930823.3659806,
+      "finished_at": 1773930902.6383343,
+      "subagent_task_id": "e868d703",
+      "subagent_port": 8624
+    },
+    {
+      "id": "5",
+      "title": "Wire /treesitter AST into the pipeline",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "running",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": 1773930902.6394246,
+      "finished_at": null,
+      "subagent_task_id": "3a028bb8",
+      "subagent_port": 8624
+    },
+    {
+      "id": "6",
+      "title": "Wire --help parsing + subcommand discovery",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "queued",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "7",
+      "title": "Register analyze-elf classifiers in /assistant model_registry",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930588/7.response.txt",
+      "error": "",
+      "started_at": 1773930902.6402502,
+      "finished_at": 1773930983.6894238,
+      "subagent_task_id": "964246a6",
+      "subagent_port": 8625
+    },
+    {
+      "id": "8",
+      "title": "Wire CascadeRunner into classifier.py",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "7"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930588/8.response.txt",
+      "error": "",
+      "started_at": 1773930983.689944,
+      "finished_at": 1773931094.9086173,
+      "subagent_task_id": "4ec26a2e",
+      "subagent_port": 8625
+    },
+    {
+      "id": "9",
+      "title": "Prime shadow data from droid binary",
+      "lane": "2",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [
+        "8"
+      ],
+      "output_path": "",
+      "error": "Command failed (1): cd /home/graham/workspace/experiments/pi-mono/.pi/skills/analyze-elf &&\n./run.sh features /home/graham/.local/bin/droid --goal \"extract all features\" 2>&1 &&\nwc -l shadow.jsonl\n2026-03-19 10:38:15.083 | INFO     | __main__:features:313 - Extracting features from /home/graham/.local/bin/droid \u2014 goal: extract all features\n2026-03-19 10:38:25.091 | INFO     | __main__:_full_analysis:115 - Extracted 294 high-signal strings (t1=305, t2=235, t3=135)\n2026-03-19 10:38:27.140 | INFO     | __main__:features:321 - Captured 1778 chars of --help output\n2026-03-19 10:38:27.140 | INFO     | __main__:features:327 - Parsed 7 commands from --help output\n2026-03-19 10:38:32.049 | INFO     | elf_parser:carve_js_source:191 - Carved 15521 JS-bearing lines from 217081 total strings\n2026-03-19 10:38:32.099 | INFO     | __main__:features:333 - Carved 124492 JS statements for LLM classification\n2026-03-19 10:38:32.170 | INFO     | __main__:features:336 - Using /scillm LLM classifier (Sensai Cascade Tier 2)\n2026-03-19 10:38:32.204 | INFO     | classifier:classify_features:165 - Classifying 300 strings via /scillm (text-gemini)\n2026-03-19 10:38:52.365 | INFO     | __main__:features:353 - LLM classified: 0 state machines, 0 events, 0 RPC methods\n# Walkthrough: droid\n\n**Goal**: extract all features\n\n## Executive Summary\n\n`droid` is a 64-bit EM_X86_64 ET_EXEC binary (152,960,730 bytes), identified as **Bun Single-Executable Application**.\n\nLinks against 5 shared libraries, imports 1958 symbols.\n\n## CLI Commands\n\n```mermaid\ngraph TD\n    DROID[\"droid\"]\n    DROID --> exec[\"exec\"]\n    DROID --> mcp[\"mcp\"]\n    DROID --> plugin[\"plugin\"]\n    DROID --> daemon[\"daemon\"]\n    DROID --> search[\"search\"]\n    DROID --> computer[\"computer\"]\n    DROID --> update[\"update\"]\n```\n\n| Command | Description |\n|---------|-------------|\n| `exec` | Execute a single command (non-interactive |\n| `mcp` | Manage MCP servers |\n| `plugin` | Manage plugins |\n| `daemon` | Run the Factory daemon server |\n| `search` | <query>  Search across local sessions (messages, |\n| `computer` | Manage relay computer registrations |\n| `update` | Check for and install Droid updates |\n\n## Binary Identity\n\n- **Runtime**: Bun Single-Executable Application\n- **Architecture**: EM_X86_64 (64-bit)\n- **Shared libs**: libc.so.6, ld-linux-x86-64.so.2, libpthread.so.0, libdl.so.2, libm.so.6\n- **Symbols**: 1958 imported\n\n## What Could Go Wrong\n\n- Minified JS: variable names are meaningless; feature extraction relies on string literals, Zod schemas, and AST structure\n- Bundled library code (Bun runtime, npm deps) inflates feature counts \u2014 not all extracted items are application features\n- Static analysis cannot reveal env-dependent behavior\n\n*Generated by `/analyze-elf` \u2014 source: `/home/graham/.local/bin/droid`*\n\nwc: shadow.jsonl: No such file or directory",
+      "started_at": 1773931094.9092197,
+      "finished_at": 1773931132.4337802,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "10",
+      "title": "Auto-generate /create-walkthrough prosecution brief",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "queued",
+      "depends_on": [
+        "5",
+        "6",
+        "8"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "11",
+      "title": "End-to-end validation + skills-ci",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "10"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "12",
+      "title": "Learn to /memory",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "11"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

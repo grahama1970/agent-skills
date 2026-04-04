@@ -1,0 +1,11 @@
+[
+  {
+    "name": "whisperheads",
+    "active": true,
+    "spec": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-music/fixtures/whisperheads/piano-roll-spec.json",
+    "lyrics": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-music/fixtures/whisperheads/annotated-lyrics.json",
+    "out": "/mnt/storage12tb/media/agents/shared/music-lab/whisperheads/",
+    "backend": "yue",
+    "max_rounds": 5
+  }
+]

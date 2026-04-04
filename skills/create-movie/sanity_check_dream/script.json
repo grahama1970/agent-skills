@@ -1,0 +1,70 @@
+{
+  "title": "Final Sanity Dream (Influenced by: Cinematic fragm",
+  "synopsis": "",
+  "duration_seconds": 30,
+  "scenes": [
+    {
+      "heading": "INT. LOCATION 1 - DAY",
+      "location": "Location 1",
+      "time": "DAY",
+      "action": [
+        "[Describe action for scene 1]"
+      ],
+      "dialogue": [],
+      "visual": "[Visual description for scene 1 - detailed enough for AI generation]",
+      "audio": "[Audio cue for scene 1]",
+      "shot_type": "WIDE",
+      "duration_seconds": 7
+    },
+    {
+      "heading": "INT. LOCATION 2 - DAY",
+      "location": "Location 2",
+      "time": "DAY",
+      "action": [
+        "[Describe action for scene 2]"
+      ],
+      "dialogue": [],
+      "visual": "[Visual description for scene 2 - detailed enough for AI generation]",
+      "audio": "[Audio cue for scene 2]",
+      "shot_type": "MEDIUM",
+      "duration_seconds": 7
+    },
+    {
+      "heading": "INT. LOCATION 3 - DAY",
+      "location": "Location 3",
+      "time": "DAY",
+      "action": [
+        "[Describe action for scene 3]"
+      ],
+      "dialogue": [],
+      "visual": "[Visual description for scene 3 - detailed enough for AI generation]",
+      "audio": "[Audio cue for scene 3]",
+      "shot_type": "CLOSE-UP",
+      "duration_seconds": 7
+    },
+    {
+      "heading": "INT. LOCATION 4 - DAY",
+      "location": "Location 4",
+      "time": "DAY",
+      "action": [
+        "[Describe action for scene 4]"
+      ],
+      "dialogue": [],
+      "visual": "[Visual description for scene 4 - detailed enough for AI generation]",
+      "audio": "[Audio cue for scene 4]",
+      "shot_type": "WIDE",
+      "duration_seconds": 7
+    }
+  ],
+  "visual_style": "",
+  "audio_style": "",
+  "screenplay_raw": "",
+  "research_context": {
+    "topic": "Final Sanity Dream (Influenced by: Cinematic fragment: {\n  \"found\": true,\n  \"should_scan\": false,\n  \"confidence\": 8.744,\n  \"items\": [\n    {\n      \"_id\": \"lean_theorems/712357f9e5396e5e\",\n      \"_key\": \"712 | Literary thought: {\n  \"found\": true,\n  \"should_scan\": false,\n  \"confidence\": 9.262,\n  \"items\": [\n    {\n      \"_id\": \"lean_theorems/a4ea6e3ee18c63ae\",\n      \"_key\": \"a4e | World echo: {\n  \"found\": true,\n  \"should_scan\": false,\n  \"confidence\": 8.524,\n  \"items\": [\n    {\n      \"_id\": \"lean_theorems/b167517251176229\",\n      \"_key\": \"b16)",
+    "timestamp": "2026-02-01T08:55:42.911335",
+    "sources": {
+      "note": "Research skipped"
+    }
+  },
+  "timestamp": "2026-02-01T08:55:43.090998"
+}

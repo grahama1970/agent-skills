@@ -1,0 +1,10 @@
+{
+  "event_type": "dogpile_research",
+  "project_id": "table-merge",
+  "task": "table merge classification",
+  "round": 0,
+  "phase": "research",
+  "query": "table merge classification best tabular classifier backbone 2025 2026 F1 accuracy benchmark",
+  "result_length": 396,
+  "timestamp": 1774461151
+}

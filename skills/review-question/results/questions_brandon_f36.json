@@ -1,0 +1,142 @@
+[
+  {
+    "question": "What SPARTA countermeasures are recommended to protect the F-36's avionics systems from firmware corruption during secure boot?",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "secure boot, firmware corruption",
+    "persona": "brandon"
+  },
+  {
+    "question": "How can we apply SPARTA's kill chain analysis to identify potential adversary TTPs targeting the F-36's weapons integration system?",
+    "difficulty": "easy",
+    "f36_category": "03_weapons",
+    "domain_context": "kill chain, TTP, adversary",
+    "persona": "brandon"
+  },
+  {
+    "question": "What SPARTA threat actors are most likely to exploit vulnerabilities in the F-36's space-hardened components, and what countermeasures exist?",
+    "difficulty": "easy",
+    "f36_category": "05_space_hardening",
+    "domain_context": "threat actor, countermeasures",
+    "persona": "brandon"
+  },
+  {
+    "question": "Which SPARTA attack techniques pose the highest risk to the F-36's flight control software, and how can we mitigate them?",
+    "difficulty": "easy",
+    "f36_category": "09_flight_software",
+    "domain_context": "attack techniques, flight control software",
+    "persona": "brandon"
+  },
+  {
+    "question": "What lessons from SPARTA's analysis of F-35 legacy architecture should we apply to prevent lateral movement attacks in the F-36's upgraded systems?",
+    "difficulty": "easy",
+    "f36_category": "13_f35_legacy",
+    "domain_context": "lateral movement, legacy architecture",
+    "persona": "brandon"
+  },
+  {
+    "question": "How does the F-36's space-hardened avionics architecture mitigate SPARTA threats like firmware corruption, given the increased radiation exposure risks in near-space operations?",
+    "difficulty": "medium",
+    "f36_category": "05_space_hardening",
+    "domain_context": "SPARTA, firmware corruption, space vehicle",
+    "persona": "brandon"
+  },
+  {
+    "question": "What adversary TTPs from the SPARTA database are most likely to target the F-36's weapons integration system, and how do secure boot protocols counter these threats?",
+    "difficulty": "medium",
+    "f36_category": "03_weapons",
+    "domain_context": "SPARTA, TTP, adversary, secure boot",
+    "persona": "brandon"
+  },
+  {
+    "question": "Given the F-35 legacy architecture's vulnerabilities to lateral movement attacks, what SPARTA countermeasures should be prioritized for the F-36's upgraded flight control software?",
+    "difficulty": "medium",
+    "f36_category": "13_f35_legacy",
+    "domain_context": "SPARTA, lateral movement, countermeasures, flight software",
+    "persona": "brandon"
+  },
+  {
+    "question": "How can the F-36's sensor fusion algorithms be hardened against reconnaissance efforts by threat actors attempting to map the attack surface of the avionics system?",
+    "difficulty": "medium",
+    "f36_category": "09_flight_software",
+    "domain_context": "SPARTA, reconnaissance, threat actor, attack surface",
+    "persona": "brandon"
+  },
+  {
+    "question": "What command and control techniques from known SPARTA adversaries could exploit the F-36's GPS navigation system, and what mitigation strategies align with space-grade component standards?",
+    "difficulty": "medium",
+    "f36_category": "01_avionics",
+    "domain_context": "SPARTA, command and control, adversary, space-grade components",
+    "persona": "brandon"
+  },
+  {
+    "question": "Given the F-36's reliance on GPS for navigation, how could an adversary exploit SPARTA-identified vulnerabilities in the avionics subsystem to achieve command and control through spoofed satellite signals?",
+    "difficulty": "medium",
+    "f36_category": "01_avionics",
+    "domain_context": "Adversaries may target GPS systems to manipulate navigation data, requiring analysis of spoofing TTPs and countermeasures in SPARTA.",
+    "persona": "brandon"
+  },
+  {
+    "question": "How might firmware corruption techniques from SPARTA's space vehicle threat catalog apply to the F-36's radiation-hardened flight computers, and what secure boot measures would mitigate this?",
+    "difficulty": "medium",
+    "f36_category": "05_space_hardening",
+    "domain_context": "Space-grade components face unique firmware threats; this examines intersection with aircraft systems and defensive boot integrity.",
+    "persona": "brandon"
+  },
+  {
+    "question": "What lateral movement opportunities exist between the F-36's weapons management system and legacy F-35 fire control architecture, based on SPARTA's adversary kill chain models?",
+    "difficulty": "medium",
+    "f36_category": "03_weapons",
+    "domain_context": "Legacy system integration may introduce attack paths requiring kill chain analysis for weapon system isolation.",
+    "persona": "brandon"
+  },
+  {
+    "question": "Considering the F-36's dual-redundant flight control software, which SPARTA-observed persistence mechanisms could threat actors use to maintain access if they compromise one channel, and how would sensor fusion anomalies expose this?",
+    "difficulty": "hard",
+    "f36_category": "09_flight_software",
+    "domain_context": "Advanced adversaries may exploit redundancy systems; requires analysis of persistence TTPs and detection via sensor discrepancies.",
+    "persona": "brandon"
+  },
+  {
+    "question": "Drawing from SPARTA's satellite reconnaissance threat data, what attack surfaces in the F-36's space-hardened components would be most vulnerable to nation-state red team emulation during orbital testing phases?",
+    "difficulty": "hard",
+    "f36_category": "05_space_hardening",
+    "domain_context": "Space environment testing introduces unique reconnaissance risks needing adversarial emulation alignment.",
+    "persona": "brandon"
+  },
+  {
+    "question": "Given the F-35 legacy avionics architecture's susceptibility to firmware corruption via supply chain attacks, how would you adapt SPARTA's secure boot countermeasures for the F-36's dual-redundant flight computers while maintaining compatibility with existing weapon system interfaces?",
+    "difficulty": "hard",
+    "f36_category": "01_avionics",
+    "domain_context": "secure boot, firmware corruption, adversary",
+    "persona": "brandon"
+  },
+  {
+    "question": "The F-36's space-hardened components must defend against single-event upsets while also mitigating advanced persistent threats targeting command and control systems. What SPARTA-recommended hybrid approaches (radiation hardening + cyber hardening) would you prioritize for the mission data loader subsystem?",
+    "difficulty": "hard",
+    "f36_category": "05_space_hardening",
+    "domain_context": "persistence, command and control, space vehicle",
+    "persona": "brandon"
+  },
+  {
+    "question": "Analyzing the kill chain for F-35 legacy radar spoofing attacks, what new TTPs would a sophisticated adversary likely employ against the F-36's sensor fusion algorithms, and which D3FEND techniques from SPARTA would be most effective for the EO/IR subsystem?",
+    "difficulty": "hard",
+    "f36_category": "09_flight_software",
+    "domain_context": "kill chain, TTP, adversary",
+    "persona": "brandon"
+  },
+  {
+    "question": "How might lateral movement techniques observed in satellite ground station breaches inform our red team testing of the F-36's encrypted datalink between wingmen in a contested EW environment?",
+    "difficulty": "ambiguous",
+    "f36_category": "03_weapons",
+    "domain_context": "lateral movement, satellite, red team",
+    "persona": "brandon"
+  },
+  {
+    "question": "When evaluating reconnaissance patterns from known threat actors targeting fifth-gen fighters, what indicators should we embed in the F-36's avionics health monitoring system to detect early-stage intrusion attempts without generating excessive false positives?",
+    "difficulty": "ambiguous",
+    "f36_category": "13_f35_legacy",
+    "domain_context": "reconnaissance, threat actor, adversary",
+    "persona": "brandon"
+  }
+]

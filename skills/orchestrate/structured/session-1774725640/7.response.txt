@@ -1,0 +1,18 @@
+Implemented.
+### Change made
+Updated [`packages/ux-lab/server/index.ts`](/home/node/workspace/packages/ux-lab/server/index.ts:1192) to normalize `eval-results.json` into the EvaluateTab contract before responding:
+- Added `EvalResultsPayload` + helpers at:
+- [`EvalResultsPayload`](/home/node/workspace/packages/ux-lab/server/index.ts:1192)
+- [`normalizeEvalResultsPayload(...)`](/home/node/workspace/packages/ux-lab/server/index.ts:1396)
+- Updated endpoint:
+- [`GET /api/projects/classifier-lab/eval-results/:id`](/home/node/workspace/packages/ux-lab/server/index.ts:1699)
+It now reads from `create-classifier/projects/{id}/eval-results.json` (via `CLASSIFIER_DIR`) and returns:
+`{ model, macro_f1, accuracy, test_samples, holdout_passed, classes, confusion_matrix, per_class }`
+with legacy key mapping (`winner -> model`, `f1 -> macro_f1`, `gate_passed -> holdout_passed`) and safe defaults.
+### Validation
+- DoD command result: `OK`
+- `npm run check`: passed (only non-blocking info-level lint notes)
+- Requested test command:
+- `test-lab/run.sh verify-task 7 .pi/skills/classifier-lab/ --domain python` failed because path doesn’t exist in this workspace.
+- Correct script path run: `.pi/skills/test-lab/run.sh verify-task 7 /home/node/workspace/.pi/skills/classifier-lab --domain python`
+- Result: fail due pre-existing Python style issues (`Missing module docstring`), `126/135` passes.

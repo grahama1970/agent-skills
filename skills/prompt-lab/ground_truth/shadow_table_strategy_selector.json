@@ -1,0 +1,36 @@
+{
+  "name": "shadow-table-strategy-selector",
+  "description": "PDF table extraction strategy classification (lattice/stream/hybrid/skip)",
+  "cases": [
+    {
+      "id": "table-1",
+      "input": "{\"page\": 18, \"description\": \"Countermeasure cross-reference matrix with clear cell borders and header row. Grid lines visible at every cell boundary. 6 columns: CM ID, Title, Technique, NIST Control, Priority, Status. 24 data rows. Rendered from a Word document with table borders explicitly set to 1pt solid black.\", \"has_borders\": true, \"whitespace_aligned\": false, \"is_image_only\": false, \"estimated_columns\": 6, \"estimated_rows\": 25, \"source\": \"sparta_cm_matrix_rev4.pdf\"}",
+      "expected": {"action": "lattice"},
+      "expected_action": "lattice"
+    },
+    {
+      "id": "table-2",
+      "input": "{\"page\": 5, \"description\": \"Tabular data aligned with spaces and tabs but no visible grid lines or cell borders. Three columns of numerical tolerance values: Parameter, Nominal, Tolerance. Rows separated by consistent whitespace. Exported from a legacy CAD system as plain text wrapped in PDF.\", \"has_borders\": false, \"whitespace_aligned\": true, \"is_image_only\": false, \"estimated_columns\": 3, \"estimated_rows\": 31, \"source\": \"cnc_tolerance_spec_f36_rib_assembly.pdf\"}",
+      "expected": {"action": "stream"},
+      "expected_action": "stream"
+    },
+    {
+      "id": "table-3",
+      "input": "{\"page\": 11, \"description\": \"Mixed-format table combining bordered header section with whitespace-aligned data body. Top two rows use solid borders for column headers; remaining rows use tab-stop alignment only. Content is a SPARTA technique-to-countermeasure mapping with nested sub-rows for technique variants.\", \"has_borders\": true, \"whitespace_aligned\": true, \"is_image_only\": false, \"estimated_columns\": 4, \"estimated_rows\": 19, \"source\": \"attack_tree_sparta_hybrid_export.pdf\"}",
+      "expected": {"action": "hybrid"},
+      "expected_action": "hybrid"
+    },
+    {
+      "id": "table-4",
+      "input": "{\"page\": 2, \"description\": \"Narrative executive summary paragraph describing risk posture. No table structure present. Text flows continuously across the page with section headers. References tables on other pages but contains no tabular data itself. Occasional bold terms inline.\", \"has_borders\": false, \"whitespace_aligned\": false, \"is_image_only\": false, \"estimated_columns\": 1, \"estimated_rows\": 1, \"source\": \"risk_assessment_executive_summary.pdf\"}",
+      "expected": {"action": "skip"},
+      "expected_action": "skip"
+    },
+    {
+      "id": "table-5",
+      "input": "{\"page\": 34, \"description\": \"ICD interface control document table with full border grid. 8 columns: Interface ID, Source Subsystem, Destination Subsystem, Signal Type, Frequency, Voltage Level, Protocol, Notes. All cells have 0.5pt borders on all sides. 47 data rows covering spacecraft bus interface definitions.\", \"has_borders\": true, \"whitespace_aligned\": false, \"is_image_only\": false, \"estimated_columns\": 8, \"estimated_rows\": 48, \"source\": \"spacecraft_icd_rev2_bus_interfaces.pdf\"}",
+      "expected": {"action": "lattice"},
+      "expected_action": "lattice"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "gatePassed": true,
+  "gateThreshold": 200,
+  "totalSamples": 2000,
+  "totalTrain": 2000,
+  "classCount": 4,
+  "minPerClass": 500,
+  "modality": "text",
+  "path": "ag_news",
+  "classes": [
+    {
+      "name": "World",
+      "train": 500,
+      "val": 0,
+      "test": 250
+    },
+    {
+      "name": "Sports",
+      "train": 500,
+      "val": 0,
+      "test": 250
+    },
+    {
+      "name": "Business",
+      "train": 500,
+      "val": 0,
+      "test": 250
+    },
+    {
+      "name": "Sci/Tech",
+      "train": 500,
+      "val": 0,
+      "test": 250
+    }
+  ]
+}

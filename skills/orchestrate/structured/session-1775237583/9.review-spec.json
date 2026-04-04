@@ -1,0 +1,12 @@
+{
+  "task_id": "9",
+  "files": [
+    "packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"
+  ],
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "context": "Code-runner output for task: Family flyout panel \u2014 drill into controls for selected family",
+  "dod_command": "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx && grep -q 'selectedFamily' src/components/sparta/dashboard/PostureDashboard.tsx",
+  "backend": "codex",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775237583",
+  "max_rounds": 1
+}

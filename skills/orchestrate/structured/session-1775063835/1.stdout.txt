@@ -1,0 +1,158 @@
+```diff
+--- a/packages/ux-lab/server/index.ts
++++ b/packages/ux-lab/server/index.ts
+@@ -11,17 +11,17 @@
+  *   GET  /api/models           — discover available LLM models (grouped)
+  *   GET  /api/projects/:id/models — ModelPicker-format model registry
+  */
+ 
+ import express from 'express'
+ import cors from 'cors'
+ import { createServer } from 'http'
+ import { request as httpRequest } from 'http'
+-import { execFile } from 'child_process'
++import { execFile, exec } from 'child_process'
+ import { resolve, dirname } from 'path'
+ import { fileURLToPath } from 'url'
+ import { readdir, readFile, writeFile, mkdir, unlink, stat, copyFile, rename as fsRename } from 'fs/promises'
+ import { existsSync, readFileSync, realpathSync, createReadStream } from 'fs'
+ import { load as yamlLoad } from 'js-yaml'
+ import { promisify } from 'util'
+ 
+ const __dirname = dirname(fileURLToPath(import.meta.url))
+@@ -36,16 +36,17 @@ const ARCH_SCOPE = 'architecture'
+ const WORKSHEETS_PATH = process.env.WORKSHEETS_YAML ?? resolve(__dirname, '../fixtures/sparta-reference/worksheets.yaml')
+ const WORKSHEETS_CACHE_TTL_MS = 60_000
+ 
+ type JsonRecord = Record<string, unknown>
+ type WorksheetConfig = { description_source?: string } & Record<string, unknown>
+ 
+ let worksheetsCache: { expiresAt: number; worksheets: Record<string, WorksheetConfig> } | null = null
+ const execFileAsync = promisify(execFile)
++const execAsync = promisify(exec)
+ 
+ interface ArchitectureMetadata {
+   attachments: string[]
+   elementFileMap: Record<string, string[]>
+   [key: string]: unknown
+ }
+ 
+ interface ArchitecturePayload {
+@@ -442,16 +443,88 @@ app.post('/api/datalake/traceability', async (req, res) => {
+         has_figure: targetKeysByType[3].length,
+       },
+     })
+   } catch (e) {
+     res.status(502).json({ error: 'Traceability query failed', detail: String(e) })
+   }
+ })
+ 
++function parseLastJsonObjectFromStdout(stdout: string): unknown {
++  const lines = stdout.split('\n')
++  for (let i = lines.length - 1; i >= 0; i--) {
++    if (!lines[i].trimStart().startsWith('{')) continue
++    const candidate = lines.slice(i).join('\n').trim()
++    if (!candidate) continue
++    try {
++      return JSON.parse(candidate)
++    } catch {
++      // keep scanning for earlier candidate starts
++    }
++  }
++
++  const start = stdout.lastIndexOf('{')
++  const end = stdout.lastIndexOf('}')
++  if (start >= 0 && end > start) {
++    return JSON.parse(stdout.slice(start, end + 1))
++  }
++  throw new Error('No JSON object found in command output')
++}
++
++app.post('/api/evidence-case/drift', async (req, res) => {
++  const { control_ids } = req.body as { control_ids?: string[] }
++  const ids = Array.isArray(control_ids) ? control_ids : []
++  if (ids.some((id) => typeof id !== 'string' || !/^[A-Za-z0-9._:-]+$/.test(id))) {
++    return res.status(400).json({ error: 'control_ids must contain only [A-Za-z0-9._:-]' })
++  }
++
++  const suffix = ids.length > 0
++    ? ` --control-ids ${ids.join(',')}`
++    : ' --all-recent'
++  const cmd = `unset VIRTUAL_ENV && cd .pi/skills/create-evidence-case && .venv/bin/python tools/compute_threat_delta.py${suffix}`
++
++  try {
++    const { stdout } = await execAsync(cmd, {
++      cwd: PI_MONO,
++      timeout: 120_000,
++      maxBuffer: 10 * 1024 * 1024,
++    })
++    const parsed = parseLastJsonObjectFromStdout(stdout)
++    res.json(parsed)
++  } catch (error) {
++    const err = error as Error & { stderr?: string }
++    const message = err.stderr?.trim() || err.message || 'compute_threat_delta failed'
++    res.status(502).json({ error: message })
++  }
++})
++
++app.post('/api/evidence-case/stress-test', async (req, res) => {
++  const { question_bank } = req.body as { question_bank?: string }
++  const questionBank = typeof question_bank === 'string' && question_bank.trim().length > 0
++    ? question_bank.trim()
++    : 'batch_50_f36'
++
++  try {
++    const { stdout } = await execFileAsync(
++      '.pi/skills/create-evidence-case/run.sh',
++      ['stress-test', '--question-bank', questionBank, '--json'],
++      {
++        cwd: PI_MONO,
++        timeout: 300_000,
++        maxBuffer: 10 * 1024 * 1024,
++      },
++    )
++    res.json(JSON.parse(stdout))
++  } catch (error) {
++    const err = error as Error & { stderr?: string }
++    const message = err.stderr?.trim() || err.message || 'stress-test failed'
++    res.status(502).json({ error: message })
++  }
++})
++
+ app.all('/api/memory/{*path}', (req, res) => {
+   const memoryPath = '/' + (Array.isArray(req.params.path) ? req.params.path.join('/') : req.params.path)
+   const body = ['POST', 'PUT', 'PATCH'].includes(req.method) ? JSON.stringify(req.body) : undefined
+ 
+   const options = {
+     socketPath: MEMORY_SOCKET,
+     path: memoryPath,
+     method: req.method,
+```
+
+
+
+2026-04-01 13:17:15.562 | INFO     | __main__:run:496 - === CODE-RUNNER v2: Add /api/evidence-case/drift and /api/evidence-case/stress-test endpoints ===
+2026-04-01 13:17:15.562 | INFO     | __main__:run:497 -   Backend: codex
+2026-04-01 13:17:15.562 | INFO     | __main__:run:498 -   DoD: cd /home/graham/workspace/experiments/pi-mono && grep -c 'evidence-case/drift\|evidence-case/stress-
+2026-04-01 13:17:15.562 | INFO     | __main__:run:499 -   Max rounds: 3
+2026-04-01 13:17:15.880 | INFO     | __main__:git_stash_save:96 - Stashed pre-existing changes
+2026-04-01 13:17:15.914 | INFO     | __main__:run:587 - ── Round 1/3 [strategy=direct_fix codex:medium] ──
+2026-04-01 13:20:31.859 | WARNING  | apply:_detect_and_apply_diff:244 -   git apply failed (all strategies): error: unknown option `fuzz=5'
+usage: git apply [<options>] [<patch>...]
+
+    --exclude <path>      don't apply changes matching the given path
+    --include <path>      apply changes matching the given path
+    -p <num>              remove <num> leading slashes from traditional diff paths
+    --no-
+2026-04-01 13:20:31.859 | WARNING  | apply:apply_llm_response:276 - Diff detected but git apply failed — next round will request complete file
+2026-04-01 13:20:31.916 | INFO     | __main__:run:650 -   Detected 4 files changed by codex native file I/O: ['.pi/.worktrees/skills-ci/skills-ci-20260329144123', '.pi/.worktrees/skills-ci/skills-ci-20260329144138', '.pi/.worktrees/skills-ci/skills-ci-20260329144153', 'packages/ux-lab/server/index.ts']
+2026-04-01 13:20:31.916 | INFO     | __main__:run:653 -   Applied 4 files: ['.pi/.worktrees/skills-ci/skills-ci-20260329144123', '.pi/.worktrees/skills-ci/skills-ci-20260329144138', '.pi/.worktrees/skills-ci/skills-ci-20260329144153', 'packages/ux-lab/server/index.ts']
+2026-04-01 13:20:32.063 | INFO     | __main__:run:660 -   Score: 1.000 (DoD:True errors:0 lint:0 bp:0)
+2026-04-01 13:20:32.197 | INFO     | __main__:run:697 -   KEEP (score 1.000 > previous 0.000)
+2026-04-01 13:20:35.756 | INFO     | __main__:run:750 - === DoD PASSED on round 1 (score=1.000) ===
+2026-04-01 13:20:35.756 | INFO     | __main__:run:769 - === RESULT: PASS | score=1.000 | 1 rounds ===
+2026-04-01 13:20:35.817 | INFO     | apply:generate_hunk_review:345 - Review with: hunk patch /tmp/code-runner-ecl-endpoints/ecl-express-endpoints.hunk.md
+2026-04-01 13:20:35.817 | INFO     | apply:generate_hunk_review:347 -   Or: cd /home/graham/workspace/experiments/pi-mono && hunk diff
+2026-04-01 13:20:36.092 | ERROR    | __main__:git_stash_pop:104 - git stash pop FAILED — user changes may be trapped in stash: packages/ux-lab/0N_EMBRY_COLLABORATION.yaml already exists, no checkout
+error: could not restore untracked files from stash
+

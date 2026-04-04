@@ -1,0 +1,20 @@
+{
+  "escalation": "all strategies exhausted",
+  "rounds_attempted": 3,
+  "persistent_error": "unknown",
+  "error_evidence": {
+    "failure_type": "generic",
+    "summary": "PASS: 100% data-qid coverage",
+    "primary_location": null,
+    "root_cause_lines": [],
+    "failing_tests": []
+  },
+  "strategies_tried": [
+    "direct_fix",
+    "structured_analysis",
+    "simplify"
+  ],
+  "dogpile_searched": true,
+  "best_score": 0.0,
+  "recommendation": "Task needs project agent intervention or decomposition into smaller subtasks."
+}

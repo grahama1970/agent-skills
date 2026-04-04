@@ -1,0 +1,95 @@
+Good. Now I have the treesitter output format. Let me implement the minimum viable `--treesitter` flag on the `rescan` command.
+
+```diff
+--- a/.pi/skills/ingest-code/ingest_code.py
++++ b/.pi/skills/ingest-code/ingest_code.py
+@@ -753,6 +753,7 @@ def rescan(
+     since: Optional[str] = typer.Option(None, help="Only files modified since (ISO date or '1d', '7d', etc.)"),
+     validate: bool = typer.Option(True, "--validate/--no-validate", help="Run LLM validation"),
+     scope: str = typer.Option("code", help="Memory scope for storage"),
++    treesitter: bool = typer.Option(False, "--treesitter", help="Run treesitter scan and store symbols to memory"),
+     codebase: list[str] = typer.Option([], "-c", "--codebase", help="Codebase paths to rescan"),
+ ):
+     """Nightly rescan for living document updates. Designed for /scheduler."""
+@@ -786,6 +787,10 @@ def rescan(
+         print('{"error": "Memory skill not found"}', file=sys.stderr)
+         raise SystemExit(1)
+ 
++    # --- Treesitter symbol extraction ---
++    total_symbols = 0
++    if treesitter:
++        total_symbols = _rescan_treesitter(codebases, scope)
+     taxonomy = load_taxonomy_module()
+     total_knowledge = 0
+     total_cwes = 0
+@@ -813,9 +818,58 @@ def rescan(
+         "codebases_scanned": len(codebases),
+         "knowledge_stored": total_knowledge,
+         "cwe_stored": total_cwes,
++        "symbols_stored": total_symbols,
+         "since": since,
+     }, indent=2))
+ 
+ 
++def _rescan_treesitter(codebases: list[str], scope: str) -> int:
++    """Run treesitter scan on each codebase dir, store symbols to memory."""
++    treesitter_script = Path.home() / ".pi" / "skills" / "treesitter" / "run.sh"
++    if not treesitter_script.exists():
++        print("treesitter skill not found, skipping", file=sys.stderr)
++        return 0
++
++    stored = 0
++    for codebase_path in codebases:
++        print(f"Treesitter scanning: {codebase_path}", flush=True)
++        try:
++            result = subprocess.run(
++                [str(treesitter_script), "scan", codebase_path],
++                capture_output=True, text=True, timeout=300,
++                env={**os.environ, "VIRTUAL_ENV": ""},
++            )
++            if result.returncode != 0:
++                print(f"  treesitter scan failed: {result.stderr[:200]}", file=sys.stderr)
++                continue
++            files_data = json.loads(result.stdout)
++        except (subprocess.TimeoutExpired, json.JSONDecodeError) as e:
++            print(f"  treesitter error: {e}", file=sys.stderr)
++            continue
++
++        for file_entry in files_data:
++            file_path = Path(file_entry.get("path", ""))
++            file_stem = file_path.stem
++            for sym in file_entry.get("symbols", []):
++                kind = sym.get("kind", "symbol")
++                name = sym.get("name", "")
++                sig = sym.get("signature", "")
++                doc = sym.get("doc_preview", "") or ""
++                if not name:
++                    continue
++                tags = ["codebase", "symbol", kind, name, file_stem]
++                problem = f"What is {kind} {name} in {file_stem}?"
++                solution = f"{sig}\n\nFile: {file_path}"
++                if doc:
++                    solution += f"\n\n{doc}"
++                if _learn_http(problem, solution, scope, tags):
++                    stored += 1
++
++        print(f"  Stored {stored} symbols from {codebase_path}", flush=True)
++
++    print(f"Treesitter: {stored} symbols stored total", flush=True)
++    return stored
++
++
+ if __name__ == "__main__":
+     cli()
+```
+
+This is the minimum viable implementation:
+
+1. **`--treesitter` flag** on `rescan` command (default `False`)
+2. **Calls `treesitter/run.sh scan <dir>`** for each configured codebase via subprocess
+3. **Extracts symbols** from the JSON output — function signatures, classes, methods with their kind, name, signature, and doc preview
+4. **Tags**: `["codebase", "symbol", "<kind>", "<name>", "<file_stem>"]` exactly as specified
+5. **Stores via `_learn_http()`** which already uses the Unix socket at `/run/user/1000/embry/memory.sock`
+
+No new dependencies, no new abstractions, reuses existing `_learn_http()` function.
+

@@ -1,0 +1,24 @@
+{
+  "generated_at": 1773930372.8879426,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930372",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Echo test",
+      "lane": "default",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773930372/T1.stdout.txt",
+      "error": "",
+      "started_at": 1773930372.886012,
+      "finished_at": 1773930372.887907,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

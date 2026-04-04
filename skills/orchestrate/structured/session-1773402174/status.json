@@ -1,0 +1,36 @@
+{
+  "generated_at": 1773402174.1633594,
+  "failed": false,
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Write first artifact",
+      "lane": "lane-a",
+      "runner": "local",
+      "backend": "",
+      "mode": "deterministic",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/.pi/skills/orchestrate/structured/session-1773402174/t1.stdout.txt",
+      "error": "",
+      "started_at": 1773402174.1579962,
+      "finished_at": 1773402174.160848
+    },
+    {
+      "id": "t2",
+      "title": "Write dependent artifact",
+      "lane": "lane-b",
+      "runner": "local",
+      "backend": "",
+      "mode": "deterministic",
+      "status": "completed",
+      "depends_on": [
+        "t1"
+      ],
+      "output_path": "/home/graham/.pi/skills/orchestrate/structured/session-1773402174/t2.stdout.txt",
+      "error": "",
+      "started_at": 1773402174.1613526,
+      "finished_at": 1773402174.1633096
+    }
+  ]
+}

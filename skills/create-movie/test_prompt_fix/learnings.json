@@ -1,0 +1,37 @@
+{
+  "learnings": [
+    {
+      "question": "What visual style works for movies about: A single candle flame flickering in a dark room?",
+      "reasoning": "Used in successful movie creation with 0 generated images",
+      "answer": "cinematic",
+      "tags": [
+        "visual-style",
+        "cinematography",
+        "filmmaking"
+      ]
+    },
+    {
+      "question": "How to structure scenes for a 3-scene movie?",
+      "reasoning": "Scene breakdown from movie: A single candle flame flickeri",
+      "answer": "INT. SCENE 1 - DAY\nINT. SCENE 2 - DAY\nINT. SCENE 3 - DAY",
+      "tags": [
+        "scene-structure",
+        "screenplay",
+        "filmmaking"
+      ]
+    },
+    {
+      "question": "What sources are useful for researching: A single candle flame flickering in a dark room?",
+      "reasoning": "These sources provided useful context for movie creation",
+      "answer": "Consulted: new_movies, youtube, dogpile",
+      "tags": [
+        "research",
+        "sources",
+        "filmmaking"
+      ]
+    }
+  ],
+  "scope": "horus-filmmaking",
+  "stored_count": 0,
+  "timestamp": "2026-02-04T22:39:56.412593"
+}

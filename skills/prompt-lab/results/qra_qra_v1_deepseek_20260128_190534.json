@@ -1,0 +1,70 @@
+{
+  "prompt": "qra_v1",
+  "model": "deepseek",
+  "task": "qra",
+  "timestamp": "2026-01-28T19:05:34.040739",
+  "passed": true,
+  "metrics": {
+    "overall_score": 0.6416666666666666,
+    "question_score": 0.7666666666666666,
+    "reasoning_score": 0.5166666666666666,
+    "avg_latency_ms": 9071.821874566376
+  },
+  "cases": [
+    {
+      "id": "T1547.001-qra",
+      "question": "What are two methods adversaries use to achieve persistence through Registry Run Keys and Startup Folder?",
+      "reasoning": "The description states that adversaries can achieve persistence by either adding a program to a startup folder or referencing it with a Registry run key. Both methods result in the program being executed when a user logs in.",
+      "answer": "Adversaries achieve persistence by adding a program to a startup folder or referencing it with a Registry run key.",
+      "scores": {
+        "question": 1.0,
+        "reasoning": 0.6666666666666666,
+        "overall": 0.8333333333333333
+      }
+    },
+    {
+      "id": "SI-2-qra",
+      "question": "What is the primary purpose of the Flaw Remediation control in NIST?",
+      "reasoning": "The Flaw Remediation control focuses on identifying, reporting, and correcting system flaws. It specifically mentions installing security updates within a defined timeframe to address vulnerabilities.",
+      "answer": "The primary purpose is to identify, report, and correct information system flaws by installing security-relevant updates within a defined timeframe.",
+      "scores": {
+        "question": 0.5,
+        "reasoning": 0.0,
+        "overall": 0.25
+      }
+    },
+    {
+      "id": "CWE-89-qra",
+      "question": "What is the primary cause of SQL Injection vulnerabilities in software?",
+      "reasoning": "SQL Injection occurs when software builds SQL commands using untrusted external input without proper sanitization. The description specifies that the vulnerability arises when special elements in the input aren't neutralized, allowing modification of the intended SQL command.",
+      "answer": "SQL Injection occurs when software constructs SQL commands using unneutralized external input that can modify the command's structure.",
+      "scores": {
+        "question": 0.6666666666666666,
+        "reasoning": 1.0,
+        "overall": 0.8333333333333333
+      }
+    },
+    {
+      "id": "d3f:NetworkIsolation-qra",
+      "question": "What are the primary techniques used to achieve network isolation?",
+      "reasoning": "The description lists specific techniques that are used to implement network isolation. These techniques are designed to control network traffic between devices according to predefined rules.",
+      "answer": "The primary techniques for network isolation include firewalls, DMZs, VLANs, and network segmentation.",
+      "scores": {
+        "question": 0.6666666666666666,
+        "reasoning": 0.25,
+        "overall": 0.4583333333333333
+      }
+    },
+    {
+      "id": "relationship-qra",
+      "question": "How does network isolation mitigate lateral movement by adversaries?",
+      "reasoning": "Network isolation involves techniques like VLANs and firewalls to restrict traffic between systems. By limiting communication pathways, adversaries who gain initial access find it harder to move laterally across the network.",
+      "answer": "Network isolation mitigates lateral movement by restricting network traffic between systems using VLANs and firewalls, reducing the attack surface available to adversaries.",
+      "scores": {
+        "question": 1.0,
+        "reasoning": 0.6666666666666666,
+        "overall": 0.8333333333333333
+      }
+    }
+  ]
+}

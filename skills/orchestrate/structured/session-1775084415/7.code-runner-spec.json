@@ -1,0 +1,20 @@
+{
+  "task_id": "7",
+  "title": "Wire patch_writer into battle blue_team.py defend_phase",
+  "prompt": "Task: Wire patch_writer into battle blue_team.py defend_phase\n\nImplementation:\n- In defend_phase(), replace subprocess.run anvil_script remediate with patch_writer.write_patch()\n- Build test_command from target existing test suite (Makefile, pytest, etc.)\n- Pass finding.exploit_proof so the patch DoD can verify exploit no longer works\n- Map patch_result.success to patch.verified, patch_result.patch_diff to patch.diff\n- Set patch.functionality_preserved = patch_result.functionality_preserved\n- Keep recall_phase() and research_phase() \u2014 output feeds into patch_writer prompt\n- Keep reflect_phase() and store_phase() unchanged\n- Import patch_writer at top of file\n\nDefinition of Done:\n- Command: cd .pi/skills/battle && python3 -c \"compile(open('blue_team.py').read(), 'blue_team.py', 'exec')\" && grep -q 'patch_writer' blue_team.py && ! grep -q 'anvil.*remediate' blue_team.py\n- Assertion: exit_code == 0\n\nTests:\n- python3 -c \"compile(open('.pi/skills/battle/blue_team.py').read(), 'bt.py', 'exec')\"\n- grep -q 'patch_writer' .pi/skills/battle/blue_team.py",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775084415",
+  "definition_of_done": {
+    "command": "cd .pi/skills/battle && python3 -c \"compile(open('blue_team.py').read(), 'blue_team.py', 'exec')\" && grep -q 'patch_writer' blue_team.py && ! grep -q 'anvil.*remediate' blue_team.py",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/battle/blue_team.py"
+  ],
+  "read_context": [
+    ".pi/skills/battle/patch_writer.py",
+    ".pi/skills/battle/orchestrator.py",
+    ".pi/skills/battle/scoring.py"
+  ]
+}

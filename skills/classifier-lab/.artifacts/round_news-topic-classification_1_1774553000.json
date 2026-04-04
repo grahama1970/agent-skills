@@ -1,0 +1,17 @@
+{
+  "event_type": "self_improvement_round",
+  "timestamp": 1774553000,
+  "project_id": "news-topic-classification",
+  "task": "news topic classification",
+  "round": 1,
+  "strategy": "baseline",
+  "backbone": "distilbert-base-uncased",
+  "modality": "text",
+  "f1": 0.8902,
+  "accuracy": 0.895,
+  "wilson_lower": 0.874,
+  "diagnosis": "F1 0.890 is 0.010 below gate. Close — try regularization or ensemble.",
+  "dogpile_query": "",
+  "hps": {"lr": 2e-5, "batch_size": 16, "epochs": 2},
+  "errors": []
+}

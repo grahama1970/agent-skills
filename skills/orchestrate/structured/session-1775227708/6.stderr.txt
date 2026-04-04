@@ -1,0 +1,12 @@
+2026-04-03 10:50:34.474 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Implement PostureDashboard.tsx — full 3ft compliance view from V1 mockup ===
+2026-04-03 10:50:34.474 | INFO     | __main__:run:494 -   Backend: codex
+2026-04-03 10:50:34.474 | INFO     | __main__:run:495 -   DoD: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDash
+2026-04-03 10:50:34.474 | INFO     | __main__:run:496 -   Max rounds: 5
+2026-04-03 10:50:35.482 | INFO     | __main__:run:587 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-03 10:53:28.273 | WARNING  | apply:apply_llm_response:410 -   v2: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts not authorized, skipping
+2026-04-03 10:53:28.274 | WARNING  | apply:apply_file_blocks:226 - Path not in allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (tried: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts)
+2026-04-03 10:53:28.274 | WARNING  | __main__:run:653 -   No files applied from LLM response
+2026-04-03 10:53:28.530 | INFO     | __main__:run:658 -   Score: 1.000 (DoD:True errors:0 lint:0 bp:0)
+2026-04-03 10:53:28.533 | WARNING  | __main__:run:690 -   DISCARD (score improved but git commit failed)
+2026-04-03 10:53:28.925 | INFO     | __main__:run:751 - === DoD PASSED on round 1 (score=1.000) ===
+2026-04-03 10:53:28.926 | INFO     | __main__:run:770 - === RESULT: PASS | score=0.000 | 1 rounds ===

@@ -1,0 +1,46 @@
+{
+  "groups": [
+    {
+      "id": "voice",
+      "label": "Voice",
+      "color": "#00ff88",
+      "tabs": [
+        {
+          "id": "record",
+          "label": "Record",
+          "shortcut": "1",
+          "voiceKeyword": "record",
+          "component": "Editor.qml"
+        },
+        {
+          "id": "tts-compare",
+          "label": "TTS Compare",
+          "shortcut": "2",
+          "voiceKeyword": "compare",
+          "component": "TTSComparison.qml"
+        }
+      ]
+    },
+    {
+      "id": "system",
+      "label": "System",
+      "color": "#4a9eff",
+      "tabs": [
+        {
+          "id": "dashboard",
+          "label": "Dashboard",
+          "shortcut": "3",
+          "voiceKeyword": "dashboard",
+          "component": "DashboardPage.qml"
+        },
+        {
+          "id": "rvc-sweep",
+          "label": "RVC Sweep",
+          "shortcut": "4",
+          "voiceKeyword": "sweep",
+          "component": "RVCSweepStub.qml"
+        }
+      ]
+    }
+  ]
+}

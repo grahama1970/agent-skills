@@ -1,0 +1,29 @@
+2026-04-02 19:04:45.231 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Create usePostureData hook — aggregates control family stats ===
+2026-04-02 19:04:45.232 | INFO     | __main__:run:494 -   Backend: codex
+2026-04-02 19:04:45.232 | INFO     | __main__:run:495 -   DoD: cd packages/ux-lab && npx tsc --noEmit && grep -q 'export function usePostureData' src/hooks/usePost
+2026-04-02 19:04:45.232 | INFO     | __main__:run:496 -   Max rounds: 5
+2026-04-02 19:04:47.533 | INFO     | __main__:run:587 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-02 19:06:41.075 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for packages/ux-lab/src/hooks/usePostureData.ts, trying complete file
+2026-04-02 19:06:41.076 | INFO     | apply:apply_file_blocks:256 -   Wrote: packages/ux-lab/src/hooks/usePostureData.ts (10254 bytes)
+2026-04-02 19:06:41.076 | INFO     | __main__:run:651 -   Applied 1 files: ['packages/ux-lab/src/hooks/usePostureData.ts']
+2026-04-02 19:06:44.988 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-02 19:06:45.058 | INFO     | __main__:run:695 -   KEEP (score 0.490 > previous 0.000)
+2026-04-02 19:06:45.508 | INFO     | __main__:run:587 - ── Round 2/5 [strategy=structured_analysis codex:medium] ──
+2026-04-02 19:08:32.530 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for packages/ux-lab/src/hooks/usePostureData.ts, trying complete file
+2026-04-02 19:08:32.530 | INFO     | apply:apply_file_blocks:256 -   Wrote: packages/ux-lab/src/hooks/usePostureData.ts (10254 bytes)
+2026-04-02 19:08:32.530 | INFO     | __main__:run:651 -   Applied 1 files: ['packages/ux-lab/src/hooks/usePostureData.ts']
+2026-04-02 19:08:35.608 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-02 19:08:35.647 | INFO     | __main__:git_revert_to:166 - Reverted 1 files to 2b7f6952 (removed 0 new)
+2026-04-02 19:08:35.647 | INFO     | __main__:run:700 -   DISCARD (score 0.490 <= best 0.490)
+2026-04-02 19:08:36.459 | INFO     | __main__:run:584 - ── Round 3/5 [strategy=simplify temp=0.3↑ codex:high] ──
+2026-04-02 19:10:34.577 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for packages/ux-lab/src/hooks/usePostureData.ts, trying complete file
+2026-04-02 19:10:34.578 | INFO     | apply:apply_file_blocks:256 -   Wrote: packages/ux-lab/src/hooks/usePostureData.ts (9624 bytes)
+2026-04-02 19:10:34.578 | INFO     | __main__:run:651 -   Applied 1 files: ['packages/ux-lab/src/hooks/usePostureData.ts']
+2026-04-02 19:10:37.278 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-02 19:10:37.314 | INFO     | __main__:git_revert_to:166 - Reverted 1 files to 2b7f6952 (removed 0 new)
+2026-04-02 19:10:37.314 | INFO     | __main__:run:700 -   DISCARD (score 0.490 <= best 0.490)
+2026-04-02 19:10:37.804 | INFO     | __main__:run:584 - ── Round 4/5 [strategy=escalate temp=0.4↑ claude:high] ──
+2026-04-02 19:10:37.805 | WARNING  | __main__:run:606 - Strategy: ESCALATE — diagnosis written to 1.diagnosis.json
+2026-04-02 19:10:37.806 | INFO     | __main__:run:770 - === RESULT: FAIL | score=0.490 | 3 rounds ===
+2026-04-02 19:10:37.834 | INFO     | apply:generate_hunk_review:531 - Review with: hunk patch /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775171070/1.hunk.md
+2026-04-02 19:10:37.834 | INFO     | apply:generate_hunk_review:533 -   Or: cd /tmp/cr-wt-1-5aa7vvu_ && hunk diff

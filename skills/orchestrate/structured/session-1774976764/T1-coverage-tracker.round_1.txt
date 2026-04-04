@@ -1,0 +1,106 @@
+### FILE: .pi/skills/monitor-codebase/coverage_tracker.py
+```python
+#!/usr/bin/env python3
+"""Estimate Python test coverage structurally without executing tests."""
+from __future__ import annotations
+
+import ast
+from pathlib import Path
+
+from loguru import logger
+
+_SKIP_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git"}
+_SPARSE_TEST_THRESHOLD = 2
+
+
+def _should_skip(path: Path) -> bool:
+    return any(part in _SKIP_DIRS for part in path.parts)
+
+
+def _is_test_file(path: Path) -> bool:
+    return path.name.startswith("test_") or "tests" in path.parts
+
+
+def _iter_py_files(scan_dirs: list[str], *, include_tests: bool) -> list[Path]:
+    files: list[Path] = []
+    seen: set[Path] = set()
+    for scan_dir in scan_dirs:
+        root = Path(scan_dir).resolve()
+        if not root.exists():
+            logger.warning("Scan directory does not exist: {}", root)
+            continue
+        for path in root.rglob("*.py"):
+            if _should_skip(path) or path in seen:
+                continue
+            if not include_tests and _is_test_file(path):
+                continue
+            seen.add(path)
+            files.append(path)
+    return sorted(files)
+
+
+def _find_test_file(module_path: Path) -> Path | None:
+    candidates = [
+        module_path.with_name(f"test_{module_path.name}"),
+        module_path.parent / "tests" / f"test_{module_path.name}",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _count_test_functions(test_path: Path) -> int:
+    try:
+        tree = ast.parse(test_path.read_text(encoding="utf-8"), filename=str(test_path))
+    except (OSError, SyntaxError, UnicodeDecodeError) as exc:
+        logger.warning("Skipping test count for {}: {}", test_path, exc)
+        return 0
+    return sum(
+        1
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith("test_")
+    )
+
+
+def analyze_coverage(scan_dirs: list[str]) -> dict:
+    """Return structural coverage metrics for Python modules and tests."""
+    modules = _iter_py_files(scan_dirs, include_tests=False)
+    tested_modules = 0
+    total_test_functions = 0
+    sparse_tests: list[dict[str, int]] = []
+    untested: list[dict[str, str]] = []
+
+    for module_path in modules:
+        test_path = _find_test_file(module_path)
+        module_name = module_path.stem
+        if test_path is None:
+            untested.append({"module": module_name, "path": str(module_path)})
+            continue
+
+        tested_modules += 1
+        test_count = _count_test_functions(test_path)
+        total_test_functions += test_count
+        if test_count < _SPARSE_TEST_THRESHOLD:
+            sparse_tests.append({"module": module_name, "test_count": test_count})
+
+    total_modules = len(modules)
+    coverage_pct = round((tested_modules / total_modules) * 100, 2) if total_modules else 0.0
+    test_density = round(total_test_functions / tested_modules, 2) if tested_modules else 0.0
+
+    logger.info(
+        "Coverage scan complete: {} modules, {} tested, {:.2f}% coverage, {:.2f} tests/module",
+        total_modules,
+        tested_modules,
+        coverage_pct,
+        test_density,
+    )
+    return {
+        "total_modules": total_modules,
+        "tested_modules": tested_modules,
+        "coverage_pct": coverage_pct,
+        "test_density": test_density,
+        "untested": sorted(untested, key=lambda item: item["path"]),
+        "sparse_tests": sorted(sparse_tests, key=lambda item: (item["test_count"], item["module"])),
+    }
+```

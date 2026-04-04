@@ -1,0 +1,23 @@
+{
+  "event_type": "self_improvement_round",
+  "timestamp": 1774565628,
+  "project_id": "subagent-final",
+  "task": "table merge",
+  "round": 1,
+  "strategy": "baseline",
+  "backbone": "convnextv2_nano.fcmae_ft_in22k_in1k",
+  "modality": "paired",
+  "f1": 0.8355559560281132,
+  "accuracy": 0.8356164383561644,
+  "wilson_lower": 0.8190228352000449,
+  "diagnosis": "F1 0.836 is 0.064 below gate. Close \u2014 try regularization or ensemble.; Only 365 total samples \u2014 likely insufficient for 0.9 F1",
+  "dogpile_query": "",
+  "hps": {
+    "epochs": 10,
+    "lr": 0.0002,
+    "batch_size": 16,
+    "weight_decay": 0.0001,
+    "dropout": 0.1
+  },
+  "errors": []
+}

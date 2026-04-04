@@ -1,0 +1,24 @@
+{
+  "features": {
+    "rows": 24,
+    "sha256": "7b148add4ee455a28c3f00e47da2d55e16d9d3d4b94602912317826cea5d2630"
+  },
+  "judge": null,
+  "norm": {
+    "bad_rows": 0,
+    "rows": 24,
+    "sha256": "9ec81c1692f76ed1be6e38b79c3fe617b391ce5a2bcef2a7a6c5681724b442c9"
+  },
+  "outputs": {
+    "episodes": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/_out/artifacts/episodes.jsonl",
+    "features": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/_out/artifacts/features.jsonl",
+    "judge_labels": null,
+    "priors_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/_out/priors"
+  },
+  "train": {
+    "global_best_preset": "clarify_once",
+    "judge_labels_used": 0,
+    "unique_presets": 1,
+    "users": 3
+  }
+}

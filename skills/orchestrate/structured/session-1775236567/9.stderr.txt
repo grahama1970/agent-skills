@@ -1,0 +1,5 @@
+2026-04-03 13:19:05.165 | INFO     | __main__:run:526 - === CODE-RUNNER v2: Family flyout panel — drill into controls for selected family ===
+2026-04-03 13:19:05.165 | INFO     | __main__:run:527 -   Backend: codex
+2026-04-03 13:19:05.166 | INFO     | __main__:run:528 -   DoD: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDash
+2026-04-03 13:19:05.166 | INFO     | __main__:run:529 -   Max rounds: 5
+2026-04-03 13:19:05.168 | ERROR    | __main__:run:548 - Another code-runner is already running in /home/graham/workspace/experiments/pi-mono. Aborting.

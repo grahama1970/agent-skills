@@ -1,0 +1,117 @@
+{
+  "approach": "create-evidence-case",
+  "agreement": 0.5,
+  "cases": 10,
+  "results": [
+    {
+      "key": "1183163524",
+      "expected": "PASS",
+      "verdict": "not_satisfied",
+      "mapped": "FAIL",
+      "match": false,
+      "score": 0.0,
+      "grade": "F",
+      "gates": "0/1",
+      "latency": 11.1
+    },
+    {
+      "key": "1122196280",
+      "expected": "PASS",
+      "verdict": "inconclusive",
+      "mapped": "PARTIAL",
+      "match": false,
+      "score": 0.25,
+      "grade": "C",
+      "gates": "1/2",
+      "latency": 16.4
+    },
+    {
+      "key": "qra__run-recovery-verify__2086029845",
+      "expected": "PASS",
+      "verdict": "not_satisfied",
+      "mapped": "FAIL",
+      "match": false,
+      "score": 0.0,
+      "grade": "F",
+      "gates": "0/1",
+      "latency": 11.0
+    },
+    {
+      "key": "qra__run-recovery-verify__2085979839",
+      "expected": "PASS",
+      "verdict": "not_satisfied",
+      "mapped": "FAIL",
+      "match": false,
+      "score": 0.0,
+      "grade": "F",
+      "gates": "0/1",
+      "latency": 11.0
+    },
+    {
+      "key": "16562",
+      "expected": "PARTIAL",
+      "verdict": "inconclusive",
+      "mapped": "PARTIAL",
+      "match": true,
+      "score": 0.25,
+      "grade": "C",
+      "gates": "1/2",
+      "latency": 16.5
+    },
+    {
+      "key": "qra__run-recovery-verify__2085929758",
+      "expected": "PARTIAL",
+      "verdict": "not_satisfied",
+      "mapped": "FAIL",
+      "match": false,
+      "score": 0.0,
+      "grade": "F",
+      "gates": "0/1",
+      "latency": 11.1
+    },
+    {
+      "key": "qra__run-recovery-verify__2086079845",
+      "expected": "PARTIAL",
+      "verdict": "inconclusive",
+      "mapped": "PARTIAL",
+      "match": true,
+      "score": 0.25,
+      "grade": "C",
+      "gates": "1/2",
+      "latency": 16.7
+    },
+    {
+      "key": "14992",
+      "expected": "FAIL",
+      "verdict": "not_satisfied",
+      "mapped": "FAIL",
+      "match": true,
+      "score": 0.0,
+      "grade": "F",
+      "gates": "0/1",
+      "latency": 10.9
+    },
+    {
+      "key": "14993",
+      "expected": "FAIL",
+      "verdict": "not_satisfied",
+      "mapped": "FAIL",
+      "match": true,
+      "score": 0.0,
+      "grade": "F",
+      "gates": "0/1",
+      "latency": 11.2
+    },
+    {
+      "key": "2085921413",
+      "expected": "FAIL",
+      "verdict": "not_satisfied",
+      "mapped": "FAIL",
+      "match": true,
+      "score": 0.0,
+      "grade": "F",
+      "gates": "0/1",
+      "latency": 11.0
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+[project]
+name = "monitor-pdfs"
+version = "0.1.0"
+description = "Monitor PDF harvesting and processing"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "loguru>=0.7.0,<0.7.3",
+]

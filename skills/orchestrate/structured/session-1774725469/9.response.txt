@@ -1,0 +1,18 @@
+Implemented `POST /api/projects/classifier-lab/rerun/:id` in [index.ts](/home/node/workspace/packages/ux-lab/server/index.ts:1578).
+What was added:
+- Switchboard endpoint constant: [index.ts](/home/node/workspace/packages/ux-lab/server/index.ts:1159)
+- Manifest generator mirroring `concurrent_run.py generate_manifest()` shape/fields: [index.ts](/home/node/workspace/packages/ux-lab/server/index.ts:1196)
+- Data-dir resolver (from project `data.json` or config YAML fallbacks): [index.ts](/home/node/workspace/packages/ux-lab/server/index.ts:1268)
+- Rerun route that:
+- accepts `{ backbones, gate_f1, max_rounds, max_train_samples, modality, task }`
+- builds one manifest per backbone
+- submits each to `http://localhost:7890/run/start`
+- returns `{ submitted: true, run_ids: [] }`
+Validation run:
+- `npm run check`: passed (repo has unrelated info-level notices only).
+- DoD grep:
+- `grep -c 'rerun' /home/node/workspace/packages/ux-lab/server/index.ts` => `1` (meets “at least 1”).
+- Your exact `/home/graham/...` path does not exist in this environment.
+- Requested test command:
+- `test-lab/run.sh ...` failed (script not found at that relative path here).
+- Retried via local script path; verifier runs but fails with pre-existing Python style findings (`Missing module docstring`, 126/135 passes), unrelated to this TS endpoint change.

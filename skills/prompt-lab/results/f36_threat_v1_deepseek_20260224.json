@@ -1,0 +1,259 @@
+{
+  "prompt_template": "f36_threat_artifact_v1",
+  "ground_truth": "/home/graham/workspace/experiments/pi-mono/.pi/skills/prompt-lab/ground_truth/f36_threat_analysis.json",
+  "model_cascade": [
+    "deepseek-ai/DeepSeek-V3",
+    "Qwen/Qwen3-32B",
+    "deepseek-ai/DeepSeek-R1-0528"
+  ],
+  "timestamp": "2026-02-24T15:36:12.160296",
+  "cases": {
+    "threat-actors-f36-alis": {
+      "model_used": "Qwen/Qwen3-32B",
+      "output": {
+        "type": "ThreatActorData",
+        "actors": [
+          {
+            "id": "apt-41",
+            "level": "apt",
+            "name": "APT-41 (Double Dragon)",
+            "capabilities": [
+              "supply chain compromise",
+              "defense industrial base targeting",
+              "exploit VPN appliances",
+              "living-off-the-land techniques"
+            ],
+            "targetedControls": [
+              "AC-17",
+              "SC-7",
+              "SI-4"
+            ],
+            "probability": 0.2,
+            "capability": 9,
+            "intent": 8,
+            "targetSegments": [
+              "ground",
+              "user"
+            ]
+          },
+          {
+            "id": "sandworm",
+            "level": "nation-state",
+            "name": "Sandworm (Unit 74455, GRU)",
+            "capabilities": [
+              "destructive malware capability",
+              "supply chain disruption",
+              "industrial control systems targeting"
+            ],
+            "targetedControls": [
+              "SA-12",
+              "SI-7",
+              "CP-9"
+            ],
+            "probability": 0.15,
+            "capability": 9,
+            "intent": 7,
+            "targetSegments": [
+              "ground",
+              "link"
+            ]
+          },
+          {
+            "id": "fin7",
+            "level": "organized-crime",
+            "name": "FIN7 (Carbanak)",
+            "capabilities": [
+              "ransomware attacks",
+              "targeting administrative and financial systems"
+            ],
+            "targetedControls": [
+              "AC-2",
+              "IA-5",
+              "MP-4"
+            ],
+            "probability": 0.3,
+            "capability": 6,
+            "intent": 4,
+            "targetSegments": [
+              "user",
+              "ground"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "type": "ThreatActorData",
+        "required_fields": [
+          "actors"
+        ],
+        "actor_count_min": 3,
+        "required_actor_ids": [
+          "apt-41",
+          "sandworm",
+          "fin7"
+        ],
+        "required_levels": [
+          "nation-state",
+          "organized-crime"
+        ]
+      },
+      "ok": true,
+      "error": null
+    },
+    "threat-tactics-f36-supply-chain": {
+      "model_used": "Qwen/Qwen3-32B",
+      "output": {
+        "type": "ThreatTacticData",
+        "tactics": [
+          {
+            "id": "TA0001",
+            "name": "Initial Access",
+            "shortName": "INIT",
+            "techniques": [
+              {
+                "id": "TA1190",
+                "name": "Exploit Public-Facing Application",
+                "severity": "critical",
+                "score": 88,
+                "mitigatedBy": [
+                  "SC-7",
+                  "SI-2"
+                ],
+                "hasGap": false
+              },
+              {
+                "id": "TA1195",
+                "name": "Supply Chain Compromise",
+                "severity": "critical",
+                "score": 95,
+                "mitigatedBy": [
+                  "SA-12",
+                  "SI-7"
+                ],
+                "hasGap": false
+              },
+              {
+                "id": "TA1566",
+                "name": "Phishing",
+                "severity": "high",
+                "score": 65,
+                "mitigatedBy": [
+                  "AT-2",
+                  "SI-8"
+                ],
+                "hasGap": false
+              },
+              {
+                "id": "TA1200",
+                "name": "Hardware Additions",
+                "severity": "high",
+                "score": 72,
+                "mitigatedBy": [],
+                "hasGap": true
+              }
+            ]
+          },
+          {
+            "id": "TA0002",
+            "name": "Execution",
+            "shortName": "EXEC",
+            "techniques": [
+              {
+                "id": "TA1059",
+                "name": "Command and Scripting Interpreter",
+                "severity": "high",
+                "score": 60,
+                "mitigatedBy": [
+                  "CM-7",
+                  "SI-3"
+                ],
+                "hasGap": false
+              },
+              {
+                "id": "TA1203",
+                "name": "Exploitation for Client Execution",
+                "severity": "critical",
+                "score": 85,
+                "mitigatedBy": [
+                  "SI-2"
+                ],
+                "hasGap": false
+              }
+            ]
+          },
+          {
+            "id": "TA0003",
+            "name": "Persistence",
+            "shortName": "PERS",
+            "techniques": [
+              {
+                "id": "TA-CUST-001",
+                "name": "Implant in Build System",
+                "severity": "critical",
+                "score": 92,
+                "mitigatedBy": [
+                  "CM-3",
+                  "SI-7"
+                ],
+                "hasGap": false
+              },
+              {
+                "id": "TA-CUST-002",
+                "name": "Compromised ALIS Update Channel",
+                "severity": "critical",
+                "score": 90,
+                "mitigatedBy": [],
+                "hasGap": true
+              }
+            ]
+          },
+          {
+            "id": "TA0010",
+            "name": "Exfiltration",
+            "shortName": "EXFIL",
+            "techniques": [
+              {
+                "id": "TA1041",
+                "name": "Exfiltration Over C2 Channel",
+                "severity": "critical",
+                "score": 88,
+                "mitigatedBy": [
+                  "SC-8",
+                  "SI-4"
+                ],
+                "hasGap": false
+              },
+              {
+                "id": "TA1052",
+                "name": "Exfiltration via Physical Medium",
+                "severity": "high",
+                "score": 70,
+                "mitigatedBy": [
+                  "MP-7",
+                  "PE-3"
+                ],
+                "hasGap": false
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "type": "ThreatTacticData",
+        "required_fields": [
+          "tactics"
+        ],
+        "tactic_count_min": 4,
+        "required_tactic_ids": [
+          "TA0001",
+          "TA0002",
+          "TA0003",
+          "TA0010"
+        ],
+        "gap_techniques_min": 2
+      },
+      "ok": true,
+      "error": null
+    }
+  }
+}

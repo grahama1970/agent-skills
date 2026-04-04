@@ -1,0 +1,138 @@
+{
+  "generated_at": 1774287795.3233745,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774285499",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create augmentation prompt template in /prompt-lab",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774285499/1.response.txt",
+      "error": "",
+      "started_at": 1774285499.9615197,
+      "finished_at": 1774285847.076848,
+      "subagent_task_id": "e5291d78",
+      "subagent_port": 8627
+    },
+    {
+      "id": "2",
+      "title": "Generate ~250 variations per action type via Gemini (8 batches)",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774285499/2.response.txt",
+      "error": "",
+      "started_at": 1774285847.0774431,
+      "finished_at": 1774286344.9171336,
+      "subagent_task_id": "824b506a",
+      "subagent_port": 8627
+    },
+    {
+      "id": "3",
+      "title": "Validate generated QuerySpecs \u2014 reject invalid JSON or unknown actions",
+      "lane": "1",
+      "runner": "local",
+      "backend": "local",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "2"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774285499/3.stdout.txt",
+      "error": "",
+      "started_at": 1774286344.9178588,
+      "finished_at": 1774286344.9717517,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4",
+      "title": "Ingest validated pairs to ArangoDB via /learn",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774285499/4.response.txt",
+      "error": "",
+      "started_at": 1774286344.972202,
+      "finished_at": 1774286452.0346138,
+      "subagent_task_id": "ffe17825",
+      "subagent_port": 8624
+    },
+    {
+      "id": "5",
+      "title": "Apply Intent taxonomy tags via /taxonomy/batch-tag",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774285499/5.response.txt",
+      "error": "",
+      "started_at": 1774286452.0351691,
+      "finished_at": 1774286722.5705855,
+      "subagent_task_id": "cd8f4db8",
+      "subagent_port": 8622
+    },
+    {
+      "id": "6",
+      "title": "Create similar_to edges between docs sharing Intent tags",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774285499/6.response.txt",
+      "error": "",
+      "started_at": 1774286722.5710728,
+      "finished_at": 1774287754.5271072,
+      "subagent_task_id": "55368183",
+      "subagent_port": 8622
+    },
+    {
+      "id": "7",
+      "title": "Verification: novel phrasing accuracy test (50 held-out queries)",
+      "lane": "2",
+      "runner": "local",
+      "backend": "local",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "6"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774285499/7.stdout.txt",
+      "error": "",
+      "started_at": 1774287754.5278616,
+      "finished_at": 1774287795.3233125,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

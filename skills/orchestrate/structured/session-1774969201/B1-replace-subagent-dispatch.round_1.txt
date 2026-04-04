@@ -1,0 +1,115 @@
+Now I have everything I need. Here's the diff:
+
+```diff
+--- a/.pi/skills/monitor-codebase/run.sh
++++ b/.pi/skills/monitor-codebase/run.sh
+@@ -348,58 +348,49 @@
+   # Step 10: Fix dispatch via /agent-inbox → /subagent-service (Docker)
++  # Step 10: Fix dispatch via skills-ci generate_fix_plan → /orchestrate
+   if [[ "$do_fix" == "true" && "$total_issues" -gt 0 ]]; then
+-    echo "[10/10] Dispatching fix via /agent-inbox → /subagent-service ($total_issues issues)..."
+-    local task_file="$ARTIFACTS_DIR/${project_name}_0N_FIX_TASKS.md"
+-
+-    # Build violation summary for the task file
+-    local violation_summary
+-    violation_summary=$(python3 -c "
+-import json
+-qc = json.load(open('$qc_file'))
+-bp = json.loads('$bp_violations') if '$bp_violations' != '[]' else []
+-lines = []
+-for v in bp:
+-    lines.append(json.dumps(v))
+-for v in qc.get('violations', [])[:20]:
+-    lines.append(json.dumps(v))
+-print('\n'.join(lines))
+-" 2>/dev/null || echo "$bp_violations")
+-
+-    cat > "$task_file" <<TASKEOF
+-# Fix Codebase Violations: $project_name
+-
+-## Context
+-monitor-codebase scan found $total_issues issues ($summary_text).
+-
+-## Violations
+-\`\`\`json
+-$violation_summary
+-\`\`\`
+-
+-## Instructions
+-1. Fix each violation following the rules in the relevant \`best-practices-*\` SKILL.md.
+-2. For banned imports: \`logging\` → \`loguru\`, \`requests\` → \`httpx\`, \`argparse\` → \`typer\`.
+-3. For inline prompts: move to /prompt-lab for versioning and evaluation.
+-4. For handwritten tests: replace with /test-lab blind tests.
+-5. For regex classifiers: use /taxonomy or /extract-entities.
+-6. Code must comply with best-practices-python/react/kde/skills/streamdeck as applicable.
+-
+-## Blind Evaluation
+-This task uses the Blind Evaluation Gate. The coding agent:
+-- MUST NOT read test files directly
+-- Will receive only: rule category, natural language failure description, attempt count
+-- Has up to 5 retries before escalation
+-TASKEOF
+-
+-    # Research fix strategy
+-    run_skill dogpile search "fix common code violations: $summary_text" --no-interactive 2>/dev/null || true
+-
+-    # Dispatch via agent-inbox
+-    run_skill agent-inbox send \
+-      --to "$project_name" \
+-      --type bug \
+-      --priority normal \
+-      --context-file "$task_file" \
+-      "Fix $total_issues violations found by monitor-codebase ($summary_text)" 2>/dev/null || true
+-
+-    echo "Fix task dispatched to $project_name"
++    echo "[10/10] Fixing $total_issues violations via skills-ci → orchestrate..."
++
++    # 10a: Safety commit — revert point before any automated fixes
++    local safety_msg="safety: pre-autofix checkpoint (monitor-codebase $TIMESTAMP)"
++    if git -C "$project_path" diff --quiet && git -C "$project_path" diff --cached --quiet; then
++      echo "  Working tree clean, no safety commit needed"
++    else
++      git -C "$project_path" add -A && \
++        git -C "$project_path" commit -m "$safety_msg" --no-verify 2>/dev/null || true
++      echo "  Safety commit created"
++    fi
++
++    # 10b: Generate YAML fix plan from skills-ci violations
++    local fix_plan="$ARTIFACTS_DIR/${project_name}_0N_FIX_${TIMESTAMP}.yaml"
++    local gen_fix_py="$SKILLS_DIR/skills-ci/generate_fix_plan.py"
++    if [[ ! -f "$gen_fix_py" ]]; then
++      echo "  ERROR: generate_fix_plan.py not found at $gen_fix_py" >&2
++    else
++      (cd "$SKILLS_DIR/skills-ci" && uv run python "$gen_fix_py" \
++        --report "$report_file" \
++        --output "$fix_plan") 2>&1 || true
++
++      # 10c: Execute fix plan via /orchestrate
++      if [[ -f "$fix_plan" ]]; then
++        echo "  Fix plan generated: $fix_plan"
++        STEP_TIMEOUT=600 run_skill_timed orchestrate run "$fix_plan" 2>&1 || true
++
++        # 10d: Commit any fixes made
++        if ! git -C "$project_path" diff --quiet || ! git -C "$project_path" diff --cached --quiet; then
++          git -C "$project_path" add -A && \
++            git -C "$project_path" commit -m "fix: auto-fix $total_issues violations (monitor-codebase $TIMESTAMP)" --no-verify 2>/dev/null || true
++          echo "  Fixes committed"
++        else
++          echo "  No changes produced by orchestrate"
++        fi
++      else
++        echo "  No fix plan generated (estate may be clean or all Tier 1/3)"
++      fi
++    fi
+   fi
+ }
+```
+
+Key changes:
+
+- **10a**: Creates a safety git commit as a revert point before touching anything
+- **10b**: Runs `generate_fix_plan.py` with `--report` pointing to the scan's report file and `--output` to an artifacts-dir YAML
+- **10c**: Passes the generated YAML to `orchestrate run` with a 10-minute timeout
+- **10d**: Commits any changes orchestrate made
+- Only triggers when `--fix` is passed (the `do_fix == "true"` guard is preserved)
+- Removed all agent-inbox/subagent-service/dogpile/task-file-markdown machinery

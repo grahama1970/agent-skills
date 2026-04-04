@@ -1,0 +1,16 @@
+{
+  "project_id": "news-topic-classification",
+  "task": "news topic classification",
+  "modality": "text",
+  "best_backbone": "distilbert-base-uncased",
+  "best_f1": 0.8902,
+  "gate_threshold": 0.90,
+  "gap": 0.0098,
+  "total_rounds": 3,
+  "plateau_detected": false,
+  "diagnosis": "Task: news topic classification | Modality: text | Best F1: 0.890 | Rounds: 3 | Strategies tried: ['baseline', 'lr_halved_more_epochs', 'augmentation']",
+  "strategies_exhausted": ["baseline", "lr_halved_more_epochs", "augmentation"],
+  "dogpile_query": "Classifier training FAILED after 3 rounds. Best: distilbert-base-uncased F1=0.890 (need 0.90, gap=0.010). Generate hypotheses to close the gap.",
+  "dogpile_hypotheses": "### Hypothesis 1: Larger Model (bert-base-uncased)\n**What:** Replace distilbert-base-uncased with bert-base-uncased (110M vs 66M params). The 0.010 gap suggests the model is capacity-limited on edge cases.\n**Why:** DistilBERT sacrifices 3-5% F1 for speed on nuanced multi-class text tasks. Full BERT consistently closes small gaps.\n**Expected lift:** +0.015-0.025 F1\n\n### Hypothesis 2: Label Smoothing (0.1)\n**What:** Apply label smoothing with alpha=0.1 to the cross-entropy loss. Currently using hard labels.\n**Why:** At F1=0.890, the model is likely overconfident on boundary samples. Label smoothing regularizes decision boundaries and improves calibration on ambiguous news articles.\n**Expected lift:** +0.005-0.015 F1\n\n### Hypothesis 3: Weighted Sampling for Class Imbalance\n**What:** Apply inverse-frequency class weights to the sampler. AG News has slight imbalance between World/Sports vs Sci/Tech/Business.\n**Why:** Macro F1 penalizes weak classes. If Sci/Tech has fewer samples, weighted sampling ensures equal representation per batch.\n**Expected lift:** +0.005-0.010 F1\n\n### Hypothesis 4: Learning Rate Warmup + Cosine Decay\n**What:** Add 10% warmup steps with cosine annealing instead of constant LR. Current LR schedule may overshoot fine-tuning optima.\n**Why:** Transformers are sensitive to early LR — warmup prevents catastrophic forgetting of pretrained features. Cosine decay finds flatter minima.\n**Expected lift:** +0.003-0.008 F1\n\n### Hypothesis 5: Sentence-Transformers Backbone\n**What:** Try sentence-transformers/all-MiniLM-L6-v2 as the feature extractor with a classification head. Different embedding space may capture topic semantics better.\n**Why:** Sentence-level embeddings are trained on diverse semantic similarity tasks — may generalize better across news topic boundaries than token-level BERT.\n**Expected lift:** +0.010-0.020 F1",
+  "timestamp": "2026-03-29T10:50:00Z"
+}

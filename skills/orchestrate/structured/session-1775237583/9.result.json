@@ -1,0 +1,48 @@
+{
+  "task_id": "9",
+  "title": "Family flyout panel — drill into controls for selected family",
+  "status": "pass",
+  "rounds": 1,
+  "best_score": 1.0,
+  "dod_passed": true,
+  "backend": "codex",
+  "best_commit": "dd0b4735",
+  "round_details": [
+    {
+      "round": 1,
+      "task_id": "9",
+      "score": 1.0,
+      "prev_score": 0,
+      "delta": 1.0,
+      "dod_passed": true,
+      "status": "keep",
+      "strategy": "direct_fix",
+      "error_count": 0,
+      "error_severity": "unknown",
+      "errors_by_type": {},
+      "lint_violations": 0,
+      "bp_violations": [],
+      "error_evidence": {
+        "failure_type": "generic",
+        "summary": "PASS: 100% data-qid coverage",
+        "primary_location": null,
+        "root_cause_lines": [],
+        "failing_tests": []
+      },
+      "stdout": "data-qid coverage: 5/5 (100%)\n\nPASS: 100% data-qid coverage\n",
+      "stderr": "",
+      "written_files": [
+        "packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"
+      ],
+      "commit": "dd0b4735",
+      "backend": "codex",
+      "reasoning": "medium",
+      "temperature": 0.2,
+      "timestamp": 1775237764.764799,
+      "llm_summary": "Implemented family slide-over flyout in PostureDashboard with selected family drill-down table, close/escape behavior, navigation callbacks, and required telemetry attributes/actions.",
+      "llm_approach": "direct_fix",
+      "zero_write_reason": ""
+    }
+  ],
+  "preflight_errors": []
+}

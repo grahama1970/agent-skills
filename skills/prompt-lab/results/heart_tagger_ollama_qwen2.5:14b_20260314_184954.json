@@ -1,0 +1,275 @@
+{
+  "model": "ollama/qwen2.5:14b",
+  "timestamp": "2026-03-14T18:49:54.125223",
+  "macro_f1": 0.0,
+  "avg_latency_ms": 0.0,
+  "per_class": {
+    "anger": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "fear": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "joy": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "sadness": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "trust": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  "per_case": [
+    {
+      "id": "seed_001",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_002",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_003",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_004",
+      "predicted": [],
+      "expected": [
+        "fear"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_005",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_006",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_007",
+      "predicted": [],
+      "expected": [
+        "joy"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_008",
+      "predicted": [],
+      "expected": [
+        "fear"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_009",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_010",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_011",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_012",
+      "predicted": [],
+      "expected": [
+        "fear"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_013",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_014",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_015",
+      "predicted": [],
+      "expected": [
+        "joy"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_016",
+      "predicted": [],
+      "expected": [
+        "fear"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_017",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_018",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_019",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_020",
+      "predicted": [],
+      "expected": [
+        "fear"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_021",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_022",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_023",
+      "predicted": [],
+      "expected": [
+        "anger"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_024",
+      "predicted": [],
+      "expected": [
+        "anger"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_025",
+      "predicted": [],
+      "expected": [
+        "anger"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_026",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_027",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_028",
+      "predicted": [],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_029",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_030",
+      "predicted": [],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    }
+  ]
+}

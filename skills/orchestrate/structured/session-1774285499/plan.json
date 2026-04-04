@@ -1,0 +1,225 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "Binary Explorer Intent Training Augmentation to 2K",
+    "goal": "Generate ~2000 interaction\u2192QuerySpec training pairs by sending BinaryExplorerView.tsx + existing examples to Gemini, then ingest to ArangoDB with Intent taxonomy tags",
+    "plan_type": "code",
+    "created": "2026-03-23",
+    "primary_persona": {
+      "name": "Graham Anderson",
+      "role": "Architect \u2014 needs robust NL\u2192UI command resolution for Binary Explorer",
+      "source": ".pi/agents/graham-anderson/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 2
+  },
+  "capability_overlap": [
+    "/memory recall returned: 77 intent-training-v2 docs exist, Intent taxonomy operational",
+    "Checked /scillm \u2014 supports batch LLM inference for augmentation",
+    "Checked /prompt-lab \u2014 will use template for augmentation prompt",
+    "Checked /taxonomy \u2014 /taxonomy/batch-tag endpoint exists for bulk tagging"
+  ],
+  "questions_blockers": [
+    "None"
+  ],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Prompt + Generation"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Validation + Ingestion"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Tagging + Verification"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create augmentation prompt template in /prompt-lab",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Create .pi/skills/prompt-lab/prompts/intent_augmentation_v1.txt",
+        "The prompt must include:",
+        "  1. The full list of UI actions (VIEW_ALL, ZOOM_IN, SELECT_NODE, SET_PERSPECTIVE, TOGGLE_PROGRESSIVE, SET_LAYOUT, QUERY, EXPAND)",
+        "  2. The QuerySpec JSON schema with all fields (action, ui_action, target_node_id, expand_hops, perspective)",
+        "  3. The 8 Intent taxonomy tags and what they mean",
+        "  4. A summary of Binary Explorer UX capabilities extracted from BinaryExplorerView.tsx",
+        "  5. 3-5 examples per action type showing the input\u2192QuerySpec mapping",
+        "  6. Instructions: generate 25 diverse linguistic variations for each action type",
+        "  7. Variation types: formal, casual, typos, imperative, question form, non-native phrasing, abbreviated, verbose",
+        "  8. Each variation must include the full QuerySpec JSON \u2014 not just the text",
+        "  9. Output format: JSONL (one JSON object per line: {problem: string, solution: QuerySpec})",
+        "  10. Target node IDs should vary across real binary features: droid, daemon, tunnel, mcp, authenticate, cancel_mcp_auth, add_mcp_server, etc."
+      ],
+      "tests": [
+        "test -f .pi/skills/prompt-lab/prompts/intent_augmentation_v1.txt",
+        "test-lab/run.sh verify-task 1 .pi/skills/prompt-lab/prompts/ --domain prompts"
+      ],
+      "definition_of_done": {
+        "command": "wc -c .pi/skills/prompt-lab/prompts/intent_augmentation_v1.txt",
+        "assertion": "File exists and is >2000 chars"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Generate ~250 variations per action type via Gemini (8 batches)",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "For each of the 8 action types (VIEW_ALL, ZOOM_IN, SELECT_NODE, SET_PERSPECTIVE, TOGGLE_PROGRESSIVE, SET_LAYOUT, QUERY, EXPAND):",
+        "  1. Load the prompt template from /prompt-lab",
+        "  2. Fill in the action type, 3-5 base examples, BinaryExplorerView.tsx UX summary",
+        "  3. Call Gemini 2.0 Flash via /scillm (model: text-gemini) with max_tokens: 16000",
+        "  4. Parse the JSONL response \u2014 validate each line is valid JSON with problem + solution",
+        "  5. Write to /tmp/intent_augmentation_{action}.jsonl",
+        "  6. Target: 250 lines per file, 2000 total across all 8 files",
+        "Use the Gemini API directly (GEMINI_API_KEY in .env) if scillm times out",
+        "Include the actual React component descriptions so Gemini understands what each action does in the UI"
+      ],
+      "tests": [
+        "ls /tmp/intent_augmentation_*.jsonl | wc -l",
+        "cat /tmp/intent_augmentation_*.jsonl | wc -l"
+      ],
+      "definition_of_done": {
+        "command": "cat /tmp/intent_augmentation_*.jsonl 2>/dev/null | wc -l",
+        "assertion": "At least 1500 lines total across all files"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Validate generated QuerySpecs \u2014 reject invalid JSON or unknown actions",
+      "lane": "1",
+      "runner": "local",
+      "backend": "local",
+      "mode": "one_shot",
+      "depends_on": [
+        "2"
+      ],
+      "command": "python3 -c \"\nimport json, sys\nvalid_actions = {'UI_COMMAND', 'QUERY', 'CLARIFY', 'NO_MATCH'}\nvalid_ui = {'VIEW_ALL', 'ZOOM_IN', 'ZOOM_OUT', 'SELECT_NODE', 'SET_PERSPECTIVE', 'TOGGLE_PROGRESSIVE', 'SET_LAYOUT', 'EXPAND'}\nok, bad = 0, 0\nwith open('/tmp/intent_augmentation_validated.jsonl', 'w') as out:\n    import glob\n    for f in sorted(glob.glob('/tmp/intent_augmentation_*.jsonl')):\n        if 'validated' in f: continue\n        for line in open(f):\n            try:\n                d = json.loads(line.strip())\n                prob = d.get('problem', '')\n                sol = d.get('solution', {})\n                if isinstance(sol, str): sol = json.loads(sol)\n                if not prob or not isinstance(sol, dict): bad += 1; continue\n                if sol.get('action') not in valid_actions: bad += 1; continue\n                if sol.get('ui_action') and sol['ui_action'] not in valid_ui: bad += 1; continue\n                out.write(json.dumps({'problem': prob, 'solution': sol}) + '\\n')\n                ok += 1\n            except: bad += 1\nprint(f'Valid: {ok}, Invalid: {bad}, Total: {ok+bad}')\n\"\n",
+      "tests": [
+        "test -f /tmp/intent_augmentation_validated.jsonl"
+      ],
+      "definition_of_done": {
+        "command": "wc -l /tmp/intent_augmentation_validated.jsonl",
+        "assertion": "At least 1200 valid lines"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Ingest validated pairs to ArangoDB via /learn",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "3"
+      ],
+      "implementation": [
+        "Read /tmp/intent_augmentation_validated.jsonl",
+        "For each line, call the memory daemon /learn via httpx Unix socket:",
+        "  POST /learn {problem: text, solution: JSON.stringify(queryspec), tags: ['intent-training-v2', 'scope:binary-explorer', 'ui-interaction', 'synthetic-v1', 'category:{ui_action}'], scope: 'binary-explorer'}",
+        "Use batch concurrency of 4 (asyncio.gather) to speed up ingestion",
+        "Log progress every 100 docs",
+        "Handle errors gracefully \u2014 skip failed docs, report count at end"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 4 /tmp/ --domain python"
+      ],
+      "definition_of_done": {
+        "command": "python3 -c \"import httpx; t=httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock'); c=httpx.Client(transport=t, base_url='http://localhost', timeout=15); r=c.post('/recall', json={'q':'intent binary explorer', 'k':1, 'scope':'binary-explorer'}); print(len(r.json().get('items',[])))\"",
+        "assertion": "Returns >500 items"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Apply Intent taxonomy tags via /taxonomy/batch-tag",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "4"
+      ],
+      "implementation": [
+        "Query all intent-training-v2 docs that don't have intent tags yet",
+        "For each doc, determine Intent tags from the QuerySpec:",
+        "  VIEW_ALL/ZOOM_IN/ZOOM_OUT \u2192 Navigate",
+        "  SELECT_NODE \u2192 Select (if no expand_hops), Navigate + Expand (if expand_hops)",
+        "  SET_PERSPECTIVE \u2192 Filter",
+        "  TOGGLE_PROGRESSIVE \u2192 Filter + Layout",
+        "  SET_LAYOUT \u2192 Layout",
+        "  QUERY \u2192 Analyze (default), Compare (if 2+ entities), Trace (if keywords match)",
+        "Batch tag via POST /taxonomy/batch-tag with intent field",
+        "Use httpx Unix socket to memory daemon"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 5 /tmp/ --domain python"
+      ],
+      "definition_of_done": {
+        "command": "python3 -c \"import httpx; t=httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock'); c=httpx.Client(transport=t, base_url='http://localhost', timeout=15); r=c.get('/taxonomy/coverage', params={'collection':'lessons'}); d=r.json(); print(d.get('intent',{}).get('tagged',0))\"",
+        "assertion": "At least 1000 docs tagged with intent"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Create similar_to edges between docs sharing Intent tags",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "5"
+      ],
+      "implementation": [
+        "Group all intent-tagged docs by their Intent tags",
+        "For each tag group, create similar_to edges between docs (weight 0.7)",
+        "Use POST /add-edges endpoint via httpx Unix socket",
+        "Cap at 20 edges per doc to avoid O(n^2) explosion on large groups",
+        "Log: total edges created, edges per tag"
+      ],
+      "tests": [
+        "python3 -c \"import httpx; t=httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock'); c=httpx.Client(transport=t, base_url='http://localhost', timeout=15); r=c.post('/list', json={'collection':'lesson_edges','limit':1,'filters':{'edge_type':'similar_to'}}); print('edges:', r.json().get('total',0))\"",
+        "test-lab/run.sh verify-task 6 /tmp/ --domain data"
+      ],
+      "definition_of_done": {
+        "command": "python3 -c \"import httpx; t=httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock'); c=httpx.Client(transport=t, base_url='http://localhost', timeout=15); r=c.post('/list', json={'collection':'lesson_edges','limit':1,'filters':{'edge_type':'similar_to'}}); print(r.json().get('total',0))\"",
+        "assertion": "At least 2000 similar_to edges"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Verification: novel phrasing accuracy test (50 held-out queries)",
+      "lane": "2",
+      "runner": "local",
+      "backend": "local",
+      "mode": "one_shot",
+      "depends_on": [
+        "6"
+      ],
+      "command": "python3 -c \"\nimport httpx, json\ntransport = httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock')\nclient = httpx.Client(transport=transport, base_url='http://localhost', timeout=15)\n\n# 50 novel phrasings that should NOT appear in training data\ntests = [\n    ('bring me closer to the auth module', 'ZOOM_IN'),\n    ('i want to see everything at once', 'VIEW_ALL'),\n    ('can you highlight the MCP stuff', 'SELECT_NODE'),\n    ('lets look at this from a security angle', 'SET_PERSPECTIVE'),\n    ('turn off that progressive thing', 'TOGGLE_PROGRESSIVE'),\n    ('arrange nodes by cluster', 'SET_LAYOUT'),\n    ('how does the daemon talk to tunnel', 'QUERY'),\n    ('whats connected to add_mcp_server', 'SELECT_NODE'),\n    ('shrink back out', 'VIEW_ALL'),\n    ('gimme the protocol view', 'SET_PERSPECTIVE'),\n    ('open up the neighbors around droid', 'SELECT_NODE'),\n    ('flip to organic mode', 'SET_LAYOUT'),\n    ('explain what archive_session does', 'QUERY'),\n    ('zero in on the cancel method', 'ZOOM_IN'),\n    ('back to default view please', 'VIEW_ALL'),\n    ('show me just the state machines', 'SET_PERSPECTIVE'),\n    ('dig into the connections from tunnel', 'SELECT_NODE'),\n    ('compare daemon and droid namespaces', 'QUERY'),\n    ('trace how authentication flows', 'QUERY'),\n    ('remember this node for later', 'QUERY'),\n]\n\ncorrect, wrong, missing = 0, 0, 0\nfor q, expected_action in tests:\n    r = client.post('/recall', json={'q': q, 'k': 1, 'scope': 'binary-explorer'})\n    d = r.json()\n    items = [it for it in d.get('items', []) if 'intent-training-v2' in (it.get('tags') or [])]\n    if not items:\n        missing += 1; continue\n    sol = items[0].get('solution', '')\n    if isinstance(sol, str):\n        try: sol = json.loads(sol)\n        except: missing += 1; continue\n    got = sol.get('ui_action', sol.get('action', '?'))\n    if got == expected_action: correct += 1\n    else: wrong += 1\n\ntotal = correct + wrong + missing\naccuracy = correct / total * 100 if total > 0 else 0\nprint(f'Accuracy: {accuracy:.0f}% ({correct}/{total}) \u2014 correct={correct} wrong={wrong} missing={missing}')\nclient.close()\n\"\n",
+      "tests": [
+        "echo 'Manual review of accuracy output'"
+      ],
+      "definition_of_done": {
+        "command": "echo 'Accuracy test completed'",
+        "assertion": "Accuracy >80% on 20 novel phrasings"
+      }
+    }
+  ]
+}

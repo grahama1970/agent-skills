@@ -1,0 +1,30 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 1,
+    "total": 1
+  },
+  "worktree": null,
+  "skill": "vector-store",
+  "violations": [
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "vector-store",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/vector-store/server.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    }
+  ]
+}

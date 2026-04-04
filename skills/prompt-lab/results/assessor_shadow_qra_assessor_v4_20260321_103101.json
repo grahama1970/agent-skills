@@ -1,0 +1,391 @@
+{
+  "prompt": "shadow_qra_assessor_v4",
+  "model": "text",
+  "runs": 3,
+  "accuracy": 0.7,
+  "exact_match": 0.7,
+  "consistency": 1.0,
+  "parse_errors": 0,
+  "results": [
+    {
+      "qra_key": "1183163524",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the specific vulnerability exposed by EX-0016 (Jamming) in the Telestar-12 case, citing specific details from the incident and providing actionable insights into the need for rapid geolocation and counter-jamming capabilities."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses EX-0016 (Jamming) using the specific Telestar-12 case, cites relevant details from the incident, and highlights actionable insights such as the need for rapid geolocation and counter-jamming capabilities."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses EX-0016 (Jamming) using the specific Telestar-12 case, cites relevant details from the source material, and provides actionable insights into vulnerabilities and countermeasures."
+        }
+      ]
+    },
+    {
+      "qra_key": "1122196280",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the question with specific details about RPO and IMP-0003, citing real systems and technical mechanisms, and provides concrete mitigations grounded in cited source material."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the question with specific details about RPO and IMP-0003, citing real systems and technical mechanisms, and provides concrete mitigations grounded in the source material."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the question with specific details about RPO and IMP-0003, citing real systems and technical mechanisms, and provides concrete mitigations grounded in the source material."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2086029845",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the D3-FBA control and its role in mitigating the Flight Software technique, with specific citations that support the described behavior monitoring and anomaly detection."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the D3-FBA control and its role in mitigating the Flight Software technique, with specific citations that support the described behavior monitoring and anomaly detection."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the question by explaining how D3-FBA monitors embedded code behavior to detect anomalies, with specific citations supporting the explanation."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2085979839",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the question with specific examples of spacecraft operations, cites the control definition accurately, and provides actionable guidance on when to apply the control."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the question with specific examples of spacecraft operations, aligns with the control's intent, and provides actionable guidance based on the cited source."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the question with specific examples of spacecraft operations, cites the control definition accurately, and provides actionable guidance on when to apply the control."
+        }
+      ]
+    },
+    {
+      "qra_key": "16562",
+      "expected": "PARTIAL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened kernel/firmware integrity checks without source evidence. Citation mentions BIOS/kernel/firmware but does not support the specific claim. Dumps SPARTA technique/countermeasure IDs without explanation."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened kernel/firmware integrity checks without evidence. Citations are generic and do not support the specific claim. Answer drifts from the question about physical security barriers."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened kernel/firmware integrity checks without source evidence. Citation mentions BIOS/kernel/firmware but does not support the specific claim. Alignment is partial as it addresses account compromise but drifts into unsupported technical details."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2085929758",
+      "expected": "PARTIAL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-specific mechanisms like 'power-mimicking dummy operations' and 'electromagnetic signatures detectable through indirect physical access' without evidence in the citation. Citation is generic and does not support the specific claims made."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-specific mechanisms (power-mimicking dummy operations) without evidence in the citation. Citation is generic and does not support the described mitigation."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-specific mechanisms (power-mimicking dummy operations) without evidence in the citation. Citation is generic and does not support the described mitigation."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2086079845",
+      "expected": "PARTIAL",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the specific threat (Data Bus technique) and control (SA-11(9)), citing a relevant source that describes the threat. It provides a concrete mitigation method (interactive application security testing) to detect and address vulnerabilities in the data bus protocols and interfaces."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the specific threat and control, citing a relevant excerpt about data bus vulnerabilities and how interactive application security testing can mitigate them."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the specific control and technique, citing a relevant excerpt about the Data Bus technique and explaining how SA-11(9) mitigates it through interactive application security testing."
+        }
+      ]
+    },
+    {
+      "qra_key": "14992",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-qualified authentication tokens and orbital period credential expiry without evidence. Citations are generic and do not support the described mechanisms."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-specific mechanisms like 'space-qualified authentication tokens' and 'ephemeral credential stores' without evidence. Citations are generic and do not support the described adaptations."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-qualified authentication tokens and orbital period credential expiry without evidence. Citations are generic and do not support the described mechanisms."
+        }
+      ]
+    },
+    {
+      "qra_key": "14993",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates kernel-level browser isolation and radiation-hardened memory storage for session tokens without evidence. Citation is generic and does not support the specific claims made."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates kernel-level browser isolation and radiation-hardened memory storage for spacecraft ground systems. Citation is generic and does not support the specific claims made in the answer."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates kernel-level browser isolation and radiation-hardened memory storage for spacecraft ground systems. Citation is generic and does not support the specific claims made in the answer."
+        }
+      ]
+    },
+    {
+      "qra_key": "2085921413",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened secure storage for Kerberos tickets in spacecraft, which is not supported by the citations. The citations describe general Kerberos ticket caching but do not mention space-specific adaptations or EEPROM storage."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened secure storage for Kerberos tickets in spacecraft, which is not supported by the citations. The citations only describe general Kerberos ticket storage concepts, not space-specific implementations."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened secure storage and write-protected EEPROM for Kerberos tickets in spacecraft, which is not supported by the citations. Citations are generic and do not mention space systems or specific mitigations."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "chart_type": "pie",
+  "viz_family": "pie",
+  "query": "Show me a breakdown of which pipeline steps contribute most to extraction time as a pie chart",
+  "title": "Analysis (pie)",
+  "data_shape": {
+    "row_count": 15,
+    "col_count": 2,
+    "max_label_len": 5,
+    "has_time_axis": false,
+    "null_pct": 0.0,
+    "col_types": {
+      "label": {
+        "dtype": "str",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "unique_count": 15,
+        "semantic_type": "text",
+        "avg_length": 16.7
+      },
+      "value": {
+        "dtype": "int64",
+        "null_count": 0,
+        "null_pct": 0.0,
+        "unique_count": 4,
+        "semantic_type": "numerical",
+        "min": 1.0,
+        "max": 9.0,
+        "mean": 2.8,
+        "std": 2.91
+      }
+    },
+    "analytics_recommendation": "bar",
+    "analytics_encoding": {
+      "x": "value_bins",
+      "y": "count"
+    },
+    "analytics_all_recommendations": [
+      {
+        "name": "histogram_value",
+        "chart_type": "bar"
+      }
+    ]
+  },
+  "source": "figure-lab",
+  "timestamp": 1772298712,
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/pie_1772298712.html",
+  "html_size_bytes": 3728
+}

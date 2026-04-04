@@ -1,0 +1,12 @@
+{
+  "task_id": "3",
+  "files": [
+    ".pi/skills/hack/exploit_writer.py"
+  ],
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "context": "Code-runner output for task: Create hack exploit_writer.py \u2014 code-runner wrapper for exploit generation",
+  "dod_command": "cd .pi/skills/hack && python3 -c \"compile(open('exploit_writer.py').read(), 'exploit_writer.py', 'exec')\" && python3 -c \"import ast; t=ast.parse(open('exploit_writer.py').read()); funcs=[n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef)]; assert 'write_exploit' in funcs, f'Missing write_exploit, found: {funcs}'\"",
+  "backend": "codex",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775084415",
+  "max_rounds": 1
+}

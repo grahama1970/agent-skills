@@ -1,0 +1,18 @@
+# Jazz Vocalists
+# Import with: ./run.sh import seeds/vocalists-jazz.txt
+
+Billie Holiday
+Ella Fitzgerald
+Sarah Vaughan
+Nina Simone
+Dinah Washington
+Carmen McRae
+Betty Carter
+Abbey Lincoln
+Cassandra Wilson
+Diana Krall
+Esperanza Spalding
+Cécile McLorin Salvant
+Melody Gardot
+Norah Jones
+Madeleine Peyroux

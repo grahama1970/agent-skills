@@ -1,0 +1,162 @@
+[
+  {
+    "question": "What vendor QA inspection steps should we add when a titanium alloy batch substitution occurs on F-36 engine mounts?",
+    "difficulty": "medium",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "Material substitution and vendor QA for engine mount alloy batches"
+  },
+  {
+    "question": "Show me the acceptance test failure rates by CNC machine over the last quarter",
+    "difficulty": "easy",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "analytical",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "Manufacturing test analytics for CNC machine performance"
+  },
+  {
+    "question": "How do we trace a weld inspection non-conformance on the F-36 airframe back to the specific vendor heat treatment batch?",
+    "difficulty": "hard",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "16_legacy_lineage",
+    "domain_context": "Manufacturing provenance traceability from weld inspection to vendor process"
+  },
+  {
+    "question": "What first article inspection criteria should apply when transitioning F-35 legacy tooling to F-36 dual-engine production?",
+    "difficulty": "hard",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "06_dual_engine",
+    "domain_context": "First article inspection for legacy tooling transition"
+  },
+  {
+    "question": "Compare dimensional inspection pass rates between Building A and Building C manufacturing lines",
+    "difficulty": "easy",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "analytical",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "Manufacturing quality comparison across production lines"
+  },
+  {
+    "question": "What SPARTA supply chain attacks could compromise vendor CDRL deliverables during F-36 manufacturing?",
+    "difficulty": "medium",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "Supply chain threat to vendor deliverables and manufacturing integrity"
+  },
+  {
+    "question": "Which NDT methods should we use to verify the F-36 composite fuselage panels after the surface finish process change?",
+    "difficulty": "medium",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "Non-destructive testing for composite panel verification"
+  },
+  {
+    "question": "Show me tolerance deviation trends for the dual-engine thrust mount assemblies",
+    "difficulty": "easy",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "analytical",
+    "f36_category": "06_dual_engine",
+    "domain_context": "Manufacturing tolerance trend analysis for engine mounts"
+  },
+  {
+    "question": "How does a calibration drift on CNC Mill 7 affect downstream acceptance tests for avionics housing components?",
+    "difficulty": "hard",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "Calibration drift impact analysis on manufacturing chain"
+  },
+  {
+    "question": "What process control changes are needed when switching from the F-35 legacy alloy specification to the F-36 updated material standard?",
+    "difficulty": "medium",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "16_legacy_lineage",
+    "domain_context": "Legacy material specification transition and process control updates"
+  },
+  {
+    "question": "Chart the vendor delivery lead times against acceptance test rejection rates",
+    "difficulty": "medium",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "analytical",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "Vendor performance analytics — delivery vs quality correlation"
+  },
+  {
+    "question": "What radiographic inspection criteria apply to the F-36 engine turbine blade castings?",
+    "difficulty": "easy",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "Radiographic NDT criteria for turbine blade castings"
+  },
+  {
+    "question": "If a heat treatment furnace shows temperature excursion beyond tolerance, which F-36 components in the current batch need re-inspection?",
+    "difficulty": "hard",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "Thermal process excursion impact traceability"
+  },
+  {
+    "question": "What destructive testing sample rates should we use for the F-36 landing gear forgings?",
+    "difficulty": "easy",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "Destructive test sampling rates for structural forgings"
+  },
+  {
+    "question": "How do plant floor network security requirements affect the CNC machine data collection infrastructure?",
+    "difficulty": "medium",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "OT security impact on manufacturing data collection"
+  },
+  {
+    "question": "Show me non-conformance reports by vendor across all F-36 deliverables this year",
+    "difficulty": "easy",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "analytical",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "Vendor non-conformance analytics"
+  },
+  {
+    "question": "What manufacturing acceptance test procedures carry over from F-35 legacy for the F-36 dual-engine FADEC housing?",
+    "difficulty": "hard",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "06_dual_engine",
+    "domain_context": "Legacy test procedure carryover for FADEC housing manufacturing"
+  },
+  {
+    "question": "Compare surface finish measurements between manual and automated grinding processes",
+    "difficulty": "easy",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "analytical",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "Surface finish process comparison analytics"
+  },
+  {
+    "question": "What should the deviation approval workflow look like when a vendor substitutes a fastener grade on F-36 structural assemblies?",
+    "difficulty": "medium",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "Material deviation approval workflow for vendor substitutions"
+  },
+  {
+    "question": "How do we correlate in-service vibration anomalies back to the specific manufacturing tolerance deviations in the plant test logs?",
+    "difficulty": "hard",
+    "expected_scope": "paul_nakamura",
+    "expected_type": "knowledge",
+    "f36_category": "16_legacy_lineage",
+    "domain_context": "Flight sensor to plant machine data correlation for anomaly tracing"
+  }
+]

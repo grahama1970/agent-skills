@@ -1,0 +1,28 @@
+2026-04-02 12:53:03.749 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Fix calculator bugs (add, subtract, divide) ===
+2026-04-02 12:53:03.749 | INFO     | __main__:run:494 -   Backend: text
+2026-04-02 12:53:03.749 | INFO     | __main__:run:495 -   DoD: python3 -m pytest tests/test_calculator.py -q
+2026-04-02 12:53:03.749 | INFO     | __main__:run:496 -   Max rounds: 3
+2026-04-02 12:53:05.895 | INFO     | __main__:run:587 - ── Round 1/3 [strategy=direct_fix text:medium] ──
+2026-04-02 12:53:20.775 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for src/calculator.py, trying complete file
+2026-04-02 12:53:20.776 | INFO     | apply:apply_file_blocks:256 -   Wrote: src/calculator.py (407 bytes)
+2026-04-02 12:53:20.776 | INFO     | __main__:run:651 -   Applied 1 files: ['src/calculator.py']
+2026-04-02 12:53:21.177 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-02 12:53:21.189 | INFO     | __main__:run:695 -   KEEP (score 0.490 > previous 0.000)
+2026-04-02 12:53:21.800 | INFO     | __main__:run:587 - ── Round 2/3 [strategy=structured_analysis text:medium] ──
+2026-04-02 12:53:21.800 | INFO     | __main__:run:622 -   Context escalation: tests/test_calculator.py promoted to full content
+2026-04-02 12:53:31.971 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for src/calculator.py, trying complete file
+2026-04-02 12:53:31.971 | INFO     | apply:apply_file_blocks:256 -   Wrote: src/calculator.py (414 bytes)
+2026-04-02 12:53:31.971 | INFO     | __main__:run:651 -   Applied 1 files: ['src/calculator.py']
+2026-04-02 12:53:32.368 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-02 12:53:32.374 | INFO     | __main__:git_revert_to:166 - Reverted 1 files to d2dc5f33 (removed 0 new)
+2026-04-02 12:53:32.374 | INFO     | __main__:run:700 -   DISCARD (score 0.490 <= best 0.490)
+2026-04-02 12:53:32.957 | INFO     | __main__:run:584 - ── Round 3/3 [strategy=different_approach temp=0.3↑ text:high] ──
+2026-04-02 12:53:45.139 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for src/calculator.py, trying complete file
+2026-04-02 12:53:45.139 | INFO     | apply:apply_file_blocks:256 -   Wrote: src/calculator.py (407 bytes)
+2026-04-02 12:53:45.139 | INFO     | __main__:run:651 -   Applied 1 files: ['src/calculator.py']
+2026-04-02 12:53:45.504 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-02 12:53:45.509 | INFO     | __main__:git_revert_to:166 - Reverted 1 files to d2dc5f33 (removed 0 new)
+2026-04-02 12:53:45.509 | INFO     | __main__:run:700 -   DISCARD (score 0.490 <= best 0.490)
+2026-04-02 12:53:45.899 | INFO     | __main__:run:770 - === RESULT: FAIL | score=0.490 | 3 rounds ===
+2026-04-02 12:53:45.906 | INFO     | apply:generate_hunk_review:531 - Review with: hunk patch /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775148783/1.hunk.md
+2026-04-02 12:53:45.906 | INFO     | apply:generate_hunk_review:533 -   Or: cd /tmp/burn-in-test && hunk diff

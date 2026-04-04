@@ -1,0 +1,44 @@
+# ACE-Step Music Generation Service
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f
+#   docker compose down
+#
+# Environment:
+#   ACE_STEP_PORT: Service port (default: 8015)
+#   HF_TOKEN: HuggingFace token for gated models
+
+services:
+  ace-step:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "${ACE_STEP_PORT:-8015}:8000"
+    volumes:
+      # Model cache (persistent across restarts)
+      - ace-step-models:/root/.cache/huggingface
+      # Outputs directory
+      - ./outputs:/app/outputs
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s  # Allow time for model loading
+    restart: unless-stopped
+
+volumes:
+  ace-step-models:
+    name: ace-step-models

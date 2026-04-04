@@ -1,0 +1,105 @@
+```diff
+--- a/.pi/skills/create-icon/creator.py
++++ b/.pi/skills/create-icon/creator.py
+@@ -4,7 +4,6 @@ Uses Lucide CDN (unpkg) for SVG icons, ImageMagick for conversion.
+ Generates 72x72 PNG icons with white (inactive) and colored (active) states.
+ """
+ import sys
+ import os
+ import typer
+-import subprocess
+ import shutil
+ import json
+ import base64
+ from pathlib import Path
+@@ -115,6 +114,34 @@ def generate_svg_ai(prompt: str, output_path: Path):
+             output_path.write_text(svg_code)
+             return True
+     except Exception as e:
+         print(f"⚠️ scillm generation failed: {e}")
+ 
++    # Fallback path: local curl call (no codex exec subprocess usage)
++    try:
++        import httpx
++        url = f"https://unpkg.com/lucide-static@latest/icons/{icon_name}.svg"
++        resp = httpx.get(url, follow_redirects=True, timeout=30.0)
++        if resp.status_code != 200:
++            print(f"❌ Icon '{icon_name}' not found on Lucide CDN")
++            return False
++        content = resp.text
++        output_path.write_text(content)
++    except Exception as e:
++        print(f"❌ Failed to fetch icon '{icon_name}': {e}")
++        return False
++
++    # Verify it's actually an SVG
++    if output_path.exists() and output_path.stat().st_size > 0:
++        content = output_path.read_text()
++        if "<svg" in content:
++            return True
++
++    print(f"❌ Downloaded file is not a valid SVG")
++    return False
++
++def svg_to_png(svg_path: Path, png_path: Path, color: str, size: int = 72):
++    """Convert SVG to PNG with specified color using ImageMagick."""
++    # ImageMagick convert with color replacement
++    # The SVG stroke is typically "currentColor" or black - we colorize it
++    import subprocess
+     print(f"❌ AI generation failed.")
+     return False
+ 
+@@ -138,19 +165,7 @@ def fetch_lucide_svg(icon_name: str, output_path: Path) -> bool:
+     # Lucide icons are available at unpkg
+     url = f"https://unpkg.com/lucide-static@latest/icons/{icon_name}.svg"
+     
+     print(f"Fetching: {url}")
+-    result = subprocess.run(
+-        ["curl", "-s", "-f", "-L", "-o", str(output_path), url],
+-        capture_output=True
+-    )
+-    
+-    if result.returncode != 0:
+-        print(f"❌ Icon '{icon_name}' not found on Lucide CDN")
+-        return False
+-    
+-    # Verify it's actually an SVG
+-    if output_path.exists() and output_path.stat().st_size > 0:
+-        content = output_path.read_text()
+-        if "<svg" in content:
+-            return True
++    return False
+     
+     print(f"❌ Downloaded file is not a valid SVG")
+     return False
+@@ -166,6 +181,7 @@ def svg_to_png(svg_path: Path, png_path: Path, color: str, size: int = 72):
+         "-colorize", "100",
+         str(png_path)
+     ]
+     
++    import subprocess
+     result = subprocess.run(cmd, capture_output=True, text=True)
+     if result.returncode != 0:
+         print(f"❌ Conversion failed: {result.stderr}")
+         return False
+@@ -268,6 +284,7 @@ def fetch_icon(icon_name: str, output_name: str, target_dir: Path, active_color
+     final_active = target_dir / f"{output_name}_active.png"
+     
+     shutil.move(str(white_png), str(final_white))
+     shutil.move(str(active_png), str(final_active))
+     
+     # Verify size
++    import subprocess
+     result = subprocess.run(
+         ["identify", "-format", "%wx%h", str(final_white)],
+         capture_output=True, text=True
+@@ -395,6 +412,7 @@ def collaborative_workflow(query: str, output_name: str, target_dir: Path, acti
+ 
+         print("Waiting for your selection in the interview form...")
+         # Don't capture output so the user sees the URL/TUI
++        import subprocess
+         subprocess.run(
+             [str(interview_script), "--file", str(questions_file)],
+             env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
+         )
+```

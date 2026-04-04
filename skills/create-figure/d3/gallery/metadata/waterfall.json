@@ -1,0 +1,16 @@
+{
+  "chart_type": "waterfall",
+  "viz_family": "bar",
+  "sample_query": "Show income statement waterfall",
+  "title": "Income Statement",
+  "data_shape": {
+    "rows": 6,
+    "fields": [
+      "label",
+      "value"
+    ]
+  },
+  "source": "seed_d3_gallery.py",
+  "timestamp": "2026-02-26T13:14:48.026728+00:00",
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/waterfall_1772111688.html"
+}

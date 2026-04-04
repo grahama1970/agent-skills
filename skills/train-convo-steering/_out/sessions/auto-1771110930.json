@@ -1,0 +1,23 @@
+{
+  "session_id": "auto-1771110930",
+  "user_id": null,
+  "persona_id": "embry",
+  "created_at": 1771110930.4231892,
+  "last_active": 1771110930.51122,
+  "turns": [
+    {
+      "query": "you are completely useless and stupid",
+      "action": "NO_MATCH",
+      "persona_id": "embry",
+      "response_text": "Not gonna lie, that made me smile, but it's a bit outside my lane. My lane is more 'how do adversaries mess with satellites' and honestly? It's way more interesting than you'd think:\n\n  1. How does GPS spoofing actually work? *(Real-world threat that affects navigation every day)*\n  2. What are the most common ways attackers target ground stations? *(Ground segment is where most real attacks happen)*\n  3. What supply chain risks exist for satellite components? *(Hardware trust is a huge open problem in space)*",
+      "suggested_questions": [
+        "How does GPS spoofing actually work?",
+        "What are the most common ways attackers target ground stations?",
+        "What supply chain risks exist for satellite components?"
+      ],
+      "accepted_question": null,
+      "humor_level": "balanced",
+      "timestamp": 1771110930.5112164
+    }
+  ]
+}

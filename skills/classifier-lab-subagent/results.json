@@ -1,0 +1,53 @@
+{
+  "experiment": "classifier-lab-subagent-v2",
+  "dataset": "ag_news",
+  "gate": 0.95,
+  "duration_seconds": 182.6035132408142,
+  "reliability_rate": 0.0,
+  "completed": 0,
+  "failed": 0,
+  "blocked": 0,
+  "timed_out": 3,
+  "gate_passed": 0,
+  "models": [
+    {
+      "model_id": "model-0",
+      "model_name": "distilbert-base-uncased",
+      "status": "timeout",
+      "accuracy": 0.0,
+      "f1": 0.0,
+      "rounds": 0,
+      "gate_passed": false,
+      "duration_seconds": 180.26514387130737,
+      "log_lines": 0,
+      "round_history": [],
+      "error": "No log activity for 180s"
+    },
+    {
+      "model_id": "model-1",
+      "model_name": "prajjwal1/bert-tiny",
+      "status": "timeout",
+      "accuracy": 0.0,
+      "f1": 0.0,
+      "rounds": 0,
+      "gate_passed": false,
+      "duration_seconds": 180.22028064727783,
+      "log_lines": 0,
+      "round_history": [],
+      "error": "No log activity for 180s"
+    },
+    {
+      "model_id": "model-2",
+      "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+      "status": "timeout",
+      "accuracy": 0.0,
+      "f1": 0.0,
+      "rounds": 0,
+      "gate_passed": false,
+      "duration_seconds": 180.17580914497375,
+      "log_lines": 0,
+      "round_history": [],
+      "error": "No log activity for 180s"
+    }
+  ]
+}

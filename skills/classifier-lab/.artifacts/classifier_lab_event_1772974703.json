@@ -1,0 +1,31 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1772974703,
+  "status": "ok",
+  "selected_backbone": "distilbert-base-uncased",
+  "selected_metrics": {
+    "macro_f1": 0.6359559172602687,
+    "accuracy": 0.6484798000832986,
+    "wilson_score_lower": 0.6261025457820861,
+    "latency_p50_ms": 3.3239260083064437,
+    "latency_p95_ms": 4.108588099188637
+  },
+  "candidate_count": 2,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/tmp/tactical_training.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [
+        "Precision",
+        "Resilience"
+      ],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "keywords",
+      "worth_remembering": true
+    }
+  }
+}

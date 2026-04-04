@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "02fd4c2026eabdbee075b91c8f4c2f92d49e537f6161be8ffd0843a02b0a34ad",
+  "domain": "engineering",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/02fd4c2026eabdbee075b91c8f4c2f92d49e537f6161be8ffd0843a02b0a34ad",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/02fd4c2026eabdbee075b91c8f4c2f92d49e537f6161be8ffd0843a02b0a34ad/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/02fd4c2026eabdbee075b91c8f4c2f92d49e537f6161be8ffd0843a02b0a34ad/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/expansion_batch_1/downloads/02fd4c2026eabdbee075b91c8f4c2f92d49e537f6161be8ffd0843a02b0a34ad.pdf"
+  },
+  "estimates": {
+    "page_count": 222,
+    "estimated_sections": 74,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "engineering"
+  },
+  "actual": {
+    "section_count": 59,
+    "element_count": 666,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 222,
+    "raw_text_length": 602286
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.8,
+      "state": "pass",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.78,
+      "state": "warn",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.83,
+      "state": "pass",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.74,
+      "state": "warn",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.89,
+      "state": "pass",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.79,
+      "state": "warn",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.91,
+      "state": "pass",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.82,
+    "grade": "B",
+    "verdict": "PASS",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "issue_count": 2
+  },
+  "issues": [
+    {
+      "code": "EQ001",
+      "severity": "LOW",
+      "message": "Math symbols detected but no equation blocks extracted",
+      "recommendation": "Enable equation detection in block classifier"
+    },
+    {
+      "code": "OR001",
+      "severity": "LOW",
+      "message": "3 reading order violations detected",
+      "recommendation": "Review multi-column layout detection"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

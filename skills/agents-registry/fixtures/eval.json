@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skill": "agents-registry",
+  "defaults": { "latency_budget_ms": 10000 },
+  "cases": [
+    {
+      "name": "list-agents",
+      "command": ["list"],
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["brandon-bailey", "embry", "graham-anderson"],
+      "latency_budget_ms": 8000,
+      "tags": ["fast", "smoke"]
+    },
+    {
+      "name": "query-capability",
+      "command": ["query", "--capability", "system-architecture"],
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["graham-anderson"],
+      "latency_budget_ms": 8000,
+      "tags": ["fast"]
+    }
+  ]
+}

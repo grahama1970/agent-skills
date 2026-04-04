@@ -1,0 +1,9 @@
+{
+  "reason": "allowlist_blocked",
+  "details": [
+    "BLOCKED by allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (allowlist=['packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx'])"
+  ],
+  "response_length": 21892,
+  "v2_metadata": true,
+  "v2_blocks_found": 1
+}

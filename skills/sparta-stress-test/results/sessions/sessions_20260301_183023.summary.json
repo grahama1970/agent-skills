@@ -1,0 +1,89 @@
+{
+  "total": 2,
+  "overall_grades": {
+    "B": 2
+  },
+  "pass_rate": 1.0,
+  "by_persona": {
+    "Margaret Chen": {
+      "total": 2,
+      "avg_composite": 0.771
+    }
+  },
+  "by_difficulty": {
+    "complex": {
+      "total": 2,
+      "avg_composite": 0.771
+    }
+  },
+  "by_evaluation": {
+    "satisfactory": 2,
+    "incomplete": 3
+  },
+  "dimension_averages": {
+    "qra_citation_accuracy": 3.0,
+    "initial_response_quality": 2.0,
+    "disambiguation_handling": 2.0,
+    "error_detection": 3.0,
+    "follow_up_quality": 2.0,
+    "response_naturalness": 2.0,
+    "domain_accuracy": 2.0,
+    "session_coherence": 2.0
+  },
+  "avg_turns": 6.0,
+  "archived_count": 2,
+  "adversarial_count": 0,
+  "traceability_summaries": [
+    {
+      "session_id": "stress_20260301_174247_0dd8a98f",
+      "persona": "Margaret Chen",
+      "grade": "B",
+      "composite": 0.7506283631945723,
+      "turns": [
+        {
+          "turn_number": 2,
+          "qras_retrieved": 5,
+          "citations_verified": 0,
+          "citations_total": 0,
+          "unverified_claims": 0
+        }
+      ]
+    },
+    {
+      "session_id": "stress_20260301_175319_b187eb02",
+      "persona": "Margaret Chen",
+      "grade": "B",
+      "composite": 0.7910391666666665,
+      "turns": [
+        {
+          "turn_number": 2,
+          "qras_retrieved": 5,
+          "citations_verified": 0,
+          "citations_total": 0,
+          "unverified_claims": 0
+        },
+        {
+          "turn_number": 4,
+          "qras_retrieved": 5,
+          "citations_verified": 0,
+          "citations_total": 0,
+          "unverified_claims": 0
+        },
+        {
+          "turn_number": 6,
+          "qras_retrieved": 5,
+          "citations_verified": 0,
+          "citations_total": 0,
+          "unverified_claims": 0
+        },
+        {
+          "turn_number": 8,
+          "qras_retrieved": 5,
+          "citations_verified": 0,
+          "citations_total": 0,
+          "unverified_claims": 0
+        }
+      ]
+    }
+  ]
+}

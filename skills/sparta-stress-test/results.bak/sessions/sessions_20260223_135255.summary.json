@@ -1,0 +1,50 @@
+{
+  "total": 22,
+  "overall_grades": {
+    "B": 20,
+    "A": 2
+  },
+  "pass_rate": 1.0,
+  "by_persona": {
+    "Margaret Chen": {
+      "total": 16,
+      "avg_composite": 0.831
+    },
+    "Jennifer Cheung": {
+      "total": 6,
+      "avg_composite": 0.85
+    }
+  },
+  "by_difficulty": {
+    "medium": {
+      "total": 16,
+      "avg_composite": 0.837
+    },
+    "complex": {
+      "total": 5,
+      "avg_composite": 0.83
+    },
+    "ambiguous": {
+      "total": 1,
+      "avg_composite": 0.85
+    }
+  },
+  "by_evaluation": {
+    "incomplete": 30,
+    "wrong": 10,
+    "satisfactory": 1,
+    "flaw_missed": 2
+  },
+  "dimension_averages": {
+    "initial_response_quality": 0.75,
+    "disambiguation_handling": 0.755,
+    "error_detection": 1.0,
+    "follow_up_quality": 0.682,
+    "response_naturalness": 0.895,
+    "domain_accuracy": 0.836,
+    "session_coherence": 0.777
+  },
+  "avg_turns": 4.9,
+  "archived_count": 22,
+  "adversarial_count": 1
+}

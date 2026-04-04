@@ -1,0 +1,13 @@
+{
+  "completed": 250,
+  "total": 500,
+  "status": "completed",
+  "current_item": "case 251/500",
+  "description": "SPARTA QRA Test (500 cases, phase 0)",
+  "project": "prompt-lab",
+  "task_name": "test-sparta-500-phase0",
+  "progress_pct": 50.0,
+  "elapsed_seconds": 5973.5,
+  "eta_seconds": 5973.5,
+  "last_updated": "2026-02-04 12:17:46"
+}

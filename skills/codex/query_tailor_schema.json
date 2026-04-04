@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "arxiv": {
+      "type": "string",
+      "description": "Academic paper search query"
+    },
+    "perplexity": {
+      "type": "string",
+      "description": "Natural language question"
+    },
+    "brave": {
+      "type": "string",
+      "description": "Web/documentation search query"
+    },
+    "github": {
+      "type": "string",
+      "description": "Code-focused search query"
+    },
+    "youtube": {
+      "type": "string",
+      "description": "Tutorial-style search query"
+    }
+  },
+  "required": [
+    "arxiv",
+    "perplexity",
+    "brave",
+    "github",
+    "youtube"
+  ],
+  "additionalProperties": false
+}

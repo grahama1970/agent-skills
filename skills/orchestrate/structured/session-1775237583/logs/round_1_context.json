@@ -1,0 +1,35 @@
+{
+  "round": 1,
+  "task_id": "8",
+  "score": 1.0,
+  "prev_score": 0,
+  "delta": 1.0,
+  "dod_passed": true,
+  "status": "keep",
+  "strategy": "direct_fix",
+  "error_count": 0,
+  "error_severity": "unknown",
+  "errors_by_type": {},
+  "lint_violations": 0,
+  "bp_violations": [],
+  "error_evidence": {
+    "failure_type": "generic",
+    "summary": "Unknown error",
+    "primary_location": null,
+    "root_cause_lines": [],
+    "failing_tests": []
+  },
+  "stdout": "",
+  "stderr": "",
+  "written_files": [
+    "packages/ux-lab/src/components/sparta/explorer/SpartaExplorer.tsx"
+  ],
+  "commit": "118031ef",
+  "backend": "codex",
+  "reasoning": "medium",
+  "temperature": 0.2,
+  "timestamp": 1775237795.376749,
+  "llm_summary": "Added Posture tab wiring in SpartaExplorer with ShieldCheck icon mapping, explicit data-qid, and Overview tab rendering OverviewLanding plus PostureDashboard case.",
+  "llm_approach": "direct_fix",
+  "zero_write_reason": ""
+}

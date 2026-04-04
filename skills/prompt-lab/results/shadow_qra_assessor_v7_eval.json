@@ -1,0 +1,126 @@
+{
+  "approach": "v7-deterministic-list-rapidfuzz",
+  "agreement": 0.4,
+  "results": [
+    {
+      "grade": "PASS",
+      "best_cite": 1.0,
+      "avg_cite": 1.0,
+      "answer_score": 1.0,
+      "siblings": 226,
+      "rationale": "Grounded: citations=100%, answer=100%, 226 siblings",
+      "key": "1183163524",
+      "expected": "PASS",
+      "match": true,
+      "latency": 0.028
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 0.689,
+      "answer_score": 0.49,
+      "siblings": 210,
+      "rationale": "Partial: citations=100%, answer=49%",
+      "key": "1122196280",
+      "expected": "PASS",
+      "match": false,
+      "latency": 0.068
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 0.725,
+      "answer_score": 0.488,
+      "siblings": 538,
+      "rationale": "Partial: citations=100%, answer=49%",
+      "key": "qra__run-recovery-verify__2086029845",
+      "expected": "PASS",
+      "match": false,
+      "latency": 0.075
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 1.0,
+      "answer_score": 0.588,
+      "siblings": 40,
+      "rationale": "Partial: citations=100%, answer=59%",
+      "key": "qra__run-recovery-verify__2085979839",
+      "expected": "PASS",
+      "match": false,
+      "latency": 0.061
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 0.736,
+      "answer_score": 0.526,
+      "siblings": 64,
+      "rationale": "Partial: citations=100%, answer=53%",
+      "key": "16562",
+      "expected": "PARTIAL",
+      "match": true,
+      "latency": 0.064
+    },
+    {
+      "grade": "FAIL",
+      "best_cite": 0.485,
+      "avg_cite": 0.485,
+      "answer_score": 0.478,
+      "siblings": 76,
+      "rationale": "Ungrounded: citations=49%, answer=48%",
+      "key": "qra__run-recovery-verify__2085929758",
+      "expected": "PARTIAL",
+      "match": false,
+      "latency": 0.065
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 1.0,
+      "answer_score": 0.46,
+      "siblings": 672,
+      "rationale": "Partial: citations=100%, answer=46%",
+      "key": "qra__run-recovery-verify__2086079845",
+      "expected": "PARTIAL",
+      "match": true,
+      "latency": 0.076
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 1.0,
+      "answer_score": 0.606,
+      "siblings": 44,
+      "rationale": "Partial: citations=100%, answer=61%",
+      "key": "14992",
+      "expected": "FAIL",
+      "match": false,
+      "latency": 0.027
+    },
+    {
+      "grade": "FAIL",
+      "best_cite": 0.531,
+      "avg_cite": 0.531,
+      "answer_score": 0.478,
+      "siblings": 44,
+      "rationale": "Ungrounded: citations=53%, answer=48%",
+      "key": "14993",
+      "expected": "FAIL",
+      "match": true,
+      "latency": 0.065
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 0.662,
+      "avg_cite": 0.605,
+      "answer_score": 0.48,
+      "siblings": 42,
+      "rationale": "Partial: citations=66%, answer=48%",
+      "key": "2085921413",
+      "expected": "FAIL",
+      "match": false,
+      "latency": 0.021
+    }
+  ]
+}

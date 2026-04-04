@@ -1,0 +1,335 @@
+{
+  "model": "text-deepseek",
+  "timestamp": "2026-03-14T18:52:03.796672",
+  "macro_f1": 0.7668,
+  "avg_latency_ms": 1379.3,
+  "per_class": {
+    "anger": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "fear": {
+      "precision": 0.8333,
+      "recall": 1.0,
+      "f1": 0.9091
+    },
+    "joy": {
+      "precision": 0.2857,
+      "recall": 1.0,
+      "f1": 0.4444
+    },
+    "sadness": {
+      "precision": 0.9,
+      "recall": 1.0,
+      "f1": 0.9474
+    },
+    "trust": {
+      "precision": 1.0,
+      "recall": 0.3636,
+      "f1": 0.5333
+    }
+  },
+  "per_case": [
+    {
+      "id": "seed_001",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_002",
+      "predicted": [
+        "joy"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_003",
+      "predicted": [
+        "joy"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_004",
+      "predicted": [
+        "fear"
+      ],
+      "expected": [
+        "fear"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_005",
+      "predicted": [
+        "trust"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_006",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_007",
+      "predicted": [
+        "joy"
+      ],
+      "expected": [
+        "joy"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_008",
+      "predicted": [
+        "fear"
+      ],
+      "expected": [
+        "fear"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_009",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_010",
+      "predicted": [
+        "trust"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_011",
+      "predicted": [
+        "joy"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_012",
+      "predicted": [
+        "fear"
+      ],
+      "expected": [
+        "fear"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_013",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_014",
+      "predicted": [
+        "trust"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_015",
+      "predicted": [
+        "joy"
+      ],
+      "expected": [
+        "joy"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_016",
+      "predicted": [
+        "fear"
+      ],
+      "expected": [
+        "fear"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_017",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_018",
+      "predicted": [
+        "joy"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_019",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_020",
+      "predicted": [
+        "fear"
+      ],
+      "expected": [
+        "fear"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_021",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_022",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_023",
+      "predicted": [
+        "anger"
+      ],
+      "expected": [
+        "anger"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_024",
+      "predicted": [
+        "anger"
+      ],
+      "expected": [
+        "anger"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_025",
+      "predicted": [
+        "anger"
+      ],
+      "expected": [
+        "anger"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_026",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_027",
+      "predicted": [
+        "fear"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_028",
+      "predicted": [
+        "sadness"
+      ],
+      "expected": [
+        "sadness"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_029",
+      "predicted": [
+        "trust"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 1.0
+    },
+    {
+      "id": "seed_030",
+      "predicted": [
+        "joy"
+      ],
+      "expected": [
+        "trust"
+      ],
+      "f1": 0.0
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+[
+  {
+    "question": "What SPARTA countermeasures are recommended to protect the F-36's SCADA systems from unauthorized access, and how do they align with NIST 800-53 controls?",
+    "difficulty": "easy",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SCADA, NIST 800-53",
+    "persona": "jennifer"
+  },
+  {
+    "question": "How does the F-36's use of rad-hard processors mitigate SPARTA threats related to single-event upsets, and what NIST RMF controls support this mitigation?",
+    "difficulty": "easy",
+    "f36_category": "02_microprocessors",
+    "domain_context": "rad-hard processors, NIST RMF",
+    "persona": "jennifer"
+  },
+  {
+    "question": "What SPARTA countermeasures address supply chain risks for the F-36's space-grade components, and how do they comply with ITAR requirements?",
+    "difficulty": "easy",
+    "f36_category": "05_space_hardening",
+    "domain_context": "supply chain, ITAR",
+    "persona": "jennifer"
+  },
+  {
+    "question": "How do DISA STIGs inform the SPARTA countermeasures for securing the F-36's embedded compute systems against firmware exploits?",
+    "difficulty": "easy",
+    "f36_category": "02_microprocessors",
+    "domain_context": "embedded compute, DISA STIG",
+    "persona": "jennifer"
+  },
+  {
+    "question": "What CMMC practices are integrated into the SPARTA countermeasures for protecting CUI in the F-36's vendor-delivered avionics software?",
+    "difficulty": "easy",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "CUI, CMMC",
+    "persona": "jennifer"
+  },
+  {
+    "question": "How does the F-36's use of ITAR-controlled components in its radar system influence the selection of SPARTA countermeasures for mitigating supply chain threats?",
+    "difficulty": "medium",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "ITAR, supply chain",
+    "persona": "jennifer"
+  },
+  {
+    "question": "What SPARTA countermeasures would you recommend for securing the F-36's SCADA-based fuel management system against ICS-specific threats while maintaining compliance with NIST 800-53?",
+    "difficulty": "medium",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SCADA, ICS, NIST 800-53",
+    "persona": "jennifer"
+  },
+  {
+    "question": "Given the F-36's reliance on third-party vendors for radiation-hardened FPGAs, how do we align SPARTA's supply chain attack countermeasures with CMMC requirements for vendor risk management?",
+    "difficulty": "medium",
+    "f36_category": "02_microprocessors",
+    "domain_context": "FPGAs, supply chain, vendor, CMMC",
+    "persona": "jennifer"
+  },
+  {
+    "question": "How should DISA STIG hardening guidelines be applied to the F-36's embedded avionics systems to address SPARTA-identified vulnerabilities in military C4ISR networks?",
+    "difficulty": "medium",
+    "f36_category": "12_standards",
+    "domain_context": "DISA STIG, C4ISR",
+    "persona": "jennifer"
+  },
+  {
+    "question": "What SPARTA countermeasures would effectively protect CUI in the F-36's maintenance diagnostic systems while meeting both NIST 800-171 and naval cybersecurity requirements?",
+    "difficulty": "medium",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "CUI, NIST 800-171, naval",
+    "persona": "jennifer"
+  },
+  {
+    "question": "Given the F-36's reliance on third-party vendors for radiation-hardened FPGAs, how do NIST 800-171 controls for CUI protection align with SPARTA countermeasures against supply chain attacks targeting these components?",
+    "difficulty": "medium",
+    "f36_category": "02_microprocessors",
+    "domain_context": "NIST 800-171, CUI, supply chain, vendor",
+    "persona": "jennifer"
+  },
+  {
+    "question": "How would you assess the attack surface of the F-36's SCADA-controlled fuel management system against SPARTA threats, considering DISA STIG requirements for ICS/OT network segmentation?",
+    "difficulty": "medium",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "DISA STIG, ICS, OT, SCADA",
+    "persona": "jennifer"
+  },
+  {
+    "question": "What SPARTA firmware exploit techniques pose the greatest risk to the F-36's dual-redundant flight control processors, and how do CMMC Level 3 requirements for critical systems mitigate these threats?",
+    "difficulty": "medium",
+    "f36_category": "02_microprocessors",
+    "domain_context": "CMMC, firmware",
+    "persona": "jennifer"
+  },
+  {
+    "question": "Considering ITAR restrictions on the F-36's space-hardened navigation system components, which SPARTA supply chain attack vectors would bypass current NIST RMF controls, and what additional vendor screening measures would you recommend?",
+    "difficulty": "hard",
+    "f36_category": "05_space_hardening",
+    "domain_context": "ITAR, NIST RMF, supply chain, vendor",
+    "persona": "jennifer"
+  },
+  {
+    "question": "For the F-36's C4ISR data fusion module, how would you prioritize SPARTA countermeasures against side-channel attacks on its SoCs, given conflicting requirements between MIL-STD-881F and FedRAMP Moderate baselines for cryptographic module protection?",
+    "difficulty": "hard",
+    "f36_category": "12_standards",
+    "domain_context": "C4ISR, MIL-STD, FedRAMP",
+    "persona": "jennifer"
+  },
+  {
+    "question": "Given the F-36's reliance on third-party vendors for radiation-hardened FPGAs, how do SPARTA countermeasures address potential supply chain compromises that could introduce malicious firmware, and what NIST 800-171 controls would you prioritize for vendor oversight?",
+    "difficulty": "hard",
+    "f36_category": "02_microprocessors",
+    "domain_context": "supply chain, vendor, NIST 800-171",
+    "persona": "jennifer"
+  },
+  {
+    "question": "The F-36's dual-redundant engine control system uses legacy F-35 avionics architecture with updated space-hardened components. What SPARTA attack vectors are most likely to exploit the transition between legacy and new systems, and how would DISA STIG configurations mitigate these risks?",
+    "difficulty": "hard",
+    "f36_category": "05_space_hardening",
+    "domain_context": "DISA STIG, C4ISR",
+    "persona": "jennifer"
+  },
+  {
+    "question": "For the F-36's SCADA-controlled fuel management system, which SPARTA threats involving ICS protocol manipulation are of highest concern, and how do NIST RMF security controls map to the required countermeasures?",
+    "difficulty": "hard",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SCADA, ICS, NIST RMF",
+    "persona": "jennifer"
+  },
+  {
+    "question": "How should we balance ITAR restrictions with the need for vendor collaboration on the F-36's secure boot implementation, given SPARTA's findings on firmware vulnerabilities in military SoCs?",
+    "difficulty": "ambiguous",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "ITAR, vendor",
+    "persona": "jennifer"
+  },
+  {
+    "question": "What gaps exist between CMMC Level 3 requirements and SPARTA's recommended countermeasures for protecting the F-36's mission computer from side-channel attacks via its rad-hard processors?",
+    "difficulty": "ambiguous",
+    "f36_category": "12_standards",
+    "domain_context": "CMMC, NIST 800-53",
+    "persona": "jennifer"
+  }
+]

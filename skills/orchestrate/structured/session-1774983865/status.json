@@ -1,0 +1,299 @@
+{
+  "generated_at": 1774984396.9258678,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774983865",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Extract highlightEntities to shared utility",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "",
+      "error": "Task 1 cancelled by operator",
+      "started_at": 1774983865.4123502,
+      "finished_at": 1774984396.925546,
+      "subagent_task_id": "21812eae",
+      "subagent_port": 8625
+    },
+    {
+      "id": "2",
+      "title": "Extract SkillPaletteDropdown to shared component",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Extract MarkdownRenderer to shared component",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4",
+      "title": "Unify RecallCard \u2014 single component, both interfaces",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5",
+      "title": "Unify message types \u2014 shared ChatMessage interface",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "6",
+      "title": "Create shared-chat index barrel export",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "7",
+      "title": "Embry Terminal \u2014 import shared components, delete duplicates",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "6"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "8",
+      "title": "Embry Terminal \u2014 add ThreatMatrix rendering in chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "7"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "9",
+      "title": "SPARTA ChatWell \u2014 add entity highlighting to messages",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "6"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "10",
+      "title": "SPARTA ChatWell \u2014 add /skill-name invocation + palette",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "6",
+        "9"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "11",
+      "title": "SPARTA ChatWell \u2014 markdown rendering for agent responses",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "9"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "12",
+      "title": "SPARTA ChatTab \u2014 integrate scratch.md vision features",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "9",
+        "10",
+        "11"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "13",
+      "title": "Update Brandon Bailey test manifest for shared components",
+      "lane": "4",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "7",
+        "8"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "14",
+      "title": "Run VLM persona review \u2014 Brandon Bailey on converged chat",
+      "lane": "4",
+      "runner": "local",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "13"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "15",
+      "title": "Verify SPARTA Explorer chat has parity",
+      "lane": "4",
+      "runner": "local",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "9",
+        "10",
+        "11",
+        "12"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

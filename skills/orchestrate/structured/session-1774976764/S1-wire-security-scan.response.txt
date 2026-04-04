@@ -1,0 +1,16 @@
+Updated [run.sh](/home/graham/workspace/experiments/pi-mono/.pi/skills/monitor-codebase/run.sh).
+
+The fix was a data-contract/CLI mismatch, not a missing import. `security-scan`’s `scan` subcommand expects `--path`, and its `--format json` output is preceded by a banner line, so a direct redirect would not reliably produce valid JSON. I added a Step `4.5` that runs the full scan, normalizes the emitted output into valid JSON, and writes it to `"$ARTIFACTS_DIR/${project_name}_security.json"`.
+
+I also updated Step `9` to include:
+- `secrets_found`
+- `vulnerable_deps`
+- `sast_findings`
+- `total_security_findings`
+
+Those counts are now included in `summary.total_issues`, the report payload, and the memory learn summary string.
+
+Verification:
+- `bash -n .pi/skills/monitor-codebase/run.sh` passed.
+- `npm run check` passed. It reported two existing Biome `info` suggestions in unrelated files, but no errors, warnings, or failures.
+

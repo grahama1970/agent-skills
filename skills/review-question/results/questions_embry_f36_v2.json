@@ -1,0 +1,212 @@
+[
+  {
+    "question": "What SPARTA countermeasures protect the F-36's avionics systems from GPS spoofing attacks, and how does compliance mapping ensure these mitigations are consistently applied across all variants?",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "compliance mapping",
+    "persona": "embry"
+  },
+  {
+    "question": "How does manufacturing provenance verification for the F-36's rad-hard processors mitigate SPARTA supply chain threats related to counterfeit components?",
+    "difficulty": "easy",
+    "f36_category": "02_microprocessors",
+    "domain_context": "manufacturing provenance",
+    "persona": "embry"
+  },
+  {
+    "question": "What SPARTA attack vectors pose the greatest risk to the F-36's weapons integration system, and how does legacy lineage from the F-35 inform our threat assessment?",
+    "difficulty": "easy",
+    "f36_category": "03_weapons",
+    "domain_context": "legacy lineage",
+    "persona": "embry"
+  },
+  {
+    "question": "How do we ensure sensor correlation between the F-36's helmet-mounted display and primary flight systems is protected against SPARTA threats like data injection?",
+    "difficulty": "easy",
+    "f36_category": "04_display_ux",
+    "domain_context": "sensor correlation",
+    "persona": "embry"
+  },
+  {
+    "question": "What SPARTA countermeasures are implemented in the F-36's dual-engine control system to prevent unsafe control actions due to single-channel faults?",
+    "difficulty": "easy",
+    "f36_category": "06_dual_engine",
+    "domain_context": "safety analysis",
+    "persona": "embry"
+  },
+  {
+    "question": "Given the F-35 to F-36 legacy lineage in avionics, what SPARTA threats should we prioritize for the F-36's GPS/INS navigation system to prevent compliance drift?",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "legacy lineage, compliance drift",
+    "persona": "embry"
+  },
+  {
+    "question": "What SPARTA countermeasures would you recommend for protecting the F-36's rad-hard processors against firmware exploits, considering manufacturing provenance concerns?",
+    "difficulty": "easy",
+    "f36_category": "02_microprocessors",
+    "domain_context": "manufacturing provenance",
+    "persona": "embry"
+  },
+  {
+    "question": "How does sensor correlation between the F-36's dual engines impact the threat landscape for potential spoofing attacks on FADEC systems?",
+    "difficulty": "easy",
+    "f36_category": "06_dual_engine",
+    "domain_context": "sensor correlation, threat landscape",
+    "persona": "embry"
+  },
+  {
+    "question": "When mapping DO-178C requirements for the F-36 flight control software to SPARTA countermeasures, what cross-domain vulnerabilities emerge between avionics and cybersecurity domains?",
+    "difficulty": "medium",
+    "f36_category": "09_flight_software",
+    "domain_context": "compliance mapping, cross-domain",
+    "persona": "embry"
+  },
+  {
+    "question": "Considering both F-35 legacy issues and current F-36 test evaluation data, what multi-persona attack vectors should we address in the weapons integration subsystem's fire control protocols?",
+    "difficulty": "medium",
+    "f36_category": "03_weapons",
+    "domain_context": "multi-persona, legacy lineage",
+    "persona": "embry"
+  },
+  {
+    "question": "Given the F-35 legacy lineage in the F-36's avionics architecture, how should we adapt SPARTA countermeasures to address potential compliance drift in the updated GPS/INS integration?",
+    "difficulty": "medium",
+    "f36_category": "01_avionics",
+    "domain_context": "legacy lineage, compliance drift",
+    "persona": "embry"
+  },
+  {
+    "question": "How does manufacturing provenance verification for the F-36's rad-hard processors intersect with SPARTA supply chain threats, particularly for counterfeit component insertion?",
+    "difficulty": "medium",
+    "f36_category": "02_microprocessors",
+    "domain_context": "manufacturing provenance",
+    "persona": "embry"
+  },
+  {
+    "question": "When performing sensor correlation between the F-36's helmet-mounted display and primary flight systems, what SPARTA attack vectors should we prioritize in our safety analysis?",
+    "difficulty": "medium",
+    "f36_category": "04_display_ux",
+    "domain_context": "sensor correlation, safety analysis",
+    "persona": "embry"
+  },
+  {
+    "question": "How would you map SPARTA's firmware exploit countermeasures to the F-36's dual-engine FADEC system, considering cross-domain interactions between propulsion and avionics?",
+    "difficulty": "medium",
+    "f36_category": "06_dual_engine",
+    "domain_context": "cross-domain",
+    "persona": "embry"
+  },
+  {
+    "question": "What SPARTA threat landscape considerations emerge when analyzing extraction quality of flight control software requirements from legacy F-35 artifacts for the F-36 program?",
+    "difficulty": "medium",
+    "f36_category": "13_f35_legacy",
+    "domain_context": "threat landscape, extraction quality",
+    "persona": "embry"
+  },
+  {
+    "question": "Given the F-35 legacy lineage in the F-36's avionics architecture, how should we adapt SPARTA countermeasures for GPS spoofing threats to account for the new multi-sensor correlation requirements in the F-36's navigation system?",
+    "difficulty": "medium",
+    "f36_category": "01_avionics",
+    "domain_context": "legacy lineage, sensor correlation",
+    "persona": "embry"
+  },
+  {
+    "question": "With the F-36's dual-engine architecture introducing new cross-domain control surfaces, what SPARTA threat models should we prioritize for potential unsafe control actions that could arise from compromised FADEC firmware?",
+    "difficulty": "medium",
+    "f36_category": "06_dual_engine",
+    "domain_context": "cross-domain, unsafe control action",
+    "persona": "embry"
+  },
+  {
+    "question": "How does manufacturing provenance verification for F-36 rad-hard microprocessors align with SPARTA's supply chain countermeasures against hardware trojans, given the program's reliance on multi-tier vendors?",
+    "difficulty": "medium",
+    "f36_category": "02_microprocessors",
+    "domain_context": "manufacturing provenance, multi-tier vendors",
+    "persona": "embry"
+  },
+  {
+    "question": "When mapping DO-178C compliance for the F-36's flight software updates, what SPARTA exploit techniques pose the highest risk to our safety analysis process, particularly around autopilot logic verification?",
+    "difficulty": "medium",
+    "f36_category": "09_flight_software",
+    "domain_context": "compliance mapping, safety analysis",
+    "persona": "embry"
+  },
+  {
+    "question": "Considering both F-35 legacy issues with weapon system cyber-physical interfaces and the F-36's new multi-persona stores management system, which SPARTA attack vectors would most likely bypass current network segmentation defenses to compromise fire control integrity?",
+    "difficulty": "hard",
+    "f36_category": "03_weapons",
+    "domain_context": "multi-persona, legacy lineage",
+    "persona": "embry"
+  },
+  {
+    "question": "Given the legacy lineage of the F-35's avionics architecture, how might SPARTA threat actors exploit known vulnerabilities in the F-36's upgraded 01_avionics subsystem, and what cross-domain countermeasures from the F-35 program could be adapted to mitigate these risks?",
+    "difficulty": "hard",
+    "f36_category": "01_avionics",
+    "domain_context": "legacy lineage, cross-domain",
+    "persona": "embry"
+  },
+  {
+    "question": "Considering the manufacturing provenance of the F-36's 02_microprocessors, what SPARTA supply chain threats could target the rad-hard processors during fabrication, and how would you correlate these with historical attack patterns from the F-35 program to enhance detection?",
+    "difficulty": "hard",
+    "f36_category": "02_microprocessors",
+    "domain_context": "manufacturing provenance, sensor correlation",
+    "persona": "embry"
+  },
+  {
+    "question": "How does compliance drift in the F-36's 07_cybersecurity implementation for ICS/OT systems create gaps that SPARTA adversaries could exploit, and what multi-persona approaches (e.g., operator vs. engineer roles) would you recommend to harden these systems?",
+    "difficulty": "hard",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "compliance drift, multi-persona",
+    "persona": "embry"
+  },
+  {
+    "question": "With the F-36's 06_dual_engine architecture inheriting design elements from the F-35, what SPARTA attack techniques pose the highest risk to cross-channel control systems, and how would you perform a safety analysis to validate proposed D3FEND countermeasures?",
+    "difficulty": "hard",
+    "f36_category": "06_dual_engine",
+    "domain_context": "safety analysis, F-35 to F-36",
+    "persona": "embry"
+  },
+  {
+    "question": "Given the threat landscape for aerospace systems, how might SPARTA actors target the F-36's 14_vendor_deliverables to compromise extraction quality, and what cross-program lessons from the F-35's supply chain audits could inform defensive strategies?",
+    "difficulty": "hard",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "threat landscape, extraction quality, cross-program",
+    "persona": "embry"
+  },
+  {
+    "question": "Given the F-35 legacy lineage in our datalake, how might SPARTA threat actors exploit known vulnerabilities in the F-36's dual-engine control system during cross-domain operations, and what countermeasures from the F-35 program could be adapted?",
+    "difficulty": "hard",
+    "f36_category": "06_dual_engine",
+    "domain_context": "legacy lineage, cross-domain, countermeasures",
+    "persona": "embry"
+  },
+  {
+    "question": "How does manufacturing provenance verification for F-36 rad-hard processors intersect with SPARTA supply chain threats, and what sensor correlation techniques could detect anomalies in component sourcing?",
+    "difficulty": "hard",
+    "f36_category": "02_microprocessors",
+    "domain_context": "manufacturing provenance, sensor correlation, threat landscape",
+    "persona": "embry"
+  },
+  {
+    "question": "What would Brandon say about compliance drift risks in F-36 avionics certification when mapping DO-178C artifacts against emerging SPARTA firmware exploitation techniques?",
+    "difficulty": "ambiguous",
+    "f36_category": "01_avionics",
+    "domain_context": "compliance drift, what would Brandon say, firmware",
+    "persona": "embry"
+  },
+  {
+    "question": "How might multi-persona access patterns in F-36 weapons system testing create attack surfaces that SPARTA could exploit through compromised test equipment?",
+    "difficulty": "ambiguous",
+    "f36_category": "03_weapons",
+    "domain_context": "multi-persona, attack surface, test evaluation",
+    "persona": "embry"
+  },
+  {
+    "question": "When analyzing cross-program lessons from F-35 to F-36 display systems, which SPARTA threat vectors against HMI components require prioritized safety analysis in the new architecture?",
+    "difficulty": "ambiguous",
+    "f36_category": "04_display_ux",
+    "domain_context": "cross-program, F-35 to F-36, safety analysis",
+    "persona": "embry"
+  }
+]

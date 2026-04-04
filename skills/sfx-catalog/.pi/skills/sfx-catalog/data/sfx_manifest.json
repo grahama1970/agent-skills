@@ -1,0 +1,4653 @@
+{
+  "items": [
+    {
+      "_key": "77_pro_studio_library_3d_sound_effect_77_4056f219",
+      "filename": "77-pro_studio_library-3d_sound_effect_77-4056f219.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/77-pro_studio_library-3d_sound_effect_77-4056f219.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.912902494331066,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1517.0634328216286,
+        "spectral_centroid": 2807.3085264930332
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.290367126464844,
+        "rms_db": -29.845653533935547
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 4056f219",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "35_pro_studio_library_3d_sound_effect_35_5e789668",
+      "filename": "35-pro_studio_library-3d_sound_effect_35-5e789668.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/35-pro_studio_library-3d_sound_effect_35-5e789668.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 7.210861678004536,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 4301.2227049211215,
+        "spectral_centroid": 4688.1049502837
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.707576036453247,
+        "rms_db": -24.74977684020996
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 5e789668",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "26_pro_studio_library_3d_sound_effect_26_751e62e0",
+      "filename": "26-pro_studio_library-3d_sound_effect_26-751e62e0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/26-pro_studio_library-3d_sound_effect_26-751e62e0.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 22.858208616780047,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1354.7326579561327,
+        "spectral_centroid": 2646.5554120805723
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -8.04496955871582,
+        "rms_db": -29.925918579101562
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 751e62e0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "96_pro_studio_library_3d_sound_effect_96_ad4f97e5",
+      "filename": "96-pro_studio_library-3d_sound_effect_96-ad4f97e5.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/96-pro_studio_library-3d_sound_effect_96-ad4f97e5.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 7.550453514739229,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2106.648500504032,
+        "spectral_centroid": 3375.462497536465
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.208167314529419,
+        "rms_db": -24.314838409423828
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, ad4f97e5",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "66_pro_studio_library_3d_sound_effect_66_b5e32f60",
+      "filename": "66-pro_studio_library-3d_sound_effect_66-b5e32f60.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/66-pro_studio_library-3d_sound_effect_66-b5e32f60.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 15.361065759637189,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 273.8002074088935,
+        "spectral_centroid": 1346.5465839828232
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -3.5157470703125,
+        "rms_db": -15.705463409423828
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, b5e32f60",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "54_pro_studio_library_3d_sound_effect_54_3b427aac",
+      "filename": "54-pro_studio_library-3d_sound_effect_54-3b427aac.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/54-pro_studio_library-3d_sound_effect_54-3b427aac.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 9.013310657596373,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3152.466480152027,
+        "spectral_centroid": 3781.4300739494392
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.15873015873015872
+      },
+      "loudness": {
+        "peak_db": -3.2389771938323975,
+        "rms_db": -24.07569694519043
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 3b427aac",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "33_pro_studio_library_3d_sound_effect_33_2ffeb5a0",
+      "filename": "33-pro_studio_library-3d_sound_effect_33-2ffeb5a0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/33-pro_studio_library-3d_sound_effect_33-2ffeb5a0.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 13.506371882086167,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 188.702266732442,
+        "spectral_centroid": 549.7536656506217
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.13605442176870747
+      },
+      "loudness": {
+        "peak_db": -6.3234782218933105,
+        "rms_db": -25.727230072021484
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 2ffeb5a0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "56_pro_studio_library_3d_sound_effect_56_c31e3924",
+      "filename": "56-pro_studio_library-3d_sound_effect_56-c31e3924.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/56-pro_studio_library-3d_sound_effect_56-c31e3924.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 13.793718820861677,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 925.5021412097877,
+        "spectral_centroid": 1011.5633746843879
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.8699729442596436,
+        "rms_db": -26.972423553466797
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c31e3924",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "82_pro_studio_library_3d_sound_effect_82_f7ade8ea",
+      "filename": "82-pro_studio_library-3d_sound_effect_82-f7ade8ea.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/82-pro_studio_library-3d_sound_effect_82-f7ade8ea.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.752086167800453,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1012.6317193716843,
+        "spectral_centroid": 1615.995486781521
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.27210884353741494
+      },
+      "loudness": {
+        "peak_db": -5.497551441192627,
+        "rms_db": -32.77155303955078
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, f7ade8ea",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "89_pro_studio_library_3d_sound_effect_89_cac3b43b",
+      "filename": "89-pro_studio_library-3d_sound_effect_89-cac3b43b.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/89-pro_studio_library-3d_sound_effect_89-cac3b43b.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 19.645147392290248,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 313.96758366250737,
+        "spectral_centroid": 474.3834771683232
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.731477737426758,
+        "rms_db": -23.44090461730957
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, cac3b43b",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "91_pro_studio_library_3d_sound_effect_91_1ade1283",
+      "filename": "91-pro_studio_library-3d_sound_effect_91-1ade1283.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/91-pro_studio_library-3d_sound_effect_91-1ade1283.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 8.15126984126984,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2097.4044343994487,
+        "spectral_centroid": 3488.2715567806285
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.382100105285645,
+        "rms_db": -26.302913665771484
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 1ade1283",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "20_pro_studio_library_3d_sound_effect_20_45200c66",
+      "filename": "20-pro_studio_library-3d_sound_effect_20-45200c66.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/20-pro_studio_library-3d_sound_effect_20-45200c66.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 17.241882086167802,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2315.9930838871132,
+        "spectral_centroid": 3353.23488654155
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.15873015873015872
+      },
+      "loudness": {
+        "peak_db": -3.297616958618164,
+        "rms_db": -22.262704849243164
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 45200c66",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "98_pro_studio_library_3d_sound_effect_98_5fc6ad44",
+      "filename": "98-pro_studio_library-3d_sound_effect_98-5fc6ad44.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/98-pro_studio_library-3d_sound_effect_98-5fc6ad44.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.184739229024943,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 281.1317949187197,
+        "spectral_centroid": 774.9082084575683
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.654335975646973,
+        "rms_db": -25.89168357849121
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 5fc6ad44",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "04_pro_studio_library_3d_sound_effect_4_e55af024",
+      "filename": "04-pro_studio_library-3d_sound_effect_4-e55af024.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/04-pro_studio_library-3d_sound_effect_4-e55af024.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 18.286780045351474,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1139.1829592322335,
+        "spectral_centroid": 1418.283789511474
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.251138210296631,
+        "rms_db": -29.18248748779297
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, e55af024",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "13_pro_studio_library_3d_sound_effect_13_76b22f9a",
+      "filename": "13-pro_studio_library-3d_sound_effect_13-76b22f9a.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/13-pro_studio_library-3d_sound_effect_13-76b22f9a.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.188820861678005,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1352.2998714229784,
+        "spectral_centroid": 1942.9648961877797
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.775704860687256,
+        "rms_db": -25.09957504272461
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 76b22f9a",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "60_pro_studio_library_3d_sound_effect_60_5ad7d13f",
+      "filename": "60-pro_studio_library-3d_sound_effect_60-5ad7d13f.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/60-pro_studio_library-3d_sound_effect_60-5ad7d13f.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 14.081065759637188,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 183.67129936752886,
+        "spectral_centroid": 399.1357596809115
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.494910717010498,
+        "rms_db": -23.81275177001953
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, 5ad7d13f",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "43_pro_studio_library_3d_sound_effect_43_c2811b1a",
+      "filename": "43-pro_studio_library-3d_sound_effect_43-c2811b1a.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/43-pro_studio_library-3d_sound_effect_43-c2811b1a.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.259841269841269,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 896.0587397309922,
+        "spectral_centroid": 2233.8818190968154
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.582683086395264,
+        "rms_db": -23.202312469482422
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c2811b1a",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "70_pro_studio_library_3d_sound_effect_70_914c3a50",
+      "filename": "70-pro_studio_library-3d_sound_effect_70-914c3a50.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/70-pro_studio_library-3d_sound_effect_70-914c3a50.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 9.84922902494331,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 4924.648627291298,
+        "spectral_centroid": 6259.372037377549
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -0.051852982491254807,
+        "rms_db": -26.589771270751953
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 914c3a50",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "49_pro_studio_library_3d_sound_effect_49_00171769",
+      "filename": "49-pro_studio_library-3d_sound_effect_49-00171769.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/49-pro_studio_library-3d_sound_effect_49-00171769.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 16.170861678004535,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 734.1307366912688,
+        "spectral_centroid": 2291.697671401735
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.480006694793701,
+        "rms_db": -27.512584686279297
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 00171769",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "30_pro_studio_library_3d_sound_effect_30_be083a92",
+      "filename": "30-pro_studio_library-3d_sound_effect_30-be083a92.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/30-pro_studio_library-3d_sound_effect_30-be083a92.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 17.607596371882085,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3413.1262520857367,
+        "spectral_centroid": 4459.374932680336
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -5.580354690551758,
+        "rms_db": -33.880157470703125
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, be083a92",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "90_pro_studio_library_3d_sound_effect_90_6aeaa260",
+      "filename": "90-pro_studio_library-3d_sound_effect_90-6aeaa260.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/90-pro_studio_library-3d_sound_effect_90-6aeaa260.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.524331065759637,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 422.4190686994415,
+        "spectral_centroid": 1319.699577577113
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.647167205810547,
+        "rms_db": -29.312782287597656
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 6aeaa260",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "48_pro_studio_library_3d_sound_effect_48_dc6c7781",
+      "filename": "48-pro_studio_library-3d_sound_effect_48-dc6c7781.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/48-pro_studio_library-3d_sound_effect_48-dc6c7781.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 25.130861678004536,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 5587.204798462761,
+        "spectral_centroid": 4720.323830029865
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.7175021171569824,
+        "rms_db": -32.993194580078125
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, dc6c7781",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "39_pro_studio_library_3d_sound_effect_39_e27a2958",
+      "filename": "39-pro_studio_library-3d_sound_effect_39-e27a2958.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/39-pro_studio_library-3d_sound_effect_39-e27a2958.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 22.910453514739228,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 317.658379737367,
+        "spectral_centroid": 821.3297054076154
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.221188068389893,
+        "rms_db": -28.694488525390625
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, e27a2958",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "74_pro_studio_library_3d_sound_effect_74_0062cf67",
+      "filename": "74-pro_studio_library-3d_sound_effect_74-0062cf67.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/74-pro_studio_library-3d_sound_effect_74-0062cf67.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 9.196167800453514,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 583.1207698711381,
+        "spectral_centroid": 944.9231730360453
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -2.224503517150879,
+        "rms_db": -18.733234405517578
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 0062cf67",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "46_pro_studio_library_3d_sound_effect_46_3fb83271",
+      "filename": "46-pro_studio_library-3d_sound_effect_46-3fb83271.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/46-pro_studio_library-3d_sound_effect_46-3fb83271.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 16.745555555555555,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1248.612408231549,
+        "spectral_centroid": 1976.2402954718734
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.22675736961451248
+      },
+      "loudness": {
+        "peak_db": -6.937662124633789,
+        "rms_db": -25.5982608795166
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 3fb83271",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "86_pro_studio_library_3d_sound_effect_86_8a15a814",
+      "filename": "86-pro_studio_library-3d_sound_effect_86-8a15a814.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/86-pro_studio_library-3d_sound_effect_86-8a15a814.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.740657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1773.153649755271,
+        "spectral_centroid": 2537.401883619674
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.481588840484619,
+        "rms_db": -23.841636657714844
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 8a15a814",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "01_pro_studio_library_3d_sound_effect_1_04310e5b",
+      "filename": "01-pro_studio_library-3d_sound_effect_1-04310e5b.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/01-pro_studio_library-3d_sound_effect_1-04310e5b.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 9.300657596371883,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 5675.636835645262,
+        "spectral_centroid": 5498.7846650662195
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.803393840789795,
+        "rms_db": -20.621232986450195
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 04310e5b",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "14_pro_studio_library_3d_sound_effect_14_307ae3c2",
+      "filename": "14-pro_studio_library-3d_sound_effect_14-307ae3c2.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/14-pro_studio_library-3d_sound_effect_14-307ae3c2.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 10.13657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2467.843048305206,
+        "spectral_centroid": 3243.935813549781
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -4.847354888916016,
+        "rms_db": -27.955883026123047
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 307ae3c2",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "27_pro_studio_library_3d_sound_effect_27_e14e7129",
+      "filename": "27-pro_studio_library-3d_sound_effect_27-e14e7129.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/27-pro_studio_library-3d_sound_effect_27-e14e7129.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 12.278616780045352,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3292.911153119093,
+        "spectral_centroid": 3556.990140888495
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -8.686399459838867,
+        "rms_db": -33.387916564941406
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, e14e7129",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "19_pro_studio_library_3d_sound_effect_19_c1ebdc51",
+      "filename": "19-pro_studio_library-3d_sound_effect_19-c1ebdc51.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/19-pro_studio_library-3d_sound_effect_19-c1ebdc51.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.905555555555555,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 803.8352472319019,
+        "spectral_centroid": 1268.5072310451558
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.22675736961451248
+      },
+      "loudness": {
+        "peak_db": -3.1873812675476074,
+        "rms_db": -24.6236629486084
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c1ebdc51",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "25_pro_studio_library_3d_sound_effect_25_f8d1642b",
+      "filename": "25-pro_studio_library-3d_sound_effect_25-f8d1642b.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/25-pro_studio_library-3d_sound_effect_25-f8d1642b.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 23.79861678004535,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 293.9072146532012,
+        "spectral_centroid": 457.6249259052983
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -4.183362007141113,
+        "rms_db": -23.623971939086914
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, f8d1642b",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "81_pro_studio_library_3d_sound_effect_81_52a83057",
+      "filename": "81-pro_studio_library-3d_sound_effect_81-52a83057.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/81-pro_studio_library-3d_sound_effect_81-52a83057.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 15.570045351473922,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 847.4968127095754,
+        "spectral_centroid": 1435.2627992509902
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.40816326530612246
+      },
+      "loudness": {
+        "peak_db": -9.992530822753906,
+        "rms_db": -35.8204345703125
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 52a83057",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "02_pro_studio_library_3d_sound_effect_2_ac4e4f45",
+      "filename": "02-pro_studio_library-3d_sound_effect_2-ac4e4f45.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/02-pro_studio_library-3d_sound_effect_2-ac4e4f45.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 22.962698412698412,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1173.3745023382205,
+        "spectral_centroid": 2260.0972478872295
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.554516553878784,
+        "rms_db": -20.73016357421875
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, ac4e4f45",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "94_pro_studio_library_3d_sound_effect_94_518ff7c8",
+      "filename": "94-pro_studio_library-3d_sound_effect_94-518ff7c8.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/94-pro_studio_library-3d_sound_effect_94-518ff7c8.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.158616780045351,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 566.2325025957252,
+        "spectral_centroid": 1173.9409162372335
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.717757225036621,
+        "rms_db": -27.72613525390625
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 518ff7c8",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "07_pro_studio_library_3d_sound_effect_7_7da61a04",
+      "filename": "07-pro_studio_library-3d_sound_effect_7-7da61a04.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/07-pro_studio_library-3d_sound_effect_7-7da61a04.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.576575963718821,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 703.5388800488132,
+        "spectral_centroid": 1987.0014203497374
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.763037204742432,
+        "rms_db": -28.37938117980957
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 7da61a04",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "50_pro_studio_library_3d_sound_effect_50_21815ac9",
+      "filename": "50-pro_studio_library-3d_sound_effect_50-21815ac9.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/50-pro_studio_library-3d_sound_effect_50-21815ac9.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.599433106575963,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 363.6204345703125,
+        "spectral_centroid": 783.2952497465878
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -5.710610389709473,
+        "rms_db": -24.205114364624023
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 21815ac9",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "52_pro_studio_library_3d_sound_effect_52_a340506c",
+      "filename": "52-pro_studio_library-3d_sound_effect_52-a340506c.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/52-pro_studio_library-3d_sound_effect_52-a340506c.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.920249433106576,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 812.0488976570803,
+        "spectral_centroid": 1029.4081427785934
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.2570629119873047,
+        "rms_db": -25.173675537109375
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, a340506c",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "11_pro_studio_library_3d_sound_effect_11_a1a2d051",
+      "filename": "11-pro_studio_library-3d_sound_effect_11-a1a2d051.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/11-pro_studio_library-3d_sound_effect_11-a1a2d051.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.897392290249433,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1211.0888671875,
+        "spectral_centroid": 1572.4687287106374
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -10.342418670654297,
+        "rms_db": -31.882455825805664
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, a1a2d051",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "80_pro_studio_library_3d_sound_effect_80_27f70fd0",
+      "filename": "80-pro_studio_library-3d_sound_effect_80-27f70fd0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/80-pro_studio_library-3d_sound_effect_80-27f70fd0.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 14.342290249433107,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2582.599351012591,
+        "spectral_centroid": 3801.6124805712307
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.15873015873015872
+      },
+      "loudness": {
+        "peak_db": -6.316371917724609,
+        "rms_db": -24.948444366455078
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 27f70fd0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "40_pro_studio_library_3d_sound_effect_40_153382db",
+      "filename": "40-pro_studio_library-3d_sound_effect_40-153382db.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/40-pro_studio_library-3d_sound_effect_40-153382db.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.569229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 510.82352365950607,
+        "spectral_centroid": 690.3754636346088
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.435718059539795,
+        "rms_db": -25.623769760131836
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 153382db",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "95_pro_studio_library_3d_sound_effect_95_1f6e72f3",
+      "filename": "95-pro_studio_library-3d_sound_effect_95-1f6e72f3.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/95-pro_studio_library-3d_sound_effect_95-1f6e72f3.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.445963718820861,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1118.1333737952687,
+        "spectral_centroid": 2119.598964570996
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.767279148101807,
+        "rms_db": -24.63195037841797
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 1f6e72f3",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "88_pro_studio_library_3d_sound_effect_88_8173501f",
+      "filename": "88-pro_studio_library-3d_sound_effect_88-8173501f.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/88-pro_studio_library-3d_sound_effect_88-8173501f.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 10.162698412698413,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 5635.48015437714,
+        "spectral_centroid": 5394.222954182414
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.3294427394866943,
+        "rms_db": -28.432939529418945
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 8173501f",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "29_pro_studio_library_3d_sound_effect_29_bc937f30",
+      "filename": "29-pro_studio_library-3d_sound_effect_29-bc937f30.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/29-pro_studio_library-3d_sound_effect_29-bc937f30.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 17.37249433106576,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 7025.9087510959425,
+        "spectral_centroid": 6591.729009449525
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -4.312730312347412,
+        "rms_db": -27.492265701293945
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, bc937f30",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "85_pro_studio_library_3d_sound_effect_85_867abdf0",
+      "filename": "85-pro_studio_library-3d_sound_effect_85-867abdf0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/85-pro_studio_library-3d_sound_effect_85-867abdf0.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 6.583922902494331,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1317.088984099912,
+        "spectral_centroid": 3350.026983010466
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.223658084869385,
+        "rms_db": -30.54283332824707
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 867abdf0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "42_pro_studio_library_3d_sound_effect_42_e09e5f50",
+      "filename": "42-pro_studio_library-3d_sound_effect_42-e09e5f50.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/42-pro_studio_library-3d_sound_effect_42-e09e5f50.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.162698412698413,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 783.3071355950343,
+        "spectral_centroid": 1323.7917106277177
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.874828338623047,
+        "rms_db": -25.20684242248535
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, e09e5f50",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "76_pro_studio_library_3d_sound_effect_76_1220bcec",
+      "filename": "76-pro_studio_library-3d_sound_effect_76-1220bcec.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/76-pro_studio_library-3d_sound_effect_76-1220bcec.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 13.4018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2060.075017755682,
+        "spectral_centroid": 3776.056451618594
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -7.858924388885498,
+        "rms_db": -24.476364135742188
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 1220bcec",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "97_pro_studio_library_3d_sound_effect_97_7bb69dc8",
+      "filename": "97-pro_studio_library-3d_sound_effect_97-7bb69dc8.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/97-pro_studio_library-3d_sound_effect_97-7bb69dc8.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.740657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 351.2951218938253,
+        "spectral_centroid": 615.1792894128827
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.266897201538086,
+        "rms_db": -25.86419677734375
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 7bb69dc8",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "84_pro_studio_library_3d_sound_effect_84_34ac3b9f",
+      "filename": "84-pro_studio_library-3d_sound_effect_84-34ac3b9f.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/84-pro_studio_library-3d_sound_effect_84-34ac3b9f.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.113718820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 931.4846900201613,
+        "spectral_centroid": 2561.347977718195
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.3673932552337646,
+        "rms_db": -27.818174362182617
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 34ac3b9f",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "57_pro_studio_library_3d_sound_effect_57_0c26f0be",
+      "filename": "57-pro_studio_library-3d_sound_effect_57-0c26f0be.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/57-pro_studio_library-3d_sound_effect_57-0c26f0be.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 9.823106575963719,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2169.6545309271696,
+        "spectral_centroid": 3086.298630181445
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -4.530523300170898,
+        "rms_db": -25.87579345703125
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 0c26f0be",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "63_pro_studio_library_3d_sound_effect_63_b0795bf4",
+      "filename": "63-pro_studio_library-3d_sound_effect_63-b0795bf4.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/63-pro_studio_library-3d_sound_effect_63-b0795bf4.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.871269841269841,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 387.6340299039274,
+        "spectral_centroid": 713.9228320660345
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -10.170848846435547,
+        "rms_db": -32.213172912597656
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, b0795bf4",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "21_pro_studio_library_3d_sound_effect_21_7727fbe5",
+      "filename": "21-pro_studio_library-3d_sound_effect_21-7727fbe5.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/21-pro_studio_library-3d_sound_effect_21-7727fbe5.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 9.640249433106575,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1053.3649100293321,
+        "spectral_centroid": 1875.01232238689
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.0593037605285645,
+        "rms_db": -27.313344955444336
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 7727fbe5",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "55_pro_studio_library_3d_sound_effect_55_0bb7afdf",
+      "filename": "55-pro_studio_library-3d_sound_effect_55-0bb7afdf.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/55-pro_studio_library-3d_sound_effect_55-0bb7afdf.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.789637188208618,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 226.77009828629033,
+        "spectral_centroid": 816.8194859702828
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.4536638259887695,
+        "rms_db": -22.552759170532227
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 0bb7afdf",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "47_pro_studio_library_3d_sound_effect_47_416e1f74",
+      "filename": "47-pro_studio_library-3d_sound_effect_47-416e1f74.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/47-pro_studio_library-3d_sound_effect_47-416e1f74.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 17.607596371882085,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1124.7443524173946,
+        "spectral_centroid": 1641.8321601925543
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.915840148925781,
+        "rms_db": -28.96099853515625
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 416e1f74",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "41_pro_studio_library_3d_sound_effect_41_29427b9d",
+      "filename": "41-pro_studio_library-3d_sound_effect_41-29427b9d.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/41-pro_studio_library-3d_sound_effect_41-29427b9d.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 13.741473922902495,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 392.35351150100297,
+        "spectral_centroid": 732.1451814906467
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.249455451965332,
+        "rms_db": -29.49097442626953
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 29427b9d",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "83_pro_studio_library_3d_sound_effect_83_05201385",
+      "filename": "83-pro_studio_library-3d_sound_effect_83-05201385.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/83-pro_studio_library-3d_sound_effect_83-05201385.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1212.78076171875,
+        "spectral_centroid": 2170.2964712334856
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -1.0231778621673584,
+        "rms_db": -38.300941467285156
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 05201385",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "44_pro_studio_library_3d_sound_effect_44_4efbe288",
+      "filename": "44-pro_studio_library-3d_sound_effect_44-4efbe288.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/44-pro_studio_library-3d_sound_effect_44-4efbe288.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 20.48106575963719,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1571.6005250752478,
+        "spectral_centroid": 2066.5042160812286
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.442915439605713,
+        "rms_db": -26.395187377929688
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 4efbe288",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "06_pro_studio_library_3d_sound_effect_6_9adf0d6e",
+      "filename": "06-pro_studio_library-3d_sound_effect_6-9adf0d6e.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/06-pro_studio_library-3d_sound_effect_6-9adf0d6e.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 30.3553514739229,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 5491.79848081979,
+        "spectral_centroid": 5532.207816155008
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.8784427642822266,
+        "rms_db": -32.08641815185547
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 9adf0d6e",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "67_pro_studio_library_3d_sound_effect_67_e9a28795",
+      "filename": "67-pro_studio_library-3d_sound_effect_67-e9a28795.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/67-pro_studio_library-3d_sound_effect_67-e9a28795.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.024739229024943,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 687.5325092516447,
+        "spectral_centroid": 1234.8592428443508
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.13605442176870747
+      },
+      "loudness": {
+        "peak_db": -4.226963043212891,
+        "rms_db": -29.42249298095703
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, e9a28795",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "73_pro_studio_library_3d_sound_effect_73_9998414c",
+      "filename": "73-pro_studio_library-3d_sound_effect_73-9998414c.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/73-pro_studio_library-3d_sound_effect_73-9998414c.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.113718820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2022.5071250148244,
+        "spectral_centroid": 2624.2948361892177
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -5.9020233154296875,
+        "rms_db": -29.913721084594727
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 9998414c",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "32_pro_studio_library_3d_sound_effect_32_63886c2b",
+      "filename": "32-pro_studio_library-3d_sound_effect_32-63886c2b.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/32-pro_studio_library-3d_sound_effect_32-63886c2b.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 14.002698412698413,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 167.3417111122618,
+        "spectral_centroid": 375.0185844389594
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.22675736961451248
+      },
+      "loudness": {
+        "peak_db": -6.164610385894775,
+        "rms_db": -23.939159393310547
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, 63886c2b",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "93_pro_studio_library_3d_sound_effect_93_00b5c6ed",
+      "filename": "93-pro_studio_library-3d_sound_effect_93-00b5c6ed.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/93-pro_studio_library-3d_sound_effect_93-00b5c6ed.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.498208616780046,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 345.5979102167183,
+        "spectral_centroid": 636.5361171463966
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -11.825102806091309,
+        "rms_db": -29.50372314453125
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 00b5c6ed",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "37_pro_studio_library_3d_sound_effect_37_3e240b71",
+      "filename": "37-pro_studio_library-3d_sound_effect_37-3e240b71.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/37-pro_studio_library-3d_sound_effect_37-3e240b71.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 14.812494331065759,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 469.2078210717085,
+        "spectral_centroid": 713.9111181573012
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.38553524017334,
+        "rms_db": -26.48954200744629
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 3e240b71",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "72_pro_studio_library_3d_sound_effect_72_d9ca6132",
+      "filename": "72-pro_studio_library-3d_sound_effect_72-d9ca6132.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/72-pro_studio_library-3d_sound_effect_72-d9ca6132.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.789637188208618,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1637.461173765121,
+        "spectral_centroid": 2477.4318126920234
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -8.852654457092285,
+        "rms_db": -28.54207992553711
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, d9ca6132",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "53_pro_studio_library_3d_sound_effect_53_dc823413",
+      "filename": "53-pro_studio_library-3d_sound_effect_53-dc823413.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/53-pro_studio_library-3d_sound_effect_53-dc823413.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 14.39453514739229,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 994.2088268649194,
+        "spectral_centroid": 1550.0813921798226
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.08198881149292,
+        "rms_db": -21.56076431274414
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, dc823413",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "75_pro_studio_library_3d_sound_effect_75_d08f9601",
+      "filename": "75-pro_studio_library-3d_sound_effect_75-d08f9601.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/75-pro_studio_library-3d_sound_effect_75-d08f9601.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 14.26392290249433,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3695.327180221471,
+        "spectral_centroid": 3880.8380194193264
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.22675736961451248
+      },
+      "loudness": {
+        "peak_db": -6.015761375427246,
+        "rms_db": -27.344520568847656
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, d08f9601",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "28_pro_studio_library_3d_sound_effect_28_24766cb4",
+      "filename": "28-pro_studio_library-3d_sound_effect_28-24766cb4.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/28-pro_studio_library-3d_sound_effect_28-24766cb4.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 17.84269841269841,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2288.8730170126464,
+        "spectral_centroid": 3102.3110697384427
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.317007064819336,
+        "rms_db": -26.163150787353516
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 24766cb4",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "15_pro_studio_library_3d_sound_effect_15_a0773239",
+      "filename": "15-pro_studio_library-3d_sound_effect_15-a0773239.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/15-pro_studio_library-3d_sound_effect_15-a0773239.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 15.961882086167801,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1517.9185546875,
+        "spectral_centroid": 2450.234730602035
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -7.406122207641602,
+        "rms_db": -26.065942764282227
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, a0773239",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "45_pro_studio_library_3d_sound_effect_45_4ca1d785",
+      "filename": "45-pro_studio_library-3d_sound_effect_45-4ca1d785.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/45-pro_studio_library-3d_sound_effect_45-4ca1d785.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 16.588820861678006,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1442.084188708231,
+        "spectral_centroid": 1712.6016051653119
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -3.3861265182495117,
+        "rms_db": -21.798093795776367
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 4ca1d785",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "65_pro_studio_library_3d_sound_effect_65_a56c511d",
+      "filename": "65-pro_studio_library-3d_sound_effect_65-a56c511d.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/65-pro_studio_library-3d_sound_effect_65-a56c511d.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 29.75453514739229,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1051.2790377792137,
+        "spectral_centroid": 1255.914420201521
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -1.625872254371643,
+        "rms_db": -22.534259796142578
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, a56c511d",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "08_pro_studio_library_3d_sound_effect_8_c2249a9f",
+      "filename": "08-pro_studio_library-3d_sound_effect_8-c2249a9f.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/08-pro_studio_library-3d_sound_effect_8-c2249a9f.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 9.013310657596373,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2209.342667863176,
+        "spectral_centroid": 3517.6172866683914
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -6.327009677886963,
+        "rms_db": -31.624975204467773
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, c2249a9f",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "38_pro_studio_library_3d_sound_effect_38_f823eb19",
+      "filename": "38-pro_studio_library-3d_sound_effect_38-f823eb19.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/38-pro_studio_library-3d_sound_effect_38-f823eb19.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 26.22800453514739,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 510.7227966848728,
+        "spectral_centroid": 610.5639728563275
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.0899739265441895,
+        "rms_db": -24.611093521118164
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, f823eb19",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "92_pro_studio_library_3d_sound_effect_92_3d0627e0",
+      "filename": "92-pro_studio_library-3d_sound_effect_92-3d0627e0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/92-pro_studio_library-3d_sound_effect_92-3d0627e0.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 6.7667800453514735,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 224.9351750107204,
+        "spectral_centroid": 403.6569390063536
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -10.952463150024414,
+        "rms_db": -28.156997680664062
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, 3d0627e0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "22_pro_studio_library_3d_sound_effect_22_ce04b4fe",
+      "filename": "22-pro_studio_library-3d_sound_effect_22-ce04b4fe.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/22-pro_studio_library-3d_sound_effect_22-ce04b4fe.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 24.007596371882087,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 530.6976613500362,
+        "spectral_centroid": 801.1941685595089
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.15873015873015872
+      },
+      "loudness": {
+        "peak_db": -1.1732470989227295,
+        "rms_db": -17.836406707763672
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, ce04b4fe",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "23_pro_studio_library_3d_sound_effect_23_696c56bf",
+      "filename": "23-pro_studio_library-3d_sound_effect_23-696c56bf.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/23-pro_studio_library-3d_sound_effect_23-696c56bf.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 11.70392290249433,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3077.156615847993,
+        "spectral_centroid": 3747.3958530467853
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -8.396842956542969,
+        "rms_db": -29.375247955322266
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 696c56bf",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "34_pro_studio_library_3d_sound_effect_34_de660297",
+      "filename": "34-pro_studio_library-3d_sound_effect_34-de660297.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/34-pro_studio_library-3d_sound_effect_34-de660297.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.121882086167801,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1434.0392073489834,
+        "spectral_centroid": 2542.35150766519
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -1.9681050777435303,
+        "rms_db": -18.991958618164062
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, de660297",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "59_pro_studio_library_3d_sound_effect_59_b17106d0",
+      "filename": "59-pro_studio_library-3d_sound_effect_59-b17106d0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/59-pro_studio_library-3d_sound_effect_59-b17106d0.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 18.130045351473925,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1558.0554527448783,
+        "spectral_centroid": 1787.5479727343452
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -5.546858310699463,
+        "rms_db": -31.302387237548828
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, b17106d0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "68_pro_studio_library_3d_sound_effect_68_5c423fb7",
+      "filename": "68-pro_studio_library-3d_sound_effect_68-5c423fb7.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/68-pro_studio_library-3d_sound_effect_68-5c423fb7.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 13.297392290249434,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 300.09318246891365,
+        "spectral_centroid": 632.3403631028139
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.431577682495117,
+        "rms_db": -30.346965789794922
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 5c423fb7",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "61_pro_studio_library_3d_sound_effect_61_63c2daef",
+      "filename": "61-pro_studio_library-3d_sound_effect_61-63c2daef.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/61-pro_studio_library-3d_sound_effect_61-63c2daef.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 13.950453514739229,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1703.8997910383735,
+        "spectral_centroid": 2384.4076931437603
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -6.789910793304443,
+        "rms_db": -30.033245086669922
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 63c2daef",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "69_pro_studio_library_3d_sound_effect_69_fd3afd6c",
+      "filename": "69-pro_studio_library-3d_sound_effect_69-fd3afd6c.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/69-pro_studio_library-3d_sound_effect_69-fd3afd6c.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.386371882086168,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1066.7423738978216,
+        "spectral_centroid": 1586.4989842253424
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -0.49910131096839905,
+        "rms_db": -18.68520164489746
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, fd3afd6c",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "03_pro_studio_library_3d_sound_effect_3_fd0f25e1",
+      "filename": "03-pro_studio_library-3d_sound_effect_3-fd0f25e1.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/03-pro_studio_library-3d_sound_effect_3-fd0f25e1.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 15.282698412698412,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 322.3440391870729,
+        "spectral_centroid": 593.7910796675313
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -4.748081207275391,
+        "rms_db": -22.4991455078125
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, fd0f25e1",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "99_pro_studio_library_3d_sound_effect_99_e13b92a0",
+      "filename": "99-pro_studio_library-3d_sound_effect_99-e13b92a0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/99-pro_studio_library-3d_sound_effect_99-e13b92a0.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 5.251678004535147,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 395.5834799254967,
+        "spectral_centroid": 1770.7768344202425
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -8.045223236083984,
+        "rms_db": -19.995819091796875
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, e13b92a0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "16_pro_studio_library_3d_sound_effect_16_7f96c62c",
+      "filename": "16-pro_studio_library-3d_sound_effect_16-7f96c62c.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/16-pro_studio_library-3d_sound_effect_16-7f96c62c.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.6361678004535145,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 508.7031010981206,
+        "spectral_centroid": 812.6822809673752
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.4639744758605957,
+        "rms_db": -15.3377685546875
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 7f96c62c",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "51_pro_studio_library_3d_sound_effect_51_5b9da3df",
+      "filename": "51-pro_studio_library-3d_sound_effect_51-5b9da3df.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/51-pro_studio_library-3d_sound_effect_51-5b9da3df.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.95780045351474,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 388.2049041447516,
+        "spectral_centroid": 1089.951356648749
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.1851377487182617,
+        "rms_db": -19.47683334350586
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 5b9da3df",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "09_pro_studio_library_3d_sound_effect_9_0ab1f18b",
+      "filename": "09-pro_studio_library-3d_sound_effect_9-0ab1f18b.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/09-pro_studio_library-3d_sound_effect_9-0ab1f18b.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 28.370045351473923,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 569.8677624891316,
+        "spectral_centroid": 841.4709537523488
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.464972496032715,
+        "rms_db": -21.881256103515625
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 0ab1f18b",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "79_pro_studio_library_3d_sound_effect_79_ac28bcff",
+      "filename": "79-pro_studio_library-3d_sound_effect_79-ac28bcff.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/79-pro_studio_library-3d_sound_effect_79-ac28bcff.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.513718820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 960.9641335227273,
+        "spectral_centroid": 1609.3920029349545
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.8123393058776855,
+        "rms_db": -22.231449127197266
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, ac28bcff",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "31_pro_studio_library_3d_sound_effect_31_c6413363",
+      "filename": "31-pro_studio_library-3d_sound_effect_31-c6413363.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/31-pro_studio_library-3d_sound_effect_31-c6413363.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 16.196984126984127,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 166.1804898762088,
+        "spectral_centroid": 464.74481997629334
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -7.122063636779785,
+        "rms_db": -28.064001083374023
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, c6413363",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "36_pro_studio_library_3d_sound_effect_36_eeecfa04",
+      "filename": "36-pro_studio_library-3d_sound_effect_36-eeecfa04.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/36-pro_studio_library-3d_sound_effect_36-eeecfa04.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.461473922902494,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 566.8505450200768,
+        "spectral_centroid": 1057.952006665941
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.3621015548706055,
+        "rms_db": -24.72810935974121
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, eeecfa04",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "62_pro_studio_library_3d_sound_effect_62_c854c343",
+      "filename": "62-pro_studio_library-3d_sound_effect_62-c854c343.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/62-pro_studio_library-3d_sound_effect_62-c854c343.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 21.970045351473924,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2213.0342849271988,
+        "spectral_centroid": 4356.607955058342
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -3.9766550064086914,
+        "rms_db": -19.212892532348633
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, c854c343",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "78_pro_studio_library_3d_sound_effect_78_90f48b9f",
+      "filename": "78-pro_studio_library-3d_sound_effect_78-90f48b9f.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/78-pro_studio_library-3d_sound_effect_78-90f48b9f.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 10.345555555555556,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 5693.81826084291,
+        "spectral_centroid": 4913.137943830321
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -3.635258913040161,
+        "rms_db": -31.83696937561035
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 90f48b9f",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "87_pro_studio_library_3d_sound_effect_87_a3fde8b7",
+      "filename": "87-pro_studio_library-3d_sound_effect_87-a3fde8b7.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/87-pro_studio_library-3d_sound_effect_87-a3fde8b7.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 8.43861678004535,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2397.1016444399074,
+        "spectral_centroid": 3376.244549650845
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.0468761920928955,
+        "rms_db": -22.804929733276367
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, a3fde8b7",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "12_pro_studio_library_3d_sound_effect_12_d2b1777c",
+      "filename": "12-pro_studio_library-3d_sound_effect_12-d2b1777c.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/12-pro_studio_library-3d_sound_effect_12-d2b1777c.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 14.420657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 393.9987170341412,
+        "spectral_centroid": 611.3981966757516
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.741061687469482,
+        "rms_db": -24.476268768310547
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, d2b1777c",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "24_pro_studio_library_3d_sound_effect_24_705d4917",
+      "filename": "24-pro_studio_library-3d_sound_effect_24-705d4917.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/24-pro_studio_library-3d_sound_effect_24-705d4917.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 17.08514739229025,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 676.7672165580418,
+        "spectral_centroid": 950.7810766893242
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -8.31336784362793,
+        "rms_db": -25.00989532470703
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 705d4917",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "64_pro_studio_library_3d_sound_effect_64_2cbe67e7",
+      "filename": "64-pro_studio_library-3d_sound_effect_64-2cbe67e7.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/64-pro_studio_library-3d_sound_effect_64-2cbe67e7.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.490861678004535,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 558.789562788166,
+        "spectral_centroid": 1104.604428805889
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -6.9259352684021,
+        "rms_db": -31.89419174194336
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 2cbe67e7",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "18_pro_studio_library_3d_sound_effect_18_76864bf2",
+      "filename": "18-pro_studio_library-3d_sound_effect_18-76864bf2.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/18-pro_studio_library-3d_sound_effect_18-76864bf2.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.050861678004535,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1786.271936753217,
+        "spectral_centroid": 2899.681675654428
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -0.30757972598075867,
+        "rms_db": -21.953414916992188
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 76864bf2",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "17_pro_studio_library_3d_sound_effect_17_300c0d33",
+      "filename": "17-pro_studio_library-3d_sound_effect_17-300c0d33.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/17-pro_studio_library-3d_sound_effect_17-300c0d33.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.550453514739229,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1352.6060042842741,
+        "spectral_centroid": 2501.385906362723
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.91364860534668,
+        "rms_db": -22.812788009643555
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 300c0d33",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "10_pro_studio_library_3d_sound_effect_10_8a6d7655",
+      "filename": "10-pro_studio_library-3d_sound_effect_10-8a6d7655.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/10-pro_studio_library-3d_sound_effect_10-8a6d7655.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 14.6818820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 318.13818166378456,
+        "spectral_centroid": 543.4241134413074
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -7.63156795501709,
+        "rms_db": -28.627609252929688
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 8a6d7655",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "71_pro_studio_library_3d_sound_effect_71_fdb26a39",
+      "filename": "71-pro_studio_library-3d_sound_effect_71-fdb26a39.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/71-pro_studio_library-3d_sound_effect_71-fdb26a39.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 20.95126984126984,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 475.68694814750694,
+        "spectral_centroid": 975.2391695761143
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -5.1731109619140625,
+        "rms_db": -23.15182876586914
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, fdb26a39",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "05_pro_studio_library_3d_sound_effect_5_0733d99d",
+      "filename": "05-pro_studio_library-3d_sound_effect_5-0733d99d.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/05-pro_studio_library-3d_sound_effect_5-0733d99d.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 14.316167800453515,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 312.7636679181017,
+        "spectral_centroid": 624.991704360804
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.196162223815918,
+        "rms_db": -24.4724063873291
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 0733d99d",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "58_pro_studio_library_3d_sound_effect_58_a819e956",
+      "filename": "58-pro_studio_library-3d_sound_effect_58-a819e956.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.1-WEB-2009-KNOWN/58-pro_studio_library-3d_sound_effect_58-a819e956.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.233718820861679,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 970.9961946345558,
+        "spectral_centroid": 1366.1241847386175
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.13605442176870747
+      },
+      "loudness": {
+        "peak_db": -5.144408226013184,
+        "rms_db": -31.344707489013672
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, a819e956",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "13_pro_studio_library_3d_sound_effect_13_91168dd0",
+      "filename": "13-pro_studio_library-3d_sound_effect_13-91168dd0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/13-pro_studio_library-3d_sound_effect_13-91168dd0.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 412.5119773765377,
+        "spectral_centroid": 859.1084348472617
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.728787899017334,
+        "rms_db": -22.48680305480957
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 91168dd0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "46_pro_studio_library_3d_sound_effect_46_39ff6a7d",
+      "filename": "46-pro_studio_library-3d_sound_effect_46-39ff6a7d.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/46-pro_studio_library-3d_sound_effect_46-39ff6a7d.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2841.4682749155404,
+        "spectral_centroid": 3831.73845318845
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.766829013824463,
+        "rms_db": -27.211822509765625
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 39ff6a7d",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "54_pro_studio_library_3d_sound_effect_54_f6411164",
+      "filename": "54-pro_studio_library-3d_sound_effect_54-f6411164.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/54-pro_studio_library-3d_sound_effect_54-f6411164.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.024739229024943,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 634.458830180921,
+        "spectral_centroid": 1570.6964107204326
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.773510932922363,
+        "rms_db": -21.327980041503906
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, f6411164",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "03_pro_studio_library_3d_sound_effect_3_c10c19dd",
+      "filename": "03-pro_studio_library-3d_sound_effect_3-c10c19dd.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/03-pro_studio_library-3d_sound_effect_3-c10c19dd.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2070.9130293486137,
+        "spectral_centroid": 2733.3238757343483
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.562409400939941,
+        "rms_db": -22.294710159301758
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c10c19dd",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "23_pro_studio_library_3d_sound_effect_23_5eb09a15",
+      "filename": "23-pro_studio_library-3d_sound_effect_23-5eb09a15.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/23-pro_studio_library-3d_sound_effect_23-5eb09a15.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.017392290249433,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 988.7710158889358,
+        "spectral_centroid": 2255.7157293275654
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.264301776885986,
+        "rms_db": -22.11502456665039
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 5eb09a15",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "43_pro_studio_library_3d_sound_effect_43_03e277c5",
+      "filename": "43-pro_studio_library-3d_sound_effect_43-03e277c5.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/43-pro_studio_library-3d_sound_effect_43-03e277c5.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3577.9395803183793,
+        "spectral_centroid": 4394.451991603785
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.9785003662109375,
+        "rms_db": -25.077251434326172
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 03e277c5",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "25_pro_studio_library_3d_sound_effect_25_fedbf032",
+      "filename": "25-pro_studio_library-3d_sound_effect_25-fedbf032.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/25-pro_studio_library-3d_sound_effect_25-fedbf032.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 971.6323145177979,
+        "spectral_centroid": 1302.4991032000764
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.322545051574707,
+        "rms_db": -31.244766235351562
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, fedbf032",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "26_pro_studio_library_3d_sound_effect_26_8f9a3dd3",
+      "filename": "26-pro_studio_library-3d_sound_effect_26-8f9a3dd3.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/26-pro_studio_library-3d_sound_effect_26-8f9a3dd3.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 739.6322714315879,
+        "spectral_centroid": 1077.8401852256607
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.411648750305176,
+        "rms_db": -31.222536087036133
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 8f9a3dd3",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "07_pro_studio_library_3d_sound_effect_7_e884928a",
+      "filename": "07-pro_studio_library-3d_sound_effect_7-e884928a.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/07-pro_studio_library-3d_sound_effect_7-e884928a.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 25.026371882086167,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 597.1818403764204,
+        "spectral_centroid": 861.1828335864348
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -6.944746017456055,
+        "rms_db": -20.960294723510742
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, e884928a",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "31_pro_studio_library_3d_sound_effect_31_8f9ed3ec",
+      "filename": "31-pro_studio_library-3d_sound_effect_31-8f9ed3ec.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/31-pro_studio_library-3d_sound_effect_31-8f9ed3ec.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 716.457057643581,
+        "spectral_centroid": 1262.570632417902
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.4917821884155273,
+        "rms_db": -18.071638107299805
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 8f9ed3ec",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "29_pro_studio_library_3d_sound_effect_29_4761c77e",
+      "filename": "29-pro_studio_library-3d_sound_effect_29-4761c77e.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/29-pro_studio_library-3d_sound_effect_29-4761c77e.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 153.38842126707368,
+        "spectral_centroid": 402.3758209766589
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -0.20510649681091309,
+        "rms_db": -15.408836364746094
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, 4761c77e",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "63_pro_studio_library_group_1_3d_sound_effects_5ef89354",
+      "filename": "63-pro_studio_library-group_1_3d_sound_effects-5ef89354.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/63-pro_studio_library-group_1_3d_sound_effects-5ef89354.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 39.001882086167804,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 793.3671569824219,
+        "spectral_centroid": 1178.3746240532937
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.13605442176870747
+      },
+      "loudness": {
+        "peak_db": -1.9425036907196045,
+        "rms_db": -28.550756454467773
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, group, sound, effects, 5ef89354",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "67_pro_studio_library_group_5_3d_sound_effects_5795dc79",
+      "filename": "67-pro_studio_library-group_5_3d_sound_effects-5795dc79.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/67-pro_studio_library-group_5_3d_sound_effects-5795dc79.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 23.014943310657596,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 754.3679380200455,
+        "spectral_centroid": 1040.5446884443973
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -5.749443054199219,
+        "rms_db": -39.08329772949219
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, group, sound, effects, 5795dc79",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "02_pro_studio_library_3d_sound_effect_2_4006e08b",
+      "filename": "02-pro_studio_library-3d_sound_effect_2-4006e08b.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/02-pro_studio_library-3d_sound_effect_2-4006e08b.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 19.018208616780047,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1613.7027091118823,
+        "spectral_centroid": 2152.7247007324117
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.735071182250977,
+        "rms_db": -25.412702560424805
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 4006e08b",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "40_pro_studio_library_3d_sound_effect_40_2dd75b01",
+      "filename": "40-pro_studio_library-3d_sound_effect_40-2dd75b01.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/40-pro_studio_library-3d_sound_effect_40-2dd75b01.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 9.013310657596373,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1116.4425411739865,
+        "spectral_centroid": 1846.8263846043992
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.359538555145264,
+        "rms_db": -25.014341354370117
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 2dd75b01",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "33_pro_studio_library_3d_sound_effect_33_1d570988",
+      "filename": "33-pro_studio_library-3d_sound_effect_33-1d570988.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/33-pro_studio_library-3d_sound_effect_33-1d570988.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 338.50623124482615,
+        "spectral_centroid": 602.6104873199338
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.485254287719727,
+        "rms_db": -25.061710357666016
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 1d570988",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "06_pro_studio_library_3d_sound_effect_6_5a1035b0",
+      "filename": "06-pro_studio_library-3d_sound_effect_6-5a1035b0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/06-pro_studio_library-3d_sound_effect_6-5a1035b0.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.005963718820862,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 895.7262928690546,
+        "spectral_centroid": 1879.1981305436127
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -16.987838745117188,
+        "rms_db": -23.758899688720703
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 5a1035b0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "41_pro_studio_library_3d_sound_effect_41_84b16316",
+      "filename": "41-pro_studio_library-3d_sound_effect_41-84b16316.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/41-pro_studio_library-3d_sound_effect_41-84b16316.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 9.013310657596373,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3557.3710673564187,
+        "spectral_centroid": 4123.322635615651
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.13605442176870747
+      },
+      "loudness": {
+        "peak_db": -6.705235481262207,
+        "rms_db": -24.565298080444336
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 84b16316",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "57_pro_studio_library_3d_sound_effect_57_8c6319fc",
+      "filename": "57-pro_studio_library-3d_sound_effect_57-8c6319fc.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/57-pro_studio_library-3d_sound_effect_57-8c6319fc.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.017392290249433,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 951.4204695418075,
+        "spectral_centroid": 1839.393036473263
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.393218755722046,
+        "rms_db": -25.853084564208984
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 8c6319fc",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "04_pro_studio_library_3d_sound_effect_4_8c1e1373",
+      "filename": "04-pro_studio_library-3d_sound_effect_4-8c1e1373.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/04-pro_studio_library-3d_sound_effect_4-8c1e1373.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 7897.623105080712,
+        "spectral_centroid": 8808.571331441399
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.766476631164551,
+        "rms_db": -18.923789978027344
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 8c1e1373",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "49_pro_studio_library_3d_sound_effect_49_f8b850ca",
+      "filename": "49-pro_studio_library-3d_sound_effect_49-f8b850ca.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/49-pro_studio_library-3d_sound_effect_49-f8b850ca.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 788.8132716398335,
+        "spectral_centroid": 1784.2783615516055
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.812590599060059,
+        "rms_db": -22.406461715698242
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, f8b850ca",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "08_pro_studio_library_3d_sound_effect_8_1e3e42c4",
+      "filename": "08-pro_studio_library-3d_sound_effect_8-1e3e42c4.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/08-pro_studio_library-3d_sound_effect_8-1e3e42c4.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 9.013310657596373,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 273.3913112331081,
+        "spectral_centroid": 490.7338731530201
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -0.6915528774261475,
+        "rms_db": -16.74974822998047
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, 1e3e42c4",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "18_pro_studio_library_3d_sound_effect_18_7d6bf915",
+      "filename": "18-pro_studio_library-3d_sound_effect_18-7d6bf915.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/18-pro_studio_library-3d_sound_effect_18-7d6bf915.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.017392290249433,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1201.0580526815877,
+        "spectral_centroid": 1930.7644375687105
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -8.736310958862305,
+        "rms_db": -27.900409698486328
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 7d6bf915",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "20_pro_studio_library_3d_sound_effect_20_b5c658b8",
+      "filename": "20-pro_studio_library-3d_sound_effect_20-b5c658b8.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/20-pro_studio_library-3d_sound_effect_20-b5c658b8.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 12.017392290249433,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 325.7728370460304,
+        "spectral_centroid": 458.04912032968934
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.0499773025512695,
+        "rms_db": -22.53173065185547
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, b5c658b8",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "14_pro_studio_library_3d_sound_effect_14_44fc83ad",
+      "filename": "14-pro_studio_library-3d_sound_effect_14-44fc83ad.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/14-pro_studio_library-3d_sound_effect_14-44fc83ad.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 12.017392290249433,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1129.9735404349663,
+        "spectral_centroid": 2490.3105533706726
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.180678367614746,
+        "rms_db": -23.933696746826172
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 44fc83ad",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "50_pro_studio_library_3d_sound_effect_50_7938ab9e",
+      "filename": "50-pro_studio_library-3d_sound_effect_50-7938ab9e.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/50-pro_studio_library-3d_sound_effect_50-7938ab9e.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 11.024739229024943,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 223.84331311677633,
+        "spectral_centroid": 453.1816601918811
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.4272918701171875,
+        "rms_db": -19.7596378326416
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, 7938ab9e",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "64_pro_studio_library_group_2_3d_sound_effects_3b0f1971",
+      "filename": "64-pro_studio_library-group_2_3d_sound_effects-3b0f1971.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/64-pro_studio_library-group_2_3d_sound_effects-3b0f1971.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 39.001882086167804,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1511.7013549804688,
+        "spectral_centroid": 1956.7558337418616
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": 0.22332869470119476,
+        "rms_db": -24.595279693603516
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, group, sound, effects, 3b0f1971",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "55_pro_studio_library_3d_sound_effect_55_eb294bf2",
+      "filename": "55-pro_studio_library-3d_sound_effect_55-eb294bf2.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/55-pro_studio_library-3d_sound_effect_55-eb294bf2.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 376.8310546875,
+        "spectral_centroid": 586.7940340817393
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.452895164489746,
+        "rms_db": -30.296306610107422
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, eb294bf2",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "22_pro_studio_library_3d_sound_effect_22_a28b53e7",
+      "filename": "22-pro_studio_library-3d_sound_effect_22-a28b53e7.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/22-pro_studio_library-3d_sound_effect_22-a28b53e7.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.024739229024943,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1030.8737664473683,
+        "spectral_centroid": 1679.6167038377116
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.6860573291778564,
+        "rms_db": -28.764484405517578
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, a28b53e7",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "36_pro_studio_library_3d_sound_effect_36_40961c70",
+      "filename": "36-pro_studio_library-3d_sound_effect_36-40961c70.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/36-pro_studio_library-3d_sound_effect_36-40961c70.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2092.025509396115,
+        "spectral_centroid": 3760.9864686142346
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -5.508151531219482,
+        "rms_db": -22.749134063720703
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 40961c70",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "56_pro_studio_library_3d_sound_effect_56_445465fa",
+      "filename": "56-pro_studio_library-3d_sound_effect_56-445465fa.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/56-pro_studio_library-3d_sound_effect_56-445465fa.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.024739229024943,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1294.757504111842,
+        "spectral_centroid": 1898.4880913725576
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -12.713370323181152,
+        "rms_db": -30.15079116821289
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 445465fa",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "15_pro_studio_library_3d_sound_effect_15_23ad12ca",
+      "filename": "15-pro_studio_library-3d_sound_effect_15-23ad12ca.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/15-pro_studio_library-3d_sound_effect_15-23ad12ca.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3308.693055848818,
+        "spectral_centroid": 4455.389845102349
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.091639041900635,
+        "rms_db": -29.156448364257812
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 23ad12ca",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "37_pro_studio_library_3d_sound_effect_37_c600140e",
+      "filename": "37-pro_studio_library-3d_sound_effect_37-c600140e.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/37-pro_studio_library-3d_sound_effect_37-c600140e.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 328.69312183277026,
+        "spectral_centroid": 650.3764162302144
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.5665740966796875,
+        "rms_db": -27.702011108398438
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c600140e",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "53_pro_studio_library_3d_sound_effect_53_9ebb072c",
+      "filename": "53-pro_studio_library-3d_sound_effect_53-9ebb072c.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/53-pro_studio_library-3d_sound_effect_53-9ebb072c.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 316.50956513865896,
+        "spectral_centroid": 594.4725302901387
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.3606977462768555,
+        "rms_db": -20.76738166809082
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 9ebb072c",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "51_pro_studio_library_3d_sound_effect_51_8feb6a51",
+      "filename": "51-pro_studio_library-3d_sound_effect_51-8feb6a51.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/51-pro_studio_library-3d_sound_effect_51-8feb6a51.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2326.895389041385,
+        "spectral_centroid": 2707.715440502752
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.18659782409668,
+        "rms_db": -37.517822265625
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 8feb6a51",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "21_pro_studio_library_3d_sound_effect_21_1b14bfc1",
+      "filename": "21-pro_studio_library-3d_sound_effect_21-1b14bfc1.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/21-pro_studio_library-3d_sound_effect_21-1b14bfc1.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 18.025555555555556,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 274.8152517305216,
+        "spectral_centroid": 963.876036935292
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -5.64314603805542,
+        "rms_db": -25.42047882080078
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 1b14bfc1",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "05_pro_studio_library_3d_sound_effect_5_fa3bedc2",
+      "filename": "05-pro_studio_library-3d_sound_effect_5-fa3bedc2.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/05-pro_studio_library-3d_sound_effect_5-fa3bedc2.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 614.6939664273649,
+        "spectral_centroid": 1224.532741926341
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.089865207672119,
+        "rms_db": -22.829172134399414
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, fa3bedc2",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "30_pro_studio_library_3d_sound_effect_30_d96fa729",
+      "filename": "30-pro_studio_library-3d_sound_effect_30-d96fa729.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/30-pro_studio_library-3d_sound_effect_30-d96fa729.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 653.7904481630068,
+        "spectral_centroid": 1166.61544722077
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.4865121841430664,
+        "rms_db": -18.107223510742188
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, d96fa729",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "28_pro_studio_library_3d_sound_effect_28_5e4a6b9e",
+      "filename": "28-pro_studio_library-3d_sound_effect_28-5e4a6b9e.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/28-pro_studio_library-3d_sound_effect_28-5e4a6b9e.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 744.6414432010135,
+        "spectral_centroid": 1221.6407676584506
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.6861395835876465,
+        "rms_db": -30.119930267333984
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 5e4a6b9e",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "39_pro_studio_library_3d_sound_effect_39_7c5f59a6",
+      "filename": "39-pro_studio_library-3d_sound_effect_39-7c5f59a6.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/39-pro_studio_library-3d_sound_effect_39-7c5f59a6.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 13.010045351473924,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 688.7263438406,
+        "spectral_centroid": 1146.126584422971
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.22675736961451248
+      },
+      "loudness": {
+        "peak_db": -6.57364559173584,
+        "rms_db": -23.30917739868164
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 7c5f59a6",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "59_pro_studio_library_3d_sound_effect_59_6426c18f",
+      "filename": "59-pro_studio_library-3d_sound_effect_59-6426c18f.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/59-pro_studio_library-3d_sound_effect_59-6426c18f.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 626.77001953125,
+        "spectral_centroid": 2043.3976532793802
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.816408157348633,
+        "rms_db": -25.4605712890625
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 6426c18f",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "52_pro_studio_library_3d_sound_effect_52_237796e8",
+      "filename": "52-pro_studio_library-3d_sound_effect_52-237796e8.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/52-pro_studio_library-3d_sound_effect_52-237796e8.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 2654.9441775760133,
+        "spectral_centroid": 3146.9614675876496
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -5.128149032592773,
+        "rms_db": -31.148481369018555
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, pro, studio, library, sound, effect, 237796e8",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "24_pro_studio_library_3d_sound_effect_24_9d30355d",
+      "filename": "24-pro_studio_library-3d_sound_effect_24-9d30355d.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/24-pro_studio_library-3d_sound_effect_24-9d30355d.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 259.3800524036722,
+        "spectral_centroid": 1188.3284481552769
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -2.871752977371216,
+        "rms_db": -20.121747970581055
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 9d30355d",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "11_pro_studio_library_3d_sound_effect_11_f38ecb58",
+      "filename": "11-pro_studio_library-3d_sound_effect_11-f38ecb58.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/11-pro_studio_library-3d_sound_effect_11-f38ecb58.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.005963718820862,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 958.9644642274508,
+        "spectral_centroid": 1824.6762436934666
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.695831298828125,
+        "rms_db": -29.095792770385742
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, f38ecb58",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "48_pro_studio_library_3d_sound_effect_48_9437da07",
+      "filename": "48-pro_studio_library-3d_sound_effect_48-9437da07.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/48-pro_studio_library-3d_sound_effect_48-9437da07.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.005963718820862,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 352.112836019069,
+        "spectral_centroid": 588.6029704053686
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.3491554260253906,
+        "rms_db": -19.220579147338867
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 9437da07",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "58_pro_studio_library_3d_sound_effect_58_2fe73bb7",
+      "filename": "58-pro_studio_library-3d_sound_effect_58-2fe73bb7.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/58-pro_studio_library-3d_sound_effect_58-2fe73bb7.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 10.005963718820862,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 323.16042021642977,
+        "spectral_centroid": 667.2019731265865
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.397847175598145,
+        "rms_db": -30.166515350341797
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 2fe73bb7",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "10_pro_studio_library_3d_sound_effect_10_6917207d",
+      "filename": "10-pro_studio_library-3d_sound_effect_10-6917207d.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/10-pro_studio_library-3d_sound_effect_10-6917207d.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1032.0251060637418,
+        "spectral_centroid": 1707.6927442097644
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.607541084289551,
+        "rms_db": -28.78037452697754
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 6917207d",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "44_pro_studio_library_3d_sound_effect_44_a86b23fd",
+      "filename": "44-pro_studio_library-3d_sound_effect_44-a86b23fd.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/44-pro_studio_library-3d_sound_effect_44-a86b23fd.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 600.6080903468705,
+        "spectral_centroid": 611.0741893160657
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -13.077289581298828,
+        "rms_db": -28.118877410888672
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, a86b23fd",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "17_pro_studio_library_3d_sound_effect_17_b93f7c86",
+      "filename": "17-pro_studio_library-3d_sound_effect_17-b93f7c86.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/17-pro_studio_library-3d_sound_effect_17-b93f7c86.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1203.2728976347685,
+        "spectral_centroid": 1367.8712236451127
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -0.8252894878387451,
+        "rms_db": -22.00864601135254
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, b93f7c86",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "42_pro_studio_library_3d_sound_effect_42_99bf911c",
+      "filename": "42-pro_studio_library-3d_sound_effect_42-99bf911c.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/42-pro_studio_library-3d_sound_effect_42-99bf911c.mp3",
+      "categories": [
+        "texture"
+      ],
+      "duration": 9.013310657596373,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 3269.3471547719596,
+        "spectral_centroid": 4331.667007401675
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.416131019592285,
+        "rms_db": -23.510540008544922
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "texture, impact, extended, bright, high, treble, pro, studio, library, sound, effect, 99bf911c",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "35_pro_studio_library_3d_sound_effect_35_c4b380f3",
+      "filename": "35-pro_studio_library-3d_sound_effect_35-c4b380f3.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/35-pro_studio_library-3d_sound_effect_35-c4b380f3.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 612.8050140987169,
+        "spectral_centroid": 1291.4077753930426
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -7.550693511962891,
+        "rms_db": -24.484560012817383
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c4b380f3",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "62_pro_studio_library_3d_sound_effect_62_65fe63b1",
+      "filename": "62-pro_studio_library-3d_sound_effect_62-65fe63b1.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/62-pro_studio_library-3d_sound_effect_62-65fe63b1.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 330.2121373575434,
+        "spectral_centroid": 576.2112632993509
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.13605442176870747
+      },
+      "loudness": {
+        "peak_db": -8.883087158203125,
+        "rms_db": -31.53437042236328
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 65fe63b1",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "38_pro_studio_library_3d_sound_effect_38_b97e34a4",
+      "filename": "38-pro_studio_library-3d_sound_effect_38-b97e34a4.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/38-pro_studio_library-3d_sound_effect_38-b97e34a4.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 13.010045351473924,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 380.5575858259924,
+        "spectral_centroid": 698.1379693050312
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -8.123156547546387,
+        "rms_db": -25.1163272857666
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, b97e34a4",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "45_pro_studio_library_3d_sound_effect_45_bbbecb10",
+      "filename": "45-pro_studio_library-3d_sound_effect_45-bbbecb10.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/45-pro_studio_library-3d_sound_effect_45-bbbecb10.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.024739229024943,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1171.1115851151317,
+        "spectral_centroid": 1363.2931881084999
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -8.564208984375,
+        "rms_db": -27.79207992553711
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, bbbecb10",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "47_pro_studio_library_3d_sound_effect_47_dcc93f3e",
+      "filename": "47-pro_studio_library-3d_sound_effect_47-dcc93f3e.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/47-pro_studio_library-3d_sound_effect_47-dcc93f3e.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 22.022290249433105,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 930.2411857126384,
+        "spectral_centroid": 1521.7628426533909
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.15873015873015872
+      },
+      "loudness": {
+        "peak_db": -2.861638307571411,
+        "rms_db": -26.55870819091797
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, dcc93f3e",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "12_pro_studio_library_3d_sound_effect_12_97612416",
+      "filename": "12-pro_studio_library-3d_sound_effect_12-97612416.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/12-pro_studio_library-3d_sound_effect_12-97612416.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 287.0834063517547,
+        "spectral_centroid": 688.287570056495
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.230212211608887,
+        "rms_db": -30.635326385498047
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 97612416",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "27_pro_studio_library_3d_sound_effect_27_c50dec72",
+      "filename": "27-pro_studio_library-3d_sound_effect_27-c50dec72.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/27-pro_studio_library-3d_sound_effect_27-c50dec72.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 818.0122994087837,
+        "spectral_centroid": 1248.5985169801424
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.163331031799316,
+        "rms_db": -31.986072540283203
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c50dec72",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "16_pro_studio_library_3d_sound_effect_16_41bef018",
+      "filename": "16-pro_studio_library-3d_sound_effect_16-41bef018.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/16-pro_studio_library-3d_sound_effect_16-41bef018.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 8.020657596371882,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1471.4874841714907,
+        "spectral_centroid": 1990.7910132269878
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.09070294784580499
+      },
+      "loudness": {
+        "peak_db": -3.725416421890259,
+        "rms_db": -26.71593475341797
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 41bef018",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "61_pro_studio_library_3d_sound_effect_61_c3b4b1e6",
+      "filename": "61-pro_studio_library-3d_sound_effect_61-c3b4b1e6.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/61-pro_studio_library-3d_sound_effect_61-c3b4b1e6.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 11.024739229024943,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 542.7500513980264,
+        "spectral_centroid": 684.5108535349755
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.15873015873015872
+      },
+      "loudness": {
+        "peak_db": -13.601359367370605,
+        "rms_db": -28.366146087646484
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c3b4b1e6",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "66_pro_studio_library_group_4_3d_sound_effects_0f16fec7",
+      "filename": "66-pro_studio_library-group_4_3d_sound_effects-0f16fec7.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/66-pro_studio_library-group_4_3d_sound_effects-0f16fec7.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 28.004331065759636,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 761.3767608882873,
+        "spectral_centroid": 944.5643184657753
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -0.8147155046463013,
+        "rms_db": -44.84939193725586
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, group, sound, effects, 0f16fec7",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "60_pro_studio_library_3d_sound_effect_60_6556f5c6",
+      "filename": "60-pro_studio_library-3d_sound_effect_60-6556f5c6.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/60-pro_studio_library-3d_sound_effect_60-6556f5c6.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 342.57044507967714,
+        "spectral_centroid": 625.2174541633447
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.253350257873535,
+        "rms_db": -30.07382583618164
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 6556f5c6",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "09_pro_studio_library_3d_sound_effect_9_d18ce424",
+      "filename": "09-pro_studio_library-3d_sound_effect_9-d18ce424.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/09-pro_studio_library-3d_sound_effect_9-d18ce424.mp3",
+      "categories": [
+        "low_frequency"
+      ],
+      "duration": 10.005963718820862,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 130.44824445330624,
+        "spectral_centroid": 487.9638792557454
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -6.7349934577941895,
+        "rms_db": -19.69691276550293
+      },
+      "description": "Long low-frequency sound effect with sharp attack",
+      "keywords": "low_frequency, impact, extended, bass, rumble, low, pro, studio, library, sound, effect, d18ce424",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "19_pro_studio_library_3d_sound_effect_19_0a0c8365",
+      "filename": "19-pro_studio_library-3d_sound_effect_19-0a0c8365.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/19-pro_studio_library-3d_sound_effect_19-0a0c8365.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1818.9529006545606,
+        "spectral_centroid": 2944.4060637884363
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.11337868480725624
+      },
+      "loudness": {
+        "peak_db": -7.8711347579956055,
+        "rms_db": -28.43950653076172
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 0a0c8365",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "32_pro_studio_library_3d_sound_effect_32_c35004c4",
+      "filename": "32-pro_studio_library-3d_sound_effect_32-c35004c4.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/32-pro_studio_library-3d_sound_effect_32-c35004c4.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1168.2801942567569,
+        "spectral_centroid": 2446.2225574061545
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.02839994430542,
+        "rms_db": -21.476736068725586
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, c35004c4",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "01_pro_studio_library_3d_sound_effect_1_2794ece0",
+      "filename": "01-pro_studio_library-3d_sound_effect_1-2794ece0.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/01-pro_studio_library-3d_sound_effect_1-2794ece0.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 7.0018820861678,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1485.309727144557,
+        "spectral_centroid": 2653.0359498909497
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -4.246397972106934,
+        "rms_db": -18.439367294311523
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 2794ece0",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "34_pro_studio_library_3d_sound_effect_34_694738b2",
+      "filename": "34-pro_studio_library-3d_sound_effect_34-694738b2.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/34-pro_studio_library-3d_sound_effect_34-694738b2.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 6.009229024943311,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 1077.2421347128377,
+        "spectral_centroid": 2359.9674749527403
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -9.428680419921875,
+        "rms_db": -27.33544158935547
+      },
+      "description": "Long high-frequency sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, sound, effect, 694738b2",
+      "use_cases": [
+        "general sound effects"
+      ]
+    },
+    {
+      "_key": "65_pro_studio_library_group_3_3d_sound_effects_154a911b",
+      "filename": "65-pro_studio_library-group_3_3d_sound_effects-154a911b.mp3",
+      "filepath": "/mnt/storage12tb/media/sfx/Pro.Studio.Library-3D.Sound.Effects.Vol.2-WEB-2009-KNOWN/65-pro_studio_library-group_3_3d_sound_effects-154a911b.mp3",
+      "categories": [
+        "uncategorized"
+      ],
+      "duration": 42.00596371882086,
+      "sample_rate": 44100,
+      "channels": 1,
+      "frequency_profile": {
+        "dominant_freq": 807.2243902623308,
+        "spectral_centroid": 1156.9323034339507
+      },
+      "envelope": {
+        "type": "impact",
+        "attack_ms": 0.06802721088435373
+      },
+      "loudness": {
+        "peak_db": -3.7877960205078125,
+        "rms_db": -32.5953369140625
+      },
+      "description": "Long mid-range sound effect with sharp attack",
+      "keywords": "uncategorized, impact, extended, pro, studio, library, group, sound, effects, 154a911b",
+      "use_cases": [
+        "general sound effects"
+      ]
+    }
+  ],
+  "count": 166
+}

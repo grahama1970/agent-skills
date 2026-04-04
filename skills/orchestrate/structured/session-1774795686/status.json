@@ -1,0 +1,151 @@
+{
+  "generated_at": 1774795686.7484896,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774795686",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add sparta_qra_edges to memory daemon allowed collections and filter fields",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774795686/1.stdout.txt",
+      "error": "",
+      "started_at": 1774795686.7220514,
+      "finished_at": 1774795686.7459013,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Close ISO 27001 description quality issue in memory",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "running",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": 1774795686.746457,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Extend 08b_score_relationships.py to support sparta_qra_edges edge collection",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4",
+      "title": "Score 36K sparta_qra_edges technique_reference edges and LLM-grade grey zone",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5",
+      "title": "Add POST /api/edge-rationale endpoint to UX Lab Express server",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "running",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": 1774795686.7228758,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "6",
+      "title": "Add Explain button and gate evidence display to EdgeDetailPane",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "7",
+      "title": "Run /evidence-case-lab question bank with fixed upstream MITRE chain data",
+      "lane": "2",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "8",
+      "title": "Extract 308 T2 grey zone labels and train T1.5 verdict classifier",
+      "lane": "2",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "",
+      "error": "Command failed (1): python3 -c \"\nfrom arango import ArangoClient\nimport json\nc = ArangoClient('http://localhost:8529')\ndb = c.db('memory', username='root', password='openSesame')\ncursor = db.aql.execute('''\n  FOR r IN sparta_relationships\n  FILTER r.method == \\\"technique_reference\\\" AND r.gate_evidence.tier == \\\"T2\\\"\n  RETURN {input: r.gate_evidence, output: {verdict: r.gate_evidence.verdict, rationale: r.gate_evidence.llm_rationale}}\n''')\nwith open('/tmp/grey_zone_training.jsonl', 'w') as f:\n  n = 0\n  for row in cursor:\n    f.write(json.dumps(row) + '\\n')\n    n += 1\nprint(f'Exported {n} training examples to /tmp/grey_zone_training.jsonl')\n\"\n\nTraceback (most recent call last):\n  File \"<string>\", line 2, in <module>\n    from arango import ArangoClient\nModuleNotFoundError: No module named 'arango'",
+      "started_at": 1774795686.724089,
+      "finished_at": 1774795686.7483134,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

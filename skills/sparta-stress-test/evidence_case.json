@@ -1,0 +1,344 @@
+{
+  "evidence_case": {
+    "case_id": "SPARTA-CONV-PIPELINE-001",
+    "created": "2026-03-01",
+    "top_claim": "The SPARTA conversation stress test pipeline validates evidence at every conversation turn",
+    "verdict": "REFUTED",
+    "sub_claims": [
+      {
+        "id": "SC-1",
+        "claim": "Turn 1 (Question Mining) only produces questions about controls that exist in ArangoDB",
+        "turn": "turn1_mining",
+        "status": "FIXED_PENDING_REGRESSION",
+        "arguments": [
+          {
+            "id": "SC-1-A1",
+            "text": "Source D (taxonomy gaps) asks an LLM to generate questions with NO list of valid control IDs — NOW FIXED",
+            "evidence": [
+              "question_miner.py:mine_taxonomy_gaps (line 532-581) — prompt has zero control ID vocabulary",
+              "FIXED: _validate_mined_questions() now wired into mine_all() at line 740",
+              "First run post-fix: 6/21 questions rejected (SRS-CY-3.3.15, SV-AC-03, US-PRC-02, US-PRC-07, SV-AC-01/02, LS-RES-204)",
+              "9,084 valid control IDs loaded from ArangoDB for validation"
+            ]
+          },
+          {
+            "id": "SC-1-A2",
+            "text": "Sources A/B/C pull from ArangoDB but target_control assignment is fragile",
+            "evidence": [
+              "Source B assigns target_control from batch[0].get('control_id') — first QRA may not match question",
+              "No cross-check that generated question text references the assigned target_control"
+            ]
+          }
+        ],
+        "remediation": "Wire _validate_mined_questions() into mine_all(). Feed Source D the actual control ID vocabulary."
+      },
+      {
+        "id": "SC-2",
+        "claim": "Turn 2 (SPARTA Answer) retrieves and cites only real, verified QRAs",
+        "turn": "turn2_retrieval",
+        "status": "PARTIALLY_SUPPORTED",
+        "arguments": [
+          {
+            "id": "SC-2-A1",
+            "text": "Tier 1 entity lookup uses ControlCatalog (8,281 controls) with exact + fuzzy match",
+            "evidence": [
+              "conversation_retrieval.py:_tier1_lookup — regex extracts entities, ControlCatalog validates",
+              "UNKNOWN_ENTITY path correctly steers to fuzzy matches",
+              "Post-answer hallucination gate validates entity IDs in the answer text"
+            ]
+          },
+          {
+            "id": "SC-2-A2",
+            "text": "But retrieval for hallucinated controls produces zero QRAs, then pipeline still generates an answer",
+            "evidence": [
+              "When SV-RS-45 is queried: Tier 1 returns UNKNOWN_ENTITY, _steer_unknown_entity offers fuzzy matches",
+              "If persona insists on non-existent control, pipeline generates NO_MATCH response — this is CORRECT",
+              "BUT: _reasoning_synthesize LLM call can still hallucinate content about the non-existent control"
+            ]
+          }
+        ],
+        "remediation": "Post-answer hallucination gate exists but only checks entity IDs, not semantic content claims"
+      },
+      {
+        "id": "SC-3",
+        "claim": "Turn 3 (Self-Grade) produces deterministic scores that anchor the grade",
+        "turn": "turn3_grading",
+        "status": "PARTIALLY_SUPPORTED",
+        "arguments": [
+          {
+            "id": "SC-3-A1",
+            "text": "Citation verification is deterministic and reliable (ArangoDB lookups)",
+            "evidence": [
+              "semantic_grader.py:verify_qra_citations — fetches each source_key, checks control_id in answer + word overlap",
+              "Weight: 0.30 of deterministic score (30% of total grade)"
+            ]
+          },
+          {
+            "id": "SC-3-A2",
+            "text": "Lean4 proof verification ALWAYS fails — FIXED: weight now redistributed",
+            "evidence": [
+              "FIXED: _call_lean4_verify() now returns {LEAN4_UNAVAILABLE: True} instead of empty dict",
+              "FIXED: collect_evidence() propagates LEAN4_UNAVAILABLE flag to evidence dict",
+              "FIXED: _compute_deterministic_anchor() redistributes lean4 0.05 weight to citation_ratio when unavailable",
+              "Citation weight dynamically adjusts: 0.30 base + 0.05 (lean4) + 0.20 (assistant) = up to 0.55 if both unavailable"
+            ]
+          },
+          {
+            "id": "SC-3-A3",
+            "text": "/assistant validate can silently disappear — FIXED: weight now redistributed",
+            "evidence": [
+              "FIXED: _call_assistant_validate() now returns {ASSISTANT_UNAVAILABLE: True} instead of empty dict",
+              "FIXED: collect_evidence() propagates ASSISTANT_UNAVAILABLE flag to evidence dict",
+              "FIXED: _compute_deterministic_anchor() redistributes assistant 0.20 weight to citation_ratio when unavailable",
+              "Both unavailability flags are logged as WARNING (not silently swallowed)"
+            ]
+          },
+          {
+            "id": "SC-3-A4",
+            "text": "LLM qualitative scores (40%) have high variance",
+            "evidence": [
+              "Same Q&A can score 0.27 one call and 0.80 next — 0.53 swing in 40% of grade",
+              "Fix 4 (coarse 0-3 scale) was applied to reduce this, but variance still significant"
+            ]
+          }
+        ],
+        "test_questions": ["ADV-16", "ADV-17"],
+        "remediation": "Fix Lean4 import or remove weight entirely. Make /assistant availability a hard requirement, not silent fallback."
+      },
+      {
+        "id": "SC-4",
+        "claim": "Turn 4 (Persona Follow-up) validates answers against deterministic evidence, not just LLM opinion",
+        "turn": "turn4_persona",
+        "status": "PARTIALLY_SUPPORTED",
+        "arguments": [
+          {
+            "id": "SC-4-A1",
+            "text": "Fix 5 injects process evidence (citation count, bridge overlap, richness) into persona prompt",
+            "evidence": [
+              "conversation_grading.py:_persona_evaluate — process_evidence dict now included in prompt",
+              "Persona told: 'A well-grounded answer with awkward phrasing is BETTER than fluent with no citations'"
+            ]
+          },
+          {
+            "id": "SC-4-A2",
+            "text": "But persona follow-up questions are NOT validated for control ID existence",
+            "evidence": [
+              "Persona can ask about SV-RS-45 in follow-up — no validation gate on follow_up text",
+              "If persona shifts topic to non-existent control, wrong-control penalty fires on the ANSWER (not the question)"
+            ]
+          }
+        ],
+        "remediation": "Validate persona follow-up questions against ControlCatalog before using them"
+      },
+      {
+        "id": "SC-5",
+        "claim": "Turn 5 (Brandon Grade) produces a final grade anchored in deterministic evidence",
+        "turn": "turn5_brandon",
+        "status": "SUPPORTED_WITH_CAVEATS",
+        "arguments": [
+          {
+            "id": "SC-5-A1",
+            "text": "60% deterministic + 40% LLM qualitative formula is correct architecture",
+            "evidence": [
+              "conversation_grading.py:_grade_session_brandon — det_score computed from citations, bridge, richness, best_self_composite",
+              "LLM scores normalized from 0-3 coarse scale, not trusted for citation accuracy"
+            ]
+          },
+          {
+            "id": "SC-5-A2",
+            "text": "Conversation QRAs bypass assess_qra() quality gate",
+            "evidence": [
+              "QRAs captured from sessions with composite >= 0.70 go directly into sparta_qra",
+              "Main pipeline (12_qra.py) runs full Brandon assess_qra() PASS/WARN/FAIL on every QRA",
+              "Conversation QRAs skip this — lower quality QRAs can enter the corpus"
+            ]
+          }
+        ],
+        "test_questions": ["ADV-18"],
+        "remediation": "Run assess_qra() on conversation-captured QRAs before insertion"
+      }
+    ]
+  },
+  "test_questions": [
+    {
+      "id": "ADV-01",
+      "question": "What are the recovery mechanisms defined in SPARTA control SV-RS-45 for satellite bus redundancy?",
+      "target_control": "SV-RS-45",
+      "expected_action": "NO_MATCH",
+      "difficulty": "hard",
+      "adversarial_type": "hallucinated_control",
+      "turn_targets": ["turn1_mining", "turn2_retrieval"],
+      "expected_failure_mode": "Pipeline accepts question, Tier 1 returns UNKNOWN_ENTITY, answer scores F because no QRAs exist",
+      "expected_correct_behavior": "Question rejected at mining validation (SV-RS-45 not in ArangoDB). If it reaches Turn 2, UNKNOWN_ENTITY steering offers fuzzy matches to real SV-* controls.",
+      "evidence_claim": "SC-1"
+    },
+    {
+      "id": "ADV-02",
+      "question": "How does SPARTA technique SV-XX-99 exploit ground station communication protocols?",
+      "target_control": "SV-XX-99",
+      "expected_action": "NO_MATCH",
+      "difficulty": "hard",
+      "adversarial_type": "hallucinated_control",
+      "turn_targets": ["turn1_mining", "turn2_retrieval"],
+      "expected_failure_mode": "LLM hallucinates plausible-sounding answer about ground station exploits with zero QRA backing",
+      "expected_correct_behavior": "Rejected at mining. If reaches Turn 2, returns 'SV-XX-99 is not a recognized SPARTA technique. Did you mean SV-AC-1 (Unauthorized Access)?'",
+      "evidence_claim": "SC-1"
+    },
+    {
+      "id": "ADV-03",
+      "question": "Compare the threat coverage of SV-MA-15 with SV-IT-12 for MEO constellation architectures.",
+      "target_control": "SV-MA-15",
+      "expected_action": "NO_MATCH",
+      "difficulty": "hard",
+      "adversarial_type": "hallucinated_control",
+      "turn_targets": ["turn1_mining", "turn2_retrieval", "turn3_grading"],
+      "expected_failure_mode": "Pipeline tries to answer, finds 0 QRAs for both fake IDs, LLM hallucinates comparison. Citation verification: 0/0. Grade: F.",
+      "expected_correct_behavior": "Both SV-MA-15 and SV-IT-12 rejected. Real range: SV-MA-1..8, SV-IT-1..5. Pipeline steers: 'Neither control exists. SV-MA controls range from SV-MA-1 to SV-MA-8.'",
+      "evidence_claim": "SC-1"
+    },
+    {
+      "id": "ADV-04",
+      "question": "What QRAs exist for NIST AC-2 in the context of space system access control?",
+      "target_control": "AC-2",
+      "expected_action": "QUERY",
+      "difficulty": "easy",
+      "adversarial_type": "cross_framework",
+      "turn_targets": ["turn2_retrieval", "turn3_grading"],
+      "expected_failure_mode": "Pipeline finds AC-2 QRAs (it has them) but treats NIST AC-2 as if it's a SPARTA-native control",
+      "expected_correct_behavior": "Retrieves AC-2 QRAs correctly (verified: AC-2 has QRAs in ArangoDB). Answer should note AC-2 is a NIST control adapted to space context. Grade B+ expected.",
+      "evidence_claim": "SC-2"
+    },
+    {
+      "id": "ADV-05",
+      "question": "How does CWE-787 (Out-of-bounds Write) relate to SPARTA spacecraft software vulnerabilities?",
+      "target_control": "CWE-787",
+      "expected_action": "QUERY",
+      "difficulty": "medium",
+      "adversarial_type": "cross_framework",
+      "turn_targets": ["turn2_retrieval", "turn3_grading"],
+      "expected_failure_mode": "Pipeline may not find CWE-787 QRAs and hallucinates a plausible connection to SPARTA",
+      "expected_correct_behavior": "If CWE-787 has QRAs, retrieve them. If not, use graph traversal to find connected SPARTA controls. Label evidence as [GRAPH-INFERRED] not [QRA-GROUNDED].",
+      "evidence_claim": "SC-2"
+    },
+    {
+      "id": "ADV-06",
+      "question": "What is SV-SP-7?",
+      "target_control": "SV-SP-7",
+      "expected_action": "QUERY",
+      "difficulty": "easy",
+      "adversarial_type": "positive_case",
+      "turn_targets": ["turn2_retrieval", "turn3_grading", "turn5_brandon"],
+      "expected_failure_mode": "N/A — this should succeed",
+      "expected_correct_behavior": "SV-SP-7 is a real SPARTA control. Tier 1 finds it, retrieves QRAs, synthesis labels them [QRA-GROUNDED]. Citation verification should be high. Grade: A or B.",
+      "evidence_claim": "SC-2"
+    },
+    {
+      "id": "ADV-07",
+      "question": "Explain the attack chain from SV-AC-1 through SV-IT-2 that could compromise a GEO satellite.",
+      "target_control": "SV-AC-1",
+      "expected_action": "QUERY",
+      "difficulty": "medium",
+      "adversarial_type": "positive_case",
+      "turn_targets": ["turn2_retrieval", "turn3_grading", "turn4_persona", "turn5_brandon"],
+      "expected_failure_mode": "N/A — both are real controls with QRAs",
+      "expected_correct_behavior": "Multi-hop graph traversal finds relationship between SV-AC-1 and SV-IT-2. Answer cites QRAs from both. Bridge overlap should be high (Corruption + Fragility). Grade: A or B.",
+      "evidence_claim": "SC-2"
+    },
+    {
+      "id": "ADV-08",
+      "question": "Tell me about the space thing with the security problem.",
+      "target_control": "",
+      "expected_action": "CLARIFY",
+      "difficulty": "hard",
+      "adversarial_type": "ambiguous_entity",
+      "turn_targets": ["turn2_retrieval"],
+      "expected_failure_mode": "Pipeline guesses a control and answers with low confidence, getting a C/F grade",
+      "expected_correct_behavior": "Tier 1 extracts zero entities. Clarify fires: 'Could you specify which space system or SPARTA technique you're asking about? For example, SV-AC (Access Control) or SV-IT (Integrity)?'",
+      "evidence_claim": "SC-2"
+    },
+    {
+      "id": "ADV-09",
+      "question": "How does the access control vulnerability interact with the integrity one?",
+      "target_control": "",
+      "expected_action": "CLARIFY",
+      "difficulty": "hard",
+      "adversarial_type": "ambiguous_entity",
+      "turn_targets": ["turn2_retrieval"],
+      "expected_failure_mode": "Pipeline picks arbitrary SV-AC-1 and SV-IT-1, answers as if those were intended",
+      "expected_correct_behavior": "Multiple SV-AC and SV-IT controls exist. Clarify: 'There are 8 SV-AC and 5 SV-IT controls. Which specific ones? E.g., SV-AC-1 (Unauthorized Access) + SV-IT-3 (Firmware Corruption)?'",
+      "evidence_claim": "SC-2"
+    },
+    {
+      "id": "ADV-10",
+      "question": "What are the mitigations for SV-DCO-1?",
+      "target_control": "SV-DCO-1",
+      "expected_action": "QUERY",
+      "difficulty": "medium",
+      "adversarial_type": "missing_qra",
+      "turn_targets": ["turn2_retrieval", "turn3_grading"],
+      "expected_failure_mode": "SV-DCO-1 exists but may have few/no QRAs. Pipeline hallucinates mitigations not in corpus.",
+      "expected_correct_behavior": "If QRAs exist, cite them. If not, label answer as [NOT IN CORPUS] and suggest graph neighbors that DO have QRAs. Honesty about coverage gap.",
+      "evidence_claim": "SC-2"
+    },
+    {
+      "id": "ADV-11",
+      "question": "Does SV-CF-4 have any relationship to supply chain attacks?",
+      "target_control": "SV-CF-4",
+      "expected_action": "QUERY",
+      "difficulty": "medium",
+      "adversarial_type": "missing_qra",
+      "turn_targets": ["turn2_retrieval", "turn3_grading"],
+      "expected_failure_mode": "SV-CF-4 exists but pipeline may lack QRAs connecting it to supply chain (SV-SP-*). LLM fabricates a relationship.",
+      "expected_correct_behavior": "Retrieve SV-CF-4 QRAs. Use graph traversal to check edges to SV-SP-* controls. If no edge: 'No direct relationship found in SPARTA between SV-CF-4 and supply chain techniques.'",
+      "evidence_claim": "SC-2"
+    },
+    {
+      "id": "ADV-12",
+      "question": "You mentioned SV-AC-1 earlier. What about SV-ZZ-99 — how does it compare?",
+      "target_control": "SV-ZZ-99",
+      "expected_action": "NO_MATCH",
+      "difficulty": "hard",
+      "adversarial_type": "follow_up_trap",
+      "turn_targets": ["turn4_persona", "turn3_grading"],
+      "expected_failure_mode": "Persona introduces SV-ZZ-99 in follow-up. Pipeline tries to answer about non-existent control. Wrong-control penalty fires on answer, not on the invalid follow-up question.",
+      "expected_correct_behavior": "Follow-up question should be validated: SV-ZZ-99 not in ControlCatalog. Pipeline should respond: 'SV-ZZ-99 is not a recognized SPARTA technique.' Not penalize the original answer.",
+      "evidence_claim": "SC-4"
+    },
+    {
+      "id": "ADV-13",
+      "question": "Earlier you said SV-MA-3 has weak coverage. Actually, I think SV-MA-3 is about electromagnetic pulse hardening. Correct?",
+      "target_control": "SV-MA-3",
+      "expected_action": "QUERY",
+      "difficulty": "hard",
+      "adversarial_type": "follow_up_trap",
+      "turn_targets": ["turn4_persona", "turn3_grading", "turn5_brandon"],
+      "expected_failure_mode": "Persona makes a false claim about SV-MA-3. Pipeline agrees with the false claim because it defers to persona authority.",
+      "expected_correct_behavior": "Pipeline retrieves SV-MA-3 QRAs and checks if 'electromagnetic pulse hardening' appears in them. If not: 'Actually, SV-MA-3 covers [real topic]. The EMP hardening claim is not supported by SPARTA.'",
+      "evidence_claim": "SC-4"
+    },
+    {
+      "id": "ADV-14",
+      "question": "",
+      "target_control": "",
+      "expected_action": "CLARIFY",
+      "difficulty": "easy",
+      "adversarial_type": "boundary_test",
+      "turn_targets": ["turn1_mining", "turn2_retrieval"],
+      "expected_failure_mode": "Empty question causes KeyError or NoneType error in entity extraction regex",
+      "expected_correct_behavior": "Pipeline handles empty input gracefully: 'I didn't receive a question. What would you like to know about SPARTA?'",
+      "evidence_claim": "SC-1"
+    },
+    {
+      "id": "ADV-15",
+      "question": "SV-AC-1 SV-AC-2 SV-AC-3 SV-AC-4 SV-AC-5 SV-AC-6 SV-AC-7 SV-AC-8 SV-AV-1 SV-AV-2 SV-AV-3 SV-AV-4 SV-AV-5 SV-AV-6 SV-AV-7 SV-AV-8 SV-IT-1 SV-IT-2 SV-IT-3 SV-IT-4 SV-IT-5 — compare all of these.",
+      "target_control": "SV-AC-1",
+      "expected_action": "QUERY",
+      "difficulty": "hard",
+      "adversarial_type": "boundary_test",
+      "turn_targets": ["turn2_retrieval", "turn3_grading"],
+      "expected_failure_mode": "21 entity IDs extracted. Retrieval tries to fetch QRAs for all 21, hitting context limits or timeout. Answer is shallow across all, deep on none.",
+      "expected_correct_behavior": "Pipeline detects excessive entity count. Responds: 'That covers 21 SPARTA techniques. Could you narrow to 2-3 specific controls? Or I can provide a high-level overview of the SV-AC, SV-AV, and SV-IT categories.'",
+      "evidence_claim": "SC-2"
+    }
+  ]
+}

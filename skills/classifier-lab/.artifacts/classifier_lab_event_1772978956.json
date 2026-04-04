@@ -1,0 +1,30 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1772978956,
+  "status": "ok",
+  "selected_backbone": "distilbert-base-uncased",
+  "selected_metrics": {
+    "macro_f1": 0.5934786426904942,
+    "accuracy": 0.594311377245509,
+    "wilson_score_lower": 0.575233978613722,
+    "latency_p50_ms": 11.044136495911516,
+    "latency_p95_ms": 12.520581416902127
+  },
+  "candidate_count": 1,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/tmp/5ft_scope_combined.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [
+        "Precision"
+      ],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "keywords",
+      "worth_remembering": true
+    }
+  }
+}

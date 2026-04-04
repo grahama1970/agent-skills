@@ -1,0 +1,19 @@
+Implemented `gpu-info` in [index.ts](/home/node/workspace/packages/ux-lab/server/index.ts).
+What changed:
+- Added top-level `execFile` + `promisify` import (no inline import).
+- Rewired `GET /api/projects/classifier-lab/gpu-info` to call:
+- `nvidia-smi --query-gpu=index,name,memory.total,memory.used,temperature.gpu --format=csv,noheader,nounits`
+- Parsed output into:
+- `{ gpus: [{ index, name, memTotal, memUsed, temp }] }`
+- Kept safe fallback to `{ gpus: [] }` on errors.
+Verification:
+- DoD command:
+- `curl -fsSL http://localhost:3001/api/projects/classifier-lab/gpu-info ...`
+- Result: `OK`
+- `npm run check`:
+- Passed (exit 0), with existing repo lint infos unrelated to this endpoint.
+- Requested test command:
+- `./.pi/skills/test-lab/run.sh verify-task 8 /home/node/workspace/.pi/skills/classifier-lab --domain python`
+- Result: `FAIL` with existing style issues (`Missing module docstring`, 126/135 passes), not from this TypeScript endpoint change.
+Note:
+- Memory recall/learn commands were attempted, but `.pi/skills/memory/run.sh` fails in this environment because `uv` is missing.

@@ -1,0 +1,31 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-plan",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-03-05T07:00:30.302246+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 1,
+    "total": 1
+  },
+  "worktree": null,
+  "skill": "create-figure",
+  "violations": [
+    {
+      "rule": "skills.extra_docs",
+      "severity": "warn",
+      "skill": "create-figure",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-figure",
+      "message": "Extra docs in skill root: WALKTHROUGH.md.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

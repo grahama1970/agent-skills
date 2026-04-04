@@ -1,0 +1,57 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 4,
+    "total": 4
+  },
+  "worktree": null,
+  "skill": "ops-runpod",
+  "violations": [
+    {
+      "rule": "python.requests",
+      "severity": "warn",
+      "skill": "ops-runpod",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/ops-runpod/src/runpod_ops_fixed/core/training_orchestrator.py",
+      "message": "Uses requests; prefer httpx.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.file_length",
+      "severity": "warn",
+      "skill": "ops-runpod",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/ops-runpod/src/runpod_ops_fixed/core/training_orchestrator.py",
+      "message": "File exceeds 800 LOC (817).",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.file_length",
+      "severity": "warn",
+      "skill": "ops-runpod",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/ops-runpod/src/runpod_ops_fixed/core/inference_server.py",
+      "message": "File exceeds 800 LOC (823).",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.file_length",
+      "severity": "warn",
+      "skill": "ops-runpod",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/ops-runpod/src/runpod_ops_fixed/core/instance_monitor.py",
+      "message": "File exceeds 800 LOC (819).",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

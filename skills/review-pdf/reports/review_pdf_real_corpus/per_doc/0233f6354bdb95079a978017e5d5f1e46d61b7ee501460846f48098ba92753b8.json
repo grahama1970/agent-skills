@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "0233f6354bdb95079a978017e5d5f1e46d61b7ee501460846f48098ba92753b8",
+  "domain": "engineering",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/0233f6354bdb95079a978017e5d5f1e46d61b7ee501460846f48098ba92753b8",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/0233f6354bdb95079a978017e5d5f1e46d61b7ee501460846f48098ba92753b8/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/0233f6354bdb95079a978017e5d5f1e46d61b7ee501460846f48098ba92753b8/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/expansion_batch_1/downloads/0233f6354bdb95079a978017e5d5f1e46d61b7ee501460846f48098ba92753b8.pdf"
+  },
+  "estimates": {
+    "page_count": 64,
+    "estimated_sections": 21,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "engineering"
+  },
+  "actual": {
+    "section_count": 18,
+    "element_count": 320,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 64,
+    "raw_text_length": 93056
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.9,
+      "state": "pass",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.7,
+      "state": "warn",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.81,
+      "state": "pass",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.79,
+      "state": "warn",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.94,
+      "state": "pass",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.79,
+      "state": "warn",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.87,
+      "state": "pass",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.84,
+    "grade": "B",
+    "verdict": "PASS",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "issue_count": 1
+  },
+  "issues": [
+    {
+      "code": "TF002",
+      "severity": "LOW",
+      "message": "Merged cells not properly detected",
+      "recommendation": "Enable cross-page table merge heuristics"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

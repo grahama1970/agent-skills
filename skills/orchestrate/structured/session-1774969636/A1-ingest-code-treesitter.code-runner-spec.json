@@ -1,0 +1,15 @@
+{
+  "task_id": "A1-ingest-code-treesitter",
+  "title": "Enhance ingest-code rescan to extract symbols via treesitter",
+  "prompt": "Enhance ingest_code.py rescan command to call the treesitter skill's scan\nsubcommand on each configured directory. Add a --treesitter flag that:\n1. Invokes the treesitter skill scan on each configured dir\n2. Extracts function signatures, class hierarchies, imports\n3. Stores each symbol to memory with tags:\n   [\"codebase\", \"symbol\", \"function|class|method\", \"<name>\", \"<file_stem>\"]\n4. Uses memory daemon Unix socket at /run/user/1000/embry/memory.sock\n\nThe treesitter skill entry point is at:\n.pi/skills/treesitter/run.sh symbols <file>\n.pi/skills/treesitter/run.sh scan <directory>",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774969636",
+  "definition_of_done": {
+    "command": "bash .pi/skills/ingest-code/run.sh rescan --help 2>&1 | grep -c treesitter",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/ingest-code/ingest_code.py"
+  ]
+}

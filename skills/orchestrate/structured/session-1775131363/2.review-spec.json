@@ -1,0 +1,23 @@
+{
+  "task_id": "2",
+  "files": [
+    ".pi/.worktrees/skills-ci/skills-ci-20260329144123",
+    ".pi/.worktrees/skills-ci/skills-ci-20260329144138",
+    ".pi/.worktrees/skills-ci/skills-ci-20260329144153",
+    ".pi/skills/classifier-lab/scripts/generate_manifest.py",
+    ".pi/skills/plan/plan.py",
+    "packages/ux-lab/captures/cots/cots-report.json",
+    "packages/ux-lab/src/components/ChatFab.tsx",
+    "packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx",
+    "packages/ux-lab/src/components/datalake-explorer/ChatFAB.tsx",
+    "packages/ux-lab/src/components/datalake-explorer/types.ts",
+    "packages/ux-lab/src/components/sparta/query/ChatWell.tsx",
+    "packages/ux-lab/src/components/sparta/query/RecallCard.tsx"
+  ],
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "context": "Code-runner output for task: Upgrade review-plan check_skill_overlap to use manifest + recommend-skill-chain",
+  "dod_command": "cd .pi/skills/review-plan && python3 -c \"import ast; ast.parse(open('review_plan.py').read()); print('OK')\"",
+  "backend": "codex",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775131363",
+  "max_rounds": 1
+}

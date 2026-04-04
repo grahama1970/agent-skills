@@ -1,0 +1,160 @@
+{
+  "generated_at": 1773947003.318238,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773945604",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add first-attempt-only eval mode to pl_eval.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773945604/1.response.txt",
+      "error": "",
+      "started_at": 1773945604.8210135,
+      "finished_at": 1773945849.1226199,
+      "subagent_task_id": "bbd59d9d",
+      "subagent_port": 8626
+    },
+    {
+      "id": "2",
+      "title": "Add failure compilation to pl_optimize.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773945604/2.response.txt",
+      "error": "",
+      "started_at": 1773945849.1232636,
+      "finished_at": 1773945941.198605,
+      "subagent_task_id": "6f998822",
+      "subagent_port": 8626
+    },
+    {
+      "id": "2.5",
+      "title": "Remove call_llm_with_correction from llm.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773945604/2.5.response.txt",
+      "error": "",
+      "started_at": 1773945941.1989663,
+      "finished_at": 1773946109.9461944,
+      "subagent_task_id": "cbdb7c34",
+      "subagent_port": 8626
+    },
+    {
+      "id": "3",
+      "title": "Rebuild optimize command as iterative prompt rewriter with judge model",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "1",
+        "2",
+        "2.5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773945604/3.response.txt",
+      "error": "",
+      "started_at": 1773946109.9468906,
+      "finished_at": 1773946321.484534,
+      "subagent_task_id": "01259f89",
+      "subagent_port": 8626
+    },
+    {
+      "id": "4",
+      "title": "Add optimize-live server endpoint",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773945604/4.response.txt",
+      "error": "",
+      "started_at": 1773946321.485333,
+      "finished_at": 1773946600.3402448,
+      "subagent_task_id": "4e5006eb",
+      "subagent_port": 8622
+    },
+    {
+      "id": "4.5",
+      "title": "Design board for prompt evolution Live tab",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "gemini",
+      "mode": "review",
+      "agent": "steve-schoger",
+      "status": "completed",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773945604/4.5.response.txt",
+      "error": "",
+      "started_at": 1773946600.3409588,
+      "finished_at": 1773946609.3291128,
+      "subagent_task_id": "3b170072",
+      "subagent_port": 8623
+    },
+    {
+      "id": "5",
+      "title": "Redesign Live tab for prompt evolution view",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [
+        "4",
+        "4.5"
+      ],
+      "output_path": "",
+      "error": "Task 5 cancelled by operator",
+      "started_at": 1773946609.3297598,
+      "finished_at": 1773947003.3179529,
+      "subagent_task_id": "9dccfa19",
+      "subagent_port": 8623
+    },
+    {
+      "id": "6",
+      "title": "End-to-end test: agent-driven optimize loop via WebSocket",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

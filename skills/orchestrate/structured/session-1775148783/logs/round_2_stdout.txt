@@ -1,0 +1,24 @@
+....F                                                                    [100%]
+=================================== FAILURES ===================================
+____________________________ test_divide_zero_safe _____________________________
+
+    def test_divide_zero_safe():
+        """Division by zero should raise ValueError with message, not raw ZeroDivisionError."""
+        with pytest.raises(ValueError, match="Cannot divide by zero"):
+>           divide(1, 0)
+
+tests/test_calculator.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+a = 1, b = 0
+
+    def divide(a, b):
+        """Divide a by b."""
+        if b == 0:
+>           raise ZeroDivisionError("Cannot divide by zero")
+E           ZeroDivisionError: Cannot divide by zero
+
+src/calculator.py:22: ZeroDivisionError
+=========================== short test summary info ============================
+FAILED tests/test_calculator.py::test_divide_zero_safe - ZeroDivisionError: C...
+1 failed, 4 passed in 0.02s

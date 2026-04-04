@@ -1,0 +1,162 @@
+[
+  {
+    "question": "Where does the F-36 compliance posture drift from the F-35 legacy baseline?",
+    "difficulty": "medium",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "13_f35_legacy",
+    "domain_context": "Cross-program compliance drift detection"
+  },
+  {
+    "question": "Show me the compliance coverage breakdown across all F-36 categories",
+    "difficulty": "easy",
+    "expected_scope": "embry",
+    "expected_type": "analytical",
+    "f36_category": "12_standards",
+    "domain_context": "Cross-domain compliance coverage analytics"
+  },
+  {
+    "question": "What would Brandon say about the threat landscape for the F-36 avionics subsystem?",
+    "difficulty": "medium",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "01_avionics",
+    "domain_context": "Cross-persona query — Embry routing to Brandon's expertise"
+  },
+  {
+    "question": "Which personas should review the gaps in F-36 flight software compliance?",
+    "difficulty": "medium",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "09_flight_software",
+    "domain_context": "Multi-persona gap analysis routing"
+  },
+  {
+    "question": "Compare the compliance status between avionics and weapons integration categories",
+    "difficulty": "easy",
+    "expected_scope": "embry",
+    "expected_type": "analytical",
+    "f36_category": "01_avionics",
+    "domain_context": "Cross-category compliance comparison"
+  },
+  {
+    "question": "How has the F-36 risk assessment changed since the last quarterly review across all domains?",
+    "difficulty": "hard",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "11_program_management",
+    "domain_context": "Cross-domain risk assessment evolution"
+  },
+  {
+    "question": "What would Jennifer say about the NIST control gaps that Noah's safety analysis uncovered?",
+    "difficulty": "hard",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "12_standards",
+    "domain_context": "Cross-persona synthesis — Jennifer + Noah domain intersection"
+  },
+  {
+    "question": "Show me a trend of compliance issues across all F-36 categories over the last six months",
+    "difficulty": "easy",
+    "expected_scope": "embry",
+    "expected_type": "analytical",
+    "f36_category": "12_standards",
+    "domain_context": "Multi-category compliance trend analytics"
+  },
+  {
+    "question": "What legacy lineage connections exist between F-35 vendor substitutions and F-36 manufacturing defects?",
+    "difficulty": "hard",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "16_legacy_lineage",
+    "domain_context": "Multi-generational manufacturing provenance correlation"
+  },
+  {
+    "question": "Which F-36 program areas have the highest unresolved gap count right now?",
+    "difficulty": "easy",
+    "expected_scope": "embry",
+    "expected_type": "analytical",
+    "f36_category": "11_program_management",
+    "domain_context": "Program-wide gap analysis dashboard query"
+  },
+  {
+    "question": "How do the extraction quality issues Margaret identified affect Brandon's threat assessment coverage?",
+    "difficulty": "hard",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "13_f35_legacy",
+    "domain_context": "Cross-persona impact — extraction quality to threat coverage"
+  },
+  {
+    "question": "What is the overall compliance health across the F-36 program?",
+    "difficulty": "easy",
+    "expected_scope": "embry",
+    "expected_type": "status",
+    "f36_category": "12_standards",
+    "domain_context": "Program-wide compliance health status"
+  },
+  {
+    "question": "Compare the F-35 legacy cybersecurity posture with the F-36 updated requirements",
+    "difficulty": "medium",
+    "expected_scope": "embry",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Cross-program cybersecurity posture comparison"
+  },
+  {
+    "question": "What cross-domain compliance risks emerge when we look at manufacturing provenance alongside flight software verification?",
+    "difficulty": "hard",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "09_flight_software",
+    "domain_context": "Cross-domain risk synthesis — manufacturing + flight software"
+  },
+  {
+    "question": "Graph the distribution of compliance findings by persona expertise area",
+    "difficulty": "easy",
+    "expected_scope": "embry",
+    "expected_type": "analytical",
+    "f36_category": "12_standards",
+    "domain_context": "Per-persona findings distribution chart"
+  },
+  {
+    "question": "How do sensor correlation anomalies from fielded F-36 aircraft trace back to plant floor manufacturing data?",
+    "difficulty": "hard",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "Flight sensor to plant machine correlation — the killer feature"
+  },
+  {
+    "question": "What would Noah say about the safety implications of the vendor material substitutions Paul flagged?",
+    "difficulty": "medium",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "06_dual_engine",
+    "domain_context": "Cross-persona — Noah safety review of Paul's manufacturing findings"
+  },
+  {
+    "question": "Show me which F-36 datalake categories have the most unreviewed documents",
+    "difficulty": "easy",
+    "expected_scope": "embry",
+    "expected_type": "analytical",
+    "f36_category": "16_legacy_lineage",
+    "domain_context": "Datalake coverage analytics across categories"
+  },
+  {
+    "question": "What compliance drift has occurred since the F-35 legacy avionics architecture was migrated to the F-36 platform?",
+    "difficulty": "medium",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "13_f35_legacy",
+    "domain_context": "Legacy migration compliance drift analysis"
+  },
+  {
+    "question": "Summarize the top three cross-domain risks that require multi-persona review this week",
+    "difficulty": "medium",
+    "expected_scope": "embry",
+    "expected_type": "knowledge",
+    "f36_category": "11_program_management",
+    "domain_context": "Cross-domain risk prioritization for multi-persona review"
+  }
+]

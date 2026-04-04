@@ -1,0 +1,26 @@
+{
+  "selected_backbone": "distilbert-base-uncased",
+  "selected_metrics": {
+    "macro_f1": 0.8902116083150566,
+    "accuracy": 0.895,
+    "wilson_score_lower": 0.8744642376371893
+  },
+  "results": [
+    {
+      "backbone": "prajjwal1/bert-tiny",
+      "macro_f1": 0.7156325508275398,
+      "accuracy": 0.765,
+      "wilson_score_lower": 0.7377368880995522,
+      "rounds": 3,
+      "gate_passed": false
+    },
+    {
+      "backbone": "distilbert-base-uncased",
+      "macro_f1": 0.8902116083150566,
+      "accuracy": 0.895,
+      "wilson_score_lower": 0.8744642376371893,
+      "rounds": 1,
+      "gate_passed": true
+    }
+  ]
+}

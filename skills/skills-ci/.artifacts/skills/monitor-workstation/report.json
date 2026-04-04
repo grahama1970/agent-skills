@@ -1,0 +1,31 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-plan",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-03-05T07:00:30.302246+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 1,
+    "total": 1
+  },
+  "worktree": null,
+  "skill": "monitor-workstation",
+  "violations": [
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "monitor-workstation",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/monitor-workstation/monitor.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

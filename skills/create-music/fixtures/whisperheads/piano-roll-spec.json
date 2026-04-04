@@ -1,0 +1,45 @@
+{
+  "bpm": 85,
+  "time_signature": "4/4",
+  "key": "D minor",
+  "total_bars": 8,
+  "sections": [
+    {
+      "section_name": "verse",
+      "start_bar": 1,
+      "end_bar": 4,
+      "chord_progression": ["Dm", "Am", "Bb", "Gm"],
+      "energy_curve": [0.2, 0.25, 0.3, 0.35]
+    },
+    {
+      "section_name": "chorus",
+      "start_bar": 5,
+      "end_bar": 8,
+      "chord_progression": ["Bb", "F", "Gm", "Dm"],
+      "energy_curve": [0.6, 0.7, 0.8, 0.65]
+    }
+  ],
+  "notes": [
+    {"pitch": "D3", "start_beat": 0, "duration_beats": 4, "velocity": 60, "instrument": "bass"},
+    {"pitch": "A2", "start_beat": 4, "duration_beats": 4, "velocity": 60, "instrument": "bass"},
+    {"pitch": "Bb2", "start_beat": 8, "duration_beats": 4, "velocity": 65, "instrument": "bass"},
+    {"pitch": "G2", "start_beat": 12, "duration_beats": 4, "velocity": 65, "instrument": "bass"},
+    {"pitch": "D4", "start_beat": 0, "duration_beats": 2, "velocity": 50, "instrument": "keys"},
+    {"pitch": "F4", "start_beat": 2, "duration_beats": 2, "velocity": 50, "instrument": "keys"},
+    {"pitch": "A3", "start_beat": 4, "duration_beats": 2, "velocity": 50, "instrument": "keys"},
+    {"pitch": "C4", "start_beat": 6, "duration_beats": 2, "velocity": 50, "instrument": "keys"},
+    {"pitch": "Bb3", "start_beat": 8, "duration_beats": 2, "velocity": 55, "instrument": "keys"},
+    {"pitch": "D4", "start_beat": 10, "duration_beats": 2, "velocity": 55, "instrument": "keys"},
+    {"pitch": "G3", "start_beat": 12, "duration_beats": 2, "velocity": 55, "instrument": "keys"},
+    {"pitch": "Bb3", "start_beat": 14, "duration_beats": 2, "velocity": 55, "instrument": "keys"},
+    {"pitch": "Bb3", "start_beat": 16, "duration_beats": 4, "velocity": 80, "instrument": "bass"},
+    {"pitch": "F3", "start_beat": 20, "duration_beats": 4, "velocity": 80, "instrument": "bass"},
+    {"pitch": "G3", "start_beat": 24, "duration_beats": 4, "velocity": 85, "instrument": "bass"},
+    {"pitch": "D3", "start_beat": 28, "duration_beats": 4, "velocity": 75, "instrument": "bass"},
+    {"pitch": "D4", "start_beat": 16, "duration_beats": 1, "velocity": 90, "instrument": "vocal"},
+    {"pitch": "D4", "start_beat": 17, "duration_beats": 1, "velocity": 85, "instrument": "vocal"},
+    {"pitch": "D4", "start_beat": 18.5, "duration_beats": 1, "velocity": 95, "instrument": "vocal"},
+    {"pitch": "C4", "start_beat": 19.5, "duration_beats": 0.5, "velocity": 80, "instrument": "vocal"},
+    {"pitch": "D4", "start_beat": 20, "duration_beats": 3, "velocity": 100, "instrument": "vocal"}
+  ]
+}

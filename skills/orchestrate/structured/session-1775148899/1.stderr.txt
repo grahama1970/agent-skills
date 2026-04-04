@@ -1,0 +1,5 @@
+2026-04-02 12:55:00.168 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Complete QuarantineView.tsx — 9 missing data-qid ===
+2026-04-02 12:55:00.168 | INFO     | __main__:run:494 -   Backend: claude
+2026-04-02 12:55:00.168 | INFO     | __main__:run:495 -   DoD: cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py 
+2026-04-02 12:55:00.168 | INFO     | __main__:run:496 -   Max rounds: 5
+2026-04-02 12:55:00.171 | ERROR    | __main__:run:515 - Another code-runner is already running in /home/graham/workspace/experiments/pi-mono. Aborting.

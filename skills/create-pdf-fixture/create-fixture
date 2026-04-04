@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Back-compat wrapper for historical callers.
+# Prefer .agents/skills/pdf-fixture/run.sh (uv-based) directly.
+
+set -euo pipefail
+
+REPO="${EXTRACTOR_REPO:-git+https://github.com/grahama1970/extractor.git}"
+
+if command -v uv &>/dev/null; then
+    exec uv run --from "$REPO" python -m extractor.fixtures.create "$@"
+fi
+
+if [[ -n "${EXTRACTOR_ROOT:-}" ]]; then
+    SCRIPT_PATH="${EXTRACTOR_ROOT}/tools/tasks_loop/utils/create_fixture_pdf.py"
+    if [[ ! -f "$SCRIPT_PATH" ]]; then
+        echo "Error: create_fixture_pdf.py not found at ${SCRIPT_PATH}" >&2
+        exit 1
+    fi
+    if [[ -f "${EXTRACTOR_ROOT}/.venv/bin/activate" ]]; then
+        # shellcheck disable=SC1090
+        source "${EXTRACTOR_ROOT}/.venv/bin/activate"
+    fi
+    if [[ -f "${EXTRACTOR_ROOT}/.env" ]]; then
+        set -a
+        # shellcheck disable=SC1090
+        source "${EXTRACTOR_ROOT}/.env"
+        set +a
+    fi
+    exec python "$SCRIPT_PATH" "$@"
+fi
+
+echo "Error: uv not found and EXTRACTOR_ROOT not set." >&2
+echo "Install uv (https://astral.sh/uv) or set EXTRACTOR_ROOT to a checkout of extractor." >&2
+exit 1

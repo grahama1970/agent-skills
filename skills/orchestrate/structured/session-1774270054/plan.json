@@ -1,0 +1,219 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "metadata": {
+    "title": "RunPod Flash Training Integration",
+    "goal": "Add --target local|flash flag to training skills so model training can use B200/H200 GPUs via RunPod Flash serverless instead of being limited to local A5000 24GB",
+    "plan_type": "code",
+    "created": "2026-03-23",
+    "repo_root": "/home/graham/workspace/experiments/pi-mono",
+    "primary_persona": {
+      "name": "Graham Anderson",
+      "role": "Architect \u2014 needs 7B+ model training without Docker/SSH overhead",
+      "source": ".pi/agents/graham-anderson/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 2
+  },
+  "capability_overlap": [
+    "/memory recall returned: RunPod Flash assessment \u2014 B200 192GB enables 7B-13B training, no Docker, Python SDK",
+    "Checked /ops-runpod \u2014 exists but uses full pods (Docker+SSH+rsync). Flash replaces the training path, keep ops-runpod for inference servers.",
+    "Checked /create-gpt \u2014 has train_sft.py and train_grpo.py but no --target flag. device_map='auto' is hardcoded.",
+    "Checked /classifier-lab \u2014 torch.device('cuda') hardcoded. No remote training path.",
+    "Checked /regressor-lab \u2014 CPU-only (sklearn/xgboost). Flash not needed for CPU models, but XGBoost gpu_hist could benefit.",
+    "Checked /assistant-lab \u2014 already shells to ops-runpod for remote training via ModelFactory. This is the primary integration point."
+  ],
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "questions_blockers": [
+    "None"
+  ],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Research + Common Adapter"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Skill Integration"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Validation"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Research RunPod Flash SDK capabilities for training workloads",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "depends_on": [],
+      "implementation": [
+        "/dogpile 'RunPod Flash SDK training checkpoints storage persistent volumes serverless GPU'",
+        "Document: max execution time (7 days confirmed), storage options, GPU types available, data upload mechanism",
+        "Test: pip install runpod && python -c 'import runpod; print(runpod.__version__)'",
+        "Write findings to .pi/skills/common/flash_research.md"
+      ],
+      "definition_of_done": {
+        "command": "test -f .pi/skills/common/flash_research.md && grep -c 'storage' .pi/skills/common/flash_research.md",
+        "assertion": "Research file exists with storage findings"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Create common/flash_trainer.py adapter",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "Create .pi/skills/common/flash_trainer.py",
+        "FlashTrainer class with: submit_training_job(script_path, args, gpu_type, timeout_hours) -> job_id",
+        "Methods: poll_status(job_id), get_logs(job_id), download_checkpoint(job_id, local_path)",
+        "GPU selection: estimate_gpu(model_size_b, method='lora'|'full') -> gpu_type string",
+        "Use runpod Python SDK (pip install runpod)",
+        "Cost estimation: estimate_cost(gpu_type, hours) -> float",
+        "Fallback: if RUNPOD_API_KEY not set, raise clear error suggesting --target local",
+        "Follow best-practices-python: loguru, typer, httpx, max 800 LOC"
+      ],
+      "tests": [
+        "python -c 'from flash_trainer import FlashTrainer; print(FlashTrainer)'",
+        "test-lab/run.sh verify-task 2 .pi/skills/common/ --domain python"
+      ],
+      "definition_of_done": {
+        "command": "cd .pi/skills/common && python -c 'from flash_trainer import FlashTrainer, estimate_gpu; print(estimate_gpu(7))'",
+        "assertion": "Returns a GPU type string for 7B model"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Add runpod to create-gpt pyproject.toml + --target flag",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "2"
+      ],
+      "implementation": [
+        "Add 'runpod>=1.7.0' to .pi/skills/create-gpt/pyproject.toml [project.optional-dependencies.flash]",
+        "Add --target local|flash flag to run.sh (default: local)",
+        "In scripts/train_sft.py: add --target argument, if flash: import FlashTrainer, package script + data, submit job, poll until done, download checkpoint",
+        "In scripts/train_grpo.py: same pattern",
+        "Local path unchanged \u2014 --target local is current behavior",
+        "Flash path: FlashTrainer.submit_training_job(script='train_sft.py', args={...}, gpu_type=auto)"
+      ],
+      "tests": [
+        "cd .pi/skills/create-gpt && uv run python scripts/train_sft.py --help | grep -q 'target'",
+        "test-lab/run.sh verify-task 3 .pi/skills/create-gpt/ --domain python"
+      ],
+      "definition_of_done": {
+        "command": "cd .pi/skills/create-gpt && uv run python scripts/train_sft.py --help 2>&1 | grep -c 'target'",
+        "assertion": "--target flag appears in help output"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Add --target flag to classifier-lab",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "2"
+      ],
+      "implementation": [
+        "Add 'runpod>=1.7.0' to .pi/skills/classifier-lab/pyproject.toml [project.optional-dependencies.flash]",
+        "Add --target local|flash to run.sh and scripts/train.py",
+        "Flash path: package training script + dataset, submit via FlashTrainer",
+        "Vision models (timm) need image data upload \u2014 use FlashTrainer.upload_dataset()"
+      ],
+      "tests": [
+        "cd .pi/skills/classifier-lab && uv run python scripts/train.py --help | grep -q 'target'"
+      ],
+      "definition_of_done": {
+        "command": "cd .pi/skills/classifier-lab && uv run python scripts/train.py --help 2>&1 | grep -c 'target'",
+        "assertion": "--target flag appears in help output"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Wire assistant-lab train-remote to use Flash instead of ops-runpod",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "3"
+      ],
+      "implementation": [
+        "In assistant-lab run.sh: change train-remote to use FlashTrainer instead of ops-runpod SSH pipeline",
+        "Update common/model_factory.py: train_gpt() accepts target='local'|'flash' parameter",
+        "ModelFactory.auto_improve(): if model_size >= 3B, suggest --target flash",
+        "Keep ops-runpod for serve command (persistent inference) \u2014 Flash is for training only",
+        "Update cost estimation to use FlashTrainer.estimate_cost() instead of ops-runpod"
+      ],
+      "tests": [
+        "grep -q 'flash' .pi/skills/assistant-lab/run.sh",
+        "python -c 'from model_factory import ModelFactory; print(ModelFactory)'"
+      ],
+      "definition_of_done": {
+        "command": "grep -c 'flash\\|FlashTrainer' .pi/skills/assistant-lab/run.sh .pi/skills/common/model_factory.py",
+        "assertion": "Flash references in both files"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Integration test: dry-run Flash training for 0.5B model",
+      "lane": "2",
+      "runner": "local",
+      "backend": "local",
+      "mode": "one_shot",
+      "depends_on": [
+        "3",
+        "4",
+        "5"
+      ],
+      "command": "cd .pi/skills/create-gpt && uv run python scripts/train_sft.py \\\n  --task test-flash --target flash --mock 2>&1 | tail -20\n",
+      "tests": [
+        "cd .pi/skills/create-gpt && uv run python scripts/train_sft.py --task test-flash --target flash --mock 2>&1 | grep -q 'FlashTrainer'"
+      ],
+      "definition_of_done": {
+        "command": "cd .pi/skills/create-gpt && uv run python scripts/train_sft.py --task test-flash --target flash --mock 2>&1 | grep -c 'FlashTrainer'",
+        "assertion": "Mock flash training path executed without error"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Update SKILL.md docs for all modified skills",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "depends_on": [
+        "3",
+        "4",
+        "5"
+      ],
+      "implementation": [
+        "Update .pi/skills/create-gpt/SKILL.md: document --target local|flash flag, GPU types, cost estimates",
+        "Update .pi/skills/classifier-lab/SKILL.md: same",
+        "Update .pi/skills/assistant-lab/SKILL.md: document Flash path replacing ops-runpod for training",
+        "Add examples: './run.sh train --task X --target flash --gpu B200'"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 7 .pi/skills/ --domain docs"
+      ],
+      "definition_of_done": {
+        "command": "grep -c 'flash' .pi/skills/create-gpt/SKILL.md .pi/skills/classifier-lab/SKILL.md .pi/skills/assistant-lab/SKILL.md",
+        "assertion": "Flash documented in all 3 SKILL.md files"
+      }
+    }
+  ]
+}

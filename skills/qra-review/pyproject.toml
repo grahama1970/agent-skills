@@ -1,0 +1,20 @@
+[project]
+name = "qra-review"
+version = "1.0.0"
+description = "Human-in-the-loop QRA assessment TUI with Embry chat support"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "dbus-fast",
+    "loguru>=0.7.0,<0.7.3",
+    "python-arango>=7.6.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+    "textual>=0.47.0",
+    "typer>=0.9.0",
+]
+
+[project.scripts]
+qra-review = "qra_review:main"
+
+[tool.uv]
+dev-dependencies = ["pytest>=7.0.0"]

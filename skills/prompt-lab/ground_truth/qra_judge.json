@@ -1,0 +1,182 @@
+[
+  {
+    "input": "{\"question\": \"What makes ADVSTORESHELL particularly dangerous for the ground segment of space operations?\", \"answer\": \"ADVSTORESHELL is particularly dangerous for the ground segment of space operations because it is designed for long-term espionage. After a reconnaissance phase, it can be deployed on mission operations centers or ground stations, allowing adversaries to gather sensitive data over extended periods wi\", \"reasoning\": \"\", \"control_id\": \"S0045\", \"tactical_tags\": [\"Exploit\", \"Persist\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__5000003127",
+      "evidence_verdict": "NOT_SATISFIED",
+      "control_to_control": false
+    }
+  },
+  {
+    "input": "{\"question\": \"When should d3f:Enclave (D3FEND) be used in satellite operations to enhance security?\", \"answer\": \"d3f:Enclave (D3FEND) should be used in satellite operations when isolating critical systems, such as TT&C command processing or payload data handling, to prevent unauthorized access or interference, especially during ground station contact windows.\", \"reasoning\": \"\", \"control_id\": \"d3f:Enclave\", \"tactical_tags\": [\"Isolate\", \"Harden\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2085948411",
+      "evidence_verdict": "INCONCLUSIVE",
+      "control_to_control": false
+    }
+  },
+  {
+    "input": "{\"question\": \"What space-specific constraints affect the implementation of D3-IAA on the link segment?\", \"answer\": \"The implementation of D3-IAA on the link segment is affected by space-specific constraints such as extreme latency and limited contact windows with ground stations. The analysis of malicious identifiers must be performed efficiently within the short duration of the satellite's ground station contact\", \"reasoning\": \"\", \"control_id\": \"D3-IAA\", \"tactical_tags\": [\"Detect\", \"Harden\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2085949344",
+      "evidence_verdict": "NOT_SATISFIED",
+      "control_to_control": false
+    }
+  },
+  {
+    "input": "{\"question\": \"How does the D3-RTSD control's detection capability prevent the success of the Targeted Deception of Onboard SSA/SDA Sensors (DE-0009.04) technique in space missions?\", \"answer\": \"The D3-RTSD control prevents the success of the Targeted Deception of Onboard SSA/SDA Sensors (DE-0009.04) technique by detecting unauthorized remote terminal sessions that could be used to manipulate SSA/SDA sensor data. In space missions, this control monitors TT&C network traffic for signs of mal\", \"reasoning\": \"\", \"control_id\": \"DE-0009.04\", \"tactical_tags\": [\"Detect\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086058452",
+      "evidence_verdict": "NOT_SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"What space-specific mechanism does the Contingency Plan | Capacity Planning (CP-2(2)) control employ to address the Mission-Operated Ground System (RD-0002.01) technique?\", \"answer\": \"The Contingency Plan | Capacity Planning (CP-2(2)) control employs a space-specific mechanism by ensuring redundant ground station capacity and pre-allocated telecommunication resources to maintain spacecraft operations if primary mission-operated ground systems are compromised. This includes backup\", \"reasoning\": \"\", \"control_id\": \"RD-0002.01\", \"tactical_tags\": [\"Harden\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086034415",
+      "evidence_verdict": "NOT_SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"What space-specific vulnerabilities in ground segment automation does 3rd-Party Spacecraft (RD-0002.03) exploit that Modify Cloud Compute Configurations (T1578.005) addresses?\", \"answer\": \"3rd-Party Spacecraft (RD-0002.03) techniques often exploit auto-scaling cloud resources used for TT&C processing to generate malicious maneuver commands. Modify Cloud Compute Configurations (T1578.005) counters this by implementing orbital-period-based compute limits that align with legitimate conta\", \"reasoning\": \"\", \"control_id\": \"RD-0002.03\", \"tactical_tags\": [\"Isolate\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2085916631",
+      "evidence_verdict": "INCONCLUSIVE",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"Why is the D3-ET control particularly effective against the Replay (EX-0001) technique in space-based systems?\", \"answer\": \"The D3-ET control is particularly effective against the Replay (EX-0001) technique in space-based systems because it encrypts all network traffic, making it impossible for an adversary to execute replayed commands or data without the correct decryption keys. This ensures that even if the data is cap\", \"reasoning\": \"\", \"control_id\": \"EX-0001\", \"tactical_tags\": [\"Harden\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086074478",
+      "evidence_verdict": "NOT_SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"What role does Web Network Traffic (d3f:WebNetworkTraffic) control play in mitigating risks associated with Intranet Web Network Traffic (d3f:IntranetWebNetworkTraffic) in space systems?\", \"answer\": \"The Web Network Traffic (d3f:WebNetworkTraffic) control mitigates risks associated with Intranet Web Network Traffic (d3f:IntranetWebNetworkTraffic) in space systems by ensuring that all internal web traffic is monitored and filtered. This helps in detecting and isolating any malicious activities wi\", \"reasoning\": \"\", \"control_id\": \"d3f:IntranetWebNetworkTraffic\", \"tactical_tags\": [\"Harden\", \"Exploit\", \"Isolate\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086090665",
+      "evidence_verdict": "INCONCLUSIVE",
+      "control_to_control": false
+    }
+  },
+  {
+    "input": "{\"question\": \"How does the D3-DO control's use of decoy objects specifically address the Docked Vehicle / OSAM (IA-0005.02) technique in space missions?\", \"answer\": \"The D3-DO control addresses the Docked Vehicle / OSAM (IA-0005.02) technique by deploying decoy spacecraft that replicate the appearance and behavior of legitimate docking interfaces. When adversaries attempt to exploit a docking vehicle to gain access, they are misled into interacting with the deco\", \"reasoning\": \"\", \"control_id\": \"IA-0005.02\", \"tactical_tags\": [\"Isolate\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086051587",
+      "evidence_verdict": "NOT_SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"What role does Metadata (d3f:Metadata) play in identifying adversarial activities within the Database (d3f:Database) technique in space systems?\", \"answer\": \"Metadata (d3f:Metadata) plays a crucial role in identifying adversarial activities within the Database (d3f:Database) technique by providing insights into data access patterns and modifications. In space systems, metadata can reveal unauthorized access to telemetry data or command sequences stored i\", \"reasoning\": \"\", \"control_id\": \"d3f:Database\", \"tactical_tags\": [\"Detect\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086089545",
+      "evidence_verdict": "INCONCLUSIVE",
+      "control_to_control": false
+    }
+  },
+  {
+    "input": "{\"question\": \"How does the Contingency Plan (CP-2) control prevent the Business Relationships (REC-0008.04) technique from compromising space mission systems through third-party access?\", \"answer\": \"The Contingency Plan (CP-2) control prevents the Business Relationships (REC-0008.04) technique from compromising space mission systems by identifying and mitigating risks associated with third-party access. It ensures that any elevated network access granted to contractors or service providers is m\", \"reasoning\": \"\", \"control_id\": \"REC-0008.04\", \"tactical_tags\": [\"Isolate\"]}",
+    "expected_output": "FAIL",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086011975",
+      "evidence_verdict": "NOT_SATISFIED",
+      "control_to_control": false
+    }
+  },
+  {
+    "input": "{\"question\": \"How does Component Marking (PE-22) enhance the detection of unexecuted operations in spacecraft hardware affected by Missing Security-Relevant Feedback for Unexecuted Operations in Hardware Interface \", \"answer\": \"Component Marking (PE-22) enhances the detection of unexecuted operations in spacecraft hardware affected by Missing Security-Relevant Feedback for Unexecuted Operations in Hardware Interface (CWE-1429) by clearly labeling components with their impact or classification levels. This marking ensures t\", \"reasoning\": \"\", \"control_id\": \"PE-22\", \"tactical_tags\": [\"Detect\", \"Harden\"]}",
+    "expected_output": "AMBIGUOUS",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2085961403",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"In the context of space systems, how does the Compromise Software Defined Radio (IA-0002) technique exploit vulnerabilities that the Least Privilege | Authorize Access to Security Functions (AC-6(1)) \", \"answer\": \"The Compromise Software Defined Radio (IA-0002) technique exploits the programmable nature of SDRs to establish covert command and control channels, which can be used to gain unauthorized access to spacecraft systems. The Least Privilege | Authorize Access to Security Functions (AC-6(1)) control pre\", \"reasoning\": \"\", \"control_id\": \"IA-0002\", \"tactical_tags\": [\"Harden\"]}",
+    "expected_output": "AMBIGUOUS",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086030509",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"What space-specific vulnerabilities does Traffic Duplication (T1020.001) exploit that Boot or Logon Autostart Execution: Plist Modification (T1547.011) addresses in satellite command and control syste\", \"answer\": \"Traffic Duplication (T1020.001) in space systems can exploit the automatic mirroring capabilities of ground station equipment to duplicate authenticated command streams. Boot or Logon Autostart Execution: Plist Modification (T1547.011) addresses this by locking down configuration files that define p\", \"reasoning\": \"\", \"control_id\": \"T1020.001\", \"tactical_tags\": [\"Harden\", \"Detect\"]}",
+    "expected_output": "AMBIGUOUS",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2085920271",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"What specific aspects of Mission-Operated Ground Systems (RD-0002.01) should be analyzed under the Development Process, Standards, and Tools | Criticality Analysis (SA-15(3)) control to enhance space \", \"answer\": \"Under the Development Process, Standards, and Tools | Criticality Analysis (SA-15(3)) control, the criticality analysis should focus on the communication interfaces and authentication mechanisms of Mission-Operated Ground Systems (RD-0002.01). Specifically, the analysis should evaluate the security \", \"reasoning\": \"\", \"control_id\": \"RD-0002.01\", \"tactical_tags\": [\"Model\"]}",
+    "expected_output": "AMBIGUOUS",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086032963",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"What role does the Automated Vulnerability Analysis (SA-15(7)) control play in mitigating the Operating System (EX-0009.02) technique's exploitation of real-time operating system vulnerabilities in sp\", \"answer\": \"The Automated Vulnerability Analysis (SA-15(7)) control mitigates the Operating System (EX-0009.02) technique by identifying and analyzing vulnerabilities in spacecraft real-time operating systems. It helps detect flaws that could be exploited to execute malicious code, ensuring these vulnerabilitie\", \"reasoning\": \"\", \"control_id\": \"EX-0009.02\", \"tactical_tags\": [\"Harden\"]}",
+    "expected_output": "AMBIGUOUS",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086058408",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"How does D3-IAA prevent the Execution tactic (ST0004) from being realized through Bus Traffic Spoofing (EX-0014.02) in satellite systems?\", \"answer\": \"D3-IAA prevents the Execution tactic (ST0004) from being realized through Bus Traffic Spoofing (EX-0014.02) by identifying and blocking known malicious identifiers in the satellite's bus traffic. In space systems, where the bus is critical for communication between subsystems and ground controllers,\", \"reasoning\": \"\", \"control_id\": \"EX-0014.02\", \"tactical_tags\": [\"Isolate\"]}",
+    "expected_output": "AMBIGUOUS",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2086026401",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": true
+    }
+  },
+  {
+    "input": "{\"question\": \"Why is it important to coordinate Contingency Plan | Coordinate with Related Plans (CP-2(1)) with Cyber Incident Response Plans for ground station operations?\", \"answer\": \"Coordinating Contingency Plan | Coordinate with Related Plans (CP-2(1)) with Cyber Incident Response Plans is important for ground station operations to ensure a unified and effective response to cyber incidents. This coordination helps protect critical infrastructure like antenna farms and mission \", \"reasoning\": \"\", \"control_id\": \"CP-2(1)\", \"tactical_tags\": [\"Restore\"]}",
+    "expected_output": "PASS",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2085977300",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": false
+    }
+  },
+  {
+    "input": "{\"question\": \"What space-specific challenges does the Contingency Plan (CP-2) technique address that the d3f:ExceptionHandler control helps mitigate during ground station outages?\", \"answer\": \"CP-2 addresses the critical space challenge of multi-orbit-period outages where ground stations cannot issue recovery commands. The d3f:ExceptionHandler implements this by maintaining multiple contingency states in radiation-hardened memory - from temporary sensor resets to full payload shutdown - w\", \"reasoning\": \"\", \"control_id\": \"CP-2\", \"tactical_tags\": [\"Harden\", \"Restore\"]}",
+    "expected_output": "PASS",
+    "metadata": {
+      "_key": "qra__run-recovery-verify__2085929967",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": false
+    }
+  },
+  {
+    "input": "{\"question\": \"Why is the combination of d3f:ExceptionHandler and AT-2(4) particularly important for GEO satellite operations compared to terrestrial IT systems?\", \"answer\": \"GEO satellites experience ~240ms communication latency and limited daily contact passes, making real-time anomaly detection impossible. The d3f:ExceptionHandler preserves critical error states in radiation-hardened memory until the next pass, while AT-2(4)-trained operators analyze these preserved e\", \"reasoning\": \"\", \"control_id\": \"AT-2(4)\", \"tactical_tags\": [\"Detect\", \"Isolate\"]}",
+    "expected_output": "PASS",
+    "metadata": {
+      "_key": "2085932173",
+      "evidence_verdict": "SATISFIED",
+      "control_to_control": false
+    }
+  }
+]

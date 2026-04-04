@@ -1,0 +1,141 @@
+{
+  "generated_at": 1773931594.0165815,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773931594",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Music Lab TypeScript types + sample data",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "nico-bailon",
+      "status": "queued",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T2",
+      "title": "PianoRollView component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "queued",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T3",
+      "title": "WaveformView component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "queued",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T4",
+      "title": "ConvergenceChart component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "nico-bailon",
+      "status": "queued",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T5",
+      "title": "LyricsEditor component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "queued",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T6",
+      "title": "MusicLabWorkbench dashboard + App.tsx integration",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "queued",
+      "depends_on": [
+        "T2",
+        "T3",
+        "T4",
+        "T5"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T7",
+      "title": "Design review of music-lab components",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "review",
+      "agent": "steve-schoger",
+      "status": "queued",
+      "depends_on": [
+        "T6"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+#!/usr/bin/env python3
+"""Task Monitor Client for embedding skill.
+
+Integrates with the centralized task-monitor skill by:
+1. Registering tasks in ~/.pi/task-monitor/registry.json
+2. Writing state files that task-monitor TUI can display
+3. Updating progress for batch operations
+
+Usage:
+    monitor = EmbeddingTaskClient("batch-1000", total_texts=1000)
+    for batch in chunks(texts, 100):
+        vectors = embed_batch(batch)
+        monitor.update(len(batch), success=True)
+    monitor.finish()
+"""
+
+import json
+import os
+import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Any, Optional
+from loguru import logger
+
+# Task monitor registry location
+TASK_MONITOR_REGISTRY = Path.home() / ".pi" / "task-monitor" / "registry.json"
+SKILL_DIR = Path(__file__).parent
+STATE_FILE = SKILL_DIR / "embedding_task_state.json"
+ERROR_LOG = SKILL_DIR / "embedding_errors.json"
+
+
+@dataclass
+class FailureRecord:
+    """Record of an embedding failure."""
+    batch_index: int
+    error: str
+    texts_affected: int
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "batch_index": self.batch_index,
+            "error": self.error[:100],
+            "texts_affected": self.texts_affected,
+            "timestamp": self.timestamp,
+        }
+
+
+class EmbeddingTaskClient:
+    """Task-monitor compatible progress tracker for embedding.
+
+    Writes state to embedding_task_state.json which task-monitor TUI can display.
+    """
+
+    def __init__(
+        self,
+        task_name: str,
+        total_texts: int,
+        description: Optional[str] = None,
+        register: bool = True,
+    ):
+        self.task_name = task_name
+        self.total_texts = total_texts
+        self.description = description or f"Embedding: {task_name}"
+
+        # Progress tracking
+        self.completed = 0
+        self.start_time = time.time()
+        self.last_update = 0.0
+
+        # Metrics
+        self.batches_processed = 0
+        self.vectors_generated = 0
+        self.total_dimensions = 0
+
+        # Failure tracking
+        self.failures: List[FailureRecord] = []
+
+        # Register with task-monitor
+        if register:
+            self._register_task()
+
+        # Initial state write
+        self._write_state()
+
+    def _register_task(self):
+        """Register this task with task-monitor registry."""
+        try:
+            TASK_MONITOR_REGISTRY.parent.mkdir(parents=True, exist_ok=True)
+
+            registry = {}
+            if TASK_MONITOR_REGISTRY.exists():
+                try:
+                    registry = json.loads(TASK_MONITOR_REGISTRY.read_text())
+                except Exception:
+                    registry = {}
+
+            registry[f"embedding:{self.task_name}"] = {
+                "state_file": str(STATE_FILE),
+                "total": self.total_texts,
+                "description": self.description,
+                "project": "embedding",
+                "registered_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            }
+
+            tmp = TASK_MONITOR_REGISTRY.with_suffix(".tmp")
+            tmp.write_text(json.dumps(registry, indent=2))
+            os.replace(tmp, TASK_MONITOR_REGISTRY)
+        except Exception as e:
+            logger.debug("value lookup failed: {}", e)
+
+    def _write_state(self, final: bool = False):
+        """Update task-monitor state file."""
+        now = time.time()
+
+        if not final and (now - self.last_update) < 0.3:
+            return
+        self.last_update = now
+
+        elapsed = now - self.start_time
+        progress_pct = (self.completed / self.total_texts * 100) if self.total_texts > 0 else 0
+
+        eta_seconds = None
+        if self.completed > 0 and self.completed < self.total_texts:
+            rate = self.completed / elapsed
+            remaining = self.total_texts - self.completed
+            eta_seconds = remaining / rate if rate > 0 else None
+
+        # Calculate throughput
+        throughput = self.completed / elapsed if elapsed > 0 else 0
+
+        state = {
+            "completed": self.completed,
+            "total": self.total_texts,
+            "description": self.description,
+            "current_item": f"text {self.completed}/{self.total_texts}",
+            "progress_pct": round(progress_pct, 1),
+            "elapsed_seconds": round(elapsed, 1),
+            "eta_seconds": round(eta_seconds, 1) if eta_seconds else None,
+            "stats": {
+                "batches_processed": self.batches_processed,
+                "vectors_generated": self.vectors_generated,
+                "failure_count": len(self.failures),
+                "throughput_per_sec": round(throughput, 1),
+                "dimensions": self.total_dimensions,
+            },
+            "failures": [f.to_dict() for f in self.failures[-20:]],
+            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "completed" if final else "running",
+        }
+
+        try:
+            tmp = STATE_FILE.with_suffix(".tmp")
+            tmp.write_text(json.dumps(state, indent=2))
+            os.replace(tmp, STATE_FILE)
+        except Exception as e:
+            logger.debug("tmp failed: {}", e)
+
+    def update(
+        self,
+        texts_processed: int,
+        success: bool = True,
+        dimensions: int = 0,
+        error: Optional[str] = None,
+    ):
+        """Update progress after processing a batch.
+
+        Args:
+            texts_processed: Number of texts in this batch
+            success: Whether the batch succeeded
+            dimensions: Embedding dimensions (set once)
+            error: Error message if failed
+        """
+        self.completed += texts_processed
+        self.batches_processed += 1
+
+        if success:
+            self.vectors_generated += texts_processed
+            if dimensions and not self.total_dimensions:
+                self.total_dimensions = dimensions
+        else:
+            self.failures.append(FailureRecord(
+                batch_index=self.batches_processed,
+                error=error or "Unknown error",
+                texts_affected=texts_processed,
+            ))
+
+        self._write_state()
+
+    def finish(self, success: bool = True):
+        """Mark the task as complete."""
+        self._write_state(final=True)
+
+        if self.failures:
+            try:
+                error_data = {
+                    "task_name": self.task_name,
+                    "completed_at": datetime.now().isoformat(),
+                    "success": success,
+                    "total_texts": self.total_texts,
+                    "total_failures": len(self.failures),
+                    "failures": [f.to_dict() for f in self.failures],
+                }
+                tmp = ERROR_LOG.with_suffix(".tmp")
+                tmp.write_text(json.dumps(error_data, indent=2))
+                os.replace(tmp, ERROR_LOG)
+            except Exception as e:
+                logger.debug("value lookup failed: {}", e)
+
+    def get_summary(self) -> Dict[str, Any]:
+        """Get a summary for logging/reporting."""
+        elapsed = time.time() - self.start_time
+        return {
+            "task_name": self.task_name,
+            "completed": self.completed,
+            "total": self.total_texts,
+            "elapsed_seconds": round(elapsed, 1),
+            "vectors_generated": self.vectors_generated,
+            "failures": len(self.failures),
+            "throughput": round(self.completed / elapsed, 1) if elapsed > 0 else 0,
+        }
+
+
+# Convenience functions
+_current_client: Optional[EmbeddingTaskClient] = None
+
+
+def start_monitoring(task_name: str, total_texts: int) -> EmbeddingTaskClient:
+    """Start monitoring a new embedding task."""
+    global _current_client
+    _current_client = EmbeddingTaskClient(task_name, total_texts)
+    return _current_client
+
+
+def get_monitor() -> Optional[EmbeddingTaskClient]:
+    """Get the current task monitor."""
+    return _current_client
+
+
+def end_monitoring(success: bool = True):
+    """End the current task monitoring."""
+    global _current_client
+    if _current_client:
+        _current_client.finish(success)
+        _current_client = None

@@ -1,0 +1,18 @@
+{
+  "task_id": "3",
+  "title": "Instrument TraceabilityView.tsx \u2014 4 missing data-qid",
+  "prompt": "Task: Instrument TraceabilityView.tsx \u2014 4 missing data-qid\n\nImplementation:\n- Add data-qid to: tree expand/collapse toggle, document select, verify button, navigation\n- Naming: trace:tree:toggle, trace:verify, trace:doc:${key}\n\nDefinition of Done:\n- Command: cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py TraceabilityView.tsx\n- Assertion: PASS: 100% data-qid coverage for target file(s)",
+  "backend": "claude",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775148598",
+  "definition_of_done": {
+    "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py TraceabilityView.tsx",
+    "assertion": "PASS: 100% data-qid coverage for target file(s)"
+  },
+  "allowlist": [
+    "packages/ux-lab/src/components/datalake-explorer/TraceabilityView.tsx"
+  ],
+  "read_context": [
+    "packages/ux-lab/src/hooks/useRegisterAction.ts"
+  ]
+}

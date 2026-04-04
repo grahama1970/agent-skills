@@ -1,0 +1,74 @@
+{
+  "prompt": "taxonomy_v1",
+  "model": "deepseek",
+  "timestamp": "2026-01-28T18:48:34.230420",
+  "passed": true,
+  "metrics": {
+    "avg_f1": 0.8285714285714285,
+    "conceptual_precision": 0.75,
+    "conceptual_recall": 1.0,
+    "tactical_precision": 0.75,
+    "tactical_recall": 1.0,
+    "total_rejected": 1,
+    "avg_latency_ms": 24360.153821995482,
+    "correction_rounds": 1,
+    "cases_needing_correction": 1,
+    "correction_success_rate": 1.0
+  },
+  "cases": [
+    {
+      "id": "T1547.001",
+      "predicted": {
+        "conceptual": [
+          "Corruption",
+          "Stealth"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Corruption"
+        ],
+        "tactical": [
+          "Persist"
+        ]
+      },
+      "rejected": [
+        "Persistence"
+      ],
+      "f1": 0.8,
+      "latency_ms": 43617.10119317286,
+      "correction_rounds": 1,
+      "correction_success": true
+    },
+    {
+      "id": "SI-2",
+      "predicted": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden",
+          "Detect"
+        ]
+      },
+      "expected": {
+        "conceptual": [
+          "Resilience",
+          "Fragility"
+        ],
+        "tactical": [
+          "Harden"
+        ]
+      },
+      "rejected": [],
+      "f1": 0.8571428571428571,
+      "latency_ms": 5103.2064508181065,
+      "correction_rounds": 0,
+      "correction_success": true
+    }
+  ]
+}

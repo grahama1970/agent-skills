@@ -1,0 +1,366 @@
+{"summary":"Implemented PostureDashboard with family bar selection, slide-over flyout detail panel, selectedFamily state, control drill-in navigation, Escape/close handling, and full data-qid/data-qs-action/title instrumentation with useRegisterAction hooks for close and control select.","approach":"structured_analysis","files_changed":["packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"]}
+---
+### FILE: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
+```diff
+--- a/packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
++++ b/packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
+@@ -1,7 +1,219 @@
+-/** Stub — PostureDashboard referenced by ChatTab but not yet implemented. */
++import { useEffect, useMemo, useState } from 'react'
+ import { useRegisterAction } from '../../../hooks/useRegisterAction'
+ 
++type ControlRow = {
++  control_id: string
++  name: string
++  nrs: number
++  qraCount: number
++  weaknessCount: number
++}
++
++type FamilyData = {
++  id: string
++  name: string
++  pass: number
++  partial: number
++  fail: number
++  controls: ControlRow[]
++}
++
++const SAMPLE_FAMILIES: FamilyData[] = [
++  {
++    id: 'IAM',
++    name: 'Identity & Access Management',
++    pass: 8,
++    partial: 3,
++    fail: 2,
++    controls: [
++      { control_id: 'IAM-01', name: 'MFA for privileged accounts', nrs: 86, qraCount: 2, weaknessCount: 1 },
++      { control_id: 'IAM-02', name: 'Least privilege role design', nrs: 74, qraCount: 4, weaknessCount: 3 },
++      { control_id: 'IAM-03', name: 'Dormant account revalidation', nrs: 68, qraCount: 1, weaknessCount: 2 },
++    ],
++  },
++  {
++    id: 'NET',
++    name: 'Network Security',
++    pass: 6,
++    partial: 5,
++    fail: 1,
++    controls: [
++      { control_id: 'NET-01', name: 'Ingress ACL restrictions', nrs: 81, qraCount: 2, weaknessCount: 0 },
++      { control_id: 'NET-02', name: 'Egress filtering policy', nrs: 64, qraCount: 3, weaknessCount: 2 },
++      { control_id: 'NET-03', name: 'Service mesh mTLS', nrs: 71, qraCount: 2, weaknessCount: 1 },
++    ],
++  },
++  {
++    id: 'APP',
++    name: 'Application Security',
++    pass: 5,
++    partial: 4,
++    fail: 3,
++    controls: [
++      { control_id: 'APP-01', name: 'SAST pipeline gating', nrs: 77, qraCount: 5, weaknessCount: 4 },
++      { control_id: 'APP-02', name: 'Dependency CVE remediation', nrs: 62, qraCount: 6, weaknessCount: 5 },
++      { control_id: 'APP-03', name: 'Secrets detection in CI', nrs: 84, qraCount: 1, weaknessCount: 1 },
++    ],
++  },
++]
++
+ export default function PostureDashboard({ onNavigateToControl }: { onNavigateToControl?: (id: string) => void }) {
+   useRegisterAction('sparta-show-dashboard', { app: 'sparta-explorer', action: 'SHOW_DASHBOARD', label: 'Show Posture Dashboard', description: 'Display the security posture dashboard with coverage ring, drift alerts, and discrepancies' })
+-  return <div style={{ padding: 20, color: '#6b7280', fontSize: 12 }}>Posture Dashboard (coming soon)</div>
++  useRegisterAction('sparta-posture-flyout-close', { app: 'sparta-explorer', action: 'POSTURE_FLYOUT_CLOSE', label: 'Close family flyout', description: 'Close selected family control details flyout' })
++  useRegisterAction('sparta-posture-flyout-control-select', { app: 'sparta-explorer', action: 'POSTURE_FLYOUT_CONTROL_SELECT', label: 'Select control from flyout', description: 'Navigate to selected control from family flyout table' })
++
++  const families = useMemo(() => SAMPLE_FAMILIES, [])
++  const [selectedFamily, setSelectedFamily] = useState<FamilyData | null>(null)
++
++  useEffect(() => {
++    const onKeyDown = (event: KeyboardEvent) => {
++      if (event.key === 'Escape') setSelectedFamily(null)
++    }
++    window.addEventListener('keydown', onKeyDown)
++    return () => window.removeEventListener('keydown', onKeyDown)
++  }, [])
++
++  return (
++    <div data-qid='posture:flyout:dashboard' data-qs-action='POSTURE_FLYOUT_DASHBOARD' title='Posture dashboard' style={{ padding: 16, color: '#e5e7eb' }}>
++      <h3 style={{ marginTop: 0 }} data-qid='posture:flyout:heading' data-qs-action='POSTURE_FLYOUT_HEADING' title='Security posture families'>Security Posture by Family</h3>
++      <div data-qid='posture:flyout:family-list' data-qs-action='POSTURE_FLYOUT_FAMILY_LIST' title='Family bars' style={{ display: 'grid', gap: 10 }}>
++        {families.map((family) => {
++          const total = family.pass + family.partial + family.fail
++          return (
++            <button
++              key={family.id}
++              type='button'
++              onClick={() => setSelectedFamily(family)}
++              data-qid='posture:flyout:family-bar'
++              data-qs-action='POSTURE_FLYOUT_FAMILY_SELECT'
++              title={`Open ${family.name} controls`}
++              style={{ textAlign: 'left', border: '1px solid #374151', background: '#111827', color: '#f3f4f6', borderRadius: 8, padding: 10, cursor: 'pointer' }}
++            >
++              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
++                <strong>{family.name}</strong>
++                <span>{total} controls</span>
++              </div>
++              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>
++                Pass: {family.pass} · Partial: {family.partial} · Fail: {family.fail}
++              </div>
++            </button>
++          )
++        })}
++      </div>
++
++      {selectedFamily && (
++        <aside
++          data-qid='posture:flyout:panel'
++          data-qs-action='POSTURE_FLYOUT_OPEN'
++          title='Family controls flyout'
++          style={{
++            position: 'fixed',
++            top: 0,
++            right: 0,
++            height: '100vh',
++            width: 'min(720px, 92vw)',
++            background: '#0b1220',
++            borderLeft: '1px solid #374151',
++            padding: 16,
++            overflow: 'auto',
++            boxShadow: '-8px 0 24px rgba(0,0,0,0.35)',
++            zIndex: 40,
++          }}
++        >
++          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
++            <h4 data-qid='posture:flyout:family-name' data-qs-action='POSTURE_FLYOUT_FAMILY_NAME' title='Selected family name' style={{ margin: 0 }}>{selectedFamily.name}</h4>
++            <button
++              type='button'
++              onClick={() => setSelectedFamily(null)}
++              data-qid='posture:flyout:close'
++              data-qs-action='POSTURE_FLYOUT_CLOSE'
++              title='Close family flyout'
++              style={{ background: '#1f2937', border: '1px solid #4b5563', color: '#f9fafb', borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}
++            >
++              Close
++            </button>
++          </div>
++
++          <div data-qid='posture:flyout:summary' data-qs-action='POSTURE_FLYOUT_SUMMARY' title='Family summary' style={{ marginTop: 12, fontSize: 13, color: '#d1d5db' }}>
++            <div>Total controls: {selectedFamily.pass + selectedFamily.partial + selectedFamily.fail}</div>
++            <div>Pass: {selectedFamily.pass}</div>
++            <div>Partial: {selectedFamily.partial}</div>
++            <div>Fail: {selectedFamily.fail}</div>
++          </div>
++
++          <table data-qid='posture:flyout:control-table' data-qs-action='POSTURE_FLYOUT_CONTROL_TABLE' title='Family controls table' style={{ width: '100%', marginTop: 12, borderCollapse: 'collapse', fontSize: 13 }}>
++            <thead>
++              <tr>
++                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>Control ID</th>
++                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>Name</th>
++                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>NRS</th>
++                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>QRA Count</th>
++                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>Weakness Count</th>
++              </tr>
++            </thead>
++            <tbody>
++              {selectedFamily.controls.map((control) => (
++                <tr
++                  key={control.control_id}
++                  onClick={() => onNavigateToControl?.(control.control_id)}
++                  data-qid='posture:flyout:control-row'
++                  data-qs-action='POSTURE_FLYOUT_CONTROL_SELECT'
++                  title={`Navigate to control ${control.control_id}`}
++                  style={{ cursor: 'pointer' }}
++                >
++                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.control_id}</td>
++                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.name}</td>
++                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.nrs}</td>
++                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.qraCount}</td>
++                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.weaknessCount}</td>
++                </tr>
++              ))}
++            </tbody>
++          </table>
++        </aside>
++      )}
++    </div>
++  )
+ }
+```
+```typescript
+import { useEffect, useMemo, useState } from 'react'
+import { useRegisterAction } from '../../../hooks/useRegisterAction'
+
+type ControlRow = {
+  control_id: string
+  name: string
+  nrs: number
+  qraCount: number
+  weaknessCount: number
+}
+
+type FamilyData = {
+  id: string
+  name: string
+  pass: number
+  partial: number
+  fail: number
+  controls: ControlRow[]
+}
+
+const SAMPLE_FAMILIES: FamilyData[] = [
+  {
+    id: 'IAM',
+    name: 'Identity & Access Management',
+    pass: 8,
+    partial: 3,
+    fail: 2,
+    controls: [
+      { control_id: 'IAM-01', name: 'MFA for privileged accounts', nrs: 86, qraCount: 2, weaknessCount: 1 },
+      { control_id: 'IAM-02', name: 'Least privilege role design', nrs: 74, qraCount: 4, weaknessCount: 3 },
+      { control_id: 'IAM-03', name: 'Dormant account revalidation', nrs: 68, qraCount: 1, weaknessCount: 2 },
+    ],
+  },
+  {
+    id: 'NET',
+    name: 'Network Security',
+    pass: 6,
+    partial: 5,
+    fail: 1,
+    controls: [
+      { control_id: 'NET-01', name: 'Ingress ACL restrictions', nrs: 81, qraCount: 2, weaknessCount: 0 },
+      { control_id: 'NET-02', name: 'Egress filtering policy', nrs: 64, qraCount: 3, weaknessCount: 2 },
+      { control_id: 'NET-03', name: 'Service mesh mTLS', nrs: 71, qraCount: 2, weaknessCount: 1 },
+    ],
+  },
+  {
+    id: 'APP',
+    name: 'Application Security',
+    pass: 5,
+    partial: 4,
+    fail: 3,
+    controls: [
+      { control_id: 'APP-01', name: 'SAST pipeline gating', nrs: 77, qraCount: 5, weaknessCount: 4 },
+      { control_id: 'APP-02', name: 'Dependency CVE remediation', nrs: 62, qraCount: 6, weaknessCount: 5 },
+      { control_id: 'APP-03', name: 'Secrets detection in CI', nrs: 84, qraCount: 1, weaknessCount: 1 },
+    ],
+  },
+]
+
+export default function PostureDashboard({ onNavigateToControl }: { onNavigateToControl?: (id: string) => void }) {
+  useRegisterAction('sparta-show-dashboard', { app: 'sparta-explorer', action: 'SHOW_DASHBOARD', label: 'Show Posture Dashboard', description: 'Display the security posture dashboard with coverage ring, drift alerts, and discrepancies' })
+  useRegisterAction('sparta-posture-flyout-close', { app: 'sparta-explorer', action: 'POSTURE_FLYOUT_CLOSE', label: 'Close family flyout', description: 'Close selected family control details flyout' })
+  useRegisterAction('sparta-posture-flyout-control-select', { app: 'sparta-explorer', action: 'POSTURE_FLYOUT_CONTROL_SELECT', label: 'Select control from flyout', description: 'Navigate to selected control from family flyout table' })
+
+  const families = useMemo(() => SAMPLE_FAMILIES, [])
+  const [selectedFamily, setSelectedFamily] = useState<FamilyData | null>(null)
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedFamily(null)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  return (
+    <div data-qid='posture:flyout:dashboard' data-qs-action='POSTURE_FLYOUT_DASHBOARD' title='Posture dashboard' style={{ padding: 16, color: '#e5e7eb' }}>
+      <h3 style={{ marginTop: 0 }} data-qid='posture:flyout:heading' data-qs-action='POSTURE_FLYOUT_HEADING' title='Security posture families'>Security Posture by Family</h3>
+      <div data-qid='posture:flyout:family-list' data-qs-action='POSTURE_FLYOUT_FAMILY_LIST' title='Family bars' style={{ display: 'grid', gap: 10 }}>
+        {families.map((family) => {
+          const total = family.pass + family.partial + family.fail
+          return (
+            <button
+              key={family.id}
+              type='button'
+              onClick={() => setSelectedFamily(family)}
+              data-qid='posture:flyout:family-bar'
+              data-qs-action='POSTURE_FLYOUT_FAMILY_SELECT'
+              title={`Open ${family.name} controls`}
+              style={{ textAlign: 'left', border: '1px solid #374151', background: '#111827', color: '#f3f4f6', borderRadius: 8, padding: 10, cursor: 'pointer' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <strong>{family.name}</strong>
+                <span>{total} controls</span>
+              </div>
+              <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>
+                Pass: {family.pass} · Partial: {family.partial} · Fail: {family.fail}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {selectedFamily && (
+        <aside
+          data-qid='posture:flyout:panel'
+          data-qs-action='POSTURE_FLYOUT_OPEN'
+          title='Family controls flyout'
+          style={{
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            height: '100vh',
+            width: 'min(720px, 92vw)',
+            background: '#0b1220',
+            borderLeft: '1px solid #374151',
+            padding: 16,
+            overflow: 'auto',
+            boxShadow: '-8px 0 24px rgba(0,0,0,0.35)',
+            zIndex: 40,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h4 data-qid='posture:flyout:family-name' data-qs-action='POSTURE_FLYOUT_FAMILY_NAME' title='Selected family name' style={{ margin: 0 }}>{selectedFamily.name}</h4>
+            <button
+              type='button'
+              onClick={() => setSelectedFamily(null)}
+              data-qid='posture:flyout:close'
+              data-qs-action='POSTURE_FLYOUT_CLOSE'
+              title='Close family flyout'
+              style={{ background: '#1f2937', border: '1px solid #4b5563', color: '#f9fafb', borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
+
+          <div data-qid='posture:flyout:summary' data-qs-action='POSTURE_FLYOUT_SUMMARY' title='Family summary' style={{ marginTop: 12, fontSize: 13, color: '#d1d5db' }}>
+            <div>Total controls: {selectedFamily.pass + selectedFamily.partial + selectedFamily.fail}</div>
+            <div>Pass: {selectedFamily.pass}</div>
+            <div>Partial: {selectedFamily.partial}</div>
+            <div>Fail: {selectedFamily.fail}</div>
+          </div>
+
+          <table data-qid='posture:flyout:control-table' data-qs-action='POSTURE_FLYOUT_CONTROL_TABLE' title='Family controls table' style={{ width: '100%', marginTop: 12, borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>Control ID</th>
+                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>Name</th>
+                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>NRS</th>
+                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>QRA Count</th>
+                <th style={{ textAlign: 'left', borderBottom: '1px solid #374151', padding: 8 }}>Weakness Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedFamily.controls.map((control) => (
+                <tr
+                  key={control.control_id}
+                  onClick={() => onNavigateToControl?.(control.control_id)}
+                  data-qid='posture:flyout:control-row'
+                  data-qs-action='POSTURE_FLYOUT_CONTROL_SELECT'
+                  title={`Navigate to control ${control.control_id}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.control_id}</td>
+                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.name}</td>
+                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.nrs}</td>
+                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.qraCount}</td>
+                  <td style={{ borderBottom: '1px solid #1f2937', padding: 8 }}>{control.weaknessCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </aside>
+      )}
+    </div>
+  )
+}
+```

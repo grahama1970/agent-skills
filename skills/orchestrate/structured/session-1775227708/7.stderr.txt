@@ -1,0 +1,12 @@
+2026-04-03 10:53:41.084 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Implement OverviewLanding.tsx — 5ft landing page with 4 live content wells ===
+2026-04-03 10:53:41.085 | INFO     | __main__:run:494 -   Backend: codex
+2026-04-03 10:53:41.085 | INFO     | __main__:run:495 -   DoD: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/explorer/OverviewLand
+2026-04-03 10:53:41.085 | INFO     | __main__:run:496 -   Max rounds: 5
+2026-04-03 10:53:43.298 | INFO     | __main__:run:587 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-03 10:55:04.090 | WARNING  | apply:apply_llm_response:410 -   v2: packages/ux-lab/src/components/sparta/explorer/OverviewLanding.ts not authorized, skipping
+2026-04-03 10:55:04.091 | WARNING  | apply:apply_file_blocks:226 - Path not in allowlist: packages/ux-lab/src/components/sparta/explorer/OverviewLanding.ts (tried: packages/ux-lab/src/components/sparta/explorer/OverviewLanding.ts, packages/ux-lab/src/components/sparta/explorer/OverviewLanding.ts)
+2026-04-03 10:55:04.091 | WARNING  | __main__:run:653 -   No files applied from LLM response
+2026-04-03 10:55:04.169 | INFO     | __main__:run:658 -   Score: 1.000 (DoD:True errors:0 lint:0 bp:0)
+2026-04-03 10:55:04.172 | WARNING  | __main__:run:690 -   DISCARD (score improved but git commit failed)
+2026-04-03 10:55:08.246 | INFO     | __main__:run:751 - === DoD PASSED on round 1 (score=1.000) ===
+2026-04-03 10:55:08.247 | INFO     | __main__:run:770 - === RESULT: PASS | score=0.000 | 1 rounds ===

@@ -1,0 +1,24 @@
+{
+  "generated_at": 1775232205.7286854,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775232205",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Impossible task",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "",
+      "error": "Command failed (1): exit 1",
+      "started_at": 1775232205.7259595,
+      "finished_at": 1775232205.7284834,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

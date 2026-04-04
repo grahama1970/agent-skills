@@ -1,0 +1,10 @@
+{
+  "0": "Detect",
+  "1": "Evade",
+  "2": "Exploit",
+  "3": "Harden",
+  "4": "Isolate",
+  "5": "Model",
+  "6": "Persist",
+  "7": "Restore"
+}

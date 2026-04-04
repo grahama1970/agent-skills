@@ -1,0 +1,31 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774559448,
+  "status": "ok",
+  "selected_backbone": "convnext_tiny",
+  "selected_metrics": {
+    "macro_f1": 0.8602362056926623,
+    "accuracy": 0.8465753424657534,
+    "wilson_score_lower": 0.8304006227442359
+  },
+  "candidate_count": 1,
+  "source": {
+    "mode": "paired",
+    "data_dir": "/mnt/storage12tb/media/agents/shared/create-table-classifier/data/merge_images/split"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [
+        "anger"
+      ],
+      "worth_remembering": true
+    }
+  }
+}

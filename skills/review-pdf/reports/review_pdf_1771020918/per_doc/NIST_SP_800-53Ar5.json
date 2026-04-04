@@ -1,0 +1,146 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_1771020918",
+  "timestamp": 1771020922,
+  "doc_id": "NIST_SP_800-53Ar5",
+  "domain": "unknown",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/extractor_corpus/results/standards_NIST_SP_800-53Ar5",
+    "profile_path": "/mnt/storage12tb/extractor_corpus/results/standards_NIST_SP_800-53Ar5/00_profile_detector/profile.json",
+    "structural_path": "/mnt/storage12tb/extractor_corpus/results/standards_NIST_SP_800-53Ar5/11_json_exporter/structural.json",
+    "context_path": "/mnt/storage12tb/extractor_corpus/results/standards_NIST_SP_800-53Ar5/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/inbox/standards/NIST_SP_800-53Ar5.pdf"
+  },
+  "estimates": {
+    "page_count": 733,
+    "estimated_sections": 5754,
+    "estimated_sections_regex": 120,
+    "estimated_sections_font": 5754,
+    "estimated_sections_toc": 0,
+    "estimated_table_count": 0,
+    "table_pages": 656,
+    "image_pages": 0,
+    "has_formulas": false,
+    "estimated_timeout_seconds": 7200
+  },
+  "actual": {
+    "section_count": 2179,
+    "empty_sections": 7,
+    "section_titles_missing": 0,
+    "element_count": 5176,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 1829,
+    "duplicate_ratio": 0.35336166924265844,
+    "type_counts": {
+      "table": 52,
+      "text": 2902,
+      "section": 2222
+    },
+    "text_length": 1950475,
+    "sort_order_violations": 0,
+    "unknown_type_count": 0,
+    "bbox_pages_checked": 0,
+    "bbox_multi_col_pages": 0,
+    "bbox_order_violations": 0,
+    "bbox_page_results": {}
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 733,
+    "raw_text_length": 1977131,
+    "math_symbol_count": 22478,
+    "math_symbol_density": 0.011368998816972673
+  },
+  "ratios": {
+    "section_ratio": 0.3786930830726451,
+    "table_ratio": null,
+    "figure_ratio": null,
+    "text_ratio": 0.9865178382211396
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.6,
+      "state": "warn",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.7,
+      "state": "unknown",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.7,
+      "state": "unknown",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.7,
+      "state": "not_available",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.0,
+      "state": "fail",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.746667,
+    "grade": "C",
+    "verdict": "WARN",
+    "critical_issues": 0,
+    "high_issues": 1,
+    "issue_count": 2
+  },
+  "issues": [
+    {
+      "code": "section_alignment_low",
+      "severity": "MEDIUM",
+      "message": "Section ratio is 0.38 (<0.50).",
+      "root_cause": "S00 section estimator drift",
+      "recommendation": "calibrate S00 section estimator"
+    },
+    {
+      "code": "duplicate_content_high",
+      "severity": "HIGH",
+      "message": "Duplicate content ratio is 35.34%.",
+      "root_cause": "headers/footers or repeated blocks not deduplicated",
+      "recommendation": "improve block dedupe and section assignment"
+    }
+  ],
+  "escalation_jobs": [
+    {
+      "skill": "create-classifier",
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/create-classifier && ./run.sh train-iterative --task structural_elements --model efficientnet_b0 --labels data/labels/structural.jsonl --output-dir models/structural_elements/latest --benchmark-first --classifier-lab-first --require-classifier-lab --require-selection-pass --run-preflight-assess --dogpile-when-uncertain --auto-hf-augment --run-hp-search",
+      "reason": "section/equation/type errors suggest classifier drift",
+      "auto_executable": true
+    },
+    {
+      "skill": "classifier-lab",
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab && ./run.sh benchmark --labels-jsonl /home/graham/workspace/experiments/pi-mono/.pi/skills/create-classifier/data/labels/structural.jsonl --backbones 'efficientnet_b0,convnextv2_nano.fcmae_ft_in22k_in1k,mobilenetv3_large_100,resnet50' --output-json \"/mnt/storage12tb/extractor_corpus/results/standards_NIST_SP_800-53Ar5\"/classifier_lab_benchmark.json",
+      "reason": "backbone benchmark needed for next classifier iteration",
+      "auto_executable": true
+    },
+    {
+      "skill": "normalize",
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/normalize && ./run.sh \"/mnt/storage12tb/extractor_corpus/inbox/standards/NIST_SP_800-53Ar5.pdf\" --output \"/mnt/storage12tb/extractor_corpus/results/standards_NIST_SP_800-53Ar5\"/normalized_preview.txt",
+      "reason": "probe unicode/encoding artifacts causing empty or duplicated blocks",
+      "auto_executable": true
+    }
+  ],
+  "escalation_execution": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

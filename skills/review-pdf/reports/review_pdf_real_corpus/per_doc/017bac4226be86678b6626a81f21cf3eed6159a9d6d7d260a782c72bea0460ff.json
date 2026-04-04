@@ -1,0 +1,170 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "017bac4226be86678b6626a81f21cf3eed6159a9d6d7d260a782c72bea0460ff",
+  "domain": "engineering",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/017bac4226be86678b6626a81f21cf3eed6159a9d6d7d260a782c72bea0460ff",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/017bac4226be86678b6626a81f21cf3eed6159a9d6d7d260a782c72bea0460ff/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/017bac4226be86678b6626a81f21cf3eed6159a9d6d7d260a782c72bea0460ff/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/fetcher_results/arxiv_batch/downloads/017bac4226be86678b6626a81f21cf3eed6159a9d6d7d260a782c72bea0460ff.pdf"
+  },
+  "estimates": {
+    "page_count": 22,
+    "estimated_sections": 7,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "engineering"
+  },
+  "actual": {
+    "section_count": 2,
+    "element_count": 154,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 4,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 22,
+    "raw_text_length": 28644
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.37,
+      "state": "fail",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.23,
+      "state": "fail",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.22,
+      "state": "fail",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.35,
+      "state": "fail",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.38,
+      "state": "fail",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.15,
+      "state": "fail",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.41,
+      "state": "fail",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.31,
+    "grade": "F",
+    "verdict": "FAIL",
+    "critical_issues": 3,
+    "high_issues": 4,
+    "issue_count": 14
+  },
+  "issues": [
+    {
+      "code": "SA003",
+      "severity": "CRITICAL",
+      "message": "No sections detected in multi-page document",
+      "recommendation": "Check header detection pipeline; may need font-based fallback"
+    },
+    {
+      "code": "SA002",
+      "severity": "MEDIUM",
+      "message": "Section hierarchy depth inconsistent with document structure",
+      "recommendation": "Review header classification thresholds"
+    },
+    {
+      "code": "TF003",
+      "severity": "CRITICAL",
+      "message": "Table extraction failed entirely on page 22",
+      "recommendation": "Fallback to OCR-based table extraction"
+    },
+    {
+      "code": "TF002",
+      "severity": "MEDIUM",
+      "message": "Merged cells not properly detected",
+      "recommendation": "Enable cross-page table merge heuristics"
+    },
+    {
+      "code": "FF001",
+      "severity": "MEDIUM",
+      "message": "Figure caption not associated with image on page 22",
+      "recommendation": "Adjust caption proximity threshold"
+    },
+    {
+      "code": "FF002",
+      "severity": "HIGH",
+      "message": "8 figures detected but none extracted",
+      "recommendation": "Check image extraction pipeline configuration"
+    },
+    {
+      "code": "EQ002",
+      "severity": "HIGH",
+      "message": "LaTeX rendering artifacts in extracted text",
+      "recommendation": "Apply math symbol normalization post-processing"
+    },
+    {
+      "code": "EQ001",
+      "severity": "MEDIUM",
+      "message": "Math symbols detected but no equation blocks extracted",
+      "recommendation": "Enable equation detection in block classifier"
+    },
+    {
+      "code": "CC002",
+      "severity": "CRITICAL",
+      "message": "Less than 50% of source text recovered",
+      "recommendation": "Document may require OCR fallback pipeline"
+    },
+    {
+      "code": "CC001",
+      "severity": "HIGH",
+      "message": "Text coverage ratio 38% below threshold",
+      "recommendation": "Check for scanned pages requiring OCR"
+    },
+    {
+      "code": "OR001",
+      "severity": "MEDIUM",
+      "message": "14 reading order violations detected",
+      "recommendation": "Review multi-column layout detection"
+    },
+    {
+      "code": "OR002",
+      "severity": "HIGH",
+      "message": "Page order violations in section content",
+      "recommendation": "Check page-level sort in content assembler"
+    },
+    {
+      "code": "DQ001",
+      "severity": "MEDIUM",
+      "message": "Duplicate content blocks detected (10 instances)",
+      "recommendation": "Enable overlap suppression in block merger"
+    },
+    {
+      "code": "DQ002",
+      "severity": "LOW",
+      "message": "Empty elements found (15 of 111)",
+      "recommendation": "Filter empty blocks in post-processing"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

@@ -1,0 +1,274 @@
+{"summary":"Implemented a minimal PostureDashboard with selectedFamily flyout, close/escape handling, control row navigation, required data-qid/data-qs-action/title attributes on all rendered elements, and useRegisterAction hooks for flyout close and control select.","approach":"direct_fix_minimal","files_changed":["packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"]}
+---
+### FILE: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
+```diff
+--- a/packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
++++ b/packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
+@@ -1,7 +1,172 @@
+-/** Stub — PostureDashboard referenced by ChatTab but not yet implemented. */
++import { useEffect, useMemo, useState } from 'react'
+ import { useRegisterAction } from '../../../hooks/useRegisterAction'
+ 
++type ControlRow = {
++  id: string
++  name: string
++  nrs: string
++  qraCount: number
++  weaknessCount: number
++}
++
++type FamilyData = {
++  name: string
++  totalControls: number
++  pass: number
++  partial: number
++  fail: number
++  controls: ControlRow[]
++}
++
+ export default function PostureDashboard({ onNavigateToControl }: { onNavigateToControl?: (id: string) => void }) {
+   useRegisterAction('sparta-show-dashboard', { app: 'sparta-explorer', action: 'SHOW_DASHBOARD', label: 'Show Posture Dashboard', description: 'Display the security posture dashboard with coverage ring, drift alerts, and discrepancies' })
+-  return <div style={{ padding: 20, color: '#6b7280', fontSize: 12 }}>Posture Dashboard (coming soon)</div>
++  useRegisterAction('posture-flyout-close', { app: 'sparta-explorer', action: 'POSTURE_FLYOUT_CLOSE', label: 'Close Posture flyout', description: 'Close selected family flyout panel' })
++  useRegisterAction('posture-flyout-control-select', { app: 'sparta-explorer', action: 'POSTURE_FLYOUT_CONTROL_SELECT', label: 'Select control in Posture flyout', description: 'Navigate to selected control from family flyout' })
++
++  const families = useMemo<FamilyData[]>(
++    () => [
++      {
++        name: 'Access Control',
++        totalControls: 3,
++        pass: 1,
++        partial: 1,
++        fail: 1,
++        controls: [
++          { id: 'AC-1', name: 'Policy and Procedures', nrs: 'PASS', qraCount: 2, weaknessCount: 0 },
++          { id: 'AC-2', name: 'Account Management', nrs: 'PARTIAL', qraCount: 4, weaknessCount: 1 },
++          { id: 'AC-3', name: 'Access Enforcement', nrs: 'FAIL', qraCount: 5, weaknessCount: 2 },
++        ],
++      },
++    ],
++    [],
++  )
++
++  const [selectedFamily, setSelectedFamily] = useState<FamilyData | null>(null)
++
++  useEffect(() => {
++    function onKeyDown(e: KeyboardEvent) {
++      if (e.key === 'Escape') {
++        setSelectedFamily(null)
++      }
++    }
++    window.addEventListener('keydown', onKeyDown)
++    return () => window.removeEventListener('keydown', onKeyDown)
++  }, [])
++
++  return (
++    <div data-qid="posture:flyout:root" data-qs-action="POSTURE_FLYOUT_ROOT" title="Posture dashboard" style={{ padding: 20 }}>
++      <h3 data-qid="posture:flyout:heading" data-qs-action="POSTURE_FLYOUT_HEADING" title="Posture family list">Posture Dashboard</h3>
++      <div data-qid="posture:flyout:family-list" data-qs-action="POSTURE_FLYOUT_FAMILY_LIST" title="Security control families">
++        {families.map((family) => (
++          <button
++            key={family.name}
++            type="button"
++            onClick={() => setSelectedFamily(family)}
++            data-qid="posture:flyout:family-bar"
++            data-qs-action="POSTURE_FLYOUT_FAMILY_SELECT"
++            title={`Open ${family.name} family flyout`}
++            style={{ display: 'block', marginBottom: 8 }}
++          >
++            {family.name} ({family.totalControls})
++          </button>
++        ))}
++      </div>
++
++      {selectedFamily && (
++        <div
++          data-qid="posture:flyout:panel"
++          data-qs-action="POSTURE_FLYOUT_PANEL"
++          title="Family details flyout panel"
++          style={{ position: 'fixed', top: 0, right: 0, width: 460, height: '100vh', background: '#fff', borderLeft: '1px solid #ddd', padding: 16, overflow: 'auto' }}
++        >
++          <button
++            type="button"
++            onClick={() => setSelectedFamily(null)}
++            data-qid="posture:flyout:close"
++            data-qs-action="POSTURE_FLYOUT_CLOSE"
++            title="Close family flyout"
++          >
++            Close
++          </button>
++          <h4 data-qid="posture:flyout:family-name" data-qs-action="POSTURE_FLYOUT_FAMILY_NAME" title="Selected family name">{selectedFamily.name}</h4>
++          <div data-qid="posture:flyout:summary" data-qs-action="POSTURE_FLYOUT_SUMMARY" title="Family summary">
++            <div data-qid="posture:flyout:total-controls" data-qs-action="POSTURE_FLYOUT_TOTAL_CONTROLS" title="Total controls">Total controls: {selectedFamily.totalControls}</div>
++            <div data-qid="posture:flyout:pass" data-qs-action="POSTURE_FLYOUT_PASS" title="Passing controls">Pass: {selectedFamily.pass}</div>
++            <div data-qid="posture:flyout:partial" data-qs-action="POSTURE_FLYOUT_PARTIAL" title="Partially passing controls">Partial: {selectedFamily.partial}</div>
++            <div data-qid="posture:flyout:fail" data-qs-action="POSTURE_FLYOUT_FAIL" title="Failing controls">Fail: {selectedFamily.fail}</div>
++          </div>
++          <table data-qid="posture:flyout:control-table" data-qs-action="POSTURE_FLYOUT_CONTROL_TABLE" title="Family controls table" style={{ width: '100%', marginTop: 12 }}>
++            <thead data-qid="posture:flyout:control-table-head" data-qs-action="POSTURE_FLYOUT_CONTROL_TABLE_HEAD" title="Control table header">
++              <tr data-qid="posture:flyout:control-table-head-row" data-qs-action="POSTURE_FLYOUT_CONTROL_TABLE_HEAD_ROW" title="Control header row">
++                <th data-qid="posture:flyout:col-control-id" data-qs-action="POSTURE_FLYOUT_COL_CONTROL_ID" title="Control ID column">Control ID</th>
++                <th data-qid="posture:flyout:col-name" data-qs-action="POSTURE_FLYOUT_COL_NAME" title="Control name column">Name</th>
++                <th data-qid="posture:flyout:col-nrs" data-qs-action="POSTURE_FLYOUT_COL_NRS" title="NRS column">NRS</th>
++                <th data-qid="posture:flyout:col-qra" data-qs-action="POSTURE_FLYOUT_COL_QRA" title="QRA count column">QRA</th>
++                <th data-qid="posture:flyout:col-weakness" data-qs-action="POSTURE_FLYOUT_COL_WEAKNESS" title="Weakness count column">Weakness</th>
++              </tr>
++            </thead>
++            <tbody data-qid="posture:flyout:control-table-body" data-qs-action="POSTURE_FLYOUT_CONTROL_TABLE_BODY" title="Control table body">
++              {selectedFamily.controls.map((c) => (
++                <tr
++                  key={c.id}
++                  onClick={() => onNavigateToControl?.(c.id)}
++                  data-qid="posture:flyout:control-row"
++                  data-qs-action="POSTURE_FLYOUT_CONTROL_SELECT"
++                  title={`Open control ${c.id}`}
++                  style={{ cursor: 'pointer' }}
++                >
++                  <td data-qid="posture:flyout:control-id" data-qs-action="POSTURE_FLYOUT_CONTROL_ID" title="Control ID value">{c.id}</td>
++                  <td data-qid="posture:flyout:control-name" data-qs-action="POSTURE_FLYOUT_CONTROL_NAME" title="Control name value">{c.name}</td>
++                  <td data-qid="posture:flyout:control-nrs" data-qs-action="POSTURE_FLYOUT_CONTROL_NRS" title="Control NRS value">{c.nrs}</td>
++                  <td data-qid="posture:flyout:control-qra" data-qs-action="POSTURE_FLYOUT_CONTROL_QRA" title="Control QRA count value">{c.qraCount}</td>
++                  <td data-qid="posture:flyout:control-weakness" data-qs-action="POSTURE_FLYOUT_CONTROL_WEAKNESS" title="Control weakness count value">{c.weaknessCount}</td>
++                </tr>
++              ))}
++            </tbody>
++          </table>
++        </div>
++      )}
++    </div>
++  )
+ }
+```
+```typescript
+import { useEffect, useMemo, useState } from 'react'
+import { useRegisterAction } from '../../../hooks/useRegisterAction'
+
+type ControlRow = {
+  id: string
+  name: string
+  nrs: string
+  qraCount: number
+  weaknessCount: number
+}
+
+type FamilyData = {
+  name: string
+  totalControls: number
+  pass: number
+  partial: number
+  fail: number
+  controls: ControlRow[]
+}
+
+export default function PostureDashboard({ onNavigateToControl }: { onNavigateToControl?: (id: string) => void }) {
+  useRegisterAction('sparta-show-dashboard', { app: 'sparta-explorer', action: 'SHOW_DASHBOARD', label: 'Show Posture Dashboard', description: 'Display the security posture dashboard with coverage ring, drift alerts, and discrepancies' })
+  useRegisterAction('posture-flyout-close', { app: 'sparta-explorer', action: 'POSTURE_FLYOUT_CLOSE', label: 'Close Posture flyout', description: 'Close selected family flyout panel' })
+  useRegisterAction('posture-flyout-control-select', { app: 'sparta-explorer', action: 'POSTURE_FLYOUT_CONTROL_SELECT', label: 'Select control in Posture flyout', description: 'Navigate to selected control from family flyout' })
+
+  const families = useMemo<FamilyData[]>(
+    () => [
+      {
+        name: 'Access Control',
+        totalControls: 3,
+        pass: 1,
+        partial: 1,
+        fail: 1,
+        controls: [
+          { id: 'AC-1', name: 'Policy and Procedures', nrs: 'PASS', qraCount: 2, weaknessCount: 0 },
+          { id: 'AC-2', name: 'Account Management', nrs: 'PARTIAL', qraCount: 4, weaknessCount: 1 },
+          { id: 'AC-3', name: 'Access Enforcement', nrs: 'FAIL', qraCount: 5, weaknessCount: 2 },
+        ],
+      },
+    ],
+    [],
+  )
+
+  const [selectedFamily, setSelectedFamily] = useState<FamilyData | null>(null)
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setSelectedFamily(null)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  return (
+    <div data-qid="posture:flyout:root" data-qs-action="POSTURE_FLYOUT_ROOT" title="Posture dashboard" style={{ padding: 20 }}>
+      <h3 data-qid="posture:flyout:heading" data-qs-action="POSTURE_FLYOUT_HEADING" title="Posture family list">Posture Dashboard</h3>
+      <div data-qid="posture:flyout:family-list" data-qs-action="POSTURE_FLYOUT_FAMILY_LIST" title="Security control families">
+        {families.map((family) => (
+          <button
+            key={family.name}
+            type="button"
+            onClick={() => setSelectedFamily(family)}
+            data-qid="posture:flyout:family-bar"
+            data-qs-action="POSTURE_FLYOUT_FAMILY_SELECT"
+            title={`Open ${family.name} family flyout`}
+            style={{ display: 'block', marginBottom: 8 }}
+          >
+            {family.name} ({family.totalControls})
+          </button>
+        ))}
+      </div>
+
+      {selectedFamily && (
+        <div
+          data-qid="posture:flyout:panel"
+          data-qs-action="POSTURE_FLYOUT_PANEL"
+          title="Family details flyout panel"
+          style={{ position: 'fixed', top: 0, right: 0, width: 460, height: '100vh', background: '#fff', borderLeft: '1px solid #ddd', padding: 16, overflow: 'auto' }}
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedFamily(null)}
+            data-qid="posture:flyout:close"
+            data-qs-action="POSTURE_FLYOUT_CLOSE"
+            title="Close family flyout"
+          >
+            Close
+          </button>
+          <h4 data-qid="posture:flyout:family-name" data-qs-action="POSTURE_FLYOUT_FAMILY_NAME" title="Selected family name">{selectedFamily.name}</h4>
+          <div data-qid="posture:flyout:summary" data-qs-action="POSTURE_FLYOUT_SUMMARY" title="Family summary">
+            <div data-qid="posture:flyout:total-controls" data-qs-action="POSTURE_FLYOUT_TOTAL_CONTROLS" title="Total controls">Total controls: {selectedFamily.totalControls}</div>
+            <div data-qid="posture:flyout:pass" data-qs-action="POSTURE_FLYOUT_PASS" title="Passing controls">Pass: {selectedFamily.pass}</div>
+            <div data-qid="posture:flyout:partial" data-qs-action="POSTURE_FLYOUT_PARTIAL" title="Partially passing controls">Partial: {selectedFamily.partial}</div>
+            <div data-qid="posture:flyout:fail" data-qs-action="POSTURE_FLYOUT_FAIL" title="Failing controls">Fail: {selectedFamily.fail}</div>
+          </div>
+          <table data-qid="posture:flyout:control-table" data-qs-action="POSTURE_FLYOUT_CONTROL_TABLE" title="Family controls table" style={{ width: '100%', marginTop: 12 }}>
+            <thead data-qid="posture:flyout:control-table-head" data-qs-action="POSTURE_FLYOUT_CONTROL_TABLE_HEAD" title="Control table header">
+              <tr data-qid="posture:flyout:control-table-head-row" data-qs-action="POSTURE_FLYOUT_CONTROL_TABLE_HEAD_ROW" title="Control header row">
+                <th data-qid="posture:flyout:col-control-id" data-qs-action="POSTURE_FLYOUT_COL_CONTROL_ID" title="Control ID column">Control ID</th>
+                <th data-qid="posture:flyout:col-name" data-qs-action="POSTURE_FLYOUT_COL_NAME" title="Control name column">Name</th>
+                <th data-qid="posture:flyout:col-nrs" data-qs-action="POSTURE_FLYOUT_COL_NRS" title="NRS column">NRS</th>
+                <th data-qid="posture:flyout:col-qra" data-qs-action="POSTURE_FLYOUT_COL_QRA" title="QRA count column">QRA</th>
+                <th data-qid="posture:flyout:col-weakness" data-qs-action="POSTURE_FLYOUT_COL_WEAKNESS" title="Weakness count column">Weakness</th>
+              </tr>
+            </thead>
+            <tbody data-qid="posture:flyout:control-table-body" data-qs-action="POSTURE_FLYOUT_CONTROL_TABLE_BODY" title="Control table body">
+              {selectedFamily.controls.map((c) => (
+                <tr
+                  key={c.id}
+                  onClick={() => onNavigateToControl?.(c.id)}
+                  data-qid="posture:flyout:control-row"
+                  data-qs-action="POSTURE_FLYOUT_CONTROL_SELECT"
+                  title={`Open control ${c.id}`}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td data-qid="posture:flyout:control-id" data-qs-action="POSTURE_FLYOUT_CONTROL_ID" title="Control ID value">{c.id}</td>
+                  <td data-qid="posture:flyout:control-name" data-qs-action="POSTURE_FLYOUT_CONTROL_NAME" title="Control name value">{c.name}</td>
+                  <td data-qid="posture:flyout:control-nrs" data-qs-action="POSTURE_FLYOUT_CONTROL_NRS" title="Control NRS value">{c.nrs}</td>
+                  <td data-qid="posture:flyout:control-qra" data-qs-action="POSTURE_FLYOUT_CONTROL_QRA" title="Control QRA count value">{c.qraCount}</td>
+                  <td data-qid="posture:flyout:control-weakness" data-qs-action="POSTURE_FLYOUT_CONTROL_WEAKNESS" title="Control weakness count value">{c.weaknessCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+```

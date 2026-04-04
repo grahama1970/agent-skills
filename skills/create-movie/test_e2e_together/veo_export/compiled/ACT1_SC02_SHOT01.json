@@ -1,0 +1,17 @@
+{
+  "prompt": "[Visual description for scene 2 - detailed enough for AI generation]. [Describe action for scene 2]. MEDIUM framing. cinematic lighting",
+  "config": {
+    "duration_seconds": 4,
+    "aspect_ratio": "16:9",
+    "negative_prompt": "text overlays, watermarks, shaky camera, distorted faces, garbled speech",
+    "safety_filter": "default"
+  },
+  "model": "veo-3.1-generate-preview",
+  "_metadata": {
+    "shot_id": "ACT1_SC02_SHOT01",
+    "scene": "SC02",
+    "act": "ACT1",
+    "sequence_order": 2,
+    "notes": ""
+  }
+}

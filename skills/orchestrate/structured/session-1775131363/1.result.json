@@ -1,0 +1,43 @@
+{
+  "task_id": "1",
+  "title": "Add skill discovery to plan.py task decomposition",
+  "status": "pass",
+  "rounds": 1,
+  "best_score": 0.0,
+  "dod_passed": true,
+  "backend": "codex",
+  "best_commit": "c6d2e415",
+  "round_details": [
+    {
+      "round": 1,
+      "task_id": "1",
+      "score": 1.0,
+      "prev_score": 0,
+      "delta": 1.0,
+      "dod_passed": true,
+      "status": "discard",
+      "strategy": "direct_fix",
+      "error_count": 0,
+      "error_severity": "unknown",
+      "errors_by_type": {},
+      "lint_violations": 0,
+      "bp_violations": [],
+      "error_evidence": {
+        "failure_type": "generic",
+        "summary": "OK",
+        "primary_location": null,
+        "root_cause_lines": [],
+        "failing_tests": []
+      },
+      "stdout": "OK\n",
+      "stderr": "",
+      "written_files": [],
+      "commit": "c6d2e415",
+      "backend": "codex",
+      "reasoning": "medium",
+      "temperature": 0.2,
+      "timestamp": 1775131387.5046353
+    }
+  ],
+  "preflight_errors": []
+}

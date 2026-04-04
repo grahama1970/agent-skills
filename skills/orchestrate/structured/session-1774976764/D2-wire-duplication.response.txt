@@ -1,0 +1,161 @@
+```diff
+--- a/.pi/skills/monitor-codebase/duplication_detector.py
++++ b/.pi/skills/monitor-codebase/duplication_detector.py
+@@ -2,13 +2,15 @@
+ """Detect duplicated Python function bodies across a project."""
+ from __future__ import annotations
+ 
+ import ast
+ import copy
+ import hashlib
++import json
+ from pathlib import Path
++import sys
+ 
+ from loguru import logger
+ 
+ _SKIP_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git"}
+ _SKIP_NAMES = {"self", "cls", "True", "False", "None"}
+ 
+@@ -129,9 +131,25 @@
+         scanned_files,
+         len(duplicate_clusters),
+         total_duplicates,
+     )
+     return {
+         "clusters": duplicate_clusters,
++        "scanned_files": scanned_files,
+         "total_duplicates": total_duplicates,
+     }
+ 
++
++def main(argv: list[str]) -> int:
++    """Run duplication detection for the provided scan directories."""
++    if not argv:
++        print("Usage: duplication_detector.py <scan_dir> [<scan_dir> ...]", file=sys.stderr)
++        return 1
++
++    result = detect_duplicates(argv)
++    json.dump(result, sys.stdout, indent=2)
++    print()
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main(sys.argv[1:]))
+```
+
+```diff
+--- a/.pi/skills/monitor-codebase/run.sh
++++ b/.pi/skills/monitor-codebase/run.sh
+@@ -278,12 +278,14 @@
+   local project_name="$1" do_fix="${2:-false}"
+   local project_path
+   project_path=$(resolve_project_path "$project_name")
+   local report_file="$ARTIFACTS_DIR/${project_name}_${TIMESTAMP}.json"
+   local scan_dirs
+   scan_dirs=$(get_scan_dirs "$project_path")
++  local python_file_count
++  python_file_count=$(scoped_find "$project_path" -type f -name '*.py' | python3 -c "import sys; print(len({line.strip() for line in sys.stdin if line.strip()}))" 2>/dev/null || echo 0)
+ 
+   # Read per-project timeout and set per-step budget (total / 6 skill steps)
+   local project_timeout
+   project_timeout=$(get_project_timeout "$project_path")
+   STEP_TIMEOUT=$((project_timeout / 6))
+   [[ "$STEP_TIMEOUT" -lt 60 ]] && STEP_TIMEOUT=60  # minimum 60s per step
+@@ -334,12 +336,20 @@
+     rm -f "$sec_raw_file"
+   else
+     echo '{"error":"security scan failed"}' > "$sec_file"
+     rm -f "$sec_raw_file"
+   fi
+ 
++  # Step 4.6: duplication scan (only for non-trivial Python projects)
++  echo "[4.6/10] Running duplication detection..."
++  local dup_file="$ARTIFACTS_DIR/${project_name}_duplicates.json"
++  if [[ "$python_file_count" -gt 10 ]]; then
++    python3 "$SKILL_DIR/duplication_detector.py" $scan_dirs > "$dup_file" 2>/dev/null || echo '{"error":"duplication scan failed"}' > "$dup_file"
++  else
++    printf '{"skipped":"python file count <= 10","python_file_count":%s}\n' "$python_file_count" > "$dup_file"
++  fi
++
+   # Step 5: auto-fix docstrings (only in --fix mode — scan is read-only)
+   if [[ "$do_fix" == "true" ]]; then
+     echo "[5/10] Auto-fixing missing docstrings..."
+     for d in $scan_dirs; do
+       python3 "$SKILL_DIR/autofix_docstrings.py" "$d" 2>&1 || true
+@@ -413,45 +423,49 @@
+         return {}
+ 
+ ps = safe_load('$ps_file')
+ cl = safe_load('$cl_file')
+ qc = safe_load('$qc_file')
+ sec = safe_load('$sec_file')
++dup = safe_load('$dup_file')
+ sci = safe_load('$sci_file')
+ bp = json.loads('$bp_violations') if '$bp_violations' != '[]' else []
+ 
+ report = {
+     'project': '$project_name',
+     'path': '$project_path',
+     'timestamp': '$TIMESTAMP',
+     'project_state': ps,
+     'cleanup': cl,
+     'best_practices_violations': bp,
+     'quality_checks': qc,
+     'security_scan': sec,
++    'duplication_scan': dup,
+     'skills_ci': sci,
+ }
+ 
+ bp_count = len(bp)
+ qc_count = qc.get('total_violations', 0)
+ secrets_found = len(sec.get('secrets', [])) if isinstance(sec.get('secrets'), list) else int(sec.get('secrets_found', 0) or 0)
+ vulnerable_deps = len(sec.get('deps', [])) if isinstance(sec.get('deps'), list) else int(sec.get('vulnerable_deps', 0) or 0)
+ sast_findings = len(sec.get('sast', [])) if isinstance(sec.get('sast'), list) else int(sec.get('sast_findings', 0) or 0)
++duplicate_count = int(dup.get('total_duplicates', 0) or 0)
+ sci_errors = sci.get('summary', {}).get('error', 0) if isinstance(sci.get('summary'), dict) else 0
+ sci_warns = sci.get('summary', {}).get('warn', 0) if isinstance(sci.get('summary'), dict) else 0
+ 
+ report['summary'] = {
+     'total_bp_violations': bp_count,
+     'total_quality_violations': qc_count,
+     'secrets_found': secrets_found,
+     'vulnerable_deps': vulnerable_deps,
+     'sast_findings': sast_findings,
+     'total_security_findings': secrets_found + vulnerable_deps + sast_findings,
++    'duplicate_functions': duplicate_count,
+     'skills_ci_errors': sci_errors,
+     'skills_ci_warnings': sci_warns,
+-    'total_issues': bp_count + qc_count + secrets_found + vulnerable_deps + sast_findings + sci_errors,
++    'total_issues': bp_count + qc_count + secrets_found + vulnerable_deps + sast_findings + duplicate_count + sci_errors,
+ }
+ 
+ json.dump(report, sys.stdout, indent=2)
+ print()
+ " > "$report_file" 2>/dev/null || echo "{\"error\":\"report aggregation failed\",\"project\":\"$project_name\"}" > "$report_file"
+ 
+@@ -506,19 +520,20 @@
+ r = json.load(open('$report_file'))
+ s = r.get('summary', {})
+ parts = []
+ if s.get('total_bp_violations'): parts.append(f\"{s['total_bp_violations']} best-practices\")
+ if s.get('total_quality_violations'): parts.append(f\"{s['total_quality_violations']} quality\")
+ if s.get('total_security_findings'): parts.append(f\"{s['total_security_findings']} security\")
++if s.get('duplicate_functions'): parts.append(f\"{s['duplicate_functions']} duplicates\")
+ if s.get('skills_ci_errors'): parts.append(f\"{s['skills_ci_errors']} skills-ci errors\")
+ print(', '.join(parts) if parts else 'clean')
+ " 2>/dev/null || echo "unknown")
+ 
+   run_skill memory learn \
+     -p "monitor-codebase scan of $project_name: $total_issues total issues ($summary_text, $trend_delta)" \
+-    -s "Report: $report_file. Quality checks: $qc_total. Best-practices: $bp_count. Security: SAST $sast_findings, deps $vulnerable_deps, secrets $secrets_found ($security_total total). Trend: $trend_delta." \
++    -s "Report: $report_file. Quality checks: $qc_total. Best-practices: $bp_count. Security: SAST $sast_findings, deps $vulnerable_deps, secrets $secrets_found ($security_total total). Duplicates: $(python3 -c "import json; print(json.load(open('$report_file')).get('summary',{}).get('duplicate_functions',0))" 2>/dev/null || echo 0). Trend: $trend_delta." \
+     --scope "monitor-codebase" 2>/dev/null || true
+ 
+   echo "Report: $report_file ($total_issues issues: $summary_text, $trend_delta)"
+ 
+   # Step 10: Local fix execution via skills-ci → /orchestrate
+   if [[ "$do_fix" == "true" && "$total_issues" -gt 0 ]]; then
+```
+

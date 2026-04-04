@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "Evidence Case Lab \u2014 Code Tasks (design brief + specs pre-created)",
+    "goal": "Build Express endpoints + React components + App.tsx wiring for Evidence Case Lab via /code-runner",
+    "plan_type": "code",
+    "created": "2026-04-01",
+    "primary_persona": {
+      "name": "Brandon Bailey",
+      "role": "SPARTA cybersecurity analyst",
+      "source": ".pi/agents/brandon-bailey/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 2
+  },
+  "capability_overlap": [
+    "code-runner-endpoints.json, code-runner-task.json, code-runner-wiring.json pre-created in designs/evidence-case-lab/",
+    "DESIGN_BRIEF.md created with 3 screen specs",
+    "/code-runner composes /scillm for LLM calls \u2014 proven pipeline",
+    "GateChain.tsx, RecallCard.tsx, EvidenceCasePanel.tsx exist as shared components",
+    "compute_threat_delta.py and discrepancy_analysis.py exist and work"
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Backend + Frontend (parallel)"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Wiring + Visual QA"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add Express endpoints via /code-runner",
+      "lane": "0",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [],
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner && unset VIRTUAL_ENV && ./run.sh run /home/graham/workspace/experiments/pi-mono/packages/ux-lab/designs/evidence-case-lab/code-runner-endpoints.json --backend codex --max-rounds 3\n",
+      "tests": [
+        "grep -q 'evidence-case/drift' /home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts"
+      ],
+      "definition_of_done": {
+        "command": "grep -c 'evidence-case/drift' /home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts",
+        "assertion": "At least 1 occurrence of drift endpoint"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Generate React components via /code-runner",
+      "lane": "0",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [],
+      "command": "mkdir -p /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/evidence-case-lab && cd /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner && unset VIRTUAL_ENV && ./run.sh run /home/graham/workspace/experiments/pi-mono/packages/ux-lab/designs/evidence-case-lab/code-runner-task.json --backend codex --max-rounds 5\n",
+      "tests": [
+        "test -f /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/evidence-case-lab/EvidenceCaseLab.tsx",
+        "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npx tsc --noEmit"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0",
+        "assertion": "TypeScript compiles with zero errors"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Wire into App.tsx via /code-runner",
+      "lane": "1",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [
+        "2"
+      ],
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner && unset VIRTUAL_ENV && ./run.sh run /home/graham/workspace/experiments/pi-mono/packages/ux-lab/designs/evidence-case-lab/code-runner-wiring.json --backend codex --max-rounds 3\n",
+      "tests": [
+        "grep -q 'evidence-case-lab' /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx",
+        "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npx tsc --noEmit"
+      ],
+      "definition_of_done": {
+        "command": "grep -c 'evidence-case-lab' /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx",
+        "assertion": "At least 3 occurrences"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Visual QA screenshot",
+      "lane": "1",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [
+        "3"
+      ],
+      "command": "timeout 20 google-chrome --headless --disable-gpu --screenshot=/tmp/evidence-case-lab-qa.png --window-size=1920,1080 --virtual-time-budget=10000 'http://localhost:3002/#evidence-case-lab' 2>/dev/null && ls -la /tmp/evidence-case-lab-qa.png\n",
+      "definition_of_done": {
+        "command": "test -f /tmp/evidence-case-lab-qa.png && echo 'exists'",
+        "assertion": "Screenshot file exists"
+      }
+    }
+  ]
+}

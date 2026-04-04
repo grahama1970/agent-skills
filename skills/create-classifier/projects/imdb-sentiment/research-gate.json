@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "timestamp": "2026-04-01T13:25:33.764590",
+  "goal": "Classify IMDB movie reviews as positive or negative",
+  "modality": "text",
+  "backbones": [
+    "distilbert-base-uncased",
+    "sentence-transformers/all-MiniLM-L6-v2"
+  ]
+}

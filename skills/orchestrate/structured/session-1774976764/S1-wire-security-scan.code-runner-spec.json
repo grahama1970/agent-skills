@@ -1,0 +1,16 @@
+{
+  "task_id": "S1-wire-security-scan",
+  "title": "Add security-scan as Step 4.5 in monitor-codebase",
+  "prompt": "Add a new Step 4.5 to the monitor-codebase shell script (run.sh) that\nruns the security-scan skill on the project being scanned.\n\nInsert between Step 4 (quality checks) and Step 5 (autofix docstrings).\n\nThe security-scan skill is at .pi/skills/security-scan/run.sh and\nsupports: scan (all), sast, deps, secrets.\n\nFor the nightly scan, run the full scan with JSON output:\n  run_skill_timed security-scan scan \"$project_path\" --format json > \"$sec_file\"\n\nStore the output to $ARTIFACTS_DIR/${project_name}_security.json\n\nAlso update the Step 9 aggregate report to include security findings count.\nParse the JSON for counts: secrets_found, vulnerable_deps, sast_findings.\n\nAdd these to the summary variables used in the memory learn step.",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774976764",
+  "definition_of_done": {
+    "command": "grep -c 'security.scan' .pi/skills/monitor-codebase/run.sh",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/monitor-codebase/run.sh"
+  ],
+  "max_rounds": 3
+}

@@ -1,0 +1,65 @@
+{
+  "total": 250,
+  "overall_grades": {
+    "F": 57,
+    "A+": 119,
+    "B": 67,
+    "C": 7
+  },
+  "pass_rate": 0.744,
+  "a_plus_rate": 0.476,
+  "by_difficulty": {
+    "ambiguous": {
+      "total": 37,
+      "grades": {
+        "F": 30,
+        "C": 7
+      },
+      "avg_composite": 0.155
+    },
+    "simple": {
+      "total": 75,
+      "grades": {
+        "A+": 59,
+        "B": 15,
+        "F": 1
+      },
+      "avg_composite": 0.887
+    },
+    "complex": {
+      "total": 50,
+      "grades": {
+        "A+": 27,
+        "B": 23
+      },
+      "avg_composite": 0.857
+    },
+    "medium": {
+      "total": 62,
+      "grades": {
+        "A+": 33,
+        "B": 29
+      },
+      "avg_composite": 0.855
+    },
+    "flawed": {
+      "total": 26,
+      "grades": {
+        "F": 26
+      },
+      "avg_composite": 0.15
+    }
+  },
+  "dimension_averages": {
+    "action_correctness": 0.772,
+    "disambiguation_quality": 0.0,
+    "response_naturalness": 0.545,
+    "name_match": 0.636,
+    "technique_coverage": 0.995,
+    "cm_coverage": 0.995,
+    "error_detection": 0.0
+  },
+  "tier_distribution": {
+    "tier_0_heuristic": 250
+  }
+}

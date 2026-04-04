@@ -1,0 +1,48 @@
+2026-04-03 12:25:26.661 | INFO     | __main__:run:507 - === CODE-RUNNER v2: Implement PostureDashboard.tsx — full 3ft compliance view from V1 mockup ===
+2026-04-03 12:25:26.661 | INFO     | __main__:run:508 -   Backend: codex
+2026-04-03 12:25:26.661 | INFO     | __main__:run:509 -   DoD: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDash
+2026-04-03 12:25:26.661 | INFO     | __main__:run:510 -   Max rounds: 5
+2026-04-03 12:25:27.284 | INFO     | __main__:git_stash_save:107 - Stashed pre-existing changes
+{"event": "round_start", "ts": 1775233528.5792844, "task_id": "6", "round": 1, "max_rounds": 5, "strategy": "direct_fix", "backend": "codex", "reasoning": "medium", "temperature": 0.2}
+2026-04-03 12:25:28.579 | INFO     | __main__:run:605 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-03 12:28:26.844 | INFO     | apply:_is_path_authorized:180 - Allowlist fuzzy match: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts ≈ packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx (extension differs)
+2026-04-03 12:28:26.854 | WARNING  | apply:apply_llm_response:417 -   v2: Diff failed for packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, trying complete file
+2026-04-03 12:28:26.855 | INFO     | apply:_is_path_authorized:180 - Allowlist fuzzy match: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts ≈ packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx (extension differs)
+2026-04-03 12:28:26.855 | INFO     | apply:apply_file_blocks:250 -   Wrote: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (17064 bytes)
+2026-04-03 12:28:26.856 | INFO     | __main__:run:669 -   Applied 1 files: ['packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts']
+{"event": "round_score", "ts": 1775233707.0281577, "task_id": "6", "round": 1, "score": 0.49, "dod_passed": false, "errors": 0, "lint": 0, "files_written": 1, "zero_write_reason": ""}
+2026-04-03 12:28:27.028 | INFO     | __main__:run:700 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 12:28:27.114 | INFO     | __main__:run:737 -   KEEP (score 0.490 > previous 0.000)
+{"event": "round_decision", "ts": 1775233707.1144402, "task_id": "6", "round": 1, "status": "keep", "score": 0.49, "best_score": 0.49}
+{"event": "round_start", "ts": 1775233707.5722146, "task_id": "6", "round": 2, "max_rounds": 5, "strategy": "structured_analysis", "backend": "codex", "reasoning": "medium", "temperature": 0.2}
+2026-04-03 12:28:27.572 | INFO     | __main__:run:605 - ── Round 2/5 [strategy=structured_analysis codex:medium] ──
+2026-04-03 12:29:14.608 | ERROR    | __main__:_call_llm:347 - /scillm call failed: Server error '500 Internal Server Error' for url 'http://localhost:4001/v1/chat/completions'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
+2026-04-03 12:29:14.609 | WARNING  | apply:apply_llm_response:473 - No file blocks or diffs found in LLM response
+2026-04-03 12:29:14.610 | ERROR    | __main__:run:673 -   ZERO FILES WRITTEN — diagnosis: llm_error
+2026-04-03 12:29:14.610 | ERROR    | __main__:run:675 -     LLM returned error: ERROR: /scillm call failed: Server error '500 Internal Server Error' for url 'http://localhost:4001/v1/chat/completions'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/S
+{"event": "round_score", "ts": 1775233754.7811427, "task_id": "6", "round": 2, "score": 0.0, "dod_passed": false, "errors": 0, "lint": 0, "files_written": 0, "zero_write_reason": "llm_error"}
+2026-04-03 12:29:14.781 | INFO     | __main__:run:700 -   Score: 0.000 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 12:29:14.781 | INFO     | __main__:run:742 -   DISCARD (score 0.000 <= best 0.490)
+{"event": "round_decision", "ts": 1775233754.7817447, "task_id": "6", "round": 2, "status": "discard", "score": 0.0, "best_score": 0.49}
+{"event": "round_start", "ts": 1775233755.4822564, "task_id": "6", "round": 3, "max_rounds": 5, "strategy": "simplify", "backend": "codex", "reasoning": "high", "temperature": 0.3}
+2026-04-03 12:29:15.482 | INFO     | __main__:run:602 - ── Round 3/5 [strategy=simplify temp=0.3↑ codex:high] ──
+2026-04-03 12:30:50.596 | INFO     | apply:_is_path_authorized:180 - Allowlist fuzzy match: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts ≈ packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx (extension differs)
+2026-04-03 12:30:50.606 | WARNING  | apply:apply_llm_response:417 -   v2: Diff failed for packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, trying complete file
+2026-04-03 12:30:50.606 | INFO     | apply:_is_path_authorized:180 - Allowlist fuzzy match: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts ≈ packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx (extension differs)
+2026-04-03 12:30:50.607 | INFO     | apply:apply_file_blocks:250 -   Wrote: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (9372 bytes)
+2026-04-03 12:30:50.607 | INFO     | __main__:run:669 -   Applied 1 files: ['packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts']
+{"event": "round_score", "ts": 1775233850.77254, "task_id": "6", "round": 3, "score": 0.49, "dod_passed": false, "errors": 0, "lint": 0, "files_written": 1, "zero_write_reason": ""}
+2026-04-03 12:30:50.772 | INFO     | __main__:run:700 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 12:30:50.806 | INFO     | __main__:git_revert_to:176 - Reverted 1 files to 4c5c26e1 (removed 0 new)
+2026-04-03 12:30:50.806 | INFO     | __main__:run:742 -   DISCARD (score 0.490 <= best 0.490)
+{"event": "round_decision", "ts": 1775233850.8070142, "task_id": "6", "round": 3, "status": "discard", "score": 0.49, "best_score": 0.49}
+{"event": "round_start", "ts": 1775233851.2631435, "task_id": "6", "round": 4, "max_rounds": 5, "strategy": "escalate", "backend": "claude", "reasoning": "high", "temperature": 0.4}
+2026-04-03 12:30:51.263 | INFO     | __main__:run:602 - ── Round 4/5 [strategy=escalate temp=0.4↑ claude:high] ──
+2026-04-03 12:30:51.263 | WARNING  | __main__:run:624 - Strategy: ESCALATE — diagnosis written to 6.diagnosis.json
+{"event": "run_complete", "ts": 1775233851.2643573, "task_id": "6", "status": "fail", "score": 0.49, "rounds": 3, "dod_passed": false, "backend": "codex"}
+2026-04-03 12:30:51.264 | INFO     | __main__:run:822 - === RESULT: FAIL | score=0.490 | 3 rounds ===
+2026-04-03 12:30:51.327 | INFO     | apply:generate_hunk_review:636 - Review with: hunk patch /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775233486/6.hunk.md
+2026-04-03 12:30:51.327 | INFO     | apply:generate_hunk_review:638 -   Or: cd /home/graham/workspace/experiments/pi-mono && hunk diff
+2026-04-03 12:30:51.750 | INFO     | __main__:git_stash_pop:117 - Restored stashed changes

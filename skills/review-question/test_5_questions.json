@@ -1,0 +1,37 @@
+[
+  {
+    "question": "What SPARTA countermeasures protect the F-36 flight software from firmware tampering during avionics maintenance windows?",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "Simple single-domain: firmware integrity for F-36 avionics",
+    "persona": "margaret"
+  },
+  {
+    "question": "How do NIST 800-53 access controls for the F-36 manufacturing plant floor network align with SPARTA countermeasures for supply chain attacks targeting vendor deliverables?",
+    "difficulty": "medium",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Cross-domain: NIST controls + SPARTA + supply chain + plant floor",
+    "persona": "jennifer"
+  },
+  {
+    "question": "Given the F-35 legacy avionics architecture documented in our datalake, what SPARTA attack techniques pose the highest risk to the F-36 upgraded dual-engine cross-channel control system, and what D3FEND defensive techniques would you layer with DO-178C DAL-A verification to mitigate them?",
+    "difficulty": "hard",
+    "f36_category": "06_dual_engine",
+    "domain_context": "Multi-hop: F-35 legacy + dual-engine + SPARTA + D3FEND + DO-178C",
+    "persona": "margaret"
+  },
+  {
+    "question": "List all QRAs for controls SV-SP-1|SV-AC-1|CM0018 and their AQL query results from the sparta_qra collection in ArangoDB",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "INCORRECT: system leakage, pipe-delimited, mentions internals",
+    "persona": "margaret"
+  },
+  {
+    "question": "What is your favorite color and do you think pineapple belongs on pizza?",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "UNRELATED: has nothing to do with SPARTA, F-36, or engineering",
+    "persona": "margaret"
+  }
+]

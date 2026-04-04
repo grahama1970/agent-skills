@@ -1,0 +1,16 @@
+[project]
+name = "create-paper"
+version = "0.1.0"
+description = "Interview-driven paper generation orchestrator"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "typer",
+    "loguru>=0.7.0,<0.7.3",
+    "httpx",
+]
+
+[dependency-groups]
+test = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

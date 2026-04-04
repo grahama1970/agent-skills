@@ -1,0 +1,39 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 2,
+    "total": 2
+  },
+  "worktree": null,
+  "skill": "surf",
+  "violations": [
+    {
+      "rule": "python.file_length",
+      "severity": "warn",
+      "skill": "surf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/surf/cdp_controller_monolith.py",
+      "message": "File exceeds 800 LOC (962).",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "naming.noun_only",
+      "severity": "warn",
+      "skill": "surf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/surf/SKILL.md",
+      "message": "Skill name 'surf' appears noun-only; consider a verb- prefix or add to _NOUN_ALLOWLIST.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

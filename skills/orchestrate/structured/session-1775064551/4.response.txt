@@ -1,0 +1,13 @@
+Implementation is already present in the workspace and matches your spec; no additional edits were required.
+- Inline artifact component exists with `svg/html/code/markdown/react-table/graph`, DOMPurify, D3 cleanup, shimmer loading, card chrome (Expand/Copy), max inline height, and entrance animation: [InlineArtifact.tsx](/home/node/workspace/packages/ux-lab/src/components/shared-chat/InlineArtifact.tsx)
+- `MessageItem` renders inline artifacts after markdown and before gate cards, supports `artifacts[]`, and passes expand handler: [EmbryTerminalView.tsx:130](/home/node/workspace/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:130)
+- Expand wiring sets active artifact and opens right pane: [EmbryTerminalView.tsx:532](/home/node/workspace/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:532)
+- Right pane `ArtifactPanel` is fed from active artifact state: [EmbryTerminalView.tsx:755](/home/node/workspace/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:755)
+- `Artifact` type includes `'react-table' | 'graph'` and `data` field, and message supports `artifacts?`: [types.ts:64](/home/node/workspace/packages/ux-lab/src/components/shared-chat/types.ts:64)
+- `InlineArtifact` is exported from shared-chat index: [index.ts:18](/home/node/workspace/packages/ux-lab/src/components/shared-chat/index.ts:18)
+- Seed data includes both SVG and react-table artifacts: [EmbryTerminalView.tsx:322](/home/node/workspace/packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx:322)
+Verification commands run:
+- `cd packages/ux-lab && npx tsc --noEmit --pretty false 2>&1 | tail -1`
+Result: empty output, exit code `0`.
+- `cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0`
+Result: `0` (the fallback `echo 0` also printed, so output was `0` then `0`).

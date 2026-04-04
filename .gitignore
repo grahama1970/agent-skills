@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.eggs/
+
+# Node
+node_modules/
+dist/
+.next/
+.nuxt/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temp
+*.tmp
+*.log
+.env
+skills/assistant/checkpoints/
+skills/dogpile/run/fetch_cache/
+*.safetensors
+*.pt
+.venv/
+state/
+*.pdf
+*.so
+*.so.*
+fetch_cache/
+checkpoints/
+worktrees/

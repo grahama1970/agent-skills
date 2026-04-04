@@ -1,0 +1,93 @@
+{
+  "title": "Voice Design: Marcus Aurelius",
+  "context": "We need to design a voice for Marcus Aurelius. Since no recordings exist, we'll infer their voice from their background, era, and personality.",
+  "questions": [
+    {
+      "id": "geographic_origin",
+      "header": "Origin",
+      "text": "Where was Marcus Aurelius born or primarily lived?",
+      "options": [
+        {"label": "Rome, Italy", "description": "Classical Latin influence, rhetorical pauses"},
+        {"label": "Greece", "description": "Philosophical, measured delivery"},
+        {"label": "Multiple regions", "description": "Military campaigns across empire"}
+      ],
+      "multi_select": false
+    },
+    {
+      "id": "birth_death_years",
+      "header": "Lifespan",
+      "text": "What years did Marcus Aurelius live?",
+      "options": [
+        {"label": "121-180 CE", "description": "Correct - nearly 60 years"}
+      ],
+      "multi_select": false
+    },
+    {
+      "id": "formative_events",
+      "header": "Formative",
+      "text": "What shaped Marcus Aurelius in childhood/youth?",
+      "options": [
+        {"label": "Loss of parent/family", "description": "Father died when he was young"},
+        {"label": "Privileged education", "description": "Greek tutors, philosophy training"},
+        {"label": "Early responsibility", "description": "Adopted by Emperor Antoninus"}
+      ],
+      "multi_select": true
+    },
+    {
+      "id": "prime_events",
+      "header": "Prime Years",
+      "text": "What defined Marcus Aurelius's prime years?",
+      "options": [
+        {"label": "Plague/Hardship", "description": "Antonine Plague killed millions"},
+        {"label": "War/Conflict", "description": "Marcomannic Wars on the frontier"},
+        {"label": "Political Power", "description": "Roman Emperor, weighty decisions"},
+        {"label": "Loss of loved one", "description": "Lost multiple children"}
+      ],
+      "multi_select": true
+    },
+    {
+      "id": "late_events",
+      "header": "Later Life",
+      "text": "What marked Marcus Aurelius's later years?",
+      "options": [
+        {"label": "Reflection/Writing", "description": "Meditations - private philosophical notes"},
+        {"label": "Continued activism", "description": "Still campaigning until death"},
+        {"label": "Illness/Decline", "description": "Died on campaign, possibly from plague"}
+      ],
+      "multi_select": true
+    },
+    {
+      "id": "personality",
+      "header": "Personality",
+      "text": "How would you describe Marcus Aurelius's speaking demeanor?",
+      "options": [
+        {"label": "Stoic/Measured", "description": "Controlled, deliberate"},
+        {"label": "Authoritative", "description": "Commands attention, measured pace"},
+        {"label": "Humble/Deferential", "description": "Self-critical, philosophical humility"}
+      ],
+      "multi_select": true
+    },
+    {
+      "id": "emotional_coloring",
+      "header": "Emotion",
+      "text": "What emotional undertones should the voice carry?",
+      "options": [
+        {"label": "Weathered", "description": "Experience and endurance"},
+        {"label": "Serene", "description": "Inner peace, acceptance"},
+        {"label": "Wry/Ironic", "description": "Humor as wisdom"}
+      ],
+      "multi_select": true
+    },
+    {
+      "id": "modern_reference",
+      "header": "Reference",
+      "text": "Any modern actor/speaker whose voice might fit?",
+      "options": [
+        {"label": "Richard Harris", "description": "Gravitas, classical dignity (Gladiator)"},
+        {"label": "Ian McKellen", "description": "Theatrical, versatile"},
+        {"label": "Anthony Hopkins", "description": "Quiet intensity, intelligence"}
+      ],
+      "multi_select": true
+    }
+  ]
+}

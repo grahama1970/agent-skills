@@ -1,0 +1,62 @@
+{
+  "generated_at": 1775232203.8727365,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775232203",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create file",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775232203/1.stdout.txt",
+      "error": "",
+      "started_at": 1775232203.8645751,
+      "finished_at": 1775232203.8670528,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Append to file",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775232203/2.stdout.txt",
+      "error": "",
+      "started_at": 1775232203.8673956,
+      "finished_at": 1775232203.8687935,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Verify chain",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "2"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775232203/3.stdout.txt",
+      "error": "",
+      "started_at": 1775232203.8691185,
+      "finished_at": 1775232203.8727133,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

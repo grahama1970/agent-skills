@@ -1,0 +1,10 @@
+Updated `classifier-lab` dependencies in [pyproject.toml](/home/node/workspace/.pi/skills/classifier-lab/pyproject.toml):
+- Set `transformers` to `>=4.45,<5`
+- Added `accelerate` (was missing)
+- Added `polars` (was missing)
+Current line:
+- `transformers>=4.45,<5` (confirmed via `grep` on `/home/node/workspace/...`)
+What I couldn’t run in this environment:
+- `uv pip install --python .venv/bin/python -e .` failed: `uv: command not found`
+- `test-lab/run.sh verify-task 2 .pi/skills/classifier-lab/ --domain python` failed: script path not found
+- Your DoD grep path `/home/graham/workspace/experiments/pi-mono/...` does not exist here; verified instead at `/home/node/workspace/.pi/skills/classifier-lab/pyproject.toml`.

@@ -1,0 +1,74 @@
+{
+  "name": "elf_features_multiruntime",
+  "description": "Feature extraction from ELF binaries across Bun SEA, Go, and Rust runtimes",
+  "cases": [
+    {
+      "id": "go_trivy_packages",
+      "input": {
+        "strings": "github.com/aquasecurity/trivy\ngithub.com/spf13/cobra\ngithub.com/spf13/viper\ngoogle.golang.org/grpc\ngoogle.golang.org/protobuf\ngithub.com/aquasecurity/trivy-db\ngithub.com/aquasecurity/trivy/pkg/scanner\ngithub.com/aquasecurity/trivy/pkg/result\ngithub.com/aquasecurity/trivy/pkg/report",
+        "binary_name": "trivy",
+        "help_text": "trivy: Scanner for vulnerabilities in container images, file systems, and Git repositories"
+      },
+      "expected": {
+        "state_machines": [],
+        "event_types": [],
+        "jsonrpc_methods": [],
+        "schemas": [
+          {"name": "scanner", "fields": ["Scanner", "ScanResult"]},
+          {"name": "result", "fields": ["Result", "Report"]},
+          {"name": "trivy-db", "fields": ["VulnerabilityDB"]}
+        ]
+      },
+      "notes": "Go binary — packages should be identified as application modules, not random strings"
+    },
+    {
+      "id": "go_grpc_services",
+      "input": {
+        "strings": "/google.devtools.containeranalysis.v1.ContainerAnalysis\n/google.devtools.containeranalysis.v1beta1.GrafeasV1Beta1\n/trivy.scanner.v1.ScannerService\n/grpc.health.v1.Health\nRegisterService\ngrpc.ServiceDesc",
+        "binary_name": "trivy",
+        "help_text": "trivy: vulnerability scanner"
+      },
+      "expected": {
+        "state_machines": [],
+        "event_types": [],
+        "jsonrpc_methods": [
+          "google.devtools.containeranalysis.v1.ContainerAnalysis",
+          "trivy.scanner.v1.ScannerService",
+          "grpc.health.v1.Health"
+        ],
+        "schemas": []
+      },
+      "notes": "gRPC service names extracted from Go binary should be classified as RPC methods"
+    },
+    {
+      "id": "rust_clap_structure",
+      "input": {
+        "strings": "clap::\nclap_builder\nUSAGE:\n    ast-grep [OPTIONS] <COMMAND>\n\nCOMMANDS:\n  run      Run a pattern against files\n  scan     Scan files for patterns\n  test     Run tests for rules\n  help     Print help\n\nOPTIONS:\n  --config <PATH>    Path to config file\n  --json            Output as JSON\n  --color <WHEN>    Use colors (auto/always/never)",
+        "binary_name": "ast-grep",
+        "help_text": "ast-grep: A CLI tool for code structural search and lint"
+      },
+      "expected": {
+        "state_machines": [],
+        "event_types": [],
+        "jsonrpc_methods": [],
+        "schemas": []
+      },
+      "notes": "Rust/Clap binary — CLI structure from help text, no deep schemas expected"
+    },
+    {
+      "id": "bun_droid_events",
+      "input": {
+        "strings": "wwf=Jd.extend({type:KH.literal(\"mission_accepted\"),title:KH.string()})\n_wf=Jd.extend({type:KH.literal(\"mission_paused\")})\nVwf=Jd.extend({type:KH.literal(\"mission_resumed\")})\nJwf=Jd.extend({type:KH.literal(\"mission_run_started\")})\nZwf=Jd.extend({type:KH.literal(\"worker_started\")})\nhwf=Jd.extend({type:KH.literal(\"worker_completed\")})",
+        "binary_name": "droid",
+        "help_text": "droid: Factory's AI coding agent"
+      },
+      "expected": {
+        "state_machines": [],
+        "event_types": ["mission_accepted", "mission_paused", "mission_resumed", "mission_run_started", "worker_started", "worker_completed"],
+        "jsonrpc_methods": [],
+        "schemas": []
+      },
+      "notes": "Bun SEA with Zod — event types from KH.literal patterns"
+    }
+  ]
+}

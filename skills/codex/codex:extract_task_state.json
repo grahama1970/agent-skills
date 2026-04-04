@@ -1,0 +1,17 @@
+{
+  "skill": "codex:extract",
+  "completed": 1,
+  "total": 1,
+  "description": "Codex extract: Analyze this research query: ''\n\nIMPORTANT: Only mark as amb",
+  "current_item": "done",
+  "progress_pct": 100.0,
+  "elapsed_seconds": 208.0,
+  "eta_seconds": null,
+  "throughput_per_sec": 0.0,
+  "stats": {
+    "success": 1,
+    "failed": 0
+  },
+  "last_updated": "2026-03-02 10:44:43",
+  "status": "error"
+}

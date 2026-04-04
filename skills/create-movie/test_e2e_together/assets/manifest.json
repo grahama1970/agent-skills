@@ -1,0 +1,116 @@
+{
+  "script": "test_e2e_together/script.json",
+  "script_data": {
+    "title": "A single candle flame flickering in a dark room",
+    "synopsis": "",
+    "duration_seconds": 5,
+    "scenes": [
+      {
+        "heading": "INT. LOCATION 1 - DAY",
+        "location": "Location 1",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 1]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 1 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 1]",
+        "shot_type": "WIDE",
+        "duration_seconds": 1
+      },
+      {
+        "heading": "INT. LOCATION 2 - DAY",
+        "location": "Location 2",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 2]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 2 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 2]",
+        "shot_type": "MEDIUM",
+        "duration_seconds": 1
+      },
+      {
+        "heading": "INT. LOCATION 3 - DAY",
+        "location": "Location 3",
+        "time": "DAY",
+        "action": [
+          "[Describe action for scene 3]"
+        ],
+        "dialogue": [],
+        "visual": "[Visual description for scene 3 - detailed enough for AI generation]",
+        "audio": "[Audio cue for scene 3]",
+        "shot_type": "CLOSE-UP",
+        "duration_seconds": 1
+      }
+    ],
+    "visual_style": "",
+    "audio_style": "",
+    "screenplay_raw": "",
+    "research_context": {
+      "topic": "A single candle flame flickering in a dark room",
+      "sources": {}
+    },
+    "preset_data": {
+      "spec_version": "1.1",
+      "params": {},
+      "tags": [],
+      "resolved_ids": {},
+      "constraints_applied": [],
+      "warnings": {
+        "illegal_overrides": [],
+        "missing_ids": [],
+        "logic_errors": []
+      },
+      "taxonomy": {
+        "bridge_tags": [],
+        "collection_tags": {}
+      }
+    },
+    "preset_id": "neutral",
+    "timestamp": "2026-02-04T22:07:21.060445",
+    "bridge_attributes": [],
+    "persona_context": {
+      "episodic": [],
+      "semantic": [],
+      "federated": [],
+      "user_state": null,
+      "bridge_attributes": []
+    }
+  },
+  "output_dir": "test_e2e_together/assets",
+  "visual_style": "cinematic",
+  "scenes_processed": 3,
+  "assets": {
+    "images": [],
+    "audio": [
+      {
+        "scene": 1,
+        "file": "test_e2e_together/assets/audio/score_001.wav",
+        "type": "score",
+        "description": "[Audio cue for scene 1]",
+        "bridges": [],
+        "generated": false
+      },
+      {
+        "scene": 2,
+        "file": "test_e2e_together/assets/audio/score_002.wav",
+        "type": "score",
+        "description": "[Audio cue for scene 2]",
+        "bridges": [],
+        "generated": false
+      },
+      {
+        "scene": 3,
+        "file": "test_e2e_together/assets/audio/score_003.wav",
+        "type": "score",
+        "description": "[Audio cue for scene 3]",
+        "bridges": [],
+        "generated": false
+      }
+    ],
+    "video": []
+  },
+  "timestamp": "2026-02-04T22:08:31.181189"
+}

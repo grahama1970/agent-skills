@@ -1,0 +1,216 @@
+{
+  "session_id": "storyboard-20260129-134016-8d233c",
+  "phase": "complete",
+  "screenplay_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-storyboard/demo_session/sample_screenplay.md",
+  "created_at": "2026-01-29T13:40:16.807261",
+  "updated_at": "2026-01-29T13:40:32.484118",
+  "parsed_scenes": {
+    "title": "Sample Screenplay",
+    "metadata": {},
+    "scenes": [
+      {
+        "number": 1,
+        "heading": {
+          "int_ext": "INT.",
+          "location": "APARTMENT",
+          "time": "NIGHT",
+          "raw": "INT. APARTMENT - NIGHT"
+        },
+        "elements": [
+          {
+            "type": "action",
+            "text": "SARAH enters the dark apartment, flipping on a small desk lamp."
+          },
+          {
+            "type": "dialogue",
+            "character": "SARAH",
+            "text": "Hello? Is anyone here?",
+            "parenthetical": "whispering"
+          },
+          {
+            "type": "action",
+            "text": "She moves cautiously through the room."
+          },
+          {
+            "type": "dialogue",
+            "character": "MYSTERIOUS VOICE",
+            "text": "I've been waiting for you.",
+            "parenthetical": null
+          },
+          {
+            "type": "action",
+            "text": "Sarah spins around, fear in her eyes."
+          }
+        ],
+        "notes": {
+          "lighting": [
+            "Low key, practical desk lamp only"
+          ],
+          "references": [
+            "Blade Runner 2049 apartment scene"
+          ],
+          "beats": [
+            "tense"
+          ]
+        },
+        "duration_estimate": 14.999999999999998
+      },
+      {
+        "number": 2,
+        "heading": {
+          "int_ext": "EXT.",
+          "location": "CITY STREET",
+          "time": "DAY",
+          "raw": "EXT. CITY STREET - DAY"
+        },
+        "elements": [
+          {
+            "type": "action",
+            "text": "Cars rush by. People hurry along the sidewalk."
+          },
+          {
+            "type": "action",
+            "text": "SARAH walks determinedly, phone pressed to her ear."
+          },
+          {
+            "type": "dialogue",
+            "character": "SARAH",
+            "text": "I need backup. Now.",
+            "parenthetical": null
+          }
+        ],
+        "notes": {
+          "beats": [
+            "action"
+          ]
+        },
+        "duration_estimate": 9.333333333333334
+      }
+    ]
+  },
+  "shot_plan": {
+    "title": "Sample Screenplay",
+    "total_duration": 21.166666666666664,
+    "total_shots": 3,
+    "metadata": {
+      "scenes_count": 2,
+      "auto_generated": true
+    },
+    "shots": [
+      {
+        "scene_number": 1,
+        "shot_number": 1,
+        "shot_code": "OTS",
+        "shot_name": "Over-The-Shoulder",
+        "description": "SARAH enters the dark apartment, flipping on a small desk lamp. | SARAH: \"Hello? Is anyone here?\" | She moves cautiously through the room.",
+        "duration": 7.0,
+        "camera_movement": "static",
+        "framing_guide": "Back of one head, face of other",
+        "lens_suggestion": "50-85mm",
+        "emotion": "tense",
+        "notes": {
+          "lighting": [
+            "Low key, practical desk lamp only"
+          ],
+          "camera": [],
+          "references": [
+            "Blade Runner 2049 apartment scene"
+          ]
+        }
+      },
+      {
+        "scene_number": 1,
+        "shot_number": 2,
+        "shot_code": "MS",
+        "shot_name": "Medium Shot",
+        "description": "I've been waiting for you. | Sarah spins around, fear in her eyes.",
+        "duration": 7.499999999999999,
+        "camera_movement": "static",
+        "framing_guide": "Waist to head",
+        "lens_suggestion": "50-85mm",
+        "emotion": "tense",
+        "notes": {}
+      },
+      {
+        "scene_number": 2,
+        "shot_number": 1,
+        "shot_code": "FS",
+        "shot_name": "Full Shot",
+        "description": "Cars rush by. People hurry along the sidewalk. | SARAH walks determinedly, phone pressed to her ear. | SARAH: \"I need backup. Now.\"",
+        "duration": 6.666666666666666,
+        "camera_movement": "static",
+        "framing_guide": "Head to toe, minimal headroom",
+        "lens_suggestion": "35-50mm",
+        "emotion": "action",
+        "notes": {
+          "lighting": [],
+          "camera": [],
+          "references": []
+        }
+      }
+    ]
+  },
+  "panels": [
+    "demo_session/output/storyboard-20260129-134016-8d233c/panels/panel_s01_sh01.png",
+    "demo_session/output/storyboard-20260129-134016-8d233c/panels/panel_s01_sh02.png",
+    "demo_session/output/storyboard-20260129-134016-8d233c/panels/panel_s02_sh01.png"
+  ],
+  "questions": [
+    {
+      "id": "camera_s1",
+      "scene_number": 1,
+      "question_type": "creative_suggestion",
+      "question": "For Scene 1 in the APARTMENT, I'm thinking we should use a slow push-in as the tension builds. It would really draw the audience into the character's anxiety.",
+      "options": [
+        "sounds good",
+        "prefer static",
+        "let's try handheld",
+        "suggest something else"
+      ],
+      "default": null,
+      "context": "The cautious movement and sparse dialogue suggest building dread - a push-in amplifies this without words."
+    },
+    {
+      "id": "lighting_s1",
+      "scene_number": 1,
+      "question_type": "creative_suggestion",
+      "question": "For the night interior in Scene 1, I'm picturing practical lighting - maybe just a desk lamp or window light. It keeps things grounded and intimate. Would that work for the mood you're going for?",
+      "options": [
+        "yes, keep it naturalistic",
+        "go darker/moodier",
+        "brighter for safety"
+      ],
+      "default": null,
+      "context": "Night interiors with practical sources feel more realistic and create natural pools of light and shadow."
+    },
+    {
+      "id": "ref_s1",
+      "scene_number": 1,
+      "question_type": "creative_suggestion",
+      "question": "I see you've referenced 'Blade Runner 2049 apartment scene' for Scene 1. I could search my memory for specific techniques from that film - the color grading, the shot composition, the pacing. Should I pull those details?\n\n\ud83d\udcda From my memory of Blade Runner 2049 apartment scene:\n  \u2022 **Blade Runner Noir Lighting**\nFrom: Blade Runner (1982)\nHeavy use of venetian blind shadows, neon color, and atmospheric haze\nCamera: Slow tracking shots, low angles for oppressive atmosphere\nLighting: Low-key with strong motivated sources, blue/orange color palette\nEffect: Melancholic, mysterious, existential\n  \u2022 **Blade Runner Interview Framing**\nFrom: Blade Runner (1982)\nExtreme close-ups of eyes during interrogation scenes\nCamera: ECU on eyes, locked-off, very shallow depth of field\nLighting: Strong key light from below, rim light separation\nEffect: Invasive, dehumanizing, clinical\n",
+      "options": [
+        "yes, search memory",
+        "just inspiration, don't copy",
+        "skip references"
+      ],
+      "default": null,
+      "context": "The reference to Blade Runner 2049 apartment scene gives us a visual language to draw from."
+    }
+  ],
+  "answers": {
+    "_config": {
+      "fidelity": "sketch",
+      "format": "mp4",
+      "auto_approve": false,
+      "output_dir": "demo_session/output/storyboard-20260129-134016-8d233c"
+    },
+    "emotion_s1": "tense",
+    "ref_s1_1": "yes_search_memory",
+    "emotion_s2": "action",
+    "camera_s1": "sounds good",
+    "lighting_s1": "go darker/moodier",
+    "ref_s1": "yes, search memory"
+  },
+  "output_path": "demo_session/output/storyboard-20260129-134016-8d233c/animatic.mp4",
+  "error": null
+}

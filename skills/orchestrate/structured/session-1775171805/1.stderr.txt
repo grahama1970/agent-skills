@@ -1,0 +1,14 @@
+2026-04-02 19:16:56.798 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Create usePostureData hook — aggregates control family stats ===
+2026-04-02 19:16:56.798 | INFO     | __main__:run:494 -   Backend: codex
+2026-04-02 19:16:56.798 | INFO     | __main__:run:495 -   DoD: grep -q 'export function usePostureData' packages/ux-lab/src/hooks/usePostureData.ts
+2026-04-02 19:16:56.798 | INFO     | __main__:run:496 -   Max rounds: 5
+2026-04-02 19:16:58.957 | INFO     | __main__:run:587 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-02 19:18:18.747 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for packages/ux-lab/src/hooks/usePostureData.ts, trying complete file
+2026-04-02 19:18:18.747 | INFO     | apply:apply_file_blocks:256 -   Wrote: packages/ux-lab/src/hooks/usePostureData.ts (9424 bytes)
+2026-04-02 19:18:18.747 | INFO     | __main__:run:651 -   Applied 1 files: ['packages/ux-lab/src/hooks/usePostureData.ts']
+2026-04-02 19:18:18.812 | INFO     | __main__:run:658 -   Score: 1.000 (DoD:True errors:0 lint:0 bp:0)
+2026-04-02 19:18:18.903 | INFO     | __main__:run:695 -   KEEP (score 1.000 > previous 0.000)
+2026-04-02 19:18:19.354 | INFO     | __main__:run:751 - === DoD PASSED on round 1 (score=1.000) ===
+2026-04-02 19:18:19.355 | INFO     | __main__:run:770 - === RESULT: PASS | score=1.000 | 1 rounds ===
+2026-04-02 19:18:19.378 | INFO     | apply:generate_hunk_review:531 - Review with: hunk patch /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775171805/1.hunk.md
+2026-04-02 19:18:19.378 | INFO     | apply:generate_hunk_review:533 -   Or: cd /tmp/cr-wt-1-38xw1bmj && hunk diff

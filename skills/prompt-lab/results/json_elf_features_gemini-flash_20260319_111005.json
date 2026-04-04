@@ -1,0 +1,27 @@
+{
+  "prompt": "elf_features_v1",
+  "model": "gemini-flash",
+  "ground_truth": "elf_features",
+  "timestamp": "2026-03-19T11:10:05.700686",
+  "avg_f1": 0.0,
+  "avg_precision": 0.0,
+  "avg_recall": 0.0,
+  "parse_rate": 0.0,
+  "passed": false,
+  "cases": [
+    {
+      "id": "droid_enums",
+      "f1": 0.0,
+      "parsed": false,
+      "error": "LLM call failed: Error code: 404 - {'error': {'message': 'Unknown endpoint: /chat/completions', 'type': 'not_found_error', 'code': 404}}",
+      "field_scores": []
+    },
+    {
+      "id": "droid_events",
+      "f1": 0.0,
+      "parsed": false,
+      "error": "LLM call failed: Error code: 404 - {'error': {'message': 'Unknown endpoint: /chat/completions', 'type': 'not_found_error', 'code': 404}}",
+      "field_scores": []
+    }
+  ]
+}

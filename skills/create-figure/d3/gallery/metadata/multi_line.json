@@ -1,0 +1,18 @@
+{
+  "chart_type": "multi_line",
+  "viz_family": "line",
+  "sample_query": "Compare three series over time",
+  "title": "Multi-Series Trend",
+  "data_shape": {
+    "rows": 6,
+    "fields": [
+      "label",
+      "series_a",
+      "series_b",
+      "series_c"
+    ]
+  },
+  "source": "seed_d3_gallery.py",
+  "timestamp": "2026-02-26T13:14:48.026728+00:00",
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/multi_line_1772111688.html"
+}

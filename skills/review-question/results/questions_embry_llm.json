@@ -1,0 +1,37 @@
+[
+  {
+    "question": "What SPARTA countermeasures are in place to prevent unauthorized modifications to the F-36's flight control software during the build process?",
+    "difficulty": "easy",
+    "f36_category": "09_flight_software",
+    "domain_context": "Ensuring integrity of flight control software builds against tampering",
+    "persona": "embry"
+  },
+  {
+    "question": "How does the F-36's dual-engine control system leverage SPARTA's cross-channel monitoring techniques to detect potential cyber-physical attacks while maintaining DO-178C compliance?",
+    "difficulty": "medium",
+    "f36_category": "06_dual_engine",
+    "domain_context": "Balancing real-time attack detection with aviation safety standards",
+    "persona": "embry"
+  },
+  {
+    "question": "Given the F-36's use of space-hardened components, which SPARTA supply chain threats are most critical to mitigate given the limited vendor base for radiation-tolerant FPGAs?",
+    "difficulty": "medium",
+    "f36_category": "05_space_hardening",
+    "domain_context": "Protecting specialized components with constrained supply chains",
+    "persona": "embry"
+  },
+  {
+    "question": "Considering the F-35's legacy stores management system vulnerabilities documented in our datalake, what SPARTA attack patterns would most likely target the F-36's weapons integration subsystem, and how should we adapt our HIL testing to validate countermeasures?",
+    "difficulty": "hard",
+    "f36_category": "03_weapons",
+    "domain_context": "Evolving weapons system security from legacy vulnerabilities",
+    "persona": "embry"
+  },
+  {
+    "question": "How might changes to the F-36's cockpit display architecture impact our ability to maintain consistent cybersecurity controls across different software builds?",
+    "difficulty": "ambiguous",
+    "f36_category": "04_display_ux",
+    "domain_context": "Display system modifications with unclear security implications",
+    "persona": "embry"
+  }
+]

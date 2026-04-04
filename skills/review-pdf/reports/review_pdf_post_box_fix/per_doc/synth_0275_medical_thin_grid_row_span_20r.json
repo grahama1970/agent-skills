@@ -1,0 +1,147 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_post_box_fix",
+  "timestamp": 1771961030,
+  "doc_id": "synth_0275_medical_thin_grid_row_span_20r",
+  "domain": "unknown",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0275_medical_thin_grid_row_span_20r",
+    "profile_path": "/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0275_medical_thin_grid_row_span_20r/00_profile_detector/profile.json",
+    "structural_path": "/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0275_medical_thin_grid_row_span_20r/11_json_exporter/structural.json",
+    "context_path": "/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0275_medical_thin_grid_row_span_20r/pipeline_context.json",
+    "pdf_path": "/home/graham/workspace/experiments/extractor/data/pdfs/synthetic/synth_0275_medical_thin_grid_row_span_20r.pdf"
+  },
+  "estimates": {
+    "page_count": 1,
+    "estimated_sections": 10,
+    "estimated_sections_regex": 19,
+    "estimated_sections_font": 6,
+    "estimated_sections_toc": 0,
+    "estimated_table_count": 1,
+    "table_pages": 1,
+    "image_pages": 0,
+    "has_formulas": false,
+    "has_tables": true,
+    "has_figures": false,
+    "has_requirements": false,
+    "domain": "general",
+    "layout_columns": 2,
+    "file_size_mb": 0.0,
+    "estimated_timeout_seconds": 120,
+    "detected_preset": "sparta_stress_test"
+  },
+  "actual": {
+    "section_count": 1,
+    "empty_sections": 0,
+    "section_titles_missing": 1,
+    "element_count": 2,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "duplicate_ratio": 0.0,
+    "type_counts": {
+      "text": 1,
+      "table": 1
+    },
+    "text_length": 617,
+    "sort_order_violations": 0,
+    "unknown_type_count": 0,
+    "figure_extraction_available": false,
+    "table_extraction_available": true,
+    "bbox_pages_checked": 0,
+    "bbox_multi_col_pages": 0,
+    "bbox_order_violations": 0,
+    "bbox_page_results": {}
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 1,
+    "raw_text_length": 504,
+    "math_symbol_count": 1,
+    "math_symbol_density": 0.001984126984126984
+  },
+  "ratios": {
+    "section_ratio": 0.1,
+    "table_ratio": 1.0,
+    "figure_ratio": null,
+    "text_ratio": 1.2242063492063493
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 1.0,
+      "state": "not_available",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 1.0,
+    "grade": "A+",
+    "verdict": "PASS",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "issue_count": 1
+  },
+  "issues": [
+    {
+      "code": "section_alignment_low",
+      "severity": "MEDIUM",
+      "message": "Section ratio is 0.10 (<0.30) — S00 estimated 10, S04 found 1.",
+      "root_cause": "S00 section estimator overestimation (extraction found sections)",
+      "recommendation": "calibrate S00 section estimator against S04 actuals"
+    }
+  ],
+  "escalation_jobs": [
+    {
+      "skill": "debug-pdf",
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf && ./run.sh analyze \"/home/graham/workspace/experiments/extractor/data/pdfs/synthetic/synth_0275_medical_thin_grid_row_span_20r.pdf\" --output \"/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0275_medical_thin_grid_row_span_20r\"/review_debug_pdf.json",
+      "reason": "section alignment issues require PDF structural analysis via /debug-pdf",
+      "auto_executable": true
+    },
+    {
+      "skill": "create-classifier",
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/create-classifier && ./run.sh train-iterative --task structural_elements --model efficientnet_b0 --labels data/labels/structural.jsonl --output-dir models/structural_elements/latest --benchmark-first --classifier-lab-first --require-classifier-lab --require-selection-pass --run-preflight-assess --dogpile-when-uncertain --auto-hf-augment --run-hp-search",
+      "reason": "section/equation/type errors suggest classifier drift",
+      "auto_executable": true
+    },
+    {
+      "skill": "classifier-lab",
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab && ./run.sh benchmark --labels-jsonl /home/graham/workspace/experiments/pi-mono/.pi/skills/create-classifier/data/labels/structural.jsonl --backbones 'efficientnet_b0,convnextv2_nano.fcmae_ft_in22k_in1k,mobilenetv3_large_100,resnet50' --output-json \"/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0275_medical_thin_grid_row_span_20r\"/classifier_lab_benchmark.json",
+      "reason": "backbone benchmark needed for next classifier iteration",
+      "auto_executable": true
+    }
+  ],
+  "escalation_execution": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

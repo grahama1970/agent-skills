@@ -1,0 +1,164 @@
+"""Task-monitor integration for episodic nightly pipeline.
+
+Follows the PersonaMonitorTracker pattern: registers with task-monitor,
+tracks per-session progress, atomic state writes.
+"""
+
+import json
+import os
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+
+STATE_DIR = Path.home() / ".pi" / "monitor-episodic-archiver"
+REGISTRY_FILE = Path.home() / ".pi" / "task-monitor" / "registry.json"
+
+
+class EpisodicMonitorTracker:
+    """Track nightly episodic pipeline progress for task-monitor."""
+
+    def __init__(
+        self,
+        job_type: str = "nightly",
+        name: str = "episodic-monitor",
+        register: bool = True,
+    ):
+        self.job_type = job_type
+        self.name = f"{name}-{job_type}"
+        self.state_file = STATE_DIR / f"task_state_{job_type}.json"
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Progress tracking
+        self.sessions: List[str] = []
+        self.current_session: str = ""
+        self.completed_sessions: List[str] = []
+        self.session_status: Dict[str, str] = {}
+        self.session_stats: Dict[str, Dict[str, Any]] = {}
+
+        # Error tracking
+        self.errors: List[Dict[str, Any]] = []
+
+        # Timing
+        self.start_time = time.time()
+        self.last_update = 0.0
+
+        if register:
+            self._register_task()
+
+    def _register_task(self):
+        """Register with task-monitor registry."""
+        REGISTRY_FILE.parent.mkdir(parents=True, exist_ok=True)
+        registry = {}
+        if REGISTRY_FILE.exists():
+            try:
+                registry = json.loads(REGISTRY_FILE.read_text())
+            except json.JSONDecodeError:
+                registry = {}
+
+        registry[self.name] = {
+            "type": "nightly",
+            "skill": "monitor-episodic-archiver",
+            "state_file": str(self.state_file),
+            "registered_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+
+        tmp = REGISTRY_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(registry, indent=2))
+        os.replace(str(tmp), str(REGISTRY_FILE))
+
+    def _update_state(self, final: bool = False):
+        """Atomic state file write."""
+        elapsed = time.time() - self.start_time
+        total = len(self.sessions)
+        completed = len(self.completed_sessions)
+        success_count = sum(1 for s in self.session_status.values() if s == "success")
+        failed_count = sum(1 for s in self.session_status.values() if s == "failed")
+        skipped_count = sum(1 for s in self.session_status.values() if s == "skipped")
+
+        state = {
+            "completed": completed,
+            "total": total,
+            "description": f"Episodic Monitor: {self.job_type}",
+            "current_item": self.current_session,
+            "stats": {
+                "success": success_count,
+                "failed": failed_count,
+                "skipped": skipped_count,
+            },
+            "session_status": self.session_status,
+            "session_stats": self.session_stats,
+            "errors": self.errors[-10:],
+            "elapsed_seconds": round(elapsed, 1),
+            "progress_pct": round(completed / total * 100, 1) if total > 0 else 0,
+            "last_updated": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "completed" if final else "running",
+        }
+
+        tmp = self.state_file.with_suffix(".tmp")
+        tmp.write_text(json.dumps(state, indent=2, default=str))
+        os.replace(str(tmp), str(self.state_file))
+        self.last_update = time.time()
+
+    def set_sessions(self, session_ids: List[str]):
+        self.sessions = session_ids
+        self.session_status = {s: "pending" for s in session_ids}
+        self._update_state()
+
+    def start_session(self, session_id: str):
+        self.current_session = session_id
+        self.session_status[session_id] = "running"
+        self._update_state()
+
+    def complete_session(
+        self, session_id: str, success: bool = True,
+        stats: dict = None, error_msg: str = None,
+    ):
+        self.session_status[session_id] = "success" if success else "failed"
+        self.completed_sessions.append(session_id)
+        if stats:
+            self.session_stats[session_id] = stats
+        if error_msg:
+            self.errors.append({
+                "session_id": session_id,
+                "error": error_msg,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            })
+        self._update_state()
+
+    def skip_session(self, session_id: str, reason: str = ""):
+        self.session_status[session_id] = "skipped"
+        self.completed_sessions.append(session_id)
+        self._update_state()
+
+    def finish(self, success: bool = True):
+        self.current_session = ""
+        self._update_state(final=True)
+
+    def get_summary(self) -> dict:
+        elapsed = time.time() - self.start_time
+        return {
+            "total": len(self.sessions),
+            "completed": len(self.completed_sessions),
+            "success": sum(1 for s in self.session_status.values() if s == "success"),
+            "failed": sum(1 for s in self.session_status.values() if s == "failed"),
+            "skipped": sum(1 for s in self.session_status.values() if s == "skipped"),
+            "errors": len(self.errors),
+            "elapsed_seconds": round(elapsed, 1),
+        }
+
+
+# Global tracker management
+_trackers: Dict[str, EpisodicMonitorTracker] = {}
+
+
+def start_job(job_type: str = "nightly") -> EpisodicMonitorTracker:
+    tracker = EpisodicMonitorTracker(job_type=job_type)
+    _trackers[job_type] = tracker
+    return tracker
+
+
+def end_job(job_type: str = "nightly", success: bool = True):
+    if job_type in _trackers:
+        _trackers[job_type].finish(success)
+        del _trackers[job_type]

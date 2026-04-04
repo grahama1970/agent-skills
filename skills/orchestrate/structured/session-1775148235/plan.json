@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/tmp/burn-in-test",
+  "metadata": {
+    "title": "Burn-in stress test: fix calculator + formatter bugs",
+    "goal": "Fix all 6 failing tests across 2 modules",
+    "plan_type": "code",
+    "created": "2026-04-02"
+  },
+  "execution": {
+    "max_concurrency": 2
+  },
+  "capability_overlap": [
+    "burn-in test \u2014 no overlap check needed"
+  ],
+  "lanes": [
+    {
+      "id": "calc",
+      "label": "Calculator fixes"
+    },
+    {
+      "id": "fmt",
+      "label": "Formatter fixes"
+    },
+    {
+      "id": "verify",
+      "label": "Final verification"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Fix calculator bugs (add, subtract, divide)",
+      "lane": "calc",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "depends_on": [],
+      "max_rounds": 3,
+      "timeout_seconds": 120,
+      "prompt": "Fix all bugs in src/calculator.py: 1. add() subtracts instead of adding 2. subtract() adds instead of subtracting 3. divide() crashes on zero \u2014 should raise ValueError(\"Cannot divide by zero\")\n",
+      "allowlist": [
+        "src/calculator.py"
+      ],
+      "read_context": [
+        "tests/test_calculator.py"
+      ],
+      "definition_of_done": {
+        "command": "python3 -m pytest tests/test_calculator.py -q",
+        "assertion": "passed"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Fix formatter bugs (name, currency, list)",
+      "lane": "fmt",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "depends_on": [],
+      "max_rounds": 3,
+      "timeout_seconds": 120,
+      "prompt": "Fix all bugs in src/formatter.py: 1. format_name() returns \"last first\" \u2014 should be \"first last\" 2. format_currency() doesn't format decimals \u2014 should use comma thousands and 2 decimal places 3. format_list() uses str() \u2014 should join with \", \" and return \"\" for empty list Also: replace 'import logging' with 'from loguru import logger' (project convention).\n",
+      "allowlist": [
+        "src/formatter.py"
+      ],
+      "read_context": [
+        "tests/test_formatter.py"
+      ],
+      "definition_of_done": {
+        "command": "python3 -m pytest tests/test_formatter.py -q",
+        "assertion": "passed"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Run full test suite",
+      "lane": "verify",
+      "runner": "local",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "command": "python3 -m pytest tests/ -q",
+      "definition_of_done": {
+        "command": "python3 -m pytest tests/ -q",
+        "assertion": "passed"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Lint check with ruff",
+      "lane": "verify",
+      "runner": "local",
+      "depends_on": [
+        "3"
+      ],
+      "command": "ruff check src/ --fix || true",
+      "definition_of_done": {
+        "command": "ruff check src/ --output-format text",
+        "assertion": "exit_code == 0"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Create integration test for edge cases",
+      "lane": "verify",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "depends_on": [
+        "4"
+      ],
+      "max_rounds": 2,
+      "timeout_seconds": 90,
+      "prompt": "Create tests/test_integration.py with edge case tests: - test add/subtract with floats - test divide returns float - test format_currency with negative amounts - test format_list with single item All tests must pass.\n",
+      "allowlist": [
+        "tests/test_integration.py"
+      ],
+      "read_context": [
+        "src/calculator.py",
+        "src/formatter.py"
+      ],
+      "definition_of_done": {
+        "command": "python3 -m pytest tests/test_integration.py -q",
+        "assertion": "passed"
+      }
+    }
+  ]
+}

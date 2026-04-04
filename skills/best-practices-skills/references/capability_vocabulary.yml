@@ -1,0 +1,138 @@
+# Standardized capability vocabulary for skill provides: field
+# Each capability is an "electron" in the skill's valence shell
+# Skills advertise what they provide; /skill-lab uses this to detect gaps
+
+capabilities:
+  # --- Core compute ---
+  llm-completion:
+    description: "Text/vision LLM inference"
+    providers: [scillm, codex]
+  embedding:
+    description: "Dense vector embeddings for semantic search"
+    providers: [embedding]
+
+  # --- Memory & knowledge ---
+  memory-recall:
+    description: "Recall prior solutions from knowledge graph"
+    providers: [memory]
+  memory-learn:
+    description: "Store new problem/solution pairs"
+    providers: [memory]
+  taxonomy-tagging:
+    description: "Extract federated taxonomy tags"
+    providers: [taxonomy]
+  edge-verification:
+    description: "Verify graph edges between documents"
+    providers: [edge-verifier]
+
+  # --- Research ---
+  web-search:
+    description: "Search the web for information"
+    providers: [brave-search, dogpile]
+  deep-research:
+    description: "Multi-source aggregated research"
+    providers: [dogpile]
+  arxiv-search:
+    description: "Search academic papers"
+    providers: [arxiv]
+  web-fetch:
+    description: "Fetch and extract web page content"
+    providers: [fetcher]
+
+  # --- Document processing ---
+  pdf-extraction:
+    description: "Extract structured content from PDFs"
+    providers: [extractor, review-pdf]
+  html-extraction:
+    description: "Extract structured content from HTML"
+    providers: [extract-html, extractor]
+  document-ingestion:
+    description: "Ingest documents into memory as QRA pairs"
+    providers: [doc2qra]
+  text-normalization:
+    description: "Normalize Unicode/encoding issues"
+    providers: [normalize]
+
+  # --- Media ---
+  audio-separation:
+    description: "Separate audio into stems"
+    providers: [create-stems]
+  voice-training:
+    description: "Train RVC voice models"
+    providers: [learn-voice, train-voice]
+  voice-conversion:
+    description: "Convert voice using RVC"
+    providers: [create-music, hum]
+  image-generation:
+    description: "Generate images via AI"
+    providers: [create-image]
+  video-transcription:
+    description: "Extract YouTube transcripts"
+    providers: [ingest-youtube]
+
+  # --- Security ---
+  security-scan:
+    description: "SAST, dependency audit, secrets detection"
+    providers: [hack, security-scan]
+  competitive-security:
+    description: "Red vs blue team competition"
+    providers: [battle]
+  continuous-security:
+    description: "Nightly self-hack orchestration"
+    providers: [monitor-security]
+
+  # --- Quality & testing ---
+  skill-validation:
+    description: "Validate skill against best-practices"
+    providers: [skills-ci, best-practices-skills]
+  hardening:
+    description: "No-vibes iterative debugging"
+    providers: [anvil]
+  competitive-selection:
+    description: "Docker-isolated competitive evaluation"
+    providers: [battle]
+  quality-audit:
+    description: "Stratified quality sampling"
+    providers: [quality-audit]
+
+  # --- Skill lifecycle ---
+  skill-creation:
+    description: "Create new skills (catalyst)"
+    providers: [prompt-lab, gpt-lab, classifier-lab]
+  skill-scaffolding:
+    description: "Generate skill structure from template"
+    providers: [best-practices-skills]
+  skill-broadcasting:
+    description: "Sync skills across IDEs"
+    providers: [skills-broadcast]
+  skill-monitoring:
+    description: "Monitor skill health and drift"
+    providers: [monitor-skills]
+
+  # --- Orchestration ---
+  task-planning:
+    description: "Create task files with quality gates"
+    providers: [plan]
+  task-orchestration:
+    description: "Execute task files with pre-hooks"
+    providers: [orchestrate]
+  progress-tracking:
+    description: "Real-time task progress monitoring"
+    providers: [task-monitor]
+  human-interview:
+    description: "Structured human Q&A forms"
+    providers: [interview]
+  docker-isolation:
+    description: "Isolated container execution"
+    providers: [battle, hack]
+
+  # --- Assessment ---
+  project-assessment:
+    description: "Critical project state evaluation"
+    providers: [assess]
+  code-review:
+    description: "Multi-provider code review"
+    providers: [review-code]
+  composition-rules:
+    description: "Rules for skill composition"
+    providers: [best-practices-skills]

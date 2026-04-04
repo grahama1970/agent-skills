@@ -1,0 +1,18 @@
+{
+  "providers": {
+    "perplexity": "DONE",
+    "arxiv": "DONE",
+    "brave": "DONE",
+    "youtube": "DONE",
+    "github": "DONE",
+    "codex": "TIMEOUT",
+    "openai": "SKIP",
+    "anthropic": "SKIP",
+    "gemini": "RUNNING",
+    "claude": "TIMEOUT",
+    "llm": "FAILED",
+    "synthesis": "RUNNING"
+  },
+  "last_msg": "Starting Codex Synthesis...",
+  "last_updated": "2026-02-05 11:53:16"
+}

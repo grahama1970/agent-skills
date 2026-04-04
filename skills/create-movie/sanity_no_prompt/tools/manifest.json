@@ -1,0 +1,20 @@
+{
+  "tools": [
+    {
+      "name": "image_generator",
+      "file": "sanity_no_prompt/tools/image_generator.py",
+      "purpose": "Generate images from visual descriptions"
+    },
+    {
+      "name": "audio_processor",
+      "file": "sanity_no_prompt/tools/audio_processor.py",
+      "purpose": "Add sound effects and music"
+    },
+    {
+      "name": "frame_assembler",
+      "file": "sanity_no_prompt/tools/frame_assembler.py",
+      "purpose": "Combine frames and audio into video"
+    }
+  ],
+  "timestamp": "2026-02-01T08:58:47.572031"
+}

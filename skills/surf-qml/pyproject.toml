@@ -1,0 +1,12 @@
+[project]
+name = "pi-skill-surf-qml"
+version = "0.1.0"
+description = "Runtime package for the surf-qml skill"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "loguru>=0.7.0,<0.7.3",
+    "PyGObject",
+    "python-dotenv>=1.0.0",
+    "pyyaml",
+    "typer>=0.9.0",
+]

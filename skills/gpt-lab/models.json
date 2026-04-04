@@ -1,0 +1,35 @@
+{
+  "candidate_models": [
+    {
+      "name": "Qwen/Qwen2.5-0.5B-Instruct",
+      "params_b": 0.5,
+      "type": "base",
+      "provider": "hf"
+    },
+    {
+      "name": "Qwen/Qwen3-0.6B",
+      "params_b": 0.6,
+      "type": "base",
+      "provider": "hf"
+    },
+    {
+      "name": "Qwen/Qwen2.5-1.5B-Instruct",
+      "params_b": 1.5,
+      "type": "base",
+      "provider": "hf"
+    },
+    {
+      "name": "HuggingFaceTB/SmolLM2-1.7B-Instruct",
+      "params_b": 1.7,
+      "type": "base",
+      "provider": "hf"
+    }
+  ],
+  "api_models": [
+    {
+      "name": "deepseek-v3.2",
+      "provider": "scillm",
+      "notes": "Chutes DeepSeek V3.2-TEE for prompted comparison"
+    }
+  ]
+}

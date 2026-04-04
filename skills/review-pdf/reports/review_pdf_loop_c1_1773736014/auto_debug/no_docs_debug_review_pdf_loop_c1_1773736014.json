@@ -1,0 +1,34 @@
+{
+  "run_id": "review_pdf_loop_c1_1773736014",
+  "timestamp": 1773736072,
+  "candidate_count": 3,
+  "fixture_count": 4,
+  "results": [
+    {
+      "candidate": "/mnt/storage12tb/extractor_corpus/engineering/12 NASA_SP-2016-6105 Rev 2.pdf",
+      "mode": "local_copy",
+      "status": "copied",
+      "fixture_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773736014/auto_debug/fixtures/source_001_12 NASA_SP-2016-6105 Rev 2.pdf"
+    },
+    {
+      "candidate": "/mnt/storage12tb/extractor_corpus/expansion_batch_1/downloads/23367e7ea65623f6878c988324ad3033cb07794fb35b41803c7c0786207349af.pdf",
+      "mode": "local_copy",
+      "status": "copied",
+      "fixture_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773736014/auto_debug/fixtures/source_002_23367e7ea65623f6878c988324ad3033cb07794fb35b41803c7c0786207349af.pdf"
+    },
+    {
+      "candidate": "/mnt/storage12tb/extractor_corpus/expansion_batch_1/downloads/4dc232444db0df36332795fb5f8605a016e4e3b2ffdb7a1e679710eaf6ad7588.pdf",
+      "mode": "local_copy",
+      "status": "copied",
+      "fixture_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773736014/auto_debug/fixtures/source_003_4dc232444db0df36332795fb5f8605a016e4e3b2ffdb7a1e679710eaf6ad7588.pdf"
+    },
+    {
+      "command": "cd \"/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-tricky\" && ./run.sh gauntlet --output \"/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773736014/auto_debug/fixtures/gauntlet_review_pdf_loop_c1_1773736014.pdf\"",
+      "returncode": 0,
+      "stdout_tail": "Created: /tmp/tmpg2420hux.pdf (9 false-table tricks)\nCreated: /tmp/tmpp6zqjupv.pdf (8 malformed-table tricks)\nCreated: /tmp/tmp07jak2m4.pdf (8 cursed-text tricks)\nCreated: /tmp/tmpyb2pedgm.pdf (layout-trap tricks)\nCreated: /tmp/tmpcqutjte8.pdf (9 requirements tricks)\nCreated: /tmp/tmpb78f67z1.pdf (3 math-noise tricks)\nCreated gauntlet: /home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773736014/auto_debug/fixtures/gauntlet_review_pdf_loop_c1_1773736014.pdf (all trick categories including requirements)",
+      "stderr_tail": "",
+      "mode": "fixture_tricky_gauntlet",
+      "fixture_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773736014/auto_debug/fixtures/gauntlet_review_pdf_loop_c1_1773736014.pdf"
+    }
+  ]
+}

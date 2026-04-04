@@ -1,0 +1,16 @@
+# prompt-lab-hash: pending
+# prompt-lab-eval: pending
+Your previous output failed validation.
+
+Validation errors:
+{errors}
+
+QUESTION: {question}
+ENTITIES: {entities}
+EVIDENCE:
+{evidence}
+
+Regenerate the full JSON object. Do not explain.
+
+OUTPUT:
+{"answer": "<synthesized answer>", "evidence_used": [<indices>]}

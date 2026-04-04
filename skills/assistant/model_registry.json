@@ -1,0 +1,1394 @@
+{
+  "validators": {
+    "qra-assessor": {
+      "confidence_threshold": 0.85,
+      "gpt_model_path": "/home/graham/.pi/skills/create-gpt/models/qra-assessor/gguf/model-Q4_K_M.gguf",
+      "ollama_model": "embry/qra-assessor",
+      "task_spec": "qra-assessor",
+      "input_signature": {
+        "required_fields": [
+          "question",
+          "answer"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": false,
+      "note": "Tier 1.5 GPT v3. QLoRA on Qwen2.5-3B-Instruct, 2715 examples, 2 epochs, train_loss=0.331, token_acc=91.3%. Q4_K_M GGUF (1.9GB). ChatML template fix applied. Smoke-tested: outputs structured JSON (grade/confidence/rationale). Trained 2026-03-15."
+    },
+    "episodic-session-scorer": {
+      "gpt_model_path": "~/.pi/models/shared-gpt/shared-validator-Q4_K_M.gguf",
+      "task_spec": "episodic-session-scorer",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "session_summary"
+        ]
+      }
+    },
+    "edge-relevance-scorer": {
+      "gpt_model_path": "~/.pi/models/shared-gpt/shared-validator-Q4_K_M.gguf",
+      "task_spec": "edge-relevance-scorer",
+      "confidence_threshold": 0.9,
+      "input_signature": {
+        "required_fields": [
+          "source_episode",
+          "target_lesson"
+        ]
+      }
+    },
+    "extraction-quality-assessor": {
+      "gpt_model_path": "~/.pi/skills/create-gpt/models/extraction-quality-assessor/gguf/model-Q4_K_M.gguf",
+      "task_spec": "extraction-quality-assessor",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "required_fields": [
+          "text",
+          "asset_type"
+        ]
+      },
+      "preferred_scopes": [
+        "margaret_chen"
+      ],
+      "shadow_mode": true,
+      "note": "Trained QLoRA on Qwen2.5-1.5B, loss=0.105, 97.4% token accuracy. Adapter at models/extraction-quality-assessor/sft/"
+    },
+    "cybersecurity-extraction-auditor": {
+      "gpt_model_path": "~/.pi/skills/create-gpt/models/cybersecurity-extraction-auditor/gguf/model-Q4_K_M.gguf",
+      "task_spec": "cybersecurity-extraction-auditor",
+      "confidence_threshold": 0.88,
+      "input_signature": {
+        "required_fields": [
+          "text",
+          "asset_type"
+        ]
+      },
+      "preferred_scopes": [
+        "jennifer_cheung"
+      ],
+      "shadow_mode": true,
+      "note": "Trained QLoRA on Qwen2.5-1.5B, loss=0.153, 95.7% token accuracy. Adapter at models/cybersecurity-extraction-auditor/sft/"
+    },
+    "vuln-gpt-analyzer": {
+      "gpt_model_path": "",
+      "task_spec": "vuln-gpt-analyzer",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "required_fields": [
+          "function_source",
+          "vulnerability_type"
+        ]
+      },
+      "note": "RepoAudit-style single-function vulnerability analysis"
+    },
+    "sparta-pipeline-validator": {
+      "gpt_model_path": "~/.pi/skills/create-gpt/models/sparta-pipeline-validator/gguf/model-Q4_K_M.gguf",
+      "task_spec": "sparta-pipeline-validator",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "required_fields": [
+          "item_type",
+          "content"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": true,
+      "note": "Trained QLoRA on Qwen2.5-1.5B, loss=0.306, 93.3% token accuracy. 2010 pipeline-validator labels across 4 dimensions."
+    },
+    "chain-rationale": {
+      "gpt_model_path": "~/.pi/skills/create-gpt/models/chain-rationale/gguf/model-Q4_K_M.gguf",
+      "task_spec": "chain-rationale",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "request"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "Rationale GPT: given user request, predicts skill chain + explains WHY. Trained from 668 transcript-mined chains via QLoRA on Qwen2.5-1.5B. Nightly retrain from chain_miner."
+    },
+    "stress-test-grader": {
+      "gpt_model_path": "",
+      "task_spec": "stress-test-grader",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "required_fields": [
+          "question",
+          "expected_action",
+          "actual_action",
+          "answer_text"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": true,
+      "note": "Legacy A/B/C/F grader. Replaced by sparta_stress_evidence (evidence-based 4-state). Train GPT via /create-gpt from exported labels."
+    },
+    "sparta_stress_evidence": {
+      "gpt_model_path": "",
+      "classifier_model_path": "~/.pi/skills/sparta-stress-test/models/sparta_stress_evidence/sklearn_pipeline.joblib",
+      "task_spec": "sparta_stress_evidence",
+      "confidence_threshold": 0.6,
+      "cv_accuracy": 0.9276,
+      "wilson_lb": 0.8781,
+      "macro_f1": 0.866,
+      "n_samples": 290,
+      "model_type": "tabular_sklearn",
+      "backbone": "random_forest",
+      "augmented_with_db": true,
+      "input_signature": {
+        "required_fields": [
+          "question"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": false,
+      "note": "PROMOTED. Evidence-based 4-state grader (Pass/Ambiguous/Fail/Absurd). DB-augmented RandomForest (200 trees, balanced). 5-fold CV: 92.8% acc, Wilson LB 0.878 (99% CI), macro F1 0.866. Passes Wilson gate (>=0.85, n>=200). Teacher: evidence_grader.py (deterministic, ~800ms). Features: BM25 scores + entity extraction from ArangoDB (~200ms)."
+    },
+    "qra-extraction-from-sections": {
+      "gpt_model_path": "",
+      "task_spec": "qra-extraction-from-sections",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "section_title",
+          "section_content"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey"
+      ],
+      "shadow_mode": true,
+      "note": "Shadow gateway for doc2qra batch extraction. Routes through cascade before scillm."
+    },
+    "sparta-question-miner": {
+      "gpt_model_path": "",
+      "task_spec": "sparta-question-miner",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "source_type",
+          "content"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey"
+      ],
+      "shadow_mode": true,
+      "note": "Shadow gateway for sparta-stress-test question mining. Routes through cascade before scillm."
+    },
+    "taxonomy-prompt-evaluator": {
+      "gpt_model_path": "",
+      "task_spec": "taxonomy-prompt-evaluator",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "messages"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey"
+      ],
+      "shadow_mode": true,
+      "note": "Shadow gateway for prompt-lab LLM calls. Routes through cascade before scillm."
+    },
+    "vision-ocr-extractor": {
+      "gpt_model_path": "",
+      "task_spec": "vision-ocr-extractor",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "required_fields": [
+          "image_b64",
+          "alt_text"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "Shadow gateway for extract-html VLM calls. VLM may bypass cascade (multimodal)."
+    },
+    "steering-preset-ranker": {
+      "gpt_model_path": "",
+      "task_spec": "steering-preset-ranker",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "user_text",
+          "presets"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "Shadow gateway for train-convo-steering DeepSeek judge calls."
+    },
+    "taxonomy-bridge-assessor": {
+      "gpt_model_path": "",
+      "task_spec": "taxonomy-bridge-assessor",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "required_fields": [
+          "text",
+          "bridge_attributes"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey"
+      ],
+      "shadow_mode": true,
+      "note": "Shadow gateway for monitor-taxonomy tier-2 Brandon teacher calls."
+    },
+    "teacher-preflight-validator": {
+      "gpt_model_path": "",
+      "task_spec": "teacher-preflight-validator",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "text",
+          "asset_type"
+        ]
+      },
+      "preferred_scopes": [
+        "margaret_chen",
+        "jennifer_cheung"
+      ],
+      "shadow_mode": true,
+      "note": "Shadow gateway for extractor-quality-check teacher preflight LLM calls."
+    },
+    "sparta-rationale": {
+      "gpt_model_path": "",
+      "sglang_model": "sparta-rationale",
+      "sglang_endpoint": "http://localhost:30000/v1/chat/completions",
+      "adapter_path": "/mnt/storage12tb/media/agents/shared/sparta-intent/gpt/rationale/sft/",
+      "task_spec": "sparta-rationale",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "required_fields": [
+          "question",
+          "entities"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": true,
+      "note": "Qwen2.5-0.5B + QLoRA (18MB adapter) served via SGLang on port 30000. Generates structured rationale explaining WHY controls map to a query. Trained on 8,000 QRA examples, loss=0.220, 94.5% token accuracy."
+    },
+    "sparta-intent-llm-fallback": {
+      "gpt_model_path": "",
+      "task_spec": "sparta-intent-llm-fallback",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "required_fields": [
+          "query"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": true,
+      "note": "Shadow gateway for sparta-intent LLM fallback when classifiers can't handle a query."
+    },
+    "music-theory-analyzer": {
+      "gpt_model_path": "",
+      "task_spec": "music-theory-analyzer",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "required_fields": [
+          "audio_features"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "Shadow gateway for review-music LLM analysis of audio features."
+    },
+    "glossary-entry-extractor": {
+      "gpt_model_path": "",
+      "task_spec": "glossary-entry-extractor",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "required_fields": [
+          "text"
+        ]
+      },
+      "preferred_scopes": [
+        "extractor"
+      ],
+      "shadow_mode": true,
+      "note": "Extract term\u2192definition pairs from glossary sections. Tier 2 scillm teacher initially; trains local GPT after \u2265500 labeled examples via /assistant-lab."
+    },
+    "proof-rationale": {
+      "gpt_model_path": "",
+      "task_spec": "proof-rationale",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "requirement_text",
+          "control_id"
+        ]
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": true,
+      "note": "Tier 1.5 rationale GPT: explains WHY a requirement can/cannot be formally verified in Lean4. QLoRA on Qwen2.5-1.5B. Triggered when proof-compilable classifier escalates. Training data from scripts/build_proof_training_data.py."
+    },
+    "chart-type-extractor": {
+      "gpt_model_path": "",
+      "task_spec": "chart-type-extractor",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "required_fields": [
+          "query"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "Extracts explicitly named chart type from user query (e.g., 'sankey chart' \u2192 sankey, 'spider chart' \u2192 radar). Returns null when no explicit type mentioned. Tier 0 is regex against d3_catalog names+labels. Tier 0.5 trains SetFit from shadow labels. Handles synonyms (spider\u2192radar, mosaic\u2192marimekko). Runs BEFORE viz-type-selector in the cascade."
+    },
+    "viz-type-selector": {
+      "gpt_model_path": "",
+      "task_spec": "viz-type-selector",
+      "task_type": "classification",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "required_fields": [
+          "query",
+          "data_shape"
+        ]
+      },
+      "tier_0": {
+        "type": "heuristic",
+        "method": "d3_catalog.match_keywords",
+        "note": "Keyword matching against D3 catalog viz type names and synonyms"
+      },
+      "tier_0_5": {
+        "type": "classifier",
+        "method": "tfidf_logreg",
+        "model_path": "/home/graham/.pi/models/classifiers/viz_type_selector_classifier.joblib",
+        "status": "trained",
+        "note": "TF-IDF + logistic regression, 3071 training examples"
+      },
+      "tier_1_5": {
+        "type": "gpt",
+        "method": "qlora_finetune",
+        "status": "future",
+        "note": "Small fine-tuned model (Qwen2.5-0.5B/1.5B + QLoRA), to be trained via /create-gpt"
+      },
+      "tier_2": {
+        "type": "scillm_teacher",
+        "method": "deepseek-v3",
+        "status": "active",
+        "note": "DeepSeek-V3 judges optimal viz type. Teacher labels bootstrap lower tiers."
+      },
+      "training_data": {
+        "dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/assistant/training_data/viz_type_selector",
+        "train": "train.jsonl",
+        "val": "val.jsonl",
+        "test": "test.jsonl",
+        "train_count": 3071,
+        "val_count": 384,
+        "test_count": 384
+      },
+      "labels": [
+        "alluvial",
+        "area",
+        "bar",
+        "beeswarm",
+        "box_plot",
+        "bubble",
+        "calendar",
+        "candlestick",
+        "chord",
+        "circle_packing",
+        "confusion_matrix",
+        "diverging_bar",
+        "donut",
+        "dot_plot",
+        "force_graph",
+        "funnel",
+        "gauge",
+        "grouped_bar",
+        "hbar",
+        "heatmap",
+        "histogram",
+        "horizon",
+        "icicle",
+        "indented_tree",
+        "line",
+        "multi_line",
+        "parallel_coords",
+        "pie",
+        "qq_plot",
+        "radar",
+        "radial_bar",
+        "radial_tree",
+        "ridgeline",
+        "roc_curve",
+        "sankey",
+        "scatter",
+        "slope",
+        "sparkline",
+        "stacked_area",
+        "stacked_bar",
+        "streamgraph",
+        "sunburst",
+        "table",
+        "text",
+        "tidy_tree",
+        "treemap",
+        "unknown",
+        "violin",
+        "waterfall",
+        "word_cloud"
+      ],
+      "shadow_mode": true,
+      "note": "Cascade task for 5ft answer canvas. Given user query + data shape (row_count, columns, value_range), selects optimal D3 viz type. Only runs when chart-type-extractor returns null (no explicit type). 50 labels across 3839 training examples."
+    },
+    "page-anticipation": {
+      "gpt_model_path": "",
+      "sglang_model": "page-anticipation",
+      "sglang_endpoint": "http://localhost:30000/v1/chat/completions",
+      "adapter_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-gpt/models/page-anticipation/sft/",
+      "task_spec": "page-anticipation",
+      "task_type": "classification",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "required_fields": [
+          "persona",
+          "mode",
+          "topic"
+        ]
+      },
+      "preferred_scopes": [
+        "embry"
+      ],
+      "shadow_mode": false,
+      "note": "Tier 1.5 GPT: predicts Stream Deck page from persona/mode/topic context. Qwen2.5-0.5B + QLoRA (18MB adapter). Loss=0.169, 97.1% token accuracy, 100% holdout accuracy on 201 examples. 14 classification labels. Trained 2026-02-25."
+    },
+    "data-sufficiency-gate": {
+      "gpt_model_path": "",
+      "task_spec": "data-sufficiency-gate",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "query",
+          "data_summary"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "Shadow gateway for 5ft answer canvas. Given user query + data summary (sources_available, row_count, null_pct, column_types), determines if sufficient data exists to answer. Returns SUFFICIENT/PARTIAL/INSUFFICIENT + reason. scillm teacher initially; trains local GPT after \u2265200 labeled examples."
+    },
+    "paper-section-reviewer": {
+      "gpt_model_path": "",
+      "task_spec": "paper-section-reviewer",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "section_text",
+          "section_title"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "Reviews paper sections on 5 dimensions (accuracy, voice, completeness, clarity, humanness). Scores 0-10 per dimension with issues and strengths. scillm teacher initially; trains QLoRA GPT after >=200 labeled section reviews via /create-gpt. Consumed by /review-paper and /paper-lab convergence loops."
+    },
+    "humanization-rewriter": {
+      "gpt_model_path": "",
+      "task_spec": "humanization-rewriter",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "required_fields": [
+          "sentence",
+          "ai_signals"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "Rewrites AI-flagged sentences to sound more human while preserving facts. Input: sentence + detected AI signals (burstiness, buzzwords, transitions). Output: rewritten sentence + explanation. scillm teacher only initially \u2014 generation quality requires Tier 2. Train QLoRA after >=500 labeled rewrites."
+    },
+    "bridge-tagger": {
+      "confidence_threshold": 0.85,
+      "gpt_model_path": "/home/graham/.pi/skills/create-gpt/models/bridge-tagger/gguf/model-Q4_K_M.gguf",
+      "task_spec": "bridge-tagger",
+      "input_signature": {
+        "required_fields": []
+      }
+    },
+    "heart-rationale": {
+      "confidence_threshold": 0.8,
+      "gpt_model_path": "~/.pi/skills/create-gpt/models/heart-rationale/gguf/model-Q4_K_M.gguf",
+      "ollama_model": "embry/heart-rationale",
+      "task_spec": "heart-rationale",
+      "input_signature": {
+        "required_fields": [
+          "text",
+          "label"
+        ]
+      },
+      "preferred_scopes": [
+        "lessons",
+        "operational"
+      ],
+      "shadow_mode": false,
+      "note": "Heart T1.5 GPT rationale. QLoRA on Qwen2.5-1.5B-Instruct, 2985 training examples (DeepSeek-V3 teacher), 1 epoch, train_loss=0.794, token_accuracy=87.4%. Q4_K_M GGUF (986MB). Prompt validated via /prompt-lab eval-heart-rationale. Trained 2026-03-15."
+    },
+    "mind-rationale": {
+      "confidence_threshold": 0.8,
+      "gpt_model_path": "~/.pi/skills/create-gpt/models/mind-rationale/gguf/model-Q4_K_M.gguf",
+      "ollama_model": "embry/mind-rationale",
+      "task_spec": "mind-rationale",
+      "input_signature": {
+        "required_fields": [
+          "text",
+          "label"
+        ]
+      },
+      "preferred_scopes": [
+        "sparta",
+        "qra",
+        "sparta_qra",
+        "compliance"
+      ],
+      "shadow_mode": false,
+      "note": "Mind T1.5 GPT rationale. QLoRA on Qwen2.5-1.5B-Instruct, 1795 training examples (DeepSeek-V3 teacher), 1 epoch, train_loss=0.946, token_accuracy=85.5%. Q4_K_M GGUF. Prompt validated via /prompt-lab. Trained 2026-03-15."
+    }
+  },
+  "classifiers": {
+    "bridge-tagger": {
+      "model_path": "/home/graham/.pi/skills/assistant/models/taxonomy-bridge-v6/",
+      "type": "distilbert-multilabel",
+      "confidence_threshold": 0.5,
+      "per_class_thresholds": {
+        "Corruption": 0.7,
+        "Fragility": 0.6,
+        "Loyalty": 0.8,
+        "Precision": 0.2,
+        "Resilience": 0.8,
+        "Stealth": 0.6
+      },
+      "input_signature": {
+        "type": "text",
+        "task_hint": "bridge-tagger"
+      },
+      "macro_f1": 0.9974,
+      "accuracy": 0.9961,
+      "training_samples": 110000,
+      "training_source": "218K SPARTA QRAs from ArangoDB, 3x rare-class upsampling, focal loss gamma=2.0",
+      "classes": [
+        "Corruption",
+        "Fragility",
+        "Loyalty",
+        "Precision",
+        "Resilience",
+        "Stealth"
+      ],
+      "shadow_mode": false,
+      "multi_label": true,
+      "note": "PROMOTED. bridge-v6. DistilBERT multi-label (BCEWithLogitsLoss + focal gamma=2.0). 110K training samples. Leakage-free tune/test split (seed=42). Honest F1=0.9974 (test_half), Wilson LB95=0.9970. All 6 classes >0.99 F1. Retrained 2026-03-15.",
+      "retrained_at": "2026-03-15",
+      "previous_model": "bridge-v5 (leaked F1=0.9997)",
+      "previous_macro_f1": 0.9997,
+      "wilson_score_lower": 0.997,
+      "threshold_leakage_fixed": true
+    },
+    "heart-tagger": {
+      "model_path": "/mnt/storage12tb/media/agents/shared/sparta-intent/classifiers/models/heart_classifier/",
+      "type": "distilbert",
+      "confidence_threshold": 0.5,
+      "per_class_thresholds": {
+        "anger": 0.5,
+        "fear": 0.5,
+        "joy": 0.5,
+        "neutral": 0.5,
+        "sadness": 0.5,
+        "trust": 0.5
+      },
+      "input_signature": {
+        "type": "text",
+        "task_hint": "heart-tagger"
+      },
+      "classes": [
+        "anger",
+        "fear",
+        "joy",
+        "neutral",
+        "sadness",
+        "trust"
+      ],
+      "preferred_scopes": [
+        "embry",
+        "margaret_chen",
+        "jennifer_cheung",
+        "noah_evans",
+        "paul_nakamura",
+        "persona",
+        "tom",
+        "heart"
+      ],
+      "shadow_mode": false,
+      "multi_label": false,
+      "training_status": "v2_6class_deployed",
+      "v2_metrics": {
+        "accuracy": 0.911,
+        "macro_f1": 0.857,
+        "latency_p50_ms": 2.35,
+        "wilson_lb": 0.897,
+        "classes_trained": [
+          "anger",
+          "fear",
+          "joy",
+          "neutral",
+          "sadness",
+          "trust"
+        ],
+        "backbone": "distilbert-base-uncased",
+        "training_samples": 2540,
+        "trained_date": "2026-03-15"
+      },
+      "note": "v2 6-class heart-tagger. Plutchik-grounded. Runs CONCURRENTLY with compliance-router. Training: 1989 DeepSeek-labeled real transcripts + 1000 synthetic emotional coloring. See heart_taxonomy_v1_decision.md."
+    },
+    "mind-tagger": {
+      "model_path": "/home/graham/.pi/skills/assistant/models/taxonomy-tactical-v8/",
+      "type": "distilbert-multilabel",
+      "confidence_threshold": 0.5,
+      "per_class_thresholds": {
+        "Detect": 0.5,
+        "Evade": 0.8,
+        "Exploit": 0.65,
+        "Harden": 0.4,
+        "Isolate": 0.7,
+        "Model": 0.75,
+        "Persist": 0.8,
+        "Restore": 0.8
+      },
+      "input_signature": {
+        "type": "text",
+        "task_hint": "mind-tagger"
+      },
+      "macro_f1": 0.8498,
+      "accuracy": 0.6306,
+      "training_samples": 103916,
+      "training_source": "218K SPARTA QRAs from ArangoDB, upsampled rare labels (Evade/Persist/Restore) 3x, focal loss gamma=2.0",
+      "classes": [
+        "Detect",
+        "Evade",
+        "Exploit",
+        "Harden",
+        "Isolate",
+        "Model",
+        "Persist",
+        "Restore"
+      ],
+      "preferred_scopes": [
+        "sparta",
+        "qra",
+        "sparta_qra",
+        "brandon_bailey",
+        "compliance",
+        "mind"
+      ],
+      "shadow_mode": true,
+      "multi_label": true,
+      "note": "SHADOW MODE. tactical-v8. DistilBERT multi-label. 104K training samples. Leakage-free tune/test split (seed=42). Honest F1=0.8498 (test_half), Wilson LB95=0.8472 \u2014 BELOW promotion gate (0.85). Weak classes: Isolate=0.80, Restore=0.80, Model=0.81. Strong: Exploit=0.93, Evade=0.88. Retrained 2026-03-15. Previous leaked F1=0.9644 (12-point inflation from threshold leakage on imbalanced data).",
+      "retrained_at": "2026-03-15",
+      "wilson_score_lower": 0.8472,
+      "threshold_leakage_fixed": true,
+      "previous_model": "tactical-v7 (leaked F1=0.9644)",
+      "previous_macro_f1": 0.9644,
+      "per_label_f1": {
+        "Detect": 0.83,
+        "Evade": 0.885,
+        "Exploit": 0.928,
+        "Harden": 0.884,
+        "Isolate": 0.799,
+        "Model": 0.807,
+        "Persist": 0.865,
+        "Restore": 0.801
+      }
+    },
+    "stream-classifier": {
+      "model_path": "~/.pi/models/classifiers/stream_classifier/",
+      "type": "distilbert",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "stream"
+      }
+    },
+    "scope-router": {
+      "model_path": "~/.pi/models/classifiers/scope_router/",
+      "type": "distilbert",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "route"
+      }
+    },
+    "extraction-error-classifier": {
+      "model_path": "~/.pi/models/classifiers/extraction_error_classifier/",
+      "type": "distilbert",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "extraction_error"
+      }
+    },
+    "header-verdict": {
+      "task_spec": "header-verdict",
+      "model_type": "sklearn_random_forest",
+      "model_path": "/home/graham/.pi/models/classifiers/header_verdict.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.85,
+      "tier": "0.5",
+      "input_signature": {
+        "type": "text",
+        "task_hint": "header_classification",
+        "required_fields": [
+          "text_len",
+          "has_number_prefix",
+          "font_size",
+          "size_ratio",
+          "is_bold",
+          "ends_with_period",
+          "ends_with_colon",
+          "ends_with_other_punct",
+          "has_bullet_char",
+          "is_caption_pattern",
+          "is_multi_sentence",
+          "word_count",
+          "title_case_ratio",
+          "is_all_caps",
+          "numbering_depth",
+          "has_formal_prefix",
+          "has_parentheses",
+          "is_too_long"
+        ],
+        "n_features": 18
+      },
+      "output_classes": [
+        "Accept",
+        "Reject",
+        "Escalate"
+      ],
+      "metrics": {
+        "macro_f1": 0.9979,
+        "test_samples": 52934,
+        "training_samples": 423472
+      },
+      "shadow_mode": false,
+      "registered_date": "2026-03-13",
+      "note": "PROMOTED. RandomForest (200 trees), macro-F1=0.9979. Trained on 529,340 shadow labels from 2,819 PDFs. 18 numeric features from Rust block_classifier HeaderFeatures. Replaces shadow-only tier 0 heuristic."
+    },
+    "requirement-sentence": {
+      "model_path": "~/.pi/models/classifiers/requirement_sentence.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "requirement_detection"
+      }
+    },
+    "vuln-classifier": {
+      "model_path": "~/.pi/models/classifiers/vuln_classifier/",
+      "type": "distilbert",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "vulnerability_triage"
+      },
+      "note": "Trained from Brandon labels. Answers: true_positive | false_positive"
+    },
+    "severity-classifier": {
+      "model_path": "~/.pi/models/classifiers/severity_classifier/",
+      "type": "distilbert",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "severity_assessment"
+      },
+      "note": "Answers: critical | high | medium | low"
+    },
+    "exploitability-classifier": {
+      "model_path": "~/.pi/models/classifiers/exploitability_classifier/",
+      "type": "distilbert",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "exploitability_assessment"
+      },
+      "note": "Answers: exploitable | not_exploitable | needs_context"
+    },
+    "sparta-ambiguity": {
+      "model_path": "/mnt/storage12tb/media/agents/shared/sparta-intent/classifiers/models/ambiguity/best",
+      "onnx_path": "/mnt/storage12tb/media/agents/shared/sparta-intent/classifiers/models/ambiguity/best/model.onnx",
+      "type": "distilbert",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "sparta-ambiguity"
+      },
+      "accuracy": 0.9982,
+      "f1": 0.9967,
+      "training_samples": 8000,
+      "classes": [
+        "CLARIFY",
+        "QUERY"
+      ],
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": false,
+      "note": "DistilBERT fine-tuned on 8K examples. 99.82% accuracy, 99.67% F1. ONNX exported. Promoted from shadow \u2014 replaces sklearn baseline (94% CV)."
+    },
+    "sparta-entity-extractor": {
+      "model_path": "/mnt/storage12tb/media/agents/shared/sparta-intent/classifiers/models/entity_extractor/ner/",
+      "onnx_path": "/mnt/storage12tb/media/agents/shared/sparta-intent/classifiers/models/entity_extractor/ner/model.onnx",
+      "hallucination_model_path": "/mnt/storage12tb/media/agents/shared/sparta-intent/classifiers/models/entity_extractor/hallucination_detector/hallucination_gbm.onnx",
+      "type": "deberta-ner",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "sparta_entity_extraction"
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": false,
+      "note": "DeBERTa-v3-small NER (F1=0.9998) + GBM hallucination detector (96.55%). Extracts SPARTA/NIST/CWE/ATT&CK/D3FEND/CM/ESA entity IDs. ONNX exported. Promoted from shadow."
+    },
+    "sparta-intent": {
+      "model_path": "/home/graham/.pi/models/classifiers/sparta_intent_classifier.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "sparta-intent"
+      },
+      "cv_accuracy": 0.44,
+      "training_samples": 50,
+      "classes": [
+        "apply_controls",
+        "identify_general",
+        "identify_mitigation",
+        "identify_vulnerability",
+        "implementation",
+        "mitigation_strategy",
+        "technical_query",
+        "understand_control",
+        "understand_defense",
+        "understand_general",
+        "understand_impact",
+        "understand_relationship"
+      ],
+      "shadow_mode": true,
+      "note": "Auto-trained from 50 teacher labels. CV=44.0%"
+    },
+    "skill-chain-router": {
+      "model_path": "/home/graham/.pi/models/classifiers/skill_category_classifier.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.15,
+      "shadow_mode": true,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "skill-chain-router"
+      },
+      "cv_accuracy": 0.697,
+      "training_samples": 3745,
+      "model_type": "category_classifier",
+      "num_categories": 13,
+      "classes": [
+        "assessment",
+        "compliance",
+        "consume",
+        "creative",
+        "interaction",
+        "memory",
+        "monitoring",
+        "ops",
+        "orchestration",
+        "pipeline",
+        "research",
+        "training",
+        "voice"
+      ],
+      "note": "Category classifier (13 categories). Augmented training data. CV=69.7%. Shadow mode compares vs scillm teacher."
+    },
+    "pdf-profile-detector": {
+      "model_path": "",
+      "type": "sklearn",
+      "confidence_threshold": 0.85,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "pdf_profile_detection",
+        "required_fields": [
+          "page_count",
+          "file_size_mb",
+          "first_page_text"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "PDF domain/preset classifier. Tier 0 heuristic active. Classifier trains from shadow labels via /create-classifier after 200+ samples."
+    },
+    "pdf-extraction-strategy": {
+      "model_path": "",
+      "type": "sklearn",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "pdf_extraction_strategy",
+        "required_fields": [
+          "profile"
+        ]
+      },
+      "shadow_mode": true,
+      "note": "PDF extraction strategy selector (ocr/fast/accurate). Tier 0 heuristic active. Classifier trains from shadow labels after 200+ samples."
+    },
+    "table-strategy-selector": {
+      "confidence_threshold": 0.85,
+      "model_path": "/home/graham/workspace/experiments/extractor/models/table-strategy-classifier/model.joblib",
+      "type": "sklearn",
+      "input_signature": {
+        "type": "text"
+      }
+    },
+    "qra-assessor": {
+      "model_path": "/home/graham/.pi/models/classifiers/qra_grade_classifier.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "qra-assessor"
+      },
+      "cv_accuracy": 0.8497,
+      "training_samples": 53,
+      "classes": [
+        "FAIL",
+        "PARTIAL",
+        "PASS"
+      ],
+      "shadow_mode": true,
+      "note": "Auto-trained from 53 teacher labels. CV=85.0%"
+    },
+    "proof-compilable": {
+      "model_path": "~/.pi/models/classifiers/proof_compilable/",
+      "type": "distilbert",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "proof_compilable"
+      },
+      "classes": [
+        "compilable",
+        "not_compilable"
+      ],
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": true,
+      "note": "Tier 0.5 binary classifier: routes requirement-control pairs to Lean4 proof pipeline or skips. DistilBERT, ~5ms inference. Bootstrapped from HF aerospace datasets + F-36 datalake + scillm teacher labels. Escalates to proof-rationale GPT when confidence < 0.80."
+    },
+    "canvas-intent": {
+      "model_path": "/home/graham/.pi/models/classifiers/canvas_intent_setfit",
+      "type": "setfit",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "canvas-intent"
+      },
+      "accuracy": 0.9449,
+      "training_samples": 2296,
+      "classes": [
+        "CODE",
+        "COMPARE",
+        "EXPLAIN",
+        "NAVIGATE",
+        "QUERY",
+        "SEARCH",
+        "VISUALIZE"
+      ],
+      "shadow_mode": false,
+      "fallback_model_path": "/home/graham/.pi/models/classifiers/canvas_intent_classifier.joblib",
+      "fallback_type": "sklearn",
+      "note": "SetFit (all-MiniLM-L6-v2) retrained 2026-02-28 with 7 classes incl CODE. HF CLINC150 + StackOverflow + compound examples. Val accuracy=94.5%."
+    },
+    "5ft-intent": {
+      "model_path": "/home/graham/.pi/models/classifiers/5ft_intent_classifier.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "5ft-intent"
+      },
+      "cv_accuracy": 0.525,
+      "training_samples": 120,
+      "classes": [
+        "brandon_bailey:analytical",
+        "brandon_bailey:knowledge",
+        "embry:analytical",
+        "embry:knowledge",
+        "embry:status",
+        "jennifer_cheung:analytical",
+        "jennifer_cheung:knowledge",
+        "margaret_chen:analytical",
+        "margaret_chen:knowledge",
+        "noah_evans:analytical",
+        "noah_evans:knowledge",
+        "paul_nakamura:analytical",
+        "paul_nakamura:knowledge"
+      ],
+      "shadow_mode": true,
+      "note": "Auto-trained from 120 teacher labels. CV=52.5%"
+    },
+    "5ft-scope": {
+      "model_path": "/home/graham/.pi/models/classifiers/5ft_scope_classifier.joblib",
+      "type": "sklearn",
+      "pipeline": "FeatureUnion(word_tfidf+char_tfidf) \u2192 CalibratedClassifierCV(LinearSVC)",
+      "confidence_threshold": 0.25,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "5ft-scope"
+      },
+      "cv_accuracy": 0.867,
+      "training_samples": 462,
+      "training_source": "curated_only (labels_f36.jsonl + labels_f36_llm.jsonl + labels_f36_llm_v2.jsonl)",
+      "classes": [
+        "brandon_bailey",
+        "embry",
+        "jennifer_cheung",
+        "margaret_chen",
+        "noah_evans",
+        "paul_nakamura"
+      ],
+      "shadow_mode": true,
+      "note": "Word+Char TF-IDF \u2192 CalibratedSVC. 462 curated samples. CV=86.7% (\u00b12.1%). Mined data degrades accuracy."
+    },
+    "5ft-type": {
+      "model_path": "/home/graham/.pi/models/classifiers/5ft_type_classifier.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "5ft-type"
+      },
+      "cv_accuracy": 0.9512,
+      "training_samples": 4470,
+      "classes": [
+        "analytical",
+        "knowledge",
+        "status"
+      ],
+      "shadow_mode": true,
+      "note": "Auto-trained from 4470 teacher labels. CV=95.1%"
+    },
+    "lean4_provable": {
+      "model_path": "/home/graham/.pi/models/classifiers/lean4_provable_classifier.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "lean4_provable"
+      },
+      "cv_accuracy": 0.9382,
+      "training_samples": 3476,
+      "classes": [
+        "formalizable",
+        "not_formalizable"
+      ],
+      "shadow_mode": false,
+      "note": "Auto-trained from 3476 teacher labels. CV=93.8%. Shadow disabled \u2014 mature classifier, scillm teacher adds 18s latency for no live benefit."
+    },
+    "viz-type-selector": {
+      "model_path": "/home/graham/.pi/models/classifiers/viz_type_setfit",
+      "type": "setfit",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "viz-type-selector"
+      },
+      "accuracy": 0.9063,
+      "training_samples": 2875,
+      "fallback_model_path": "/home/graham/.pi/models/classifiers/viz_type_selector_classifier.joblib",
+      "fallback_type": "sklearn",
+      "fallback_note": "sklearn model CV=93.6% on 6381 samples, but requires sklearn>=1.8.0",
+      "classes": [
+        "area",
+        "bar",
+        "beeswarm",
+        "box_plot",
+        "bubble",
+        "calendar",
+        "chord",
+        "confusion_matrix",
+        "diverging_bar",
+        "donut",
+        "dot_plot",
+        "force_graph",
+        "funnel",
+        "gauge",
+        "grouped_bar",
+        "hbar",
+        "heatmap",
+        "histogram",
+        "line",
+        "multi_line",
+        "parallel_coords",
+        "pie",
+        "radar",
+        "ridgeline",
+        "roc_curve",
+        "sankey",
+        "scatter",
+        "slope",
+        "sparkline",
+        "stacked_area",
+        "stacked_bar",
+        "streamgraph",
+        "sunburst",
+        "table",
+        "text",
+        "tidy_tree",
+        "treemap",
+        "violin",
+        "waterfall",
+        "word_cloud"
+      ],
+      "shadow_mode": false,
+      "note": "SetFit (all-MiniLM-L6-v2) trained on 2875 samples, 40 classes, val accuracy=90.6%. Replaces sklearn model with version mismatch."
+    },
+    "lie-detector": {
+      "model_path": "/mnt/storage12tb/skills/lie-detector/models/setfit-v1",
+      "type": "setfit",
+      "backbone": "sentence-transformers/all-MiniLM-L6-v2",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "lie-detection"
+      },
+      "classes": [
+        "honest",
+        "gaming",
+        "drift"
+      ],
+      "shadow_mode": true,
+      "shadow_file": "/mnt/storage12tb/skills/lie-detector/shadow.jsonl",
+      "note": "Few-shot lie detection: honest/gaming/drift. Seed: 2026-02-28 incident + synthetic. Untrained until first ./run.sh train."
+    },
+    "compliance-router": {
+      "model_path": "/mnt/storage12tb/media/agents/shared/sparta-intent/classifiers/models/compliance_classifier/best_model",
+      "type": "distilbert",
+      "confidence_threshold": 0.7,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "compliance-routing"
+      },
+      "accuracy": 0.984,
+      "training_samples": 481,
+      "classes": [
+        "compliance",
+        "not_compliance"
+      ],
+      "preferred_scopes": [
+        "brandon_bailey",
+        "sparta"
+      ],
+      "shadow_mode": false,
+      "note": "Binary compliance question router. DistilBERT, 3.9ms latency, F1=0.984. Routes compliance questions to auto-trigger /memory clarify + evidence validation. Trained on 481 examples (237 SPARTA QRAs + 244 negatives across greetings/coding/ops/creative/research)."
+    },
+    "ai-text-detector": {
+      "model_path": "",
+      "type": "sklearn",
+      "confidence_threshold": 0.7,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "ai-text-detection"
+      },
+      "classes": [
+        "ai_generated",
+        "human_written",
+        "mixed"
+      ],
+      "shadow_mode": true,
+      "note": "Sentence-level AI text detection. Tier 0 is deterministic (burstiness, diversity, buzzwords from /review-paper metrics.py). Classifier trains from shadow labels after >=500 samples. Training data: /review-paper humanization signals vs arxiv benchmark corpus human papers."
+    },
+    "url-content-quality": {
+      "model_path": "/home/graham/.pi/models/classifiers/url_content_quality_classifier.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "url-content-quality"
+      },
+      "cv_accuracy": 0.97,
+      "training_samples": 200,
+      "classes": [
+        "content",
+        "junk"
+      ],
+      "shadow_mode": true,
+      "note": "Auto-trained from 200 teacher labels. CV=97.0%"
+    },
+    "persona-section-matcher": {
+      "model_path": "",
+      "type": "sklearn",
+      "confidence_threshold": 0.6,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "persona-section-matching"
+      },
+      "classes": [
+        "brandon_bailey",
+        "margaret_chen",
+        "jennifer_cheung",
+        "embry",
+        "unassigned"
+      ],
+      "shadow_mode": true,
+      "note": "Given paper section text, predicts best persona owner. Bootstrapped from 5ft-scope training data adapted for paper sections. Trains after >=200 labeled section-persona pairs from /review-paper persona alignment results."
+    },
+    "elf-feature-classifier": {
+      "model_path": "",
+      "type": "pending",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "elf-feature-classifier",
+        "required_fields": [
+          "strings",
+          "binary_name"
+        ]
+      },
+      "classes": [
+        "state_machine",
+        "event_type",
+        "jsonrpc_method",
+        "schema",
+        "cli_command",
+        "noise"
+      ],
+      "preferred_scopes": [
+        "analyze-elf"
+      ],
+      "shadow_mode": true,
+      "multi_label": true,
+      "note": "ELF binary feature classifier. Shadow mode \u2014 teacher is /scillm text (DeepSeek-V3). Prompt: elf_features_v2 validated via /prompt-lab (F1=0.970). Registered 2026-03-19.",
+      "training_status": "shadow_collecting (6/200 entries, 0% agreement)",
+      "shadow_entries": 6,
+      "shadow_file": "/home/graham/workspace/experiments/pi-mono/.pi/skills/analyze-elf/shadow.jsonl",
+      "promotion_threshold": 0.85,
+      "min_shadow_samples": 200
+    },
+    "elf-go-feature-classifier": {
+      "model_path": "",
+      "type": "pending",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "type": "text",
+        "task_hint": "elf-go-feature-classifier",
+        "required_fields": [
+          "strings",
+          "binary_name"
+        ]
+      },
+      "classes": [
+        "grpc_service",
+        "protobuf_message",
+        "cobra_command",
+        "go_package",
+        "stdlib",
+        "noise"
+      ],
+      "preferred_scopes": [
+        "analyze-elf"
+      ],
+      "shadow_mode": true,
+      "multi_label": false,
+      "note": "Go binary feature classifier. Filters stdlib types from application types. Shadow mode \u2014 needs training data from Go binary analyses. Registered 2026-03-19.",
+      "training_status": "shadow_collecting",
+      "shadow_entries": 0,
+      "shadow_file": "/home/graham/workspace/experiments/pi-mono/.pi/skills/analyze-elf/shadow.jsonl",
+      "promotion_threshold": 0.85,
+      "min_shadow_samples": 200
+    }
+  },
+  "regressors": {
+    "grounding-score-predictor": {
+      "model_path": "~/.pi/models/regressors/grounding_score/model.joblib",
+      "type": "xgboost",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "type": "features",
+        "task_hint": "grounding_prediction"
+      },
+      "note": "Predicts QRA grounding score from text features. Trained via /create-regressor from Brandon's inline assessments."
+    },
+    "timeout-estimator": {
+      "model_path": "~/.pi/models/regressors/timeout_estimator/model.joblib",
+      "type": "sklearn",
+      "confidence_threshold": 0.75,
+      "input_signature": {
+        "type": "features",
+        "task_hint": "timeout_estimation"
+      },
+      "note": "Predicts task completion time from input features. Trained via /create-regressor + /learn-timeout."
+    },
+    "evidence-case-assessor": {
+      "gpt_model_path": "",
+      "task_spec": "evidence-case-assessor",
+      "confidence_threshold": 0.8,
+      "input_signature": {
+        "required_fields": [
+          "claim_text",
+          "evidence_items"
+        ],
+        "type": "text"
+      },
+      "preferred_scopes": [
+        "brandon_bailey",
+        "margaret_chen"
+      ],
+      "shadow_mode": true,
+      "note": "Judges evidence sufficiency for CAE trees. scillm teacher initially. Created by /create-evidence-case."
+    }
+  },
+  "cascade_decisions": {
+    "datalake-action-resolver": {
+      "task_spec": "datalake-action-resolver",
+      "tiers": {
+        "T0": {
+          "type": "deterministic",
+          "module": "intent-mapper/resolver.py",
+          "method": "resolve_action",
+          "description": "BM25 recall + token overlap from app_actions collection"
+        },
+        "T0.5": {
+          "type": "classifier",
+          "model_path": null,
+          "confidence_threshold": 0.8,
+          "status": "awaiting_shadow_data",
+          "description": "Awaiting 1000+ shadow pairs. Will train SetFit or RF classifier on MiniLM embeddings, not a 7B LoRA.",
+          "min_shadow_samples": 1000
+        },
+        "T2": {
+          "type": "llm",
+          "provider": "scillm",
+          "model": "deepseek-v3",
+          "prompt_path": "intent-mapper/queryspec_ui_prompt.md",
+          "description": "Full LLM with system prompt for complex/ambiguous commands"
+        }
+      },
+      "shadow_mode": true,
+      "promotion_threshold": 0.9,
+      "min_shadow_samples": 200,
+      "note": "T0 deterministic resolver live. Shadow logging active via /api/queryspec/learn. T0.5 classifier deferred until 1000+ shadow pairs collected with agreement analysis. 7B LoRA approach abandoned \u2014 this is a classification task, not generation."
+    }
+  }
+}

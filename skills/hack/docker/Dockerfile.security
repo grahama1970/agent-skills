@@ -1,0 +1,33 @@
+# Security Scanning Container
+# Pre-built image with all security tools for isolated scanning
+FROM python:3.11-slim
+
+LABEL maintainer="hack-skill"
+LABEL description="Isolated security scanning environment"
+
+# Install system packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nmap \
+    netcat-openbsd \
+    iputils-ping \
+    curl \
+    wget \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python security tools
+RUN pip install --no-cache-dir \
+    semgrep \
+    bandit \
+    pip-audit \
+    safety \
+    requests \
+    rich \
+    typer
+
+# Note: Running as root inside container for nmap privileged scans
+# Container isolation provides security boundary
+WORKDIR /scan
+
+# Default command shows available tools
+CMD ["bash", "-c", "echo 'Security Scanner Ready. Tools: nmap, semgrep, bandit, pip-audit, safety'"]

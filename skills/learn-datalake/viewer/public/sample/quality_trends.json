@@ -1,0 +1,26 @@
+[
+  {
+    "date": "2026-02-12",
+    "fail_rate": 34.2,
+    "throughput_per_hour": 12,
+    "extraction_quality_mean": 0.41,
+    "memory_ingestion_rate": 82.1,
+    "cascade_agreement": 78.3
+  },
+  {
+    "date": "2026-02-13",
+    "fail_rate": 6.9,
+    "throughput_per_hour": 28,
+    "extraction_quality_mean": 0.72,
+    "memory_ingestion_rate": 88.5,
+    "cascade_agreement": 84.2
+  },
+  {
+    "date": "2026-02-14",
+    "fail_rate": 5.8,
+    "throughput_per_hour": 35,
+    "extraction_quality_mean": 0.76,
+    "memory_ingestion_rate": 91.3,
+    "cascade_agreement": 89.7
+  }
+]

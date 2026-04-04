@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fixture Ground Truth",
+  "description": "The oracle for synthetic PDF fixtures. Every field is known because we created the PDF. Extraction output is compared against this to compute deltas.",
+  "type": "object",
+  "required": ["version", "fixture_id", "tricks", "pages"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Schema version"
+    },
+    "fixture_id": {
+      "type": "string",
+      "description": "Unique ID for this fixture (matches PDF filename stem)"
+    },
+    "source_pattern": {
+      "type": "string",
+      "description": "The failure pattern this fixture reproduces (e.g. severe_section_underestimate)"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "The real PDF that inspired this fixture (if any)"
+    },
+    "tricks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of trick names used to generate this fixture"
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page_number", "width", "height"],
+        "properties": {
+          "page_number": { "type": "integer", "minimum": 0 },
+          "width": { "type": "number" },
+          "height": { "type": "number" }
+        }
+      },
+      "description": "Page dimensions (pts)"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "level", "page"],
+        "properties": {
+          "title": { "type": "string" },
+          "level": { "type": "integer", "minimum": 1 },
+          "page": { "type": "integer", "minimum": 0 },
+          "bbox": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 4,
+            "maxItems": 4,
+            "description": "[x0, y0, x1, y1] in pts"
+          },
+          "section_number": { "type": "string" },
+          "is_toc_entry": { "type": "boolean", "default": false }
+        }
+      },
+      "description": "All real sections in the document — the header classification oracle"
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "page"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Header", "Text", "Table", "Figure", "Equation", "Code", "Footnote", "Caption", "TOC", "PageNumber", "Boilerplate", "Requirement"]
+          },
+          "page": { "type": "integer", "minimum": 0 },
+          "bbox": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "text": { "type": "string", "description": "Expected text content (first 200 chars)" },
+          "font_size": { "type": "number" },
+          "is_bold": { "type": "boolean" }
+        }
+      },
+      "description": "All content blocks — the block classification oracle"
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page", "is_real_table"],
+        "properties": {
+          "page": { "type": "integer", "minimum": 0 },
+          "bbox": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "rows": { "type": "integer" },
+          "columns": { "type": "integer" },
+          "is_real_table": {
+            "type": "boolean",
+            "description": "true = real table, false = false positive (should NOT be extracted as table)"
+          },
+          "strategy": {
+            "type": "string",
+            "enum": ["lattice", "stream", "lattice_sensitive"],
+            "description": "Expected optimal Camelot strategy"
+          },
+          "has_borders": { "type": "boolean" }
+        }
+      },
+      "description": "Tables and false-positive table regions"
+    },
+    "figures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["page"],
+        "properties": {
+          "page": { "type": "integer", "minimum": 0 },
+          "bbox": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "caption": { "type": "string" }
+        }
+      }
+    },
+    "toc_entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["title", "page"],
+        "properties": {
+          "title": { "type": "string" },
+          "page": { "type": "integer", "minimum": 0 },
+          "level": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "description": "Expected TOC/outline entries — what S00 should produce"
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text", "page", "is_real_requirement"],
+        "properties": {
+          "req_id": { "type": "string" },
+          "text": { "type": "string" },
+          "page": { "type": "integer", "minimum": 0 },
+          "is_real_requirement": {
+            "type": "boolean",
+            "description": "true = real SHALL/MUST, false = false positive (quoted/historical)"
+          },
+          "modal": { "type": "string", "enum": ["SHALL", "MUST", "WILL", "SHOULD", "MAY"] }
+        }
+      },
+      "description": "Requirements oracle for S08 validation"
+    },
+    "expected_profile": {
+      "type": "object",
+      "properties": {
+        "preset": { "type": "string" },
+        "is_scanned": { "type": "boolean", "default": false },
+        "has_tables": { "type": "boolean" },
+        "has_figures": { "type": "boolean" },
+        "has_equations": { "type": "boolean" },
+        "layout": { "type": "string", "enum": ["single-column", "multi-column", "mixed"] }
+      },
+      "description": "Expected S00 profile detection results"
+    },
+    "assertions": {
+      "type": "object",
+      "properties": {
+        "section_count": { "type": "integer", "description": "Expected number of real sections" },
+        "table_count": { "type": "integer", "description": "Expected real table count (excluding false positives)" },
+        "false_table_count": { "type": "integer", "description": "Expected false positive table count" },
+        "figure_count": { "type": "integer" },
+        "requirement_count": { "type": "integer" },
+        "false_requirement_count": { "type": "integer" }
+      },
+      "description": "Quick numeric assertions for pass/fail checks"
+    }
+  }
+}

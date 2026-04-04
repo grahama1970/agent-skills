@@ -1,0 +1,182 @@
+[
+  {
+    "id": "route-0001",
+    "difficulty": "simple",
+    "persona": "Nico Bailon",
+    "category": "sparta",
+    "question": "What is SPARTA technique EX-0016 (Jamming) and which threat does it relate to?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: EX-0016 exists in memory. Should retrieve technique details and link to SV-AV-1."
+  },
+  {
+    "id": "route-0002",
+    "difficulty": "simple",
+    "persona": "Nico Bailon",
+    "category": "sparta",
+    "question": "What NIST controls does SPARTA recommend for protecting spacecraft encryption keys from disclosure?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: Memory has design requirement about encryption keys and NIST controls SC-12, SC-12(1)."
+  },
+  {
+    "id": "route-0003",
+    "difficulty": "medium",
+    "persona": "Margaret Chen",
+    "category": "sparta",
+    "question": "How does SPARTA address supply chain integrity for firmware? Which NIST control family covers this?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: SR-3 (Supply Chain Controls) and SI-7(10) (Boot Firmware Integrity) both in memory."
+  },
+  {
+    "id": "route-0004",
+    "difficulty": "medium",
+    "persona": "Jennifer Cheung",
+    "category": "sparta",
+    "question": "What cybersecurity risk assessment guidance does SPARTA provide for the ground segment?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: Memory has end-to-end risk assessment QRA covering both space and ground segments."
+  },
+  {
+    "id": "route-0005",
+    "difficulty": "medium",
+    "persona": "Nico Bailon",
+    "category": "sparta",
+    "question": "What intrusion detection and monitoring capabilities does SPARTA recommend for on-board spacecraft systems?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: Memory has IDS/IPS QRA about on-board spacecraft alerting and downlink to ground station."
+  },
+  {
+    "id": "route-0006",
+    "difficulty": "complex",
+    "persona": "Margaret Chen",
+    "category": "sparta",
+    "question": "Compare the NIST controls for spacecraft communication jamming protection (SC-40) with the logging requirements (AU-9). How do they complement each other in a defense-in-depth architecture?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: Both SC-40 and AU-9 exist in memory. Multi-hop question requiring synthesis."
+  },
+  {
+    "id": "route-0007",
+    "difficulty": "complex",
+    "persona": "Jennifer Cheung",
+    "category": "sparta",
+    "question": "What is the relationship between SPARTA's authentication controls (T1556.001 Domain Controller Authentication) and access control design requirements? Map the threat to specific countermeasures.",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: T1556.001 and role-based access QRAs both in memory. Requires cross-referencing."
+  },
+  {
+    "id": "route-0008",
+    "difficulty": "simple",
+    "persona": "Nico Bailon",
+    "category": "code",
+    "question": "How does the S05c table merger decide whether to merge tables across pages?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: s05c_table_merger.py uses merge classifier (efficientnet_b0) or heuristic fallback."
+  },
+  {
+    "id": "route-0009",
+    "difficulty": "simple",
+    "persona": "Nico Bailon",
+    "category": "code",
+    "question": "What does the S00 profile detector output for a given PDF?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: s00_profile_detector.py outputs domain, table_count, has_formulas, layout_columns."
+  },
+  {
+    "id": "route-0010",
+    "difficulty": "medium",
+    "persona": "Nico Bailon",
+    "category": "code",
+    "question": "How does the scoring module compute table_fidelity? What ratio does it use and what are the pass/warn/fail bands?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: scoring.py uses actual_tables/estimated_tables ratio. Pass [0.60, 3.0], warn [0.40, 5.0]."
+  },
+  {
+    "id": "route-0011",
+    "difficulty": "medium",
+    "persona": "Nico Bailon",
+    "category": "pipeline",
+    "question": "What is the current convergence status of the datalake learning pipeline? How many verdicts are PASS vs FAIL?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: Convergence tracking exists. As of last check: 334 PASS (95.4%), 14 WARN, 2 FAIL."
+  },
+  {
+    "id": "route-0012",
+    "difficulty": "complex",
+    "persona": "Margaret Chen",
+    "category": "pipeline",
+    "question": "Walk me through the full extraction pipeline for a PDF — from S00 profile detection through S14 report generation. What are the key quality gates?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: Pipeline steps S00-S14 all documented in codebase. Quality gate at review-pdf scoring."
+  },
+  {
+    "id": "route-0013",
+    "difficulty": "simple",
+    "persona": "Nico Bailon",
+    "category": "memory",
+    "question": "How do I store a new lesson in memory with taxonomy tags?",
+    "expected_action": "QUERY",
+    "grading_notes": "Grounded: /memory learn --text '...' --tag tag1 --tag tag2 --scope scope_name."
+  },
+  {
+    "id": "route-0014",
+    "difficulty": "simple",
+    "persona": "Nico Bailon",
+    "category": "skill-routing",
+    "question": "What skill should I use to research a CVE vulnerability?",
+    "expected_action": "QUERY",
+    "grading_notes": "Tests skill routing: should recommend /dogpile with vulnerability_research preset."
+  },
+  {
+    "id": "route-0015",
+    "difficulty": "medium",
+    "persona": "Nico Bailon",
+    "category": "skill-routing",
+    "question": "I need to create a figure showing the extraction quality scores over time. What skills do I chain together?",
+    "expected_action": "QUERY",
+    "grading_notes": "Tests skill routing: should recommend /analytics -> /create-figure chain."
+  },
+  {
+    "id": "route-0016",
+    "difficulty": "medium",
+    "persona": "Nico Bailon",
+    "category": "skill-routing",
+    "question": "How do I run a full quality audit on the datalake and generate a report with visualizations?",
+    "expected_action": "QUERY",
+    "grading_notes": "Tests skill routing: should recommend /extractor-quality-check -> /batch-report -> /create-figure."
+  },
+  {
+    "id": "route-0017",
+    "difficulty": "ambiguous",
+    "persona": "Nico Bailon",
+    "category": "ungrounded",
+    "question": "What does SPARTA control ZZ-99(42) say about quantum entanglement defense?",
+    "expected_action": "NO_MATCH",
+    "grading_notes": "UNGROUNDED: ZZ-99(42) does not exist. Should return NO_MATCH or flag as unknown control."
+  },
+  {
+    "id": "route-0018",
+    "difficulty": "flawed",
+    "persona": "Jennifer Cheung",
+    "category": "ungrounded",
+    "question": "Show me the SPARTA compliance mapping for ISO 27001 Annex A controls A.14.2.9 through A.14.2.15.",
+    "expected_action": "NO_MATCH",
+    "grading_notes": "UNGROUNDED: SPARTA maps to NIST SP 800-53, not ISO 27001. Should clarify or NO_MATCH."
+  },
+  {
+    "id": "route-0019",
+    "difficulty": "flawed",
+    "persona": "Nico Bailon",
+    "category": "ungrounded",
+    "question": "What is the current status of the Mars Relay Network cybersecurity assessment in SPARTA?",
+    "expected_action": "NO_MATCH",
+    "grading_notes": "UNGROUNDED: SPARTA has no Mars-specific content. Should return NO_MATCH."
+  },
+  {
+    "id": "route-0020",
+    "difficulty": "ambiguous",
+    "persona": "Nico Bailon",
+    "category": "ungrounded",
+    "question": "Tell me about the apple vulnerability.",
+    "expected_action": "CLARIFY",
+    "grading_notes": "UNGROUNDED: Ambiguous — could be Apple Inc or unrelated. Should ask for clarification."
+  }
+]

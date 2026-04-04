@@ -1,0 +1,23 @@
+{
+  "session_id": "auto-1771111363",
+  "user_id": "test-user",
+  "persona_id": "embry",
+  "created_at": 1771111363.8103564,
+  "last_active": 1771111363.9076269,
+  "turns": [
+    {
+      "query": "you are completely useless",
+      "action": "NO_MATCH",
+      "persona_id": "embry",
+      "response_text": "I mean, I have opinions on that, but Brandon would give me The Look if I went off-script. What I CAN talk about all day is space systems security. Here, try one of these:\n\n  1. What NIST controls apply specifically to space systems? *(Compliance frameworks adapted for space \u2014 Brandon's specialty)*\n  2. What are the most common ways attackers target ground stations? *(Ground segment is where most real attacks happen)*\n  3. How do you detect if a spacecraft's firmware has been tampered with? *(Firmware integrity in space is genuinely hard)*",
+      "suggested_questions": [
+        "What NIST controls apply specifically to space systems?",
+        "What are the most common ways attackers target ground stations?",
+        "How do you detect if a spacecraft's firmware has been tampered with?"
+      ],
+      "accepted_question": null,
+      "humor_level": "balanced",
+      "timestamp": 1771111363.907623
+    }
+  ]
+}

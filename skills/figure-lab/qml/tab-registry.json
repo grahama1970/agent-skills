@@ -1,0 +1,46 @@
+{
+  "groups": [
+    {
+      "id": "composition",
+      "label": "Composition",
+      "color": "#00ff88",
+      "tabs": [
+        {
+          "id": "composer",
+          "label": "Composer",
+          "shortcut": "1",
+          "voiceKeyword": "compose",
+          "component": "ComposerPage.qml"
+        },
+        {
+          "id": "gallery",
+          "label": "Gallery",
+          "shortcut": "2",
+          "voiceKeyword": "gallery",
+          "component": "GalleryPage.qml"
+        }
+      ]
+    },
+    {
+      "id": "quality",
+      "label": "Quality",
+      "color": "#44aaff",
+      "tabs": [
+        {
+          "id": "evaluate",
+          "label": "Evaluate",
+          "shortcut": "3",
+          "voiceKeyword": "evaluate",
+          "component": "EvaluatePage.qml"
+        },
+        {
+          "id": "promote",
+          "label": "Promote",
+          "shortcut": "4",
+          "voiceKeyword": "promote",
+          "component": "PromotePage.qml"
+        }
+      ]
+    }
+  ]
+}

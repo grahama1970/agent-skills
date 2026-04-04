@@ -1,0 +1,18 @@
+{
+  "chart_type": "heatmap",
+  "viz_family": "specialty",
+  "query": "Show me a heatmap of dimension scores across the worst 20 documents",
+  "title": "Quality Dimensions",
+  "data_shape": {
+    "row_count": 3,
+    "col_count": 1,
+    "max_label_len": 4,
+    "has_time_axis": false,
+    "null_pct": 0,
+    "nested": false
+  },
+  "source": "figure-lab",
+  "timestamp": 1772306663,
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/heatmap_1772306663.html",
+  "html_size_bytes": 3609
+}

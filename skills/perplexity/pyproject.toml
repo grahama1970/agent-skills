@@ -1,0 +1,11 @@
+[project]
+name = "perplexity"
+version = "0.1.0"
+description = "AI-powered research assistant with real-time web search"
+requires-python = ">=3.11,<3.13"
+
+dependencies = [
+    "typer>=0.9.0",
+    "loguru>=0.7.0,<0.7.3",
+    "python-dotenv>=1.0.0",
+]

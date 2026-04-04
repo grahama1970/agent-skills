@@ -1,0 +1,37 @@
+{
+  "capability_overlap": [
+    "sanity test"
+  ],
+  "execution": {
+    "max_concurrency": 1
+  },
+  "kind": "orchestrate-plan",
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0"
+    }
+  ],
+  "metadata": {
+    "created": "2026-04-02",
+    "goal": "pipeline sanity test",
+    "plan_type": "code",
+    "title": "Fail test"
+  },
+  "repo_root": "/tmp/pipeline-sanity-02kgd9gy",
+  "tasks": [
+    {
+      "command": "exit 1",
+      "definition_of_done": {
+        "assertion": "never",
+        "command": "exit 1"
+      },
+      "depends_on": [],
+      "id": "1",
+      "lane": "0",
+      "runner": "local",
+      "title": "Impossible task"
+    }
+  ],
+  "version": 1
+}

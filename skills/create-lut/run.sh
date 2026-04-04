@@ -1,0 +1,17 @@
+#!/bin/bash
+# Strip inherited venv to prevent uv conflicts in cross-skill subprocess calls
+unset VIRTUAL_ENV
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
+
+# Load .env if present
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -a
+    source "$PROJECT_ROOT/.env"
+    set +a
+fi
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Using uv run to manage the environment and dependencies automatically
+uv run --project "$SKILL_DIR" python "$SKILL_DIR/main.py" "$@"

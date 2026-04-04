@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_batch_1771950473",
+  "timestamp": 1771950485,
+  "doc_id": "synth_0400_defense_borderless_zebra_nested_header_20r",
+  "domain": "unknown",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0400_defense_borderless_zebra_nested_header_20r",
+    "profile_path": "/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0400_defense_borderless_zebra_nested_header_20r/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/extractor_data/output/synthetic_validation/synth_0400_defense_borderless_zebra_nested_header_20r/pipeline_context.json",
+    "pdf_path": "/home/graham/workspace/experiments/extractor/data/pdfs/synthetic/synth_0400_defense_borderless_zebra_nested_header_20r.pdf"
+  },
+  "estimates": {
+    "page_count": 1,
+    "estimated_sections": 2,
+    "estimated_sections_regex": 1,
+    "estimated_sections_font": 5,
+    "estimated_sections_toc": 0,
+    "estimated_table_count": 1,
+    "table_pages": 1,
+    "image_pages": 0,
+    "has_formulas": true,
+    "has_tables": true,
+    "has_figures": false,
+    "has_requirements": false,
+    "domain": "scientific",
+    "layout_columns": 2,
+    "file_size_mb": 0.0,
+    "estimated_timeout_seconds": 120,
+    "detected_preset": "arxiv"
+  },
+  "actual": {
+    "section_count": 2,
+    "empty_sections": 0,
+    "section_titles_missing": 0,
+    "element_count": 110,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "duplicate_ratio": 0.0,
+    "type_counts": {
+      "text": 108,
+      "equation": 2
+    },
+    "text_length": 1027,
+    "sort_order_violations": 0,
+    "unknown_type_count": 0,
+    "bbox_pages_checked": 0,
+    "bbox_multi_col_pages": 0,
+    "bbox_order_violations": 0,
+    "bbox_page_results": {},
+    "table_extraction_available": false,
+    "figure_extraction_available": false
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 1,
+    "raw_text_length": 1135,
+    "math_symbol_count": 37,
+    "math_symbol_density": 0.03259911894273128
+  },
+  "ratios": {
+    "section_ratio": 1.0,
+    "table_ratio": null,
+    "figure_ratio": null,
+    "text_ratio": 0.9048458149779736
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.7,
+      "state": "not_available",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.7,
+      "state": "not_available",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 1.0,
+      "state": "pass",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 1.0,
+    "grade": "A+",
+    "verdict": "PASS",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "issue_count": 0
+  },
+  "issues": [],
+  "escalation_jobs": [],
+  "escalation_execution": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

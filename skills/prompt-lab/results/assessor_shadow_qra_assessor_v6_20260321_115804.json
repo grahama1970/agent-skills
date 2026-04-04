@@ -1,0 +1,391 @@
+{
+  "prompt": "shadow_qra_assessor_v6",
+  "model": "text",
+  "runs": 3,
+  "accuracy": 0.7,
+  "exact_match": 0.7,
+  "consistency": 1.0,
+  "parse_errors": 0,
+  "results": [
+    {
+      "qra_key": "1183163524",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer accurately summarizes the Telestar-12 case, highlighting vulnerabilities like frequency jamming and the need for geolocation, directly supported by the citations."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer accurately synthesizes the citations to describe the vulnerabilities exposed by EX-0016 in the Telestar-12 case, including the need for rapid geolocation and counter-jamming capabilities."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer accurately synthesizes the citations to highlight vulnerabilities in commercial satellite operations exposed by EX-0016 (Jamming), specifically the need for rapid geolocation and counter-jamming capabilities."
+        }
+      ]
+    },
+    {
+      "qra_key": "1122196280",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses how RPO could enable IMP-0003 (Denial) attacks, using specific examples and mechanisms described in the citations, making it actionable and aligned with the question."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses how RPO could enable IMP-0003 attacks, using specific details from the citations to explain the mechanism of denial through sensor-based interference."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses how RPO could enable IMP-0003 (Denial) attacks, using specific details from the citations about sensor payloads and electromagnetic interference, and aligns with the definition of IMP-0003 provided."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2086029845",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer accurately reflects the citations, which describe monitoring embedded code behavior for anomalies to mitigate flight software vulnerabilities."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer accurately reflects the citations, which describe monitoring embedded code behavior for anomalies to mitigate flight software vulnerabilities."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer accurately reflects the citations, which describe the importance of monitoring embedded code behavior to detect anomalies, aligning with the D3-FBA control's purpose in enhancing spacecraft security against flight software vulnerabilities."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2085979839",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the question by specifying when SI-10(5) should be applied in spacecraft operations, and the citation supports the need to restrict inputs to trusted sources and approved formats."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the question by specifying when SI-10(5) should be applied in spacecraft operations, and the citation supports the need to restrict inputs to trusted sources and formats."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the question by specifying when SI-10(5) should be applied in spacecraft operations, and the citation supports the need to restrict inputs to trusted sources and approved formats."
+        }
+      ]
+    },
+    {
+      "qra_key": "16562",
+      "expected": "PARTIAL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "The answer introduces 'radiation-hardened kernel/firmware integrity checks' which is not supported by the citations, and the citations do not explicitly link SV-SP-7 to mitigating Compromise Account (ESA-T2038) through physical security barriers."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "The answer introduces 'radiation-hardened kernel/firmware integrity checks' which is not supported by the citations, and the citations do not mention SV-SP-7 or its mechanisms."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer introduces 'radiation-hardened kernel/firmware integrity checks' which is not supported by the citations, and the alignment is partial as it addresses account compromise but not the specific issue of missing physical security barriers."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2085929758",
+      "expected": "PARTIAL",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the question by explaining how Dummy Process - Aggregator Node mitigates Physical Access Authorizations vulnerabilities through power-mimicking dummy operations, which is supported by the citation describing the execution of dummy operations resembling normal power consumption."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer accurately describes how Dummy Process - Aggregator Node mitigates power consumption side channels by executing dummy operations, directly addressing the question and aligning with the citation."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses how Dummy Process - Aggregator Node mitigates Physical Access Authorizations vulnerabilities by executing power-mimicking dummy operations, which is consistent with the citation describing dummy operations that resemble normal power consumption."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2086079845",
+      "expected": "PARTIAL",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer aligns with the citation by explaining how SA-11(9) mitigates REC-0001.04 through interactive application security testing, which directly addresses the threat of data bus reconnaissance."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses how SA-11(9) mitigates REC-0001.04 by using interactive application security testing to identify vulnerabilities in data bus protocols, aligning with the citation's description of the threat."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses how SA-11(9) mitigates REC-0001.04 by using interactive application security testing to identify vulnerabilities in data bus protocols, aligning with the citation's description of the threat."
+        }
+      ]
+    },
+    {
+      "qra_key": "14992",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'space-qualified authentication tokens' and 'orbital period credential expiry' that are not supported by the citations, which only vaguely mention OS protections and program management."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'space-qualified authentication tokens' and 'orbital period credential expiry' that are not supported by the citations, which only vaguely mention OS protections and program management."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'space-qualified authentication tokens' and 'orbital period credential expiry' which are not supported by the citations, and the citations provided are too generic to substantiate the claims made."
+        }
+      ]
+    },
+    {
+      "qra_key": "14993",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'kernel-level isolation of browser processes' and 'secure storage of session tokens in protected memory regions' which are not supported by the citation. The citation only mentions the general role of the operating system in system security, not specific mitigations for web session cookies."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'kernel-level isolation of browser processes' and 'secure storage of session tokens in protected memory regions' which are not supported by the citation. The citation only mentions the general role of the operating system in system security, not specific mitigations for session cookie theft."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'kernel-level isolation of browser processes' and 'secure storage of session tokens in protected memory regions' which are not supported by the citation, which only generically mentions the operating system's role in security."
+        }
+      ]
+    },
+    {
+      "qra_key": "2085921413",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'radiation-hardened secure storage' and 'write-protected EEPROM' that are not supported by the citations, which only describe general Kerberos ticket storage concepts without any space-specific details."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'radiation-hardened secure storage' and 'write-protected EEPROM' that are not supported by the citations, which only describe general Kerberos ticket caching without any space-specific context."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "The answer fabricates mechanisms like 'radiation-hardened secure storage' and 'write-protected EEPROM' that are not supported by the citations, which only describe general Kerberos ticket storage concepts without any space-specific details."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "event_type": "self_improvement_round",
+  "timestamp": 1774553100,
+  "project_id": "news-topic-classification",
+  "task": "news topic classification",
+  "round": 2,
+  "strategy": "lr_halved_more_epochs",
+  "backbone": "prajjwal1/bert-tiny",
+  "modality": "text",
+  "f1": 0.716,
+  "accuracy": 0.765,
+  "wilson_lower": 0.738,
+  "diagnosis": "F1 0.716 is low — likely needs more data or different architecture",
+  "dogpile_query": "",
+  "hps": {"lr": 1e-5, "batch_size": 16, "epochs": 4},
+  "errors": []
+}

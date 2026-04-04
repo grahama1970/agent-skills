@@ -1,0 +1,235 @@
+{
+  "created_at": "2026-01-28T22:33:10.222788+00:00",
+  "media_dirs": [
+    "/mnt/storage12tb/media/movies",
+    "/mnt/storage12tb/media/shows"
+  ],
+  "jobs": [
+    {
+      "emotion": "anger",
+      "movie_title": "The Godfather",
+      "scenes": [
+        "against the family",
+        "Fredo warning",
+        "baptism"
+      ],
+      "actor_model": "Al Pacino",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "The Godfather (1972)",
+      "video_file": "/mnt/storage12tb/media/movies/The Godfather (1972)/The.Godfather.1972.REMASTERED.1080p.BluRay.x264.DTS-FGT.mkv",
+      "subtitle_file": "/mnt/storage12tb/media/movies/The Godfather (1972)/The.Godfather.1972.eng.srt",
+      "status": "ready"
+    },
+    {
+      "emotion": "anger",
+      "movie_title": "Heat",
+      "scenes": [
+        "face to face",
+        "bank robbery"
+      ],
+      "actor_model": "Al Pacino",
+      "source_type": "movie",
+      "available": false,
+      "status": "not_in_library"
+    },
+    {
+      "emotion": "anger",
+      "movie_title": "Apocalypse Now",
+      "scenes": [
+        "Kurtz monologue",
+        "horror"
+      ],
+      "actor_model": "Marlon Brando",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "Apocalypse Now (1979)",
+      "video_file": "/mnt/storage12tb/media/movies/Apocalypse Now (1979)/Apocalypse.Now.1979.iNTERNAL.MULTi.1080p.BluRay.x264-PATHECROUTE.mkv",
+      "subtitle_file": null,
+      "status": "needs_subtitle"
+    },
+    {
+      "emotion": "camaraderie",
+      "movie_title": "Band of Brothers",
+      "scenes": [
+        "Easy Company",
+        "Bastogne",
+        "Christmas"
+      ],
+      "actor_model": "Damian Lewis",
+      "source_type": "tv",
+      "available": false,
+      "status": "not_in_library"
+    },
+    {
+      "emotion": "camaraderie",
+      "movie_title": "Saving Private Ryan",
+      "scenes": [
+        "Earn this",
+        "brothers in arms"
+      ],
+      "actor_model": "Tom Hanks",
+      "source_type": "movie",
+      "available": false,
+      "status": "not_in_library"
+    },
+    {
+      "emotion": "camaraderie",
+      "movie_title": "Fury",
+      "scenes": [
+        "best job",
+        "tank crew"
+      ],
+      "actor_model": "Brad Pitt",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "Mad Max Fury Road (2015)",
+      "video_file": "/mnt/storage12tb/media/movies/Mad Max Fury Road (2015)/Mad.Max-Fury.Road.2015.1080p.Blu-ray.Remux.AVC.TrueHD.Atmos.7.1-KRaLiMaRKo.mkv",
+      "subtitle_file": null,
+      "status": "needs_subtitle"
+    },
+    {
+      "emotion": "camaraderie",
+      "movie_title": "Dune",
+      "scenes": [
+        "Stilgar meets Paul",
+        "Fremen loyalty",
+        "desert power"
+      ],
+      "actor_model": "Javier Bardem",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "Dune (2021)",
+      "video_file": "/mnt/storage12tb/media/movies/Dune (2021)/Dune.2021.2160p.BluRay.x265.10bit.SDR.DTS-HD.MA.TrueHD.7.1.Atmos-SWTYBLZ.mkv",
+      "subtitle_file": "/mnt/storage12tb/media/movies/Dune (2021)/Dune.2021.SDH.eng.srt",
+      "status": "ready"
+    },
+    {
+      "emotion": "camaraderie",
+      "movie_title": "Dune Part Two",
+      "scenes": [
+        "Stilgar",
+        "warrior bond",
+        "Fremen"
+      ],
+      "actor_model": "Javier Bardem",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "Dune Part Two (2024)",
+      "video_file": "/mnt/storage12tb/media/movies/Dune Part Two (2024)/Dune.Part.Two.2024.1080p.HDTS.CLEAN.x264.COLLECTIVE.mp4",
+      "subtitle_file": "/mnt/storage12tb/media/movies/Dune Part Two (2024)/Dune.Part.Two.2024.eng.srt",
+      "status": "ready"
+    },
+    {
+      "emotion": "rage",
+      "movie_title": "There Will Be Blood",
+      "scenes": [
+        "I drink your milkshake",
+        "Eli confrontation",
+        "bowling alley"
+      ],
+      "actor_model": "Daniel Day-Lewis",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "There Will Be Blood (2007)",
+      "video_file": "/mnt/storage12tb/media/movies/There Will Be Blood (2007)/There.Will.Be.Blood.2007.PROPER.1080p.BluRay.x264-ELBOWDOWN.mkv",
+      "subtitle_file": "/mnt/storage12tb/media/movies/There Will Be Blood (2007)/There.Will.Be.Blood.2007.SDH.eng.srt",
+      "status": "ready"
+    },
+    {
+      "emotion": "rage",
+      "movie_title": "Sicario",
+      "scenes": [
+        "dinner scene",
+        "border crossing"
+      ],
+      "actor_model": "Benicio del Toro",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "Sicario (2015)",
+      "video_file": "/mnt/storage12tb/media/movies/Sicario (2015)/Sicario.2015.BluRay.1080p.DTS.x264-PRoDJi.mkv",
+      "subtitle_file": null,
+      "status": "needs_subtitle"
+    },
+    {
+      "emotion": "rage",
+      "movie_title": "No Country for Old Men",
+      "scenes": [
+        "coin toss",
+        "hotel confrontation"
+      ],
+      "actor_model": "Javier Bardem",
+      "source_type": "movie",
+      "available": false,
+      "status": "not_in_library"
+    },
+    {
+      "emotion": "regret",
+      "movie_title": "George Carlin",
+      "scenes": [
+        "dumb Americans",
+        "soft language",
+        "rights"
+      ],
+      "actor_model": "George Carlin",
+      "source_type": "youtube",
+      "available": false,
+      "status": "not_in_library"
+    },
+    {
+      "emotion": "regret",
+      "movie_title": "Full Metal Jacket",
+      "scenes": [
+        "private Pyle",
+        "thousand yard stare"
+      ],
+      "actor_model": "Matthew Modine",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "Full Metal Jacket (1987)",
+      "video_file": "/mnt/storage12tb/media/movies/Full Metal Jacket (1987)/Full.Metal.Jacket.1987.1080p.UHD.BluRay.x264.DD5.1-Pahe.in.mkv",
+      "subtitle_file": null,
+      "status": "needs_subtitle"
+    },
+    {
+      "emotion": "sorrow",
+      "movie_title": "Gladiator",
+      "scenes": [
+        "my name is",
+        "Elysium",
+        "family death"
+      ],
+      "actor_model": "Russell Crowe",
+      "source_type": "movie",
+      "available": true,
+      "library_title": "Gladiator (2000)",
+      "video_file": "/mnt/storage12tb/media/movies/Gladiator (2000)/Gladiator.2000.Extended.Cut.Remastered.Sapphire.Edition.1080P.Blu-ray.AVC.DTS-HD.MA.5.1.REMUX.HEVC-X265.POOTLED.mkv",
+      "subtitle_file": "/mnt/storage12tb/media/movies/Gladiator (2000)/Gladiator.2000.SDH.eng.srt",
+      "status": "ready"
+    },
+    {
+      "emotion": "sorrow",
+      "movie_title": "The Last Samurai",
+      "scenes": [
+        "final battle",
+        "death of Katsumoto"
+      ],
+      "actor_model": "Ken Watanabe",
+      "source_type": "movie",
+      "available": false,
+      "status": "not_in_library"
+    },
+    {
+      "emotion": "sorrow",
+      "movie_title": "Schindler's List",
+      "scenes": [
+        "I could have done more",
+        "one more person"
+      ],
+      "actor_model": "Liam Neeson",
+      "source_type": "movie",
+      "available": false,
+      "status": "not_in_library"
+    }
+  ]
+}

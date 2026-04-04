@@ -1,0 +1,12 @@
+{
+  "task_id": "3",
+  "title": "Add Why button with GateChain + source chunks in flyout",
+  "prompt": "Task: Add Why button with GateChain + source chunks in flyout\n\nImplementation:\n- Add Show Evidence button next to grade badge in ThreatMatrix Grid\n- On click: call /api/evidence-case/trace, open Detail flyout with GateChain\n- Import GateChain from ../query/GateChain\n\nDefinition of Done:\n- Command: npx tsc --noEmit\n- Assertion: TypeScript compiles. GateChain imported and wired.\n\nTests:\n- npx tsc --noEmit\n- grep -q 'GateChain' packages/ux-lab/src/components/sparta/shared/ThreatMatrix.tsx\n- grep -q 'evidence-case/trace' packages/ux-lab/src/components/sparta/shared/ThreatMatrix.tsx",
+  "backend": "sonnet",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774976924",
+  "definition_of_done": {
+    "command": "npx tsc --noEmit",
+    "assertion": "TypeScript compiles. GateChain imported and wired."
+  }
+}

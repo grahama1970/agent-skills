@@ -1,0 +1,171 @@
+[
+  {
+    "template": "f36_machine_test",
+    "context": "f36_plant_floor",
+    "required_workflows": ["torque", "thermal", "ndi", "inspect", "pass", "fail", "log", "escalate"],
+    "forbidden": ["weapons", "missile"],
+    "palette": "standard",
+    "requires_commands": true,
+    "requires_hierarchy": true,
+    "hmi_principles": ["left-to-right workflow", "clear disposition", "minimal cognitive load"]
+  },
+  {
+    "template": "f36_shift_ops",
+    "context": "f36_plant_floor",
+    "required_workflows": ["handoff", "qa", "assembly", "sensors", "maint"],
+    "forbidden": ["weapons", "missile"],
+    "palette": "standard",
+    "requires_commands": true
+  },
+  {
+    "template": "f36_compliance_monitor",
+    "context": "f36_plant_floor",
+    "required_workflows": ["drift", "sparta", "datalake", "doc", "cui"],
+    "forbidden": ["weapons", "missile"],
+    "palette": "standard",
+    "requires_commands": true
+  },
+  {
+    "template": "sentinel_hud",
+    "context": "sentinel_hud",
+    "required_workflows": ["alt", "heading", "fuel", "threats", "weapons", "comms"],
+    "palette": "nvis",
+    "max_label_chars": 8,
+    "requires_hierarchy": true,
+    "information_hierarchy_check": {
+      "primary": ["alt", "heading", "fuel", "threats"],
+      "secondary": ["weapons", "comms", "subsys"],
+      "tertiary": ["back"]
+    },
+    "dynamic_events": ["missile_warning", "fuel_bingo", "comms_degraded", "threat_popup"],
+    "mode_variants": ["a2a", "a2g", "nav", "diag"]
+  },
+  {
+    "template": "sentinel_comms",
+    "context": "sentinel_comms",
+    "required_workflows": ["uhf", "vhf", "l16", "iff", "datalink"],
+    "palette": "nvis",
+    "max_label_chars": 8
+  },
+  {
+    "template": "sentinel_diagnostic",
+    "context": "sentinel_diagnostic",
+    "required_workflows": ["bit", "sensor", "nav", "radar", "ew"],
+    "palette": "nvis",
+    "max_label_chars": 8
+  },
+  {
+    "template": "compliance_dashboard",
+    "context": "brandon_compliance",
+    "persona": "brandon_bailey",
+    "required_workflows": ["cmmc", "threat", "vulns", "siem", "cui", "vendor", "poam", "approve", "warn", "reject", "undo", "alert"],
+    "forbidden": ["weapons", "missile", "qra_review"],
+    "palette": "standard",
+    "requires_commands": true,
+    "requires_hierarchy": true,
+    "max_wired_buttons": 13,
+    "fixed_positions": {"7": "alert", "31": "undo"},
+    "zone_rules": {
+      "status_row": [0, 1, 2, 3, 4, 5, 6],
+      "emergency": [7],
+      "disposition": [24, 25, 26, 27],
+      "safety": [31]
+    },
+    "icon_collision_check": true,
+    "hmi_principles": ["5ft-away glanceable", "gloved-hand safe", "max 13 buttons", "breathing room between zones", "muscle memory UNDO at 31"],
+    "brandon_grading": {
+      "zone_layout": "Status row 0 identical across all 3 contexts, disposition bottom-left, UNDO bottom-right",
+      "cognitive_load": "Max 13 wired buttons per context, middle rows empty for breathing room",
+      "muscle_memory": "UNDO always [31], ALERT always [7], status row [0-6] never changes",
+      "error_prevention": "APPROVE/REJECT separated by WARN buffer, UNDO always reachable",
+      "workflow_match": "Triage context — morning monitoring + disposition decisions"
+    },
+    "dynamic_events": ["drift_detected", "cui_violation", "critical_vuln", "vendor_lapse"]
+  },
+  {
+    "template": "compliance_analysis",
+    "context": "brandon_compliance",
+    "persona": "brandon_bailey",
+    "required_workflows": ["cmmc", "threat", "vulns", "siem", "cui", "vendor", "poam", "attack", "cve", "stig", "800-171", "undo", "alert"],
+    "forbidden": ["weapons", "missile", "qra_review"],
+    "palette": "standard",
+    "requires_commands": true,
+    "max_wired_buttons": 13,
+    "fixed_positions": {"7": "alert", "31": "undo"},
+    "zone_rules": {
+      "status_row": [0, 1, 2, 3, 4, 5, 6],
+      "emergency": [7],
+      "action": [8, 9, 10, 11],
+      "safety": [31]
+    },
+    "icon_collision_check": true,
+    "clipboard_buttons": [8, 9, 10, 11],
+    "hmi_principles": ["5ft-away glanceable", "clipboard-aware lookups", "max 13 buttons", "breathing room"],
+    "brandon_grading": {
+      "zone_layout": "Status row 0 identical to dashboard, lookups grouped [8-11]",
+      "cognitive_load": "Only 4 lookup buttons + status row — minimal scanning",
+      "muscle_memory": "Clipboard context — copy control ID, press lookup button",
+      "error_prevention": "Lookup-only context, no destructive actions except UNDO",
+      "workflow_match": "Cross-reference context — afternoon analysis against 214K QRAs"
+    }
+  },
+  {
+    "template": "compliance_ops",
+    "context": "brandon_compliance",
+    "persona": "brandon_bailey",
+    "required_workflows": ["cmmc", "threat", "vulns", "siem", "cui", "vendor", "poam", "ingest", "export", "sam", "drift", "undo", "alert"],
+    "forbidden": ["weapons", "missile", "qra_review", "xclip"],
+    "palette": "standard",
+    "requires_commands": true,
+    "max_wired_buttons": 13,
+    "fixed_positions": {"7": "alert", "31": "undo"},
+    "zone_rules": {
+      "status_row": [0, 1, 2, 3, 4, 5, 6],
+      "emergency": [7],
+      "action": [8, 9, 10, 11],
+      "safety": [31]
+    },
+    "icon_collision_check": true,
+    "hmi_principles": ["5ft-away glanceable", "direct skill invocation", "max 13 buttons", "no clipboard"],
+    "brandon_grading": {
+      "zone_layout": "Status row 0 identical, ops grouped [8-11]",
+      "cognitive_load": "4 ops buttons + status — clear purpose",
+      "muscle_memory": "INGEST/EXPORT/SAM.GOV/DRIFT always in same positions",
+      "error_prevention": "Ops buttons invoke skills directly, no clipboard ambiguity",
+      "workflow_match": "Operations context — afternoon ingestion, export, vendor verification"
+    }
+  },
+  {
+    "template": "compliance_review",
+    "context": "compliance_review",
+    "required_workflows": ["brandon", "margaret", "auto_fix", "compare"],
+    "palette": "standard",
+    "requires_commands": true
+  },
+  {
+    "template": "dev_tools",
+    "context": "development",
+    "required_workflows": ["terminal", "git", "pytest", "docker", "deploy", "logs"],
+    "palette": "standard",
+    "requires_commands": true
+  },
+  {
+    "template": "video_call",
+    "context": "communication",
+    "required_workflows": ["zoom", "mute", "video", "share", "end"],
+    "palette": "standard"
+  },
+  {
+    "template": "ai_prompts",
+    "context": "ai_interaction",
+    "required_workflows": ["review", "bug", "brief", "detail", "explain"],
+    "palette": "standard",
+    "requires_commands": true
+  },
+  {
+    "template": "home_base",
+    "context": "home",
+    "required_workflows": ["system", "weather", "lights", "prompts", "sleep"],
+    "palette": "standard"
+  }
+]

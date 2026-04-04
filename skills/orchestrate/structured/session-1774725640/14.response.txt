@@ -1,0 +1,22 @@
+Implemented.
+### Changes
+- Added new shared component: [RerunButton.tsx](/home/node/workspace/packages/ux-lab/src/components/sparta/common/RerunButton.tsx)
+- Imported and used it in Promote tab: [ClassifierLabView.tsx](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx)
+### `RerunButton` behavior
+- Props: `projectId`, `onRerun`, `disabled`
+- On click:
+- Fetches current project params (benchmark + project metadata)
+- `POST` to `/api/projects/classifier-lab/rerun/:id`
+- Shows loading spinner and `SUBMITTING...` while request is in flight
+- On success, shows toast:
+- `Submitted N manifests to Switchboard`
+- Uses existing `RunButton` styling for visual consistency
+### Verification run
+- `npm run check`: passed
+- Requested test command:
+- `.pi/skills/test-lab/run.sh verify-task 14 /home/node/workspace/.pi/skills/classifier-lab --domain python`
+- Result: **FAIL** (style failures: missing module docstrings in python domain; 126/135 passed)
+- Requested grep assertion:
+- Your exact path `/home/graham/workspace/experiments/pi-mono/...` does not exist in this environment
+- Equivalent local check passed:
+- import + usage + component definition all found via `grep -r 'RerunButton' /home/node/workspace/packages/ux-lab/src/ | head -3`

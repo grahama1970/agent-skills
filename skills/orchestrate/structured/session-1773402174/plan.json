@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "title": "Structured execution test",
+  "capability_overlap": [
+    "ok"
+  ],
+  "questions_blockers": [
+    "None"
+  ],
+  "execution": {
+    "max_concurrency": 2
+  },
+  "lanes": [
+    {
+      "id": "lane-a"
+    },
+    {
+      "id": "lane-b"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Write first artifact",
+      "runner": "local",
+      "mode": "deterministic",
+      "lane": "lane-a",
+      "cwd": "/tmp/tmp.hQyJIiRaUG",
+      "command": "printf 'one' > one.txt",
+      "depends_on": [],
+      "tests": [
+        "test-lab/run.sh verify-task t1 . --domain python"
+      ],
+      "definition_of_done": {
+        "command": "test -f one.txt",
+        "assertion": "one.txt exists"
+      }
+    },
+    {
+      "id": "t2",
+      "title": "Write dependent artifact",
+      "runner": "local",
+      "mode": "deterministic",
+      "lane": "lane-b",
+      "cwd": "/tmp/tmp.hQyJIiRaUG",
+      "command": "test -f one.txt && printf 'two' > two.txt",
+      "depends_on": [
+        "t1"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task t2 . --domain python"
+      ],
+      "definition_of_done": {
+        "command": "test -f two.txt",
+        "assertion": "two.txt exists"
+      }
+    }
+  ]
+}

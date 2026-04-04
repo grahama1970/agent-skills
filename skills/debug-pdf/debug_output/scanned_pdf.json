@@ -1,0 +1,9 @@
+{
+  "is_scanned": false,
+  "reason": "has_text",
+  "pages_sampled": 5,
+  "text_page_ratio": 1.0,
+  "image_page_ratio": 0.0,
+  "total_text_chars": 4515,
+  "document_type": "native_text"
+}

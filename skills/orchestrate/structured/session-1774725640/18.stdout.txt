@@ -1,0 +1,4 @@
+Manual verification: open http://localhost:3002/#classifier-lab
+Click news-topic-classification project
+Verify each tab: Research, Data, Tune, Train, Benchmark, Evaluate, Promote
+All should show real data, no undefined/zeros

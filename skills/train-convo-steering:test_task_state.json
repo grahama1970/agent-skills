@@ -1,0 +1,17 @@
+{
+  "skill": "train-convo-steering:test",
+  "completed": 5,
+  "total": 10,
+  "description": "Convo Steering: test",
+  "current_item": "",
+  "progress_pct": 50.0,
+  "elapsed_seconds": 0.0,
+  "eta_seconds": 0.0,
+  "throughput_per_sec": 2299.51,
+  "stats": {
+    "success": 5,
+    "failed": 0
+  },
+  "last_updated": "2026-02-26 08:53:45",
+  "status": "completed"
+}

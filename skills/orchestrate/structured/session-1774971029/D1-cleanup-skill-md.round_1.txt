@@ -1,0 +1,127 @@
+```diff
+--- a/.pi/skills/monitor-codebase/SKILL.md
++++ b/.pi/skills/monitor-codebase/SKILL.md
+@@ -1,33 +1,31 @@
+ ---
+ name: monitor-codebase
+ description: >
+   Continuous codebase health monitoring for all registered projects.
+   Composes project-state, cleanup, ingest-code, quality-checks, skills-ci,
+-  dogpile research, and agent-inbox dispatch for isolated fix verification.
++  dogpile research, and orchestrated fix execution for isolated verification.
+ triggers:
+   - monitor codebase
+   - codebase health
+   - scan all projects
+   - project health check
+   - best practices audit
+ allowed-tools:
+   - Bash
+   - Read
+ metadata:
+   short-description: Continuous codebase health monitor
+ provides:
+   - codebase-monitoring
+ composes:
+   - project-state
+   - cleanup
+   - ingest-code
+   - skills-ci
+   - treesitter
+   - embedding
+   - memory
+   - dogpile
+-  - create-code
+-  - battle
+-  - agent-inbox
++  - orchestrate
+   - scheduler
+   - task-monitor
+   - best-practices-python
+@@ -40,33 +38,34 @@
+ > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
+ 
+ # monitor-codebase
+ 
+ Continuous codebase health monitoring for all registered projects. Scans for
+-violations, researches fixes, dispatches isolated agents to apply them, and
++violations, researches fixes, orchestrates isolated remediation runs, and
+ tracks health trends over time.
+ 
+ ## Commands
+ 
+ | Command | Description |
+ |---------|-------------|
+ | `scan <project>` | Scan a single registered project (full or light based on git changes) |
+-| `scan --all` | Scan every project in agent-inbox registry |
++| `scan --all` | Scan every registered project |
+ | `scan --all --force` | Force full scan on all projects (ignore change detection) |
+-| `scan <project> --fix` | Scan and dispatch headless agents to fix violations |
++| `scan <project> --fix` | Scan and run orchestrated fixes for violations |
+ | `cache-state [project...] [--force]` | Refresh project-state only for projects with new commits |
+ | `report [project]` | Show latest findings from memory |
+ | `schedule` | Register nightly scan with /scheduler |
+ 
+ ## Change Detection
+ 
+ Projects are tracked by git HEAD hash. On `scan --all`:
+ - **Changed projects** → full 9-step scan
+ - **Unchanged projects** → light scan (project-state only)
+ - **`--force`** → full scan regardless of changes
+ 
+-## Full Scan Pipeline (10 steps, for changed projects)
++## Full Scan Pipeline (11 stages, for changed projects)
+ 
+ | Step | Skill/Module | What It Does |
+ |------|-------------|-------------|
+ | 1 | `/project-state` | Baseline health snapshot (JSON) |
+ | 2 | `/cleanup --dry-run` | Dead files, stale docs, junk artifacts |
+ | 3 | `run_best_practices_checks()` | Grep-based: missing run.sh/sanity.sh for skills, React/KDE/StreamDeck patterns |
+ | 4 | `quality_checks.py` | AST-based: banned imports, inline prompts, regex classifiers, handwritten tests, mock-only tests, hardcoded skill paths, bespoke AQL |
+ | 5 | `autofix_docstrings.py` | Auto-generate missing docstrings via /treesitter + /scillm (**--fix only**, scan is read-only) |
+-| 6 | `/ingest-code` | CWE + structural scan via treesitter, scoped to configured dirs |
++| 6 | `/ingest-code --treesitter` | CWE + structural scan with symbol extraction, scoped to configured dirs |
+ | 7 | `/skills-ci` | Full skills-ci scan (only if project has skills/ or .pi/skills/ dir) |
+ | 8 | `/dogpile` | Research improvements for top violations (only if >5 issues found) |
+ | 9 | Aggregate + `/memory learn` | JSON report + persist findings for trend tracking |
+-| 10 | `/agent-inbox` → `/subagent-service` | **--fix only**: generate task file, dispatch headless agent in Docker to fix violations |
++| 9.5 | Trend comparison | Classify delta vs prior scan as `REGRESSION`, `IMPROVED`, or `STABLE` |
++| 10 | `/orchestrate` + `/code-runner` | **--fix only**: generate fix task file and execute remediation workflow |
+ 
+ ## Light Scan (for unchanged projects)
+ 
+ | Step | Skill | What It Does |
+ |------|-------|-------------|
+@@ -90,25 +89,24 @@
+ | `*/plasmoids/*`, `*/kde-*` | best-practices-kde | KDE/Plasma patterns |
+ | `*/streamdeck/*` | best-practices-streamdeck | StreamDeck patterns |
+ 
+-## Fix Dispatch Flow
++## Fix Execution Flow
+ 
+ When `scan --fix` finds violations:
+ 
+ 1. Generates `0N_FIX_TASKS.md` with violation details + fix instructions
+ 2. `/dogpile search` for fix strategy
+-3. `/agent-inbox send` dispatches headless agent via `/subagent-service`
+-4. Agent fixes violations in Docker isolation (strips CLAUDECODE env var)
+-5. `/test-lab` blind-tests the fix — agent never sees test source
+-6. Only passing code transfers back
++3. `/orchestrate` runs the fix task file
++4. `/code-runner` applies changes and iterates on deterministic checks
++5. `/test-lab` blind-tests the fix when a test target is configured
++6. Only passing fixes are retained in the remediation result
+ 
+ ## Project Scoping
+ 
+ Each project can have `.monitor-codebase.json` to control scan scope:
+ 
+ ```json
+ {
+   "include_dirs": ["packages/coding-agent/src", "packages/ai/src"],
+   "exclude_dirs": [".pi", "node_modules", "dist", "models"]
+ }
+ ```
+ 
+ ## Scheduler Integration
+```

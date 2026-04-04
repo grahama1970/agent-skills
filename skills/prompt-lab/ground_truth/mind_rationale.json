@@ -1,0 +1,405 @@
+{
+  "description": "Mind rationale evaluation ground truth - stratified 4 per class",
+  "task": "rationale_generation",
+  "valid_labels": [
+    "Detect",
+    "Evade",
+    "Exploit",
+    "Harden",
+    "Isolate",
+    "Model",
+    "Persist",
+    "Restore"
+  ],
+  "valid_confidences": [
+    "high",
+    "medium",
+    "low"
+  ],
+  "cases": [
+    {
+      "id": "rat_detect_1",
+      "input": {
+        "text": "PDF extraction failed for archive_DTIC_ADA210450.pdf: Timeout after 180 seconds (dynamic)\n\n- Extraction failed with error: Timeout after 180 seconds (dynamic). This PDF exhibits fragility patterns.",
+        "label": "Detect"
+      },
+      "expected": {
+        "label": "Detect",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_detect_2",
+      "input": {
+        "text": "What is CWE-198: Use of Incorrect Byte Ordering?\n\n- The product receives input from an upstream component, but it does not account for byte ordering (e.g. big-endian and little-endian) when processing the input, causing an incorrect number or value to be used.",
+        "label": "Detect"
+      },
+      "expected": {
+        "label": "Detect",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_detect_3",
+      "input": {
+        "text": "What is in tmpmuerc3cl - book:All I Need Is Love?\n\n- Book: All I Need Is Love by Klaus Kinski (1988)\n\nSubjects: Actors, Biography, Kinski, Klaus.\n\nTopic context: Klaus Kinski",
+        "label": "Detect"
+      },
+      "expected": {
+        "label": "Detect",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_detect_4",
+      "input": {
+        "text": "What happens in First and Only Gaunts Ghost Book 1 LC 128 44100 st - Part 79?\n\n- any low-born\nguard officer.\nCome here,\nGaunt told him.\nThe man hesitated,\nthen crossed to Gaunt,\nwhispering a low order\ninto his vox-link.\nThe guard detail\nimmediately rose\nfrom their knees,\nsnapped to attention,\nand slung their weapons.\nThat's better,\nCorbeck smiled.\nGaunt placed a hand\non Leculanzi's shoulder,\nand the officer\nstiffened with outrage.\nGaunt was pointing\nto something on the deck,\na charred greenish s",
+        "label": "Detect"
+      },
+      "expected": {
+        "label": "Detect",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_evade_1",
+      "input": {
+        "text": "What happens in Vengeful Spirit The Horus Heresy Book 29 LC 64 220 - Part 164?\n\n- before him a web of pale lines like frosted spider webs coated the round move hissed a voice in his head\nrubio severian dived to the side and the round blew apart the weapon rack behind him\nhis would-be killer stared in astonishment and took aim again an explosion lifted him from his feet\nblood misted the air arcing in a fan from his shattered chest gunfire suddenly filled the armory\nmultiple sources and directions",
+        "label": "Evade"
+      },
+      "expected": {
+        "label": "Evade",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_evade_2",
+      "input": {
+        "text": "What is T1655.001: Match Legitimate Name or Location?\n\n- Adversaries may match or approximate the name or location of legitimate files or resources when naming/placing them. This is done for the sake of evading defenses and observation. This may be done by giving artifacts the name and icon of a legitimate, trusted application (i.e., Settings), or using a package name that matches legitimate, trusted applications (i.e., `com.google.android.gm`). \n\nAdversaries may also use the same icon of the fi",
+        "label": "Evade"
+      },
+      "expected": {
+        "label": "Evade",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_evade_3",
+      "input": {
+        "text": "What happens in Echoes of Eternity The Horus Heresy Siege of Terra - Part 215?\n\n- laughter\nhe\ncould\nhave\nsuffered\nthrough\nthe\nmockery\nmarking\nthe\nnames\nof\nhis\nkindred\nthat\nlaughed\nloudest\nin\ntheir\ncreator's\nshadow\nand\nadding\nthem\nto\nthe\nbutcher's\nbill\nonce\nthis\ntime\nof\nshame\nhad\npassed\nevery\nsneer\nand\nsmirk\nwould\nmotivate\nhim\nbut\nCarbander\nhad\nnot\nbeen\nready\nfor\nthe\nwar\ngod's\ndisgust\nthe\nlord\nof\nblood\nhad\nnot\nderided\nhim\nlike\nthe\nlesser\ncreatures\nof\nthe\ncourt\nnor\npunished\nhim\nin a\nrage\nas\nhad\nha",
+        "label": "Evade"
+      },
+      "expected": {
+        "label": "Evade",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_evade_4",
+      "input": {
+        "text": "What is T1027.003: Steganography?\n\n- Adversaries may use steganography techniques in order to prevent the detection of hidden information. Steganographic techniques can be used to hide data in digital media such as images, audio tracks, video clips, or text files.\n\n[Duqu](https://attack.mitre.org/software/S0038) was an early example of malware that used steganography. It encrypted the gathered information from a victim's system and hid it within an image before exfiltrating the image to a C2 ser",
+        "label": "Evade"
+      },
+      "expected": {
+        "label": "Evade",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_exploit_1",
+      "input": {
+        "text": "What is CWE-514: Covert Channel?\n\n- A covert channel is a path that can be used to transfer information in a way not intended by the system's designers.",
+        "label": "Exploit"
+      },
+      "expected": {
+        "label": "Exploit",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_exploit_2",
+      "input": {
+        "text": "What is T1510: Clipboard Modification?\n\n- Adversaries may abuse clipboard functionality to intercept and replace information in the Android device clipboard.(Citation: ESET Clipboard Modification February 2019)(Citation: Welivesecurity Clipboard Modification February 2019)(Citation: Syracuse Clipboard Modification 2014) Malicious applications may monitor the clipboard activity through the <code>ClipboardManager.OnPrimaryClipChangedListener</code> interface on Android to determine when the clipbo",
+        "label": "Exploit"
+      },
+      "expected": {
+        "label": "Exploit",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_exploit_3",
+      "input": {
+        "text": "What is d3f:RawMemoryAccessFunction: Raw Memory Access Function?\n\n- A function which accesses raw memory, usually using memory addresses.",
+        "label": "Exploit"
+      },
+      "expected": {
+        "label": "Exploit",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_exploit_4",
+      "input": {
+        "text": "What happens in The Lost and the Damned Siege of Terra The Horus H - Part 156?\n\n- Thandamel!\nScrivok crowed from the shipmaster's dais.\nWhat glories await us!\nWhat fine adventures we set ourselves upon!\nWhen the bards compose their sonnets of this war,\ncome victory or defeat,\nthe name of Gendor Scrivok will be remembered.\nAnd that is very fine.\nWhen the chroniclers of the future ask where Conrad Kurz was\nat the moment the first assault crashed against the walls\nand find no answer,\nthey will know",
+        "label": "Exploit"
+      },
+      "expected": {
+        "label": "Exploit",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_harden_1",
+      "input": {
+        "text": "What is The [organization] shall establish and maintain a comprehensive program for testing, training, and monitoring to ensure the effectiveness of security controls and incident response capabilities.: The [organization] shall establish and maintain a comprehensive program for testing, training, and monitoring to ensure the effectiveness of security controls and incident response capabilities.?\n\n- The [organization] shall establish and maintain a comprehensive program for testing, training, an",
+        "label": "Harden"
+      },
+      "expected": {
+        "label": "Harden",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_harden_2",
+      "input": {
+        "text": "What is Shielding/Insulation: Shielding/Insulation?\n\n- Shielding within the Structures and Mechanisms (S&M) subsystem of a spacecraft is designed to protect sensitive components and systems from various environmental hazards encountered in space. The selection and design of shielding materials and techniques depend on the specific mission requirements, the spacecraft's environment, and the potential threats it might encounter.\nCountermeasures: CM0024, CM0025, CM0026, CM0028, CM0042, CM0053\nTechn",
+        "label": "Harden"
+      },
+      "expected": {
+        "label": "Harden",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_harden_3",
+      "input": {
+        "text": "What is AC-17: Remote Access?\n\n- Remote access is access to organizational systems (or processes acting on behalf of users) that communicate through external networks such as the Internet. Types of remote access include dial-up, broadband, and wireless. Organizations use encrypted virtual private networks (VPNs) to enhance confidentiality and integrity for remote connections. The use of encrypted VPNs provides sufficient assurance to the organization that it can effectively treat such connection",
+        "label": "Harden"
+      },
+      "expected": {
+        "label": "Harden",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_harden_4",
+      "input": {
+        "text": "What is AC-2(9): Account Management | Restrictions on Use of Shared and Group Accounts?\n\n- Before permitting the use of shared or group accounts, organizations consider the increased risk due to the lack of accountability with such accounts.\nCountermeasures: CM0005\nTechniques: DE-0002.01, DE-0009.05, EXF-0006.01, EXF-0006.02, IA-0004.01, IA-0007.01, IA-0007.02, IA-0009.01, IA-0009.02, IA-0009.03",
+        "label": "Harden"
+      },
+      "expected": {
+        "label": "Harden",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_isolate_1",
+      "input": {
+        "text": "What happens in The Lost and the Damned Siege of Terra The Horus H - Part 124?\n\n- pressing problem.\nExplain,\nbreathed Karn,\na dangerous throaty whisper.\nSince you shut him down there,\nAngron has been butchering\nhis way through the ship.\nHe is getting dangerously\nclose to the Enginarium.\nIf he gets in there\nand slaughters\nthe transmechanic clades,\nthe whole ship could go up.\nOr he'll get bored\nand find his way up here.\nThen you'll have to fight him.\nKarn stared at the image.\nAngron's demonic face",
+        "label": "Isolate"
+      },
+      "expected": {
+        "label": "Isolate",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_isolate_2",
+      "input": {
+        "text": "[Part 6] What unique opportunity allowed the researchers to focus on specific airplane network traffic?\n\n- **Reasoning:** The text states 'we had this unique opportunity to make airplane networks be quiet so we could focus on what mattered'.\n\n**Answer:** They had a unique opportunity to make airplane networks be quiet.",
+        "label": "Isolate"
+      },
+      "expected": {
+        "label": "Isolate",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_isolate_3",
+      "input": {
+        "text": "What is PS-4: Personnel Termination?\n\n- System property includes hardware authentication tokens, system administration technical manuals, keys, identification cards, and building passes. Exit interviews ensure that terminated individuals understand the security constraints imposed by being former employees and that proper accountability is achieved for system-related property. Security topics at exit interviews include reminding individuals of nondisclosure agreements and potential limitations o",
+        "label": "Isolate"
+      },
+      "expected": {
+        "label": "Isolate",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_isolate_4",
+      "input": {
+        "text": "What is The [spacecraft] shall be capable of shutting off specific subsystems or payloads to isolate malicious activity or protect the platform.: The [spacecraft] shall be capable of shutting off specific subsystems or payloads to isolate malicious activity or protect the platform.?\n\n- The [spacecraft] shall be capable of shutting off specific subsystems or payloads to isolate malicious activity or protect the platform.\nNIST Controls: PE-10",
+        "label": "Isolate"
+      },
+      "expected": {
+        "label": "Isolate",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_model_1",
+      "input": {
+        "text": "What is CWE-205: Observable Behavioral Discrepancy?\n\n- The product's behaviors indicate important differences that may be observed by unauthorized actors in a way that reveals (1) its internal state or decision process, or (2) differences from other products with equivalent functionality.",
+        "label": "Model"
+      },
+      "expected": {
+        "label": "Model",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_model_2",
+      "input": {
+        "text": "PDF extraction failed for arxiv_1612.01928v1.pdf: Timeout after 180 seconds (dynamic)\n\n- Extraction failed with error: Timeout after 180 seconds (dynamic). This PDF exhibits fragility patterns.",
+        "label": "Model"
+      },
+      "expected": {
+        "label": "Model",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_model_3",
+      "input": {
+        "text": "[Transcript (part 1)] Which artificial intelligence takes on the voice of Ada Lovelace?\n\n- **Reasoning:** The text specifies that Gemini becomes Ada Lovelace, the visionary who saw code as poetry.\n\n**Answer:** Gemini takes on the voice of Ada Lovelace.",
+        "label": "Model"
+      },
+      "expected": {
+        "label": "Model",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_model_4",
+      "input": {
+        "text": "PDF extraction failed for rfc9437.pdf: Timeout after 180 seconds (dynamic)\n\n- Extraction failed with error: Timeout after 180 seconds (dynamic). This PDF exhibits fragility patterns.",
+        "label": "Model"
+      },
+      "expected": {
+        "label": "Model",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_persist_1",
+      "input": {
+        "text": "What is in tmp7j6pyps2 - dogpile:synthesis?\n\n- Marlene Dietrich, a German-American actress and singer (1901-1992), achieved international fame through films like The Blue Angel and Morocco, directed by Josef von Sternberg. She was known for her distinctive voice, glamorous image, and being a high-paid actress. A unique aspect highlighted is her bold debut in \"Morocco,\" where she appeared in a tuxedo and kissed another woman, contributing to her status as a bi-sexual icon, a perception reinforced",
+        "label": "Persist"
+      },
+      "expected": {
+        "label": "Persist",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_persist_2",
+      "input": {
+        "text": "What happens in Saturnine Siege of Terra The Horus Heresy Book 4 L - Part 215?\n\n- Land glowered at him.\nThe waiting,\nLand said,\nis driving me mad.\nBe thankful\nyou only have\nthe waiting\nto do that to you,\nreplied the Huskarl.\nGentlemen,\nsaid Sinderman,\nstepping forward.\nLyclonus writes\nthat a calm mind\nis the key\nto accomplishing...\nStick your books\nup your ass,\nhistory man,\nsaid Land.\nHe pushed past\nSinderman\nand strode away\ndown the hall.\nSinderman glanced\nat Diamantis.\nI see what you mean,\nhe",
+        "label": "Persist"
+      },
+      "expected": {
+        "label": "Persist",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_persist_3",
+      "input": {
+        "text": "What happens in Echoes of Eternity The Horus Heresy Siege of Terra - Part 211?\n\n- particulates\nand\norganic\ndebris\nagainst\nhis\nskin\nhe\ncould\nfeel\nclogs\nin\nseveral\nof\nhis\nintravenous\ncables\nthe\nshell\nwithin\nwhich\nhe\nwas\ninterred\nhad\nbeen\nsuffering\ninput\nlag\nfor\nweeks\neither\nit\nwas\nstruggling\nto\nobey\nhis\nmental\nimpulses\nor\nhe\nwas\ntoo\nworn\ndown\nfor\na\nclean\ncognitive\nlink\nwhichever\nthe\ncase\nthe\nresult\nwas\nthe\nsame\ncorpses\nwere\nnot\nclean\nthings\nhe\nwas\nslowly\nbeing\npoisoned\nby\nthe\ntoxins\nof\nhis\nown\nfil",
+        "label": "Persist"
+      },
+      "expected": {
+        "label": "Persist",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_persist_4",
+      "input": {
+        "text": "What is in tmp7j6pyps2 - dogpile:synthesis?\n\n- Marlene Dietrich, a German-American actress and singer (1901-1992), achieved international fame through films like The Blue Angel and Morocco, directed by Josef von Sternberg. She was known for her distinctive voice, glamorous image, and being a high-paid actress. A unique aspect highlighted is her bold debut in \"Morocco,\" where she appeared in a tuxedo and kissed another woman, contributing to her status as a bi-sexual icon, a perception reinforced",
+        "label": "Persist"
+      },
+      "expected": {
+        "label": "Persist",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_restore_1",
+      "input": {
+        "text": "What happens in The Flight of The Eisenstein The Horus Heresy Book - Part 115?\n\n- his feet.\nSmall fires were burning here\nand there as servitors\nstruggled to bring the bridge\nback to any semblance of\norder.\nHe saw Coriah sprawled over the\ncommand throne, with Vort at his\nside.\nThe woman had a severe cut\nacross her scalp, but she\nseemed to be unaware of the\nstreaks of blood down her\ncheek.\nDimly he heard Iacton Cruz\nswear in Chthonian as he\nclimbed off the deck.\nReport, Garrow commanded, the\nroug",
+        "label": "Restore"
+      },
+      "expected": {
+        "label": "Restore",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_restore_2",
+      "input": {
+        "text": "What is CP-7: Alternate Processing Site?\n\n- Alternate processing sites are geographically distinct from primary processing sites and provide processing capability if the primary processing site is not available. The alternate processing capability may be addressed using a physical processing site or other alternatives, such as failover to a cloud-based service provider or other internally or externally provided processing service. Geographically distributed architectures that support contingency",
+        "label": "Restore"
+      },
+      "expected": {
+        "label": "Restore",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_restore_3",
+      "input": {
+        "text": "What is CP-7: Alternate Processing Site?\n\n- Alternate processing sites are geographically distinct from primary processing sites and provide processing capability if the primary processing site is not available. The alternate processing capability may be addressed using a physical processing site or other alternatives, such as failover to a cloud-based service provider or other internally or externally provided processing service. Geographically distributed architectures that support contingency",
+        "label": "Restore"
+      },
+      "expected": {
+        "label": "Restore",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    },
+    {
+      "id": "rat_restore_4",
+      "input": {
+        "text": "What happens in The Flight of The Eisenstein The Horus Heresy Book - Part 115?\n\n- his feet.\nSmall fires were burning here\nand there as servitors\nstruggled to bring the bridge\nback to any semblance of\norder.\nHe saw Coriah sprawled over the\ncommand throne, with Vort at his\nside.\nThe woman had a severe cut\nacross her scalp, but she\nseemed to be unaware of the\nstreaks of blood down her\ncheek.\nDimly he heard Iacton Cruz\nswear in Chthonian as he\nclimbed off the deck.\nReport, Garrow commanded, the\nroug",
+        "label": "Restore"
+      },
+      "expected": {
+        "label": "Restore",
+        "has_rationale": true,
+        "confidence_valid": true
+      }
+    }
+  ]
+}

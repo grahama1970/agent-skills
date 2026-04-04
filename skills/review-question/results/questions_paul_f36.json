@@ -1,0 +1,142 @@
+[
+  {
+    "question": "What SPARTA countermeasures are in place to prevent firmware exploits in the F-36's FADEC system during acceptance testing?",
+    "difficulty": "easy",
+    "f36_category": "06_dual_engine",
+    "domain_context": "acceptance test",
+    "persona": "paul"
+  },
+  {
+    "question": "How does SPARTA address supply chain threats related to material substitution in titanium alloy batches for F-36 structural components?",
+    "difficulty": "easy",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "alloy batch",
+    "persona": "paul"
+  },
+  {
+    "question": "What weld inspection protocols does SPARTA recommend to mitigate threats against the F-36's airframe integrity from compromised vendor deliverables?",
+    "difficulty": "easy",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "weld inspection",
+    "persona": "paul"
+  },
+  {
+    "question": "Which SPARTA countermeasures protect CNC machining programs for F-36 bulkheads from unauthorized modifications during plant floor operations?",
+    "difficulty": "easy",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "CNC",
+    "persona": "paul"
+  },
+  {
+    "question": "How does SPARTA's threat model account for tolerance stack-up risks in dual-engine control linkages when vendors submit non-conformance reports?",
+    "difficulty": "easy",
+    "f36_category": "06_dual_engine",
+    "domain_context": "tolerance",
+    "persona": "paul"
+  },
+  {
+    "question": "How does SPARTA address potential supply chain threats related to counterfeit alloy batches in the F-36's structural components, and what vendor QA measures should we enforce beyond standard material certifications?",
+    "difficulty": "medium",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "Ensuring material integrity for critical airframe components while mitigating supplier-side substitution risks",
+    "persona": "paul"
+  },
+  {
+    "question": "What SPARTA countermeasures would you recommend for protecting the F-36's dual-engine FADEC system against firmware exploits that could originate from compromised CNC machining equipment in our manufacturing line?",
+    "difficulty": "medium",
+    "f36_category": "06_dual_engine",
+    "domain_context": "Preventing firmware manipulation during engine control unit production where machining tolerances intersect with cybersecurity",
+    "persona": "paul"
+  },
+  {
+    "question": "Given the F-36's increased use of automated weld inspection systems, how do SPARTA threat models account for potential data integrity attacks that could mask non-conformance in critical joint welds?",
+    "difficulty": "medium",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "Securing digital quality assurance processes against adversarial manipulation of weld inspection data",
+    "persona": "paul"
+  },
+  {
+    "question": "How should we adapt SPARTA's approach to process control threats when dealing with material substitutions for F-36 hydraulic components, particularly where alternate alloys might introduce new attack surfaces in the supply chain?",
+    "difficulty": "medium",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "Managing approved material changes while maintaining security across distributed manufacturing partners",
+    "persona": "paul"
+  },
+  {
+    "question": "What SPARTA-informed mitigations would you suggest for protecting acceptance test procedures for the F-36's flight control actuators against test equipment compromise that could hide manufacturing defects?",
+    "difficulty": "medium",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "Ensuring test result integrity for flight-critical systems where malicious actors might manipulate validation outcomes",
+    "persona": "paul"
+  },
+  {
+    "question": "Given the F-36's dual-engine FADEC system relies on vendor-supplied control modules, what SPARTA countermeasures should we enforce during vendor QA to prevent firmware exploits that could affect cross-channel control?",
+    "difficulty": "medium",
+    "f36_category": "06_dual_engine",
+    "domain_context": "vendor QA, FADEC, cross-channel control",
+    "persona": "paul"
+  },
+  {
+    "question": "How can we leverage SPARTA's supply chain threat models to validate that material substitutions in our titanium alloy batches don't introduce vulnerabilities in critical F-36 structural welds?",
+    "difficulty": "medium",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "supply chain, alloy batch, weld inspection",
+    "persona": "paul"
+  },
+  {
+    "question": "What SPARTA-based process controls would you recommend for our CNC machining centers to mitigate the risk of compromised toolpath files affecting F-36 wing spar tolerances?",
+    "difficulty": "medium",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "process control, CNC, tolerance",
+    "persona": "paul"
+  },
+  {
+    "question": "Considering the F-36's legacy avionics architecture from the F-35 program, what SPARTA attack vectors pose the greatest risk to our acceptance test procedures for the new dual-engine control system, and how should we modify our plant floor test stations to detect them?",
+    "difficulty": "hard",
+    "f36_category": "16_legacy_lineage",
+    "domain_context": "acceptance test, plant floor, dual-engine control",
+    "persona": "paul"
+  },
+  {
+    "question": "When reviewing non-conformance reports from F-36 hydraulic system components, how should we correlate SPARTA's firmware exploit patterns with potential vulnerabilities in vendor deliverables that might explain recurring manufacturing defects?",
+    "difficulty": "hard",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "non-conformance, vendor deliverables, manufacturing",
+    "persona": "paul"
+  },
+  {
+    "question": "Given the F-36's dual-engine FADEC system relies on legacy CNC machining tolerances from the F-35 program, what SPARTA threats could exploit material substitution vulnerabilities in the actuator housings, and how would weld inspection countermeasures mitigate these risks?",
+    "difficulty": "hard",
+    "f36_category": "06_dual_engine",
+    "domain_context": "CNC, tolerance, weld inspection, material substitution",
+    "persona": "paul"
+  },
+  {
+    "question": "How might SPARTA supply chain attacks targeting alloy batch certifications for our turbine blades bypass current vendor QA processes, and what additional acceptance test protocols would you recommend to detect compromised materials?",
+    "difficulty": "hard",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "alloy batch, vendor QA, acceptance test, supply chain",
+    "persona": "paul"
+  },
+  {
+    "question": "When analyzing non-conformance reports from the plant floor, what patterns in machine test logs would indicate potential SPARTA firmware exploits targeting the F-36's hydraulic control system, and how should we modify our process controls to flag these anomalies?",
+    "difficulty": "hard",
+    "f36_category": "15_machine_test_logs",
+    "domain_context": "non-conformance, machine test, process control, plant floor",
+    "persona": "paul"
+  },
+  {
+    "question": "Could deviations in vendor deliverables for the F-36's radar cooling system create SPARTA vulnerabilities if malicious actors manipulate CDRL documentation to hide substandard manufacturing?",
+    "difficulty": "ambiguous",
+    "f36_category": "14_vendor_deliverables",
+    "domain_context": "vendor deliverable, CDRL, manufacturing",
+    "persona": "paul"
+  },
+  {
+    "question": "What SPARTA countermeasures would you prioritize for protecting the F-36's flight test data integrity if attackers compromise our CNC programming interfaces through the supply chain?",
+    "difficulty": "ambiguous",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "CNC, supply chain, flight test",
+    "persona": "paul"
+  }
+]

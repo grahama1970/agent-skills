@@ -1,0 +1,13 @@
+{
+  "completed": 489,
+  "total": 500,
+  "description": "Harvesting Industry PDFs",
+  "current_item": "Done",
+  "stats": {
+    "success": 489,
+    "failed": 0
+  },
+  "elapsed_seconds": 288.8,
+  "last_updated": "2026-02-10 08:38:31",
+  "status": "completed"
+}

@@ -1,0 +1,150 @@
+### FILE: .pi/skills/monitor-codebase/SKILL.md
+```md
+---
+name: monitor-codebase
+description: >
+  Continuous codebase health monitoring for all registered projects.
+  Composes project-state, cleanup, ingest-code, quality-checks, skills-ci,
+  dogpile research, and orchestrated fix verification.
+triggers:
+  - monitor codebase
+  - codebase health
+  - scan all projects
+  - project health check
+  - best practices audit
+allowed-tools:
+  - Bash
+  - Read
+metadata:
+  short-description: Continuous codebase health monitor
+provides:
+  - codebase-monitoring
+composes:
+  - project-state
+  - cleanup
+  - ingest-code
+  - skills-ci
+  - treesitter
+  - embedding
+  - memory
+  - dogpile
+  - orchestrate
+  - code-runner
+  - scheduler
+  - task-monitor
+  - best-practices-python
+  - best-practices-react
+  - best-practices-kde
+  - best-practices-skills
+  - best-practices-streamdeck
+taxonomy:
+  - precision
+  - resilience
+  - fragility
+---
+
+> STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
+
+# monitor-codebase
+
+Continuous codebase health monitoring for all registered projects. Scans for
+violations, researches fixes, runs isolated remediation workflows, and tracks
+health trends over time.
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `scan <project>` | Scan a single registered project (full or light based on git changes) |
+| `scan --all` | Scan every project in the registry |
+| `scan --all --force` | Force full scan on all projects (ignore change detection) |
+| `scan <project> --fix` | Scan and run an orchestrated fix workflow for violations |
+| `cache-state [project...] [--force]` | Refresh project-state only for projects with new commits |
+| `report [project]` | Show latest findings from memory |
+| `schedule` | Register nightly scan with /scheduler |
+
+## Change Detection
+
+Projects are tracked by git HEAD hash. On `scan --all`:
+- **Changed projects** → full 11-step scan
+- **Unchanged projects** → light scan (project-state only)
+- **`--force`** → full scan regardless of changes
+
+## Full Scan Pipeline (11 steps, for changed projects)
+
+| Step | Skill/Module | What It Does |
+|------|-------------|-------------|
+| 1 | `/project-state` | Baseline health snapshot (JSON) |
+| 2 | `/cleanup --dry-run` | Dead files, stale docs, junk artifacts |
+| 3 | `run_best_practices_checks()` | Grep-based: missing run.sh/sanity.sh for skills, React/KDE/StreamDeck patterns |
+| 4 | `quality_checks.py` | AST-based: banned imports, inline prompts, regex classifiers, handwritten tests, mock-only tests, hardcoded skill paths, bespoke AQL |
+| 5 | `autofix_docstrings.py` | Auto-generate missing docstrings via /treesitter + /scillm (**--fix only**, scan is read-only) |
+| 6 | `/ingest-code --treesitter` | CWE + structural scan with explicit symbol extraction, scoped to configured dirs |
+| 7 | `/skills-ci` | Full skills-ci scan (only if project has skills/ or .pi/skills/ dir) |
+| 8 | `/dogpile` | Research improvements for top violations (only if >5 issues found) |
+| 9 | Aggregate + `/memory learn` | JSON report + persist findings for trend tracking |
+| 9.5 | Trend comparison | Compare with prior scans and classify outcome as `REGRESSION`, `IMPROVED`, or `STABLE` |
+| 10 | `/orchestrate` + `/code-runner` | **--fix only**: generate a fix task file and run the remediation workflow |
+
+## Light Scan (for unchanged projects)
+
+| Step | Skill | What It Does |
+|------|-------|-------------|
+| 1 | `/project-state` | Health snapshot refresh |
+
+No violations scanning, no dogpile, no code modification. Just refreshes the state.
+
+## Quality Checks (Step 4)
+
+`quality_checks.py` runs AST-based analysis across any project (not just skills):
+
+| Check | Rule | What It Detects |
+|-------|------|-----------------|
+| Banned imports | `use-loguru`, `use-httpx`, `use-typer` | `import logging/requests/argparse` via AST |
+| File length | `max-800-lines` | Python files >800 lines |
+| Inline prompts | `inline-prompt` | LLM prompts in string literals (>200 chars, 2+ indicators) |
+| Regex classifier | `regex-classifier` | Functions with 3+ regex calls + 2+ branches |
+| Hardcoded paths | `hardcoded-skill-path` | `~/.pi/skills/` instead of SKILLS_DIR |
+| Shell AQL | `shell-aql` | Raw AQL in .sh files (memory project exempt) |
+| Python AQL | `python-bespoke-aql` | Raw AQL in .py files (memory project exempt) |
+| Handwritten tests | `handwritten-tests` | test_*.py without test-lab markers |
+| Mock-only tests | `mock-only-tests` | All tests use mocks, no sanity.sh |
+
+## Best-Practices Mapping
+
+| File Pattern | Best-Practices Skill | Key Checks |
+|---|---|---|
+| `*/skills/*/SKILL.md` | best-practices-skills | run.sh, sanity.sh, frontmatter |
+| `*.tsx`, `*.jsx` | best-practices-react | React patterns |
+| `*/plasmoids/*`, `*/kde-*` | best-practices-kde | KDE/Plasma patterns |
+| `*/streamdeck/*` | best-practices-streamdeck | StreamDeck patterns |
+
+## Fix Workflow
+
+When `scan --fix` finds violations:
+
+1. Generates `0N_FIX_TASKS.md` with violation details and fix instructions
+2. Runs `/dogpile search` for fix strategy when the findings need external research
+3. Uses `/orchestrate` to execute the remediation plan
+4. Uses `/code-runner` to implement and iterate on fixes inside the workflow
+5. Runs verification gates before accepting the result
+6. Persists the final outcome for later trend analysis
+
+## Project Scoping
+
+Each project can have `.monitor-codebase.json` to control scan scope:
+
+```json
+{
+  "include_dirs": ["packages/coding-agent/src", "packages/ai/src"],
+  "exclude_dirs": [".pi", "node_modules", "dist", "models"]
+}
+```
+
+## Scheduler Integration
+
+```bash
+./run.sh schedule
+# Registers nightly scan at 03:00 UTC via /scheduler
+```
+```

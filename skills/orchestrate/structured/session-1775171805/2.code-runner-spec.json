@@ -1,0 +1,18 @@
+{
+  "task_id": "2",
+  "title": "Generate Posture Dashboard design via /mockup-lab",
+  "prompt": "Task: Generate Posture Dashboard design via /mockup-lab\n\nImplementation:\n- Generate desktop design with /mockup-lab --device desktop\n- Design brief:\n- Dark theme (EMBRY: bg=#0d0f12, card=#12151a, green=#00ff88, amber=#ffaa00, red=#ff4444, blue=#4a9eff)\n- Row 1 (hero): Large posture score number + delta badge + 8 framework donut rings\n- Row 2 (main): NIST 800-53 family stacked bars (left 2/3) + gap analysis card (right 1/3)\n- Row 3 (detail): Drift alerts list (left) + top risks table (right)\n- Monospace text, uppercase labels, glow dots\n- Save per-pane PNGs: hero-row.png, family-bars.png, gap-analysis.png, drift-alerts.png, top-risks.png\n- Human reviews and approves each pane\n\nDefinition of Done:\n- Command: test $(ls packages/ux-lab/captures/posture-dashboard-design/*.png 2>/dev/null | wc -l) -ge 1 && echo PASS\n- Assertion: exit_code == 0\n\nTests:\n- ls packages/ux-lab/captures/posture-dashboard-design/*.png | wc -l",
+  "backend": "gemini",
+  "cwd": "/tmp/cr-wt-2-q4hwxnro",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775171805",
+  "definition_of_done": {
+    "command": "test $(ls packages/ux-lab/captures/posture-dashboard-design/*.png 2>/dev/null | wc -l) -ge 1 && echo PASS",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    "packages/ux-lab/captures/posture-dashboard-design/"
+  ],
+  "read_context": [
+    "/home/graham/workspace/experiments/pi-mono/.code-runner-skills-2.md"
+  ]
+}

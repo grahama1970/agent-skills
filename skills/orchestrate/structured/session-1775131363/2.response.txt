@@ -1,0 +1,103 @@
+```diff
+--- a/.pi/skills/review-plan/review_plan.py
++++ b/.pi/skills/review-plan/review_plan.py
+@@ -184,40 +184,58 @@ def check_claims(task: dict, findings: list[Finding]):
+                 suggestion=f"Verify path exists or update reference",
+             ))
+ 
+ 
+ def check_skill_overlap(task: dict, manifest: dict | None, findings: list[Finding]):
+     """Check 2: Detect tasks that reinvent existing skills."""
+     if not manifest:
+         return
+ 
+-    body = task["body"].lower()
+-    title = task["title"].lower()
+-
+-    # Keywords that suggest building something new
+-    build_signals = ["create", "build", "implement", "add", "write", "develop"]
+-    if not any(signal in title for signal in build_signals):
+-        return
++    runner = str(task.get("runner", "")).strip()
++    if runner != "code-runner":
++        return
++
++    skills_field = task.get("skills")
++    skills_list = []
++    if isinstance(skills_field, list):
++        skills_list = [str(s).strip() for s in skills_field if str(s).strip()]
++
++    known_skills = {s.get("name", "") for s in manifest.get("skills", []) if s.get("name")}
++
++    if not skills_list:
++        findings.append(Finding(
++            task=f"Task {task['id']}",
++            check="overlap",
++            grade="WARN",
++            message="missing skills — run /recommend-skill-chain",
++            line=task["line"],
++            suggestion="Populate `skills` using /recommend-skill-chain.",
++        ))
++    else:
++        for skill_name in skills_list:
++            if skill_name not in known_skills:
++                findings.append(Finding(
++                    task=f"Task {task['id']}",
++                    check="overlap",
++                    grade="FAIL",
++                    message=f"Unknown skill `{skill_name}` in skills field",
++                    line=task["line"],
++                    suggestion="Use only skill names from .pi/skills-manifest.json",
++                ))
+ 
++    text = f"{task.get('title', '')}\n{task.get('body', '')}".lower()
++    text_words = set(re.findall(r"[a-z0-9][a-z0-9-]{1,}", text))
+     skills = manifest.get("skills", [])
+     for skill in skills:
+         name = skill.get("name", "")
+         desc = (skill.get("description", "") or "").lower()
++        if not name or not desc:
++            continue
+ 
+-        # Check if task title/body overlaps significantly with an existing skill
+-        desc_words = set(desc.split()) - {"the", "a", "an", "and", "or", "for", "to", "of", "in", "on", "with", "is"}
+-        body_words = set(body.split()) - {"the", "a", "an", "and", "or", "for", "to", "of", "in", "on", "with", "is"}
+-
+-        if len(desc_words) < 5:
++        desc_words = set(re.findall(r"[a-z0-9][a-z0-9-]{1,}", desc))
++        if len(desc_words) < 4:
+             continue
+-
+-        overlap = desc_words & body_words
++        overlap = desc_words & text_words
+         overlap_ratio = len(overlap) / len(desc_words) if desc_words else 0
+-
+-        if overlap_ratio > 0.4:
++        if overlap_ratio > 0.6:
+             findings.append(Finding(
+                 task=f"Task {task['id']}",
+                 check="overlap",
+-                grade="WARN",
+-                message=f"Possible overlap with existing skill `/{name}`: {skill.get('description', '')[:80]}",
++                grade="FAIL",
++                message=f"use /{name} instead",
+                 line=task["line"],
+-                suggestion=f"Consider using `/{name}` instead of building from scratch",
++                suggestion=f"Use /{name} instead of bespoke implementation.",
+             ))
++            break
+ 
+ 
+ def check_dod(task: dict, findings: list[Finding]):
+     """Check 4: Audit Definition of Done quality."""
+     dod = task.get("dod", "")
+@@ -109,6 +127,7 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
+             "allowlist": item.get("allowlist") or [],
+             "read_context": item.get("read_context") or [],
+             "allowlist_optional": item.get("allowlist_optional", False),
++            "skills": item.get("skills") or [],
+             "implementation": impl,
+         })
+     return tasks, 0
+ 
+```

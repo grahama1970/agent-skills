@@ -1,0 +1,49 @@
+{
+  "total": 5,
+  "overall_grades": {
+    "A": 1,
+    "B": 4
+  },
+  "pass_rate": 1.0,
+  "by_persona": {
+    "Jennifer Cheung": {
+      "total": 5,
+      "avg_composite": 0.818
+    }
+  },
+  "by_difficulty": {
+    "flawed": {
+      "total": 1,
+      "avg_composite": 0.85
+    },
+    "simple": {
+      "total": 2,
+      "avg_composite": 0.82
+    },
+    "complex": {
+      "total": 1,
+      "avg_composite": 0.85
+    },
+    "ambiguous": {
+      "total": 1,
+      "avg_composite": 0.75
+    }
+  },
+  "by_evaluation": {
+    "flaw_caught": 2,
+    "incomplete": 6,
+    "flaw_missed": 1
+  },
+  "dimension_averages": {
+    "initial_response_quality": 0.74,
+    "disambiguation_handling": 0.8,
+    "error_detection": 1.0,
+    "follow_up_quality": 0.72,
+    "response_naturalness": 0.9,
+    "domain_accuracy": 0.81,
+    "session_coherence": 0.78
+  },
+  "avg_turns": 4.6,
+  "archived_count": 5,
+  "adversarial_count": 2
+}

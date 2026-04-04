@@ -1,0 +1,391 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "SPARTA Data Generation \u2014 QRAs, taxonomy scoring, quality scores, chat cascade",
+    "goal": "Fill all data gaps: taxonomy endpoints, QRA generation for 5 frameworks, relationship rescoring, per-control quality scores, ESA/NASA enrichment, chat cascade verification"
+  },
+  "capability_overlap": {
+    "memory_recall": "- \"SPARTA Explorer 2026-03-25\" \u2192 UI complete, data gaps identified\n- \"ISO enrichment\" \u2192 DONE via Brave Search + /upsert\n- \"Framework normalization\" \u2192 DONE (nist/cwe/d3fend/nvd \u2192 uppercase)\n- \"worksheets.yaml audit\" \u2192 04_TASKS filed but not run\n",
+    "decision_matrix": "/taxonomy endpoints = memory daemon code change (memory project)\nQRA generation = CALL /doc2qra or /scillm direct\nDescription enrichment = CALL /brave-search + /upsert\nRelationship rescoring = Mind tag Jaccard (data already on controls)\nQuality score = aggregation script via /upsert\nChat cascade test = manual verification in browser\n"
+  },
+  "execution": {
+    "max_concurrency": 4,
+    "backend": "codex"
+  },
+  "lanes": [
+    {
+      "id": "infra",
+      "label": "Infrastructure"
+    },
+    {
+      "id": "enrich",
+      "label": "Data Enrichment"
+    },
+    {
+      "id": "generate",
+      "label": "QRA Generation"
+    },
+    {
+      "id": "score",
+      "label": "Scoring + Quality"
+    },
+    {
+      "id": "verify",
+      "label": "Verification"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Stand up /taxonomy daemon endpoints",
+      "lane": "infra",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "The memory daemon at /run/user/1000/embry/memory.sock needs /taxonomy/extract and /taxonomy/classify registered",
+        "These endpoints are 404 \u2014 they need to be added to the daemon's route registration",
+        "The daemon code is at /home/graham/workspace/experiments/memory/",
+        "The /taxonomy skill logic is at /home/graham/workspace/experiments/pi-mono/.pi/skills/taxonomy/",
+        "The daemon should call the taxonomy skill's Python functions or implement equivalent logic",
+        "POST /taxonomy/extract: input {text, collection?} \u2192 output {tags: {mind: [...], heart: [...]}, entities: [...]}",
+        "POST /taxonomy/classify: input {text} \u2192 output {bridges: {...}}"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST --unix-socket /run/user/1000/embry/memory.sock http://localhost/taxonomy/extract -H 'Content-Type: application/json' -d '{\"text\":\"protect satellite telemetry from jamming\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print(d); assert 'tags' in d or 'mind' in d; print('PASS')\"",
+        "assertion": "/taxonomy/extract returns mind tags"
+      },
+      "tests": [
+        "HTTP 200 from /taxonomy/extract",
+        "HTTP 200 from /taxonomy/classify"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Enrich ESA control descriptions via Brave Search",
+      "lane": "enrich",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "ESA has 137 controls \u2014 check which have real descriptions vs placeholder/empty",
+        "For controls missing descriptions, search Brave for 'ESA SPACE-SHIELD {control_name} description'",
+        "Write inferred descriptions via /upsert with [INFERRED from Brave Search] prefix",
+        "Similar process to ISO enrichment done 2026-03-25",
+        "Update worksheets.yaml ESA entry with description_source: inferred if needed"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_controls\",\"limit\":5,\"filters\":{\"source_framework\":\"ESA\"},\"return_fields\":[\"control_id\",\"description\"]}' | python3 -c \"import json,sys; d=json.load(sys.stdin); has=sum(1 for doc in d['documents'] if doc.get('description') and len(doc['description'])>30); print(f'{has}/5 have descriptions'); assert has>=4; print('PASS')\"",
+        "assertion": "80%+ ESA controls have prose descriptions"
+      },
+      "tests": [
+        "ESA controls have non-empty descriptions"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Enrich NASA control descriptions via Brave Search",
+      "lane": "enrich",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "NASA (NASABPG) has 14 controls \u2014 check descriptions",
+        "Search Brave for 'NASA Best Practices Guide {control_name} space security'",
+        "Write via /upsert with [INFERRED from Brave Search] prefix"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_controls\",\"limit\":5,\"filters\":{\"source_framework\":\"NASA\"},\"return_fields\":[\"control_id\",\"description\"]}' | python3 -c \"import json,sys; d=json.load(sys.stdin); has=sum(1 for doc in d['documents'] if doc.get('description') and len(doc['description'])>30); print(f'{has}/5'); assert has>=4; print('PASS')\"",
+        "assertion": "80%+ NASA controls have prose descriptions"
+      },
+      "tests": [
+        "NASA controls have non-empty descriptions"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Generate QRAs for SPARTA countermeasures (90 controls)",
+      "lane": "generate",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "For each SPARTA countermeasure (CM0001-CM0092) that has a description:",
+        "  1. GET description via /list with filters {source_framework: SPARTA, control_type: countermeasure}",
+        "  2. Generate 3-5 QRAs using /scillm (POST http://localhost:4001/v1/chat/completions)",
+        "     System prompt: 'Generate 3 Question-Reasoning-Answer triples for this security countermeasure. Each Q should test understanding of the control, R explains why, A gives the definitive answer.'",
+        "  3. Store each QRA via /learn with collection=sparta_qra, control_id={id}",
+        "Target: ~300 new QRAs",
+        "Use model: 'text' (routes to DeepSeek via scillm)"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_qra\",\"limit\":1,\"filters\":{\"control_id\":\"CM0001\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print(f'CM0001 QRAs: {d[\"total\"]}'); assert d['total']>=3; print('PASS')\"",
+        "assertion": "CM0001 has >= 3 QRAs"
+      },
+      "tests": [
+        "SPARTA countermeasure QRA count > 200"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Generate QRAs for SPARTA techniques (216 controls)",
+      "lane": "generate",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Same approach as T4 but for techniques (SV-IT-2, SV-SP-1, etc.)",
+        "These already have descriptions \u2014 use them directly",
+        "Target: ~650 new QRAs"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_qra\",\"limit\":1,\"filters\":{\"control_id\":\"SV-IT-2\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print(f'SV-IT-2 QRAs: {d[\"total\"]}'); assert d['total']>=3; print('PASS')\"",
+        "assertion": "SV-IT-2 has >= 3 QRAs"
+      },
+      "tests": [
+        "SPARTA technique QRA count > 500"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Generate QRAs for ISO 27001 controls (15 controls)",
+      "lane": "generate",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "ISO controls now have [INFERRED] descriptions \u2014 use those",
+        "Tag QRAs with ['iso-qra', 'inferred-source']",
+        "Target: ~45-75 new QRAs"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_qra\",\"limit\":1,\"filters\":{\"control_id\":\"9.1\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print(f'ISO 9.1 QRAs: {d[\"total\"]}'); assert d['total']>=3; print('PASS')\"",
+        "assertion": "ISO 9.1 has >= 3 QRAs"
+      },
+      "tests": [
+        "ISO QRA count > 30"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Generate QRAs for ESA controls (137 controls)",
+      "lane": "generate",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T2"
+      ],
+      "implementation": [
+        "ESA controls need descriptions first (T2) then QRA generation",
+        "Target: ~400 new QRAs"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_qra\",\"limit\":1,\"filters\":{\"control_id\":\"ESA-01\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print(f'ESA-01 QRAs: {d[\"total\"]}'); assert d['total']>=1; print('PASS')\"",
+        "assertion": "ESA-01 has >= 1 QRA"
+      },
+      "tests": [
+        "ESA QRA count > 100"
+      ]
+    },
+    {
+      "id": "T8",
+      "title": "Generate QRAs for NASA controls (14 controls)",
+      "lane": "generate",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T3"
+      ],
+      "implementation": [
+        "NASA controls need descriptions first (T3) then QRA generation",
+        "Target: ~42-70 new QRAs"
+      ],
+      "definition_of_done": {
+        "command": "echo 'NASA QRAs generated'",
+        "assertion": "NASA controls have QRAs"
+      },
+      "tests": [
+        "NASA QRA count > 20"
+      ]
+    },
+    {
+      "id": "T9",
+      "title": "Recompute relationship scores via Mind tag Jaccard intersection",
+      "lane": "score",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T1"
+      ],
+      "implementation": [
+        "131K relationships in sparta_relationships need rescoring",
+        "For each relationship:",
+        "  1. Get source_control_id mind tags via /list",
+        "  2. Get target_control_id mind tags via /list",
+        "  3. Compute Jaccard: |intersection| / |union| of mind[] arrays",
+        "  4. Update combined_score via /upsert",
+        "Mind tags are already 100% populated on controls",
+        "Process in batches of 500 relationships",
+        "Cache control mind tags to avoid repeated lookups (same control appears in many relationships)",
+        "Write a Python script that does this via httpx to localhost:3001"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_relationships\",\"limit\":10,\"return_fields\":[\"combined_score\",\"source_control_id\",\"target_control_id\"]}' | python3 -c \"import json,sys; d=json.load(sys.stdin); scores=[doc.get('combined_score',0) for doc in d['documents']]; print(f'Scores: {scores}'); assert max(scores)>0.1; print('PASS')\"",
+        "assertion": "Relationship scores reflect taxonomy intersection"
+      },
+      "tests": [
+        "Sampled scores > 0 and vary by Mind tag overlap"
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "Compute per-control quality score",
+      "lane": "score",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T4",
+        "T5",
+        "T6",
+        "T9"
+      ],
+      "implementation": [
+        "Compute nrs_score for all 11,620 controls:",
+        "  score = weighted avg of:",
+        "    has_description: 0/1 (weight 0.2)",
+        "    has_mind_tags: 0/1 (weight 0.2)",
+        "    min(qra_count/5, 1.0) (weight 0.3)",
+        "    avg_relationship_score (weight 0.3)",
+        "Store via /upsert on sparta_controls",
+        "Process in batches of 100",
+        "For qra_count: /list sparta_qra with filter control_id, limit 1 \u2192 use total",
+        "For avg_rel_score: /recall sparta_relationships with entity filter \u2192 avg combined_score"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_controls\",\"limit\":10,\"return_fields\":[\"control_id\",\"nrs_score\"]}' | python3 -c \"import json,sys; d=json.load(sys.stdin); has=sum(1 for doc in d['documents'] if doc.get('nrs_score') is not None); print(f'{has}/10 have scores'); assert has>=8; print('PASS')\"",
+        "assertion": "80%+ controls have nrs_score"
+      },
+      "tests": [
+        "Controls show scores between 0.0 and 1.0"
+      ]
+    },
+    {
+      "id": "T11",
+      "title": "Run /data-audit for coverage report",
+      "lane": "verify",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T10"
+      ],
+      "implementation": [
+        "Run /data-audit to verify pipeline coverage:",
+        "  Control \u2192 URL \u2192 Knowledge \u2192 QRA",
+        "All frameworks should now show > 0% QRA coverage",
+        "SPARTA/ISO/ESA/NASA should show new QRAs"
+      ],
+      "definition_of_done": {
+        "command": "echo 'Data audit complete'",
+        "assertion": "No framework at 0% QRA coverage"
+      },
+      "tests": [
+        "All frameworks have QRAs"
+      ]
+    },
+    {
+      "id": "T12",
+      "title": "UI verification \u2014 status badges + chat cascade + screenshots",
+      "lane": "verify",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T10",
+        "T11"
+      ],
+      "implementation": [
+        "1. Hard refresh browser (xdotool key ctrl+shift+r)",
+        "2. Verify status badges show real colors (green/amber/red) in Controls tab",
+        "3. Open Sources tab \u2192 ISO \u2192 verify QRAs count > 0",
+        "4. Click 'View in QRAs tab' \u2192 verify cross-tab navigation + filter badge",
+        "5. Open chat flyout \u2192 send query \u2192 verify cascade layer indicator",
+        "6. Take headless screenshots of all tabs",
+        "7. Save to packages/ux-lab/captures/sparta-explorer/"
+      ],
+      "definition_of_done": {
+        "command": "npx tsc --noEmit && echo 'PASS'",
+        "assertion": "All tabs render, badges colored, chat works, zero errors"
+      },
+      "tests": [
+        "Screenshots saved",
+        "Zero console errors"
+      ]
+    }
+  ],
+  "test_manifest": [
+    {
+      "tab": "Sources",
+      "collection": "sparta_controls",
+      "min_rows": 10,
+      "interactions": [
+        "click_iso",
+        "check_qra_count_nonzero",
+        "click_view_qras"
+      ],
+      "visual": "ISO shows QRA count > 0, 'View in QRAs tab' button works"
+    },
+    {
+      "tab": "Controls",
+      "collection": "sparta_controls",
+      "min_rows": 100,
+      "interactions": [
+        "check_status_badges"
+      ],
+      "visual": "Status badges show green/amber/red based on quality score, not all Unknown"
+    },
+    {
+      "tab": "QRAs",
+      "collection": "sparta_qra",
+      "min_rows": 5,
+      "interactions": [
+        "filter_by_iso_9_1"
+      ],
+      "visual": "ISO 9.1 QRAs exist, filter badge shown"
+    },
+    {
+      "tab": "Relationships",
+      "collection": "sparta_relationships",
+      "min_rows": 10,
+      "interactions": [
+        "check_scores"
+      ],
+      "visual": "Scores reflect taxonomy intersection (vary by Mind tag overlap)"
+    },
+    {
+      "tab": "Chat",
+      "interactions": [
+        "open_flyout",
+        "send_query"
+      ],
+      "visual": "Cascade returns results with layer indicator"
+    }
+  ]
+}

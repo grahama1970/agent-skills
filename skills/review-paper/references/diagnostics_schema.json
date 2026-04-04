@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Paper Diagnostics Output",
+  "type": "object",
+  "required": [
+    "paper",
+    "diagnostics",
+    "persona_alignment",
+    "revision_plan",
+    "cross_persona_consistency",
+    "cross_persona_issues"
+  ],
+  "properties": {
+    "paper": {"type": "object"},
+    "diagnostics": {"type": "object"},
+    "persona_alignment": {"type": "array", "items": {"type": "object"}},
+    "revision_plan": {"type": "array", "items": {"type": "object"}},
+    "cross_persona_consistency": {"type": "number"},
+    "cross_persona_issues": {"type": "array", "items": {"type": "string"}}
+  }
+}

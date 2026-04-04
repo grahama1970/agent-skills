@@ -1,0 +1,118 @@
+{
+  "generated_at": 1774362824.204894,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774361922",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Stitch mockup: Binary ingestion progress panel (docker-log style)",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774361922/1.response.txt",
+      "error": "",
+      "started_at": 1774361922.4044096,
+      "finished_at": 1774362187.2553113,
+      "subagent_task_id": "fba5f3d8",
+      "subagent_port": 8627
+    },
+    {
+      "id": "2",
+      "title": "SSE streaming endpoint for /analyze-elf pipeline progress",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774361922/2.response.txt",
+      "error": "",
+      "started_at": 1774361922.4053648,
+      "finished_at": 1774362209.3979816,
+      "subagent_task_id": "7b9c089d",
+      "subagent_port": 8624
+    },
+    {
+      "id": "3",
+      "title": "React IngestionProgress component (from Stitch mockup)",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774361922/3.response.txt",
+      "error": "",
+      "started_at": 1774362187.2562354,
+      "finished_at": 1774362465.6853206,
+      "subagent_task_id": "9624b1df",
+      "subagent_port": 8622
+    },
+    {
+      "id": "4",
+      "title": "Wire IngestionProgress into Binary Explorer data panel",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "2",
+        "3"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774361922/4.response.txt",
+      "error": "",
+      "started_at": 1774362465.686049,
+      "finished_at": 1774362671.642553,
+      "subagent_task_id": "31d80bc9",
+      "subagent_port": 8622
+    },
+    {
+      "id": "5",
+      "title": "VLM review: compare implementation screenshot to Stitch mockup",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "gemini",
+      "mode": "review",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774361922/5.response.txt",
+      "error": "",
+      "started_at": 1774362671.6429286,
+      "finished_at": 1774362680.6777349,
+      "subagent_task_id": "2f7fc3be",
+      "subagent_port": 8626
+    },
+    {
+      "id": "6",
+      "title": "Add ingestion tests to Binary Explorer test manifest",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774361922/6.response.txt",
+      "error": "",
+      "started_at": 1774362680.6782503,
+      "finished_at": 1774362824.2048542,
+      "subagent_task_id": "483c67ab",
+      "subagent_port": 8626
+    }
+  ]
+}

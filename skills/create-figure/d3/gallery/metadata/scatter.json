@@ -1,0 +1,18 @@
+{
+  "chart_type": "scatter",
+  "viz_family": "dot",
+  "query": "Plot the S00 estimated table count vs S05 actual table count as a scatter plot to show estimator accuracy",
+  "title": "Analysis (scatter)",
+  "data_shape": {
+    "row_count": 3,
+    "col_count": 1,
+    "max_label_len": 4,
+    "has_time_axis": false,
+    "null_pct": 0,
+    "nested": false
+  },
+  "source": "figure-lab",
+  "timestamp": 1772298792,
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/scatter_1772298792.html",
+  "html_size_bytes": 3190
+}

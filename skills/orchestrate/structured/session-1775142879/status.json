@@ -1,0 +1,61 @@
+{
+  "generated_at": 1775142880.7833807,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775142879",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Lane A work",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775142879/1.stdout.txt",
+      "error": "",
+      "started_at": 1775142879.7762105,
+      "finished_at": 1775142880.7799218,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Lane B work",
+      "lane": "1",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775142879/2.stdout.txt",
+      "error": "",
+      "started_at": 1775142879.77708,
+      "finished_at": 1775142880.7807412,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Merge",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775142879/3.stdout.txt",
+      "error": "",
+      "started_at": 1775142880.7810469,
+      "finished_at": 1775142880.7833533,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

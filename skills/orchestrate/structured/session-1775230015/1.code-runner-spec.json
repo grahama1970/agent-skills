@@ -1,0 +1,19 @@
+{
+  "task_id": "1",
+  "title": "Express endpoints: all /api/posture/* routes (frameworks, families, gaps, risks, alerts, overview)",
+  "prompt": "Task: Express endpoints: all /api/posture/* routes (frameworks, families, gaps, risks, alerts, overview)\n\nImplementation:\n- Add all posture endpoints to server/index.ts (edits working directory directly \u2014 NOT worktree):\n- GET /api/posture/frameworks:\n- Query memory daemon via Unix socket /run/user/1000/embry/memory.sock:\n- POST /list {collection: 'sparta_controls', return_fields: ['control_id','source_framework','nrs_score','weaknesses'], limit: 0}\n- POST /list {collection: 'sparta_qra', return_fields: ['control_id'], group_by: 'control_id', limit: 0}\n- Server-side aggregation: group by source_framework \u2192 { name, total, withQRAs, pct }\n- Derive overallScore as weighted average of framework pcts\n- Return JSON: { overallScore, delta: 0, frameworks: [...] }\n- GET /api/posture/families/:framework:\n- Query sparta_controls filtered by source_framework, group by NIST family prefix\n- Per family: { family, total, pass: NRS>=0.8, partial: 0.6<=NRS<0.8, fail: NRS<0.6 }\n- Return JSON: { framework, families: [...] }\n- GET /api/posture/gaps:\n- Query sparta_controls + sparta_qra + sparta_relationships\n- Return: { missingQRAs, noRelationships, unmappedPolicies, expiredEvidence, manualReview, details: [...top 20] }\n- GET /api/posture/risks?limit=10:\n- Query sparta_controls sorted by weaknesses DESC, nrs_score ASC\n- Return: { risks: [{ control_id, name, framework, weaknesses, nrs_score }] }\n- GET /api/posture/alerts?limit=20:\n- Query sparta_controls where NRS < 0.4 or weaknesses > 3\n- Return: { alerts: [{ control_id, name, severity, message, timestamp }] }\n- GET /api/posture/overview:\n- Aggregates 4 wells: data_quality, threat_matrix, posture, proof_graph\n- Single endpoint, single response \u2014 no waterfalls on client\n- Return JSON: { wells: { data_quality, threat_matrix, posture, proof_graph } }\n- ALL endpoints: res.status(502).json({error: 'Memory daemon unavailable'}) on connection failure\n\nDefinition of Done:\n- Command: grep -q '/api/posture/frameworks' packages/ux-lab/server/index.ts && grep -q '/api/posture/overview' packages/ux-lab/server/index.ts && grep -q '/api/posture/gaps' packages/ux-lab/server/index.ts && grep -q '/api/posture/risks' packages/ux-lab/server/index.ts && grep -q '/api/posture/alerts' packages/ux-lab/server/index.ts && grep -q '/api/posture/families' packages/ux-lab/server/index.ts\n- Assertion: exit_code == 0\n\nTests:\n- grep -c 'posture' packages/ux-lab/server/index.ts | python3 -c \"import sys; assert int(sys.stdin.read().strip()) >= 6\"",
+  "backend": "codex",
+  "cwd": "/tmp/cr-wt-1-f_yvmt9x",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775230015",
+  "definition_of_done": {
+    "command": "grep -q '/api/posture/frameworks' packages/ux-lab/server/index.ts && grep -q '/api/posture/overview' packages/ux-lab/server/index.ts && grep -q '/api/posture/gaps' packages/ux-lab/server/index.ts && grep -q '/api/posture/risks' packages/ux-lab/server/index.ts && grep -q '/api/posture/alerts' packages/ux-lab/server/index.ts && grep -q '/api/posture/families' packages/ux-lab/server/index.ts",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    "packages/ux-lab/server/index.ts"
+  ],
+  "read_context": [
+    "packages/ux-lab/src/hooks/usePostureData.ts",
+    "/home/graham/workspace/experiments/pi-mono/.code-runner-skills-1.md"
+  ]
+}

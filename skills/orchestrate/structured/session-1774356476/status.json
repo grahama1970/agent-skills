@@ -1,0 +1,215 @@
+{
+  "generated_at": 1774359176.192146,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Dogpile: automated UX testing + synthetic training in graph tools and robotics sim",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/1.response.txt",
+      "error": "",
+      "started_at": 1774356476.0761466,
+      "finished_at": 1774356537.2408063,
+      "subagent_task_id": "801a15f0",
+      "subagent_port": 8627
+    },
+    {
+      "id": "2",
+      "title": "Build CDP interaction harness for UX Lab projects",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/2.response.txt",
+      "error": "",
+      "started_at": 1774356537.2413838,
+      "finished_at": 1774356668.100319,
+      "subagent_task_id": "14ad317d",
+      "subagent_port": 8627
+    },
+    {
+      "id": "3",
+      "title": "Build adversarial command generator using /prompt-lab",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/3.response.txt",
+      "error": "",
+      "started_at": 1774356537.2425432,
+      "finished_at": 1774356900.2522354,
+      "subagent_task_id": "54ad7c75",
+      "subagent_port": 8624
+    },
+    {
+      "id": "4",
+      "title": "Build blind evaluator \u2014 grades QuerySpec without seeing expected result",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "2"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/4.response.txt",
+      "error": "",
+      "started_at": 1774356900.2532647,
+      "finished_at": 1774357207.2822843,
+      "subagent_task_id": "7bd43c05",
+      "subagent_port": 8624
+    },
+    {
+      "id": "5",
+      "title": "Integrate voice command generation via /converse + PersonaPlex",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/5.response.txt",
+      "error": "",
+      "started_at": 1774356900.2541885,
+      "finished_at": 1774357228.0723634,
+      "subagent_task_id": "9af7211f",
+      "subagent_port": 8622
+    },
+    {
+      "id": "6",
+      "title": "Run interaction batch: 200 text + 50 voice commands against Binary Explorer",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "3",
+        "4",
+        "5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/6.response.txt",
+      "error": "",
+      "started_at": 1774357228.072854,
+      "finished_at": 1774357577.3023112,
+      "subagent_task_id": "cdc620a3",
+      "subagent_port": 8622
+    },
+    {
+      "id": "7",
+      "title": "Build grader: compare actual vs expected QuerySpec (blind evaluation)",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "6"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/7.response.txt",
+      "error": "",
+      "started_at": 1774357577.30312,
+      "finished_at": 1774357933.813027,
+      "subagent_task_id": "d889e3b4",
+      "subagent_port": 8626
+    },
+    {
+      "id": "8",
+      "title": "Auto-retrain intent classifier from graded labels via /create-gpt",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "7"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/8.response.txt",
+      "error": "",
+      "started_at": 1774358220.5571318,
+      "finished_at": 1774358609.0650547,
+      "subagent_task_id": "63fb8188",
+      "subagent_port": 8626
+    },
+    {
+      "id": "9",
+      "title": "Wire /episodic-archiver for chat transcript archival",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "6"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/9.response.txt",
+      "error": "",
+      "started_at": 1774357933.8134632,
+      "finished_at": 1774358220.5566447,
+      "subagent_task_id": "72b57a62",
+      "subagent_port": 8626
+    },
+    {
+      "id": "10",
+      "title": "Convergence loop: run batches until intent accuracy exceeds 85%",
+      "lane": "4",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "7",
+        "8"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/10.response.txt",
+      "error": "",
+      "started_at": 1774358609.0658607,
+      "finished_at": 1774358818.4665987,
+      "subagent_task_id": "f36c1f03",
+      "subagent_port": 8628
+    },
+    {
+      "id": "11",
+      "title": "Verification: end-to-end test with 50 novel commands + 10 voice",
+      "lane": "4",
+      "runner": "local",
+      "backend": "local",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "10"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774356476/11.stdout.txt",
+      "error": "",
+      "started_at": 1774358818.4670212,
+      "finished_at": 1774359176.1920843,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

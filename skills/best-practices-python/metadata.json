@@ -1,0 +1,23 @@
+{
+  "abstract": "Atomic Python rules for correctness, security, async safety, typing boundaries, IO hygiene, tests, packaging, and house conventions (loguru/typer/uv/httpx).",
+  "generated": false,
+  "generated_at": "2026-02-03",
+  "house_conventions": {
+    "cli": "typer",
+    "functions_over_classes": true,
+    "http": "httpx",
+    "logging": "loguru",
+    "max_lines_per_file": 800,
+    "module_docstring_required": true,
+    "packaging": "uv + pyproject.toml",
+    "sanity_tests_required": true
+  },
+  "language": "python",
+  "license": "MIT",
+  "name": "python-best-practices",
+  "python_versions": [
+    "3.11+",
+    "3.12+"
+  ],
+  "version": "0.1.0"
+}

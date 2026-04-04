@@ -1,0 +1,16 @@
+Replaced Step 10 in [run.sh](/home/graham/workspace/experiments/pi-mono/.pi/skills/monitor-codebase/run.sh) with a local deterministic fix pipeline gated by `--fix`.
+
+The change addresses a logic and data-contract mismatch, not a missing import: the old step dispatched work through `agent-inbox` and `subagent-service`, which is the wrong execution path for local file edits. The new step now:
+1. creates a safety git commit when the target project is a git repo and has pending changes,
+2. runs `.pi/skills/skills-ci/generate_fix_plan.py` against the `skills-ci` JSON report,
+3. normalizes that YAML into an `orchestrate`-valid structured plan with required fields like `repo_root`, `metadata`, `capability_overlap`, and `questions_blockers`,
+4. executes it through `.pi/skills/orchestrate/run.sh`,
+5. commits any resulting fixes.
+
+Validation:
+- `bash -n .pi/skills/monitor-codebase/run.sh`
+- normalized sample fix plan passes `structured_plan.py validate`
+- `npm run check` completed; it reported two existing Biome info suggestions in unrelated files, but no errors or warnings from this change
+
+I did not make any git commits.
+

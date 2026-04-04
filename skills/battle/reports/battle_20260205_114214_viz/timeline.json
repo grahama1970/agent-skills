@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    {
+      "id": "round_1",
+      "group": 1,
+      "label": "Round 1"
+    },
+    {
+      "id": "round_2",
+      "group": 1,
+      "label": "Round 2"
+    }
+  ],
+  "links": []
+}

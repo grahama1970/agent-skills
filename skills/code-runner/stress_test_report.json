@@ -1,0 +1,105 @@
+{
+  "timestamp": 1775248538.7407033,
+  "passed": 25,
+  "failed": 0,
+  "total_tests": 12,
+  "total_assertions": 25,
+  "results": [
+    {
+      "num": "01",
+      "name": "test_01_simple_code_generation",
+      "status": "PASS",
+      "category": "Code Gen",
+      "desc": "Write new Python file, DoD verifies output",
+      "error": ""
+    },
+    {
+      "num": "02",
+      "name": "test_02_bug_fix",
+      "status": "PASS",
+      "category": "Bug Fix",
+      "desc": "Fix existing file logic error",
+      "error": ""
+    },
+    {
+      "num": "03",
+      "name": "test_03_multiround_recovery",
+      "status": "PASS",
+      "category": "Recovery",
+      "desc": "Round 1 fails DoD \u2192 round 2 passes",
+      "error": ""
+    },
+    {
+      "num": "04",
+      "name": "test_04_preflight_vague",
+      "status": "PASS",
+      "category": "Preflight",
+      "desc": "Rejects vague prompt (<20 chars)",
+      "error": ""
+    },
+    {
+      "num": "05",
+      "name": "test_05_preflight_no_allowlist",
+      "status": "PASS",
+      "category": "Preflight",
+      "desc": "Rejects missing allowlist",
+      "error": ""
+    },
+    {
+      "num": "06",
+      "name": "test_06_allowlist_enforcement",
+      "status": "PASS",
+      "category": "Security",
+      "desc": "Blocks writes outside allowlist",
+      "error": ""
+    },
+    {
+      "num": "07",
+      "name": "test_07_denylist_enforcement",
+      "status": "PASS",
+      "category": "Security",
+      "desc": "Blocks writes to .env (denylisted)",
+      "error": ""
+    },
+    {
+      "num": "08",
+      "name": "test_08_prewrite_lint_gate",
+      "status": "PASS",
+      "category": "Lint Gate",
+      "desc": "Rejects syntax errors before disk write",
+      "error": ""
+    },
+    {
+      "num": "09",
+      "name": "test_09_non_git",
+      "status": "PASS",
+      "category": "Graceful",
+      "desc": "Works in non-git directory",
+      "error": ""
+    },
+    {
+      "num": "10",
+      "name": "test_10_directory_allowlist",
+      "status": "PASS",
+      "category": "Security",
+      "desc": "Dir scope scripts/ allows scripts/hello.py",
+      "error": ""
+    },
+    {
+      "num": "11",
+      "name": "test_11_best_practices",
+      "status": "PASS",
+      "category": "Compliance",
+      "desc": "Detects import requests + import logging",
+      "error": ""
+    },
+    {
+      "num": "12",
+      "name": "test_12_exit_code_assertion",
+      "status": "PASS",
+      "category": "DoD",
+      "desc": "exit_code == 0 expression evaluation",
+      "error": ""
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "name": "qra_grounded",
+  "description": "QRA generation with citation grounding validation",
+  "evaluation_criteria": {
+    "min_qras_per_input": 3,
+    "citation_grounding_threshold": 0.85,
+    "required_question_types": ["simple", "medium", "complex"],
+    "diversity_check": true,
+    "hallucination_detection": true
+  },
+  "cases": [
+    {
+      "id": "T1547.001",
+      "input": {
+        "name": "Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder",
+        "description": "Adversaries may achieve persistence by adding a program to a startup folder or referencing it with a Registry run key."
+      },
+      "source_text": "Adversaries may achieve persistence by adding a program to a startup folder or referencing it with a Registry run key. Adding an entry to the \"run keys\" in the Registry or startup folder will cause the program referenced to be executed when a user logs in. These programs will be executed under the context of the user and will have the account's associated permissions level.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["simple", "medium"],
+        "citations_grounded": true
+      },
+      "notes": "Golden Ticket persistence technique"
+    },
+    {
+      "id": "SI-2",
+      "input": {
+        "name": "Flaw Remediation",
+        "description": "The organization identifies, reports, and corrects information system flaws."
+      },
+      "source_text": "The organization identifies, reports, and corrects information system flaws. The organization tests software and firmware updates related to flaw remediation for effectiveness and potential side effects before installation. The organization installs security-relevant software and firmware updates within the time period specified in the organizationally defined time period after the release of the updates.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["simple", "complex"],
+        "citations_grounded": true
+      },
+      "notes": "NIST SI-2 control"
+    }
+  ]
+}

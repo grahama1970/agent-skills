@@ -1,0 +1,57 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 4,
+    "total": 4
+  },
+  "worktree": null,
+  "skill": "task-monitor",
+  "violations": [
+    {
+      "rule": "skills.extra_docs",
+      "severity": "warn",
+      "skill": "task-monitor",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/task-monitor",
+      "message": "Extra docs in skill root: review_request.md.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.file_length",
+      "severity": "warn",
+      "skill": "task-monitor",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/task-monitor/discord_publisher_monolith.py",
+      "message": "File exceeds 800 LOC (986).",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.file_length",
+      "severity": "warn",
+      "skill": "task-monitor",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/task-monitor/monitor_monolith.py",
+      "message": "File exceeds 800 LOC (1524).",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "naming.noun_only",
+      "severity": "warn",
+      "skill": "task-monitor",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/task-monitor/SKILL.md",
+      "message": "Skill name 'task-monitor' appears noun-only; consider a verb- prefix or add to _NOUN_ALLOWLIST.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+Updated [`SourcesView.tsx`](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/SourcesView.tsx) to remove the legacy commented `SOURCES` block (`// Legacy: replaced by useWorksheets()`), with no commented legacy array remaining.
+Validation results:
+- `grep -c 'Legacy: replaced' packages/ux-lab/src/components/sparta/explorer/SourcesView.tsx` -> `0`
+- `npx tsc --noEmit` -> failed with pre-existing errors outside this file:
+- `packages/tui/src/utils.ts(32,100): TS1501`
+- `packages/tui/src/utils.ts(33,113): TS1501`
+- `packages/tui/src/utils.ts(34,40): TS1501`
+No additional dead imports were introduced in `SourcesView.tsx`, and `TYPE_COLORS` remains actively used via `typeColor()`.

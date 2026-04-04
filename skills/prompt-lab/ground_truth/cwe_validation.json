@@ -1,0 +1,111 @@
+{
+  "name": "cwe_validation",
+  "description": "CWE relevance validation for security controls - Brandon Bailey persona",
+  "evaluation_criteria": {
+    "precision_threshold": 0.85,
+    "recall_threshold": 0.80,
+    "confidence_threshold": 0.70
+  },
+  "cases": [
+    {
+      "id": "case_001",
+      "control_text": "The system shall validate all command inputs before processing, ensuring that buffer lengths do not exceed allocated memory. All telemetry packets must be bounds-checked before parsing.",
+      "candidate_cwes": ["CWE-120", "CWE-787", "CWE-20", "CWE-89", "CWE-287", "CWE-400"],
+      "expected": {
+        "relevant": ["CWE-120", "CWE-787", "CWE-20"],
+        "irrelevant": ["CWE-89", "CWE-287", "CWE-400"]
+      },
+      "notes": "Memory safety and input validation - no SQL or auth involved"
+    },
+    {
+      "id": "case_002",
+      "control_text": "Ground station operators must authenticate using multi-factor authentication before accessing satellite command interfaces. Default passwords shall be changed upon first use.",
+      "candidate_cwes": ["CWE-287", "CWE-306", "CWE-798", "CWE-120", "CWE-89", "CWE-22"],
+      "expected": {
+        "relevant": ["CWE-287", "CWE-306", "CWE-798"],
+        "irrelevant": ["CWE-120", "CWE-89", "CWE-22"]
+      },
+      "notes": "Authentication controls - no memory or SQL operations"
+    },
+    {
+      "id": "case_003",
+      "control_text": "All communications between spacecraft and ground station shall use AES-256 encryption. Encryption keys must be rotated every 90 days using secure key exchange protocols.",
+      "candidate_cwes": ["CWE-311", "CWE-327", "CWE-330", "CWE-120", "CWE-79", "CWE-269"],
+      "expected": {
+        "relevant": ["CWE-311", "CWE-327", "CWE-330"],
+        "irrelevant": ["CWE-120", "CWE-79", "CWE-269"]
+      },
+      "notes": "Cryptography controls - specifically encryption and key management"
+    },
+    {
+      "id": "case_004",
+      "control_text": "Firmware updates shall be cryptographically signed and verified before installation. The spacecraft shall detect and reject corrupted or tampered firmware images. Telemetry data integrity shall be verified using checksums.",
+      "candidate_cwes": ["CWE-1281", "CWE-1282", "CWE-345", "CWE-353", "CWE-89", "CWE-78"],
+      "expected": {
+        "relevant": ["CWE-1281", "CWE-1282", "CWE-345", "CWE-353"],
+        "irrelevant": ["CWE-89", "CWE-78"]
+      },
+      "notes": "Space systems - firmware verification, telemetry integrity"
+    },
+    {
+      "id": "case_005",
+      "control_text": "The spacecraft control system shall limit the number of concurrent command sessions to prevent resource exhaustion. Memory allocation for command buffers shall be monitored and freed after use.",
+      "candidate_cwes": ["CWE-400", "CWE-401", "CWE-770", "CWE-311", "CWE-287", "CWE-79"],
+      "expected": {
+        "relevant": ["CWE-400", "CWE-401", "CWE-770"],
+        "irrelevant": ["CWE-311", "CWE-287", "CWE-79"]
+      },
+      "notes": "Resource management - DoS prevention, memory leaks"
+    },
+    {
+      "id": "case_006",
+      "control_text": "Users shall only access satellite subsystems for which they have explicit authorization. Privilege escalation from operator to administrator roles requires additional approval.",
+      "candidate_cwes": ["CWE-269", "CWE-862", "CWE-863", "CWE-120", "CWE-327", "CWE-401"],
+      "expected": {
+        "relevant": ["CWE-269", "CWE-862", "CWE-863"],
+        "irrelevant": ["CWE-120", "CWE-327", "CWE-401"]
+      },
+      "notes": "Authorization controls - privilege management"
+    },
+    {
+      "id": "case_007",
+      "control_text": "The ground system shall sanitize all operator-provided commands to prevent injection attacks. File paths in upload commands shall be validated to prevent directory traversal.",
+      "candidate_cwes": ["CWE-78", "CWE-22", "CWE-79", "CWE-287", "CWE-400", "CWE-1281"],
+      "expected": {
+        "relevant": ["CWE-78", "CWE-22"],
+        "irrelevant": ["CWE-79", "CWE-287", "CWE-400", "CWE-1281"]
+      },
+      "notes": "Input validation - command injection and path traversal (no web context so no XSS)"
+    },
+    {
+      "id": "case_008",
+      "control_text": "The spacecraft memory management system shall prevent use-after-free conditions and null pointer dereferences. Integer overflow checks shall be performed on all arithmetic operations involving sensor data.",
+      "candidate_cwes": ["CWE-416", "CWE-476", "CWE-190", "CWE-125", "CWE-89", "CWE-306"],
+      "expected": {
+        "relevant": ["CWE-416", "CWE-476", "CWE-190", "CWE-125"],
+        "irrelevant": ["CWE-89", "CWE-306"]
+      },
+      "notes": "Memory safety - use-after-free, null pointer, integer overflow"
+    },
+    {
+      "id": "case_009",
+      "control_text": "The satellite shall implement radiation-hardened memory with error detection and correction. Single Event Upsets (SEUs) shall be detected and logged for ground station review.",
+      "candidate_cwes": ["CWE-1283", "CWE-1281", "CWE-125", "CWE-120", "CWE-89", "CWE-287"],
+      "expected": {
+        "relevant": ["CWE-1283", "CWE-1281"],
+        "irrelevant": ["CWE-125", "CWE-120", "CWE-89", "CWE-287"]
+      },
+      "notes": "Space systems - radiation effects and firmware integrity"
+    },
+    {
+      "id": "case_010",
+      "control_text": "The flight software shall store passwords in hashed format using approved algorithms. Credential transmission shall occur only over encrypted channels.",
+      "candidate_cwes": ["CWE-522", "CWE-311", "CWE-798", "CWE-79", "CWE-22", "CWE-401"],
+      "expected": {
+        "relevant": ["CWE-522", "CWE-311", "CWE-798"],
+        "irrelevant": ["CWE-79", "CWE-22", "CWE-401"]
+      },
+      "notes": "Authentication + Cryptography - password storage and credential protection"
+    }
+  ]
+}

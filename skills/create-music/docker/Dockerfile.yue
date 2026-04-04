@@ -1,0 +1,54 @@
+# YuE Music Generation - CLI Docker Image
+# Based on grahama1970/YuE-Interface fork (stripped Gradio)
+# Target: A5000 24GB, INT8 quantization, <8GB VRAM for base model
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+
+ARG PYTHON_VERSION=3.12
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git git-lfs wget curl ffmpeg sox libsndfile1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Miniconda
+RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/conda \
+    && rm /tmp/miniconda.sh
+ENV PATH="/opt/conda/bin:$PATH"
+RUN conda create -n yue python=${PYTHON_VERSION} -y
+SHELL ["conda", "run", "-n", "yue", "/bin/bash", "-c"]
+
+# PyTorch + core deps
+RUN pip install --no-cache-dir \
+    torch==2.5.1 torchvision torchaudio \
+    --index-url https://download.pytorch.org/whl/cu124
+
+# YuE repo (our fork, no Gradio)
+RUN git clone --depth 1 https://github.com/grahama1970/YuE-Interface.git /workspace/yue \
+    && cd /workspace/yue && git lfs pull
+
+WORKDIR /workspace/yue
+
+# Python deps (minus gradio)
+RUN pip install --no-cache-dir \
+    transformers sentencepiece einops numpy scipy \
+    bitsandbytes accelerate tqdm toml omegaconf \
+    descript-audio-codec descript-audiotools vocos typer \
+    && pip install --no-cache-dir flash-attn --no-build-isolation 2>/dev/null || true
+
+# Patch transformers for YuE custom modeling
+RUN bash patchtransformers.sh || true
+
+# Copy our CLI wrapper
+COPY yue_cli.py /workspace/yue/yue_cli.py
+
+# Mount points
+VOLUME ["/input", "/output", "/models"]
+
+# Models default to HuggingFace cache (can override with /models mount)
+ENV HF_HOME=/models/huggingface
+ENV TRANSFORMERS_CACHE=/models/huggingface
+
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "yue", "python", "/workspace/yue/yue_cli.py"]

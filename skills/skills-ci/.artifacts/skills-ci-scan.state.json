@@ -1,0 +1,11 @@
+{
+  "completed": 230,
+  "total": 230,
+  "current_item": "",
+  "last_updated": "2026-03-10T13:29:28.876965+00:00",
+  "stats": {
+    "errors": 350,
+    "warnings": 384,
+    "total": 734
+  }
+}

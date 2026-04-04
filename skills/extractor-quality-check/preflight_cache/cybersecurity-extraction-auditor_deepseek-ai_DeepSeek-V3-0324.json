@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "model": "deepseek-ai/DeepSeek-V3-0324",
+  "task": "cybersecurity-extraction-auditor",
+  "compliance_rate": 1.0,
+  "compliant_count": 4,
+  "total_tested": 4,
+  "enhanced_prompt_used": true,
+  "results": [
+    {
+      "index": 1,
+      "compliant": true,
+      "missing": [],
+      "grade": "PASS",
+      "fidelity_score": 1.0,
+      "error_types": []
+    },
+    {
+      "index": 2,
+      "compliant": true,
+      "missing": [],
+      "grade": "PASS",
+      "fidelity_score": 1.0,
+      "error_types": []
+    },
+    {
+      "index": 3,
+      "compliant": true,
+      "missing": [],
+      "grade": "PASS",
+      "fidelity_score": 1.0,
+      "error_types": []
+    },
+    {
+      "index": 0,
+      "compliant": true,
+      "missing": [],
+      "grade": "PASS",
+      "fidelity_score": 1.0,
+      "error_types": []
+    }
+  ],
+  "timestamp": "2026-02-15T16:52:37.889415+00:00",
+  "cached": false
+}

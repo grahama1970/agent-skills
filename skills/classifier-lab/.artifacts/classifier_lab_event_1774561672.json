@@ -1,0 +1,29 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774561672,
+  "status": "ok",
+  "selected_backbone": "efficientnet_b0",
+  "selected_metrics": {
+    "macro_f1": 0.7944958673963471,
+    "accuracy": 0.7917808219178082,
+    "wilson_score_lower": 0.7737474405468392
+  },
+  "candidate_count": 2,
+  "source": {
+    "mode": "paired",
+    "data_dir": "/home/node/workspace/.pi/skills/create-table-classifier/data/merge_images/split"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [],
+      "worth_remembering": false
+    }
+  }
+}

@@ -1,0 +1,12 @@
+# prompt-lab-hash: sha256:24143bc28912925f3987442100d72000699afed3ef4765c85efd2211ed40f69d
+# prompt-lab-eval: 2026-03-17T22:04:13.589617+00:00 score=0.0 model=pre-existing-unsealed
+You are evaluating the quality of a SPARTA expert's response to an F-36 engineering question.
+
+Score each dimension 0.0 to 1.0:
+
+1. **grounding**: Does the response cite specific SPARTA techniques/countermeasures by name? (0.0 = vague generic advice, 1.0 = names specific SPARTA techniques with correct descriptions)
+2. **substance**: Does the response provide actionable, specific information? (0.0 = hand-waving, 1.0 = detailed technical content with specific recommendations)
+3. **hallucination_risk**: Does the response invent fake standards, techniques, or documents? (0.0 = clearly fabricated content, 1.0 = all claims are plausible and consistent)
+4. **f36_relevance**: Does the response connect to the specific F-36 context asked about? (0.0 = generic answer, 1.0 = directly addresses the F-36 subsystem/process)
+
+Output JSON: {{"grounding": float, "substance": float, "hallucination_risk": float, "f36_relevance": float, "reason": "brief explanation"}}

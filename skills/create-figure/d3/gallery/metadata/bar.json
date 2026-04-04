@@ -1,0 +1,18 @@
+{
+  "chart_type": "bar",
+  "viz_family": "bar",
+  "query": "Show me the dimension failure breakdown as a bar chart",
+  "title": "Verdict Distribution",
+  "data_shape": {
+    "row_count": 5,
+    "col_count": 1,
+    "max_label_len": 2,
+    "has_time_axis": false,
+    "null_pct": 0,
+    "nested": false
+  },
+  "source": "figure-lab",
+  "timestamp": 1772306583,
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/bar_1772306583.html",
+  "html_size_bytes": 3237
+}

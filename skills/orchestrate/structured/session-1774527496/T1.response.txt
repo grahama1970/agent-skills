@@ -1,0 +1,9 @@
+Blocked on environment/path mismatch, so I can’t apply the daemon route change yet.
+What I verified:
+- `/home/graham/workspace/experiments/memory/` does not exist in this container.
+- `/home/graham/workspace/experiments/pi-mono/.pi/skills/taxonomy/` also does not exist here (taxonomy exists at `/home/node/workspace/.pi/skills/taxonomy`).
+- The target socket `/run/user/1000/embry/memory.sock` is not reachable here (`curl` returns connection failure), so I can’t run your DoD checks.
+What I need from you:
+1. Mount/provide the actual memory daemon repo path in this environment (or point me to the equivalent path under `/home/node/...`).
+2. Confirm the running daemon/socket is available in this environment (or give the correct socket path).
+Once you provide that, I’ll add `/taxonomy/extract` and `/taxonomy/classify` to route registration and run the exact curl assertions.

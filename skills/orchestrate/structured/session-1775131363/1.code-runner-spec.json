@@ -1,0 +1,21 @@
+{
+  "task_id": "1",
+  "title": "Add skill discovery to plan.py task decomposition",
+  "prompt": "Task: Add skill discovery to plan.py task decomposition\n\nImplementation:\n- Add _discover_skills(task_title, task_body) function to plan.py\n- It calls recommend-skill-chain/run.sh recommend --task '{title}: {body}' --json --limit 5\n- Parse JSON output, extract skill names with confidence > 0.5\n- Auto-populate the skills field on Task dataclass\n- Call _discover_skills in to_dict or during plan emission for each task\n- If recommend-skill-chain is unavailable, fall back to manifest keyword search\n\nDefinition of Done:\n- Command: cd .pi/skills/plan && python3 -c \"import ast; ast.parse(open('plan.py').read()); print('OK')\"\n- Assertion: OK\n\nTests:\n- python3 -c \"import ast; ast.parse(open('.pi/skills/plan/plan.py').read())\"",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775131363",
+  "definition_of_done": {
+    "command": "cd .pi/skills/plan && python3 -c \"import ast; ast.parse(open('plan.py').read()); print('OK')\"",
+    "assertion": "OK"
+  },
+  "allowlist": [
+    ".pi/skills/plan/plan.py"
+  ],
+  "read_context": [
+    ".pi/skills/recommend-skill-chain/SKILL.md",
+    ".pi/skills/recommend-skill-chain/run.sh",
+    ".pi/skills-manifest.json",
+    "/home/graham/workspace/experiments/pi-mono/.code-runner-skills-1.md"
+  ]
+}

@@ -1,0 +1,293 @@
+#!/usr/bin/env python3
+"""Task Monitor Client for debug-fetcher skill.
+
+Integrates with the centralized task-monitor skill by:
+1. Registering tasks in ~/.pi/task-monitor/registry.json
+2. Writing state files that task-monitor TUI can display
+3. Updating progress per URL (not just on completion)
+
+Usage:
+    monitor = DebugFetcherTaskClient("batch-fetch-100", total_urls=100)
+    for url in urls:
+        result = engine.exhaust_strategies(url)
+        monitor.update(url, result)
+    monitor.finish()
+
+View progress:
+    # Via task-monitor TUI
+    cd ~/.pi/skills/task-monitor
+    uv run python monitor.py tui --filter debug-fetcher
+"""
+
+import json
+import os
+import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Any, Optional
+from loguru import logger
+
+# Task monitor registry location
+TASK_MONITOR_REGISTRY = Path.home() / ".pi" / "task-monitor" / "registry.json"
+SKILL_DIR = Path(__file__).parent.parent
+STATE_FILE = SKILL_DIR / "debug_fetcher_task_state.json"
+ERROR_LOG = SKILL_DIR / "debug_fetcher_errors.json"
+
+
+@dataclass
+class StrategyMetrics:
+    """Track pass/fail counts per strategy."""
+    attempts: int = 0
+    successes: int = 0
+
+    @property
+    def rate(self) -> float:
+        return self.successes / self.attempts if self.attempts > 0 else 0.0
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "attempts": self.attempts,
+            "successes": self.successes,
+            "rate": round(self.rate, 4),
+        }
+
+
+@dataclass
+class FailureRecord:
+    """Record of a URL fetch failure."""
+    url: str
+    strategy: str
+    error: str
+    attempts: int
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "url": self.url[:100],  # Truncate for display
+            "strategy": self.strategy,
+            "error": self.error[:100],
+            "attempts": self.attempts,
+            "timestamp": self.timestamp,
+        }
+
+
+class DebugFetcherTaskClient:
+    """Task-monitor compatible progress tracker for debug-fetcher.
+
+    Writes state to debug_fetcher_task_state.json which task-monitor TUI can display.
+    """
+
+    def __init__(
+        self,
+        task_name: str,
+        total_urls: int,
+        description: Optional[str] = None,
+        register: bool = True,
+    ):
+        self.task_name = task_name
+        self.total_urls = total_urls
+        self.description = description or f"Debug-Fetcher: {task_name}"
+
+        # Progress tracking
+        self.completed = 0
+        self.start_time = time.time()
+        self.last_update = 0.0
+
+        # Strategy metrics
+        self.strategies: Dict[str, StrategyMetrics] = {}
+
+        # Failure tracking
+        self.failures: List[FailureRecord] = []
+        self.success_count = 0
+        self.learned_count = 0  # URLs that used learned strategies
+
+        # Register with task-monitor
+        if register:
+            self._register_task()
+
+        # Initial state write
+        self._write_state()
+
+    def _register_task(self):
+        """Register this task with task-monitor registry."""
+        try:
+            TASK_MONITOR_REGISTRY.parent.mkdir(parents=True, exist_ok=True)
+
+            # Load existing registry
+            registry = {}
+            if TASK_MONITOR_REGISTRY.exists():
+                try:
+                    registry = json.loads(TASK_MONITOR_REGISTRY.read_text())
+                except Exception:
+                    registry = {}
+
+            # Add/update our task
+            registry[f"debug-fetcher:{self.task_name}"] = {
+                "state_file": str(STATE_FILE),
+                "total": self.total_urls,
+                "description": self.description,
+                "project": "debug-fetcher",
+                "registered_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            }
+
+            # Write atomically
+            tmp = TASK_MONITOR_REGISTRY.with_suffix(".tmp")
+            tmp.write_text(json.dumps(registry, indent=2))
+            os.replace(tmp, TASK_MONITOR_REGISTRY)
+        except Exception as e:
+            logger.debug("debug-fetcher task monitor registry write failed: {}", e)
+
+    def _write_state(self, final: bool = False):
+        """Update task-monitor state file."""
+        now = time.time()
+
+        # Throttle updates (max every 0.3s unless final)
+        if not final and (now - self.last_update) < 0.3:
+            return
+        self.last_update = now
+
+        elapsed = now - self.start_time
+        progress_pct = (self.completed / self.total_urls * 100) if self.total_urls > 0 else 0
+
+        # Calculate ETA
+        eta_seconds = None
+        if self.completed > 0 and self.completed < self.total_urls:
+            rate = self.completed / elapsed
+            remaining = self.total_urls - self.completed
+            eta_seconds = remaining / rate if rate > 0 else None
+
+        # Calculate overall success rate
+        success_rate = self.success_count / self.completed if self.completed > 0 else 0.0
+
+        state = {
+            "completed": self.completed,
+            "total": self.total_urls,
+            "description": self.description,
+            "current_item": f"URL {self.completed + 1}/{self.total_urls}",
+            "progress_pct": round(progress_pct, 1),
+            "elapsed_seconds": round(elapsed, 1),
+            "eta_seconds": round(eta_seconds, 1) if eta_seconds else None,
+            "strategies": {name: metrics.to_dict() for name, metrics in self.strategies.items()},
+            "stats": {
+                "success_count": self.success_count,
+                "failure_count": len(self.failures),
+                "success_rate": round(success_rate, 4),
+                "learned_count": self.learned_count,
+            },
+            "failures": [f.to_dict() for f in self.failures[-20:]],  # Last 20
+            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "completed" if final else "running",
+        }
+
+        # Write atomically
+        try:
+            tmp = STATE_FILE.with_suffix(".tmp")
+            tmp.write_text(json.dumps(state, indent=2))
+            os.replace(tmp, STATE_FILE)
+        except Exception as e:
+            logger.debug("tmp failed: {}", e)
+
+    def update(
+        self,
+        url: str,
+        success: bool,
+        winning_strategy: str,
+        attempts: int,
+        error: Optional[str] = None,
+        used_learned: bool = False,
+    ):
+        """Update progress after fetching a URL.
+
+        Args:
+            url: The URL that was fetched
+            success: Whether the fetch succeeded
+            winning_strategy: The strategy that succeeded (or 'all_failed')
+            attempts: Number of strategy attempts
+            error: Error message if failed
+            used_learned: Whether a learned strategy was used first
+        """
+        self.completed += 1
+
+        if success:
+            self.success_count += 1
+
+        if used_learned:
+            self.learned_count += 1
+
+        # Update strategy metrics
+        if winning_strategy not in self.strategies:
+            self.strategies[winning_strategy] = StrategyMetrics()
+        self.strategies[winning_strategy].attempts += 1
+        if success:
+            self.strategies[winning_strategy].successes += 1
+
+        # Record failures
+        if not success:
+            self.failures.append(FailureRecord(
+                url=url,
+                strategy=winning_strategy,
+                error=error or "Unknown error",
+                attempts=attempts,
+            ))
+
+        self._write_state()
+
+    def finish(self, success: bool = True):
+        """Mark the task as complete."""
+        self._write_state(final=True)
+
+        # Persist errors to log file
+        if self.failures:
+            try:
+                error_data = {
+                    "task_name": self.task_name,
+                    "completed_at": datetime.now().isoformat(),
+                    "success": success,
+                    "total_urls": self.total_urls,
+                    "total_failures": len(self.failures),
+                    "strategies": {name: metrics.to_dict() for name, metrics in self.strategies.items()},
+                    "failures": [f.to_dict() for f in self.failures],
+                }
+                tmp = ERROR_LOG.with_suffix(".tmp")
+                tmp.write_text(json.dumps(error_data, indent=2))
+                os.replace(tmp, ERROR_LOG)
+            except Exception as e:
+                logger.debug("value lookup failed: {}", e)
+
+    def get_summary(self) -> Dict[str, Any]:
+        """Get a summary for logging/reporting."""
+        elapsed = time.time() - self.start_time
+        return {
+            "task_name": self.task_name,
+            "completed": self.completed,
+            "total": self.total_urls,
+            "elapsed_seconds": round(elapsed, 1),
+            "success_rate": self.success_count / self.completed if self.completed > 0 else 0,
+            "failures": len(self.failures),
+            "learned_count": self.learned_count,
+        }
+
+
+# Convenience functions for simple usage
+_current_client: Optional[DebugFetcherTaskClient] = None
+
+
+def start_monitoring(task_name: str, total_urls: int) -> DebugFetcherTaskClient:
+    """Start monitoring a new debug-fetcher task."""
+    global _current_client
+    _current_client = DebugFetcherTaskClient(task_name, total_urls)
+    return _current_client
+
+
+def get_monitor() -> Optional[DebugFetcherTaskClient]:
+    """Get the current task monitor."""
+    return _current_client
+
+
+def end_monitoring(success: bool = True):
+    """End the current task monitoring."""
+    global _current_client
+    if _current_client:
+        _current_client.finish(success)
+        _current_client = None

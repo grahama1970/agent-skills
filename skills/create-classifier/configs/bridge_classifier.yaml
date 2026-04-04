@@ -1,0 +1,83 @@
+# Bridge Classifier - Federated Taxonomy bridge extraction
+# Multi-label text classifier for fast persona routing
+#
+# Input: Natural language query/request
+# Output: Bridge labels with confidence scores
+#
+# Example:
+#   Input: "Evaluate the Horus UI for accessibility"
+#   Output: {Precision: 0.85, Fragility: 0.72}
+
+task_name: bridge_classifier
+task_type: text_multilabel  # Multi-label classification
+
+# The 6 Federated Taxonomy bridges
+classes:
+  - Corruption    # Moral decay, entropy, power dynamics
+  - Precision     # Exactness, clarity, measurement
+  - Resilience    # Recovery, adaptation, stress response
+  - Fragility     # Vulnerability, trauma, system failure
+  - Loyalty       # Trust, commitment, relationship dynamics
+  - Stealth       # Hidden operations, unconscious processes
+
+model:
+  # Use DistilBERT for speed (~10-20ms inference)
+  name: distilbert-base-uncased
+  pretrained: true
+  # Alternative faster options:
+  # - sentence-transformers/all-MiniLM-L6-v2 (fastest, ~5ms)
+  # - microsoft/deberta-v3-small (more accurate, ~20ms)
+
+training:
+  batch_size: 32
+  learning_rate: 2e-5
+  epochs: 10
+  max_length: 256  # Queries are typically short
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  early_stopping_patience: 3
+
+# Multi-label specific settings
+multilabel:
+  threshold: 0.5           # Prediction threshold per class
+  loss: binary_cross_entropy
+  # Class imbalance handling
+  pos_weight_auto: true    # Auto-compute positive weights from data
+
+# Evaluation thresholds (must pass to deploy)
+eval_thresholds:
+  f1_micro: 0.80
+  f1_macro: 0.75
+  hamming_loss_max: 0.15
+  exact_match_ratio: 0.60
+
+# Inference optimization
+inference:
+  quantize: false          # Enable for even faster inference
+  onnx_export: true        # Export to ONNX for production
+  target_latency_ms: 20    # Target inference time
+
+# Data sources for training
+data:
+  # Mine from existing successful taxonomy extractions
+  source: memory_taxonomy_extractions
+  augmentation:
+    enabled: true
+    # Generate variations using scillm
+    variation_types:
+      - layperson   # Casual phrasing
+      - technical   # Domain-specific terms
+      - question    # Question form
+      - statement   # Statement form
+  min_examples_per_class: 200
+
+# Integration
+integration:
+  # Replace slow LLM extraction in these skills
+  target_skills:
+    - /ask        # Persona routing
+    - /taxonomy   # Fast extraction mode
+  fallback:
+    # Fall back to LLM if confidence < threshold
+    enabled: true
+    confidence_threshold: 0.6

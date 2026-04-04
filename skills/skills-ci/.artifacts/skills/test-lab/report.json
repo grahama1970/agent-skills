@@ -1,0 +1,57 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 4,
+    "total": 4
+  },
+  "worktree": null,
+  "skill": "test-lab",
+  "violations": [
+    {
+      "rule": "python.requests",
+      "severity": "warn",
+      "skill": "test-lab",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/test-lab/generators/python_tests.py",
+      "message": "Uses requests; prefer httpx.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.argparse",
+      "severity": "warn",
+      "skill": "test-lab",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/test-lab/generators/python_tests.py",
+      "message": "Uses argparse; prefer Typer.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.logging",
+      "severity": "warn",
+      "skill": "test-lab",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/test-lab/generators/python_tests.py",
+      "message": "Uses logging; prefer loguru.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "naming.noun_only",
+      "severity": "warn",
+      "skill": "test-lab",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/test-lab/SKILL.md",
+      "message": "Skill name 'test-lab' appears noun-only; consider a verb- prefix or add to _NOUN_ALLOWLIST.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

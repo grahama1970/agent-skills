@@ -1,0 +1,84 @@
+{
+  "name": "elf_features",
+  "description": "Feature extraction from compiled ELF binary strings (Bun SEA / bundled JS)",
+  "cases": [
+    {
+      "id": "droid_enums",
+      "input": {
+        "strings": "((M)=>{M.AwaitingInput=\"awaiting_input\";M.Initializing=\"initializing\";M.Running=\"running\";M.Paused=\"paused\";M.OrchestratorTurn=\"orchestrator_turn\";M.Completed=\"completed\"})(Z6||={})",
+        "binary_name": "droid",
+        "help_text": "Commands: exec, mcp, plugin, daemon, search, computer, update"
+      },
+      "expected": {
+        "state_machines": [{"enum_name": "Z6", "states": ["awaiting_input", "initializing", "running", "paused", "orchestrator_turn", "completed"]}],
+        "event_types": [],
+        "jsonrpc_methods": [],
+        "schemas": []
+      },
+      "notes": "Mission state enum extraction from IIFE assignment pattern"
+    },
+    {
+      "id": "droid_events",
+      "input": {
+        "strings": "wwf=Jd.extend({type:KH.literal(\"mission_accepted\"),title:KH.string()}),_wf=Jd.extend({type:KH.literal(\"mission_paused\")}),Vwf=Jd.extend({type:KH.literal(\"mission_resumed\")}),Jwf=Jd.extend({type:KH.literal(\"mission_run_started\"),message:KH.string().optional()}),Zwf=Jd.extend({type:KH.literal(\"worker_started\"),workerSessionId:KH.string(),spawnId:KH.string(),featureId:KH.string().optional()}),qwf=Jd.extend({type:KH.literal(\"worker_selected_feature\"),workerSessionId:KH.string(),featureId:KH.string()}),hwf=Jd.extend({type:KH.literal(\"worker_completed\")}),Rwf=Jd.extend({type:KH.literal(\"worker_failed\")}),Ywf=Jd.extend({type:KH.literal(\"worker_paused\")}),zwf=Jd.extend({type:KH.literal(\"handoff_items_dismissed\")}),Swf=Jd.extend({type:KH.literal(\"milestone_validation_triggered\")})",
+        "binary_name": "droid",
+        "help_text": "Commands: exec, mcp, plugin, daemon, search, computer, update"
+      },
+      "expected": {
+        "state_machines": [],
+        "event_types": ["mission_accepted", "mission_paused", "mission_resumed", "mission_run_started", "worker_started", "worker_selected_feature", "worker_completed", "worker_failed", "worker_paused", "handoff_items_dismissed", "milestone_validation_triggered"],
+        "jsonrpc_methods": [],
+        "schemas": []
+      },
+      "notes": "Progress log event types from Zod extend patterns"
+    },
+    {
+      "id": "droid_notifications",
+      "input": {
+        "strings": "xwf=tGL.extend({type:KH.literal(\"tool_result\"),messageId:KH.string()}),jwf=KH.object({type:KH.literal(\"tool_progress_update\"),toolUseId:KH.string(),toolName:KH.string()}),vwf=KH.object({type:KH.literal(\"create_message\")}),kwf=KH.object({type:KH.literal(\"error\")}),gwf=KH.object({type:KH.literal(\"droid_working_state_changed\")}),pwf=KH.object({type:KH.literal(\"permission_resolved\")}),lwf=KH.object({type:KH.literal(\"settings_updated\")}),mwf=KH.object({type:KH.literal(\"session_title_updated\")}),bwf=KH.object({type:KH.literal(\"mcp_status_changed\")}),dwf=KH.object({type:KH.literal(\"assistant_text_delta\")}),iwf=KH.object({type:KH.literal(\"thinking_text_delta\")}),twf=KH.object({type:KH.literal(\"session_token_usage_changed\")}),nwf=KH.object({type:KH.literal(\"mission_state_changed\")}),owf=KH.object({type:KH.literal(\"mission_features_changed\")}),rwf=KH.object({type:KH.literal(\"mission_progress_entry\")}),swf=KH.object({type:KH.literal(\"mission_heartbeat\")}),awf=KH.object({type:KH.literal(\"mission_worker_started\")}),ewf=KH.object({type:KH.literal(\"mission_worker_completed\")}),H_f=KH.object({type:KH.literal(\"mcp_auth_required\")}),$_f=KH.object({type:KH.literal(\"mcp_auth_completed\")})",
+        "binary_name": "droid",
+        "help_text": "Commands: exec, mcp, plugin, daemon, search, computer, update"
+      },
+      "expected": {
+        "state_machines": [],
+        "event_types": ["tool_result", "tool_progress_update", "create_message", "error", "droid_working_state_changed", "permission_resolved", "settings_updated", "session_title_updated", "mcp_status_changed", "assistant_text_delta", "thinking_text_delta", "session_token_usage_changed", "mission_state_changed", "mission_features_changed", "mission_progress_entry", "mission_heartbeat", "mission_worker_started", "mission_worker_completed", "mcp_auth_required", "mcp_auth_completed"],
+        "jsonrpc_methods": [],
+        "schemas": []
+      },
+      "notes": "Session notification event types from Zod object/extend patterns"
+    },
+    {
+      "id": "droid_rpc_methods",
+      "input": {
+        "strings": "A_f=_3H.extend({method:KH.literal(\"droid.session_notification\"),params:L_f}),F_f=T1.extend({method:KH.literal(\"droid.request_permission\"),params:BnH}),Q_f=T1.extend({method:KH.literal(\"droid.ask_user\"),params:MnH}),y_f=T1.extend({method:KH.literal(\"droid.initialize_session\"),params:IXL}),j_f=T1.extend({method:KH.literal(\"droid.load_session\"),params:DXL}),v_f=T1.extend({method:KH.literal(\"droid.add_user_message\"),params:Du$}),k_f=T1.extend({method:KH.literal(\"droid.interrupt_session\"),params:fXL}),g_f=T1.extend({method:KH.literal(\"droid.kill_worker_session\"),params:BXL}),p_f=T1.extend({method:KH.literal(\"droid.update_session_settings\"),params:MXL})",
+        "binary_name": "droid",
+        "help_text": "Commands: exec, mcp, plugin, daemon, search, computer, update"
+      },
+      "expected": {
+        "state_machines": [],
+        "event_types": [],
+        "jsonrpc_methods": ["droid.session_notification", "droid.request_permission", "droid.ask_user", "droid.initialize_session", "droid.load_session", "droid.add_user_message", "droid.interrupt_session", "droid.kill_worker_session", "droid.update_session_settings"],
+        "schemas": []
+      },
+      "notes": "JSON-RPC method declarations from Zod extend patterns with method:KH.literal()"
+    },
+    {
+      "id": "droid_schemas",
+      "input": {
+        "strings": "o6$=KH.object({id:KH.string(),description:KH.string(),status:KH.nativeEnum(dy),skillName:KH.string(),preconditions:KH.array(KH.string()),expectedBehavior:KH.array(KH.string()),verificationSteps:KH.array(KH.string())}),mJH=KH.object({salientSummary:KH.string().optional(),whatWasImplemented:KH.string(),whatWasLeftUndone:KH.string(),verification:Qwf,tests:Kwf,discoveredIssues:KH.array(Xwf),skillFeedback:Owf.optional()})",
+        "binary_name": "droid",
+        "help_text": "Commands: exec, mcp, plugin, daemon, search, computer, update"
+      },
+      "expected": {
+        "state_machines": [],
+        "event_types": [],
+        "jsonrpc_methods": [],
+        "schemas": [
+          {"name": "o6$", "fields": ["id", "description", "status", "skillName", "preconditions", "expectedBehavior", "verificationSteps"]},
+          {"name": "mJH", "fields": ["salientSummary", "whatWasImplemented", "whatWasLeftUndone", "verification", "tests", "discoveredIssues", "skillFeedback"]}
+        ]
+      },
+      "notes": "Zod schema definitions — Feature and WorkerHandoff schemas"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "groups": [
+    {
+      "id": "templates",
+      "label": "Templates",
+      "color": "#00ff88",
+      "tabs": [
+        {
+          "id": "templates",
+          "label": "Templates",
+          "shortcut": "1",
+          "voiceKeyword": "templates",
+          "component": "TemplatesPage.qml"
+        },
+        {
+          "id": "ground-truth",
+          "label": "Ground Truth",
+          "shortcut": "2",
+          "voiceKeyword": "ground truth",
+          "component": "GroundTruthPage.qml"
+        }
+      ]
+    },
+    {
+      "id": "testing",
+      "label": "Testing",
+      "color": "#44aaff",
+      "tabs": [
+        {
+          "id": "evaluate",
+          "label": "Evaluate",
+          "shortcut": "3",
+          "voiceKeyword": "evaluate",
+          "component": "EvaluatePage.qml"
+        },
+        {
+          "id": "generator",
+          "label": "Generator",
+          "shortcut": "4",
+          "voiceKeyword": "generator",
+          "component": "GeneratorPage.qml"
+        },
+        {
+          "id": "events",
+          "label": "Events",
+          "shortcut": "5",
+          "voiceKeyword": "events",
+          "component": "EventsPage.qml"
+        }
+      ]
+    }
+  ]
+}

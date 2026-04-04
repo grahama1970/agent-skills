@@ -1,0 +1,159 @@
+{
+  "generated_at": 1775233851.8037968,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775233486",
+  "tasks": [
+    {
+      "id": "5",
+      "title": "Update usePostureData hook to use dedicated /api/posture/* endpoints",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775233486/5.response.txt",
+      "error": "",
+      "started_at": 1775233486.4647434,
+      "finished_at": 1775233526.4075007,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "6",
+      "title": "Implement PostureDashboard.tsx \u2014 full 3ft compliance view from V1 mockup",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775233486/6.response.txt",
+      "error": "/code-runner exit 1: 2026-04-03 12:25:26.661 | INFO     | __main__:run:507 - === CODE-RUNNER v2: Implement PostureDashboard.tsx \u2014 full 3ft compliance view from V1 mockup ===\n2026-04-03 12:25:26.661 | INFO     | __main__:run:508 -   Backend: codex\n2026-04-03 12:25:26.661 | INFO     | __main__:run:509 -   DoD: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDash\n2026-04-03 12:25:26.661 | INFO     | __main__:run:510 -   Max rounds: 5\n2026-04-03 12:25:27.284 | INFO     | _",
+      "started_at": 1775233526.408454,
+      "finished_at": 1775233851.803602,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "7",
+      "title": "Implement OverviewLanding.tsx \u2014 5ft landing page with 4 live content wells",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "8",
+      "title": "Add Gauge icon to nav strip + wire Posture tab in SpartaExplorer",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "6",
+        "7"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "9",
+      "title": "Family flyout panel \u2014 drill into controls for selected family",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "6"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "10",
+      "title": "Generate CDP live DOM interaction manifest for PostureDashboard",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "8",
+        "9"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "11",
+      "title": "CDP live DOM test manifest \u2014 generate and validate from running browser",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "10"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "12",
+      "title": "VLM review \u2014 compare implementation screenshots to approved V1 mockup",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "gemini",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "11"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

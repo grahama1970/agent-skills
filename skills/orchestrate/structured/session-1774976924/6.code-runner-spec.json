@@ -1,0 +1,12 @@
+{
+  "task_id": "6",
+  "title": "Discrepancy analysis script + prompt",
+  "prompt": "Task: Discrepancy analysis script + prompt\n\nImplementation:\n- Create sparta/tools/discrepancy_analysis.py\n- Design prompt via /prompt-lab (NOT hand-written)\n- Query daemon: find controls with both Requirement AND Table chunks via chunk_control_edges\n- For top 50 controls: call /scillm to compare requirement vs table\n- Store findings via /memory learn with tags: [discrepancy, control:{id}]\n- Add Discrepancies section to ThreatMatrix Detail flyout\n- Use httpx, loguru, typer\n\nDefinition of Done:\n- Command: cd /home/graham/workspace/experiments/sparta && uv run python tools/discrepancy_analysis.py --dry-run --limit 5\n- Assertion: Dry run prints 5 controls with both types. No errors.\n\nTests:\n- cd /home/graham/workspace/experiments/sparta && uv run python tools/discrepancy_analysis.py --help\n- cd /home/graham/workspace/experiments/sparta && uv run python tools/discrepancy_analysis.py --dry-run --limit 2",
+  "backend": "sonnet",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774976924",
+  "definition_of_done": {
+    "command": "cd /home/graham/workspace/experiments/sparta && uv run python tools/discrepancy_analysis.py --dry-run --limit 5",
+    "assertion": "Dry run prints 5 controls with both types. No errors."
+  }
+}

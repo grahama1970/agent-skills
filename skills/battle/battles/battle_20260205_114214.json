@@ -1,0 +1,40 @@
+{
+  "battle_id": "battle_20260205_114214",
+  "target_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/battle",
+  "max_rounds": 2,
+  "current_round": 2,
+  "status": "completed",
+  "red_total_score": 0.0,
+  "blue_total_score": 0.0,
+  "rounds": [
+    {
+      "round_number": 1,
+      "red_findings": [],
+      "blue_patches": [],
+      "red_score": 0,
+      "blue_score": 0.0,
+      "chaos_iterations": 0,
+      "duration_seconds": 332.2794146537781,
+      "timestamp": "2026-02-05T11:47:47.699574"
+    },
+    {
+      "round_number": 2,
+      "red_findings": [],
+      "blue_patches": [],
+      "red_score": 0,
+      "blue_score": 0.0,
+      "chaos_iterations": 0,
+      "duration_seconds": 329.2557911872864,
+      "timestamp": "2026-02-05T11:53:16.957178"
+    }
+  ],
+  "all_findings": [],
+  "all_patches": [],
+  "tdsr": 0.0,
+  "fdsr": 0.0,
+  "asc": 0,
+  "started_at": "2026-02-05T11:42:15.415809",
+  "completed_at": "2026-02-05T11:53:16.960709",
+  "last_checkpoint": "2026-02-05T11:53:16.960733",
+  "threat_profile": "hobbyist"
+}

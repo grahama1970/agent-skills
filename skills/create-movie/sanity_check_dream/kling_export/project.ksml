@@ -1,0 +1,120 @@
+project:
+  name: 'Final Sanity Dream (Influenced by: Cinematic fragm'
+  created_at: '2026-02-01T08:56:01.865190'
+  version: '0.1'
+  aspect_ratio: '16:9'
+style:
+  overall_vibe: Cinematic, Photorealistic, High Budget
+  base_gear:
+    camera: Arri Alexa 65
+    film_stock: Kodak Vision3 500T
+    lens: Panavision Primo 70mm
+shots:
+- id: sh_001
+  mode: storyboard_then_i2v
+  duration_s: 7
+  intent:
+    beat: Scene 1
+    emotion: neutral
+    end_state: hold on final pose
+  visual:
+    subject: '[Visual description for scene 1 - detailed enough for AI generation]'
+    action: '[Describe action for scene 1]'
+    environment: ''
+  camera:
+    framing: Wide Shot
+    movement: Slow Push-In
+    lens_intent: cinematic 50mm
+    stabilization: gimbal
+  lighting:
+    key: cinematic lighting
+    fill: soft cinematic
+  audio:
+    dialog: []
+    sfx: []
+    music: ambient score
+  storyboard:
+    model: fal-ai/nano-banana-pro
+    keyframes:
+    - start
+- id: sh_002
+  mode: storyboard_then_i2v
+  duration_s: 7
+  intent:
+    beat: Scene 2
+    emotion: neutral
+    end_state: hold on final pose
+  visual:
+    subject: '[Visual description for scene 2 - detailed enough for AI generation]'
+    action: '[Describe action for scene 2]'
+    environment: ''
+  camera:
+    framing: Medium Shot
+    movement: Slow Push-In
+    lens_intent: cinematic 50mm
+    stabilization: gimbal
+  lighting:
+    key: cinematic lighting
+    fill: soft cinematic
+  audio:
+    dialog: []
+    sfx: []
+    music: ambient score
+  storyboard:
+    model: fal-ai/nano-banana-pro
+    keyframes:
+    - start
+- id: sh_003
+  mode: storyboard_then_i2v
+  duration_s: 7
+  intent:
+    beat: Scene 3
+    emotion: neutral
+    end_state: hold on final pose
+  visual:
+    subject: '[Visual description for scene 3 - detailed enough for AI generation]'
+    action: '[Describe action for scene 3]'
+    environment: ''
+  camera:
+    framing: Close-Up
+    movement: Slow Push-In
+    lens_intent: cinematic 50mm
+    stabilization: gimbal
+  lighting:
+    key: cinematic lighting
+    fill: soft cinematic
+  audio:
+    dialog: []
+    sfx: []
+    music: ambient score
+  storyboard:
+    model: fal-ai/nano-banana-pro
+    keyframes:
+    - start
+- id: sh_004
+  mode: storyboard_then_i2v
+  duration_s: 7
+  intent:
+    beat: Scene 4
+    emotion: neutral
+    end_state: hold on final pose
+  visual:
+    subject: '[Visual description for scene 4 - detailed enough for AI generation]'
+    action: '[Describe action for scene 4]'
+    environment: ''
+  camera:
+    framing: Wide Shot
+    movement: Slow Push-In
+    lens_intent: cinematic 50mm
+    stabilization: gimbal
+  lighting:
+    key: cinematic lighting
+    fill: soft cinematic
+  audio:
+    dialog: []
+    sfx: []
+    music: ambient score
+  storyboard:
+    model: fal-ai/nano-banana-pro
+    keyframes:
+    - start

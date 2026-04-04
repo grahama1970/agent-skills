@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "Wire threat delta post-hook into learn-datalake",
+    "goal": "After each learn-datalake ingestion cycle, automatically compute threat deltas for affected SPARTA controls",
+    "plan_type": "code",
+    "created": "2026-04-01",
+    "primary_persona": {
+      "name": "Brandon Bailey",
+      "role": "SPARTA cybersecurity analyst",
+      "source": ".pi/agents/brandon-bailey/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 1
+  },
+  "capability_overlap": [
+    "compute_threat_delta.py already exists and works (tested: DE-0007 satisfied\u2192inconclusive)",
+    "_validate_taxonomy_coverage at learn_datalake.py:144 is the pattern for post-hooks",
+    "learn-datalake uses subprocess calls for all external skill invocations",
+    "No existing post-hook mechanism \u2014 this is the first one after taxonomy validation"
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Wire post-hook"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: ChatTab delta alerts"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add _run_threat_delta_check post-hook to learn_datalake.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "depends_on": [],
+      "implementation": [
+        "Edit .pi/skills/learn-datalake/learn_datalake.py",
+        "Add a new function _run_threat_delta_check() following the EXACT same pattern as _validate_taxonomy_coverage (line 736)",
+        "The function should:",
+        "  1. Query memory daemon (Unix socket /run/user/1000/embry/memory.sock) for chunk_control_edges created in the last hour: POST /query with AQL 'FOR e IN chunk_control_edges FILTER e.created_at >= @since COLLECT ctrl = e.control_id INTO g RETURN DISTINCT ctrl' bind_vars={since: int(time.time()) - 3600}",
+        "  2. If no new control_ids found, log and return",
+        "  3. Call compute_threat_delta.py via subprocess: [sys.executable, str(COMPUTE_DELTA_SCRIPT), '--control-ids', ','.join(control_ids)] with cwd=SKILL_DIR, timeout=300, check=False",
+        "  4. Log the result (how many deltas found). Never raise \u2014 this is non-blocking like taxonomy check",
+        "COMPUTE_DELTA_SCRIPT path: Path(__file__).resolve().parent.parent / 'create-evidence-case' / 'tools' / 'compute_threat_delta.py'",
+        "Call _run_threat_delta_check() at line 145, right AFTER _validate_taxonomy_coverage(memory_scope_pdf) \u2014 both in cmd_once (line 144) and in _run_sequential_cycle (find the equivalent spot)",
+        "Also call it after _run_sequential_cycle returns in the start command's loop body (learn_datalake.py around line 447)",
+        "Use subprocess.run NOT subprocess.Popen \u2014 we want to wait for completion",
+        "Set env SCILLM_MODEL=text in the subprocess env",
+        "Import time at top of file if not already imported",
+        "DO NOT use httpx \u2014 use the same subprocess+bash pattern as _validate_taxonomy_coverage",
+        "Actually WAIT \u2014 _validate_taxonomy_coverage uses raw AQL via subprocess to the memory project .venv. For the daemon query, use httpx instead since the daemon is running. But for calling compute_threat_delta.py, use subprocess.",
+        "Correction: use httpx.Client with HTTPTransport(uds=MEMORY_SOCKET) for the daemon query (same pattern as compute_threat_delta.py itself), and subprocess.run for calling the script"
+      ],
+      "tests": [
+        "grep -q '_run_threat_delta_check' .pi/skills/learn-datalake/learn_datalake.py",
+        "python3 -c \"import ast; ast.parse(open('.pi/skills/learn-datalake/learn_datalake.py').read()); print('syntax OK')\""
+      ],
+      "definition_of_done": {
+        "command": "grep -c '_run_threat_delta_check' /home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake/learn_datalake.py\n",
+        "assertion": "Function defined and called at least twice (once in cmd_once, once in start loop)"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Add delta alert cards to ChatTab on mount",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "depends_on": [],
+      "implementation": [
+        "Edit packages/ux-lab/src/components/sparta/explorer/ChatTab.tsx",
+        "Add a useEffect that runs on mount (after evidenceMap loads)",
+        "Fetch recent threat deltas: POST http://localhost:3001/api/memory/list with body {collection: 'evidence_cases', limit: 20, filters: {type: 'threat-delta'}}",
+        "Note: the Express proxy at localhost:3001 forwards /api/memory/* to the daemon \u2014 use the /list path",
+        "For each delta doc with old_verdict != new_verdict, add a system message to chat with role='system' and content like:",
+        "  'SECURITY DRIFT DETECTED: {control_id} verdict changed from {old_verdict} to {new_verdict}. {reason}'",
+        "Use the existing addMsg helper to add messages",
+        "Add a 'threat-delta' type or flag to ChatMessage so the message renders with a warning style",
+        "Only show deltas from the last 7 days (filter by timestamp field)",
+        "This is a read-only useEffect \u2014 no new endpoints needed, /api/memory/list already works",
+        "The post() helper already exists in ChatTab for calling the daemon proxy",
+        "DO NOT modify any existing message rendering \u2014 just add new system messages on mount"
+      ],
+      "tests": [
+        "grep -q 'threat-delta' packages/ux-lab/src/components/sparta/explorer/ChatTab.tsx",
+        "cd packages/ux-lab && npx tsc --noEmit"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c \"error\" || echo 0\n",
+        "assertion": "TypeScript compiles with zero errors"
+      }
+    }
+  ]
+}

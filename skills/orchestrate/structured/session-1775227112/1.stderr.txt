@@ -1,0 +1,14 @@
+2026-04-03 10:38:42.764 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Express endpoints: all /api/posture/* routes (frameworks, families, gaps, risks, alerts, overview) ===
+2026-04-03 10:38:42.765 | INFO     | __main__:run:494 -   Backend: codex
+2026-04-03 10:38:42.765 | INFO     | __main__:run:495 -   DoD: grep -q '/api/posture/frameworks' packages/ux-lab/server/index.ts && grep -q '/api/posture/overview'
+2026-04-03 10:38:42.765 | INFO     | __main__:run:496 -   Max rounds: 5
+2026-04-03 10:38:44.210 | INFO     | __main__:run:587 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-03 10:39:56.232 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for packages/ux-lab/server/index.ts, trying complete file
+2026-04-03 10:39:56.233 | INFO     | apply:apply_file_blocks:256 -   Wrote: packages/ux-lab/server/index.ts (13835 bytes)
+2026-04-03 10:39:56.233 | INFO     | __main__:run:651 -   Applied 1 files: ['packages/ux-lab/server/index.ts']
+2026-04-03 10:39:56.297 | INFO     | __main__:run:658 -   Score: 1.000 (DoD:True errors:0 lint:0 bp:0)
+2026-04-03 10:39:56.367 | INFO     | __main__:run:695 -   KEEP (score 1.000 > previous 0.000)
+2026-04-03 10:39:56.773 | INFO     | __main__:run:751 - === DoD PASSED on round 1 (score=1.000) ===
+2026-04-03 10:39:56.774 | INFO     | __main__:run:770 - === RESULT: PASS | score=1.000 | 1 rounds ===
+2026-04-03 10:39:56.795 | INFO     | apply:generate_hunk_review:531 - Review with: hunk patch /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775227112/1.hunk.md
+2026-04-03 10:39:56.795 | INFO     | apply:generate_hunk_review:533 -   Or: cd /tmp/cr-wt-1-06euqmyw && hunk diff

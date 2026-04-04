@@ -1,0 +1,159 @@
+{
+  "generated_at": 1775237797.6178916,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775237583",
+  "tasks": [
+    {
+      "id": "5",
+      "title": "Update usePostureData hook to use dedicated /api/posture/* endpoints",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775237583/5.response.txt",
+      "error": "",
+      "started_at": 1775237583.4040458,
+      "finished_at": 1775237623.8004982,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "6",
+      "title": "Implement PostureDashboard.tsx \u2014 full 3ft compliance view from V1 mockup",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775237583/6.response.txt",
+      "error": "",
+      "started_at": 1775237623.8011425,
+      "finished_at": 1775237709.6352096,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "7",
+      "title": "Implement OverviewLanding.tsx \u2014 5ft landing page with 4 live content wells",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775237583/7.response.txt",
+      "error": "",
+      "started_at": 1775237709.6365583,
+      "finished_at": 1775237768.5004086,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "8",
+      "title": "Add Gauge icon to nav strip + wire Posture tab in SpartaExplorer",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "6",
+        "7"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775237583/8.response.txt",
+      "error": "",
+      "started_at": 1775237768.5015562,
+      "finished_at": 1775237797.5948422,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "9",
+      "title": "Family flyout panel \u2014 drill into controls for selected family",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "6"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775237583/9.response.txt",
+      "error": "",
+      "started_at": 1775237709.639096,
+      "finished_at": 1775237767.251582,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "10",
+      "title": "Generate CDP live DOM interaction manifest for PostureDashboard",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [
+        "8",
+        "9"
+      ],
+      "output_path": "",
+      "error": "Command failed (22): cd packages/ux-lab &&\necho \"=== Vite compile check ===\" &&\ncurl -sf http://localhost:3002/src/components/sparta/dashboard/PostureDashboard.tsx -o /dev/null &&\necho \"=== Express endpoint checks ===\" &&\ncurl -sf http://localhost:3001/api/posture/frameworks | python3 -c \"import json,sys; d=json.load(sys.stdin); assert len(d['frameworks'])>0\" &&\ncurl -sf http://localhost:3001/api/posture/families/NIST | python3 -c \"import json,sys; d=json.load(sys.stdin); assert len(d['families'])>0\" &&\ncurl -sf http://localhost:3001/api/posture/gaps | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'missingQRAs' in d\" &&\ncurl -sf http://localhost:3001/api/posture/risks | python3 -c \"import json,sys; d=json.load(sys.stdin); assert len(d['risks'])>0\" &&\ncurl -sf http://localhost:3001/api/posture/alerts | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'alerts' in d\" &&\ncurl -sf http://localhost:3001/api/posture/overview | python3 -c \"import json,sys; d=json.load(sys.stdin); assert len(d['wells'])==4\" &&\necho \"=== verify-data-qid gate ===\" &&\npython3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx &&\npython3 scripts/verify-data-qid.py src/components/sparta/explorer/OverviewLanding.tsx &&\npython3 scripts/verify-data-qid.py src/components/sparta/explorer/SpartaExplorer.tsx &&\necho \"=== ALL GATES PASS ===\"\n=== Vite compile check ===",
+      "started_at": 1775237797.5958452,
+      "finished_at": 1775237797.6176124,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "11",
+      "title": "CDP live DOM test manifest \u2014 generate and validate from running browser",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "10"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "12",
+      "title": "VLM review \u2014 compare implementation screenshots to approved V1 mockup",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "gemini",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "11"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

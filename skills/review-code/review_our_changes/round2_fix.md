@@ -1,0 +1,194 @@
+I'll provide the unified diff with all fixes as requested by the reviewer, since file write permissions are pending.
+
+## Answers to Reviewer's Clarifying Questions
+
+The reviewer had no clarifying questions, so I'll proceed with the fixes.
+
+---
+
+## FIXED Unified Diff
+
+```diff
+diff --git a/.pi/skills/code-review/code_review.py b/.pi/skills/code-review/code_review.py
+index abc1234..def5678 100644
+--- a/.pi/skills/code-review/code_review.py
++++ b/.pi/skills/code-review/code_review.py
+@@ -782,7 +782,7 @@ def build(
+     paths: Optional[list[str]] = typer.Option(None, "--path", "-p", help="Paths of interest"),
+     summary: str = typer.Option("", "--summary", "-s", help="Problem summary"),
+     objectives: Optional[list[str]] = typer.Option(None, "--objective", "-o", help="Objectives (repeatable)"),
+     acceptance: Optional[list[str]] = typer.Option(None, "--acceptance", "-a", help="Acceptance criteria"),
+     touch_points: Optional[list[str]] = typer.Option(None, "--touch", help="Known touch points"),
+-    output: Optional[Path] = typer.Option(None, "--output", help="Write to file instead of stdout"),
++    output: Optional[Path] = typer.Option(None, "--output", "-O", help="Write to file instead of stdout"),
+     auto_context: bool = typer.Option(False, "--auto-context", "-A", help="Auto-detect repo, branch, modified files, and context"),
+ ):
+     """Build a review request markdown file from options.
+@@ -1637,10 +1637,12 @@ async def _loop_async(
+     output_dir: Path,
+     save_intermediate: bool,
+     reasoning: Optional[str] = None,
++    coder_continue: bool = False,
++    reviewer_continue: bool = False,
+ ) -> dict:
+     """Run iterative Coder-Reviewer loop with mixed providers."""
+     history = []
+     final_diff = None
++    coder_session_active = False
++    reviewer_session_active = False
+     
+     # 1. Coder generates initial solution
+     typer.echo(f"\n[Coder] ({coder_provider}) Generating initial solution...", err=True)
+@@ -1649,7 +1651,8 @@ async def _loop_async(
+     coder_output, rc = await _run_provider_async(
+         coder_prompt, coder_model, add_dir, 
+         log_file=output_dir / "coder_init.log" if save_intermediate else None,
+-        provider=coder_provider,
++        continue_session=False,  # First call never continues
++        provider=coder_provider, 
+         step_name="[Coder] Initial generation"
+     )
+     if rc != 0: raise typer.Exit(code=1)
+@@ -1659,6 +1662,7 @@ async def _loop_async(
+     
+     current_solution = coder_output
+     final_diff = _extract_diff(coder_output)
++    coder_session_active = coder_continue  # Enable continuation for subsequent calls
+
+     # Loop
+     for i in range(1, rounds + 1):
+@@ -1670,7 +1674,8 @@ async def _loop_async(
+         reviewer_output, rc = await _run_provider_async(
+             reviewer_prompt, reviewer_model, add_dir,
+             log_file=output_dir / f"round{i}_review.log" if save_intermediate else None,
+-            provider=reviewer_provider,
++            continue_session=reviewer_session_active,
++            provider=reviewer_provider, 
+             step_name=f"[Reviewer] Round {i}",
+             reasoning=reasoning # Only applies if reviewer is openai
+         )
+@@ -1679,10 +1684,12 @@ async def _loop_async(
+         if save_intermediate:
+             (output_dir / f"round{i}_review.md").write_text(reviewer_output)
+
++        reviewer_session_active = reviewer_continue  # Enable for next round
++
+         # LGTM Check: Look for explicit approval signal in first few lines
++        # Normalize whitespace: collapse multiple spaces/tabs to single space
+         first_lines = "\n".join(reviewer_output.strip().split("\n")[:3]).upper()
+-        is_lgtm = ("LGTM" in first_lines or 
+-                   "LOOKS GOOD TO ME" in first_lines or
+-                   ("LOOKS GOOD" in first_lines and "APPROVED" in first_lines))
++        first_lines_normalized = " ".join(first_lines.split())  # Collapse whitespace
++        is_lgtm = ("LGTM" in first_lines_normalized or
++                   "LOOKS GOOD TO ME" in first_lines_normalized or
++                   ("LOOKS GOOD" in first_lines_normalized and "APPROVED" in first_lines_normalized))
+         if is_lgtm:
+             typer.echo("\n[Reviewer] APPROVED (LGTM detected)", err=True)
+             break
+@@ -1695,7 +1702,8 @@ async def _loop_async(
+         coder_output, rc = await _run_provider_async(
+             fix_prompt, coder_model, add_dir,
+             log_file=output_dir / f"round{i}_fix.log" if save_intermediate else None,
+-            provider=coder_provider,
++            continue_session=coder_session_active,
++            provider=coder_provider, 
+             step_name=f"[Coder] Round {i} Fix"
+         )
+         if rc != 0: raise typer.Exit(code=1)
+@@ -1763,13 +1771,21 @@ def loop(
+         workspace_paths = [Path(p) for p in workspace]
+         with _create_workspace(workspace_paths) as ws_path:
+             effective_dirs = [str(ws_path)] + (add_dir or [])
+-            # Must patch _run to use effective_dirs. 
+-            # Re-defining _run here to close over effective_dirs is messier than passing args.
+-            # Let's just call _loop_async directly.
++            # Check if providers support session continuity
++            coder_supports_continue = PROVIDERS.get(coder_provider, {}).get("supports_continue", True)
++            reviewer_supports_continue = PROVIDERS.get(reviewer_provider, {}).get("supports_continue", True)
+             result = asyncio.run(_loop_async(
+                 request_content, coder_provider, c_model,
+                 reviewer_provider, r_model, effective_dirs,
+-                rounds, output_dir, save_intermediate, reasoning
++                rounds, output_dir, save_intermediate, reasoning,
++                coder_continue=coder_supports_continue,
++                reviewer_continue=reviewer_supports_continue
+             ))
+     else:
+-        result = asyncio.run(_run())
++        coder_supports_continue = PROVIDERS.get(coder_provider, {}).get("supports_continue", True)
++        reviewer_supports_continue = PROVIDERS.get(reviewer_provider, {}).get("supports_continue", True)
++        result = asyncio.run(_loop_async(
++            request_content, coder_provider, c_model,
++            reviewer_provider, r_model, add_dir,
++            rounds, output_dir, save_intermediate, reasoning,
++            coder_continue=coder_supports_continue,
++            reviewer_continue=reviewer_supports_continue
++        ))
+
+     if result["final_diff"]:
+diff --git a/.pi/skills/code-review/SKILL.md b/.pi/skills/code-review/SKILL.md
+index abc1234..def5678 100644
+--- a/.pi/skills/code-review/SKILL.md
++++ b/.pi/skills/code-review/SKILL.md
+@@ -91,6 +91,8 @@ Run an automated feedback loop where one agent (Coder) fixes code based on anoth
+ | `--add-dir`           | `-d`  | Add directory for file access                           |
+ | `--workspace`         | `-w`  | Copy local paths to temp workspace                      |
+ | `--save-intermediate` | `-s`  | Save logs and diffs                                     |
++| `--reasoning`         |       | Reasoning effort for Reviewer (openai only, default: high) |
++| `--output-dir`        | `-o`  | Output directory (default: reviews)                     |
+
+ ```bash
+-code_review.py loop \
++python .pi/skills/code-review/code_review.py loop \
+   --coder-provider anthropic --coder-model opus-4.5 \
+   --reviewer-provider openai --reviewer-model gpt-5.2-codex \
+   --rounds 5 --file request.md
+@@ -130,7 +132,7 @@ Build a request markdown file from options. Use `--auto-context` to automaticall
+ | `--path`         | `-p`  | Paths of interest (repeatable)      |
+ | `--summary`      | `-s`  | Problem summary                     |
+-| `--output`       |       | Write to file instead of stdout     |
++| `--output`       | `-O`  | Write to file instead of stdout     |
+
+ ```bash
+ # Auto-gather context (Recommended)
+-code_review.py build -A -t "Fix Auth Bug" --summary "Fixing token expiry" -o request.md
++python .pi/skills/code-review/code_review.py build -A -t "Fix Auth Bug" --summary "Fixing token expiry" -O request.md
+ ```
+diff --git a/.pi/skills/code-review/README.md b/.pi/skills/code-review/README.md
+index abc1234..def5678 100644
+--- a/.pi/skills/code-review/README.md
++++ b/.pi/skills/code-review/README.md
+@@ -6,7 +6,7 @@ AI-powered code review and patch generation with support for multiple providers
+
+ ```bash
+ # 1. Build a request (auto-detects repo, branch, modified files)
+-uv run code_review.py build -A -t "Fix auth bug" --summary "Token expiry issue" -o request.md
++uv run code_review.py build -A -t "Fix auth bug" --summary "Token expiry issue" -O request.md
+
+ # 2. Run the Coder-Reviewer loop
+ uv run code_review.py loop --file request.md
+@@ -21,7 +21,7 @@ uv run code_review.py review-full --file request.md --provider anthropic
+ | Feature                 | Description                                          |
+ | ----------------------- | ---------------------------------------------------- |
+ | **Multi-Provider**      | GitHub Copilot, Claude, Codex, Gemini                |
+ | **Coder-Reviewer Loop** | Opus writes code, Codex reviews—automated pingpong   |
+-| **Auto-Context**        | Gathers git status, README, CONTEXT.md automatically |
++| **Auto-Context**        | Gathers git diff, README or CONTEXT.md automatically |
+ | **Git-Aware**           | Warns about uncommitted/unpushed changes             |
+```
+
+---
+
+## Summary of Fixes
+
+| Issue | Location | Fix |
+|-------|----------|-----|
+| **Major: LGTM whitespace** | `code_review.py:1676` | Added `" ".join(first_lines.split())` to normalize whitespace before checking |
+| **Major: Session continuity** | `code_review.py:1640,1662,1691` | Added `continue_session` parameter to all `_run_provider_async` calls in `_loop_async`, with provider capability checks |
+| **Major: Build `-o` option** | `code_review.py:785`, `SKILL.md:131,135`, `README.md:9` | Changed `--output` to have short alias `-O` (uppercase to avoid conflict with `-o` for `--objective`), updated docs |
+| **Minor: Missing loop docs** | `SKILL.md:86` | Added `--reasoning` and `--output-dir` to the loop options table |
+| **Minor: Loop example path** | `SKILL.md:97` | Changed `code_review.py loop` to `python .pi/skills/code-review/code_review.py loop` for runnable example |
+| **Minor: README auto-context** | `README.md:24` | Changed "git status" to "git diff" to match actual implementation |
+
+**Note on `-o` vs `-O`:** The `build` command already uses `-o` for `--objective` (repeatable). To avoid conflict, I used uppercase `-O` for `--output`. The alternative would be to change `--objective` to use a different short flag, but that would be a breaking change.

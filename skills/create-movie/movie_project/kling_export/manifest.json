@@ -1,0 +1,33 @@
+{
+  "project_name": "A short dream about infinite libraries (Influenced",
+  "exported_at": "2026-02-01T07:51:11.797181",
+  "scenes": [
+    {
+      "id": "1",
+      "prompt": "[Visual description for scene 1 - detailed enough for AI generation]. [Describe action for scene 1]. Cinematic, photorealistic, 8k.",
+      "duration": 3,
+      "negative_prompt": "text, watermark, blurry, low quality, distorted, ugly",
+      "aspect_ratio": "16:9",
+      "mode": "std",
+      "camera_type": "wide"
+    },
+    {
+      "id": "2",
+      "prompt": "[Visual description for scene 2 - detailed enough for AI generation]. [Describe action for scene 2]. Cinematic, photorealistic, 8k.",
+      "duration": 3,
+      "negative_prompt": "text, watermark, blurry, low quality, distorted, ugly",
+      "aspect_ratio": "16:9",
+      "mode": "std",
+      "camera_type": "medium"
+    },
+    {
+      "id": "3",
+      "prompt": "[Visual description for scene 3 - detailed enough for AI generation]. [Describe action for scene 3]. Cinematic, photorealistic, 8k.",
+      "duration": 3,
+      "negative_prompt": "text, watermark, blurry, low quality, distorted, ugly",
+      "aspect_ratio": "16:9",
+      "mode": "std",
+      "camera_type": "close-up"
+    }
+  ]
+}

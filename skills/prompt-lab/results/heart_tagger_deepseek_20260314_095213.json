@@ -1,0 +1,115 @@
+{
+  "model": "deepseek",
+  "timestamp": "2026-03-14T09:52:13.291723",
+  "macro_f1": 0.0,
+  "avg_latency_ms": 0.0,
+  "per_class": {
+    "cognitive": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "defensive": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "emotional": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "motivational": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "relational": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  "per_case": [
+    {
+      "id": "seed_001",
+      "predicted": [],
+      "expected": [
+        "motivational"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_002",
+      "predicted": [],
+      "expected": [
+        "motivational"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_003",
+      "predicted": [],
+      "expected": [
+        "emotional"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_004",
+      "predicted": [],
+      "expected": [
+        "emotional"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_005",
+      "predicted": [],
+      "expected": [
+        "motivational"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_006",
+      "predicted": [],
+      "expected": [
+        "motivational"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_007",
+      "predicted": [],
+      "expected": [
+        "emotional"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_008",
+      "predicted": [],
+      "expected": [
+        "emotional"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_009",
+      "predicted": [],
+      "expected": [
+        "motivational"
+      ],
+      "f1": 0.0
+    },
+    {
+      "id": "seed_010",
+      "predicted": [],
+      "expected": [
+        "motivational"
+      ],
+      "f1": 0.0
+    }
+  ]
+}

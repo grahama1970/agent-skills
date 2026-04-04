@@ -1,0 +1,29 @@
+{
+  "event_type": "self_improvement_round",
+  "timestamp": 1774461179,
+  "project_id": "table-merge",
+  "task": "table merge classification",
+  "round": 6,
+  "strategy": "switch_modality",
+  "backbone": "efficientnet_b0",
+  "modality": "paired",
+  "f1": 0.0,
+  "accuracy": 0.0,
+  "wilson_lower": 0.0,
+  "diagnosis": "Training produced zero F1 \u2014 likely crash or data format mismatch",
+  "dogpile_query": "",
+  "hps": {
+    "epochs": 20,
+    "lr": 0.0001,
+    "batch_size": 32,
+    "weight_decay": 0.0002,
+    "dropout": 0.2,
+    "mixup_alpha": 0.3,
+    "cutmix_alpha": 1.0,
+    "random_erasing": 0.25,
+    "label_smoothing": 0.1,
+    "ensemble": true,
+    "top_k": 3
+  },
+  "errors": []
+}

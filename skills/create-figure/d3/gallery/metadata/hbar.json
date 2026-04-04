@@ -1,0 +1,18 @@
+{
+  "chart_type": "hbar",
+  "viz_family": "bar",
+  "query": "Show me the top 5 worst-scoring quarantined PDFs",
+  "title": "Analysis (hbar)",
+  "data_shape": {
+    "row_count": 3,
+    "col_count": 1,
+    "max_label_len": 4,
+    "has_time_axis": false,
+    "null_pct": 0,
+    "nested": false
+  },
+  "source": "figure-lab",
+  "timestamp": 1772304930,
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/hbar_1772304930.html",
+  "html_size_bytes": 3084
+}

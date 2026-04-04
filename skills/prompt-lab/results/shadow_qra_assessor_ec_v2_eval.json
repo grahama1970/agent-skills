@@ -1,0 +1,77 @@
+{
+  "approach": "evidence-case-gate1-bypass",
+  "agreement": 0.0,
+  "cases": 10,
+  "results": [
+    {
+      "key": "1183163524",
+      "expected": "PASS",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.5
+    },
+    {
+      "key": "1122196280",
+      "expected": "PASS",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.0
+    },
+    {
+      "key": "qra__run-recovery-verify__2086029845",
+      "expected": "PASS",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.4
+    },
+    {
+      "key": "qra__run-recovery-verify__2085979839",
+      "expected": "PASS",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.3
+    },
+    {
+      "key": "16562",
+      "expected": "PARTIAL",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.3
+    },
+    {
+      "key": "qra__run-recovery-verify__2085929758",
+      "expected": "PARTIAL",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 18.7
+    },
+    {
+      "key": "qra__run-recovery-verify__2086079845",
+      "expected": "PARTIAL",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.5
+    },
+    {
+      "key": "14992",
+      "expected": "FAIL",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.4
+    },
+    {
+      "key": "14993",
+      "expected": "FAIL",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.5
+    },
+    {
+      "key": "2085921413",
+      "expected": "FAIL",
+      "mapped": "ERROR",
+      "match": false,
+      "latency": 16.8
+    }
+  ]
+}

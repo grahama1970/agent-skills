@@ -1,0 +1,34 @@
+{
+  "run_id": "review_pdf_loop_c1_1773229621",
+  "timestamp": 1773229680,
+  "candidate_count": 3,
+  "fixture_count": 4,
+  "results": [
+    {
+      "candidate": "/mnt/storage12tb/extractor_corpus/expansion_batch_1/downloads/301a96fe97a67b315cf21f819d72d34df6b6f75986966a470dbe24f3b944c4af.pdf",
+      "mode": "local_copy",
+      "status": "copied",
+      "fixture_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773229621/auto_debug/fixtures/source_001_301a96fe97a67b315cf21f819d72d34df6b6f75986966a470dbe24f3b944c4af.pdf"
+    },
+    {
+      "candidate": "/mnt/storage12tb/extractor_corpus/expansion_batch_1/downloads/5a1ed8c1812c80bb08637c12e80412a3397d134fb02e72db63b9091da020367b.pdf",
+      "mode": "local_copy",
+      "status": "copied",
+      "fixture_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773229621/auto_debug/fixtures/source_002_5a1ed8c1812c80bb08637c12e80412a3397d134fb02e72db63b9091da020367b.pdf"
+    },
+    {
+      "candidate": "/mnt/storage12tb/extractor_corpus/expansion_batch_1/downloads/8b853d2471261dcc95cae4839584a93cd4400a5cbe458e63cf6d666ae701a6d7.pdf",
+      "mode": "local_copy",
+      "status": "copied",
+      "fixture_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773229621/auto_debug/fixtures/source_003_8b853d2471261dcc95cae4839584a93cd4400a5cbe458e63cf6d666ae701a6d7.pdf"
+    },
+    {
+      "command": "cd \"/home/graham/workspace/experiments/pi-mono/.pi/skills/fixture-tricky\" && ./run.sh gauntlet --output \"/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773229621/auto_debug/fixtures/gauntlet_review_pdf_loop_c1_1773229621.pdf\"",
+      "returncode": 0,
+      "stdout_tail": "Created: /tmp/tmpscb6srtz.pdf (9 false-table tricks)\nCreated: /tmp/tmpch9ci1xx.pdf (8 malformed-table tricks)\nCreated: /tmp/tmpfais9xo5.pdf (8 cursed-text tricks)\nCreated: /tmp/tmpwcsxs2j2.pdf (layout-trap tricks)\nCreated: /tmp/tmpa_2r9at3.pdf (9 requirements tricks)\nCreated: /tmp/tmpef2zf2tj.pdf (3 math-noise tricks)\nCreated gauntlet: /home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773229621/auto_debug/fixtures/gauntlet_review_pdf_loop_c1_1773229621.pdf (all trick categories including requirements)",
+      "stderr_tail": "",
+      "mode": "fixture_tricky_gauntlet",
+      "fixture_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/reports/review_pdf_loop_c1_1773229621/auto_debug/fixtures/gauntlet_review_pdf_loop_c1_1773229621.pdf"
+    }
+  ]
+}

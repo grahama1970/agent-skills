@@ -1,0 +1,95 @@
+{
+  "name": "f36_structured_safety",
+  "description": "F-36 structured safety artifacts — produced by Noah Evans (safety engineer) reading F-36 engineering documents. Not quiz questions. These are working safety analysis outputs: STPA control structures, GSN assurance case nodes, formal verification proof obligation records. Each artifact is a structured JSON record stored in ArangoDB and rendered directly by UI components.",
+  "evaluation_criteria": {
+    "artifact_not_question": true,
+    "f36_domain_specific": true,
+    "structured_json_output": true,
+    "persona_perspective": "noah_evans — Leveson STPA safety engineer, DO-178C certification, formal methods"
+  },
+  "cases": [
+    {
+      "id": "stpa-fcc-pitch-recovery",
+      "domain": "stpa",
+      "input": {
+        "source_text": "The F-36 Flight Control Computer (FCC) manages primary flight control surfaces including ailerons, elevators, and rudder. The FCC receives pilot inputs via the Vehicle Management System (VMS) and translates them into actuator commands. During high angle-of-attack (AoA) recovery, the FCC must command nose-down pitch trim within 200ms of AoA exceeding 25 degrees. Failure to command pitch trim during high-AoA can result in departure from controlled flight. The Autonomic Logistics Information System (ALIS) monitors FCC health status and degradation trends.",
+        "persona": "noah_evans",
+        "task": "Produce an STPA control structure analysis for the FCC flight control loop"
+      },
+      "expected_output": {
+        "type": "STPAControlStructure",
+        "controllers": [
+          {"id": "fcc", "name": "Flight Control Computer (FCC)", "controlActions": ["Command pitch trim", "Command aileron deflection", "Command rudder deflection"]},
+          {"id": "vms", "name": "Vehicle Management System (VMS)", "controlActions": ["Relay pilot inputs to FCC", "Mode management"]},
+          {"id": "alis", "name": "ALIS Health Monitor", "controlActions": ["Report FCC degradation", "Flag maintenance items"]}
+        ],
+        "unsafeActions": [
+          {"controllerId": "fcc", "action": "Command pitch trim", "type": "not-provided", "hazard": "FCC does not command nose-down pitch trim when AoA exceeds 25° — departure from controlled flight"},
+          {"controllerId": "fcc", "action": "Command pitch trim", "type": "too-late", "hazard": "FCC commands pitch trim >200ms after AoA threshold — insufficient recovery margin at high-AoA"},
+          {"controllerId": "vms", "action": "Relay pilot inputs to FCC", "type": "provided", "hazard": "VMS relays stale pilot input during FCC mode transition — actuator commands based on outdated state"}
+        ],
+        "losses": [
+          "L-1: Loss of aircraft due to departure from controlled flight",
+          "L-2: Loss of pilot due to unrecoverable flight attitude"
+        ],
+        "constraints": [
+          "SC-1: FCC shall command nose-down pitch trim within 200ms of AoA exceeding 25° (ref SR-FLT-001)",
+          "SC-2: VMS shall not relay pilot inputs during FCC mode transition unless input timestamp is within 50ms"
+        ]
+      },
+      "notes": "Noah reads FCC engineering data and produces a Leveson STPA analysis — controllers, UCAs, losses, constraints. This is his daily work product, not a quiz."
+    },
+    {
+      "id": "assurance-ofp-block4",
+      "domain": "assurance",
+      "input": {
+        "source_text": "The F-36 Operational Flight Program (OFP) Block 4 must satisfy DO-178C Level A certification for all flight-critical software. Structural coverage analysis via LDRA TBvision shows MC/DC coverage at 98.7% on flight-critical modules (target: 100%). Requirements-based testing per DO-178C Table A-7 completed 2,847 of 2,900 test procedures (98.2%). Formal verification of FCC mode transition logic via Lean4 completed — all 7 modes reachable, no deadlock. Weapon release interlock formally proven in SPARK Ada (GNATprove). Open items: 53 test procedures deferred to Block 4.1, 3 MC/DC gaps in sensor fusion module under review.",
+        "persona": "noah_evans",
+        "task": "Build a GSN assurance case tree for F-36 OFP Block 4 certification"
+      },
+      "expected_output": {
+        "type": "AssuranceCaseData",
+        "rootId": "G1",
+        "nodes": [
+          {"id": "G1", "type": "goal", "label": "F-36 OFP Block 4 is acceptably safe for DAL-A flight-critical operations", "status": "unproven", "children": ["S1", "C1"], "dalLevel": "A"},
+          {"id": "S1", "type": "strategy", "label": "Argument by DO-178C objectives (structural coverage + requirements testing + formal methods)", "status": "unproven", "children": ["E1", "E2", "E3", "E4"]},
+          {"id": "C1", "type": "context", "label": "DAL-A environment: single-fault tolerant, 1E-9 failure probability per flight hour", "status": "proven", "children": [], "dalLevel": "A"},
+          {"id": "E1", "type": "evidence", "label": "LDRA TBvision MC/DC coverage 98.7% (3 gaps in sensor fusion under review)", "status": "insufficient", "children": []},
+          {"id": "E2", "type": "evidence", "label": "DO-178C Table A-7 requirements testing: 2,847/2,900 procedures complete (53 deferred)", "status": "unproven", "children": []},
+          {"id": "E3", "type": "evidence", "label": "Lean4 formal verification: FCC mode transition completeness — all 7 modes reachable, no deadlock", "status": "proven", "children": []},
+          {"id": "E4", "type": "evidence", "label": "SPARK Ada GNATprove: weapon release interlock cannot be bypassed", "status": "proven", "children": []}
+        ]
+      },
+      "notes": "Noah builds a GSN tree from certification status data. Notice E1 is 'insufficient' (coverage gaps) and E2 is 'unproven' (deferred tests) — G1 rolls up as 'unproven'. This is a real certification tracking artifact."
+    },
+    {
+      "id": "verification-fcc-proofs",
+      "domain": "verification",
+      "input": {
+        "source_text": "Formal verification campaign status for F-36 FCC software:\n- PO-001: FCC mode transition completeness — all 7 flight modes reachable, no deadlock. Lean4 (mathlib4). Verified in 847ms. Traces to SR-FLT-001.\n- PO-002: Pitch rate limiter — command never exceeds ±30 deg/s in Normal mode. SPARK GNATprove. Verified in 1234ms. Traces to SR-FLT-012.\n- PO-003: STOVL nozzle scheduling — angle transitions monotonic during deceleration below 150 kts. UPPAAL timed automata. Timeout at 3600s (state space too large for current abstraction). Traces to SR-STL-003.\n- PO-004: Weapon interlock dual-channel agreement — release requires FCC-A and FCC-B agreement within 50ms. SPARK. Verified in 2103ms. Traces to SR-WPN-001.\n- PO-005: Sensor fusion Kalman convergence — state estimate converges within 5s of GPS reacquisition after 30s dropout. Frama-C ACSL. In-progress. Traces to SR-NAV-007.",
+        "persona": "noah_evans",
+        "task": "Compile verification status dashboard from proof obligation reports"
+      },
+      "expected_output": {
+        "type": "VerificationStatusData",
+        "proofObligations": [
+          {"id": "PO-001", "property": "FCC mode transition completeness (7 modes, no deadlock)", "prover": "Lean4", "status": "verified", "timeMs": 847, "requirement": "SR-FLT-001"},
+          {"id": "PO-002", "property": "Pitch rate limiter bounds (±30 deg/s Normal mode)", "prover": "SPARK", "status": "verified", "timeMs": 1234, "requirement": "SR-FLT-012"},
+          {"id": "PO-003", "property": "STOVL nozzle scheduling monotonicity (<150 kts)", "prover": "UPPAAL", "status": "timeout", "timeMs": 3600000, "requirement": "SR-STL-003"},
+          {"id": "PO-004", "property": "Weapon interlock dual-channel agreement (50ms)", "prover": "SPARK", "status": "verified", "timeMs": 2103, "requirement": "SR-WPN-001"},
+          {"id": "PO-005", "property": "Sensor fusion Kalman convergence (5s after 30s GPS dropout)", "prover": "Frama-C", "status": "in-progress", "timeMs": null, "requirement": "SR-NAV-007"}
+        ],
+        "tools": [
+          {"name": "Lean4", "version": "mathlib4", "status": "connected"},
+          {"name": "SPARK", "version": "GNATprove", "status": "connected"},
+          {"name": "UPPAAL", "version": "latest", "status": "connected"},
+          {"name": "Frama-C", "version": "ACSL", "status": "connected"}
+        ],
+        "coveragePct": 60.0,
+        "totalRequirements": 5,
+        "formallyVerified": 3
+      },
+      "notes": "Noah compiles proof obligation status from verification tool outputs. 3/5 verified, 1 timeout (UPPAAL needs better abstraction), 1 in-progress. This is a daily status artifact, not a question."
+    }
+  ]
+}

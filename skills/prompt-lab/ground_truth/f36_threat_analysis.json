@@ -1,0 +1,32 @@
+{
+  "cases": {
+    "threat-actors-f36-alis": {
+      "input": {
+        "source_text": "The F-36 Autonomic Logistics Information System (ALIS) network connects maintenance terminals at the Fort Worth plant to the central mission data server via TCP/IP on a segmented VLAN. Intelligence assessment identifies three primary threat actors targeting the F-36 program:\n\n1. APT-41 (Double Dragon): Chinese state-sponsored group with demonstrated capability in supply chain compromise and defense industrial base targeting. Known to exploit VPN appliances and use living-off-the-land techniques. Assessed capability 9/10, intent 8/10 against F-36 avionics source code and ALIS maintenance records. Probability of targeting: 0.20. Targeted NIST controls: AC-17 (Remote Access), SC-7 (Boundary Protection), SI-4 (System Monitoring). Primarily targets ground segment (ALIS terminals, build servers) and user segment (engineer workstations).\n\n2. Sandworm (Unit 74455, GRU): Russian military intelligence with destructive malware capability (NotPetya, Industroyer). Focus on supply chain disruption and industrial control systems. Assessed capability 9/10, intent 7/10 against F-36 manufacturing systems. Probability: 0.15. Targeted controls: SA-12 (Supply Chain Protection), SI-7 (Software/Firmware Integrity), CP-9 (System Backup). Targets ground segment (manufacturing execution systems) and link segment (data transfer between plant and depot).\n\n3. FIN7 (Carbanak): Financially motivated organized crime group pivoting to defense sector ransomware. Targets administrative and financial systems adjacent to classified networks. Assessed capability 6/10, intent 4/10 against F-36 program. Probability: 0.30. Targeted controls: AC-2 (Account Management), IA-5 (Authenticator Management), MP-4 (Media Storage). Primarily targets user segment (corporate endpoints) and ground segment (shared infrastructure).",
+        "persona": "Brandon Bailey — SPARTA/cybersecurity analyst, F-36 LOE program",
+        "task": "Generate threat actor profiles for the F-36 ALIS network threat assessment"
+      },
+      "expected_output": {
+        "type": "ThreatActorData",
+        "required_fields": ["actors"],
+        "actor_count_min": 3,
+        "required_actor_ids": ["apt-41", "sandworm", "fin7"],
+        "required_levels": ["nation-state", "organized-crime"]
+      }
+    },
+    "threat-tactics-f36-supply-chain": {
+      "input": {
+        "source_text": "F-36 Supply Chain Cyber Threat Assessment — Fort Worth Plant\n\nTactic: Initial Access (TA0001)\n- Exploit Public-Facing Application (T1190): ALIS web portal running on unpatched Apache Struts. Severity: critical, risk score 88. Mitigated by SC-7 (Boundary Protection), SI-2 (Flaw Remediation). No gap.\n- Supply Chain Compromise (T1195): Malicious firmware insertion in F135 FADEC vendor components during transit. Severity: critical, risk score 95. Mitigated by SA-12 (Supply Chain Protection), SI-7 (Software Integrity). No gap.\n- Phishing (T1566): Spear-phishing campaign targeting F-36 program managers with weaponized PDFs. Severity: high, risk score 65. Mitigated by AT-2 (Security Awareness Training), SI-8 (Spam Protection). No gap.\n- Hardware Additions (T1200): Rogue USB devices planted in maintenance bay workstations. Severity: high, risk score 72. No mitigating controls mapped — GAP identified.\n\nTactic: Execution (TA0002)\n- Command and Scripting Interpreter (T1059): PowerShell abuse on ALIS Windows terminals for lateral movement. Severity: high, risk score 60. Mitigated by CM-7 (Least Functionality), SI-3 (Malicious Code Protection). No gap.\n- Exploitation for Client Execution (T1203): Zero-day in ALIS client application to achieve code execution. Severity: critical, risk score 85. Mitigated by SI-2 (Flaw Remediation). No gap.\n\nTactic: Persistence (TA0003)\n- Implant in Build System (custom): Backdoor inserted into F-36 OFP build pipeline at Fort Worth. Severity: critical, risk score 92. Mitigated by CM-3 (Change Management), SI-7 (Software Integrity). No gap.\n- Compromised ALIS Update Channel (custom): Hijack ALIS software distribution mechanism. Severity: critical, risk score 90. No mitigating controls mapped — GAP identified.\n\nTactic: Exfiltration (TA0010)\n- Exfiltration Over C2 Channel (T1041): Classified avionics data exfiltrated via encrypted C2 tunnel. Severity: critical, risk score 88. Mitigated by SC-8 (Transmission Confidentiality), SI-4 (System Monitoring). No gap.\n- Exfiltration via Physical Medium (T1052): USB dead drops in maintenance bay. Severity: high, risk score 70. Mitigated by MP-7 (Media Use), PE-3 (Physical Access Control). No gap.",
+        "persona": "Brandon Bailey — SPARTA/cybersecurity analyst, F-36 LOE program",
+        "task": "Generate threat tactic/technique matrix for F-36 supply chain cyber assessment"
+      },
+      "expected_output": {
+        "type": "ThreatTacticData",
+        "required_fields": ["tactics"],
+        "tactic_count_min": 4,
+        "required_tactic_ids": ["TA0001", "TA0002", "TA0003", "TA0010"],
+        "gap_techniques_min": 2
+      }
+    }
+  }
+}

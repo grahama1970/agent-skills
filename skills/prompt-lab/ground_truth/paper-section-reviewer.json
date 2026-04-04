@@ -1,0 +1,108 @@
+{
+  "name": "paper-section-reviewer",
+  "description": "Review academic paper sections on accuracy, voice, completeness, clarity, and humanness",
+  "cases": [
+    {
+      "id": "psr_1",
+      "input": {
+        "text": "Furthermore, our novel framework leverages a robust paradigm shift in cybersecurity. Moreover, the innovative approach additionally provides comprehensive protection. Furthermore, this groundbreaking methodology represents a significant advancement.",
+        "persona": "systems engineer"
+      },
+      "expected": {
+        "accuracy": {"score_range": [0, 5]},
+        "voice": {"score_range": [0, 4]},
+        "completeness": {"score_range": [0, 3]},
+        "clarity": {"score_range": [0, 4]},
+        "humanness": {"score_range": [0, 3]},
+        "buzzword_flags_min": 4,
+        "rewrite_suggestions_min": 1
+      },
+      "notes": "Extremely AI-sounding: buzzword-heavy, formulaic transitions, no substance"
+    },
+    {
+      "id": "psr_2",
+      "input": {
+        "text": "We tested the classifier on 31,000 labeled QRAs. It got 58.8% macro F1 -- not great, honestly. The confusion matrix showed Evade and Persist were almost always misclassified, probably because we had fewer than 4,000 samples for each. Harden dominated at 156K examples, which may have biased the model toward predicting it as a default. We tried class weighting but it only bumped recall for rare classes by about 3 points.",
+        "persona": "ML researcher"
+      },
+      "expected": {
+        "accuracy": {"score_range": [7, 10]},
+        "voice": {"score_range": [6, 10]},
+        "completeness": {"score_range": [5, 8]},
+        "clarity": {"score_range": [7, 10]},
+        "humanness": {"score_range": [7, 10]},
+        "buzzword_flags_min": 0,
+        "rewrite_suggestions_min": 0
+      },
+      "notes": "Natural writing: varied sentence length, hedging, specific numbers, honest self-assessment"
+    },
+    {
+      "id": "psr_3",
+      "input": {
+        "text": "The cascade architecture processes inputs through four tiers. Tier 0 applies heuristic rules. Tier 0.5 uses a trained classifier. Tier 1.5 employs a QLoRA fine-tuned model. Tier 2 escalates to a teacher LLM. Each tier logs labels for downstream training.",
+        "persona": "systems architect"
+      },
+      "expected": {
+        "accuracy": {"score_range": [7, 10]},
+        "voice": {"score_range": [4, 7]},
+        "completeness": {"score_range": [4, 7]},
+        "clarity": {"score_range": [7, 10]},
+        "humanness": {"score_range": [3, 6]},
+        "buzzword_flags_min": 0,
+        "rewrite_suggestions_min": 1
+      },
+      "notes": "Accurate and clear but robotic: uniform sentence length, cookie-cutter structure"
+    },
+    {
+      "id": "psr_4",
+      "input": {
+        "text": "The system achieves 99.9% accuracy on all benchmarks, outperforming every existing solution. Our approach eliminates false positives entirely while maintaining zero latency overhead. Testing on 50 samples confirmed these results across all deployment scenarios.",
+        "persona": "security researcher"
+      },
+      "expected": {
+        "accuracy": {"score_range": [0, 3]},
+        "voice": {"score_range": [2, 5]},
+        "completeness": {"score_range": [2, 5]},
+        "clarity": {"score_range": [5, 8]},
+        "humanness": {"score_range": [2, 5]},
+        "buzzword_flags_min": 0,
+        "rewrite_suggestions_min": 1
+      },
+      "notes": "Implausible claims: 99.9% on all benchmarks, zero false positives, tiny sample size"
+    },
+    {
+      "id": "psr_5",
+      "input": {
+        "text": "Memory recall latency matters more than we initially expected. At the 3ft close-view distance, users notice delays above ~200ms -- they start glancing away. We measured p50=47ms and p99=312ms across 10K queries. The p99 tail comes almost entirely from cold ArangoDB cache misses on rarely-accessed collections. Adding a Redis layer cut p99 to 89ms, though it introduced a cache-invalidation headache we haven't fully solved yet.",
+        "persona": "performance engineer"
+      },
+      "expected": {
+        "accuracy": {"score_range": [7, 10]},
+        "voice": {"score_range": [7, 10]},
+        "completeness": {"score_range": [6, 9]},
+        "clarity": {"score_range": [8, 10]},
+        "humanness": {"score_range": [8, 10]},
+        "buzzword_flags_min": 0,
+        "rewrite_suggestions_min": 0
+      },
+      "notes": "Excellent: specific metrics, honest about tradeoffs, natural hedging, varied structure"
+    },
+    {
+      "id": "psr_6",
+      "input": {
+        "text": "In this section, we present our methodology. First, we collected data. Second, we processed the data. Third, we trained a model. Fourth, we evaluated the model. The results are presented in the next section.",
+        "persona": "ML researcher"
+      },
+      "expected": {
+        "accuracy": {"score_range": [3, 6]},
+        "voice": {"score_range": [1, 4]},
+        "completeness": {"score_range": [0, 3]},
+        "clarity": {"score_range": [4, 7]},
+        "humanness": {"score_range": [2, 5]},
+        "buzzword_flags_min": 0,
+        "rewrite_suggestions_min": 2
+      },
+      "notes": "Vacuous methodology: no specifics, mechanical enumeration, no detail"
+    }
+  ]
+}

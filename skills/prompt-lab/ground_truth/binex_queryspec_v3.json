@@ -1,0 +1,314 @@
+{
+  "name": "binex-queryspec-v3",
+  "description": "QuerySpec generation — action as input, only structured fields as output",
+  "cases": [
+    {
+      "id": "binex_000",
+      "input": {
+        "question": "collapse the tunnel.* namespace",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "COLLAPSE_NAMESPACE"
+      },
+      "notes": "action=UI_COMMAND"
+    },
+    {
+      "id": "binex_001",
+      "input": {
+        "question": "make it all smaller again",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "ZOOM_OUT"
+      },
+      "notes": "action=UI_COMMAND"
+    },
+    {
+      "id": "binex_002",
+      "input": {
+        "question": "find attack surface of daemon",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "find_attack_surface"
+      },
+      "notes": "action=UI_COMMAND, scene action"
+    },
+    {
+      "id": "binex_003",
+      "input": {
+        "question": "focus on the 'create_session' RPC",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "FOCUS_CLUSTER"
+      },
+      "notes": "action=UI_COMMAND"
+    },
+    {
+      "id": "binex_004",
+      "input": {
+        "question": "How do I see the big picture here?",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "show_architecture"
+      },
+      "notes": "action=UI_COMMAND, scene action"
+    },
+    {
+      "id": "binex_005",
+      "input": {
+        "question": "show auth chain for update_session",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "show_auth_chain"
+      },
+      "notes": "action=UI_COMMAND, scene action"
+    },
+    {
+      "id": "binex_006",
+      "input": {
+        "question": "show all nodes pls",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "TOGGLE_PROGRESSIVE"
+      },
+      "notes": "action=UI_COMMAND"
+    },
+    {
+      "id": "binex_007",
+      "input": {
+        "question": "switch to Security perspective",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "SET_PERSPECTIVE",
+        "perspective": "Security"
+      },
+      "notes": "action=UI_COMMAND, perspective"
+    },
+    {
+      "id": "binex_008",
+      "input": {
+        "question": "how solid is the label for create_session?",
+        "action": "QUERY",
+        "entities": "[\"create_session\"]"
+      },
+      "expected": {
+        "entities": ["create_session"],
+        "keywords": ["label"]
+      },
+      "notes": "action=QUERY, entity pre-extracted"
+    },
+    {
+      "id": "binex_009",
+      "input": {
+        "question": "what's the most critical authentication flow?",
+        "action": "QUERY",
+        "entities": "[]"
+      },
+      "expected": {
+        "entities": [],
+        "keywords": ["critical", "authentication", "flow"]
+      },
+      "notes": "action=QUERY, no entities"
+    },
+    {
+      "id": "binex_010",
+      "input": {
+        "question": "info on create_message event",
+        "action": "QUERY",
+        "entities": "[\"create_message\"]"
+      },
+      "expected": {
+        "entities": ["create_message"],
+        "keywords": ["event"]
+      },
+      "notes": "action=QUERY, entity pre-extracted"
+    },
+    {
+      "id": "binex_011",
+      "input": {
+        "question": "what does the stop_automation event do?",
+        "action": "QUERY",
+        "entities": "[\"stop_automation\"]"
+      },
+      "expected": {
+        "entities": ["stop_automation"],
+        "keywords": ["event"]
+      },
+      "notes": "action=QUERY, entity pre-extracted"
+    },
+    {
+      "id": "binex_012",
+      "input": {
+        "question": "is the daemon.* namespace healthy?",
+        "action": "QUERY",
+        "entities": "[\"daemon.*\"]"
+      },
+      "expected": {
+        "entities": ["daemon.*"],
+        "keywords": ["namespace", "healthy"]
+      },
+      "notes": "action=QUERY, wildcard entity"
+    },
+    {
+      "id": "binex_013",
+      "input": {
+        "question": "which RPCs accept untrusted data?",
+        "action": "QUERY",
+        "entities": "[]"
+      },
+      "expected": {
+        "entities": [],
+        "keywords": ["RPC", "untrusted", "data"]
+      },
+      "notes": "action=QUERY, no entities"
+    },
+    {
+      "id": "binex_014",
+      "input": {
+        "question": "what's the auth flow for authenticate?",
+        "action": "QUERY",
+        "entities": "[\"authenticate\"]"
+      },
+      "expected": {
+        "entities": ["authenticate"],
+        "keywords": ["auth", "flow"]
+      },
+      "notes": "action=QUERY, entity pre-extracted"
+    },
+    {
+      "id": "binex_015",
+      "input": {
+        "question": "zoom in on the auth_handler",
+        "action": "UI_COMMAND",
+        "entities": "[\"auth_handler\"]"
+      },
+      "expected": {
+        "ui_action": "ZOOM_IN",
+        "target_node_id": "auth_handler"
+      },
+      "notes": "action=UI_COMMAND, entity-targeted zoom"
+    },
+    {
+      "id": "binex_016",
+      "input": {
+        "question": "trace execution from set_mode",
+        "action": "UI_COMMAND",
+        "entities": "[\"set_mode\"]"
+      },
+      "expected": {
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "trace_execution",
+        "target_node_id": "set_mode"
+      },
+      "notes": "action=UI_COMMAND, scene action with target"
+    },
+    {
+      "id": "binex_017",
+      "input": {
+        "question": "select the create_session node",
+        "action": "UI_COMMAND",
+        "entities": "[\"create_session\"]"
+      },
+      "expected": {
+        "ui_action": "SELECT_NODE",
+        "target_node_id": "create_session"
+      },
+      "notes": "action=UI_COMMAND, select with entity"
+    },
+    {
+      "id": "binex_018",
+      "input": {
+        "question": "dismiss auth_handler from the view",
+        "action": "UI_COMMAND",
+        "entities": "[\"auth_handler\"]"
+      },
+      "expected": {
+        "ui_action": "DISMISS_NODE",
+        "target_node_id": "auth_handler"
+      },
+      "notes": "action=UI_COMMAND, dismiss with entity"
+    },
+    {
+      "id": "binex_019",
+      "input": {
+        "question": "show me the Data Flow perspective",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "SET_PERSPECTIVE",
+        "perspective": "Data Flow"
+      },
+      "notes": "action=UI_COMMAND, perspective"
+    },
+    {
+      "id": "binex_020",
+      "input": {
+        "question": "find all input handlers in the binary",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "find_input_handlers"
+      },
+      "notes": "action=UI_COMMAND, scene action"
+    },
+    {
+      "id": "binex_021",
+      "input": {
+        "question": "compare AutomationConfig and AutomationModelSettings",
+        "action": "QUERY",
+        "entities": "[\"AutomationConfig\", \"AutomationModelSettings\"]"
+      },
+      "expected": {
+        "entities": ["AutomationConfig", "AutomationModelSettings"],
+        "keywords": ["compare"]
+      },
+      "notes": "action=QUERY, multi-entity"
+    },
+    {
+      "id": "binex_022",
+      "input": {
+        "question": "view all nodes",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "VIEW_ALL"
+      },
+      "notes": "action=UI_COMMAND, view all"
+    },
+    {
+      "id": "binex_023",
+      "input": {
+        "question": "where do data sinks end up?",
+        "action": "UI_COMMAND",
+        "entities": "[]"
+      },
+      "expected": {
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "find_data_sinks"
+      },
+      "notes": "action=UI_COMMAND, scene action"
+    }
+  ]
+}

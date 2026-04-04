@@ -1,0 +1,20 @@
+{
+  "tools": [
+    {
+      "name": "image_generator",
+      "file": "movie_project/tools/image_generator.py",
+      "purpose": "Generate images from visual descriptions"
+    },
+    {
+      "name": "audio_processor",
+      "file": "movie_project/tools/audio_processor.py",
+      "purpose": "Add sound effects and music"
+    },
+    {
+      "name": "frame_assembler",
+      "file": "movie_project/tools/frame_assembler.py",
+      "purpose": "Combine frames and audio into video"
+    }
+  ],
+  "timestamp": "2026-02-01T07:51:09.296695"
+}

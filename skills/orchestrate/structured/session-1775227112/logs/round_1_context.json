@@ -1,0 +1,34 @@
+{
+  "round": 1,
+  "task_id": "1",
+  "score": 1.0,
+  "prev_score": 0,
+  "delta": 1.0,
+  "dod_passed": true,
+  "status": "keep",
+  "strategy": "direct_fix",
+  "error_count": 0,
+  "error_severity": "unknown",
+  "errors_by_type": {},
+  "lint_violations": 0,
+  "bp_violations": [],
+  "error_evidence": {
+    "failure_type": "generic",
+    "summary": "Unknown error",
+    "primary_location": null,
+    "root_cause_lines": [],
+    "failing_tests": []
+  },
+  "stdout": "",
+  "stderr": "",
+  "written_files": [
+    "packages/ux-lab/server/index.ts"
+  ],
+  "commit": "14d7f131",
+  "backend": "codex",
+  "reasoning": "medium",
+  "temperature": 0.2,
+  "timestamp": 1775227196.2972372,
+  "llm_summary": "Added all requested /api/posture/* Express endpoints to packages/ux-lab/server/index.ts with memory-daemon Unix socket queries, server-side aggregations, overview well aggregation, and standardized 502 error handling on daemon connection failures.",
+  "llm_approach": "direct_fix"
+}

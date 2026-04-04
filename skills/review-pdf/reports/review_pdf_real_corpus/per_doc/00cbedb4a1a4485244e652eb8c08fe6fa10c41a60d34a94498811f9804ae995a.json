@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "00cbedb4a1a4485244e652eb8c08fe6fa10c41a60d34a94498811f9804ae995a",
+  "domain": "scientific",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/00cbedb4a1a4485244e652eb8c08fe6fa10c41a60d34a94498811f9804ae995a_3fad1d2c40",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/00cbedb4a1a4485244e652eb8c08fe6fa10c41a60d34a94498811f9804ae995a_3fad1d2c40/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/00cbedb4a1a4485244e652eb8c08fe6fa10c41a60d34a94498811f9804ae995a_3fad1d2c40/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/fetcher_results/arxiv_batch/downloads/00cbedb4a1a4485244e652eb8c08fe6fa10c41a60d34a94498811f9804ae995a.pdf"
+  },
+  "estimates": {
+    "page_count": 33,
+    "estimated_sections": 11,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "scientific"
+  },
+  "actual": {
+    "section_count": 10,
+    "element_count": 231,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 33,
+    "raw_text_length": 85998
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.95,
+      "state": "pass",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.87,
+      "state": "pass",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.82,
+      "state": "pass",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.85,
+      "state": "pass",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.91,
+      "state": "pass",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.8,
+      "state": "pass",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.96,
+      "state": "pass",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.88,
+    "grade": "B",
+    "verdict": "PASS",
+    "critical_issues": 0,
+    "high_issues": 0,
+    "issue_count": 0
+  },
+  "issues": [],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "task_id": "1",
+  "files": [
+    "src/calculator.py"
+  ],
+  "cwd": "/tmp/burn-in-test",
+  "context": "Code-runner output for task: Fix calculator bugs",
+  "dod_command": "python3 -m pytest tests/test_calculator.py -q",
+  "backend": "codex",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775149863",
+  "max_rounds": 1
+}

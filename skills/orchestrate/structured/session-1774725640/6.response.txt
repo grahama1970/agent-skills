@@ -1,0 +1,24 @@
+Implemented server-side tune-results contract normalization in [index.ts](/home/node/workspace/packages/ux-lab/server/index.ts:1177) and [index.ts](/home/node/workspace/packages/ux-lab/server/index.ts:1601).
+What changed:
+- Added `TuneResultsPayload` shape and helpers:
+- `getDefaultTuneResults()`
+- `normalizeTuneResultsPayload(payload)`
+- Updated `GET /api/projects/classifier-lab/tune-results/:id` to:
+- read `create-classifier/projects/{id}/tune-results.json` (`CLASSIFIER_DIR/{id}/tune-results.json`)
+- return normalized JSON matching TuneTab contract:
+- `trials: []`
+- `strategy`
+- `winningRound`
+- `completed`
+- `total`
+- return contract defaults when file is missing or parsing fails.
+Verification:
+- `npm run check`: passed.
+- DoD command:
+- `curl -fsSL http://localhost:3001/api/projects/classifier-lab/tune-results/news-topic-classification ...`
+- Result: `OK`.
+- Requested task verifier:
+- `.pi/skills/test-lab/run.sh verify-task 6 /home/node/workspace/.pi/skills/classifier-lab --domain python`
+- Failed with pre-existing style issues (`Missing module docstring`, 126/135 passes), unrelated to this TypeScript endpoint change.
+Note:
+- Required memory recall/learn scripts could not run here because `uv` is not installed.

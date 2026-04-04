@@ -1,0 +1,29 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774566200,
+  "status": "ok",
+  "selected_backbone": "convnextv2_nano.fcmae_ft_in22k_in1k",
+  "selected_metrics": {
+    "macro_f1": 0.843718309859155,
+    "accuracy": 0.8246575342465754,
+    "wilson_score_lower": 0.807670366290802
+  },
+  "candidate_count": 2,
+  "source": {
+    "mode": "paired",
+    "data_dir": "/home/node/workspace/.pi/skills/create-table-classifier/data/merge_images/split"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [],
+      "worth_remembering": false
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "shadow-sparta-pipeline-validator",
+  "description": "SPARTA pipeline item validation (PASS/FAIL/PARTIAL)",
+  "cases": [
+    {
+      "id": "pipeline-1",
+      "input": "{\"question\": \"How does T1499 (Endpoint Denial of Service) threaten spacecraft payload operations and what does CM0027 (Redundancy and Failover) do to mitigate it?\", \"reasoning\": \"Endpoint denial of service attacks against spacecraft payload operations could overwhelm the onboard processor with malformed telecommand frames, preventing legitimate payload scheduling commands from being processed. CM0027 addresses this through redundant command processors with automatic failover, ensuring that even if the primary processor is saturated, a secondary processor can continue nominal operations.\", \"answer\": \"T1499 threatens spacecraft payload operations by flooding the onboard command processor with malformed frames, exhausting CPU cycles and memory buffers needed for legitimate payload scheduling. CM0027 mitigates this through hardware-redundant command processors configured for hot standby: when the primary processor's utilization exceeds 85% for more than 3 consecutive telemetry cycles, the spacecraft autonomy rules engine triggers failover to the backup processor, preserving payload operations during the attack.\", \"control_id\": \"CM0027\", \"grounding_score\": 0.843, \"citations\": [\"Redundancy and failover mechanisms ensure that critical spacecraft functions can continue even when individual components are compromised\", \"Spacecraft should implement autonomous fault detection and recovery capabilities\"]}",
+      "expected": {"action": "PASS"},
+      "expected_action": "PASS"
+    },
+    {
+      "id": "pipeline-2",
+      "input": "{\"question\": \"What space-specific persistence mechanisms does T1053.005 (Scheduled Task/Job: Scheduled Task) enable on satellite ground system workstations, and how does CM0042 (Application Allowlisting) prevent them?\", \"reasoning\": \"Scheduled tasks on ground system workstations could be used by adversaries to maintain persistence across reboots, executing malicious payloads during off-peak hours when monitoring is reduced. Application allowlisting prevents unauthorized executables from running, breaking the persistence chain.\", \"answer\": \"T1053.005 enables persistence on satellite ground system workstations by creating scheduled tasks that execute malicious spacecraft command injectors during autonomous contact windows — specifically targeting the pre-pass configuration scripts that run 15 minutes before scheduled uplink sessions. CM0042 breaks this attack by maintaining a cryptographic allowlist of approved executables; any task scheduler attempt to launch an unlisted binary triggers an immediate alert and blocks execution, preventing malicious code from reaching the uplink pipeline.\", \"control_id\": \"CM0042\", \"grounding_score\": 0.871, \"citations\": [\"Application allowlisting prevents unauthorized software from executing on critical systems\", \"Adversaries may abuse task scheduling functionality to facilitate initial or recurring execution of malicious code\"]}",
+      "expected": {"action": "PASS"},
+      "expected_action": "PASS"
+    },
+    {
+      "id": "pipeline-3",
+      "input": "{\"question\": \"How does T1190 (Exploit Public-Facing Application) relate to CM0015 (Patch Management) in protecting spacecraft systems?\", \"reasoning\": \"T1190 exploits vulnerabilities in public-facing applications. CM0015 patches those vulnerabilities. Therefore CM0015 mitigates T1190 by removing the underlying weakness.\", \"answer\": \"T1190 exploits CM0015, which patches vulnerabilities, preventing T1190 from succeeding when CM0015 is applied. CM0015 mitigates T1190 by addressing patch management, which is related to the application of security patches that T1190 relies on to exploit. The mitigation relationship between CM0015 and T1190 is that CM0015 addresses the weakness that T1190 exploits through patch management processes.\", \"control_id\": \"CM0015\", \"grounding_score\": 0.621, \"citations\": [\"Patch management reduces exploitable vulnerabilities\"]}",
+      "expected": {"action": "PARTIAL"},
+      "expected_action": "PARTIAL"
+    },
+    {
+      "id": "pipeline-4",
+      "input": "{\"question\": \"How does the Compiler Configuration File (d3f:CompilerConfigurationFile) prevent the Boot or Logon Autostart Execution (T1547) technique in spacecraft ground station systems?\", \"reasoning\": \"Compiler configuration files control how software is compiled. Boot autostart execution uses registry or filesystem locations to persist. Therefore compiler settings could affect whether autostart code compiles correctly.\", \"answer\": \"The Compiler Configuration File (d3f:CompilerConfigurationFile) prevents Boot or Logon Autostart Execution (T1547) by enforcing strict compilation flags that detect and remove autostart persistence mechanisms during the build process. By configuring the compiler to reject code patterns associated with registry run key modifications or startup folder writes, the compiler configuration ensures that ground station software cannot be compiled with T1547 persistence mechanisms baked in, thereby preventing adversaries from exploiting this autostart vector.\", \"control_id\": \"T1547\", \"grounding_score\": 0.734, \"citations\": [\"Adversaries may configure system settings to automatically execute a program during system boot\"]}",
+      "expected": {"action": "FAIL"},
+      "expected_action": "FAIL"
+    },
+    {
+      "id": "pipeline-5",
+      "input": "{\"question\": \"How does the Dummy Process Aggregator Node (CM0062) mitigate the Physical Access (SV-AC-1) technique against satellite ground stations?\", \"reasoning\": \"CM0062 creates dummy processes that mimic normal power consumption, making side-channel analysis harder. SV-AC-1 involves physical access to ground systems.\", \"answer\": \"CM0062 mitigates SV-AC-1 by running dummy processes that simulate normal power profiles, making it harder for adversaries with physical access to distinguish operational states through power analysis. However, CM0062 is primarily a side-channel countermeasure — it does not address the physical access vector itself (badge readers, locks, surveillance), so its mitigation of SV-AC-1 is limited to the power-analysis sub-technique.\", \"control_id\": \"CM0062\", \"grounding_score\": 0.712, \"citations\": [\"Dummy processes that resemble the average power consumption curve observed during normal operation\", \"Physical access to ground systems can enable direct attack against spacecraft command infrastructure\"]}",
+      "expected": {"action": "FAIL"},
+      "expected_action": "FAIL"
+    }
+  ]
+}

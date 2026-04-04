@@ -1,0 +1,13 @@
+[project]
+name = "pi-skill-ops-claude"
+version = "0.2.0"
+description = "Claude Code maintenance, diagnostics, and usage analytics"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "rich>=13.0",
+    "typer>=0.9",
+    "loguru>=0.7,<0.7.3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

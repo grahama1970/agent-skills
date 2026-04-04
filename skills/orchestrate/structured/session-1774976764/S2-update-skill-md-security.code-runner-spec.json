@@ -1,0 +1,16 @@
+{
+  "task_id": "S2-update-skill-md-security",
+  "title": "Update SKILL.md pipeline table with Step 4.5 security scan",
+  "prompt": "Update the monitor-codebase SKILL.md pipeline table to include the new\nStep 4.5 for security scanning. Add it between Step 4 and Step 5.\n\nNew row:\n| 4.5 | `/security-scan` | Secrets detection (gitleaks), dependency vulnerabilities (pip-audit/trivy), SAST (Semgrep) |\n\nAlso add security-scan to the composes list in frontmatter.",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774976764",
+  "definition_of_done": {
+    "command": "grep -c 'security-scan' .pi/skills/monitor-codebase/SKILL.md",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/monitor-codebase/SKILL.md"
+  ],
+  "max_rounds": 2
+}

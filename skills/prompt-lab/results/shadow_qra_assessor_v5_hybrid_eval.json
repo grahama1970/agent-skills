@@ -1,0 +1,107 @@
+{
+  "approach": "v5-hybrid-extract-entities-recall-scillm",
+  "agreement": 0.3,
+  "cases": 10,
+  "results": [
+    {
+      "key": "1183163524",
+      "expected": "PASS",
+      "got": "FAIL",
+      "match": false,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates details about the Telestar-12 case and its citations, which are not found in the provided source t",
+      "latency": 13.6,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "1122196280",
+      "expected": "PASS",
+      "got": "FAIL",
+      "match": false,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates details about sensor-based interference and electronic warfare that are not supported by the sourc",
+      "latency": 5.8,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "qra__run-recovery-verify__2086029845",
+      "expected": "PASS",
+      "got": "FAIL",
+      "match": false,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates the D3-FBA control, which is not mentioned in the source text, and misaligns with the specific thr",
+      "latency": 8.3,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "qra__run-recovery-verify__2085979839",
+      "expected": "PASS",
+      "got": "PARTIAL",
+      "match": false,
+      "confidence": 0.85,
+      "rationale": "The answer is grounded in the source text but adds specific spacecraft operations not mentioned in the source.",
+      "latency": 12.9,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "16562",
+      "expected": "PARTIAL",
+      "got": "FAIL",
+      "match": false,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates details about radiation-hardened kernel/firmware integrity checks and power cycle persistence, whi",
+      "latency": 10.6,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "qra__run-recovery-verify__2085929758",
+      "expected": "PARTIAL",
+      "got": "FAIL",
+      "match": false,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates technical details about CM0062 and power consumption side channels that have no basis in the provi",
+      "latency": 15.0,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "qra__run-recovery-verify__2086079845",
+      "expected": "PARTIAL",
+      "got": "FAIL",
+      "match": false,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates details about SA-11(9) and its application to data bus security, which are not supported by the so",
+      "latency": 13.4,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "14992",
+      "expected": "FAIL",
+      "got": "FAIL",
+      "match": true,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates space-specific adaptations not found in the source text and provides no actionable mitigations.",
+      "latency": 8.8,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "14993",
+      "expected": "FAIL",
+      "got": "FAIL",
+      "match": true,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates technical details about kernel-level isolation and radiation-hardened computers, which are not men",
+      "latency": 13.7,
+      "same_control_recalls": 0
+    },
+    {
+      "key": "2085921413",
+      "expected": "FAIL",
+      "got": "FAIL",
+      "match": true,
+      "confidence": 0.95,
+      "rationale": "The answer fabricates space-specific details like 'radiation-hardened secure storage' and 'write-protected EEPROM' that ",
+      "latency": 7.6,
+      "same_control_recalls": 0
+    }
+  ]
+}

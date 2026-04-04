@@ -1,0 +1,7 @@
+2026-04-02 12:47:40.901 | ERROR    | __main__:run:480 - PRE-FLIGHT WARNING: 3 modules referenced but not in allowlist or read_context: ['loguru', 'logging', 'logger']
+2026-04-02 12:47:40.901 | ERROR    | __main__:run:482 -   FIX: Add them to read_context so code-runner can extract interface maps.
+2026-04-02 12:47:40.901 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Fix formatter bugs (name, currency, list) ===
+2026-04-02 12:47:40.902 | INFO     | __main__:run:494 -   Backend: text
+2026-04-02 12:47:40.902 | INFO     | __main__:run:495 -   DoD: python3 -m pytest tests/test_formatter.py -q
+2026-04-02 12:47:40.902 | INFO     | __main__:run:496 -   Max rounds: 3
+2026-04-02 12:47:40.904 | ERROR    | __main__:run:515 - Another code-runner is already running in /tmp/burn-in-test. Aborting.

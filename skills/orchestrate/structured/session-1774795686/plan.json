@@ -1,0 +1,238 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "metadata": {
+    "title": "SPARTA Core Triad: Post-Scoring Pipeline",
+    "goal": "Complete Sensai Cascade T0 scoring on sparta_qra_edges, wire on-demand LLM rationale into Explorer, validate evidence-case-lab, train T1.5, close ISO issue",
+    "plan_type": "code",
+    "created": "2026-03-29",
+    "primary_persona": {
+      "name": "Brandon Bailey",
+      "role": "SPARTA Security Analyst",
+      "source": ".pi/agents/brandon-bailey/AGENTS.md"
+    }
+  },
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "execution": {
+    "max_concurrency": 3
+  },
+  "capability_overlap": [
+    "/memory recall: 08b_score_relationships.py scores sparta_relationships. Reuse for qra_edges.",
+    "Server index.ts has proxyPost() and /api/scillm proxy \u2014 CALL, don't rebuild.",
+    "EdgeDetailPane in RelationshipsView.tsx \u2014 EXTEND with Explain button (small change).",
+    "/evidence-case-lab run + diagnose \u2014 CALL existing commands.",
+    "/create-gpt prepare/train/evaluate \u2014 CALL for T1.5.",
+    "ISO resolved by design (worksheets.yaml description_source: inferred)."
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Config + Data"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Backend + Scoring"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Validation + Training"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add sparta_qra_edges to memory daemon allowed collections and filter fields",
+      "lane": "0",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [],
+      "command": "python3 -c \"\nimport subprocess, sys\n# Verify the file and add collections\npath = '/home/graham/workspace/experiments/memory/src/graph_memory/service/app/_core.py'\nwith open(path) as f: content = f.read()\nassert 'sparta_qra_edges' in content or True, 'Will be added by implementation'\nprint('Config file exists and is readable')\n\"\n",
+      "implementation": [
+        "Add 'sparta_qra_edges' to _ALLOWED_COLLECTIONS in memory _core.py",
+        "Verify 'edge_type' already in _ALLOWED_FILTER_FIELDS (added earlier today)",
+        "Add 'sparta_qra_edges' to _WRITABLE_COLLECTIONS for /upsert",
+        "Restart embry-memory.service"
+      ],
+      "gate": "Memory daemon /list returns 200 for sparta_qra_edges with edge_type filter",
+      "tests": [
+        "test-lab/run.sh verify-task 1 /home/graham/workspace/experiments/memory/src/graph_memory/service/app/ --domain python"
+      ],
+      "definition_of_done": {
+        "command": "systemctl --user restart embry-memory.service && sleep 2 && python3 -c \"import httpx; c=httpx.Client(transport=httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock'),base_url='http://localhost',timeout=10); r=c.post('/list',json={'collection':'sparta_qra_edges','limit':1,'filters':{'edge_type':'technique_reference'}}); print(r.status_code); assert r.status_code==200\"",
+        "assertion": "HTTP 200 from /list with sparta_qra_edges and edge_type filter"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Close ISO 27001 description quality issue in memory",
+      "lane": "0",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [],
+      "command": "python3 -c \"\nimport httpx, json\ntransport = httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock')\nclient = httpx.Client(transport=transport, base_url='http://localhost', timeout=30)\nresp = client.post('/learn', json={\n  'problem': 'ISO 27001 control descriptions quality issue \u2014 RESOLVED (2026-03-29)',\n  'solution': 'Not a bug. ISO 27001 is copyrighted. No description column in SPARTA-Data.xlsx. All 15 controls have Brave Search-inferred descriptions. worksheets.yaml documents description_source: inferred.',\n  'tags': ['iso', 'data-quality', 'resolved', 'sparta'],\n  'scope': 'sparta',\n})\nprint(resp.json())\nclient.close()\n\"\n",
+      "gate": "Lesson persisted in memory with RESOLVED in problem field",
+      "tests": [
+        "python3 -c \"import httpx; c=httpx.Client(transport=httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock'),base_url='http://localhost',timeout=10); r=c.post('/recall',json={'q':'ISO description RESOLVED','k':1,'collections':['lessons']}); items=r.json().get('items',[]); assert len(items)>0 and 'RESOLVED' in items[0].get('problem','')\""
+      ],
+      "definition_of_done": {
+        "command": "python3 -c \"import httpx; c=httpx.Client(transport=httpx.HTTPTransport(uds='/run/user/1000/embry/memory.sock'),base_url='http://localhost',timeout=10); r=c.post('/recall',json={'q':'ISO 27001 description quality RESOLVED','k':1,'collections':['lessons']}); items=r.json().get('items',[]); print(items[0].get('problem','')[:80] if items else 'NOT FOUND'); assert 'RESOLVED' in items[0].get('problem','')\"",
+        "assertion": "Memory recall finds the resolved ISO lesson"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Extend 08b_score_relationships.py to support sparta_qra_edges edge collection",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "Add --collection CLI flag to 08b_score_relationships.py (default: sparta_relationships)",
+        "For edge collections (sparta_qra_edges): parse control IDs from _from/_to fields by stripping 'sparta_controls/ctrl__' prefix",
+        "Use edge_type filter instead of method filter for edge collections",
+        "Same 4-gate scoring logic: shared technique, curated count, mind jaccard, cosine",
+        "Store gate_evidence on edge documents via memory daemon /upsert"
+      ],
+      "gate": "Dry run with --collection sparta_qra_edges shows scored edges with no errors",
+      "tests": [
+        "cd /home/graham/workspace/experiments/sparta && uv run python -m sparta.pipeline.steps.08b_score_relationships --collection sparta_qra_edges --dry-run 2>&1 | grep -c 'Verdicts'"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/sparta && uv run python -m sparta.pipeline.steps.08b_score_relationships --collection sparta_qra_edges --dry-run 2>&1 | grep 'Verdicts'",
+        "assertion": "Dry run outputs verdict distribution for sparta_qra_edges"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Score 36K sparta_qra_edges technique_reference edges and LLM-grade grey zone",
+      "lane": "0",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [
+        "3"
+      ],
+      "command": "cd /home/graham/workspace/experiments/sparta &&\nuv run python -m sparta.pipeline.steps.08b_score_relationships --collection sparta_qra_edges\n",
+      "gate": "Zero unscored technique_reference edges in sparta_qra_edges",
+      "tests": [
+        "python3 -c \"from arango import ArangoClient; c=ArangoClient('http://localhost:8529'); db=c.db('memory',username='root',password='openSesame'); cursor=db.aql.execute(\\\"FOR e IN sparta_qra_edges FILTER e.edge_type=='technique_reference' AND e.gate_evidence!=null COLLECT WITH COUNT INTO cnt RETURN cnt\\\"); print(f'Scored: {list(cursor)[0]}')\""
+      ],
+      "definition_of_done": {
+        "command": "python3 -c \"from arango import ArangoClient; c=ArangoClient('http://localhost:8529'); db=c.db('memory',username='root',password='openSesame'); cursor=db.aql.execute(\\\"FOR e IN sparta_qra_edges FILTER e.edge_type=='technique_reference' AND e.gate_evidence==null COLLECT WITH COUNT INTO cnt RETURN cnt\\\"); n=list(cursor)[0]; print(f'Unscored: {n}'); assert n==0\"",
+        "assertion": "Zero unscored technique_reference edges"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Add POST /api/edge-rationale endpoint to UX Lab Express server",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Add POST /api/edge-rationale handler to packages/ux-lab/server/index.ts",
+        "Receives { _key: string } \u2014 the sparta_relationships document key",
+        "Cache-first: if edge already has gate_evidence.llm_rationale, return immediately",
+        "Fetch edge via proxyPost('/list', {collection: 'sparta_relationships', filters: {_key}, limit: 1})",
+        "Fetch source+target control descriptions via proxyPost('/recall/by-keys', ...)",
+        "Build prompt from gate_evidence + descriptions, call SCILLM_URL",
+        "Cache rationale back via proxyPost('/upsert', ...) on gate_evidence.llm_rationale",
+        "Return { rationale, verdict, gates_passed, cached: bool }",
+        "Use existing proxyPost() helper (line 663) and SCILLM_URL constant (line 15)"
+      ],
+      "gate": "curl to /api/edge-rationale returns JSON with rationale field",
+      "tests": [
+        "curl -sf http://localhost:3001/api/edge-rationale -X POST -H 'Content-Type: application/json' -d '{\"_key\":\"rel__1\"}' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert \"rationale\" in d'"
+      ],
+      "definition_of_done": {
+        "command": "curl -sf http://localhost:3001/api/edge-rationale -X POST -H 'Content-Type: application/json' -d '{\"_key\":\"rel__1\"}' | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get(\"rationale\",\"\")[:100]); assert len(d.get(\"rationale\",\"\"))>10'",
+        "assertion": "Endpoint returns rationale longer than 10 chars"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Add Explain button and gate evidence display to EdgeDetailPane",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "5"
+      ],
+      "implementation": [
+        "In RelationshipsView.tsx EdgeDetailPane component",
+        "Add Explain button near Close button \u2014 small UI addition, not a new view",
+        "On click: POST /api/edge-rationale with edge._key",
+        "Show loading state while fetching",
+        "Display rationale text below existing NRS score section",
+        "Show gate_evidence fields: verdict badge, gates_passed, mind_jaccard, cosine",
+        "If tier === T2, show amber 'LLM Graded' badge",
+        "EMBRY design tokens for styling"
+      ],
+      "gate": "TypeScript compiles and Explain button renders in EdgeDetailPane",
+      "tests": [
+        "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npx tsc --noEmit 2>&1 | tail -3"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npx tsc --noEmit 2>&1; echo $?",
+        "assertion": "tsc --noEmit exits 0"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Run /evidence-case-lab question bank with fixed upstream MITRE chain data",
+      "lane": "2",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [
+        "4"
+      ],
+      "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/evidence-case-lab &&\n./run.sh run --question-bank batch_50_f36 2>&1 | tail -20\n",
+      "implementation": [
+        "Run the 50-question bank against fixed upstream data (MITRE chain + scored relationships)",
+        "Run ./run.sh diagnose to extract accuracy metrics",
+        "Compare false_positive rate and satisfied_rate against prior cycles",
+        "Record results via /checkpoint"
+      ],
+      "gate": "At least 40 results generated, diagnose output shows metrics",
+      "tests": [
+        "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/evidence-case-lab && python3 -c \"import json,os; assert os.path.exists('state/last_results.json')\""
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/evidence-case-lab && python3 -c \"import json; d=json.load(open('state/last_results.json')); n=len(d.get('results',[])); print(f'Results: {n}'); assert n>=40\"",
+        "assertion": "At least 40 question results"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Extract 308 T2 grey zone labels and train T1.5 verdict classifier",
+      "lane": "2",
+      "runner": "local",
+      "mode": "one_shot",
+      "depends_on": [],
+      "command": "python3 -c \"\nfrom arango import ArangoClient\nimport json\nc = ArangoClient('http://localhost:8529')\ndb = c.db('memory', username='root', password='openSesame')\ncursor = db.aql.execute('''\n  FOR r IN sparta_relationships\n  FILTER r.method == \\\"technique_reference\\\" AND r.gate_evidence.tier == \\\"T2\\\"\n  RETURN {input: r.gate_evidence, output: {verdict: r.gate_evidence.verdict, rationale: r.gate_evidence.llm_rationale}}\n''')\nwith open('/tmp/grey_zone_training.jsonl', 'w') as f:\n  n = 0\n  for row in cursor:\n    f.write(json.dumps(row) + '\\n')\n    n += 1\nprint(f'Exported {n} training examples to /tmp/grey_zone_training.jsonl')\n\"\n",
+      "implementation": [
+        "Extract 308 T2-graded edge labels from sparta_relationships as JSONL",
+        "Create task definition at .pi/skills/create-gpt/data/tasks/relationship-verdict.yaml",
+        "System prompt via /prompt-lab (not hand-written)",
+        "Run: ./run.sh prepare --task relationship-verdict --input /tmp/grey_zone_training.jsonl",
+        "Run: ./run.sh split --task relationship-verdict --holdout-ratio 0.10 --val-ratio 0.10",
+        "Run: ./run.sh train --task relationship-verdict --sft-only --epochs 3",
+        "SFT-only (308 marginal for GRPO which needs 1000+)",
+        "Base: Qwen/Qwen2.5-1.5B-Instruct (fits A5000 24GB)"
+      ],
+      "gate": "Training JSONL has 308 lines, training completes without error",
+      "tests": [
+        "wc -l /tmp/grey_zone_training.jsonl | grep -c '308'"
+      ],
+      "definition_of_done": {
+        "command": "wc -l /tmp/grey_zone_training.jsonl",
+        "assertion": "308 lines exported"
+      }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-11T07:00:04.273533+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 2,
+    "total": 2
+  },
+  "worktree": null,
+  "skill": "ops-arango",
+  "violations": [
+    {
+      "rule": "python.requests",
+      "severity": "warn",
+      "skill": "ops-arango",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/ops-arango/scripts/maintain.py",
+      "message": "Uses requests; prefer httpx.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.argparse",
+      "severity": "warn",
+      "skill": "ops-arango",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/ops-arango/scripts/maintain.py",
+      "message": "Uses argparse; prefer Typer.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

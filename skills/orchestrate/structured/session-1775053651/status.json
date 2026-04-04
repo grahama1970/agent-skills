@@ -1,0 +1,41 @@
+{
+  "generated_at": 1775053974.0319448,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775053651",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add _run_threat_delta_check post-hook to learn_datalake.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775053651/1.response.txt",
+      "error": "",
+      "started_at": 1775053651.9907231,
+      "finished_at": 1775053830.468961,
+      "subagent_task_id": "67a88c07",
+      "subagent_port": 8625
+    },
+    {
+      "id": "2",
+      "title": "Add delta alert cards to ChatTab on mount",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775053651/2.response.txt",
+      "error": "",
+      "started_at": 1775053830.469571,
+      "finished_at": 1775053974.0319095,
+      "subagent_task_id": "90afe901",
+      "subagent_port": 8626
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "total": 10,
+  "overall_grades": {
+    "A+": 10
+  },
+  "pass_rate": 1.0,
+  "a_plus_rate": 1.0,
+  "by_difficulty": {
+    "ambiguous": {
+      "total": 10,
+      "grades": {
+        "A+": 10
+      },
+      "avg_composite": 1.0
+    }
+  },
+  "dimension_averages": {
+    "action_correctness": 1.0,
+    "disambiguation_quality": 1.0,
+    "response_naturalness": 1.0
+  },
+  "tier_distribution": {
+    "tier_0_heuristic": 10
+  }
+}

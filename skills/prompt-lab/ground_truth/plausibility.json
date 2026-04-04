@@ -1,0 +1,164 @@
+[
+  {
+    "id": "real_01_fadec",
+    "question": "Which SPARTA countermeasures ensure requirements traceability in the F-36's dual-engine FADEC system to prevent safety-critical requirements gaps from being exploited?",
+    "not_in_corpus": ["FADEC"],
+    "resolved": ["SV-MA-3 (Secure Boot)", "SV-CF-1 (Telemetry Protection)", "SV-MA-7 (Secure Update)"],
+    "resolved_count": 3,
+    "expected": {"answerable": false},
+    "rationale": "FADEC is a real aerospace term but has 0 QRAs and 0 controls in sparta_controls. SPARTA can identify what FADEC is via domain_terms, but cannot answer the question until /memory clarify maps it to SPARTA terms (e.g., flight control system countermeasures via SV-CF-1)."
+  },
+  {
+    "id": "real_02_hil",
+    "question": "How do the F-36's HIL test procedures validate SPARTA countermeasures against sensor fusion attacks that could violate ARP4761 safety objectives?",
+    "not_in_corpus": ["HIL", "ARP4761"],
+    "resolved": ["SV-CF-3 (Sensor Protection)", "SV-AC-2 (Access Control)", "SV-IT-1 (Intrusion Detection)"],
+    "resolved_count": 3,
+    "expected": {"answerable": false},
+    "rationale": "HIL (0 QRAs, 0 controls) and ARP4761 (0 QRAs, 0 controls) are real aerospace terms not in SPARTA corpus. Needs /memory clarify to rephrase using SPARTA terms."
+  },
+  {
+    "id": "real_03_cmmc",
+    "question": "What CMMC practices are integrated into the SPARTA countermeasures for protecting CUI in the F-36's vendor-delivered avionics software?",
+    "not_in_corpus": ["CMMC", "CUI"],
+    "resolved": ["SV-AC-1 (Access Control)", "SV-SP-3 (Supply Chain)", "SV-DC-1 (Data Protection)"],
+    "resolved_count": 3,
+    "expected": {"answerable": false},
+    "rationale": "CMMC has only 1 QRA and CUI has 3 QRAs — too sparse for reliable answers. Needs /memory clarify to map to SPARTA access control and supply chain terms."
+  },
+  {
+    "id": "real_04_cui",
+    "question": "How do NIST 800-171 requirements for CUI protection align with SPARTA's recommended defenses for the F-36's embedded computing systems?",
+    "not_in_corpus": ["CUI"],
+    "resolved": ["SV-AC-1 (Access Control)", "SV-DC-1 (Data Protection)", "SV-MA-3 (Secure Boot)"],
+    "resolved_count": 3,
+    "expected": {"answerable": false},
+    "rationale": "CUI has only 3 QRAs in SPARTA — not enough to reliably answer. Needs /memory clarify to rephrase using data protection controls directly."
+  },
+  {
+    "id": "real_05_scada",
+    "question": "How does SPARTA address SCADA-like control system vulnerabilities in spacecraft ground segment operations?",
+    "not_in_corpus": ["SCADA"],
+    "resolved": ["SV-GS-1 (Ground Station Security)", "SV-AC-2 (Access Control)", "SV-IT-1 (Intrusion Detection)"],
+    "resolved_count": 3,
+    "expected": {"answerable": false},
+    "rationale": "SCADA has only 3 QRAs in SPARTA. The term is known via domain_terms but sparse in the corpus. Needs /memory clarify to map to ground station security controls."
+  },
+  {
+    "id": "real_06_mcdc",
+    "question": "How do SPARTA countermeasures support MC/DC coverage requirements for safety-critical avionics software verification?",
+    "not_in_corpus": ["MC/DC"],
+    "resolved": ["SV-MA-7 (Secure Update)", "SV-CF-1 (Telemetry Protection)"],
+    "resolved_count": 2,
+    "expected": {"answerable": false},
+    "rationale": "MC/DC is a DO-178C testing metric with 0 QRAs in SPARTA. Needs /memory clarify to rephrase using software assurance countermeasures."
+  },
+  {
+    "id": "real_07_disa_stig",
+    "question": "How do DISA STIG requirements complement SPARTA countermeasures for hardening the F-36's mission computer operating system?",
+    "not_in_corpus": ["DISA STIG"],
+    "resolved": ["SV-AC-1 (Access Control)", "SV-MA-3 (Secure Boot)", "SV-SP-1 (System Hardening)"],
+    "resolved_count": 3,
+    "expected": {"answerable": false},
+    "rationale": "DISA STIG has 0 QRAs in SPARTA. Real term but not in corpus. Needs /memory clarify to map to system hardening countermeasures."
+  },
+  {
+    "id": "real_08_clean",
+    "question": "How does SV-AC-2 protect against unauthorized command injection on the spacecraft bus?",
+    "not_in_corpus": [],
+    "resolved": ["SV-AC-2 (Access Control)"],
+    "resolved_count": 1,
+    "expected": {"answerable": true},
+    "rationale": "All terms resolved. Clean question — SV-AC-2 is in SPARTA corpus."
+  },
+  {
+    "id": "real_09_multi_resolved",
+    "question": "What is the relationship between SV-CF-1 telemetry protection and SV-IT-1 intrusion detection for detecting bus spoofing?",
+    "not_in_corpus": [],
+    "resolved": ["SV-CF-1 (Telemetry Protection)", "SV-IT-1 (Intrusion Detection)"],
+    "resolved_count": 2,
+    "expected": {"answerable": true},
+    "rationale": "All terms resolved. Clean question about control relationships."
+  },
+  {
+    "id": "real_10_arp4754",
+    "question": "How do SPARTA countermeasures map to ARP4754A development assurance levels for F-36 avionics?",
+    "not_in_corpus": ["ARP4754A"],
+    "resolved": ["SV-MA-3 (Secure Boot)", "SV-MA-7 (Secure Update)", "SV-CF-1 (Telemetry Protection)"],
+    "resolved_count": 3,
+    "expected": {"answerable": false},
+    "rationale": "ARP4754A is a real aerospace standard with 0 QRAs in SPARTA. Needs /memory clarify to map to software assurance countermeasures."
+  },
+  {
+    "id": "adv_01_fabricated_id",
+    "question": "How does X23-MUSTARD protect avionics bus from spoofing?",
+    "not_in_corpus": ["X23-MUSTARD"],
+    "resolved": ["SV-CF-1 (Telemetry Protection)"],
+    "resolved_count": 1,
+    "expected": {"answerable": false},
+    "rationale": "X23-MUSTARD is a fabricated control ID. Deterministic gate catches this (id_like type). No LLM needed."
+  },
+  {
+    "id": "adv_02_fabricated_framework",
+    "question": "How does the CYBER-NOVA-7 framework integrate with SPARTA for quantum-resistant avionics?",
+    "not_in_corpus": ["CYBER-NOVA-7"],
+    "resolved": ["SV-CF-1 (Telemetry Protection)"],
+    "resolved_count": 1,
+    "expected": {"answerable": false},
+    "rationale": "CYBER-NOVA-7 is a fabricated framework. Deterministic gate catches this (id_like type)."
+  },
+  {
+    "id": "adv_03_wrong_domain",
+    "question": "How do submarine sonar arrays use SPARTA countermeasures for underwater acoustic stealth?",
+    "not_in_corpus": ["submarine sonar arrays", "underwater acoustic stealth"],
+    "resolved": [],
+    "resolved_count": 0,
+    "expected": {"answerable": false},
+    "rationale": "SPARTA is for space vehicle cybersecurity, not submarine sonar. No relevant controls resolved."
+  },
+  {
+    "id": "adv_04_completely_unrelated",
+    "question": "What is the best recipe for chocolate cake using SPARTA ingredients?",
+    "not_in_corpus": ["chocolate cake", "recipe"],
+    "resolved": [],
+    "resolved_count": 0,
+    "expected": {"answerable": false},
+    "rationale": "Completely unrelated to space vehicle cybersecurity. No controls resolved."
+  },
+  {
+    "id": "edge_01_mixed",
+    "question": "How do FADEC systems and ZZ-PHANTOM-7 work together for engine protection?",
+    "not_in_corpus": ["FADEC", "ZZ-PHANTOM-7"],
+    "resolved": ["SV-MA-3 (Secure Boot)"],
+    "resolved_count": 1,
+    "expected": {"answerable": false},
+    "rationale": "Both FADEC (real but not in corpus) and ZZ-PHANTOM-7 (fabricated) are not in SPARTA. Double rejection."
+  },
+  {
+    "id": "edge_02_weak_resolution",
+    "question": "How do SPARTA countermeasures address electromagnetic pulse hardening for LEO satellites?",
+    "not_in_corpus": ["electromagnetic pulse hardening"],
+    "resolved": ["SV-CF-1 (Telemetry Protection)"],
+    "resolved_count": 1,
+    "expected": {"answerable": false},
+    "rationale": "Electromagnetic pulse hardening is not a phrase in SPARTA corpus. Even though the concept maps loosely, SPARTA can't answer this without /memory clarify to rephrase."
+  },
+  {
+    "id": "edge_03_acronym_gap",
+    "question": "What SPARTA countermeasures apply to AEHF satellite link protection?",
+    "not_in_corpus": ["AEHF"],
+    "resolved": ["SV-CF-1 (Telemetry Protection)", "SV-CF-3 (Link Protection)"],
+    "resolved_count": 2,
+    "expected": {"answerable": false},
+    "rationale": "AEHF (Advanced Extremely High Frequency) is a real satellite program but not in SPARTA corpus. Needs /memory clarify to rephrase as satellite link protection using SV-CF-3."
+  },
+  {
+    "id": "edge_04_zero_resolved_real",
+    "question": "What is the airworthiness certification process for F-36 flight software?",
+    "not_in_corpus": ["airworthiness certification"],
+    "resolved": [],
+    "resolved_count": 0,
+    "expected": {"answerable": false},
+    "rationale": "Airworthiness certification is real but is an aviation process, not a SPARTA cybersecurity concern. Zero controls resolved confirms SPARTA doesn't cover this."
+  }
+]

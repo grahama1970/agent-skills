@@ -1,0 +1,128 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "00b5d1beac452cecacdc4e993fbbeba9fc830c6e8d59b146160a96d653360579",
+  "domain": "scientific",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/00b5d1beac452cecacdc4e993fbbeba9fc830c6e8d59b146160a96d653360579_c4c0833cbb",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/00b5d1beac452cecacdc4e993fbbeba9fc830c6e8d59b146160a96d653360579_c4c0833cbb/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/00b5d1beac452cecacdc4e993fbbeba9fc830c6e8d59b146160a96d653360579_c4c0833cbb/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/fetcher_results/arxiv_batch/downloads/00b5d1beac452cecacdc4e993fbbeba9fc830c6e8d59b146160a96d653360579.pdf"
+  },
+  "estimates": {
+    "page_count": 8,
+    "estimated_sections": 2,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "scientific"
+  },
+  "actual": {
+    "section_count": 1,
+    "element_count": 64,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 8,
+    "raw_text_length": 14480
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.65,
+      "state": "warn",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.65,
+      "state": "warn",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.53,
+      "state": "warn",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.46,
+      "state": "fail",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.66,
+      "state": "warn",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.79,
+      "state": "warn",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.78,
+      "state": "warn",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.64,
+    "grade": "D",
+    "verdict": "WARN",
+    "critical_issues": 0,
+    "high_issues": 4,
+    "issue_count": 7
+  },
+  "issues": [
+    {
+      "code": "SA002",
+      "severity": "MEDIUM",
+      "message": "Section hierarchy depth inconsistent with document structure",
+      "recommendation": "Review header classification thresholds"
+    },
+    {
+      "code": "TF001",
+      "severity": "HIGH",
+      "message": "Table cell content truncated in 2 cells",
+      "recommendation": "Increase cell content buffer; check column boundary detection"
+    },
+    {
+      "code": "FF002",
+      "severity": "HIGH",
+      "message": "6 figures detected but none extracted",
+      "recommendation": "Check image extraction pipeline configuration"
+    },
+    {
+      "code": "EQ002",
+      "severity": "HIGH",
+      "message": "LaTeX rendering artifacts in extracted text",
+      "recommendation": "Apply math symbol normalization post-processing"
+    },
+    {
+      "code": "EQ001",
+      "severity": "MEDIUM",
+      "message": "Math symbols detected but no equation blocks extracted",
+      "recommendation": "Enable equation detection in block classifier"
+    },
+    {
+      "code": "CC002",
+      "severity": "HIGH",
+      "message": "Less than 50% of source text recovered",
+      "recommendation": "Document may require OCR fallback pipeline"
+    },
+    {
+      "code": "OR001",
+      "severity": "LOW",
+      "message": "4 reading order violations detected",
+      "recommendation": "Review multi-column layout detection"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

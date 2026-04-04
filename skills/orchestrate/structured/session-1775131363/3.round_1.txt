@@ -1,0 +1,62 @@
+```diff
+--- a/.pi/skills/plan/SKILL.md
++++ b/.pi/skills/plan/SKILL.md
+@@ -46,17 +46,17 @@
+ | Runner | When to use | Example |
+ |--------|-------------|---------|
+ | `local` | Deterministic shell command, no LLM needed | `docker compose up`, `pytest`, `npm install` |
+ | `code-runner` | Bounded code task: write/fix ONE module with verifiable DoD | Fix auth.py bug, create new utility module |
+-| `subagent-service` | Open-ended tasks requiring exploration, design, or judgment | Research best approach, review code quality |
++| `code-runner` | Open-ended tasks requiring exploration, design, or judgment | Research best approach, review code quality |
+ | `scillm` | Single LLM call for text generation (no code execution) | Generate docstring, summarize, classify |
+ 
+ **Use code-runner when:**
+ - The task writes/edits 1-3 specific files (use `allowlist`)
+ - There's a runnable DoD command that verifies correctness
+ - The LLM doesn't need to make architecture decisions
+ - Dependencies are known and can be listed in `read_context`
+ 
+ **Do NOT use code-runner when:**
+ - The task requires choosing between approaches ("pick the best DB") — that's a project agent decision
+ - The task is an integration test exercising 4+ modules — write it as `blind_tests` instead
+ - The DoD depends on external APIs/network — use mock DoD + real API in `blind_tests`
+ - The task is vague ("make it better") — decompose into specific bounded tasks first
+@@ -182,6 +182,7 @@ metadata:
+ execution:
+   max_concurrency: 3       # parallel lanes
+ 
++skills: []                 # optional list of skills this plan calls/extends
+ capability_overlap:        # Phase 0 evidence (required)
+   - "/memory recall returned: no prior Redis caching solution"
+   - "Checked /fetcher, /dogpile — no overlap"
+@@ -211,7 +212,7 @@ tasks:
+   - id: "2"
+     title: "Create cache utility module"
+     lane: "1"
+-    runner: "subagent-service"  # agent loop
++    runner: "code-runner"       # bounded code task
+     backend: "sonnet"           # which LLM
+     mode: "iterative"           # iterative/one_shot/review
+     agent: "general-purpose"
+@@ -235,10 +236,11 @@ tasks:
+ | Runner | Use For | Required Fields |
+ |--------|---------|-----------------|
+ | `local` | Shell commands (setup, tests, sanity scripts) | `command` |
++| `code-runner` | Bounded coding tasks with explicit file scope and verifiable DoD | `backend`, `mode`, `implementation` or `prompt`, `allowlist`, `read_context`, `definition_of_done` |
+ | `scillm` | One-shot LLM inference (classification, extraction) | `backend`, `mode: one_shot` |
+-| `subagent-service` | Agent loops (coding, review, design) | `backend`, `mode`, `implementation` or `prompt` |
+ 
+ ### Backend (which LLM model)
+ 
+ | Backend | Best For | Cost |
+ |---------|----------|------|
+@@ -334,7 +336,7 @@ tasks:
+ ```yaml
+ tasks:
+   - id: "1"
+     title: "Implement PDF extraction"
+-    runner: "subagent-service"
++    runner: "code-runner"
+     # A /extractor skill already does this!
+ ```
+```

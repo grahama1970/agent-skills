@@ -1,0 +1,18 @@
+{
+  "task_id": "1",
+  "title": "Create usePostureData hook — aggregates control family stats",
+  "status": "preflight_fail",
+  "rounds": 0,
+  "best_score": 0.0,
+  "dod_passed": false,
+  "backend": "",
+  "best_commit": "",
+  "round_details": [],
+  "preflight_errors": [
+    {
+      "field": "definition_of_done.assertion",
+      "error": "'cd packages/ux-lab && npx tsc --noEmit && grep -q 'export function usePostureData' src/hooks/usePostureData.ts && echo PASS' outputs nothing on success (exit 0 only). Assertion 'PASS' will never match empty stdout. Use 'exit_code == 0' instead.",
+      "fix": "Use 'exit_code == 0' for commands that output nothing on success. Or use a command that produces output (e.g., 'npx tsc --noEmit && echo passed')."
+    }
+  ]
+}

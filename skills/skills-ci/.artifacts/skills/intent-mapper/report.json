@@ -1,0 +1,57 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 4,
+    "total": 4
+  },
+  "worktree": null,
+  "skill": "intent-mapper",
+  "violations": [
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "intent-mapper",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/intent-mapper/main.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "intent-mapper",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/intent-mapper/__init__.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "intent-mapper",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/intent-mapper/tests/test_cli.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "naming.noun_only",
+      "severity": "warn",
+      "skill": "intent-mapper",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/intent-mapper/SKILL.md",
+      "message": "Skill name 'intent-mapper' appears noun-only; consider a verb- prefix or add to _NOUN_ALLOWLIST.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

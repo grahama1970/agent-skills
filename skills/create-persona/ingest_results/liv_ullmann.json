@@ -1,0 +1,19 @@
+{
+  "persona_name": "Liv Ullmann",
+  "category": "performers",
+  "dogpile_done": true,
+  "books_found": [
+    "[would discover 3 books]"
+  ],
+  "books_ingested": [],
+  "movies_found": [
+    "[would discover 3 movies]"
+  ],
+  "youtube_videos": [
+    "[would ingest 3-5 videos]"
+  ],
+  "github_repos": [],
+  "feeds_added": [],
+  "errors": [],
+  "timestamp": "2026-02-08T11:21:49.594973"
+}

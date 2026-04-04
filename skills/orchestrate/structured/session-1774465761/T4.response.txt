@@ -1,0 +1,9 @@
+Implemented in [SpartaExplorer.tsx](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/SpartaExplorer.tsx):
+- `SpartaNavContext` created with:
+- `navigateToTab(tab)` ([line 96](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/SpartaExplorer.tsx:96))
+- `navigateToTabWithFilter(tab, { controlId })` ([line 100](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/SpartaExplorer.tsx:100))
+- `useSpartaNav()` hook exported ([line 34](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/SpartaExplorer.tsx:34))
+- Tab content area wrapped in provider ([line 398](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/SpartaExplorer.tsx:398))
+Validation:
+- Ran `npx tsc --noEmit` (as requested): fails due to pre-existing unrelated errors in `packages/tui/src/utils.ts` (ES2024 regex flag target issue).
+- Ran `npx tsc --noEmit -p packages/ux-lab/tsconfig.json`: passes.

@@ -1,0 +1,27 @@
+{
+  "task_id": "4",
+  "files": [
+    ".pi/.worktrees/skills-ci/skills-ci-20260329144123",
+    ".pi/.worktrees/skills-ci/skills-ci-20260329144138",
+    ".pi/.worktrees/skills-ci/skills-ci-20260329144153",
+    ".pi/skills/classifier-lab/scripts/kickoff.py",
+    ".pi/skills/orchestrate/structured_execute.py",
+    "packages/ux-lab/captures/persona-reviews/capture-summary.json",
+    "packages/ux-lab/persona-review-manifest.json",
+    "packages/ux-lab/persona-review-report.md",
+    "packages/ux-lab/sim/run_cdp_captures.cjs",
+    "packages/ux-lab/src/components/common/EmbryStyle.ts",
+    "packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx",
+    "packages/ux-lab/src/components/embry-terminal/ReasoningChain.tsx",
+    "packages/ux-lab/src/components/shared-chat/highlightEntities.tsx",
+    "packages/ux-lab/src/components/sparta/explorer/SourcesView.tsx",
+    "packages/ux-lab/src/components/sparta/query/RecallCard.tsx",
+    "packages/ux-lab/test-manifest-sparta-explorer.yaml"
+  ],
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "context": "Code-runner output for task: Create battle patch_writer.py \u2014 code-runner wrapper for patch generation",
+  "dod_command": "cd .pi/skills/battle && python3 -c \"compile(open('patch_writer.py').read(), 'patch_writer.py', 'exec')\" && python3 -c \"import ast; t=ast.parse(open('patch_writer.py').read()); funcs=[n.name for n in ast.walk(t) if isinstance(n, ast.FunctionDef)]; assert 'write_patch' in funcs, f'Missing write_patch, found: {funcs}'\"",
+  "backend": "codex",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775084415",
+  "max_rounds": 1
+}

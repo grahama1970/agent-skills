@@ -1,0 +1,282 @@
+{"summary":"Refactored usePostureData hook to fetch posture data from dedicated /api/posture/* endpoints in parallel via Promise.all, removed any client-side aggregation assumptions, and ensured exported types include PostureData, FrameworkScore, FamilyBreakdown, GapAnalysis, RiskControl, and DriftAlert with driftAlerts populated from /api/posture/alerts.","approach":"direct_fix","files_changed":["packages/ux-lab/src/hooks/usePostureData.ts"]}
+---
+### FILE: packages/ux-lab/src/hooks/usePostureData.ts
+```diff
+--- a/packages/ux-lab/src/hooks/usePostureData.ts
++++ b/packages/ux-lab/src/hooks/usePostureData.ts
+@@ -1,136 +1,136 @@
+ import { useEffect, useState } from "react";
+ 
+ export type FrameworkScore = {
+ 	total: number;
+ 	withQRAs: number;
+ 	withRels: number;
+ 	pct: number;
+ };
+ 
+ export type FamilyBreakdown = {
+ 	family: string;
+ 	total: number;
+ 	withQRAs: number;
+ 	withRels: number;
+ 	pct: number;
+ };
+ 
+ export type GapAnalysis = {
+ 	control_id: string;
+ 	name?: string;
+ 	source_framework?: string;
+ 	reason?: string;
+ 	qraCount?: number;
+ 	relCount?: number;
+ };
+ 
+ export type RiskControl = {
+ 	control_id: string;
+ 	name?: string;
+ 	source_framework?: string;
+ 	weaknessCount?: number;
+ 	nrs_score?: number | string | null;
+ };
+ 
+ export type DriftAlert = {
+ 	id?: string;
+ 	type?: string;
+ 	severity?: string;
+ 	title?: string;
+ 	message?: string;
+ 	control_id?: string;
+ 	timestamp?: string;
+ };
+ 
+ export type PostureData = {
+ 	frameworkCoverage: Record<string, FrameworkScore>;
+ 	overallScore: number;
+ 	controlsByFamily: FamilyBreakdown[] | Record<string, FamilyBreakdown>;
+ 	gaps: GapAnalysis[];
+ 	topRisks: RiskControl[];
+ 	driftAlerts: DriftAlert[];
+ };
+ 
+ type UsePostureDataResult = PostureData & {
+ 	loading: boolean;
+ 	error: string | null;
+ };
+ 
+ async function getJson<T>(url: string): Promise<T> {
+ 	const response = await fetch(url);
+ 
+ 	if (!response.ok) {
+ 		throw new Error(`Failed to fetch ${url}: ${response.status}`);
+ 	}
+ 
+ 	return (await response.json()) as T;
+ }
+ 
+ const emptyData: PostureData = {
+ 	frameworkCoverage: {},
+ 	overallScore: 0,
+ 	controlsByFamily: [],
+ 	gaps: [],
+ 	topRisks: [],
+ 	driftAlerts: [],
+ };
+ 
+ export function usePostureData(): UsePostureDataResult {
+ 	const [data, setData] = useState<PostureData>(emptyData);
+ 	const [loading, setLoading] = useState<boolean>(true);
+ 	const [error, setError] = useState<string | null>(null);
+ 
+ 	useEffect(() => {
+ 		let cancelled = false;
+ 
+ 		const fetchAll = async (): Promise<void> => {
+ 			setLoading(true);
+ 			setError(null);
+ 
+ 			try {
+ 				const [frameworksResponse, controlsByFamily, gaps, topRisks, driftAlerts] = await Promise.all([
+ 					getJson<{ frameworkCoverage: Record<string, FrameworkScore>; overallScore: number }>(
+ 						"/api/posture/frameworks",
+ 					),
+ 					getJson<FamilyBreakdown[] | Record<string, FamilyBreakdown>>("/api/posture/families/NIST"),
+ 					getJson<GapAnalysis[]>("/api/posture/gaps"),
+ 					getJson<RiskControl[]>("/api/posture/risks"),
+ 					getJson<DriftAlert[]>("/api/posture/alerts"),
+ 				]);
+ 
+ 				if (cancelled) return;
+ 				setData({
+ 					frameworkCoverage: frameworksResponse.frameworkCoverage ?? {},
+ 					overallScore: frameworksResponse.overallScore ?? 0,
+ 					controlsByFamily: controlsByFamily ?? [],
+ 					gaps: gaps ?? [],
+ 					topRisks: topRisks ?? [],
+ 					driftAlerts: driftAlerts ?? [],
+ 				});
+ 			} catch (e) {
+ 				if (!cancelled) {
+ 					setError(e instanceof Error ? e.message : "Failed to load posture data");
+ 					setData(emptyData);
+ 				}
+ 			} finally {
+ 				if (!cancelled) setLoading(false);
+ 			}
+ 		};
+ 
+ 		void fetchAll();
+ 		return () => {
+ 			cancelled = true;
+ 		};
+ 	}, []);
+ 
+ 	return {
+ 		loading,
+ 		error,
+ 		frameworkCoverage: data.frameworkCoverage,
+ 		overallScore: data.overallScore,
+ 		controlsByFamily: data.controlsByFamily,
+ 		gaps: data.gaps,
+ 		topRisks: data.topRisks,
+ 		driftAlerts: data.driftAlerts,
+ 	};
+ }
+```
+```typescript
+import { useEffect, useState } from "react";
+
+export type FrameworkScore = {
+	total: number;
+	withQRAs: number;
+	withRels: number;
+	pct: number;
+};
+
+export type FamilyBreakdown = {
+	family: string;
+	total: number;
+	withQRAs: number;
+	withRels: number;
+	pct: number;
+};
+
+export type GapAnalysis = {
+	control_id: string;
+	name?: string;
+	source_framework?: string;
+	reason?: string;
+	qraCount?: number;
+	relCount?: number;
+};
+
+export type RiskControl = {
+	control_id: string;
+	name?: string;
+	source_framework?: string;
+	weaknessCount?: number;
+	nrs_score?: number | string | null;
+};
+
+export type DriftAlert = {
+	id?: string;
+	type?: string;
+	severity?: string;
+	title?: string;
+	message?: string;
+	control_id?: string;
+	timestamp?: string;
+};
+
+export type PostureData = {
+	frameworkCoverage: Record<string, FrameworkScore>;
+	overallScore: number;
+	controlsByFamily: FamilyBreakdown[] | Record<string, FamilyBreakdown>;
+	gaps: GapAnalysis[];
+	topRisks: RiskControl[];
+	driftAlerts: DriftAlert[];
+};
+
+type UsePostureDataResult = PostureData & {
+	loading: boolean;
+	error: string | null;
+};
+
+async function getJson<T>(url: string): Promise<T> {
+	const response = await fetch(url);
+
+	if (!response.ok) {
+		throw new Error(`Failed to fetch ${url}: ${response.status}`);
+	}
+
+	return (await response.json()) as T;
+}
+
+const emptyData: PostureData = {
+	frameworkCoverage: {},
+	overallScore: 0,
+	controlsByFamily: [],
+	gaps: [],
+	topRisks: [],
+	driftAlerts: [],
+};
+
+export function usePostureData(): UsePostureDataResult {
+	const [data, setData] = useState<PostureData>(emptyData);
+	const [loading, setLoading] = useState<boolean>(true);
+	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		let cancelled = false;
+
+		const fetchAll = async (): Promise<void> => {
+			setLoading(true);
+			setError(null);
+
+			try {
+				const [frameworksResponse, controlsByFamily, gaps, topRisks, driftAlerts] = await Promise.all([
+					getJson<{ frameworkCoverage: Record<string, FrameworkScore>; overallScore: number }>(
+						"/api/posture/frameworks",
+					),
+					getJson<FamilyBreakdown[] | Record<string, FamilyBreakdown>>("/api/posture/families/NIST"),
+					getJson<GapAnalysis[]>("/api/posture/gaps"),
+					getJson<RiskControl[]>("/api/posture/risks"),
+					getJson<DriftAlert[]>("/api/posture/alerts"),
+				]);
+
+				if (cancelled) return;
+				setData({
+					frameworkCoverage: frameworksResponse.frameworkCoverage ?? {},
+					overallScore: frameworksResponse.overallScore ?? 0,
+					controlsByFamily: controlsByFamily ?? [],
+					gaps: gaps ?? [],
+					topRisks: topRisks ?? [],
+					driftAlerts: driftAlerts ?? [],
+				});
+			} catch (e) {
+				if (!cancelled) {
+					setError(e instanceof Error ? e.message : "Failed to load posture data");
+					setData(emptyData);
+				}
+			} finally {
+				if (!cancelled) setLoading(false);
+			}
+		};
+
+		void fetchAll();
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+
+	return {
+		loading,
+		error,
+		frameworkCoverage: data.frameworkCoverage,
+		overallScore: data.overallScore,
+		controlsByFamily: data.controlsByFamily,
+		gaps: data.gaps,
+		topRisks: data.topRisks,
+		driftAlerts: data.driftAlerts,
+	};
+}
+```

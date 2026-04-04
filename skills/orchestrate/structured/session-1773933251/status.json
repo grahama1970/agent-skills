@@ -1,0 +1,141 @@
+{
+  "generated_at": 1773934285.3238575,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773933251",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Music Lab TypeScript types + sample data",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": 0.0,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T2",
+      "title": "PianoRollView component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773933251/T2.response.txt",
+      "error": "",
+      "started_at": 1773933251.375268,
+      "finished_at": 1773933352.0352325,
+      "subagent_task_id": "36cbf500",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T3",
+      "title": "WaveformView component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773933251/T3.response.txt",
+      "error": "",
+      "started_at": 1773933352.035864,
+      "finished_at": 1773933630.2513676,
+      "subagent_task_id": "e783e90e",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T4",
+      "title": "ConvergenceChart component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773933251/T4.response.txt",
+      "error": "",
+      "started_at": 1773933630.251737,
+      "finished_at": 1773933794.4192848,
+      "subagent_task_id": "5bbd21b8",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T5",
+      "title": "LyricsEditor component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773933251/T5.response.txt",
+      "error": "",
+      "started_at": 1773933794.4196804,
+      "finished_at": 1773934045.499677,
+      "subagent_task_id": "11e33acf",
+      "subagent_port": 8622
+    },
+    {
+      "id": "T6",
+      "title": "MusicLabWorkbench dashboard + App.tsx integration",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "nico-bailon",
+      "status": "completed",
+      "depends_on": [
+        "T2",
+        "T3",
+        "T4",
+        "T5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1773933251/T6.response.txt",
+      "error": "",
+      "started_at": 1773934045.500309,
+      "finished_at": 1773934285.323487,
+      "subagent_task_id": "d81fc1b4",
+      "subagent_port": 8623
+    },
+    {
+      "id": "T7",
+      "title": "Design review of music-lab components",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "review",
+      "agent": "steve-schoger",
+      "status": "queued",
+      "depends_on": [
+        "T6"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

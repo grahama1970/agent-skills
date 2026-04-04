@@ -1,0 +1,220 @@
+{
+  "generated_at": 1774466493.4680073,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774465761",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Serve worksheets.yaml via Express API",
+      "lane": "ws1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774465761/T1.response.txt",
+      "error": "",
+      "started_at": 1774465761.6619325,
+      "finished_at": 1774466024.3227654,
+      "subagent_task_id": "cd2c4081",
+      "subagent_port": 8625
+    },
+    {
+      "id": "T2",
+      "title": "Create useWorksheets hook",
+      "lane": "ws1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T3",
+      "title": "Refactor SourcesView to use useWorksheets",
+      "lane": "ws1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T4",
+      "title": "Add SpartaNavContext for cross-tab navigation",
+      "lane": "ws2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774465761/T4.response.txt",
+      "error": "",
+      "started_at": 1774466024.3232253,
+      "finished_at": 1774466152.9002507,
+      "subagent_task_id": "b30b4d64",
+      "subagent_port": 8626
+    },
+    {
+      "id": "T5",
+      "title": "Replace inline QRAs in SourcesView with cross-tab link",
+      "lane": "ws2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T6",
+      "title": "QRAsView accepts filter from navigation",
+      "lane": "ws2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T5"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T7",
+      "title": "Update /extract-entities skill with delimiter support",
+      "lane": "ws3",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "",
+      "error": "Task T7 cancelled by operator",
+      "started_at": 1774466152.9011781,
+      "finished_at": 1774466493.4677944,
+      "subagent_task_id": "4c8dc6fc",
+      "subagent_port": 8627
+    },
+    {
+      "id": "T8",
+      "title": "Wire ControlIdPills to use delimiter mode",
+      "lane": "ws3",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T7"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T9",
+      "title": "SourcesView flyout + UtilityBar + Toast",
+      "lane": "ws4",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T3",
+        "T5"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T10",
+      "title": "Magnetic hover + status badges for SourcesView",
+      "lane": "ws4",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T9"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "T11",
+      "title": "Full verification + blind testing",
+      "lane": "ws4",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T9",
+        "T10"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+Implemented `compute_threat_delta.py` at [compute_threat_delta.py](/home/node/workspace/.pi/skills/create-evidence-case/tools/compute_threat_delta.py).
+What it does:
+- Typer CLI with:
+- `--control-ids ID1,ID2`
+- `--all-recent`
+- `--dry-run`
+- Uses `httpx` over Unix socket `/run/user/1000/embry/memory.sock` to:
+- `POST /list` on `evidence_cases`
+- `POST /upsert` for delta docs
+- Re-evaluates each selected control by running:
+- `.pi/skills/create-evidence-case/run.sh create <original_question> --json`
+- Forces model alias to `text` for subprocess runs (`SCILLM_MODEL=text`).
+- Compares old vs new verdict and creates `type='threat-delta'` records with:
+- `control_id`, `old_verdict`, `new_verdict`, `reason`, `timestamp`, `_key` (sha256)
+- Prints stdout summary including:
+- per-control `old_verdict`/`new_verdict`
+- `no previous evidence case` lines
+- delta count and mode
+Validation run:
+- `python3 -c "import ast; ast.parse(...); print('syntax OK')"` passed.
+- `npm run check` passed.
+- `uv`-based runtime checks could not be executed here because `uv` is not installed in this environment (`uv: command not found`).

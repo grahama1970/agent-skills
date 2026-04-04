@@ -1,0 +1,66 @@
+# prompt-lab-hash: sha256:0a390fdfbf48451909dccfa508a417bd42896bd2d229952d7158638211d5ba5e
+# prompt-lab-eval: 2026-03-17T22:04:12.807116+00:00 score=0.0 model=pre-existing-unsealed
+# Design Audit Finalization
+
+## Context
+You have:
+1. The original design audit (Step 1)
+2. The judge's critique and validation (Step 2)
+
+Now produce the final, actionable recommendations.
+
+## Your Task (Step 3: Finalize)
+
+Synthesize the audit and judge feedback into:
+
+1. **Final Findings List**: Validated findings with accurate severity and specific fixes
+2. **Token Changes**: Exact token path changes in machine-readable format
+3. **Implementation Order**: Prioritized list of changes to make
+4. **Summary**: Executive summary for the developer
+
+## Output Format
+
+```
+## Executive Summary
+[3-4 sentences summarizing the review outcome and top priorities]
+
+## Final Findings
+
+### 1. [Title] (Severity: high/medium/low)
+- **Element**: [element]
+- **Issue**: [concise description]
+- **Fix**: [specific implementation instruction]
+- **Token Change**: `path.to.token` = "new_value"
+
+### 2. ...
+[repeat, ordered by priority]
+
+## Token Changes (Machine-Readable)
+```json
+{{{{
+  "changes": [
+    {{{{ "path": "colors.text.primary", "from": "#ffffff", "to": "#f5f5f5" }}}},
+    {{{{ "path": "layout.resultHeight", "from": 60, "to": 44 }}}}
+  ]
+}}}}
+```
+
+## Implementation Order
+1. [First change to make - highest impact]
+2. [Second change]
+3. ...
+
+## Preserved Strengths
+- [What to keep unchanged]
+
+## Next Steps
+- [Any follow-up actions or additional review needed]
+```
+
+## Step 1 Audit
+{step1_output}
+
+## Step 2 Judge Feedback
+{step2_output}
+
+Now produce the finalized recommendations.

@@ -1,0 +1,9 @@
+{
+  "verdict": "SATISFIED",
+  "grade": "A+",
+  "expected_control_ids": ["CM0028", "SV-MA-4", "SI-7"],
+  "expected_technique_groups": ["Harden", "Detect"],
+  "min_qra_count": 3,
+  "min_gates_passed": 3,
+  "notes": "Firmware tampering is core SPARTA threat. CM0028 (Tamper Protection) + SV-MA (Maintenance Access) share Harden technique bridge."
+}

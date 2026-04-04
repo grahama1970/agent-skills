@@ -1,0 +1,32 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1773020405,
+  "status": "ok",
+  "selected_backbone": "distilbert-base-uncased",
+  "selected_metrics": {
+    "macro_f1": 0.9996911646448184,
+    "accuracy": 0.9979934330536301,
+    "wilson_score_lower": 0.9995209191828115,
+    "latency_p50_ms": 2.3574164952151477,
+    "latency_p95_ms": 2.5642040418460965
+  },
+  "candidate_count": 1,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/tmp/bridge_training_upsampled.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [
+        "Precision",
+        "Resilience",
+        "Fragility"
+      ],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "keywords",
+      "worth_remembering": true
+    }
+  }
+}

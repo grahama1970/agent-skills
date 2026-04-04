@@ -1,0 +1,14 @@
+{
+  "lr": 2e-5,
+  "epochs": 10,
+  "batch_size": 16,
+  "warmup_ratio": 0.1,
+  "weight_decay": 0.01,
+  "max_length": 128,
+  "early_stopping_patience": 3,
+  "_source": "dogpile-research",
+  "_updated": "2026-03-31",
+  "_changelog": [
+    {"who": "agent", "what": "Initial HPs from /dogpile spam detection research", "when": "2026-03-31"}
+  ]
+}

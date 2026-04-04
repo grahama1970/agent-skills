@@ -1,0 +1,41 @@
+{
+  "timestamp": 1772473539.5239997,
+  "passed": 5,
+  "failed": 0,
+  "errors": 0,
+  "total": 5,
+  "pass_rate": 1.0,
+  "classifications": {
+    "DECOMPOSE": 2,
+    "ANSWERABLE": 2,
+    "NEEDS_CLARIFICATION": 1
+  },
+  "by_difficulty": {
+    "simple": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "classifications": {
+        "DECOMPOSE": 1,
+        "ANSWERABLE": 2
+      }
+    },
+    "flawed": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "classifications": {
+        "NEEDS_CLARIFICATION": 1
+      }
+    },
+    "medium": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "classifications": {
+        "DECOMPOSE": 1
+      }
+    }
+  },
+  "elapsed_s": 68.4
+}

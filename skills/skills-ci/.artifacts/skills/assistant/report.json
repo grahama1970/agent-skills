@@ -1,0 +1,49 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-plan",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-03-05T07:00:30.302246+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 3,
+    "total": 3
+  },
+  "worktree": null,
+  "skill": "assistant",
+  "violations": [
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "assistant",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/assistant/prime_shadow.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "subprocess.stderr_fatal",
+      "severity": "warn",
+      "skill": "assistant",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/assistant/prime_shadow.py",
+      "message": "Treats stderr as fatal error \u2014 uv/pip emit warnings to stderr that are not errors. Check returncode instead.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "assistant",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/assistant/gateway.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+-rw-rw-r-- 1 graham graham 243839 Mar 31 19:05 /tmp/sparta-flyout-qa.png

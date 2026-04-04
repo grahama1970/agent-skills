@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "04293ac014266aabc128b17885fb9e7dcf47bb0f3182b3b42dd0f8a2fb9db837",
+  "domain": "scientific",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/04293ac014266aabc128b17885fb9e7dcf47bb0f3182b3b42dd0f8a2fb9db837_d986cf1822",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/04293ac014266aabc128b17885fb9e7dcf47bb0f3182b3b42dd0f8a2fb9db837_d986cf1822/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/04293ac014266aabc128b17885fb9e7dcf47bb0f3182b3b42dd0f8a2fb9db837_d986cf1822/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/expansion_batch_1/downloads/04293ac014266aabc128b17885fb9e7dcf47bb0f3182b3b42dd0f8a2fb9db837.pdf"
+  },
+  "estimates": {
+    "page_count": 17,
+    "estimated_sections": 5,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "scientific"
+  },
+  "actual": {
+    "section_count": 4,
+    "element_count": 51,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 17,
+    "raw_text_length": 24157
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.88,
+      "state": "pass",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.81,
+      "state": "pass",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.77,
+      "state": "warn",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.67,
+      "state": "warn",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.96,
+      "state": "pass",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.98,
+      "state": "pass",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.89,
+      "state": "pass",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.86,
+    "grade": "B",
+    "verdict": "PASS",
+    "critical_issues": 0,
+    "high_issues": 1,
+    "issue_count": 1
+  },
+  "issues": [
+    {
+      "code": "EQ002",
+      "severity": "HIGH",
+      "message": "LaTeX rendering artifacts in extracted text",
+      "recommendation": "Apply math symbol normalization post-processing"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

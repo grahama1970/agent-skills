@@ -1,0 +1,120 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 11,
+    "total": 11
+  },
+  "worktree": null,
+  "skill": "train-convo-steering",
+  "violations": [
+    {
+      "rule": "skills.extra_docs",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering",
+      "message": "Extra docs in skill root: README.md.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/policy.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/task_monitor_client.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/judge_deepseek.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/schema.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/presets.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/io_utils.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/__init__.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/pipeline.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/heuristics.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "train-convo-steering",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/train-convo-steering/train_convo_steering/cli.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    }
+  ]
+}

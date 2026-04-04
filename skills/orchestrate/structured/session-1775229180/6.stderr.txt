@@ -1,0 +1,28 @@
+2026-04-03 11:16:29.764 | INFO     | __main__:run:497 - === CODE-RUNNER v2: Implement PostureDashboard.tsx — full 3ft compliance view from V1 mockup ===
+2026-04-03 11:16:29.764 | INFO     | __main__:run:498 -   Backend: codex
+2026-04-03 11:16:29.764 | INFO     | __main__:run:499 -   DoD: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDash
+2026-04-03 11:16:29.764 | INFO     | __main__:run:500 -   Max rounds: 5
+2026-04-03 11:16:31.344 | INFO     | __main__:run:591 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-03 11:19:25.532 | WARNING  | apply:apply_llm_response:410 -   v2: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts not authorized, skipping
+2026-04-03 11:19:25.533 | WARNING  | apply:apply_file_blocks:226 - Path not in allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (tried: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts)
+2026-04-03 11:19:25.534 | ERROR    | __main__:run:659 -   ZERO FILES WRITTEN — diagnosis: allowlist_blocked
+2026-04-03 11:19:25.534 | ERROR    | __main__:run:661 -     BLOCKED by allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (allowlist=['packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx'])
+2026-04-03 11:19:25.613 | INFO     | __main__:run:681 -   Score: 0.000 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 11:19:25.617 | INFO     | __main__:run:723 -   DISCARD (score 0.000 <= best 0.000)
+2026-04-03 11:19:26.034 | INFO     | __main__:run:591 - ── Round 2/5 [strategy=structured_analysis codex:medium] ──
+2026-04-03 11:22:08.099 | WARNING  | apply:apply_llm_response:410 -   v2: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts not authorized, skipping
+2026-04-03 11:22:08.101 | WARNING  | apply:apply_file_blocks:226 - Path not in allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (tried: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts)
+2026-04-03 11:22:08.102 | ERROR    | __main__:run:659 -   ZERO FILES WRITTEN — diagnosis: allowlist_blocked
+2026-04-03 11:22:08.102 | ERROR    | __main__:run:661 -     BLOCKED by allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (allowlist=['packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx'])
+2026-04-03 11:22:08.184 | INFO     | __main__:run:681 -   Score: 0.000 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 11:22:08.185 | INFO     | __main__:run:723 -   DISCARD (score 0.000 <= best 0.000)
+2026-04-03 11:22:12.207 | INFO     | __main__:run:588 - ── Round 3/5 [strategy=simplify temp=0.3↑ codex:high] ──
+2026-04-03 11:24:00.370 | WARNING  | apply:apply_llm_response:410 -   v2: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts not authorized, skipping
+2026-04-03 11:24:00.371 | WARNING  | apply:apply_file_blocks:226 - Path not in allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (tried: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts)
+2026-04-03 11:24:00.372 | ERROR    | __main__:run:659 -   ZERO FILES WRITTEN — diagnosis: allowlist_blocked
+2026-04-03 11:24:00.372 | ERROR    | __main__:run:661 -     BLOCKED by allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (allowlist=['packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx'])
+2026-04-03 11:24:00.451 | INFO     | __main__:run:681 -   Score: 0.000 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 11:24:00.452 | INFO     | __main__:run:723 -   DISCARD (score 0.000 <= best 0.000)
+2026-04-03 11:24:00.892 | INFO     | __main__:run:588 - ── Round 4/5 [strategy=escalate temp=0.4↑ claude:high] ──
+2026-04-03 11:24:00.892 | WARNING  | __main__:run:610 - Strategy: ESCALATE — diagnosis written to 6.diagnosis.json
+2026-04-03 11:24:00.893 | INFO     | __main__:run:795 - === RESULT: FAIL | score=0.000 | 3 rounds ===

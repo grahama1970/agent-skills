@@ -1,0 +1,94 @@
+[
+  {
+    "name": "header-verdict",
+    "total_samples": 5000,
+    "shadow_file_size_bytes": 428923079,
+    "date_range": {
+      "start": "2026-03-11T15:39:35.823426+00:00",
+      "end": "2026-03-11T15:40:24.403253+00:00"
+    },
+    "disposition_counts": {
+      "Escalate": 576,
+      "Reject": 2933,
+      "Accept": 1491
+    },
+    "confidence_distribution": [
+      2933,
+      121,
+      167,
+      288,
+      1491
+    ],
+    "promotion_status": "Learning",
+    "agreement_rate": 0.0,
+    "wilson_lower_bound": 0.0,
+    "samples_vs_threshold": {
+      "current": 5000,
+      "threshold": 200
+    }
+  },
+  {
+    "name": "pdf-profile",
+    "total_samples": 5000,
+    "shadow_file_size_bytes": 2950284,
+    "date_range": {
+      "start": "2026-03-11T15:26:37.598434+00:00",
+      "end": "2026-03-11T15:46:21.062698+00:00"
+    },
+    "disposition_counts": {
+      "standards": 57,
+      "defense": 36,
+      "engineering": 206,
+      "general": 4358,
+      "legal": 102,
+      "nasa": 78,
+      "slides": 28,
+      "academic": 135
+    },
+    "confidence_distribution": [
+      0,
+      0,
+      0,
+      0,
+      5000
+    ],
+    "promotion_status": "Learning",
+    "agreement_rate": 0.0,
+    "wilson_lower_bound": 0.0,
+    "samples_vs_threshold": {
+      "current": 5000,
+      "threshold": 200
+    }
+  },
+  {
+    "name": "pdf-strategy",
+    "total_samples": 5000,
+    "shadow_file_size_bytes": 1774929,
+    "date_range": {
+      "start": "2026-03-11T15:26:37.598976+00:00",
+      "end": "2026-03-11T15:46:21.063113+00:00"
+    },
+    "disposition_counts": {
+      "structured_extraction": 3896,
+      "standard_extraction": 1040,
+      "drawing_extraction": 24,
+      "slide_extraction": 14,
+      "academic_extraction": 24,
+      "multi_column_extraction": 2
+    },
+    "confidence_distribution": [
+      0,
+      0,
+      0,
+      0,
+      5000
+    ],
+    "promotion_status": "Learning",
+    "agreement_rate": 0.0,
+    "wilson_lower_bound": 0.0,
+    "samples_vs_threshold": {
+      "current": 5000,
+      "threshold": 200
+    }
+  }
+]

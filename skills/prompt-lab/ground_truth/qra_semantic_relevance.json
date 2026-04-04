@@ -1,0 +1,55 @@
+{
+  "description": "Ground truth for QRA semantic relevance scoring. Tests whether LLM correctly identifies meaningful vs coincidental cross-framework comparisons.",
+  "cases": [
+    {
+      "id": "relevant_bus_firmware",
+      "input": "Tactic: Lateral Movement\nTechnique: LM-0002 (Exploit Lack of Bus Segregation)\nQuestion: How does System Firmware (T1542.001) mitigate Exploit Lack of Bus Segregation (LM-0002) in spacecraft with flat bus architectures?\nAnswer: System Firmware (T1542.001) prevents unauthorized bus access by implementing hardware-enforced bus master authentication at the firmware level. In spacecraft with radiation-hardened processors, the firmware validates all bus controller requests against cryptographic certificates burned into protected memory.",
+      "expected": {"verdict": "RELEVANT"}
+    },
+    {
+      "id": "irrelevant_ccache_spoofing",
+      "input": "Tactic: Credential Access\nTechnique: T1558.005 (Ccache Files)\nQuestion: How might the Ccache Files (T1558.005) control help mitigate Authentication Bypass by Spoofing (CWE-290) in ground station operations?\nAnswer: In ground station operations, the Ccache Files (T1558.005) control could mitigate Authentication Bypass by Spoofing (CWE-290) by securely managing Kerberos ticket storage. By ensuring that ccache files are stored in protected memory locations and implementing strict access controls, the control can prevent adversaries from spoofing authentication tokens.",
+      "expected": {"verdict": "NOT_RELEVANT"}
+    },
+    {
+      "id": "irrelevant_ia6_thermal",
+      "input": "Tactic: Reconnaissance\nTechnique: REC-0001.05 (Ground Station Equipment)\nQuestion: How does SPARTA implement NIST-based authentication controls to ensure secure downlink communications in space systems?\nAnswer: The implementation of Authentication Feedback (IA-6) in space systems addresses the reconnaissance efforts associated with the Thermal Control System (REC-0001.05) technique by ensuring that any system feedback does not inadvertently disclose information about the thermal management subsystem.",
+      "expected": {"verdict": "NOT_RELEVANT"}
+    },
+    {
+      "id": "relevant_cwe707_si7",
+      "input": "Tactic: Execution\nTechnique: EX-0009 (Malicious Code Upload)\nQuestion: How does Improper Neutralization (CWE-707) impact the effectiveness of SI-7(12) (Integrity Verification) in spacecraft flight software updates?\nAnswer: Improper Neutralization (CWE-707) can compromise SI-7(12) in spacecraft flight software updates by allowing malformed uplink commands or corrupted software patches to bypass integrity checks. In space systems, software updates transmitted via RF links are vulnerable to input manipulation if neutralization is inadequate.",
+      "expected": {"verdict": "RELEVANT"}
+    },
+    {
+      "id": "irrelevant_mp4_integration",
+      "input": "Tactic: Collection\nTechnique: Not specified\nQuestion: How does MP-4(2) (Media Storage | Automated Restricted Access) integrate with other NIST controls in space system operations?\nAnswer: MP-4(2) integrates with other NIST controls in space system operations by complementing AC-3 (Access Enforcement) to ensure only authorized personnel access media storage areas. It works with AU-2 (Event Logging) and AU-12 (Audit Record Generation) to log all access attempts.",
+      "expected": {"verdict": "NOT_RELEVANT"}
+    },
+    {
+      "id": "relevant_sv_ac6_1553",
+      "input": "Tactic: Lateral Movement\nTechnique: LM-0002 (Exploit Lack of Bus Segregation)\nQuestion: What space-specific protection does System Firmware (T1542.001) provide against SV-AC-6's threat of rogue Remote Terminals on the 1553 bus?\nAnswer: System Firmware (T1542.001) in spacecraft implements hardware-enforced bus segregation at the firmware level, creating distinct security domains for the 1553 bus interfaces. The firmware configures the spacecraft's bus controller to validate RT addresses and commands before transmission, preventing unauthorized Remote Terminals from injecting commands.",
+      "expected": {"verdict": "RELEVANT"}
+    },
+    {
+      "id": "irrelevant_generic_encryption",
+      "input": "Tactic: Defense Evasion\nTechnique: Not specified\nQuestion: How does SPARTA ensure compliance with NIST controls related to encryption in the Ground Station domain?\nAnswer: SPARTA ensures compliance with NIST encryption controls in the Ground Station domain by implementing SC-13 (Cryptographic Protection) for data-at-rest and data-in-transit. This includes AES-256 encryption for stored telemetry and TLS 1.3 for ground-to-ground communications.",
+      "expected": {"verdict": "NOT_RELEVANT"}
+    },
+    {
+      "id": "relevant_cwe306_payload",
+      "input": "Tactic: Initial Access\nTechnique: IA-0005 (Compromise Ground System)\nQuestion: What are the consequences of Missing Authentication for Critical Function (CWE-306) in the context of spacecraft payload operations?\nAnswer: Missing Authentication for Critical Function (CWE-306) in spacecraft payload operations can result in unauthorized access to sensitive payload data or the execution of unauthorized payload commands via the ground system. An attacker who compromises the ground system (IA-0005) could send unauthenticated commands directly to the payload subsystem if CWE-306 exists in the command chain.",
+      "expected": {"verdict": "RELEVANT"}
+    },
+    {
+      "id": "irrelevant_vague_both_improve",
+      "input": "Tactic: Persistence\nTechnique: PER-0002 (Modify On-Board Values)\nQuestion: How do AC-6 (Least Privilege) and SC-28 (Protection of Information at Rest) work together to prevent persistent threats on spacecraft?\nAnswer: AC-6 and SC-28 both improve the overall security posture of spacecraft systems. AC-6 limits access to authorized users while SC-28 protects stored data. Together they create a defense-in-depth approach that reduces the attack surface for persistent threats.",
+      "expected": {"verdict": "NOT_RELEVANT"}
+    },
+    {
+      "id": "relevant_rf_jamming",
+      "input": "Tactic: Denial\nTechnique: DE-0003 (Jamming)\nQuestion: How does SC-40 (Wireless Link Protection) specifically address DE-0003 jamming attacks on spacecraft communication links?\nAnswer: SC-40 addresses DE-0003 jamming by requiring frequency hopping spread spectrum (FHSS) or direct sequence spread spectrum (DSSS) for wireless links. These techniques spread the signal across a wider bandwidth, making it resistant to narrowband jamming. For spacecraft, this applies to both uplink command channels and downlink telemetry where jamming could prevent ground operators from maintaining contact.",
+      "expected": {"verdict": "RELEVANT"}
+    }
+  ]
+}

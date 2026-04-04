@@ -1,0 +1,147 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 14,
+    "total": 14
+  },
+  "worktree": null,
+  "skill": "extract-html",
+  "violations": [
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/sanity/verify.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/schematron.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/validate.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/tables.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/vision_client.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/__init__.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/pipeline.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/util.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/normalize.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/media.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/cli.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/sectionify.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/cleaning.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "extract-html",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/extract-html/extract_html/extract.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    }
+  ]
+}

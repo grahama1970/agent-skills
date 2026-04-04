@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-03-11T20:07:33.652920",
+  "threshold": 0.85,
+  "winner": {
+    "model": "qwen2.5-3b-local",
+    "provider": "ollama",
+    "params_b": 3,
+    "json_rate": 1.0,
+    "action_acc": 0.85,
+    "total_time": 411480.8946843259,
+    "errors": [
+      "qra-1: PASS vs FAIL",
+      "qra-6: PASS vs FAIL",
+      "qra-15: PASS vs FAIL"
+    ]
+  },
+  "all_results": [
+    {
+      "model": "qwen3-1.7b-local",
+      "provider": "ollama",
+      "params_b": 1.7,
+      "json_rate": 0.0,
+      "action_acc": 0.0,
+      "total_time": 0,
+      "errors": [
+        "qra-1: Client error '404 Not Found' for url 'http://local",
+        "qra-2: Client error '404 Not Found' for url 'http://local",
+        "qra-3: Client error '404 Not Found' for url 'http://local",
+        "qra-4: Client error '404 Not Found' for url 'http://local",
+        "qra-5: Client error '404 Not Found' for url 'http://local",
+        "qra-6: Client error '404 Not Found' for url 'http://local",
+        "qra-7: Client error '404 Not Found' for url 'http://local",
+        "qra-8: Client error '404 Not Found' for url 'http://local",
+        "qra-9: Client error '404 Not Found' for url 'http://local",
+        "qra-10: Client error '404 Not Found' for url 'http://local",
+        "qra-11: Client error '404 Not Found' for url 'http://local",
+        "qra-12: Client error '404 Not Found' for url 'http://local",
+        "qra-13: Client error '404 Not Found' for url 'http://local",
+        "qra-14: Client error '404 Not Found' for url 'http://local",
+        "qra-15: Client error '404 Not Found' for url 'http://local",
+        "qra-16: Client error '404 Not Found' for url 'http://local",
+        "qra-17: Client error '404 Not Found' for url 'http://local",
+        "qra-18: Client error '404 Not Found' for url 'http://local",
+        "qra-19: Client error '404 Not Found' for url 'http://local",
+        "qra-20: Client error '404 Not Found' for url 'http://local"
+      ]
+    },
+    {
+      "model": "qwen2.5-3b-local",
+      "provider": "ollama",
+      "params_b": 3,
+      "json_rate": 1.0,
+      "action_acc": 0.85,
+      "total_time": 411480.8946843259,
+      "errors": [
+        "qra-1: PASS vs FAIL",
+        "qra-6: PASS vs FAIL",
+        "qra-15: PASS vs FAIL"
+      ]
+    }
+  ]
+}

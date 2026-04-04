@@ -1,0 +1,372 @@
+# intent_augmentation_v1.txt
+# Purpose: Generate diverse linguistic augmentation data for Binary Explorer intent training
+# Version: 1.0.0
+# Output format: JSONL — one JSON object per line: {"problem": "<user utterance>", "solution": <QuerySpec JSON>}
+# Target: 25 variations per action type × 8 action types = 200+ training pairs
+
+================================================================================
+SECTION 1 — UI ACTIONS (Complete List)
+================================================================================
+
+The Binary Explorer omnibar accepts natural language commands that map to
+exactly one of the following 8 UI actions. These are the ONLY valid values
+for the `ui_action` field in a QuerySpec when `action` == "UI_COMMAND".
+
+  1. VIEW_ALL          — Reset/recenter graph to show all nodes. Clears selection.
+  2. ZOOM_IN           — Magnify/zoom the camera toward a specific node.
+  3. SELECT_NODE       — Focus/highlight a specific node, optionally expand N hops.
+  4. SET_PERSPECTIVE   — Switch the active filter lens (security, data_flow, protocol, all).
+  5. TOGGLE_PROGRESSIVE — Enable or disable progressive disclosure mode.
+  6. SET_LAYOUT        — Change the graph layout algorithm (organic, stratified, clustered).
+  7. QUERY             — Ask an analysis question about binary features or architecture.
+  8. EXPAND            — Expand the neighbor subgraph around a node by N hops.
+
+================================================================================
+SECTION 2 — QuerySpec JSON Schema
+================================================================================
+
+A QuerySpec is the structured output that maps one user utterance to one
+executable intent. Every variation you generate MUST include a valid QuerySpec.
+
+Schema (all fields):
+
+  {
+    "action":         string,   // REQUIRED. One of: "UI_COMMAND" | "QUERY" | "NO_MATCH" | "CLARIFY"
+    "ui_action":      string,   // REQUIRED when action=="UI_COMMAND". One of the 8 UI actions above.
+    "target_node_id": string,   // OPTIONAL. The binary feature node to act on (e.g., "authenticate").
+    "expand_hops":    integer,  // OPTIONAL. How many hops to expand from the target node. Default: 1.
+    "perspective":    string    // OPTIONAL. For SET_PERSPECTIVE: "security"|"data_flow"|"protocol"|"all".
+                                //           For ZOOM_IN: numeric zoom level as string, e.g., "2.5".
+                                //           For SET_LAYOUT: "organic"|"stratified"|"clustered".
+                                //           For TOGGLE_PROGRESSIVE: "ON"|"OFF" (or omit to toggle).
+  }
+
+Field rules:
+  - `action` is always required. UI interactions → "UI_COMMAND". Domain questions → "QUERY".
+  - `ui_action` is only populated when `action == "UI_COMMAND"`.
+  - `target_node_id` uses the raw feature identifier, NOT a display label (snake_case preferred).
+  - `expand_hops` defaults to 1; use 2 or 3 for "expand widely" phrasing.
+  - `perspective` is multi-purpose: doubles as zoom level, layout name, or disclosure toggle.
+  - All fields except `action` are optional — omit if not applicable.
+
+================================================================================
+SECTION 3 — Intent Taxonomy Tags (8 Tags)
+================================================================================
+
+Each of the 8 action types below represents a distinct intent category. When
+generating variations, stay within the semantic boundary of each category.
+
+  TAG 1 — VIEW_ALL (scene_reset)
+    Resets camera to show the full graph. Triggered by "show everything", "zoom out",
+    "reset view", "go back to overview", "see all nodes", "clear selection".
+
+  TAG 2 — ZOOM_IN (camera_zoom)
+    Zooms the camera toward a named node. Triggered by "zoom in on X", "get closer to X",
+    "magnify X", "focus the lens on X", "enlarge X in view".
+
+  TAG 3 — SELECT_NODE (node_focus)
+    Selects and highlights a specific node, optionally expanding its neighborhood.
+    Triggered by "show me X", "click on X", "focus X", "find X", "go to X",
+    "select the X feature", "navigate to X".
+
+  TAG 4 — SET_PERSPECTIVE (filter_lens)
+    Switches the active graph filter. Triggered by "switch to security view",
+    "show only security nodes", "protocol perspective", "data flow filter",
+    "view all types", "change the lens to X".
+
+  TAG 5 — TOGGLE_PROGRESSIVE (disclosure_mode)
+    Enables or disables progressive disclosure. Triggered by "turn on progressive mode",
+    "enable step-by-step expansion", "toggle progressive", "disable progressive disclosure",
+    "switch off layer mode", "progressive on/off".
+
+  TAG 6 — SET_LAYOUT (graph_layout)
+    Changes layout algorithm. Triggered by "switch to stratified layout",
+    "use organic layout", "cluster the nodes", "change graph layout to X",
+    "rearrange as tree", "force-directed view".
+
+  TAG 7 — QUERY (analysis_question)
+    Natural language question requiring LLM-backed analysis. Triggered by "what does X do",
+    "how does X relate to Y", "explain X", "list the RPCs in namespace X",
+    "what is the attack surface of X", "summarize the authentication flow".
+
+  TAG 8 — EXPAND (neighborhood_expand)
+    Explicitly expands the subgraph around a node. Triggered by "expand X by 2 hops",
+    "show X and its neighbors", "reveal connections from X", "open up X's subgraph",
+    "expand 3 hops from X", "unfold X".
+
+================================================================================
+SECTION 4 — Binary Explorer UX Capabilities (from BinaryExplorerView.tsx)
+================================================================================
+
+The Binary Explorer is a graph visualization tool for reverse engineering binary
+features extracted from compiled software. Key UX facts for grounding examples:
+
+  GRAPH NODES — Binary features loaded per binary:
+    - namespace    : Logical grouping containers (e.g., "mcp", "auth", "tunnel_core")
+    - rpc          : Callable functions/procedures (e.g., "authenticate", "add_mcp_server")
+    - event        : Signals emitted during execution (e.g., "cancel_mcp_auth")
+    - schema       : Data structures and configs (e.g., "MCP_Request", "AuthToken")
+    - state_machine: FSMs with state transitions (e.g., "ConnectionState")
+    - parameter    : Shared data fields (e.g., "timeout_ms", "retry_count")
+    - cli_command  : Entry point commands (e.g., "daemon start", "tunnel connect")
+
+  KNOWN BINARIES — Selectable in the sidebar:
+    droid, daemon, tunnel, mcp
+    (Additional discovered binaries appear dynamically.)
+
+  REAL NODE IDs — Feature identifiers present in the loaded graph data:
+    authenticate, cancel_mcp_auth, add_mcp_server, remove_mcp_server,
+    mcp_handshake, tunnel_open, tunnel_close, send_payload, recv_payload,
+    droid_init, droid_shutdown, daemon_start, daemon_stop, daemon_status,
+    auth_token_refresh, session_create, session_destroy, heartbeat,
+    log_event, emit_telemetry, config_update, permission_check,
+    tls_handshake, connection_pool, request_queue, response_cache
+
+  PERSPECTIVES — Filter lenses on the graph:
+    all        → no filter, show all node types
+    security   → rpc, schema, event, namespace
+    data_flow  → schema, event, state_machine, namespace
+    protocol   → namespace, rpc, cli_command, event
+
+  LAYOUTS — Graph arrangement algorithms:
+    organic    → force-directed (default)
+    stratified → hierarchical layers
+    clustered  → group-by-cluster
+
+  PROGRESSIVE DISCLOSURE — When ON, nodes are revealed incrementally by hop
+    distance from the selected anchor node, reducing visual overload.
+
+  CHAT/OMNIBAR — Natural language input drives all interactions.
+    A three-tier routing pipeline handles each utterance:
+      Tier A: Memory recall (semantic similarity >0.85 → direct replay)
+      Tier B: Intent API (LLM classification → QuerySpec generation)
+      Tier C: Local heuristic fallback (keyword pattern matching)
+
+================================================================================
+SECTION 5 — Examples per Action Type (input → QuerySpec)
+================================================================================
+
+--- VIEW_ALL examples ---
+
+  Input: "show me everything"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "VIEW_ALL"}
+
+  Input: "reset the graph view"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "VIEW_ALL"}
+
+  Input: "zoom out to see all nodes"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "VIEW_ALL"}
+
+  Input: "go back to overview"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "VIEW_ALL"}
+
+  Input: "clear my selection and show full graph"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "VIEW_ALL"}
+
+--- ZOOM_IN examples ---
+
+  Input: "zoom into authenticate"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "ZOOM_IN", "target_node_id": "authenticate", "perspective": "2.5"}
+
+  Input: "get a closer look at mcp_handshake"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "ZOOM_IN", "target_node_id": "mcp_handshake", "perspective": "2.0"}
+
+  Input: "magnify tunnel_open please"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "ZOOM_IN", "target_node_id": "tunnel_open", "perspective": "2.5"}
+
+  Input: "enlarge the daemon_start node"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "ZOOM_IN", "target_node_id": "daemon_start", "perspective": "2.0"}
+
+  Input: "focus camera on add_mcp_server"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "ZOOM_IN", "target_node_id": "add_mcp_server", "perspective": "3.0"}
+
+--- SELECT_NODE examples ---
+
+  Input: "show me authenticate"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SELECT_NODE", "target_node_id": "authenticate"}
+
+  Input: "go to cancel_mcp_auth and expand one hop"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SELECT_NODE", "target_node_id": "cancel_mcp_auth", "expand_hops": 1}
+
+  Input: "click on add_mcp_server"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SELECT_NODE", "target_node_id": "add_mcp_server"}
+
+  Input: "navigate to droid_init and show its neighbors"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SELECT_NODE", "target_node_id": "droid_init", "expand_hops": 1}
+
+  Input: "find session_create node"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SELECT_NODE", "target_node_id": "session_create"}
+
+--- SET_PERSPECTIVE examples ---
+
+  Input: "switch to security view"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_PERSPECTIVE", "perspective": "security"}
+
+  Input: "show me the data flow perspective"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_PERSPECTIVE", "perspective": "data_flow"}
+
+  Input: "change lens to protocol"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_PERSPECTIVE", "perspective": "protocol"}
+
+  Input: "reset to all features view"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_PERSPECTIVE", "perspective": "all"}
+
+  Input: "filter graph to show only security-relevant nodes"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_PERSPECTIVE", "perspective": "security"}
+
+--- TOGGLE_PROGRESSIVE examples ---
+
+  Input: "enable progressive mode"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "TOGGLE_PROGRESSIVE", "perspective": "ON"}
+
+  Input: "turn off progressive disclosure"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "TOGGLE_PROGRESSIVE", "perspective": "OFF"}
+
+  Input: "toggle progressive"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "TOGGLE_PROGRESSIVE"}
+
+  Input: "switch on step-by-step expansion"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "TOGGLE_PROGRESSIVE", "perspective": "ON"}
+
+  Input: "disable layer reveal mode"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "TOGGLE_PROGRESSIVE", "perspective": "OFF"}
+
+--- SET_LAYOUT examples ---
+
+  Input: "switch to stratified layout"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_LAYOUT", "perspective": "stratified"}
+
+  Input: "use clustered arrangement"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_LAYOUT", "perspective": "clustered"}
+
+  Input: "go back to organic layout"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_LAYOUT", "perspective": "organic"}
+
+  Input: "rearrange as hierarchical tree"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_LAYOUT", "perspective": "stratified"}
+
+  Input: "force-directed view please"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "SET_LAYOUT", "perspective": "organic"}
+
+--- QUERY examples ---
+
+  Input: "what does authenticate do?"
+  QuerySpec: {"action": "QUERY", "target_node_id": "authenticate"}
+
+  Input: "explain the mcp_handshake flow"
+  QuerySpec: {"action": "QUERY", "target_node_id": "mcp_handshake"}
+
+  Input: "what is the attack surface of the tunnel binary?"
+  QuerySpec: {"action": "QUERY"}
+
+  Input: "list all RPCs that emit events"
+  QuerySpec: {"action": "QUERY"}
+
+  Input: "how does cancel_mcp_auth relate to add_mcp_server?"
+  QuerySpec: {"action": "QUERY", "target_node_id": "cancel_mcp_auth"}
+
+--- EXPAND examples ---
+
+  Input: "expand authenticate 2 hops"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "EXPAND", "target_node_id": "authenticate", "expand_hops": 2}
+
+  Input: "show neighbors of cancel_mcp_auth"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "EXPAND", "target_node_id": "cancel_mcp_auth", "expand_hops": 1}
+
+  Input: "reveal subgraph around daemon_start by 3 hops"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "EXPAND", "target_node_id": "daemon_start", "expand_hops": 3}
+
+  Input: "unfold tls_handshake and nearby nodes"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "EXPAND", "target_node_id": "tls_handshake", "expand_hops": 1}
+
+  Input: "open up the droid_init neighborhood"
+  QuerySpec: {"action": "UI_COMMAND", "ui_action": "EXPAND", "target_node_id": "droid_init", "expand_hops": 2}
+
+================================================================================
+SECTION 6 — Generation Instructions
+================================================================================
+
+For each of the 8 action types (VIEW_ALL, ZOOM_IN, SELECT_NODE, SET_PERSPECTIVE,
+TOGGLE_PROGRESSIVE, SET_LAYOUT, QUERY, EXPAND), generate exactly 25 diverse
+linguistic variations.
+
+TOTAL OUTPUT: 8 × 25 = 200 JSONL lines.
+
+Each line must be a valid JSON object:
+  {"problem": "<user utterance>", "solution": <QuerySpec as JSON object>}
+
+REQUIREMENTS per batch of 25 variations:
+  - Each variation targets a different node, binary, or perspective value where applicable.
+  - Rotate through the node IDs listed in Section 4 (real binary features).
+  - Use binaries: droid, daemon, tunnel, mcp — distribute evenly.
+  - node IDs to rotate: authenticate, cancel_mcp_auth, add_mcp_server, remove_mcp_server,
+    mcp_handshake, tunnel_open, tunnel_close, send_payload, recv_payload,
+    droid_init, droid_shutdown, daemon_start, daemon_stop, daemon_status,
+    auth_token_refresh, session_create, session_destroy, heartbeat,
+    log_event, emit_telemetry, config_update, permission_check,
+    tls_handshake, connection_pool, request_queue, response_cache
+
+================================================================================
+SECTION 7 — Variation Types
+================================================================================
+
+Cover ALL of the following 8 linguistic variation styles within each batch of 25:
+
+  1. FORMAL        — Professional, precise phrasing. ("Please navigate to the authenticate node.")
+  2. CASUAL        — Relaxed, conversational. ("hey can you show me authenticate real quick")
+  3. TYPOS         — Realistic misspellings/keyboard errors. ("sho me aunthentciate")
+  4. IMPERATIVE    — Direct command form. ("Select authenticate now.")
+  5. QUESTION FORM — Phrased as a question. ("Can you focus on the authenticate feature?")
+  6. NON-NATIVE    — Non-native English phrasing. ("I want to see the authenticate, please showing.")
+  7. ABBREVIATED   — Shortened/clipped. ("auth node pls", "sel droid_init")
+  8. VERBOSE       — Overly descriptive. ("Would you be so kind as to navigate the graph camera
+                      to highlight and select the node identified as 'authenticate' within
+                      the currently loaded binary feature graph?")
+
+Ensure at least 2 examples of each variation type per batch of 25.
+Variation types may overlap (e.g., a typo + casual hybrid).
+
+================================================================================
+SECTION 8 — Output Format Specification
+================================================================================
+
+Output ONLY JSONL. Each line is one complete JSON object. No blank lines between
+objects. No explanatory text. No markdown code fences. No headers.
+
+Line format:
+  {"problem": "<utterance>", "solution": {"action": "...", ...}}
+
+VALID example lines:
+
+{"problem": "show everything", "solution": {"action": "UI_COMMAND", "ui_action": "VIEW_ALL"}}
+{"problem": "zoom into authenticate", "solution": {"action": "UI_COMMAND", "ui_action": "ZOOM_IN", "target_node_id": "authenticate", "perspective": "2.5"}}
+{"problem": "what does mcp_handshake do", "solution": {"action": "QUERY", "target_node_id": "mcp_handshake"}}
+{"problem": "swich to securty veiw", "solution": {"action": "UI_COMMAND", "ui_action": "SET_PERSPECTIVE", "perspective": "security"}}
+{"problem": "expand daemon_start 2 hops", "solution": {"action": "UI_COMMAND", "ui_action": "EXPAND", "target_node_id": "daemon_start", "expand_hops": 2}}
+
+INVALID (do not produce):
+  - Lines with only the utterance and no QuerySpec
+  - Lines missing the "action" field in solution
+  - Markdown, code blocks, or prose
+  - QuerySpec with ui_action set when action is "QUERY"
+  - expand_hops less than 1 or greater than 5
+
+================================================================================
+SECTION 9 — Quality Checklist (self-verify before outputting)
+================================================================================
+
+Before emitting each JSONL line, verify:
+  [ ] `action` field is present and valid ("UI_COMMAND" | "QUERY" | "NO_MATCH" | "CLARIFY")
+  [ ] `ui_action` is present IFF action == "UI_COMMAND"
+  [ ] `ui_action` value is one of the 8 valid UI actions from Section 1
+  [ ] `target_node_id` uses a real node ID from Section 4 (not a display label)
+  [ ] `expand_hops` is an integer 1–5 (only set when meaningful)
+  [ ] `perspective` carries the correct sub-type value for the given ui_action
+  [ ] No extra fields are present beyond: action, ui_action, target_node_id, expand_hops, perspective
+  [ ] "problem" text does NOT contain the QuerySpec or any JSON
+  [ ] The problem text sounds natural for its assigned variation type
+  [ ] Node IDs are distributed — avoid repeating the same node more than 3 times per batch
+
+================================================================================
+END OF PROMPT TEMPLATE
+================================================================================

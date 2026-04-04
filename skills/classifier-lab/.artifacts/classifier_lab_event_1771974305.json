@@ -1,0 +1,25 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1771974305,
+  "status": "ok",
+  "selected_backbone": "gradient_boosting",
+  "selected_metrics": {
+    "macro_f1": 0.8631313242078529,
+    "accuracy": 0.9973614775725593
+  },
+  "candidate_count": 3,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/home/graham/.pi/assistant/training_data/table-strategy-selector/labels.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "keywords",
+      "worth_remembering": false
+    }
+  }
+}

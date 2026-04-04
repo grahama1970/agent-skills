@@ -1,0 +1,625 @@
+### FILE: .pi/skills/monitor-codebase/run.sh
+```bash
+#!/usr/bin/env bash
+# Strip inherited venv to prevent uv conflicts in cross-skill subprocess calls
+unset VIRTUAL_ENV
+set -euo pipefail
+
+SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
+PI_MONO="$(cd "$SKILL_DIR/../../.." && pwd)"
+SKILLS_DIR="$PI_MONO/.pi/skills"
+ARTIFACTS_DIR="$SKILL_DIR/artifacts"
+INBOX_REGISTRY="${HOME}/.agent-inbox/projects.json"
+TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+
+mkdir -p "$ARTIFACTS_DIR"
+
+run_skill() { "$SKILLS_DIR/$1/run.sh" "${@:2}"; }
+
+# Timeout-aware skill runner: wraps run_skill with per-step timeout
+# Uses the `timeout` command to kill hung skills
+STEP_TIMEOUT=300  # default 5 min per step
+
+run_skill_timed() {
+  timeout "$STEP_TIMEOUT" "$SKILLS_DIR/$1/run.sh" "${@:2}"
+}
+
+# Read timeout from .monitor-codebase.json (default: 3600s = 1hr total)
+get_project_timeout() {
+  local project_path="$1"
+  local config_file="$project_path/.monitor-codebase.json"
+  if [[ -f "$config_file" ]]; then
+    python3 -c "import json; print(json.load(open('$config_file')).get('timeout', 3600))" 2>/dev/null || echo 3600
+  else
+    echo 3600
+  fi
+}
+
+resolve_project_path() {
+  local project="$1"
+  if [[ -d "$project" ]]; then echo "$project"; return; fi
+  if [[ -f "$INBOX_REGISTRY" ]]; then
+    local path
+    path=$(python3 -c "import json,sys; d=json.load(open('$INBOX_REGISTRY')); print(d.get('$project',''))" 2>/dev/null)
+    if [[ -n "$path" && -d "$path" ]]; then echo "$path"; return; fi
+  fi
+  echo "ERROR: Cannot resolve project '$project'" >&2; return 1
+}
+
+# Load per-project scan config from .monitor-codebase.json
+# Returns space-separated list of absolute scan paths (or project root if no config)
+get_scan_dirs() {
+  local project_path="$1"
+  local config_file="$project_path/.monitor-codebase.json"
+  if [[ -f "$config_file" ]]; then
+    python3 -c "
+import json, os
+cfg = json.load(open('$config_file'))
+root = '$project_path'
+dirs = cfg.get('include_dirs', ['.'])
+for d in dirs:
+    full = os.path.join(root, d)
+    if os.path.isdir(full):
+        print(full)
+" 2>/dev/null
+  else
+    echo "$project_path"
+  fi
+}
+
+# Build find/grep exclude args from config
+get_exclude_dirs() {
+  local project_path="$1"
+  local config_file="$project_path/.monitor-codebase.json"
+  local defaults=".venv venv node_modules __pycache__ .git dist build .eggs .mypy_cache .pytest_cache .uv"
+  if [[ -f "$config_file" ]]; then
+    local extra
+    extra=$(python3 -c "
+import json
+cfg = json.load(open('$config_file'))
+print(' '.join(cfg.get('exclude_dirs', [])))
+" 2>/dev/null)
+    echo "$defaults $extra"
+  else
+    echo "$defaults"
+  fi
+}
+
+project_git_root() {
+  local project_path="$1"
+  git -C "$project_path" rev-parse --show-toplevel 2>/dev/null || return 1
+}
+
+commit_all_changes_if_needed() {
+  local repo_root="$1"
+  local commit_message="$2"
+
+  if [[ -z "$repo_root" ]]; then
+    return 1
+  fi
+
+  local status_output
+  status_output=$(git -C "$repo_root" status --porcelain 2>/dev/null || true)
+  if [[ -z "$status_output" ]]; then
+    return 0
+  fi
+
+  git -C "$repo_root" add -A
+  git -C "$repo_root" commit -m "$commit_message"
+}
+
+normalize_fix_plan_for_orchestrate() {
+  local source_plan="$1"
+  local output_plan="$2"
+  local project_path="$3"
+  local project_name="$4"
+
+  (
+    cd "$SKILLS_DIR/orchestrate"
+    uv run python - "$source_plan" "$output_plan" "$project_path" "$project_name" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+
+source_plan = Path(sys.argv[1])
+output_plan = Path(sys.argv[2])
+project_path = Path(sys.argv[3]).resolve()
+project_name = sys.argv[4]
+
+data = yaml.safe_load(source_plan.read_text()) or {}
+tasks = data.get("tasks") or []
+
+normalized = {
+    "version": 1,
+    "kind": "orchestrate-plan",
+    "repo_root": str(project_path),
+    "metadata": {
+        "title": data.get("plan") or f"monitor-codebase-fix-{project_name}",
+        "goal": data.get("description") or f"Apply skills-ci fixes for {project_name}",
+        "source_yaml": str(source_plan.resolve()),
+    },
+    "execution": {
+        "max_concurrency": 1,
+    },
+    "capability_overlap": [
+        "skills-ci generates deterministic Tier 2 fixes and orchestrate executes them via code-runner.",
+    ],
+    "questions_blockers": [
+        "None",
+    ],
+    "tasks": tasks,
+    "lanes": [
+        {"id": "default", "label": "Default"},
+    ],
+}
+
+output_plan.write_text(yaml.safe_dump(normalized, sort_keys=False))
+PY
+  )
+}
+
+# Run find scoped to configured dirs with exclusions
+scoped_find() {
+  local project_path="$1"; shift
+  local scan_dirs
+  scan_dirs=$(get_scan_dirs "$project_path")
+  local exclude_dirs
+  exclude_dirs=$(get_exclude_dirs "$project_path")
+
+  # Build -not -path exclusions
+  local excludes=()
+  for d in $exclude_dirs; do
+    excludes+=(-not -path "*/$d/*")
+  done
+
+  for dir in $scan_dirs; do
+    find "$dir" "${excludes[@]}" "$@" 2>/dev/null
+  done
+}
+
+list_all_projects() {
+  if [[ ! -f "$INBOX_REGISTRY" ]]; then echo "ERROR: No registry at $INBOX_REGISTRY" >&2; return 1; fi
+  python3 -c "import json; [print(k) for k in json.load(open('$INBOX_REGISTRY')).keys()]"
+}
+
+detect_best_practices() {
+  # Detect which best-practices apply using scoped dirs (not compgen on full tree)
+  local project_path="$1"
+  local checks=()
+  local scan_dirs
+  scan_dirs=$(get_scan_dirs "$project_path")
+
+  for dir in $scan_dirs; do
+    if find "$dir" -name '*.py' -not -path '*/.venv/*' -not -path '*/node_modules/*' -print -quit 2>/dev/null | grep -q .; then
+      checks+=("best-practices-python"); break
+    fi
+  done
+  for dir in $scan_dirs; do
+    if find "$dir" \( -name '*.tsx' -o -name '*.jsx' \) -not -path '*/node_modules/*' -print -quit 2>/dev/null | grep -q .; then
+      checks+=("best-practices-react"); break
+    fi
+  done
+  if [[ -d "$project_path/plasmoids" ]]; then checks+=("best-practices-kde"); fi
+  for dir in $scan_dirs; do
+    if find "$dir" -path '*/skills/*/SKILL.md' -print -quit 2>/dev/null | grep -q .; then
+      checks+=("best-practices-skills"); break
+    fi
+  done
+  if [[ -d "$project_path/streamdeck" ]]; then checks+=("best-practices-streamdeck"); fi
+  printf '%s\n' "${checks[@]}"
+}
+
+run_best_practices_checks() {
+  # Non-Python checks only — Python violations are caught by quality_checks.py (AST-based, Step 4).
+  # This step handles skill structure, React, KDE, StreamDeck patterns via grep.
+  local project_path="$1" project_name="$2"
+  local violations=()
+  local bp_skills
+  bp_skills=$(detect_best_practices "$project_path")
+
+  while IFS= read -r bp; do
+    [[ -z "$bp" ]] && continue
+    case "$bp" in
+      best-practices-skills)
+        while IFS= read -r skill_md; do
+          [[ -z "$skill_md" ]] && continue
+          local skill_dir
+          skill_dir=$(dirname "$skill_md")
+          local sname
+          sname=$(basename "$skill_dir")
+          [[ ! -f "$skill_dir/run.sh" ]] && violations+=("{\"rule\":\"missing-run-sh\",\"skill\":\"$bp\",\"target\":\"$sname\"}")
+          [[ ! -f "$skill_dir/sanity.sh" ]] && violations+=("{\"rule\":\"missing-sanity-sh\",\"skill\":\"$bp\",\"target\":\"$sname\"}")
+        done < <(scoped_find "$project_path" -path '*/skills/*/SKILL.md' -type f)
+        ;;
+      # React, KDE, StreamDeck checks can be added here as needed
+    esac
+  done <<< "$bp_skills"
+
+  if [[ ${#violations[@]} -eq 0 ]]; then
+    echo "[]"
+  else
+    printf '[%s]' "$(IFS=,; echo "${violations[*]}")"
+  fi
+}
+
+scan_project() {
+  local project_name="$1" do_fix="${2:-false}"
+  local project_path
+  project_path=$(resolve_project_path "$project_name")
+  local report_file="$ARTIFACTS_DIR/${project_name}_${TIMESTAMP}.json"
+  local scan_dirs
+  scan_dirs=$(get_scan_dirs "$project_path")
+
+  # Read per-project timeout and set per-step budget (total / 6 skill steps)
+  local project_timeout
+  project_timeout=$(get_project_timeout "$project_path")
+  STEP_TIMEOUT=$((project_timeout / 6))
+  [[ "$STEP_TIMEOUT" -lt 60 ]] && STEP_TIMEOUT=60  # minimum 60s per step
+
+  echo "=== Scanning: $project_name ($project_path) [timeout: ${project_timeout}s, ${STEP_TIMEOUT}s/step] ==="
+
+  # Step 1: project-state (focused on health, missing features, competitive landscape)
+  echo "[1/10] Running project-state..."
+  local ps_file="$ARTIFACTS_DIR/${project_name}_project_state.json"
+  (cd "$project_path" && run_skill_timed project-state report --quick --json > "$ps_file" 2>/dev/null) || echo '{"error":"project-state timeout or failed"}' > "$ps_file"
+
+  # Step 2: cleanup dry-run (dead files, stale docs, junk artifacts)
+  echo "[2/10] Running cleanup --dry-run..."
+  local cl_file="$ARTIFACTS_DIR/${project_name}_cleanup.json"
+  (cd "$project_path" && run_skill_timed cleanup --dry-run > "$cl_file" 2>/dev/null) || echo '{"error":"cleanup timeout or failed"}' > "$cl_file"
+
+  # Step 3: best-practices grep checks (fast, shell-based)
+  echo "[3/10] Running best-practices grep checks..."
+  local bp_violations
+  bp_violations=$(run_best_practices_checks "$project_path" "$project_name")
+
+  # Step 4: quality checks (AST-based — inline prompts, regex classifiers,
+  #   handwritten tests, mock-only tests, hardcoded paths, shell AQL, banned imports)
+  echo "[4/10] Running quality checks (AST-based)..."
+  local qc_file="$ARTIFACTS_DIR/${project_name}_quality_checks.json"
+  local include_dir_args=""
+  for d in $scan_dirs; do
+    # Convert absolute scan dir to relative path from project root
+    local rel_dir
+    rel_dir=$(python3 -c "import os; print(os.path.relpath('$d', '$project_path'))" 2>/dev/null)
+    if [[ -n "$include_dir_args" ]]; then
+      include_dir_args="$include_dir_args,$rel_dir"
+    else
+      include_dir_args="$rel_dir"
+    fi
+  done
+  python3 "$SKILL_DIR/quality_checks.py" "$project_path" --json > "$qc_file" 2>/dev/null || echo '{"error":"quality checks failed"}' > "$qc_file"
+
+  # Step 5: auto-fix docstrings (only in --fix mode — scan is read-only)
+  if [[ "$do_fix" == "true" ]]; then
+    echo "[5/10] Auto-fixing missing docstrings..."
+    for d in $scan_dirs; do
+      python3 "$SKILL_DIR/autofix_docstrings.py" "$d" 2>&1 || true
+    done
+  else
+    echo "[5/10] Docstring autofix skipped (scan mode is read-only, use --fix)"
+  fi
+
+  # Step 6: ingest-code rescan (scoped to configured dirs)
+  echo "[6/10] Running ingest-code rescan..."
+  local last_run_file="$ARTIFACTS_DIR/${project_name}_last_run"
+  local since="7d"
+  if [[ -f "$last_run_file" ]]; then
+    since=$(cat "$last_run_file")
+  fi
+  local ingest_args=(rescan --since "$since" --treesitter --scope "monitor-$project_name")
+  for d in $scan_dirs; do
+    ingest_args+=(-c "$d")
+  done
+  (run_skill_timed ingest-code "${ingest_args[@]}" 2>/dev/null) || true
+  date -u +%Y-%m-%dT%H:%M:%SZ > "$last_run_file"
+
+  # Step 7: skills-ci scan (if project has skills)
+  echo "[7/10] Checking for skills-ci targets..."
+  local sci_file="$ARTIFACTS_DIR/${project_name}_skills_ci.json"
+  local skills_root=""
+  for d in $scan_dirs; do
+    if [[ -d "$d/skills" ]]; then skills_root="$d/skills"; break; fi
+    if [[ -d "$d/.pi/skills" ]]; then skills_root="$d/.pi/skills"; break; fi
+  done
+  if [[ -n "$skills_root" ]]; then
+    echo "  Running skills-ci on $skills_root..."
+    (cd "$SKILLS_DIR/skills-ci" && timeout "$STEP_TIMEOUT" uv run python skills_ci.py --mode scan --root "$skills_root" --report-json "$sci_file" 2>/dev/null) || echo '{"error":"skills-ci timeout or failed"}' > "$sci_file"
+  else
+    echo '{"skipped":"no skills directory found"}' > "$sci_file"
+  fi
+
+  # Step 8: focused dogpile for improvement ideas (only if violations found)
+  echo "[8/10] Researching improvements..."
+  local dogpile_file="$ARTIFACTS_DIR/${project_name}_improvements.txt"
+  local qc_total
+  qc_total=$(python3 -c "import json; print(json.load(open('$qc_file')).get('total_violations',0))" 2>/dev/null || echo 0)
+  local bp_count
+  bp_count=$(python3 -c "import json; print(len(json.loads('$bp_violations')))" 2>/dev/null || echo 0)
+  local total_issues=$((qc_total + bp_count))
+
+  if [[ "$total_issues" -gt 5 ]]; then
+    local top_rules
+    top_rules=$(python3 -c "
+import json
+d = json.load(open('$qc_file'))
+rules = d.get('by_rule', {})
+top = sorted(rules.items(), key=lambda x: -x[1])[:3]
+print(', '.join(f'{r}({c})' for r, c in top))
+" 2>/dev/null || echo "various")
+    run_skill_timed dogpile search "fix common violations in Python project: $top_rules" --no-interactive > "$dogpile_file" 2>/dev/null || echo "dogpile timeout or unavailable" > "$dogpile_file"
+  else
+    echo "Low violation count ($total_issues) — skipping dogpile research" > "$dogpile_file"
+  fi
+
+  # Step 9: aggregate report
+  echo "[9/10] Aggregating findings..."
+  python3 -c "
+import json, sys
+
+def safe_load(path):
+    try:
+        text = open(path).read().strip()
+        return json.loads(text) if text else {}
+    except Exception:
+        return {}
+
+ps = safe_load('$ps_file')
+cl = safe_load('$cl_file')
+qc = safe_load('$qc_file')
+sci = safe_load('$sci_file')
+bp = json.loads('$bp_violations') if '$bp_violations' != '[]' else []
+
+report = {
+    'project': '$project_name',
+    'path': '$project_path',
+    'timestamp': '$TIMESTAMP',
+    'project_state': ps,
+    'cleanup': cl,
+    'best_practices_violations': bp,
+    'quality_checks': qc,
+    'skills_ci': sci,
+}
+
+bp_count = len(bp)
+qc_count = qc.get('total_violations', 0)
+sci_errors = sci.get('summary', {}).get('error', 0) if isinstance(sci.get('summary'), dict) else 0
+sci_warns = sci.get('summary', {}).get('warn', 0) if isinstance(sci.get('summary'), dict) else 0
+
+report['summary'] = {
+    'total_bp_violations': bp_count,
+    'total_quality_violations': qc_count,
+    'skills_ci_errors': sci_errors,
+    'skills_ci_warnings': sci_warns,
+    'total_issues': bp_count + qc_count + sci_errors,
+}
+
+json.dump(report, sys.stdout, indent=2)
+print()
+" > "$report_file" 2>/dev/null || echo "{\"error\":\"report aggregation failed\",\"project\":\"$project_name\"}" > "$report_file"
+
+  # Step 9.5: compare against previous report trend
+  echo "[9.5/10] Comparing trend with previous report..."
+  local trend_delta="STABLE"
+  local prev=""
+  prev=$(ls -t "$ARTIFACTS_DIR"/${project_name}_2*.json 2>/dev/null | sed -n '2p' || true)
+  if [[ -n "$prev" && -f "$prev" ]]; then
+    trend_delta=$(python3 -c "
+import json
+
+def load_total_issues(path):
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        summary = data.get('summary', {})
+        value = summary.get('total_issues', 0)
+        return int(value) if value is not None else 0
+    except Exception:
+        return 0
+
+current_total = load_total_issues('$report_file')
+previous_total = load_total_issues('$prev')
+delta = current_total - previous_total
+
+if delta > 0:
+    print(f'REGRESSION (+{delta} issues)')
+elif delta < 0:
+    print(f'IMPROVED ({delta} issues)')
+else:
+    print('STABLE')
+" 2>/dev/null || echo "STABLE")
+  fi
+
+  # Persist to memory
+  local total_issues
+  total_issues=$(python3 -c "import json; print(json.load(open('$report_file')).get('summary',{}).get('total_issues',0))" 2>/dev/null || echo 0)
+  local summary_text
+  summary_text=$(python3 -c "
+import json
+r = json.load(open('$report_file'))
+s = r.get('summary', {})
+parts = []
+if s.get('total_bp_violations'): parts.append(f\"{s['total_bp_violations']} best-practices\")
+if s.get('total_quality_violations'): parts.append(f\"{s['total_quality_violations']} quality\")
+if s.get('skills_ci_errors'): parts.append(f\"{s['skills_ci_errors']} skills-ci errors\")
+print(', '.join(parts) if parts else 'clean')
+" 2>/dev/null || echo "unknown")
+
+  run_skill memory learn \
+    -p "monitor-codebase scan of $project_name: $total_issues total issues ($summary_text, $trend_delta)" \
+    -s "Report: $report_file. Quality checks: $qc_total. Best-practices: $bp_count. Trend: $trend_delta." \
+    --scope "monitor-codebase" 2>/dev/null || true
+
+  echo "Report: $report_file ($total_issues issues: $summary_text, $trend_delta)"
+
+  # Step 10: Local fix execution via skills-ci → /orchestrate
+  if [[ "$do_fix" == "true" && "$total_issues" -gt 0 ]]; then
+    echo "[10/10] Running local fix pipeline via skills-ci → /orchestrate ($total_issues issues)..."
+    local sci_violation_count
+    sci_violation_count=$(python3 -c "import json; print(len(json.load(open('$sci_file')).get('violations', [])))" 2>/dev/null || echo 0)
+    if [[ "$sci_violation_count" -eq 0 ]]; then
+      echo "  No skills-ci violations available for fix-plan generation; skipping orchestrated fixes"
+      return
+    fi
+
+    local repo_root=""
+    repo_root=$(project_git_root "$project_path" 2>/dev/null || true)
+    if [[ -n "$repo_root" ]]; then
+      echo "  Creating safety commit in $repo_root..."
+      commit_all_changes_if_needed \
+        "$repo_root" \
+        "monitor-codebase: safety snapshot before orchestrated fixes for $project_name ($TIMESTAMP)"
+    else
+      echo "  Skipping safety commit: $project_path is not a git repository"
+    fi
+
+    local raw_fix_plan="$ARTIFACTS_DIR/${project_name}_skills_ci_fix_plan_raw.yaml"
+    local fix_plan="$ARTIFACTS_DIR/${project_name}_skills_ci_fix_plan.yaml"
+    echo "  Generating fix plan from $sci_file..."
+    (
+      cd "$SKILLS_DIR/skills-ci"
+      timeout "$STEP_TIMEOUT" uv run python generate_fix_plan.py \
+        --report "$sci_file" \
+        --output "$raw_fix_plan"
+    )
+
+    if [[ ! -s "$raw_fix_plan" ]]; then
+      echo "  No fix plan generated; skipping orchestrated fixes"
+      return
+    fi
+
+    normalize_fix_plan_for_orchestrate "$raw_fix_plan" "$fix_plan" "$project_path" "$project_name"
+
+    local fix_task_count
+    fix_task_count=$(rg -c '^[[:space:]]*- id:' "$fix_plan" 2>/dev/null || echo 0)
+    if [[ "$fix_task_count" -eq 0 ]]; then
+      echo "  Fix plan contains no executable tasks; skipping /orchestrate"
+      return
+    fi
+
+    echo "  Executing $fix_task_count fix tasks via /orchestrate..."
+    timeout "$project_timeout" "$SKILLS_DIR/orchestrate/run.sh" run "$fix_plan"
+
+    if [[ -n "$repo_root" ]]; then
+      echo "  Committing orchestrated fixes..."
+      commit_all_changes_if_needed \
+        "$repo_root" \
+        "monitor-codebase: apply orchestrated fixes for $project_name ($TIMESTAMP)"
+    fi
+  fi
+}
+
+light_scan_project() {
+  # For unchanged projects: refresh project-state only. No violations scan,
+  # no dogpile (too expensive for 28 projects nightly), no code modification.
+  local project_name="$1"
+  local project_path
+  project_path=$(resolve_project_path "$project_name")
+
+  echo "=== Light scan (unchanged): $project_name ==="
+
+  echo "[1/1] Running project-state..."
+  local ps_file="$ARTIFACTS_DIR/${project_name}_project_state.json"
+  (cd "$project_path" && run_skill project-state report --quick --json > "$ps_file" 2>/dev/null) || echo '{"error":"project-state failed"}' > "$ps_file"
+
+  echo "Light scan complete: $project_name (project-state refreshed)"
+}
+
+has_project_changed() {
+  # Check if project has new commits since last full scan
+  local project_name="$1"
+  local project_path
+  project_path=$(resolve_project_path "$project_name") || return 0  # scan if can't resolve
+  local hash_file="$ARTIFACTS_DIR/${project_name}_last_hash"
+
+  if [[ ! -d "$project_path/.git" ]]; then return 0; fi  # always scan non-git
+
+  local current_hash
+  current_hash=$(git -C "$project_path" rev-parse HEAD 2>/dev/null)
+  if [[ -z "$current_hash" ]]; then return 0; fi
+
+  if [[ -f "$hash_file" ]]; then
+    local stored_hash
+    stored_hash=$(cat "$hash_file")
+    if [[ "$current_hash" == "$stored_hash" ]]; then
+      return 1  # unchanged
+    fi
+  fi
+
+  echo "$current_hash" > "$hash_file"
+  return 0  # changed
+}
+
+cmd_scan() {
+  local do_fix=false
+  local force_all=false
+  local targets=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --all) targets=($(list_all_projects)); shift ;;
+      --fix) do_fix=true; shift ;;
+      --force) force_all=true; shift ;;
+      *)     targets+=("$1"); shift ;;
+    esac
+  done
+  if [[ ${#targets[@]} -eq 0 ]]; then echo "Usage: $0 scan <project|--all> [--fix] [--force]"; exit 1; fi
+
+  local changed=0 unchanged=0 total=${#targets[@]}
+  for proj in "${targets[@]}"; do
+    if [[ "$force_all" == "true" ]] || has_project_changed "$proj"; then
+      scan_project "$proj" "$do_fix"
+      changed=$((changed + 1))
+    else
+      light_scan_project "$proj"
+      unchanged=$((unchanged + 1))
+    fi
+  done
+
+  echo ""
+  echo "=== Scan complete: $changed full scans, $unchanged light scans (of $total projects) ==="
+}
+
+cmd_report() {
+  local project="${1:-}"
+  if [[ -z "$project" ]]; then
+    echo "Latest scan reports:"
+    ls -lt "$ARTIFACTS_DIR"/*_2*.json 2>/dev/null | head -20
+    return
+  fi
+  local latest
+  latest=$(ls -t "$ARTIFACTS_DIR"/${project}_2*.json 2>/dev/null | head -1)
+  if [[ -z "$latest" ]]; then echo "No reports found for $project"; return 1; fi
+  echo "=== Latest report: $project ==="
+  python3 -c "import json; d=json.load(open('$latest')); print(json.dumps(d, indent=2))"
+}
+
+cmd_schedule() {
+  run_skill scheduler register \
+    --name "monitor-codebase" \
+    --cron "0 3 * * *" \
+    --command "$SKILL_DIR/run.sh scan --all" \
+    --workdir "$PI_MONO" \
+    --description "Nightly codebase health scan for all registered projects"
+  echo "Registered nightly scan at 03:00 UTC"
+}
+
+cmd_cache_state() {
+  python3 "$SKILL_DIR/cache_state.py" "$@"
+}
+
+case "${1:-help}" in
+  scan)        shift; cmd_scan "$@" ;;
+  report)      shift; cmd_report "$@" ;;
+  cache-state) shift; cmd_cache_state "$@" ;;
+  schedule)    cmd_schedule ;;
+  help|*)
+    echo "monitor-codebase — Continuous codebase health monitoring"
+    echo ""
+    echo "Commands:"
+    echo "  scan <project|--all> [--fix] [--force]  Scan project(s) for violations"
+    echo "  report [project]              Show latest findings"
+    echo "  cache-state [project...] [--force]  Refresh project-state for changed projects"
+    echo "  schedule                      Register nightly scan with scheduler"
+    ;;
+esac
+```

@@ -1,0 +1,22 @@
+{
+  "task_id": "8",
+  "title": "Update SKILL.md and config for both skills",
+  "prompt": "Task: Update SKILL.md and config for both skills\n\nImplementation:\n- Add code-runner to composes list in both SKILL.md files\n- Add common to composes list in both SKILL.md files\n- Update hack config.py DEFAULT_MODEL from gpt-5.2-codex to gpt-5.3-codex\n- Update battle config.py DEFAULT_MODEL similarly\n- Add CODE_RUNNER_MAX_ROUNDS = 5 to both config.py files\n- Add EXPLOIT_ALLOWLIST_DIR = exploits/ to hack config.py\n\nDefinition of Done:\n- Command: grep -q 'code-runner' .pi/skills/hack/SKILL.md && grep -q 'code-runner' .pi/skills/battle/SKILL.md && grep -q 'gpt-5.3' .pi/skills/hack/config.py\n- Assertion: exit_code == 0\n\nTests:\n- grep -q 'code-runner' .pi/skills/hack/SKILL.md\n- grep -q 'code-runner' .pi/skills/battle/SKILL.md\n- grep -q 'gpt-5.3' .pi/skills/hack/config.py",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775083762",
+  "definition_of_done": {
+    "command": "grep -q 'code-runner' .pi/skills/hack/SKILL.md && grep -q 'code-runner' .pi/skills/battle/SKILL.md && grep -q 'gpt-5.3' .pi/skills/hack/config.py",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/hack/SKILL.md",
+    ".pi/skills/hack/config.py",
+    ".pi/skills/battle/SKILL.md",
+    ".pi/skills/battle/config.py"
+  ],
+  "read_context": [
+    ".pi/skills/hack/exploit_writer.py",
+    ".pi/skills/battle/patch_writer.py"
+  ]
+}

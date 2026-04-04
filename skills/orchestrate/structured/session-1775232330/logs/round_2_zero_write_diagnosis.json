@@ -1,0 +1,9 @@
+{
+  "reason": "apply_failed",
+  "details": [
+    "Block for packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts: diff=yes, content=yes \u2014 diff failed to apply AND/OR complete file had syntax error"
+  ],
+  "response_length": 29193,
+  "v2_metadata": true,
+  "v2_blocks_found": 1
+}

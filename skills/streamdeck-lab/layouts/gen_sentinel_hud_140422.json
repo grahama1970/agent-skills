@@ -1,0 +1,332 @@
+{
+  "template_name": "sentinel_hud",
+  "context": "sentinel_hud",
+  "buttons": [
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn0_0.png",
+      "command": "",
+      "text": "ALT/TAS",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_alt_tas",
+      "priority": "primary",
+      "row": 0
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn1_0.png",
+      "command": "",
+      "text": "HDG",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_heading",
+      "priority": "primary",
+      "row": 0
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn2_0.png",
+      "command": "",
+      "text": "BINGO!",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_fuel",
+      "priority": "primary",
+      "row": 0,
+      "_alert_tier": "warning"
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn3_0.png",
+      "command": "",
+      "text": "G-FORCE",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_g_force",
+      "priority": "primary",
+      "row": 0
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn4_0.png",
+      "command": "",
+      "text": "THREATS",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_threats",
+      "priority": "primary",
+      "row": 0,
+      "_mode_priority": true
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn5_0.png",
+      "command": "",
+      "text": "SUBSYS",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_subsystems",
+      "priority": "secondary",
+      "row": 0
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn6_0.png",
+      "command": "",
+      "text": "WEAPONS",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_weapons",
+      "priority": "secondary",
+      "row": 0,
+      "_mode_priority": true
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn7_0.png",
+      "command": "",
+      "text": "CCA-1",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_cca_0",
+      "priority": "secondary",
+      "row": 0
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn8_0.png",
+      "command": "",
+      "text": "CCA-2",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_cca_1",
+      "priority": "secondary",
+      "row": 1
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/sentinel/btn9_0.png",
+      "command": "",
+      "text": "COMMS",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_comms",
+      "priority": "secondary",
+      "row": 1
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "MISSILE",
+      "switch_page": null,
+      "keys": "",
+      "write": "",
+      "widget": "sentinel_missile",
+      "priority": "primary",
+      "alert_tier": "critical",
+      "row": 1,
+      "_alert_tier": "critical",
+      "_flash": true,
+      "_requires_ack": true,
+      "_mode_priority": true
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "COMMS PG",
+      "switch_page": 11,
+      "keys": "",
+      "write": "",
+      "priority": "tertiary",
+      "row": 1
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "DIAG PG",
+      "switch_page": 12,
+      "keys": "",
+      "write": "",
+      "priority": "tertiary",
+      "row": 1
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "",
+      "command": "",
+      "text": "",
+      "switch_page": null,
+      "keys": "",
+      "write": ""
+    },
+    {
+      "icon": "/home/graham/workspace/streamdeck/icon/back_white.png",
+      "command": "",
+      "text": "",
+      "switch_page": 0,
+      "keys": "",
+      "write": ""
+    }
+  ],
+  "mutations": [
+    {
+      "event": "missile_warning",
+      "action": "injected",
+      "position": 10
+    },
+    {
+      "event": "fuel_bingo",
+      "action": "modified",
+      "position": 2
+    },
+    {
+      "event": "mode_a2a",
+      "action": "mode_applied",
+      "mode": "a2a",
+      "priority_buttons": [
+        4,
+        6,
+        10
+      ]
+    }
+  ],
+  "generated_at": "2026-02-19T14:04:22.505605",
+  "event_count": 3,
+  "base_score": 0.9333
+}

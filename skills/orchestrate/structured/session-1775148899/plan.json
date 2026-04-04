@@ -1,0 +1,422 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "data-qid + QuerySpec Instrumentation for Datalake Explorer",
+    "goal": "Instrument all 121 interactive elements with data-qid, title, and useRegisterAction per best-practices-react CRITICAL rule",
+    "plan_type": "code",
+    "created": "2026-04-02",
+    "primary_persona": {
+      "name": "Nico Bailon",
+      "role": "Extraction QA Engineer",
+      "source": ".pi/agents/nico-bailon/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 13
+  },
+  "capability_overlap": [
+    "useRegisterAction hook EXISTS at packages/ux-lab/src/hooks/useRegisterAction.ts \u2014 CALL, not create",
+    "best-practices-react SKILL.md already defines data-qid + QuerySpec as CRITICAL rule \u2014 FOLLOW, not duplicate",
+    "21/121 elements already instrumented in Wave 0 (this session) \u2014 EXTEND, not redo"
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: High-traffic components (QuarantineView, CorpusView, DatalakeExplorerView)"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Secondary views (Traceability, Cascade, ThreatMatrix, LemmaGraph)"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Modals & panels (ExtractionReview, EvidenceCase, ChatFAB, SpotReextract)"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: Utility components (BboxEditor, BboxWorkspace, MonitorStrip, RequirementsBlock)"
+    },
+    {
+      "id": "4",
+      "label": "Wave 4: Verification + manifest generation"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Complete QuarantineView.tsx \u2014 9 missing data-qid",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/views/QuarantineView.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts",
+        "packages/ux-lab/src/components/datalake-explorer/views/QuarantineView.tsx"
+      ],
+      "implementation": [
+        "Find all 9 interactive elements with onClick/onChange that lack data-qid",
+        "Add data-qid (colon format), title, and useRegisterAction for state-changing actions",
+        "Missing elements include: section tree items, select-all button, re-extract strategy dropdown, layout separator divs",
+        "DO NOT rewrite \u2014 only add attributes to existing elements"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py QuarantineView.tsx",
+        "assertion": "PASS: 100% data-qid coverage for QuarantineView"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Instrument CorpusView.tsx \u2014 13 missing data-qid",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/views/CorpusView.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts",
+        "packages/ux-lab/src/components/datalake-explorer/views/CorpusView.tsx"
+      ],
+      "implementation": [
+        "Add data-qid to all 13 interactive elements: scope filter pills, document list rows, sort toggles, detail panel close, convergence score clicks",
+        "Naming: corpus:scope:${name}, corpus:doc:${key}, corpus:sort:${field}, corpus:detail:close",
+        "Add title attributes to each",
+        "Add useRegisterAction for: corpus sort, scope filter, doc select"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py",
+        "assertion": "PASS: 100% data-qid coverage"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Instrument TraceabilityView.tsx \u2014 4 missing data-qid",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/TraceabilityView.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "Add data-qid to: tree expand/collapse toggle, document select, verify button, navigation",
+        "Naming: trace:tree:toggle, trace:verify, trace:doc:${key}"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py TraceabilityView.tsx",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Instrument CascadeView.tsx \u2014 3 missing data-qid",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/views/CascadeView.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "Add data-qid to: decision point tabs, tier radio buttons, filter radios",
+        "Naming: cascade:dp:${name}, cascade:tier:${value}, cascade:filter:${key}"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py views/CascadeView.tsx",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Instrument ThreatMatrixView.tsx \u2014 8 missing data-qid",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/views/ThreatMatrixView.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "Add data-qid to: framework filter buttons, sector filter buttons, drillthrough close, edit input, severity checkbox, metric buttons",
+        "Naming: threatmatrix:framework:${fw}, threatmatrix:sector:${s}, threatmatrix:drillthrough:close"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py views/ThreatMatrixView.tsx",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Instrument LemmaGraphView.tsx \u2014 9 missing data-qid",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/views/LemmaGraphView.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "Add data-qid to: toggle panel, close detail, expand/collapse, mode buttons, reset layout, graph container",
+        "Naming: lemma:toggle, lemma:detail:close, lemma:mode:${m}, lemma:reset"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py views/LemmaGraphView.tsx",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Instrument remaining views \u2014 QualityView(3), MonitorView(2), RequirementsView(2), SupervisorView(1)",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/views/QualityView.tsx",
+        "packages/ux-lab/src/components/datalake-explorer/views/MonitorView.tsx",
+        "packages/ux-lab/src/components/datalake-explorer/views/RequirementsView.tsx",
+        "packages/ux-lab/src/components/datalake-explorer/views/SupervisorView.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "QualityView: quality:tier:${t}, quality:toggle, quality:metric:${m}",
+        "MonitorView: monitor:scope:${s}, monitor:filter:${f}",
+        "RequirementsView: requirements:tree:${id}, requirements:detail",
+        "SupervisorView: supervisor:select:${label}"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Instrument ExtractionReviewModal.tsx \u2014 11 missing data-qid",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/ExtractionReviewModal.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "Add data-qid to: mode selector spans, generate fixture button, re-extract button, accept button, close button, block detail clicks, diff tab clicks",
+        "Naming: review:mode:${m}, review:generate, review:reextract, review:accept, review:close, review:block:${id}"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py ExtractionReviewModal.tsx",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "9",
+      "title": "Instrument EvidenceCasePanel.tsx \u2014 11 missing data-qid",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/EvidenceCasePanel.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "Add data-qid to: overlay close, close button, pattern radio buttons, confidence slider, toggle buttons, source input, add source button, create button",
+        "Naming: evidence:close, evidence:pattern:${opt}, evidence:confidence, evidence:source:add, evidence:create"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py EvidenceCasePanel.tsx",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "10",
+      "title": "Instrument ChatFAB.tsx \u2014 4 missing data-qid",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/ChatFAB.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "Add data-qid to: close button, send button, chat input area, FAB toggle button",
+        "Naming: chat:close, chat:send, chat:input, chat:toggle",
+        "Add useRegisterAction for chat:toggle and chat:send"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py ChatFAB.tsx",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "11",
+      "title": "Complete SpotReextract.tsx \u2014 3 missing data-qid",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/SpotReextract.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "Add data-qid to: overlay backdrop, strategy selector buttons, run pipeline button",
+        "Naming: reextract:backdrop, reextract:strategy:${s}, reextract:run"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py SpotReextract.tsx",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "12",
+      "title": "Complete BboxEditor.tsx \u2014 3 missing + BboxWorkspace.tsx \u2014 7 missing",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/BboxEditor.tsx",
+        "packages/ux-lab/src/components/datalake-explorer/BboxWorkspace.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "BboxEditor: bbox:coord:input, bbox:type:${t} (type dropdown items), bbox:actions (wrapper)",
+        "BboxWorkspace: bbox:block:add, bbox:section:select, bbox:toolbar:actions, remaining filter/toolbar elements"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "13",
+      "title": "Instrument MonitorStrip.tsx(3) + RequirementsBlock.tsx(3) + PdfCanvas.tsx(1)",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [],
+      "allowlist": [
+        "packages/ux-lab/src/components/datalake-explorer/MonitorStrip.tsx",
+        "packages/ux-lab/src/components/datalake-explorer/RequirementsBlock.tsx",
+        "packages/ux-lab/src/components/datalake-explorer/PdfCanvas.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/hooks/useRegisterAction.ts"
+      ],
+      "implementation": [
+        "MonitorStrip: monitor:expand, monitor:collapse, monitor:event:${source}",
+        "RequirementsBlock: requirements:toggle, requirements:control:select, requirements:evidence:create",
+        "PdfCanvas: pdf:overlay (the overlay canvas with onClick)"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py",
+        "assertion": "PASS: 100% data-qid coverage for target file(s)"
+      }
+    },
+    {
+      "id": "14",
+      "title": "Verify 100% data-qid coverage \u2014 0 missing interactive elements",
+      "lane": "4",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "depends_on": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13"
+      ],
+      "command": "cd /home/graham/workspace/experiments/pi-mono &&\npython3 -c \"\nimport re, os, sys\nbase = 'packages/ux-lab/src/components/datalake-explorer'\ntotal = 0; qid = 0; missing_files = []\nfor root, dirs, files in os.walk(base):\n    for fn in files:\n        if not fn.endswith('.tsx'): continue\n        path = os.path.join(root, fn)\n        c = open(path).read()\n        els = [e for e in re.split(r'<(?=button|input|select|div|span|label)', c) if re.search(r'on(?:Click|Change|DoubleClick)=', e)]\n        q = [e for e in els if 'data-qid' in e[:e.find('>')+1 if e.find('>') > 0 else 500]]\n        total += len(els); qid += len(q)\n        if len(q) < len(els): missing_files.append((fn, len(els), len(q)))\npct = qid * 100 // total if total > 0 else 0\nprint(f'Coverage: {qid}/{total} ({pct}%)')\nfor fn, t, q in missing_files:\n    print(f'  MISSING: {fn}: {t-q} elements without data-qid')\nassert qid == total, f'FAIL: {total-qid} interactive elements missing data-qid'\nprint('PASS: 100% coverage')\n\"\n",
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono && python3 packages/ux-lab/scripts/verify-data-qid.py",
+        "assertion": "PASS: 100% data-qid coverage"
+      }
+    },
+    {
+      "id": "15",
+      "title": "Generate deterministic test manifest from data-qid registry",
+      "lane": "4",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "depends_on": [
+        "14"
+      ],
+      "allowlist": [
+        "packages/ux-lab/test-manifest-datalake-explorer-vlm.yaml"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/components/datalake-explorer/views/QuarantineView.tsx",
+        "packages/ux-lab/src/components/datalake-explorer/DatalakeExplorerView.tsx"
+      ],
+      "implementation": [
+        "Scan all TSX files for data-qid attributes",
+        "Generate one manifest test per data-qid: DOM click test (surf click '[data-qid=\"...\"]')",
+        "Add keyboard shortcut tests for QuarantineView (j/k/a/r/x/i/Esc) and BboxWorkspace (S/D/Tab/t)",
+        "Add API backend tests (16 existing)",
+        "Add 7 VLM visual regression tests (existing)",
+        "Target: 121+ interactive DOM tests + 16 API + 10 keyboard + 7 VLM = 150+ total"
+      ],
+      "definition_of_done": {
+        "command": "grep -c '  - id:' packages/ux-lab/test-manifest-datalake-explorer-vlm.yaml",
+        "assertion": "At least 120 test entries"
+      }
+    }
+  ]
+}

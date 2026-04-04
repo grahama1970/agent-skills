@@ -1,0 +1,350 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "Architecture Editor \u2014 Visual Collaboration Tool",
+    "goal": "Build #Architecture tab in UX Lab: Excalidraw canvas + project list + element inspector + Save to Memory + Create Plan button. Agent can read/write canvas programmatically.",
+    "plan_type": "hybrid",
+    "created": "2026-03-25",
+    "repo_root": "/home/graham/workspace/experiments/pi-mono",
+    "primary_persona": {
+      "name": "Graham",
+      "role": "Data scientist and agentic researcher",
+      "source": "memory/MEMORY.md"
+    },
+    "design_reference": {
+      "approved_mockup": "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/captures/architecture/simplified/be7b5e7fc1df49a0a4045cc4dc43f6e2.png",
+      "design_system": "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/DESIGN.md",
+      "spec": "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/captures/architecture/spec.md",
+      "stitch_project": "4129095658897667901"
+    }
+  },
+  "execution": {
+    "max_concurrency": 2
+  },
+  "capability_overlap": [
+    "/memory recall: no prior architecture diagram tool",
+    "CALL: LeftPane.tsx (project list with right-click context menu)",
+    "CALL: EmbryStyle.ts (NVIS design tokens)",
+    "CALL: AgentControl.tsx (agent active indicator)",
+    "CALL: ContextMenu.tsx (rename, delete, duplicate, history)",
+    "CALL: useAgentBus.ts (agent WebSocket communication)",
+    "CALL: ModelPicker.tsx pattern for toolbar controls",
+    "CREATE: @excalidraw/excalidraw npm package for canvas \u2014 no existing Excalidraw skill, pure npm dependency",
+    "CREATE: Express API endpoints for agent read/write \u2014 /ux-lab server pattern, not a new skill",
+    "GLUE: ArangoDB persistence via daemon /learn endpoint \u2014 reuses existing daemon, no new endpoints",
+    "Anti-silo: /create-figure exists but is static image generation, not interactive canvas \u2014 no overlap"
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Dependencies + Server API"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: React View + Excalidraw Integration"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Agent Features + Persistence"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: Validation + Review"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Install @excalidraw/excalidraw in ux-lab",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "depends_on": [],
+      "command": "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npm install @excalidraw/excalidraw",
+      "tests": [
+        "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && node -e \"require('@excalidraw/excalidraw')\""
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && node -e \"require('@excalidraw/excalidraw')\" && echo OK",
+        "assertion": "Package resolves without error \u2014 prints OK"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Add /api/architecture Express endpoints to ux-lab server",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "model": "codex",
+      "agent": "general-purpose",
+      "depends_on": [],
+      "timeout": "15m",
+      "gate": "API returns valid JSON with architectures key",
+      "implementation": [
+        "Add routes to /home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts",
+        "GET /api/architecture \u2014 list all architecture projects (from ArangoDB via daemon /list with filter)",
+        "GET /api/architecture/:id \u2014 get single architecture (Excalidraw JSON + metadata + attachments)",
+        "PUT /api/architecture/:id \u2014 save architecture (Excalidraw JSON + metadata)",
+        "POST /api/architecture/:id/attach \u2014 attach file path to an element",
+        "DELETE /api/architecture/:id \u2014 delete architecture",
+        "All ArangoDB calls via httpx Unix socket to /run/user/1000/embry/memory.sock using /learn, /recall, /store endpoints",
+        "NEVER import graph_memory. NEVER write AQL.",
+        "Architecture stored as lessons with tags: ['architecture', project-name]",
+        "Excalidraw JSON in solution field, metadata (attachments, element-to-file mappings) in JSON"
+      ],
+      "context_files": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 2 packages/ux-lab/server/ --domain express",
+        "curl -s http://localhost:3001/api/architecture | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'architectures' in d\""
+      ],
+      "definition_of_done": {
+        "command": "curl -s http://localhost:3001/api/architecture | python3 -c \"import json,sys; d=json.load(sys.stdin); print('OK' if 'architectures' in d else 'FAIL')\"",
+        "assertion": "Returns OK"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Create ArchitectureView.tsx \u2014 main view component",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "model": "codex",
+      "agent": "general-purpose",
+      "depends_on": [
+        "1"
+      ],
+      "timeout": "20m",
+      "gate": "TypeScript compiles AND component matches Stitch mockup layout",
+      "design_reference": "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/captures/architecture/simplified/be7b5e7fc1df49a0a4045cc4dc43f6e2.png",
+      "implementation": [
+        "Create /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/architecture/ArchitectureView.tsx",
+        "Three-panel layout: LeftPane (project list) | Excalidraw canvas | Right inspector pane",
+        "ALL panels resizable via drag handles and collapsible",
+        "Import and embed @excalidraw/excalidraw React component with dark theme",
+        "Excalidraw theme: match EMBRY bgDeep (#0b1220) background, accent (#7c3aed)",
+        "Left pane: reuse LeftPane.tsx + LeftPaneSection from common/",
+        "Left pane: architecture project list with right-click context menu (reuse ContextMenu.tsx): Rename, Duplicate, Delete, Version History",
+        "Left pane: + button to create new architecture",
+        "Right pane: Element Inspector with tabs \u2014 Properties, Code, Files",
+        "Right pane Properties tab: element name, type, latency, description from element customData",
+        "Right pane Code tab: syntax-highlighted code from attached .py/.ts files",
+        "Right pane Files tab: list of attached file paths with paperclip icons, + Attach File button",
+        "Right pane renders markdown, code, and HTML inline when attachment is clicked",
+        "Top bar: architecture project name + Agent indicator (reuse AgentControl.tsx)",
+        "Bottom bar: Save to Memory button + Create Plan button",
+        "100% compliant with EmbryStyle.ts \u2014 import EMBRY tokens, use label/heading styles",
+        "Lucide icons for all toolbar controls"
+      ],
+      "context_files": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/common/LeftPane.tsx",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/common/EmbryStyle.ts",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/common/AgentControl.tsx",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/common/ContextMenu.tsx",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/captures/architecture/simplified/be7b5e7fc1df49a0a4045cc4dc43f6e2.png",
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/DESIGN.md"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 3 packages/ux-lab/src/components/architecture/ --domain react",
+        "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npx tsc --noEmit"
+      ],
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npx tsc --noEmit 2>&1 | tail -1",
+        "assertion": "No TypeScript errors"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Register Architecture in UX Lab shell + hash routing",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "one_shot",
+      "model": "codex",
+      "agent": "general-purpose",
+      "depends_on": [
+        "3"
+      ],
+      "timeout": "10m",
+      "gate": "Hash route resolves and component renders",
+      "implementation": [
+        "Edit /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx",
+        "Add lazy import: const Architecture = React.lazy(() => import('./components/architecture/ArchitectureView'))",
+        "Add to project list with icon 'account_tree'",
+        "Add hash route: #architecture \u2192 render <Architecture />",
+        "Follow exact pattern of binary-explorer and prompt-lab registration"
+      ],
+      "context_files": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 4 packages/ux-lab/src/ --domain react",
+        "grep -c 'rchitecture' /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx"
+      ],
+      "definition_of_done": {
+        "command": "grep -c 'rchitecture' /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/App.tsx",
+        "assertion": "Returns 2 or more (import + route)"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Wire Save to Memory \u2014 persist Excalidraw JSON to ArangoDB",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "model": "codex",
+      "agent": "general-purpose",
+      "depends_on": [
+        "2",
+        "3"
+      ],
+      "timeout": "15m",
+      "gate": "PUT saves and GET retrieves same Excalidraw JSON",
+      "implementation": [
+        "Save button calls PUT /api/architecture/:id with Excalidraw scene JSON",
+        "Server stores via daemon /learn endpoint with tags ['architecture', project-name]",
+        "Versioning: each save creates a new lesson (immutable versions in ArangoDB)",
+        "Load on mount: fetch GET /api/architecture/:id and hydrate Excalidraw",
+        "Auto-load active architecture at session start for agent context"
+      ],
+      "context_files": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 5 packages/ux-lab/ --domain express"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X PUT http://localhost:3001/api/architecture/test -H 'Content-Type: application/json' -d '{\"elements\":[], \"name\":\"test\"}' | python3 -c \"import json,sys; print('OK' if json.load(sys.stdin).get('saved') else 'FAIL')\"",
+        "assertion": "Returns OK"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Wire Create Plan \u2014 generate /plan YAML from architecture diagram",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "model": "codex",
+      "agent": "general-purpose",
+      "depends_on": [
+        "5"
+      ],
+      "timeout": "15m",
+      "gate": "POST returns checklist or plan YAML skeleton",
+      "implementation": [
+        "Create Plan button reads all Excalidraw elements + their attachments",
+        "POST /api/architecture/:id/plan endpoint",
+        "Server extracts: shapes \u2192 tasks, arrows \u2192 depends_on, attached files \u2192 context_files",
+        "Runs evaluation checklist: every component has attached docs? no orphan nodes? all files exist?",
+        "If checklist passes, generates YAML plan skeleton",
+        "Returns plan YAML as response for human review",
+        "Checklist items: has Design doc, has Backend Notes, no bespoke duplicates of existing skills"
+      ],
+      "context_files": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 6 packages/ux-lab/server/ --domain express"
+      ],
+      "definition_of_done": {
+        "command": "curl -s http://localhost:3001/api/architecture/test/plan | python3 -c \"import json,sys; d=json.load(sys.stdin); print('OK' if 'tasks' in d or 'checklist' in d else 'FAIL')\"",
+        "assertion": "Returns OK with tasks or checklist"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Agent read/write API \u2014 programmatic canvas manipulation",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "model": "codex",
+      "agent": "general-purpose",
+      "depends_on": [
+        "2",
+        "3"
+      ],
+      "timeout": "15m",
+      "gate": "PATCH adds element and returns updated state",
+      "implementation": [
+        "PATCH /api/architecture/:id/elements \u2014 add/modify/delete elements",
+        "Agent can add boxes, arrows, text, and attach documents via API",
+        "WebSocket channel pushes element changes to browser in real-time",
+        "Agent indicator pulses green when agent is modifying canvas",
+        "Element customData stores: component name, tech stack, latency, file attachments"
+      ],
+      "context_files": [
+        "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 7 packages/ux-lab/server/ --domain express"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X PATCH http://localhost:3001/api/architecture/test/elements -H 'Content-Type: application/json' -d '{\"add\":[{\"type\":\"rectangle\",\"label\":\"test-node\"}]}' | python3 -c \"import json,sys; print('OK' if json.load(sys.stdin).get('updated') else 'FAIL')\"",
+        "assertion": "Returns OK"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Visual review \u2014 screenshot and /review-design",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "gemini",
+      "mode": "review",
+      "model": "gemini",
+      "agent": "general-purpose",
+      "depends_on": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "timeout": "10m",
+      "gate": "match_score >= 85 from /review-design VLM comparison",
+      "design_reference": "/home/graham/workspace/experiments/pi-mono/packages/ux-lab/captures/architecture/simplified/be7b5e7fc1df49a0a4045cc4dc43f6e2.png",
+      "implementation": [
+        "Start dev server: cd /home/graham/workspace/experiments/pi-mono/packages/ux-lab && npm run dev",
+        "Navigate to http://localhost:3001/#architecture via /surf",
+        "Screenshot the rendered view via /surf snap",
+        "Compare against approved Stitch mockup at captures/architecture/simplified/be7b5e7fc1df49a0a4045cc4dc43f6e2.png",
+        "Run /review-design with both screenshots",
+        "Fix any visual regressions until match_score >= 85"
+      ],
+      "tests": [
+        "/surf snap --output /tmp/architecture-review.png"
+      ],
+      "definition_of_done": {
+        "command": "test -f /tmp/architecture-review.png && echo OK",
+        "assertion": "Screenshot captured and match_score >= 85 from /review-design"
+      }
+    },
+    {
+      "id": "9",
+      "title": "Integration test \u2014 full round-trip",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "depends_on": [
+        "8"
+      ],
+      "command": "curl -s -X PUT http://localhost:3001/api/architecture/queryspec-pipeline \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"name\":\"QuerySpec Pipeline\",\"elements\":[{\"type\":\"rectangle\",\"id\":\"1\",\"x\":100,\"y\":100,\"width\":200,\"height\":80,\"customData\":{\"label\":\"Intent Classifier\",\"tech\":\"SetFit\",\"latency\":\"<10ms\"}}],\"attachments\":{\"1\":[\"scripts/training/sft_queryspec_v3.py\"]}}' \\\n&& curl -s http://localhost:3001/api/architecture/queryspec-pipeline | python3 -c \"import json,sys; d=json.load(sys.stdin); print(f'elements: {len(d.get(\\\"elements\\\",[]))}, attachments: {len(d.get(\\\"attachments\\\",{}))}')\" \\\n&& curl -s http://localhost:3001/api/architecture/queryspec-pipeline/plan | python3 -c \"import json,sys; d=json.load(sys.stdin); print(f'plannable: {d.get(\\\"checklist\\\",{}).get(\\\"passed\\\",False)}')\"\n",
+      "tests": [
+        "test-lab/run.sh verify-task 9 packages/ux-lab/ --domain integration"
+      ],
+      "definition_of_done": {
+        "command": "curl -s http://localhost:3001/api/architecture | python3 -c \"import json,sys; d=json.load(sys.stdin); print(len(d.get('architectures',[])) > 0)\"",
+        "assertion": "Returns True \u2014 at least one architecture exists after round-trip"
+      }
+    }
+  ]
+}

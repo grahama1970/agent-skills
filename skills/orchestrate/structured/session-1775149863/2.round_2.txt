@@ -1,0 +1,33 @@
+{"summary":"Fixed format_list() to join items with commas instead of using str()","approach":"direct_fix","files_changed":["src/formatter.py"]}
+---
+### FILE: src/formatter.py
+```diff
+--- a/src/formatter.py
++++ b/src/formatter.py
+@@ -13,7 +13,7 @@ def format_currency(amount, symbol="$"):
+
+ def format_list(items):
+     """Format a list as comma-separated string."""
+-    return str(items)  # BUG: should join, not str()
++    return ", ".join(items) if items else ""
+```
+
+```python
+"""String formatting utilities with bugs."""
+from loguru import logger
+
+
+def format_name(first, last):
+    """Format a full name."""
+    return f"{first} {last}"
+
+
+def format_currency(amount, symbol="$"):
+    """Format a currency amount."""
+    return f"{symbol}{amount:,.2f}"
+
+
+def format_list(items):
+    """Format a list as comma-separated string."""
+    return ", ".join(items) if items else ""
+```

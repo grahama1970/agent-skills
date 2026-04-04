@@ -1,0 +1,128 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "03b348c3874860e1e7f9db550caaa71dc082d02c0343938b59f9ebde128cd8ea",
+  "domain": "scientific",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/03b348c3874860e1e7f9db550caaa71dc082d02c0343938b59f9ebde128cd8ea_91199d5c86",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/03b348c3874860e1e7f9db550caaa71dc082d02c0343938b59f9ebde128cd8ea_91199d5c86/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/03b348c3874860e1e7f9db550caaa71dc082d02c0343938b59f9ebde128cd8ea_91199d5c86/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/fetcher_results/arxiv_batch/downloads/03b348c3874860e1e7f9db550caaa71dc082d02c0343938b59f9ebde128cd8ea.pdf"
+  },
+  "estimates": {
+    "page_count": 25,
+    "estimated_sections": 8,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "scientific"
+  },
+  "actual": {
+    "section_count": 5,
+    "element_count": 100,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 25,
+    "raw_text_length": 45400
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.64,
+      "state": "warn",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.74,
+      "state": "warn",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.46,
+      "state": "fail",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.45,
+      "state": "fail",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.74,
+      "state": "warn",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.76,
+      "state": "warn",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.73,
+      "state": "warn",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.66,
+    "grade": "D",
+    "verdict": "WARN",
+    "critical_issues": 0,
+    "high_issues": 3,
+    "issue_count": 7
+  },
+  "issues": [
+    {
+      "code": "SA003",
+      "severity": "HIGH",
+      "message": "No sections detected in multi-page document",
+      "recommendation": "Check header detection pipeline; may need font-based fallback"
+    },
+    {
+      "code": "FF001",
+      "severity": "MEDIUM",
+      "message": "Figure caption not associated with image on page 13",
+      "recommendation": "Adjust caption proximity threshold"
+    },
+    {
+      "code": "FF002",
+      "severity": "HIGH",
+      "message": "13 figures detected but none extracted",
+      "recommendation": "Check image extraction pipeline configuration"
+    },
+    {
+      "code": "EQ002",
+      "severity": "HIGH",
+      "message": "LaTeX rendering artifacts in extracted text",
+      "recommendation": "Apply math symbol normalization post-processing"
+    },
+    {
+      "code": "EQ001",
+      "severity": "MEDIUM",
+      "message": "Math symbols detected but no equation blocks extracted",
+      "recommendation": "Enable equation detection in block classifier"
+    },
+    {
+      "code": "CC001",
+      "severity": "LOW",
+      "message": "Text coverage ratio 74% below threshold",
+      "recommendation": "Check for scanned pages requiring OCR"
+    },
+    {
+      "code": "DQ002",
+      "severity": "LOW",
+      "message": "Empty elements found (3 of 30)",
+      "recommendation": "Filter empty blocks in post-processing"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

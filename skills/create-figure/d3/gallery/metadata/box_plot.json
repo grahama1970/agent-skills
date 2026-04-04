@@ -1,0 +1,16 @@
+{
+  "chart_type": "box_plot",
+  "viz_family": "distribution",
+  "sample_query": "Show quartile comparison across groups",
+  "title": "Quartile Comparison",
+  "data_shape": {
+    "rows": 30,
+    "fields": [
+      "label",
+      "value"
+    ]
+  },
+  "source": "seed_d3_gallery.py",
+  "timestamp": "2026-02-26T13:14:48.026728+00:00",
+  "html_path": "/mnt/storage12tb/artifacts/d3_gallery/working/box_plot_1772111688.html"
+}

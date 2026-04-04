@@ -1,0 +1,13 @@
+{
+  "name": "toxic-v4",
+  "status": "researched",
+  "modality": "text",
+  "samples": 10000,
+  "classes": 2,
+  "goal": "Classify online comments as toxic or non-toxic",
+  "class_names": [
+    "not_toxic",
+    "toxic"
+  ],
+  "data_source": "thesofakillers/jigsaw-toxic-comment-classification-challenge"
+}

@@ -1,0 +1,602 @@
+{"summary":"Replaced the 7-line stub with a full PostureDashboard implementation matching the requested 3-row V1 mockup structure, declarative D3 donut rendering, interactive telemetry attributes, register-action hooks, and EmbryStyle-token-based styling with accessible interactive semantics.","approach":"structured_analysis","files_changed":["packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"]}
+---
+### FILE: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
+```diff
+--- a/packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
++++ b/packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx
+@@ -1,7 +1,557 @@
+-/** Stub — PostureDashboard referenced by ChatTab but not yet implemented. */
++import { useMemo, useState } from 'react'
++import * as d3 from 'd3'
+ import { useRegisterAction } from '../../../hooks/useRegisterAction'
++import { EMBRY, card, label, heading, glowDot, fwBadge } from '../common/EmbryStyle'
++
++type FrameworkKey = 'NIST_CSF' | 'NIST_800_53' | 'CMMC' | 'ISO_27001' | 'SOC2' | 'CIS' | 'HIPAA' | 'PCI_DSS'
++type Severity = 'high' | 'medium' | 'low'
++
++type FrameworkDatum = {
++  key: FrameworkKey
++  label: string
++  score: number
++  delta: number
++}
++
++type FamilyDatum = {
++  family: string
++  pass: number
++  partial: number
++  fail: number
++}
++
++type GapDatum = {
++  type: 'coverage' | 'qra' | 'relation' | 'drift' | 'evidence'
++  label: string
++  value: string
++  trend: string
++}
++
++type AlertDatum = {
++  control_id: string
++  severity: Severity
++  title: string
++  detail: string
++  when: string
++}
++
++type RiskDatum = {
++  control_id: string
++  name: string
++  family: string
++  score: number
++  status: 'Open' | 'Mitigating' | 'Accepted'
++}
++
++const FRAMEWORKS: FrameworkDatum[] = [
++  { key: 'NIST_CSF', label: 'NIST CSF', score: 88, delta: 4 },
++  { key: 'NIST_800_53', label: 'NIST 800-53', score: 81, delta: 2 },
++  { key: 'CMMC', label: 'CMMC', score: 76, delta: -1 },
++  { key: 'ISO_27001', label: 'ISO 27001', score: 84, delta: 3 },
++  { key: 'SOC2', label: 'SOC 2', score: 79, delta: 1 },
++  { key: 'CIS', label: 'CIS', score: 86, delta: 5 },
++  { key: 'HIPAA', label: 'HIPAA', score: 74, delta: -2 },
++  { key: 'PCI_DSS', label: 'PCI DSS', score: 71, delta: 0 }
++]
++
++const FAMILIES: FamilyDatum[] = [
++  { family: 'AC', pass: 21, partial: 7, fail: 2 },
++  { family: 'AT', pass: 12, partial: 3, fail: 1 },
++  { family: 'AU', pass: 15, partial: 5, fail: 3 },
++  { family: 'CA', pass: 11, partial: 4, fail: 2 },
++  { family: 'CM', pass: 18, partial: 6, fail: 2 },
++  { family: 'CP', pass: 10, partial: 5, fail: 4 },
++  { family: 'IA', pass: 16, partial: 5, fail: 2 },
++  { family: 'IR', pass: 9, partial: 4, fail: 2 },
++  { family: 'MA', pass: 8, partial: 3, fail: 2 },
++  { family: 'MP', pass: 7, partial: 3, fail: 1 },
++  { family: 'PE', pass: 12, partial: 4, fail: 2 },
++  { family: 'PL', pass: 10, partial: 4, fail: 3 },
++  { family: 'RA', pass: 11, partial: 5, fail: 3 },
++  { family: 'SC', pass: 19, partial: 6, fail: 4 },
++  { family: 'SI', pass: 14, partial: 5, fail: 3 }
++]
++
++const GAPS: GapDatum[] = [
++  { type: 'coverage', label: 'Coverage Gaps', value: '27', trend: '+3 w/w' },
++  { type: 'qra', label: 'Missing QRA', value: '14', trend: '-2 w/w' },
++  { type: 'relation', label: 'Missing Relations', value: '22', trend: '+1 w/w' },
++  { type: 'drift', label: 'Config Drift', value: '9', trend: '+4 w/w' },
++  { type: 'evidence', label: 'Stale Evidence', value: '31', trend: '-6 w/w' }
++]
++
++const ALERTS: AlertDatum[] = [
++  { control_id: 'AC-2', severity: 'high', title: 'Account review cadence drifted', detail: 'Review interval exceeded 35 days', when: '2h ago' },
++  { control_id: 'AU-6', severity: 'medium', title: 'Audit retention mismatch', detail: 'Retention policy differs from baseline', when: '5h ago' },
++  { control_id: 'CM-3', severity: 'high', title: 'Unauthorized change pattern', detail: '3 unapproved config updates detected', when: '9h ago' },
++  { control_id: 'IR-4', severity: 'low', title: 'Playbook relation missing', detail: 'Incident procedure relation absent', when: '1d ago' },
++  { control_id: 'SC-7', severity: 'medium', title: 'Boundary control exception', detail: 'Firewall rule outside approved template', when: '1d ago' }
++]
++
++const RISKS: RiskDatum[] = [
++  { control_id: 'AC-17', name: 'Remote Access', family: 'AC', score: 92, status: 'Open' },
++  { control_id: 'AU-12', name: 'Audit Generation', family: 'AU', score: 89, status: 'Mitigating' },
++  { control_id: 'CM-6', name: 'Configuration Settings', family: 'CM', score: 88, status: 'Open' },
++  { control_id: 'RA-5', name: 'Vulnerability Monitoring', family: 'RA', score: 87, status: 'Open' },
++  { control_id: 'SC-13', name: 'Cryptographic Protection', family: 'SC', score: 86, status: 'Mitigating' },
++  { control_id: 'SI-4', name: 'System Monitoring', family: 'SI', score: 84, status: 'Open' },
++  { control_id: 'CP-9', name: 'System Backup', family: 'CP', score: 82, status: 'Accepted' },
++  { control_id: 'PE-3', name: 'Physical Access', family: 'PE', score: 80, status: 'Mitigating' },
++  { control_id: 'IR-5', name: 'Incident Monitoring', family: 'IR', score: 79, status: 'Open' },
++  { control_id: 'PL-2', name: 'System Security Plan', family: 'PL', score: 78, status: 'Accepted' }
++]
+ 
+ export default function PostureDashboard({ onNavigateToControl }: { onNavigateToControl?: (id: string) => void }) {
+   useRegisterAction('sparta-show-dashboard', { app: 'sparta-explorer', action: 'SHOW_DASHBOARD', label: 'Show Posture Dashboard', description: 'Display the security posture dashboard with coverage ring, drift alerts, and discrepancies' })
+-  return <div style={{ padding: 20, color: '#6b7280', fontSize: 12 }}>Posture Dashboard (coming soon)</div>
++  useRegisterAction('posture-select-framework', { app: 'sparta-explorer', action: 'POSTURE_SELECT_FRAMEWORK', label: 'Select framework', description: 'Select a framework donut to filter dashboard posture data' })
++  useRegisterAction('posture-select-family', { app: 'sparta-explorer', action: 'POSTURE_SELECT_FAMILY', label: 'Select family', description: 'Select a NIST 800-53 family bar for family detail panel' })
++  useRegisterAction('posture-view-gap', { app: 'sparta-explorer', action: 'POSTURE_VIEW_GAP', label: 'View gap item', description: 'Inspect posture gap analysis detail' })
++  useRegisterAction('posture-view-alert', { app: 'sparta-explorer', action: 'POSTURE_VIEW_ALERT', label: 'View drift alert', description: 'Inspect control drift alert detail' })
++  useRegisterAction('posture-view-risk', { app: 'sparta-explorer', action: 'POSTURE_VIEW_RISK', label: 'View risk control', description: 'Navigate to high-risk control detail' })
++
++  const [selectedFamily, setSelectedFamily] = useState<string | null>(null)
++  const overall = Math.round(FRAMEWORKS.reduce((acc, fw) => acc + fw.score, 0) / FRAMEWORKS.length)
++  const overallDelta = FRAMEWORKS.reduce((acc, fw) => acc + fw.delta, 0)
++
++  const donutArcs = useMemo(() => {
++    const pie = d3.pie<number>().value((d) => d).sort(null)
++    const arc = d3.arc<d3.PieArcDatum<number>>().innerRadius(18).outerRadius(28)
++    return FRAMEWORKS.map((fw) => {
++      const data = pie([fw.score, 100 - fw.score])
++      return {
++        key: fw.key,
++        label: fw.label,
++        score: fw.score,
++        delta: fw.delta,
++        paths: data.map((d, i) => ({
++          d: arc(d) ?? '',
++          fill: i === 0 ? (EMBRY.fw as Record<string, string>)[fw.key] : EMBRY.bg,
++          opacity: i === 0 ? 1 : 0.35
++        }))
++      }
++    })
++  }, [])
++
++  return (
++    <div style={{ background: EMBRY.bg, minHeight: '100%', padding: 16, display: 'grid', gap: 16 }}>
++      <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: 16 }}>
++        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
++          <div style={label}>Overall Posture Score</div>
++          <div style={{ ...heading, fontSize: 56, lineHeight: 1, marginTop: 10, textShadow: `0 0 18px ${EMBRY.green}` }}>{overall}</div>
++          <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 8, ...fwBadge }}>
++            <span aria-hidden>Δ</span>
++            <strong>{overallDelta >= 0 ? `+${overallDelta}` : overallDelta}</strong>
++            <span style={label}>vs last cycle</span>
++          </div>
++        </div>
++        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
++          <div style={{ ...heading, marginBottom: 10 }}>Framework Coverage</div>
++          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
++            {donutArcs.map((fw) => (
++              <button
++                key={fw.key}
++                type="button"
++                data-qid={`posture:donut:${fw.key}`}
++                data-qs-action={`POSTURE_SELECT_FRAMEWORK_${fw.key}`}
++                title={`Select ${fw.label} framework`}
++                style={{ ...card, background: EMBRY.bg, border: `1px solid ${EMBRY.bgCard}`, padding: 10, cursor: 'pointer' }}
++              >
++                <svg width="72" height="72" viewBox="-36 -36 72 72" role="img" aria-label={`${fw.label} ${fw.score}%`}>
++                  {fw.paths.map((p, idx) => (
++                    <path key={`${fw.key}-${idx}`} d={p.d} fill={p.fill} opacity={p.opacity} />
++                  ))}
++                  <text x="0" y="4" textAnchor="middle" style={{ ...label, fill: EMBRY.text, fontSize: 12 }}>
++                    {fw.score}%
++                  </text>
++                </svg>
++                <div style={{ ...label, marginTop: 4 }}>{fw.label}</div>
++              </button>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      <section style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
++        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
++          <div style={{ ...heading, marginBottom: 10 }}>NIST 800-53 Families</div>
++          <div style={{ display: 'grid', gap: 8 }}>
++            {FAMILIES.map((f) => {
++              const total = f.pass + f.partial + f.fail
++              return (
++                <button
++                  key={f.family}
++                  type="button"
++                  data-qid={`posture:family:${f.family}`}
++                  data-qs-action={`POSTURE_SELECT_FAMILY_${f.family}`}
++                  title={`Select family ${f.family}`}
++                  onClick={() => setSelectedFamily(f.family)}
++                  style={{ background: EMBRY.bg, border: 'none', textAlign: 'left', padding: 8, cursor: 'pointer' }}
++                >
++                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
++                    <span style={label}>{f.family}</span>
++                    <span style={label}>{total} controls</span>
++                  </div>
++                  <div style={{ display: 'grid', gridTemplateColumns: `${f.pass}fr ${f.partial}fr ${f.fail}fr`, height: 10, borderRadius: 6, overflow: 'hidden' }}>
++                    <div style={{ background: EMBRY.green }} aria-label="pass segment" />
++                    <div style={{ background: EMBRY.amber }} aria-label="partial segment" />
++                    <div style={{ background: EMBRY.red }} aria-label="fail segment" />
++                  </div>
++                </button>
++              )
++            })}
++          </div>
++          <div style={{ ...label, marginTop: 8 }}>Legend: Pass / Partial / Fail</div>
++        </div>
++        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
++          <div style={{ ...heading, marginBottom: 10 }}>Gap Analysis</div>
++          <div style={{ display: 'grid', gap: 8 }}>
++            {GAPS.map((g) => (
++              <button
++                key={g.type}
++                type="button"
++                data-qid={`posture:gap:${g.type}`}
++                data-qs-action={`POSTURE_VIEW_GAP_${g.type.toUpperCase()}`}
++                title={`View ${g.label}`}
++                style={{ background: EMBRY.bg, border: 'none', padding: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}
++              >
++                <span style={label}>{g.label}</span>
++                <span style={heading}>{g.value} <span style={label}>({g.trend})</span></span>
++              </button>
++            ))}
++          </div>
++        </div>
++      </section>
++
++      <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 16 }}>
++        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
++          <div style={{ ...heading, marginBottom: 10 }}>Drift Alerts</div>
++          <div style={{ display: 'grid', gap: 8 }}>
++            {ALERTS.map((a) => (
++              <button
++                key={a.control_id}
++                type="button"
++                data-qid={`posture:alert:${a.control_id}`}
++                data-qs-action={`POSTURE_VIEW_ALERT_${a.control_id}`}
++                title={`View alert ${a.control_id}`}
++                style={{ background: EMBRY.bg, border: 'none', padding: 10, textAlign: 'left', cursor: 'pointer' }}
++              >
++                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
++                  <span
++                    style={{
++                      ...glowDot,
++                      background: a.severity === 'high' ? EMBRY.red : a.severity === 'medium' ? EMBRY.amber : EMBRY.green,
++                      boxShadow: `0 0 8px ${a.severity === 'high' ? EMBRY.red : a.severity === 'medium' ? EMBRY.amber : EMBRY.green}`
++                    }}
++                  />
++                  <span style={label}>{a.control_id} — {a.title}</span>
++                </div>
++                <div style={{ ...label, marginTop: 4 }}>{a.detail} · {a.when} · Severity: {a.severity}</div>
++              </button>
++            ))}
++          </div>
++        </div>
++        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
++          <div style={{ ...heading, marginBottom: 10 }}>Top 10 Risk Controls</div>
++          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
++            <thead>
++              <tr>
++                <th style={{ ...label, textAlign: 'left', paddingBottom: 6 }}>Control</th>
++                <th style={{ ...label, textAlign: 'left', paddingBottom: 6 }}>Family</th>
++                <th style={{ ...label, textAlign: 'left', paddingBottom: 6 }}>Risk</th>
++                <th style={{ ...label, textAlign: 'left', paddingBottom: 6 }}>Status</th>
++              </tr>
++            </thead>
++            <tbody>
++              {RISKS.map((r) => (
++                <tr key={r.control_id}>
++                  <td colSpan={4} style={{ padding: 0 }}>
++                    <button
++                      type="button"
++                      data-qid={`posture:risk:${r.control_id}`}
++                      data-qs-action={`POSTURE_VIEW_RISK_${r.control_id}`}
++                      title={`View risk control ${r.control_id}`}
++                      onClick={() => onNavigateToControl?.(r.control_id)}
++                      style={{ width: '100%', background: EMBRY.bg, border: 'none', cursor: 'pointer', padding: 8, textAlign: 'left', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 6 }}
++                    >
++                      <span style={label}>{r.control_id} — {r.name}</span>
++                      <span style={label}>{r.family}</span>
++                      <span style={label}>{r.score}</span>
++                      <span style={label}>{r.status}</span>
++                    </button>
++                  </td>
++                </tr>
++              ))}
++            </tbody>
++          </table>
++        </div>
++      </section>
++
++      <aside style={{ ...card, background: EMBRY.bgCard, padding: 12 }}>
++        <div style={heading}>Family Flyout</div>
++        <div style={label}>{selectedFamily ? `Selected family: ${selectedFamily}` : 'Select a family bar to view detail.'}</div>
++      </aside>
++    </div>
++  )
+ }
+```
+```typescript
+import { useMemo, useState } from 'react'
+import * as d3 from 'd3'
+import { useRegisterAction } from '../../../hooks/useRegisterAction'
+import { EMBRY, card, label, heading, glowDot, fwBadge } from '../common/EmbryStyle'
+
+type FrameworkKey = 'NIST_CSF' | 'NIST_800_53' | 'CMMC' | 'ISO_27001' | 'SOC2' | 'CIS' | 'HIPAA' | 'PCI_DSS'
+type Severity = 'high' | 'medium' | 'low'
+
+type FrameworkDatum = {
+  key: FrameworkKey
+  label: string
+  score: number
+  delta: number
+}
+
+type FamilyDatum = {
+  family: string
+  pass: number
+  partial: number
+  fail: number
+}
+
+type GapDatum = {
+  type: 'coverage' | 'qra' | 'relation' | 'drift' | 'evidence'
+  label: string
+  value: string
+  trend: string
+}
+
+type AlertDatum = {
+  control_id: string
+  severity: Severity
+  title: string
+  detail: string
+  when: string
+}
+
+type RiskDatum = {
+  control_id: string
+  name: string
+  family: string
+  score: number
+  status: 'Open' | 'Mitigating' | 'Accepted'
+}
+
+const FRAMEWORKS: FrameworkDatum[] = [
+  { key: 'NIST_CSF', label: 'NIST CSF', score: 88, delta: 4 },
+  { key: 'NIST_800_53', label: 'NIST 800-53', score: 81, delta: 2 },
+  { key: 'CMMC', label: 'CMMC', score: 76, delta: -1 },
+  { key: 'ISO_27001', label: 'ISO 27001', score: 84, delta: 3 },
+  { key: 'SOC2', label: 'SOC 2', score: 79, delta: 1 },
+  { key: 'CIS', label: 'CIS', score: 86, delta: 5 },
+  { key: 'HIPAA', label: 'HIPAA', score: 74, delta: -2 },
+  { key: 'PCI_DSS', label: 'PCI DSS', score: 71, delta: 0 }
+]
+
+const FAMILIES: FamilyDatum[] = [
+  { family: 'AC', pass: 21, partial: 7, fail: 2 },
+  { family: 'AT', pass: 12, partial: 3, fail: 1 },
+  { family: 'AU', pass: 15, partial: 5, fail: 3 },
+  { family: 'CA', pass: 11, partial: 4, fail: 2 },
+  { family: 'CM', pass: 18, partial: 6, fail: 2 },
+  { family: 'CP', pass: 10, partial: 5, fail: 4 },
+  { family: 'IA', pass: 16, partial: 5, fail: 2 },
+  { family: 'IR', pass: 9, partial: 4, fail: 2 },
+  { family: 'MA', pass: 8, partial: 3, fail: 2 },
+  { family: 'MP', pass: 7, partial: 3, fail: 1 },
+  { family: 'PE', pass: 12, partial: 4, fail: 2 },
+  { family: 'PL', pass: 10, partial: 4, fail: 3 },
+  { family: 'RA', pass: 11, partial: 5, fail: 3 },
+  { family: 'SC', pass: 19, partial: 6, fail: 4 },
+  { family: 'SI', pass: 14, partial: 5, fail: 3 }
+]
+
+const GAPS: GapDatum[] = [
+  { type: 'coverage', label: 'Coverage Gaps', value: '27', trend: '+3 w/w' },
+  { type: 'qra', label: 'Missing QRA', value: '14', trend: '-2 w/w' },
+  { type: 'relation', label: 'Missing Relations', value: '22', trend: '+1 w/w' },
+  { type: 'drift', label: 'Config Drift', value: '9', trend: '+4 w/w' },
+  { type: 'evidence', label: 'Stale Evidence', value: '31', trend: '-6 w/w' }
+]
+
+const ALERTS: AlertDatum[] = [
+  { control_id: 'AC-2', severity: 'high', title: 'Account review cadence drifted', detail: 'Review interval exceeded 35 days', when: '2h ago' },
+  { control_id: 'AU-6', severity: 'medium', title: 'Audit retention mismatch', detail: 'Retention policy differs from baseline', when: '5h ago' },
+  { control_id: 'CM-3', severity: 'high', title: 'Unauthorized change pattern', detail: '3 unapproved config updates detected', when: '9h ago' },
+  { control_id: 'IR-4', severity: 'low', title: 'Playbook relation missing', detail: 'Incident procedure relation absent', when: '1d ago' },
+  { control_id: 'SC-7', severity: 'medium', title: 'Boundary control exception', detail: 'Firewall rule outside approved template', when: '1d ago' }
+]
+
+const RISKS: RiskDatum[] = [
+  { control_id: 'AC-17', name: 'Remote Access', family: 'AC', score: 92, status: 'Open' },
+  { control_id: 'AU-12', name: 'Audit Generation', family: 'AU', score: 89, status: 'Mitigating' },
+  { control_id: 'CM-6', name: 'Configuration Settings', family: 'CM', score: 88, status: 'Open' },
+  { control_id: 'RA-5', name: 'Vulnerability Monitoring', family: 'RA', score: 87, status: 'Open' },
+  { control_id: 'SC-13', name: 'Cryptographic Protection', family: 'SC', score: 86, status: 'Mitigating' },
+  { control_id: 'SI-4', name: 'System Monitoring', family: 'SI', score: 84, status: 'Open' },
+  { control_id: 'CP-9', name: 'System Backup', family: 'CP', score: 82, status: 'Accepted' },
+  { control_id: 'PE-3', name: 'Physical Access', family: 'PE', score: 80, status: 'Mitigating' },
+  { control_id: 'IR-5', name: 'Incident Monitoring', family: 'IR', score: 79, status: 'Open' },
+  { control_id: 'PL-2', name: 'System Security Plan', family: 'PL', score: 78, status: 'Accepted' }
+]
+
+export default function PostureDashboard({ onNavigateToControl }: { onNavigateToControl?: (id: string) => void }) {
+  useRegisterAction('sparta-show-dashboard', { app: 'sparta-explorer', action: 'SHOW_DASHBOARD', label: 'Show Posture Dashboard', description: 'Display the security posture dashboard with coverage ring, drift alerts, and discrepancies' })
+  useRegisterAction('posture-select-framework', { app: 'sparta-explorer', action: 'POSTURE_SELECT_FRAMEWORK', label: 'Select framework', description: 'Select a framework donut to filter dashboard posture data' })
+  useRegisterAction('posture-select-family', { app: 'sparta-explorer', action: 'POSTURE_SELECT_FAMILY', label: 'Select family', description: 'Select a NIST 800-53 family bar for family detail panel' })
+  useRegisterAction('posture-view-gap', { app: 'sparta-explorer', action: 'POSTURE_VIEW_GAP', label: 'View gap item', description: 'Inspect posture gap analysis detail' })
+  useRegisterAction('posture-view-alert', { app: 'sparta-explorer', action: 'POSTURE_VIEW_ALERT', label: 'View drift alert', description: 'Inspect control drift alert detail' })
+  useRegisterAction('posture-view-risk', { app: 'sparta-explorer', action: 'POSTURE_VIEW_RISK', label: 'View risk control', description: 'Navigate to high-risk control detail' })
+
+  const [selectedFamily, setSelectedFamily] = useState<string | null>(null)
+  const overall = Math.round(FRAMEWORKS.reduce((acc, fw) => acc + fw.score, 0) / FRAMEWORKS.length)
+  const overallDelta = FRAMEWORKS.reduce((acc, fw) => acc + fw.delta, 0)
+
+  const donutArcs = useMemo(() => {
+    const pie = d3.pie<number>().value((d) => d).sort(null)
+    const arc = d3.arc<d3.PieArcDatum<number>>().innerRadius(18).outerRadius(28)
+    return FRAMEWORKS.map((fw) => {
+      const data = pie([fw.score, 100 - fw.score])
+      return {
+        key: fw.key,
+        label: fw.label,
+        score: fw.score,
+        delta: fw.delta,
+        paths: data.map((d, i) => ({
+          d: arc(d) ?? '',
+          fill: i === 0 ? (EMBRY.fw as Record<string, string>)[fw.key] : EMBRY.bg,
+          opacity: i === 0 ? 1 : 0.35
+        }))
+      }
+    })
+  }, [])
+
+  return (
+    <div style={{ background: EMBRY.bg, minHeight: '100%', padding: 16, display: 'grid', gap: 16 }}>
+      <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: 16 }}>
+        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
+          <div style={label}>Overall Posture Score</div>
+          <div style={{ ...heading, fontSize: 56, lineHeight: 1, marginTop: 10, textShadow: `0 0 18px ${EMBRY.green}` }}>{overall}</div>
+          <div style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 8, ...fwBadge }}>
+            <span aria-hidden>Δ</span>
+            <strong>{overallDelta >= 0 ? `+${overallDelta}` : overallDelta}</strong>
+            <span style={label}>vs last cycle</span>
+          </div>
+        </div>
+        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
+          <div style={{ ...heading, marginBottom: 10 }}>Framework Coverage</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}>
+            {donutArcs.map((fw) => (
+              <button
+                key={fw.key}
+                type="button"
+                data-qid={`posture:donut:${fw.key}`}
+                data-qs-action={`POSTURE_SELECT_FRAMEWORK_${fw.key}`}
+                title={`Select ${fw.label} framework`}
+                style={{ ...card, background: EMBRY.bg, border: `1px solid ${EMBRY.bgCard}`, padding: 10, cursor: 'pointer' }}
+              >
+                <svg width="72" height="72" viewBox="-36 -36 72 72" role="img" aria-label={`${fw.label} ${fw.score}%`}>
+                  {fw.paths.map((p, idx) => (
+                    <path key={`${fw.key}-${idx}`} d={p.d} fill={p.fill} opacity={p.opacity} />
+                  ))}
+                  <text x="0" y="4" textAnchor="middle" style={{ ...label, fill: EMBRY.text, fontSize: 12 }}>
+                    {fw.score}%
+                  </text>
+                </svg>
+                <div style={{ ...label, marginTop: 4 }}>{fw.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
+        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
+          <div style={{ ...heading, marginBottom: 10 }}>NIST 800-53 Families</div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {FAMILIES.map((f) => {
+              const total = f.pass + f.partial + f.fail
+              return (
+                <button
+                  key={f.family}
+                  type="button"
+                  data-qid={`posture:family:${f.family}`}
+                  data-qs-action={`POSTURE_SELECT_FAMILY_${f.family}`}
+                  title={`Select family ${f.family}`}
+                  onClick={() => setSelectedFamily(f.family)}
+                  style={{ background: EMBRY.bg, border: 'none', textAlign: 'left', padding: 8, cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={label}>{f.family}</span>
+                    <span style={label}>{total} controls</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: `${f.pass}fr ${f.partial}fr ${f.fail}fr`, height: 10, borderRadius: 6, overflow: 'hidden' }}>
+                    <div style={{ background: EMBRY.green }} aria-label="pass segment" />
+                    <div style={{ background: EMBRY.amber }} aria-label="partial segment" />
+                    <div style={{ background: EMBRY.red }} aria-label="fail segment" />
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+          <div style={{ ...label, marginTop: 8 }}>Legend: Pass / Partial / Fail</div>
+        </div>
+        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
+          <div style={{ ...heading, marginBottom: 10 }}>Gap Analysis</div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {GAPS.map((g) => (
+              <button
+                key={g.type}
+                type="button"
+                data-qid={`posture:gap:${g.type}`}
+                data-qs-action={`POSTURE_VIEW_GAP_${g.type.toUpperCase()}`}
+                title={`View ${g.label}`}
+                style={{ background: EMBRY.bg, border: 'none', padding: 10, cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}
+              >
+                <span style={label}>{g.label}</span>
+                <span style={heading}>{g.value} <span style={label}>({g.trend})</span></span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: 16 }}>
+        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
+          <div style={{ ...heading, marginBottom: 10 }}>Drift Alerts</div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {ALERTS.map((a) => (
+              <button
+                key={a.control_id}
+                type="button"
+                data-qid={`posture:alert:${a.control_id}`}
+                data-qs-action={`POSTURE_VIEW_ALERT_${a.control_id}`}
+                title={`View alert ${a.control_id}`}
+                style={{ background: EMBRY.bg, border: 'none', padding: 10, textAlign: 'left', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span
+                    style={{
+                      ...glowDot,
+                      background: a.severity === 'high' ? EMBRY.red : a.severity === 'medium' ? EMBRY.amber : EMBRY.green,
+                      boxShadow: `0 0 8px ${a.severity === 'high' ? EMBRY.red : a.severity === 'medium' ? EMBRY.amber : EMBRY.green}`
+                    }}
+                  />
+                  <span style={label}>{a.control_id} — {a.title}</span>
+                </div>
+                <div style={{ ...label, marginTop: 4 }}>{a.detail} · {a.when} · Severity: {a.severity}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ ...card, background: EMBRY.bgCard, padding: 16 }}>
+          <div style={{ ...heading, marginBottom: 10 }}>Top 10 Risk Controls</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ ...label, textAlign: 'left', paddingBottom: 6 }}>Control</th>
+                <th style={{ ...label, textAlign: 'left', paddingBottom: 6 }}>Family</th>
+                <th style={{ ...label, textAlign: 'left', paddingBottom: 6 }}>Risk</th>
+                <th style={{ ...label, textAlign: 'left', paddingBottom: 6 }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {RISKS.map((r) => (
+                <tr key={r.control_id}>
+                  <td colSpan={4} style={{ padding: 0 }}>
+                    <button
+                      type="button"
+                      data-qid={`posture:risk:${r.control_id}`}
+                      data-qs-action={`POSTURE_VIEW_RISK_${r.control_id}`}
+                      title={`View risk control ${r.control_id}`}
+                      onClick={() => onNavigateToControl?.(r.control_id)}
+                      style={{ width: '100%', background: EMBRY.bg, border: 'none', cursor: 'pointer', padding: 8, textAlign: 'left', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 6 }}
+                    >
+                      <span style={label}>{r.control_id} — {r.name}</span>
+                      <span style={label}>{r.family}</span>
+                      <span style={label}>{r.score}</span>
+                      <span style={label}>{r.status}</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside style={{ ...card, background: EMBRY.bgCard, padding: 12 }}>
+        <div style={heading}>Family Flyout</div>
+        <div style={label}>{selectedFamily ? `Selected family: ${selectedFamily}` : 'Select a family bar to view detail.'}</div>
+      </aside>
+    </div>
+  )
+}
+```

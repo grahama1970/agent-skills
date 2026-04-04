@@ -1,0 +1,46 @@
+{
+  "groups": [
+    {
+      "id": "analysis",
+      "label": "Analysis",
+      "color": "#00ff88",
+      "tabs": [
+        {
+          "id": "diagnose",
+          "label": "Diagnose",
+          "shortcut": "1",
+          "voiceKeywords": ["diagnose", "diagnosis", "issues"],
+          "component": "DiagnosePage.qml"
+        },
+        {
+          "id": "sessions",
+          "label": "Sessions",
+          "shortcut": "2",
+          "voiceKeywords": ["sessions", "session list", "conversations"],
+          "component": "SessionsPage.qml"
+        }
+      ]
+    },
+    {
+      "id": "convergence",
+      "label": "Convergence",
+      "color": "#44aaff",
+      "tabs": [
+        {
+          "id": "converge",
+          "label": "Converge",
+          "shortcut": "3",
+          "voiceKeywords": ["converge", "convergence", "rerun"],
+          "component": "ConvergePage.qml"
+        },
+        {
+          "id": "promote",
+          "label": "Promote",
+          "shortcut": "4",
+          "voiceKeywords": ["promote", "QRA", "nightly"],
+          "component": "PromotePage.qml"
+        }
+      ]
+    }
+  ]
+}

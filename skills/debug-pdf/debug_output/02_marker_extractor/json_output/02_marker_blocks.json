@@ -1,0 +1,7239 @@
+{
+  "timestamp": "2026-01-30T08:25:04.808240",
+  "run_id": "a97062ed47fb42fb9b16362b1ad95605",
+  "source_pdf": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/repro_failed.pdf",
+  "status": "Completed",
+  "block_count": 277,
+  "suspicious_block_count": 0,
+  "blocks": [
+    {
+      "id": "block-000001",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        30.649999618530273,
+        325.0939636230469,
+        55.38199996948242
+      ],
+      "text": "False-Positive Table Test Patterns",
+      "block_type": "Text",
+      "font_size": 18.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 18.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000002",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        77.0999984741211,
+        129.3560028076172,
+        93.58799743652344
+      ],
+      "text": "[numbered-list]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000003",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        95.32499694824219,
+        292.5859375,
+        107.69100189208984
+      ],
+      "text": "Numbered list with aligned numbers (triggers table detection)",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000004",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        125.00000762939453,
+        362.0,
+        137.49000549316406
+      ],
+      "text": "1.  First item in the list that has some longer text",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000005",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        136.64068603515625,
+        302.0,
+        149.1306915283203
+      ],
+      "text": "2.  Second item that continues the pattern",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000006",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        148.2813720703125,
+        278.0,
+        160.77137756347656
+      ],
+      "text": "3.  Third item with similar formatting",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000007",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        159.92205810546875,
+        290.0,
+        172.4120635986328
+      ],
+      "text": "4.  Fourth item to establish the pattern",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000008",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        171.56268310546875,
+        296.0,
+        184.0526885986328
+      ],
+      "text": "5.  Fifth and final item in this sequence",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000009",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        226.48001098632812,
+        131.36000061035156,
+        242.96800231933594
+      ],
+      "text": "[address-block]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000010",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        244.7050018310547,
+        194.0449676513672,
+        257.0710144042969
+      ],
+      "text": "Multi-line address with aligned fields",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000011",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        274.3800048828125,
+        110.0,
+        286.8700256347656
+      ],
+      "text": "John Smith",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000012",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        286.0206604003906,
+        188.0,
+        298.51068115234375
+      ],
+      "text": "Director of Engineering",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000013",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        297.6613464355469,
+        146.0,
+        310.1513671875
+      ],
+      "text": "Acme Corporation",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000014",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        309.3020324707031,
+        206.0,
+        321.79205322265625
+      ],
+      "text": "123 Main Street, Suite 456",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000015",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        320.9427185058594,
+        188.0,
+        333.4327392578125
+      ],
+      "text": "San Francisco, CA 94102",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000016",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        332.5834045410156,
+        128.0,
+        345.07342529296875
+      ],
+      "text": "United States",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000017",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        363.3699951171875,
+        114.69198608398438,
+        379.8580017089844
+      ],
+      "text": "[code-block]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000018",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        381.5950012207031,
+        215.06895446777344,
+        393.96099853515625
+      ],
+      "text": "Indented code with column-like alignment",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000019",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        411.2699890136719,
+        302.0,
+        423.760009765625
+      ],
+      "text": "def process_data(input_file, output_file):",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000020",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        422.9106750488281,
+        242.0,
+        435.40069580078125
+      ],
+      "text": "data = load_file(input_file)",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000021",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        434.5513610839844,
+        218.0,
+        447.0413818359375
+      ],
+      "text": "result = transform(data)",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000022",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        446.1920471191406,
+        254.0,
+        458.68206787109375
+      ],
+      "text": "save_file(result, output_file)",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000023",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        457.83270263671875,
+        152.0,
+        470.3227233886719
+      ],
+      "text": "return result",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000024",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        512.75,
+        138.031982421875,
+        529.238037109375
+      ],
+      "text": "[signature-block]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000025",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        530.9750366210938,
+        245.57894897460938,
+        543.3410034179688
+      ],
+      "text": "Email/document signature with name/title/contact",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000026",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        560.6499633789062,
+        128.0,
+        573.1399536132812
+      ],
+      "text": "Best regards,",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000027",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        583.9313354492188,
+        98.0,
+        596.4213256835938
+      ],
+      "text": "Jane Doe",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000028",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        595.572021484375,
+        176.0,
+        608.06201171875
+      ],
+      "text": "Senior Vice President",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000029",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        607.2127075195312,
+        170.0,
+        619.7026977539062
+      ],
+      "text": "jane.doe@company.com",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000030",
+      "page": 0,
+      "page_idx": 0,
+      "bbox": [
+        50.0,
+        618.8533935546875,
+        152.0,
+        631.3433837890625
+      ],
+      "text": "+1 (555) 123-4567",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000031",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        37.099998474121094,
+        138.01998901367188,
+        53.5880012512207
+      ],
+      "text": "[key-value-pairs]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000032",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        55.32500076293945,
+        195.0799560546875,
+        67.69100189208984
+      ],
+      "text": "Key: Value patterns that look tabular",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000033",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        85.00000762939453,
+        236.0,
+        97.49000549316406
+      ],
+      "text": "Document ID:     DOC-2024-00142",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000034",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        96.64069366455078,
+        212.0,
+        109.13069152832031
+      ],
+      "text": "Author:          John Smith",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000035",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        108.28137969970703,
+        248.0,
+        120.77137756347656
+      ],
+      "text": "Created:         January 15, 2024",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000036",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        119.92206573486328,
+        248.0,
+        132.4120635986328
+      ],
+      "text": "Modified:        January 23, 2024",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000037",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        131.56268310546875,
+        224.0,
+        144.0526885986328
+      ],
+      "text": "Status:          Under Review",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000038",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        143.203369140625,
+        254.0,
+        155.69337463378906
+      ],
+      "text": "Classification:  Internal Use Only",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000039",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        173.99002075195312,
+        112.68798828125,
+        190.47801208496094
+      ],
+      "text": "[toc-entries]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000040",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        192.2150115966797,
+        197.0779571533203,
+        204.5810089111328
+      ],
+      "text": "Table of contents with dotted leaders",
+      "block_type": "SectionHeader",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": true,
+      "header_confidence": 0.65,
+      "header_level": 2,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000041",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        221.8900146484375,
+        314.0,
+        234.38002014160156
+      ],
+      "text": "1. Introduction .......................... 1",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000042",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        233.53070068359375,
+        314.0,
+        246.0207061767578
+      ],
+      "text": "2. Background ............................ 5",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000043",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        245.17132568359375,
+        314.0,
+        257.6613464355469
+      ],
+      "text": "3. Methodology .......................... 12",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000044",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        256.81201171875,
+        314.0,
+        269.3020324707031
+      ],
+      "text": "4. Results .............................. 28",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000045",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        268.45269775390625,
+        314.0,
+        280.9427185058594
+      ],
+      "text": "5. Discussion ........................... 45",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000046",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        280.0933837890625,
+        314.0,
+        292.5834045410156
+      ],
+      "text": "6. Conclusions .......................... 52",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000047",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        291.73406982421875,
+        314.0,
+        304.2240905761719
+      ],
+      "text": "References .............................. 55",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.65,
+      "header_level": 2,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000048",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        298.3900146484375,
+        116.02398681640625,
+        314.8780212402344
+      ],
+      "text": "[receipt-text]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000049",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        316.6150207519531,
+        150.5389862060547,
+        328.98101806640625
+      ],
+      "text": "Receipt-style aligned text",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000050",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        346.2900085449219,
+        218.0,
+        358.780029296875
+      ],
+      "text": "Coffee, Large          $4.50",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000051",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        357.9306640625,
+        218.0,
+        370.4206848144531
+      ],
+      "text": "Bagel w/ Cream Cheese  $3.25",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000052",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        369.57135009765625,
+        218.0,
+        382.0613708496094
+      ],
+      "text": "Orange Juice           $2.75",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000053",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        381.2120361328125,
+        218.0,
+        393.7020568847656
+      ],
+      "text": "------",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000054",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        392.85272216796875,
+        224.0,
+        405.3427429199219
+      ],
+      "text": "Subtotal               $10.50",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000055",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        404.4933776855469,
+        218.0,
+        416.9833984375
+      ],
+      "text": "Tax (8.5%)             $0.89",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000056",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        416.1340637207031,
+        218.0,
+        428.62408447265625
+      ],
+      "text": "------",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000057",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        427.7747497558594,
+        224.0,
+        440.2647705078125
+      ],
+      "text": "Total                  $11.39",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000058",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        410.3000183105469,
+        112.67599487304688,
+        426.78802490234375
+      ],
+      "text": "[form-fields]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000059",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        428.5250244140625,
+        167.0269775390625,
+        440.8910217285156
+      ],
+      "text": "Form-like text with underlines",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000060",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        458.1999816894531,
+        224.0,
+        470.69000244140625
+      ],
+      "text": "Name: _______________________",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000061",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        481.4813537597656,
+        230.0,
+        493.97137451171875
+      ],
+      "text": "Date of Birth: _______________",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000062",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        504.76275634765625,
+        224.0,
+        517.2527465820312
+      ],
+      "text": "Address: ____________________",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000063",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        509.7200012207031,
+        158.03598022460938,
+        526.2080078125
+      ],
+      "text": "[toc-with-pagenums]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5066163,
+      "font_color_bucket": "blue",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5066163,
+        "color_bucket": "blue"
+      }
+    },
+    {
+      "id": "block-000064",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        527.9450073242188,
+        324.63494873046875,
+        540.3109741210938
+      ],
+      "text": "TOC entries with page numbers that get detected as section headers",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000065",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        528.0440673828125,
+        266.0,
+        540.5340576171875
+      ],
+      "text": "City: _________ State: __ ZIP: _____",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000066",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        551.325439453125,
+        176.0,
+        563.8154296875
+      ],
+      "text": "Phone: (___) ___-____",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000067",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        557.6199951171875,
+        470.0,
+        570.1099853515625
+      ],
+      "text": "1. Operation Blockbuster.............................................4",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000068",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        569.2606811523438,
+        482.0,
+        581.7506713867188
+      ],
+      "text": "2. [Wiper] WhiskeyAlfa.................................................7",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000069",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        580.9013671875,
+        68.0,
+        593.391357421875
+      ],
+      "text": "2.1",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000070",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        592.5420532226562,
+        560.0,
+        605.0320434570312
+      ],
+      "text": "WhiskeyAlfa-One......................................................................",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000071",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        604.1826782226562,
+        74.0,
+        616.6726684570312
+      ],
+      "text": "...9",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000072",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        615.8234252929688,
+        68.0,
+        628.3134155273438
+      ],
+      "text": "2.2",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000073",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        627.4640502929688,
+        560.0,
+        639.9540405273438
+      ],
+      "text": "WhiskeyAlfa-Two......................................................................",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000074",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        639.104736328125,
+        68.0,
+        651.5947265625
+      ],
+      "text": ".10",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000075",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        650.7454223632812,
+        464.0,
+        663.2354125976562
+      ],
+      "text": "3. [Wiper] WhiskeyBravo........................................... 17",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000076",
+      "page": 1,
+      "page_idx": 1,
+      "bbox": [
+        50.0,
+        662.3861083984375,
+        518.0,
+        674.8760986328125
+      ],
+      "text": "4. Conclusions............................................................. 43",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 8,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 8,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000078",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        102.6199722290039,
+        166.4600067138672,
+        121.89797973632812
+      ],
+      "text": "[missing-columns]",
+      "block_type": "Text",
+      "font_size": 14.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 14.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000079",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        126.89997863769531,
+        299.8499450683594,
+        140.43997192382812
+      ],
+      "text": "Rows with fewer cells than header (Word PDF import bug)",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 2,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 2,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000080",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        149.16998291015625,
+        51.0,
+        161.56298828125
+      ],
+      "text": "ID",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000085",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        167.12498474121094,
+        57.01200485229492,
+        179.49098205566406
+      ],
+      "text": "001",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000090",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        185.12498474121094,
+        57.01200485229492,
+        197.49098205566406
+      ],
+      "text": "002",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000093",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        203.12498474121094,
+        57.01200485229492,
+        215.49098205566406
+      ],
+      "text": "003",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000097",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        221.12498474121094,
+        57.01200485229492,
+        233.49098205566406
+      ],
+      "text": "004",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000098",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        239.12498474121094,
+        57.01200485229492,
+        251.49098205566406
+      ],
+      "text": "005",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000103",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        287.41998291015625,
+        135.33799743652344,
+        306.697998046875
+      ],
+      "text": "[ragged-rows]",
+      "block_type": "Text",
+      "font_size": 14.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 14.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000104",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        311.6999816894531,
+        214.83998107910156,
+        325.239990234375
+      ],
+      "text": "Completely inconsistent column counts",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 2,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 2,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000105",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        333.9700012207031,
+        48.49800109863281,
+        346.3630065917969
+      ],
+      "text": "A",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000109",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        351.9250183105469,
+        47.00400161743164,
+        364.291015625
+      ],
+      "text": "1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000113",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        369.9250183105469,
+        47.00400161743164,
+        382.291015625
+      ],
+      "text": "1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000115",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        387.9250183105469,
+        47.00400161743164,
+        400.291015625
+      ],
+      "text": "1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000119",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        405.9250183105469,
+        47.00400161743164,
+        418.291015625
+      ],
+      "text": "1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000120",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        423.9250183105469,
+        47.00400161743164,
+        436.291015625
+      ],
+      "text": "1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000124",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        472.2200012207031,
+        173.47401428222656,
+        491.4980163574219
+      ],
+      "text": "[empty-cells-chaos]",
+      "block_type": "Text",
+      "font_size": 14.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 14.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000125",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        496.5,
+        215.38998413085938,
+        510.0400085449219
+      ],
+      "text": "Random empty cells breaking structure",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 2,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 2,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000126",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        518.77001953125,
+        61.50300216674805,
+        531.1630249023438
+      ],
+      "text": "Col1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000132",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        572.7250366210938,
+        65.01300048828125,
+        585.0910034179688
+      ],
+      "text": "Value",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000135",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        639.02001953125,
+        176.56800842285156,
+        658.2979736328125
+      ],
+      "text": "[merged-simulation]",
+      "block_type": "Text",
+      "font_size": 14.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 14.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000136",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        663.2999877929688,
+        240.40997314453125,
+        676.8400268554688
+      ],
+      "text": "Simulated merged cells with repeated values",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 2,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 2,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000137",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        685.5700073242188,
+        81.00599670410156,
+        697.9630126953125
+      ],
+      "text": "Category",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000141",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        42.0,
+        703.5250244140625,
+        86.010009765625,
+        715.8909912109375
+      ],
+      "text": "Electronics",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000077",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        174.968994140625,
+        40.73999786376953,
+        437.0309143066406,
+        65.5260009765625
+      ],
+      "text": "Malformed Table Test Patterns",
+      "block_type": "Text",
+      "font_size": 18.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 18.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000081",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        150.0,
+        149.16998291015625,
+        174.5070037841797,
+        161.56298828125
+      ],
+      "text": "Name",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000082",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        258.0,
+        149.16998291015625,
+        308.0039978027344,
+        161.56298828125
+      ],
+      "text": "Department",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000083",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        366.0,
+        149.16998291015625,
+        393.5039978027344,
+        161.56298828125
+      ],
+      "text": "Status",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000084",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        474.0,
+        149.16998291015625,
+        499.0019836425781,
+        161.56298828125
+      ],
+      "text": "Notes",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.3,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000086",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        150.0,
+        167.12498474121094,
+        169.50299072265625,
+        179.49098205566406
+      ],
+      "text": "Alice",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000087",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        258.0,
+        167.12498474121094,
+        306.02398681640625,
+        179.49098205566406
+      ],
+      "text": "Engineering",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000088",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        366.0,
+        167.12498474121094,
+        390.5069885253906,
+        179.49098205566406
+      ],
+      "text": "Active",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000089",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        474.0,
+        167.12498474121094,
+        516.5159912109375,
+        179.49098205566406
+      ],
+      "text": "Team lead",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000091",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        150.0,
+        185.12498474121094,
+        166.010986328125,
+        197.49098205566406
+      ],
+      "text": "Bob",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000092",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        258.0,
+        185.12498474121094,
+        297.5099792480469,
+        197.49098205566406
+      ],
+      "text": "Marketing",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000094",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        150.0,
+        203.12498474121094,
+        171.50099182128906,
+        215.49098205566406
+      ],
+      "text": "Carol",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000095",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        258.0,
+        203.12498474121094,
+        280.5090026855469,
+        215.49098205566406
+      ],
+      "text": "Sales",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000096",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        366.0,
+        203.12498474121094,
+        390.5069885253906,
+        215.49098205566406
+      ],
+      "text": "Active",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000099",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        150.0,
+        239.12498474121094,
+        165.50698852539062,
+        251.49098205566406
+      ],
+      "text": "Eve",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000100",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        258.0,
+        239.12498474121094,
+        270.9959716796875,
+        251.49098205566406
+      ],
+      "text": "HR",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000101",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        366.0,
+        239.12498474121094,
+        397.0140075683594,
+        251.49098205566406
+      ],
+      "text": "Inactive",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000102",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        474.0,
+        239.12498474121094,
+        510.01800537109375,
+        251.49098205566406
+      ],
+      "text": "On leave",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000106",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        333.9700012207031,
+        183.4980010986328,
+        346.3630065917969
+      ],
+      "text": "B",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000107",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        333.9700012207031,
+        318.49798583984375,
+        346.3630065917969
+      ],
+      "text": "C",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000108",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        333.9700012207031,
+        453.49798583984375,
+        346.3630065917969
+      ],
+      "text": "D",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000110",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        351.9250183105469,
+        182.00399780273438,
+        364.291015625
+      ],
+      "text": "2",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000111",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        351.9250183105469,
+        317.0039978027344,
+        364.291015625
+      ],
+      "text": "3",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000112",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        351.9250183105469,
+        452.0039978027344,
+        364.291015625
+      ],
+      "text": "4",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000114",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        369.9250183105469,
+        182.00399780273438,
+        382.291015625
+      ],
+      "text": "2",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000116",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        387.9250183105469,
+        182.00399780273438,
+        400.291015625
+      ],
+      "text": "2",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000117",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        387.9250183105469,
+        317.0039978027344,
+        400.291015625
+      ],
+      "text": "3",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000118",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        387.9250183105469,
+        452.0039978027344,
+        400.291015625
+      ],
+      "text": "4",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000121",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        423.9250183105469,
+        182.00399780273438,
+        436.291015625
+      ],
+      "text": "2",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000122",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        423.9250183105469,
+        317.0039978027344,
+        436.291015625
+      ],
+      "text": "3",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000123",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        423.9250183105469,
+        452.0039978027344,
+        436.291015625
+      ],
+      "text": "4",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000127",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        518.77001953125,
+        196.50299072265625,
+        531.1630249023438
+      ],
+      "text": "Col2",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000128",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        518.77001953125,
+        331.50299072265625,
+        531.1630249023438
+      ],
+      "text": "Col3",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000129",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        518.77001953125,
+        466.50299072265625,
+        531.1630249023438
+      ],
+      "text": "Col4",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000130",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        536.7250366210938,
+        196.00799560546875,
+        549.0910034179688
+      ],
+      "text": "Data",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000131",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        536.7250366210938,
+        467.50201416015625,
+        549.0910034179688
+      ],
+      "text": "More",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000133",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        572.7250366210938,
+        355.0199890136719,
+        585.0910034179688
+      ],
+      "text": "Something",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000134",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        590.7250366210938,
+        351.0150146484375,
+        603.0910034179688
+      ],
+      "text": "Only here",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000138",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        685.5700073242188,
+        195.50399780273438,
+        697.9630126953125
+      ],
+      "text": "Item",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000139",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        685.5700073242188,
+        324.0060119628906,
+        697.9630126953125
+      ],
+      "text": "Q1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000140",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        685.5700073242188,
+        459.0060119628906,
+        697.9630126953125
+      ],
+      "text": "Q2",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000142",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        703.5250244140625,
+        207.5189971923828,
+        715.8909912109375
+      ],
+      "text": "Phones",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000143",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        703.5250244140625,
+        327.0119934082031,
+        715.8909912109375
+      ],
+      "text": "100",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000144",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        703.5250244140625,
+        462.0119934082031,
+        715.8909912109375
+      ],
+      "text": "120",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000145",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        177.0,
+        721.5250244140625,
+        206.510986328125,
+        733.8909912109375
+      ],
+      "text": "Tablets",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000146",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        312.0,
+        721.5250244140625,
+        322.00799560546875,
+        733.8909912109375
+      ],
+      "text": "50",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000147",
+      "page": 2,
+      "page_idx": 2,
+      "bbox": [
+        447.0,
+        721.5250244140625,
+        457.00799560546875,
+        733.8909912109375
+      ],
+      "text": "60",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000151",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        62.32500076293945,
+        78.00900268554688,
+        74.69100189208984
+      ],
+      "text": "Furniture",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000158",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        128.61997985839844,
+        205.3520050048828,
+        147.89797973632812
+      ],
+      "text": "[numeric-alignment-hell]",
+      "block_type": "Text",
+      "font_size": 14.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 14.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000159",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        152.8999786376953,
+        188.96998596191406,
+        166.43997192382812
+      ],
+      "text": "Numbers that don't align properly",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 2,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 2,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000160",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        175.16998291015625,
+        60.50400161743164,
+        187.56298828125
+      ],
+      "text": "Item",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000164",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        193.12498474121094,
+        78.51300048828125,
+        205.49098205566406
+      ],
+      "text": "Widget A",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000168",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        211.12498474121094,
+        78.51300048828125,
+        223.49098205566406
+      ],
+      "text": "Widget B",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000172",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        229.12498474121094,
+        71.52000427246094,
+        241.49098205566406
+      ],
+      "text": "Gadget",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000176",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        247.12498474121094,
+        64.50900268554688,
+        259.4909973144531
+      ],
+      "text": "Thing",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000180",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        295.41998291015625,
+        167.2300262451172,
+        314.697998046875
+      ],
+      "text": "[unicode-in-tables]",
+      "block_type": "Text",
+      "font_size": 14.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 14.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000181",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        319.6999816894531,
+        235.40997314453125,
+        333.239990234375
+      ],
+      "text": "Unicode characters breaking table structure",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 2,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 2,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000182",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        341.9700012207031,
+        66.50700378417969,
+        354.3630065917969
+      ],
+      "text": "Name",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000185",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        359.9250183105469,
+        65.01300048828125,
+        372.291015625
+      ],
+      "text": "Alpha",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000188",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        377.9250183105469,
+        60.513004302978516,
+        390.291015625
+      ],
+      "text": "Beta",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000191",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        395.9250183105469,
+        67.5060043334961,
+        408.291015625
+      ],
+      "text": "Sigma",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000194",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        413.9250183105469,
+        68.01000213623047,
+        426.291015625
+      ],
+      "text": "Infinity",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000197",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        42.0,
+        431.9250183105469,
+        65.4990005493164,
+        444.291015625
+      ],
+      "text": "Arrow",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000148",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        177.0,
+        44.32500076293945,
+        209.02198791503906,
+        56.691001892089844
+      ],
+      "text": "Laptops",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000149",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        312.0,
+        44.32500076293945,
+        322.00799560546875,
+        56.691001892089844
+      ],
+      "text": "30",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000150",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        447.0,
+        44.32500076293945,
+        457.00799560546875,
+        56.691001892089844
+      ],
+      "text": "40",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000152",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        177.0,
+        62.32500076293945,
+        202.0019989013672,
+        74.69100189208984
+      ],
+      "text": "Desks",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000153",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        312.0,
+        62.32500076293945,
+        322.00799560546875,
+        74.69100189208984
+      ],
+      "text": "20",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000154",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        447.0,
+        62.32500076293945,
+        457.00799560546875,
+        74.69100189208984
+      ],
+      "text": "25",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000155",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        177.0,
+        80.32499694824219,
+        203.00099182128906,
+        92.69100189208984
+      ],
+      "text": "Chairs",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000156",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        312.0,
+        80.32499694824219,
+        322.00799560546875,
+        92.69100189208984
+      ],
+      "text": "40",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000157",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        447.0,
+        80.32499694824219,
+        457.00799560546875,
+        92.69100189208984
+      ],
+      "text": "45",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000161",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        177.0,
+        175.16998291015625,
+        213.50396728515625,
+        187.56298828125
+      ],
+      "text": "Quantity",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000162",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        312.0,
+        175.16998291015625,
+        334.0140075683594,
+        187.56298828125
+      ],
+      "text": "Price",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000163",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        447.0,
+        175.16998291015625,
+        468.5010070800781,
+        187.56298828125
+      ],
+      "text": "Total",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000165",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        177.0,
+        193.12498474121094,
+        182.00399780273438,
+        205.49098205566406
+      ],
+      "text": "5",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000166",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        312.0,
+        193.12498474121094,
+        339.5220031738281,
+        205.49098205566406
+      ],
+      "text": "$10.00",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000167",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        447.0,
+        193.12498474121094,
+        474.5220031738281,
+        205.49098205566406
+      ],
+      "text": "$50.00",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000169",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        177.0,
+        211.12498474121094,
+        192.01199340820312,
+        223.49098205566406
+      ],
+      "text": "123",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000170",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        312.0,
+        211.12498474121094,
+        334.51800537109375,
+        223.49098205566406
+      ],
+      "text": "$0.50",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000171",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        447.0,
+        211.12498474121094,
+        474.5220031738281,
+        223.49098205566406
+      ],
+      "text": "$61.50",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000173",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        177.0,
+        229.12498474121094,
+        182.00399780273438,
+        241.49098205566406
+      ],
+      "text": "1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000174",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        312.0,
+        229.12498474121094,
+        352.0320129394531,
+        241.49098205566406
+      ],
+      "text": "$1,234.56",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000175",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        447.0,
+        229.12498474121094,
+        487.0320129394531,
+        241.49098205566406
+      ],
+      "text": "$1,234.56",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000177",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        177.0,
+        247.12498474121094,
+        202.01998901367188,
+        259.4909973144531
+      ],
+      "text": "10000",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000178",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        312.0,
+        247.12498474121094,
+        334.51800537109375,
+        259.4909973144531
+      ],
+      "text": "$0.01",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000179",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        447.0,
+        247.12498474121094,
+        479.5260009765625,
+        259.4909973144531
+      ],
+      "text": "$100.00",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000183",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        222.0,
+        341.9700012207031,
+        254.50799560546875,
+        354.3630065917969
+      ],
+      "text": "Symbol",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.3,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000184",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        402.0,
+        341.9700012207031,
+        451.5090026855469,
+        354.3630065917969
+      ],
+      "text": "Description",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 16,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 16,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000187",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        402.0,
+        359.9250183105469,
+        442.0050354003906,
+        372.291015625
+      ],
+      "text": "First letter",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000186",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        222.0,
+        360.510009765625,
+        227.6790008544922,
+        372.23699951171875
+      ],
+      "text": "\u03b1",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000190",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        402.0,
+        377.9250183105469,
+        455.02801513671875,
+        390.291015625
+      ],
+      "text": "Second letter",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000189",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        222.0,
+        378.510009765625,
+        226.9409942626953,
+        390.23699951171875
+      ],
+      "text": "\u03b2",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000193",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        402.0,
+        395.9250183105469,
+        455.02801513671875,
+        408.291015625
+      ],
+      "text": "Sum notation",
+      "block_type": "SectionHeader",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.65,
+      "header_level": 2,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000192",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        222.0,
+        396.510009765625,
+        227.3280029296875,
+        408.23699951171875
+      ],
+      "text": "\u03a3",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000196",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        402.0,
+        413.9250183105469,
+        448.52996826171875,
+        426.291015625
+      ],
+      "text": "Unbounded",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000195",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        222.0,
+        414.510009765625,
+        228.41700744628906,
+        426.23699951171875
+      ],
+      "text": "\u221e",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000199",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        402.0,
+        431.9250183105469,
+        437.5049743652344,
+        444.291015625
+      ],
+      "text": "Direction",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000198",
+      "page": 3,
+      "page_idx": 3,
+      "bbox": [
+        222.0,
+        432.510009765625,
+        230.88299560546875,
+        444.23699951171875
+      ],
+      "text": "\u2192",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000200",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        30.649999618530273,
+        260.0780029296875,
+        55.38199996948242
+      ],
+      "text": "Cursed Text Test Patterns",
+      "block_type": "Text",
+      "font_size": 18.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 18.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000201",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        77.0999984741211,
+        102.01998901367188,
+        93.58799743652344
+      ],
+      "text": "[ligatures]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 11750733,
+      "font_color_bucket": "red",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 11750733,
+        "color_bucket": "red"
+      }
+    },
+    {
+      "id": "block-000202",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        95.32499694824219,
+        228.08294677734375,
+        107.69100189208984
+      ],
+      "text": "Ligature characters that break text extraction",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000203",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        125.0,
+        324.5799255371094,
+        138.74000549316406
+      ],
+      "text": "The officefficials were fi nding it diffi cult to handle the affl uent",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000204",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        139.7705078125,
+        341.7899475097656,
+        153.51051330566406
+      ],
+      "text": "fi nancial matters effi ciently. The effl orescence of fi nesse in their",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000205",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        154.541015625,
+        321.7699279785156,
+        168.28102111816406
+      ],
+      "text": "offi cial duties was insufficient for the affl icted circumstances.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000206",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        247.88998413085938,
+        130.03997802734375,
+        264.37799072265625
+      ],
+      "text": "[math-notation]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 11750733,
+      "font_color_bucket": "red",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 11750733,
+        "color_bucket": "red"
+      }
+    },
+    {
+      "id": "block-000207",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        266.114990234375,
+        191.05697631835938,
+        278.4809875488281
+      ],
+      "text": "Mathematical symbols and notation",
+      "block_type": "SectionHeader",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": true,
+      "header_confidence": 0.65,
+      "header_level": 2,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000208",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        295.7900085449219,
+        195.57998657226562,
+        309.5299987792969
+      ],
+      "text": "Given f(x) = x2 + 2x + 1, find f'(x).",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000209",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        325.33099365234375,
+        175.2999725341797,
+        339.07098388671875
+      ],
+      "text": "The solution is: f'(x) = 2x + 2",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000210",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        354.87200927734375,
+        219.72996520996094,
+        368.61199951171875
+      ],
+      "text": "For the integral: ??^? e^(-x2) dx = ??/2",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000211",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        363.7200012207031,
+        167.3599853515625,
+        380.2080078125
+      ],
+      "text": "[subscript-superscript]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 11750733,
+      "font_color_bucket": "red",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 11750733,
+        "color_bucket": "red"
+      }
+    },
+    {
+      "id": "block-000212",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        381.94500732421875,
+        212.053955078125,
+        394.3110046386719
+      ],
+      "text": "Chemical formulas and footnote markers",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000213",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        384.4129943847656,
+        193.4199676513672,
+        398.1529846191406
+      ],
+      "text": "And the sum: ????? i = n(n+1)/2",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000214",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        411.6199951171875,
+        288.949951171875,
+        425.3599853515625
+      ],
+      "text": "Water (H?O) reacts with carbon dioxide (CO?) to form",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000215",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        426.3905029296875,
+        312.85992431640625,
+        440.1304931640625
+      ],
+      "text": "carbonic acid (H?CO?)1. The reaction proceeds as follows2:",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000216",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        455.9314880371094,
+        146.97999572753906,
+        469.6714782714844
+      ],
+      "text": "H?O + CO? ? H?CO?",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000217",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        485.4725036621094,
+        275.2299499511719,
+        499.2124938964844
+      ],
+      "text": "The equilibrium constant K? = 4.3 \u00d7 10?? at 25\u00b0C3.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000218",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        493.2900085449219,
+        136.68800354003906,
+        509.77801513671875
+      ],
+      "text": "[lookalike-chars]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 11750733,
+      "font_color_bucket": "red",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 11750733,
+        "color_bucket": "red"
+      }
+    },
+    {
+      "id": "block-000219",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        511.5150146484375,
+        262.804931640625,
+        523.8809814453125
+      ],
+      "text": "Characters that look identical but aren't (homoglyphs)",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000220",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        541.1900024414062,
+        237.8399658203125,
+        554.9299926757812
+      ],
+      "text": "Compare these seemingly identical words:",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000221",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        555.9605102539062,
+        171.6199951171875,
+        569.7005004882812
+      ],
+      "text": "- apple vs ?pple (Cyrillic '?')",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000222",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        570.7310180664062,
+        164.94000244140625,
+        584.4710083007812
+      ],
+      "text": "- hello vs h?llo (Cyrillic '?')",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000223",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        585.50146484375,
+        170.5,
+        599.241455078125
+      ],
+      "text": "- office vs ?ffice (Cyrillic '?')",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000224",
+      "page": 4,
+      "page_idx": 4,
+      "bbox": [
+        50.0,
+        600.27197265625,
+        231.5699920654297,
+        614.011962890625
+      ],
+      "text": "- Example vs ??ample (Cyrillic '?' and '?')",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000225",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        37.099998474121094,
+        132.67999267578125,
+        53.5880012512207
+      ],
+      "text": "[invisible-chars]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 11750733,
+      "font_color_bucket": "red",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 11750733,
+        "color_bucket": "red"
+      }
+    },
+    {
+      "id": "block-000226",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        55.32500076293945,
+        189.0409698486328,
+        67.69100189208984
+      ],
+      "text": "Zero-width and invisible characters",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000227",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        85.0,
+        241.199951171875,
+        98.73999786376953
+      ],
+      "text": "This sentence has a zero?width space in it.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000228",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        99.7705078125,
+        290.6699523925781,
+        113.51050567626953
+      ],
+      "text": "This one has a soft-hyphen that may or may not show.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000229",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        114.541015625,
+        240.6399688720703,
+        128.28102111816406
+      ],
+      "text": "And this has a word?joiner between words.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000230",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        129.3115234375,
+        205.62997436523438,
+        143.05152893066406
+      ],
+      "text": "Finally, a non breaking space here.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000231",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        194.14999389648438,
+        139.35198974609375,
+        210.6379852294922
+      ],
+      "text": "[mixed-numbers]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 11750733,
+      "font_color_bucket": "red",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 11750733,
+        "color_bucket": "red"
+      }
+    },
+    {
+      "id": "block-000232",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        212.37498474121094,
+        181.55296325683594,
+        224.74098205566406
+      ],
+      "text": "Different number representations",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000233",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        242.04998779296875,
+        166.6899871826172,
+        255.7899932861328
+      ],
+      "text": "Numbers in various forms:",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000234",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        256.82049560546875,
+        170.6299591064453,
+        270.56048583984375
+      ],
+      "text": "- Arabic: 0 1 2 3 4 5 6 7 8 9",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000235",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        271.59100341796875,
+        204.5299530029297,
+        285.33099365234375
+      ],
+      "text": "- Roman: I II III IV V VI VII VIII IX X",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000236",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        286.36151123046875,
+        186.1699676513672,
+        300.10150146484375
+      ],
+      "text": "- Superscript: ? 1 2 3 ? ? ? ? ? ?",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000237",
+      "page": 5,
+      "page_idx": 5,
+      "bbox": [
+        50.0,
+        301.1319885253906,
+        173.39996337890625,
+        314.8719787597656
+      ],
+      "text": "- Circled: ? ? ? ? ? ? ? ? ? ?",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000238",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        30.649999618530273,
+        258.09796142578125,
+        55.38199996948242
+      ],
+      "text": "Layout Trap Test Patterns",
+      "block_type": "Text",
+      "font_size": 18.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.45,
+      "header_level": null,
+      "first_span_font": {
+        "size": 18.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000239",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        77.0999984741211,
+        126.04399108886719,
+        93.58799743652344
+      ],
+      "text": "[deep-nesting]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5092173,
+      "font_color_bucket": "green",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5092173,
+        "color_bucket": "green"
+      }
+    },
+    {
+      "id": "block-000240",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        95.32499694824219,
+        178.0519561767578,
+        107.69100189208984
+      ],
+      "text": "Deeply nested section hierarchy",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000241",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        20.0,
+        111.0250015258789,
+        102.38099670410156,
+        128.88699340820312
+      ],
+      "text": "1. Introduction",
+      "block_type": "SectionHeader",
+      "font_size": 13.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 13.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000242",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        35.0,
+        130.10000610351562,
+        119.04800415039062,
+        146.58799743652344
+      ],
+      "text": "1.1 Background",
+      "block_type": "SectionHeader",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 2,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000243",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        148.1750030517578,
+        163.7069854736328,
+        163.28900146484375
+      ],
+      "text": "1.1.1 Historical Context",
+      "block_type": "SectionHeader",
+      "font_size": 11.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 3,
+      "first_span_font": {
+        "size": 11.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000244",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        65.0,
+        165.25,
+        182.82997131347656,
+        178.99000549316406
+      ],
+      "text": "1.1.1.1 Early Development",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 4,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000245",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        80.0,
+        181.3249969482422,
+        179.54896545410156,
+        193.6909942626953
+      ],
+      "text": "1.1.1.1.1 Initial Research",
+      "block_type": "SectionHeader",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 5,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000246",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        95.0,
+        196.39999389648438,
+        197.26397705078125,
+        207.39199829101562
+      ],
+      "text": "1.1.1.1.1.1 First Experiments",
+      "block_type": "SectionHeader",
+      "font_size": 8.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 6,
+      "first_span_font": {
+        "size": 8.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000247",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        110.0,
+        209.39999389648438,
+        225.5999755859375,
+        220.39199829101562
+      ],
+      "text": "1.1.1.1.1.1.1 Preliminary Results",
+      "block_type": "SectionHeader",
+      "font_size": 8.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 7,
+      "first_span_font": {
+        "size": 8.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000248",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        125.0,
+        222.39999389648438,
+        227.27996826171875,
+        233.39199829101562
+      ],
+      "text": "1.1.1.1.1.1.1.1 Data Analysis",
+      "block_type": "SectionHeader",
+      "font_size": 8.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 8,
+      "first_span_font": {
+        "size": 8.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000249",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        140.0,
+        235.39999389648438,
+        267.1839599609375,
+        246.39199829101562
+      ],
+      "text": "1.1.1.1.1.1.1.1.1 Statistical Methods",
+      "block_type": "SectionHeader",
+      "font_size": 8.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 9,
+      "first_span_font": {
+        "size": 8.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000250",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        155.0,
+        248.39999389648438,
+        294.1839599609375,
+        259.3919982910156
+      ],
+      "text": "1.1.1.1.1.1.1.1.1.1 Regression Analysis",
+      "block_type": "SectionHeader",
+      "font_size": 8.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 10,
+      "first_span_font": {
+        "size": 8.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000251",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        277.1000061035156,
+        148.05198669433594,
+        293.5880126953125
+      ],
+      "text": "[footnote-sections]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5092173,
+      "font_color_bucket": "green",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5092173,
+        "color_bucket": "green"
+      }
+    },
+    {
+      "id": "block-000252",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        295.32501220703125,
+        178.06097412109375,
+        307.6910095214844
+      ],
+      "text": "Footnotes that look like sections",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000253",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        325.0,
+        281.2099609375,
+        338.739990234375
+      ],
+      "text": "Main content paragraph discussing important topics.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000254",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        374.2300109863281,
+        176.04798889160156,
+        390.718017578125
+      ],
+      "text": "[page-number-sections]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5092173,
+      "font_color_bucket": "green",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5092173,
+        "color_bucket": "green"
+      }
+    },
+    {
+      "id": "block-000255",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        354.541015625,
+        336.22991943359375,
+        368.281005859375
+      ],
+      "text": "1 This is a footnote that spans multiple lines and looks very much",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000256",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        369.3114929199219,
+        332.35992431640625,
+        383.0514831542969
+      ],
+      "text": "like it could be a new section with its own content that continues",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000257",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        384.0820007324219,
+        122.80998229980469,
+        397.8219909667969
+      ],
+      "text": "for quite a while.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000258",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        392.45501708984375,
+        250.59193420410156,
+        404.8210144042969
+      ],
+      "text": "Standalone numbers mistaken for section headers",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000259",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        413.6230163574219,
+        340.7199401855469,
+        427.3630065917969
+      ],
+      "text": "2 Another footnote that might confuse section detection because it",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000260",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        428.39349365234375,
+        304.00994873046875,
+        442.13348388671875
+      ],
+      "text": "starts with a number and has substantial content below it.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000261",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        448.32000732421875,
+        130.6999969482422,
+        464.8080139160156
+      ],
+      "text": "[partial-header]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5092173,
+      "font_color_bucket": "green",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5092173,
+        "color_bucket": "green"
+      }
+    },
+    {
+      "id": "block-000262",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        457.93450927734375,
+        146.71998596191406,
+        471.67449951171875
+      ],
+      "text": "1. Actual Section One",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000263",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        466.5450134277344,
+        238.0909423828125,
+        478.9110107421875
+      ],
+      "text": "Incomplete headers truncated during extraction",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000264",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        487.47552490234375,
+        218.41995239257812,
+        501.21551513671875
+      ],
+      "text": "This is the real content of section one.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000265",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        496.2200012207031,
+        86.12999725341797,
+        509.9599914550781
+      ],
+      "text": "Table of",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000266",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        525.760986328125,
+        318.4099426269531,
+        539.5009765625
+      ],
+      "text": "This text should be part of the 'Table of Contents' section but",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000267",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        540.531494140625,
+        242.31996154785156,
+        554.271484375
+      ],
+      "text": "the header was truncated during extraction.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000268",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        570.072509765625,
+        93.3499984741211,
+        583.8125
+      ],
+      "text": "Executive",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000269",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        599.613525390625,
+        295.11993408203125,
+        613.353515625
+      ],
+      "text": "Summary text that got separated from its header due to",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.65,
+      "header_level": 2,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000270",
+      "page": 6,
+      "page_idx": 6,
+      "bbox": [
+        50.0,
+        614.384033203125,
+        211.1699676513672,
+        628.1240234375
+      ],
+      "text": "formatting issues in the source PDF.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000271",
+      "page": 7,
+      "page_idx": 7,
+      "bbox": [
+        50.0,
+        37.099998474121094,
+        163.38796997070312,
+        53.5880012512207
+      ],
+      "text": "[sentence-as-header]",
+      "block_type": "Text",
+      "font_size": 12.0,
+      "font_flags": 0,
+      "font_color": 5092173,
+      "font_color_bucket": "green",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 12.0,
+        "flags": 0,
+        "color": 5092173,
+        "color_bucket": "green"
+      }
+    },
+    {
+      "id": "block-000272",
+      "page": 7,
+      "page_idx": 7,
+      "bbox": [
+        50.0,
+        55.32500076293945,
+        234.09494018554688,
+        67.69100189208984
+      ],
+      "text": "Partial sentences detected as section headers",
+      "block_type": "Text",
+      "font_size": 9.0,
+      "font_flags": 0,
+      "font_color": 8421504,
+      "font_color_bucket": "unknown",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 9.0,
+        "flags": 0,
+        "color": 8421504,
+        "color_bucket": "unknown"
+      }
+    },
+    {
+      "id": "block-000273",
+      "page": 7,
+      "page_idx": 7,
+      "bbox": [
+        50.0,
+        85.0,
+        280.64996337890625,
+        98.73999786376953
+      ],
+      "text": "// This section gives a brief overview of the technical",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.65,
+      "header_level": 2,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000274",
+      "page": 7,
+      "page_idx": 7,
+      "bbox": [
+        50.0,
+        114.541015625,
+        282.3199462890625,
+        128.28102111816406
+      ],
+      "text": "architecture and implementation details that follow in",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.65,
+      "header_level": 2,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000275",
+      "page": 7,
+      "page_idx": 7,
+      "bbox": [
+        50.0,
+        129.3115234375,
+        220.0899658203125,
+        143.05152893066406
+      ],
+      "text": "subsequent sections of this document.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000276",
+      "page": 7,
+      "page_idx": 7,
+      "bbox": [
+        50.0,
+        158.85247802734375,
+        519.6798095703125,
+        172.5924835205078
+      ],
+      "text": "3.  The heap memory buffer is zeroed out and written over the entirety of the selected file starting at byte 0",
+      "block_type": "SectionHeader",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": true,
+      "header_confidence": 0.9,
+      "header_level": 1,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    },
+    {
+      "id": "block-000277",
+      "page": 7,
+      "page_idx": 7,
+      "bbox": [
+        50.0,
+        188.39349365234375,
+        289.5499572753906,
+        202.1334991455078
+      ],
+      "text": "which is a common technique used in secure deletion.",
+      "block_type": "Text",
+      "font_size": 10.0,
+      "font_flags": 0,
+      "font_color": 0,
+      "font_color_bucket": "black",
+      "is_header": false,
+      "header_confidence": 0.0,
+      "header_level": null,
+      "first_span_font": {
+        "size": 10.0,
+        "flags": 0,
+        "color": 0,
+        "color_bucket": "black"
+      }
+    }
+  ],
+  "errors_count": 0,
+  "warnings_count": 0,
+  "diagnostics": {
+    "page_count": 8,
+    "text_blocks": 238,
+    "section_headers": 39,
+    "figures": 0,
+    "extractor": "pymupdf_native",
+    "scanned_pdf_detection": {
+      "is_scanned_pdf": false,
+      "detection_method": "pymupdf_native",
+      "multi_column_pages": [
+        2,
+        3
+      ]
+    },
+    "document_type": null
+  },
+  "timings": {
+    "total_ms": 39
+  },
+  "resources": {},
+  "predictors_present": {},
+  "fallback_mode": false,
+  "predictor_mode": "pymupdf_native",
+  "blocks_content_hash": "16202d186d93a8eb",
+  "is_scanned_pdf": false
+}

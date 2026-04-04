@@ -1,0 +1,38 @@
+{
+  "preset_name": "arxiv",
+  "config": {
+    "category": "Scientific",
+    "description": "Academic papers (2-column, math, citations)",
+    "detection": {
+      "filename_triggers": [
+        "arxiv",
+        "paper",
+        "journal",
+        "proceedings"
+      ],
+      "keywords": [
+        "arXiv",
+        "Abstract",
+        "References",
+        "Introduction",
+        "Fig."
+      ],
+      "layout": "double",
+      "min_score": 2,
+      "section_pattern": "^\\d+\\.\\s+[A-Z]"
+    },
+    "errors": [
+      "hyphenation",
+      "ligatures",
+      "split_tables",
+      "trapped_headers"
+    ],
+    "features": {
+      "enable_proving": true,
+      "summarization_prompt": "Analyze this section of a scientific paper. Summarize the methodology, results, and key claims.\nFocus on the technical contribution.\n"
+    },
+    "layout": "double"
+  },
+  "timestamp": 1769779504.7524502,
+  "profile_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/00_profile_detector/profile.json"
+}

@@ -1,0 +1,28 @@
+Implemented.
+### What changed
+- Added vision confusion/per-class metric generation in [`benchmark.py`](/home/node/workspace/.pi/skills/classifier-lab/scripts/benchmark.py):
+- `_evaluate()` now returns:
+- `accuracy`
+- `macro_f1`
+- `confusion_matrix` (2D list)
+- `per_class` (`{class_idx: {precision, recall, f1, support}}`)
+- `_benchmark_backbone()` now adds:
+- `classes` (label names in index order)
+- label-name keyed `per_class`
+- `confusion_matrix`
+- `run_benchmark()` now propagates these into `selected_metrics` so `train_vision_round()` can parse them and write full `eval_details.json`.
+### Current state of `backbone_train_loop.py`
+- It already matches your requested contracts:
+- `eval_details.json` path and writer exist ([`backbone_train_loop.py:50`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:50), [`backbone_train_loop.py:81`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:81))
+- `build_eval_details()` has exact required fields ([`backbone_train_loop.py:86`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:86))
+- `train_text_round()` computes sklearn confusion + per-class and writes `eval_details.json` ([`backbone_train_loop.py:343`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:343), [`backbone_train_loop.py:357`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:357))
+- `train_vision_round()` parses benchmark output and writes `eval_details.json` ([`backbone_train_loop.py:439`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:439), [`backbone_train_loop.py:475`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:475))
+- `tune-results.json` contract is implemented and written in both success/failure exits ([`backbone_train_loop.py:110`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:110), [`backbone_train_loop.py:602`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:602), [`backbone_train_loop.py:654`](/home/node/workspace/.pi/skills/classifier-lab/scripts/backbone_train_loop.py:654))
+### Validation run
+- `npm run check`: passed.
+- Python DoD import check:
+- Your exact path `/home/graham/...` does not exist in this environment.
+- Equivalent local command passed and printed: `Fields check: import OK`.
+- `verify-task`:
+- `test-lab/run.sh` is not at the exact path you gave in this workspace.
+- Running available verifier at `../skills/test-lab/run.sh ...` executes but fails on pre-existing style issues (`Missing module docstring`, 99/108 passes), not on this feature logic.

@@ -1,0 +1,128 @@
+{
+  "fixtures": {
+    "strategy": "lattice",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "multiple_tables.pdf"
+  },
+  "adversarial": {
+    "strategy": "stream",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "false_tables.pdf"
+  },
+  "archive_org": {
+    "strategy": "network",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "archive_NASA_NTRS_Archive_20010084145.pdf"
+  },
+  "arxiv": {
+    "strategy": "network",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "arxiv_2502.20168v1.pdf"
+  },
+  "defense": {
+    "strategy": "network",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "arxiv_2601.19635v1.pdf"
+  },
+  "edge_cases": {
+    "strategy": "network",
+    "accuracy": 96.67,
+    "params": {},
+    "filepath_sample": "FAA-AC-20-115D.pdf"
+  },
+  "engineering": {
+    "strategy": "stream",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "BHT_CV32A65X_marked.pdf"
+  },
+  "government": {
+    "strategy": "stream",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "NIST.SP.800-82r3_608f55.pdf"
+  },
+  "ietf": {
+    "strategy": "stream",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "rfc9109.pdf"
+  },
+  "nasa": {
+    "strategy": "network",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "nasa_19920020170.pdf"
+  },
+  "nist": {
+    "strategy": "network",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "nist_sp_800_82.pdf"
+  },
+  "standards": {
+    "strategy": "stream",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "NIST_SP_800-171Ar3.pdf"
+  },
+  "stress_test_pdfs": {
+    "strategy": "hybrid",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "arxiv_2601_21796v1.pdf"
+  },
+  "tabula": {
+    "strategy": "lattice",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "12s0324.pdf"
+  },
+  "files": {
+    "strategy": "lattice",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "multiple_tables.pdf"
+  },
+  "f16_scanned_pdfs": {
+    "strategy": "stream",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "F16-HUD-4175_1979.pdf"
+  },
+  "arxiv_papers": {
+    "strategy": "stream",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "ace_2411_16422v1.pdf"
+  },
+  "industry": {
+    "strategy": "stream",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "archive_DTIC_ADA152525.pdf"
+  },
+  "papers": {
+    "strategy": "hybrid",
+    "accuracy": 100.0,
+    "params": {},
+    "filepath_sample": "2508_16314.pdf"
+  },
+  "downloads": {
+    "strategy": "hybrid",
+    "accuracy": 89.58,
+    "params": {},
+    "filepath_sample": "04d96319269d98e08b64a3a6cb85e83a92746046723fa2b312b2f4849e0de31c.pdf"
+  },
+  "01_annotation_processor": {
+    "strategy": "hybrid",
+    "accuracy": 94.44,
+    "params": {},
+    "filepath_sample": "rfc9110_clean.pdf"
+  }
+}

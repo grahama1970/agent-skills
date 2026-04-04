@@ -1,0 +1,37 @@
+[
+  {
+    "question": "What SPARTA countermeasures would you recommend to protect the F-36's secure boot process against firmware corruption attacks during avionics system updates?",
+    "difficulty": "easy",
+    "f36_category": "01_avionics",
+    "domain_context": "secure boot, firmware corruption",
+    "persona": "brandon"
+  },
+  {
+    "question": "How might SPARTA's adversary TTPs for lateral movement in satellite systems inform our defensive approach to the F-36's weapons integration network, given its shared bus architecture with legacy F-35 systems?",
+    "difficulty": "medium",
+    "f36_category": "03_weapons",
+    "domain_context": "lateral movement, legacy architecture",
+    "persona": "brandon"
+  },
+  {
+    "question": "Considering the F-36's space-hardened components must resist single-event upsets, which SPARTA threat actors have demonstrated capability to exploit radiation-induced faults as an attack vector, and what mitigation strategies from satellite systems could we adapt?",
+    "difficulty": "medium",
+    "f36_category": "05_space_hardening",
+    "domain_context": "SEU mitigation, space-grade components",
+    "persona": "brandon"
+  },
+  {
+    "question": "Given the F-36's dual-redundant flight control system inherits some F-35 legacy code vulnerable to timing attacks, how would you map SPARTA's command and control techniques to potential exploit chains, and what red team exercises would best validate our sensor fusion's resistance to such attacks?",
+    "difficulty": "hard",
+    "f36_category": "09_flight_software",
+    "domain_context": "command and control, sensor fusion, red team",
+    "persona": "brandon"
+  },
+  {
+    "question": "When evaluating the F-36's navigation system resilience, should we prioritize SPARTA countermeasures against GPS spoofing or INS drift exploitation, given recent adversary reconnaissance patterns in contested environments?",
+    "difficulty": "ambiguous",
+    "f36_category": "01_avionics",
+    "domain_context": "GPS, INS, reconnaissance",
+    "persona": "brandon"
+  }
+]

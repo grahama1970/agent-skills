@@ -1,0 +1,57 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 4,
+    "total": 4
+  },
+  "worktree": null,
+  "skill": "create-story",
+  "violations": [
+    {
+      "rule": "python.click",
+      "severity": "warn",
+      "skill": "create-story",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-story/orchestrator_monolith.py",
+      "message": "Uses click; prefer Typer.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.file_length",
+      "severity": "warn",
+      "skill": "create-story",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-story/orchestrator_monolith.py",
+      "message": "File exceeds 800 LOC (1145).",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.click",
+      "severity": "warn",
+      "skill": "create-story",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-story/orchestrator.py",
+      "message": "Uses click; prefer Typer.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "python.click",
+      "severity": "warn",
+      "skill": "create-story",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-story/story_phases.py",
+      "message": "Uses click; prefer Typer.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

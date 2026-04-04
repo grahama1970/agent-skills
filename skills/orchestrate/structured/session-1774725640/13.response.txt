@@ -1,0 +1,10 @@
+`BenchmarkTab` in [ClassifierLabView.tsx](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx#L1165) is already implemented per your requirements in this workspace:
+- Parallel coordinates are driven by real benchmark rows (`data.map(...)`), one line per backbone.
+- Axes are `F1`, `ACCURACY`, `WILSON LOWER`, `ROUNDS`.
+- Winner detection uses `winner`/best fallback, and winner line is highlighted in accent color.
+Validation results:
+- `cd /home/node/workspace/packages/ux-lab && npx tsc --noEmit 2>&1 | head -5`
+- Result: no output, exit code `0` (no type errors)
+Requested test command:
+- `test-lab/run.sh verify-task 13 .pi/skills/classifier-lab/ --domain python`
+- In this environment, the runnable path is `.pi/skills/test-lab/run.sh`; running it fails with style issues (`Missing module docstring`, 126/135 passes), unrelated to `ClassifierLabView.tsx`.

@@ -1,0 +1,246 @@
+{
+  "name": "binex-intent",
+  "description": "Binary Explorer intent classification ground truth",
+  "cases": [
+    {
+      "id": "binex_000",
+      "input": "collapse the tunnel.* namespace",
+      "expected": {
+        "action": "UI_COMMAND",
+        "ui_action": "COLLAPSE_NAMESPACE",
+        "scene_action_id": null
+      },
+      "notes": "Expected: UI_COMMAND"
+    },
+    {
+      "id": "binex_001",
+      "input": "make it all smaller again",
+      "expected": {
+        "action": "UI_COMMAND",
+        "ui_action": "ZOOM_OUT",
+        "scene_action_id": null
+      },
+      "notes": "Expected: UI_COMMAND"
+    },
+    {
+      "id": "binex_002",
+      "input": "find attack surface of daemon",
+      "expected": {
+        "action": "UI_COMMAND",
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "find_attack_surface"
+      },
+      "notes": "Expected: UI_COMMAND"
+    },
+    {
+      "id": "binex_003",
+      "input": "focus on the 'create_session' RPC",
+      "expected": {
+        "action": "UI_COMMAND",
+        "ui_action": "FOCUS_CLUSTER",
+        "scene_action_id": null
+      },
+      "notes": "Expected: UI_COMMAND"
+    },
+    {
+      "id": "binex_004",
+      "input": "How do I see the big picture here?",
+      "expected": {
+        "action": "UI_COMMAND",
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "show_architecture"
+      },
+      "notes": "Expected: UI_COMMAND"
+    },
+    {
+      "id": "binex_005",
+      "input": "show auth chain for update_session",
+      "expected": {
+        "action": "UI_COMMAND",
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "show_auth_chain"
+      },
+      "notes": "Expected: UI_COMMAND"
+    },
+    {
+      "id": "binex_006",
+      "input": "show all nodes pls",
+      "expected": {
+        "action": "UI_COMMAND",
+        "ui_action": "TOGGLE_PROGRESSIVE",
+        "scene_action_id": null
+      },
+      "notes": "Expected: UI_COMMAND"
+    },
+    {
+      "id": "binex_007",
+      "input": "find state machines in the binary",
+      "expected": {
+        "action": "UI_COMMAND",
+        "ui_action": "SCENE_ACTION",
+        "scene_action_id": "find_state_machines"
+      },
+      "notes": "Expected: UI_COMMAND"
+    },
+    {
+      "id": "binex_008",
+      "input": "how solid is the label for create_session?",
+      "expected": {
+        "action": "QUERY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: QUERY"
+    },
+    {
+      "id": "binex_009",
+      "input": "I\u2019m lost, what\u2019s the most critical authentication flow?",
+      "expected": {
+        "action": "QUERY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: QUERY"
+    },
+    {
+      "id": "binex_010",
+      "input": "info on create_message event",
+      "expected": {
+        "action": "QUERY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: QUERY"
+    },
+    {
+      "id": "binex_011",
+      "input": "what\u2019s 'show_auth_chain' for?",
+      "expected": {
+        "action": "QUERY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: QUERY"
+    },
+    {
+      "id": "binex_012",
+      "input": "is the daemon.* namespace healthy?",
+      "expected": {
+        "action": "QUERY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: QUERY"
+    },
+    {
+      "id": "binex_013",
+      "input": "what does the stop_automation event do?",
+      "expected": {
+        "action": "QUERY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: QUERY"
+    },
+    {
+      "id": "binex_014",
+      "input": "which RPCs accept untrusted data?",
+      "expected": {
+        "action": "QUERY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: QUERY"
+    },
+    {
+      "id": "binex_015",
+      "input": "what\u2019s the auth flow for authenticate?",
+      "expected": {
+        "action": "QUERY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: QUERY"
+    },
+    {
+      "id": "binex_016",
+      "input": "nope, not the RPC, I meant the tool_use event",
+      "expected": {
+        "action": "CLARIFY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: CLARIFY"
+    },
+    {
+      "id": "binex_017",
+      "input": "that's not what I meant, I need the assistant_text_delta event",
+      "expected": {
+        "action": "CLARIFY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: CLARIFY"
+    },
+    {
+      "id": "binex_018",
+      "input": "not the schema, I need the B state machine",
+      "expected": {
+        "action": "CLARIFY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: CLARIFY"
+    },
+    {
+      "id": "binex_019",
+      "input": "no, I meant the `F` state machine, not `M`",
+      "expected": {
+        "action": "CLARIFY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: CLARIFY"
+    },
+    {
+      "id": "binex_020",
+      "input": "no, I meant the exec_command RPC",
+      "expected": {
+        "action": "CLARIFY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: CLARIFY"
+    },
+    {
+      "id": "binex_021",
+      "input": "wrong, I meant the find_attack_surface scene action",
+      "expected": {
+        "action": "CLARIFY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: CLARIFY"
+    },
+    {
+      "id": "binex_022",
+      "input": "nope, I was asking about the show_auth_chain scene action",
+      "expected": {
+        "action": "CLARIFY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: CLARIFY"
+    },
+    {
+      "id": "binex_023",
+      "input": "nope, I wanted to see the `trace_execution` scene action",
+      "expected": {
+        "action": "CLARIFY",
+        "ui_action": null,
+        "scene_action_id": null
+      },
+      "notes": "Expected: CLARIFY"
+    }
+  ]
+}

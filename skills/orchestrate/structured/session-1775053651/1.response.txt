@@ -1,0 +1,17 @@
+Implemented in [learn_datalake.py](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py).
+Changes made:
+- Added constants for daemon socket and script path at [learn_datalake.py:74](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py:74) and [learn_datalake.py:76](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py:76).
+- Added `_run_threat_delta_check()` at [learn_datalake.py:793](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py:793).
+- Uses `httpx.Client` + `HTTPTransport(uds=MEMORY_SOCKET)` to POST `/query` with the requested AQL and `since = int(time.time()) - 3600`.
+- Returns early with log if no recent control IDs.
+- Calls `compute_threat_delta.py` via `subprocess.run([...], cwd=SKILL_DIR, timeout=300, check=False)` using `[sys.executable, str(COMPUTE_DELTA_SCRIPT), "--control-ids", ",".join(control_ids)]`.
+- Sets subprocess env `SCILLM_MODEL=text`.
+- Logs delta count from `delta_count=` output and never raises.
+- Hook call added right after taxonomy check in `cmd_once` at [learn_datalake.py:150](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py:150) and [learn_datalake.py:152](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py:152).
+- Hook call added in `_run_sequential_cycle` after taxonomy check at [learn_datalake.py:456](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py:456) and [learn_datalake.py:457](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py:457).
+- Hook call added in `start` loop immediately after `_run_sequential_cycle` returns at [learn_datalake.py:276](/home/node/workspace/.pi/skills/learn-datalake/learn_datalake.py:276).
+Verification:
+- `grep -c '_run_threat_delta_check' /home/graham/workspace/experiments/pi-mono/.pi/skills/learn-datalake/learn_datalake.py` failed: path does not exist in this environment.
+- Local equivalent count: `grep -c '_run_threat_delta_check' .pi/skills/learn-datalake/learn_datalake.py` -> `4`
+- `grep -q '_run_threat_delta_check' .pi/skills/learn-datalake/learn_datalake.py` -> `OK`
+- `python3 -c "import ast; ast.parse(open('.pi/skills/learn-datalake/learn_datalake.py').read()); print('syntax OK')"` -> `syntax OK`

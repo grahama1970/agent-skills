@@ -1,0 +1,48 @@
+{
+  "passed": true,
+  "model": "Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
+  "task": "extraction-quality-assessor",
+  "compliance_rate": 0.75,
+  "compliant_count": 3,
+  "total_tested": 4,
+  "enhanced_prompt_used": true,
+  "results": [
+    {
+      "index": 0,
+      "compliant": true,
+      "missing": [],
+      "grade": "PASS",
+      "fidelity_score": 0.95,
+      "error_types": []
+    },
+    {
+      "index": 1,
+      "compliant": true,
+      "missing": [],
+      "grade": "PASS",
+      "fidelity_score": 0.95,
+      "error_types": []
+    },
+    {
+      "index": 3,
+      "compliant": false,
+      "error": "litellm.APIConnectionError: Openai_likeException - Client error '429 Too Many Requests' for url 'https://llm.chutes.ai/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429",
+      "missing": [
+        "all (call failed)"
+      ]
+    },
+    {
+      "index": 2,
+      "compliant": true,
+      "missing": [],
+      "grade": "FAIL",
+      "fidelity_score": 0.45,
+      "error_types": [
+        "CONTENT_COMPLETENESS",
+        "BOUNDARY_CLEAN"
+      ]
+    }
+  ],
+  "timestamp": "2026-02-16T16:48:20.294260+00:00",
+  "cached": false
+}

@@ -1,0 +1,21 @@
+{
+  "step": "04a_layout_audit",
+  "ok": true,
+  "errors": 0,
+  "results_root": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output",
+  "sections_checked": 1,
+  "checks": [
+    {
+      "section_title": "1.  First item in the list that has some longer text",
+      "ok": true,
+      "section_index": 0,
+      "block_count": 4
+    }
+  ],
+  "visuals": [
+    {
+      "section_id": "section_0",
+      "visual_path": "04a_layout_audit/visual_output/section_0.png"
+    }
+  ]
+}

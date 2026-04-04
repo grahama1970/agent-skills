@@ -1,0 +1,24 @@
+[
+  {
+    "filename": "NIST-SP-800-171-rev3.pdf",
+    "confidence": 0.42,
+    "rust_guess": "Escalate",
+    "features": {"font_size_ratio": 1.2, "all_caps": true, "word_count": 5, "has_numbering": true},
+    "doc_id": "doc-101"
+  },
+  {
+    "filename": "arxiv-2312.09876.pdf",
+    "confidence": 0.55,
+    "rust_guess": "Accept",
+    "classifier_disposition": "Reject",
+    "features": {"font_size_ratio": 1.5, "all_caps": false, "word_count": 8, "has_numbering": false},
+    "doc_id": "doc-102"
+  },
+  {
+    "filename": "MIL-HDBK-217F.pdf",
+    "confidence": 0.18,
+    "rust_guess": "Reject",
+    "features": {"font_size_ratio": 0.9, "all_caps": false, "word_count": 3, "has_numbering": true},
+    "doc_id": "doc-103"
+  }
+]

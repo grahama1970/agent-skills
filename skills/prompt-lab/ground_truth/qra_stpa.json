@@ -1,0 +1,105 @@
+{
+  "name": "qra_stpa",
+  "description": "QRA generation for STPA/CWE safety analysis applied to F-36 systems",
+  "persona": "noah_evans",
+  "domain": "stpa",
+  "evaluation_criteria": {
+    "min_qras_per_input": 3,
+    "citation_grounding_threshold": 0.85,
+    "required_question_types": ["simple", "medium", "complex"],
+    "diversity_check": true,
+    "hallucination_detection": true,
+    "question_blocklist": [
+      "^What is [\\w\\s\\-/()]+\\?$",
+      "^Define [\\w\\s\\-/()]+\\.?$"
+    ],
+    "required_entity_patterns": ["UCA-\\d+", "LSC-\\d+", "H-\\d+", "SC-\\d+", "CWE-\\d+"],
+    "framework_grounding": {"fail": 0.50, "warn": 0.65}
+  },
+  "cases": [
+    {
+      "id": "stpa_uca_throttle",
+      "input": {
+        "name": "UCA-1 Throttle Control — F-36 Engine Interface",
+        "description": "Unsafe control action analysis for engine throttle commands"
+      },
+      "source_text": "STPA analysis of the F-36 engine throttle control identifies UCA-1: the flight control computer provides a full-throttle command when the aircraft is on the ground during maintenance engine runs. The control action (throttle command) is provided in a context where it should not be (ground maintenance mode). Hazard H-1 (unintended thrust during ground operations) can result if the weight-on-wheels sensor is failed or bypassed. Safety constraint SC-1 requires that throttle commands be limited to idle during ground maintenance mode regardless of pilot input. Loss scenario LSC-1: maintenance technician initiates engine run with forward fuselage access panel open — unintended thrust could cause FOD ingestion or personnel injury. CWE-20 (Improper Input Validation) applies: the engine interface software does not validate that the WOW discrete is consistent with other ground indicators (parking brake, gear position).",
+      "expected": {
+        "min_qras": 4,
+        "required_types": ["simple", "medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["UCA-1", "H-1", "SC-1", "LSC-1", "CWE-20"],
+        "rejected_patterns": ["What is STPA", "Define unsafe control action"]
+      },
+      "notes": "Multi-indicator validation gap for ground mode is the key finding"
+    },
+    {
+      "id": "stpa_feedback_gps",
+      "input": {
+        "name": "GPS Feedback Loop — F-36 Navigation",
+        "description": "Feedback loop analysis for GPS-dependent navigation controls"
+      },
+      "source_text": "The F-36 navigation system control structure includes a GPS feedback loop where position data from the GPS receiver feeds the navigation filter, which provides corrected position to the flight management computer. STPA Step 2 identifies loss scenario LSC-7: spoofed GPS signals provide gradually drifting position data that the navigation filter accepts as valid because the drift rate falls below the filter's innovation threshold. Hazard H-3 (navigation to incorrect position) results. Safety constraint SC-7 requires cross-validation of GPS position against INS, terrain database, and TACAN/DME when available. The current implementation only cross-validates GPS against INS — terrain and TACAN cross-checks are not implemented in Block 4 software. UCA-7: navigation filter provides corrected position when GPS input is spoofed. The flawed process model is that the filter assumes GPS accuracy degrades only through random noise, not systematic adversarial manipulation.",
+      "expected": {
+        "min_qras": 4,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["LSC-7", "H-3", "SC-7", "UCA-7"],
+        "rejected_patterns": ["What is GPS spoofing", "Define feedback loop"]
+      },
+      "notes": "Missing terrain and TACAN cross-validation is the gap"
+    },
+    {
+      "id": "stpa_hierarchical_fuel",
+      "input": {
+        "name": "Hierarchical Control — F-36 Fuel Management",
+        "description": "Hierarchical control structure analysis for fuel system safety"
+      },
+      "source_text": "The F-36 fuel management system operates as a hierarchical control structure: the mission computer (Level 1) commands fuel distribution, the fuel management controller (Level 2) manages tank sequencing and cross-feed valves, and individual fuel pumps and valves (Level 3) execute commands. STPA identifies UCA-12: fuel management controller opens cross-feed valve when asymmetric fuel load exceeds CG limits. Hazard H-5 (aircraft CG outside certified envelope) can result in loss of control. Safety constraint SC-12 requires fuel transfer commands to be validated against a real-time CG model before execution. Loss scenario LSC-12: the CG model uses fuel quantity indicators that have a known 3% measurement error at low fuel states — at 15% fuel remaining, the 3% error can mask a CG exceedance. The hierarchical control gap is that Level 2 (fuel controller) does not receive CG data from Level 1 (mission computer) — it relies on its own simplified CG estimation using fuel quantity alone.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["UCA-12", "H-5", "SC-12", "LSC-12"],
+        "rejected_patterns": ["What is hierarchical control", "Define CG limits"]
+      },
+      "notes": "Level 2 missing CG data from Level 1 is the structural gap"
+    },
+    {
+      "id": "stpa_cwe_oxygen",
+      "input": {
+        "name": "CWE-476 Null Pointer — F-36 OBOGS Controller",
+        "description": "CWE analysis of on-board oxygen generating system controller software"
+      },
+      "source_text": "CWE-476 (NULL Pointer Dereference) was identified in the F-36 On-Board Oxygen Generating System (OBOGS) controller software during static analysis. The OBOGS controller receives cabin pressure data from redundant sensors via an ARINC 429 bus. When both sensors report stale data (no update within 100ms), the sensor fusion function returns a null pointer instead of a default safe value. The OBOGS flow control algorithm dereferences this pointer without null checking, causing the controller to restart. During the restart (approximately 3 seconds), oxygen flow ceases. At altitudes above FL250, a 3-second oxygen interruption can cause pilot cognitive degradation. UCA-15: OBOGS controller stops providing oxygen when both pressure sensors report stale data. Safety constraint SC-15 requires that OBOGS default to maximum flow rate on any sensor failure mode.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["CWE-476", "UCA-15", "SC-15"],
+        "rejected_patterns": ["What is CWE-476", "Define null pointer"]
+      },
+      "notes": "3-second oxygen interruption from null dereference is the safety issue"
+    },
+    {
+      "id": "stpa_causal_ew",
+      "input": {
+        "name": "Causal Factors — F-36 Electronic Warfare Suite",
+        "description": "STPA causal factor analysis for EW self-protection system"
+      },
+      "source_text": "The F-36 electronic warfare (EW) suite self-protection system includes a control loop where the EW controller detects threats (radar emissions), selects countermeasures (chaff, flares, jamming), and commands deployment. STPA causal factor analysis identifies multiple factors contributing to UCA-20: EW controller deploys wrong countermeasure type. Causal factor 1: threat library database uses a hash table with known collision rate of 0.2% — colliding threat signatures can cause misidentification. Causal factor 2: the countermeasure selection algorithm uses threat priority ranking that does not account for simultaneous threats from different frequency bands. Causal factor 3: the pilot override interface introduces a 200ms delay during which the automated response may have already initiated. Loss scenario LSC-20: pilot attempts to override an incorrect chaff deployment, but the override arrives after chaff has been dispensed, wasting limited countermeasure inventory. Hazard H-8: depleted countermeasures against active threat.",
+      "expected": {
+        "min_qras": 4,
+        "required_types": ["simple", "medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["UCA-20", "LSC-20", "H-8"],
+        "rejected_patterns": ["What is STPA", "Define causal factors"]
+      },
+      "notes": "200ms override delay and hash collision rate are measurable findings"
+    }
+  ],
+  "notes": {
+    "problem_statement": "Noah Evans persona needs QRAs about STPA safety analysis applied to F-36 systems, not abstract safety theory",
+    "prompt_goal": "Generate synthesis questions about how STPA identifies unsafe control actions and loss scenarios in F-36 subsystems"
+  }
+}

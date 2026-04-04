@@ -1,0 +1,31 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774637299,
+  "status": "ok",
+  "selected_backbone": "prajjwal1/bert-tiny",
+  "selected_metrics": {
+    "macro_f1": 0.8583185105837209,
+    "accuracy": 0.8600555555555556,
+    "wilson_score_lower": 0.8574557796879321,
+    "latency_p50_ms": 1.0895529412664473,
+    "latency_p95_ms": 2.616300474619493
+  },
+  "candidate_count": 1,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/home/node/workspace/.pi/skills/classifier-lab/.data/ag_news/train.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [],
+      "worth_remembering": false
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "02154bb60a42c62e394b4b8a9a1420f39d8ed28ce0eb5d4cecb8678ab54a2b64",
+  "domain": "general",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/02154bb60a42c62e394b4b8a9a1420f39d8ed28ce0eb5d4cecb8678ab54a2b64_6bb48fffe2",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/02154bb60a42c62e394b4b8a9a1420f39d8ed28ce0eb5d4cecb8678ab54a2b64_6bb48fffe2/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/02154bb60a42c62e394b4b8a9a1420f39d8ed28ce0eb5d4cecb8678ab54a2b64_6bb48fffe2/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/fetcher_results/arxiv_batch/downloads/02154bb60a42c62e394b4b8a9a1420f39d8ed28ce0eb5d4cecb8678ab54a2b64.pdf"
+  },
+  "estimates": {
+    "page_count": 18,
+    "estimated_sections": 6,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "general"
+  },
+  "actual": {
+    "section_count": 3,
+    "element_count": 216,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 4,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 18,
+    "raw_text_length": 45270
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.52,
+      "state": "warn",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.46,
+      "state": "fail",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.42,
+      "state": "fail",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.55,
+      "state": "warn",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.63,
+      "state": "warn",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.67,
+      "state": "warn",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.65,
+      "state": "warn",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.56,
+    "grade": "D",
+    "verdict": "WARN",
+    "critical_issues": 1,
+    "high_issues": 4,
+    "issue_count": 9
+  },
+  "issues": [
+    {
+      "code": "SA002",
+      "severity": "MEDIUM",
+      "message": "Section hierarchy depth inconsistent with document structure",
+      "recommendation": "Review header classification thresholds"
+    },
+    {
+      "code": "TF003",
+      "severity": "CRITICAL",
+      "message": "Table extraction failed entirely on page 18",
+      "recommendation": "Fallback to OCR-based table extraction"
+    },
+    {
+      "code": "TF001",
+      "severity": "HIGH",
+      "message": "Table cell content truncated in 3 cells",
+      "recommendation": "Increase cell content buffer; check column boundary detection"
+    },
+    {
+      "code": "FF001",
+      "severity": "MEDIUM",
+      "message": "Figure caption not associated with image on page 15",
+      "recommendation": "Adjust caption proximity threshold"
+    },
+    {
+      "code": "FF002",
+      "severity": "HIGH",
+      "message": "3 figures detected but none extracted",
+      "recommendation": "Check image extraction pipeline configuration"
+    },
+    {
+      "code": "EQ001",
+      "severity": "MEDIUM",
+      "message": "Math symbols detected but no equation blocks extracted",
+      "recommendation": "Enable equation detection in block classifier"
+    },
+    {
+      "code": "CC002",
+      "severity": "HIGH",
+      "message": "Less than 50% of source text recovered",
+      "recommendation": "Document may require OCR fallback pipeline"
+    },
+    {
+      "code": "OR002",
+      "severity": "HIGH",
+      "message": "Page order violations in section content",
+      "recommendation": "Check page-level sort in content assembler"
+    },
+    {
+      "code": "DQ001",
+      "severity": "MEDIUM",
+      "message": "Duplicate content blocks detected (2 instances)",
+      "recommendation": "Enable overlap suppression in block merger"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

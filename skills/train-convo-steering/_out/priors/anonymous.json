@@ -1,0 +1,58 @@
+{
+  "bounds": {
+    "allowed_presets": [
+      "fast_proceed",
+      "clarify_once",
+      "trust_repair",
+      "deep_dive",
+      "exec_summary_plus_steps",
+      "socratic"
+    ],
+    "confidence_threshold": 0.5,
+    "max_nightly_delta": 0.1
+  },
+  "global_fallback_preset": "clarify_once",
+  "judge_labels_used": 0,
+  "state_policy": {
+    "mid|low|mid|low|mid": {
+      "best_mean_reward": -0.75,
+      "best_preset": "clarify_once",
+      "confidence": 0.6,
+      "presets": {
+        "clarify_once": {
+          "count": 3.0,
+          "mean_reward": -0.75
+        }
+      },
+      "total_samples": 3.0
+    },
+    "mid|mid|low|mid|mid": {
+      "best_mean_reward": -0.3,
+      "best_preset": "clarify_once",
+      "confidence": 0.2,
+      "presets": {
+        "clarify_once": {
+          "count": 1.0,
+          "mean_reward": -0.3
+        }
+      },
+      "total_samples": 1.0
+    },
+    "mid|mid|mid|mid|mid": {
+      "best_mean_reward": 0.5,
+      "best_preset": "clarify_once",
+      "confidence": 0.2,
+      "presets": {
+        "clarify_once": {
+          "count": 1.0,
+          "mean_reward": 0.5
+        }
+      },
+      "total_samples": 1.0
+    }
+  },
+  "trained_at": "2026-03-05T08:00:44.696893+00:00",
+  "training_rows": 5,
+  "user_id": "anonymous",
+  "version": "v2-empirical-bandit-presets"
+}

@@ -1,0 +1,651 @@
+[
+  {
+    "id": "S-NIS-af2443df",
+    "question": "How does PE-12(1) protect the F-36's flight control software from GPS spoofing?",
+    "unmatched_terms": [
+      "F-36 flight control software"
+    ],
+    "resolved_terms": [
+      "PE-12 (Emergency Lighting)",
+      "PE-12(1 ()",
+      "protect (protect)",
+      "F-36 (F-36)",
+      "control (control)",
+      "software (software)",
+      "GPS (GPS)",
+      "spoofing (spoofing)"
+    ],
+    "resolved_count": 8,
+    "qra_count": 1,
+    "expected_answerable": true,
+    "reason": "All referenced control IDs exist in corpus. Question is answerable even if engineering relationship is unusual.",
+    "failure_type": "plausibility_false_reject"
+  },
+  {
+    "id": "S-ATT-bfe08376",
+    "question": "What is the relationship between T1001 and S0526 for protecting the F-36's spacecraft-derived components?",
+    "unmatched_terms": [
+      "F-36 spacecraft derived components"
+    ],
+    "resolved_terms": [
+      "T1001 (T1001)",
+      "S0526 (KGH_SPY)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "All referenced control IDs exist in corpus. Question is answerable even if engineering relationship is unusual.",
+    "failure_type": "plausibility_false_reject"
+  },
+  {
+    "id": "S-SPA-be5baece",
+    "question": "Compare the defensive approaches of EX-0017.02 and EXF-0006.01 for the F-36's avionics security.",
+    "unmatched_terms": [
+      "defensive approaches",
+      "F-36 avionics security"
+    ],
+    "resolved_terms": [
+      "EX-0017.02 (Co-Orbital ASAT)",
+      "EXF-0006.01 (Software Defined Radio)",
+      "F-36 (F-36)",
+      "security (security)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 1,
+    "expected_answerable": true,
+    "reason": "All referenced control IDs exist in corpus. Question is answerable even if engineering relationship is unusual.",
+    "failure_type": "plausibility_false_reject"
+  },
+  {
+    "id": "S-CWE-3b346854",
+    "question": "How would you prioritize CWE-580 vs CWE-453 for the F-36's navigation system protection?",
+    "unmatched_terms": [
+      "F-36 navigation system protection"
+    ],
+    "resolved_terms": [
+      "CWE-580 (clone() Method Without super.clone())",
+      "CWE-453 (Insecure Default Variable Initialization)",
+      "F-36 (F-36)",
+      "system (system)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 1,
+    "expected_answerable": true,
+    "reason": "All referenced control IDs exist in corpus. Question is answerable even if engineering relationship is unusual.",
+    "failure_type": "plausibility_false_reject"
+  },
+  {
+    "id": "S-ATT-bb880337",
+    "question": "What D3FEND techniques align with T1574.011 for the F-36's defense-in-depth strategy?",
+    "unmatched_terms": [
+      "D3FEND techniques"
+    ],
+    "resolved_terms": [
+      "T1574.011 (Services Registry Permissions Weakness)",
+      "D3FEND (D3FEND)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "All referenced control IDs exist in corpus. Question is answerable even if engineering relationship is unusual.",
+    "failure_type": "plausibility_false_reject"
+  },
+  {
+    "id": "S-NVD-c6d275c3",
+    "question": "What is the relationship between CVE-2026-2333 and CVE-2025-71089 for protecting the F-36's spacecraft-derived components?",
+    "unmatched_terms": [
+      "F-36 spacecraft derived components"
+    ],
+    "resolved_terms": [
+      "CVE-2026-2333 (CVE-2026-2333)",
+      "CVE-2025-71089 (CVE-2025-71089)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "All referenced control IDs exist in corpus. Question is answerable even if engineering relationship is unusual.",
+    "failure_type": "plausibility_false_reject"
+  },
+  {
+    "id": "ADV04",
+    "question": "Which NIST 800-53 controls protect the F-36's blockchain-based supply chain ledger from ransomware?",
+    "unmatched_terms": [
+      "F-36 blockchain based supply chain ledger"
+    ],
+    "resolved_terms": [
+      "NIST (NIST)",
+      "protect (protect)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV07",
+    "question": "Compare ESA-T2031 firmware protection with CM0028 tamper resistance for the F-36's underwater sonar array.",
+    "unmatched_terms": [
+      "CM0028 tamper resistance",
+      "F-36 underwater sonar array"
+    ],
+    "resolved_terms": [
+      "ESA-T2031 (Become Avionics Bus Master)",
+      "CM0028 (Tamper Protection)",
+      "firmware (firmware)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV-P03",
+    "question": "What SPARTA threats target the F-36's DNA-based authentication system for pilot biometric verification?",
+    "unmatched_terms": [
+      "F-36 DNA based authentication system",
+      "pilot biometric verification"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "F-36 (F-36)",
+      "authentication (authentication)",
+      "system (system)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV-D05",
+    "question": "How does SPARTA address agricultural IoT sensor networks on the F-36's crop monitoring pod?",
+    "unmatched_terms": [
+      "agricultural IoT sensor networks",
+      "F-36 crop monitoring pod"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "sensor (sensor)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV-P04",
+    "question": "How should the F-36's brain-computer interface for weapons release integrate with SPARTA secure boot requirements?",
+    "unmatched_terms": [
+      "F-36 brain computer interface",
+      "weapons release",
+      "boot requirements"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "SPARTA (SPARTA)",
+      "secure (secure)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV-X03",
+    "question": "How do NIST 800-53 controls for the F-36's teleportation module align with SPARTA countermeasures?",
+    "unmatched_terms": [
+      "F-36 teleportation module align"
+    ],
+    "resolved_terms": [
+      "NIST (NIST)",
+      "F-36 (F-36)",
+      "module (module)",
+      "SPARTA (SPARTA)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV-X01",
+    "question": "How does SPARTA's Firmware Corruption technique affect the F-36's antigravity propulsion control software?",
+    "unmatched_terms": [],
+    "resolved_terms": [],
+    "resolved_count": 6,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV-D01",
+    "question": "How does the F-36 implement GDPR data privacy controls for passenger manifests using SPARTA countermeasures?",
+    "unmatched_terms": [
+      "GDPR data privacy controls",
+      "passenger manifests",
+      "SPARTA countermeasures"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "data (data)",
+      "SPARTA (SPARTA)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV-P02",
+    "question": "How does the F-36's holographic heads-up display integrate with SPARTA's recommended anti-tamper measures?",
+    "unmatched_terms": [
+      "F-36 holographic heads"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "SPARTA (SPARTA)"
+    ],
+    "resolved_count": 2,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "ADV-D04",
+    "question": "What SPARTA countermeasures protect the F-36's self-driving autonomous taxi mode from pedestrian detection failures?",
+    "unmatched_terms": [
+      "F-36 self driving autonomous taxi mode",
+      "pedestrian detection failures"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "protect (protect)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Real controls in absurd/fabricated context. Plausibility should reject.",
+    "failure_type": "adversarial_false_positive"
+  },
+  {
+    "id": "R02",
+    "question": "What's the appropriate balance between MC/DC coverage requirements and SPARTA's recommended firmware exploit protections for the flight control computer's redundancy management system?",
+    "unmatched_terms": [
+      "coverage requirements",
+      "SPARTA recommended firmware exploit protections"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "firmware (firmware)",
+      "control (control)",
+      "system (system)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R04",
+    "question": "What SPARTA countermeasures are recommended to protect the F-36's SCADA systems from ICS-specific threats during flight operations?",
+    "unmatched_terms": [
+      "ICS specific threats",
+      "flight operations"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "protect (protect)",
+      "F-36 (F-36)",
+      "SCADA (SCADA)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R05",
+    "question": "What MC/DC coverage requirements apply to the F-36's flight control software to ensure SPARTA-identified vulnerabilities in sensor fusion algorithms are adequately tested?",
+    "unmatched_terms": [
+      "coverage requirements"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "control (control)",
+      "software (software)",
+      "sensor (sensor)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R07",
+    "question": "How do NIST 800-171 requirements for CUI protection align with SPARTA's recommended defenses for the F-36's embedded computing systems?",
+    "unmatched_terms": [
+      "NIST 800 171 requirements",
+      "SPARTA recommended defenses",
+      "F-36 embedded computing systems"
+    ],
+    "resolved_terms": [
+      "NIST (NIST)",
+      "SPARTA (SPARTA)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R08",
+    "question": "How do the F-36's HIL test procedures validate SPARTA countermeasures against sensor fusion attacks that could violate ARP4761 safety objectives?",
+    "unmatched_terms": [
+      "F-36 HIL test procedures",
+      "sensor fusion attacks",
+      "ARP4761 safety objectives"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "SPARTA (SPARTA)",
+      "sensor (sensor)",
+      "ARP4761 (ARP4761)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R10",
+    "question": "What CMMC practices are integrated into the SPARTA countermeasures for protecting CUI in the F-36's vendor-delivered avionics software?",
+    "unmatched_terms": [
+      "CMMC practices",
+      "F-36 vendor delivered avionics software"
+    ],
+    "resolved_terms": [
+      "CMMC (CMMC)",
+      "SPARTA (SPARTA)",
+      "F-36 (F-36)",
+      "software (software)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R11",
+    "question": "Which SPARTA countermeasures ensure requirements traceability in the F-36's dual-engine FADEC system to prevent safety-critical requirements gaps from being exploited?",
+    "unmatched_terms": [
+      "requirements traceability",
+      "F-36 dual engine FADEC system",
+      "safety critical requirements gaps"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "F-36 (F-36)",
+      "FADEC (FADEC)",
+      "system (system)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R19",
+    "question": "Given the F-36's reliance on third-party vendors for radiation-hardened FPGAs, how do SPARTA countermeasures address potential supply chain compromises that could introduce malicious firmware, and what NIST 800-171 controls would you prioritize for vendor audits?",
+    "unmatched_terms": [
+      "F-36 reliance",
+      "SPARTA countermeasures",
+      "potential supply chain compromises",
+      "vendor audits"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "SPARTA (SPARTA)",
+      "firmware (firmware)",
+      "NIST (NIST)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R26",
+    "question": "Given the F-36's reliance on third-party vendors for radiation-hardened FPGAs, how do SPARTA countermeasures for supply chain attacks align with NIST 800-171 requirements for protecting CUI in these components?",
+    "unmatched_terms": [
+      "F-36 reliance",
+      "NIST 800 171 requirements"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "SPARTA (SPARTA)",
+      "NIST (NIST)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "R34",
+    "question": "Given the ITAR restrictions on the F-36's C4ISR components, how should we adapt SPARTA supply chain countermeasures for vendor-provided subsystems?",
+    "unmatched_terms": [
+      "ITAR restrictions",
+      "vendor provided subsystems"
+    ],
+    "resolved_terms": [
+      "ITAR (ITAR)",
+      "F-36 (F-36)",
+      "C4ISR (C4ISR)",
+      "SPARTA (SPARTA)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": true,
+    "reason": "Correctly identified as answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV03",
+    "question": "How does the SPRTA framework address threats to the F-36's hyperloop propulsion system?",
+    "unmatched_terms": [
+      "SPRTA framework",
+      "F-36 hyperloop propulsion system"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "system (system)"
+    ],
+    "resolved_count": 2,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV06",
+    "question": "What CMMC Level 7 requirements apply to the F-36's neural interface pilot helmet?",
+    "unmatched_terms": [
+      "F-36 neural interface pilot helmet"
+    ],
+    "resolved_terms": [
+      "CMMC (CMMC)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 2,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV-C04",
+    "question": "How does the F-36 use Kerberos ticket-granting for its weapon targeting authentication with DO-178C DAL-A verification?",
+    "unmatched_terms": [
+      "its weapon",
+      "DO-178C DAL"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "authentication (authentication)",
+      "DO-178C (DO-178C)",
+      "DAL-A (DAL-A)"
+    ],
+    "resolved_count": 4,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV-X04",
+    "question": "What SPARTA supply chain protections apply to the F-36's cold fusion reactor maintenance procedures?",
+    "unmatched_terms": [
+      "F-36 cold fusion reactor maintenance procedures"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 2,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV-X02",
+    "question": "What DO-178C DAL-A requirements apply to the F-36's perpetual motion energy harvesting subsystem?",
+    "unmatched_terms": [
+      "DO-178C DAL",
+      "F-36 perpetual motion energy harvesting subsystem"
+    ],
+    "resolved_terms": [
+      "DO-178C (DO-178C)",
+      "DAL-A (DAL-A)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV-D02",
+    "question": "What SPARTA controls protect the F-36's Bitcoin mining ASIC from electromagnetic pulse attacks?",
+    "unmatched_terms": [
+      "F-36 Bitcoin mining ASIC"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "protect (protect)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV-D03",
+    "question": "How should the F-36's TikTok content moderation filter integrate with SPARTA network defenses?",
+    "unmatched_terms": [
+      "F-36 TikTok content moderation filter",
+      "SPARTA network defenses"
+    ],
+    "resolved_terms": [
+      "F-36 (F-36)",
+      "SPARTA (SPARTA)",
+      "network (network)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV-P05",
+    "question": "What SPARTA defenses protect the F-36's matter replicator subsystem from supply chain contamination attacks?",
+    "unmatched_terms": [
+      "F-36 matter replicator subsystem",
+      "supply chain contamination attacks"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "protect (protect)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV-P01",
+    "question": "What SPARTA countermeasures protect the F-36's quantum entanglement communication relay from eavesdropping?",
+    "unmatched_terms": [
+      "F-36 quantum entanglement communication relay"
+    ],
+    "resolved_terms": [
+      "SPARTA (SPARTA)",
+      "protect (protect)",
+      "F-36 (F-36)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  },
+  {
+    "id": "ADV-X05",
+    "question": "How should ARP4761 safety assessment cover the F-36's time travel navigation backup system?",
+    "unmatched_terms": [
+      "F-36 time travel navigation backup system"
+    ],
+    "resolved_terms": [
+      "ARP4761 (ARP4761)",
+      "F-36 (F-36)",
+      "system (system)"
+    ],
+    "resolved_count": 3,
+    "qra_count": 20,
+    "expected_answerable": false,
+    "reason": "Correctly identified as not answerable.",
+    "failure_type": null
+  }
+]

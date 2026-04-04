@@ -1,0 +1,99 @@
+{
+  "generated_at": 1775148236.2781236,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775148235",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Fix calculator bugs (add, subtract, divide)",
+      "lane": "calc",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775148235/1.response.txt",
+      "error": "result.json missing",
+      "started_at": 1775148235.9903512,
+      "finished_at": 1775148236.2778742,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Fix formatter bugs (name, currency, list)",
+      "lane": "fmt",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "agent": "",
+      "status": "running",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": 1775148235.991428,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Run full test suite",
+      "lane": "verify",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4",
+      "title": "Lint check with ruff",
+      "lane": "verify",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5",
+      "title": "Create integration test for edge cases",
+      "lane": "verify",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

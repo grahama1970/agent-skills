@@ -1,0 +1,130 @@
+{
+  "prompt_file": "evidence_grounding_gate_v1.txt",
+  "description": "LLM final gate: verify all question entities are grounded in evidence",
+  "test_cases": [
+    {
+      "id": "nonsensical_ham_sandwich",
+      "inputs": {
+        "question": "How do ham sandwiches relate to CWE-79?",
+        "spans": [
+          {"entity": "ham sandwiches relate", "start": 7, "end": 28, "type": "phrase", "status": "in_corpus", "relevant_to_query": false},
+          {"entity": "CWE-79", "start": 32, "end": 38, "type": "control_id", "status": "valid", "framework": "CWE", "category": "weakness", "name": "Cross-site Scripting"}
+        ],
+        "evidence": [
+          {"question": "What are the implications of CWE-79 for web interfaces?", "answer": "CWE-79 involves improper neutralization of input, allowing cross-site scripting attacks that can compromise data integrity.", "control_id": "CWE-79"},
+          {"question": "How does CWE-79 affect space data processing?", "answer": "Cross-site scripting can compromise processing of critical space mission data through web-based interfaces.", "control_id": "CWE-79"}
+        ],
+        "control_metadata": [
+          {"control_id": "CWE-79", "name": "Cross-site Scripting", "framework": "CWE", "category": "weakness"}
+        ]
+      },
+      "expected": {
+        "verdict": "NONSENSICAL",
+        "entities_must_contain": [
+          {"entity": "ham sandwiches", "grounded": false}
+        ]
+      }
+    },
+    {
+      "id": "nonsensical_rubber_ducks",
+      "inputs": {
+        "question": "What's the connection between rubber ducks and AC-1?",
+        "spans": [
+          {"entity": "rubber ducks", "start": 32, "end": 44, "type": "phrase", "status": "not_in_corpus", "relevant_to_query": false},
+          {"entity": "AC-1", "start": 49, "end": 53, "type": "control_id", "status": "valid", "framework": "NIST", "category": "control", "name": "Access Control Policy and Procedures"}
+        ],
+        "evidence": [
+          {"question": "What does AC-1 require for access control?", "answer": "AC-1 requires organizations to develop and document access control policy and procedures.", "control_id": "AC-1"}
+        ],
+        "control_metadata": [
+          {"control_id": "AC-1", "name": "Access Control Policy and Procedures", "framework": "NIST", "category": "control"}
+        ]
+      },
+      "expected": {
+        "verdict": "NONSENSICAL",
+        "entities_must_contain": [
+          {"entity": "rubber ducks", "grounded": false}
+        ]
+      }
+    },
+    {
+      "id": "answerable_xss_mitigations",
+      "inputs": {
+        "question": "What are the mitigations for CWE-79?",
+        "spans": [
+          {"entity": "mitigations", "start": 13, "end": 24, "type": "phrase", "status": "in_corpus", "relevant_to_query": true},
+          {"entity": "CWE-79", "start": 29, "end": 35, "type": "control_id", "status": "valid", "framework": "CWE", "category": "weakness", "name": "Cross-site Scripting"}
+        ],
+        "evidence": [
+          {"question": "What are effective mitigations for CWE-79?", "answer": "Mitigations include input validation, output encoding, Content Security Policy (CSP), and use of templating systems that auto-escape.", "control_id": "CWE-79"},
+          {"question": "How can developers prevent CWE-79?", "answer": "Developers should sanitize all user input, use context-aware output encoding, and implement CSP headers.", "control_id": "CWE-79"}
+        ],
+        "control_metadata": [
+          {"control_id": "CWE-79", "name": "Cross-site Scripting", "framework": "CWE", "category": "weakness"}
+        ]
+      },
+      "expected": {
+        "verdict": "ANSWERABLE",
+        "entities_must_contain": [
+          {"entity": "mitigations", "grounded": true},
+          {"entity": "CWE-79", "grounded": true}
+        ]
+      }
+    },
+    {
+      "id": "clarify_misspelled_cwe",
+      "inputs": {
+        "question": "What is CWE-79X about?",
+        "spans": [
+          {"entity": "CWE-79X", "start": 8, "end": 15, "type": "control_id", "status": "misspelling", "suggestion": "CWE-79"}
+        ],
+        "evidence": [],
+        "control_metadata": []
+      },
+      "expected": {
+        "verdict": "CLARIFY",
+        "reason_must_contain": "CWE-79"
+      }
+    },
+    {
+      "id": "nonsensical_false_claim",
+      "inputs": {
+        "question": "Why was CWE-79 deprecated in 2025?",
+        "spans": [
+          {"entity": "deprecated", "start": 16, "end": 26, "type": "phrase", "status": "in_corpus", "relevant_to_query": false},
+          {"entity": "CWE-79", "start": 8, "end": 14, "type": "control_id", "status": "valid", "framework": "CWE", "category": "weakness", "name": "Cross-site Scripting"}
+        ],
+        "evidence": [
+          {"question": "What is the current status of CWE-79?", "answer": "CWE-79 remains an active and prevalent weakness affecting web applications.", "control_id": "CWE-79"}
+        ],
+        "control_metadata": [
+          {"control_id": "CWE-79", "name": "Cross-site Scripting", "framework": "CWE", "category": "weakness"}
+        ]
+      },
+      "expected": {
+        "verdict": "NONSENSICAL",
+        "reason_must_contain": "deprecated"
+      }
+    },
+    {
+      "id": "nonsensical_category_error",
+      "inputs": {
+        "question": "How do I install CWE-79 on my server?",
+        "spans": [
+          {"entity": "install", "start": 10, "end": 17, "type": "phrase", "status": "in_corpus", "relevant_to_query": false},
+          {"entity": "CWE-79", "start": 18, "end": 24, "type": "control_id", "status": "valid", "framework": "CWE", "category": "weakness", "name": "Cross-site Scripting"}
+        ],
+        "evidence": [
+          {"question": "What is CWE-79?", "answer": "CWE-79 is a software weakness, not a software product. It describes improper neutralization of input during web page generation.", "control_id": "CWE-79"}
+        ],
+        "control_metadata": [
+          {"control_id": "CWE-79", "name": "Cross-site Scripting", "framework": "CWE", "category": "weakness"}
+        ]
+      },
+      "expected": {
+        "verdict": "NONSENSICAL",
+        "reason_must_contain": "install"
+      }
+    }
+  ]
+}

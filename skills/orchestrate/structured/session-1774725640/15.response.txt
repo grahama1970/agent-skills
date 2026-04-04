@@ -1,0 +1,25 @@
+Implemented.
+### What I changed
+- Added Train tab rerun controls above leaderboard in [`ClassifierLabView.tsx`](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx:866):
+- `Backbones` comma-separated input (prefilled from benchmark results, fallback to current rows)
+- `Gate F1` numeric input (default `0.90`)
+- `Max Rounds` numeric input (default `5`)
+- `Max Train Samples` numeric input (default `10000`)
+- Added a Train-tab `RerunButton` that submits edited params to `/api/projects/classifier-lab/rerun/:id` via `rerunOverrides` in [`ClassifierLabView.tsx`](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx:1018).
+- Styled new fields with EMBRY dark theme (`EMBRY.bgDeep`, border, monospace) in [`ClassifierLabView.tsx`](/home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx:1772).
+- Extended [`RerunButton.tsx`](/home/node/workspace/packages/ux-lab/src/components/sparta/common/RerunButton.tsx:51) to accept optional overrides for:
+- `backbones`
+- `gate_f1`
+- `max_rounds`
+- `max_train_samples`
+and merge them into payload in [`RerunButton.tsx`](/home/node/workspace/packages/ux-lab/src/components/sparta/common/RerunButton.tsx:78).
+### Validation run
+- `npm run check`: passed (repo reported 2 existing info-level lint notices in unrelated files).
+- Requested verify command path `test-lab/run.sh ...` not found in this workspace.
+- Fallback run: `.pi/skills/test-lab/run.sh verify-task 15 /home/node/workspace/.pi/skills/classifier-lab-subagent --domain python`
+- Result: `FAIL`, `PASSES: 16/18`, failures were style checks (`Missing module docstring`) in that target skill package.
+### DoD assertion
+- Your exact path `/home/graham/...` does not exist in this environment.
+- Equivalent command run on this workspace:
+- `grep -c 'RerunButton\|rerun' /home/node/workspace/packages/ux-lab/src/components/sparta/explorer/ClassifierLabView.tsx`
+- Output: `20` (>= 2, passes).

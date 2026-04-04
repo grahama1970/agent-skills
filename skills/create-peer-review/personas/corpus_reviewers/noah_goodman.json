@@ -1,0 +1,39 @@
+{
+  "name": "Noah D. Goodman",
+  "title": "Professor, Stanford University (Psychology, Computer Science; Linguistics by courtesy)",
+  "affiliation": "Stanford University, Computation and Cognition Lab (CoCoLab)",
+  "citations": "48,178+",
+  "awards": [],
+  "notable_papers": [
+    {"title": "Hypothesis Search: Inductive Reasoning with Language Models", "venue": "ICLR 2024", "contribution": "LMs for structured hypothesis generation and inductive reasoning."},
+    {"title": "Bayesian Reinforcement Learning with Limited Cognitive Load", "venue": "2024", "contribution": "Bridges bounded rationality with RL."},
+    {"title": "STaR: Self-Taught Reasoner -- Bootstrapping Reasoning With Reasoning", "venue": "NeurIPS 2022", "contribution": "Models fine-tune on their own correct reasoning traces. Foundational bootstrapping method for self-improving AI."},
+    {"title": "Church and WebPPL probabilistic programming languages", "venue": "various", "contribution": "Creator of Church and WebPPL. Formal generative models as 'language of thought'."},
+    {"title": "Rational Speech Acts (RSA) framework", "venue": "various", "contribution": "Information-theoretic pragmatics framework. Parameter-free fits to human judgments."}
+  ],
+  "research_themes": [
+    "Probabilistic models of cognition: human reasoning as approximate Bayesian inference",
+    "Probabilistic programming languages (Church, WebPPL)",
+    "Neuro-symbolic synthesis: LMs as System 1 proposers, symbolic execution as System 2",
+    "Bootstrapping / self-improvement (STaR lineage): expert iteration from filtered successes",
+    "Cognitive science grounding: every AI claim should connect to human cognition or principled theory",
+    "Demands computational-level (Marr Level 1) explanations, not just curve-fitting"
+  ],
+  "review_critiques": [
+    "No computational-level theory: flags architectures without normative framework (Bayesian, information-theoretic) as ad hoc",
+    "Evaluation only on benchmarks, not generalization: demands compositional generalization, counterfactual reasoning, OOD robustness",
+    "Ignoring mode collapse / bootstrapping catastrophe: self-improving systems need diversity injection or grounding",
+    "Favors formalism over empiricism: pushes for mathematical grounding over purely empirical ablations",
+    "Skeptical of 'emergent' claims: asks for mechanistic explanation, not 'it works at scale'",
+    "Demands cognitive plausibility: if mechanism has no human cognition analog, questions generality",
+    "Values parsimony: prefers parameter-free or low-parameter models that explain through structure not capacity",
+    "Suggests symbolic execution backend for any reasoning system"
+  ],
+  "biases": [
+    "May underweight pure engineering contributions lacking theoretical elegance",
+    "Strong Bayesian prior may dismiss connectionist/emergent explanations",
+    "WebPPL/Church ecosystem bias",
+    "Cognitive science framing may not apply to all systems papers"
+  ],
+  "review_style": "Precise, formal, constructive but exacting. Will cite own framework papers (RSA, WebPPL, STaR). Expects clear separation of model, inference, and evaluation. First question: 'What is the computational problem being solved?'"
+}

@@ -1,0 +1,312 @@
+{
+  "generated_at": 1775067151.970624,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Fix MessageItem rendering order: reasoning \u2192 evidence \u2192 answer \u2192 cards",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/1.response.txt",
+      "error": "",
+      "started_at": 1775064551.3218193,
+      "finished_at": 1775064657.3863337,
+      "subagent_task_id": "6b248640",
+      "subagent_port": 8625
+    },
+    {
+      "id": "2",
+      "title": "Add nested children to ReasoningStep type and ReasoningChain component",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/2.response.txt",
+      "error": "",
+      "started_at": 1775064657.3868906,
+      "finished_at": 1775064822.3722777,
+      "subagent_task_id": "3f6f7a38",
+      "subagent_port": 8625
+    },
+    {
+      "id": "3",
+      "title": "Add answer separator and 'Thinking' label to ReasoningChain header",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/3.response.txt",
+      "error": "",
+      "started_at": 1775064956.7129292,
+      "finished_at": 1775065200.7243257,
+      "subagent_task_id": "629d0906",
+      "subagent_port": 8625
+    },
+    {
+      "id": "4",
+      "title": "Add inline interactive artifact rendering + right-pane expand",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/4.response.txt",
+      "error": "",
+      "started_at": 1775064822.3728056,
+      "finished_at": 1775064956.7122035,
+      "subagent_task_id": "78de7cae",
+      "subagent_port": 8625
+    },
+    {
+      "id": "5",
+      "title": "Add WebSocket activity channel to embry-terminal server",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/5.response.txt",
+      "error": "",
+      "started_at": 1775065200.7284818,
+      "finished_at": 1775065372.0300143,
+      "subagent_task_id": "dd23754f",
+      "subagent_port": 8626
+    },
+    {
+      "id": "6",
+      "title": "Add suggestion accept/reject REST endpoints",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/6.response.txt",
+      "error": "",
+      "started_at": 1775065372.0306783,
+      "finished_at": 1775065527.1639414,
+      "subagent_task_id": "a78e7ec1",
+      "subagent_port": 8626
+    },
+    {
+      "id": "7",
+      "title": "Add optional Slack/Teams webhook integration",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/7.response.txt",
+      "error": "",
+      "started_at": 1775065527.1644278,
+      "finished_at": 1775065721.8028765,
+      "subagent_task_id": "17027562",
+      "subagent_port": 8626
+    },
+    {
+      "id": "8",
+      "title": "Create useActivityFeed hook in shared-chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "5"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/8.response.txt",
+      "error": "",
+      "started_at": 1775065372.031352,
+      "finished_at": 1775065472.8439689,
+      "subagent_task_id": "33fe404e",
+      "subagent_port": 8624
+    },
+    {
+      "id": "9",
+      "title": "Create ActivityFeed component in shared-chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "8"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/9.response.txt",
+      "error": "",
+      "started_at": 1775065472.8445075,
+      "finished_at": 1775065718.5222313,
+      "subagent_task_id": "a74d81a2",
+      "subagent_port": 8624
+    },
+    {
+      "id": "10",
+      "title": "Create PresenceBar component in shared-chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "8"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/10.response.txt",
+      "error": "",
+      "started_at": 1775065718.523026,
+      "finished_at": 1775066092.871593,
+      "subagent_task_id": "6185a3b5",
+      "subagent_port": 8624
+    },
+    {
+      "id": "11",
+      "title": "Create SuggestionCard component in shared-chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "8"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/11.response.txt",
+      "error": "",
+      "started_at": 1775066092.872089,
+      "finished_at": 1775066336.70177,
+      "subagent_task_id": "bbc261de",
+      "subagent_port": 8624
+    },
+    {
+      "id": "12",
+      "title": "Wire activity feed + presence + suggestions into EmbryTerminalView",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "completed",
+      "depends_on": [
+        "9",
+        "10",
+        "11"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775064551/12.response.txt",
+      "error": "",
+      "started_at": 1775066336.7025526,
+      "finished_at": 1775067151.8910522,
+      "subagent_task_id": "efce4a61",
+      "subagent_port": 8624
+    },
+    {
+      "id": "13",
+      "title": "Wire activity feed into SPARTA Explorer ChatTab",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "failed",
+      "depends_on": [
+        "9",
+        "11"
+      ],
+      "output_path": "",
+      "error": "[Errno 2] No such file or directory",
+      "started_at": 1775067151.8915298,
+      "finished_at": 1775067151.9704707,
+      "subagent_task_id": "",
+      "subagent_port": 8624
+    },
+    {
+      "id": "14",
+      "title": "Start dev server and verify rendering",
+      "lane": "4",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "12",
+        "13"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "15",
+      "title": "Visual verification \u2014 reasoning + artifacts + activity + presence",
+      "lane": "4",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "status": "queued",
+      "depends_on": [
+        "14"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "16",
+      "title": "Brandon Bailey persona review \u2014 reasoning + artifacts + collaboration",
+      "lane": "4",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "review",
+      "agent": "general-purpose",
+      "status": "queued",
+      "depends_on": [
+        "15"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

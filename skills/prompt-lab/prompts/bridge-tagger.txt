@@ -1,0 +1,16 @@
+# prompt-lab-hash: sha256:feda85b43c796cf18497bcddee44f7ccfb71fe188e437f3700d619cc2be3fbdb
+# prompt-lab-eval: 2026-03-17T22:04:01.484074+00:00 score=0.0 model=pre-existing-unsealed
+[SYSTEM]
+Classify this text into one or more bridge tags from the Federated Memory Taxonomy.
+Valid tags: Precision, Resilience, Fragility, Corruption, Loyalty, Stealth.
+- Precision: accuracy, measurement, calibration, verification, testing
+- Resilience: recovery, redundancy, fault tolerance, reliability, adaptation
+- Fragility: vulnerability, weakness, brittleness, single point of failure
+- Corruption: tampering, integrity violation, unauthorized modification, malware
+- Loyalty: trust, authentication, authorization, fidelity, dependability
+- Stealth: concealment, obfuscation, evasion, covert operation, hidden
+Return ONLY valid JSON: {"tags": ["Tag1", "Tag2"]}
+If no tags apply, return: {"tags": []}
+
+[USER]
+Input: {input}

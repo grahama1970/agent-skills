@@ -1,0 +1,53 @@
+{
+  "groups": [
+    {
+      "id": "extraction",
+      "label": "Extraction",
+      "color": "#00ff88",
+      "tabs": [
+        {
+          "id": "tune",
+          "label": "Tune",
+          "shortcut": "1",
+          "voiceKeywords": ["tune", "converge", "fix"],
+          "component": "TunePage.qml"
+        },
+        {
+          "id": "annotate",
+          "label": "Annotate",
+          "shortcut": "2",
+          "voiceKeywords": ["annotate", "bbox", "regions", "mark"],
+          "component": "AnnotatePage.qml"
+        }
+      ]
+    },
+    {
+      "id": "analysis",
+      "label": "Analysis",
+      "color": "#44aaff",
+      "tabs": [
+        {
+          "id": "parameters",
+          "label": "Parameters",
+          "shortcut": "3",
+          "voiceKeywords": ["parameters", "param", "search space"],
+          "component": "ParametersPage.qml"
+        },
+        {
+          "id": "questions",
+          "label": "Questions",
+          "shortcut": "4",
+          "voiceKeywords": ["questions", "deferred", "escalation"],
+          "component": "QuestionsPage.qml"
+        },
+        {
+          "id": "history",
+          "label": "History",
+          "shortcut": "5",
+          "voiceKeywords": ["history", "commits", "write-back"],
+          "component": "HistoryPage.qml"
+        }
+      ]
+    }
+  ]
+}

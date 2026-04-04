@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "Binary Explorer Ingestion Pipeline UI",
+    "goal": "Add ELF binary ingestion UI with live progress (jsbeautify, /treesitter, ArangoDB ingest) to Binary Explorer, matching docker-log-style output",
+    "plan_type": "hybrid",
+    "created": "2026-03-24",
+    "primary_persona": {
+      "name": "Graham Anderson",
+      "role": "Architect \u2014 needs to ingest new binaries from the Binary Explorer UI with visible progress",
+      "source": ".pi/agents/graham-anderson/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 2
+  },
+  "capability_overlap": [
+    "/memory recall: 'UX Lab is the simulation environment' \u2014 Binary Explorer architecture defined",
+    "Checked /analyze-elf \u2014 has features() command with 6 pipeline stages, --store flag for ArangoDB",
+    "Checked /treesitter \u2014 AST parsing skill, called by /analyze-elf step 4",
+    "Checked /task-monitor \u2014 progress tracking via HTTP API, can integrate for stage progress",
+    "Checked /mockup-lab \u2014 Stitch SDK available, STITCH_API_KEY in .env",
+    "Checked /ux-lab \u2014 shared LeftPane + EmbryStyle available in components/common/",
+    "Checked packages/ux-lab/server/test-runner.ts \u2014 existing Puppeteer CDP test runner for interaction testing"
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Design"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Backend"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Frontend"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: Integration + Tests"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Stitch mockup: Binary ingestion progress panel (docker-log style)",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Use /mockup-lab (Stitch) + /create-design-board to generate mockup for the ingestion progress panel:",
+        "  Device: desktop",
+        "  Theme: NVIS dark (#141414 bg, #00ff88 green, #ff4444 red, #ffaa00 amber, #7c3aed accent)",
+        "  Panel location: data panel area (bottom of left pane) when no node is selected",
+        "  Layout: Docker-log-style vertical task list with:",
+        "    - 6 pipeline stages as rows: (0) Memory recall, (1) CLI --help parse, (2) Tier 0 regex extract, (3) jsbeautify bundled JS, (4) /treesitter AST parse, (5) Ingest to ArangoDB",
+        "    - Each row: [status icon] [stage name] [duration] [detail count]",
+        "    - Status icons: \u25cb pending, \u25d0 running (amber pulse), \u2713 done (green), \u2717 failed (red)",
+        "    - Running stage shows inline progress text (e.g. 'Parsing 3/7 chunks...')",
+        "    - Top: binary name input + 'INGEST' button (accent color)",
+        "    - Bottom: summary line '334 nodes \u00b7 755 edges \u00b7 12.4s total'",
+        "    - Overall progress bar at top (thin, accent color)",
+        "  Font: JetBrains Mono for all text (monospace log feel)",
+        "  Reference: Docker build output, GitHub Actions log, Vercel deploy log",
+        "Save mockup screenshot to packages/ux-lab/captures/binary-explorer/ingest-progress-mockup.png"
+      ],
+      "tests": [
+        "test -f packages/ux-lab/captures/binary-explorer/ingest-progress-mockup.png",
+        "test-lab/run.sh verify-task 1 packages/ux-lab/captures/ --domain design"
+      ],
+      "gate": {
+        "command": "test -f packages/ux-lab/captures/binary-explorer/ingest-progress-mockup.png && echo OK",
+        "assertion": "Mockup PNG exists"
+      },
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/captures/binary-explorer/ingest-progress-mockup.png && echo DONE",
+        "assertion": "Mockup screenshot saved"
+      }
+    },
+    {
+      "id": "2",
+      "title": "SSE streaming endpoint for /analyze-elf pipeline progress",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Add to packages/ux-lab/server/index.ts:",
+        "  POST /api/binary/ingest \u2014 starts /analyze-elf features <binary_path> --store",
+        "  Spawns the process via child_process.spawn()",
+        "  Streams stdout/stderr lines as SSE events to the client",
+        "  SSE event format: {stage: number, status: 'running'|'done'|'failed', message: string, detail?: {count: number}}",
+        "  Parse /analyze-elf loguru output to detect stage transitions:",
+        "    'Tier 0: deterministic extraction' \u2192 stage 2 running",
+        "    'jsbeautify' \u2192 stage 3 running",
+        "    'treesitter' \u2192 stage 4 running",
+        "    'store_graph' \u2192 stage 5 running",
+        "    'Wrote N nodes' \u2192 stage 5 done with count",
+        "  GET /api/binary/ingest/status \u2014 returns current ingestion state (for reconnection)",
+        "  Use existing Express app, do NOT create a new server"
+      ],
+      "tests": [
+        "grep -q 'binary/ingest' packages/ux-lab/server/index.ts",
+        "test-lab/run.sh verify-task 2 packages/ux-lab/server/ --domain node"
+      ],
+      "gate": {
+        "command": "grep -c 'binary/ingest' packages/ux-lab/server/index.ts",
+        "assertion": "At least 2 route definitions"
+      },
+      "png_evidence": [
+        "Screenshot of SSE event stream in browser DevTools Network tab"
+      ],
+      "definition_of_done": {
+        "command": "curl -s http://localhost:3001/api/binary/ingest/status | python3 -c 'import sys,json; print(json.load(sys.stdin).get(\"status\",\"?\"))'",
+        "assertion": "Returns idle or running"
+      }
+    },
+    {
+      "id": "3",
+      "title": "React IngestionProgress component (from Stitch mockup)",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/src/components/common/IngestionProgress.tsx from /create-design-board mockup:",
+        "  Shared component (goes in common/ alongside LeftPane, EmbryStyle)",
+        "  Props: {endpoint: string, binaryName: string, onComplete: (stats: {nodes: number, edges: number}) => void}",
+        "  Uses EventSource (SSE) to connect to the ingest endpoint",
+        "  Renders 6 pipeline stages as vertical list matching Stitch mockup",
+        "  Each stage: status icon + name + duration + detail",
+        "  Running stage has amber pulse animation (reuse EMBRY tokens)",
+        "  Top: thin progress bar (width = completed_stages / total_stages)",
+        "  Bottom: summary stats when complete",
+        "  Use EmbryStyle tokens only \u2014 no raw hex colors",
+        "  Reference: packages/ux-lab/captures/binary-explorer/ingest-progress-mockup.png"
+      ],
+      "tests": [
+        "grep -q 'IngestionProgress' packages/ux-lab/src/components/common/IngestionProgress.tsx",
+        "test-lab/run.sh verify-task 3 packages/ux-lab/src/components/common/ --domain react"
+      ],
+      "gate": {
+        "command": "npx tsc --noEmit --skipLibCheck 2>&1 | grep -c 'IngestionProgress' || echo 0",
+        "assertion": "No type errors in IngestionProgress"
+      },
+      "design_reference": "packages/ux-lab/captures/binary-explorer/ingest-progress-mockup.png",
+      "png_evidence": [
+        "Headless Chrome screenshot of IngestionProgress component in isolation"
+      ],
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/src/components/common/IngestionProgress.tsx && npx tsc --noEmit --skipLibCheck 2>&1 | grep 'IngestionProgress' | wc -l",
+        "assertion": "File exists and 0 type errors"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Wire IngestionProgress into Binary Explorer data panel",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "2",
+        "3"
+      ],
+      "implementation": [
+        "In BinaryExplorerView.tsx, wire /create-design-board approved ingestion UI into the data panel (bottom pane):",
+        "  When no node is selected AND no scene nodes exist, show:",
+        "    1. Binary overview (existing \u2014 NAMESPACES, TOP FEATURES)",
+        "    2. 'INGEST NEW BINARY' section at bottom:",
+        "       - Text input for binary path (or file picker)",
+        "       - 'INGEST' button (accent color)",
+        "       - When clicked, shows <IngestionProgress endpoint='/api/binary/ingest' binaryName={name} />",
+        "    3. On complete: refresh useBinaryData hook, add new binary to left pane",
+        "  Also add an 'Ingest' button to the left pane BinaryLeftPane component",
+        "  Use the shared IngestionProgress component from common/"
+      ],
+      "tests": [
+        "grep -q 'IngestionProgress' packages/ux-lab/src/components/binary-explorer/BinaryExplorerView.tsx",
+        "test-lab/run.sh verify-task 4 packages/ux-lab/src/components/binary-explorer/ --domain react"
+      ],
+      "gate": {
+        "command": "npx vite build --mode development 2>&1 | grep -c 'built'",
+        "assertion": "Build succeeds"
+      },
+      "design_reference": "packages/ux-lab/captures/binary-explorer/ingest-progress-mockup.png",
+      "png_evidence": [
+        "Headless Chrome screenshot of Binary Explorer with ingestion panel visible in data area"
+      ],
+      "definition_of_done": {
+        "command": "npx vite build --mode development 2>&1 | grep '\u2713 built'",
+        "assertion": "Build passes with ingestion wired in"
+      }
+    },
+    {
+      "id": "5",
+      "title": "VLM review: compare implementation screenshot to Stitch mockup",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "gemini",
+      "mode": "review",
+      "depends_on": [
+        "4"
+      ],
+      "implementation": [
+        "Use /mockup-lab review to compare:",
+        "  1. Take headless Chrome screenshot of the ingestion progress panel",
+        "  2. Compare against Stitch mockup at captures/binary-explorer/ingest-progress-mockup.png",
+        "  3. Score: match_score >= 80 \u2192 pass, < 80 \u2192 list specific deviations",
+        "  4. If fail: list what to fix (colors, spacing, icons, text)"
+      ],
+      "tests": [
+        "echo 'VLM review completed'"
+      ],
+      "gate": {
+        "command": "echo 'VLM gate'",
+        "assertion": "Review completed"
+      },
+      "definition_of_done": {
+        "command": "echo 'VLM review done'",
+        "assertion": "match_score >= 80 or deviations documented"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Add ingestion tests to Binary Explorer test manifest",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "4"
+      ],
+      "implementation": [
+        "Add tests to packages/ux-lab/test-manifest.json in group 'binary-explorer-ingestion':",
+        "  1. Ingest button visible when no node selected",
+        "  2. Clicking Ingest shows progress panel",
+        "  3. Progress stages render correctly (6 stages)",
+        "  4. SSE events update progress in real time",
+        "  5. On complete, new binary appears in left pane",
+        "  6. New binary can be explored (seed, click, expand)",
+        "Use the Testing tab runner format (Puppeteer actions)"
+      ],
+      "tests": [
+        "python3 -c \"import json; d=json.load(open('packages/ux-lab/test-manifest.json')); print(sum(1 for t in d['tests'] if 'ingestion' in t.get('group','')))\""
+      ],
+      "gate": {
+        "command": "python3 -c \"import json; d=json.load(open('packages/ux-lab/test-manifest.json')); print(sum(1 for t in d['tests'] if 'ingestion' in t.get('group','')))\"",
+        "assertion": "At least 10 ingestion tests"
+      },
+      "definition_of_done": {
+        "command": "python3 -c \"import json; d=json.load(open('packages/ux-lab/test-manifest.json')); print(sum(1 for t in d['tests'] if 'ingestion' in t.get('group','')))\"",
+        "assertion": "At least 10 ingestion tests in manifest"
+      }
+    }
+  ]
+}

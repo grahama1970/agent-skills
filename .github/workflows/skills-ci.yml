@@ -1,0 +1,117 @@
+name: Skills CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['skills/**']
+  pull_request:
+    branches: [main]
+    paths: ['skills/**']
+
+jobs:
+  lint-skills:
+    name: Lint skill structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check skill structure
+        run: |
+          FAIL=0
+          WARN=0
+          TOTAL=0
+          MISSING_SKILL_MD=""
+          MISSING_RUN_SH=""
+          MISSING_SANITY_SH=""
+          PARSE_ERRORS=""
+
+          for dir in skills/*/; do
+            skill=$(basename "$dir")
+
+            # Skip system/hidden dirs
+            [[ "$skill" == .* ]] && continue
+            [[ "$skill" == __pycache__ ]] && continue
+
+            TOTAL=$((TOTAL + 1))
+
+            # Required: SKILL.md
+            if [[ ! -f "$dir/SKILL.md" ]]; then
+              MISSING_SKILL_MD="$MISSING_SKILL_MD  - $skill\n"
+              FAIL=$((FAIL + 1))
+            fi
+
+            # Recommended: run.sh
+            if [[ ! -f "$dir/run.sh" ]]; then
+              MISSING_RUN_SH="$MISSING_RUN_SH  - $skill\n"
+              WARN=$((WARN + 1))
+            fi
+
+            # Recommended: sanity.sh
+            if [[ ! -f "$dir/sanity.sh" ]]; then
+              MISSING_SANITY_SH="$MISSING_SANITY_SH  - $skill\n"
+              WARN=$((WARN + 1))
+            fi
+
+            # Validate shell scripts parse (syntax only)
+            for sh in "$dir"/*.sh; do
+              [[ -f "$sh" ]] || continue
+              if ! bash -n "$sh" 2>/dev/null; then
+                PARSE_ERRORS="$PARSE_ERRORS  - $sh\n"
+                FAIL=$((FAIL + 1))
+              fi
+            done
+          done
+
+          echo "=== Skills CI Report ==="
+          echo "Total skills: $TOTAL"
+          echo ""
+
+          if [[ -n "$MISSING_SKILL_MD" ]]; then
+            echo "FAIL: Missing SKILL.md:"
+            echo -e "$MISSING_SKILL_MD"
+          fi
+
+          if [[ -n "$PARSE_ERRORS" ]]; then
+            echo "FAIL: Shell script parse errors:"
+            echo -e "$PARSE_ERRORS"
+          fi
+
+          if [[ -n "$MISSING_RUN_SH" ]]; then
+            echo "WARN: Missing run.sh:"
+            echo -e "$MISSING_RUN_SH"
+          fi
+
+          if [[ -n "$MISSING_SANITY_SH" ]]; then
+            echo "WARN: Missing sanity.sh:"
+            echo -e "$MISSING_SANITY_SH"
+          fi
+
+          if [[ $FAIL -gt 0 ]]; then
+            echo "FAILED: $FAIL error(s) found"
+            exit 1
+          fi
+
+          echo "PASSED: All $TOTAL skills have valid structure"
+
+      - name: Check for secrets in skills
+        run: |
+          FAIL=0
+          # Scan for common secret patterns in tracked files
+          if git ls-files skills/ | xargs grep -lEn \
+            '(APIKEY|API_KEY|SECRET|PASSWORD|TOKEN)\s*=\s*["\x27][^"\x27]{8,}' \
+            2>/dev/null; then
+            echo "FAIL: Potential secrets found in skill files"
+            FAIL=1
+          fi
+
+          if git ls-files skills/ | xargs grep -lEn \
+            'sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36}|glpat-[a-zA-Z0-9]{20}' \
+            2>/dev/null; then
+            echo "FAIL: API tokens found in skill files"
+            FAIL=1
+          fi
+
+          if [[ $FAIL -gt 0 ]]; then
+            exit 1
+          fi
+          echo "PASSED: No secrets detected"

@@ -1,0 +1,36 @@
+{
+  "name": "music-compile-generation-prompt",
+  "description": "Platform-ready generation payload from annotated lyrics + piano-roll spec — validates platform, bpm, key, tags, lyrics section markers, and prompt quality for Sonauto/MusicGen/AudioLDM2/StableAudio",
+  "cases": [
+    {
+      "id": "whisperheads_sonauto_v1",
+      "input": {
+        "strings": "Platform: sonauto\n\nAnnotated lyrics summary: Whisperheads by Horus. BPM: 85, Key: D minor, Time Signature: 4/4. Genre: indie, alternative, atmospheric, dark. Emotional arc: verse (fear→sadness, whisper/sing, p/mp) → chorus (trust→anger, belt, f). 4 phrases across 8 bars.\n\nPiano-roll spec summary: 8 bars total. Verse (bars 1-4): Dm-Am-Bb-Gm, energy 0.2-0.35. Chorus (bars 5-8): Bb-F-Gm-Dm, energy 0.6-0.8. Instruments: bass, keys, vocal; drums enter at chorus. Notes include whispered vocal at D3/A2 range building to belted D4 at chorus.\n\nSong brief: Dark atmospheric indie/alternative. Influences: Radiohead Kid A textures, Portishead trip-hop darkness, Nine Inch Nails The Fragile quiet-loud dynamics. Target sound: sparse keys, deep bass, atmospheric pads, lo-fi crackle in verse, clean/wide in chorus. BPM 85, slow and deliberate.\n\nLyrics:\n[verse]\nThey speak in static frequencies\nBeneath the hum of broken light\n\n[chorus]\nWe are the whisperheads\nTuned to the noise you left behind"
+      },
+      "expected": {
+        "platform": "sonauto",
+        "bpm": 85,
+        "key": "D minor",
+        "required_tags": ["indie", "atmospheric", "dark"],
+        "required_lyrics_markers": ["[verse]", "[chorus]"],
+        "instrumental": false
+      },
+      "notes": "Validates sonauto payload against Whisperheads compilation ground truth. Platform must be sonauto, bpm/key must match exactly, tags must include core genre/mood words, lyrics must contain section markers."
+    },
+    {
+      "id": "whisperheads_musicgen_v1",
+      "input": {
+        "strings": "Platform: musicgen\n\nAnnotated lyrics summary: Whisperheads by Horus. BPM: 85, Key: D minor, Genre: indie, alternative, atmospheric, dark. Emotional arc: fear/sadness verse → trust/anger chorus.\n\nPiano-roll spec summary: 8 bars total. Verse sparse and lo-fi. Chorus wide and full. Instruments: bass, keys, vocal, drums (chorus only).\n\nSong brief: Dark atmospheric indie/alternative. Influences: Radiohead Kid A, Portishead trip-hop, Nine Inch Nails The Fragile. Sparse keys, deep bass, atmospheric pads, lo-fi crackle verse, clean chorus."
+      },
+      "expected": {
+        "platform": "musicgen",
+        "bpm": 85,
+        "key": "D minor",
+        "required_tags": ["indie", "atmospheric", "dark"],
+        "required_lyrics_markers": [],
+        "instrumental": true
+      },
+      "notes": "MusicGen does not support lyrics — instrumental must be true and lyrics field omitted. Prompt should be a single dense descriptive sentence."
+    }
+  ]
+}

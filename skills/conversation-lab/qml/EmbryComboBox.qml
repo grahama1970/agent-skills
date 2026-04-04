@@ -1,0 +1,1 @@
+../voice-lab/qml/EmbryComboBox.qml

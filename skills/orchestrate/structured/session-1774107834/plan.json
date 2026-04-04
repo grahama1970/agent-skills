@@ -1,0 +1,282 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "metadata": {
+    "title": "Music Lab Pipeline \u2014 Implementation",
+    "goal": "Build the 10-stage music creation pipeline: Python pipeline runner + React UX from Stitch mockups",
+    "plan_type": "hybrid",
+    "created": "2026-03-20",
+    "context": "Pipeline design complete (pipeline-summary.md). Stitch mockups exist for all 10 stages (project 6234033554959844801). yue_cli.py updated with audio reference flags. /consume-midi and /create-midi scaffolded. pipeline.py exists but needs rewrite to match 10-stage architecture. React components exist but need rebuild from Stitch mockups.\n",
+    "primary_persona": {
+      "name": "nico-bailon",
+      "role": "Senior Embry OS Developer",
+      "source": ".pi/agents/nico-bailon/AGENTS.md"
+    }
+  },
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "execution": {
+    "max_concurrency": 1
+  },
+  "capability_overlap": [
+    "/music-lab converge.py exists (S08 convergence loop)",
+    "/music-lab pipeline.py exists (needs rewrite for 10 stages)",
+    "yue_cli.py updated with --vocal-ref --instrumental-ref flags",
+    "/consume-midi and /create-midi scaffolded (SKILL.md + run.sh, no Python)",
+    "/story-lab scaffolded (no Python implementation)",
+    "Stitch mockups for all 10 stages in project 6234033554959844801",
+    "packages/ux-lab/src/components/music-lab/ has prior components (need rebuild from mockups)",
+    "annotated-lyrics.schema.json and piano-roll-spec.schema.json exist",
+    "Whisperheads fixtures exist"
+  ],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Skill implementations"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Pipeline rewrite"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: UX from Stitch mockups"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: Integration + test"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Implement /consume-midi search + ingest",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Read /consume-midi/SKILL.md for the interface contract",
+        "Create search.py: query ArangoDB consume_midi collection via /memory recall Unix socket",
+        "Create ingest.py: store MIDI fragments with key, BPM, instrument, heart tags",
+        "Search accepts --key, --bpm, --instrument, --mood filters",
+        "Use httpx Unix socket to /memory endpoints (NOT direct ArangoDB)"
+      ],
+      "tests": [
+        "bash .pi/skills/consume-midi/sanity.sh"
+      ],
+      "definition_of_done": {
+        "command": "uv run --project .pi/skills/consume-midi python .pi/skills/consume-midi/search.py --help",
+        "assertion": "Help text shows --key, --bpm, --instrument, --mood flags"
+      }
+    },
+    {
+      "id": "T2",
+      "title": "Implement /create-midi compose + move midi_utils.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Move midi_utils.py from /create-music to /create-midi",
+        "Create compose.py: LLM arrangement via /prompt-lab prompt",
+        "compose takes annotated-lyrics.json + consume-midi fragments + arrangement notes + heart tags",
+        "Outputs piano-roll-spec.json matching schema",
+        "All LLM prompts MUST go through /prompt-lab"
+      ],
+      "tests": [
+        "bash .pi/skills/create-midi/sanity.sh"
+      ],
+      "definition_of_done": {
+        "command": "uv run --project .pi/skills/create-midi python .pi/skills/create-midi/compose.py --help",
+        "assertion": "Help shows --lyrics, --references, --heart, --out flags"
+      }
+    },
+    {
+      "id": "T3",
+      "title": "Implement /story-lab converge.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Follow /paper-lab and /music-lab converge.py pattern",
+        "Loop: /create-story \u2192 /review-story \u2192 diagnose \u2192 fix \u2192 repeat",
+        "Delta scoring for lyrics: lore fidelity, emotional arc, voice consistency, rhyme",
+        "Converges when all dimensions below threshold"
+      ],
+      "tests": [
+        "bash .pi/skills/story-lab/sanity.sh"
+      ],
+      "definition_of_done": {
+        "command": "uv run --project .pi/skills/story-lab python .pi/skills/story-lab/converge.py --help",
+        "assertion": "Help shows converge command with --input, --out, --max-rounds"
+      }
+    },
+    {
+      "id": "T4",
+      "title": "Rewrite pipeline.py for 10-stage architecture",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "T1",
+        "T2",
+        "T3"
+      ],
+      "implementation": [
+        "Read pipeline-steps.md for the complete stage definitions",
+        "Read pipeline-summary.md for the architecture overview",
+        "Rewrite MusicPipeline class with 10 stages (S00-S09)",
+        "S03: /create-stems + /review-music (no RVC training)",
+        "S04: /create-story + /story-lab + annotation (merged)",
+        "S05: /create-midi compose + from-spec",
+        "S06: compile prompt via /prompt-lab",
+        "S07: /create-music yue with --vocal-ref --instrumental-ref",
+        "S08: converge loop back to S06 for re-prompting",
+        "S09: RVC training + voice conversion",
+        "WebSocket broadcast to ux-lab for real-time progress"
+      ],
+      "tests": [
+        "uv run --project .pi/skills/music-lab python .pi/skills/music-lab/pipeline.py run whisperheads --dry-run --out /tmp/test"
+      ],
+      "definition_of_done": {
+        "command": "uv run --project .pi/skills/music-lab python .pi/skills/music-lab/pipeline.py run whisperheads --dry-run --out /tmp/pipeline-test",
+        "assertion": "All 10 stages pass in dry-run, pipeline_results.json shows all_passed: true"
+      }
+    },
+    {
+      "id": "T5",
+      "title": "Build S03 stem viewer React component from Stitch mockup",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "T4"
+      ],
+      "implementation": [
+        "Reference: Stitch screen 4b9b20e4 (DAW-style stem viewer Graham created)",
+        "Also reference: Suno Studio colored track pattern",
+        "Use Web Audio API for real waveform rendering",
+        "Per-track selection with drag handles",
+        "Solo/Mute per track",
+        "Selected clips cards at bottom with stem identity dots",
+        "Album art + song identity always visible"
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit && npx vite build --mode development",
+        "assertion": "Build succeeds with StemViewer component"
+      }
+    },
+    {
+      "id": "T6",
+      "title": "Build S04 lyrics editor React component from Stitch mockup",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "T4"
+      ],
+      "implementation": [
+        "Reference: Stitch screen 4b5e9e89 (lyrics with phonetic popover)",
+        "Notion-style editor with colored section markers",
+        "Emotional word emphasis (heart tag colors)",
+        "Click word \u2192 inline phonetic timing editor (syllable boxes)",
+        "Emotion/dynamics/vocal pills per phrase",
+        "Convergence round counter"
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit && npx vite build --mode development",
+        "assertion": "Build succeeds with LyricsEditor component"
+      }
+    },
+    {
+      "id": "T7",
+      "title": "Build pipeline view + remaining stage components",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "T5",
+        "T6"
+      ],
+      "implementation": [
+        "Vertical pipeline layout with S03 and S04 as interactive wells",
+        "S00-S02 as simpler display wells (lore fragments, song cards, stem bars)",
+        "S05-S09 as status/output wells (arrangement, prompt preview, audio player, convergence chart, voice comparison)",
+        "WebSocket integration via useAgentBus for live pipeline progress",
+        "Wire into App.tsx as Music Lab tab"
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx vite build --mode development"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx vite build --mode development",
+        "assertion": "Full build succeeds with Music Lab tab showing pipeline view"
+      }
+    },
+    {
+      "id": "T8",
+      "title": "Create /prompt-lab prompts for S04 annotation + S05 composition + S06 compile",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "T4"
+      ],
+      "implementation": [
+        "Create prompt: music-lyrics-annotate (lyrics \u2192 annotated-lyrics.json)",
+        "Create prompt: music-piano-roll-spec (annotated lyrics + refs \u2192 arrangement)",
+        "Create prompt: music-compile-generation-prompt (all artifacts \u2192 platform-specific prompt)",
+        "Evaluate each against Whisperheads fixtures",
+        "ALL prompts through /prompt-lab create + eval"
+      ],
+      "tests": [
+        "ls .pi/skills/prompt-lab/prompts/music-*.txt"
+      ],
+      "definition_of_done": {
+        "command": "ls .pi/skills/prompt-lab/prompts/music-lyrics-annotate.txt .pi/skills/prompt-lab/prompts/music-piano-roll-spec.txt .pi/skills/prompt-lab/prompts/music-compile-generation-prompt.txt",
+        "assertion": "All 3 prompt files exist"
+      }
+    },
+    {
+      "id": "T9",
+      "title": "End-to-end dry-run: Whisperheads",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "T4",
+        "T7",
+        "T8"
+      ],
+      "implementation": [
+        "Run full pipeline in dry-run mode for Whisperheads project",
+        "Verify all 10 stages produce output artifacts",
+        "Verify UX shows pipeline progress via WebSocket",
+        "Verify status.json tracks all stages"
+      ],
+      "tests": [
+        "uv run --project .pi/skills/music-lab python .pi/skills/music-lab/pipeline.py run whisperheads --dry-run"
+      ],
+      "definition_of_done": {
+        "command": "cat /tmp/pipeline-e2e/pipeline_results.json | python3 -c \"import sys,json; d=json.load(sys.stdin); assert d['all_passed'], 'pipeline failed'\"",
+        "assertion": "All stages passed in dry-run"
+      }
+    }
+  ]
+}

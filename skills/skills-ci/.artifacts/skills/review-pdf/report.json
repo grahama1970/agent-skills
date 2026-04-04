@@ -1,0 +1,85 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-plan",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-03-05T07:00:30.302246+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 7,
+    "total": 7
+  },
+  "worktree": null,
+  "skill": "review-pdf",
+  "violations": [
+    {
+      "rule": "python.argparse",
+      "severity": "warn",
+      "skill": "review-pdf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/verify/question_book_reader.py",
+      "message": "Uses argparse; prefer Typer.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "review-pdf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/verify/runner.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "review-pdf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/verify/escalation.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "review-pdf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/verify/timeout.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "review-pdf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/verify/cli_helpers.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "review-pdf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/verify/question_book_reader.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    },
+    {
+      "rule": "subprocess.venv_leak",
+      "severity": "warn",
+      "skill": "review-pdf",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/review-pdf/verify/discovery.py",
+      "message": "Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks in scheduler context.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

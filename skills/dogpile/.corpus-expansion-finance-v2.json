@@ -1,0 +1,13 @@
+{
+  "completed": 291,
+  "total": 500,
+  "description": "Harvesting finance_pdfs_v2.txt",
+  "current_item": "Done",
+  "stats": {
+    "success": 291,
+    "failed": 0
+  },
+  "elapsed_seconds": 105.3,
+  "last_updated": "2026-02-10 09:08:31",
+  "status": "completed"
+}

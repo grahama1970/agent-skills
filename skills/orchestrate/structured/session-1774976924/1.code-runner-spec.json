@@ -1,0 +1,12 @@
+{
+  "task_id": "1",
+  "title": "Add /api/memory/traceability endpoint",
+  "prompt": "Task: Add /api/memory/traceability endpoint\n\nImplementation:\n- Add POST /api/memory/traceability to server/index.ts\n- Input: { control_id: string }\n- Use proxyPost to daemon /query: traverse chunk_control_edges where _to == sparta_controls/ctrl__{id}\n- Fetch source datalake_chunk documents via _from\n- Group by asset_type (Requirement, Table, Figure, Text, Equation)\n- Sort within group by edge confidence descending\n- Return: { control_id, groups: {...}, total_chunks: N }\n- AQL in memory project only \u2014 use daemon /query endpoint\n\nDefinition of Done:\n- Command: curl -s http://localhost:3001/api/memory/traceability -H 'Content-Type: application/json' -d '{\"control_id\":\"IA-0002\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert len(d.get('groups',{})) > 0\"\n- Assertion: Returns grouped chunks with at least one asset_type group\n\nTests:\n- curl -sf http://localhost:3001/api/memory/traceability -H 'Content-Type: application/json' -d '{\"control_id\":\"REC-0001\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d.get('total_chunks',0)>0\"\n- curl -sf http://localhost:3001/api/memory/traceability -H 'Content-Type: application/json' -d '{\"control_id\":\"NONEXISTENT\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d.get('total_chunks',0)==0\"",
+  "backend": "sonnet",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774976924",
+  "definition_of_done": {
+    "command": "curl -s http://localhost:3001/api/memory/traceability -H 'Content-Type: application/json' -d '{\"control_id\":\"IA-0002\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert len(d.get('groups',{})) > 0\"",
+    "assertion": "Returns grouped chunks with at least one asset_type group"
+  }
+}

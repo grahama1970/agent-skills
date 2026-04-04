@@ -1,0 +1,186 @@
+```diff
+--- a/.pi/skills/monitor-codebase/run.sh
++++ b/.pi/skills/monitor-codebase/run.sh
+@@ -163,8 +163,49 @@ run_best_practices_checks() {
+     echo "[]"
+   else
+     printf '[%s]' "$(IFS=,; echo "${violations[*]}")"
+   fi
+ }
+ 
++git_has_changes() {
++  local repo_path="$1"
++  [[ -n "$(git -C "$repo_path" status --porcelain 2>/dev/null)" ]]
++}
++
++collect_git_changed_paths() {
++  local repo_path="$1"
++  python3 - "$repo_path" <<'PY'
++import subprocess
++import sys
++
++repo = sys.argv[1]
++output = subprocess.check_output(
++    ["git", "-C", repo, "status", "--porcelain", "-z", "--untracked-files=all"],
++    stderr=subprocess.DEVNULL,
++)
++
++i = 0
++while i < len(output):
++    xy = output[i:i + 2].decode("utf-8", "replace")
++    i += 3  # skip XY plus separator space
++    end = output.index(0, i)
++    path = output[i:end].decode("utf-8", "surrogateescape")
++    i = end + 1
++
++    if "R" in xy or "C" in xy:
++        end = output.index(0, i)
++        path = output[i:end].decode("utf-8", "surrogateescape")
++        i = end + 1
++
++    print(path)
++PY
++}
++
++commit_all_changes() {
++  local repo_path="$1" commit_message="$2"
++  local changed_paths=()
++  mapfile -t changed_paths < <(collect_git_changed_paths "$repo_path")
++  if [[ ${#changed_paths[@]} -eq 0 ]]; then
++    return 1
++  fi
++  git -C "$repo_path" add -- "${changed_paths[@]}"
++  git -C "$repo_path" commit -m "$commit_message" >/dev/null
++}
++
+ scan_project() {
+   local project_name="$1" do_fix="${2:-false}"
+   local project_path
+   project_path=$(resolve_project_path "$project_name")
+   local report_file="$ARTIFACTS_DIR/${project_name}_${TIMESTAMP}.json"
+@@ -341,70 +382,73 @@ print(', '.join(parts) if parts else 'clean')
+   run_skill memory learn \
+     -p "monitor-codebase scan of $project_name: $total_issues total issues ($summary_text)" \
+     -s "Report: $report_file. Quality checks: $qc_total. Best-practices: $bp_count." \
+     --scope "monitor-codebase" 2>/dev/null || true
+ 
+   echo "Report: $report_file ($total_issues issues: $summary_text)"
+ 
+-  # Step 10: Fix dispatch via /agent-inbox → /subagent-service (Docker)
++  # Step 10: Generate fix plan and execute via /orchestrate (only in --fix mode)
+   if [[ "$do_fix" == "true" && "$total_issues" -gt 0 ]]; then
+-    echo "[10/10] Dispatching fix via /agent-inbox → /subagent-service ($total_issues issues)..."
+-    local task_file="$ARTIFACTS_DIR/${project_name}_0N_FIX_TASKS.md"
+-
+-    # Build violation summary for the task file
+-    local violation_summary
+-    violation_summary=$(python3 -c "
+-import json
+-qc = json.load(open('$qc_file'))
+-bp = json.loads('$bp_violations') if '$bp_violations' != '[]' else []
+-lines = []
+-for v in bp:
+-    lines.append(json.dumps(v))
+-for v in qc.get('violations', [])[:20]:
+-    lines.append(json.dumps(v))
+-print('\n'.join(lines))
+-" 2>/dev/null || echo "$bp_violations")
+-
+-    cat > "$task_file" <<TASKEOF
+-# Fix Codebase Violations: $project_name
+-
+-## Context
+-monitor-codebase scan found $total_issues issues ($summary_text).
+-
+-## Violations
+-\`\`\`json
+-$violation_summary
+-\`\`\`
+-
+-## Instructions
+-1. Fix each violation following the rules in the relevant \`best-practices-*\` SKILL.md.
+-2. For banned imports: \`logging\` → \`loguru\`, \`requests\` → \`httpx\`, \`argparse\` → \`typer\`.
+-3. For inline prompts: move to /prompt-lab for versioning and evaluation.
+-4. For handwritten tests: replace with /test-lab blind tests.
+-5. For regex classifiers: use /taxonomy or /extract-entities.
+-6. Code must comply with best-practices-python/react/kde/skills/streamdeck as applicable.
+-
+-## Blind Evaluation
+-This task uses the Blind Evaluation Gate. The coding agent:
+-- MUST NOT read test files directly
+-- Will receive only: rule category, natural language failure description, attempt count
+-- Has up to 5 retries before escalation
+-TASKEOF
+-
+-    # Research fix strategy
+-    run_skill dogpile search "fix common code violations: $summary_text" --no-interactive 2>/dev/null || true
+-
+-    # Dispatch via agent-inbox
+-    run_skill agent-inbox send \
+-      --to "$project_name" \
+-      --type bug \
+-      --priority normal \
+-      --context-file "$task_file" \
+-      "Fix $total_issues violations found by monitor-codebase ($summary_text)" 2>/dev/null || true
+-
+-    echo "Fix task dispatched to $project_name"
++    echo "[10/10] Generating fix plan and executing via /orchestrate ($total_issues issues)..."
++    local fix_plan_file="$ARTIFACTS_DIR/${project_name}_0N_FIX_TASKS.yaml"
++    local safety_ref=""
++
++    if [[ -d "$project_path/.git" ]]; then
++      if git_has_changes "$project_path"; then
++        local safety_message="chore(monitor-codebase): safety checkpoint before auto-fix [$TIMESTAMP]"
++        if commit_all_changes "$project_path" "$safety_message"; then
++          safety_ref=$(git -C "$project_path" rev-parse HEAD 2>/dev/null || true)
++          echo "  Safety checkpoint committed: $safety_ref"
++        else
++          echo "  Warning: failed to create safety checkpoint commit" >&2
++        fi
++      else
++        safety_ref=$(git -C "$project_path" rev-parse HEAD 2>/dev/null || true)
++        echo "  Worktree clean; using HEAD as safety checkpoint: $safety_ref"
++      fi
++    else
++      echo "  No git repository; skipping safety checkpoint commit"
++    fi
++
++    if [[ -n "$skills_root" && -f "$sci_file" ]]; then
++      if (cd "$PI_MONO" && uv run --project "$SKILLS_DIR/skills-ci" python "$SKILLS_DIR/skills-ci/generate_fix_plan.py" generate --report "$sci_file" --output "$fix_plan_file" >/dev/null 2>&1); then
++        if [[ -s "$fix_plan_file" ]]; then
++          echo "  Generated fix plan: $fix_plan_file"
++          if (cd "$project_path" && "$SKILLS_DIR/orchestrate/run.sh" run "$fix_plan_file"); then
++            echo "  Orchestrate completed for $project_name"
++          else
++            echo "  Warning: orchestrate execution failed for $project_name" >&2
++          fi
++        else
++          echo "  No fixable skills-ci tasks generated for $project_name"
++        fi
++      else
++        echo "  Warning: failed to generate fix plan from $sci_file" >&2
++      fi
++    else
++      echo "  No skills-ci target or report available; skipping fix plan generation"
++    fi
++
++    if [[ -d "$project_path/.git" ]]; then
++      if git_has_changes "$project_path"; then
++        local fix_commit_message="fix(monitor-codebase): apply automated fixes [$TIMESTAMP]"
++        if commit_all_changes "$project_path" "$fix_commit_message"; then
++          echo "  Fixes committed for $project_name"
++        else
++          echo "  Warning: failed to commit automated fixes for $project_name" >&2
++        fi
++      else
++        echo "  No file changes to commit after orchestration"
++      fi
++    fi
+   fi
+ }
+ 
+ light_scan_project() {
+   # For unchanged projects: refresh project-state only. No violations scan,
+   # no dogpile (too expensive for 28 projects nightly), no code modification.
+   local project_name="$1"
+```

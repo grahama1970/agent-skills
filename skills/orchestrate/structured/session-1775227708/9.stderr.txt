@@ -1,0 +1,25 @@
+2026-04-03 10:53:41.012 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Family flyout panel — drill into controls for selected family ===
+2026-04-03 10:53:41.012 | INFO     | __main__:run:494 -   Backend: codex
+2026-04-03 10:53:41.012 | INFO     | __main__:run:495 -   DoD: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDash
+2026-04-03 10:53:41.012 | INFO     | __main__:run:496 -   Max rounds: 5
+2026-04-03 10:53:43.218 | INFO     | __main__:run:587 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-03 10:55:26.496 | WARNING  | apply:apply_llm_response:410 -   v2: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts not authorized, skipping
+2026-04-03 10:55:26.497 | WARNING  | apply:apply_file_blocks:226 - Path not in allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (tried: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts)
+2026-04-03 10:55:26.497 | WARNING  | __main__:run:653 -   No files applied from LLM response
+2026-04-03 10:55:26.579 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 10:55:26.582 | WARNING  | __main__:run:690 -   DISCARD (score improved but git commit failed)
+2026-04-03 10:55:27.003 | INFO     | __main__:run:587 - ── Round 2/5 [strategy=structured_analysis codex:medium] ──
+2026-04-03 10:56:57.220 | WARNING  | apply:apply_llm_response:410 -   v2: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts not authorized, skipping
+2026-04-03 10:56:57.221 | WARNING  | apply:apply_file_blocks:226 - Path not in allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (tried: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts)
+2026-04-03 10:56:57.221 | WARNING  | __main__:run:653 -   No files applied from LLM response
+2026-04-03 10:56:57.305 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 10:56:57.306 | WARNING  | __main__:run:690 -   DISCARD (score improved but git commit failed)
+2026-04-03 10:56:57.987 | INFO     | __main__:run:584 - ── Round 3/5 [strategy=simplify temp=0.3↑ codex:high] ──
+2026-04-03 10:58:16.671 | WARNING  | apply:apply_llm_response:410 -   v2: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts not authorized, skipping
+2026-04-03 10:58:16.672 | WARNING  | apply:apply_file_blocks:226 - Path not in allowlist: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts (tried: packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts, packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.ts)
+2026-04-03 10:58:16.672 | WARNING  | __main__:run:653 -   No files applied from LLM response
+2026-04-03 10:58:16.753 | INFO     | __main__:run:658 -   Score: 0.490 (DoD:False errors:0 lint:0 bp:0)
+2026-04-03 10:58:16.754 | WARNING  | __main__:run:690 -   DISCARD (score improved but git commit failed)
+2026-04-03 10:58:17.147 | INFO     | __main__:run:584 - ── Round 4/5 [strategy=escalate temp=0.4↑ claude:high] ──
+2026-04-03 10:58:17.147 | WARNING  | __main__:run:606 - Strategy: ESCALATE — diagnosis written to 9.diagnosis.json
+2026-04-03 10:58:17.148 | INFO     | __main__:run:770 - === RESULT: FAIL | score=0.000 | 3 rounds ===

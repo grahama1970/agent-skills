@@ -1,0 +1,51 @@
+{
+  "name": "word_cloud",
+  "version": 3,
+  "family": "specialty",
+  "description": "word_cloud visualization",
+  "chart_type": "word_cloud",
+  "data_shapes": [
+    "categorical"
+  ],
+  "marks": [],
+  "scales": {},
+  "encodings": {},
+  "d3_modules": [
+    "d3-cloud"
+  ],
+  "test_data": [
+    {
+      "label": "A",
+      "value": 42
+    },
+    {
+      "label": "B",
+      "value": 28
+    },
+    {
+      "label": "C",
+      "value": 65
+    },
+    {
+      "label": "D",
+      "value": 17
+    },
+    {
+      "label": "E",
+      "value": 53
+    }
+  ],
+  "scores": {
+    "render_success": 1.0,
+    "data_marks": 0.7,
+    "axes_labels": 0.8,
+    "intent_match": 0.5,
+    "distance_aware": 0.8999999999999999
+  },
+  "overall_score": 0.7849999999999999,
+  "promoted": true,
+  "promoted_at": "2026-02-27T17:07:07.321062+00:00",
+  "iterations": 3,
+  "created_at": "2026-02-27T17:05:08.427439+00:00",
+  "errors": []
+}

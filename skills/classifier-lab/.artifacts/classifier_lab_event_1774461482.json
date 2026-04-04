@@ -1,0 +1,29 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774461482,
+  "status": "ok",
+  "selected_backbone": "random_forest",
+  "selected_metrics": {
+    "macro_f1": 0.8104980398943574,
+    "accuracy": 0.810958904109589,
+    "wilson_score_lower": 0.7896844278227666
+  },
+  "candidate_count": 3,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-table-classifier/data/merge_features_tabular.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [],
+      "worth_remembering": false
+    }
+  }
+}

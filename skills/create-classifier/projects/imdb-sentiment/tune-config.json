@@ -1,0 +1,21 @@
+{
+  "lr": 2e-05,
+  "epochs": 10,
+  "batch_size": 16,
+  "warmup_ratio": 0.1,
+  "weight_decay": 0.01,
+  "max_length": 128,
+  "backbones": [
+    "distilbert-base-uncased",
+    "sentence-transformers/all-MiniLM-L6-v2"
+  ],
+  "_source": "dogpile-kickoff",
+  "_updated": "2026-04-01T13:25:33.395417",
+  "_changelog": [
+    {
+      "who": "agent",
+      "what": "Kickoff from goal: Classify IMDB movie reviews as positive or negativ",
+      "when": "2026-04-01"
+    }
+  ]
+}

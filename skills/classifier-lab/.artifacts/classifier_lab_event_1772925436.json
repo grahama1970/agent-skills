@@ -1,0 +1,29 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1772925436,
+  "status": "ok",
+  "selected_backbone": "random_forest",
+  "selected_metrics": {
+    "macro_f1": 0.8436363636363636,
+    "accuracy": 0.9302325581395349
+  },
+  "candidate_count": 3,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/home/graham/.pi/skills/sparta-stress-test/results/tabular_evidence_training.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [
+        "Precision",
+        "Resilience",
+        "Fragility"
+      ],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "keywords",
+      "worth_remembering": true
+    }
+  }
+}

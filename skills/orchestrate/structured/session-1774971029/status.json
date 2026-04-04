@@ -1,0 +1,136 @@
+{
+  "generated_at": 1774972594.913197,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029",
+  "tasks": [
+    {
+      "id": "A1-ingest-code-treesitter",
+      "title": "Enhance ingest-code rescan to extract symbols via treesitter",
+      "lane": "track-a",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029/A1-ingest-code-treesitter.response.txt",
+      "error": "",
+      "started_at": 1774971029.377568,
+      "finished_at": 1774971331.4331203,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "A2-embedding-verification",
+      "title": "Add --verify-embeddings flag to ingest-code rescan",
+      "lane": "track-a",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "A1-ingest-code-treesitter"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029/A2-embedding-verification.response.txt",
+      "error": "",
+      "started_at": 1774971805.5135827,
+      "finished_at": 1774972044.8065562,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "A3-monitor-codebase-step6",
+      "title": "Update monitor-codebase Step 6 to use --treesitter flag",
+      "lane": "track-a",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "A1-ingest-code-treesitter"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029/A3-monitor-codebase-step6.response.txt",
+      "error": "",
+      "started_at": 1774972044.8069806,
+      "finished_at": 1774972271.350828,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "B1-replace-subagent-dispatch",
+      "title": "Replace Step 10 broken subagent dispatch with orchestrate code-runner",
+      "lane": "track-b",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029/B1-replace-subagent-dispatch.response.txt",
+      "error": "",
+      "started_at": 1774971331.4335465,
+      "finished_at": 1774971666.997402,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "C1-trend-comparison",
+      "title": "Add trend comparison step: diff current report vs previous",
+      "lane": "track-c",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029/C1-trend-comparison.response.txt",
+      "error": "",
+      "started_at": 1774971666.9979408,
+      "finished_at": 1774971805.5127225,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "C2-trend-to-memory",
+      "title": "Create trend_tracker.py to store trend data to memory",
+      "lane": "track-c",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "C1-trend-comparison"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029/C2-trend-to-memory.response.txt",
+      "error": "",
+      "started_at": 1774972271.351454,
+      "finished_at": 1774972456.0966632,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "D1-cleanup-skill-md",
+      "title": "Remove dead composes and update SKILL.md pipeline table",
+      "lane": "track-d",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [
+        "B1-replace-subagent-dispatch",
+        "C1-trend-comparison",
+        "A3-monitor-codebase-step6"
+      ],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029/D1-cleanup-skill-md.response.txt",
+      "error": "",
+      "started_at": 1774972456.0973163,
+      "finished_at": 1774972594.913168,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

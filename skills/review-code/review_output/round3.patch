@@ -1,0 +1,601 @@
+fix: add input validation, error handling, and resource cleanup to wezterm integration
+
+diff --git a/packages/wezterm/src/cli-wrapper.ts b/packages/wezterm/src/cli-wrapper.ts
+index 00000000..11111111 100644
+--- a/packages/wezterm/src/cli-wrapper.ts
++++ b/packages/wezterm/src/cli-wrapper.ts
+@@ -1,6 +1,6 @@
+ /**
+  * Typed wrapper around `wezterm cli` subcommands.
+- * Each function calls execFile and parses stdout.
++ * Uses execFile (not exec) to prevent shell injection.
+  */
+ 
+ import { execFile } from "node:child_process";
+@@ -10,10 +10,19 @@ const WEZTERM = process.env.WEZTERM_EXECUTABLE ?? "wezterm";
+ 
+ function exec(args: string[]): Promise<string> {
+ 	return new Promise((resolve, reject) => {
++		if (args.length === 0) {
++			reject(new Error("wezterm cli: empty command"));
++			return;
++		}
++		
+ 		execFile(WEZTERM, ["cli", ...args], { timeout: 10_000 }, (err, stdout, stderr) => {
+ 			if (err) {
+-				reject(new Error(`wezterm cli ${args[0]} failed: ${stderr || err.message}`));
++				const cmd = args[0];
++				if (stderr?.includes("failed to connect")) {
++					reject(new Error(`wezterm cli ${cmd} failed: WezTerm not running or socket unreachable`));
++				} else if (err.code === "ETIMEDOUT") {
++					reject(new Error(`wezterm cli ${cmd} timed out after 10s`));
++				} else {
++					reject(new Error(`wezterm cli ${cmd} failed: ${err.message}`));
++				}
+ 			} else {
+ 				resolve(stdout);
+ 			}
+@@ -23,7 +32,14 @@ function exec(args: string[]): Promise<string> {
+ 
+ export async function listPanes(): Promise<PaneInfo[]> {
+ 	const stdout = await exec(["list", "--format", "json"]);
+-	return JSON.parse(stdout) as PaneInfo[];
++	if (!stdout.trim()) {
++		return [];
++	}
++	try {
++		return JSON.parse(stdout) as PaneInfo[];
++	} catch (e) {
++		throw new Error(`wezterm cli list returned invalid JSON: ${e instanceof Error ? e.message : String(e)}`);
++	}
+ }
+ 
+ export async function splitPane(opts: SplitPaneOptions = {}): Promise<number> {
+@@ -36,6 +52,10 @@ export async function splitPane(opts: SplitPaneOptions = {}): Promise<number> {
+ 	}
+ 
+ 	if (opts.paneId !== undefined) {
++		if (!Number.isInteger(opts.paneId) || opts.paneId < 0) {
++			throw new Error(`Invalid pane_id: ${opts.paneId} (must be non-negative integer)`);
++		}
+ 		args.push("--pane-id", String(opts.paneId));
+ 	}
+ 	if (opts.cwd) {
+@@ -43,6 +63,9 @@ export async function splitPane(opts: SplitPaneOptions = {}): Promise<number> {
+ 	}
+ 	if (opts.percent !== undefined) {
++		if (opts.percent < 1 || opts.percent > 99) {
++			throw new Error(`Invalid percent: ${opts.percent} (must be 1-99)`);
++		}
+ 		args.push("--percent", String(opts.percent));
+ 	}
+ 	if (opts.command && opts.command.length > 0) {
+@@ -50,11 +73,19 @@ export async function splitPane(opts: SplitPaneOptions = {}): Promise<number> {
+ 	}
+ 
+ 	const stdout = await exec(args);
+-	// split-pane prints the new pane ID
+-	return parseInt(stdout.trim(), 10);
++	const paneId = parseInt(stdout.trim(), 10);
++	// Number.isInteger(NaN) === false, so this catches both NaN and floats
++	if (!Number.isInteger(paneId) || paneId < 0) {
++		throw new Error(`wezterm cli split-pane returned invalid pane ID: ${stdout.trim()}`);
++	}
++	return paneId;
+ }
+ 
+ export async function sendText(paneId: number, text: string): Promise<void> {
++	if (!Number.isInteger(paneId) || paneId < 0) {
++		throw new Error(`Invalid pane_id: ${paneId}`);
++	}
+ 	await exec(["send-text", "--pane-id", String(paneId), "--no-paste", text]);
+ }
+ 
+@@ -62,6 +93,9 @@ export async function getText(paneId: number, startLine?: number, endLine?: num
+ 	const args = ["get-text", "--pane-id", String(paneId)];
++	if (!Number.isInteger(paneId) || paneId < 0) {
++		throw new Error(`Invalid pane_id: ${paneId}`);
++	}
+ 	if (startLine !== undefined) {
+ 		args.push("--start-line", String(startLine));
+ 	}
+@@ -72,6 +106,9 @@ export async function getText(paneId: number, startLine?: number, endLine?: num
+ }
+ 
+ export async function activatePane(paneId: number): Promise<void> {
++	if (!Number.isInteger(paneId) || paneId < 0) {
++		throw new Error(`Invalid pane_id: ${paneId}`);
++	}
+ 	await exec(["activate-pane", "--pane-id", String(paneId)]);
+ }
+ 
+@@ -84,6 +121,10 @@ export async function spawnWorkspace(opts: SpawnWorkspaceOptions): Promise<numb
+ 		args.push("--", ...opts.command);
+ 	}
+ 	const stdout = await exec(args);
+-	return parseInt(stdout.trim(), 10);
++	const paneId = parseInt(stdout.trim(), 10);
++	if (!Number.isInteger(paneId) || paneId < 0) {
++		throw new Error(`wezterm cli spawn returned invalid pane ID: ${stdout.trim()}`);
++	}
++	return paneId;
+ }
+diff --git a/packages/wezterm/src/extension.ts b/packages/wezterm/src/extension.ts
+index 22222222..33333333 100644
+--- a/packages/wezterm/src/extension.ts
++++ b/packages/wezterm/src/extension.ts
+@@ -6,10 +6,28 @@
+ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+ import { Type } from "@sinclair/typebox";
+ import * as cli from "./cli-wrapper.js";
+-import type { ManagedPane } from "./types.js";
++import type { ManagedPane, PaneInfo } from "./types.js";
+ 
++// In-memory pane tracking. Not persisted across Pi restarts.
+ const managedPanes = new Map<number, ManagedPane>();
+ 
++// Periodic cleanup to prevent unbounded growth
++let cleanupInterval: ReturnType<typeof setInterval> | undefined;
++
+ export default function weztermExtension(pi: ExtensionAPI) {
++	// Clean up stale pane references every 60s
++	if (cleanupInterval) clearInterval(cleanupInterval);
++	cleanupInterval = setInterval(async () => {
++		try {
++			const panes = await cli.listPanes();
++			const validIds = new Set(panes.map((p) => p.pane_id));
++			for (const id of managedPanes.keys()) {
++				if (!validIds.has(id)) {
++					managedPanes.delete(id);
++				}
++			}
++		} catch {
++			// WezTerm offline; skip cleanup
++		}
++	}, 60_000);
++
+ 	// --- Tools ---
+ 
+ 	pi.registerTool({
+@@ -17,15 +35,26 @@ export default function weztermExtension(pi: ExtensionAPI) {
+ 		label: "List Panes",
+ 		description:
+-			"List all WezTerm panes. Optionally filter by workspace name. Returns pane IDs, titles, working directories, and dimensions.",
++			"List all WezTerm panes. Optionally filter by workspace name. Returns pane IDs, titles, working directories, and dimensions. Includes a timestamp for staleness detection.",
+ 		parameters: Type.Object({
+ 			workspace: Type.Optional(Type.String({ description: "Filter panes to this workspace" })),
+ 		}),
+ 		async execute(_toolCallId, params, _onUpdate, _ctx, _signal) {
+ 			const { workspace } = params as { workspace?: string };
+-			let panes = await cli.listPanes();
++			let panes: PaneInfo[];
++			try {
++				panes = await cli.listPanes();
++			} catch (e) {
++				return {
++					content: [{ type: "text", text: `Failed to list panes: ${e instanceof Error ? e.message : String(e)}` }],
++					details: { error: true, count: 0 },
++				};
++			}
++			
+ 			if (workspace) {
+ 				panes = panes.filter((p) => p.workspace === workspace);
+ 			}
+ 			return {
+ 				content: [{ type: "text", text: JSON.stringify(panes, null, 2) }],
+-				details: { count: panes.length, workspace: workspace ?? "all" },
++				details: { count: panes.length, workspace: workspace ?? "all", timestamp: Date.now() },
+ 			};
+ 		},
+ 	});
+@@ -51,17 +80,47 @@ export default function weztermExtension(pi: ExtensionAPI) {
+ 				percent?: number;
+ 				purpose?: string;
+ 			};
+-			const newPaneId = await cli.splitPane({
+-				direction,
+-				paneId: pane_id,
+-				cwd,
+-				command,
+-				percent,
+-			});
++			
++			if (command && command.length === 0) {
++				return {
++					content: [{ type: "text", text: "Invalid command: empty array" }],
++					details: { error: true },
++				};
++			}
++			if (command) {
++				for (const arg of command) {
++					if (typeof arg !== "string" || arg.length === 0) {
++						return {
++							content: [{ type: "text", text: "Invalid command: empty or non-string argument" }],
++							details: { error: true },
++						};
++					}
++				}
++			}
++			
++			let newPaneId: number;
++			try {
++				newPaneId = await cli.splitPane({
++					direction,
++					paneId: pane_id,
++					cwd,
++					command,
++					percent,
++				});
++			} catch (e) {
++				return {
++					content: [{ type: "text", text: `Failed to split pane: ${e instanceof Error ? e.message : String(e)}` }],
++					details: { error: true },
++				};
++			}
+ 
+-			// Track managed panes
+-			const panes = await cli.listPanes();
+-			const paneInfo = panes.find((p) => p.pane_id === newPaneId);
++			let paneInfo: PaneInfo | undefined;
++			try {
++				const panes = await cli.listPanes();
++				paneInfo = panes.find((p) => p.pane_id === newPaneId);
++			} catch {
++				// Failed to get workspace info; proceed anyway
++			}
++			
+ 			managedPanes.set(newPaneId, {
+ 				paneId: newPaneId,
+ 				workspace: paneInfo?.workspace ?? "default",
+@@ -70,7 +129,7 @@ export default function weztermExtension(pi: ExtensionAPI) {
+ 
+ 			return {
+ 				content: [{ type: "text", text: `Created pane ${newPaneId}` }],
+-				details: { paneId: newPaneId, direction: direction ?? "right", purpose: purpose ?? "unnamed" },
++				details: { paneId: newPaneId, direction: direction ?? "right", purpose: purpose ?? "unnamed", workspace: paneInfo?.workspace ?? "default" },
+ 			};
+ 		},
+ 	});
+@@ -84,7 +143,18 @@ export default function weztermExtension(pi: ExtensionAPI) {
+ 		}),
+ 		async execute(_toolCallId, params, _onUpdate, _ctx, _signal) {
+ 			const { pane_id, text } = params as { pane_id: number; text: string };
+-			await cli.sendText(pane_id, text);
++			
++			try {
++				await cli.sendText(pane_id, text);
++			} catch (e) {
++				return {
++					content: [{ type: "text", text: `Failed to send text: ${e instanceof Error ? e.message : String(e)}` }],
++					details: { error: true, paneId: pane_id },
++				};
++			}
++			
+ 			return {
+ 				content: [{ type: "text", text: `Sent ${text.length} chars to pane ${pane_id}` }],
+ 				details: { paneId: pane_id, length: text.length },
+@@ -104,9 +174,19 @@ export default function weztermExtension(pi: ExtensionAPI) {
+ 				start_line?: number;
+ 				end_line?: number;
+ 			};
+-			const text = await cli.getText(pane_id, start_line, end_line);
++			
++			let text: string;
++			try {
++				text = await cli.getText(pane_id, start_line, end_line);
++			} catch (e) {
++				return {
++					content: [{ type: "text", text: `Failed to get text: ${e instanceof Error ? e.message : String(e)}` }],
++					details: { error: true, paneId: pane_id },
++				};
++			}
++			
+ 			return {
+ 				content: [{ type: "text", text }],
+-				details: { paneId: pane_id, lines: text.split("\n").length },
++				details: { paneId: pane_id, lines: text.split("\n").length, bytes: text.length },
+ 			};
+ 		},
+ 	});
+@@ -119,7 +199,16 @@ export default function weztermExtension(pi: ExtensionAPI) {
+ 		}),
+ 		async execute(_toolCallId, params, _onUpdate, _ctx, _signal) {
+ 			const { pane_id } = params as { pane_id: number };
+-			await cli.activatePane(pane_id);
++			
++			try {
++				await cli.activatePane(pane_id);
++			} catch (e) {
++				return {
++					content: [{ type: "text", text: `Failed to activate pane: ${e instanceof Error ? e.message : String(e)}` }],
++					details: { error: true, paneId: pane_id },
++				};
++			}
++			
+ 			return {
+ 				content: [{ type: "text", text: `Activated pane ${pane_id}` }],
+ 				details: { paneId: pane_id },
+@@ -138,7 +227,23 @@ export default function weztermExtension(pi: ExtensionAPI) {
+ 				cwd?: string;
+ 				command?: string[];
+ 			};
+-			const paneId = await cli.spawnWorkspace({ workspace, cwd, command });
++			
++			if (!workspace || !/^[a-zA-Z0-9_-]+$/.test(workspace)) {
++				return {
++					content: [{ type: "text", text: `Invalid workspace name: ${workspace} (must match ^[a-zA-Z0-9_-]+$)` }],
++					details: { error: true },
++				};
++			}
++			
++			let paneId: number;
++			try {
++				paneId = await cli.spawnWorkspace({ workspace, cwd, command });
++			} catch (e) {
++				return {
++					content: [{ type: "text", text: `Failed to spawn workspace: ${e instanceof Error ? e.message : String(e)}` }],
++					details: { error: true, workspace },
++				};
++			}
+ 
+ 			managedPanes.set(paneId, {
+ 				paneId,
+ 				workspace,
+-				purpose: `workspace-root`,
++				purpose: "workspace-root",
+ 				createdAt: Date.now(),
+ 			});
+ 
+@@ -154,10 +259,15 @@ export default function weztermExtension(pi: ExtensionAPI) {
+ 			const panes = await cli.listPanes();
+ 			const lines = panes.map((p) => {
+ 				const managed = managedPanes.get(p.pane_id);
+ 				const label = managed ? ` [${managed.purpose}]` : "";
+-				return `  ${p.pane_id}: ${p.title}${label} (${p.workspace}) ${p.size.cols}x${p.size.rows}`;
++				const active = p.is_active ? " *" : "";
++				const zoomed = p.is_zoomed ? " [Z]" : "";
++				return `  ${p.pane_id}: ${p.title}${label}${active}${zoomed} (${p.workspace}) ${p.size.cols}x${p.size.rows}`;
+ 			});
+-			ctx.ui.notify(`Panes (${panes.length}):\n${lines.join("\n")}`);
++			
++			const managed_count = panes.filter((p) => managedPanes.has(p.pane_id)).length;
++			const summary = `Panes: ${panes.length} total, ${managed_count} managed\n`;
++			ctx.ui.notify(summary + lines.join("\n"));
+ 		} catch (e) {
+ 			ctx.ui.notify(`Failed to list panes: ${e instanceof Error ? e.message : String(e)}`);
+ 		}
+diff --git a/packages/wezterm/lua/embry/state.lua b/packages/wezterm/lua/embry/state.lua
+index 44444444..55555555 100644
+--- a/packages/wezterm/lua/embry/state.lua
++++ b/packages/wezterm/lua/embry/state.lua
+@@ -28,12 +28,15 @@ local OFFLINE_STATE = {
+ 	online = false,
+ }
+ 
+--- Parse busctl output: 's "{"key":"value",...}"' → table
+ local function parse_busctl_output(stdout)
+-	-- busctl returns: s "json-string-here"
+-	local json_str = stdout:match('^s "(.+)"')
+-	if not json_str then
+-		-- Try without the 's ' prefix (varies by busctl version)
+-		json_str = stdout:match('"(.+)"')
+-	end
++	if not stdout or stdout == "" then
++		return nil
++	end
++	
++	-- Modern systemd: s "json"
++	local json_str = stdout:match('^s "(.+)"')
++	if not json_str then
++		-- Older systemd: "json"
++		json_str = stdout:match('^"(.+)"')
++	end
+ 	if not json_str then
+ 		return nil
+ 	end
+@@ -69,6 +72,7 @@ function M.get()
+ 	local success, stdout, _stderr = wezterm.run_child_process({
+ 		"busctl",
+ 		"--user",
++		"--timeout=10",
+ 		"call",
+ 		BUS_NAME,
+ 		OBJECT_PATH,
+@@ -94,6 +98,9 @@ function M.get()
+ 
+ function M.invalidate()
+ 	last_poll = 0
++	-- Reset backoff on manual invalidation
++	consecutive_failures = 0
++	poll_interval = POLL_NORMAL
+ end
+ 
+ return M
+diff --git a/packages/wezterm/lua/embry/keybindings.lua b/packages/wezterm/lua/embry/keybindings.lua
+index 88888888..99999999 100644
+--- a/packages/wezterm/lua/embry/keybindings.lua
++++ b/packages/wezterm/lua/embry/keybindings.lua
+@@ -7,11 +7,17 @@ local M = {}
+ -- Bridge script path (adjacent to lua/)
+ local BRIDGE = (function()
+ 	local info = debug.getinfo(1, "S")
+ 	local src = info.source:match("^@(.+)$")
+ 	if src then
+ 		local dir = src:match("^(.+)/[^/]+$")
+ 		if dir then
+-			return dir .. "/../../bin/embry-wezterm-bridge"
++			local bridge_path = dir .. "/../../bin/embry-wezterm-bridge"
++			local f = io.open(bridge_path, "r")
++			if f then
++				f:close()
++				return bridge_path
++			else
++				wezterm.log_error("embry-wezterm-bridge not found at " .. bridge_path)
++			end
+ 		end
+ 	end
++	wezterm.log_warn("Could not resolve bridge script path - falling back to PATH lookup")
+ 	return "embry-wezterm-bridge"
+ end)()
+ 
+diff --git a/packages/wezterm/bin/embry-wezterm-bridge b/packages/wezterm/bin/embry-wezterm-bridge
+index aaaaaaaa..bbbbbbbb 100755
+--- a/packages/wezterm/bin/embry-wezterm-bridge
++++ b/packages/wezterm/bin/embry-wezterm-bridge
+@@ -1,6 +1,7 @@
+ #!/usr/bin/env python3
+ """
+ embry-wezterm-bridge — D-Bus helper for WezTerm agent keybindings.
++Requires Python 3.9+.
+ 
+ Sends Ask, Steer, FollowUp, and Abort commands to org.embry.Agent
+ via busctl. Designed to be called from WezTerm Lua callbacks.
+@@ -12,6 +13,7 @@ Usage:
+ """
+ 
+ import json
+ import subprocess
+ import sys
++from typing import Tuple
+ 
+ BUS_NAME = "org.embry.Agent"
+ OBJECT_PATH = "/org/embry/Agent"
+@@ -19,7 +21,7 @@ INTERFACE = "org.embry.Agent"
+ 
+ 
+-def busctl_call(method: str, signature: str = "", *args: str) -> tuple[bool, str]:
++def busctl_call(method: str, signature: str = "", *args: str) -> Tuple[bool, str]:
+     """Call a D-Bus method via busctl. Returns (success, stdout)."""
+     cmd = [
+         "busctl", "--user", "call",
+@@ -32,11 +34,20 @@ def busctl_call(method: str, signature: str = "", *args: str) -> tuple[bool, st
+         cmd.extend(args)
+ 
+     try:
+         result = subprocess.run(
+             cmd,
+             capture_output=True,
+             text=True,
+             timeout=10,
++            check=False,
+         )
+-        return result.returncode == 0, result.stdout.strip()
++        if result.returncode == 0:
++            return True, result.stdout.strip()
++        else:
++            err_msg = result.stderr.strip() or f"busctl exited with code {result.returncode}"
++            return False, err_msg
+     except subprocess.TimeoutExpired:
+         return False, "timeout"
+     except FileNotFoundError:
+         return False, "busctl not found"
+ 
+ 
+@@ -48,7 +59,13 @@ def cmd_ask(prompt: str) -> int:
+     if ok:
+         print(f"Asked: {prompt[:60]}...")
+         return 0
+-    print(f"Failed to ask: {out}", file=sys.stderr)
++    
++    if "not found" in out.lower() or "unknown" in out.lower():
++        print(f"Agent offline or D-Bus service not running: {out}", file=sys.stderr)
++        print("Start the agent with: pi --mode rpc", file=sys.stderr)
++    else:
++        print(f"Failed to ask: {out}", file=sys.stderr)
+     return 1
+ 
+ 
+@@ -88,7 +105,11 @@ def cmd_state() -> int:
+     """Get and print the current agent state."""
+     ok, out = busctl_call("GetState")
+     if not ok:
+-        print(f"Agent offline: {out}", file=sys.stderr)
++        if "not found" in out.lower() or "unknown" in out.lower():
++            print("Agent offline (D-Bus service not running)", file=sys.stderr)
++        else:
++            print(f"Failed to get state: {out}", file=sys.stderr)
+         return 1
+ 
+     # Parse busctl output: s "json..."
+diff --git a/packages/wezterm/scripts/install.sh b/packages/wezterm/scripts/install.sh
+index cccccccc..dddddddd 100755
+--- a/packages/wezterm/scripts/install.sh
++++ b/packages/wezterm/scripts/install.sh
+@@ -5,9 +5,20 @@ set -euo pipefail
+ 
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ LUA_DIR="$(cd "$SCRIPT_DIR/../lua" && pwd)"
++BIN_DIR="$(cd "$SCRIPT_DIR/../bin" && pwd)"
+ WEZTERM_DIR="${HOME}/.config/wezterm"
+ 
++if [ ! -d "$LUA_DIR" ]; then
++	echo "Error: Lua directory not found: $LUA_DIR" >&2
++	exit 1
++fi
++
++if [ ! -d "$BIN_DIR" ]; then
++	echo "Error: Bin directory not found: $BIN_DIR" >&2
++	exit 1
++fi
++
+ echo "Installing Embry OS WezTerm config..."
+ echo "  Source: ${LUA_DIR}"
++echo "  Bridge: ${BIN_DIR}"
+ echo "  Target: ${WEZTERM_DIR}"
+ 
+ mkdir -p "$WEZTERM_DIR"
+@@ -15,11 +26,13 @@ mkdir -p "$WEZTERM_DIR"
+ # Backup existing wezterm.lua if it exists and isn't already our symlink
+-if [ -e "$WEZTERM_DIR/wezterm.lua" ] && [ ! -L "$WEZTERM_DIR/wezterm.lua" ]; then
++if [ -L "$WEZTERM_DIR/wezterm.lua" ] && [ ! -e "$WEZTERM_DIR/wezterm.lua" ]; then
++	echo "  Removing broken symlink: $WEZTERM_DIR/wezterm.lua"
++	rm "$WEZTERM_DIR/wezterm.lua"
++elif [ -L "$WEZTERM_DIR/wezterm.lua" ]; then
++	echo "  Removing existing symlink: $WEZTERM_DIR/wezterm.lua"
++	rm "$WEZTERM_DIR/wezterm.lua"
++elif [ -e "$WEZTERM_DIR/wezterm.lua" ]; then
+ 	BACKUP="$WEZTERM_DIR/wezterm.lua.backup.$(date +%Y%m%d%H%M%S)"
+ 	echo "  Backing up existing config → $BACKUP"
+ 	mv "$WEZTERM_DIR/wezterm.lua" "$BACKUP"
+-elif [ -L "$WEZTERM_DIR/wezterm.lua" ]; then
+-	echo "  Removing existing symlink: $WEZTERM_DIR/wezterm.lua"
+-	rm "$WEZTERM_DIR/wezterm.lua"
+ fi
+ 
+ # Backup existing embry/ if it exists and isn't already our symlink
+-if [ -e "$WEZTERM_DIR/embry" ] && [ ! -L "$WEZTERM_DIR/embry" ]; then
++if [ -L "$WEZTERM_DIR/embry" ] && [ ! -e "$WEZTERM_DIR/embry" ]; then
++	echo "  Removing broken symlink: $WEZTERM_DIR/embry"
++	rm "$WEZTERM_DIR/embry"
++elif [ -L "$WEZTERM_DIR/embry" ]; then
++	echo "  Removing existing symlink: $WEZTERM_DIR/embry"
++	rm "$WEZTERM_DIR/embry"
++elif [ -e "$WEZTERM_DIR/embry" ]; then
+ 	BACKUP="$WEZTERM_DIR/embry.backup.$(date +%Y%m%d%H%M%S)"
+ 	echo "  Backing up existing embry/ → $BACKUP"
+ 	mv "$WEZTERM_DIR/embry" "$BACKUP"
+-elif [ -L "$WEZTERM_DIR/embry" ]; then
+-	echo "  Removing existing symlink: $WEZTERM_DIR/embry"
+-	rm "$WEZTERM_DIR/embry"
+ fi
+ 
+ # Create symlinks
+@@ -37,5 +50,18 @@ ln -s "$LUA_DIR/wezterm.lua" "$WEZTERM_DIR/wezterm.lua"
+ ln -s "$LUA_DIR/embry" "$WEZTERM_DIR/embry"
+ 
++# Make bridge script executable
++chmod +x "$BIN_DIR/embry-wezterm-bridge"
++
++# Optionally add bridge to PATH
++LOCAL_BIN="$HOME/.local/bin"
++if [ -d "$LOCAL_BIN" ] && [ ! -e "$LOCAL_BIN/embry-wezterm-bridge" ]; then
++	echo "  Installing bridge to PATH: $LOCAL_BIN/embry-wezterm-bridge"
++	ln -s "$BIN_DIR/embry-wezterm-bridge" "$LOCAL_BIN/embry-wezterm-bridge"
++fi
++
+ echo "Done. Restart WezTerm to apply."
+ echo ""
+ echo "Status bar will show 'agent: offline' until pi-dbus is running."
++if [ -d "$LOCAL_BIN" ]; then
++	echo "Test bridge with: embry-wezterm-bridge state"
++fi

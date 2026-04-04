@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skill": "eval-skills",
+  "defaults": { "latency_budget_ms": 10000 },
+  "cases": [
+    {
+      "name": "cli-help",
+      "command": ["--help"],
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["eval", "--skill", "--tags"],
+      "latency_budget_ms": 5000,
+      "tags": ["fast", "smoke"]
+    }
+  ]
+}

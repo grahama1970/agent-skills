@@ -1,0 +1,17 @@
+{
+  "skill": "sparta-stress-run",
+  "completed": 0,
+  "total": 3,
+  "description": "sparta-stress-run",
+  "current_item": "",
+  "progress_pct": 0.0,
+  "elapsed_seconds": 9.5,
+  "eta_seconds": null,
+  "throughput_per_sec": 0.0,
+  "stats": {
+    "success": 0,
+    "failed": 0
+  },
+  "last_updated": "2026-03-10 11:26:06",
+  "status": "completed"
+}

@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0.0",
+  "run_id": "review_pdf_real_corpus",
+  "timestamp": 1773158210,
+  "doc_id": "0132f43a9038b205102323e8c7ffa53d25660e8388e563ff2459564a52f33779",
+  "domain": "general",
+  "inputs": {
+    "run_dir": "/mnt/storage12tb/skills/review-pdf/extracted_runs/0132f43a9038b205102323e8c7ffa53d25660e8388e563ff2459564a52f33779",
+    "profile_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/0132f43a9038b205102323e8c7ffa53d25660e8388e563ff2459564a52f33779/00_profile_detector/profile.json",
+    "structural_path": "None",
+    "context_path": "/mnt/storage12tb/skills/review-pdf/extracted_runs/0132f43a9038b205102323e8c7ffa53d25660e8388e563ff2459564a52f33779/pipeline_context.json",
+    "pdf_path": "/mnt/storage12tb/extractor_corpus/fetcher_results/arxiv_batch/downloads/0132f43a9038b205102323e8c7ffa53d25660e8388e563ff2459564a52f33779.pdf"
+  },
+  "estimates": {
+    "page_count": 20,
+    "estimated_sections": 6,
+    "has_tables": true,
+    "has_figures": true,
+    "domain": "general"
+  },
+  "actual": {
+    "section_count": 3,
+    "element_count": 140,
+    "empty_elements": 0,
+    "empty_ratio": 0.0,
+    "duplicate_count": 0,
+    "table_extraction_available": true,
+    "figure_extraction_available": true
+  },
+  "source_pdf": {
+    "available": true,
+    "page_count": 20,
+    "raw_text_length": 41660
+  },
+  "dimensions": {
+    "section_alignment": {
+      "score": 0.66,
+      "state": "warn",
+      "weight": 0.18
+    },
+    "table_fidelity": {
+      "score": 0.58,
+      "state": "warn",
+      "weight": 0.16
+    },
+    "figure_fidelity": {
+      "score": 0.62,
+      "state": "warn",
+      "weight": 0.1
+    },
+    "equation_fidelity": {
+      "score": 0.49,
+      "state": "fail",
+      "weight": 0.14
+    },
+    "content_coverage": {
+      "score": 0.77,
+      "state": "warn",
+      "weight": 0.22
+    },
+    "ordering_yx": {
+      "score": 0.6,
+      "state": "warn",
+      "weight": 0.12
+    },
+    "data_quality": {
+      "score": 0.71,
+      "state": "warn",
+      "weight": 0.08
+    }
+  },
+  "overall": {
+    "score": 0.64,
+    "grade": "D",
+    "verdict": "WARN",
+    "critical_issues": 0,
+    "high_issues": 3,
+    "issue_count": 6
+  },
+  "issues": [
+    {
+      "code": "SA001",
+      "severity": "HIGH",
+      "message": "Section count mismatch: estimated 5 but found 5",
+      "recommendation": "Calibrate section estimator against actuals"
+    },
+    {
+      "code": "TF002",
+      "severity": "MEDIUM",
+      "message": "Merged cells not properly detected",
+      "recommendation": "Enable cross-page table merge heuristics"
+    },
+    {
+      "code": "FF002",
+      "severity": "HIGH",
+      "message": "7 figures detected but none extracted",
+      "recommendation": "Check image extraction pipeline configuration"
+    },
+    {
+      "code": "EQ001",
+      "severity": "MEDIUM",
+      "message": "Math symbols detected but no equation blocks extracted",
+      "recommendation": "Enable equation detection in block classifier"
+    },
+    {
+      "code": "EQ002",
+      "severity": "HIGH",
+      "message": "LaTeX rendering artifacts in extracted text",
+      "recommendation": "Apply math symbol normalization post-processing"
+    },
+    {
+      "code": "OR001",
+      "severity": "MEDIUM",
+      "message": "1 reading order violations detected",
+      "recommendation": "Review multi-column layout detection"
+    }
+  ],
+  "escalation_jobs": [],
+  "memory_ingest": {
+    "status": "not_requested"
+  }
+}

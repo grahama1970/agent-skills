@@ -1,0 +1,16 @@
+[project]
+name = "streamdeck-lab"
+version = "0.1.0"
+description = "Stream Deck layout evaluator, generator, and ground truth editor"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "loguru>=0.7.0,<0.7.3",
+    "pyside6>=6.6.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

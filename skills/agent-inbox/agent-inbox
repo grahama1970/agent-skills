@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# agent-inbox CLI wrapper
+# Delegates to inbox.py for all commands
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec python "${SCRIPT_DIR}/inbox.py" "$@"

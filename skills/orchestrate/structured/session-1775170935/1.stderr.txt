@@ -1,0 +1,2 @@
+2026-04-02 19:02:27.496 | ERROR    | __main__:run:405 - === PRE-FLIGHT FAILED: DoD assertion will never match ===
+2026-04-02 19:02:27.496 | ERROR    | __main__:run:406 -   'cd packages/ux-lab && npx tsc --noEmit && grep -c 'export function usePostureData' src/hooks/usePostureData.ts' outputs nothing on success (exit 0 only). Assertion 'tsc clean, hook exported with usePostureData' will never match empty stdout. Use 'exit_code == 0' instead.

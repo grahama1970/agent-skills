@@ -1,0 +1,19 @@
+{
+  "task_id": "9",
+  "title": "Family flyout panel \u2014 drill into controls for selected family",
+  "prompt": "Task: Family flyout panel \u2014 drill into controls for selected family\n\nImplementation:\n- Slide-over panel (same pattern as ControlsView detail flyout)\n- Opens when user clicks a family bar in PostureDashboard\n- Shows: family name, total controls, pass/partial/fail breakdown\n- Control table: control_id, name, NRS, QRA count, weakness count\n- Click control row \u2192 onNavigateToControl(id)\n- Close button + Escape key handler\n- ALL elements: data-qid='posture:flyout:{element}' data-qs-action='POSTURE_FLYOUT_{ACTION}' title='...'\n- useRegisterAction for flyout close, control select\n\nDefinition of Done:\n- Command: cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx && grep -q 'selectedFamily' src/components/sparta/dashboard/PostureDashboard.tsx\n- Assertion: exit_code == 0\n\nTests:\n- cd packages/ux-lab && curl -sf http://localhost:3002/src/components/sparta/dashboard/PostureDashboard.tsx -o /dev/null -w '%{http_code}' | grep -q 200\n- cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx",
+  "backend": "codex",
+  "cwd": "/tmp/cr-wt-9-2euaj5gi",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775237583",
+  "definition_of_done": {
+    "command": "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx && grep -q 'selectedFamily' src/components/sparta/dashboard/PostureDashboard.tsx",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    "packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"
+  ],
+  "read_context": [
+    "packages/ux-lab/src/components/sparta/explorer/ControlsView.tsx",
+    "/home/graham/workspace/experiments/pi-mono/.code-runner-skills-9.md"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 2,
+    "total": 2
+  },
+  "worktree": null,
+  "skill": "discover-lut",
+  "violations": [
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "discover-lut",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/discover-lut/main.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": false
+    },
+    {
+      "rule": "python.click",
+      "severity": "warn",
+      "skill": "discover-lut",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/discover-lut/main.py",
+      "message": "Uses click; prefer Typer.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

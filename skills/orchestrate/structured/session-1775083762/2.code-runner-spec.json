@@ -1,0 +1,18 @@
+{
+  "task_id": "2",
+  "title": "Remove codex exec from create-icon creator.py (flip scillm to primary)",
+  "prompt": "Task: Remove codex exec from create-icon creator.py (flip scillm to primary)\n\nImplementation:\n- creator.py already has scillm fallback \u2014 make scillm the PRIMARY path\n- Remove claude -p and gemini -p subprocess calls\n- Keep the httpx scillm call that already exists (lines 104-127)\n- Remove subprocess import if no longer needed\n\nDefinition of Done:\n- Command: cd .pi/skills/create-icon && python3 -c \"compile(open('creator.py').read(), 'creator.py', 'exec')\" && ! grep -q 'claude.*-p' creator.py\n- Assertion: exit_code == 0\n\nTests:\n- python3 -c \"compile(open('.pi/skills/create-icon/creator.py').read(), 'creator.py', 'exec')\"\n- ! grep -q 'claude.*-p' .pi/skills/create-icon/creator.py",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775083762",
+  "definition_of_done": {
+    "command": "cd .pi/skills/create-icon && python3 -c \"compile(open('creator.py').read(), 'creator.py', 'exec')\" && ! grep -q 'claude.*-p' creator.py",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/create-icon/creator.py"
+  ],
+  "read_context": [
+    ".pi/skills/create-icon/SKILL.md"
+  ]
+}

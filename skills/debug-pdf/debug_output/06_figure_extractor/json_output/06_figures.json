@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-01-30T08:25:04.938876",
+  "source_json": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/02_marker_extractor/json_output/02_marker_blocks.json",
+  "source_pdf": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/01_annotation_processor/repro_failed_clean.pdf",
+  "status": "Completed",
+  "figure_count": 0,
+  "figures": []
+}

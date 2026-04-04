@@ -1,0 +1,23 @@
+{
+  "selected_backbone": "distilbert-base-uncased",
+  "selected_metrics": {
+    "macro_f1": 0.9840534979423868,
+    "accuracy": 0.992831541218638
+  },
+  "results": [
+    {
+      "backbone": "distilbert-base-uncased",
+      "macro_f1": 0.9840534979423868,
+      "accuracy": 0.992831541218638,
+      "f1": 0.992746729206307,
+      "gate_passed": true
+    },
+    {
+      "backbone": "sentence-transformers/all-MiniLM-L6-v2",
+      "macro_f1": 0.9728906255422222,
+      "accuracy": 0.9874551971326165,
+      "f1": 0.9874908073321039,
+      "gate_passed": true
+    }
+  ]
+}

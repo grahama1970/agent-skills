@@ -1,0 +1,176 @@
+{
+  "version": 1,
+  "skill": "extract-entities",
+  "description": "Behavioral tests for entity extraction grounding evidence. Tests fabricated IDs, misspelled terms, hallucinated components, real controls, and word overlap detection.",
+  "defaults": { "latency_budget_ms": 5000 },
+  "cases": [
+    {
+      "name": "real_control_exact_match",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "What does SV-AC-2 have to do with CWE-89?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["SV-AC-2", "control_ids", "resolution_map"],
+      "rationale": ["Real control IDs should resolve via regex + exact DB match"],
+      "tags": ["fast", "real", "grounding"]
+    },
+    {
+      "name": "fabricated_id_x23_mustard",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "How does SPARTA control X23-MUSTARD mitigate spoofing attacks on the F-36's avionics bus?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["X23-MUSTARD", "unresolved_terms"],
+      "expected_stdout_excludes": [],
+      "rationale": [
+        "X23-MUSTARD is fabricated — should appear in unresolved_terms",
+        "ID-like classification prevents false BM25 resolution",
+        "F-36 excluded from id_like by _KNOWN_NON_CONTROL_IDS"
+      ],
+      "tags": ["fast", "adversarial", "grounding", "fabricated_id"]
+    },
+    {
+      "name": "fabricated_id_zz_phantom",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "How does countermeasure ZZ-PHANTOM-7 in the SPRATA framework protect against adversarial ML?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["ZZ-PHANTOM-7", "unresolved_terms"],
+      "rationale": [
+        "ZZ-PHANTOM-7 is fabricated — no exact match, no fuzzy match",
+        "SPRATA is a misspelling of SPARTA — should appear as near_miss or candidate"
+      ],
+      "tags": ["fast", "adversarial", "grounding", "fabricated_id"]
+    },
+    {
+      "name": "misspelled_framework_sprta",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "How does the SPRTA framework address threats to the F-36's hyperloop propulsion system?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["resolution_map"],
+      "rationale": [
+        "SPRTA is 1 edit distance from SPARTA",
+        "hyperloop propulsion is fabricated — no BM25 match for hyperloop in controls"
+      ],
+      "tags": ["fast", "adversarial", "grounding", "misspelling"]
+    },
+    {
+      "name": "hallucinated_component_coffee_machine",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "How do SPARTA countermeasures for T9999.999 prevent the F-36's coffee machine from being hacked?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["resolution_map"],
+      "rationale": [
+        "Coffee machine is absurd in SPARTA context",
+        "T9999.999 is a fake technique ID — should not resolve",
+        "BM25 word overlap should flag coffee/machine as truly_missing"
+      ],
+      "tags": ["fast", "adversarial", "grounding", "hallucinated"]
+    },
+    {
+      "name": "hallucinated_component_neural_helmet",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "What CMMC Level 7 requirements apply to the F-36's neural interface pilot helmet?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["resolution_map"],
+      "rationale": [
+        "Neural interface pilot helmet is fabricated — no SPARTA control covers it",
+        "CMMC Level 7 doesn't exist (max is Level 3)",
+        "BM25 word overlap: neural/helmet should be truly_missing"
+      ],
+      "tags": ["fast", "adversarial", "grounding", "hallucinated"]
+    },
+    {
+      "name": "hallucinated_blockchain_ledger",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "How does SPARTA's blockchain supply chain ledger protect the F-36's FADEC controllers?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["resolution_map"],
+      "rationale": [
+        "blockchain supply chain ledger is fabricated",
+        "BM25 may match supply chain risk management but blockchain/ledger are missing words",
+        "FADEC is a real component but blockchain integration doesn't exist"
+      ],
+      "tags": ["fast", "adversarial", "grounding", "hallucinated"]
+    },
+    {
+      "name": "wrong_context_kerberos",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "How does the F-36 use Kerberos ticket-granting service for its radar system authentication?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["resolution_map"],
+      "rationale": [
+        "Kerberos is real but not applicable to embedded radar systems",
+        "Word overlap: kerberos/ticket-granting should be weak_match if not in control names"
+      ],
+      "tags": ["full", "adversarial", "grounding", "wrong_context"]
+    },
+    {
+      "name": "wrong_context_windows_defender",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "What SPARTA defenses protect the F-36's Windows Defender antivirus configuration?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["resolution_map"],
+      "rationale": [
+        "Windows Defender is not used on military avionics",
+        "Should extract Windows Defender as a phrase candidate"
+      ],
+      "tags": ["full", "adversarial", "grounding", "wrong_context"]
+    },
+    {
+      "name": "known_non_control_ids_excluded",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "How should we apply DO-178C DAL-A requirements to the F-36's flight software with ARP4761 safety analysis?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["resolution_map"],
+      "rationale": [
+        "F-36, DO-178C, DAL-A, ARP4761 are all in _KNOWN_NON_CONTROL_IDS",
+        "None should be classified as id_like or trigger grounding warnings"
+      ],
+      "tags": ["fast", "real", "grounding", "exclusion"]
+    },
+    {
+      "name": "real_firmware_question",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "What SPARTA countermeasures protect the F-36 flight software from firmware tampering during avionics maintenance windows?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["resolution_map", "all_control_ids"],
+      "rationale": [
+        "Real question — should resolve controls via hybrid search",
+        "No fabricated terms — unresolved_terms should be empty or contain only text fragments"
+      ],
+      "tags": ["full", "real", "grounding"]
+    },
+    {
+      "name": "empty_text",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "   ",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["control_ids"],
+      "rationale": ["Empty/whitespace input should return empty result gracefully"],
+      "tags": ["fast", "edge_case"]
+    },
+    {
+      "name": "offtopic_question",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "What is your favorite color?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["control_ids"],
+      "rationale": [
+        "Off-topic question — no SPARTA/security entities",
+        "Should return empty control_ids and no unresolved id_like terms"
+      ],
+      "tags": ["fast", "edge_case", "grounding"]
+    },
+    {
+      "name": "misspelled_countermeasure_cm028",
+      "command": ["extract", "--json", "{input}"],
+      "input_inline": "How does CM028 protect against firmware tampering?",
+      "expected_exit_code": 0,
+      "expected_stdout_contains": ["CM028", "resolution_map"],
+      "rationale": [
+        "CM028 is 1 edit distance from CM0028 (missing zero)",
+        "Fuzzy match should resolve to CM0028 or flag as near_miss",
+        "This tests the edit distance resolution path for id_like terms"
+      ],
+      "tags": ["fast", "adversarial", "grounding", "misspelling"]
+    }
+  ]
+}

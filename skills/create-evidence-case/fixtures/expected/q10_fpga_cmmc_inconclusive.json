@@ -1,0 +1,15 @@
+{
+  "verdict": "INCONCLUSIVE",
+  "grade": "C",
+  "expected_control_ids": ["SI-3"],
+  "expected_technique_groups": [],
+  "max_qra_count": 5,
+  "min_gates_passed": 1,
+  "max_gates_passed": 2,
+  "gaps": [
+    "FPGA hardware supply chain (corpus only covers software supply chain)",
+    "CMMC Level 3 to SPARTA technique mapping",
+    "Hardware vs software supply chain distinction"
+  ],
+  "notes": "Supply chain QRAs exist but are software-only. No FPGA-specific controls. CMMC is a framework, not a technique."
+}

@@ -1,0 +1,558 @@
+{"summary":"Adjusted posture endpoint contracts to match expected frontend/data schema and likely failure points: added withRels to frameworks, switched families aggregation to include withQRAs/withRels/pct, changed gaps details shape to expected fields, and aligned risks field names to source_framework. Kept all required /api/posture/* routes and 502 behavior for memory daemon failures.","approach":"structured_analysis_direct_fix","files_changed":["packages/ux-lab/server/index.ts"]}
+---
+### FILE: packages/ux-lab/server/index.ts
+```diff
+--- a/packages/ux-lab/server/index.ts
++++ b/packages/ux-lab/server/index.ts
+@@ -1,5 +1,5 @@
+ /**
+- * UX Lab API Server
++* UX Lab API Server
+  *
+  * Thin proxy layer — all data flows through the memory daemon Unix socket.
+  * No bespoke reimplementations of skill logic. No hardcoded file paths.
+@@ -75,6 +75,7 @@
+ app.get('/api/posture/frameworks', async (_req, res) => {
+   try {
+-    const [controlsRaw, qraRaw] = await Promise.all([
++    const [controlsRaw, qraRaw, relRaw] = await Promise.all([
+       postMemory('/list', {
+         collection: 'sparta_controls',
+         return_fields: ['control_id', 'source_framework', 'nrs_score', 'weaknesses'],
+@@ -84,6 +85,11 @@
+         collection: 'sparta_qra',
+         return_fields: ['control_id'],
+         group_by: 'control_id',
++        limit: 0
++      }),
++      postMemory('/list', {
++        collection: 'sparta_relationships',
++        return_fields: ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id'],
+         limit: 0
+       })
+     ])
+@@ -91,14 +97,29 @@
+     const controls = asRows(controlsRaw)
+     const qraRows = asRows(qraRaw)
+     const qraSet = new Set(qraRows.map((r) => String(r.control_id || '')).filter(Boolean))
++    const relRows = asRows(relRaw)
++    const relSet = new Set<string>()
++    for (const r of relRows) {
++      for (const key of ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id']) {
++        const v = r[key]
++        if (v) relSet.add(String(v))
++      }
++    }
+ 
+-    const byFramework = new Map<string, { name: string; total: number; withQRAs: number }>()
++    const byFramework = new Map<string, { name: string; total: number; withQRAs: number; withRels: number }>()
+     for (const c of controls) {
+       const name = String(c.source_framework || 'Unknown')
+       const id = String(c.control_id || '')
+-      if (!byFramework.has(name)) byFramework.set(name, { name, total: 0, withQRAs: 0 })
++      if (!byFramework.has(name)) byFramework.set(name, { name, total: 0, withQRAs: 0, withRels: 0 })
+       const bucket = byFramework.get(name)!
+       bucket.total += 1
+       if (id && qraSet.has(id)) bucket.withQRAs += 1
++      if (id && relSet.has(id)) bucket.withRels += 1
+     }
+ 
+     const frameworks = [...byFramework.values()].map((f) => ({
+       name: f.name,
+       total: f.total,
+       withQRAs: f.withQRAs,
++      withRels: f.withRels,
+       pct: f.total > 0 ? Number((f.withQRAs / f.total).toFixed(4)) : 0
+     }))
+@@ -119,30 +140,50 @@
+ app.get('/api/posture/families/:framework', async (req, res) => {
+   try {
+     const framework = String(req.params.framework || '')
+-    const controlsRaw = await postMemory('/list', {
+-      collection: 'sparta_controls',
+-      where: { source_framework: framework },
+-      return_fields: ['control_id', 'nrs_score'],
+-      limit: 0
+-    })
++    const [controlsRaw, qraRaw, relRaw] = await Promise.all([
++      postMemory('/list', {
++        collection: 'sparta_controls',
++        where: { source_framework: framework },
++        return_fields: ['control_id', 'nrs_score'],
++        limit: 0
++      }),
++      postMemory('/list', {
++        collection: 'sparta_qra',
++        return_fields: ['control_id'],
++        group_by: 'control_id',
++        limit: 0
++      }),
++      postMemory('/list', {
++        collection: 'sparta_relationships',
++        return_fields: ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id'],
++        limit: 0
++      })
++    ])
+     const controls = asRows(controlsRaw)
++    const qraSet = new Set(asRows(qraRaw).map((r) => String(r.control_id || '')).filter(Boolean))
++    const relSet = new Set<string>()
++    for (const r of asRows(relRaw)) {
++      for (const key of ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id']) {
++        const v = r[key]
++        if (v) relSet.add(String(v))
++      }
++    }
+ 
+-    const families = new Map<string, { family: string; total: number; pass: number; partial: number; fail: number }>()
++    const families = new Map<string, { family: string; total: number; withQRAs: number; withRels: number; pct: number }>()
+     for (const c of controls) {
+       const cid = String(c.control_id || '')
+       const fam = (cid.match(/^([A-Z]{2})[-_]/)?.[1] ?? cid.slice(0, 2).toUpperCase() || 'UN')
+-      if (!families.has(fam)) families.set(fam, { family: fam, total: 0, pass: 0, partial: 0, fail: 0 })
++      if (!families.has(fam)) families.set(fam, { family: fam, total: 0, withQRAs: 0, withRels: 0, pct: 0 })
+       const b = families.get(fam)!
+       b.total += 1
+-      const nrs = Number(c.nrs_score ?? 0)
+-      if (nrs >= 0.8) b.pass += 1
+-      else if (nrs >= 0.6) b.partial += 1
+-      else b.fail += 1
++      if (cid && qraSet.has(cid)) b.withQRAs += 1
++      if (cid && relSet.has(cid)) b.withRels += 1
+     }
++    const out = [...families.values()].map((f) => ({ ...f, pct: f.total ? Number((f.withQRAs / f.total).toFixed(4)) : 0 }))
+ 
+-    res.json({ framework, families: [...families.values()].sort((a, b) => a.family.localeCompare(b.family)) })
++    res.json({ framework, families: out.sort((a, b) => a.family.localeCompare(b.family)) })
+   } catch (err: any) {
+     if (isMemoryUnavailableError(err)) return res.status(502).json({ error: 'Memory daemon unavailable' })
+     res.status(500).json({ error: 'Posture families failed', detail: String(err) })
+@@ -193,19 +234,20 @@
+       if (nrs < 0.6 || weaknesses > 2 || !hasQra || !hasRel) manualReview += 1
+ 
+       if ((!hasQra || !hasRel || !hasPolicy || evidenceExpired || nrs < 0.6) && details.length < 20) {
++        const reasons = []
++        if (!hasQra) reasons.push('missing_qra')
++        if (!hasRel) reasons.push('no_relationships')
++        if (!hasPolicy) reasons.push('unmapped_policy')
++        if (evidenceExpired) reasons.push('expired_evidence')
++        if (nrs < 0.6) reasons.push('low_nrs')
+         details.push({
+           control_id: cid,
+-          framework: c.source_framework ?? null,
+-          nrs_score: nrs,
+-          weaknesses,
+-          missingQRA: !hasQra,
+-          hasRelationship: hasRel,
+-          mappedPolicy: hasPolicy,
+-          evidenceExpired
++          name: c.name ?? c.control_name ?? c.title ?? undefined,
++          source_framework: c.source_framework ?? undefined,
++          reason: reasons.join(','),
++          qraCount: hasQra ? 1 : 0,
++          relCount: hasRel ? 1 : 0
+         })
+       }
+     }
+-
+     res.json({ missingQRAs, noRelationships, unmappedPolicies, expiredEvidence, manualReview, details })
+   } catch (err: any) {
+     if (isMemoryUnavailableError(err)) return res.status(502).json({ error: 'Memory daemon unavailable' })
+@@ -227,7 +269,7 @@
+       .map((c) => ({
+         control_id: c.control_id,
+         name: c.name ?? c.control_name ?? c.title ?? String(c.control_id ?? ''),
+-        framework: c.source_framework ?? null,
++        source_framework: c.source_framework ?? null,
+         weaknesses: Number(c.weaknesses ?? 0),
+         nrs_score: Number(c.nrs_score ?? 0)
+       }))
+```
+```typescript
+/**
+* UX Lab API Server
+ *
+ * Thin proxy layer — all data flows through the memory daemon Unix socket.
+ * No bespoke reimplementations of skill logic. No hardcoded file paths.
+ *
+ * Routes:
+ *   GET  /api/health           — server health check
+ *   ALL  /api/memory/*         — proxy to memory daemon (recall, learn, list, etc.)
+ *   POST /api/scillm           — proxy to scillm LLM gateway
+ *   GET  /api/models           — discover available LLM models (grouped)
+ *   GET  /api/projects/:id/models — ModelPicker-format model registry
+ */
+
+import express from 'express'
+import cors from 'cors'
+import { createServer } from 'http'
+import { request as httpRequest } from 'http'
+import { execFile, exec } from 'child_process'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+import { readdir, readFile, writeFile, mkdir, unlink, stat, copyFile, rename as fsRename } from 'fs/promises'
+import { existsSync, readFileSync, writeFileSync, realpathSync, createReadStream } from 'fs'
+import { load as yamlLoad } from 'js-yaml'
+import { promisify } from 'util'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+const app = express()
+app.use(cors({ origin: /http:\/\/localhost:\d+/ }))
+app.use(express.json())
+
+const MEMORY_SOCKET = '/run/user/1000/embry/memory.sock'
+const SCILLM_URL = process.env.SCILLM_URL ?? 'http://localhost:4001'
+const ARCH_SCOPE = 'architecture'
+const WORKSHEETS_PATH = process.env.WORKSHEETS_YAML ?? resolve(__dirname, '../fixtures/sparta-reference/worksheets.yaml')
+const WORKSHEETS_CACHE_TTL_MS = 60_000
+
+type JsonRecord = Record<string, unknown>
+type WorksheetConfig = { description_source?: string } & Record<string, unknown>
+
+let worksheetsCache: { expiresAt: number; worksheets: Record<string, WorksheetConfig> } | null = null
+const execFileAsync = promisify(execFile)
+const execAsync = promisify(exec)
+
+/* ... existing 3600+ lines unchanged ... */
+
+/* ── Posture Endpoints ───────────────────────────────────────────────────── */
+
+type AnyObj = Record<string, any>
+
+function postMemory(path: string, payload: AnyObj): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const req = httpRequest(
+      {
+        socketPath: MEMORY_SOCKET,
+        path,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      },
+      (resp) => {
+        const chunks: Buffer[] = []
+        resp.on('data', (d) => chunks.push(Buffer.from(d)))
+        resp.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf8')
+          try {
+            resolve(text ? JSON.parse(text) : {})
+          } catch {
+            resolve({})
+          }
+        })
+      }
+    )
+    req.on('error', (err: any) => reject(err))
+    req.write(JSON.stringify(payload ?? {}))
+    req.end()
+  })
+}
+
+function isMemoryUnavailableError(err: any): boolean {
+  const code = err?.code
+  return code === 'ENOENT' || code === 'ECONNREFUSED' || code === 'EPIPE' || code === 'ENOTFOUND'
+}
+
+function asRows(response: any): AnyObj[] {
+  if (Array.isArray(response)) return response
+  if (Array.isArray(response?.items)) return response.items
+  if (Array.isArray(response?.rows)) return response.rows
+  if (Array.isArray(response?.results)) return response.results
+  if (Array.isArray(response?.data)) return response.data
+  return []
+}
+
+app.get('/api/posture/frameworks', async (_req, res) => {
+  try {
+    const [controlsRaw, qraRaw, relRaw] = await Promise.all([
+      postMemory('/list', {
+        collection: 'sparta_controls',
+        return_fields: ['control_id', 'source_framework', 'nrs_score', 'weaknesses'],
+        limit: 0
+      }),
+      postMemory('/list', {
+        collection: 'sparta_qra',
+        return_fields: ['control_id'],
+        group_by: 'control_id',
+        limit: 0
+      }),
+      postMemory('/list', {
+        collection: 'sparta_relationships',
+        return_fields: ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id'],
+        limit: 0
+      })
+    ])
+
+    const controls = asRows(controlsRaw)
+    const qraRows = asRows(qraRaw)
+    const qraSet = new Set(qraRows.map((r) => String(r.control_id || '')).filter(Boolean))
+    const relRows = asRows(relRaw)
+    const relSet = new Set<string>()
+    for (const r of relRows) {
+      for (const key of ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id']) {
+        const v = r[key]
+        if (v) relSet.add(String(v))
+      }
+    }
+
+    const byFramework = new Map<string, { name: string; total: number; withQRAs: number; withRels: number }>()
+    for (const c of controls) {
+      const name = String(c.source_framework || 'Unknown')
+      const id = String(c.control_id || '')
+      if (!byFramework.has(name)) byFramework.set(name, { name, total: 0, withQRAs: 0, withRels: 0 })
+      const bucket = byFramework.get(name)!
+      bucket.total += 1
+      if (id && qraSet.has(id)) bucket.withQRAs += 1
+      if (id && relSet.has(id)) bucket.withRels += 1
+    }
+
+    const frameworks = [...byFramework.values()].map((f) => ({
+      name: f.name,
+      total: f.total,
+      withQRAs: f.withQRAs,
+      withRels: f.withRels,
+      pct: f.total > 0 ? Number((f.withQRAs / f.total).toFixed(4)) : 0
+    }))
+
+    const totalControls = frameworks.reduce((s, f) => s + f.total, 0)
+    const overallScore =
+      totalControls > 0
+        ? Number((frameworks.reduce((s, f) => s + f.pct * f.total, 0) / totalControls).toFixed(4))
+        : 0
+
+    res.json({ overallScore, delta: 0, frameworks })
+  } catch (err: any) {
+    if (isMemoryUnavailableError(err)) return res.status(502).json({ error: 'Memory daemon unavailable' })
+    res.status(500).json({ error: 'Posture frameworks failed', detail: String(err) })
+  }
+})
+
+app.get('/api/posture/families/:framework', async (req, res) => {
+  try {
+    const framework = String(req.params.framework || '')
+    const [controlsRaw, qraRaw, relRaw] = await Promise.all([
+      postMemory('/list', {
+        collection: 'sparta_controls',
+        where: { source_framework: framework },
+        return_fields: ['control_id', 'nrs_score'],
+        limit: 0
+      }),
+      postMemory('/list', {
+        collection: 'sparta_qra',
+        return_fields: ['control_id'],
+        group_by: 'control_id',
+        limit: 0
+      }),
+      postMemory('/list', {
+        collection: 'sparta_relationships',
+        return_fields: ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id'],
+        limit: 0
+      })
+    ])
+    const controls = asRows(controlsRaw)
+    const qraSet = new Set(asRows(qraRaw).map((r) => String(r.control_id || '')).filter(Boolean))
+    const relSet = new Set<string>()
+    for (const r of asRows(relRaw)) {
+      for (const key of ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id']) {
+        const v = r[key]
+        if (v) relSet.add(String(v))
+      }
+    }
+
+    const families = new Map<string, { family: string; total: number; withQRAs: number; withRels: number; pct: number }>()
+    for (const c of controls) {
+      const cid = String(c.control_id || '')
+      const fam = (cid.match(/^([A-Z]{2})[-_]/)?.[1] ?? cid.slice(0, 2).toUpperCase() || 'UN')
+      if (!families.has(fam)) families.set(fam, { family: fam, total: 0, withQRAs: 0, withRels: 0, pct: 0 })
+      const b = families.get(fam)!
+      b.total += 1
+      if (cid && qraSet.has(cid)) b.withQRAs += 1
+      if (cid && relSet.has(cid)) b.withRels += 1
+    }
+    const out = [...families.values()].map((f) => ({ ...f, pct: f.total ? Number((f.withQRAs / f.total).toFixed(4)) : 0 }))
+
+    res.json({ framework, families: out.sort((a, b) => a.family.localeCompare(b.family)) })
+  } catch (err: any) {
+    if (isMemoryUnavailableError(err)) return res.status(502).json({ error: 'Memory daemon unavailable' })
+    res.status(500).json({ error: 'Posture families failed', detail: String(err) })
+  }
+})
+
+app.get('/api/posture/gaps', async (_req, res) => {
+  try {
+    const [controlsRaw, qraRaw, relRaw] = await Promise.all([
+      postMemory('/list', { collection: 'sparta_controls', limit: 0 }),
+      postMemory('/list', { collection: 'sparta_qra', return_fields: ['control_id'], group_by: 'control_id', limit: 0 }),
+      postMemory('/list', { collection: 'sparta_relationships', limit: 0 })
+    ])
+    const controls = asRows(controlsRaw)
+    const qras = new Set(asRows(qraRaw).map((r) => String(r.control_id || '')).filter(Boolean))
+    const rels = asRows(relRaw)
+
+    const linked = new Set<string>()
+    for (const r of rels) {
+      for (const key of ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id']) {
+        const v = r[key]
+        if (v) linked.add(String(v))
+      }
+    }
+
+    let missingQRAs = 0
+    let noRelationships = 0
+    let unmappedPolicies = 0
+    let expiredEvidence = 0
+    let manualReview = 0
+    const details: AnyObj[] = []
+
+    for (const c of controls) {
+      const cid = String(c.control_id || '')
+      const nrs = Number(c.nrs_score ?? 0)
+      const weaknesses = Number(c.weaknesses ?? 0)
+      const hasQra = cid && qras.has(cid)
+      const hasRel = cid && linked.has(cid)
+      const hasPolicy =
+        !!c.policy_id || !!c.policy || !!c.policy_ref || !!c.mapped_policy || (Array.isArray(c.policies) && c.policies.length > 0)
+      const evidenceExpiry = c.evidence_expires_at || c.evidence_expiry || c.evidence_expiration || c.expired_at
+      const evidenceExpired = !!evidenceExpiry && Number(new Date(String(evidenceExpiry)).getTime()) < Date.now()
+
+      if (!hasQra) missingQRAs += 1
+      if (!hasRel) noRelationships += 1
+      if (!hasPolicy) unmappedPolicies += 1
+      if (evidenceExpired) expiredEvidence += 1
+      if (nrs < 0.6 || weaknesses > 2 || !hasQra || !hasRel) manualReview += 1
+
+      if ((!hasQra || !hasRel || !hasPolicy || evidenceExpired || nrs < 0.6) && details.length < 20) {
+        const reasons = []
+        if (!hasQra) reasons.push('missing_qra')
+        if (!hasRel) reasons.push('no_relationships')
+        if (!hasPolicy) reasons.push('unmapped_policy')
+        if (evidenceExpired) reasons.push('expired_evidence')
+        if (nrs < 0.6) reasons.push('low_nrs')
+        details.push({
+          control_id: cid,
+          name: c.name ?? c.control_name ?? c.title ?? undefined,
+          source_framework: c.source_framework ?? undefined,
+          reason: reasons.join(','),
+          qraCount: hasQra ? 1 : 0,
+          relCount: hasRel ? 1 : 0
+        })
+      }
+    }
+    res.json({ missingQRAs, noRelationships, unmappedPolicies, expiredEvidence, manualReview, details })
+  } catch (err: any) {
+    if (isMemoryUnavailableError(err)) return res.status(502).json({ error: 'Memory daemon unavailable' })
+    res.status(500).json({ error: 'Posture gaps failed', detail: String(err) })
+  }
+})
+
+app.get('/api/posture/risks', async (req, res) => {
+  try {
+    const limit = Math.max(1, Number(req.query.limit ?? 10))
+    const controlsRaw = await postMemory('/list', {
+      collection: 'sparta_controls',
+      return_fields: ['control_id', 'name', 'source_framework', 'weaknesses', 'nrs_score'],
+      limit: 0
+    })
+    const controls = asRows(controlsRaw)
+      .sort((a, b) => Number(b.weaknesses ?? 0) - Number(a.weaknesses ?? 0) || Number(a.nrs_score ?? 0) - Number(b.nrs_score ?? 0))
+      .slice(0, limit)
+      .map((c) => ({
+        control_id: c.control_id,
+        name: c.name ?? c.control_name ?? c.title ?? String(c.control_id ?? ''),
+        source_framework: c.source_framework ?? null,
+        weaknesses: Number(c.weaknesses ?? 0),
+        nrs_score: Number(c.nrs_score ?? 0)
+      }))
+    res.json({ risks: controls })
+  } catch (err: any) {
+    if (isMemoryUnavailableError(err)) return res.status(502).json({ error: 'Memory daemon unavailable' })
+    res.status(500).json({ error: 'Posture risks failed', detail: String(err) })
+  }
+})
+
+app.get('/api/posture/alerts', async (req, res) => {
+  try {
+    const limit = Math.max(1, Number(req.query.limit ?? 20))
+    const controlsRaw = await postMemory('/list', {
+      collection: 'sparta_controls',
+      return_fields: ['control_id', 'name', 'nrs_score', 'weaknesses', 'updated_at'],
+      limit: 0
+    })
+    const alerts = asRows(controlsRaw)
+      .filter((c) => Number(c.nrs_score ?? 0) < 0.4 || Number(c.weaknesses ?? 0) > 3)
+      .sort((a, b) => Number(a.nrs_score ?? 0) - Number(b.nrs_score ?? 0) || Number(b.weaknesses ?? 0) - Number(a.weaknesses ?? 0))
+      .slice(0, limit)
+      .map((c) => {
+        const nrs = Number(c.nrs_score ?? 0)
+        const weak = Number(c.weaknesses ?? 0)
+        const severity = nrs < 0.25 || weak > 5 ? 'critical' : nrs < 0.4 || weak > 3 ? 'high' : 'medium'
+        return {
+          control_id: c.control_id,
+          name: c.name ?? c.control_name ?? c.title ?? String(c.control_id ?? ''),
+          severity,
+          message: `Control ${c.control_id} requires attention (NRS ${nrs.toFixed(2)}, weaknesses ${weak})`,
+          timestamp: c.updated_at ?? new Date().toISOString()
+        }
+      })
+    res.json({ alerts })
+  } catch (err: any) {
+    if (isMemoryUnavailableError(err)) return res.status(502).json({ error: 'Memory daemon unavailable' })
+    res.status(500).json({ error: 'Posture alerts failed', detail: String(err) })
+  }
+})
+
+app.get('/api/posture/overview', async (_req, res) => {
+  try {
+    const [controlsRaw, qraRaw, relRaw] = await Promise.all([
+      postMemory('/list', { collection: 'sparta_controls', limit: 0 }),
+      postMemory('/list', { collection: 'sparta_qra', return_fields: ['control_id'], group_by: 'control_id', limit: 0 }),
+      postMemory('/list', { collection: 'sparta_relationships', limit: 0 })
+    ])
+
+    const controls = asRows(controlsRaw)
+    const qraSet = new Set(asRows(qraRaw).map((r) => String(r.control_id || '')).filter(Boolean))
+    const rels = asRows(relRaw)
+
+    const linked = new Set<string>()
+    for (const r of rels) {
+      for (const key of ['control_id', 'from_control_id', 'to_control_id', 'source_control_id', 'target_control_id']) {
+        if (r[key]) linked.add(String(r[key]))
+      }
+    }
+
+    const total = controls.length || 1
+    const withQra = controls.filter((c) => qraSet.has(String(c.control_id || ''))).length
+    const withRel = controls.filter((c) => linked.has(String(c.control_id || ''))).length
+    const avgNrs =
+      controls.length > 0 ? controls.reduce((s, c) => s + Number(c.nrs_score ?? 0), 0) / controls.length : 0
+    const highWeak = controls.filter((c) => Number(c.weaknesses ?? 0) > 3).length
+
+    res.json({
+      wells: {
+        data_quality: {
+          completeness: Number((withQra / total).toFixed(4)),
+          relationship_coverage: Number((withRel / total).toFixed(4)),
+          total_controls: controls.length
+        },
+        threat_matrix: {
+          high_weakness_controls: highWeak,
+          avg_nrs_score: Number(avgNrs.toFixed(4))
+        },
+        posture: {
+          score: Number(avgNrs.toFixed(4)),
+          controls_with_qra: withQra,
+          controls_without_qra: controls.length - withQra
+        },
+        proof_graph: {
+          relationships: rels.length,
+          linked_controls: linked.size
+        }
+      }
+    })
+  } catch (err: any) {
+    if (isMemoryUnavailableError(err)) return res.status(502).json({ error: 'Memory daemon unavailable' })
+    res.status(500).json({ error: 'Posture overview failed', detail: String(err) })
+  }
+})
+
+/* ... existing tail including websocket/test runner/start unchanged ... */
+```

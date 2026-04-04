@@ -1,0 +1,238 @@
+Alejandro Jodorowsky
+Terry Gilliam
+Ingmar Bergman
+F.W. Murnau
+Werner Herzog
+Luc Besson
+David Lynch
+Roger Deakins
+Emmanuel Lubezki
+Gordon Willis
+John Alcott
+Robby Müller
+Vittorio Storaro
+Gregg Toland
+Sven Nykvist
+Robert Richardson
+Conrad Hall
+Freddie Young
+Vilmos Zsigmond
+Jessica Walsh
+Stefan Sagmeister
+Paula Scher
+Temi Coker
+Natasha Jen
+Michael Bierut
+Jon Contino
+Timothy Goodman
+Peter Saville
+Rachel Gogel
+Tommy Graphics
+Razvan Garofeanu
+Louis Ansa
+Shanti Sparrow
+Juliette van Rhyn
+Wale Osunla
+Ingrid Picanyol
+Hugh Miller
+Billy Wilder
+William Goldman
+Quentin Tarantino
+Aaron Sorkin
+Robert Towne
+Charlie Kaufman
+William Gibson
+Frank Herbert
+Liu Cixin
+Philip K. Dick
+Ursula K. Le Guin
+Kurt Vonnegut
+Joseph Heller
+Jonathan Swift
+Alan Moore
+Neil Gaiman
+Umberto Eco
+Jorge Luis Borges
+H.P. Lovecraft
+Stephen King
+Shirley Jackson
+Edgar Allan Poe
+John le Carré
+Tom Clancy
+Aristotle
+Plato
+Marcus Aurelius
+Leonardo da Vinci
+Galileo Galilei
+Benjamin Franklin
+Voltaire
+Adam Smith
+Charles Darwin
+Friedrich Nietzsche
+Ada Lovelace
+Karl Marx
+Nikola Tesla
+Sigmund Freud
+Carl Jung
+B.F. Skinner
+John Maynard Keynes
+Friedrich Hayek
+John Nash
+Carl von Clausewitz
+Napoleon Bonaparte
+Dwight D. Eisenhower
+Marie Curie
+Linus Pauling
+Herodotus
+Ibn Khaldun
+Howard Zinn
+Donald Knuth
+Grace Hopper
+Edsger Dijkstra
+Joseph Campbell
+Karen Armstrong
+Marlene Dietrich
+Daniel Day-Lewis
+Cate Blanchett
+Joaquin Phoenix
+Tilda Swinton
+Anthony Hopkins
+Meryl Streep
+Denzel Washington
+Viola Davis
+Gary Oldman
+Frances McDormand
+Max von Sydow
+Klaus Kinski
+Kyle MacLachlan
+Laura Dern
+Jean Reno
+Liv Ullmann
+Mads Mikkelsen
+Akira Kurosawa
+Hayao Miyazaki
+Yasujiro Ozu
+Takeshi Kitano
+Hirokazu Kore-eda
+Wong Kar-wai
+Zhang Yimou
+Ang Lee
+Jia Zhangke
+Bong Joon-ho
+Park Chan-wook
+Eric Khoo
+Toshiro Mifune
+Tony Leung Chiu-wai
+Gong Li
+Chow Yun-fat
+Song Kang-ho
+Maggie Cheung
+Ken Watanabe
+Rinko Kikuchi
+John Williams
+Hans Zimmer
+Ennio Morricone
+Bernard Herrmann
+Joe Hisaishi
+Trent Reznor
+Ryuichi Sakamoto
+Hildur Guðnadóttir
+Walter Murch
+Thelma Schoonmaker
+Lee Smith
+Sally Menke
+Margaret Sixel
+Ken Adam
+Dante Ferretti
+Hannah Beachler
+Jack Fisk
+Nathan Crowley
+Ben Burtt
+Gary Rydstrom
+Richard King
+Ren Klyce
+Skip Lievsay
+Chauncey McIntosh
+Noam Chomsky
+Niccolò Machiavelli
+Sun Tzu
+Alexander Hamilton
+Julius Caesar
+Robert Oppenheimer
+Sabine Hossenfelder
+Richard Feynman
+Robert Sapolsky
+E.O. Wilson
+Richard Dawkins
+John von Neumann
+Alan Turing
+Terence Tao
+Andrew Ng
+code4AI
+Ronan McGovern
+Kevin Mitnick
+Charlie Miller
+Tavis Ormandy
+Bruce Schneier
+Brian Krebs
+Lazarus Group
+APT29 Cozy Bear
+LockBit Affiliate
+APT28 Fancy Bear
+FIN7 Carbanak
+Volt Typhoon
+Scattered Spider
+Kimsuky
+Defensive CISO
+Incident Responder
+Threat Hunter
+Security Architect
+SOC Analyst
+Detection Engineer
+Malware Analyst
+Threat Intelligence Analyst
+Purple Team Lead
+Cloud Security Engineer
+Penetration Tester
+Adversary Emulation Specialist
+Social Engineer
+Physical Security Tester
+Cloud Attacker
+Insider Threat
+Hacktivist Collective
+Initial Access Broker
+Red Team Operator
+John Carmack
+Linus Torvalds
+Judy Fan
+AI Video School
+Dave Clark
+Dan Kieft
+Patrick Clair
+Tasha Caufield
+Edith Head
+Colleen Atwood
+Ruth E. Carter
+Sandy Powell
+Jacqueline Durran
+John Knoll
+Dennis Muren
+Joe Letteri
+Rob Legato
+Dan Glass
+Mel Blanc
+Frank Welker
+Tara Strong
+Keith David
+Jennifer Hale
+Brad Bird
+Mamoru Hosoda
+Isao Takahata
+Genndy Tartakovsky
+Tomm Moore
+Frederick Wiseman
+Errol Morris
+Ken Burns
+Werner Herzog
+Kirsten Johnson
+Brandon Bailey

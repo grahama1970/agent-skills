@@ -1,0 +1,17 @@
+{
+  "task_id": "C2-trend-to-memory",
+  "title": "Create trend_tracker.py to store trend data to memory",
+  "prompt": "Create a new file trend_tracker.py in the monitor-codebase skill directory.\nThis file stores trend data to memory via httpx.\n\nUses httpx to Unix socket /run/user/1000/embry/memory.sock.\nEndpoint: POST to the learn path.\nPayload: problem=\"monitor-codebase trend: {project} {date}\",\n  solution=JSON with project, date, total_issues, delta, breakdown.\n  scope=\"codebase_trends\", tags=[\"trend\", \"project:{name}\"]\n\nAlso update the shell script to call this after trend comparison:\n  python3 \"$SKILL_DIR/trend_tracker.py\" \"$project_name\" \"$report_file\" \"$prev\"",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029",
+  "definition_of_done": {
+    "command": "test -f .pi/skills/monitor-codebase/trend_tracker.py",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/monitor-codebase/trend_tracker.py",
+    ".pi/skills/monitor-codebase/run.sh"
+  ],
+  "max_rounds": 3
+}

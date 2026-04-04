@@ -1,0 +1,30 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-20T07:00:09.590643+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 1,
+    "total": 1
+  },
+  "worktree": null,
+  "skill": "embry-config",
+  "violations": [
+    {
+      "rule": "naming.noun_only",
+      "severity": "warn",
+      "skill": "embry-config",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/embry-config/SKILL.md",
+      "message": "Skill name 'embry-config' appears noun-only; consider a verb- prefix or add to _NOUN_ALLOWLIST.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "task": "qra-assessor",
+  "base_model": "Qwen/Qwen2.5-3B-Instruct",
+  "sft_only": true,
+  "mock": false,
+  "epochs": 2,
+  "metrics": {
+    "train_samples": 2715,
+    "epochs": 2,
+    "mock": false
+  }
+}

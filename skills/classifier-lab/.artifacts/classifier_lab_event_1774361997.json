@@ -1,0 +1,31 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774361997,
+  "status": "ok",
+  "selected_backbone": "efficientnet_b0",
+  "selected_metrics": {
+    "macro_f1": 0.9018854650344731,
+    "accuracy": 0.9032258064516129,
+    "wilson_score_lower": 0.8769061427420738
+  },
+  "candidate_count": 3,
+  "source": {
+    "mode": "data_dir",
+    "data_dir": "/mnt/storage12tb/media/agents/shared/classifier-lab/data/beans/train"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [
+        "anger"
+      ],
+      "worth_remembering": true
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1771617769,
+  "status": "failed",
+  "selected_backbone": null,
+  "selected_metrics": {},
+  "candidate_count": 4,
+  "source": {
+    "mode": "jsonl",
+    "labels_jsonl": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-classifier/data/labels/structural.jsonl"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "keywords",
+      "worth_remembering": false
+    }
+  }
+}

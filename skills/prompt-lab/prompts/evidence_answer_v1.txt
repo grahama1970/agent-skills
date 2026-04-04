@@ -1,0 +1,11 @@
+# prompt-lab-hash: pending
+# prompt-lab-eval: pending
+QUESTION: {question}
+
+ENTITIES: {entities}
+
+EVIDENCE:
+{evidence}
+
+OUTPUT:
+{"answer": "<synthesized answer>", "evidence_used": [<indices of evidence items used>]}

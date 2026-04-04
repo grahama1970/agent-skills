@@ -1,0 +1,13 @@
+{
+  "completed": 183,
+  "total": 500,
+  "description": "Harvesting adversarial_pdfs_v2.txt",
+  "current_item": "Done",
+  "stats": {
+    "success": 183,
+    "failed": 0
+  },
+  "elapsed_seconds": 128.1,
+  "last_updated": "2026-02-10 09:06:46",
+  "status": "completed"
+}

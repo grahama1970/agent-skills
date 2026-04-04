@@ -1,0 +1,57 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774793075,
+  "status": "ok",
+  "selected_backbone": "efficientnet_b0",
+  "selected_metrics": {
+    "macro_f1": 0.752754696531792,
+    "accuracy": 0.7534246575342466,
+    "wilson_score_lower": 0.7282241933890298,
+    "classes": [
+      "merge",
+      "separate"
+    ],
+    "confusion_matrix": [
+      [
+        128,
+        63
+      ],
+      [
+        27,
+        147
+      ]
+    ],
+    "per_class": {
+      "merge": {
+        "precision": 0.8258064516129032,
+        "recall": 0.6701570680628273,
+        "f1": 0.7398843930635838,
+        "support": 191
+      },
+      "separate": {
+        "precision": 0.7,
+        "recall": 0.8448275862068966,
+        "f1": 0.765625,
+        "support": 174
+      }
+    }
+  },
+  "candidate_count": 1,
+  "source": {
+    "mode": "data_dir",
+    "data_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/create-table-classifier/data/merge_images/split"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [],
+      "worth_remembering": false
+    }
+  }
+}

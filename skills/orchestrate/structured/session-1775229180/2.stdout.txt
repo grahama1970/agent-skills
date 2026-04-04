@@ -1,0 +1,6 @@
+=== File verification ===
+=== All 6 posture endpoints present in server/index.ts ===
+=== Live endpoint check (server must be running on :3001) ===
+frameworks: OK
+overview: OK
+=== PASS ===

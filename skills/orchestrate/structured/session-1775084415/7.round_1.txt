@@ -1,0 +1,144 @@
+```diff
+--- a/.pi/skills/battle/blue_team.py
++++ b/.pi/skills/battle/blue_team.py
+@@ -1,17 +1,18 @@
+ """
+ Battle Skill - Blue Team Agent
+ Defends using anvil skill with learning loop.
+ """
+ from __future__ import annotations
+ 
+ import os
+ import subprocess
+ from typing import Any
+ 
+ from rich.console import Console
+ 
+ from config import ANVIL_SKILL
+ from state import BattleState, Finding, Patch, DefenseType
+ from memory import BattleMemory
++import patch_writer
+ 
+ console = Console()
+ 
+ 
+ class BlueAgent:
+@@ -95,54 +96,79 @@ class BlueAgent:
+ 
+     def defend_phase(self, findings: list[Finding], round_number: int) -> list[Patch]:
+         """
+         Phase 3: DEFEND - Generate and apply patches for findings.
+         """
+         console.print("[blue]Blue Team: DEFEND phase - generating patches[/blue]")
+         patches = []
+         profile = self.state.threat_profile
+ 
++        # Build test command from common target test suites
++        test_command = "pytest -q"
++        if os.path.exists(os.path.join(self.target_path, "Makefile")):
++            test_command = "make test"
++        elif os.path.exists(os.path.join(self.target_path, "pytest.ini")) or os.path.exists(
++            os.path.join(self.target_path, "conftest.py")
++        ):
++            test_command = "pytest -q"
++        elif os.path.exists(os.path.join(self.target_path, "pyproject.toml")):
++            try:
++                with open(os.path.join(self.target_path, "pyproject.toml"), "r", encoding="utf-8") as f:
++                    pyproject = f.read()
++                if "[tool.pytest" in pyproject:
++                    test_command = "pytest -q"
++            except OSError:
++                pass
++
+         for finding in findings:
+             self.round_actions.append(f"Patching: {finding.id} (Profile: {profile})")
+ 
+-            if self.anvil_script.exists():
+-                try:
+-                    # Use anvil remediate which is profile-aware
+-                    result = subprocess.run(
+-                        [str(self.anvil_script), "remediate", self.target_path,
+-                         "--profile", profile, "--model", self.model, "--auto-fix"],
+-                        capture_output=True, text=True, timeout=600,
+-                        cwd=self.target_path,
+-                        env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
+-                    )
+-
+-                    patch = Patch(
+-                        id=f"patch_{round_number}_{finding.id}",
+-                        finding_id=finding.id,
+-                        type=DefenseType.PATCH,
+-                        diff=result.stdout[:2000] if result.returncode == 0 else "",
+-                        verified=result.returncode == 0,
+-                        functionality_preserved=True,
+-                    )
+-                    patches.append(patch)
+-
+-                    if patch.verified:
+-                        self.round_outcomes.append(f"Patched {finding.id} successfully")
+-                    else:
+-                        self.round_outcomes.append(f"Patch for {finding.id} failed or needs manual review")
+-
+-                except subprocess.TimeoutExpired:
+-                    console.print("[yellow]Blue Team: Patch generation timed out[/yellow]")
+-                    self.round_outcomes.append(f"Patch timeout for {finding.id}")
+-                except Exception as e:
+-                    console.print(f"[red]Blue Team error: {e}[/red]")
+-                    self.round_outcomes.append(f"Error patching {finding.id}: {e}")
+-            else:
++            try:
++                # Include recall/research output in finding text so it feeds patch_writer prompt context
++                prior_context = self.recall_phase([finding])
++                research_context = self.research_phase([finding])
++                finding_context = (
++                    f"{finding.description}\n\n"
++                    f"Recall Context: {prior_context}\n\n"
++                    f"Research Context: {research_context}"
++                )
++
++                patch_result = patch_writer.write_patch(
++                    target_path=self.target_path,
++                    finding=finding_context,
++                    exploit_proof=getattr(finding, "exploit_proof", "") or "",
++                    test_command=test_command,
++                )
++
+                 patch = Patch(
+                     id=f"patch_{round_number}_{finding.id}",
+                     finding_id=finding.id,
+                     type=DefenseType.PATCH,
+-                    diff="",
+-                    verified=False,
++                    diff=patch_result.patch_diff,
++                    verified=patch_result.success,
++                    functionality_preserved=patch_result.functionality_preserved,
+                 )
+                 patches.append(patch)
+-                self.round_outcomes.append(f"Placeholder patch for {finding.id}")
++
++                if patch.verified:
++                    self.round_outcomes.append(f"Patched {finding.id} successfully")
++                else:
++                    self.round_outcomes.append(f"Patch for {finding.id} failed or needs manual review")
++
++            except subprocess.TimeoutExpired:
++                console.print("[yellow]Blue Team: Patch generation timed out[/yellow]")
++                self.round_outcomes.append(f"Patch timeout for {finding.id}")
++            except Exception as e:
++                console.print(f"[red]Blue Team error: {e}[/red]")
++                self.round_outcomes.append(f"Error patching {finding.id}: {e}")
++                patch = Patch(
++                    id=f"patch_{round_number}_{finding.id}",
++                    finding_id=finding.id,
++                    type=DefenseType.PATCH,
++                    diff="",
++                    verified=False,
++                    functionality_preserved=False,
++                )
++                patches.append(patch)
+ 
+         return patches
+ 
+     def reflect_phase(self, patches: list[Patch]) -> None:
+         """
+```

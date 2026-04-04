@@ -1,0 +1,25 @@
+# ACE-Step Music Generation Server Dependencies
+
+# Web framework
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+
+# Audio processing
+soundfile>=0.12.1
+librosa>=0.10.2
+pydub>=0.25.1
+
+# ML/DL
+torch>=2.4.0
+torchaudio>=2.4.0
+transformers>=4.44.0
+accelerate>=0.32.0
+
+# Utilities
+python-multipart>=0.0.9
+aiofiles>=24.1.0
+loguru>=0.7.2
+pydantic>=2.7.0
+
+# ACE-Step (will be installed from git if pip fails)
+# ace-step>=1.5.0

@@ -1,0 +1,14 @@
+{
+  "name": "email-spam-detection",
+  "status": "evaluated",
+  "modality": "text",
+  "samples": 5574,
+  "classes": 2,
+  "data_source": "ucirvine/sms_spam (HuggingFace)",
+  "class_names": [
+    "ham",
+    "spam"
+  ],
+  "f1": 0.9840534979423868,
+  "backbone": "distilbert-base-uncased"
+}

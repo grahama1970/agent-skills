@@ -1,0 +1,555 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "metadata": {
+    "title": "Embry Terminal: Cohesive Reasoning UX + Real-Time Collaboration (Level 3 GRC)",
+    "goal": "Fix message rendering order (reasoning\u2192evidence\u2192answer), add nested collapsible skill calls, inline interactive artifacts (D3, React tables), then build WebSocket activity feed, presence indicators, agent suggestion accept/reject, and optional Slack webhook",
+    "plan_type": "hybrid",
+    "created": "2026-04-01",
+    "primary_persona": {
+      "name": "Brandon Bailey",
+      "role": "CMMC Lead Assessor",
+      "source": ".pi/agents/brandon-bailey/AGENTS.md"
+    }
+  },
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "execution": {
+    "max_concurrency": 3
+  },
+  "capability_overlap": [
+    "/memory recall: No prior WebSocket collaboration solutions in pi-mono",
+    "EXISTING: shared-chat/ barrel (7 components) \u2014 EXTEND with ActivityFeed + PresenceBar + SuggestionCard + InlineArtifact",
+    "EXISTING: embry-terminal server (pty-server.ts) has ws + Express \u2014 EXTEND with /api/activity",
+    "EXISTING: ReasoningChain.tsx \u2014 EXTEND with nested children + rendering order fix",
+    "EXISTING: ArtifactPanel in EmbryTerminalView \u2014 EXTEND to work with inline artifacts",
+    "CREATE: InlineArtifact with D3 graph + React table renderers (no existing inline artifact)",
+    "CREATE: Slack webhook integration, ActivityFeed, PresenceBar (no existing skills)"
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Cohesive Reasoning UX (foundational)"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Backend WebSocket + Webhook"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Shared UI Components"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: Integration"
+    },
+    {
+      "id": "4",
+      "label": "Wave 4: Visual Verification + Persona Review"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Fix MessageItem rendering order: reasoning \u2192 evidence \u2192 answer \u2192 cards",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 small JSX reorder, no new logic",
+      "depends_on": [],
+      "implementation": [
+        "Read packages/ux-lab/src/components/embry-terminal/EmbryTerminalView.tsx \u2014 find MessageItem (~line 129-191)",
+        "CURRENT broken order: ToolAction \u2192 MarkdownRenderer \u2192 RecallCard \u2192 GateChain \u2192 ThreatMatrixCard \u2192 DeltaReportCard \u2192 ReasoningChain",
+        "CORRECT order \u2014 reorder JSX inside agent message div:",
+        "  1. ReasoningChain (collapsed by default) \u2014 'here is what I did'",
+        "  2. RecallCard \u2014 'here is the evidence I found'",
+        "  3. Visual separator: 1px dashed rgba(255,255,255,0.08), margin 12px 0",
+        "  4. MarkdownRenderer content \u2014 'here is my answer'",
+        "  5. Inline artifacts (charts, tables, graphs) \u2014 part of the answer",
+        "  6. GateChain / ThreatMatrixCard / DeltaReportCard \u2014 structured cards",
+        "  7. ToolAction lines move INTO ReasoningChain (not standalone above content)",
+        "Do NOT change user message bubble (right-aligned, works fine)"
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit --pretty false 2>&1 | tail -1",
+        "assertion": "TypeScript compiles, reasoning renders before content"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Add nested children to ReasoningStep type and ReasoningChain component",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 1 type field + ~30 lines recursive render",
+      "depends_on": [],
+      "implementation": [
+        "Read packages/ux-lab/src/components/shared-chat/types.ts for ReasoningStep type",
+        "Read packages/ux-lab/src/components/embry-terminal/ReasoningChain.tsx (full file)",
+        "STEP 1 \u2014 Extend ReasoningStep in shared-chat/types.ts: add children?: ReasoningStep[]",
+        "STEP 2 \u2014 Update StepContent in ReasoningChain.tsx:",
+        "  When step.children exists, render nested indented list: smaller status dots (16px), skill badges, summaries",
+        "  Children collapsible independently \u2014 collapsed by default, '\u25b8 3 sub-steps' toggle",
+        "  Nested indent: 24px left, thinner connector (0.5px dashed)",
+        "  Staggered fade-in animation (50ms each)",
+        "STEP 3 \u2014 Update seed data: add children to /dogpile step",
+        "Keep component under 400 lines. memo() on sub-components."
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit --pretty false 2>&1 | tail -1",
+        "assertion": "TypeScript compiles, nested steps render"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Add answer separator and 'Thinking' label to ReasoningChain header",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 string change + 3 JSX lines",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "implementation": [
+        "Read EmbryTerminalView.tsx MessageItem and ReasoningChain.tsx summary header",
+        "CHANGE 1 \u2014 ReasoningChain header: collapsed='\u25b8 Thinking \u00b7 6 steps \u00b7 12s', running='\u25cf Thinking... \u00b7 3/6'",
+        "CHANGE 2 \u2014 Answer separator in MessageItem after ReasoningChain+RecallCard, before MarkdownRenderer",
+        "CHANGE 3 \u2014 ToolAction dedup: suppress if msg.reasoningSteps exists (skill visible in steps)"
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npm run build 2>&1 | tail -3",
+        "assertion": "Build succeeds"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Add inline interactive artifact rendering + right-pane expand",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "/code-runner \u2192 Codex 5.3 \u2014 large component with 6 renderers including interactive D3 + React tables. Project agent reviews.",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "Read EmbryTerminalView.tsx (MessageItem + ArtifactPanel), shared-chat/types.ts",
+        "Read .pi/skills/best-practices-react/SKILL.md before implementing",
+        "STEP 1 \u2014 Create shared-chat/InlineArtifact.tsx:",
+        "  Props: { artifact: Artifact, onExpand?, onEntityClick? }",
+        "  Renders by artifact.type:",
+        "    'svg': DOMPurify.sanitize + dangerouslySetInnerHTML",
+        "    'html': sandboxed iframe (srcdoc) for /create-figure HTML+JS",
+        "    'code': syntax-highlighted pre block",
+        "    'markdown': MarkdownRenderer",
+        "    'react-table': interactive table \u2014 sortable columns (click header), filterable (search input), zebra rows, sticky header, row hover, entity highlighting on cell values. Data: { columns: {key,label,sortable?}[], rows: Record<string,any>[] }",
+        "    'graph': interactive D3 force-directed \u2014 zoom/pan (wheel+drag), node hover tooltip, node click fires onEntityClick, edge labels on hover. Data: { nodes: {id,label,type?,group?}[], edges: {source,target,label?}[] }. NVIS colors by group.",
+        "  NVIS card container, top bar with title + Expand + Copy buttons",
+        "  Max inline height 400px with scroll. Skeleton shimmer loading state.",
+        "  Entrance animation: fade-in + translateY(8px\u21920) 300ms ease-out",
+        "STEP 2 \u2014 Wire into MessageItem after MarkdownRenderer, before GateChain",
+        "STEP 3 \u2014 onExpand wires to setActiveArtifact \u2192 opens ArtifactPanel right pane",
+        "STEP 4 \u2014 Extend Artifact type: add 'react-table' | 'graph', add data?: any field",
+        "STEP 5 \u2014 Support artifacts?: Artifact[] for multiple per message",
+        "STEP 6 \u2014 Seed data with SVG chart + react-table artifacts",
+        "Export InlineArtifact from shared-chat/index.ts",
+        "Must comply with /best-practices-react: memo(), useCallback, DOMPurify, cleanup D3 on unmount"
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit --pretty false 2>&1 | tail -1",
+        "assertion": "TypeScript compiles, inline artifacts render, expand opens right pane"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Add WebSocket activity channel to embry-terminal server",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 familiar Express+ws codebase, extending existing patterns",
+      "depends_on": [
+        "3"
+      ],
+      "implementation": [
+        "Read ~/workspace/experiments/embry-terminal/server/src/pty-server.ts",
+        "Add /api/activity WebSocket endpoint (separate from /api/terminal/:id)",
+        "Broadcast events: agent_started, agent_completed, agent_finding, presence_update, suggestion",
+        "Set<WebSocket> for activity subscribers, broadcastActivity() helper",
+        "Hook into agent/message: broadcast agent_completed after scillm response",
+        "Hook into memory/recall: broadcast agent_finding on findings",
+        "Presence heartbeat: client sends every 30s, stale after 90s",
+        "Bearer token auth on upgrade"
+      ],
+      "tests": [
+        "curl -sf http://127.0.0.1:8640/api/health | jq -e '.status == \"ok\"'"
+      ],
+      "definition_of_done": {
+        "command": "curl -sf http://127.0.0.1:8640/api/health | jq -e '.status == \"ok\"'",
+        "assertion": "Health ok, activity WebSocket accepts connections"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Add suggestion accept/reject REST endpoints",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 small REST endpoints on existing Express server",
+      "depends_on": [
+        "5"
+      ],
+      "implementation": [
+        "Read pty-server.ts",
+        "In-memory Map<string, Suggestion> store",
+        "GET /api/suggestions, POST /api/suggestions/:id/accept, POST /api/suggestions/:id/reject",
+        "Auto-create suggestion on agent_finding with confidence > 0.5",
+        "Accept persists to /api/memory/learn, 24h expiry"
+      ],
+      "tests": [
+        "curl -sf http://127.0.0.1:8640/api/suggestions | jq -e '.suggestions != null'"
+      ],
+      "definition_of_done": {
+        "command": "curl -sf http://127.0.0.1:8640/api/suggestions | jq -e '.suggestions != null'",
+        "assertion": "Suggestions endpoint returns array"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Add optional Slack/Teams webhook integration",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 small fire-and-forget webhook, ~40 lines",
+      "depends_on": [
+        "5"
+      ],
+      "implementation": [
+        "Read pty-server.ts",
+        "Env: EMBRY_WEBHOOK_URL, EMBRY_WEBHOOK_EVENTS, EMBRY_WEBHOOK_CHANNEL",
+        "webhookNotify(): check URL \u2192 check filter \u2192 Slack Block Kit format \u2192 fetch POST 5s timeout",
+        "Hook into broadcastActivity, GET /api/webhook/test",
+        "Never throws \u2014 log only on failure"
+      ],
+      "tests": [
+        "curl -sf http://127.0.0.1:8640/api/health | jq -e '.status == \"ok\"'"
+      ],
+      "definition_of_done": {
+        "command": "curl -sf http://127.0.0.1:8640/api/health | jq -e '.status == \"ok\"'",
+        "assertion": "Health ok, no crash without webhook configured"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Create useActivityFeed hook in shared-chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 hook follows useEmbryFeatures.ts pattern",
+      "depends_on": [
+        "5"
+      ],
+      "implementation": [
+        "Read shared-chat/types.ts, useEmbryFeatures.ts",
+        "Create shared-chat/useActivityFeed.ts",
+        "Add ActivityEvent + PresenceEntry types to types.ts",
+        "useActivityFeed(wsUrl, token): WS connect, heartbeat 30s, auto-reconnect, returns { events, connectionState, sendPresence }",
+        "Export from shared-chat/index.ts. Cleanup WS on unmount."
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit --pretty false 2>&1 | tail -1",
+        "assertion": "TypeScript compiles"
+      }
+    },
+    {
+      "id": "9",
+      "title": "Create ActivityFeed component in shared-chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 small component following existing shared-chat patterns",
+      "depends_on": [
+        "8"
+      ],
+      "implementation": [
+        "Read shared-chat types, highlightEntities, NVIS tokens from EmbryTerminalView",
+        "Create shared-chat/ActivityFeed.tsx",
+        "Event list: started(blue pulse), completed(green), finding(amber), suggestion(purple), resolved(grey)",
+        "Relative timestamps, NVIS dark theme, colored left borders. New events slide-in.",
+        "Props: { events, onAcceptSuggestion?, onRejectSuggestion?, onEntityClick?, maxVisible? }",
+        "Export from index.ts"
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit --pretty false 2>&1 | tail -1",
+        "assertion": "TypeScript compiles"
+      }
+    },
+    {
+      "id": "10",
+      "title": "Create PresenceBar component in shared-chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 small component",
+      "depends_on": [
+        "8"
+      ],
+      "implementation": [
+        "Read shared-chat types, EmbryTerminalView sidebar",
+        "Create shared-chat/PresenceBar.tsx",
+        "Avatar circles (max 8, +N): active=green, idle=yellow, agents=robot icon. Hover tooltip.",
+        "Props: { entries: PresenceEntry[], compact? }. Export from index.ts."
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit --pretty false 2>&1 | tail -1",
+        "assertion": "TypeScript compiles"
+      }
+    },
+    {
+      "id": "11",
+      "title": "Create SuggestionCard component in shared-chat",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 follows DeltaReportCard pattern",
+      "depends_on": [
+        "8"
+      ],
+      "implementation": [
+        "Read shared-chat types, DeltaReportCard, highlightEntities",
+        "Create shared-chat/SuggestionCard.tsx",
+        "Header: agent + confidence. Body: control chip + finding + evidence. Footer: Accept/Reject/Discuss.",
+        "Resolved state: greyed out. AgentSuggestion type in types.ts.",
+        "NVIS: purple pending, green accepted, red-faded rejected. Export from index.ts."
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npx tsc --noEmit --pretty false 2>&1 | tail -1",
+        "assertion": "TypeScript compiles"
+      }
+    },
+    {
+      "id": "12",
+      "title": "Wire activity feed + presence + suggestions into EmbryTerminalView",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 import + add JSX, familiar codebase",
+      "depends_on": [
+        "9",
+        "10",
+        "11"
+      ],
+      "implementation": [
+        "Read EmbryTerminalView.tsx (full)",
+        "Import useActivityFeed, ActivityFeed, PresenceBar, SuggestionCard from shared-chat",
+        "SIDEBAR: PresenceBar (compact) below agent switcher + Activity section (last 5 events)",
+        "CHAT: SuggestionCard on suggestion events, accept/reject POST",
+        "TOP BAR: PresenceBar (full) next to connection status",
+        "Wire entity clicks through handleEntityClick. Keep under 800 lines."
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npm run build 2>&1 | tail -3",
+        "assertion": "Build succeeds"
+      }
+    },
+    {
+      "id": "13",
+      "title": "Wire activity feed into SPARTA Explorer ChatTab",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 minimal wiring, graceful degradation",
+      "depends_on": [
+        "9",
+        "11"
+      ],
+      "implementation": [
+        "Read ChatTab.tsx and ChatWell.tsx",
+        "Import useActivityFeed, SuggestionCard. Optional EMBRY_ACTIVITY_URL.",
+        "SuggestionCard inline in ChatWell for current matrix controls. Minimal changes."
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx tsc --noEmit 2>&1 | grep -c 'error' || echo 0"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && npm run build 2>&1 | tail -3",
+        "assertion": "Build succeeds"
+      }
+    },
+    {
+      "id": "14",
+      "title": "Start dev server and verify rendering",
+      "lane": "4",
+      "runner": "local",
+      "backend": "",
+      "mode": "one_shot",
+      "executor": "Project agent \u2014 shell command",
+      "depends_on": [
+        "12",
+        "13"
+      ],
+      "command": "systemctl --user is-active ux-lab-vite && curl -sf http://localhost:3002/ | head -5 && echo 'DEV SERVER OK'",
+      "tests": [
+        "curl -sf http://localhost:3002/ | grep -c 'html'"
+      ],
+      "definition_of_done": {
+        "command": "curl -sf http://localhost:3002/ | grep -c 'html'",
+        "assertion": "Dev server returns HTML"
+      }
+    },
+    {
+      "id": "15",
+      "title": "Visual verification \u2014 reasoning + artifacts + activity + presence",
+      "lane": "4",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 CDP screenshots + visual checks, no code writing",
+      "depends_on": [
+        "14"
+      ],
+      "implementation": [
+        "CDP headless Chrome \u2192 http://localhost:3002/#embry-terminal, wait 8000ms",
+        "VERIFY: ReasoningChain ABOVE response, 'Thinking' label, nested children expand",
+        "VERIFY: Inline SVG chart + react-table render, Expand opens right pane",
+        "VERIFY: PresenceBar in top area, ActivityFeed in sidebar",
+        "Screenshot \u2192 packages/ux-lab/captures/embry-collaboration-v1.png",
+        "Check console for errors"
+      ],
+      "tests": [
+        "test -f packages/ux-lab/captures/embry-collaboration-v1.png && echo PASS"
+      ],
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/captures/embry-collaboration-v1.png && echo PASS",
+        "assertion": "Screenshot proves correct rendering"
+      }
+    },
+    {
+      "id": "16",
+      "title": "Brandon Bailey persona review \u2014 reasoning + artifacts + collaboration",
+      "lane": "4",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "review",
+      "agent": "general-purpose",
+      "executor": "Project agent \u2014 VLM persona review pipeline, no code writing",
+      "depends_on": [
+        "15"
+      ],
+      "implementation": [
+        "Add test groups to brandon-bailey-embry-terminal.test.json: reasoning-ux, inline-artifacts, collaboration",
+        "Run VLM screenshot review (CDP \u2192 vlm_image.py \u2192 scillm vlm)",
+        "Target: 7+/10 per group"
+      ],
+      "tests": [
+        "test -d packages/ux-lab/captures/persona-reviews && echo PASS"
+      ],
+      "definition_of_done": {
+        "command": "ls packages/ux-lab/captures/persona-reviews/ 2>/dev/null | wc -l",
+        "assertion": "At least 1 review screenshot captured"
+      }
+    }
+  ],
+  "test_manifest": [
+    {
+      "tab": "Embry Terminal \u2014 Reasoning UX",
+      "collection": null,
+      "min_rows": 0,
+      "interactions": [
+        "expand_reasoning",
+        "expand_nested_step",
+        "collapse_reasoning",
+        "verify_separator"
+      ],
+      "visual": "ReasoningChain above response. Thinking label. Nested children. Separator."
+    },
+    {
+      "tab": "Embry Terminal \u2014 Inline Artifacts",
+      "collection": null,
+      "min_rows": 0,
+      "interactions": [
+        "verify_inline_svg",
+        "sort_table",
+        "filter_table",
+        "zoom_d3_graph",
+        "click_expand",
+        "click_graph_node"
+      ],
+      "visual": "SVG inline with animation. Table sortable+filterable. D3 zoomable. Expand \u2192 right pane."
+    },
+    {
+      "tab": "Embry Terminal \u2014 Collaboration",
+      "collection": null,
+      "min_rows": 0,
+      "interactions": [
+        "verify_presence",
+        "verify_activity",
+        "verify_suggestion",
+        "accept_suggestion"
+      ],
+      "visual": "Presence bar. Activity feed. SuggestionCard accept/reject."
+    },
+    {
+      "tab": "SPARTA Explorer Chat",
+      "collection": "sparta_controls",
+      "min_rows": 10,
+      "interactions": [
+        "verify_suggestion_inline"
+      ],
+      "visual": "SuggestionCard inline for matrix controls."
+    }
+  ]
+}

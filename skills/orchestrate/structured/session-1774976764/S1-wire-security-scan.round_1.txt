@@ -1,0 +1,108 @@
+```diff
+--- a/.pi/skills/monitor-codebase/run.sh
++++ b/.pi/skills/monitor-codebase/run.sh
+@@ -286,10 +286,15 @@
+       include_dir_args="$rel_dir"
+     fi
+   done
+   python3 "$SKILL_DIR/quality_checks.py" "$project_path" --json > "$qc_file" 2>/dev/null || echo '{"error":"quality checks failed"}' > "$qc_file"
+ 
++  # Step 4.5: security scan (SAST, deps, secrets)
++  echo "[4.5/10] Running security scan..."
++  local sec_file="$ARTIFACTS_DIR/${project_name}_security.json"
++  run_skill_timed security-scan scan "$project_path" --format json > "$sec_file" 2>/dev/null || echo '{"error":"security scan timeout or failed","sast":[],"deps":[],"secrets":[]}' > "$sec_file"
++
+   # Step 5: auto-fix docstrings (only in --fix mode — scan is read-only)
+   if [[ "$do_fix" == "true" ]]; then
+     echo "[5/10] Auto-fixing missing docstrings..."
+     for d in $scan_dirs; do
+       python3 "$SKILL_DIR/autofix_docstrings.py" "$d" 2>&1 || true
+@@ -332,11 +337,18 @@
+   local dogpile_file="$ARTIFACTS_DIR/${project_name}_improvements.txt"
+   local qc_total
+   qc_total=$(python3 -c "import json; print(json.load(open('$qc_file')).get('total_violations',0))" 2>/dev/null || echo 0)
+   local bp_count
+   bp_count=$(python3 -c "import json; print(len(json.loads('$bp_violations')))" 2>/dev/null || echo 0)
+-  local total_issues=$((qc_total + bp_count))
++  local sast_findings
++  sast_findings=$(python3 -c "import json; print(len(json.load(open('$sec_file')).get('sast', [])))" 2>/dev/null || echo 0)
++  local vulnerable_deps
++  vulnerable_deps=$(python3 -c "import json; print(len(json.load(open('$sec_file')).get('deps', [])))" 2>/dev/null || echo 0)
++  local secrets_found
++  secrets_found=$(python3 -c "import json; print(len(json.load(open('$sec_file')).get('secrets', [])))" 2>/dev/null || echo 0)
++  local security_total=$((sast_findings + vulnerable_deps + secrets_found))
++  local total_issues=$((qc_total + bp_count + security_total))
+ 
+   if [[ "$total_issues" -gt 5 ]]; then
+     local top_rules
+     top_rules=$(python3 -c "
+ import json
+@@ -363,10 +375,11 @@
+         return {}
+ 
+ ps = safe_load('$ps_file')
+ cl = safe_load('$cl_file')
+ qc = safe_load('$qc_file')
++sec = safe_load('$sec_file')
+ sci = safe_load('$sci_file')
+ bp = json.loads('$bp_violations') if '$bp_violations' != '[]' else []
+ 
+ report = {
+     'project': '$project_name',
+@@ -374,24 +387,32 @@
+     'timestamp': '$TIMESTAMP',
+     'project_state': ps,
+     'cleanup': cl,
+     'best_practices_violations': bp,
+     'quality_checks': qc,
++    'security_scan': sec,
+     'skills_ci': sci,
+ }
+ 
+ bp_count = len(bp)
+ qc_count = qc.get('total_violations', 0)
++sast_findings = len(sec.get('sast', [])) if isinstance(sec.get('sast'), list) else 0
++vulnerable_deps = len(sec.get('deps', [])) if isinstance(sec.get('deps'), list) else 0
++secrets_found = len(sec.get('secrets', [])) if isinstance(sec.get('secrets'), list) else 0
+ sci_errors = sci.get('summary', {}).get('error', 0) if isinstance(sci.get('summary'), dict) else 0
+ sci_warns = sci.get('summary', {}).get('warn', 0) if isinstance(sci.get('summary'), dict) else 0
+ 
+ report['summary'] = {
+     'total_bp_violations': bp_count,
+     'total_quality_violations': qc_count,
++    'sast_findings': sast_findings,
++    'vulnerable_deps': vulnerable_deps,
++    'secrets_found': secrets_found,
++    'total_security_findings': sast_findings + vulnerable_deps + secrets_found,
+     'skills_ci_errors': sci_errors,
+     'skills_ci_warnings': sci_warns,
+-    'total_issues': bp_count + qc_count + sci_errors,
++    'total_issues': bp_count + qc_count + sast_findings + vulnerable_deps + secrets_found + sci_errors,
+ }
+ 
+ json.dump(report, sys.stdout, indent=2)
+ print()
+ " > "$report_file" 2>/dev/null || echo "{\"error\":\"report aggregation failed\",\"project\":\"$project_name\"}" > "$report_file"
+@@ -439,17 +460,20 @@
+ r = json.load(open('$report_file'))
+ s = r.get('summary', {})
+ parts = []
+ if s.get('total_bp_violations'): parts.append(f\"{s['total_bp_violations']} best-practices\")
+ if s.get('total_quality_violations'): parts.append(f\"{s['total_quality_violations']} quality\")
++if s.get('sast_findings'): parts.append(f\"{s['sast_findings']} sast\")
++if s.get('vulnerable_deps'): parts.append(f\"{s['vulnerable_deps']} vulnerable deps\")
++if s.get('secrets_found'): parts.append(f\"{s['secrets_found']} secrets\")
+ if s.get('skills_ci_errors'): parts.append(f\"{s['skills_ci_errors']} skills-ci errors\")
+ print(', '.join(parts) if parts else 'clean')
+ " 2>/dev/null || echo "unknown")
+ 
+   run_skill memory learn \
+     -p "monitor-codebase scan of $project_name: $total_issues total issues ($summary_text, $trend_delta)" \
+-    -s "Report: $report_file. Quality checks: $qc_total. Best-practices: $bp_count. Trend: $trend_delta." \
++    -s "Report: $report_file. Quality checks: $qc_total. Best-practices: $bp_count. Security findings: $security_total (SAST: $sast_findings, deps: $vulnerable_deps, secrets: $secrets_found). Trend: $trend_delta." \
+     --scope "monitor-codebase" 2>/dev/null || true
+ 
+   echo "Report: $report_file ($total_issues issues: $summary_text, $trend_delta)"
+ 
+   # Step 10: Local fix execution via skills-ci → /orchestrate
+```

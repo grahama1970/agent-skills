@@ -1,0 +1,16 @@
+{
+  "task_id": "G2-wire-dep-graph",
+  "title": "Wire dependency graph analysis into monitor-codebase Step 4.7",
+  "prompt": "Add Step 4.7 to monitor-codebase run.sh that runs dependency graph analysis.\n\nInsert after Step 4.6 (duplication), before Step 5 (autofix).\n\nCall: python3 \"$SKILL_DIR/dep_graph.py\" with scan_dirs as args,\ncapture JSON output to $ARTIFACTS_DIR/${project_name}_deps.json.\n\nInclude circular dependency count in Step 9 aggregate report.\nIf circular deps found, add them to the dogpile research query in Step 8.",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774976764",
+  "definition_of_done": {
+    "command": "grep -c 'dep_graph' .pi/skills/monitor-codebase/run.sh",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/monitor-codebase/run.sh"
+  ],
+  "max_rounds": 3
+}

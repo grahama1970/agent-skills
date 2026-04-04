@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "Rebuild prompt-lab self-improvement loop for one-shot prompt quality",
+    "goal": "A system prompt that produces correct output in ONE LLM request with ZERO corrections. The correction loop becomes a diagnostic tool that feeds failures back into prompt rewriting, not a runtime band-aid.",
+    "plan_type": "hybrid",
+    "created": "2026-03-19",
+    "primary_persona": {
+      "name": "Graham Anderson",
+      "role": "Architect",
+      "source": ".pi/agents/graham-anderson/AGENTS.md"
+    },
+    "context": "Current prompt-lab appends conversation messages for correction instead of fixing the system prompt. The metric that matters is first-attempt F1, not post-correction F1. The Live tab in ux-lab needs to show the prompt evolving, not the model retrying.",
+    "decisions": [
+      "REMOVE call_llm_with_correction entirely \u2014 if a prompt needs corrections it's broken",
+      "PROJECT AGENT is the judge \u2014 rewrites prompts directly, no separate LLM call",
+      "APPROVE FINAL ONLY \u2014 optimizer runs N rounds autonomously, human reviews the final diff and score",
+      "DESIGN BOARD FIRST \u2014 Steve Schoger mockup before rebuilding the Live tab",
+      "PER-MODEL PROMPT VARIANTS \u2014 each model gets its own system prompt derived from a shared base. A 7B model needs explicit disambiguation that a 671B model understands from context. The optimizer rewrites per-model based on each model's failures independently."
+    ]
+  },
+  "execution": {
+    "max_concurrency": 2
+  },
+  "capability_overlap": [
+    "/prompt-lab pl_optimize.py already generates prompt variations and evaluates them \u2014 EXTEND, don't replace",
+    "/prompt-lab pl_eval.py already runs eval with F1 scoring \u2014 EXTEND with first-attempt-only mode",
+    "/prompt-lab config.py CORRECTION_PROMPT template exists \u2014 will be reused for failure compilation",
+    "/scillm handles all LLM routing including Ollama \u2014 no new LLM calling code",
+    "packages/ux-lab WebSocket bus (useAgentBus) already works \u2014 EXTEND with new event types",
+    "packages/ux-lab/server/index.ts eval-live endpoint exists \u2014 REPLACE with optimize-live"
+  ],
+  "questions_blockers": [
+    "None"
+  ],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Backend \u2014 prompt-lab one-shot eval + optimize loop"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Server \u2014 optimize-live endpoint with WebSocket events"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Frontend \u2014 Live tab redesign for prompt evolution"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: Validation \u2014 end-to-end test"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Add first-attempt-only eval mode to pl_eval.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Add --first-attempt-only flag to eval command in pl_eval.py",
+        "When set, call call_llm (single call, no correction) instead of call_llm_with_correction",
+        "Track two metrics: first_attempt_f1 (no corrections) and corrected_f1 (with corrections)",
+        "Display both in the summary table so the human sees the gap",
+        "The quality gate checks first_attempt_f1, NOT corrected_f1",
+        "Add first_attempt_f1 to the saved results JSON for regression detection"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 1 .pi/skills/prompt-lab --domain python",
+        "cd .pi/skills/prompt-lab && uv run python prompt_lab.py eval --prompt taxonomy_v1 --model deepseek --cases 2 --first-attempt-only"
+      ],
+      "definition_of_done": {
+        "command": "cd .pi/skills/prompt-lab && python -c \"import ast; ast.parse(open('pl_eval.py').read()); print('OK')\"",
+        "assertion": "pl_eval.py parses and has --first-attempt-only flag"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Add failure compilation to pl_optimize.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "Add compile_failures(results: List[EvalResult]) -> str function to pl_optimize.py",
+        "Groups failures by type: hallucinated tags (with frequency), parse errors, wrong classifications",
+        "Outputs a structured brief: 'Tag Persistence hallucinated 3/5 times. Model confuses Persistence (not a valid tag) with Persist (valid tactical tag).'",
+        "Include the specific test cases that failed and what was expected vs predicted",
+        "This brief becomes the input to the meta-model prompt rewriter"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 2 .pi/skills/prompt-lab --domain python"
+      ],
+      "definition_of_done": {
+        "command": "cd .pi/skills/prompt-lab && python -c \"from pl_optimize import compile_failures; print('OK')\"",
+        "assertion": "compile_failures is importable"
+      }
+    },
+    {
+      "id": "2.5",
+      "title": "Remove call_llm_with_correction from llm.py",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "Delete the call_llm_with_correction function from llm.py (lines 293-397)",
+        "Delete CORRECTION_PROMPT from config.py (lines 66-75)",
+        "Update all callers: pl_eval.py, pl_eval_sparta.py, and any other files that import call_llm_with_correction",
+        "Replace with call_llm (single call, no correction) everywhere",
+        "Remove correction_rounds, correction_success from EvalResult fields (evaluation.py)",
+        "Remove correction_success_rate from EvalSummary",
+        "Remove CORRECTION_SUCCESS_THRESHOLD from config.py",
+        "The only quality gate is now first_attempt_f1 >= F1_THRESHOLD"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 2.5 .pi/skills/prompt-lab --domain python",
+        "cd .pi/skills/prompt-lab && python -c \"import ast; m=ast.parse(open('llm.py').read()); assert not any(isinstance(n, ast.AsyncFunctionDef) and n.name == 'call_llm_with_correction' for n in ast.walk(m)); print('REMOVED')\""
+      ],
+      "definition_of_done": {
+        "command": "cd .pi/skills/prompt-lab && grep -c 'call_llm_with_correction' llm.py || echo 0",
+        "assertion": "Returns 0 \u2014 function no longer exists"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Rebuild optimize command as iterative prompt rewriter with judge model",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "depends_on": [
+        "1",
+        "2",
+        "2.5"
+      ],
+      "implementation": [
+        "Rewrite the optimize command in pl_optimize.py to implement the one-shot loop:",
+        "CRITICAL DESIGN: Per-model prompt variants from a shared base. Each model gets its own system prompt that evolves independently based on that model's specific failures.",
+        "Prompt naming: {base_name}.txt is the shared base. {base_name}.{model_alias}.txt is the per-model variant. Example: taxonomy_v1.txt (base), taxonomy_v1.deepseek-v3.txt, taxonomy_v1.qwen2.5-7b.txt",
+        "Step 1: For each model, start with the base prompt (or existing per-model variant if one exists). For each test case, make ONE fresh call: messages = [{role:system, content:model_specific_prompt}, {role:user, content:user_input}]. No conversation history. Score the response.",
+        "Step 2: Compile failures PER MODEL via compile_failures() \u2014 each model may fail differently. A 7B model hallucinates different tags than a 671B model.",
+        "Step 3: The PROJECT AGENT rewrites the system prompt PER MODEL. The 7B variant gets explicit disambiguation and negative examples. The 671B variant gets minimal corrections. The base prompt stays untouched \u2014 per-model variants are diffs on top of it.",
+        "Step 4: Save rewritten prompts as {base_name}.{model_alias}_v{N+1}.txt",
+        "Step 5: Re-run ALL test cases per model with each model's new prompt \u2014 fresh one-shot calls",
+        "Step 6: Compare first_attempt_f1 per model. If improved, keep that model's variant. If worse, discard.",
+        "Step 7: If any model still below threshold and iterations remaining, compile that model's new failures, rewrite that model's prompt again",
+        "Each model lane runs INDEPENDENTLY \u2014 its own rounds, its own pace. DeepSeek may converge in 1 round while qwen2.5:7b needs 5. Lanes are NOT synchronized. A lane stops when it passes the quality gate OR hits max_rounds. The UI shows two independent timelines side by side, not shared rounds.",
+        "The user message never changes. No conversation state between rounds.",
+        "Max iterations controlled by --max-rounds flag (default 3)",
+        "The meta-prompt itself MUST be loaded from prompts/meta_optimizer.txt \u2014 not hardcoded in Python",
+        "The meta-prompt must go through /prompt-lab eval before being used (bootstrap problem \u2014 use a known-good starting point)"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 3 .pi/skills/prompt-lab --domain python"
+      ],
+      "definition_of_done": {
+        "command": "cd .pi/skills/prompt-lab && uv run python prompt_lab.py optimize --help",
+        "assertion": "Shows --max-rounds flag and describes iterative prompt rewriting"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Add optimize-live server endpoint",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "3"
+      ],
+      "implementation": [
+        "Add POST /api/prompt-lab/optimize-live endpoint to packages/ux-lab/server/index.ts",
+        "Accepts: { prompt, models, cases, max_rounds }",
+        "Runs the optimize loop from Task 3 with WebSocket events at each stage:",
+        "New event types (all carry model field for multi-lane support):",
+        "  optimize-start: { prompt, models, cases, max_rounds }",
+        "  optimize-round-start: { round, prompt_version, prompt_content_preview }",
+        "  eval-case-start/llm-response/validation-result/eval-case-done: same as existing (first-attempt only, no correction events)",
+        "  optimize-round-eval-done: { round, model, first_attempt_f1, failures_count, failures_brief }",
+        "  prompt-rewrite-start: { round, failure_brief }",
+        "  prompt-rewrite-done: { round, new_prompt_preview, diff_summary }",
+        "  optimize-round-done: { round, old_f1, new_f1, improved, prompt_version }",
+        "  optimize-done: { final_prompt_version, final_f1, rounds_used, improvement }",
+        "The endpoint calls the prompt-lab Python skill via subprocess (uv run python prompt_lab.py optimize-live --emit-events) OR implements the loop directly in TypeScript using scillm HTTP calls",
+        "Prefer direct TypeScript implementation since the loop is simple: eval \u2192 compile \u2192 rewrite \u2192 re-eval",
+        "Remove the old eval-live correction loop \u2014 replace with first-attempt-only eval"
+      ],
+      "tests": [
+        "test-lab/run.sh verify-task 4 packages/ux-lab/server --domain service",
+        "curl -sf -X POST http://localhost:3001/api/prompt-lab/optimize-live -H 'Content-Type: application/json' -d '{\"prompt\":\"taxonomy_v1\",\"models\":[\"text\"],\"cases\":2,\"max_rounds\":1}' | jq .ok"
+      ],
+      "definition_of_done": {
+        "command": "grep -c 'optimize-live' packages/ux-lab/server/index.ts",
+        "assertion": "Returns at least 1 (endpoint exists)"
+      }
+    },
+    {
+      "id": "4.5",
+      "title": "Design board for prompt evolution Live tab",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "gemini",
+      "mode": "review",
+      "agent": "steve-schoger",
+      "depends_on": [
+        "4"
+      ],
+      "implementation": [
+        "Run /create-design-board for the prompt evolution Live tab",
+        "The layout shows: vertical rounds (v1 eval \u2192 failures \u2192 rewrite \u2192 v2 eval \u2192 score comparison)",
+        "User messages indent left, model responses indent right (chat-like)",
+        "Each round has a prompt diff section showing what changed",
+        "Final section has approve/reject buttons and side-by-side prompt diff",
+        "Capture to packages/ux-lab/captures/prompt-lab-optimize/"
+      ],
+      "tests": [
+        "ls packages/ux-lab/captures/prompt-lab-optimize/*.png | head -1"
+      ],
+      "definition_of_done": {
+        "command": "test -d packages/ux-lab/captures/prompt-lab-optimize && ls packages/ux-lab/captures/prompt-lab-optimize/*.png 2>/dev/null | wc -l",
+        "assertion": "At least 1 PNG mockup exists"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Redesign Live tab for prompt evolution view",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "4",
+        "4.5"
+      ],
+      "implementation": [
+        "Redesign the Live tab in PromptLabView.tsx to show the optimization loop, not the correction loop",
+        "Layout: vertical rounds, not horizontal model lanes",
+        "Each round shows:",
+        "  1. Current prompt version (collapsible, with diff from previous version highlighted)",
+        "  2. Eval results: per-case first-attempt F1 in a compact table (case | predicted | expected | F1)",
+        "  3. Failure brief: what went wrong, compiled by compile_failures()",
+        "  4. Prompt rewrite: the meta-model's changes (shown as a diff)",
+        "  5. Re-eval results: same table with new prompt",
+        "  6. Score comparison: v1 F1 \u2192 v2 F1 (with delta)",
+        "Final section: side-by-side prompt diff (old vs new) + approve/reject buttons",
+        "Approve saves the new prompt version. Reject discards it.",
+        "The approve/reject sends a WebSocket message back to the server: { type: 'user-decision', payload: { action: 'approve' | 'reject', prompt_version } }",
+        "Keep the model selector \u2014 the human picks which model(s) to eval with",
+        "Rename 'Run Eval' button to 'Optimize Prompt' \u2014 this is the primary action",
+        "Chat-like indentation: user/system messages indent left, model responses indent right",
+        "After implementation, capture screenshot via flameshot to packages/ux-lab/captures/prompt-lab-optimize/implemented.png",
+        "Run /review-design --persona steve-schoger comparing mockup to implementation"
+      ],
+      "tests": [
+        "npx tsc --noEmit (must pass with zero errors)",
+        "test -f packages/ux-lab/captures/prompt-lab-optimize/implemented.png"
+      ],
+      "definition_of_done": {
+        "command": "npx tsc --noEmit --pretty 2>&1 | grep -c error || echo 0",
+        "assertion": "Returns 0 (no type errors) and implementation screenshot captured"
+      }
+    },
+    {
+      "id": "6",
+      "title": "End-to-end test: agent-driven optimize loop via WebSocket",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "5"
+      ],
+      "implementation": [
+        "Write a Node.js script that drives the full loop via WebSocket (like the eval demo scripts in this conversation)",
+        "Script: select taxonomy_v1 \u2192 click Optimize \u2192 watch rounds \u2192 verify final prompt has higher first_attempt_f1",
+        "Verify these events appear in order: optimize-start \u2192 optimize-round-start \u2192 eval events \u2192 optimize-round-eval-done \u2192 prompt-rewrite-start \u2192 prompt-rewrite-done \u2192 optimize-round-done \u2192 optimize-done",
+        "Verify the human can see: (a) the original prompt, (b) what failed, (c) the rewritten prompt, (d) the improvement",
+        "Verify approve/reject buttons work: approve saves to prompts/ + changelog.jsonl, reject discards",
+        "Save the script as packages/ux-lab/test/test-optimize-live.mjs for future regression"
+      ],
+      "tests": [
+        "node packages/ux-lab/test/test-optimize-live.mjs"
+      ],
+      "definition_of_done": {
+        "command": "node packages/ux-lab/test/test-optimize-live.mjs 2>&1 | tail -1",
+        "assertion": "Prints 'PASS' or exits 0"
+      }
+    }
+  ]
+}

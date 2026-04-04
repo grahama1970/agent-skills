@@ -1,0 +1,17 @@
+{
+  "skill": "edge-verifier",
+  "completed": 3,
+  "total": 3,
+  "description": "edge-verifier",
+  "current_item": "verify_edges",
+  "progress_pct": 100.0,
+  "elapsed_seconds": 200.5,
+  "eta_seconds": null,
+  "throughput_per_sec": 0.01,
+  "stats": {
+    "success": 3,
+    "failed": 0
+  },
+  "last_updated": "2026-02-26 13:54:28",
+  "status": "completed"
+}

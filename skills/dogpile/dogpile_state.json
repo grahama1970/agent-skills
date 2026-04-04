@@ -1,0 +1,56 @@
+{
+  "providers": {
+    "discord": "ERROR",
+    "codex": "SKIP_RATELIMIT",
+    "github": "DONE",
+    "arxiv": "DONE",
+    "perplexity": "DONE",
+    "brave": "DONE",
+    "openai": "ERROR",
+    "anthropic": "SKIP",
+    "gemini": "DONE",
+    "claude": "RUNNING",
+    "llm": "FAILED",
+    "synthesis": "DONE"
+  },
+  "errors": [
+    {
+      "provider": "discord",
+      "status": "ERROR",
+      "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+      "error_type": null,
+      "http_status": null,
+      "retry_after": null,
+      "timestamp": "2026-02-14 10:27:10"
+    },
+    {
+      "provider": "codex",
+      "status": "RATE_LIMITED",
+      "message": "codex rate limited",
+      "error_type": null,
+      "http_status": null,
+      "retry_after": null,
+      "timestamp": "2026-02-14 10:27:15"
+    },
+    {
+      "provider": "openai",
+      "status": "ERROR",
+      "message": "openai error: cannot import name 'acompletion' from 'scillm' (unknown location)",
+      "error_type": null,
+      "http_status": null,
+      "retry_after": null,
+      "timestamp": "2026-02-14 10:27:15"
+    },
+    {
+      "provider": "openai",
+      "status": "ERROR",
+      "message": "openai error: cannot import name 'acompletion' from 'scillm' (unknown location)",
+      "error_type": null,
+      "http_status": null,
+      "retry_after": null,
+      "timestamp": "2026-02-14 10:27:15"
+    }
+  ],
+  "last_msg": "Codex Synthesis finished.",
+  "last_updated": "2026-02-14 10:27:18"
+}

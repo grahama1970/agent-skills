@@ -1,0 +1,31 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-kde",
+    "best-practices-plan",
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills",
+    "best-practices-streamdeck"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-03-05T07:00:30.302246+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 1,
+    "total": 1
+  },
+  "worktree": null,
+  "skill": "project-state",
+  "violations": [
+    {
+      "rule": "subprocess.stderr_fatal",
+      "severity": "warn",
+      "skill": "project-state",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/project-state/figures.py",
+      "message": "Treats stderr as fatal error \u2014 uv/pip emit warnings to stderr that are not errors. Check returncode instead.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

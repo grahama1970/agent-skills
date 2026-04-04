@@ -1,0 +1,13 @@
+{
+  "gpu_name": "RTX A5000",
+  "vram_gb": 8,
+  "ram_gb": 0,
+  "cuda_available": true,
+  "model_variant": "runpod",
+  "resolution": "1080p",
+  "max_clip_seconds": 15,
+  "audio_enabled": true,
+  "weight_streaming": false,
+  "runpod_suggested": true,
+  "detected_at": "2026-02-04T22:26:44.882625"
+}

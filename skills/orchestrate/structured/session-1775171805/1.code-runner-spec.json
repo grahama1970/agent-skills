@@ -1,0 +1,18 @@
+{
+  "task_id": "1",
+  "title": "Create usePostureData hook \u2014 aggregates control family stats",
+  "prompt": "Task: Create usePostureData hook \u2014 aggregates control family stats\n\nImplementation:\n- Create packages/ux-lab/src/hooks/usePostureData.ts\n- Hook fetches in parallel (Promise.all, no waterfalls per /best-practices-react):\n- 1. /api/memory/list sparta_controls \u2014 return_fields: [control_id, name, source_framework, control_type, weaknesses, nrs_score, mind]\n- 2. /api/memory/list sparta_qra \u2014 count per control_id (filters + limit:0)\n- 3. /api/memory/list sparta_relationships \u2014 count per source/target\n- 4. /api/memory/list sparta_urls \u2014 count per control mapping\n- Compute derived data with useMemo:\n- - controlsByFamily: Map keyed by NIST family prefix (AC, AU, CA, CM, IA, IR, MA, MP, PE, PL, PS, RA, SA, SC, SI)\n- - frameworkCoverage: per-framework { total, withQRAs, withRels, pct }\n- - overallScore: weighted average of family pass rates\n- - gaps: controls with zero QRAs OR zero relationships\n- - topRisks: controls sorted by weakness count desc, NRS asc, top 10\n- - nrsDistribution: { accept: NRS>=0.8, uncertain: 0.6-0.8, reject: <0.6 }\n- Fetch controls in batches of 500 (11.6K total)\n\nDefinition of Done:\n- Command: grep -q 'export function usePostureData' packages/ux-lab/src/hooks/usePostureData.ts\n- Assertion: exit_code == 0\n\nTests:\n- cd packages/ux-lab && npx tsc --noEmit\n- test-lab/run.sh verify-task 1 packages/ux-lab/src/hooks/ --domain typescript",
+  "backend": "codex",
+  "cwd": "/tmp/cr-wt-1-38xw1bmj",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775171805",
+  "definition_of_done": {
+    "command": "grep -q 'export function usePostureData' packages/ux-lab/src/hooks/usePostureData.ts",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    "packages/ux-lab/src/hooks/usePostureData.ts"
+  ],
+  "read_context": [
+    "/home/graham/workspace/experiments/pi-mono/.code-runner-skills-1.md"
+  ]
+}

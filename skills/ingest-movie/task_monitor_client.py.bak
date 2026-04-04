@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+"""Task Monitor Client for ingest-movie skill.
+
+Integrates with the centralized task-monitor skill by:
+1. Registering tasks in ~/.pi/task-monitor/registry.json
+2. Writing state files that task-monitor TUI can display
+3. Updating progress per movie (not just on completion)
+
+Usage:
+    monitor = IngestMovieTaskClient("batch-emotions", total_movies=50)
+    for task in manifest["tasks"]:
+        result = process_task(task)
+        monitor.update(task, result)
+    monitor.finish()
+"""
+
+import json
+import os
+import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Any, Optional
+from loguru import logger
+
+# Task monitor registry location
+TASK_MONITOR_REGISTRY = Path.home() / ".pi" / "task-monitor" / "registry.json"
+SKILL_DIR = Path(__file__).parent
+STATE_FILE = SKILL_DIR / "ingest_movie_task_state.json"
+ERROR_LOG = SKILL_DIR / "ingest_movie_errors.json"
+
+
+@dataclass
+class EmotionMetrics:
+    """Track processing counts per emotion."""
+    processed: int = 0
+    skipped: int = 0
+    failed: int = 0
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "processed": self.processed,
+            "skipped": self.skipped,
+            "failed": self.failed,
+        }
+
+
+@dataclass
+class FailureRecord:
+    """Record of a movie processing failure."""
+    movie_title: str
+    emotion: str
+    error: str
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "movie_title": self.movie_title[:50],
+            "emotion": self.emotion,
+            "error": self.error[:100],
+            "timestamp": self.timestamp,
+        }
+
+
+class IngestMovieTaskClient:
+    """Task-monitor compatible progress tracker for ingest-movie.
+
+    Writes state to ingest_movie_task_state.json which task-monitor TUI can display.
+    """
+
+    def __init__(
+        self,
+        task_name: str,
+        total_tasks: int,
+        description: Optional[str] = None,
+        register: bool = True,
+    ):
+        self.task_name = task_name
+        self.total_tasks = total_tasks
+        self.description = description or f"Ingest-Movie: {task_name}"
+
+        # Progress tracking
+        self.completed = 0
+        self.start_time = time.time()
+        self.last_update = 0.0
+
+        # Emotion metrics
+        self.emotions: Dict[str, EmotionMetrics] = {}
+
+        # Failure tracking
+        self.failures: List[FailureRecord] = []
+        self.processed_count = 0
+        self.skipped_count = 0
+
+        # Register with task-monitor
+        if register:
+            self._register_task()
+
+        # Initial state write
+        self._write_state()
+
+    def _register_task(self):
+        """Register this task with task-monitor registry."""
+        try:
+            TASK_MONITOR_REGISTRY.parent.mkdir(parents=True, exist_ok=True)
+
+            registry = {}
+            if TASK_MONITOR_REGISTRY.exists():
+                try:
+                    registry = json.loads(TASK_MONITOR_REGISTRY.read_text())
+                except Exception:
+                    registry = {}
+
+            registry[f"ingest-movie:{self.task_name}"] = {
+                "state_file": str(STATE_FILE),
+                "total": self.total_tasks,
+                "description": self.description,
+                "project": "ingest-movie",
+                "registered_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            }
+
+            tmp = TASK_MONITOR_REGISTRY.with_suffix(".tmp")
+            tmp.write_text(json.dumps(registry, indent=2))
+            os.replace(tmp, TASK_MONITOR_REGISTRY)
+        except Exception as e:
+            logger.debug("value lookup failed: {}", e)
+
+    def _write_state(self, final: bool = False):
+        """Update task-monitor state file."""
+        now = time.time()
+
+        if not final and (now - self.last_update) < 0.3:
+            return
+        self.last_update = now
+
+        elapsed = now - self.start_time
+        progress_pct = (self.completed / self.total_tasks * 100) if self.total_tasks > 0 else 0
+
+        eta_seconds = None
+        if self.completed > 0 and self.completed < self.total_tasks:
+            rate = self.completed / elapsed
+            remaining = self.total_tasks - self.completed
+            eta_seconds = remaining / rate if rate > 0 else None
+
+        state = {
+            "completed": self.completed,
+            "total": self.total_tasks,
+            "description": self.description,
+            "current_item": f"task {self.completed + 1}/{self.total_tasks}",
+            "progress_pct": round(progress_pct, 1),
+            "elapsed_seconds": round(elapsed, 1),
+            "eta_seconds": round(eta_seconds, 1) if eta_seconds else None,
+            "emotions": {name: metrics.to_dict() for name, metrics in self.emotions.items()},
+            "stats": {
+                "processed_count": self.processed_count,
+                "skipped_count": self.skipped_count,
+                "failure_count": len(self.failures),
+            },
+            "failures": [f.to_dict() for f in self.failures[-20:]],
+            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "completed" if final else "running",
+        }
+
+        try:
+            tmp = STATE_FILE.with_suffix(".tmp")
+            tmp.write_text(json.dumps(state, indent=2))
+            os.replace(tmp, STATE_FILE)
+        except Exception as e:
+            logger.debug("tmp failed: {}", e)
+
+    def update(
+        self,
+        movie_title: str,
+        emotion: str,
+        processed: bool = False,
+        skipped: bool = False,
+        error: Optional[str] = None,
+    ):
+        """Update progress after processing a movie task."""
+        self.completed += 1
+
+        # Initialize emotion metrics if needed
+        if emotion not in self.emotions:
+            self.emotions[emotion] = EmotionMetrics()
+
+        if processed:
+            self.processed_count += 1
+            self.emotions[emotion].processed += 1
+        elif skipped:
+            self.skipped_count += 1
+            self.emotions[emotion].skipped += 1
+        else:
+            self.emotions[emotion].failed += 1
+            self.failures.append(FailureRecord(
+                movie_title=movie_title,
+                emotion=emotion,
+                error=error or "Unknown error",
+            ))
+
+        self._write_state()
+
+    def finish(self, success: bool = True):
+        """Mark the task as complete."""
+        self._write_state(final=True)
+
+        if self.failures:
+            try:
+                error_data = {
+                    "task_name": self.task_name,
+                    "completed_at": datetime.now().isoformat(),
+                    "success": success,
+                    "total_tasks": self.total_tasks,
+                    "total_failures": len(self.failures),
+                    "emotions": {name: metrics.to_dict() for name, metrics in self.emotions.items()},
+                    "failures": [f.to_dict() for f in self.failures],
+                }
+                tmp = ERROR_LOG.with_suffix(".tmp")
+                tmp.write_text(json.dumps(error_data, indent=2))
+                os.replace(tmp, ERROR_LOG)
+            except Exception as e:
+                logger.debug("value lookup failed: {}", e)
+
+    def get_summary(self) -> Dict[str, Any]:
+        """Get a summary for logging/reporting."""
+        elapsed = time.time() - self.start_time
+        return {
+            "task_name": self.task_name,
+            "completed": self.completed,
+            "total": self.total_tasks,
+            "elapsed_seconds": round(elapsed, 1),
+            "processed": self.processed_count,
+            "skipped": self.skipped_count,
+            "failures": len(self.failures),
+        }
+
+
+# Convenience functions
+_current_client: Optional[IngestMovieTaskClient] = None
+
+
+def start_monitoring(task_name: str, total_tasks: int) -> IngestMovieTaskClient:
+    """Start monitoring a new ingest-movie task."""
+    global _current_client
+    _current_client = IngestMovieTaskClient(task_name, total_tasks)
+    return _current_client
+
+
+def get_monitor() -> Optional[IngestMovieTaskClient]:
+    """Get the current task monitor."""
+    return _current_client
+
+
+def end_monitoring(success: bool = True):
+    """End the current task monitoring."""
+    global _current_client
+    if _current_client:
+        _current_client.finish(success)
+        _current_client = None

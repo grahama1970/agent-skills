@@ -1,0 +1,25 @@
+{
+  "event_type": "classifier_lab_benchmark",
+  "timestamp": 1774531675,
+  "status": "failed",
+  "selected_backbone": null,
+  "selected_metrics": {},
+  "candidate_count": 1,
+  "source": {
+    "mode": "paired",
+    "data_dir": "/home/node/skills/create-table-classifier/data/merge_images/split"
+  },
+  "taxonomy": {
+    "status": "ok",
+    "result": {
+      "bridge_tags": [],
+      "collection_tags": {},
+      "confidence": 0.3,
+      "method": "fast",
+      "mind": [],
+      "tactical_tags": [],
+      "heart": [],
+      "worth_remembering": false
+    }
+  }
+}

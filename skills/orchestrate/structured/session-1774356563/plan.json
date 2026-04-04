@@ -1,0 +1,417 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "UX Lab Sim-to-Real Training Pipeline",
+    "goal": "Agent-driven synthetic interaction generation against UX Lab projects, blind adversarial testing, voice command integration, auto-retraining of intent classifiers from feedback",
+    "plan_type": "code",
+    "created": "2026-03-24",
+    "primary_persona": {
+      "name": "Graham Anderson",
+      "role": "Architect \u2014 needs scalable NL\u2192QuerySpec training across all UX Lab surfaces",
+      "source": ".pi/agents/graham-anderson/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 2
+  },
+  "capability_overlap": [
+    "/memory recall: 'UX Lab is the simulation environment for Embry OS voice-first training' \u2014 architecture already defined",
+    "Checked /test-lab \u2014 adversarial blind test generation exists, adapting for CDP interactions",
+    "Checked /conversation-lab \u2014 convergence loop for conversation quality exists",
+    "Checked /converse \u2014 PersonaPlex voice via PipeWire exists",
+    "Checked /create-intent-map \u2014 LoRA intent mapper with GRPO exists",
+    "Checked /create-gpt \u2014 small GPT training with holdout gates exists",
+    "Checked /surf \u2014 CDP browser automation exists",
+    "Checked /battle \u2014 adversarial red/blue competition framework exists",
+    "Checked /train-convo-steering \u2014 voice-first conversation priors exists",
+    "Checked /prompt-lab \u2014 structured prompt evaluation exists",
+    "Checked /checkpoint \u2014 session state persistence exists",
+    "Checked /episodic-archiver \u2014 transcript archival exists",
+    "Checked /recommend-skill-chain \u2014 chain prediction from training data exists"
+  ],
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Research + Harness"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: Interaction Generation"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Voice Integration"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: Training Pipeline"
+    },
+    {
+      "id": "4",
+      "label": "Wave 4: Convergence Loop"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Dogpile: automated UX testing + synthetic training in graph tools and robotics sim",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "one_shot",
+      "depends_on": [],
+      "implementation": [
+        "Use /dogpile to research:",
+        "  1. How Binary Ninja Sidekick 5.0 trains BNQL from user interactions",
+        "  2. How Neo4j Bloom handles automated testing of graph exploration",
+        "  3. How robotics sim-to-real (OpenAI Dactyl, NVIDIA Isaac) generates training data",
+        "  4. How Graphistry benchmarks graph interaction performance",
+        "  5. Domain randomization techniques for NL command variation",
+        "Store findings to /memory learn with tags [sim-to-real, training-pipeline, dogpile]"
+      ],
+      "tests": [
+        "curl -s --unix-socket /run/user/1000/embry/memory.sock http://localhost/recall -X POST -H 'Content-Type: application/json' -d '{\"q\":\"sim-to-real training graph interaction\",\"k\":1}' | grep -q found"
+      ],
+      "definition_of_done": {
+        "command": "curl -s --unix-socket /run/user/1000/embry/memory.sock http://localhost/recall -X POST -H 'Content-Type: application/json' -d '{\"q\":\"sim-to-real training graph\",\"k\":1}' | python3 -c 'import sys,json; print(len(json.load(sys.stdin).get(\"items\",[]))>0)'",
+        "assertion": "At least 1 research finding stored"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Build CDP interaction harness for UX Lab projects",
+      "lane": "0",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Create packages/ux-lab/sim/cdp-harness.cjs \u2014 a reusable CDP driver that:",
+        "  1. Connects to Chrome remote debugging port",
+        "  2. Navigates to any UX Lab project hash route",
+        "  3. Waits for React hydration (poll for root content)",
+        "  4. Exposes: type(selector, text), click(selector), evaluate(script), screenshot(name), assertText(text), getSceneCount(), getNodeLabels(), getQuerySpec()",
+        "  5. Returns structured JSON results per interaction",
+        "  6. Captures all Runtime.exceptionThrown as errors",
+        "Reference: packages/ux-lab/cdp-verify.cjs (working CDP example)",
+        "Reference: packages/ux-lab/server/test-runner.ts (Puppeteer test format)"
+      ],
+      "tests": [
+        "node packages/ux-lab/sim/cdp-harness.cjs --self-test",
+        "test-lab/run.sh verify-task 2 packages/ux-lab/sim/ --domain node"
+      ],
+      "gate": {
+        "command": "node packages/ux-lab/sim/cdp-harness.cjs --self-test 2>&1 | tail -1",
+        "assertion": "Self-test passes"
+      },
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/sim/cdp-harness.cjs && node -c packages/ux-lab/sim/cdp-harness.cjs",
+        "assertion": "File exists and parses without syntax errors"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Build adversarial command generator using /prompt-lab",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "1"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/sim/generate-commands.py \u2014 generates adversarial NL commands:",
+        "  1. Load binary_features from ArangoDB via /recall (node names, types, clusters)",
+        "  2. Use /prompt-lab template to generate 8 variation types per command:",
+        "     formal, casual, typos, imperative, question, non-native, abbreviated, verbose",
+        "  3. Generate commands for each QuerySpec action type:",
+        "     SELECT_NODE, VIEW_ALL, SET_PERSPECTIVE, SET_LAYOUT, EXPAND, QUERY",
+        "  4. Include entity resolution challenges: partial names, wrong case, abbreviations",
+        "  5. Include /memory clarify triggers: ambiguous entities, non-existent nodes, misspellings",
+        "  6. Output JSONL: {command: string, expected_action: string, expected_target?: string, difficulty: easy|medium|hard}",
+        "  7. Generate 200+ commands per binary (droid, daemon, tunnel, mcp)",
+        "Store prompt template in /prompt-lab for version control"
+      ],
+      "tests": [
+        "test -f packages/ux-lab/sim/generate-commands.py",
+        "python3 packages/ux-lab/sim/generate-commands.py --dry-run --limit 5",
+        "test-lab/run.sh verify-task 3 packages/ux-lab/sim/ --domain python"
+      ],
+      "gate": {
+        "command": "python3 packages/ux-lab/sim/generate-commands.py --dry-run --limit 5 | wc -l",
+        "assertion": "At least 5 lines"
+      },
+      "definition_of_done": {
+        "command": "python3 packages/ux-lab/sim/generate-commands.py --dry-run --limit 5 | wc -l",
+        "assertion": "At least 5 lines of JSONL output"
+      }
+    },
+    {
+      "id": "4",
+      "title": "Build blind evaluator \u2014 grades QuerySpec without seeing expected result",
+      "lane": "1",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "2"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/sim/evaluate-interaction.cjs \u2014 blind evaluation:",
+        "  1. Takes a command string + CDP harness connection",
+        "  2. Types command into chat, submits",
+        "  3. Waits for response (UI command or LLM answer)",
+        "  4. Captures: QuerySpec from collapsible details, scene node count, selected node label, graph screenshot",
+        "  5. Does NOT compare against expected \u2014 just captures actual result",
+        "  6. Outputs JSON: {command, queryspec, scene_count, selected_node, screenshot_path, errors[]}",
+        "  7. A separate grading step (task 8) compares actual vs expected",
+        "This is the /test-lab pattern: agent doesn't see ground truth during execution"
+      ],
+      "tests": [
+        "node -c packages/ux-lab/sim/evaluate-interaction.cjs",
+        "test-lab/run.sh verify-task 4 packages/ux-lab/sim/ --domain node"
+      ],
+      "gate": {
+        "command": "node -c packages/ux-lab/sim/evaluate-interaction.cjs && echo OK",
+        "assertion": "Parses without error"
+      },
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/sim/evaluate-interaction.cjs",
+        "assertion": "File exists"
+      }
+    },
+    {
+      "id": "5",
+      "title": "Integrate voice command generation via /converse + PersonaPlex",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "3"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/sim/voice-commands.py \u2014 generates voice interactions:",
+        "  1. Load adversarial text commands from generate-commands.py output",
+        "  2. For each command, use PersonaPlex TTS (Kokoro port 8880) to generate audio",
+        "  3. Feed audio through PersonaPlex STT (Whisper port 2022) to get noisy transcript",
+        "  4. The noisy transcript is the 'voice command' \u2014 preserves STT errors",
+        "  5. Output JSONL: {original_text, voice_transcript, audio_path, stt_confidence}",
+        "  6. This is domain randomization via the speech pipeline",
+        "Use httpx to PersonaPlex endpoints (NOT subprocess calls)"
+      ],
+      "tests": [
+        "python3 packages/ux-lab/sim/voice-commands.py --dry-run --limit 3",
+        "test-lab/run.sh verify-task 5 packages/ux-lab/sim/ --domain python"
+      ],
+      "gate": {
+        "command": "python3 packages/ux-lab/sim/voice-commands.py --dry-run --limit 3 2>&1 | wc -l",
+        "assertion": "At least 1 line"
+      },
+      "definition_of_done": {
+        "command": "python3 packages/ux-lab/sim/voice-commands.py --dry-run --limit 3 2>&1 | head -1",
+        "assertion": "Outputs at least 1 JSONL line or 'dry-run: 3 commands'"
+      }
+    },
+    {
+      "id": "6",
+      "title": "Run interaction batch: 200 text + 50 voice commands against Binary Explorer",
+      "lane": "2",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "3",
+        "4",
+        "5"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/sim/run-batch.cjs \u2014 orchestrates a full batch:",
+        "  1. Start headless Chrome with CDP",
+        "  2. Navigate to Binary Explorer",
+        "  3. For each command in the JSONL manifest:",
+        "     a. CLEAR scene (fresh state per command)",
+        "     b. Seed namespaces (standard starting state)",
+        "     c. Type command into chat, submit",
+        "     d. Wait for response",
+        "     e. Capture QuerySpec, scene state, screenshot",
+        "     f. Check if /memory clarify was triggered (look for 'Did you mean' in response)",
+        "  4. Output results JSONL: {command, expected, actual_queryspec, scene_count, clarify_triggered, errors}",
+        "  5. Include both text commands and voice transcripts in the same batch",
+        "  6. Target: 200 text + 50 voice = 250 interactions per binary"
+      ],
+      "tests": [
+        "node packages/ux-lab/sim/run-batch.cjs --dry-run --limit 3",
+        "test-lab/run.sh verify-task 6 packages/ux-lab/sim/ --domain node"
+      ],
+      "gate": {
+        "command": "node packages/ux-lab/sim/run-batch.cjs --dry-run --limit 1 2>&1 | tail -1",
+        "assertion": "Dry run completes"
+      },
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/sim/run-batch.cjs",
+        "assertion": "File exists"
+      }
+    },
+    {
+      "id": "7",
+      "title": "Build grader: compare actual vs expected QuerySpec (blind evaluation)",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "6"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/sim/grade-batch.py \u2014 grades interaction results:",
+        "  1. Load results JSONL from run-batch",
+        "  2. Load expected results JSONL from generate-commands",
+        "  3. For each pair, grade:",
+        "     - action_match: did ui_action match expected? (SELECT_NODE, EXPAND, etc.)",
+        "     - target_match: did target_node_id resolve to the correct entity?",
+        "     - clarify_correct: if entity was ambiguous, did /memory clarify trigger?",
+        "     - no_crash: were there 0 runtime errors?",
+        "  4. Output: accuracy %, action accuracy, entity resolution rate, clarify rate",
+        "  5. Output labeled pairs for training: {problem: command, solution: actual_queryspec, tags: [positive|negative]}",
+        "  6. Store labeled pairs to ArangoDB via /memory learn"
+      ],
+      "tests": [
+        "python3 packages/ux-lab/sim/grade-batch.py --dry-run",
+        "test-lab/run.sh verify-task 7 packages/ux-lab/sim/ --domain python"
+      ],
+      "gate": {
+        "command": "python3 packages/ux-lab/sim/grade-batch.py --dry-run 2>&1 | tail -1",
+        "assertion": "Dry run completes"
+      },
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/sim/grade-batch.py",
+        "assertion": "File exists"
+      }
+    },
+    {
+      "id": "8",
+      "title": "Auto-retrain intent classifier from graded labels via /create-gpt",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "7"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/sim/retrain-intent.py \u2014 triggers retraining:",
+        "  1. Query ArangoDB for all binary-explorer-feedback docs with intent-training-v2 tag",
+        "  2. Split into train/holdout (80/20)",
+        "  3. Format as SFT pairs: {input: user_command, output: json_queryspec}",
+        "  4. Call /create-gpt with --task intent-binary-explorer --size 0.5B --sft-only",
+        "  5. Evaluate on holdout: accuracy must exceed previous model",
+        "  6. If accuracy improves, promote model to /assistant cascade tier 1.5",
+        "  7. Store training run metadata to /memory learn",
+        "Uses httpx Unix socket to memory daemon for all ArangoDB queries"
+      ],
+      "tests": [
+        "python3 packages/ux-lab/sim/retrain-intent.py --dry-run",
+        "test-lab/run.sh verify-task 8 packages/ux-lab/sim/ --domain python"
+      ],
+      "gate": {
+        "command": "python3 packages/ux-lab/sim/retrain-intent.py --dry-run 2>&1 | tail -1",
+        "assertion": "Dry run completes"
+      },
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/sim/retrain-intent.py",
+        "assertion": "File exists"
+      }
+    },
+    {
+      "id": "9",
+      "title": "Wire /episodic-archiver for chat transcript archival",
+      "lane": "3",
+      "runner": "subagent-service",
+      "backend": "sonnet",
+      "mode": "iterative",
+      "depends_on": [
+        "6"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/sim/archive-sessions.py \u2014 archives interaction sessions:",
+        "  1. Read batch results JSONL",
+        "  2. Group by session (each CLEAR\u2192commands\u2192result is a session)",
+        "  3. Format as episodic-archiver transcript format",
+        "  4. Call /episodic-archiver ingest for each session",
+        "  5. Tag with: binary-explorer, sim-training, batch-id, accuracy",
+        "This enables /conversation-lab to analyze interaction patterns cross-session"
+      ],
+      "tests": [
+        "python3 packages/ux-lab/sim/archive-sessions.py --dry-run",
+        "test-lab/run.sh verify-task 9 packages/ux-lab/sim/ --domain python"
+      ],
+      "gate": {
+        "command": "python3 packages/ux-lab/sim/archive-sessions.py --dry-run 2>&1 | tail -1",
+        "assertion": "Dry run completes"
+      },
+      "definition_of_done": {
+        "command": "test -f packages/ux-lab/sim/archive-sessions.py",
+        "assertion": "File exists"
+      }
+    },
+    {
+      "id": "10",
+      "title": "Convergence loop: run batches until intent accuracy exceeds 85%",
+      "lane": "4",
+      "runner": "subagent-service",
+      "backend": "opus",
+      "mode": "iterative",
+      "depends_on": [
+        "7",
+        "8"
+      ],
+      "implementation": [
+        "Create packages/ux-lab/sim/converge.py \u2014 the main convergence loop:",
+        "  1. Round N: generate-commands \u2192 run-batch \u2192 grade-batch \u2192 retrain-intent",
+        "  2. Check holdout accuracy after retrain",
+        "  3. If accuracy < 85%: analyze failure patterns, generate targeted adversarial commands for weak spots",
+        "  4. If accuracy >= 85%: declare convergence, store final model metrics",
+        "  5. Max 5 rounds (prevent infinite loop)",
+        "  6. Each round adds ~200 new training pairs to ArangoDB",
+        "  7. Uses /conversation-lab pattern: diagnose \u2192 fix \u2192 re-run \u2192 measure",
+        "  8. Final report: accuracy curve, failure categories, top confused entity pairs",
+        "Wire to /task-monitor for progress tracking"
+      ],
+      "tests": [
+        "python3 packages/ux-lab/sim/converge.py --dry-run --max-rounds 1",
+        "test-lab/run.sh verify-task 10 packages/ux-lab/sim/ --domain python"
+      ],
+      "gate": {
+        "command": "python3 packages/ux-lab/sim/converge.py --dry-run --max-rounds 0 2>&1 | tail -1",
+        "assertion": "Dry run completes"
+      },
+      "definition_of_done": {
+        "command": "python3 packages/ux-lab/sim/converge.py --dry-run --max-rounds 0 2>&1 | head -1",
+        "assertion": "Outputs convergence status"
+      }
+    },
+    {
+      "id": "11",
+      "title": "Verification: end-to-end test with 50 novel commands + 10 voice",
+      "lane": "4",
+      "runner": "local",
+      "backend": "local",
+      "mode": "one_shot",
+      "depends_on": [
+        "10"
+      ],
+      "command": "cd packages/ux-lab && python3 sim/generate-commands.py --novel --limit 50 > /tmp/novel_commands.jsonl\npython3 sim/voice-commands.py --input /tmp/novel_commands.jsonl --limit 10 >> /tmp/novel_commands.jsonl\nnode sim/run-batch.cjs --input /tmp/novel_commands.jsonl --output /tmp/novel_results.jsonl\npython3 sim/grade-batch.py --results /tmp/novel_results.jsonl --expected /tmp/novel_commands.jsonl\n",
+      "tests": [
+        "test -f /tmp/novel_results.jsonl"
+      ],
+      "definition_of_done": {
+        "command": "python3 packages/ux-lab/sim/grade-batch.py --results /tmp/novel_results.jsonl --expected /tmp/novel_commands.jsonl 2>&1 | grep -oP 'accuracy: \\K[0-9]+'",
+        "assertion": "Accuracy >80% on 50 novel + 10 voice commands"
+      }
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "name": "qra_formal",
+  "description": "QRA generation for formal verification applied to F-36 safety-critical software",
+  "persona": "rob_armstrong",
+  "domain": "formal",
+  "evaluation_criteria": {
+    "min_qras_per_input": 3,
+    "citation_grounding_threshold": 0.85,
+    "required_question_types": ["simple", "medium", "complex"],
+    "diversity_check": true,
+    "hallucination_detection": true,
+    "question_blocklist": [
+      "^What is [\\w\\s\\-/()]+\\?$",
+      "^Define [\\w\\s\\-/()]+\\.?$"
+    ],
+    "required_entity_patterns": ["Theorem \\d+", "Lemma \\d+", "Proposition \\d+"],
+    "framework_grounding": {"fail": 0.50, "warn": 0.60}
+  },
+  "cases": [
+    {
+      "id": "formal_bounded_mc",
+      "input": {
+        "name": "Bounded Model Checking — F-36 Bus Arbiter",
+        "description": "Bounded model checking for MIL-STD-1553 bus arbiter"
+      },
+      "source_text": "Bounded model checking of the F-36 MIL-STD-1553 bus arbiter was performed using CBMC (C Bounded Model Checker) to verify mutual exclusion and deadlock freedom. The arbiter manages bus access for 31 remote terminals across two redundant buses. Theorem 1: No two remote terminals can hold bus mastership simultaneously (mutual exclusion). Verified up to depth k=50 transitions using SAT-based BMC. Lemma 1: Bus mastership token always returns to the bus controller within 31 terminal poll cycles. Verified for all reachable states within k=50. Limitation: BMC at k=50 covers the common case but does not guarantee correctness for execution paths longer than 50 transitions. The bus arbiter has a fault recovery path that requires 63 transitions to complete (bus reset after dual-bus failure) — this path exceeds the BMC bound and remains formally unverified. Full unbounded verification requires an inductive invariant that has not been synthesized.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["Theorem 1", "Lemma 1"],
+        "rejected_patterns": ["What is bounded model checking", "Define BMC"]
+      },
+      "notes": "63-transition fault recovery path exceeding k=50 bound is the gap"
+    },
+    {
+      "id": "formal_tla_scheduler",
+      "input": {
+        "name": "TLA+ Specification — F-36 Task Scheduler",
+        "description": "TLA+ formal specification of RTOS task scheduler properties"
+      },
+      "source_text": "The F-36 ARINC 653 RTOS task scheduler was specified in TLA+ to verify temporal partitioning guarantees. The specification models 12 partitions with fixed time windows summing to 20ms major frame. Proposition 1: No partition exceeds its allocated time window (temporal isolation). Model checked with TLC over all reachable states (2.3 billion states explored in 47 hours). Proposition 2: All partitions execute at least once per major frame (liveness). Verified using TLC with fairness constraints. Counterexample found for Proposition 3 (priority inversion freedom): when a high-priority task in Partition A is blocked on a shared resource held by a low-priority task in Partition B, the partition timer expires before the resource is released, causing the high-priority task to miss its deadline. The counterexample trace is 847 states long. Mitigation requires priority ceiling protocol implementation in the RTOS kernel, which is not currently implemented.",
+      "expected": {
+        "min_qras": 4,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["Proposition 1", "Proposition 2", "Proposition 3"],
+        "rejected_patterns": ["What is TLA+", "Define temporal logic"]
+      },
+      "notes": "Priority inversion counterexample across partitions is the key finding"
+    },
+    {
+      "id": "formal_lean_crypto",
+      "input": {
+        "name": "Lean 4 Proof — F-36 Crypto Module",
+        "description": "Lean 4 formal proof of cryptographic protocol correctness"
+      },
+      "source_text": "The F-36 Link 16 cryptographic module key distribution protocol was formally verified in Lean 4. The proof establishes that the key exchange protocol satisfies forward secrecy (Theorem 2) and mutual authentication (Theorem 3). Theorem 2 proof required 1,247 lines of Lean 4 tactic code and depends on Lemma 2 (discrete log hardness assumption formalized as an axiom). Theorem 3 proof: 892 lines, fully constructive (no axioms). Limitation: the proof models the protocol at the message-passing level but does not verify the C implementation against the Lean specification. The gap between the formal model and the deployed code (17,000 lines of C) remains unaddressed. Corollary 1: if the implementation correctly refines the Lean model, then the deployed protocol satisfies forward secrecy and mutual authentication. However, verifying this refinement requires a verified C compiler or extraction mechanism (e.g., CertiCoq) that is not available for the target platform (PowerPC).",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["Theorem 2", "Theorem 3", "Lemma 2", "Corollary 1"],
+        "rejected_patterns": ["What is Lean 4", "Define formal verification"]
+      },
+      "notes": "Model-to-implementation gap (17K lines C unverified) is the key gap"
+    },
+    {
+      "id": "formal_smt_timing",
+      "input": {
+        "name": "SMT-Based Timing Analysis — F-36 Sensor Fusion",
+        "description": "SMT solver timing verification for sensor fusion pipeline"
+      },
+      "source_text": "SMT-based worst-case execution time (WCET) analysis of the F-36 sensor fusion pipeline was performed using ESBMC with the Z3 solver backend. The sensor fusion pipeline processes radar, EO/IR, and EW inputs with a 20ms deadline. Theorem 4: under all input combinations, the sensor fusion pipeline completes within 18.7ms (verified for single-path analysis). The SMT encoding covers 4,200 basic blocks with 127 loop bounds. Lemma 3: cache effects add at most 1.2ms to the computed WCET (verified using abstract interpretation of cache states). Combined worst-case: 18.7ms + 1.2ms = 19.9ms, leaving 0.1ms margin to the 20ms deadline. Concern: the 0.1ms margin assumes no cache contention from other partitions. With the L2 cache sharing issue identified in the IMA partitioning analysis, actual worst-case may exceed 20ms. The SMT model does not account for inter-partition cache interference — extending the model to include cache partitioning effects would require approximately 6 months of additional verification effort.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["Theorem 4", "Lemma 3"],
+        "rejected_patterns": ["What is WCET", "Define SMT solver"]
+      },
+      "notes": "0.1ms margin without cache contention modeling is the risk"
+    },
+    {
+      "id": "formal_isabelle_voting",
+      "input": {
+        "name": "Isabelle/HOL Proof — F-36 Redundancy Voting",
+        "description": "Formal proof of triple-redundant voting logic correctness"
+      },
+      "source_text": "The F-36 flight control system uses triple modular redundancy (TMR) with a voting logic module. The voting algorithm was verified in Isabelle/HOL. Theorem 5: given three inputs where at most one is faulty, the voter output equals the majority value (Byzantine fault tolerance for one fault). Proof uses 423 lines of Isabelle tactic script. Lemma 4: the voter detects a disagreeing channel within one computation cycle and flags it for BITE (Built-In Test Equipment). Proposition 4: after flagging a faulty channel, the voter transitions to dual-redundant mode and Theorem 5 no longer holds — a second fault in dual mode causes voter output to be undefined. The formal specification reveals that the voter has no defined behavior for simultaneous dual-channel failure in dual-redundant mode. The implementation actually outputs the last valid value (a design choice not captured in the specification), creating a specification-implementation mismatch.",
+      "expected": {
+        "min_qras": 3,
+        "required_types": ["medium", "complex"],
+        "citations_grounded": true,
+        "expected_entity_refs": ["Theorem 5", "Lemma 4", "Proposition 4"],
+        "rejected_patterns": ["What is TMR", "Define formal proof"]
+      },
+      "notes": "Spec-implementation mismatch in dual-fault behavior is the finding"
+    }
+  ],
+  "notes": {
+    "problem_statement": "Rob Armstrong persona needs QRAs about formal verification applied to F-36 safety-critical software, not abstract formal methods theory",
+    "prompt_goal": "Generate synthesis questions about how formal methods reveal verification gaps in F-36 software systems"
+  }
+}

@@ -1,0 +1,21 @@
+# prompt-lab-hash: pending
+# prompt-lab-eval: pending
+[SYSTEM]
+Parse the structured input and return JSON.
+
+DECISION TABLE:
+| Condition | Verdict |
+|-----------|---------|
+| Any span has status="not_in_corpus" | NONSENSICAL |
+| Any span has status="not_relevant" | NONSENSICAL |
+| Any span has relevant_to_query=false | NONSENSICAL |
+| Control ID not in control_metadata | CLARIFY |
+| All spans grounded | ANSWERABLE |
+
+Apply conditions top-to-bottom. First match wins.
+
+[USER]
+{"question":"{question}","spans":{spans},"evidence":{evidence},"control_metadata":{control_metadata},"similar_requests":{similar_requests}}
+
+[ASSISTANT]
+{"parsed":{"span_count":

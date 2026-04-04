@@ -1,0 +1,63 @@
+```diff
+--- a/.pi/skills/battle/blue_team.py
++++ b/.pi/skills/battle/blue_team.py
+@@ -223,33 +223,34 @@ class BlueAgent:
+ 
+         def _generate_patch(finding: Finding) -> Patch | None:
+-            if self.anvil_script.exists():
+-                try:
+-                    result = subprocess.run(
+-                        [str(self.anvil_script), "remediate", self.target_path,
+-                         "--profile", self.state.threat_profile,
+-                         "--model", self.model, "--auto-fix"],
+-                        capture_output=True, text=True, timeout=120,
+-                        cwd=self.target_path,
+-                        env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
++            target_path_obj = Path(self.target_path)
++            if (target_path_obj / "Makefile").exists():
++                test_command = "make test"
++            elif (target_path_obj / "pytest.ini").exists() or (target_path_obj / "conftest.py").exists():
++                test_command = "pytest -q"
++            elif (target_path_obj / "pyproject.toml").exists():
++                test_command = "python -m pytest -q"
++            else:
++                test_command = "pytest -q"
++            try:
++                patch_result = patch_writer.write_patch(
++                    target_path=self.target_path,
++                    finding=finding.description,
++                    exploit_proof=getattr(finding, "exploit_proof", "") or "",
++                    test_command=test_command,
++                )
++                return Patch(
++                    id=f"swarm_patch_{self.current_round}_{finding.id}",
++                    finding_id=finding.id,
++                    type=DefenseType.PATCH,
++                    diff=patch_result.patch_diff,
++                    verified=patch_result.success,
++                    functionality_preserved=patch_result.functionality_preserved,
++                )
++            except Exception:
++                return Patch(
++                    id=f"swarm_patch_{self.current_round}_{finding.id}",
++                    finding_id=finding.id,
++                    type=DefenseType.PATCH,
++                    diff="",
++                    verified=False,
++                    functionality_preserved=False,
+                     )
+-                    return Patch(
+-                        id=f"swarm_patch_{self.current_round}_{finding.id}",
+-                        finding_id=finding.id,
+-                        type=DefenseType.PATCH,
+-                        diff=result.stdout[:2000] if result.returncode == 0 else "",
+-                        verified=result.returncode == 0,
+-                        functionality_preserved=True,
+-                    )
+-                except (subprocess.TimeoutExpired, OSError):
+-                    pass
+-            return None
+ 
+         with ThreadPoolExecutor(max_workers=max_workers) as pool:
+             futures = {pool.submit(_generate_patch, f): f for f in findings}
+```

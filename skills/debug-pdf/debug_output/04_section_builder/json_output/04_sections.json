@@ -1,0 +1,271 @@
+{
+  "success": true,
+  "timestamp": "2026-01-30T08:25:04.911253",
+  "source_json": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/03_suspicious_headers/json_output/03_verified_blocks.json",
+  "source_pdf": "/home/graham/workspace/experiments/pi-mono/.pi/skills/debug-pdf/debug_output/01_annotation_processor/repro_failed_clean.pdf",
+  "status": "Completed",
+  "section_count": 1,
+  "hierarchy_depth": 1,
+  "visual_captures": 1,
+  "suspicious_header_analysis": {
+    "validation_method": "stage03_llm_verification",
+    "total_sections": 1,
+    "validated_sections": 0,
+    "suspicious_sections": 0,
+    "categories": {
+      "low_confidence": [],
+      "ocr_errors": [],
+      "formatting_issues": [],
+      "context_issues": [],
+      "sequence_issues": [],
+      "false_positives": []
+    },
+    "statistics": {
+      "avg_confidence": 0.0,
+      "confidence_distribution": {},
+      "common_issues": {},
+      "validation_summary": {
+        "sections_validated": 0,
+        "total_suspicious": 0,
+        "suspicious_rate": 0.0,
+        "avg_confidence": 0.0
+      }
+    }
+  },
+  "sections": [
+    {
+      "title": "1.  First item in the list that has some longer text",
+      "level": 1,
+      "blocks": [
+        {
+          "id": "block-000001",
+          "page": 0,
+          "page_idx": 0,
+          "bbox": [
+            50.0,
+            30.649999618530273,
+            325.0939636230469,
+            55.38199996948242
+          ],
+          "text": "False-Positive Table Test Patterns",
+          "block_type": "Text",
+          "font_size": 18.0,
+          "font_flags": 0,
+          "font_color": 0,
+          "font_color_bucket": "black",
+          "is_header": false,
+          "header_confidence": 0.45,
+          "header_level": null,
+          "first_span_font": {
+            "size": 18.0,
+            "flags": 0,
+            "color": 0,
+            "color_bucket": "black"
+          },
+          "section_breadcrumbs": [
+            "1 First item in the list that has some longer text"
+          ]
+        },
+        {
+          "id": "block-000002",
+          "page": 0,
+          "page_idx": 0,
+          "bbox": [
+            50.0,
+            77.0999984741211,
+            129.3560028076172,
+            93.58799743652344
+          ],
+          "text": "[numbered-list]",
+          "block_type": "Text",
+          "font_size": 12.0,
+          "font_flags": 0,
+          "font_color": 5066163,
+          "font_color_bucket": "blue",
+          "is_header": false,
+          "header_confidence": 0.0,
+          "header_level": null,
+          "first_span_font": {
+            "size": 12.0,
+            "flags": 0,
+            "color": 5066163,
+            "color_bucket": "blue"
+          },
+          "section_titles": [
+            ""
+          ],
+          "section_hashes": [
+            ""
+          ],
+          "section_number": "",
+          "section_level": 1,
+          "section_breadcrumbs": [
+            "1 First item in the list that has some longer text"
+          ]
+        },
+        {
+          "id": "block-000003",
+          "page": 0,
+          "page_idx": 0,
+          "bbox": [
+            50.0,
+            95.32499694824219,
+            292.5859375,
+            107.69100189208984
+          ],
+          "text": "Numbered list with aligned numbers (triggers table detection)",
+          "block_type": "Text",
+          "font_size": 9.0,
+          "font_flags": 0,
+          "font_color": 8421504,
+          "font_color_bucket": "unknown",
+          "is_header": false,
+          "header_confidence": 0.0,
+          "header_level": null,
+          "first_span_font": {
+            "size": 9.0,
+            "flags": 0,
+            "color": 8421504,
+            "color_bucket": "unknown"
+          },
+          "section_titles": [
+            ""
+          ],
+          "section_hashes": [
+            ""
+          ],
+          "section_number": "",
+          "section_level": 1,
+          "section_breadcrumbs": [
+            "1 First item in the list that has some longer text"
+          ]
+        },
+        {
+          "id": "block-000004",
+          "page": 0,
+          "page_idx": 0,
+          "bbox": [
+            50.0,
+            125.00000762939453,
+            362.0,
+            137.49000549316406
+          ],
+          "text": "1.  First item in the list that has some longer text",
+          "block_type": "SectionHeader",
+          "font_size": 10.0,
+          "font_flags": 8,
+          "font_color": 0,
+          "font_color_bucket": "black",
+          "is_header": true,
+          "header_confidence": 0.9,
+          "header_level": 1,
+          "first_span_font": {
+            "size": 10.0,
+            "flags": 8,
+            "color": 0,
+            "color_bucket": "black"
+          },
+          "header_char_spans": {
+            "number": {
+              "start": 0,
+              "end": 1
+            },
+            "title": {
+              "start": 4,
+              "end": 52
+            }
+          },
+          "header_title": "First item in the list that has some longer text",
+          "section_titles": [
+            "First item in the list that has some longer text"
+          ],
+          "section_hashes": [
+            "a00a8dbcdb78c7496bae7c9c600bda7b"
+          ],
+          "section_number": "1",
+          "section_level": 1,
+          "section_depth": [
+            1
+          ],
+          "section_breadcrumbs": [
+            "1 First item in the list that has some longer text"
+          ]
+        }
+      ],
+      "page_start": 0,
+      "page_end": 0,
+      "bbox": [
+        50.0,
+        125.00000762939453,
+        362.0,
+        137.49000549316406
+      ],
+      "metadata": {
+        "section_number": "1",
+        "section_depth": [
+          1
+        ],
+        "section_hash": "a00a8dbcdb78c7496bae7c9c600bda7b",
+        "block_count": 4,
+        "validation_method": "stage03_or_fallback",
+        "diagnostics": [],
+        "header_char_spans": {
+          "number": {
+            "start": 0,
+            "end": 1
+          },
+          "title": {
+            "start": 4,
+            "end": 52
+          }
+        },
+        "title_display": "First item in the list that has some longer text",
+        "pages": [
+          0
+        ],
+        "page_start": 0,
+        "page_end": 0,
+        "page_count": 1,
+        "breadcrumbs": [
+          {
+            "id": "section_0",
+            "title": "1 First item in the list that has some longer text",
+            "section_number": "1",
+            "level": 1,
+            "section_hash": "a00a8dbcdb78c7496bae7c9c600bda7b"
+          }
+        ],
+        "breadcrumb_titles": [
+          "1 First item in the list that has some longer text"
+        ]
+      },
+      "display_title": "First item in the list that has some longer text",
+      "id": "section_0",
+      "parent_id": null,
+      "pages": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "type": "content",
+      "section_number": "1",
+      "section_depth": [
+        1
+      ],
+      "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+      "has_visual": true,
+      "visual_path": "04_section_builder/visual_output/section_section_0.png"
+    }
+  ],
+  "timings": {
+    "stage_start_ts": "2026-01-30T08:25:04.868152",
+    "stage_end_ts": "2026-01-30T08:25:04.911265",
+    "stage_duration_ms": 43
+  },
+  "run_id": "102fa789cf134698bdbf88b6eeff20d3"
+}

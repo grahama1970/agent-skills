@@ -1,0 +1,26 @@
+{
+  "clips": [
+    {
+      "movie_title": "There Will Be Blood (2007)",
+      "emotion": "rage",
+      "clip_path": "/mnt/storage12tb/media/movies/There Will Be Blood (2007)/rage_clips/clip_rage_9000.mkv",
+      "persona_path": "/tmp/high_fidelity_sanity_1769958938/ingest_output/clip_rage_9000_persona.json",
+      "scene_description": "The Milkshake Scene",
+      "timestamp": "02:30:00.000-02:30:10.000",
+      "created_at": "2026-02-01T15:15:53.914540+00:00"
+    },
+    {
+      "movie_title": "There Will Be Blood (2007)",
+      "emotion": "rage",
+      "clip_path": "/mnt/storage12tb/media/movies/There Will Be Blood (2007)/rage_clips/clip_rage_8889.mkv",
+      "persona_path": "/tmp/high_fidelity_sanity_1769959241/ingest_output/clip_rage_8889_persona.json",
+      "scene_description": "The Milkshake Scene",
+      "timestamp": "02:28:09.000-02:28:39.000",
+      "created_at": "2026-02-01T15:20:58.487390+00:00"
+    }
+  ],
+  "movies_processed": [
+    "There Will Be Blood (2007)"
+  ],
+  "last_updated": "2026-02-01T15:20:58.487403+00:00"
+}

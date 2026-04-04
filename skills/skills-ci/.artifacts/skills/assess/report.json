@@ -1,0 +1,28 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-11T07:00:04.273533+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 1,
+    "total": 1
+  },
+  "worktree": null,
+  "skill": "assess",
+  "violations": [
+    {
+      "rule": "python.argparse",
+      "severity": "warn",
+      "skill": "assess",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/assess/assess.py",
+      "message": "Uses argparse; prefer Typer.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

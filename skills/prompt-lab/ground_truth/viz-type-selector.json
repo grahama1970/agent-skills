@@ -1,0 +1,83 @@
+{
+  "name": "viz-type-selector",
+  "description": "Select optimal chart type for voice-query data visualization on 5ft answer canvas",
+  "cases": [
+    {
+      "id": "viz_1",
+      "input": {
+        "query": "How many defects did each vendor have last quarter?",
+        "data_shape": "5 vendors, each with a defect count integer"
+      },
+      "expected": {
+        "chart_type": "bar"
+      },
+      "notes": "Categorical comparison of counts across vendors"
+    },
+    {
+      "id": "viz_2",
+      "input": {
+        "query": "Show me the temperature trend for CNC machine 7 over the past 24 hours",
+        "data_shape": "288 data points (5-min intervals), timestamp + temperature_celsius"
+      },
+      "expected": {
+        "chart_type": "line"
+      },
+      "notes": "Time series trend, ordered x-axis with many points"
+    },
+    {
+      "id": "viz_3",
+      "input": {
+        "query": "What percentage of our fleet uses each alloy type?",
+        "data_shape": "4 alloy types with percentage values summing to 100%"
+      },
+      "expected": {
+        "chart_type": "pie"
+      },
+      "notes": "Parts-of-whole composition, few categories"
+    },
+    {
+      "id": "viz_4",
+      "input": {
+        "query": "What is the current status of build 47?",
+        "data_shape": "1 record: build_id=47, status=PASSED, timestamp=2026-03-12T14:30:00Z"
+      },
+      "expected": {
+        "chart_type": "text"
+      },
+      "notes": "Single value lookup, not chart-worthy"
+    },
+    {
+      "id": "viz_5",
+      "input": {
+        "query": "Compare the cybersecurity posture of our 3 facilities across hardening, detection, isolation, and recovery dimensions",
+        "data_shape": "3 facilities x 4 dimensions, scores 0-100"
+      },
+      "expected": {
+        "chart_type": "radar"
+      },
+      "notes": "Multi-dimensional profile comparison, 3 series x 4 axes"
+    },
+    {
+      "id": "viz_6",
+      "input": {
+        "query": "Show where our components flow from raw material suppliers through assembly to final delivery",
+        "data_shape": "12 source-target-value triples across 4 pipeline stages"
+      },
+      "expected": {
+        "chart_type": "sankey"
+      },
+      "notes": "Flow/pipeline with source-target-value triples"
+    },
+    {
+      "id": "viz_7",
+      "input": {
+        "query": "Rank all 15 NIST control families by compliance gap percentage",
+        "data_shape": "15 rows, control_family_name (long labels like 'Access Control (AC)') + gap_percentage"
+      },
+      "expected": {
+        "chart_type": "hbar"
+      },
+      "notes": "Ranking with long category labels, horizontal bar preferred"
+    }
+  ]
+}

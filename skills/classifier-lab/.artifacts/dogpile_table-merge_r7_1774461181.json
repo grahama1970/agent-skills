@@ -1,0 +1,10 @@
+{
+  "event_type": "dogpile_research",
+  "project_id": "table-merge",
+  "task": "table merge classification",
+  "round": 7,
+  "phase": "targeted-research",
+  "query": "why does efficientnet_b0 fail on table merge classification with F1=0.000 using paired modality cross-document generalization",
+  "result_length": 396,
+  "timestamp": 1774461181
+}

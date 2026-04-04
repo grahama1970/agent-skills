@@ -1,0 +1,37 @@
+[
+  {
+    "question": "What SPARTA countermeasures are most relevant for mitigating unauthorized access to the F-36's flight control software development environment, given DO-178C's requirements for tool qualification?",
+    "difficulty": "easy",
+    "f36_category": "09_flight_software",
+    "domain_context": "DO-178C compliance requires strict controls over development tools; SPARTA countermeasures must align with these to prevent tampering or unauthorized modifications.",
+    "persona": "noah"
+  },
+  {
+    "question": "How should SPARTA's threat model for sensor spoofing be applied to the F-36's integrated GPS/INS navigation system, considering ARP4761's fault tree analysis requirements?",
+    "difficulty": "medium",
+    "f36_category": "01_avionics",
+    "domain_context": "GPS/INS systems are vulnerable to spoofing; ARP4761 requires fault trees to account for such threats, necessitating SPARTA-aligned mitigations.",
+    "persona": "noah"
+  },
+  {
+    "question": "Given the F-36's dual-engine architecture relies on cross-channel data synchronization, which SPARTA attack patterns pose the greatest risk to FADEC integrity, and how do DO-254's hardware assurance requirements influence countermeasure selection?",
+    "difficulty": "medium",
+    "f36_category": "06_dual_engine",
+    "domain_context": "FADEC systems in dual-engine designs require robust synchronization; SPARTA threats must be evaluated against DO-254's hardware lifecycle controls.",
+    "persona": "noah"
+  },
+  {
+    "question": "The F-36's autopilot system inherits legacy components from the F-35's flight software stack. What SPARTA adversarial tactics would most likely exploit this technical debt, and how should our assurance case (per GSN) justify the residual risk of these inherited vulnerabilities?",
+    "difficulty": "hard",
+    "f36_category": "09_flight_software",
+    "domain_context": "Legacy code introduces undocumented vulnerabilities; SPARTA tactics must be mapped to GSN-based assurance arguments to demonstrate acceptable risk.",
+    "persona": "noah"
+  },
+  {
+    "question": "How do we balance SPARTA's recommended mitigations for supply chain threats against the F-36's avionics testing schedule constraints, particularly for HIL simulations requiring third-party hardware?",
+    "difficulty": "ambiguous",
+    "f36_category": "10_test_evaluation",
+    "domain_context": "Supply chain risks conflict with test program timelines; the question lacks clarity on whether technical or procedural countermeasures are prioritized.",
+    "persona": "noah"
+  }
+]

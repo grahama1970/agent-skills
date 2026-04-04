@@ -1,0 +1,162 @@
+[
+  {
+    "question": "What is SPARTA and what does it stand for?",
+    "difficulty": "easy",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SPARTA framework definition"
+  },
+  {
+    "question": "What can SPARTA be used for in threat intelligence?",
+    "difficulty": "easy",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SPARTA use cases \u2014 threat intelligence, threat reporting, attack chain building, education"
+  },
+  {
+    "question": "How is SPARTA different from the regular cyber kill chain?",
+    "difficulty": "easy",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SPARTA vs traditional kill chain \u2014 space-specific phases and techniques"
+  },
+  {
+    "question": "What is jamming in the context of space systems?",
+    "difficulty": "easy",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "RF interference and GPS signal jamming definitions"
+  },
+  {
+    "question": "What NIST control families are most relevant for space systems?",
+    "difficulty": "easy",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "AC, AU, CM, IA, SC control families mapped by SPARTA"
+  },
+  {
+    "question": "How does a third-party spacecraft attack complicate attribution?",
+    "difficulty": "medium",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SPARTA technique RD-0002.03 \u2014 compromising 3rd-party spacecraft for proximity operations"
+  },
+  {
+    "question": "Walk me through how an attacker would use the initial access phase against a ground station",
+    "difficulty": "medium",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SPARTA kill chain initial access methods targeting ground infrastructure"
+  },
+  {
+    "question": "Why are countermeasures in SPARTA important and how do they extend beyond standard NIST controls?",
+    "difficulty": "medium",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SPARTA countermeasures include radiation hardening, crypto-agility, autonomous operations beyond NIST"
+  },
+  {
+    "question": "How does SPARTA handle the resource development tactic for space-specific delivery mechanisms?",
+    "difficulty": "medium",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "RD-0004.01 \u2014 identifying delivery mechanisms requiring orbital mechanics and satellite protocol knowledge"
+  },
+  {
+    "question": "What are some real examples of GPS spoofing that have been documented?",
+    "difficulty": "medium",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Historical GPS spoofing incidents from brandon_bailey corpus"
+  },
+  {
+    "question": "Show me a breakdown of how SPARTA maps threats across the full kill chain from reconnaissance through execution",
+    "difficulty": "hard",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SPARTA kill chain phases \u2014 Reconnaissance, Resource Development, Initial Access, Execution, Persistence and their technique mappings"
+  },
+  {
+    "question": "Compare how SPARTA and MITRE ATT-CK for ICS handle threat modeling for satellite ground infrastructure",
+    "difficulty": "hard",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "MITRE ATT&CK for ICS shares characteristics with ground infrastructure; SPARTA focuses on space-specific cyber attacks"
+  },
+  {
+    "question": "Show me the coverage distribution of SPARTA countermeasures mapped to NIST control families and where the gaps are",
+    "difficulty": "hard",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Gap analysis \u2014 comparing current controls against SPARTA techniques, risk scoring likelihood x impact"
+  },
+  {
+    "question": "How many threat techniques in SPARTA deal with RF interference versus firmware manipulation, and what countermeasures overlap between them?",
+    "difficulty": "hard",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "SPARTA technique categories \u2014 RF interference, ground station compromise, telemetry spoofing, firmware manipulation with cross-referenced countermeasures"
+  },
+  {
+    "question": "Chart out a complete attack chain for a nation-state actor targeting a spacecraft using third-party proximity operations and show which countermeasures break the chain at each phase",
+    "difficulty": "hard",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "analytical",
+    "f36_category": "07_cybersecurity",
+    "domain_context": "Full attack chain using RD-0002.03 third-party spacecraft with countermeasure mapping per kill chain phase"
+  },
+  {
+    "question": "What SPARTA persistence techniques could an adversary use after compromising the F-36 mission planning workstation?",
+    "difficulty": "medium",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "09_flight_software",
+    "domain_context": "SPARTA persistence on mission planning infrastructure"
+  },
+  {
+    "question": "Show me the distribution of SPARTA attack techniques by kill chain phase for space hardening threats",
+    "difficulty": "easy",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "analytical",
+    "f36_category": "05_space_hardening",
+    "domain_context": "SPARTA technique distribution analytics"
+  },
+  {
+    "question": "How do lateral movement techniques in the F-36 avionics bus differ from traditional IT lateral movement?",
+    "difficulty": "hard",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "01_avionics",
+    "domain_context": "SPARTA lateral movement in embedded avionics vs IT"
+  },
+  {
+    "question": "What countermeasures protect the F-36 weapons integration system from command and control implants?",
+    "difficulty": "medium",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "knowledge",
+    "f36_category": "03_weapons",
+    "domain_context": "SPARTA countermeasures for C2 implants in weapons systems"
+  },
+  {
+    "question": "Compare threat actor capabilities targeting satellite ground segments versus airborne platforms",
+    "difficulty": "medium",
+    "expected_scope": "brandon_bailey",
+    "expected_type": "analytical",
+    "f36_category": "05_space_hardening",
+    "domain_context": "Threat actor comparison across space and air domains"
+  }
+]

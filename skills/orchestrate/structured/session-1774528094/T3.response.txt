@@ -1,0 +1,8 @@
+Completed.
+- Upserted enriched descriptions for all 14 NASA (`NASABPG`) controls in `sparta_controls` using `/api/memory/upsert`.
+- Every updated description starts with the required prefix: `[INFERRED from Brave Search]`.
+- Source used from Brave/web results: https://sparta.aerospace.org/countermeasures/nasabpg
+Validation results:
+- Your exact DoD command output: `5/5` then `PASS`
+- Full NASA coverage check: `14/14 (100%)` then `PASS`
+- Non-empty description test: `missing: none` then `PASS`

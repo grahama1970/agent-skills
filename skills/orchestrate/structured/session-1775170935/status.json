@@ -1,0 +1,176 @@
+{
+  "generated_at": 1775170949.1124778,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775170935",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create usePostureData hook \u2014 aggregates control family stats",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775170935/1.response.txt",
+      "error": "/code-runner exit 1: 2026-04-02 19:02:27.496 | ERROR    | __main__:run:405 - === PRE-FLIGHT FAILED: DoD assertion will never match ===\n2026-04-02 19:02:27.496 | ERROR    | __main__:run:406 -   'cd packages/ux-lab && npx tsc --noEmit && grep -c 'export function usePostureData' src/hooks/usePostureData.ts' outputs nothing on success (exit 0 only). Assertion 'tsc clean, hook exported with usePostureData' will never match empty stdout. Use 'exit_code == 0' instead.\n",
+      "started_at": 1775170935.4338136,
+      "finished_at": 1775170949.1121268,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Generate Posture Dashboard design via /mockup-lab",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "gemini",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Implement PostureDashboard.tsx \u2014 hero row (score + framework rings)",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4",
+      "title": "Implement PostureDashboard \u2014 main row (family bars + gap analysis)",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5",
+      "title": "Implement PostureDashboard \u2014 detail row (drift + risks)",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "6",
+      "title": "QuerySpec instrumentation + verify-data-qid gate",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4",
+        "5"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "7",
+      "title": "Add family flyout \u2014 drill into controls for selected family",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "6"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "8",
+      "title": "Visual QA via /test-interactions",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "7"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "9",
+      "title": "VLM review \u2014 compare implementation to approved design",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "gemini",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "8"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

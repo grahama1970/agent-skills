@@ -1,0 +1,367 @@
+{
+  "generated_at": 1775152899.0757942,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775152859",
+  "tasks": [
+    {
+      "id": "0.1",
+      "title": "Generate embeddings for app_actions collection (dense=0.00 \u2192 384d)",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775152859/0.1.stdout.txt",
+      "error": "",
+      "started_at": 1775152859.4861186,
+      "finished_at": 1775152859.8047423,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "0.2",
+      "title": "Generate datalake-explorer training data from app_actions (129 actions \u2192 NL variations)",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775152859/0.2.response.txt",
+      "error": "/code-runner exit 1: 2026-04-02 14:01:10.914 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Generate datalake-explorer training data from app_actions (129 actions \u2192 NL variations) ===\n2026-04-02 14:01:10.914 | INFO     | __main__:run:494 -   Backend: claude\n2026-04-02 14:01:10.915 | INFO     | __main__:run:495 -   DoD: cd /home/graham/workspace/experiments/pi-mono && \\\npython3 .pi/skills/create-intent-map/data/generat\n2026-04-02 14:01:10.915 | INFO     | __main__:run:496 -   Max rounds: 5\n2026-04-02 14:01:14.06",
+      "started_at": 1775152859.8055003,
+      "finished_at": 1775152899.0754683,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "0.3",
+      "title": "Verify app_actions populated on Datalake Explorer load (129 actions registered)",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "1.1",
+      "title": "Build Tier 0 deterministic action resolver (BM25 + FlashText + fuzzy match)",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "0.1",
+        "0.3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "1.2",
+      "title": "Add /api/queryspec/resolve endpoint to UX Lab server",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "1.3",
+      "title": "Build Tier 0 eval harness \u2014 measure BM25 resolver accuracy on 50 hand-labeled examples",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2.1",
+      "title": "Run training data generator to produce ~1500 datalake action training examples",
+      "lane": "2",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "0.2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2.2",
+      "title": "Validate system prompt via /prompt-lab before any model training",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "2.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2.3",
+      "title": "Zero-shot model comparison: qwen2.5-7b vs qwen2.5-3b vs deepseek-r1-7b on UI_COMMAND",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "2.1",
+        "2.2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3.1",
+      "title": "Split training data into train/eval and convert to SFT chat format",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "2.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3.2",
+      "title": "SFT warmup training on datalake UI_COMMAND data",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3.1",
+        "2.2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3.3",
+      "title": "Evaluate fine-tuned model on holdout set \u2014 target 80% action accuracy",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3.2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3.4",
+      "title": "Register datalake-intent model in model_registry.json",
+      "lane": "3",
+      "runner": "scillm",
+      "backend": "claude",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3.3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4.1",
+      "title": "Wire ChatFAB sendMessage to query /api/queryspec/resolve BEFORE /memory intent",
+      "lane": "4",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1.2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4.2",
+      "title": "Add training pair storage \u2014 every successful execution \u2192 /memory learn",
+      "lane": "4",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5.1",
+      "title": "E2E test: surf CDP \u2192 type NL command \u2192 verify DOM click \u2192 screenshot evidence",
+      "lane": "5",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5.2",
+      "title": "Build /test-interactions manifest for QuerySpec E2E (20 action tests)",
+      "lane": "5",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5.3",
+      "title": "Register resolver as cascade decision point in /assistant model_registry",
+      "lane": "5",
+      "runner": "scillm",
+      "backend": "claude",
+      "mode": "one_shot",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3.4",
+        "1.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5.4",
+      "title": "Run Tier 0 eval harness and report baseline accuracy",
+      "lane": "5",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1.3",
+        "0.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

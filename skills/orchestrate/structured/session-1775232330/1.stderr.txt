@@ -1,0 +1,21 @@
+2026-04-03 12:05:31.025 | INFO     | __main__:run:507 - === CODE-RUNNER v2: Express endpoints: all /api/posture/* routes (frameworks, families, gaps, risks, alerts, overview) ===
+2026-04-03 12:05:31.025 | INFO     | __main__:run:508 -   Backend: codex
+2026-04-03 12:05:31.025 | INFO     | __main__:run:509 -   DoD: grep -q '/api/posture/frameworks' packages/ux-lab/server/index.ts && grep -q '/api/posture/overview'
+2026-04-03 12:05:31.025 | INFO     | __main__:run:510 -   Max rounds: 5
+2026-04-03 12:05:31.868 | INFO     | __main__:git_stash_save:107 - Stashed pre-existing changes
+{"event": "round_start", "ts": 1775232332.688868, "task_id": "1", "round": 1, "max_rounds": 5, "strategy": "direct_fix", "backend": "codex", "reasoning": "medium", "temperature": 0.2}
+2026-04-03 12:05:32.688 | INFO     | __main__:run:605 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-03 12:07:46.181 | WARNING  | apply:apply_llm_response:431 -   v2: Diff failed for packages/ux-lab/server/index.ts, trying complete file
+2026-04-03 12:07:46.182 | INFO     | apply:apply_file_blocks:264 -   Wrote: packages/ux-lab/server/index.ts (15026 bytes)
+2026-04-03 12:07:46.183 | INFO     | __main__:run:669 -   Applied 1 files: ['packages/ux-lab/server/index.ts']
+{"event": "round_score", "ts": 1775232466.3493538, "task_id": "1", "round": 1, "score": 1.0, "dod_passed": true, "errors": 0, "lint": 0, "files_written": 1, "zero_write_reason": ""}
+2026-04-03 12:07:46.349 | INFO     | __main__:run:700 -   Score: 1.000 (DoD:True errors:0 lint:0 bp:0)
+2026-04-03 12:07:46.434 | INFO     | __main__:run:737 -   KEEP (score 1.000 > previous 0.000)
+{"event": "round_decision", "ts": 1775232466.4351344, "task_id": "1", "round": 1, "status": "keep", "score": 1.0, "best_score": 1.0}
+{"event": "dod_passed", "ts": 1775232466.9162846, "task_id": "1", "round": 1, "score": 1.0, "total_rounds": 1}
+2026-04-03 12:07:46.916 | INFO     | __main__:run:800 - === DoD PASSED on round 1 (score=1.000) ===
+{"event": "run_complete", "ts": 1775232466.9169958, "task_id": "1", "status": "pass", "score": 1.0, "rounds": 1, "dod_passed": true, "backend": "codex"}
+2026-04-03 12:07:46.917 | INFO     | __main__:run:822 - === RESULT: PASS | score=1.000 | 1 rounds ===
+2026-04-03 12:07:46.985 | INFO     | apply:generate_hunk_review:650 - Review with: hunk patch /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775232330/1.hunk.md
+2026-04-03 12:07:46.985 | INFO     | apply:generate_hunk_review:652 -   Or: cd /home/graham/workspace/experiments/pi-mono && hunk diff
+2026-04-03 12:07:47.397 | INFO     | __main__:git_stash_pop:117 - Restored stashed changes

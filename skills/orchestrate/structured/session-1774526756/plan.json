@@ -1,0 +1,477 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "SPARTA Dataset Completeness \u2014 QRA generation, taxonomy scoring, NRS computation, deduplication",
+    "goal": "Fill critical data gaps: generate QRAs for 5 missing frameworks, recompute relationship scores via taxonomy intersection, normalize framework duplicates, stand up /taxonomy endpoints"
+  },
+  "capability_overlap": {
+    "memory_recall": "- \"ISO controls missing descriptions\" \u2192 DONE (enriched 2026-03-25 via Brave Search + /upsert)\n- \"SPARTA Explorer session\" \u2192 DONE (UI complete, data gaps identified in project-state)\n- \"Sensai Cascade\" \u2192 /assistant handles 3-tier cascade (T0 heuristic \u2192 T1.5 GPT \u2192 T2 Brandon)\n- \"Edge verification\" \u2192 /edge-verifier exists for relationship stance verification\n- \"QRA generation\" \u2192 /monitor-sparta Stage 12 generates QRAs; /doc2qra converts docs to QRAs\n",
+    "skills_manifest_scan": "- /monitor-sparta: EXISTS \u2014 runs 3-tier QRA validation cascade + Stage 12 generation\n- /doc2qra: EXISTS \u2014 converts any document to QRAs via LLM\n- /edge-verifier: EXISTS \u2014 verifies relationships using taxonomy + LLM stance\n- /taxonomy: EXISTS \u2014 extracts Mind/Heart tags, bridge attributes\n- /extract-entities: EXISTS \u2014 entity extraction with delimiter support (updated 2026-03-25)\n- /ingest-sparta: EXISTS \u2014 thin wrapper dispatching to sparta pipeline\n- /data-audit: EXISTS \u2014 DuckDB coverage reporting (Control \u2192 URL \u2192 Knowledge \u2192 QRA)\n- /assistant: EXISTS \u2014 4-tier cascade (heuristic \u2192 classifier \u2192 GPT \u2192 scillm)\n",
+    "decision_matrix": "| Functionality | Decision | Justification |\n|---|---|---|\n| QRA generation for SPARTA/NIST/ISO | CALL /doc2qra | Skill exists, needs descriptions as input |\n| QRA generation for ESA/NASA | CALL /doc2qra | Same, but controls need description enrichment first |\n| Relationship rescoring | CALL /taxonomy + CALL /edge-verifier | Both exist, compose them |\n| NRS aggregation | CREATE | Simple aggregation script, no skill exists for per-control scoring |\n| Framework deduplication | CREATE | One-off data fix via /upsert, no skill needed |\n| /taxonomy endpoints | EXTEND memory daemon | Endpoints missing, need to be registered |\n| Status badges | EXTEND UI | Change from NRS to taxonomy-intersection score |\n"
+  },
+  "execution": {
+    "max_concurrency": 3,
+    "backend": "codex"
+  },
+  "lanes": [
+    {
+      "id": "p0",
+      "label": "P0: Critical Data Generation"
+    },
+    {
+      "id": "p1",
+      "label": "P1: Data Quality"
+    },
+    {
+      "id": "p2",
+      "label": "P2: UI Fixes"
+    },
+    {
+      "id": "p3",
+      "label": "P3: Testing"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Stand up /taxonomy daemon endpoints",
+      "lane": "p0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "The memory daemon at /run/user/1000/embry/memory.sock is missing /taxonomy/extract, /taxonomy/classify, /taxonomy/tags endpoints (all return 404)",
+        "These are defined in the /taxonomy skill but not registered on the daemon",
+        "Check /home/graham/workspace/experiments/memory/ for the daemon's route registration",
+        "Register the taxonomy endpoints so they proxy to the /taxonomy skill's Python logic",
+        "The /taxonomy skill is at /home/graham/workspace/experiments/pi-mono/.pi/skills/taxonomy/",
+        "Endpoints needed: POST /taxonomy/extract (text \u2192 mind/heart tags), POST /taxonomy/classify (text \u2192 bridge attributes)"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST --unix-socket /run/user/1000/embry/memory.sock http://localhost/taxonomy/extract -H 'Content-Type: application/json' -d '{\"text\":\"protect against supply chain attacks\"}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'tags' in d or 'entities' in d; print('PASS')\"",
+        "assertion": "/taxonomy/extract returns tags, not 404"
+      },
+      "tests": [
+        "curl -s -o /dev/null -w '%{http_code}' --unix-socket /run/user/1000/embry/memory.sock -X POST http://localhost/taxonomy/extract -H 'Content-Type: application/json' -d '{\"text\":\"test\"}' returns 200"
+      ]
+    },
+    {
+      "id": "T2",
+      "title": "Generate QRAs for SPARTA countermeasures (90 controls)",
+      "lane": "p0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "SPARTA countermeasures (CM0001-CM0092) have descriptions but almost no QRAs (~2K out of 217K)",
+        "Use /doc2qra to generate QRAs from each countermeasure's description",
+        "For each control: POST /api/memory/list to get description, then /doc2qra to generate Q/R/A triples",
+        "Store via POST /api/memory/learn with collection=sparta_qra, tags=['sparta-countermeasure-qra']",
+        "Target: 3-5 QRAs per countermeasure = ~300-450 new QRAs",
+        "Use /scillm text model for generation, NOT paid APIs"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_qra\",\"limit\":1,\"filters\":{\"control_id\":\"CM0001\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['total']>=3; print('PASS')\"",
+        "assertion": "CM0001 has at least 3 QRAs"
+      },
+      "tests": [
+        "QRA count for SPARTA countermeasures > 200"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Generate QRAs for SPARTA techniques (216 controls)",
+      "lane": "p0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "SPARTA techniques (SV-IT-2, SV-SP-1, etc.) have descriptions but very few QRAs",
+        "Same approach as T2: /doc2qra from descriptions",
+        "Target: 3-5 QRAs per technique = ~650-1080 new QRAs"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_qra\",\"limit\":1,\"filters\":{\"control_id\":\"SV-IT-2\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['total']>=3; print('PASS')\"",
+        "assertion": "SV-IT-2 has at least 3 QRAs"
+      },
+      "tests": [
+        "QRA count for SPARTA techniques > 500"
+      ]
+    },
+    {
+      "id": "T4",
+      "title": "Generate QRAs for ISO 27001 controls (15 controls)",
+      "lane": "p0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "ISO controls now have [INFERRED from Brave Search] descriptions (enriched 2026-03-25)",
+        "Generate QRAs from these inferred descriptions",
+        "Target: 3-5 QRAs per ISO control = ~45-75 new QRAs",
+        "Tag with ['iso-qra', 'inferred-source'] since descriptions are inferred"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_qra\",\"limit\":1,\"filters\":{\"control_id\":\"9.1\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['total']>=3; print('PASS')\"",
+        "assertion": "ISO 9.1 has at least 3 QRAs"
+      },
+      "tests": [
+        "QRA count for ISO controls > 30"
+      ]
+    },
+    {
+      "id": "T5",
+      "title": "Generate QRAs for ESA + NASA controls (151 controls)",
+      "lane": "p0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "ESA (137) and NASA (14) controls have zero QRAs",
+        "Check if descriptions exist \u2014 if not, infer via /brave-search like ISO",
+        "Then /doc2qra to generate QRAs",
+        "Target: ~400-750 new QRAs"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_qra\",\"limit\":1,\"filters\":{\"control_id\":\"ESA-01\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['total']>=1; print('PASS')\"",
+        "assertion": "ESA-01 has at least 1 QRA"
+      },
+      "tests": [
+        "QRA count for ESA + NASA > 100"
+      ]
+    },
+    {
+      "id": "T6",
+      "title": "Recompute relationship scores via /taxonomy intersection",
+      "lane": "p0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T1"
+      ],
+      "implementation": [
+        "Current 131K relationships have combined_score from string matching / curation",
+        "Recompute using taxonomy (Mind tag) intersection between source and target controls:",
+        "  1. For each relationship, get Mind tags for source_control_id and target_control_id",
+        "  2. Compute Jaccard similarity: |intersection| / |union| of Mind tag sets",
+        "  3. Update combined_score via /upsert on sparta_relationships",
+        "  4. Optionally run /edge-verifier on low-scoring relationships for LLM stance verification",
+        "Process in batches of 100. Use /list to get Mind tags (already 100% populated).",
+        "DO NOT use /taxonomy endpoints for this \u2014 Mind tags are already ON the control documents",
+        "This is pure set intersection: fetch two controls \u2192 compare their mind[] arrays"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_relationships\",\"limit\":5,\"return_fields\":[\"combined_score\",\"source_control_id\",\"target_control_id\"]}' | python3 -c \"import json,sys; d=json.load(sys.stdin); scores=[doc['combined_score'] for doc in d['documents'] if doc.get('combined_score')]; print(f'Scores: {scores}'); assert any(s > 0 for s in scores); print('PASS')\"",
+        "assertion": "Relationship scores are recomputed from taxonomy intersection"
+      },
+      "tests": [
+        "Sampled relationship scores reflect Mind tag Jaccard similarity"
+      ]
+    },
+    {
+      "id": "T7",
+      "title": "Compute per-control quality score (replaces NRS)",
+      "lane": "p0",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T2",
+        "T3",
+        "T4",
+        "T6"
+      ],
+      "implementation": [
+        "nrs_score field on controls is always null \u2014 never computed",
+        "Compute a quality score per control based on available data:",
+        "  score = weighted average of:",
+        "    - has_description (0 or 1, weight 0.2)",
+        "    - has_mind_tags (0 or 1, weight 0.2)",
+        "    - qra_count / 5 capped at 1.0 (weight 0.3)",
+        "    - avg_relationship_score (weight 0.3)",
+        "  Result: 0.0-1.0 stored as nrs_score on the control document via /upsert",
+        "Process all 11,620 controls in batches of 100",
+        "This makes status badges in the UI meaningful (High Risk / Medium / Compliant)"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_controls\",\"limit\":10,\"return_fields\":[\"control_id\",\"nrs_score\"]}' | python3 -c \"import json,sys; d=json.load(sys.stdin); has_score=sum(1 for doc in d['documents'] if doc.get('nrs_score') is not None); print(f'{has_score}/10 have scores'); assert has_score >= 8; print('PASS')\"",
+        "assertion": "80%+ of sampled controls have nrs_score computed"
+      },
+      "tests": [
+        "Controls have nrs_score values between 0.0 and 1.0"
+      ]
+    },
+    {
+      "id": "T8",
+      "title": "Normalize duplicate framework entries",
+      "lane": "p1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Case-variant duplicates exist in sparta_controls:",
+        "  NIST (1,904) + nist (1) \u2192 normalize nist to NIST",
+        "  CWE (964) + cwe (5) \u2192 normalize cwe to CWE",
+        "  D3FEND (396) + d3fend (28) \u2192 normalize d3fend to D3FEND",
+        "  NVD (544) + nvd (4,286) \u2192 normalize to NVD (pick the larger group's casing)",
+        "Use /upsert to update source_framework on affected documents",
+        "For NVD: 4,286 docs have 'nvd' \u2192 update to 'NVD'",
+        "For the others: small counts, update the minority casing"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_controls\",\"limit\":1,\"filters\":{\"source_framework\":\"nist\"}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); assert d['total']==0; print('PASS: no lowercase nist')\"",
+        "assertion": "No lowercase framework variants remain"
+      },
+      "tests": [
+        "All framework values are uppercase/canonical"
+      ]
+    },
+    {
+      "id": "T9",
+      "title": "Run worksheets.yaml audit (04_TASKS)",
+      "lane": "p1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T8"
+      ],
+      "implementation": [
+        "Execute 04_WORKSHEETS_YAML_AUDIT_TASKS.yaml",
+        "Compare declared row_counts vs actual, find undeclared columns, check field coverage",
+        "Update worksheets.yaml with findings"
+      ],
+      "definition_of_done": {
+        "command": "echo 'Audit report generated'",
+        "assertion": "worksheets.yaml row_counts match reality within 10%"
+      },
+      "tests": [
+        "Audit report saved"
+      ]
+    },
+    {
+      "id": "T10",
+      "title": "Enrich ESA + NASA descriptions (if missing)",
+      "lane": "p1",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "Check if ESA (137) and NASA (14) controls have prose descriptions",
+        "If descriptions are missing or placeholder, enrich via /brave-search like ISO",
+        "Tag enriched descriptions with [INFERRED from Brave Search]",
+        "Update via /upsert",
+        "This is a prerequisite for T5 (QRA generation needs descriptions)"
+      ],
+      "definition_of_done": {
+        "command": "curl -s -X POST http://localhost:3001/api/memory/list -H 'Content-Type: application/json' -d '{\"collection\":\"sparta_controls\",\"limit\":5,\"filters\":{\"source_framework\":\"ESA\"},\"return_fields\":[\"control_id\",\"description\"]}' | python3 -c \"import json,sys; d=json.load(sys.stdin); has_desc=sum(1 for doc in d['documents'] if doc.get('description') and len(doc['description'])>20); print(f'{has_desc}/5 have descriptions'); assert has_desc>=4; print('PASS')\"",
+        "assertion": "80%+ ESA controls have prose descriptions"
+      },
+      "tests": [
+        "ESA and NASA controls have descriptions"
+      ]
+    },
+    {
+      "id": "T11",
+      "title": "Update status badges to use quality score",
+      "lane": "p2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T7"
+      ],
+      "implementation": [
+        "Once nrs_score is populated (T7), status badges in ControlsView and SourcesView will work",
+        "Verify the nrsToStatus() mapping in TableStyles.ts is correct:",
+        "  >= 0.80 \u2192 Compliant (green), >= 0.60 \u2192 Medium (amber), < 0.60 \u2192 High Risk (red)",
+        "Take screenshot showing badges with real colors",
+        "If badges still show Unknown, debug the data flow"
+      ],
+      "definition_of_done": {
+        "command": "npx tsc --noEmit",
+        "assertion": "Status badges show colored states based on quality scores"
+      },
+      "tests": [
+        "Screenshot shows green/amber/red badges, not all Unknown"
+      ]
+    },
+    {
+      "id": "T12",
+      "title": "Delete legacy SOURCES array from SourcesView",
+      "lane": "p2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "implementation": [
+        "SourcesView.tsx has a commented-out SOURCES array marked '// Legacy: replaced by useWorksheets()'",
+        "After confirming worksheets.yaml-driven Sources works, delete the commented block",
+        "Also clean up any dead imports or unused TYPE_COLORS entries"
+      ],
+      "definition_of_done": {
+        "command": "npx tsc --noEmit && grep -c 'Legacy: replaced' packages/ux-lab/src/components/sparta/explorer/SourcesView.tsx",
+        "assertion": "Legacy SOURCES array removed, zero type errors"
+      },
+      "tests": [
+        "No commented-out SOURCES array in file"
+      ]
+    },
+    {
+      "id": "T13",
+      "title": "Live test chat cascade pipeline",
+      "lane": "p2",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T1",
+        "T7"
+      ],
+      "implementation": [
+        "Open the query flyout drawer in SPARTA Explorer",
+        "Send test queries and verify the full cascade executes:",
+        "  1. 'What countermeasures protect against GPS spoofing?' \u2192 should hit recall or intent",
+        "  2. 'CWE-79 related controls' \u2192 should extract entities and return results",
+        "  3. An AQL query in AQL mode \u2192 should bypass cascade",
+        "Verify cascade layer indicator shows (recall/intent/llm)",
+        "Verify thumbs up/down persists to /memory/learn",
+        "Verify evidence gates run at selected depth (Fast/Med/Full)"
+      ],
+      "definition_of_done": {
+        "command": "echo 'Manual verification required'",
+        "assertion": "Chat cascade returns results with layer indicator, feedback persists"
+      },
+      "tests": [
+        "Query returns non-empty results with cascade layer badge"
+      ]
+    },
+    {
+      "id": "T14",
+      "title": "Run /data-audit for full pipeline coverage report",
+      "lane": "p3",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T8"
+      ],
+      "implementation": [
+        "Run /data-audit to get coverage percentages at each pipeline stage:",
+        "  Control \u2192 URL \u2192 Knowledge \u2192 QRA",
+        "Report should show improvement from baseline (QRAs were 48% ATT&CK, 28% CWE, 23% D3FEND)",
+        "After T2-T5, SPARTA/ISO/ESA/NASA should have non-zero QRA coverage"
+      ],
+      "definition_of_done": {
+        "command": "echo 'Data audit report generated'",
+        "assertion": "All frameworks show >0% QRA coverage"
+      },
+      "tests": [
+        "/data-audit shows no framework at 0% QRA coverage"
+      ]
+    },
+    {
+      "id": "T15",
+      "title": "Full headless verification + screenshots",
+      "lane": "p3",
+      "runner": "subagent-service",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "T11",
+        "T12",
+        "T13",
+        "T14"
+      ],
+      "implementation": [
+        "Final verification with headless Chrome:",
+        "  1. Sources tab: worksheets from YAML, correct counts, ISO inferred badge, flyout with ControlIdPills",
+        "  2. Controls tab: status badges show real colors (not all Unknown), magnetic hover works",
+        "  3. QRAs tab: ISO 9.1 has QRAs (from T4), filter badge works from cross-tab nav",
+        "  4. Relationships tab: scores reflect taxonomy intersection",
+        "  5. Chat flyout: query returns results with cascade layer indicator",
+        "Save screenshots to packages/ux-lab/captures/sparta-explorer/",
+        "Zero console errors"
+      ],
+      "definition_of_done": {
+        "command": "npx tsc --noEmit && echo 'PASS'",
+        "assertion": "All tabs render with real data, badges colored, zero errors"
+      },
+      "tests": [
+        "Screenshots saved, zero console errors"
+      ]
+    }
+  ],
+  "test_manifest": [
+    {
+      "tab": "Sources",
+      "collection": "sparta_controls",
+      "min_rows": 10,
+      "interactions": [
+        "click_worksheet",
+        "click_iso",
+        "view_detail",
+        "check_inferred_badge"
+      ],
+      "visual": "Sidebar from YAML, ISO inferred badge, flyout with ControlIdPills, correct per-type counts"
+    },
+    {
+      "tab": "Controls",
+      "collection": "sparta_controls",
+      "min_rows": 100,
+      "interactions": [
+        "click_row",
+        "hover_row",
+        "check_status_badge"
+      ],
+      "visual": "Magnetic hover, status badges show green/amber/red (not all Unknown), flyout with UtilityBar"
+    },
+    {
+      "tab": "QRAs",
+      "collection": "sparta_qra",
+      "min_rows": 5,
+      "interactions": [
+        "navigate_from_sources_iso",
+        "check_filter_badge",
+        "accept_reject"
+      ],
+      "visual": "ISO 9.1 QRAs exist, filter badge shows, card-stack review works"
+    },
+    {
+      "tab": "Relationships",
+      "collection": "sparta_relationships",
+      "min_rows": 10,
+      "interactions": [
+        "click_row",
+        "check_score"
+      ],
+      "visual": "Scores reflect taxonomy intersection, magnetic hover, flyout detail"
+    },
+    {
+      "tab": "Chat",
+      "interactions": [
+        "open_flyout",
+        "send_query",
+        "check_cascade_layer",
+        "thumbs_up"
+      ],
+      "visual": "Query returns results, cascade layer indicator (recall/intent/llm), feedback persists"
+    }
+  ]
+}

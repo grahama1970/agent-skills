@@ -1,0 +1,42 @@
+```diff
+--- a/.pi/skills/monitor-codebase/SKILL.md
++++ b/.pi/skills/monitor-codebase/SKILL.md
+@@ -14,14 +14,15 @@ metadata:
+ provides:
+   - codebase-monitoring
+ composes:
+   - project-state
+   - cleanup
+   - ingest-code
++  - security-scan
+   - skills-ci
+   - treesitter
+   - embedding
+   - memory
+   - dogpile
+   - orchestrate
+   - code-runner
+   - scheduler
+@@ -47,18 +48,19 @@ Projects are tracked by git HEAD hash. On `scan --all`:
+ - **Changed projects** → full 11-step scan
+ - **Unchanged projects** → light scan (project-state only)
+ - **`--force`** → full scan regardless of changes
+ 
+-## Full Scan Pipeline (11 steps, for changed projects)
++## Full Scan Pipeline (12 steps, for changed projects)
+ 
+ | Step | Skill/Module | What It Does |
+ |------|-------------|-------------|
+ | 1 | `/project-state` | Baseline health snapshot (JSON) |
+ | 2 | `/cleanup --dry-run` | Dead files, stale docs, junk artifacts |
+ | 3 | `run_best_practices_checks()` | Grep-based: missing run.sh/sanity.sh for skills, React/KDE/StreamDeck patterns |
+ | 4 | `quality_checks.py` | AST-based: banned imports, inline prompts, regex classifiers, handwritten tests, mock-only tests, hardcoded skill paths, bespoke AQL |
++| 4.5 | `/security-scan` | Secrets detection (gitleaks), dependency vulnerabilities (pip-audit/trivy), SAST (Semgrep) |
+ | 5 | `autofix_docstrings.py` | Auto-generate missing docstrings via /treesitter + /scillm (**--fix only**, scan is read-only) |
+ | 6 | `/ingest-code --treesitter` | CWE scan + treesitter symbol extraction + semantic embedding via `/memory learn` (embedding-at-insert contract) |
+ | 7 | `/skills-ci` | Full skills-ci scan (only if project has skills/ or .pi/skills/ dir) |
+ | 8 | `/dogpile` | Research improvements for top violations (only if >5 issues found) |
+ | 9 | Aggregate + `/memory learn` | JSON report + persist findings for trend tracking |
+ | 9.5 | Trend comparison | Compare with prior scans and classify outcome as `REGRESSION`, `IMPROVED`, or `STABLE` |
+ | 10 | `/orchestrate` + `/code-runner` | **--fix only**: generate a fix task file and run the remediation workflow |
+```

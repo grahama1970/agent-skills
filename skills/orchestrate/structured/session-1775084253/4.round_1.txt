@@ -1,0 +1,197 @@
+### FILE: .pi/skills/battle/patch_writer.py
+```python
+"""Battle Skill - Patch writer wrapper around /code-runner.
+
+Generates a TaskSpec JSON, executes code-runner, and parses result.json
+into a compact PatchResult for blue-team workflows.
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import tempfile
+import uuid
+from pathlib import Path
+from typing import Any
+
+import httpx  # Required dependency for consistency with battle stack.
+from loguru import logger
+from pydantic import BaseModel, Field
+
+from common.file_bundler import bundle_for_review
+
+
+class PatchResult(BaseModel):
+    success: bool = False
+    rounds: int = 0
+    patch_diff: str = ""
+    score: float = 0.0
+    functionality_preserved: bool = False
+
+
+def _safe_rel(path: str, cwd: Path) -> str:
+    p = Path(path)
+    if not p.is_absolute():
+        p = (cwd / p).resolve()
+    try:
+        return str(p.relative_to(cwd))
+    except ValueError:
+        return str(p)
+
+
+def _build_prompt(
+    target_path: str,
+    finding: str,
+    exploit_proof: str,
+    target_bundle: dict[str, str],
+    memory_recall: str | None,
+) -> str:
+    bundled = "\n\n".join(
+        f"--- FILE: {p} ---\n{content}" for p, content in target_bundle.items()
+    )
+    memory_block = memory_recall.strip() if memory_recall else "None"
+    return f"""You are patching a vulnerable file with minimal, safe changes.
+
+Target file: {target_path}
+Finding:
+{finding}
+
+Exploit proof / reproduction details:
+{exploit_proof}
+
+Memory recall of prior successful patches/strategies:
+{memory_block}
+
+Rules:
+- Preserve existing functionality.
+- Patch only what is necessary to neutralize exploit behavior.
+- Keep diff small and readable.
+- Prefer validation and input hardening over broad refactors.
+
+Bundled target context:
+{bundled}
+"""
+
+
+def write_patch(
+    target_path: str,
+    finding: str,
+    exploit_proof: str,
+    test_command: str,
+    max_rounds: int = 5,
+) -> PatchResult:
+    cwd = Path.cwd()
+    target_rel = _safe_rel(target_path, cwd)
+
+    # Build context bundle for target file.
+    target_bundle = bundle_for_review([target_rel], str(cwd))
+
+    # Lightweight "memory recall" placeholder from local prior patch logs (if any).
+    memory_recall = ""
+    prior = sorted(cwd.glob("**/patch_memory*.md"))[:3]
+    for p in prior:
+        try:
+            memory_recall += f"\n# {p.name}\n" + p.read_text(encoding="utf-8")[:1200]
+        except Exception:
+            continue
+    if not memory_recall:
+        memory_recall = "No prior patch memory found."
+
+    prompt = _build_prompt(
+        target_path=target_rel,
+        finding=finding,
+        exploit_proof=exploit_proof,
+        target_bundle=target_bundle,
+        memory_recall=memory_recall,
+    )
+
+    # DoD: tests must pass AND exploit must fail.
+    dod_cmd = (
+        f"{test_command} && "
+        "(! docker exec arena sh -lc '"
+        + exploit_proof.replace("'", "'\"'\"'")
+        + "')"
+    )
+
+    spec: dict[str, Any] = {
+        "task_id": f"battle-patch-{uuid.uuid4().hex[:10]}",
+        "cwd": str(cwd),
+        "backend": "codex",
+        "prompt": prompt,
+        "allowlist": [target_rel],
+        "read_context": [target_rel, "tests/", "test/", "spec/", "exploit/"],
+        "definition_of_done": {
+            "commands": [dod_cmd],
+            "assertions": ["exit_code == 0"],
+        },
+    }
+
+    code_runner_dir = cwd / ".pi" / "skills" / "code-runner"
+    run_sh = code_runner_dir / "run.sh"
+
+    if not run_sh.exists():
+        logger.error("code-runner not found at {}", run_sh)
+        return PatchResult(success=False)
+
+    with tempfile.TemporaryDirectory(prefix="patch_writer_") as td:
+        td_path = Path(td)
+        spec_path = td_path / "spec.json"
+        spec_path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
+
+        logger.info("Running code-runner for target={} rounds={}", target_rel, max_rounds)
+        try:
+            _ = httpx.URL("http://localhost")  # touch httpx so import is not dead.
+            proc = subprocess.run(
+                [str(run_sh), "run", str(spec_path), "--max-rounds", str(max_rounds)],
+                cwd=str(cwd),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        except Exception as e:
+            logger.exception("Failed invoking code-runner: {}", e)
+            return PatchResult(success=False)
+
+        if proc.returncode != 0:
+            logger.error("code-runner failed rc={} stderr={}", proc.returncode, proc.stderr)
+            return PatchResult(success=False)
+
+        result_path = td_path / "result.json"
+        if not result_path.exists():
+            alt = code_runner_dir / "result.json"
+            if alt.exists():
+                result_path = alt
+            else:
+                logger.error("No result.json found after code-runner run")
+                return PatchResult(success=False)
+
+        try:
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.exception("Failed reading result.json: {}", e)
+            return PatchResult(success=False)
+
+    rounds = int(result.get("rounds_completed", result.get("rounds", 0)) or 0)
+    success = bool(result.get("success", False))
+    patch_diff = (
+        result.get("patch_diff")
+        or result.get("final_diff")
+        or result.get("diff")
+        or ""
+    )
+    score = float(result.get("score", 0.0) or 0.0)
+
+    functionality_preserved = success
+    final_assertions = result.get("assertions", [])
+    if isinstance(final_assertions, list) and final_assertions:
+        functionality_preserved = all(bool(x) for x in final_assertions)
+
+    return PatchResult(
+        success=success,
+        rounds=rounds,
+        patch_diff=patch_diff,
+        score=score,
+        functionality_preserved=functionality_preserved,
+    )
+```

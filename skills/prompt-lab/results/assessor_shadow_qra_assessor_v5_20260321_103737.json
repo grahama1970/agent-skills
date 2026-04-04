@@ -1,0 +1,391 @@
+{
+  "prompt": "shadow_qra_assessor_v5",
+  "model": "text",
+  "runs": 3,
+  "accuracy": 0.9,
+  "exact_match": 0.9,
+  "consistency": 1.0,
+  "parse_errors": 0,
+  "results": [
+    {
+      "qra_key": "1183163524",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PARTIAL",
+          "rationale": "Answer directly addresses EX-0016 (Jamming) using the Telestar-12 case, with accurate citations. It highlights vulnerabilities and the need for countermeasures, though actionability is partial as it doesn't provide specific mitigation steps."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the vulnerabilities exposed by EX-0016 in the Telestar-12 case, using specific details and citations from the source material to support the analysis and recommendations."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the vulnerabilities exposed by EX-0016 in the Telestar-12 case, using specific details and citations from the source material to support the analysis and recommendations."
+        }
+      ]
+    },
+    {
+      "qra_key": "1122196280",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the question with specific details about RPO enabling IMP-0003, supported by verbatim citations from real source material, and provides concrete examples of how the attack could be executed."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer directly addresses the question by explaining how RPO could enable IMP-0003, using specific details from the citations about True Anomaly's Jackal and its potential for electromagnetic interference, which aligns with the definition of IMP-0003."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer directly addresses the question with specific details about RPO enabling IMP-0003, using verbatim citations and providing concrete examples of how sensor payloads could cause denial of service."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2086029845",
+      "expected": "PASS",
+      "grades": [
+        "PARTIAL",
+        "PARTIAL",
+        "PARTIAL"
+      ],
+      "correct": 0,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PASS",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Citations support the concept of monitoring embedded code for anomalies, but the answer extends by specifically linking it to D3-FBA without direct evidence. Alignment is partial as it addresses the general threat but not the specific technique EX-0009.01. Actionability is partial due to lack of concrete implementation details."
+        },
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PARTIAL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Citations support the general concept of monitoring embedded code for anomalies, but the answer extends beyond the citations by specifically linking D3-FBA to this process without direct evidence. Alignment is partial as it addresses the threat but not the specific technique EX-0009.01 in detail. Actionability is partial as it describes a general monitoring approach without concrete implementation details."
+        },
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PASS",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Citations support the concept of monitoring embedded code for anomalies, but the answer extends by suggesting D3-FBA specifically does this without direct evidence. Alignment is partial as it addresses the general threat but not the specific technique EX-0009.01. Actionability is partial as it lacks concrete implementation details."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2085979839",
+      "expected": "PASS",
+      "grades": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer correctly cites SI-10(5) and applies it to specific spacecraft operations, aligning with the citation and providing actionable guidance."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.95,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "The answer correctly cites the control and applies it to specific spacecraft operations, aligning with the question and providing actionable guidance."
+        },
+        {
+          "grade": "PASS",
+          "confidence": 0.9,
+          "fidelity": "PASS",
+          "alignment": "PASS",
+          "actionability": "PASS",
+          "rationale": "Answer correctly cites SI-10(5) and applies it to specific spacecraft operations, aligning with the question and providing actionable guidance."
+        }
+      ]
+    },
+    {
+      "qra_key": "16562",
+      "expected": "PARTIAL",
+      "grades": [
+        "PARTIAL",
+        "PARTIAL",
+        "PARTIAL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PARTIAL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Answer uses real SPARTA techniques and countermeasures but extends with 'radiation-hardened kernel/firmware integrity checks' which is not directly supported by citations. Alignment is partial as it addresses account compromise but focuses more on firmware integrity than physical security barriers. Actionability is partial due to lack of specific implementation details."
+        },
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PARTIAL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Answer cites real SPARTA techniques and countermeasures but extends beyond the citations by introducing 'radiation-hardened kernel/firmware integrity checks' without direct evidence. Alignment is partial as it addresses account compromise but focuses on firmware rather than physical security barriers. Actionability is partial due to lack of specific implementation details."
+        },
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PARTIAL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Answer uses real SPARTA techniques and countermeasures but extends beyond citations with 'radiation-hardened kernel/firmware integrity checks' which is not explicitly supported. Alignment is partial as it addresses account compromise but focuses on firmware rather than physical barriers. Actionability is partial due to lack of specific implementation details."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2085929758",
+      "expected": "PARTIAL",
+      "grades": [
+        "PARTIAL",
+        "PARTIAL",
+        "PARTIAL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PASS",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Citation is real and supports the use of dummy operations to mimic power consumption. However, the answer extends beyond the citation by linking this to physical access exploits and ground station vulnerabilities, which are not explicitly mentioned. The alignment is partial as it addresses power consumption side channels but drifts from the specific scope of PE-2 physical access authorizations. Actionability is partial as it provides a specific technique but lacks concrete implementation details for physical access scenarios."
+        },
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PASS",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Citation is real and supports the use of dummy operations to mimic power consumption. However, the answer extends beyond the citation by linking this to physical access exploits and ground station vulnerabilities, which are not explicitly mentioned in the source. The alignment is partial as it addresses a broader scope than just PE-2 physical access authorizations."
+        },
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PASS",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "Citation is real and supports the use of dummy operations to mimic power consumption. However, the answer extends beyond the citation by linking this to physical access exploits and ground station vulnerabilities, which are not explicitly mentioned. The alignment is partial as it addresses power side channels rather than direct physical access authorization (PE-2). Actionability is partial due to the lack of specific implementation details for physical access scenarios."
+        }
+      ]
+    },
+    {
+      "qra_key": "qra__run-recovery-verify__2086079845",
+      "expected": "PARTIAL",
+      "grades": [
+        "PARTIAL",
+        "PARTIAL",
+        "PARTIAL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PARTIAL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "The answer uses domain-appropriate terminology and the citation is relevant, but it extends beyond the citation by suggesting specific actions (e.g., using interactive application security testing tools) without direct evidence. The alignment is partial as it addresses the general threat but not the specific technique in detail. Actionability is partial due to the lack of concrete implementation guidance."
+        },
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PARTIAL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "The answer correctly identifies the use of interactive application security testing tools to detect flaws in data bus protocols, which aligns with the general purpose of SA-11(9). However, the citation only describes the reconnaissance threat (REC-0001.04) and does not directly support the specific mitigation claim. The actionability is partial as it provides a general approach but lacks concrete implementation details."
+        },
+        {
+          "grade": "PARTIAL",
+          "confidence": 0.85,
+          "fidelity": "PARTIAL",
+          "alignment": "PARTIAL",
+          "actionability": "PARTIAL",
+          "rationale": "The answer uses real concepts (SA-11(9) and REC-0001.04) and cites a relevant source, but it extends beyond the citation by suggesting specific mitigation actions (using interactive application security testing tools) without direct evidence. The alignment is partial as it addresses the general concept of mitigating data bus vulnerabilities but does not directly tie to the specific reconnaissance technique described in REC-0001.04. Actionability is partial due to the lack of concrete implementation details."
+        }
+      ]
+    },
+    {
+      "qra_key": "14992",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-qualified authentication tokens and orbital period expiry. Citations are generic OS text \u2014 no such mechanism exists in the provided references. The answer does not align with the specific threat T1003.005 and lacks concrete, actionable mitigations."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-qualified authentication tokens and orbital period expiry. Citations are generic OS text \u2014 no such mechanism exists in the provided references."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates space-qualified authentication tokens and orbital period expiry. Citations are generic OS text \u2014 no such mechanism exists in the provided references."
+        }
+      ]
+    },
+    {
+      "qra_key": "14993",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Answer fabricates kernel-level browser isolation and secure storage in radiation-hardened memory, which are not supported by the citation. The citation is generic and does not address session cookie protection or spacecraft ground segment operations."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates kernel-level browser isolation and secure storage in radiation-hardened computers. Citation is generic OS text \u2014 no such mechanisms are described in SPARTA sources. Answer drifts from specific Web Session Cookie mitigation."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.9,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates kernel-level browser isolation and secure storage in radiation-hardened computers. Citation is generic OS text \u2014 no such mechanisms are described in the references. Answer drifts from specific Web Session Cookie mitigation to general OS hardening."
+        }
+      ]
+    },
+    {
+      "qra_key": "2085921413",
+      "expected": "FAIL",
+      "grades": [
+        "FAIL",
+        "FAIL",
+        "FAIL"
+      ],
+      "correct": 3,
+      "runs": 3,
+      "consistent": true,
+      "details": [
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened secure storage and write-protected EEPROM for Kerberos tickets, which are not supported by the citations. The citations only describe general Kerberos ticket caching, not space-specific implementations."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened secure storage and write-protected EEPROM for Kerberos tickets, which are not supported by the citations. The citations only describe general Kerberos ticket caching, not space-specific implementations."
+        },
+        {
+          "grade": "FAIL",
+          "confidence": 0.95,
+          "fidelity": "FAIL",
+          "alignment": "PARTIAL",
+          "actionability": "FAIL",
+          "rationale": "Fabricates radiation-hardened secure storage and write-protected EEPROM with cryptographic signatures \u2014 no such mechanisms exist in the citations. Citations are generic descriptions of Kerberos ticket storage, not specific to space systems."
+        }
+      ]
+    }
+  ]
+}

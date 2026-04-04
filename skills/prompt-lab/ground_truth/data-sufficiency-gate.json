@@ -1,0 +1,78 @@
+{
+  "name": "data-sufficiency-gate",
+  "description": "Assess whether available data is sufficient to answer a user query on the voice-activated answer canvas",
+  "cases": [
+    {
+      "id": "dsg_1",
+      "input": {
+        "query": "How many defects per vendor last quarter?",
+        "data_summary": "vendor_defects table: 5 vendors, 3 months of data, 0% null, last updated 2 hours ago"
+      },
+      "expected": {
+        "verdict": "SUFFICIENT",
+        "missing": []
+      },
+      "notes": "Complete data, recent, no nulls"
+    },
+    {
+      "id": "dsg_2",
+      "input": {
+        "query": "What is the failure rate trend for titanium fasteners over the past 5 years?",
+        "data_summary": "fastener_qa table: only 8 months of data available, 12% null in failure_rate column"
+      },
+      "expected": {
+        "verdict": "PARTIAL",
+        "missing": ["4+ years of historical fastener failure data"]
+      },
+      "notes": "Some data exists but timeframe is much shorter than requested"
+    },
+    {
+      "id": "dsg_3",
+      "input": {
+        "query": "Show me the vibration analysis for engine serial number ENG-4472",
+        "data_summary": "No vibration data found for ENG-4472. vibration_logs table has 0 matching records."
+      },
+      "expected": {
+        "verdict": "INSUFFICIENT",
+        "missing": ["vibration sensor data for engine ENG-4472"]
+      },
+      "notes": "Zero matching records"
+    },
+    {
+      "id": "dsg_4",
+      "input": {
+        "query": "Compare torque specs across our 3 assembly lines",
+        "data_summary": "torque_readings table: Line A has 500 readings, Line B has 480 readings, Line C has 3 readings (sensor installed yesterday), 2% null overall"
+      },
+      "expected": {
+        "verdict": "PARTIAL",
+        "missing": ["sufficient torque data for Line C (only 3 readings vs 480+ for others)"]
+      },
+      "notes": "Highly imbalanced data across categories would produce misleading comparison"
+    },
+    {
+      "id": "dsg_5",
+      "input": {
+        "query": "What is the current temperature in the clean room?",
+        "data_summary": "environment_sensors table: 1 record for clean_room, temperature=21.3C, last_updated=2026-03-13T10:00:00Z"
+      },
+      "expected": {
+        "verdict": "SUFFICIENT",
+        "missing": []
+      },
+      "notes": "Single-value query, one fresh record is enough for text answer"
+    },
+    {
+      "id": "dsg_6",
+      "input": {
+        "query": "Show supplier quality scores for all vendors",
+        "data_summary": "vendor_scores table: 12 vendors, quality_score column is 68% null, last data from 14 months ago"
+      },
+      "expected": {
+        "verdict": "INSUFFICIENT",
+        "missing": ["current quality scores (data is 14 months stale)", "quality scores for majority of vendors (68% null)"]
+      },
+      "notes": "Too sparse (>50% null) and too stale"
+    }
+  ]
+}

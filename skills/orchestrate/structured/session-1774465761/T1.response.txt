@@ -1,0 +1,17 @@
+Implemented.
+**Code changes**
+- Added YAML parsing dependency and types in [`packages/ux-lab/package.json`](/home/node/workspace/packages/ux-lab/package.json:16).
+- Added `GET /api/worksheets` in [`packages/ux-lab/server/index.ts`](/home/node/workspace/packages/ux-lab/server/index.ts:96) with:
+- file read from `/home/graham/workspace/experiments/sparta/config/worksheets.yaml`
+- YAML parse via `js-yaml`
+- response shape `{ worksheets: Record<string, WorksheetConfig> }`
+- 60s in-memory cache
+- Added typed helpers/constants for worksheets parsing and cache in [`packages/ux-lab/server/index.ts`](/home/node/workspace/packages/ux-lab/server/index.ts:23).
+**Validation run**
+- `npm run check` (repo root): passed.
+- `npx tsc --noEmit` (in `packages/ux-lab`): passed.
+- `curl -s http://localhost:3001/api/worksheets`: existing server on 3001 returned `Cannot GET /api/worksheets` (stale process not running updated code).
+- Started updated server on `3011` and hit `/api/worksheets`: route works, but returns:
+- `{"worksheets":{},"error":"Failed to load worksheets","detail":"ENOENT ... /home/graham/workspace/experiments/sparta/config/worksheets.yaml"}`
+**Current blocker**
+- The YAML file path does not exist in this environment, so the DoD assertion (`len > 10` and ISO entry) cannot pass locally until that file is present and the updated server is running on the target port.

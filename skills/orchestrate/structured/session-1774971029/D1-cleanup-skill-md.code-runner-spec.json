@@ -1,0 +1,16 @@
+{
+  "task_id": "D1-cleanup-skill-md",
+  "title": "Remove dead composes and update SKILL.md pipeline table",
+  "prompt": "Update the monitor-codebase SKILL.md:\n1. Remove battle, create-code, agent-inbox from composes list. Add orchestrate.\n2. Update the pipeline table:\n   - Step 6 now includes --treesitter flag for symbol extraction\n   - New Step 9.5: trend comparison (REGRESSION/IMPROVED/STABLE)\n   - Step 10 uses orchestrate + code-runner (not subagent-service)\n3. Remove all references to subagent-service dispatch flow.",
+  "backend": "codex",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774971029",
+  "definition_of_done": {
+    "command": "grep -c 'orchestrate' .pi/skills/monitor-codebase/SKILL.md",
+    "assertion": "exit_code == 0"
+  },
+  "allowlist": [
+    ".pi/skills/monitor-codebase/SKILL.md"
+  ],
+  "max_rounds": 2
+}

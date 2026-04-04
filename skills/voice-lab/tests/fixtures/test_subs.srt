@@ -1,0 +1,7 @@
+1
+00:00:00,500 --> 00:00:02,500
+Hello world, this is segment one
+
+2
+00:00:03,000 --> 00:00:04,800
+And this is segment two

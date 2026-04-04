@@ -1,0 +1,99 @@
+{
+  "generated_at": 1775148460.9603953,
+  "failed": true,
+  "session_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775148460",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Fix calculator bugs (add, subtract, divide)",
+      "lane": "calc",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "agent": "",
+      "status": "running",
+      "depends_on": [],
+      "output_path": "",
+      "error": "",
+      "started_at": 1775148460.658418,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Fix formatter bugs (name, currency, list)",
+      "lane": "fmt",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1775148460/2.response.txt",
+      "error": "/code-runner exit 1: 2026-04-02 12:47:40.901 | ERROR    | __main__:run:480 - PRE-FLIGHT WARNING: 3 modules referenced but not in allowlist or read_context: ['loguru', 'logging', 'logger']\n2026-04-02 12:47:40.901 | ERROR    | __main__:run:482 -   FIX: Add them to read_context so code-runner can extract interface maps.\n2026-04-02 12:47:40.901 | INFO     | __main__:run:493 - === CODE-RUNNER v2: Fix formatter bugs (name, currency, list) ===\n2026-04-02 12:47:40.902 | INFO     | __main__:run:494 -   Backend: text\n2026-04-",
+      "started_at": 1775148460.6598976,
+      "finished_at": 1775148460.960239,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Run full test suite",
+      "lane": "verify",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1",
+        "2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4",
+      "title": "Lint check with ruff",
+      "lane": "verify",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5",
+      "title": "Create integration test for edge cases",
+      "lane": "verify",
+      "runner": "code-runner",
+      "backend": "text",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

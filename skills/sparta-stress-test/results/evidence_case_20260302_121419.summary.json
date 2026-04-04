@@ -1,0 +1,57 @@
+{
+  "timestamp": 1772471659.8704767,
+  "passed": 10,
+  "failed": 0,
+  "errors": 0,
+  "total": 10,
+  "pass_rate": 1.0,
+  "classifications": {
+    "ANSWERABLE": 4,
+    "NEEDS_CLARIFICATION": 3,
+    "DECOMPOSE": 3
+  },
+  "by_difficulty": {
+    "simple": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "classifications": {
+        "ANSWERABLE": 3
+      }
+    },
+    "flawed": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "classifications": {
+        "NEEDS_CLARIFICATION": 2
+      }
+    },
+    "complex": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "classifications": {
+        "ANSWERABLE": 1,
+        "DECOMPOSE": 2
+      }
+    },
+    "ambiguous": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "classifications": {
+        "NEEDS_CLARIFICATION": 1
+      }
+    },
+    "medium": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "classifications": {
+        "DECOMPOSE": 1
+      }
+    }
+  },
+  "elapsed_s": 140.0
+}

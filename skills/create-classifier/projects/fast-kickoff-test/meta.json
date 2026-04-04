@@ -1,0 +1,8 @@
+{
+  "name": "fast-kickoff-test",
+  "status": "researched",
+  "modality": "text",
+  "samples": 0,
+  "classes": 0,
+  "goal": "Classify customer support tickets by priority (low/medium/high)"
+}

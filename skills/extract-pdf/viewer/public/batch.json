@@ -1,0 +1,16 @@
+{
+  "total": 100,
+  "processed": 97,
+  "results": [
+    {"filename": "NIST_SP_800-53r5.pdf", "domain": "nist", "pages": 492, "strategy": "native_structure", "status": "success", "time_ms": 2340, "blocks": 1205, "sections": 48, "tables": 12, "figures": 3},
+    {"filename": "arxiv_2401.12345.pdf", "domain": "arxiv", "pages": 12, "strategy": "native_structure", "status": "success", "time_ms": 180, "blocks": 87, "sections": 6, "tables": 2, "figures": 5},
+    {"filename": "MIL-STD-810H.pdf", "domain": "defense", "pages": 1089, "strategy": "native_tagged", "status": "timeout", "time_ms": 60000, "blocks": 0, "sections": 0, "tables": 0, "figures": 0},
+    {"filename": "NASA-STD-5009A.pdf", "domain": "nasa", "pages": 64, "strategy": "native_structure", "status": "success", "time_ms": 890, "blocks": 312, "sections": 15, "tables": 8, "figures": 2},
+    {"filename": "corrupted.pdf", "domain": "adversarial", "pages": 0, "strategy": "unknown", "status": "failed", "time_ms": 50, "blocks": 0, "sections": 0, "tables": 0, "figures": 0},
+    {"filename": "arxiv_2312.09876.pdf", "domain": "arxiv", "pages": 24, "strategy": "native_structure", "status": "success", "time_ms": 310, "blocks": 156, "sections": 8, "tables": 4, "figures": 7},
+    {"filename": "DISA-STIG-Windows.pdf", "domain": "defense", "pages": 245, "strategy": "native_structure", "status": "success", "time_ms": 1820, "blocks": 890, "sections": 32, "tables": 45, "figures": 0},
+    {"filename": "NASA-TM-2024-001234.pdf", "domain": "nasa", "pages": 38, "strategy": "native_structure", "status": "success", "time_ms": 520, "blocks": 201, "sections": 11, "tables": 3, "figures": 9},
+    {"filename": "NIST_SP_800-171r3.pdf", "domain": "nist", "pages": 156, "strategy": "native_structure", "status": "success", "time_ms": 1100, "blocks": 620, "sections": 22, "tables": 8, "figures": 1},
+    {"filename": "engineering_spec_valve.pdf", "domain": "engineering", "pages": 88, "strategy": "native_structure", "status": "success", "time_ms": 780, "blocks": 410, "sections": 18, "tables": 14, "figures": 12}
+  ]
+}

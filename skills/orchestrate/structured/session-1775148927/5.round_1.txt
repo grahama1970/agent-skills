@@ -1,0 +1,74 @@
+{"summary":"Created integration tests for calculator and formatter with edge cases","approach":"direct_implementation","files_changed":["tests/test_integration.py"]}
+---
+### FILE: tests/test_integration.py
+```diff
+--- /dev/null
++++ b/tests/test_integration.py
+@@ -0,0 +1,30 @@
++from src.calculator import add, subtract, divide
++from src.formatter import format_currency, format_list
++
++
++def test_add_with_floats():
++    """Test adding floating point numbers."""
++    result = add(1.5, 2.5)
++    assert result == 4.0
++
++
++def test_subtract_with_floats():
++    """Test subtracting floating point numbers."""
++    result = subtract(5.5, 2.5)
++    assert result == 3.0
++
++
++def test_divide_returns_float():
++    """Test division returns float even with integers."""
++    result = divide(7, 2)
++    assert result == 3.5
++
++
++def test_format_currency_with_negative_amount():
++    """Test formatting negative currency amounts."""
++    result = format_currency(-100)
++    assert result == "-$100.00"
++
++
++def test_format_list_with_single_item():
++    """Test formatting a list with single item."""
++    result = format_list(["apple"])
++    assert result == "apple"
+```
+```python
+from src.calculator import add, subtract, divide
+from src.formatter import format_currency, format_list
+
+
+def test_add_with_floats():
+    """Test adding floating point numbers."""
+    result = add(1.5, 2.5)
+    assert result == 4.0
+
+
+def test_subtract_with_floats():
+    """Test subtracting floating point numbers."""
+    result = subtract(5.5, 2.5)
+    assert result == 3.0
+
+
+def test_divide_returns_float():
+    """Test division returns float even with integers."""
+    result = divide(7, 2)
+    assert result == 3.5
+
+
+def test_format_currency_with_negative_amount():
+    """Test formatting negative currency amounts."""
+    result = format_currency(-100)
+    assert result == "-$100.00"
+
+
+def test_format_list_with_single_item():
+    """Test formatting a list with single item."""
+    result = format_list(["apple"])
+    assert result == "apple"
+```

@@ -1,0 +1,354 @@
+{
+  "cases": [
+    {
+      "input": "{\"question\": \"How can Ccache Files (T1558.005) be implemented to protect against the use of Software Defined Radio (EXF-0006.01) in space systems?\", \"answer\": \"Hypothesized based on context: Ccache Files (T1558.005) can be implemented to protect against the use of Software Defined Radio (EXF-0006.01) by ensuring that Kerberos tickets are securely managed and stored. This would prevent unauthorized access to SDRs, thereby mitigating the risk of covert exfiltration channels being established in space systems.\", \"reasoning\": \"Ccache Files (T1558.005) can be implemented to protect against the use of Software Defined Radio (EXF-0006.01) by ensuring that Kerberos tickets are securely managed and stored. This would prevent unauthorized access to SDRs, thereby mitigating the risk of covert exfiltration channels being established.\", \"grounding_score\": 0.8080000281333923}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085942232"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the SV-SP-9 control address the risk of supply chain attacks that could lead to the Degradation (IMP-0004) technique in space systems?\", \"answer\": \"The SV-SP-9 control addresses the risk of supply chain attacks that could lead to the Degradation (IMP-0004) technique by implementing secure protocols for on-orbit software updates. This prevents adversaries from exploiting compromised TT&C or MOC environments to inject malicious code that would degrade the spacecraft's subsystems.\\n\\nSPARTA References: Techniques: RD-0004, RD-0004.01, RD-0004.02, IA-0001, IA-0001.01, IA-0001.02, IA-0007, IA-0007.01, IA-0009, IA-0009.01, IA-0009.02, EX-0010, EX-0010.01, EX-0010.02, EX-0010.03, EX-0010.04, EX-0012, EX-0012.01, EX-0012.02, EX-0012.03, EX-0012.04, EX-0012.05, EX-0012.07, EX-0012.08, EX-0012.09, EX-0012.10, EX-0012.11, EX-0012.12, PER-0001, PER-0002, PER-0002.02, DE-0006, EXF-0009, IMP-0001, IMP-0002, IMP-0003, IMP-0004. Countermeasures: CM0025, CM0052, CM0054, CM0004, CM0007, CM0010, CM0011, CM0012, CM0013, CM0015, CM0017, CM0018, CM0019, CM0021, CM0023, CM0047, CM0032, CM0014.\", \"reasoning\": \"The SV-SP-9 control involves on-orbit software updates/upgrades/patches/direct memory writes. If TT&C is compromised or MOC or even the developer's environment, the risk exists to do a variation of a supply chain attack where after it is in orbit you inject malicious code.\", \"grounding_score\": 0.781}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086007675"
+      }
+    },
+    {
+      "input": "{\"question\": \"What space-specific vulnerabilities does Passive Interception (RF/Optical): Telemetry Protocol Interception (ESA-T2004.002) exploit that Timestomp (T1070.006) addresses?\", \"answer\": \"Passive Interception (RF/Optical): Telemetry Protocol Interception (ESA-T2004.002) exploits the vulnerability of telemetry data being transmitted over RF channels, which can be intercepted and analyzed for malicious changes. Timestomp (T1070.006) addresses this by modifying the timestamps of telemetry data files, making it difficult for adversaries to determine when changes were made, thus reducing the effectiveness of RF interception in detecting tampering.\", \"reasoning\": \"Passive Interception (ESA-T2004.002) exploits the vulnerability of telemetry data being transmitted over RF channels, which can be intercepted and analyzed for malicious changes.\", \"grounding_score\": 0.7860000133514404}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085975345"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Semiconductor Defects in Hardware Logic with Security-Sensitive Implications (CWE-1248) control mitigate the SV-AV-1 (SV-AV-1) technique in space systems?\", \"answer\": \"The Semiconductor Defects in Hardware Logic with Security-Sensitive Implications (CWE-1248) control mitigates the SV-AV-1 (SV-AV-1) technique by ensuring the integrity and reliability of semiconductor devices used in space communication systems. In space systems, semiconductor defects such as oxide-layer faults or aluminum-metal faults can lead to hardware failures that make communication systems more susceptible to jamming attacks. By identifying and mitigating these defects, the control helps maintain the robustness of communication hardware, reducing the risk of successful jamming attacks that exploit hardware vulnerabilities.\\n\\nSPARTA References: Techniques: EX-0013, EX-0013.01, EX-0013.02, EX-0016, EX-0016.01, EX-0016.02, EX-0016.03, DE-0002, DE-0002.01, DE-0002.02, IMP-0001, IMP-0002, IMP-0003, IMP-0004. Countermeasures: CM0074, CM0075, CM0076, CM0077, CM0078, CM0079, CM0080, CM0081, CM0082, CM0083, CM0036, CM0034, CM0070, CM0032, CM0042, CM0044, CM0068, CM0029.\", \"reasoning\": \"The SV-AV-1 technique involves communications system jamming, which can be exacerbated by hardware defects in semiconductor devices. The CWE-1248 control addresses semiconductor defects that could compromise security-sensitive hardware modules, potentially affecting the reliability of communication systems.\", \"grounding_score\": 0.8180000185966492}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085954257"
+      }
+    },
+    {
+      "input": "{\"question\": \"What space-specific vulnerabilities does Modify Authentication Process (EX-0003) exploit that Elevated Execution with Prompt (T1548.004) addresses in satellite TT&C systems?\", \"answer\": \"Modify Authentication Process (EX-0003) exploits the irreversible nature of spacecraft authentication module updates via TT&C uplinks. Elevated Execution with Prompt (T1548.004) counters this by enforcing time-bound cryptographic signatures on all authentication-modifying commands, requiring real-time ground operator approval during scheduled contact windows when the satellite is in view of trusted ground stations.\", \"reasoning\": \"This question examines the unique TT&C attack surface where authentication processes can be modified via compromised uplinks, and how privilege escalation controls provide protection.\", \"grounding_score\": 0.7459999918937683}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085917136"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Information Exchange | Transfer Authorizations (CA-3(6)) control mitigate the Hardware Recon (REC-0008.01) technique in space systems?\", \"answer\": \"The Information Exchange | Transfer Authorizations (CA-3(6)) control mitigates the Hardware Recon (REC-0008.01) technique by verifying that individuals or systems transferring data between interconnecting systems have the requisite authorizations (i.e., write permissions or privileges) prior to accepting such data. This ensures resilience against threat actors attempting to manipulate hardware components in the victim spacecraft prior to the customer receiving them, thereby hardening the system against unauthorized modifications that could lead to data or system compromise, including the insertion of backdoors in ASIC and FPGA devices within the supply chain.\", \"reasoning\": \"Threat actors may gather information that can be used to facilitate a future attack where they manipulate hardware components in the victim spacecraft prior to the customer receiving them in order to achieve data or system compromise.\", \"grounding_score\": 0.926}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086070561"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does System Firmware (T1542.001) mitigate Adversary in the Middle (ESA-T2042) attacks on spacecraft command interfaces?\", \"answer\": \"In space systems, System Firmware (T1542.001) counters Adversary in the Middle (ESA-T2042) by implementing radiation-hardened boot ROMs with cryptographic signature verification for all firmware updates. This prevents adversaries from injecting malicious firmware during ground station uplinks or crosslink transmissions, as any unauthorized modification would fail the cryptographic check during the spacecraft's power-on self-test sequence. Spacecraft firmware is typically stored in write-protected EEPROM with mandatory checksum validation before execution.\", \"reasoning\": \"The question explores the space-specific mechanism where firmware protections could prevent command injection via MITM attacks on satellite uplinks\", \"grounding_score\": 0.7760000228881836}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "16546"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the D3-SEA control address the Ransomware (EX-0010.01) technique in the context of spacecraft flight software?\", \"answer\": \"The D3-SEA control addresses the Ransomware (EX-0010.01) technique by analyzing script execution to detect unauthorized encryption attempts on spacecraft flight software. This is critical in space systems where ransomware could encrypt flight software stored in radiation-hardened memory, potentially rendering the spacecraft inoperable during critical mission phases.\", \"reasoning\": \"Analyzing the execution of a script to detect unauthorized user activity.\", \"grounding_score\": 0.802}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086060666"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does Service Stop: Ground system loss (ESA-T1489.001) mitigate the risk of compromised d3f:SystemFirmware in spacecraft operations?\", \"answer\": \"Service Stop: Ground system loss (ESA-T1489.001) mitigates compromised d3f:SystemFirmware by implementing autonomous spacecraft safing procedures when ground contact is lost. In space systems, this control triggers predefined firmware integrity checks and fallback to radiation-hardened golden copies stored in write-protected memory, ensuring the spacecraft maintains basic operations even with compromised firmware during ground communication blackouts. This is critical since spacecraft cannot receive firmware patches during loss of ground contact periods that may last multiple orbits.\", \"reasoning\": \"The question explores the relationship between a control designed to handle ground system loss and the potential compromise of system firmware in space systems, focusing on the space-specific mechanisms involved.\", \"grounding_score\": 0.7720000147819519}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085926480"
+      }
+    },
+    {
+      "input": "{\"question\": \"Why is Missing Synchronization (CWE-820) particularly dangerous for spacecraft operations and how does the Mission-Operated Ground System (RD-0002.01) control counter it?\", \"answer\": \"Missing Synchronization (CWE-820) is dangerous for spacecraft operations because it can allow adversaries to inject malicious commands or disrupt telemetry data streams, leading to mission-critical failures. The Mission-Operated Ground System (RD-0002.01) control counters this by implementing robust synchronization mechanisms for command uplinks and telemetry downlinks, ensuring that all operations are executed in the correct sequence and that data integrity is maintained throughout the communication process.\", \"reasoning\": \"Missing Synchronization (CWE-820) is particularly dangerous for spacecraft operations because it can lead to the execution of out-of-sequence commands or the corruption of telemetry data, both of which can result in mission failure. The Mission-Operated Ground System (RD-0002.01) control is designed to secure the ground systems that manage these critical operations.\", \"grounding_score\": 0.803}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085995026"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does System Firmware (T1542.001) prevent SV-SP-10 attacks from compromising the integrity of spacecraft flight software binaries?\", \"answer\": \"System Firmware (T1542.001) prevents SV-SP-10 attacks by enforcing secure boot processes and firmware validation in the development environment, ensuring that flight software binaries are compiled and tested using trusted firmware. In space systems, where flight software must be flawless due to the inability to patch post-launch, this control is critical to prevent adversaries from introducing malicious code during the compilation or testing phases.\\n\\nSPARTA References: Techniques: REC-0008.03, RD-0003, RD-0003.01, IA-0001, IA-0001.01, IA-0001.02, EX-0009, EX-0009.01, EX-0009.03, PER-0002, PER-0002.02, DE-0010, IMP-0001, IMP-0002, IMP-0003, IMP-0004. Countermeasures: CM0008, CM0020, CM0025, CM0004, CM0007, CM0010, CM0011, CM0012, CM0013, CM0015, CM0016, CM0017, CM0018, CM0019, CM0021, CM0023, CM0047, CM0032, CM0042, CM0044.\", \"reasoning\": \"This question focuses on the specific mechanism by which firmware security protects flight software binaries.\", \"grounding_score\": 0.8450000286102295}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "2085937288"
+      }
+    },
+    {
+      "input": "{\"question\": \"In the context of space systems, how does the Remote Access | Protection of Confidentiality and Integrity Using Encryption (AC-17(2)) control address the persistence tactic through the Ground System Presence (PER-0003) technique?\", \"answer\": \"The Remote Access | Protection of Confidentiality and Integrity Using Encryption (AC-17(2)) control addresses the persistence tactic by securing remote access sessions between ground systems and spacecraft. In space systems, this control ensures that all communications are encrypted, thereby protecting the confidentiality and integrity of the data transmitted. This prevents threat actors from exploiting compromised ground systems to maintain persistent access to the spacecraft, as encrypted sessions hinder their ability to intercept or manipulate command and control signals.\", \"reasoning\": \"Threat actors may compromise target owned ground systems that can be used for persistent access to the spacecraft or to perpetuate other techniques. These ground systems have already been configured for communications to the victim spacecraft. By compromising this infrastructure, threat actors can stage, launch, and execute persistently.\", \"grounding_score\": 0.8}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086034502"
+      }
+    },
+    {
+      "input": "{\"question\": \"In the context of Initial Access (ST0003), how does the Security and Privacy Engineering Principles | Continuous Protection (SA-8(19)) control prevent the Receiver (IA-0004.02) technique from compromising spacecraft command systems?\", \"answer\": \"In the context of Initial Access (ST0003), the Security and Privacy Engineering Principles | Continuous Protection (SA-8(19)) control prevents the Receiver (IA-0004.02) technique by implementing continuous security assessments and updates for all spacecraft receivers. This includes verifying the integrity of firmware and software on secondary receivers and ensuring that all communication channels are encrypted and authenticated, thereby blocking unauthorized command injections.\", \"reasoning\": \"Threat actors may target the backup/secondary receiver on the spacecraft as a method to inject malicious communications into the mission. The secondary receivers may come from different supply chains than the primary which could have different level of security and weaknesses.\", \"grounding_score\": 0.823}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086071101"
+      }
+    },
+    {
+      "input": "{\"question\": \"Why is Generation of Predictable Numbers or Identifiers (CWE-340) particularly dangerous for satellite command and control systems, and how does Function Call with Incorrectly Specified Arguments (CWE-628) counter it?\", \"answer\": \"Generation of Predictable Numbers or Identifiers (CWE-340) is particularly dangerous for satellite command and control systems because adversaries can predict authentication tokens or session IDs, leading to unauthorized command execution. Function Call with Incorrectly Specified Arguments (CWE-628) counters this by ensuring that functions generating these identifiers are called with the correct entropy sources and parameters, making the outputs unpredictable and secure.\", \"reasoning\": \"CWE-340 is dangerous in satellite systems because predictable identifiers can be used to spoof commands or gain unauthorized access. CWE-628 can help by ensuring correct function calls that prevent predictable outputs.\", \"grounding_score\": 0.778}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085990756"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Configuration Change Control | Automated Security Response (CM-3(5)) control enhance the security of space systems against the Operations (REC-0002.03) technique?\", \"answer\": \"The Configuration Change Control | Automated Security Response (CM-3(5)) control enhances the security of space systems against the Operations (REC-0002.03) technique by automatically detecting and responding to unauthorized changes in spacecraft configurations. This ensures that critical operational data, such as mission objectives and orbital parameters, remains secure and inaccessible to adversaries.\", \"reasoning\": \"Threat actors may gather information about the victim spacecraft's operations that can be used for future campaigns or to help perpetuate other techniques. Collection efforts may target mission objectives, orbital parameters such as orbit slot and inclination, user guides and schedules, etc. Additionally, threat actors may seek information about constellation deployments and configurations where applicable.\", \"grounding_score\": 0.832}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086078723"
+      }
+    },
+    {
+      "input": "{\"question\": \"In the context of space systems, how does the 3rd Party Ground System (RD-0002.02) technique exploit vulnerabilities that the System Monitoring | Analyze Communications Traffic Anomalies (SI-4(11)) control aims to detect?\", \"answer\": \"The 3rd Party Ground System (RD-0002.02) technique exploits vulnerabilities by compromising third-party ground systems that are configured to communicate with the victim spacecraft. The System Monitoring | Analyze Communications Traffic Anomalies (SI-4(11)) control aims to detect such exploitation by analyzing outbound communications traffic for anomalies, such as unexpected command sequences or unusual data patterns in the RF uplink/downlink channels, which could indicate unauthorized access or malicious activity from a compromised ground station.\", \"reasoning\": \"Threat actors may compromise access to third-party ground systems that can be used for future campaigns or to perpetuate other techniques. These ground systems can be or may have already been configured for communications to the victim spacecraft. By compromising this infrastructure, threat actors can stage, launch, and execute an operation.\", \"grounding_score\": 0.819}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086040033"
+      }
+    },
+    {
+      "input": "{\"question\": \"What space-specific risks does LM-0006 (Launch Vehicle Interface) address?\", \"answer\": \"LM-0006 (Launch Vehicle Interface) addresses space-specific risks by focusing on the interface between launch vehicles and payloads, a critical juncture where reduced protections could be exploited by threat actors to compromise the integrity and security of the spacecraft.\", \"reasoning\": \"The description specifies the risk of threat actors exploiting the interface between launch vehicles and payloads, which is a unique concern in space systems.\", \"grounding_score\": 0.859000027179718}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085982712"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does d3f:RemoteDatabaseQuery support the continuous monitoring of control effectiveness required by SA-4(8) in satellite ground segment operations?\", \"answer\": \"d3f:RemoteDatabaseQuery enables SA-4(8) compliance by allowing ground operators to periodically query spacecraft telemetry databases for security control status indicators. In space systems, this involves querying radiation-hardened flight computer logs via authenticated TT&C links to verify control effectiveness, with results automatically compared against baseline configurations stored in mission operations center databases.\", \"reasoning\": \"This question explores how a database query mechanism can be used to implement continuous monitoring of security controls in space ground systems, which is the core requirement of SA-4(8)\", \"grounding_score\": 0.7739999890327454}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085936628"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Transmission of Security and Privacy Attributes (SC-16) control mitigate Traffic Analysis Attacks (EXF-0002.03) in space constellation networks?\", \"answer\": \"The Transmission of Security and Privacy Attributes (SC-16) control mitigates Traffic Analysis Attacks (EXF-0002.03) in space constellation networks by embedding security attributes within the telemetry and command data exchanged between spacecraft nodes. This includes metadata that obfuscates the timing and frequency of transmissions, making it difficult for adversaries to infer the energy consumption patterns or identify aggregator nodes based on traffic flow analysis.\", \"reasoning\": \"In the space environment, specifically with relays and constellations, traffic analysis can be used to understand the energy capacity of spacecraft node and the fact that the transceiver component of a spacecraft node consumes the most power. The spacecraft nodes in a constellation network limit the use of the transceiver to transmit or receive information either at a regulated time interval or only when an event has been detected.\", \"grounding_score\": 0.845}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086047661"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does SV-SP-7 (SV-SP-7) prevent d3f:HardwareDevice (d3f:HardwareDevice) attacks from propagating between spacecraft bus components?\", \"answer\": \"SV-SP-7 implements hardware-level isolation in spacecraft systems by enforcing strict OS-controlled memory partitioning between bus components. This prevents compromised hardware (like a star tracker) from affecting other systems through shared memory or bus access. In space environments, this is critical because radiation-induced hardware faults could otherwise propagate unchecked through the spacecraft's avionics network.\\n\\nSPARTA References: Techniques: REC-0008.03, RD-0003, RD-0003.01, IA-0001, IA-0001.01, IA-0001.02, EX-0009, EX-0009.02, EX-0009.03, EX-0010, EX-0010.01, EX-0010.02, EX-0010.03, EX-0010.04. Countermeasures: CM0025, CM0026, CM0011, CM0015, CM0021, CM0023, CM0047, CM0032, CM0014.\", \"reasoning\": \"Examines hardware isolation mechanisms in spacecraft architecture\", \"grounding_score\": 0.7540000081062317}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__16831"
+      }
+    },
+    {
+      "input": "{\"question\": \"How can the Media Storage (MP-4) control be implemented to counteract the Modify Communications Configuration (EXF-0006) technique in space systems?\", \"answer\": \"To harden space systems against the Modify Communications Configuration (EXF-0006) technique, the Media Storage (MP-4) control can be implemented by physically controlling and securely storing [Assignment: organization-defined types of digital and/or non-digital media] within [Assignment: organization-defined controlled areas]. Access to these areas must be restricted to authorized personnel only, ensuring resilience against unauthorized manipulation of communications equipment. Additionally, the control requires protecting system media types defined in MP-4a until the media are destroyed or sanitized using approved equipment, techniques, and procedures, preventing the exfiltration of data via unintentional channels the mission has no control over.\", \"reasoning\": \"Threat actors can manipulate communications equipment, modifying the existing software, hardware, or the transponder configuration to exfiltrate data via unintentional channels the mission has no control over.\", \"grounding_score\": 0.919}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086027930"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the combination of Creation of Temporary File in Directory with Insecure Permissions (CWE-379) and Wi-Fi Discovery (T1422.002) vulnerabilities create unique risks for LEO satellite constellation operations?\", \"answer\": \"In LEO operations, visible temporary handover command files (CWE-379) combined with exposed Wi-Fi networks could allow adversaries to predict satellite trajectories. Wi-Fi Discovery (T1422.002) counters this by implementing dynamic wireless network segmentation that changes with each orbital pass, breaking the correlation between file creation events and operational timelines.\", \"reasoning\": \"LEO constellations require frequent ground station handovers where temporary files are created and wireless networks are heavily utilized.\", \"grounding_score\": 0.7300000190734863}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085923985"
+      }
+    },
+    {
+      "input": "{\"question\": \"How can SV-AC-4 be applied to limit the effectiveness of Credentialed Traversal (LM-0007) in satellite constellations?\", \"answer\": \"SV-AC-4 can be applied to limit the effectiveness of Credentialed Traversal (LM-0007) in satellite constellations by enforcing strict access control policies that restrict credential usage to specific spacecraft and subsystems. This includes implementing time-bound authentication tokens and cross-validating credentials across inter-satellite links. By ensuring that credentials are only valid for specific orbital periods and spacecraft, SV-AC-4 prevents adversaries from using stolen or misused credentials to traverse the constellation.\\n\\nSPARTA References: Techniques: REC-0003.04, IA-0009, IA-0009.01, IA-0009.02, IA-0009.03, EX-0003, PER-0005, DE-0004, DE-0011, LM-0007. Countermeasures: CM0041, CM0052, CM0054, CM0002, CM0030, CM0031, CM0021, CM0055, CM0005, CM0035, CM0053.\", \"reasoning\": \"Threat actors may leverage valid credentials to traverse across spacecraft subsystems, communication buses, or even to access other spacecraft within a constellation, all while avoiding detection. These credentials may include system service accounts, user accounts, maintenance credentials, cryptographic keys, or other authentication mechanisms that grant authorized access.\", \"grounding_score\": 0.795}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086007489"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Threat Hunting (RA-10) control detect the Modify Communications Configuration (EXF-0006) technique in satellite systems?\", \"answer\": \"The Threat Hunting (RA-10) control detects the Modify Communications Configuration (EXF-0006) technique by actively searching for anomalies in satellite transponder configurations and RF signal patterns, identifying unauthorized modifications that could enable data exfiltration through unintended channels.\", \"reasoning\": \"Threat actors can manipulate communications equipment, modifying the existing software, hardware, or the transponder configuration to exfiltrate data via unintentional channels the mission has no control over.\", \"grounding_score\": 0.825}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086029358"
+      }
+    },
+    {
+      "input": "{\"question\": \"What space-specific vulnerabilities does Configuration Change Control | Prevent or Restrict Configuration Changes (CM-3(8)) address that Improper Neutralization (CWE-707) helps mitigate in ground station operations?\", \"answer\": \"In ground station operations, Configuration Change Control | Prevent or Restrict Configuration Changes (CM-3(8)) addresses vulnerabilities related to unauthorized configuration changes that could compromise the security and privacy of space mission data. Improper Neutralization (CWE-707) helps mitigate these vulnerabilities by ensuring that all configuration commands sent to the ground station are properly validated and sanitized. This prevents malformed or malicious commands from being processed, thereby protecting the integrity and security of the ground station's configuration and the overall mission.\", \"reasoning\": \"Configuration Change Control | Prevent or Restrict Configuration Changes (CM-3(8)) prevents or restricts changes to the configuration of the system under specific circumstances to protect system security and privacy functions. Improper Neutralization (CWE-707) ensures that input/output conforms with expectations and is 'safe' through techniques such as validation, filtering, encoding/decoding, escaping/unescaping, quoting/unquoting, or canonicalization.\", \"grounding_score\": 0.7160000205039978}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085959103"
+      }
+    },
+    {
+      "input": "{\"question\": \"In the context of the Constellation Hopping via Crosslink (LM-0003) technique, how does the Improper Authorization (CWE-285) control enhance the security of inter-satellite communications?\", \"answer\": \"The Improper Authorization (CWE-285) control enhances the security of inter-satellite communications by requiring multi-factor authentication for crosslink commands. This includes cryptographic signatures and dynamic token generation, which are validated by both the sending and receiving spacecraft, thereby preventing unauthorized command injection in the Constellation Hopping via Crosslink (LM-0003) technique.\", \"reasoning\": \"Threat actors may attempt to command another neighboring spacecraft via crosslink. spacecraft in close proximity are often able to send commands back and forth. Threat actors may be able to leverage this access to compromise another spacecraft.\", \"grounding_score\": 0.786}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086009934"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does SV-SP-7 (SV-SP-7) mitigate the risks associated with Architecture with Number of Horizontal Layers Outside of Expected Range (CWE-1044) in spacecraft software?\", \"answer\": \"SV-SP-7 mitigates the risks of Architecture with Number of Horizontal Layers Outside of Expected Range (CWE-1044) in spacecraft software by focusing on the protection of the operating system and firmware layers. These layers are critical in spacecraft systems, and SV-SP-7 ensures they are secure and resilient, reducing the likelihood of vulnerabilities that could arise from an architecture with too few or too many horizontal layers. This control helps maintain a manageable and secure software structure, aligning with the CISQ recommended range of 4-8 layers.\\n\\nSPARTA References: Techniques: REC-0008.03, RD-0003, RD-0003.01, IA-0001, IA-0001.01, IA-0001.02, EX-0009, EX-0009.02, EX-0009.03, EX-0010, EX-0010.01, EX-0010.02, EX-0010.03, EX-0010.04. Countermeasures: CM0025, CM0026, CM0011, CM0015, CM0021, CM0023, CM0047, CM0032, CM0014.\", \"reasoning\": \"SV-SP-7 focuses on protecting the operating system and firmware layers, which are critical in spacecraft software. CWE-1044 highlights the risks of having too few or too many horizontal layers in software architecture, which can complicate maintenance and introduce vulnerabilities. SV-SP-7's emphasis on securing the OS and firmware layers directly addresses the structural weaknesses described in CWE-1044 by ensuring these critical layers are robust and less susceptible to exploitation.\", \"grounding_score\": 0.8539999723434448}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085965270"
+      }
+    },
+    {
+      "input": "{\"question\": \"In the context of space systems, what role does the Software, Firmware, and Information Integrity | Cryptographic Protection (SI-7(6)) control play in defending against the Position, Navigation, and Timing (PNT) Spoofing (EX-0014.04) technique?\", \"answer\": \"In space systems, the Software, Firmware, and Information Integrity | Cryptographic Protection (SI-7(6)) control defends against the Position, Navigation, and Timing (PNT) Spoofing (EX-0014.04) technique by ensuring that the GNSS signal processing algorithms are cryptographically protected. This prevents adversaries from injecting spoofed signals that could mislead the spacecraft's navigation system, thereby safeguarding its position, navigation, and timing accuracy.\", \"reasoning\": \"Implement cryptographic mechanisms to detect unauthorized changes to software, firmware, and information.\", \"grounding_score\": 0.785}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086048509"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Vulnerability Monitoring and Scanning (RA-5) control mitigate the Ground System Presence (PER-0003) technique in space systems?\", \"answer\": \"The Vulnerability Monitoring and Scanning (RA-5) control mitigates the Ground System Presence (PER-0003) technique by continuously monitoring and scanning ground systems for vulnerabilities that could be exploited to maintain persistent access to spacecraft. This includes identifying and remediating software flaws, improper configurations, and other weaknesses in ground station networks and mission operations centers, which are critical for maintaining secure communications with the spacecraft.\", \"reasoning\": \"Threat actors may compromise target owned ground systems that can be used for persistent access to the spacecraft or to perpetuate other techniques. These ground systems have already been configured for communications to the victim spacecraft. By compromising this infrastructure, threat actors can stage, launch, and execute persistently.\", \"grounding_score\": 0.855}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086022770"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does SA-17(9) (Developer Security and Privacy Architecture and Design | Design Diversity) protect against single points of failure in spacecraft flight software?\", \"answer\": \"SA-17(9) protects against single points of failure in spacecraft flight software by requiring multiple developers to create different software variants that meet the same requirements. This ensures that if one variant fails due to a design flaw or vulnerability, the other variants can continue to operate, maintaining the spacecraft's functionality and mission integrity.\", \"reasoning\": \"Design diversity is achieved by supplying the same requirements specification to multiple developers, each of whom is responsible for developing a variant of the system or system component that meets the requirements.\", \"grounding_score\": 0.7900000214576721}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085979051"
+      }
+    },
+    {
+      "input": "{\"question\": \"What role does Space-Based Radio Frequency Mapping (CM0078) play in identifying the source of ASAT/Counterspace Weapon (IA-0008.03) attacks?\", \"answer\": \"Space-Based Radio Frequency Mapping (CM0078) plays a crucial role in identifying the source of ASAT/Counterspace Weapon (IA-0008.03) attacks by detecting and geolocating electronic attacks. This capability allows operators to pinpoint the origin of the interference, whether it is from Earth or other satellites, facilitating targeted responses.\", \"reasoning\": \"Space-based RF mapping provides space operators with a more complete picture of the space environment, the ability to quickly distinguish between intentional and unintentional interference, and the ability to detect and geolocate electronic attacks.\", \"grounding_score\": 0.802}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086009278"
+      }
+    },
+    {
+      "input": "{\"question\": \"Why is the Wireless Link Protection | Imitative or Manipulative Communications Deception (SC-40(3)) control particularly effective against the Downlink Jamming (EX-0016.02) technique in satellite communications?\", \"answer\": \"The Wireless Link Protection | Imitative or Manipulative Communications Deception (SC-40(3)) control is particularly effective against the Downlink Jamming (EX-0016.02) technique in satellite communications because it uses cryptographic mechanisms to verify the authenticity of downlink signals. This ensures that any attempt to jam or deceive the communication link by injecting noise or false signals is identified and rejected, maintaining the integrity and reliability of the satellite's downlink.\", \"reasoning\": \"Implement cryptographic mechanisms to identify and reject wireless transmissions that are deliberate attempts to achieve imitative or manipulative communications deception based on signal parameters.\", \"grounding_score\": 0.827}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086081862"
+      }
+    },
+    {
+      "input": "{\"question\": \"What role does D3-SDA play in identifying Component Collusion (DE-0012) in inter-satellite communication systems?\", \"answer\": \"D3-SDA plays a critical role in identifying Component Collusion (DE-0012) in inter-satellite communication systems by analyzing the duration of communication sessions between satellites. If colluding components are coordinating to evade detection, their communication sessions may exhibit unusual durations or patterns that D3-SDA can detect, alerting operators to potential malicious activity.\", \"reasoning\": \"This technique involves two or more compromised components operating in coordination to conceal malicious activity. Each component independently performs only a limited, seemingly benign function, such that when analyzed in isolation, no single module appears malicious.\", \"grounding_score\": 0.774}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086038349"
+      }
+    },
+    {
+      "input": "{\"question\": \"What space-specific vulnerabilities does the Receiver (IA-0004.02) technique exploit that Improper Control of Document Type Definition (CWE-827) addresses?\", \"answer\": \"The Receiver (IA-0004.02) technique exploits vulnerabilities in the secondary receiver of a spacecraft, which may have different security levels compared to the primary receiver. Improper Control of Document Type Definition (CWE-827) addresses this by ensuring that the communication protocols do not allow arbitrary DTDs, which could be used to exploit these vulnerabilities and inject malicious commands or data.\", \"reasoning\": \"The Receiver (IA-0004.02) technique exploits vulnerabilities in the secondary receiver of a spacecraft, which may have different security levels compared to the primary receiver. Improper Control of Document Type Definition (CWE-827) addresses this by ensuring that the communication protocols do not allow arbitrary DTDs, which could be used to exploit these vulnerabilities.\", \"grounding_score\": 0.8669999837875366}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085942558"
+      }
+    },
+    {
+      "input": "{\"question\": \"How can Default Accounts (T1078.001) be mitigated in the link segment of space systems?\", \"answer\": \"Default Accounts (T1078.001) can be mitigated in the link segment by ensuring that all communication equipment, such as RF uplink/downlink systems and SATCOM devices, have their default accounts changed or disabled. Additionally, implementing strong authentication mechanisms for TT&C (Telemetry, Tracking & Command) systems can prevent unauthorized access through default accounts.\", \"reasoning\": \"Default accounts are those that are built-into an OS, such as the Guest or Administrator accounts on Windows systems. Default accounts also include default factory/provider set accounts on other types of systems, software, or devices.\", \"grounding_score\": 0.7760000228881836}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085946195"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Acquisition Process | Functions, Ports, Protocols, and Services in Use (SA-4(9)) technique mitigate the risk posed by Uncaught Exception in Servlet (CWE-600) in space ground segment software?\", \"answer\": \"The Acquisition Process | Functions, Ports, Protocols, and Services in Use (SA-4(9)) technique mitigates the risk posed by Uncaught Exception in Servlet (CWE-600) in space ground segment software by requiring developers to identify and secure functions, ports, protocols, and services early in the development life cycle. This ensures that error handling mechanisms are robust and do not leak sensitive debugging information through error responses.\", \"reasoning\": \"The Acquisition Process | Functions, Ports, Protocols, and Services in Use (SA-4(9)) technique requires developers to identify and secure functions, ports, protocols, and services early in the development life cycle. This helps mitigate the risk posed by Uncaught Exception in Servlet (CWE-600), which can expose sensitive debugging information through error responses.\", \"grounding_score\": 0.8289999961853027}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085942917"
+      }
+    },
+    {
+      "input": "{\"question\": \"Why is Covert Channel Analysis | Maximum Bandwidth (SC-31(2)) particularly challenging to implement in space systems, and how does Improper Neutralization (CWE-707) provide a complementary defense?\", \"answer\": \"Covert Channel Analysis | Maximum Bandwidth (SC-31(2)) is particularly challenging in space systems because the complete elimination of covert channels, especially timing channels, often requires significant performance trade-offs. Improper Neutralization (CWE-707) complements this control by ensuring that all inputs to the spacecraft's communication systems are properly sanitized and validated. This reduces the risk of covert channel exploitation by preventing adversaries from injecting malformed data that could be used to create or enhance covert channels.\", \"reasoning\": \"Covert Channel Analysis | Maximum Bandwidth (SC-31(2)) is challenging to implement in space systems due to the difficulty in completely eliminating covert channels without significant performance impacts. Improper Neutralization (CWE-707) provides a complementary defense by ensuring that inputs are properly sanitized, reducing the risk of covert channel exploitation.\", \"grounding_score\": 0.8180000185966492}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085970048"
+      }
+    },
+    {
+      "input": "{\"question\": \"What space-specific vulnerabilities does Software Discovery (T1518) exploit that Function Call with Incorrectly Specified Arguments (CWE-628) addresses in satellite crosslink communications?\", \"answer\": \"In satellite crosslinks, Software Discovery can exploit protocol version handshake mechanisms to identify vulnerable implementations of CCSDS Proximity-1 or other space data link protocols. CWE-628 controls prevent this by enforcing strict validation of all version negotiation packet fields - rejecting malformed queries that could reveal the spacecraft's protocol implementation details. This is critical because many satellites cannot be patched after launch, making protocol version information highly valuable to attackers.\", \"reasoning\": \"Focuses on the inter-satellite link aspect where software discovery could reveal vulnerable protocols.\", \"grounding_score\": 0.7360000014305115}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "2085927466"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does Insufficient Adherence to Expected Conventions (CWE-1076) impact the effectiveness of Physical Access Authorizations | Two Forms of Identification (PE-2(2)) in ground station security?\", \"answer\": \"In ground stations, Insufficient Adherence to Expected Conventions (CWE-1076) creates vulnerabilities in Physical Access Authorizations (PE-2(2)) when personnel bypass dual-authentication procedures during emergency operations or maintenance windows. Space-specific impacts include: 1) Operators skipping biometric verification during time-sensitive satellite contact passes, 2) Shared use of PIV cards between shifts when accessing antenna control rooms, and 3) Inconsistent logging of temporary contractor access during ground system upgrades. These deviations from protocol create undocumented access vectors that could compromise TT&C systems.\", \"reasoning\": \"Ground stations are critical space infrastructure where physical access control is paramount. The question explores how deviation from expected security conventions can undermine multi-factor physical access controls.\", \"grounding_score\": 0.8029999732971191}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085931098"
+      }
+    },
+    {
+      "input": "{\"question\": \"What space-specific vulnerabilities in Public Key Infrastructure Certificates (SC-17) does d3f:ExceptionHandler (d3f:ExceptionHandler) address during satellite uplink operations?\", \"answer\": \"d3f:ExceptionHandler addresses space-specific vulnerabilities in Public Key Infrastructure Certificates (SC-17) during satellite uplink operations by detecting exceptions such as certificate chain validation failures or unauthorized trust anchors. In space systems, where uplink commands must be authenticated using PKI certificates, the d3f:ExceptionHandler ensures that any anomalies in the certificate validation process are caught and isolated. This prevents adversaries from exploiting compromised certificates to inject malicious commands, which is particularly critical in space systems due to the long latency and limited opportunities for manual intervention.\", \"reasoning\": \"This question focuses on the specific vulnerabilities in PKI certificates during satellite uplink operations and how the d3f:ExceptionHandler control addresses these vulnerabilities in the space domain.\", \"grounding_score\": 0.8159999847412109}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085933899"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the implementation of Ccache Files (T1558.005) differ between terrestrial systems and spacecraft when defending against Exploit Lack of Bus Segregation (LM-0002)?\", \"answer\": \"Unlike terrestrial implementations where ccache files may persist for days, spacecraft implementations of Ccache Files (T1558.005) must account for: 1) Radiation-induced bit flips requiring ECC-protected credential storage, 2) Limited uplink windows mandating shorter ticket validity periods aligned with contact schedules, and 3) The absence of filesystem hierarchies requiring credential storage in protected memory regions rather than /tmp. These adaptations prevent LM-0002 attacks by making stolen credentials both temporally and spatially invalid in the space environment.\", \"reasoning\": \"This question highlights the space-specific adaptations required for credential caching controls.\", \"grounding_score\": 0.7490000128746033}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "2085930820"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does Incomplete Design Documentation (CWE-1110) affect the assurance case for space systems implementing the Security and Privacy Engineering Principles | Hierarchical Trust (SA-8(10)) technique?\", \"answer\": \"The Security and Privacy Engineering Principles | Hierarchical Trust (SA-8(10)) technique is particularly important for space systems because it ensures that \\\"the security dependencies in a system will form a partial ordering if they preserve the principle of trusted components,\\\" preventing scenarios where \\\"a more trustworthy component located in a lower layer of the system were to depend on a less trustworthy component in a higher layer,\\\" which would \\\"put the components in the same 'less trustworthy' equivalence class per the principle of trusted components.\\\" This principle is critical for maintaining the trustworthiness and resilience of space systems by eliminating circular dependencies and enabling trustworthiness reasoning or an assurance case when composing a secure system from heterogeneously trustworthy components. Incomplete Design Documentation (CWE-1110) hinders this effectiveness because \\\"the product's design documentation does not adequately describe control flow, data flow, system initialization, relationships between tasks, components, rationales, or other important aspects of the design.\\\" This lack of clarity undermines the ability to model and harden the system, leading to potential fragility in trust relationships and compromising the loyalty of lower-layer components to their intended security dependencies.\", \"reasoning\": \"The partial ordering provides the basis for trustworthiness reasoning or an assurance case (assurance argument) when composing a secure system from heterogeneously trustworthy components.\", \"grounding_score\": 0.921999990940094}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085955830"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Mission-Operated Ground System (RD-0002.01) control mitigate the Proc Memory (T1055.009) technique in spacecraft ground segment operations?\", \"answer\": \"The Mission-Operated Ground System (RD-0002.01) mitigates Proc Memory (T1055.009) by enforcing strict process isolation and memory protection on ground station servers that generate and validate uplink commands. Unlike terrestrial systems where /proc access might be exploited, space ground systems implement hardware-enforced memory segmentation on mission-critical command generation servers, preventing unauthorized process memory access that could corrupt validated command sequences before uplink. This is critical because compromised command generation could lead to malicious spacecraft operations that cannot be immediately corrected due to communication latency.\", \"reasoning\": \"The question explores the space-specific application of the control against the technique in ground systems that communicate with spacecraft.\", \"grounding_score\": 0.7519999742507935}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "2085920878"
+      }
+    },
+    {
+      "input": "{\"question\": \"How can Modify Cloud Compute Configurations (T1578.005) prevent lateral movement via Malicious Copy and Paste (T1204.004) between ground station and spacecraft command systems?\", \"answer\": \"Modify Cloud Compute Configurations (T1578.005) prevents lateral movement by implementing network segmentation policies in ground station clouds that restrict compute instances from both accessing uplink frequencies and processing telemetry simultaneously. This space-specific control ensures that even if Malicious Copy and Paste (T1204.004) compromises a cloud instance, it cannot both receive stolen command tokens from telemetry and inject them into uplink streams during the same orbital contact window.\", \"reasoning\": \"The control can limit the ability of compromised cloud instances to interact with spacecraft command systems.\", \"grounding_score\": 0.7799999713897705}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "2085921133"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the Mission-Operated Ground System (RD-0002.01) control enhance the security of spacecraft against the DEPRECATED: Sensitive Information Accessible by Physical Probing of JTAG Interface (CWE-1324) technique?\", \"answer\": \"The Mission-Operated Ground System (RD-0002.01) enhances the security of spacecraft against the DEPRECATED: Sensitive Information Accessible by Physical Probing of JTAG Interface (CWE-1324) technique by implementing comprehensive security measures for ground systems. These measures include strict access controls, continuous monitoring, and regular security audits to ensure that ground systems are not compromised. By securing the ground systems, the control prevents adversaries from using them as a vector to probe JTAG interfaces on spacecraft, thereby protecting sensitive information from unauthorized access.\", \"reasoning\": \"Threat actors may compromise mission owned/operated ground systems that can be used for future campaigns or to perpetuate other techniques. These ground systems have already been configured for communications to the victim spacecraft.\", \"grounding_score\": 0.817}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085991337"
+      }
+    },
+    {
+      "input": "{\"question\": \"How does the automatic update feature of Malicious Code Protection (SI-3) enhance defense against the Propulsion Subsystem (EX-0012.07) technique in space systems?\", \"answer\": \"The automatic update feature of Malicious Code Protection (SI-3) enhances defense against the Propulsion Subsystem (EX-0012.07) technique by ensuring that the spacecraft's malicious code protection mechanisms are always up-to-date with the latest releases. This continuous update process helps detect and block new variants of malicious code that could target and modify the propulsion subsystem's values, thereby preventing over-correction and resource wastage.\", \"reasoning\": \"Threat actors may target the onboard values for the propulsion subsystem of the victim spacecraft. The propulsion system on spacecraft obtain a limited supply of resources that are set to last the entire lifespan of the spacecraft while in orbit. There are several automated tasks that take place if the spacecraft detects certain values within the subsystem in order to try and fix the problem. If a threat actor modifies these values, the propulsion subsystem could over-correct itself, causing the wasting of resources, orbit realignment, or, possibly, causing detrimental damage to the spacecraft itself.\", \"grounding_score\": 0.81}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086031319"
+      }
+    },
+    {
+      "input": "{\"question\": \"What role does Information Input Validation (SI-10) play in defending against the Corruption or Overload of Ground-Based SDA Systems (DE-0009.05) technique in space domain awareness operations?\", \"answer\": \"Information Input Validation (SI-10) plays a critical role in defending against the Corruption or Overload of Ground-Based SDA Systems (DE-0009.05) technique by ensuring that all data inputs, such as telemetry, TLEs, and sensor feeds, are rigorously validated for authenticity and integrity before being processed. This prevents adversaries from corrupting or overloading the SDA systems, thereby maintaining accurate and reliable space domain awareness.\", \"reasoning\": \"Threat actors may target the ground-based systems and data pipelines that support Space Domain Awareness (SDA), either by corrupting key data sources, manipulating tracking information, or overloading the ingestion architecture.\", \"grounding_score\": 0.833}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086035476"
+      }
+    },
+    {
+      "input": "{\"question\": \"How can DLL Side-Loading (T1574.002) be implemented to protect ground segment software from Downlink Jamming (EX-0016.02)?\", \"answer\": \"DLL Side-Loading (T1574.002) can be implemented to protect ground segment software from Downlink Jamming (EX-0016.02) by introducing a DLL that enhances the software's signal processing capabilities. This DLL could include algorithms for adaptive filtering, frequency hopping, or other techniques to detect and mitigate jamming signals. By side-loading this DLL into the ground station software, the system can dynamically adjust its reception parameters to maintain reliable communication with the satellite, even in the presence of jamming. This approach leverages the trusted process of the ground station software to ensure that the mitigation measures are executed effectively.\", \"reasoning\": \"DLL Side-Loading can be implemented to protect ground segment software by introducing a DLL that enhances the software's ability to process and filter signals, thereby mitigating the effects of jamming.\", \"grounding_score\": 0.7839999794960022}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2085962915"
+      }
+    },
+    {
+      "input": "{\"question\": \"Why is Permissive Cross-domain Security Policy with Untrusted Domains (CWE-942) particularly dangerous for space ground stations and how does the Ccache Files (T1558.005) control counter it?\", \"answer\": \"Hypothesized based on context: Permissive Cross-domain Security Policy with Untrusted Domains (CWE-942) is particularly dangerous for space ground stations because it can allow untrusted domains to interact with critical systems, potentially leading to unauthorized command and control of spacecraft. The Ccache Files (T1558.005) control counters this by securing the Kerberos ticket cache, ensuring that even if an attacker gains access through a permissive policy, they cannot use stolen credentials to escalate privileges or access sensitive systems.\", \"reasoning\": \"If a cross-domain policy file includes domains that should not be trusted, such as when using wildcards under a high-level domain, then the application could be attacked by these untrusted domains. In many cases, the attack can be launched without the victim even being aware of it.\", \"grounding_score\": 0.823}",
+      "expected_output": "FAIL",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086000534"
+      }
+    },
+    {
+      "input": "{\"question\": \"In the context of space systems, how does Software Usage Restrictions (CM-10) prevent the exploitation of Software Defined Radio (EXF-0006.01) for data exfiltration?\", \"answer\": \"Software Usage Restrictions (CM-10) prevents the exploitation of Software Defined Radio (EXF-0006.01) by mandating strict control over software installations and updates on SDRs. In space systems, this ensures that only authorized and verified software is used, preventing adversaries from reprogramming SDRs to establish unauthorized exfiltration channels via RF links.\", \"reasoning\": \"Threat actors may target software defined radios due to their software nature to setup exfiltration channels. Since SDRs are programmable, when combined with supply chain or development environment attacks, SDRs provide a pathway to setup covert exfiltration channels for a threat actor.\", \"grounding_score\": 0.803}",
+      "expected_output": "PASS",
+      "metadata": {
+        "_key": "qra__run-recovery-verify__2086024962"
+      }
+    }
+  ]
+}

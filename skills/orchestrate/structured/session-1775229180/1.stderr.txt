@@ -1,0 +1,13 @@
+2026-04-03 11:13:13.735 | INFO     | __main__:run:497 - === CODE-RUNNER v2: Express endpoints: all /api/posture/* routes (frameworks, families, gaps, risks, alerts, overview) ===
+2026-04-03 11:13:13.735 | INFO     | __main__:run:498 -   Backend: codex
+2026-04-03 11:13:13.735 | INFO     | __main__:run:499 -   DoD: grep -q '/api/posture/frameworks' packages/ux-lab/server/index.ts && grep -q '/api/posture/overview'
+2026-04-03 11:13:13.736 | INFO     | __main__:run:500 -   Max rounds: 5
+2026-04-03 11:13:15.234 | INFO     | __main__:run:591 - ── Round 1/5 [strategy=direct_fix codex:medium] ──
+2026-04-03 11:15:32.972 | WARNING  | apply:apply_llm_response:423 -   v2: Diff failed for packages/ux-lab/server/index.ts, trying complete file
+2026-04-03 11:15:32.972 | INFO     | apply:apply_file_blocks:256 -   Wrote: packages/ux-lab/server/index.ts (13835 bytes)
+2026-04-03 11:15:32.972 | INFO     | __main__:run:655 -   Applied 1 files: ['packages/ux-lab/server/index.ts']
+2026-04-03 11:15:33.057 | INFO     | __main__:run:681 -   Score: 1.000 (DoD:True errors:0 lint:0 bp:0)
+2026-04-03 11:15:33.130 | WARNING  | __main__:git_commit_round:123 - git commit failed: 
+2026-04-03 11:15:33.130 | WARNING  | __main__:run:713 -   DISCARD (score improved but git commit failed)
+2026-04-03 11:15:33.581 | INFO     | __main__:run:776 - === DoD PASSED on round 1 (score=1.000) ===
+2026-04-03 11:15:33.582 | INFO     | __main__:run:795 - === RESULT: PASS | score=0.000 | 1 rounds ===

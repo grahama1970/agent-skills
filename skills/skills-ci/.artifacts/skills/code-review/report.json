@@ -1,0 +1,28 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/skills",
+  "best_practices": [
+    "best-practices-python",
+    "best-practices-react",
+    "best-practices-skills"
+  ],
+  "mode": "scan",
+  "timestamp": "2026-02-04T13:50:58.222761+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 1,
+    "total": 1
+  },
+  "worktree": null,
+  "skill": "code-review",
+  "violations": [
+    {
+      "rule": "skills.missing_skill_md",
+      "severity": "warn",
+      "skill": "code-review",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/skills/code-review/SKILL.md",
+      "message": "Missing SKILL.md; directory treated as non-skill.",
+      "fixable": false,
+      "applied": false
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "approach": "v8-all-sparta-collections",
+  "agreement": 0.4,
+  "results": [
+    {
+      "grade": "FAIL",
+      "best_cite": 0.477,
+      "avg_cite": 0.464,
+      "answer_score": 0.443,
+      "corpus_len": 10007,
+      "rationale": "Ungrounded: cite=48% ans=44%",
+      "key": "1183163524",
+      "expected": "PASS",
+      "match": false,
+      "latency": 0.18
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 0.681,
+      "answer_score": 0.512,
+      "corpus_len": 6564,
+      "rationale": "Partial: cite=100% ans=51%",
+      "key": "1122196280",
+      "expected": "PASS",
+      "match": false,
+      "latency": 0.282
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 0.721,
+      "answer_score": 0.469,
+      "corpus_len": 3866,
+      "rationale": "Partial: cite=100% ans=47%",
+      "key": "qra__run-recovery-verify__2086029845",
+      "expected": "PASS",
+      "match": false,
+      "latency": 0.316
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 1.0,
+      "answer_score": 0.538,
+      "corpus_len": 3657,
+      "rationale": "Partial: cite=100% ans=54%",
+      "key": "qra__run-recovery-verify__2085979839",
+      "expected": "PASS",
+      "match": false,
+      "latency": 0.273
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 0.718,
+      "answer_score": 0.408,
+      "corpus_len": 2448,
+      "rationale": "Partial: cite=100% ans=41%",
+      "key": "16562",
+      "expected": "PARTIAL",
+      "match": true,
+      "latency": 0.316
+    },
+    {
+      "grade": "FAIL",
+      "best_cite": 0.485,
+      "avg_cite": 0.485,
+      "answer_score": 0.474,
+      "corpus_len": 6936,
+      "rationale": "Ungrounded: cite=49% ans=47%",
+      "key": "qra__run-recovery-verify__2085929758",
+      "expected": "PARTIAL",
+      "match": false,
+      "latency": 0.275
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 1.0,
+      "avg_cite": 1.0,
+      "answer_score": 0.456,
+      "corpus_len": 4126,
+      "rationale": "Partial: cite=100% ans=46%",
+      "key": "qra__run-recovery-verify__2086079845",
+      "expected": "PARTIAL",
+      "match": true,
+      "latency": 0.318
+    },
+    {
+      "grade": "FAIL",
+      "best_cite": 0.543,
+      "avg_cite": 0.528,
+      "answer_score": 0.42,
+      "corpus_len": 12515,
+      "rationale": "Ungrounded: cite=54% ans=42%",
+      "key": "14992",
+      "expected": "FAIL",
+      "match": true,
+      "latency": 0.149
+    },
+    {
+      "grade": "FAIL",
+      "best_cite": 0.531,
+      "avg_cite": 0.531,
+      "answer_score": 0.478,
+      "corpus_len": 7897,
+      "rationale": "Ungrounded: cite=53% ans=48%",
+      "key": "14993",
+      "expected": "FAIL",
+      "match": true,
+      "latency": 0.271
+    },
+    {
+      "grade": "PARTIAL",
+      "best_cite": 0.662,
+      "avg_cite": 0.599,
+      "answer_score": 0.444,
+      "corpus_len": 14706,
+      "rationale": "Partial: cite=66% ans=44%",
+      "key": "2085921413",
+      "expected": "FAIL",
+      "match": false,
+      "latency": 0.183
+    }
+  ]
+}

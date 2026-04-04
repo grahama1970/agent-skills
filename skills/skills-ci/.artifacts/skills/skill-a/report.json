@@ -1,0 +1,45 @@
+{
+  "root": "/home/graham/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci/skills-ci-sanity-20260204090925/.pi/skills/skills-ci/tests/fixtures/skills_root",
+  "best_practices": [
+    "best-practices-skills",
+    "best-practices-python"
+  ],
+  "mode": "apply",
+  "timestamp": "2026-02-04T14:09:26.417770+00:00",
+  "summary": {
+    "error": 0,
+    "warn": 3,
+    "total": 3
+  },
+  "worktree": "/home/graham/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci/skills-ci-sanity-20260204090925",
+  "skill": "skill-a",
+  "violations": [
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "skill-a",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci/skills-ci-sanity-20260204090925/.pi/skills/skills-ci/tests/fixtures/skills_root/skill-a/example.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": true
+    },
+    {
+      "rule": "python.requests",
+      "severity": "warn",
+      "skill": "skill-a",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci/skills-ci-sanity-20260204090925/.pi/skills/skills-ci/tests/fixtures/skills_root/skill-a/example.py",
+      "message": "Uses requests; prefer httpx.",
+      "fixable": true,
+      "applied": true
+    },
+    {
+      "rule": "python.module_docstring",
+      "severity": "warn",
+      "skill": "skill-a",
+      "path": "/home/graham/workspace/experiments/pi-mono/.pi/.worktrees/skills-ci/skills-ci-sanity-20260204090925/.pi/skills/skills-ci/tests/fixtures/skills_root/skill-a/test_sample.py",
+      "message": "Missing module docstring.",
+      "fixable": true,
+      "applied": true
+    }
+  ]
+}

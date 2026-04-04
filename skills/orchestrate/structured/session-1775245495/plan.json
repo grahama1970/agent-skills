@@ -1,0 +1,442 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pi-mono",
+  "metadata": {
+    "title": "SPARTA Posture Dashboard \u2014 Full Backend Integration",
+    "goal": "Compliance officer ATO decision screen: dedicated Express API endpoints querying ArangoDB, PostureDashboard React component (3ft), 5ft landing page, Gauge nav icon, 100% data-qid coverage, CDP live DOM test manifest",
+    "plan_type": "hybrid",
+    "device": "desktop",
+    "created": "2026-04-03",
+    "primary_persona": {
+      "name": "Brandon Bailey",
+      "role": "Compliance Officer / Authorizing Official",
+      "source": ".pi/agents/brandon-bailey/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 3
+  },
+  "capability_overlap": [
+    "/memory recall: usePostureData.ts hook DONE (349 lines, committed). PostureDashboard.tsx is 7-line stub.",
+    "useSpartaCollections.ts hooks (useCollectionCounts, useRawFrameworkCounts) \u2014 CALL",
+    "EmbryStyle.ts (EMBRY colors, card, heading, label, body, fwBadge, glowDot) \u2014 CALL",
+    "Express /api/memory/* generic proxy \u2014 EXISTS but posture needs dedicated typed endpoints",
+    "verify-data-qid.py \u2014 CALL (packages/ux-lab/scripts/verify-data-qid.py)",
+    "/mockup-lab \u2014 SKIP (V1 mockup already approved at captures/posture-dashboard-design/)",
+    "/code-runner \u2014 CALL (Codex implementation)",
+    "/test-interactions \u2014 CALL (CDP live DOM manifest generation)",
+    "/best-practices-react \u2014 COMPLY (data-qid, data-qs-action, title, useRegisterAction on ALL interactive elements)",
+    "d3-shape (d3.arc, d3.pie), d3-scale \u2014 CALL (already in package.json)",
+    "CREATE justification: (1) No posture API endpoints exist \u2014 generic /api/memory/list requires client-side aggregation. Dedicated endpoints push aggregation server-side. (2) No PostureDashboard component. (3) No 5ft landing page. (4) No Gauge in nav."
+  ],
+  "design_constraints": {
+    "embry_style": {
+      "source": "packages/ux-lab/src/components/common/EmbryStyle.ts",
+      "rule": "ALL colors, backgrounds, borders, typography, and spacing MUST use EmbryStyle tokens \u2014 NEVER hardcoded hex values",
+      "tokens_required": [
+        "EMBRY.bg, EMBRY.bgCard, EMBRY.bgPanel, EMBRY.bgDeep \u2014 backgrounds",
+        "EMBRY.border, EMBRY.borderHover \u2014 borders",
+        "EMBRY.green, EMBRY.red, EMBRY.amber, EMBRY.blue, EMBRY.accent \u2014 semantic colors",
+        "EMBRY.white, EMBRY.dim, EMBRY.muted \u2014 text",
+        "EMBRY.fw[framework] \u2014 framework-specific ring/badge colors",
+        "card, panel, label, heading, body \u2014 layout primitives",
+        "glowDot(color) \u2014 status indicators",
+        "fwBadge(framework) \u2014 framework badges"
+      ]
+    },
+    "nvis_palette": {
+      "standard": "MIL-STD-3009 (NVIS-compatible night vision)",
+      "rule": "NVIS compliance is built into EmbryStyle tokens. Using EmbryStyle = NVIS compliant. Hardcoded colors = NVIS violation.",
+      "colors": {
+        "green": "#00ff88 \u2014 operational/pass",
+        "red": "#ff4444 \u2014 critical/fail",
+        "amber": "#ffaa00 \u2014 warning/partial",
+        "blue": "#4a9eff \u2014 informational/NIST"
+      },
+      "enforcement": "grep for hardcoded hex in TSX (excluding EmbryStyle imports) = FAIL"
+    },
+    "cots_interaction": {
+      "standard": "MIL-STD-1472H (Human Engineering)",
+      "rules": [
+        "title attribute on ALL interactive elements (tooltips for touch/hover)",
+        "EMBRY.muted text must maintain \u22654.5:1 contrast ratio on dark backgrounds",
+        "Focus-visible outlines on all clickable elements (keyboard navigation)",
+        "No color-only signaling \u2014 every status uses color + shape/text (colorblind-safe)",
+        "Minimum touch target 44x44px for clickable elements",
+        "Error states use EMBRY.red + icon + text (never color alone)"
+      ],
+      "colorblind_safe": "EmbryStyle graph palette is deuteranopia/protanopia verified. Donut rings use EMBRY.fw[] which differs by hue AND luminance."
+    },
+    "review_plan_gate": {
+      "rule": "/review-plan MUST FAIL any task that:",
+      "failures": [
+        "Uses hardcoded hex colors instead of EmbryStyle tokens",
+        "Missing title attribute on interactive elements",
+        "Color-only status signaling without text/icon fallback",
+        "Missing focus-visible styles on clickable elements",
+        "Imports CSS colors directly instead of from EmbryStyle"
+      ]
+    }
+  },
+  "questions_blockers": [],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Wave 0: Express API endpoints (backend-first)"
+    },
+    {
+      "id": "1",
+      "label": "Wave 1: React components (PostureDashboard + OverviewLanding)"
+    },
+    {
+      "id": "2",
+      "label": "Wave 2: Nav integration + QuerySpec instrumentation"
+    },
+    {
+      "id": "3",
+      "label": "Wave 3: CDP live DOM test manifest + visual verification"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "5",
+      "title": "Update usePostureData hook to use dedicated /api/posture/* endpoints",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [],
+      "skills": [
+        "best-practices-react",
+        "best-practices-plan"
+      ],
+      "allowlist": [
+        "packages/ux-lab/src/hooks/usePostureData.ts"
+      ],
+      "read_context": [
+        "packages/ux-lab/server/index.ts"
+      ],
+      "implementation": [
+        "Refactor usePostureData.ts to fetch from dedicated endpoints instead of generic /api/memory/list:",
+        "  /api/posture/frameworks \u2192 frameworkCoverage, overallScore",
+        "  /api/posture/families/NIST \u2192 controlsByFamily",
+        "  /api/posture/gaps \u2192 gaps",
+        "  /api/posture/risks \u2192 topRisks",
+        "  /api/posture/alerts \u2192 driftAlerts (new export)",
+        "Keep Promise.all parallel fetch (no waterfalls)",
+        "Remove client-side aggregation (server does it now)",
+        "Export types: PostureData, FrameworkScore, FamilyBreakdown, GapAnalysis, RiskControl, DriftAlert"
+      ],
+      "tests": [
+        "cd packages/ux-lab && npx vite build --mode development 2>&1 | tail -5",
+        "curl -sf http://localhost:3002/src/hooks/usePostureData.ts -o /dev/null -w '%{http_code}' | grep -q 200"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && curl -sf http://localhost:3002/src/hooks/usePostureData.ts -o /dev/null -w '%{http_code}' | grep -q 200",
+        "assertion": "exit_code == 0"
+      },
+      "gate": "Hook compiles in Vite dev server and fetches from dedicated endpoints"
+    },
+    {
+      "id": "6",
+      "title": "Implement PostureDashboard.tsx \u2014 full 3ft compliance view from V1 mockup",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "5"
+      ],
+      "skills": [
+        "best-practices-react",
+        "best-practices-d3"
+      ],
+      "allowlist": [
+        "packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/captures/posture-dashboard-design/variation_1.html",
+        "packages/ux-lab/src/hooks/usePostureData.ts",
+        "packages/ux-lab/src/components/sparta/common/EmbryStyle.ts"
+      ],
+      "design_board": "APPROVED: packages/ux-lab/captures/posture-dashboard-design/variation_1.html + variation_1.png (V1 approved 2026-04-03)",
+      "png_evidence": "Capture headless Chrome screenshot \u2192 captures/posture-dashboard-design/implementation-dashboard.png for /review-design comparison",
+      "implementation": [
+        "Replace 7-line stub with full implementation matching approved V1 mockup",
+        "Layout: 3-row grid per mockup",
+        "  Row 1 (hero): Large posture score (glow, delta badge) + 8 framework SVG donut rings",
+        "  Row 2 (main): NIST 800-53 family stacked bars (15 families) + Gap Analysis card (5 stat rows)",
+        "  Row 3 (detail): Drift Alerts list (glow-dot severity) + Top 10 Risk Controls table",
+        "D3 per /best-practices-d3: React renders SVG declaratively, d3.pie()/d3.arc() compute paths in useMemo",
+        "Styling: ALL via EmbryStyle tokens \u2014 EMBRY.bgCard for cards, EMBRY.bg for background, label/heading/body for text",
+        "  NEVER hardcode hex values \u2014 import { EMBRY, card, label, heading, glowDot, fwBadge } from common/EmbryStyle",
+        "  NVIS MIL-STD-3009: green=#00ff88 pass, red=#ff4444 fail, amber=#ffaa00 partial (all via EMBRY.green/red/amber)",
+        "  COTS MIL-STD-1472H: title on every interactive element, \u22654.5:1 contrast, focus-visible outlines, no color-only signaling",
+        "  Colorblind-safe: donut rings use EMBRY.fw[framework] which differs by hue AND luminance",
+        "ALL interactive elements get: data-qid, data-qs-action, title",
+        "  Donuts: data-qid='posture:donut:{framework}' data-qs-action='POSTURE_SELECT_FRAMEWORK_{FW}'",
+        "  Family bars: data-qid='posture:family:{family}' data-qs-action='POSTURE_SELECT_FAMILY_{FAM}'",
+        "  Gap items: data-qid='posture:gap:{type}' data-qs-action='POSTURE_VIEW_GAP_{TYPE}'",
+        "  Alert rows: data-qid='posture:alert:{control_id}' data-qs-action='POSTURE_VIEW_ALERT_{ID}'",
+        "  Risk rows: data-qid='posture:risk:{control_id}' data-qs-action='POSTURE_VIEW_RISK_{ID}'",
+        "useRegisterAction at top of component for each action class",
+        "No early returns that hide chrome \u2014 empty state renders inside content area",
+        "Clickable bars: onClick sets selectedFamily state \u2192 family flyout panel",
+        "Clickable risk rows: onClick navigates to control detail"
+      ],
+      "tests": [
+        "cd packages/ux-lab && curl -sf http://localhost:3002/src/components/sparta/dashboard/PostureDashboard.tsx -o /dev/null -w '%{http_code}' | grep -q 200",
+        "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx",
+        "assertion": "exit_code == 0"
+      },
+      "gate": "PostureDashboard renders all 3 rows with real data, 100% data-qid coverage"
+    },
+    {
+      "id": "7",
+      "title": "Implement OverviewLanding.tsx \u2014 5ft landing page with 4 live content wells",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "5"
+      ],
+      "skills": [
+        "best-practices-react"
+      ],
+      "allowlist": [
+        "packages/ux-lab/src/components/sparta/explorer/OverviewLanding.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/components/sparta/explorer/OverviewView.tsx",
+        "packages/ux-lab/src/hooks/usePostureData.ts",
+        "packages/ux-lab/src/components/sparta/common/EmbryStyle.ts"
+      ],
+      "design_board": "APPROVED: 5ft landing follows same EMBRY dark theme as PostureDashboard. 4 content wells in 2x2 grid. No separate mockup \u2014 derived from V1 posture dashboard design language.",
+      "png_evidence": "Capture headless Chrome screenshot \u2192 captures/posture-dashboard-design/implementation-overview.png for /review-design comparison",
+      "implementation": [
+        "Create OverviewLanding.tsx \u2014 replaces or enhances OverviewView as the 5ft landing",
+        "4 content wells in 2x2 grid:",
+        "  Data Quality: big number (QRA coverage %), sparkline trend, 'N controls assessed'",
+        "  Threat Matrix: big number (technique coverage %), top 3 uncovered techniques",
+        "  Posture: big number (overall score %), framework mini-bars, delta badge",
+        "  Proof Graph: big number (relationship density), avg NRS, strong/weak edge counts",
+        "Each well is a clickable card that navigates to its detail view",
+        "Fetch from single GET /api/posture/overview (no waterfalls)",
+        "ALL wells: data-qid='overview:well:{name}' data-qs-action='OVERVIEW_NAVIGATE_{NAME}' title='View {name} details'",
+        "useRegisterAction for each well navigation"
+      ],
+      "tests": [
+        "cd packages/ux-lab && curl -sf http://localhost:3002/src/components/sparta/explorer/OverviewLanding.tsx -o /dev/null -w '%{http_code}' | grep -q 200",
+        "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/explorer/OverviewLanding.tsx"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/explorer/OverviewLanding.tsx",
+        "assertion": "exit_code == 0"
+      },
+      "gate": "OverviewLanding renders 4 wells with real data, 100% data-qid coverage"
+    },
+    {
+      "id": "8",
+      "title": "Add Gauge icon to nav strip + wire Posture tab in SpartaExplorer",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "6",
+        "7"
+      ],
+      "skills": [
+        "best-practices-react"
+      ],
+      "allowlist": [
+        "packages/ux-lab/src/components/sparta/explorer/SpartaExplorer.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/App.tsx",
+        "packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx",
+        "packages/ux-lab/src/components/sparta/explorer/OverviewLanding.tsx"
+      ],
+      "design_board": "N/A \u2014 nav wiring task, not visual design. Icon (ShieldCheck) already in lucide-react.",
+      "png_evidence": "Capture headless Chrome screenshot \u2192 captures/posture-dashboard-design/implementation-nav.png showing Posture tab in nav strip",
+      "implementation": [
+        "In SpartaExplorer.tsx:",
+        "  1. Add 'Posture' to TABS constant array",
+        "  2. Import ShieldCheck from lucide-react (already imported in App.tsx \u2014 compliance posture icon)",
+        "  3. Add 'Posture': ShieldCheck to TAB_ICON_COMPONENTS map",
+        "  4. Add case for 'Posture' tab rendering PostureDashboard component",
+        "  5. Wire OverviewLanding into the 'Overview' tab (replace or enhance existing OverviewView)",
+        "  6. data-qid on the new tab button: data-qid='sparta:tab:posture'",
+        "Preserve all existing tabs and their data-qid attributes"
+      ],
+      "tests": [
+        "cd packages/ux-lab && curl -sf http://localhost:3002/src/components/sparta/explorer/SpartaExplorer.tsx -o /dev/null -w '%{http_code}' | grep -q 200",
+        "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/explorer/SpartaExplorer.tsx"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && grep -q 'Posture' src/components/sparta/explorer/SpartaExplorer.tsx && grep -q 'ShieldCheck' src/components/sparta/explorer/SpartaExplorer.tsx",
+        "assertion": "exit_code == 0"
+      },
+      "gate": "Posture tab with Gauge icon appears in nav and renders PostureDashboard"
+    },
+    {
+      "id": "9",
+      "title": "Family flyout panel \u2014 drill into controls for selected family",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "6"
+      ],
+      "skills": [
+        "best-practices-react"
+      ],
+      "allowlist": [
+        "packages/ux-lab/src/components/sparta/dashboard/PostureDashboard.tsx"
+      ],
+      "read_context": [
+        "packages/ux-lab/src/components/sparta/explorer/ControlsView.tsx"
+      ],
+      "design_board": "Follows existing ControlsView flyout pattern \u2014 same slide-over, same EMBRY styling. No separate mockup needed.",
+      "png_evidence": "Capture headless Chrome screenshot \u2192 captures/posture-dashboard-design/implementation-flyout.png showing family drill-in panel",
+      "implementation": [
+        "Slide-over panel (same pattern as ControlsView detail flyout)",
+        "Opens when user clicks a family bar in PostureDashboard",
+        "Shows: family name, total controls, pass/partial/fail breakdown",
+        "Control table: control_id, name, NRS, QRA count, weakness count",
+        "Click control row \u2192 onNavigateToControl(id)",
+        "Close button + Escape key handler",
+        "ALL elements: data-qid='posture:flyout:{element}' data-qs-action='POSTURE_FLYOUT_{ACTION}' title='...'",
+        "useRegisterAction for flyout close, control select"
+      ],
+      "tests": [
+        "cd packages/ux-lab && curl -sf http://localhost:3002/src/components/sparta/dashboard/PostureDashboard.tsx -o /dev/null -w '%{http_code}' | grep -q 200",
+        "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx"
+      ],
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx && grep -q 'selectedFamily' src/components/sparta/dashboard/PostureDashboard.tsx",
+        "assertion": "exit_code == 0"
+      },
+      "gate": "Family flyout renders control list with 100% data-qid coverage"
+    },
+    {
+      "id": "10",
+      "title": "Generate CDP live DOM interaction manifest for PostureDashboard",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "depends_on": [
+        "8",
+        "9"
+      ],
+      "command": "cd packages/ux-lab &&\necho \"=== Vite compile check ===\" &&\ncurl -sf http://localhost:3002/src/components/sparta/dashboard/PostureDashboard.tsx -o /dev/null &&\necho \"=== Express endpoint structure checks (schema, not data presence) ===\" &&\ncurl -sf http://localhost:3001/api/posture/frameworks | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'overallScore' in d; assert 'frameworks' in d\" &&\ncurl -sf http://localhost:3001/api/posture/families/NIST | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'families' in d\" &&\ncurl -sf http://localhost:3001/api/posture/gaps | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'missingQRAs' in d\" &&\ncurl -sf http://localhost:3001/api/posture/risks | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'risks' in d\" &&\ncurl -sf http://localhost:3001/api/posture/alerts | python3 -c \"import json,sys; d=json.load(sys.stdin); assert 'alerts' in d\" &&\ncurl -sf http://localhost:3001/api/posture/overview | python3 -c \"import json,sys; d=json.load(sys.stdin); assert len(d['wells'])==4\" &&\necho \"=== verify-data-qid gate ===\" &&\npython3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx &&\npython3 scripts/verify-data-qid.py src/components/sparta/explorer/OverviewLanding.tsx &&\npython3 scripts/verify-data-qid.py src/components/sparta/explorer/SpartaExplorer.tsx &&\necho \"=== ALL GATES PASS ===\"\n",
+      "definition_of_done": {
+        "command": "cd packages/ux-lab && python3 scripts/verify-data-qid.py src/components/sparta/dashboard/PostureDashboard.tsx && curl -sf http://localhost:3001/api/posture/frameworks > /dev/null",
+        "assertion": "exit_code == 0"
+      },
+      "gate": "All endpoints return real data, all components compile in Vite, 100% data-qid coverage"
+    },
+    {
+      "id": "11",
+      "title": "CDP live DOM test manifest \u2014 generate and validate from running browser",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "depends_on": [
+        "10"
+      ],
+      "skills": [
+        "test-interactions"
+      ],
+      "allowlist": [
+        "packages/ux-lab/test-manifests/posture-dashboard.json"
+      ],
+      "implementation": [
+        "Use /test-interactions generate to create manifest from live DOM",
+        "Navigate to Posture tab in running browser via CDP",
+        "Query document.querySelectorAll('[data-qid]') to enumerate all interactive elements",
+        "Generate manifest JSON with: qid, tag, visible, clickable, hasTitle, hasQsAction",
+        "Validate: every data-qid has a matching data-qs-action and title",
+        "Test interactions: click each family bar (verify flyout opens), click each donut, click risk row",
+        "Save manifest to packages/ux-lab/test-manifests/posture-dashboard.json"
+      ],
+      "tests": [
+        "test -f packages/ux-lab/test-manifests/posture-dashboard.json && python3 -c \"import json; m=json.load(open('packages/ux-lab/test-manifests/posture-dashboard.json')); assert len(m.get('elements',[])) >= 20\""
+      ],
+      "definition_of_done": {
+        "command": "python3 -c \"import json; m=json.load(open('packages/ux-lab/test-manifests/posture-dashboard.json')); assert len(m.get('elements',m.get('interactions',[]))) >= 20; print(f'PASS: {len(m.get(\"elements\",m.get(\"interactions\",[])))} elements')\"",
+        "assertion": "exit_code == 0"
+      },
+      "gate": "CDP manifest has 20+ interactive elements from live DOM, all with data-qid + data-qs-action + title",
+      "visual": true
+    },
+    {
+      "id": "12",
+      "title": "VLM review \u2014 compare implementation screenshots to approved V1 mockup",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "gemini",
+      "mode": "one_shot",
+      "depends_on": [
+        "11"
+      ],
+      "skills": [
+        "review-design"
+      ],
+      "allowlist": [
+        "packages/ux-lab/captures/posture-dashboard-design/"
+      ],
+      "implementation": [
+        "Capture CDP screenshots of PostureDashboard in running browser",
+        "Per-pane crops: hero-row, family-bars, gap-analysis, drift-alerts, top-risks",
+        "Compare each crop against approved V1 mockup (variation_1.html rendered)",
+        "Per-pane VLM scoring: layout match, color match, data presence, typography",
+        "Each pane match score >= 80 \u2192 PASS"
+      ],
+      "tests": [
+        "test $(ls packages/ux-lab/captures/posture-dashboard-design/implementation-*.png 2>/dev/null | wc -l) -ge 3"
+      ],
+      "definition_of_done": {
+        "command": "test $(ls packages/ux-lab/captures/posture-dashboard-design/implementation-*.png 2>/dev/null | wc -l) -ge 3 && test -f packages/ux-lab/test-manifests/posture-dashboard.json",
+        "assertion": "exit_code == 0"
+      },
+      "gate": "VLM captured 3+ per-pane implementation screenshots and manifest exists",
+      "visual": true
+    }
+  ],
+  "test_manifest": [
+    {
+      "view": "PostureDashboard",
+      "collection": "sparta_controls",
+      "min_rows": 100,
+      "endpoints": [
+        "GET /api/posture/frameworks",
+        "GET /api/posture/families/NIST",
+        "GET /api/posture/gaps",
+        "GET /api/posture/risks",
+        "GET /api/posture/alerts",
+        "GET /api/posture/overview"
+      ],
+      "interactions": [
+        "click_framework_donut",
+        "click_family_bar",
+        "open_family_flyout",
+        "close_family_flyout",
+        "click_gap_badge",
+        "click_risk_row",
+        "click_alert_row",
+        "click_overview_well"
+      ],
+      "data_qid_coverage": "100%",
+      "visual": "Dashboard shows posture score with delta, 8 framework donut rings, 15 NIST family stacked bars, gap analysis with 5 stat rows, drift alerts with glow-dots, top 10 risks table. All rendering real data from 11.6K controls via dedicated Express endpoints."
+    }
+  ]
+}

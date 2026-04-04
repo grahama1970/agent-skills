@@ -1,0 +1,62 @@
+{
+  "title": "Sample Screenplay",
+  "total_duration": 21.166666666666664,
+  "total_shots": 3,
+  "metadata": {
+    "scenes_count": 2,
+    "auto_generated": true
+  },
+  "shots": [
+    {
+      "scene_number": 1,
+      "shot_number": 1,
+      "shot_code": "OTS",
+      "shot_name": "Over-The-Shoulder",
+      "description": "SARAH enters the dark apartment, flipping on a small desk lamp. | SARAH: \"Hello? Is anyone here?\" | She moves cautiously through the room.",
+      "duration": 7.0,
+      "camera_movement": "static",
+      "framing_guide": "Back of one head, face of other",
+      "lens_suggestion": "50-85mm",
+      "emotion": "tense",
+      "notes": {
+        "lighting": [
+          "Low key, practical desk lamp only"
+        ],
+        "camera": [],
+        "references": [
+          "Blade Runner 2049 apartment scene"
+        ]
+      }
+    },
+    {
+      "scene_number": 1,
+      "shot_number": 2,
+      "shot_code": "MS",
+      "shot_name": "Medium Shot",
+      "description": "I've been waiting for you. | Sarah spins around, fear in her eyes.",
+      "duration": 7.499999999999999,
+      "camera_movement": "static",
+      "framing_guide": "Waist to head",
+      "lens_suggestion": "50-85mm",
+      "emotion": "tense",
+      "notes": {}
+    },
+    {
+      "scene_number": 2,
+      "shot_number": 1,
+      "shot_code": "FS",
+      "shot_name": "Full Shot",
+      "description": "Cars rush by. People hurry along the sidewalk. | SARAH walks determinedly, phone pressed to her ear. | SARAH: \"I need backup. Now.\"",
+      "duration": 6.666666666666666,
+      "camera_movement": "static",
+      "framing_guide": "Head to toe, minimal headroom",
+      "lens_suggestion": "35-50mm",
+      "emotion": "action",
+      "notes": {
+        "lighting": [],
+        "camera": [],
+        "references": []
+      }
+    }
+  ]
+}
