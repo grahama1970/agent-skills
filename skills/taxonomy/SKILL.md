@@ -41,17 +41,32 @@ taxonomy:
 
 Extract Federated Taxonomy tags from text for multi-hop graph traversal between collections.
 
-## Three-Axis Classification (v0.3.0)
+## Four-Axis Classification (v0.4.0)
 
 | Axis | Output key | Tags | Lives on | Purpose |
 |------|-----------|------|----------|---------|
-| **Mind** | `mind` | Detect, Evade, Exploit, Harden, Isolate, Model, Persist, Restore | `sparta_qra` | SPARTA tactical scope |
-| **Heart** | `heart` | anger, fear, joy, sadness, trust | `lessons` | Emotional scope |
-| **Intent** | `intent` | Navigate, Expand, Filter, Analyze, Compare, Trace, Layout, Persist | `lessons` (tagged `intent-training-v2`) | App interaction scope |
+| **Mind** | `mind` | Detect, Evade, Exploit, Harden, Isolate, Model, Persist, Restore | `sparta_qra`, `skill_chains` | SPARTA tactical scope |
+| **Heart** | `heart` | anger, fear, joy, sadness, trust | `lessons` (persona/lore) | Emotional scope |
+| **Code** | `code` | extraction, research, security, training, creation, monitoring, review, memory_op, voice, media | `skill_chains` | Coding workflow type |
+| **Intent** | `intent` | Navigate, Expand, Filter, Analyze, Compare, Trace, Layout, Persist | `app_actions` | App interaction scope |
 
-Mind and Heart are **orthogonal** — every call emits both keys. The text content determines which tags apply, not the scope.
+### Axis Routing — NOT all axes apply to all collections
 
-Intent is a **separate dimension** for UI interaction documents. It enables graph traversal between commands phrased differently (e.g., "zoom in" ↔ "focus on" via shared Navigate tag). Intent tags ONLY go on docs tagged `intent-training-v2`.
+Each collection gets ONLY the axes that make sense for it. Putting heart tags
+on compliance data is noise. Putting code tags on persona journals is noise.
+
+| Collection | mind | heart | code | intent |
+|------------|------|-------|------|--------|
+| `sparta_qra` | ✅ | ❌ | ❌ | ❌ |
+| `skill_chains` | ✅ | ❌ | ✅ | ❌ |
+| `lessons` (persona/lore) | ❌ | ✅ | ❌ | ❌ |
+| `lessons` (operational) | ✅ | ❌ | ✅ | ❌ |
+| `app_actions` | ❌ | ❌ | ❌ | ✅ |
+| `checkpoints` | ❌ | ❌ | ✅ | ❌ |
+| `horus_lore` | ❌ | ✅ | ❌ | ❌ |
+
+The collection determines which axes `/taxonomy` applies. **Do not tag everything
+with everything.**
 
 ### Bridge Attributes — REMOVED
 
@@ -71,12 +86,34 @@ LLM-mode taxonomy extraction prompts MUST be validated through `/prompt-lab` bef
   "bridge_tags": [],
   "mind": ["Detect", "Harden"],
   "heart": ["trust"],
+  "code": ["extraction", "review"],
   "intent": [],
   "collection_tags": {"function": "Defend", "domain": "Endpoint"},
   "confidence": 0.87,
   "worth_remembering": true
 }
 ```
+
+## Code Tags (v0.4.0)
+
+10 tags for classifying coding workflow type. Used on `skill_chains` and operational `lessons`.
+Enables graph traversal between skill chains that do similar work.
+
+| Tag | Keywords | Examples |
+|-----|----------|----------|
+| **extraction** | extract, parse, ingest, convert, pdf | "extract tables from PDF" |
+| **research** | search, find, discover, arxiv, paper, dogpile | "research SPARTA framework" |
+| **security** | hack, scan, vulnerability, pentest, audit | "run security scan" |
+| **training** | train, fine-tune, qlora, lora, classifier | "train intent mapper" |
+| **creation** | create, generate, build, scaffold, write | "create new skill" |
+| **monitoring** | monitor, watch, track, alert, check | "monitor codebase health" |
+| **review** | review, assess, evaluate, quality, validate | "review code changes" |
+| **memory_op** | learn, recall, remember, store | "store lesson to memory" |
+| **voice** | voice, tts, rvc, audio, speech | "train voice model" |
+| **media** | video, movie, image, storyboard, youtube | "create storyboard" |
+
+Code tags are **keyword-classified** (no LLM) via word boundary matching against
+the task description. The classifier already exists in `skill_chains.classify_task()`.
 
 ## Intent Tags (v0.3.0)
 

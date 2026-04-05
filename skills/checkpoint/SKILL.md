@@ -83,22 +83,44 @@ can recommend what worked (and warn about what failed).
 ```
 Session ends
     ↓
-/checkpoint save (grades + catalogs)
+/checkpoint save --skills A B C --grade clean
     ↓
-httpx POST /learn → ArangoDB lessons collection
+1. git commit with Skills: trailer (machine-readable in commit message)
     ↓
-POST /taxonomy/batch-tag → Mind + Bridge tags assigned
+2. httpx POST /store → checkpoints collection (BM25 searchable)
     ↓
-POST /add-edge → links to episodic archive (full transcript)
+3. learn_chain() → skill_chains collection (self-contained document):
+   - problem + solution (BM25 searchable)
+   - skills, grade, commit, files_changed, tags, scope
+   - mind tags (tactical, from /taxonomy/extract)
+   - code tags (workflow type, from classify_task)
+   - embedding (for semantic search)
     ↓
-Store skill chain → /recommend-skill-chain training data
+4. store_skill_chain() → lessons_v2 (legacy, backward compat)
     ↓
-git commit + push → project AND skills repos
+5. git push + tag → project AND skills repos
     ↓
-Findable via /recall: BM25 + semantic + graph traversal
+Findable via: recall --brief → items + skill_chain
     ↓
 Next similar problem → agent gets proven chain + grade
 ```
+
+### What gets stored where
+
+| Collection | What | Searchable via |
+|------------|------|----------------|
+| `checkpoints` | Session snapshot (topic, resume, grade, git state) | BM25, tags |
+| `skill_chains` | **Self-contained**: problem, solution, skills, grade, mind, code, embedding | BM25 + semantic + graph traversal |
+| `lessons_v2` | Legacy skill-chain lesson (backward compat) | BM25 |
+| git commit | `Skills:` and `Grade:` trailers in commit message | `git log --grep="Skills:"` |
+
+### Taxonomy axes on skill_chains
+
+Only the axes that make sense for code:
+- **mind**: tactical (Detect/Harden/Model/...) — from /taxonomy/extract
+- **code**: workflow type (extraction/review/training/...) — from keyword classifier
+- **NO heart**: emotional tags are for persona content, not code
+- **NO intent**: interaction tags are for UI commands, not code
 
 ## Save Options
 
@@ -193,12 +215,52 @@ Fixed false negative rate from 0.85 threshold in QRA validation pipeline.
 ./run.sh save -t "..." -s "..." --episode-key "ep_abc123"
 ```
 
+## How Agents Use Proven Chains
+
+```bash
+# Agent hits a problem → recall finds the solution AND the proven chain
+.agents/skills/memory/run.sh recall --q "PDF extraction drops tables" --brief
+
+# Response includes:
+# {
+#   "items": [{"problem": "...", "solution": "..."}],
+#   "skill_chain": {
+#     "skills": ["extractor", "review-pdf", "memory"],
+#     "code": ["extraction"],
+#     "mind": ["Detect", "Harden"],
+#     "success_rate": 1.0
+#   }
+# }
+
+# Agent follows the proven chain instead of guessing
+```
+
 ## Integration
 
 | Skill | Role |
 |-------|------|
-| `/memory` | Storage backend (httpx to daemon Unix socket) |
-| `/taxonomy` | Assigns Mind + Bridge tags for graph traversal |
-| `/recommend-skill-chain` | Consumes proven/failed chains for recommendations |
+| `/memory` | Storage backend. `skill_chains` is a supplemental recall source. |
+| `/taxonomy` | Assigns mind tags (tactical) + code tags (workflow) at write time |
+| `/recommend-skill-chain` | Queries skill_chains for proven chains. Nightly prune + verify. |
 | `/episodic-archiver` | Full transcript archive, linked via graph edge |
-| `/mine-transcripts` | Extracts skill chains from conversation transcripts |
+| `/mine-transcripts` | Nightly transcript extraction → commit-anchored chains |
+
+## Data Flow: 2,300+ Skill Chains
+
+```
+Sources:
+  /checkpoint --skills (production)     → highest confidence
+  git commit Skills: trailers           → machine-readable
+  Commit-transcript correlation         → ±15min timestamp window
+  mine-transcripts nightly              → regex-mined (lower confidence)
+
+Storage:
+  skill_chains collection               → self-contained documents
+  skill_chains_search view              → BM25 on problem/solution
+  mind/code taxonomy                    → multi-hop graph traversal
+
+Consumption:
+  recall --brief                        → returns skill_chain field
+  chain-recall "query"                  → direct semantic search
+  /recommend-skill-chain                → ranked recommendations
+```

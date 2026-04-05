@@ -15,7 +15,9 @@ The subagent CAN follow this because every step is a subprocess call.
 """
 from __future__ import annotations
 
+import concurrent.futures
 import fcntl
+import random
 import json
 import os
 import subprocess
@@ -35,16 +37,11 @@ from evidence import (
     build_fix_prompt,
 )
 from apply import (
-    apply_llm_response,
     build_file_context,
     generate_hunk_review,
-    get_last_metadata,
 )
 from tool_use import run_tool_use_loop
 from models import TaskSpec, TaskResult, PreflightError
-
-# Models that support tool_use via scillm passthrough
-TOOL_USE_MODELS = {"codex", "claude", "gemini"}
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -338,7 +335,7 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     if not model.startswith("gpt-"):
         payload["temperature"] = min(temperature, 1.0)
 
-    # Retry with backoff on transient errors (HTTP 500, 502, 503, 429, timeout)
+    # Retry with backoff + jitter on transient errors
     max_retries = 3
     for attempt in range(1, max_retries + 1):
         try:
@@ -349,8 +346,9 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
                 timeout=180.0,
             )
             if resp.status_code in (500, 502, 503, 429) and attempt < max_retries:
-                wait = 2 ** attempt
-                logger.warning("/scillm {} (attempt {}/{}) — retrying in {}s",
+                base = min(0.5 * (2 ** attempt), 32.0)
+                wait = base + random.random() * 0.25 * base
+                logger.warning("/scillm {} (attempt {}/{}) — retrying in {:.1f}s",
                                resp.status_code, attempt, max_retries, wait)
                 time.sleep(wait)
                 continue
@@ -358,8 +356,9 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
             return resp.json()["choices"][0]["message"]["content"]
         except httpx.TimeoutException:
             if attempt < max_retries:
-                wait = 2 ** attempt
-                logger.warning("/scillm timeout (attempt {}/{}) — retrying in {}s",
+                base = min(0.5 * (2 ** attempt), 32.0)
+                wait = base + random.random() * 0.25 * base
+                logger.warning("/scillm timeout (attempt {}/{}) — retrying in {:.1f}s",
                                attempt, max_retries, wait)
                 time.sleep(wait)
                 continue
@@ -373,10 +372,6 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
 
 # ── Memory-Backed Prompt Assembly (extracted to prompt_assembly.py) ─────
 from prompt_assembly import build_system_prompt as _build_system_prompt
-
-
-# ── Zero-Write Diagnostics (extracted for maintainability) ──────────
-from apply import diagnose_zero_writes as _diagnose_zero_writes
 
 
 # ── Main Loop (autoresearch pattern) ─────────────────────────────────
@@ -555,6 +550,7 @@ def run(
 
     # Session key links all rounds in /memory for graph traversal
     session_key = f"cr-{task_id}-{int(time.time())}"
+    run_start_time = time.monotonic()
 
     # Git safety: stash pre-existing changes before we start
     stashed = git_stash_save(cwd) if is_git_repo else False
@@ -587,6 +583,9 @@ def run(
         system_prompt = _build_system_prompt(
             task_id, session_key, prompt, round_num=1,
             dod_desc=dod_desc, allowlist=allowlist, recent_rounds=[])
+
+        consecutive_zero_writes = 0
+        MAX_CONSECUTIVE_ZERO_WRITES = 3
 
         for round_num in range(1, max_rounds + 1):
             # 1. Determine strategy (deterministic)
@@ -674,16 +673,23 @@ def run(
                     dod_desc=dod_desc, allowlist=allowlist,
                     recent_rounds=rounds_history)
 
-            # 2. Call LLM — tool_use (v4) or text parse (v2/v3 fallback)
+            # 2. Call LLM via tool_use agent loop
             model_name = {
                 "codex": "gpt-5.3-codex", "claude": "claude-sonnet-4-6",
-                "text": "text", "gemini": "text-gemini", "deepseek": "text",
+                "gemini": "text-gemini",
             }.get(cur_backend, "gpt-5.3-codex")
-            use_tools = cur_backend in TOOL_USE_MODELS
 
-            if use_tools:
-                # v4: Tool-use agent loop — LLM calls write_file/edit_file directly
-                written, tool_messages = run_tool_use_loop(
+            # Dynamic timeout: P95 from /memory history, or env override
+            if os.environ.get("CODE_RUNNER_ROUND_TIMEOUT"):
+                ROUND_TIMEOUT = int(os.environ["CODE_RUNNER_ROUND_TIMEOUT"])
+            else:
+                sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "common"))
+                from estimate_timeout import estimate_skill
+                ROUND_TIMEOUT = estimate_skill("code-runner", units=1)
+                logger.info("  Round timeout: {}s (from /memory P95)", ROUND_TIMEOUT)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(
+                    run_tool_use_loop,
                     system_prompt=system_prompt,
                     user_prompt=current_prompt,
                     model=model_name,
@@ -692,48 +698,46 @@ def run(
                     read_context=read_context,
                     temperature=temperature,
                     max_tokens={"low": 4000, "medium": 8000, "high": 16000}.get(cur_reasoning, 4000),
+                    dod_command=dod_command,
                 )
-                # Extract final text response (last assistant message without tool_calls)
-                response = ""
-                for m in reversed(tool_messages):
-                    if m.get("role") == "assistant" and not m.get("tool_calls"):
-                        response = m.get("content", "")
-                        break
-                final_response = response
-                llm_metadata = {"summary": response[:200], "approach": strategy}
-                _emit_event("tool_use_complete", task_id=task_id, round=round_num,
-                            files_written=len(written), tool_calls=sum(
-                                1 for m in tool_messages if m.get("role") == "assistant" and m.get("tool_calls")))
-            else:
-                # v2/v3: Text parse fallback for backends without tool_use
-                response = _call_llm(current_prompt, cur_backend, cwd,
-                                     temperature=temperature, reasoning=cur_reasoning,
-                                     system_prompt=system_prompt)
-                final_response = response
-                written = apply_llm_response(response, cwd, allowlist)
-                llm_metadata = get_last_metadata()
+                try:
+                    written, tool_messages = future.result(timeout=ROUND_TIMEOUT)
+                except concurrent.futures.TimeoutError:
+                    _emit_event("round_timeout", task_id=task_id, round=round_num,
+                                timeout_seconds=ROUND_TIMEOUT)
+                    logger.error("  ROUND TIMEOUT: tool_use loop exceeded {}s", ROUND_TIMEOUT)
+                    written, tool_messages = [], []
+
+            # Extract final text response (last assistant message without tool_calls)
+            response = ""
+            for m in reversed(tool_messages):
+                if m.get("role") == "assistant" and not m.get("tool_calls"):
+                    response = m.get("content", "")
+                    break
+            final_response = response
+            llm_metadata = {"summary": response[:200], "approach": strategy}
+            _emit_event("tool_use_complete", task_id=task_id, round=round_num,
+                        files_written=len(written), tool_calls=sum(
+                            1 for m in tool_messages if m.get("role") == "assistant" and m.get("tool_calls")))
 
             # Save round response
             round_file = output_dir / f"{task_id}.round_{round_num}.txt"
             if response:
                 round_file.write_text(response)
-            elif use_tools:
-                round_file.write_text(json.dumps({"tool_iterations": len(tool_messages)}))
             else:
-                round_file.write_text("(empty response)")
+                round_file.write_text(json.dumps({"tool_iterations": len(tool_messages)}))
 
             if written:
                 logger.info("  Applied {} files: {}", len(written), written)
-            elif not use_tools:
-                # Diagnose WHY nothing was written (text parse path only — tool_use has its own errors)
-                diag = _diagnose_zero_writes(response, cwd, allowlist)
-                logger.error("  ZERO FILES WRITTEN — diagnosis: {}", diag["reason"])
-                for detail in diag.get("details", []):
-                    logger.error("    {}", detail)
-                log_dir = output_dir / "logs"
-                log_dir.mkdir(exist_ok=True)
-                (log_dir / f"round_{round_num}_zero_write_diagnosis.json").write_text(
-                    json.dumps(diag, indent=2, default=str))
+                consecutive_zero_writes = 0
+            else:
+                consecutive_zero_writes += 1
+                if consecutive_zero_writes >= MAX_CONSECUTIVE_ZERO_WRITES:
+                    _emit_event("early_abort", task_id=task_id, round=round_num,
+                                reason=f"{consecutive_zero_writes} consecutive rounds wrote 0 files")
+                    logger.error("  EARLY ABORT: {} consecutive rounds wrote 0 files — LLM not producing edits",
+                                 consecutive_zero_writes)
+                    break
 
             # 3. T0 deterministic evidence collection (NOW evaluates changed files)
             evidence_raw = collect_evidence(cwd, dod_command, dod_assertion)
@@ -746,11 +750,7 @@ def run(
                 evidence_raw["score"] = 0.0
                 evidence_raw["dod_passed"] = False
                 evidence_raw["_zero_files_override"] = True
-                # diag only exists in text-parse path; tool_use path has inline errors
-                evidence_raw["_zero_write_reason"] = (
-                    diag["reason"] if isinstance(locals().get("diag"), dict)
-                    else "tool_use_no_writes"
-                )
+                evidence_raw["_zero_write_reason"] = "tool_use_no_writes"
             _emit_event("round_score", task_id=task_id, round=round_num,
                         score=round(score, 4), dod_passed=evidence_raw["dod_passed"],
                         errors=evidence_raw["error_count"], lint=evidence_raw["lint_violations"],
@@ -880,6 +880,18 @@ def run(
                     dod_passed=result.dod_passed, backend=llm_backend)
         logger.info("=== RESULT: {} | score={:.3f} | {} rounds ===",
                      result.status.upper(), best_score, len(rounds_history))
+
+        # Record duration to /memory for timeout estimation flywheel
+        run_duration = time.monotonic() - run_start_time
+        from estimate_timeout import record as record_duration
+        record_duration(
+            "code-runner", run_duration,
+            units=len(rounds_history),
+            outcome="success" if result.dod_passed else "failed",
+            trigger="orchestrate",
+            metadata={"task_id": task_id, "backend": llm_backend,
+                      "best_score": best_score, "rounds": len(rounds_history)},
+        )
 
         if is_git_repo:
             generate_hunk_review(output_dir, task_id, cwd, rounds_history, snapshot)

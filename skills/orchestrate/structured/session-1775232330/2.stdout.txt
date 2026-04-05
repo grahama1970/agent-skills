@@ -1,3 +1,0 @@
-=== File verification ===
-=== All 6 posture endpoints present in server/index.ts ===
-=== PASS (live endpoint verification deferred to Wave 3 gate) ===

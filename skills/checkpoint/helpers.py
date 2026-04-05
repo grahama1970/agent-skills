@@ -226,7 +226,7 @@ def commit_one_repo(cwd: str, msg: str, label: str = "", console=None) -> dict:
     return info
 
 
-def git_commit_and_push(project_root: str, topic: str, files: list[str], console=None) -> dict:
+def git_commit_and_push(project_root: str, topic: str, files: list[str], console=None, skills: list[str] | None = None, grade: str = "") -> dict:
     """NON-NEGOTIABLE: Commit project + skills on every checkpoint.
 
     Returns dict with commit_hash, diff_stat, skills_commit_hash, skills_diff_stat.
@@ -238,6 +238,14 @@ def git_commit_and_push(project_root: str, topic: str, files: list[str], console
     if has_staged:
         staged_count = len(git(["diff", "--cached", "--name-only"], cwd=project_root).splitlines())
         msg = f"checkpoint: {short_topic} ({staged_count} files)"
+        # Append skill chain + grade as git trailers for commit-anchored extraction
+        trailers = []
+        if skills:
+            trailers.append(f"Skills: {', '.join(s.lstrip('/') for s in skills)}")
+        if grade:
+            trailers.append(f"Grade: {grade}")
+        if trailers:
+            msg += "\n\n" + "\n".join(trailers)
         info = commit_one_repo(project_root, msg, console=console)
         result.update(info)
 
@@ -274,10 +282,13 @@ def store_skill_chain(
     outcome: str,
     explicit_skills: list[str] | None = None,
     console=None,
+    checkpoint_key: str = "",
 ) -> list[str]:
     """Store skill chain for /recommend-skill-chain. Returns resolved chain.
 
     Handles all outcomes with polarity for recommendation.
+    If checkpoint_key is provided, creates an edge linking the checkpoint
+    to its skill chain so recall can follow the edge directly.
     """
     if explicit_skills:
         chain = [s.lstrip("/") for s in explicit_skills if s.strip()]
@@ -303,8 +314,9 @@ def store_skill_chain(
     tags = ["skill-chain", f"outcome:{outcome}", f"source:{source}", polarity_tag]
     timestamp = datetime.now(timezone.utc).isoformat()
 
+    lesson_key = ""
     try:
-        memory_post("/learn", {
+        resp = memory_post("/learn", {
             "problem": f"SKILL-CHAIN: {outcome} for {scope}: {topic}",
             "solution": json.dumps({
                 "chain": chain,
@@ -317,30 +329,87 @@ def store_skill_chain(
             "scope": "skill-chains",
             "tags": tags,
         }, console=console)
+        if isinstance(resp, dict):
+            # /learn returns {"items": [{"_key": "..."}]}
+            items = resp.get("items", [])
+            if items and isinstance(items[0], dict):
+                lesson_key = items[0].get("_key", "")
+            else:
+                lesson_key = resp.get("_key", "")
         logger.info("Stored {} chain (conf={}) for '{}': {}", source, confidence, topic[:40], chain)
     except Exception:
         pass
 
-    # Also store in the typed skill_chains collection (embeddings, energy, bridges)
+    # Also store in the typed skill_chains collection (self-contained document)
+    chain_key = ""
     if len(chain) >= 2:
         try:
-            _store_typed_skill_chain(chain, topic, outcome)
+            chain_key = _store_typed_skill_chain(
+                chain, topic, outcome,
+                summary=summary, grade=polarity_tag, scope=scope,
+                tags=tags,
+            )
         except Exception as exc:
             logger.warning("Typed skill_chain storage failed (non-fatal): {}", exc)
+
+    # Create edges so recall can traverse to the chain deterministically
+    # lesson → chain: "this lesson was solved by this chain"
+    if lesson_key and chain_key:
+        try:
+            _link_to_chain(
+                from_collection="lessons_v2", from_key=lesson_key,
+                chain_key=chain_key, console=console,
+            )
+        except Exception as exc:
+            logger.warning("lesson→chain edge failed (non-fatal): {}", exc)
+    # checkpoint → chain: "this session produced this chain"
+    if checkpoint_key and chain_key:
+        try:
+            _link_to_chain(
+                from_collection="checkpoints", from_key=checkpoint_key,
+                chain_key=chain_key, console=console,
+            )
+        except Exception as exc:
+            logger.warning("checkpoint→chain edge failed (non-fatal): {}", exc)
 
     return chain
 
 
-def _store_typed_skill_chain(chain: list[str], topic: str, outcome: str) -> None:
-    """Write to the skill_chains collection via graph_memory.lessons.skill_chains.
+def _link_to_chain(from_collection: str, from_key: str, chain_key: str, console=None) -> None:
+    """Create an edge in skill_chain_edges linking a source document to its chain.
 
-    This is the primary path — checkpoint captures ground truth at the moment
-    the chain proved itself (or failed). Nightly backfill catches the rest.
+    Edge: {from_collection}/{from_key} → skill_chains/{chain_key}
+    This makes the chain recommendation deterministic — recall follows the
+    edge instead of doing a separate semantic search.
+    """
+    edge_doc = {
+        "_from": f"{from_collection}/{from_key}",
+        "_to": f"skill_chains/{chain_key}",
+        "type": "produced_by",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    memory_post("/store", {
+        "document": edge_doc,
+        "collection": "skill_chain_edges",
+    }, console=console)
+    logger.info("Linked {}/{} → skill_chains/{}", from_collection, from_key, chain_key)
+
+
+def _store_typed_skill_chain(
+    chain: list[str], topic: str, outcome: str,
+    summary: str = "", grade: str = "", scope: str = "",
+    commit: str = "", files_changed: list[str] | None = None,
+    tags: list[str] | None = None,
+) -> str:
+    """Write self-contained skill chain to skill_chains collection.
+
+    Returns the chain _key. Empty string on failure.
+    The chain document includes problem, solution, grade, commit,
+    files_changed, and tags — everything needed for recall without edges.
     """
     try:
         from graph_memory.lessons.skill_chains import learn_chain
     except ImportError:
-        # Fall back to run.sh subprocess if graph_memory not importable
         import subprocess
         skill_dir = Path(__file__).parent.parent / "memory"
         cmd = [
@@ -354,14 +423,22 @@ def _store_typed_skill_chain(chain: list[str], topic: str, outcome: str) -> None
         else:
             cmd += ["--no-success"]
         subprocess.run(cmd, capture_output=True, timeout=30)
-        return
+        return ""
 
-    learn_chain(
+    doc = learn_chain(
         skills=chain,
         task_description=topic[:500],
         source="production",
         success=outcome in ("success", "partial"),
+        problem=topic,
+        solution=summary,
+        grade=grade,
+        commit=commit,
+        files_changed=files_changed,
+        tags=tags,
+        scope=scope,
     )
+    return doc.get("_key", "")
 
 
 # ---------------------------------------------------------------------------
@@ -407,6 +484,43 @@ def auto_grade(
 # ---------------------------------------------------------------------------
 # Claude memory + mine-transcripts helpers
 # ---------------------------------------------------------------------------
+
+
+def detect_transcript_paths(project_root: str) -> list[str]:
+    """Auto-detect transcript .jsonl files for the current Claude Code session.
+
+    Claude Code stores transcripts at:
+      ~/.claude/projects/-<sanitized-path>/<session-uuid>/*.jsonl
+    plus subagent transcripts in a subagents/ subdirectory.
+
+    Returns absolute paths to the main session transcript(s) only —
+    subagent fragments are excluded since they lack full session context.
+    """
+    sanitized = project_root.lstrip("/").replace("/", "-")
+    claude_dir = Path.home() / ".claude" / "projects" / f"-{sanitized}"
+    if not claude_dir.exists():
+        claude_dir = Path.home() / ".claude" / "projects" / sanitized
+    if not claude_dir.exists():
+        logger.debug("No Claude project dir at {}", claude_dir)
+        return []
+
+    # Find the most recently modified session directory (UUID-named)
+    session_dirs = [
+        d for d in claude_dir.iterdir()
+        if d.is_dir() and len(d.name) == 36 and "-" in d.name
+    ]
+    if not session_dirs:
+        return []
+
+    latest = max(session_dirs, key=lambda d: d.stat().st_mtime)
+
+    # Main transcript only — exclude subagents/ directory
+    paths = sorted(
+        str(p) for p in latest.glob("*.jsonl")
+        if p.is_file()
+    )
+    logger.info("Detected {} transcript files in {}", len(paths), latest)
+    return paths
 
 
 def ingest_claude_memory(project_root: str, evidence: list[str]) -> list[str]:

@@ -1,1 +1,0 @@
-{"summary":"Refactored hook already matches dedicated /api/posture/* endpoint usage with parallel Promise.all, exported required types including DriftAlert, and no client-side aggregation; no additional changes needed.","approach":"simplify","operations":[]}

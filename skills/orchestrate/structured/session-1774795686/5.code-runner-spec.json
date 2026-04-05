@@ -1,8 +1,0 @@
-{
-  "task_id": "5",
-  "title": "Add POST /api/edge-rationale endpoint to UX Lab Express server",
-  "prompt": "Task: Add POST /api/edge-rationale endpoint to UX Lab Express server\n\nImplementation:\n- Add POST /api/edge-rationale handler to packages/ux-lab/server/index.ts\n- Receives { _key: string } \u2014 the sparta_relationships document key\n- Cache-first: if edge already has gate_evidence.llm_rationale, return immediately\n- Fetch edge via proxyPost('/list', {collection: 'sparta_relationships', filters: {_key}, limit: 1})\n- Fetch source+target control descriptions via proxyPost('/recall/by-keys', ...)\n- Build prompt from gate_evidence + descriptions, call SCILLM_URL\n- Cache rationale back via proxyPost('/upsert', ...) on gate_evidence.llm_rationale\n- Return { rationale, verdict, gates_passed, cached: bool }\n- Use existing proxyPost() helper (line 663) and SCILLM_URL constant (line 15)\n\nDefinition of Done:\n- Command: curl -sf http://localhost:3001/api/edge-rationale -X POST -H 'Content-Type: application/json' -d '{\"_key\":\"rel__1\"}' | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get(\"rationale\",\"\")[:100]); assert len(d.get(\"rationale\",\"\"))>10'\n- Assertion: Endpoint returns rationale longer than 10 chars\n\nTests:\n- curl -sf http://localhost:3001/api/edge-rationale -X POST -H 'Content-Type: application/json' -d '{\"_key\":\"rel__1\"}' | python3 -c 'import json,sys; d=json.load(sys.stdin); assert \"rationale\" in d'",
-  "backend": "sonnet",
-  "cwd": "/home/graham/workspace/experiments/pi-mono",
-  "output_dir": "/home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured/session-1774795686"
-}

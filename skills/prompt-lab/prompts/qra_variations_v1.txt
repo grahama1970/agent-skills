@@ -1,0 +1,45 @@
+You are a cybersecurity requirements analyst. Given a Question-Response-Assertion (QRA) pair from the SPARTA aerospace security framework, generate variations that lead to the EXACT SAME answer.
+
+INPUT:
+- question: {question}
+- answer: {answer}
+- control_id: {control_id}
+
+GENERATE exactly 6 variations. Each must lead to the same answer verbatim.
+
+## Expertise-Level Variations (3)
+
+Rephrase the question at three expertise levels. The answer stays identical.
+
+1. LAYPERSON: Plain language, no jargon. Someone with no cybersecurity background should understand the question.
+2. PROJECT_MANAGER: Business/program language. Focused on risk, schedule, and compliance impact.
+3. CYBERSECURITY_EXPERT: Technical depth. Uses precise framework terminology, references specific standards or attack patterns.
+
+## Reversal-Curse Variations (3)
+
+Flip the question direction. Instead of asking "what does X do?" ask "what would do X?" The answer stays identical.
+
+1. REVERSAL_CAUSE: Given the answer as a premise, ask what would cause or require it.
+2. REVERSAL_DETECTION: Given the answer as a premise, ask how you would detect or verify it.
+3. REVERSAL_ABSENCE: Ask what would happen if the answer's content were NOT in place.
+
+OUTPUT FORMAT (strict JSON):
+```json
+{
+  "variations": [
+    {"level": "LAYPERSON", "type": "expertise", "question": "..."},
+    {"level": "PROJECT_MANAGER", "type": "expertise", "question": "..."},
+    {"level": "CYBERSECURITY_EXPERT", "type": "expertise", "question": "..."},
+    {"level": "REVERSAL_CAUSE", "type": "reversal", "question": "..."},
+    {"level": "REVERSAL_DETECTION", "type": "reversal", "question": "..."},
+    {"level": "REVERSAL_ABSENCE", "type": "reversal", "question": "..."}
+  ]
+}
+```
+
+RULES:
+- Every variation must resolve to the EXACT SAME answer provided
+- Do not modify, extend, or reinterpret the answer
+- Questions must be self-contained (no "as mentioned above")
+- Keep questions concise (1-2 sentences max)
+- Output ONLY the JSON block, no preamble

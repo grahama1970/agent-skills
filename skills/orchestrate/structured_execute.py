@@ -260,15 +260,20 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
     if not code_runner.exists():
         raise RuntimeError(f"/code-runner skill not found at {code_runner}")
 
-    # Worktree isolation — enables parallel code-runner tasks on same repo
+    # Worktree isolation — off by default. Set CR_WORKTREE=1 to enable.
+    # Worktrees break projects needing built bindings (Rust/maturin, C extensions).
     original_cwd = task.cwd
     worktree_dir: Path | None = None
     worktree_branch = ""
-    try:
-        worktree_dir, worktree_branch = await _setup_worktree(original_cwd, task.task_id)
-        work_cwd = worktree_dir
-    except Exception as exc:
-        logger.warning("Worktree setup failed ({}), running in-place", exc)
+    use_worktree = os.environ.get("CR_WORKTREE", "0") == "1"
+    if use_worktree:
+        try:
+            worktree_dir, worktree_branch = await _setup_worktree(original_cwd, task.task_id)
+            work_cwd = worktree_dir
+        except Exception as exc:
+            logger.warning("Worktree setup failed ({}), running in-place", exc)
+            work_cwd = original_cwd
+    else:
         work_cwd = original_cwd
 
     # Clean env: strip .venv paths so DoD/commands use system Python
@@ -899,8 +904,16 @@ async def _execute_loop(
                     logger.error("Task {} failed: {}", task_id, exc)
                     task.status = "failed"
                     task.error = str(exc)
-                    _render_state(session_dir, runtimes, deps, failed=True)
-                    return 1
+                    # Mark downstream dependents as blocked (they can't run)
+                    def _mark_blocked(parent_id: str) -> None:
+                        for child_id in reverse.get(parent_id, []):
+                            child = runtimes[child_id]
+                            if child.status == "pending":
+                                child.status = "blocked"
+                                child.error = f"blocked by failed parent: {parent_id}"
+                                logger.warning("  Task {} blocked (parent {} failed)", child_id, parent_id)
+                                _mark_blocked(child_id)
+                    _mark_blocked(task_id)
                 task.finished_at = time.time()
             # Release children ONLY when parent completed successfully.
             # Cancelled/failed parents must NOT unblock dependents — missing prerequisites.
@@ -911,8 +924,24 @@ async def _execute_loop(
                         ready.append(child)
             _render_state(session_dir, runtimes, deps, failed=False)
 
+    # Summary: count completed, failed, blocked
+    failed_tasks = [t for t in runtimes.values() if t.status == "failed"]
+    blocked_tasks = [t for t in runtimes.values() if t.status == "blocked"]
+    completed_tasks = [t for t in runtimes.values() if t.status == "completed"]
+
     logger.info("Session written to {}", session_dir)
-    return 0
+    if failed_tasks:
+        logger.error("FAILED tasks ({}):", len(failed_tasks))
+        for t in failed_tasks:
+            logger.error("  {} — {}", t.task_id, t.error[:150] if t.error else "unknown")
+    if blocked_tasks:
+        logger.warning("BLOCKED tasks ({}) — skipped due to failed parents:", len(blocked_tasks))
+        for t in blocked_tasks:
+            logger.warning("  {} — {}", t.task_id, t.error[:150] if t.error else "")
+    logger.info("Completed: {} | Failed: {} | Blocked: {} | Total: {}",
+                len(completed_tasks), len(failed_tasks), len(blocked_tasks), len(runtimes))
+
+    return 1 if failed_tasks else 0
 
 
 def execute_plan(path: Path, repo_root: Path | None = None, resume: bool = False) -> int:

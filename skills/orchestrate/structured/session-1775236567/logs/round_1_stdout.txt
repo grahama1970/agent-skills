@@ -1,3 +1,0 @@
-data-qid coverage: 2/2 (100%)
-
-PASS: 100% data-qid coverage

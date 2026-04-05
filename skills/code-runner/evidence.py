@@ -162,6 +162,23 @@ def collect_evidence(cwd: str, dod_command: str, dod_assertion: str) -> dict:
     elif re.match(r'^exit_code\s*==\s*(\d+)$', dod_assertion.strip()):
         expected = int(re.match(r'^exit_code\s*==\s*(\d+)$', dod_assertion.strip()).group(1))
         dod_passed = exit_code == expected
+    elif dod_assertion.strip().startswith("json_has_keys:"):
+        # Structured: "json_has_keys: key1, key2, key3"
+        keys = [k.strip() for k in dod_assertion.split(":", 1)[1].split(",")]
+        try:
+            data = json.loads(stdout.strip())
+            dod_passed = exit_code == 0 and all(k in data for k in keys)
+        except (json.JSONDecodeError, TypeError):
+            dod_passed = False
+    elif re.match(r'^(?:Returns|Contains|Has)\s+JSON\s+with\s+', dod_assertion, re.IGNORECASE):
+        # Natural language: "Returns JSON with family_id, confidence, rules_matched"
+        key_text = re.sub(r'^(?:Returns|Contains|Has)\s+JSON\s+with\s+', '', dod_assertion, flags=re.IGNORECASE)
+        keys = [k.strip().strip('"\'') for k in re.split(r'[,\s]+', key_text) if k.strip()]
+        try:
+            data = json.loads(stdout.strip())
+            dod_passed = exit_code == 0 and all(k in data for k in keys)
+        except (json.JSONDecodeError, TypeError):
+            dod_passed = exit_code == 0 and dod_assertion.lower() in combined.lower()
     else:
         # String match: assertion text must appear in output
         dod_passed = exit_code == 0 and dod_assertion.lower() in combined.lower()
@@ -346,15 +363,6 @@ def build_fix_prompt(
     err_loc = error_evidence.primary_location
     objective = f"Fix {err_loc.file}:{err_loc.line}" if err_loc and err_loc.file else "Fix the failing code"
 
-    # Diff failure warning
-    diff_note = ""
-    try:
-        from apply import diff_failed_last_round
-        if diff_failed_last_round():
-            diff_note = "⚠️ Your previous diff did not apply. Make sure diff context lines match exactly.\n\n"
-    except ImportError:
-        pass
-
     # Allowlist reminder to prevent drift in later rounds
     allowlist_reminder = ""
     if allowlist:
@@ -365,7 +373,6 @@ def build_fix_prompt(
         f"{allowlist_reminder}"
         f"Strategy: {strategy}\n"
         f"{strategy_instructions.get(strategy, 'Fix the error.')}\n\n"
-        f"{diff_note}"
         f"Evidence:\n"
         f"  Score: {evidence['score']:.3f}\n"
         f"  DoD passed: {evidence['dod_passed']}\n"

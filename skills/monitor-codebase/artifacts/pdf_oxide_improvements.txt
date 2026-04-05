@@ -1,0 +1,118 @@
+Found prior research on this topic in memory.
+## Memory Recall (Prior Solutions Found)
+
+1. **Problem**: Research: fix common violations in Python project: 
+handwritten-tests(71) (2026-03-17)
+   **Solution**: {"query": "fix common violations in Pyt...
+Dogpiling on: fix common violations in Python project: handwritten-tests(21) 
+(Code Related: True)...
+Tailored queries:
+  arxiv: fix common violations in Python project: handwritten-tests(2...
+  perplexity: fix common violations in Python project: handwritten-tests(2...
+  brave: fix common violations in Python project: handwritten-tests(2...
+  github: fix common violations in Python project: handwritten-tests(2...
+  youtube: fix common violations in Python project: handwritten-tests(2...
+  readarr: fix common violations in Python project: handwritten-tests(2...
+# Dogpile Report: fix common violations in Python project: handwritten-tests(21)
+
+## Codex Technical Overview
+**Interpretation**
+`handwritten-tests(21)` usually means your project has 21 tests flagged as ad-hoc/manual-pattern tests: duplicated setup, brittle assertions, and low reuse of shared test infrastructure.
+
+**Architectural Pattern To Fix It**
+1. Centralize test construction:
+- Move object creation into factories/builders (`tests/factories.py`).
+- Move environment/bootstrap into layered fixtures (`session` for global, `function` for isolation).
+
+2. Separate test intent from mechanics:
+- Keep test bodies focused on behavior.
+- Push heavy setup, mocks, and wiring into helpers/fixtures.
+
+3. Use typed, composable test utilities:
+- Shared helpers with explicit types (no untyped dict blobs).
+- Small assertion helpers for domain semantics (not repeated raw `assert x == y` chains).
+
+4. Introduce test taxonomy:
+- Unit tests: pure logic, no I/O.
+- Contract tests: API/schema boundary.
+- Integration tests: DB/network with controlled fixtures.
+- E2E only for critical flows.
+
+**Common Pitfalls**
+- Over-mocking internals, then breaking tests during refactor without behavior changes.
+- Fixture sprawl (`conftest.py` god-file) causing hidden coupling.
+- Non-determinism (time, randomness, network, shared temp dirs).
+- Snapshot abuse without semantic assertions.
+- Repeated Arrange logic across files instead of reusable factories.
+- Tests asserting implementation details instead of public behavior.
+
+**State-of-the-Art Practices**
+- Property-based testing (`hypothesis`) for invariants and edge exploration.
+- Mutation testing (`mutmut`, `cosmic-ray`) to detect weak assertions.
+- Contract/schema testing (OpenAPI/JSON Schema/Pydantic model contracts).
+- Flake detection and quarantine pipeline (rerun + statistical flakiness scoring).
+- Deterministic clocks/seeds and hermetic test environments (containerized dependencies).
+- Coverage quality over raw percentage: branch coverage + mutation score + critical-path coverage.
+
+**Practical Remediation Plan For 21 Violations**
+1. Cluster all 21 by smell type:
+- duplicate setup
+- brittle assertions
+- over-mocking
+- nondeterministic behavior
+
+2. Build shared primitives first:
+- factories
+- fixture layers
+- assertion helpers
+
+3. Refactor tests in batches by module, not one-off.
+
+4. Add guardrails:
+- lint rules for test anti-patterns
+- CI gate for flaky tests
+- mutation threshold for critical packages
+
+5. Track outcome metrics:
+- flake rate
+- median test runtime
+- mutation score
+- escaped defect rate
+
+If you want, I can convert this into a concrete `pytest` refactor checklist you can apply file-by-file.
+
+
+## AI Research (Perplexity)
+No answer.
+
+## Books & Usenet (Readarr)
+No books or Usenet results found.
+
+## Discord (Security Servers)
+> Error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.
+
+## GitHub
+### Repositories
+No repositories found.
+
+### Issues/Discussions
+No issues found.
+
+## Web Results (Brave)
+- **[Identifying and Fixing Code Issues: A Python Debugging Guide](https://pythondeck.com/identifying_and_fixing_code_issues.php)**
+  Learn how to identify and fix common code issues in Python. This guide covers debugging techniques, error handling, and tools to improve your coding skills.
+- **[Python Code Review Checklist (With Examples) | Jetbrains Qodana](https://www.jetbrains.com/pages/static-code-analysis-guide/python-code-review-checklist/)**
+  Use our Python code review checklist to help review common mistakes, security flaws, duplications, and more when reviewing code.
+- **[Python Code Review Checklist: 25 Things to Check for Engineering Teams | Augment Code](https://www.augmentcode.com/guides/python-code-review-checklist)**
+  Augment Code&#x27;s Context Engine identifies code quality issues across 400,000+ files through architectural analysis, accelerating review cycles by catching style violations, type mismatches, and security vulnerabilities before human review begins. Get started with automated code review → ... Install Augment to get started. Works with codebases of any size, from side projects to enterprise monorepos.
+- **[Python Code Quality: Best Practices and Tools – Real Python](https://realpython.com/python-code-quality/)**
+  To experiment with this possibility, check out the Document Your Python Code and Projects With ChatGPT tutorial. ... The Python community has built a few tools, known as linters, that you can set up and use to check different aspects of your code. Linters analyze code for potential errors, code smells, and adherence to coding style guides like PEP 8. They check for: Syntax errors: Detect basic syntax issues, such as missing colons and commas, invalid variable usage, and similar. Coding style violations: Check for correct indentation, spacing, and naming conventions.
+- **[Code Style — The Hitchhiker's Guide to Python](https://docs.python-guide.org/writing/style/)**
+  Then run it on a file or series of files to get a report of any violations. $ pycodestyle optparse.py optparse.py:69:11: E401 multiple imports on one line optparse.py:77:1: E302 expected 2 blank lines, found 1 optparse.py:88:5: E301 expected 1 blank line, found 0 optparse.py:222:34: W602 deprecated form of raising exception optparse.py:347:31: E211 whitespace before &#x27;(&#x27; optparse.py:357:17: E201 whitespace after &#x27;{&#x27; optparse.py:472:29: E221 multiple spaces before operator optparse.py:544:21: W601 .has_key() is deprecated, use &#x27;in&#x27;
+
+## Academic Papers (ArXiv)
+
+## Videos (YouTube)
+> Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp
+
+Research findings learned to memory (2 entries).

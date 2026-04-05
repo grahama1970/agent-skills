@@ -59,14 +59,78 @@ Pi is the only CLI agent that can reliably enforce Memory First (other CLIs trea
 
 | Command                                           | Use Case                                                               |
 | ------------------------------------------------- | ---------------------------------------------------------------------- |
-| `./run.sh recall --q "..."`                       | FIRST step for every task                                              |
+| `./run.sh recall --q "..." --brief`               | **DEFAULT.** Slim output + proven skill chain. Use this.               |
+| `./run.sh recall --q "..."`                       | Full output with taxonomy, raw scores, _key (when you need metadata)   |
 | `./run.sh learn --problem "..." --solution "..."` | After solving something new                                            |
 | `./run.sh clarify --q "..."`                      | Detect ambiguity + generate clarifying questions when recall is weak    |
+| `./run.sh chain-recall "query"`                   | Search proven skill chains directly                                    |
+| `./run.sh chain-learn --skills "a,b,c" --task "..."` | Store a proven skill chain                                          |
+| `./run.sh chain-stats`                            | Skill chain collection statistics                                      |
 | `./run.sh preset compile --ids '{"set":"..."}'`   | Compile deterministic technical specs from ArangoDB                    |
 | `./run.sh preset sanity`                          | Audit preset library for broken links / cycles (Strict Mode)           |
 | `./run.sh info`                                   | Print active configuration (embedder, episodic sources, edge verifier) |
 | `./run.sh serve --host --port`                    | Keep the FastAPI server warm for low-latency recall                    |
 | `./run.sh status`                                 | Quick health check / Arango connectivity                               |
+
+## `--brief` Mode: Context-Safe Recall with Skill Chains
+
+**Use `--brief` by default.** It returns ~3.5x smaller output (problem, solution,
+score, tags) PLUS the best matching proven skill chain from the `skill_chains`
+collection. This is the "have I solved this before, and what skills worked?" pattern.
+
+```bash
+./run.sh recall --q "checkpoint resume fails after clear" --brief
+```
+
+```json
+{
+  "found": true,
+  "items": [
+    {
+      "problem": "checkpoints collection not searchable via /recall",
+      "solution": "Added to builtin_sources() in _declarations.py...",
+      "score": 0.99,
+      "tags": ["checkpoint", "grade:clean"]
+    }
+  ],
+  "skill_chain": {
+    "skills": ["memory", "assess", "checkpoint"],
+    "task_type": "general",
+    "success_rate": 1.0,
+    "observations": 3,
+    "elegance": "efficient",
+    "score": 0.78
+  }
+}
+```
+
+**If `skill_chain` is present: follow it.** These chains are extracted from real
+commits across 11 repos (17K+ commits) and proven by successful outcomes. The
+agent doesn't guess which skills to compose — it follows the proven path.
+
+### How Skill Chains Are Built
+
+```
+/checkpoint --skills A B C --grade clean
+    ↓
+1. Git commit with Skills: trailer (machine-readable)
+2. learn_chain() → skill_chains collection (embeddings, energy scoring)
+3. Nightly: mine-transcripts → chain-backfill → new chains from history
+    ↓
+Next agent: recall --brief → skill_chain: [A, B, C]
+```
+
+**Sources** (2,300+ chains, ranked by quality):
+- `production` — from /checkpoint --skills (highest confidence)
+- `commit-trailer` — from git commit Skills: trailers
+- `commit-transcript` — transcript scan within ±15min of commit timestamp
+- `transcript` / `warm_pond` — nightly regex-mined (lower confidence)
+
+### Chain Prioritization
+
+`--brief` prefers production chains over transcript-mined chains, and filters
+out noisy chains with >8 skills. If no production chain matches, falls back
+to transcript-mined chains that match semantically.
 
 ## Daemon HTTP Endpoints
 
@@ -147,6 +211,45 @@ if data["found"]:
     for item in data["items"]:       # ← "items" NOT "results"
         print(item["scores"])         # ← {bm25, graph, dense, freshness}
     print(data["confidence"])         # ← combined grounding signal
+```
+
+## LLM Execution Telemetry (`llm_call_log`)
+
+Every `/scillm` call is automatically logged to `llm_call_log` with duration, model,
+provider, tokens, cost, status, and caller skill. Use this for timeout estimation,
+failure diagnosis, and cost tracking. **No new endpoints** — uses existing `/recall` and `/list`.
+
+```python
+# Find slow Chutes calls (BM25 + multi-hop via llm_call_log_edges)
+resp = client.post("/recall", json={
+    "q": "deepseek timeout error",
+    "k": 10,
+    "collections": ["llm_call_log"],
+})
+
+# Structured query: all errors from a specific provider
+resp = client.post("/list", json={
+    "collection": "llm_call_log",
+    "limit": 50,
+    "filters": {"provider": "chutes", "status": "error"},
+})
+
+# Filter by caller skill
+resp = client.post("/list", json={
+    "collection": "llm_call_log",
+    "filters": {"caller": "dogpile", "date": "2026-04-05"},
+})
+```
+
+**Document fields:** `_key`, `ts`, `date`, `model_requested`, `model_served`, `provider`,
+`duration_ms`, `prompt_tokens`, `completion_tokens`, `total_tokens`, `cost_usd`,
+`status` (ok/error), `error`, `caller`.
+
+Multi-hop graph traversal works automatically — no extra params needed.
+
+**To tag which skill made the call**, pass an HTTP header to scillm:
+```python
+httpx.post(SCILLM_URL, headers={"x-caller-skill": "dogpile", ...}, json={...})
 ```
 
 ## Common Mistakes

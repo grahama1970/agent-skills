@@ -1,0 +1,114 @@
+Found prior research on this topic in memory.
+## Memory Recall (Prior Solutions Found)
+
+1. **Problem**: Research: fix common violations in Python project:  (2026-04-03)
+   **Solution**: {"query": "fix common violations in Python project: ", "date...
+Dogpiling on: fix common violations in Python project:  (Code Related: True)...
+Tailored queries:
+  arxiv: fix common violations in Python project: ...
+  perplexity: fix common violations in Python project: ...
+  brave: fix common violations in Python project: ...
+  github: fix common violations in Python project: ...
+  youtube: fix common violations in Python project: ...
+  readarr: fix common violations in Python project: ...
+# Dogpile Report: fix common violations in Python project: 
+
+## Codex Technical Overview
+**Scope**
+“Fix common violations” in a Python project is best treated as an engineering system, not a one-off cleanup. The winning pattern is: `detect -> auto-fix -> verify -> prevent regression`.
+
+**Violation Taxonomy**
+1. Formatting/import hygiene: inconsistent style, import order drift, dead imports.
+2. Static correctness: type errors, unreachable code, undefined names, bad exception handling.
+3. Architecture violations: circular dependencies, boundary leakage, God modules, hidden side effects.
+4. Reliability: flaky tests, weak assertions, missing edge-case tests.
+5. Security/supply-chain: vulnerable deps, unsafe deserialization, subprocess misuse, secret leakage.
+6. Packaging/runtime: implicit deps, lock drift, non-reproducible environments.
+
+**Architecture Pattern (What scales)**
+1. Single source of truth in `pyproject.toml` for lint/type/test tool config.
+2. Layered quality gates:
+   1. Local fast gate: formatter + linter auto-fix + import cleanup.
+   2. Pre-commit gate: deterministic checks on changed files.
+   3. CI full gate: strict type checking, full tests, security scans.
+3. Deterministic fixer order to avoid tool fights:
+   1. Formatter
+   2. Import/unused cleanup
+   3. Lint auto-fixes
+   4. Type check
+   5. Tests
+4. “No new debt” policy: block only new violations first, then burn down baseline.
+5. Ownership model: each package/module has explicit owner + quality budget.
+
+**Common Pitfalls**
+1. Tool overlap conflicts (multiple tools rewriting imports/formatting differently).
+2. Turning on strict typing globally in one shot and drowning in noise.
+3. Using broad ignore lists that hide real defects.
+4. Over-indexing style fixes while correctness/security regressions remain.
+5. Non-deterministic CI (different Python/tool versions locally vs CI).
+6. Big-bang refactors without characterization tests, causing behavior drift.
+7. Weak exception policies (`except Exception: pass`) masking production faults.
+
+**State-of-the-Art Approaches**
+1. Consolidated, high-performance linting/auto-fix pipelines (modern single-tool-first strategies) to reduce latency and config complexity.
+2. Incremental strict typing:
+   1. Public interfaces first
+   2. Domain/core next
+   3. Peripheral adapters last
+3. Policy-as-code for architecture rules (forbidden imports, layer boundaries, dependency direction checks).
+4. AST/CST codemods for safe large-scale fixes (instead of regex edits).
+5. Risk-based quality gates:
+   1. Always gate correctness/security
+   2. Soft-gate style during migration
+6. Supply-chain hardening:
+   1. Pinned lockfiles
+   2. Vulnerability scanning in CI
+   3. SBOM/provenance where required
+7. AI-assisted remediation with deterministic validation loops:
+   1. AI proposes patch
+   2. Automated checks verify
+   3. Reject if checks fail
+
+**Practical Rollout**
+1. Week 1: establish baseline metrics, freeze toolchain versions, enable fast local auto-fix.
+2. Week 2: enforce “no new violations” in CI on changed files.
+3. Week 3-4: tighten type/security gates per module priority.
+4. Ongoing: track violation burn-down and mean time to remediation.
+
+If you want, I can give you a concrete `pyproject.toml` + pre-commit + CI blueprint for this migration pattern.
+
+
+## AI Research (Perplexity)
+No answer.
+
+## Books & Usenet (Readarr)
+No books or Usenet results found.
+
+## Discord (Security Servers)
+> Error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.
+
+## GitHub
+### Repositories
+No repositories found.
+
+### Issues/Discussions
+No issues found.
+
+## Web Results (Brave)
+- **[Identifying and Fixing Code Issues: A Python Debugging Guide](https://pythondeck.com/identifying_and_fixing_code_issues.php)**
+  Learn how to identify and fix common code issues in Python. This guide covers debugging techniques, error handling, and tools to improve your coding skills.
+- **[15 Common Errors in Python and How to Fix Them | Better Stack Community](https://betterstack.com/community/guides/scaling-python/python-errors/)**
+  Dealing with errors is a significant challenge for developers. This article looks at some of the most common Python errors and discusses how to fix them
+- **[Common Python Errors: Complete Debugging Guide 2026](https://purpletutor.com/common-python-errors/)**
+  Master common Python errors with practical solutions. Learn debugging techniques, exception handling, and prevention strategies. Fix SyntaxError, TypeError, IndexError and more with step-by-step examples.
+- **[Python Code Quality: Best Practices and Tools – Real Python](https://realpython.com/python-code-quality/)**
+  Bandit is a security-focused linter that scans for common vulnerabilities and insecure coding patterns in Python code. Some of these patterns include the use of: ... These are just a sample of the tests that Bandit can run against your code. You can even use it to write your own tests and then run them on your Python projects. Once you have a list of detected issues, you can take action and fix them to make the code more secure.
+- **[5 | Dealing With Errors and Bugs - The Python Coding Book](https://thepythoncodingbook.com/errors-and-bugs/)**
+  In this case, the variable qty is being defined on the line before. That’s where the error must be. At this point, you may remember that input() always returns a string. You’ve encountered this bug in the first project you worked on in Chapter 1. You can now fix this problem by converting the string to an integer.
+
+## Academic Papers (ArXiv)
+
+## Videos (YouTube)
+> Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp
+
+Research findings learned to memory (2 entries).

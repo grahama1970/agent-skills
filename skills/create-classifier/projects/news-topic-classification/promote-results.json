@@ -1,7 +1,0 @@
-{
-  "ready": true,
-  "model": "distilbert-base-uncased",
-  "f1": 0.8902116083150566,
-  "hf_repo": "",
-  "exported": false
-}

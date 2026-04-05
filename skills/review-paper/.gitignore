@@ -1,7 +1,0 @@
-__pycache__/
-*.pyc
-*.egg-info/
-.venv/
-outputs/
-*.diagnostics.json
-*.normalized.md

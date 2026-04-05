@@ -29,7 +29,7 @@ dev = [
 extractor = "extract:main"
 
 [tool.setuptools]
-packages = ["extract"]
+packages = ["extractor_skill"]
 
 [tool.black]
 line-length = 100

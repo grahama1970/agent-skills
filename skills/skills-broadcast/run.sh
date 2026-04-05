@@ -242,47 +242,64 @@ if [[ "$MODE" == "git-sync" ]]; then
         exit 0
     fi
 
-    cp -a "$CANONICAL_DIR" "$UPSTREAM_SKILLS"
+    # Step 2: Whitelist-copy source files only. Never follow symlinks.
+    # This prevents secrets in session logs, Rust build artifacts, .venv,
+    # models, and other heavy/sensitive content from reaching GitHub.
+    mkdir -p "$UPSTREAM_SKILLS"
+    # Directory excludes MUST come before --include='*/' (rsync processes in order)
+    rsync -a --no-links --delete \
+        --exclude='.venv*/' \
+        --exclude='__pycache__/' \
+        --exclude='.ruff_cache/' \
+        --exclude='.pytest_cache/' \
+        --exclude='node_modules/' \
+        --exclude='target/' \
+        --exclude='.git/' \
+        --exclude='worktrees/' \
+        --exclude='designs/' \
+        --exclude='references/' \
+        --exclude='.artifacts/' \
+        --exclude='models/' \
+        --exclude='.system/' \
+        --exclude='structured/' \
+        --exclude='state/' \
+        --exclude='checkpoints/' \
+        --exclude='*.pre-symlink-*' \
+        --include='*/' \
+        --include='*.py' \
+        --include='*.sh' \
+        --include='*.md' \
+        --include='*.yaml' \
+        --include='*.yml' \
+        --include='*.toml' \
+        --include='*.txt' \
+        --include='*.html' \
+        --include='*.css' \
+        --include='*.js' \
+        --include='*.ts' \
+        --include='*.tsx' \
+        --include='*.jsx' \
+        --include='*.rs' \
+        --include='*.go' \
+        --include='*.cfg' \
+        --include='*.ini' \
+        --include='*.conf' \
+        --include='*.svg' \
+        --include='*.png' \
+        --include='Makefile' \
+        --include='Dockerfile' \
+        --include='Dockerfile.*' \
+        --include='docker-compose.yml' \
+        --include='docker-compose.yaml' \
+        --exclude='*' \
+        "$CANONICAL_DIR/" "$UPSTREAM_SKILLS/"
 
-    # Step 2.5: Remove any .pre-symlink-* backup dirs at the repo root
-    find "$UPSTREAM_DIR" -maxdepth 1 -type d -name '*.pre-symlink-*' \
-        -exec rm -rf {} + 2>/dev/null || true
-
-    # Step 3: Prune heavy artifacts that shouldn't live in a git repo.
-    # Internal symlinks to 12TB (models/, weights/, etc.) are kept as symlinks
-    # in the repo — git stores them as symlink entries, which is correct.
-    # But any real (non-symlinked) heavy dirs/files get removed.
-    echo "Pruning non-git content..."
-    find "$UPSTREAM_SKILLS" -maxdepth 4 -type d \( \
-        -name '.venv' -o -name '__pycache__' -o -name 'node_modules' \
-        -o -name '.pytest_cache' -o -name '.mypy_cache' -o -name '.ruff_cache' \
-        -o -name 'run' -o -name 'worktrees' -o -name '.git' \
-        -o -name 'artifacts' \
-    \) -exec rm -rf {} + 2>/dev/null || true
-
-    # Remove .pre-symlink-* backup dirs that may have been copied from canonical
-    find "$UPSTREAM_SKILLS" -maxdepth 2 -type d -name '*.pre-symlink-*' \
-        -exec rm -rf {} + 2>/dev/null || true
-
-    find "$UPSTREAM_SKILLS" -type f \( \
-        -name '*.pyc' -o -name '*.wav' -o -name '*.mp3' -o -name '*.mp4' \
-        -o -name '*.webm' -o -name '*.bin' -o -name '*.pt' -o -name '*.safetensors' \
-        -o -name '*.onnx' -o -name '*.ckpt' -o -name 'uv.lock' -o -name '.env' \
-        -o -name '*.pdf' \
-    \) -delete 2>/dev/null || true
-
-    # Remove any individual files >90MB (GitHub limit is 100MB)
-    find "$UPSTREAM_SKILLS" -type f -size +90M -delete 2>/dev/null || true
-
-    # Also prune non-symlinked heavy subdirs (>50MB real data)
-    while IFS= read -r heavy_dir; do
-        [[ ! -d "$heavy_dir" || -L "$heavy_dir" ]] && continue
-        size_mb=$(du -sm "$heavy_dir" 2>/dev/null | cut -f1)
-        if [[ "$size_mb" -gt 50 ]]; then
-            echo "  Pruned ${size_mb}MB: $(basename "$(dirname "$heavy_dir")")/$(basename "$heavy_dir")"
-            rm -rf "$heavy_dir"
-        fi
-    done < <(find "$UPSTREAM_SKILLS" -maxdepth 3 -mindepth 2 -type d 2>/dev/null)
+    # Safety: remove any file >50MB that slipped through
+    find "$UPSTREAM_SKILLS" -type f -size +50M -delete 2>/dev/null || true
+    # Safety: remove any .env or secret-bearing files
+    find "$UPSTREAM_SKILLS" -name '.env' -delete 2>/dev/null || true
+    # Clean empty directories left by exclusions
+    find "$UPSTREAM_SKILLS" -type d -empty -delete 2>/dev/null || true
 
     # Step 4: Commit and push
     cd "$UPSTREAM_DIR"
@@ -305,7 +322,7 @@ if [[ "$MODE" == "git-sync" ]]; then
 
     timestamp="$(date +%Y-%m-%d)"
     git commit -m "sync: $skill_count skills from canonical ($timestamp)"
-    git push origin "$(git branch --show-current)"
+    git push origin "$(git branch --show-current)" --force-with-lease
 
     echo ""
     echo "Pushed to github.com/grahama1970/agent-skills"

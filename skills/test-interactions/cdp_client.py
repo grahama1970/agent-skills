@@ -143,10 +143,124 @@ class CDPClient:
         )
         return result or {"ok": False, "error": "evaluate returned null"}
 
+    # --- Keyboard actions ---
+
+    def press_key(self, key: str):
+        """Press a keyboard key (Tab, Enter, Escape, ArrowDown, ArrowUp, ArrowLeft, ArrowRight, Space)."""
+        key_map = {
+            "Tab": {"key": "Tab", "code": "Tab", "keyCode": 9},
+            "Enter": {"key": "Enter", "code": "Enter", "keyCode": 13},
+            "Escape": {"key": "Escape", "code": "Escape", "keyCode": 27},
+            "Space": {"key": " ", "code": "Space", "keyCode": 32},
+            "ArrowDown": {"key": "ArrowDown", "code": "ArrowDown", "keyCode": 40},
+            "ArrowUp": {"key": "ArrowUp", "code": "ArrowUp", "keyCode": 38},
+            "ArrowLeft": {"key": "ArrowLeft", "code": "ArrowLeft", "keyCode": 37},
+            "ArrowRight": {"key": "ArrowRight", "code": "ArrowRight", "keyCode": 39},
+        }
+        info = key_map.get(key, {"key": key, "code": key, "keyCode": 0})
+        params = {
+            "type": "keyDown",
+            "key": info["key"],
+            "code": info["code"],
+            "windowsVirtualKeyCode": info["keyCode"],
+            "nativeVirtualKeyCode": info["keyCode"],
+        }
+        self.send("Input.dispatchKeyEvent", params)
+        params["type"] = "keyUp"
+        self.send("Input.dispatchKeyEvent", params)
+
+    def get_focused_qid(self) -> str | None:
+        """Return the data-qid of the currently focused element, or None."""
+        return self.evaluate(
+            "(function() {"
+            "  var el = document.activeElement;"
+            "  return el ? el.getAttribute('data-qid') : null;"
+            "})()"
+        )
+
+    # --- COTS measurement helpers (deterministic, no LLM) ---
+
+    def get_bounding_rect(self, selector: str) -> dict | None:
+        """Get bounding rect {width, height, x, y} for a selector."""
+        return self.evaluate(
+            f"(function() {{"
+            f"  var el = document.querySelector({json.dumps(selector)});"
+            f"  if (!el) return null;"
+            f"  var r = el.getBoundingClientRect();"
+            f"  return {{width: r.width, height: r.height, x: r.x, y: r.y}};"
+            f"}})()"
+        )
+
+    def get_computed_font_size(self, selector: str) -> float | None:
+        """Get computed font-size in px for a selector."""
+        return self.evaluate(
+            f"(function() {{"
+            f"  var el = document.querySelector({json.dumps(selector)});"
+            f"  if (!el) return null;"
+            f"  return parseFloat(getComputedStyle(el).fontSize);"
+            f"}})()"
+        )
+
+    def get_contrast_ratio(self, selector: str) -> float | None:
+        """Get WCAG contrast ratio of text color vs background for a selector.
+
+        Uses the WCAG 2.1 relative luminance formula. Returns ratio or None.
+        """
+        js = (
+            "(function() {"
+            f"  var el = document.querySelector({json.dumps(selector)});"
+            "  if (!el) return null;"
+            "  var s = getComputedStyle(el);"
+            "  function parse(c) {"
+            "    var m = c.match(/\\d+/g);"
+            "    return m ? m.slice(0,3).map(Number) : null;"
+            "  }"
+            "  function lum(rgb) {"
+            "    var a = rgb.map(function(v) {"
+            "      v = v / 255;"
+            "      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);"
+            "    });"
+            "    return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];"
+            "  }"
+            "  var fg = parse(s.color);"
+            "  var bg = parse(s.backgroundColor);"
+            "  if (!fg || !bg) return null;"
+            "  var l1 = lum(fg), l2 = lum(bg);"
+            "  var ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);"
+            "  return Math.round(ratio * 100) / 100;"
+            "})()"
+        )
+        return self.evaluate(js)
+
+    def get_all_qid_elements(self) -> list[dict]:
+        """Get all elements with data-qid: [{qid, tag, hasTitle, hasQsAction, width, height}]."""
+        js = (
+            "(function() {"
+            "  var results = [];"
+            "  document.querySelectorAll('[data-qid]').forEach(function(el) {"
+            "    var r = el.getBoundingClientRect();"
+            "    results.push({"
+            "      qid: el.getAttribute('data-qid'),"
+            "      tag: el.tagName.toLowerCase(),"
+            "      hasTitle: el.hasAttribute('title'),"
+            "      hasQsAction: el.hasAttribute('data-qs-action'),"
+            "      width: r.width,"
+            "      height: r.height,"
+            "      interactive: !!(el.onclick || el.getAttribute('onclick') ||"
+            "        ['BUTTON','A','INPUT','SELECT','TEXTAREA'].indexOf(el.tagName) >= 0 ||"
+            "        el.getAttribute('role') === 'button' || el.getAttribute('role') === 'tab' ||"
+            "        el.getAttribute('role') === 'link' || el.getAttribute('tabindex'))"
+            "    });"
+            "  });"
+            "  return results;"
+            "})()"
+        )
+        return self.evaluate(js) or []
+
     def close(self):
         if self.ws:
             try:
                 self.ws.close()
-            except Exception:
+            except (OSError, ConnectionError):
                 pass
             self.ws = None

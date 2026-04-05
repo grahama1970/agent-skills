@@ -1,1 +1,0 @@
-/home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner/.venv/bin/python3: No module named pytest

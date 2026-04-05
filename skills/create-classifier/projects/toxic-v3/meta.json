@@ -1,8 +1,0 @@
-{
-  "name": "toxic-v3",
-  "status": "researched",
-  "modality": "text",
-  "samples": 0,
-  "classes": 0,
-  "goal": "Classify online comments as toxic or non-toxic"
-}

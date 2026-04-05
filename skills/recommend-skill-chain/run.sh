@@ -18,8 +18,11 @@ case "$CMD" in
   recommend|evaluate|chains|shadow-status|train|status)
     uv run --project "$SKILL_DIR" python -m src.cli "$CMD" "$@"
     ;;
+  extract|extract-all)
+    uv run --project "$SKILL_DIR" python -m src.commit_chain_extractor "$CMD" "$@"
+    ;;
   *)
-    echo "Usage: ./run.sh {recommend|evaluate|chains|shadow-status|train|status} [options]"
+    echo "Usage: ./run.sh {recommend|evaluate|chains|shadow-status|train|status|extract|extract-all} [options]"
     echo ""
     echo "Commands:"
     echo "  recommend      Recommend skill chains for a task"
@@ -28,6 +31,8 @@ case "$CMD" in
     echo "  shadow-status  Show shadow-LEGO agreement rate"
     echo "  train          Retrain from accumulated labels"
     echo "  status         Health check"
+    echo "  extract        Extract chains from a single repo (--repo PATH)"
+    echo "  extract-all    Extract chains from all registered projects"
     exit 1
     ;;
 esac

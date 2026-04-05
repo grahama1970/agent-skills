@@ -4,12 +4,24 @@
 Uses CDP directly — single persistent WebSocket, no subprocess overhead.
 Playwright-inspired assertions with auto-retry for SPA testing.
 
+Architecture:
+  RUN stage  — deterministic CDP interactions + assertions → PASS/FAIL verdicts
+  REVIEW stage — batch all screenshots into one /scillm call → visual critique
+
+The LLM never decides pass/fail. It only comments on evidence after deterministic
+tests have already run. All interactions target [data-qid] selectors — no exceptions.
+
 Manifest interactions support:
-  Actions: screenshot | click | type | wait | scroll
+  Actions: screenshot | click | type | wait | scroll | key | tab
   Assertions: assert_selector | assert_visible | assert_text | assert_absent |
     assert_count | assert_attribute | assert_css | assert_value | assert_url |
-    assert_enabled | assert_disabled | assert_aria
+    assert_enabled | assert_disabled | assert_aria |
+    assert_min_size | assert_font_size | assert_contrast | assert_title |
+    assert_qs_action | assert_focus_visible
   All assertions support _not suffix for negation and auto-retry with timeout.
+
+  Per-surface: qid_compliance scan checks all [data-qid] elements for
+  4-attribute rule (data-qid, data-qs-action, title) and COTS sizing (C02).
 """
 
 import json
@@ -22,7 +34,7 @@ import typer
 from loguru import logger
 
 from cdp_client import CDPClient
-from assertions import run_assertions
+from assertions import run_assertions, run_qid_compliance
 
 app = typer.Typer(help="Systematic UI interaction testing with verification.")
 
@@ -140,6 +152,27 @@ def _execute_interaction(
             result.status = "PASS"
             result.evidence = f"scrolled {direction} {amount}px"
 
+        elif action == "key":
+            key_name = interaction.get("key", interaction.get("target", ""))
+            if not key_name:
+                result.status = "FAIL"
+                result.evidence = "no key specified"
+            else:
+                cdp.press_key(key_name)
+                focused_qid = cdp.get_focused_qid()
+                result.status = "PASS"
+                result.evidence = f"pressed {key_name}, focus on qid={focused_qid}"
+
+        elif action == "tab":
+            count = interaction.get("count", 1)
+            focused_qids = []
+            for _ in range(count):
+                cdp.press_key("Tab")
+                time.sleep(0.1)
+                focused_qids.append(cdp.get_focused_qid())
+            result.status = "PASS"
+            result.evidence = f"tabbed {count}x, focus path: {focused_qids}"
+
         else:
             result.status = "WARN"
             result.evidence = f"unknown action: {action}"
@@ -224,6 +257,19 @@ def _run_surface(cdp: CDPClient, surface: dict, base_url: str, output_dir: Path,
         for interaction in element.get("interactions", []):
             r = _execute_interaction(cdp, interaction, element_name, surface_name, surface_dir)
             results.add(r)
+
+    # Per-surface qid compliance scan (deterministic, no LLM)
+    if surface.get("qid_compliance", True):
+        qid_results = run_qid_compliance(cdp)
+        for qr in qid_results:
+            r = InteractionResult(
+                surface=surface_name, element=qr["qid"],
+                action="qid_compliance", description=qr["check"],
+                status=qr["status"], evidence=qr["evidence"],
+            )
+            results.add(r)
+            icon = "\u2713" if r.status == "PASS" else "\u2717"
+            logger.info("  [{}] {} — qid:{} | {}", icon, r.status, qr["qid"], qr["evidence"])
 
 
 @app.command()
@@ -318,6 +364,51 @@ def generate(
     logger.info("Manifest written to {}", output)
 
 
+def _preprocess_screenshots(captures_dir: Path):
+    """Preprocess all PNGs with vlm_image: auto-crop, sharpen, upscale.
+
+    Modifies files in-place. Skips if vlm_image is not available.
+    """
+    import sys
+    common_dir = Path(__file__).resolve().parent.parent / "common"
+    if not (common_dir / "vlm_image.py").exists():
+        logger.warning("vlm_image.py not found at {}, skipping preprocessing", common_dir)
+        return
+    if str(common_dir) not in sys.path:
+        sys.path.insert(0, str(common_dir))
+    try:
+        from vlm_image import prepare_for_vlm, stitch_vertical
+    except ImportError:
+        logger.warning("Failed to import vlm_image (missing Pillow?), skipping preprocessing")
+        return
+
+    screenshots = sorted(captures_dir.rglob("*.png"))
+    if not screenshots:
+        return
+
+    processed = 0
+    for png in screenshots:
+        if "BURST_" in png.name:
+            continue  # burst frames get stitched below
+        raw = png.read_bytes()
+        out = prepare_for_vlm(raw)
+        png.write_bytes(out)
+        processed += 1
+
+    # Stitch burst frames into single filmstrip per element
+    for burst_dir in sorted(captures_dir.rglob("burst")):
+        frames = sorted(burst_dir.glob("BURST_*.png"))
+        if len(frames) > 1:
+            frame_bytes = [f.read_bytes() for f in frames]
+            stitched = stitch_vertical(frame_bytes)
+            filmstrip_path = burst_dir.parent / f"{burst_dir.parent.name}_filmstrip.png"
+            filmstrip_path.write_bytes(stitched)
+            processed += 1
+
+    if processed:
+        logger.info("Preprocessed {} screenshots with vlm_image", processed)
+
+
 def _find_review_design() -> Optional[Path]:
     """Locate the /review-design skill run.sh."""
     candidates = [
@@ -359,7 +450,11 @@ def _run_review_design(
         logger.warning("No screenshots found in {}", captures)
         return None
 
-    cmd = [str(run_sh), "review", "--screenshots", str(captures),
+    # /review-design doesn't recurse — pass the directory with the most PNGs
+    screenshot_dirs = {p.parent for p in screenshots}
+    screenshots_path = max(screenshot_dirs, key=lambda d: len(list(d.glob("*.png")))) if screenshot_dirs else captures
+
+    cmd = [str(run_sh), "review", "--screenshots", str(screenshots_path),
            "--provider", provider, "--persona", persona]
     if context:
         cmd.extend(["--context", context])
@@ -393,16 +488,20 @@ def _run_review_design(
 def review(
     captures: Path = typer.Option(..., help="Directory containing captured screenshots"),
     output: Path = typer.Option(Path("./INTERACTION_REPORT.md"), help="Output report path"),
-    skip_visual: bool = typer.Option(False, help="Skip /review-design visual AI review"),
     context: str = typer.Option("", help="Context string for /review-design"),
     provider: str = typer.Option("gemini", help="Vision AI provider for /review-design"),
-    persona: str = typer.Option("", "--persona", help="Persona agent for /review-design (e.g. brandon-bailey, rob-armstrong). REQUIRED for visual review."),
+    persona: str = typer.Option(..., "--persona", help="Persona agent for /review-design (e.g. brandon-bailey, rob-armstrong). REQUIRED."),
+    preprocess: bool = typer.Option(True, help="Preprocess screenshots with vlm_image before review"),
 ):
     """Generate report from results.json + /review-design visual audit.
 
-    --persona is required for visual review. Without it, the /review-design
-    call is skipped — generic reviews are useless.
+    --persona is REQUIRED. A review without a persona produces generic,
+    unfocused feedback. The test fails if no persona is specified.
     """
+    if not persona:
+        logger.error("--persona is required. A review without a persona is a failure.")
+        raise typer.Exit(1)
+
     if not captures.exists():
         logger.error("Captures directory not found: {}", captures)
         raise typer.Exit(1)
@@ -412,10 +511,15 @@ def review(
         logger.warning("No results.json in {}. Run `test-interactions run` first.", captures)
         return
 
+    # Preprocess screenshots for VLM (auto-crop, sharpen, upscale)
+    if preprocess:
+        _preprocess_screenshots(captures)
+
     data = json.loads(results_file.read_text())
     lines = [
         f"# Interaction Test Report: {data.get('app', 'Unknown')}",
         f"**Date**: {time.strftime('%Y-%m-%d %H:%M')}",
+        f"**Persona**: {persona}",
         f"**Results**: {data['passed']} PASS / {data['failed']} FAIL / {data['warned']} WARN / {data['total']} total",
         "", "## DOM Assertion Results", "",
         "| Surface | Element | Action | Status | Evidence |",
@@ -429,10 +533,17 @@ def review(
             a_st = {"PASS": "PASS", "FAIL": "**FAIL**"}.get(a["status"], a["status"])
             lines.append(f"| | | assertion | {a_st} | {a['check']}: {a['evidence'][:80]} |")
 
+    # QID compliance section
+    qid_failures = [r for r in data.get("interactions", []) if r.get("action") == "qid_compliance" and r["status"] == "FAIL"]
+    if qid_failures:
+        lines.extend(["", "## QID Compliance Failures", ""])
+        for r in qid_failures:
+            lines.append(f"- **{r['element']}**: {r['description']} — {r['evidence']}")
+
     if data["failed"] > 0:
         lines.extend(["", "## Failures", ""])
         for r in data.get("interactions", []):
-            if r["status"] == "FAIL":
+            if r["status"] == "FAIL" and r.get("action") != "qid_compliance":
                 lines.append(f"### {r['surface']} > {r['element']} > {r['action']}")
                 lines.append(f"- **Description**: {r['description']}")
                 lines.append(f"- **Evidence**: {r['evidence']}")
@@ -440,24 +551,72 @@ def review(
                     lines.append(f"- **Screenshot**: {r['screenshot']}")
                 lines.append("")
 
-    # Run /review-design visual audit (persona required — generic reviews are useless)
-    if not skip_visual and not persona:
-        logger.warning("No --persona specified — skipping /review-design (generic reviews are useless)")
-        skip_visual = True
+    # Run /review-design visual audit — batched LLM call at the end
+    visual_review = _run_review_design(captures, context, provider, persona)
+    if visual_review:
+        lines.extend(["", "## Visual Design Review", ""])
+        lines.append(f"*Generated by /review-design — AI vision audit with persona: {persona}*")
+        lines.append("")
+        lines.append(visual_review)
+    else:
+        lines.extend(["", "## Visual Design Review", ""])
+        lines.append("*Skipped — /review-design not available or returned no output.*")
 
-    if not skip_visual:
-        visual_review = _run_review_design(captures, context, provider, persona)
-        if visual_review:
-            lines.extend(["", "## Visual Design Review", ""])
-            lines.append("*Generated by /review-design — AI vision audit of captured screenshots.*")
-            lines.append("")
-            lines.append(visual_review)
-        else:
-            lines.extend(["", "## Visual Design Review", ""])
-            lines.append("*Skipped — /review-design not available or returned no output.*")
+    # Final persona summary — deterministic /scillm call
+    summary = _persona_summary(data, visual_review, persona)
+    if summary:
+        lines.extend(["", "## Final Assessment", ""])
+        lines.append(f"*{persona} overall verdict via /scillm text-gemini:*")
+        lines.append("")
+        lines.append(summary)
 
     output.write_text("\n".join(lines))
     logger.info("Report written to {}", output)
+
+
+def _persona_summary(data: dict, visual_review: Optional[str], persona: str) -> Optional[str]:
+    """Final deterministic /scillm call: persona gives overall pass/fail verdict."""
+    import httpx as _httpx
+
+    passed = data.get("passed", 0)
+    failed = data.get("failed", 0)
+    total = data.get("total", 0)
+    app_name = data.get("app", "Unknown")
+
+    # Build a concise prompt from test results + visual review excerpt
+    visual_excerpt = (visual_review or "No visual review available.")[:2000]
+    failures = []
+    for r in data.get("interactions", []):
+        if r.get("status") == "FAIL":
+            failures.append(f"- {r['surface']} > {r['element']} > {r['action']}: {r.get('evidence', '')[:100]}")
+    failure_text = "\n".join(failures[:20]) if failures else "None"
+
+    prompt = (
+        f"You are {persona}, a QA persona reviewing interaction test results for {app_name}.\n\n"
+        f"Test Results: {passed}/{total} PASS, {failed}/{total} FAIL\n\n"
+        f"Failures:\n{failure_text}\n\n"
+        f"Visual Review Excerpt:\n{visual_excerpt}\n\n"
+        f"Give a 3-5 sentence overall assessment as {persona}. "
+        f"State whether the application is ready for the next phase or what must be fixed first. "
+        f"Be specific and honest — do not declare victory if there are real failures."
+    )
+
+    try:
+        resp = _httpx.post(
+            "http://localhost:4001/v1/chat/completions",
+            headers={"Authorization": "Bearer sk-dev-proxy-123"},
+            json={"model": "text-gemini", "messages": [{"role": "user", "content": prompt}], "max_tokens": 512},
+            timeout=30.0,
+        )
+        if resp.status_code == 200:
+            content = resp.json()["choices"][0]["message"]["content"]
+            logger.info("Persona summary generated ({} chars)", len(content))
+            return content
+        else:
+            logger.warning("scillm returned {}", resp.status_code)
+    except Exception as e:
+        logger.warning("Persona summary failed: {}", e)
+    return None
 
 
 @app.command()
@@ -465,14 +624,21 @@ def full(
     url: str = typer.Option(..., help="Target URL to test"),
     output_dir: Path = typer.Option(Path("./captures"), help="Output directory"),
     manifest: Optional[Path] = typer.Option(None, help="Existing manifest (skip generate)"),
-    skip_visual: bool = typer.Option(False, help="Skip /review-design visual AI review"),
     context: str = typer.Option("", help="Context string for /review-design"),
     provider: str = typer.Option("gemini", help="Vision AI provider for /review-design"),
-    persona: str = typer.Option("", "--persona", help="Persona agent for /review-design (e.g. brandon-bailey). REQUIRED for visual review."),
+    persona: str = typer.Option(..., "--persona", help="Persona agent for /review-design (e.g. brandon-bailey). REQUIRED."),
     surface: Optional[str] = typer.Option(None, help="Run only this surface (by name)"),
     max_retries: int = typer.Option(1, help="Max attempts per surface on failure"),
+    preprocess: bool = typer.Option(True, help="Preprocess screenshots with vlm_image before review"),
 ):
-    """Full pipeline: generate manifest -> run interactions -> review + visual audit."""
+    """Full pipeline: generate manifest -> run interactions -> review + visual audit.
+
+    --persona is REQUIRED. A test run without a persona is a failure.
+    """
+    if not persona:
+        logger.error("--persona is required. A test run without a persona is a failure.")
+        raise typer.Exit(1)
+
     manifest_path = manifest or (output_dir / "manifest.json")
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -482,17 +648,16 @@ def full(
     else:
         logger.info("Step 1/3: Using existing manifest {}", manifest_path)
 
-    logger.info("Step 2/3: Running interactions")
+    logger.info("Step 2/3: Running interactions (deterministic CDP + assertions)")
     try:
         run(manifest=manifest_path, output_dir=output_dir, surface=surface, max_retries=max_retries)
     except SystemExit:
         pass
 
-    logger.info("Step 3/3: Reviewing captures{}",
-                " (with /review-design)" if not skip_visual else "")
+    logger.info("Step 3/3: Reviewing captures (persona: {})", persona)
     report_path = output_dir / "INTERACTION_REPORT.md"
     review(captures=output_dir, output=report_path,
-           skip_visual=skip_visual, context=context, provider=provider, persona=persona)
+           context=context, provider=provider, persona=persona, preprocess=preprocess)
     logger.info("Done. Report: {}", report_path)
 
 

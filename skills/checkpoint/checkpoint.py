@@ -30,6 +30,7 @@ from helpers import (
     default_workspace_scope,
     detect_project_root,
     detect_scope,
+    detect_transcript_paths,
     git,
     git_context,
     git_commit_and_push,
@@ -271,7 +272,8 @@ def save(
     test_result = _run_tests(root) if run_tests else None
 
     # === GIT: commit + push + tag ===
-    commit_info = git_commit_and_push(root, topic, [], console=console)
+    commit_info = git_commit_and_push(root, topic, [], console=console,
+                                      skills=skills, grade=grade)
 
     # Create checkpoint tag
     timestamp = datetime.now(timezone.utc)
@@ -318,6 +320,11 @@ def save(
     if episode_key:
         solution_doc["episode_key"] = episode_key
 
+    # Auto-detect transcript paths for this session
+    transcript_paths = detect_transcript_paths(root)
+    if transcript_paths:
+        solution_doc["transcript_paths"] = transcript_paths
+
     # Tags for filtering
     date_str = ts_iso[:10]
     tags = [
@@ -346,13 +353,15 @@ def save(
         "document": checkpoint_doc,
         "collection": "checkpoints",
     }, console=console)
+    checkpoint_key = result.get("_key", "") if isinstance(result, dict) else ""
 
-    # Skill chain storage
+    # Skill chain storage — links checkpoint → skill_chain via edge
     if skills:
         store_skill_chain(
             topic=topic, summary=resume_instruction, decisions=[],
             scope=scope_val, outcome=outcome,
             explicit_skills=skills, console=console,
+            checkpoint_key=checkpoint_key,
         )
 
     if output_json:
@@ -418,6 +427,47 @@ def resume(
     last_tag = _last_checkpoint_tag(root)
     since = _git_since_tag(root, last_tag)
 
+    # === RECALL: prior solutions + recommended skill chains ===
+    prior_solutions: list[dict] = []
+    recommended_chains: list[dict] = []
+    if checkpoints:
+        cp = checkpoints[0]
+        recall_query = cp.get("resume", "") or cp.get("topic", "")
+        if recall_query:
+            try:
+                recall_result = memory_post("/recall", {
+                    "q": recall_query,
+                    "k": 3,
+                    "collections": ["lessons_v2", "skill_chains"],
+                }, console=None)
+                for item in recall_result.get("items", []):
+                    source = item.get("_source", "")
+                    if source == "skill_chains":
+                        chain = item.get("skills", [])
+                        if not chain:
+                            sol = item.get("solution", "")
+                            if isinstance(sol, str) and sol.startswith("{"):
+                                try:
+                                    chain = json.loads(sol).get("chain", [])
+                                except (json.JSONDecodeError, TypeError):
+                                    pass
+                        if chain:
+                            recommended_chains.append({
+                                "chain": chain,
+                                "task": item.get("problem", "")[:80],
+                                "score": item.get("scores", {}).get("bm25", 0),
+                            })
+                    else:
+                        problem = item.get("problem", "")
+                        solution = item.get("solution", "")
+                        if problem and solution:
+                            prior_solutions.append({
+                                "problem": problem[:100],
+                                "solution": solution[:150],
+                            })
+            except (TypeError, KeyError):
+                pass  # recall unavailable, non-fatal
+
     if output_json:
         slim = {
             "checkpoint": checkpoints[0] if checkpoints else None,
@@ -430,6 +480,8 @@ def resume(
                 "commits_since": since["commit_count"],
                 "files_changed": since["files_changed"][:20],
             },
+            "prior_solutions": prior_solutions,
+            "recommended_chains": recommended_chains,
         }
         print(json.dumps(slim, indent=2))
         return
@@ -483,6 +535,24 @@ def resume(
         lines.append(f"\n[dim]Saved: {cp.get('timestamp', '?')}[/dim]")
     else:
         lines.append("[yellow]No previous checkpoint found.[/yellow]")
+
+    # Section 4: Prior solutions from /memory recall
+    if prior_solutions:
+        lines.append("")
+        lines.append("[bold]PRIOR SOLUTIONS:[/bold]")
+        for ps in prior_solutions[:3]:
+            lines.append(f"  [dim]{ps['problem']}[/dim]")
+            lines.append(f"    → {ps['solution']}")
+
+    # Section 5: Recommended skill chains
+    if recommended_chains:
+        lines.append("")
+        lines.append("[bold]RECOMMENDED SKILL CHAINS:[/bold]")
+        for rc in recommended_chains[:3]:
+            chain_str = " → ".join(f"/{s}" for s in rc["chain"])
+            lines.append(f"  [cyan]{chain_str}[/cyan]")
+            if rc.get("task"):
+                lines.append(f"    [dim]{rc['task']}[/dim]")
 
     console.print(Panel("\n".join(lines), title="RESUME", border_style="cyan"))
 

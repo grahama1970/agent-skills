@@ -1,6 +1,0 @@
-# Exclude non-skill markdown files from Pi skill discovery
-0N_*.md
-01_*.md
-README.md
-TRIGGERS.md
-movie_ingest_review.md

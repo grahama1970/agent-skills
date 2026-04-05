@@ -25,21 +25,16 @@ def build_system_prompt(
 ) -> str:
     """Build system prompt — single template, all placeholders filled."""
     _prompt_dir = Path(__file__).resolve().parent.parent / "prompt-lab" / "prompts"
-    # v3 (structured edit ops) preferred over v2 (hybrid diff+complete file)
     _system_template = _prompt_dir / "code_runner_system_v3.txt"
-    if not _system_template.exists():
-        _system_template = _prompt_dir / "code_runner_system_v2.txt"
     if _system_template.exists():
         base = _system_template.read_text().strip()
     else:
         base = (
-            "You are a code-fixing agent.\n\n"
+            "You are a code-fixing agent. Use the provided tools (write_file, edit_file, "
+            "read_file, run_command) to make changes.\n\n"
             "ORIGINAL REQUEST:\n{original_request}\n\n"
             "DEFINITION OF DONE:\n{definition_of_done}\n\n"
             "EDITABLE FILES:\n{allowlist}\n\n"
-            "OUTPUT: Line 1 = JSON {\"summary\":\"...\",\"approach\":\"...\",\"files_changed\":[...]}\n"
-            "Line 2 = ---\n"
-            "Then ### FILE: blocks with ```diff and ```python blocks.\n\n"
             "{similar_solved_problems}\n\n{last_2_rounds}"
         )
 

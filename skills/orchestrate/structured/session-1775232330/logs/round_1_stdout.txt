@@ -1,3 +1,0 @@
-data-qid coverage: 0/0 (0%)
-
-FAIL: 0 interactive elements found — nothing to verify (wrong path or empty scan)

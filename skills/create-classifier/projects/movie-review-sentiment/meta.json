@@ -1,8 +1,0 @@
-{
-  "name": "movie-review-sentiment",
-  "status": "researched",
-  "modality": "text",
-  "goal": "Classify movie reviews as positive or negative",
-  "samples": 0,
-  "classes": 0
-}

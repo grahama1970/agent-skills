@@ -1,0 +1,56 @@
+Found prior research on this topic in memory.
+## Memory Recall (Prior Solutions Found)
+
+1. **Problem**: Research: fix common violations in Python project:  (2026-04-03)
+   **Solution**: {"query": "fix common violations in Python project: ", "date...
+Dogpiling on: fix common violations in Python project:  (Code Related: True)...
+Tailored queries:
+  arxiv: fix common violations in Python project: ...
+  perplexity: fix common violations in Python project: ...
+  brave: fix common violations in Python project: ...
+  github: fix common violations in Python project: ...
+  youtube: fix common violations in Python project: ...
+  readarr: fix common violations in Python project: ...
+# Dogpile Report: fix common violations in Python project: 
+
+## Codex Technical Overview
+> Error: Error: All LLM providers failed:
+  - codex: Timeout
+  - openai: Auth failed
+  - gemini: Auth failed
+  - claude: Auth failed
+
+## AI Research (Perplexity)
+No answer.
+
+## Books & Usenet (Readarr)
+No books or Usenet results found.
+
+## Discord (Security Servers)
+> Error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.
+
+## GitHub
+### Repositories
+No repositories found.
+
+### Issues/Discussions
+No issues found.
+
+## Web Results (Brave)
+- **[Identifying and Fixing Code Issues: A Python Debugging Guide](https://pythondeck.com/identifying_and_fixing_code_issues.php)**
+  Learn how to identify and fix common code issues in Python. This guide covers debugging techniques, error handling, and tools to improve your coding skills.
+- **[15 Common Errors in Python and How to Fix Them | Better Stack Community](https://betterstack.com/community/guides/scaling-python/python-errors/)**
+  Dealing with errors is a significant challenge for developers. This article looks at some of the most common Python errors and discusses how to fix them
+- **[Common Python Errors: Complete Debugging Guide 2026](https://purpletutor.com/common-python-errors/)**
+  Master common Python errors with practical solutions. Learn debugging techniques, exception handling, and prevention strategies. Fix SyntaxError, TypeError, IndexError and more with step-by-step examples.
+- **[Python Code Quality: Best Practices and Tools – Real Python](https://realpython.com/python-code-quality/)**
+  Bandit is a security-focused linter that scans for common vulnerabilities and insecure coding patterns in Python code. Some of these patterns include the use of: ... These are just a sample of the tests that Bandit can run against your code. You can even use it to write your own tests and then run them on your Python projects. Once you have a list of detected issues, you can take action and fix them to make the code more secure.
+- **[5 | Dealing With Errors and Bugs - The Python Coding Book](https://thepythoncodingbook.com/errors-and-bugs/)**
+  In this case, the variable qty is being defined on the line before. That’s where the error must be. At this point, you may remember that input() always returns a string. You’ve encountered this bug in the first project you worked on in Chapter 1. You can now fix this problem by converting the string to an integer.
+
+## Academic Papers (ArXiv)
+
+## Videos (YouTube)
+> Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp
+
+Research findings learned to memory (2 entries).

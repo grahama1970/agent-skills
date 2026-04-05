@@ -1,9 +1,0 @@
-polars=1.39.3, cuda=True
-
-Resolved 45 packages in 476ms
-Downloading polars-runtime-32 (44.7MiB)
- Downloaded polars-runtime-32
-Prepared 2 packages in 2.75s
-Installed 2 packages in 9ms
- + polars==1.39.3
- + polars-runtime-32==1.39.3

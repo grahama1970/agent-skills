@@ -205,6 +205,169 @@ for s in data.get('sources', []):
         uv run --project "${SCRIPT_DIR}" python "${SCRIPT_DIR}/archive_episode.py" list-unresolved 2>&1 || true
         ;;
 
+    archive-checkpointed)
+        # Archive only sessions that have been checkpointed (with transcript_paths).
+        # Queries the checkpoints collection via memory daemon for recent entries
+        # that have transcript_paths, then archives only those specific files.
+        # This replaces the blind filesystem scan that caused nightly timeouts.
+        shift
+        HOURS=24
+        ANALYZE=0
+        MAX_DOGPILE=3
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --hours) HOURS="$2"; shift 2 ;;
+                --analyze) ANALYZE=1; shift ;;
+                --max-dogpile) MAX_DOGPILE="$2"; shift 2 ;;
+                *) shift ;;
+            esac
+        done
+
+        ARCHIVED=0
+        SKIPPED=0
+        ERRORS=0
+        TOTAL_FOUND=0
+        ANALYZED=0
+        ANALYSIS_ERRORS=0
+
+        echo "[episodic] Querying checkpoints from last ${HOURS}h for transcript_paths..."
+
+        # Query memory daemon for recent checkpoints with transcript_paths
+        CHECKPOINT_DATA=$(python3 -c "
+import json, sys, time
+try:
+    import httpx
+except ImportError:
+    sys.exit(0)
+
+sock = '/run/user/1000/embry/memory.sock'
+tcp = 'http://127.0.0.1:8601'
+import os
+if os.path.exists(sock):
+    transport = httpx.HTTPTransport(uds=sock)
+    base = 'http://localhost'
+else:
+    transport = None
+    base = tcp
+
+cutoff = time.time() - ($HOURS * 3600)
+with httpx.Client(transport=transport, timeout=30.0) as client:
+    resp = client.post(f'{base}/list', json={
+        'collection': 'checkpoints',
+        'limit': 100,
+        'filters': {}
+    })
+    data = resp.json()
+    docs = data.get('documents', data.get('items', []))
+    results = []
+    for doc in docs:
+        ts = doc.get('updated_at', doc.get('created_at', 0))
+        if isinstance(ts, str):
+            from datetime import datetime
+            try:
+                ts = datetime.fromisoformat(ts.replace('Z', '+00:00')).timestamp()
+            except (ValueError, TypeError): ts = 0
+        paths = doc.get('transcript_paths', [])
+        skills = doc.get('skills_used', [])
+        if ts >= cutoff and paths:
+            results.append({
+                '_key': doc.get('_key', ''),
+                'topic': doc.get('topic', ''),
+                'grade': doc.get('grade', ''),
+                'outcome': doc.get('outcome', ''),
+                'scope': doc.get('scope', ''),
+                'resume': doc.get('resume', ''),
+                'skills_used': skills,
+                'transcript_paths': paths,
+            })
+    print(json.dumps(results))
+" 2>/dev/null) || CHECKPOINT_DATA="[]"
+
+        if [[ -z "$CHECKPOINT_DATA" || "$CHECKPOINT_DATA" == "[]" ]]; then
+            echo "[episodic] No recent checkpoints with transcript_paths found."
+            echo "[episodic] Hint: /checkpoint save now records transcript_paths automatically."
+            exit 0
+        fi
+
+        echo "[episodic] Found checkpoints with transcripts, processing..."
+
+        # Locate chain-learn for skill chain storage
+        CHAIN_LEARN="${SKILLS_DIR}/memory/run.sh"
+        CHAINS_STORED=0
+
+        # Process each checkpoint's transcript files
+        # Emit: _key|topic|grade|outcome|skills_csv|transcript_path
+        echo "$CHECKPOINT_DATA" | python3 -c "
+import json, sys
+for cp in json.load(sys.stdin):
+    skills_csv = ','.join(cp.get('skills_used', []))
+    outcome = cp.get('outcome', '')
+    for p in cp.get('transcript_paths', []):
+        print(f\"{cp['_key']}|{cp.get('topic','')}|{cp.get('grade','')}|{outcome}|{skills_csv}|{p}\")
+" 2>/dev/null | while IFS='|' read -r CP_KEY CP_TOPIC CP_GRADE CP_OUTCOME CP_SKILLS TRANSCRIPT; do
+            TOTAL_FOUND=$((TOTAL_FOUND + 1))
+
+            if [[ ! -f "$TRANSCRIPT" ]]; then
+                echo "[episodic]   File missing: $TRANSCRIPT"
+                continue
+            fi
+
+            SESSION_ID="checkpoint:${CP_KEY}:$(basename "$TRANSCRIPT" .jsonl)"
+
+            # Dedup check
+            ALREADY=$("${MEMORY_RUN}" search --query "${SESSION_ID}" --collection agent_conversations --limit 1 2>/dev/null \
+                | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('items',[])))" 2>/dev/null || echo "0")
+
+            if [[ "$ALREADY" -gt 0 ]]; then
+                SKIPPED=$((SKIPPED + 1))
+                continue
+            fi
+
+            echo "[episodic]   Archiving: ${CP_TOPIC:0:50} (${CP_GRADE}) → $(basename "$TRANSCRIPT")"
+            if uv run --project "${SCRIPT_DIR}" python "${SCRIPT_DIR}/archive_episode.py" archive "$TRANSCRIPT" 2>&1; then
+                ARCHIVED=$((ARCHIVED + 1))
+
+                # Store skill chain for /recommend-skill-chain training
+                # The chain doc needs rich problem/solution text for BM25 + embedding recall
+                if [[ -n "$CP_SKILLS" && -x "$CHAIN_LEARN" ]]; then
+                    SUCCESS_FLAG="--success"
+                    if [[ "$CP_OUTCOME" == "failed" ]]; then
+                        SUCCESS_FLAG="--no-success"
+                    fi
+                    if "$CHAIN_LEARN" chain-learn \
+                        --skills "$CP_SKILLS" \
+                        --task "$CP_TOPIC" \
+                        --source "production" \
+                        $SUCCESS_FLAG 2>/dev/null; then
+                        CHAINS_STORED=$((CHAINS_STORED + 1))
+                        echo "[episodic]   Stored skill chain: $CP_SKILLS ($CP_OUTCOME)"
+                    fi
+                fi
+
+                if [[ "$ANALYZE" == "1" ]]; then
+                    echo "[episodic]   Analyzing: $SESSION_ID"
+                    if uv run --project "${SCRIPT_DIR}" python "${SCRIPT_DIR}/session_analysis.py" analyze \
+                        "$SESSION_ID" --max-dogpile "$MAX_DOGPILE" --json-stream 2>&1; then
+                        ANALYZED=$((ANALYZED + 1))
+                    else
+                        ANALYSIS_ERRORS=$((ANALYSIS_ERRORS + 1))
+                    fi
+                fi
+            else
+                ERRORS=$((ERRORS + 1))
+            fi
+        done
+
+        echo ""
+        echo "[episodic] === CHECKPOINT-DRIVEN ARCHIVE COMPLETE ==="
+        echo "  Found:     $TOTAL_FOUND transcripts from checkpoints"
+        echo "  Archived:  $ARCHIVED"
+        echo "  Chains:    $CHAINS_STORED stored for /recommend-skill-chain"
+        echo "  Analyzed:  $ANALYZED"
+        echo "  Skipped:   $SKIPPED (already archived)"
+        echo "  Errors:    $ERRORS (archive) / $ANALYSIS_ERRORS (analysis)"
+        ;;
+
     *)
         # Default: pass through to archive_episode.py
         exec uv run --project "${SCRIPT_DIR}" python "${SCRIPT_DIR}/archive_episode.py" "$@"

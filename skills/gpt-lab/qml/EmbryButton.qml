@@ -1,1 +1,0 @@
-/home/graham/workspace/experiments/pi-mono/.pi/skills/voice-lab/qml/EmbryButton.qml

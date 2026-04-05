@@ -15,6 +15,13 @@ Supported assertions:
   assert_url                             — current page URL (exact or contains)
   assert_enabled / assert_disabled       — interactive element state
   assert_aria                            — ARIA attribute value
+  assert_min_size                        — bounding rect >= threshold (COTS C02)
+  assert_font_size                       — computed fontSize >= threshold (COTS C01)
+  assert_contrast                        — WCAG contrast ratio >= threshold (COTS C03)
+  assert_title                           — element has title attribute (COTS C14)
+  assert_qs_action                       — element has data-qs-action attribute
+  assert_focus_visible                   — Tab to element, verify focus indicator
+  assert_qid_compliance                  — all [data-qid] elements pass 4-attribute rule
 """
 
 import json
@@ -259,5 +266,154 @@ def run_assertions(cdp: CDPClient, interaction: dict, wait_ms: int) -> list[dict
             return (ok, f"{attr}={val!r} {'==' if ok else '!='} {expected!r}")
         passed, evidence = _retry(check, timeout)
         _append(results, f"assert_aria({sel}, {attr}={expected})", passed, evidence)
+
+    # --- COTS deterministic assertions (C01, C02, C03, C14) ---
+
+    # assert_min_size — COTS C02: touch target >= threshold (default 44x44)
+    assert_min_size = interaction.get("assert_min_size")
+    if assert_min_size:
+        sel = assert_min_size["selector"]
+        min_w = assert_min_size.get("min_width", 44)
+        min_h = assert_min_size.get("min_height", 44)
+        def check():
+            rect = cdp.get_bounding_rect(sel)
+            if not rect:
+                return (False, "element not found")
+            w, h = rect["width"], rect["height"]
+            ok = w >= min_w and h >= min_h
+            return (ok, f"{w:.0f}x{h:.0f}px {'>=' if ok else '<'} {min_w}x{min_h}px")
+        passed, evidence = _retry(check, timeout)
+        _append(results, f"assert_min_size({sel}, {min_w}x{min_h})", passed, evidence)
+
+    # assert_font_size — COTS C01: font >= threshold (default 12px)
+    assert_font_size = interaction.get("assert_font_size")
+    if assert_font_size:
+        sel = assert_font_size["selector"]
+        min_px = assert_font_size.get("min_px", 12)
+        def check():
+            size = cdp.get_computed_font_size(sel)
+            if size is None:
+                return (False, "element not found")
+            ok = size >= min_px
+            return (ok, f"fontSize={size}px {'>=' if ok else '<'} {min_px}px")
+        passed, evidence = _retry(check, timeout)
+        _append(results, f"assert_font_size({sel}, >={min_px}px)", passed, evidence)
+
+    # assert_contrast — COTS C03: WCAG contrast >= threshold (default 4.5)
+    assert_contrast = interaction.get("assert_contrast")
+    if assert_contrast:
+        sel = assert_contrast["selector"]
+        min_ratio = assert_contrast.get("min_ratio", 4.5)
+        def check():
+            ratio = cdp.get_contrast_ratio(sel)
+            if ratio is None:
+                return (False, "element not found or colors unparseable")
+            ok = ratio >= min_ratio
+            return (ok, f"contrast={ratio}:1 {'>=' if ok else '<'} {min_ratio}:1")
+        passed, evidence = _retry(check, timeout)
+        _append(results, f"assert_contrast({sel}, >={min_ratio}:1)", passed, evidence)
+
+    # assert_title — COTS C14: element has title attribute (tooltip)
+    assert_title = interaction.get("assert_title")
+    if assert_title:
+        sel = assert_title if isinstance(assert_title, str) else assert_title["selector"]
+        def check():
+            val = cdp.evaluate(
+                f"(function() {{"
+                f"  var el = document.querySelector({json.dumps(sel)});"
+                f"  return el ? el.getAttribute('title') : null;"
+                f"}})()"
+            )
+            if val is None:
+                return (False, "element not found or no title attribute")
+            return (bool(val), f"title={val!r}" if val else "title is empty")
+        passed, evidence = _retry(check, timeout)
+        _append(results, f"assert_title({sel})", passed, evidence)
+
+    # assert_qs_action — element has data-qs-action attribute
+    assert_qs = interaction.get("assert_qs_action")
+    if assert_qs:
+        sel = assert_qs if isinstance(assert_qs, str) else assert_qs["selector"]
+        def check():
+            val = cdp.evaluate(
+                f"(function() {{"
+                f"  var el = document.querySelector({json.dumps(sel)});"
+                f"  return el ? el.getAttribute('data-qs-action') : null;"
+                f"}})()"
+            )
+            if val is None:
+                return (False, "element not found or no data-qs-action")
+            return (bool(val), f"data-qs-action={val!r}")
+        passed, evidence = _retry(check, timeout)
+        _append(results, f"assert_qs_action({sel})", passed, evidence)
+
+    # assert_focus_visible — Tab to selector, check focus indicator (COTS C06)
+    assert_focus = interaction.get("assert_focus_visible")
+    if assert_focus:
+        sel = assert_focus if isinstance(assert_focus, str) else assert_focus["selector"]
+        def check():
+            has_focus = cdp.evaluate(
+                f"(function() {{"
+                f"  var target = document.querySelector({json.dumps(sel)});"
+                f"  if (!target) return null;"
+                f"  target.focus();"
+                f"  if (document.activeElement !== target) return false;"
+                f"  var s = getComputedStyle(target);"
+                f"  var outline = s.outlineStyle;"
+                f"  var boxShadow = s.boxShadow;"
+                f"  return outline !== 'none' || (boxShadow && boxShadow !== 'none');"
+                f"}})()"
+            )
+            if has_focus is None:
+                return (False, "element not found")
+            return (bool(has_focus), "focus indicator visible" if has_focus else "NO focus indicator (outline/boxShadow)")
+        passed, evidence = _retry(check, timeout)
+        _append(results, f"assert_focus_visible({sel})", passed, evidence)
+
+    return results
+
+
+# --- Surface-level COTS compliance scan (runs once per surface) ---
+
+# COTS thresholds — same as best-practices-cots/scanner.cjs
+MIN_FONT_PX = 12       # MIL-STD-1472H
+MIN_TOUCH_PX = 44      # WCAG 2.1 / Apple HIG
+MIN_CONTRAST = 4.5     # WCAG 2.1 AA
+
+
+def run_qid_compliance(cdp) -> list[dict]:
+    """Scan all [data-qid] elements for the 4-attribute rule + COTS sizing.
+
+    Returns list of {qid, check, status, evidence} dicts.
+    No LLM. Pure CDP measurements against thresholds.
+    """
+    results = []
+    elements = cdp.get_all_qid_elements()
+
+    for el in elements:
+        qid = el["qid"]
+        sel = f"[data-qid='{qid}']"
+
+        # 4-attribute rule: title required on interactive elements
+        if el["interactive"] and not el["hasTitle"]:
+            results.append({
+                "qid": qid, "check": "title_missing",
+                "status": "FAIL", "evidence": f"interactive {el['tag']} missing title attribute",
+            })
+
+        # 4-attribute rule: data-qs-action required on interactive elements
+        if el["interactive"] and not el["hasQsAction"]:
+            results.append({
+                "qid": qid, "check": "qs_action_missing",
+                "status": "FAIL", "evidence": f"interactive {el['tag']} missing data-qs-action attribute",
+            })
+
+        # C02: touch target size
+        if el["interactive"] and (el["width"] < MIN_TOUCH_PX or el["height"] < MIN_TOUCH_PX):
+            results.append({
+                "qid": qid, "check": "C02_touch_target",
+                "status": "FAIL",
+                "evidence": f"{el['width']:.0f}x{el['height']:.0f}px < {MIN_TOUCH_PX}x{MIN_TOUCH_PX}px",
+            })
 
     return results

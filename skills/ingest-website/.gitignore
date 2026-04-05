@@ -1,6 +1,0 @@
-run/
-.venv/
-__pycache__/
-*.pyc
-.batch_state.json
-*_task_state.json

@@ -346,6 +346,26 @@ flowchart TD
 **Will it work?** [Honest one-paragraph assessment]
 **What's genuinely different this time?** [Numbered list]
 **What's the same?** [What DIDN'T change — often reveals the real bottleneck]
+
+---
+
+## Next Steps — Your Call
+
+[If there are open questions or branching next steps, include interview-style
+questions so the user can steer what happens next. Use numbered options with
+descriptions. These should be REAL decisions, not rubber-stamp confirmations.]
+
+**1. [Decision question]**
+   - a) [Option] — [what this means, tradeoff]
+   - b) [Option] — [what this means, tradeoff]
+   - c) [Option] — [what this means, tradeoff]
+
+**2. [Another decision]**
+   - a) ...
+   - b) ...
+
+[For HTML walkthroughs, render these as interactive elements if possible.
+For markdown, use the numbered format above so the user can reply "1b, 2a".]
 ```
 
 ### Phase 4: Claim Verification (CRITICAL)
@@ -402,7 +422,75 @@ Use `/create-table` (or markdown tables) for:
 
 Prefer Mermaid over ASCII art — it survives edits when the implementation changes.
 
-### Phase 6: Present for Review
+### Phase 6: Publish (AUTO — NON-NEGOTIABLE)
+
+After writing the walkthrough, two things happen automatically. The agent does NOT
+skip these or ask the user first.
+
+#### 6a. Learn to /memory
+
+Store the walkthrough's key findings as lessons so future agents can recall them.
+Store BOTH:
+1. **The overview lesson** — "How does [system] work?" with the full pipeline summary
+2. **Individual decision lessons** — one per key decision, separately recallable
+
+```bash
+# Overview
+.agents/skills/memory/run.sh learn \
+  --problem "How does [system name] work? What is the [system] pipeline?" \
+  --solution "[Full pipeline summary from the walkthrough]" \
+  --tag walkthrough --tag architecture --tag [system-name] \
+  --scope [project]
+
+# Each key decision
+.agents/skills/memory/run.sh learn \
+  --problem "Why does [system] do [decision]?" \
+  --solution "[Rationale from the walkthrough]" \
+  --tag architecture-decision --tag [system-name] \
+  --scope [project]
+```
+
+**Why this can't be skipped:** A walkthrough that isn't in memory is a dead document.
+The next agent won't find it. The whole point is that `recall --brief "how does X work"`
+returns the answer.
+
+#### 6b. Open in browser (HTML output)
+
+If the walkthrough was generated as HTML, open it immediately:
+
+```bash
+xdg-open path/to/walkthrough.html
+```
+
+The user should see the rendered result without having to find and open the file manually.
+This applies to HTML output only — markdown walkthroughs are presented inline.
+
+#### 6c. Right-click annotation (HTML output — REQUIRED)
+
+All HTML walkthroughs MUST include the inline annotation script. This gives the user
+a right-click context menu with:
+
+| Action | Icon | Purpose |
+|--------|------|---------|
+| **Add Note** | 📝 | Free-text annotation at that position |
+| **Flag Question** | ❓ | Mark something the user wants clarified |
+| **Disagree** | ⚠️ | Mark a claim the user thinks is wrong |
+| **Looks Good** | ✅ | Approve a section |
+| **Export All Notes** | 📋 | Export as Markdown or JSON, or copy to clipboard |
+
+Notes render as inline badges next to the annotated element, with the nearest section
+heading as context. Export produces structured output the agent can consume:
+
+```markdown
+- **DISAGREE** (4. Taxonomy v0.4.0): Mind tag gate is too aggressive — some extraction chains touch security
+- **QUESTION** (8. Nightly Backfill): What happens if commit_chain_extractor crashes mid-run?
+- **NOTE** (13. What's Next): Should prioritize edge backfill over pruner
+```
+
+The annotation script is a self-contained `<script>` block — no external dependencies.
+Include it in every HTML walkthrough before the Mermaid init script.
+
+### Phase 7: Present for Review
 
 Present the complete walkthrough to the user. The goal is adversarial review:
 - The user reads it looking for claims they disagree with
@@ -451,7 +539,7 @@ a finished document.
 |-------|-----------|---------|-----------|
 | `/interview` | Phase 1 | Gather failure history, concerns, scope from user | **YES** |
 | `/ask consult` | Phase 1b | Persona expert review — concerns + satisfactions | **YES** |
-| `/memory` | Phase 1 | Recall past failures, assessments, lessons | **YES** |
+| `/memory` | Phase 1 + 6a | Recall past failures; **store walkthrough findings** | **YES** |
 | `/create-figure` | Phase 5 | Mermaid data flow + architecture diagrams | Recommended |
 | `/create-table` | Phase 5 | Risk matrices, metrics tables (PDF if needed) | Optional |
 | `/assess` | Pre-walkthrough | Quick health check to identify what to cover | Optional |

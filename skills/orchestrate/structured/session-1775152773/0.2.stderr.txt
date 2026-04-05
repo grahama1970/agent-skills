@@ -1,3 +1,0 @@
-2026-04-02 13:59:43.353 | ERROR    | __main__:run:385 - === PRE-FLIGHT FAILED for 0.2 (1 issues) ===
-2026-04-02 13:59:43.353 | ERROR    | __main__:run:387 -   [backend] Value error, Unknown backend 'sonnet'. Valid: claude, codex, deepseek, gemini, test, text
-2026-04-02 13:59:43.354 | ERROR    | __main__:run:388 -     FIX: Use one of: codex, claude, text, gemini, deepseek.

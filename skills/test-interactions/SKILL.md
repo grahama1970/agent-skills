@@ -1,9 +1,9 @@
 ---
 name: test-interactions
 description: >
-  Systematic UI interaction testing with screenshots and burst-mode animation capture.
-  Generates interaction manifests, captures screenshots via /surf, reviews via /review-design,
-  and tracks results on a /create-design-board.
+  Deterministic UI interaction testing against LIVE DOM via CDP.
+  All interactions target [data-qid] selectors. PASS/FAIL from thresholds, not LLM.
+  Batched VLM review at the end only — never in the test loop.
 triggers:
   - test interactions
   - test UI interactions
@@ -15,17 +15,23 @@ triggers:
   - interaction manifest
   - test clicking navigation
   - systematic UI test
+  - cots compliance test
+  - qid compliance
 metadata:
-  short-description: Systematic UI interaction testing with screenshots
+  short-description: Deterministic UI interaction testing with COTS compliance
 provides:
   - interaction-testing
   - interaction-manifest
   - burst-capture
+  - qid-compliance
+  - cots-assertions
 composes:
   - surf
   - review-design
   - create-design-board
   - interview
+  - best-practices-react
+  - best-practices-cots
 taxonomy:
   - validation
   - precision
@@ -34,92 +40,85 @@ taxonomy:
 
 # test-interactions
 
-Systematic UI interaction testing with screenshot capture and AI review.
+Deterministic UI interaction testing against the LIVE DOM via CDP.
 
-Thin GLUE skill that composes `/surf` (capture), `/review-design` (review),
-`/create-design-board` (tracking), and `/interview` (ambiguity resolution)
-into a repeatable interaction testing workflow driven by a manifest.
+## PREREQUISITE: Read /best-practices-react FIRST
 
-## Critical Rule
+Before writing ANY manifest or running ANY test, you MUST read
+`.pi/skills/best-practices-react/SKILL.md`. It defines:
 
-Screenshots are **acceptance evidence**, not byproducts.
+- The **4-attribute rule**: every interactive element needs `data-qid`,
+  `data-qs-action`, `title`, and `useRegisterAction`
+- QID naming conventions (`component:element:qualifier`)
+- How to verify qid coverage with `verify-data-qid.py`
 
-Do not treat `/test-interactions` as "press buttons and save PNGs." The skill is
-only complete when the captured images are **critically analyzed** against the
-intended target behavior and, when available, against the design reference
-surface (existing screenshots, design board, spec, or reference product).
+If you skip this, your manifests will target the wrong selectors and
+miss compliance requirements. This is not optional.
 
-If the screenshot is ugly, ambiguous, off-target, clipped, or otherwise fails to
-prove the intended behavior, the interaction test **fails**.
+## Architecture: Deterministic Run, Batched LLM Review
 
-## Required Review Standard
-
-For every meaningful run:
-
-1. Identify the intended target state for the interaction.
-2. Capture the state before/after (or burst frames for animation).
-3. Inspect the resulting images directly.
-4. Compare them against the relevant reference:
-   - design board
-   - existing approved screenshots
-   - competitor/reference product
-   - explicit product spec
-5. Produce explicit findings:
-   - what improved
-   - what failed
-   - what remains off-target
-
-Do **not** mark success just because:
-
-- a screenshot exists
-- pixels changed
-- the command ran without error
-- a UI element appeared in some ambiguous form
-
-If the image does not clearly support the claim, the claim is unproven.
-
-## Persona Requirement (NON-NEGOTIABLE)
-
-Every visual review MUST specify `--persona`. A review without a persona produces
-generic, unfocused feedback that wastes everyone's time. The persona's domain expertise
-drives what the review looks for:
-
-- `brandon-bailey` — CMMC/compliance: status indicators, access control, audit trails
-- `rob-armstrong` — Formal verification: proof obligations, trust boundaries, Lean4 representation
-- `margaret-chen` — Quality assurance: usability heuristics, error handling, edge cases
-- `nico-bailon` — Extraction QA: PDF fidelity, table/section verification, quarantine triage, keyboard workflow
-
-```bash
-# CORRECT — persona-driven review
-./run.sh review --captures ./captures/ --persona brandon-bailey
-
-# CORRECT — full pipeline with persona
-./run.sh full --url "http://localhost:3000" --persona rob-armstrong --manifest manifest.json
-
-# WRONG — visual review will be skipped (no persona)
-./run.sh review --captures ./captures/
 ```
+RUN stage (deterministic — no LLM)
+├── CDP interactions: click, type, key, tab, scroll, wait
+├── DOM assertions: selector, visible, text, value, attribute, aria
+├── COTS assertions: min_size (C02), font_size (C01), contrast (C03),
+│   title (C14), focus_visible (C06)
+├── QID compliance scan: 4-attribute rule on all [data-qid] elements
+└── PASS/FAIL verdicts from thresholds and DOM state
+
+REVIEW stage (one batched LLM call at the end)
+├── vlm_image preprocessing: auto-crop, sharpen, upscale, stitch
+├── /review-design with REQUIRED --persona
+└── Visual critique of captured screenshots (does NOT change verdicts)
+```
+
+The LLM never decides pass/fail. It only comments on evidence after
+deterministic tests have already run.
+
+## Critical Rules
+
+### 1. All selectors MUST be [data-qid]
+
+No `#id`, no `.class`, no `nth-child`, no XPath. Every interaction targets
+a `[data-qid='...']` selector. If an element doesn't have a `data-qid`,
+that's a bug in the component — fix it first.
+
+### 2. Persona is REQUIRED (non-negotiable)
+
+Every `review` and `full` command MUST specify `--persona`. The CLI will
+reject the command without one. A review without a persona produces generic,
+unfocused feedback that wastes everyone's time.
+
+Available personas:
+- `brandon-bailey` — CMMC/compliance: status indicators, access control, audit trails
+- `rob-armstrong` — Formal verification: proof obligations, trust boundaries
+- `margaret-chen` — Quality assurance: usability heuristics, error handling, edge cases
+- `nico-bailon` — Extraction QA: PDF fidelity, table verification, keyboard workflow
+
+### 3. Every LIVE DOM interactive component must be tested
+
+If it's in the DOM and it's interactive (button, link, input, select, tab),
+it must appear in a manifest and have assertions against it.
 
 ## Commands
 
 ```bash
-# Generate an interaction manifest from a URL or app description
+# Generate an interaction manifest from a URL
 ./run.sh generate --url "http://localhost:3000" --output manifest.json
 
-# Run the manifest — capture screenshots for each interaction
+# Run the manifest — deterministic CDP + assertions → PASS/FAIL
 ./run.sh run --manifest manifest.json --output-dir ./captures/
 
+# Review captures — PERSONA REQUIRED
+./run.sh review --captures ./captures/ --persona brandon-bailey
+
+# Full pipeline: generate → run → review — PERSONA REQUIRED
+./run.sh full --url "http://localhost:3000" --persona rob-armstrong --manifest manifest.json
+
 # Run tests via UX Lab Express test runner (Puppeteer CDP backend)
-./run.sh run-server                                    # Run all tests
-./run.sh run-server --group design_board               # Run one group
-./run.sh run-server --test canvas_card_select          # Run one test
-./run.sh run-server --server-url http://localhost:3001  # Custom server URL
-
-# Review captures via /review-design (PERSONA REQUIRED for visual review)
-./run.sh review --captures ./captures/ --persona brandon-bailey --output ./INTERACTION_REPORT.md
-
-# Full pipeline: generate → run → review (PERSONA REQUIRED)
-./run.sh full --url "http://localhost:3000" --persona rob-armstrong --output-dir ./captures/ --manifest manifest.json
+./run.sh run-server
+./run.sh run-server --group design_board
+./run.sh run-server --test canvas_card_select
 ```
 
 ## Interaction Manifest Schema
@@ -133,10 +132,11 @@ drives what the review looks for:
     {
       "name": "main-dashboard",
       "path": "/",
+      "wait_ready": "[data-qid='dashboard:header']",
+      "qid_compliance": true,
       "elements": [
         {
           "name": "nav-sidebar",
-          "selector": "#sidebar",
           "interactions": [
             {
               "action": "screenshot",
@@ -144,17 +144,23 @@ drives what the review looks for:
             },
             {
               "action": "click",
-              "target": "#sidebar .menu-item:first-child",
-              "description": "Click first menu item",
-              "screenshot_after": true
+              "target": "[data-qid='nav:item:home']",
+              "description": "Click home nav item",
+              "screenshot_after": true,
+              "assert_title": "[data-qid='nav:item:home']",
+              "assert_qs_action": "[data-qid='nav:item:home']",
+              "assert_min_size": {"selector": "[data-qid='nav:item:home']", "min_width": 44, "min_height": 44}
             },
             {
-              "action": "hover",
-              "target": "#sidebar .menu-item:nth-child(2)",
-              "description": "Hover second menu item",
-              "burst": true,
-              "burst_frames": 10,
-              "burst_interval_ms": 100
+              "action": "tab",
+              "count": 3,
+              "description": "Tab through nav items, verify focus path",
+              "assert_focus_visible": "[data-qid='nav:item:settings']"
+            },
+            {
+              "action": "key",
+              "key": "Enter",
+              "description": "Activate focused nav item with Enter"
             }
           ]
         }
@@ -164,87 +170,148 @@ drives what the review looks for:
 }
 ```
 
+## Actions
+
+| Action | Description | Key Fields |
+|--------|-------------|------------|
+| `screenshot` | Capture current state | `description` |
+| `click` | Click a [data-qid] element | `target` (required) |
+| `type` | Type into a [data-qid] input | `target`, `value` |
+| `wait` | Wait for element to appear | `target`, `timeout_ms` |
+| `scroll` | Scroll page | `direction`, `amount` |
+| `key` | Press a keyboard key | `key` (Tab, Enter, Escape, Space, Arrow*) |
+| `tab` | Tab N times, track focus path | `count` (default 1) |
+
+## Assertions (Deterministic)
+
+### Standard DOM assertions
+
+| Assertion | Description |
+|-----------|-------------|
+| `assert_selector` | Element exists in DOM |
+| `assert_visible` | Element visible (not hidden/zero-size) |
+| `assert_text` | Text content matches |
+| `assert_absent` | Element NOT in DOM |
+| `assert_count` | Element count in {min, max} range |
+| `assert_attribute` | Element attribute value |
+| `assert_css` | Computed CSS property |
+| `assert_value` | Input/select current value |
+| `assert_url` | Current page URL |
+| `assert_enabled` / `assert_disabled` | Interactive element state |
+| `assert_aria` | ARIA attribute value |
+
+### COTS compliance assertions
+
+| Assertion | COTS Rule | Threshold |
+|-----------|-----------|-----------|
+| `assert_min_size` | C02 touch targets | >= 44x44px (WCAG 2.1) |
+| `assert_font_size` | C01 font size | >= 12px (MIL-STD-1472H) |
+| `assert_contrast` | C03 color contrast | >= 4.5:1 (WCAG 2.1 AA) |
+| `assert_title` | C14 tooltips | title attribute exists |
+| `assert_focus_visible` | C06 focus indicator | outline or boxShadow visible |
+
+### QID compliance assertions
+
+| Assertion | Description |
+|-----------|-------------|
+| `assert_qs_action` | Element has `data-qs-action` attribute |
+| `assert_title` | Element has `title` attribute |
+
+### Per-surface QID compliance scan
+
+Enabled by default (`qid_compliance: true`). After all interactions on a surface,
+scans every `[data-qid]` element for:
+
+- Missing `title` on interactive elements
+- Missing `data-qs-action` on interactive elements
+- Touch target < 44x44px on interactive elements
+
+Set `"qid_compliance": false` on a surface to skip.
+
+## VLM Image Preprocessing
+
+Before the batched LLM review, screenshots are preprocessed with `vlm_image.py`:
+
+- **auto_crop** — Trim dark borders from headless Chrome captures
+- **sharpen_text** — Enhance text edges for VLM OCR accuracy
+- **upscale** — Scale small images to 1200px width for readability
+- **compress** — Convert to JPEG if exceeds 500KB
+- **stitch_vertical** — Stack burst frames into single filmstrip
+
+Use `--no-preprocess` to skip.
+
 ## Burst Mode (Animation Capture)
 
-For interactions with animations (hover effects, transitions, drag-to-draw),
-use `"burst": true` in the interaction. This captures multiple frames that
-`/review-design` analyzes as a filmstrip sequence.
+For interactions with animations, use `"burst": true`. Captures multiple frames
+that get stitched into a filmstrip for the VLM review.
 
-Burst frames are stored as `BURST_<element>_<action>_f01.png` through `_f10.png`
-in a `burst/` subdirectory, matching `/review-design`'s expected format.
+```json
+{"action": "hover", "target": "[data-qid='animated:element']", "burst": true, "burst_frames": 10}
+```
 
 ## Workflow
 
-1. **Generate** — Analyze the target app/URL and produce an interaction manifest
-2. **Resolve ambiguity** — If the manifest needs human input, `/interview` presents options
-3. **Run** — Execute each interaction via `/surf`, capturing screenshots
-4. **Review** — Pipe captures to `/review-design` for AI analysis and perform direct human/agent visual critique
-5. **Decide** — Treat off-target or ugly captures as failures requiring implementation changes
-6. **Track** — Append results to a design board via `/create-design-board`
+1. **Read /best-practices-react** — Understand qid conventions and 4-attribute rule
+2. **Generate** — Analyze target app and produce manifest with [data-qid] selectors
+3. **Run** — Deterministic CDP interactions + assertions → PASS/FAIL
+4. **Review** — Batch screenshots to /review-design with persona → visual critique
+5. **Decide** — Off-target or ugly captures are failures requiring implementation changes
 
-## Failure Conditions
+## Common Mistakes
 
-An interaction run is **not complete** if any of the following are true:
+### WRONG: Running without reading /best-practices-react first
+```bash
+./run.sh full --url "..." --persona brandon-bailey
+# Manifest uses #id and .class selectors — all wrong
+```
 
-- The manifest does not identify the target state being proven
-- The screenshot does not clearly show the intended UI result
-- The result is visually worse than the target reference
-- The reviewer only reports that "the UI changed" instead of whether it improved
-- The capture is ambiguous about which UI surface actually opened
-- The test reports success without a findings section grounded in the image
+### RIGHT: Read /best-practices-react, then build manifest with [data-qid] selectors
+```bash
+# 1. Read .pi/skills/best-practices-react/SKILL.md
+# 2. Build manifest with [data-qid='component:element:qualifier'] selectors
+# 3. Run
+./run.sh full --url "..." --persona brandon-bailey --manifest manifest.json
+```
 
-## Recommended Output Per Run
+### WRONG: Running review without persona
+```bash
+./run.sh review --captures ./captures/
+# ERROR: --persona is required
+```
 
-At minimum, record:
+### WRONG: Using CSS selectors that aren't [data-qid]
+```json
+{"action": "click", "target": "#sidebar .menu-item:first-child"}
+```
 
-- manifest used
-- captures produced
-- reference used for comparison
-- verified behaviors
-- failed or ambiguous behaviors
-- specific visual defects seen in the screenshot
-- concrete next implementation step
+### RIGHT: All selectors are [data-qid]
+```json
+{"action": "click", "target": "[data-qid='nav:item:home']"}
+```
+
+### WRONG: Relying on LLM to decide pass/fail
+```bash
+# "Ask the VLM if the button looks correct" — NO
+```
+
+### RIGHT: Deterministic assertions decide pass/fail
+```json
+{
+  "action": "click",
+  "target": "[data-qid='nav:item:home']",
+  "assert_min_size": {"selector": "[data-qid='nav:item:home']", "min_width": 44, "min_height": 44},
+  "assert_title": "[data-qid='nav:item:home']",
+  "assert_qs_action": "[data-qid='nav:item:home']"
+}
+```
 
 ## Integration
 
 | Composed Skill | Role |
 |----------------|------|
+| `/best-practices-react` | MUST READ FIRST — qid conventions, 4-attribute rule |
+| `/best-practices-cots` | COTS thresholds (C01-C15), scanner.cjs reference |
 | `/surf` | `surf go`, `surf click`, `surf snap` for browser automation |
-| `/review-design` | AI review of captured screenshots + burst filmstrips |
+| `/review-design` | AI review of captured screenshots (batched, end only) |
 | `/create-design-board` | Track results across rounds in DESIGN_BOARD.md |
 | `/interview` | Resolve ambiguous elements or missing selectors |
-
-## Common Mistakes
-
-### WRONG: Running test without specifying --persona for visual review
-```bash
-./run.sh review --captures ./captures/  # persona missing, visual review skipped
-```
-
-### RIGHT: Always specify persona for domain-focused review
-```bash
-./run.sh review --captures ./captures/ --persona brandon-bailey
-```
-
-### WRONG: Treating screenshots as success just because they exist
-```bash
-./run.sh run --manifest manifest.json --output-dir ./captures/
-# "Screenshots captured successfully" — but are they correct?
-```
-
-### RIGHT: Critically analyze captures against intended target behavior
-```bash
-./run.sh run --manifest manifest.json --output-dir ./captures/
-./run.sh review --captures ./captures/ --persona brandon-bailey --output REPORT.md
-# Report must include: verified behaviors, failed behaviors, visual defects
-```
-
-### WRONG: Using burst mode for static UI elements
-```json
-{"action": "click", "target": "#button", "burst": true, "burst_frames": 10}
-```
-
-### RIGHT: Use burst only for animations/transitions
-```json
-{"action": "hover", "target": "#animated-element", "burst": true, "burst_frames": 10}
-```

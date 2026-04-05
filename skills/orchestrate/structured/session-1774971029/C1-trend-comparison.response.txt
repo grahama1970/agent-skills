@@ -1,6 +1,0 @@
-Updated [run.sh](/home/graham/workspace/experiments/pi-mono/.pi/skills/monitor-codebase/run.sh#L399) to add a post-aggregation trend step between Step 9 and Step 10. This is a logic fix, not an import/data-shape fix: it now safely finds the previous report, compares `summary.total_issues` via inline Python, and stores the result in `trend_delta` as `REGRESSION (+N issues)`, `IMPROVED (-N issues)`, or `STABLE`.
-
-I also threaded `trend_delta` into the existing notification-facing strings at [run.sh](/home/graham/workspace/experiments/pi-mono/.pi/skills/monitor-codebase/run.sh#L445), so the memory/summary output now carries the comparison result.
-
-Verification: `npm run check` passed. Repo-wide output still includes 2 existing Biome info-level findings outside this file in `packages/ux-lab/...`, but the check exited `0`.
-

@@ -7,8 +7,10 @@ This is how Cursor, Claude Code, Aider, and every working agent CLI works.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import random
 import subprocess
 import time
 from pathlib import Path
@@ -26,6 +28,54 @@ DENYLIST = {".git", ".gitignore", ".env", "SKILL.md", "run.sh", "sanity.sh", "py
 MAX_TOOL_ITERATIONS = 20
 
 TREESITTER_RUN = Path(__file__).resolve().parent.parent / "treesitter" / "run.sh"
+
+
+def _retry_delay(attempt: int, max_delay: float = 32.0) -> float:
+    """Exponential backoff with jitter. Prevents thundering herd."""
+    base = min(0.5 * (2 ** attempt), max_delay)
+    return base + random.random() * 0.25 * base
+
+
+# File staleness tracking: {path: (content_hash, mtime)}
+_file_state: dict[str, tuple[str, float]] = {}
+
+
+def _hash_content(content: str) -> str:
+    return hashlib.sha256(content.encode(errors="replace")).hexdigest()[:16]
+
+
+def _track_file_read(path: Path) -> None:
+    """Record file state on read for staleness detection."""
+    try:
+        content = path.read_text(errors="replace")
+        _file_state[str(path)] = (_hash_content(content), path.stat().st_mtime)
+    except OSError:
+        pass
+
+
+def _check_file_stale(path: Path) -> str | None:
+    """Check if file changed since last read. Returns error message or None."""
+    key = str(path)
+    if key not in _file_state:
+        return None  # Never tracked — allow write
+    old_hash, old_mtime = _file_state[key]
+    try:
+        current_mtime = path.stat().st_mtime
+    except OSError:
+        return None  # File deleted — allow write (create_file case)
+    if current_mtime == old_mtime:
+        return None  # Unchanged
+    # Mtime changed — compare content hash (avoids false positives from touch/cloud sync)
+    try:
+        current_hash = _hash_content(path.read_text(errors="replace"))
+    except OSError:
+        return None
+    if current_hash == old_hash:
+        # Content same, mtime different — update tracking and allow
+        _file_state[key] = (current_hash, current_mtime)
+        return None
+    return (f"STALE: {path.name} was modified externally since last read "
+            f"(hash {old_hash}→{current_hash}). Re-read before editing.")
 
 
 # ── Repo Map (tree-sitter symbols for context) ─────────────────────
@@ -188,6 +238,10 @@ def execute_tool(
         if not safe:
             return f"ERROR: Path '{path}' not in allowlist or is denylisted. Allowlist: {allowlist}"
         target = Path(cwd) / safe
+        # Staleness check — reject if file changed since last read
+        stale_msg = _check_file_stale(target)
+        if stale_msg:
+            return f"ERROR: {stale_msg}"
         # Truncation guard
         if target.exists():
             existing_lines = len(target.read_text(errors="replace").splitlines())
@@ -203,6 +257,7 @@ def execute_tool(
                 return f"ERROR: Python syntax error — {e}. Fix and retry."
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content)
+        _track_file_read(target)  # Update tracking after write
         logger.info("  tool: write_file {} ({} lines)", safe, len(content.splitlines()))
         return f"OK: Wrote {safe} ({len(content.splitlines())} lines)"
 
@@ -217,12 +272,25 @@ def execute_tool(
         target = Path(cwd) / safe
         if not target.exists():
             return f"ERROR: File '{safe}' does not exist. Use write_file to create it."
+        # Staleness check
+        stale_msg = _check_file_stale(target)
+        if stale_msg:
+            return f"ERROR: {stale_msg}"
         lines = target.read_text(errors="replace").splitlines(keepends=True)
         if start < 1 or end > len(lines) or start > end:
             return f"ERROR: Line range {start}-{end} invalid for file with {len(lines)} lines."
         replacement = content.splitlines(keepends=True)
         if replacement and not replacement[-1].endswith("\n"):
             replacement[-1] += "\n"
+        # Truncation guard for edit_file — same as write_file
+        # Catches LLM replacing entire large file via edit_file(1, N, <truncated>)
+        replaced_lines = end - start + 1
+        new_lines_count = len(replacement)
+        if len(lines) > 500 and replaced_lines > len(lines) * 0.8 and new_lines_count < replaced_lines * 0.5:
+            return (f"ERROR: Truncation guard — editing {replaced_lines}/{len(lines)} lines "
+                    f"but replacement is only {new_lines_count} lines ({new_lines_count*100//replaced_lines}%). "
+                    f"This looks like a truncated output. Use smaller edit ranges.")
+
         lines[start - 1:end] = replacement
         new_content = "".join(lines)
         if safe.endswith(".py"):
@@ -231,6 +299,7 @@ def execute_tool(
             except SyntaxError as e:
                 return f"ERROR: Edit would create syntax error — {e}. Fix and retry."
         target.write_text(new_content)
+        _track_file_read(target)  # Update tracking after edit
         logger.info("  tool: edit_file {} lines {}-{} → {} lines", safe, start, end, len(replacement))
         return f"OK: Edited {safe} lines {start}-{end}"
 
@@ -241,6 +310,7 @@ def execute_tool(
         if not target.exists():
             return f"ERROR: File '{clean}' does not exist."
         content = target.read_text(errors="replace")
+        _track_file_read(target)  # Track for staleness detection
         # Cap at 500 lines to prevent context flooding
         lines = content.splitlines()
         if len(lines) > 500:
@@ -253,6 +323,14 @@ def execute_tool(
 
     elif name == "run_command":
         command = arguments.get("command", "")
+        # Block destructive commands that bypass write/edit guards
+        import re as _re
+        if _re.search(r'\brm\s', command) and not _re.search(r'\brm\s+(-rf?\s+)?(\/tmp|__pycache__|\.pytest_cache|node_modules|dist|build)\b', command):
+            return "ERROR: rm blocked in run_command. Use edit_file or write_file to modify files."
+        if _re.search(r'\bmv\s.*\.(py|ts|tsx|js|jsx|sh)\b', command):
+            return "ERROR: mv of code files blocked. Use write_file to create files at new paths."
+        if _re.search(r'>\s*\S+\.(py|ts|tsx|js|jsx|sh)\b', command):
+            return "ERROR: Shell redirect to code files blocked. Use write_file instead."
         # Strip .venv from PATH
         clean_env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
         clean_env["PATH"] = os.pathsep.join(
@@ -290,13 +368,29 @@ def run_tool_use_loop(
     read_context: list[str] | None = None,
     temperature: float = 0.2,
     max_tokens: int = 8000,
+    dod_command: str = "",
 ) -> tuple[list[str], list[dict]]:
     """Run the tool-use agent loop. Returns (files_written, messages).
 
     The LLM decides what to read, edit, and run. Code-runner just executes
     the tool calls and feeds results back. Loop ends when the LLM stops
     calling tools (sends a text response instead).
+
+    If dod_command is provided, the LLM is instructed to run it after editing
+    to verify its changes pass. This gives it in-conversation feedback.
     """
+    # Inject DoD verification instruction into system prompt
+    if dod_command:
+        system_prompt += (
+            "\n\nVERIFICATION: After making your edits, run this command with run_command "
+            "to verify your changes work:\n"
+            f"  {dod_command}\n"
+            "If the command fails, read the output and fix the issue before stopping."
+        )
+
+    # Clear file staleness state for fresh round
+    _file_state.clear()
+
     # Build repo map from allowlist + read_context so LLM knows what exists
     all_files = list(allowlist or []) + list(read_context or [])
     repo_map = build_repo_map(all_files, cwd)
@@ -323,23 +417,47 @@ def run_tool_use_loop(
     for iteration in range(MAX_TOOL_ITERATIONS):
         payload = {**payload_base, "messages": messages}
 
-        # Call LLM
-        try:
-            resp = httpx.post(
-                SCILLM_URL,
-                headers={"Authorization": f"Bearer {SCILLM_KEY}"},
-                json=payload,
-                timeout=180.0,
-            )
-            if resp.status_code in (500, 502, 503, 429):
-                wait = 2 ** min(iteration, 3)
-                logger.warning("/scillm {} — retrying in {}s", resp.status_code, wait)
-                time.sleep(wait)
-                continue
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            logger.error("Tool loop LLM call failed: {}", e)
+        # Call LLM with retry on transient errors
+        data = None
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            try:
+                resp = httpx.post(
+                    SCILLM_URL,
+                    headers={"Authorization": f"Bearer {SCILLM_KEY}"},
+                    json=payload,
+                    timeout=180.0,
+                )
+                if resp.status_code in (500, 502, 503, 429) and attempt < max_retries:
+                    wait = _retry_delay(attempt)
+                    logger.warning("/scillm {} (attempt {}/{}) — retrying in {:.1f}s",
+                                   resp.status_code, attempt, max_retries, wait)
+                    time.sleep(wait)
+                    continue
+                resp.raise_for_status()
+                data = resp.json()
+                break
+            except httpx.TimeoutException:
+                if attempt < max_retries:
+                    wait = _retry_delay(attempt)
+                    logger.warning("/scillm timeout (attempt {}/{}) — retrying in {:.1f}s",
+                                   attempt, max_retries, wait)
+                    time.sleep(wait)
+                    continue
+                logger.error("/scillm timeout after {} attempts", max_retries)
+            except (httpx.ConnectError, OSError) as e:
+                if attempt < max_retries:
+                    wait = _retry_delay(attempt)
+                    logger.warning("/scillm connection error (attempt {}/{}) — retrying in {:.1f}s: {}",
+                                   attempt, max_retries, wait, e)
+                    time.sleep(wait)
+                    continue
+                logger.error("/scillm connection failed after {} attempts: {}", max_retries, e)
+            except Exception as e:
+                logger.error("Tool loop LLM call failed: {}", e)
+                break
+        if data is None:
+            logger.error("  Tool loop aborting — LLM unreachable after retries")
             break
 
         choice = data["choices"][0]

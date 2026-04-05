@@ -93,9 +93,39 @@ class TaskSpec(BaseModel):
             covered_modules.add(clean.split(".")[-1])
             covered_modules.add(path)
 
-        unseen = referenced - covered_modules - {"sys", "os", "json", "re", "time", "math",
-            "pathlib", "typing", "collections", "functools", "hashlib", "base64",
-            "dataclasses", "abc", "enum", "io", "subprocess", "tempfile", "shutil"}
+        # Stdlib + common third-party packages that appear in prompts
+        # but are NOT project files the LLM needs to read
+        KNOWN_PACKAGES = {
+            # stdlib
+            "sys", "os", "json", "re", "time", "math", "pathlib", "typing",
+            "collections", "functools", "hashlib", "base64", "dataclasses",
+            "abc", "enum", "io", "subprocess", "tempfile", "shutil", "copy",
+            "datetime", "logging", "argparse", "unittest", "contextlib",
+            "itertools", "operator", "string", "textwrap", "struct", "csv",
+            "sqlite3", "urllib", "http", "socket", "threading", "asyncio",
+            "concurrent", "multiprocessing", "inspect", "ast", "dis",
+            # common third-party (pip)
+            "pydantic", "fastapi", "uvicorn", "starlette", "httpx", "requests",
+            "aiohttp", "flask", "django", "sqlalchemy", "alembic",
+            "typer", "click", "rich", "loguru", "structlog",
+            "numpy", "pandas", "scipy", "sklearn", "torch", "tensorflow",
+            "pytest", "hypothesis", "mypy", "ruff", "black",
+            "pyyaml", "yaml", "toml", "tomli", "tomllib",
+            "boto3", "botocore", "google", "azure",
+            "celery", "redis", "pymongo", "psycopg2",
+            "jinja2", "mako", "lxml", "beautifulsoup4", "bs4",
+            "cryptography", "jwt", "passlib", "bcrypt",
+            "pillow", "pil", "matplotlib", "seaborn", "plotly",
+            "docker", "paramiko", "fabric",
+            "openai", "anthropic", "tiktoken", "transformers", "huggingface",
+            "rapidfuzz", "python",
+            # JS/TS (appear in TypeScript task prompts)
+            "react", "express", "next", "vue", "angular", "svelte",
+            "axios", "fetch", "node", "npm", "typescript", "zod",
+            "prisma", "drizzle", "sequelize", "mongoose",
+            "mui", "tailwind", "chakra", "radix",
+        }
+        unseen = referenced - covered_modules - KNOWN_PACKAGES
         if len(unseen) >= 3:
             object.__setattr__(self, "_unseen_deps", list(unseen))
             object.__setattr__(self, "_unseen_dep_count", len(unseen))

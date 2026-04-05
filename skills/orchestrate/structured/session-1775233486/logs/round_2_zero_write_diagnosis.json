@@ -1,7 +1,0 @@
-{
-  "reason": "llm_error",
-  "details": [
-    "LLM returned error: ERROR: /scillm call failed: Server error '500 Internal Server Error' for url 'http://localhost:4001/v1/chat/completions'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/S"
-  ],
-  "response_length": 209
-}
