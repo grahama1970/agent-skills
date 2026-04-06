@@ -803,6 +803,32 @@ class EvidenceCaseRunner:
             gates_passed, total_gates=len(steps), t2_override=t2_override,
         )
 
+        # Stage B: LLM routing via scillm → Claude Opus
+        # Three paths: ANSWER (satisfied), CLARIFY (not_satisfied + clarify data), DEFLECT (not_satisfied + off-topic)
+        llm_route = None
+        if final_verdict == "satisfied" and qra_items:
+            with _timed("step_5b_llm_answer"):
+                llm_answer = self._generate_llm_answer(claim_text, qra_items[:10])
+                if llm_answer:
+                    answer = llm_answer
+                    llm_route = "answer"
+        elif final_verdict in ("not_satisfied", "inconclusive") and clarify_result and clarify_result.get("clarify_questions"):
+            with _timed("step_5b_llm_clarify"):
+                clarify_response = self._generate_llm_clarify(
+                    claim_text, entity_warnings, clarify_result,
+                )
+                if clarify_response:
+                    answer = clarify_response.get("clarify_message", answer)
+                    clarify_result["llm_clarify"] = clarify_response
+                    llm_route = "clarify"
+        elif final_verdict == "not_satisfied":
+            blocking = [w for w in entity_warnings if w.get("category") in ("not_relevant", "not_in_corpus", "off_topic")]
+            with _timed("step_5b_llm_deflect"):
+                deflect_response = self._generate_llm_deflect(claim_text, blocking)
+                if deflect_response:
+                    answer = deflect_response.get("deflect_message", answer)
+                    llm_route = "deflect"
+
         with _timed("step_6_persist"):
             result = self.store.persist_case(
                 question=claim_text, category=category,
@@ -816,6 +842,7 @@ class EvidenceCaseRunner:
                 decomposition=decomposition,
             )
         result["decomposition"] = decomposition
+        result["llm_route"] = llm_route
         result["tier"] = "T2" if t2_override else "T0"
         result["component_results"] = component_results
         result["entities"] = entities
@@ -832,6 +859,138 @@ class EvidenceCaseRunner:
         if show_progress:
             self._print_timings(step_timings, total_ms)
         return result
+
+    def _generate_llm_answer(self, question: str, evidence: list[dict]) -> str | None:
+        """Stage B: Generate evidence-grounded answer via scillm → Claude Opus."""
+        from gate import ANSWER_SYSTEM_PROMPT
+
+        evidence_text = "\n".join(
+            f"[{e.get('_key', f'qra_{i}')}] Q: {e.get('question', '')[:100]} "
+            f"A: {(e.get('answer', '') or e.get('solution', '') or e.get('text', ''))[:200]}"
+            for i, e in enumerate(evidence)
+        )
+
+        try:
+            resp = httpx.post(
+                f"{self.SCILLM_URL}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.SCILLM_KEY}",
+                    "x-caller-skill": "create-evidence-case",
+                },
+                json={
+                    "model": "claude-opus-4-6",
+                    "messages": [
+                        {"role": "system", "content": ANSWER_SYSTEM_PROMPT},
+                        {"role": "user", "content": f"Question: {question}\n\nEvidence:\n{evidence_text}"},
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 2000,
+                },
+                timeout=60,
+            )
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"].strip()
+            if content.startswith("```"):
+                content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            result = json.loads(content)
+            return result.get("answer", content)
+        except Exception as exc:
+            logger.warning("Stage B LLM answer failed: {}", exc)
+            return None
+
+    def _generate_llm_clarify(
+        self, question: str, entity_warnings: list[dict], clarify_result: dict,
+    ) -> dict | None:
+        """Stage B: Generate clarification response via scillm → Claude Opus."""
+        from gate import CLARIFY_SYSTEM_PROMPT
+
+        problematic = []
+        for w in entity_warnings:
+            problematic.append(f"- {w.get('text', '?')}: {w.get('category', 'unknown')}")
+        problems_text = "\n".join(problematic) or "No specific entity warnings."
+
+        suggested = []
+        for w in entity_warnings:
+            suggested.extend(w.get("suggested_sparta_terms", []))
+
+        daemon_questions = []
+        if clarify_result and clarify_result.get("clarify_questions"):
+            daemon_questions = [
+                cq.get("question", "") for cq in clarify_result["clarify_questions"]
+                if cq.get("question")
+            ]
+
+        user_content = (
+            f"Question: {question}\n\n"
+            f"Problematic entities:\n{problems_text}\n\n"
+            f"Suggested SPARTA terms: {', '.join(sorted(set(suggested))) or 'none'}\n\n"
+            f"System clarifying questions: {json.dumps(daemon_questions)}"
+        )
+
+        try:
+            resp = httpx.post(
+                f"{self.SCILLM_URL}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.SCILLM_KEY}",
+                    "x-caller-skill": "create-evidence-case",
+                },
+                json={
+                    "model": "claude-opus-4-6",
+                    "messages": [
+                        {"role": "system", "content": CLARIFY_SYSTEM_PROMPT},
+                        {"role": "user", "content": user_content},
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 1500,
+                },
+                timeout=60,
+            )
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"].strip()
+            if content.startswith("```"):
+                content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            return json.loads(content)
+        except Exception as exc:
+            logger.warning("Stage B LLM clarify failed: {}", exc)
+            return None
+
+    def _generate_llm_deflect(
+        self, question: str, blocking_entities: list[dict],
+    ) -> dict | None:
+        """Stage B: Generate deflection response via scillm → Claude Opus."""
+        from gate import DEFLECT_SYSTEM_PROMPT
+
+        blocking_text = "\n".join(
+            f"- {e.get('text', '?')}: {e.get('category', 'unknown')}"
+            for e in blocking_entities
+        ) or "Question is outside SPARTA space cybersecurity domain."
+
+        try:
+            resp = httpx.post(
+                f"{self.SCILLM_URL}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.SCILLM_KEY}",
+                    "x-caller-skill": "create-evidence-case",
+                },
+                json={
+                    "model": "claude-opus-4-6",
+                    "messages": [
+                        {"role": "system", "content": DEFLECT_SYSTEM_PROMPT},
+                        {"role": "user", "content": f"Question: {question}\n\nBlocking entities:\n{blocking_text}"},
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 500,
+                },
+                timeout=30,
+            )
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"].strip()
+            if content.startswith("```"):
+                content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            return json.loads(content)
+        except Exception as exc:
+            logger.warning("Stage B LLM deflect failed: {}", exc)
+            return None
 
     def _run_lean4_gate(
         self,

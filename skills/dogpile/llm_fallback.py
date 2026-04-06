@@ -133,14 +133,16 @@ class OpenAIProvider(LLMProvider):
         log_status(f"Trying {self.name} ({self.model})...", provider=self.name, status="RUNNING")
 
         payload: Dict[str, Any] = {
-            "model": "deepseek-ai/DeepSeek-V3",
+            "model": "text",
             "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 4000,
         }
 
         try:
             resp = httpx.post(
                 f"{self.SCILLM_URL}/v1/chat/completions",
                 json=payload,
+                headers={"Authorization": "Bearer sk-dev-proxy-123", "x-caller-skill": "dogpile"},
                 timeout=120.0,
             )
 
@@ -199,16 +201,17 @@ class ClaudeProvider(LLMProvider):
 
         log_status(f"Trying {self.name} ({self.model})...", provider=self.name, status="RUNNING")
 
-        model_id = self.MODEL_MAP.get(self.model, self.model)
         payload: Dict[str, Any] = {
-            "model": model_id,
+            "model": "text-gemini",
             "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 4000,
         }
 
         try:
             resp = httpx.post(
                 f"{self.SCILLM_URL}/v1/chat/completions",
                 json=payload,
+                headers={"Authorization": "Bearer sk-dev-proxy-123", "x-caller-skill": "dogpile"},
                 timeout=180.0,
             )
 
@@ -244,35 +247,32 @@ class ClaudeProvider(LLMProvider):
             return False, str(e)
 
 
-class PiProvider(LLMProvider):
-    """Pi CLI provider (headless with OAuth)."""
+class _DeprecatedPiProvider(LLMProvider):
+    """DEPRECATED: Use scillm providers instead. Kept only for import compat."""
 
     name = "pi"
 
-    def __init__(self, model: str = "sonnet"):
-        self.model = model
-
     def is_available(self) -> bool:
-        """Check if Pi CLI is available."""
-        return shutil.which("pi") is not None
+        return False
 
     def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
-        """Call Pi CLI in headless mode."""
-        log_status(f"Trying {self.name}...", provider=self.name, status="RUNNING")
+        return False, "Deprecated: use scillm"
 
-        cmd = ["pi", "--no-session", "-p", prompt]
 
-        try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=180,
-                env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
-            )
+# Legacy aliases for import compatibility
+PiProvider = _DeprecatedPiProvider
 
-            if result.returncode == 0 and result.stdout.strip():
-                log_status(f"{self.name} succeeded", provider=self.name, status="DONE")
+
+class _DeprecatedStub(LLMProvider):
+    """Stub for removed providers. All LLM calls go through scillm now."""
+    name = "deprecated"
+    def is_available(self) -> bool:
+        return False
+    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+        return False, "Deprecated: use scillm"
+
+# Legacy aliases — GeminiProvider and AnthropicProvider classes still exist below
+# but are never instantiated in any provider chain. All chains use scillm now.
                 return True, result.stdout
 
             return False, result.stderr or "Empty response"
@@ -469,33 +469,21 @@ def mark_rate_limited(provider_name: str, seconds: float = 60):
     _RATE_LIMITED_PROVIDERS[provider_name] = time.time() + seconds
 
 
-# Default fallback chain - ordered by preference
-# Fast/cheap providers first, expensive/slow providers last
+# All chains route through scillm (localhost:4001). One endpoint, one auth token.
+# scillm handles provider cascade internally (DeepSeek → Gemini → GLM).
 DEFAULT_PROVIDERS: List[LLMProvider] = [
-    CodexProvider(),                        # 1. Codex (gpt-5.2) - high reasoning
-    OpenAIProvider(model="gpt-4o"),         # 2. OpenAI API (gpt-4o) - fast, reliable
-    GeminiProvider(model="gemini-2.0-flash"),  # 3. Gemini Flash - fast, cheap
-    AnthropicProvider(),                    # 4. Anthropic API - reliable
-    ClaudeProvider(model="sonnet"),         # 5. Claude CLI (OAuth) - headless
-    ClaudeProvider(model="haiku"),          # 6. Claude Haiku - faster/cheaper
-    PiProvider(),                           # 7. Pi CLI - fallback
+    OpenAIProvider(model="text"),              # scillm → DeepSeek V3.1-TEE
+    ClaudeProvider(model="text-gemini"),       # scillm → Gemini 2.5 Flash
 ]
 
-# High-reasoning chain (for synthesis tasks)
 HIGH_REASONING_PROVIDERS: List[LLMProvider] = [
-    CodexProvider(),                        # Codex with high reasoning
-    OpenAIProvider(model="gpt-4o"),         # GPT-4o
-    AnthropicProvider(model="claude-sonnet-4-20250514"),  # Claude Sonnet
-    GeminiProvider(model="gemini-2.5-pro"), # Gemini Pro
-    ClaudeProvider(model="opus"),           # Claude Opus (most capable)
+    OpenAIProvider(model="text"),              # scillm → DeepSeek V3.1-TEE
+    ClaudeProvider(model="text-gemini"),       # scillm → Gemini 2.5 Flash
 ]
 
-# Fast chain (for simple tasks like query tailoring)
 FAST_PROVIDERS: List[LLMProvider] = [
-    GeminiProvider(model="gemini-2.0-flash"),  # Fastest
-    OpenAIProvider(model="gpt-4o-mini"),       # Fast OpenAI
-    ClaudeProvider(model="haiku"),             # Fast Claude
-    AnthropicProvider(model="claude-3-haiku-20240307"),  # Fast Anthropic
+    ClaudeProvider(model="text-gemini"),       # scillm → Gemini (fastest)
+    OpenAIProvider(model="text"),              # scillm → DeepSeek
 ]
 
 

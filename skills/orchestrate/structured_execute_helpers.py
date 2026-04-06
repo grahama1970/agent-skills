@@ -206,6 +206,17 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             timeout_seconds=int(raw_task.get("timeout_seconds") or 1800),
             worktree=bool(raw_task.get("worktree", False)),
         )
+
+    # Gate: code-runner tasks MUST have blind_tests. DoD alone is gameable.
+    # ImpossibleBench (arXiv:2510.20270): GPT-5 cheats 76% when it sees tests.
+    for tid, rt in runtimes.items():
+        if rt.runner == "code-runner" and not rt.blind_tests:
+            raise ValueError(
+                f"Task {tid} ({rt.title!r}) uses runner=code-runner but has no blind_tests. "
+                f"DoD is gameable — add blind_tests[] that the coding agent cannot see. "
+                f"See /test-lab SKILL.md and /code-runner WALKTHROUGH.md."
+            )
+
     return runtimes
 
 

@@ -493,6 +493,7 @@ def run(
     dod_assertion = spec.definition_of_done.assertion
     allowlist = spec.allowlist
     read_context = spec.read_context
+    skills_used = spec.skills_used
 
     # Bug fix: spec max_rounds should override CLI default (5)
     # CLI --max-rounds only wins if explicitly passed (typer sets default=5)
@@ -582,7 +583,8 @@ def run(
         dod_desc = f"Command: {dod_command}\nAssertion: {dod_assertion}" if dod_command else ""
         system_prompt = _build_system_prompt(
             task_id, session_key, prompt, round_num=1,
-            dod_desc=dod_desc, allowlist=allowlist, recent_rounds=[])
+            dod_desc=dod_desc, allowlist=allowlist, recent_rounds=[],
+            skills_used=skills_used)
 
         consecutive_zero_writes = 0
         MAX_CONSECUTIVE_ZERO_WRITES = 3

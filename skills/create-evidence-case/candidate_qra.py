@@ -202,6 +202,8 @@ class EvidenceCaseStore2:
             "gate_trace": gates,
             "gates_passed": gates_passed,
             "gates_total": len(gates),
+            "control_ids": control_ids[:20] if control_ids else [],
+            "recall_count": len(evidence_items),
             "technique_groups": technique_groups or {},
             "sub_claims": sub_claims or [],
             "decomposition": decomposition_node,

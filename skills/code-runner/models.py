@@ -27,6 +27,7 @@ class TaskSpec(BaseModel):
     definition_of_done: DefinitionOfDone
     allowlist: list[str] | None = Field(None, description="Files/dirs the LLM can write. None = requires allowlist_optional")
     read_context: list[str] = Field(default_factory=list, description="Files the LLM should READ for context but NOT write. Injected into prompt alongside allowlist files.")
+    skills_used: list[str] = Field(default_factory=list, description="Skill names whose SKILL.md is deterministically injected into the LLM prompt. Trust boundary: code reads docs, not the LLM.")
     allowlist_optional: bool = Field(False, description="Set true to allow unrestricted writes")
     # NOTE: blind_tests deliberately NOT in this model. Information barrier:
     # only /orchestrate handles blind_tests, code-runner never parses them.

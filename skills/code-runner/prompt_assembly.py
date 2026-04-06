@@ -4,14 +4,49 @@ Builds a single system prompt from a /prompt-lab template with placeholders.
 All variable content is injected via string replacement — the LLM sees one
 clean document, not appended sections.
 
-Three data sources:
+Four data sources:
 1. Task spec (original request, DoD, allowlist) — immutable anchor
-2. Local round history (last 2 rounds) — what just happened
-3. /memory recall (similar solved problems) — cross-session learning
+2. Skill documentation (SKILL.md) — deterministically injected, not optional
+3. Local round history (last 2 rounds) — what just happened
+4. /memory recall (similar solved problems) — cross-session learning
 """
 from __future__ import annotations
 
 from pathlib import Path
+
+SKILLS_DIR = Path(__file__).resolve().parent.parent
+
+
+def _compile_skill_docs(skill_names: list[str]) -> str:
+    """Deterministically read and compile full SKILL.md files.
+
+    This is the trust boundary: the LLM cannot skip reading these docs
+    because they are injected directly into its system prompt by code,
+    not by the LLM's choice.
+    """
+    if not skill_names:
+        return "(no skills referenced)"
+
+    sections = []
+    for name in skill_names:
+        skill_md = SKILLS_DIR / name / "SKILL.md"
+        if not skill_md.exists():
+            sections.append(f"### SKILL: /{name}\n⚠ SKILL.md not found at {skill_md}\n")
+            continue
+
+        text = skill_md.read_text()
+        # Strip YAML frontmatter — keep only the human-readable docs
+        lines = text.splitlines()
+        content_start = 0
+        if lines and lines[0].strip() == "---":
+            for i, line in enumerate(lines[1:], 1):
+                if line.strip() == "---":
+                    content_start = i + 1
+                    break
+        content = "\n".join(lines[content_start:])
+        sections.append(f"### SKILL: /{name}\n{content}\n")
+
+    return "\n".join(sections)
 
 
 def build_system_prompt(
@@ -22,6 +57,7 @@ def build_system_prompt(
     dod_desc: str = "",
     allowlist: list[str] | None = None,
     recent_rounds: list[dict] | None = None,
+    skills_used: list[str] | None = None,
 ) -> str:
     """Build system prompt — single template, all placeholders filled."""
     _prompt_dir = Path(__file__).resolve().parent.parent / "prompt-lab" / "prompts"
@@ -35,6 +71,7 @@ def build_system_prompt(
             "ORIGINAL REQUEST:\n{original_request}\n\n"
             "DEFINITION OF DONE:\n{definition_of_done}\n\n"
             "EDITABLE FILES:\n{allowlist}\n\n"
+            "{skill_docs}\n\n"
             "{similar_solved_problems}\n\n{last_2_rounds}"
         )
 
@@ -43,6 +80,10 @@ def build_system_prompt(
     base = base.replace("{definition_of_done}", dod_desc or "(not specified)")
     allowlist_str = "\n".join(f"  - {f}" for f in (allowlist or []))
     base = base.replace("{allowlist}", allowlist_str or "(no files specified — task must set allowlist or allowlist_optional)")
+
+    # 2. Skill documentation — deterministic injection (trust boundary)
+    skill_docs = _compile_skill_docs(skills_used or [])
+    base = base.replace("{skill_docs}", skill_docs)
 
     # 2. Last 2 rounds (local history — what just happened)
     rounds_block = "(first round — no prior history)"
