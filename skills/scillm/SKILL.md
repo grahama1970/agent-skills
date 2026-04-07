@@ -72,15 +72,18 @@ concurrency limits, budget tracking, and optional Redis caching.
 
 | Model | Backend | Use Case | Fallback |
 |-------|---------|----------|----------|
-| `text` | Chutes DeepSeek-V3 | General text, extraction, summarization | → text-deepseek → text-gemini |
-| `vlm` | Chutes Qwen3-VL-235B | Image/figure/table description | → vlm-openrouter |
+| `text` | Chutes DeepSeek-V3 (non-TEE → V3.1-TEE) | General text, extraction, summarization | → text-gemini → text-gemini-paid → text-deepseek |
+| `vlm` | Gemini 2.5 Flash (free key) | Image/PDF/screenshot description | → vlm-paid → vlm-claude → vlm-codex |
 | `local-text` | Ollama qwen2.5:0.5b (local) | Smoke tests, always-on fallback | (none) |
 | `moonshot-text` | Moonshot Kimi K2 | Alternative text provider | (none) |
-| `text-gemini` | Google Gemini 2.5 Flash | Fast, 1M context | (none) |
-| `text-gemini-3` | Google Gemini 3 Flash Preview | Thinking model, 1M context | (none) |
+| `text-gemini` | Gemini 2.5 Flash (free key) | Fast, 1M context | → text-gemini-paid → text-deepseek |
+| `text-gemini-paid` | Gemini 2.5 Flash (paid key) | Paid fallback when free exhausted | (none) |
+| `text-gemini-3` | Gemini 3 Flash Preview (free key) | Thinking model, 1M context | → text-gemini-3-paid |
 | `claude-sonnet-4-6` | Anthropic Claude Sonnet (OAuth) | Max subscription via ~/.claude | (none) |
 | `claude-haiku-4-5` | Anthropic Claude Haiku (OAuth) | Fast, cheap via Max subscription | (none) |
 | `gpt-5.3-codex` | OpenAI Codex (OAuth) | High-reasoning via ~/.codex | (none) |
+| `vlm-claude` | Claude Sonnet (OAuth) | VLM fallback (images + PDFs) | (none) |
+| `vlm-codex` | GPT-5.3 Codex (OAuth) | VLM fallback (images + PDFs) | (none) |
 | Any `gemini-*` | Google | Auto-routed to Gemini API | (none) |
 | Any `claude-*` | Anthropic | Auto-routed via Claude Code OAuth | (none) |
 | Any `gpt-*`/`codex-*` | OpenAI | Auto-routed via Codex CLI OAuth | (none) |
@@ -98,7 +101,9 @@ concurrency limits, budget tracking, and optional Redis caching.
 | `Org/Model` | Chutes | API key | `Qwen/Qwen3-30B-A3B` |
 | `model:tag` | Ollama (local) | none | `qwen2.5:7b` |
 
-Cascade aliases still work: `text` (Chutes → DeepSeek → Gemini), `vlm` (Chutes → OpenRouter).
+Cascade aliases still work: `text` (Chutes → Gemini free → Gemini paid → DeepSeek), `vlm` (Gemini free → Gemini paid → Claude → Codex).
+
+**Chutes cold-start handling**: Non-TEE tried first (1 retry), falls through to TEE on 503. Warmup API fires in background on cold detect — miners notified to spin up. Next call may hit warm non-TEE.
 
 **Discover all available models:** `GET /v1/scillm/providers` returns every provider, its auto-routing pattern, available models, and auth status.
 
@@ -635,11 +640,17 @@ The proxy runs these middleware components on every request:
 When a provider fails, the proxy cascades to the next group:
 
 ```
-text (Chutes DeepSeek-V3) → text-deepseek (DeepSeek direct) → text-gemini (Gemini 2.5 Flash)
-vlm  (Chutes Qwen3-VL)   → vlm-openrouter (Claude Sonnet)
+text:          Chutes V3 (non-TEE, 1 retry) → V3.1-TEE → Gemini free → Gemini paid → DeepSeek
+text-gemini:   Gemini free → Gemini paid → DeepSeek
+vlm:           Gemini free → Gemini paid → Claude OAuth → Codex OAuth
+text-gemini-3: Gemini 3 free → Gemini 3 paid
 ```
 
-Circuit breaker: 3 failures trigger a 20-second cooldown per group.
+**Gemini free/paid are separate groups** — 429 on free cascades immediately to paid (no wasted retries on an exhausted key).
+
+**Chutes cold-start**: Non-TEE deployment tried first with 1 retry (fast-fail). On 503, warmup API fires in background to notify miners. Falls through to TEE which is hot. Multi-model groups preserve config order (non-TEE before TEE).
+
+Circuit breaker: 3 consecutive failures trigger a 20-second cooldown per group.
 
 ## Retry Policy
 
@@ -654,8 +665,7 @@ Per-exception-type retries across the cascade:
 | BadRequest (400) | 0 | Don't retry |
 | ContentPolicy | 0 | Don't retry |
 
-With 3 providers in cascade (text -> text-deepseek -> text-gemini), effective retry
-budget is ~8 retries x 3 providers = 24 attempts before final failure.
+Multi-model groups (non-TEE + TEE in same group) use 1 retry per deployment for fast fallthrough. With 4 groups in cascade (text → gemini-free → gemini-paid → deepseek), effective retry budget is ~24+ attempts before final failure.
 
 ## Caching
 

@@ -46,7 +46,8 @@ class TestQuestion:
 # ---------------------------------------------------------------------------
 
 def _client() -> httpx.Client:
-    transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
+    sock = os.environ.get("EMBRY_MEMORY_SOCKET", f"/run/user/{os.getuid()}/embry/memory.sock")
+    transport = httpx.HTTPTransport(uds=sock)
     return httpx.Client(transport=transport, base_url="http://localhost", timeout=30)
 
 
@@ -180,6 +181,7 @@ def _generate_satisfied(seed: int = 42) -> list[TestQuestion]:
                 "collections": ["sparta_qra"],
                 "limit": 10,
             })
+            r.raise_for_status()
             items = r.json().get("items", [])
             rng.shuffle(items)
 
@@ -204,6 +206,7 @@ def _generate_satisfied(seed: int = 42) -> list[TestQuestion]:
         # Strategy 2: random offset sampling (corpus breadth)
         # sparta_qra has 218K docs — sample from different regions
         total_r = c.post("/list", json={"collection": "sparta_qra", "limit": 1})
+        total_r.raise_for_status()
         total = total_r.json().get("total", 200000)
         for i in range(40):
             offset = rng.randint(0, max(1, total - 100))
@@ -241,8 +244,95 @@ def _generate_satisfied(seed: int = 42) -> list[TestQuestion]:
 
 _ADVERSARIAL_PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompt-lab" / "prompts" / "evidence_case_adversarial_v1.txt"
 
-_SCILLM_URL = "http://localhost:4001/v1/chat/completions"
-_SCILLM_KEY = "sk-dev-proxy-123"
+_SCILLM_URL = os.environ.get("SCILLM_URL", "http://localhost:4001") + "/v1/chat/completions"
+_SCILLM_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")
+
+_REQUIRED_MUTATION_FIELDS = {"question", "type"}
+_VALID_MUTATION_TYPES = {"FABRICATED_ID", "PHANTOM_TERM", "NON_SECURITY_ENTITY", "UNRELATED_PAIR"}
+
+
+def _call_scillm_batch(batch_idx: int, batch: list[dict], system_prompt: str) -> list[dict]:
+    """Sync httpx call to scillm for one batch of QRA mutations."""
+    import json as _json
+
+    user_lines = []
+    for i, q in enumerate(batch):
+        user_lines.append(
+            f'{i + 1}. "{q["question"]}" (control_id: {q["control_id"]})'
+        )
+    user_prompt = (
+        "Here are 5 real QRA questions from the SPARTA corpus. "
+        "For EACH question, generate 3 adversarial mutations — "
+        "one FABRICATED_ID, one PHANTOM_TERM, and one NON_SECURITY_ENTITY. "
+        "Then generate 3 additional UNRELATED_PAIR questions using control IDs "
+        "from different questions below.\n\n"
+        + "\n".join(user_lines)
+        + "\n\nReturn 18 total: 15 mutations (3 per source QRA) + 3 UNRELATED_PAIR."
+    )
+
+    resp = httpx.post(
+        _SCILLM_URL,
+        headers={"Authorization": f"Bearer {_SCILLM_KEY}"},
+        json={
+            "model": "text",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.9,
+            "scillm_metadata": {
+                "source_keys": [q["_key"] for q in batch],
+                "control_ids": [q["control_id"] for q in batch],
+                "batch_index": batch_idx,
+            },
+        },
+        timeout=60.0,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+
+    if "choices" not in data or not data["choices"]:
+        raise ValueError(f"scillm returned no choices for batch {batch_idx}")
+
+    content = data["choices"][0]["message"]["content"]
+    meta = data.get("scillm_metadata", {})
+    source_keys = meta.get("source_keys", [q["_key"] for q in batch])
+
+    # Parse JSON — handle markdown fences
+    content = content.strip()
+    if content.startswith("```"):
+        content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+    mutations = _json.loads(content)
+    if isinstance(mutations, dict):
+        mutations = mutations.get("mutations", mutations.get("questions", []))
+
+    if not isinstance(mutations, list):
+        raise ValueError(f"scillm batch {batch_idx} returned non-list: {type(mutations)}")
+
+    # Validate and join metadata
+    valid = []
+    for m in mutations:
+        if not isinstance(m, dict):
+            continue
+        missing = _REQUIRED_MUTATION_FIELDS - set(m.keys())
+        if missing:
+            logger.warning("Skipping mutation missing fields {}: {}", missing, m)
+            continue
+        if m["type"] not in _VALID_MUTATION_TYPES:
+            logger.warning("Skipping mutation with invalid type '{}': {}", m["type"], m.get("question", "")[:60])
+            continue
+        if not m["question"].strip():
+            logger.warning("Skipping mutation with empty question")
+            continue
+        idx = m.get("source_index", 0)
+        if idx < len(source_keys):
+            m["source_key"] = source_keys[idx]
+        m["batch_index"] = batch_idx
+        valid.append(m)
+
+    return valid
 
 
 def _generate_adversarial(seed: int = 42) -> list[TestQuestion]:
@@ -250,15 +340,17 @@ def _generate_adversarial(seed: int = 42) -> list[TestQuestion]:
 
     Pulls real QRAs from daemon, sends batches of 5 to scillm with the
     adversarial mutation prompt. Each batch returns ~18 mutations
-    (3 per source QRA + 3 UNRELATED_PAIR). Runs 3 batches concurrently.
+    (3 per source QRA + 3 UNRELATED_PAIR). Runs 3 batches concurrently
+    via ThreadPoolExecutor (no asyncio).
 
-    Returns NOT_SATISFIED (FABRICATED_ID, PHANTOM_TERM, NON_SECURITY_ENTITY)
-    and INCONCLUSIVE (UNRELATED_PAIR) questions.
+    Raises if adversarial generation produces fewer than 10 mutations.
     """
-    import asyncio
-    import json as _json
+    from concurrent.futures import ThreadPoolExecutor
 
     rng = random.Random(seed)
+
+    if not _ADVERSARIAL_PROMPT_PATH.exists():
+        raise FileNotFoundError(f"Adversarial prompt not found: {_ADVERSARIAL_PROMPT_PATH}")
     system_prompt = _ADVERSARIAL_PROMPT_PATH.read_text()
 
     # Pull 15 diverse real QRAs from daemon (3 queries x 5 results)
@@ -274,7 +366,12 @@ def _generate_adversarial(seed: int = 42) -> list[TestQuestion]:
             r = c.post("/recall", json={
                 "q": query, "collections": ["sparta_qra"], "limit": 8,
             })
-            for item in r.json().get("items", []):
+            r.raise_for_status()
+            resp_data = r.json()
+            if "items" not in resp_data:
+                logger.warning("Recall returned no items for query '{}': {}", query, list(resp_data.keys()))
+                continue
+            for item in resp_data["items"]:
                 key = item.get("_key", "")
                 q_text = item.get("question", "")
                 cid = item.get("control_id", "")
@@ -284,89 +381,42 @@ def _generate_adversarial(seed: int = 42) -> list[TestQuestion]:
                         "_key": key, "question": q_text, "control_id": cid,
                     })
 
+    if len(source_qras) < 5:
+        raise RuntimeError(
+            f"Only {len(source_qras)} QRAs found from daemon — need at least 5 for adversarial generation"
+        )
+
     rng.shuffle(source_qras)
     source_qras = source_qras[:15]
 
-    # Split into 3 batches of 5
+    # Split into batches of 5, run concurrently via threads
     batches = [source_qras[i:i + 5] for i in range(0, len(source_qras), 5)]
 
-    async def _call_one(batch_idx: int, batch: list[dict]) -> list[dict]:
-        user_lines = []
-        for i, q in enumerate(batch):
-            user_lines.append(
-                f'{i + 1}. "{q["question"]}" (control_id: {q["control_id"]})'
-            )
-        user_prompt = (
-            "Here are 5 real QRA questions from the SPARTA corpus. "
-            "For EACH question, generate 3 adversarial mutations — "
-            "one FABRICATED_ID, one PHANTOM_TERM, and one NON_SECURITY_ENTITY. "
-            "Then generate 3 additional UNRELATED_PAIR questions using control IDs "
-            "from different questions below.\n\n"
-            + "\n".join(user_lines)
-            + "\n\nReturn 18 total: 15 mutations (3 per source QRA) + 3 UNRELATED_PAIR."
+    all_mutations: list[dict] = []
+    errors: list[str] = []
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        futures = {
+            pool.submit(_call_scillm_batch, i, b, system_prompt): i
+            for i, b in enumerate(batches) if b
+        }
+        for future in futures:
+            batch_idx = futures[future]
+            try:
+                mutations = future.result()
+                all_mutations.extend(mutations)
+                logger.info("Adversarial batch {} returned {} mutations", batch_idx, len(mutations))
+            except Exception as exc:
+                errors.append(f"batch {batch_idx}: {exc}")
+                logger.error("Adversarial batch {} failed: {}", batch_idx, exc)
+
+    if errors and not all_mutations:
+        raise RuntimeError(f"All adversarial batches failed: {'; '.join(errors)}")
+
+    if len(all_mutations) < 10:
+        logger.warning(
+            "Only {} adversarial mutations generated (expected ~54). "
+            "Errors: {}", len(all_mutations), errors or "none"
         )
-
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                _SCILLM_URL,
-                headers={"Authorization": f"Bearer {_SCILLM_KEY}"},
-                json={
-                    "model": "text",
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    "response_format": {"type": "json_object"},
-                    "temperature": 0.9,
-                    "scillm_metadata": {
-                        "source_keys": [q["_key"] for q in batch],
-                        "control_ids": [q["control_id"] for q in batch],
-                        "batch_index": batch_idx,
-                    },
-                },
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            content = data["choices"][0]["message"]["content"]
-            meta = data.get("scillm_metadata", {})
-            source_keys = meta.get("source_keys", [q["_key"] for q in batch])
-
-            # Parse mutations
-            mutations = _json.loads(content)
-            if isinstance(mutations, dict):
-                mutations = mutations.get("mutations", mutations.get("questions", []))
-
-            # Join source_index with metadata
-            for m in mutations:
-                idx = m.get("source_index", 0)
-                if idx < len(source_keys):
-                    m["source_key"] = source_keys[idx]
-                m["batch_index"] = batch_idx
-
-            return mutations
-
-    async def _run_all():
-        tasks = [_call_one(i, b) for i, b in enumerate(batches) if b]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        all_mutations = []
-        for r in results:
-            if isinstance(r, list):
-                all_mutations.extend(r)
-            else:
-                logger.warning("Adversarial batch failed: {}", r)
-        return all_mutations
-
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor() as pool:
-                mutations = pool.submit(lambda: asyncio.run(_run_all())).result()
-        else:
-            mutations = asyncio.run(_run_all())
-    except Exception as exc:
-        logger.warning("Adversarial generation failed, using empty set: {}", exc)
-        mutations = []
 
     # Convert mutations to TestQuestion objects
     _TYPE_MAP = {
@@ -376,11 +426,11 @@ def _generate_adversarial(seed: int = 42) -> list[TestQuestion]:
         "UNRELATED_PAIR": ("inconclusive", "INCONCLUSIVE", "cross"),
     }
     questions: list[TestQuestion] = []
-    for m in mutations:
-        mut_type = m.get("type", "")
-        category, verdict, framework = _TYPE_MAP.get(mut_type, ("not_satisfied", "NOT_SATISFIED", "none"))
+    for m in all_mutations:
+        mut_type = m["type"]
+        category, verdict, framework = _TYPE_MAP[mut_type]
         questions.append(TestQuestion(
-            question=m.get("question", ""),
+            question=m["question"],
             category=category,
             framework=framework,
             control_id=m.get("payload", ""),
