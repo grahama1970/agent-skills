@@ -1,0 +1,243 @@
+version: 1
+kind: orchestrate-plan
+
+metadata:
+  title: "Visual Verification — ColPali-equivalent features via Qwen3-VL"
+  goal: "Build element-level visual verification into /pdf-lab: render pages, crop bboxes, embed via Qwen3-VL, compare against extracted text, store multimodal vectors in ArangoDB for cross-modal search"
+  plan_type: hybrid
+  created: "2026-04-02"
+  primary_persona:
+    name: "Nico Bailon"
+    role: "Extraction QA Engineer"
+    source: ".pi/agents/nico-bailon/AGENTS.md"
+
+execution:
+  max_concurrency: 2
+
+capability_overlap:
+  - "/pdf-screenshot CALL: screenshot_page(pdf, page, crop_bbox) already renders pages and crops bboxes to PNG"
+  - "/embedding CALL: Qwen3-VL at :8603 — POST /v1/embeddings for text, POST /pooling for images"
+  - "/pdf-lab lib/visual_score.py EXTEND: already has embed_text_multimodal, embed_image, cosine_similarity — missing render+crop"
+  - "pdf_oxide extract_document() REUSE: returns blocks with bbox=(x, y, w, h) per element"
+  - "datalake_chunks in ArangoDB EXTEND: add embedding_multimodal field for cross-modal search"
+  - "Datalake Explorer TraceabilityView EXTEND: show visual verification scores"
+  - "CREATE justification: lib/render.py — thin wrapper composing /pdf-screenshot + Pillow crop + Qwen3-VL embed. No existing skill does render→crop→embed→score in one call."
+
+questions_blockers: []
+
+lanes:
+  - id: "0"
+    label: "Wave 0: Render + Crop"
+  - id: "1"
+    label: "Wave 1: Element Verification"
+  - id: "2"
+    label: "Wave 2: Convergence + Storage"
+  - id: "3"
+    label: "Wave 3: Datalake Explorer UX"
+
+tasks:
+  # === WAVE 0: Render pages and crop bboxes ===
+  - id: "1"
+    title: "Create lib/render.py — render_page() and crop_bbox() composing /pdf-screenshot"
+    lane: "0"
+    runner: "code-runner"
+    backend: "sonnet"
+    mode: "iterative"
+    depends_on: []
+    allowlist:
+      - ".pi/skills/pdf-lab/lib/render.py"
+    read_context:
+      - ".pi/skills/pdf-screenshot/pdf_screenshot.py"
+      - ".pi/skills/pdf-lab/lib/visual_score.py"
+    implementation:
+      - "Create lib/render.py with functions:"
+      - "  render_page(pdf_path: Path, page_num: int, dpi: int = 150) -> Path:"
+      - "    Call /pdf-screenshot's screenshot_page() to render full page to temp PNG"
+      - "    Return the PNG path"
+      - "  crop_element(page_image: Path, bbox: tuple[float,float,float,float], page_height: float, dpi: int = 150) -> Path:"
+      - "    Open with Pillow, convert PDF coords (origin bottom-left) to pixel coords (origin top-left)"
+      - "    Crop the bbox region with 5px padding"
+      - "    Save to temp file, return path"
+      - "    bbox format from pdf_oxide: (x, y, width, height) where y is from bottom"
+      - "  render_and_crop_elements(pdf_path: Path, page_num: int, blocks: list[dict]) -> list[dict]:"
+      - "    Render page once, then crop each block's bbox"
+      - "    Return list of {block_type, text, image_path, bbox}"
+      - "Use /pdf-screenshot for rendering (compose, don't rewrite)"
+      - "Use Pillow Image.crop() for bbox cropping"
+      - "Max 60 lines"
+    definition_of_done:
+      command: "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab && python3 -c \"from lib.render import render_page, crop_element, render_and_crop_elements; print('import OK')\""
+      assertion: "Imports without error"
+
+  # === WAVE 1: Element-level visual verification ===
+  - id: "2"
+    title: "Extend visual_score.py — verify_element() and verify_page() using render+crop+embed"
+    lane: "1"
+    runner: "code-runner"
+    backend: "sonnet"
+    mode: "iterative"
+    depends_on: ["1"]
+    allowlist:
+      - ".pi/skills/pdf-lab/lib/visual_score.py"
+    read_context:
+      - ".pi/skills/pdf-lab/lib/render.py"
+      - ".pi/skills/embedding/SKILL.md"
+    implementation:
+      - "Add to visual_score.py:"
+      - "  verify_element(pdf_path: Path, page_num: int, bbox: tuple, extracted_text: str, page_height: float) -> float:"
+      - "    1. render_page(pdf_path, page_num)"
+      - "    2. crop_element(page_image, bbox, page_height)"
+      - "    3. embed_image(crop_path) → image_vec"
+      - "    4. embed_text_multimodal(extracted_text) → text_vec"
+      - "    5. Return cosine_similarity(image_vec, text_vec)"
+      - "  verify_page(pdf_path: Path, page_num: int, blocks: list[dict], page_height: float) -> list[dict]:"
+      - "    1. render_and_crop_elements(pdf_path, page_num, blocks)"
+      - "    2. For each element: verify_element score"
+      - "    3. Return list of {block_type, text_preview, bbox, visual_score, image_path}"
+      - "  verify_document(pdf_path: Path, extraction: dict, max_pages: int = 5) -> dict:"
+      - "    1. For each page in extraction['pages'][:max_pages]: verify_page()"
+      - "    2. Return {page_scores: [...], mean_score: float, low_confidence: [{block details where score < 0.5}]}"
+      - "Keep existing functions unchanged — only ADD new ones"
+      - "Max 40 lines of additions"
+    definition_of_done:
+      command: "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab && python3 -c \"from lib.visual_score import verify_element, verify_page, verify_document; print('import OK')\""
+      assertion: "New functions importable"
+
+  # === WAVE 2: Wire into convergence + store multimodal embeddings ===
+  - id: "3"
+    title: "Wire verify_document into convergence loop as the visual_gate implementation"
+    lane: "2"
+    runner: "code-runner"
+    backend: "sonnet"
+    mode: "iterative"
+    depends_on: ["2"]
+    allowlist:
+      - ".pi/skills/pdf-lab/lib/convergence.py"
+    read_context:
+      - ".pi/skills/pdf-lab/lib/visual_score.py"
+    implementation:
+      - "In convergence.py, replace the placeholder visual scoring block:"
+      - "  Currently: score_extraction(pages=[], extracted_sections=[]) — returns 0.0"
+      - "  Replace with: verify_document(fixture_pdf, comparison_extraction_result, max_pages=3)"
+      - "  Use verification.mean_score as v_score"
+      - "  Log low_confidence elements for audit trail"
+      - "Keep visual_gate=False default — no behavior change unless opted in"
+    definition_of_done:
+      command: "grep -c 'verify_document' /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab/lib/convergence.py"
+      assertion: "At least 1 call to verify_document"
+
+  - id: "4"
+    title: "Create lib/embed_store.py — backfill multimodal embeddings for datalake_chunks"
+    lane: "2"
+    runner: "code-runner"
+    backend: "sonnet"
+    mode: "iterative"
+    depends_on: ["1"]
+    allowlist:
+      - ".pi/skills/pdf-lab/lib/embed_store.py"
+    read_context:
+      - ".pi/skills/pdf-lab/lib/visual_score.py"
+      - ".pi/skills/pdf-lab/lib/render.py"
+      - ".pi/skills/embedding/SKILL.md"
+    implementation:
+      - "Create lib/embed_store.py with:"
+      - "  backfill_chunk_embeddings(chunk_keys: list[str], corpus_root: str) -> dict:"
+      - "    For each chunk key:"
+      - "      1. Load chunk from ArangoDB via /recall/by-keys"
+      - "      2. Read source_meta.image_path to find the element PNG on disk"
+      - "      3. If image exists: embed_image(image_path) → multimodal_vec"
+      - "      4. If no image but has text + bbox: render page, crop bbox, embed"
+      - "      5. Upsert embedding_multimodal vector back to the chunk via /upsert"
+      - "    Return {processed: N, embedded: N, skipped: N, errors: N}"
+      - "  This enables cross-modal search: text query → finds table images"
+      - "Use httpx to graph_memory container at :8601 for reads/writes"
+      - "Process in batches of 10 to avoid overwhelming the embedding service"
+      - "Max 80 lines"
+    definition_of_done:
+      command: "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab && python3 -c \"from lib.embed_store import backfill_chunk_embeddings; print('import OK')\""
+      assertion: "Imports without error"
+
+  # === WAVE 3: Datalake Explorer UX ===
+  - id: "5"
+    title: "Add /api/datalake/verify endpoint — run visual verification on a document"
+    lane: "3"
+    runner: "code-runner"
+    backend: "sonnet"
+    mode: "iterative"
+    depends_on: ["2"]
+    allowlist:
+      - "packages/ux-lab/server/index.ts"
+    read_context:
+      - "packages/ux-lab/server/index.ts"
+    implementation:
+      - "Add POST /api/datalake/verify to ux-lab server"
+      - "Input: { pdf_path: string, max_pages?: number }"
+      - "Calls pdf-lab's verify_document via subprocess:"
+      - "  python3 -c 'from lib.visual_score import verify_document; ...'"
+      - "Returns: { page_scores, mean_score, low_confidence elements }"
+      - "Add before the /api/memory catch-all"
+      - "Timeout: 60s (rendering + embedding takes time)"
+    definition_of_done:
+      command: "grep -c '/api/datalake/verify' /home/graham/workspace/experiments/pi-mono/packages/ux-lab/server/index.ts"
+      assertion: "At least 1 endpoint registration"
+
+  - id: "6"
+    title: "Add visual verification scores to TraceabilityView"
+    lane: "3"
+    runner: "code-runner"
+    backend: "sonnet"
+    mode: "iterative"
+    depends_on: ["5"]
+    allowlist:
+      - "packages/ux-lab/src/components/datalake-explorer/TraceabilityView.tsx"
+    read_context:
+      - "packages/ux-lab/src/components/datalake-explorer/DatalakeExplorerView.tsx"
+      - "packages/ux-lab/src/components/common/EmbryStyle.tsx"
+    implementation:
+      - "Add a 'Verify' button to the traceability tree header"
+      - "When clicked: POST /api/datalake/verify with the selected document's PDF path"
+      - "Display results inline:"
+      - "  Each element in the tree gets a visual score badge:"
+      - "    >= 0.8: green-700 'MATCH'"
+      - "    0.5-0.8: amber-700 'PARTIAL'"
+      - "    < 0.5: red-600 'MISMATCH'"
+      - "  Low-confidence elements get a warning icon"
+      - "  Overall page score shown in the tree header"
+      - "Follow EMBRY design tokens, monospace, no decorative elements"
+    definition_of_done:
+      command: "grep -c 'verify\\|visual_score\\|MATCH\\|MISMATCH' /home/graham/workspace/experiments/pi-mono/packages/ux-lab/src/components/datalake-explorer/TraceabilityView.tsx"
+      assertion: "At least 3 references to verification"
+
+  - id: "7"
+    title: "E2E: render ResNet paper page, crop a section bbox, embed, verify score"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["3", "4"]
+    command: |
+      cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab &&
+      python3 -c "
+      from pathlib import Path
+      from lib.render import render_page, crop_element
+      from lib.visual_score import verify_element, embed_image, embed_text_multimodal, cosine_similarity
+
+      pdf = Path('/mnt/storage12tb/extractor_corpus/inbox/arxiv/1512.03385v1.pdf')
+
+      # Step 1: Render page 0
+      page_img = render_page(pdf, 0)
+      print(f'Rendered: {page_img}')
+
+      # Step 2: Crop the title bbox (from earlier extraction)
+      title_bbox = (153.45, 675.07, 306.26, 14.35)
+      crop = crop_element(page_img, title_bbox, page_height=792.0)
+      print(f'Cropped: {crop}')
+
+      # Step 3: Verify
+      score = verify_element(pdf, 0, title_bbox, 'Deep Residual Learning for Image Recognition', 792.0)
+      print(f'Visual score: {score:.4f}')
+      print(f'PASS' if score > 0.5 else 'FAIL')
+      " 2>&1 | tail -5
+    definition_of_done:
+      command: "cd /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab && python3 -c \"from lib.render import render_page; print('OK')\""
+      assertion: "render module importable"

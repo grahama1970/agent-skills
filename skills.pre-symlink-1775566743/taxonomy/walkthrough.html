@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>/extract-entities + /taxonomy — How It Works</title>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #e6edf3; --text-muted: #8b949e;
+    --accent: #58a6ff; --green: #3fb950; --yellow: #d29922;
+    --red: #f85149; --purple: #bc8cff; --orange: #db6d28;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7;
+    padding: 2rem; max-width: 1100px; margin: 0 auto;
+  }
+  h1 { font-size: 2rem; margin-bottom: 0.25rem; color: var(--accent); }
+  h1 + p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.4rem; margin-top: 3rem; margin-bottom: 1rem;
+    padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); color: var(--green);
+  }
+  h3 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--purple); }
+  h4 { font-size: 1rem; margin-top: 1rem; color: var(--orange); }
+  p, li { margin-bottom: 0.75rem; }
+  ul, ol { padding-left: 1.5rem; }
+  code {
+    background: var(--surface); padding: 0.15rem 0.4rem; border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.88rem;
+  }
+  pre {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem; overflow-x: auto; margin-bottom: 1.5rem;
+  }
+  pre code { background: none; padding: 0; font-size: 0.85rem; color: var(--text); }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.9rem; }
+  th, td { padding: 0.5rem 0.75rem; text-align: left; border: 1px solid var(--border); }
+  th { background: var(--surface); color: var(--accent); font-weight: 600; }
+  .mermaid {
+    background: #fff; border-radius: 8px; padding: 1.5rem;
+    margin-bottom: 1.5rem; overflow-x: auto;
+  }
+  .callout {
+    background: var(--surface); border-left: 4px solid var(--accent);
+    padding: 1rem 1.25rem; margin-bottom: 1.5rem; border-radius: 0 8px 8px 0;
+  }
+  .callout.green { border-left-color: var(--green); }
+  .callout.yellow { border-left-color: var(--yellow); }
+  .callout.red { border-left-color: var(--red); }
+  .callout.orange { border-left-color: var(--orange); }
+  .callout strong { color: var(--accent); }
+  .callout.green strong { color: var(--green); }
+  .callout.yellow strong { color: var(--yellow); }
+  .callout.red strong { color: var(--red); }
+  .callout.orange strong { color: var(--orange); }
+  .tag {
+    display: inline-block; padding: 0.1rem 0.5rem; border-radius: 12px;
+    font-size: 0.8rem; font-weight: 600; margin: 0.1rem;
+  }
+  .tag-model { background: #1f3a5f; color: #7ec8e3; }
+  .tag-exploit { background: #5f1f1f; color: #f87171; }
+  .tag-harden { background: #1f5f2f; color: #6ee7b7; }
+  .tag-evade { background: #4f1f5f; color: #c084fc; }
+  .tag-persist { background: #5f4f1f; color: #fbbf24; }
+  .tag-isolate { background: #1f4f5f; color: #67e8f9; }
+  .tag-detect { background: #1f5f5f; color: #5eead4; }
+  .tag-restore { background: #3f3f1f; color: #bef264; }
+  .result-box {
+    background: #0d2818; border: 1px solid #1a5c2e; border-radius: 8px;
+    padding: 1rem; margin: 1rem 0;
+  }
+  .result-box code { background: #163d23; }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%; background: var(--accent);
+    color: var(--bg); font-weight: 700; font-size: 0.85rem; margin-right: 0.5rem;
+    flex-shrink: 0;
+  }
+  .step {
+    display: flex; align-items: flex-start; margin: 1rem 0;
+    padding: 0.75rem 1rem; background: var(--surface); border-radius: 8px;
+    border-left: 3px solid var(--accent);
+  }
+  .step.green { border-left-color: var(--green); }
+  .step.green .step-num { background: var(--green); }
+  .step.yellow { border-left-color: var(--yellow); }
+  .step.yellow .step-num { background: var(--yellow); }
+  .step.red { border-left-color: var(--red); }
+  .step.red .step-num { background: var(--red); }
+  .step.purple { border-left-color: var(--purple); }
+  .step.purple .step-num { background: var(--purple); }
+  .step-content { flex: 1; }
+  .step-content p { margin-bottom: 0.3rem; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  .two-col { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .two-col > * { flex: 1; min-width: 300px; }
+  .io-box { border: 2px solid var(--border); border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+  .io-box.input { border-color: var(--accent); }
+  .io-box.output { border-color: var(--green); }
+  .io-label {
+    display: inline-block; padding: 0.1rem 0.6rem; border-radius: 4px;
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;
+  }
+  .io-label.in { background: var(--accent); color: var(--bg); }
+  .io-label.out { background: var(--green); color: var(--bg); }
+</style>
+</head>
+<body>
+
+<h1>/extract-entities + /taxonomy</h1>
+<p>Sentence in, entities and Mind tags out. Here's exactly what to call and what you get back.</p>
+
+<!-- ================================================================ -->
+<h2>1. TL;DR &mdash; The Full Pipeline in 30 Seconds</h2>
+
+<div class="mermaid">
+flowchart LR
+    Q["'How does CWE-119\naffect REC-0001?'"]
+    EE["/extract-entities"]
+    IDS["control_ids:\nCWE-119, REC-0001\nST0001"]
+    TAX["/taxonomy"]
+    MIND["mind:\nExploit, Harden, Model"]
+
+    Q --> EE --> IDS --> TAX --> MIND
+
+    style EE fill:#d4edda,stroke:#28a745,color:#000
+    style TAX fill:#cce5ff,stroke:#004085,color:#000
+</div>
+
+<div class="two-col">
+<div class="io-box input">
+<span class="io-label in">You send</span>
+<pre><code>A sentence (natural language question or claim)</code></pre>
+</div>
+<div class="io-box output">
+<span class="io-label out">You get back</span>
+<pre><code>/extract-entities → control_ids, resolution_map, grounding_ok
+/taxonomy         → mind tags, heart tags, method</code></pre>
+</div>
+</div>
+
+<div class="callout green">
+<strong>Design principles:</strong>
+<ul>
+<li><strong>No regex</strong> &mdash; flashtext (Aho-Corasick) matches against the actual ArangoDB vocabulary</li>
+<li><strong>/memory daemon httpx</strong> &mdash; primary DB access path. Inside the memory project, AQL is allowed as a fallback when the daemon is unavailable (e.g. tests).</li>
+<li><strong>Deterministic first</strong> &mdash; Sensai Cascade: T0 lookup (fast), T0.5 classifier (only &ge;95%, clamped &mdash; cannot be lowered), T2 LLM (grey zone only)</li>
+</ul>
+</div>
+
+<!-- ================================================================ -->
+<h2>2. /extract-entities &mdash; What You Call and What You Get</h2>
+
+<h3>CLI</h3>
+<pre><code># Basic extraction
+./run.sh extract "What does CWE-119 have to do with REC-0001 reconnaissance?"
+
+# JSON output (for piping to other skills)
+./run.sh extract --json "SQL injection in the F-36 login form"
+
+# Coherence check (boolean: are entities related?)
+./run.sh check "Compare SV-AC-2 with CWE-89"</code></pre>
+
+<h3>Python (direct import &mdash; used by /create-evidence-case)</h3>
+<pre><code>from graph_memory.entity_extraction import extract_entities
+
+result = extract_entities("How does CWE-119 affect REC-0001 reconnaissance?")
+print(result.control_ids)       # ["CWE-119", "REC-0001", "ST0001"]
+print(result.all_control_ids)   # ["CWE-119", "CWE-131", "CWE-680", "REC-0001", "ST0001"]
+print(result.grounding_ok)      # True (via .agent_view())</code></pre>
+
+<h3>Full output example (live data)</h3>
+
+<div class="io-box input">
+<span class="io-label in">Input</span>
+<pre><code>"How does CWE-119 affect REC-0001 reconnaissance?"</code></pre>
+</div>
+
+<div class="io-box output">
+<span class="io-label out">Output</span>
+<pre><code>{
+  "control_ids": ["CWE-119", "REC-0001", "ST0001"],
+  "all_control_ids": ["CWE-119", "CWE-131", "CWE-680", "CWE-806", "REC-0001", "ST0001"],
+  "resolution_map": {
+    "CWE-119": {"exists": true, "match_type": "exact", "confidence": 1.0,
+                "control_id": "CWE-119", "name": "CWE-119", "qra_count": 4},
+    "REC-0001": {"exists": true, "match_type": "exact", "confidence": 1.0,
+                 "control_id": "REC-0001", "name": "Gather Spacecraft Design Information",
+                 "qra_count": 633},
+    "F-36":     {"exists": true, "match_type": "domain_term", "confidence": 0.8,
+                 "control_id": "", "name": "F-36"}
+  },
+  "grounding_ok": true,
+  "unresolved_terms": [],
+  "headline": "3 controls resolved",
+  "phrases": ["REC-0001 reconnaissance", "F-36 FADEC"],
+  "related_pairs": [
+    {"source": "CWE-119", "target": "REC-0001", "method": "qra_co_occurrence"}
+  ]
+}</code></pre>
+</div>
+
+<h3>Name-based matching (no explicit IDs needed)</h3>
+
+<div class="io-box input">
+<span class="io-label in">Input</span>
+<pre><code>"SQL injection vulnerability in the login form allows credential theft"</code></pre>
+</div>
+
+<div class="io-box output">
+<span class="io-label out">Output</span>
+<pre><code>{
+  "control_ids": ["CAPEC-66", "IMP-0006", "d3f:Credential"],
+  ...
+  "resolution_map": {
+    "CAPEC-66":       {"exists": true, "match_type": "exact", "name": "SQL Injection"},
+    "IMP-0006":       {"exists": true, "match_type": "exact", "name": "Theft"},
+    "d3f:Credential": {"exists": true, "match_type": "exact", "name": "Credential"}
+  }
+}</code></pre>
+<p><em>flashtext matched "SQL injection", "Theft", and "Credential" by name &mdash; no IDs in the input text.</em></p>
+</div>
+
+<h3>Fabricated / unresolved entities</h3>
+
+<div class="io-box input">
+<span class="io-label in">Input</span>
+<pre><code>"How does SPARTA control X23-MUSTARD protect the F-36?"</code></pre>
+</div>
+
+<div class="io-box output">
+<span class="io-label out">Output</span>
+<pre><code>{
+  "control_ids": [],
+  "grounding_ok": false,
+  "unresolved_terms": [
+    {"term": "X23-MUSTARD", "type": "id_like", "exists": false,
+     "reason": "no_match_in_sparta_controls",
+     "closest_match": "CM0028", "distance": 0.85}
+  ],
+  "resolution_map": {
+    "X23-MUSTARD": {"exists": false, "reason": "no_match_in_sparta_controls",
+                    "closest_match": "CM0028", "distance": 0.85}
+  }
+}</code></pre>
+<p><em><code>grounding_ok: false</code> tells the caller this question references entities that don't exist in the corpus. The plausibility gate in /create-evidence-case uses this to reject or clarify.</em></p>
+</div>
+
+<h3>Output field reference</h3>
+
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>What it means</th></tr></thead>
+<tbody>
+<tr><td><code>control_ids</code></td><td><code>list[str]</code></td><td>Controls found by flashtext (Step 1)</td></tr>
+<tr><td><code>all_control_ids</code></td><td><code>list[str]</code></td><td>All controls: flashtext + hybrid search + phrase discovery</td></tr>
+<tr><td><code>resolution_map</code></td><td><code>dict</code></td><td>Per-term: exists? match_type? confidence? control_id?</td></tr>
+<tr><td><code>grounding_ok</code></td><td><code>bool</code></td><td><code>true</code> if no fabricated IDs and no framework misspellings</td></tr>
+<tr><td><code>unresolved_terms</code></td><td><code>list[dict]</code></td><td>Terms that look like entities but don't exist in corpus</td></tr>
+<tr><td><code>phrases</code></td><td><code>list[str]</code></td><td>Noun phrases extracted via spaCy</td></tr>
+<tr><td><code>related_pairs</code></td><td><code>list[dict]</code></td><td>Relationship edges between discovered controls</td></tr>
+<tr><td><code>misspellings</code></td><td><code>list[dict]</code></td><td>Detected typos with suggestions</td></tr>
+<tr><td><code>headline</code></td><td><code>str</code></td><td>Human-readable summary: "3 controls resolved"</td></tr>
+</tbody>
+</table>
+
+<!-- ================================================================ -->
+<h2>3. /taxonomy &mdash; What You Call and What You Get</h2>
+
+<h3>CLI</h3>
+<pre><code># With pre-extracted control IDs (preferred)
+./run.sh extract -t "buffer overflow reconnaissance" --control-ids "CWE-119,REC-0001" --fast
+
+# Without control IDs (classifier/LLM only, no Tier 0)
+./run.sh extract -t "some security text" -c sparta --fast</code></pre>
+
+<h3>Python</h3>
+<pre><code>from taxonomy import extract_taxonomy
+
+result = extract_taxonomy(
+    text="buffer overflow reconnaissance",
+    collection="sparta",
+    fast=True,
+    control_ids=["CWE-119", "REC-0001"],  # from /extract-entities
+)
+print(result["mind"])    # ["Exploit", "Harden", "Model"]
+print(result["heart"])   # []
+print(result["method"])  # "fast+refs"</code></pre>
+
+<h3>Full output example</h3>
+
+<div class="io-box input">
+<span class="io-label in">Input</span>
+<pre><code>extract_taxonomy(text="...", control_ids=["CWE-119", "REC-0001"], fast=True)</code></pre>
+</div>
+
+<div class="io-box output">
+<span class="io-label out">Output</span>
+<pre><code>{
+  "mind": ["Exploit", "Harden", "Model"],
+  "heart": [],
+  "method": "fast+refs",
+  "confidence": 0.3,
+  "bridge_tags": [],
+  "collection_tags": {},
+  "worth_remembering": true,
+  "tactical_tags": ["Exploit", "Harden", "Model"]
+}</code></pre>
+</div>
+
+<h3>Output field reference</h3>
+
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>What it means</th></tr></thead>
+<tbody>
+<tr><td><code>mind</code></td><td><code>list[str]</code></td><td>Tactical dimension: Detect, Evade, Exploit, Harden, Isolate, Model, Persist, Restore</td></tr>
+<tr><td><code>heart</code></td><td><code>list[str]</code></td><td>Emotional dimension: anger, fear, joy, sadness, trust</td></tr>
+<tr><td><code>method</code></td><td><code>str</code></td><td>Which tier produced the tags: <code>fast+refs</code>, <code>refs+classifier</code>, <code>llm+refs</code></td></tr>
+<tr><td><code>confidence</code></td><td><code>float</code></td><td>Only meaningful for classifier/LLM paths. T0 lookup is always authoritative.</td></tr>
+<tr><td><code>collection_tags</code></td><td><code>dict</code></td><td>Scope-specific tags (only from LLM path)</td></tr>
+<tr><td><code>worth_remembering</code></td><td><code>bool</code></td><td><code>true</code> if any mind, heart, or collection tags were found</td></tr>
+</tbody>
+</table>
+
+<h3>Where do the mind tags come from?</h3>
+
+<p><code>/taxonomy</code> reads the <code>mind</code> field already stored on each control document in <code>sparta_controls</code>.
+These were pre-computed at ingestion time by the SPARTA pipeline traversing the
+CWE &rarr; CAPEC &rarr; ATT&CK chain. At query time, it's just a document lookup &mdash; no chain traversal.</p>
+
+<pre><code># What /taxonomy does internally for each control_id:
+POST /list → {collection: "sparta_controls", filters: {control_id: "CWE-119"}}
+# Response: {mind: ["Exploit", "Harden"], capec_ids: [...], pillar_cwe: "CWE-664"}
+# → takes the mind field, adds to tag set</code></pre>
+
+<!-- ================================================================ -->
+<h2>4. The 8 Mind Tags</h2>
+
+<table>
+<thead><tr><th>Tag</th><th>Tactical Meaning</th><th>Example Controls (live data)</th></tr></thead>
+<tbody>
+<tr><td><span class="tag tag-detect">Detect</span></td><td>Monitoring, alerting, anomaly detection</td><td>Intrusion detection controls</td></tr>
+<tr><td><span class="tag tag-evade">Evade</span></td><td>Bypassing defenses, anti-forensics</td><td>CWE-117 (Log Injection), DE-0001</td></tr>
+<tr><td><span class="tag tag-exploit">Exploit</span></td><td>Attacking, weaponizing vulnerabilities</td><td>CWE-79 (XSS), CWE-119, IA-0001</td></tr>
+<tr><td><span class="tag tag-harden">Harden</span></td><td>Strengthening, patching, securing</td><td>Most CWE mitigations, D3FEND defenses</td></tr>
+<tr><td><span class="tag tag-isolate">Isolate</span></td><td>Segmentation, containment, sandboxing</td><td>CWE-89 (SQL Injection mitigation)</td></tr>
+<tr><td><span class="tag tag-model">Model</span></td><td>Reconnaissance, mapping, understanding</td><td>REC-0001, ST0001 (Reconnaissance)</td></tr>
+<tr><td><span class="tag tag-persist">Persist</span></td><td>Maintaining access, C2, exfiltration</td><td>PER-0001, EX-0001</td></tr>
+<tr><td><span class="tag tag-restore">Restore</span></td><td>Recovery, backup, incident response</td><td>Continuity/recovery controls</td></tr>
+</tbody>
+</table>
+
+<!-- ================================================================ -->
+<h2>5. How /extract-entities Works Internally</h2>
+
+<p>You don't need to know this to use the skill &mdash; but here's what happens under the hood.</p>
+
+<div class="step green">
+<span class="step-num">1</span>
+<div class="step-content">
+<p><strong>flashtext Aho-Corasick scan</strong></p>
+<p>A <code>KeywordProcessor</code> loaded with 17,792 keywords (both control IDs and names)
+from <code>sparta_controls</code> via /memory daemon <code>POST /list</code>.
+Scans text in O(n). Matches "CWE-119" by ID or "SQL Injection" by name &mdash; both resolve to the same control_id.</p>
+</div>
+</div>
+
+<div class="step green">
+<span class="step-num">2</span>
+<div class="step-content">
+<p><strong>RapidFuzz fallback</strong></p>
+<p>If flashtext finds nothing, fuzzy matching catches typos: "CWE-7" &rarr; "CWE-79" (score 80+).</p>
+</div>
+</div>
+
+<div class="step green">
+<span class="step-num">3</span>
+<div class="step-content">
+<p><strong>Verify via /memory daemon</strong></p>
+<p><code>POST /list</code> confirms each match exists, gets metadata (name, framework, QRA count).</p>
+</div>
+</div>
+
+<div class="step green">
+<span class="step-num">4</span>
+<div class="step-content">
+<p><strong>Hybrid search (BM25 + semantic)</strong></p>
+<p>Finds related controls not mentioned by name. Catches implicit references.</p>
+</div>
+</div>
+
+<div class="step green">
+<span class="step-num">5</span>
+<div class="step-content">
+<p><strong>Spellcheck + corpus membership</strong></p>
+<p>Classifies remaining terms: domain vocab, misspelling, fabricated ID, or not in corpus.</p>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<h2>6. The Sensai Cascade (/taxonomy tiers)</h2>
+
+<div class="mermaid">
+flowchart TD
+    START["extract_taxonomy(text, control_ids)"] --> T0{"T0: control_ids\nprovided?"}
+    T0 --> |"Yes"| T0_LOOKUP["Look up mind from\nsparta_controls via\n/memory daemon\n~5ms per ID"]
+    T0 --> |"No"| T0_SKIP["ref_mind = empty"]
+
+    T0_LOOKUP --> T0_RESULT["ref_mind = set union\nof all control mind tags"]
+    T0_SKIP --> FAST
+
+    T0_RESULT --> FAST{"fast mode?"}
+    FAST --> |"Yes"| DONE["Return ref_mind\nmethod: fast+refs"]
+    FAST --> |"No"| CLF{"T0.5: Classifier\nconfidence >= 95%?"}
+
+    CLF --> |"Yes: merge"| CLF_MERGE["mind = ref_mind UNION\nclassifier tags"]
+    CLF --> |"No: IGNORED"| LLM["T2: LLM grey zone\n/scillm Claude Sonnet"]
+
+    LLM --> LLM_MERGE["mind = ref_mind UNION\nLLM tags"]
+    CLF_MERGE --> HEART["Heart: keyword scan"]
+    LLM_MERGE --> HEART
+
+    DONE --> HEART
+    HEART --> FINAL["Return: mind, heart,\nmethod, confidence"]
+
+    style T0 fill:#d4edda,stroke:#28a745,color:#000
+    style T0_LOOKUP fill:#d4edda,stroke:#28a745,color:#000
+    style CLF fill:#fff3cd,stroke:#ffc107,color:#000
+    style LLM fill:#f8d7da,stroke:#dc3545,color:#000
+    style HEART fill:#e2d5f1,stroke:#7b2d8e,color:#000
+    style DONE fill:#d4edda,stroke:#28a745,color:#000
+    style FINAL fill:#cce5ff,stroke:#004085,color:#000
+</div>
+
+<table>
+<thead><tr><th>Tier</th><th>What</th><th>When</th><th>Cost</th></tr></thead>
+<tbody>
+<tr><td><strong>T0</strong></td><td>Control ID lookup via /memory daemon</td><td>Always (when control_ids provided)</td><td>~5ms per ID</td></tr>
+<tr><td><strong>T0.5</strong></td><td>DistilBERT classifier</td><td>Only if confidence &ge; 95%</td><td>~3ms, free</td></tr>
+<tr><td><strong>T2</strong></td><td>LLM via /scillm (Claude Sonnet)</td><td>Grey zone only (T0 + T0.5 insufficient)</td><td>~2s, API cost</td></tr>
+<tr><td><strong>Heart</strong></td><td>Keyword scan for emotion</td><td>Always</td><td>~0ms</td></tr>
+</tbody>
+</table>
+
+<div class="callout green">
+<strong>Key rule:</strong> Below 95% confidence, the classifier is <strong>fully ignored</strong> &mdash; its tags never appear in the output. Only T0 deterministic lookups and T2 LLM contribute. This prevents low-confidence guesses from polluting the tag set.
+</div>
+
+<!-- ================================================================ -->
+<h2>7. How Downstream Skills Use These Results</h2>
+
+<h3>A. /create-evidence-case</h3>
+<pre><code># 1. Extract entities
+entities = collect_entities(question)       # calls /extract-entities
+control_ids = entities["all_control_ids"]   # ["CWE-119", "REC-0001"]
+
+# 2. Get mind tags for technique bridge gate
+mind_sets = [set(c.get("mind", [])) for c in control_data]
+mind_overlap = mind_sets[0] &amp; mind_sets[1]
+# CWE-119: {Exploit, Harden}  ∩  REC-0001: {Model}  = {} → no overlap
+
+# 3. Check grounding
+if not entities["grounding_ok"]:
+    # Fabricated entities → plausibility gate → clarify or reject</code></pre>
+
+<h3>B. 08b_score_relationships.py (Gate 3)</h3>
+<pre><code># Mind tag Jaccard similarity between two controls:
+mind_jaccard = len(mind_inter) / len(mind_union)
+gate3 = len(mind_inter) > 0  # At least one shared Mind tag</code></pre>
+
+<h3>C. /memory (at document insertion)</h3>
+<pre><code># Every /learn call tags the document:
+result = extract_taxonomy(text, collection=scope, control_ids=extracted_ids)
+doc["mind"] = result["mind"]   # stored on the document forever</code></pre>
+
+<!-- ================================================================ -->
+<h2>8. How Mind Tags Get on Controls (Ingestion)</h2>
+
+<p><em>This section explains the one-time ingestion process. You don't need this to use the skills.</em></p>
+
+<p>The SPARTA pipeline (<code>01c_load_capec.py</code>) traverses the MITRE chain at ingestion time and stores
+mind tags directly on each control document:</p>
+
+<div class="mermaid">
+graph LR
+    CWE["CWE-117\nLog Injection"] -->|"curated:CAPEC→CWE\n(MITRE XML)"| CAPEC["CAPEC-268\nAudit Log Manipulation"]
+    CAPEC -->|"curated:CAPEC→ATT&CK\n(MITRE XML)"| ATT["T1070\nIndicator Removal\ntactic: defense-evasion"]
+    ATT -->|"tactic mapping"| MIND["mind: Evade"]
+
+    style CWE fill:#fce4ec,stroke:#c62828,color:#000
+    style CAPEC fill:#fff3e0,stroke:#e65100,color:#000
+    style ATT fill:#e3f2fd,stroke:#1565c0,color:#000
+    style MIND fill:#e8f5e9,stroke:#2e7d32,color:#000
+</div>
+
+<p>Result stored on the CWE-117 document:</p>
+<pre><code>{
+  "control_id": "CWE-117",
+  "mind": ["Evade", "Exploit", "Harden"],
+  "capec_ids": ["CAPEC-268", "CAPEC-81", "CAPEC-93"],
+  "pillar_cwe": "CWE-707"
+}</code></pre>
+
+<h3>Edge counts (live datalake)</h3>
+<table>
+<thead><tr><th>Edge Type</th><th>Count</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td><code>curated:CAPEC&rarr;CWE</code></td><td>1,212</td><td>MITRE CAPEC XML</td></tr>
+<tr><td><code>curated:CAPEC&rarr;ATT&CK</code></td><td>271</td><td>MITRE CAPEC XML</td></tr>
+<tr><td><code>derived:CWE&rarr;CAPEC&rarr;ATT&CK</code></td><td>567</td><td>Computed shortcut</td></tr>
+<tr><td><code>curated:NIST Rev5 Controls</code></td><td>46,440</td><td>NIST SP 800-53</td></tr>
+<tr><td><code>curated:D3FEND Techniques</code></td><td>13,876</td><td>MITRE D3FEND</td></tr>
+<tr><td><code>technique_reference</code> (scored)</td><td>49,208</td><td>Gate-based scoring</td></tr>
+</tbody>
+</table>
+
+<h3>Framework coverage</h3>
+<table>
+<thead><tr><th>Framework</th><th>Controls</th><th>Example</th><th>Example Mind</th></tr></thead>
+<tbody>
+<tr><td>SPARTA</td><td>553</td><td><code>REC-0001</code></td><td><span class="tag tag-model">Model</span></td></tr>
+<tr><td>CWE</td><td>969</td><td><code>CWE-119</code></td><td><span class="tag tag-exploit">Exploit</span> <span class="tag tag-harden">Harden</span></td></tr>
+<tr><td>ATT&CK</td><td>1,778</td><td><code>T1070</code></td><td>(via tactic mapping)</td></tr>
+<tr><td>CAPEC</td><td>615</td><td><code>CAPEC-268</code></td><td><span class="tag tag-evade">Evade</span></td></tr>
+<tr><td>D3FEND</td><td>424</td><td><code>D3-ACA</code></td><td><span class="tag tag-evade">Evade</span> <span class="tag tag-exploit">Exploit</span> <span class="tag tag-harden">Harden</span> <span class="tag tag-model">Model</span> <span class="tag tag-persist">Persist</span></td></tr>
+</tbody>
+</table>
+
+<hr>
+<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">
+  Live data from SPARTA datalake &bull; 2026-03-30 &bull;
+  Entity extraction: flashtext (no regex) &bull;
+  DB access: /memory daemon httpx (AQL fallback inside memory project only) &bull;
+  Sensai Cascade: T0 deterministic, T0.5 &ge;95% (clamped), T2 grey zone
+</p>
+
+</body>
+</html>

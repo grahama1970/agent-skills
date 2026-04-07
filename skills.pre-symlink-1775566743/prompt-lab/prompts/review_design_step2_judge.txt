@@ -1,0 +1,50 @@
+# prompt-lab-hash: sha256:7b21f8b8a0ce71f1e3586e820089a7fba6173386bd9f8950341dd729824acd0b
+# prompt-lab-eval: 2026-03-17T22:04:12.652613+00:00 score=0.0 model=pre-existing-unsealed
+# Design Audit Judge Review
+
+## Context
+You are reviewing an initial design audit (Step 1 output) to ensure accuracy, proper prioritization, and actionability.
+
+## Your Task (Step 2: Judge)
+
+Review the Step 1 audit and:
+
+1. **Validate Findings**: Are the identified issues real? Are severity ratings appropriate?
+2. **Check Specificity**: Are recommendations specific enough to implement?
+3. **Prioritize**: Which findings have the highest impact for effort?
+4. **Answer Questions**: Address any clarifying questions from Step 1
+5. **Add Missing Issues**: Did the audit miss anything obvious?
+6. **Remove False Positives**: Flag any findings that are incorrect or too nitpicky
+
+## Output Format
+
+```
+## Validation
+
+### Finding 1: [title]
+- **Verdict**: Agree / Adjust / Remove
+- **Notes**: [why, and any adjustments to severity or recommendation]
+
+### Finding 2: ...
+[repeat]
+
+## Answers to Questions
+- Q: [question from Step 1]
+  A: [your answer]
+
+## Missing Issues
+- [Any issues the audit missed]
+
+## Priority Ranking
+1. [Highest impact finding]
+2. [Second highest]
+3. ...
+
+## Overall Assessment
+[Is this audit accurate and actionable? What needs refinement?]
+```
+
+## Step 1 Audit Output
+{step1_output}
+
+Now judge the audit.

@@ -1,0 +1,3 @@
+# prompt-lab-hash: sha256:0c0792d5b8914f078cea750b7eb255e9b552265a6daaccd53b30a449ed4be8b1
+# prompt-lab-eval: 2026-03-17T22:04:07.063025+00:00 score=0.0 model=pre-existing-unsealed
+TODO: create prompt via /prompt-lab eval

@@ -277,47 +277,27 @@ def collect_recall_with_confidence(question: str, k: int = 20) -> dict:
 
 
 def collect_entities(question: str) -> dict | None:
-    """Extract entities from question text via /extract-entities skill.
+    """Extract entities via daemon /extract-entities HTTP endpoint.
 
-    Prefer direct import when available so local/dev flows and tests stay fast.
-    Fall back to the skill wrapper when the package is not importable.
-    If both fail or the result contract is invalid, fail loudly.
+    Uses the warm daemon (spaCy already loaded in-process) instead of
+    importing extract_entities directly (which reloads the model every call).
     """
-    direct_error: Exception | None = None
+    client = _get_memory_http()
     try:
-        from graph_memory.entity_extraction import extract_entities
-
-        direct = extract_entities(question[:500])
-        if direct:
-            result = direct.to_dict() if hasattr(direct, "to_dict") else {}
-            if hasattr(direct, "agent_view"):
-                result.update(direct.agent_view() or {})
-            # Pull dataclass fields needed by runner gates
-            if hasattr(direct, "resolution_map"):
-                result["resolution_map"] = direct.resolution_map
-            if hasattr(direct, "unresolved_terms"):
-                result["unresolved_terms"] = direct.unresolved_terms
-            if hasattr(direct, "all_control_ids"):
-                result["all_control_ids"] = direct.all_control_ids
-            if hasattr(direct, "related_pairs"):
-                result["related_pairs"] = direct.related_pairs
-            result.setdefault("all_control_ids", result.get("control_ids", []))
-            result.setdefault("control_ids", result.get("all_control_ids", []))
-        else:
-            result = None
+        resp = client.post(
+            "/extract-entities",
+            json={"text": question[:500]},
+        )
+        resp.raise_for_status()
+        result = resp.json()
     except Exception as exc:
-        direct_error = exc
-        result = None
-
-    if result is None:
-        result = _invoke_skill(EXTRACT_ENTITIES_SKILL, [
-            "extract", "--json", question[:500],
-        ], timeout=20)
+        raise EntityExtractionFailure(
+            f"Daemon /extract-entities call failed: {exc}"
+        )
 
     if not isinstance(result, dict):
-        detail = f"direct={direct_error!r}" if direct_error else "direct=not_attempted"
         raise EntityExtractionFailure(
-            f"Entity extraction failed: no valid result returned ({detail}; skill_result={type(result).__name__})"
+            f"Entity extraction failed: no valid result returned (type={type(result).__name__})"
         )
 
     required_fields = ("grounding_ok", "resolution_map", "unresolved_terms")
@@ -328,59 +308,13 @@ def collect_entities(question: str) -> dict | None:
             + ", ".join(missing_fields)
         )
 
-    if result and (result.get("all_control_ids") or result.get("control_ids")):
-        # Bridge unresolved_terms + not_in_corpus into warnings for plausibility gate.
-        warnings = []
-        for ut in result.get("unresolved_terms", []):
-            ut_type = ut.get("type", "phrase")
-            # Only id_like terms generate warnings. Generic phrases
-            # ("threats", "countermeasures", "techniques") are SPARTA
-            # domain vocabulary — not resolving is expected, not a warning.
-            if ut_type != "id_like":
-                continue
-            warnings.append({
-                "term": ut.get("term", ""),
-                "category": "fabricated_id",
-                "type": ut_type,
-            })
-        # Real aerospace/NIST/MITRE terms that are NOT in the SPARTA corpus.
-        # These trigger the plausibility gate → clarify flow so the user
-        # rephrases using SPARTA terms the system can actually answer.
-        for nic in result.get("not_in_corpus", []):
-            warnings.append({
-                "term": nic.get("term", ""),
-                "category": "not_in_corpus",
-                "type": "not_in_corpus",
-                "reason": nic.get("reason", ""),
-                "suggested_sparta_terms": nic.get("suggested_sparta_terms", []),
-            })
-        for ms in result.get("misspellings", []):
-            warnings.append({
-                "term": ms.get("word", ms.get("term", "")),
-                "category": "misspelling",
-                "type": "misspelling",
-                "suggestion": ms.get("suggestion", ""),
-            })
-        for typo in result.get("possible_typos", []):
-            warnings.append({
-                "term": typo.get("word", typo.get("term", "")),
-                "category": "possible_typo",
-                "type": "possible_typo",
-                "fuzzy_matches": typo.get("fuzzy_matches", []),
-            })
-        result["warnings"] = warnings
-        result["method"] = "extract_entities"
-        return result
-
-    # No control IDs found can still be a valid extraction result for natural-language
-    # questions. Normalize the empty-shape contract rather than synthesizing a success
-    # from a failed extractor.
+    # Daemon response already has warnings from agent_view(). Normalize defaults.
     result.setdefault("all_control_ids", result.get("control_ids", []))
     result.setdefault("control_ids", result.get("all_control_ids", []))
     result.setdefault("related_pairs", [])
+    result.setdefault("warnings", [])
     result.setdefault("headline", "No controls resolved")
-    result["warnings"] = []
-    result["method"] = "extract_entities"
+    result["method"] = "daemon_http"
     return result
 
 

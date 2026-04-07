@@ -1,0 +1,16 @@
+[project]
+name = "monitor-security"
+version = "0.1.0"
+description = "Nightly self-hack orchestrator with four-tier probe cascade for embry-os"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "loguru>=0.7.0,<0.7.3",
+    "httpx>=0.24.0",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.uv]
+dev-dependencies = []
+package = false

@@ -1,0 +1,192 @@
+# F-35 Block 4 Multi-Year Enhancement Program — Shared Project Context
+#
+# This file gives Margaret Chen and Jennifer Cheung the "why" behind their
+# datalake queries. Without it, they ask generic questions. With it, they
+# ask the same questions a real engineer would ask on a Tuesday morning
+# when a vendor just delivered Rev C of a critical spec.
+#
+# Both personas reference this file. Their questions should evolve as they
+# learn what's actually in the datalake and what extraction issues exist.
+
+program:
+  name: F-35 Lightning II Joint Strike Fighter
+  block: Block 4 (Technology Refresh 3 / Continuous Capability Development and Delivery)
+  prime_contractor: Lockheed Martin Aeronautics
+  location: Fort Worth, TX (Air Force Plant 4)
+  timeline: FY2024-FY2030 (multi-year procurement)
+  variants:
+    - F-35A (CTOL — Air Force)
+    - F-35B (STOVL — Marine Corps)
+    - F-35C (CV — Navy, carrier variant)
+
+# Margaret Chen's world — Pratt & Whitney propulsion
+propulsion:
+  engine: F135 Enhanced Engine Package (EEP)
+  manufacturer: Pratt & Whitney (Raytheon Technologies)
+  margaret_location: West Hartford, CT → supports Ft Worth integration
+  key_deliverables:
+    - F135-SRS-xxxx series (Software Requirements Specifications)
+    - Thermal management specs (turbine inlet temperature limits)
+    - FADEC software updates (Full Authority Digital Engine Control)
+    - Engine health monitoring data interface specs
+  vendors:
+    honeywell:
+      role: FADEC controller hardware and firmware
+      docs_expected: FADEC-ICD-xxx, FADEC-SRS-xxx
+      concern: >
+        Honeywell just delivered Rev C of the FADEC interface spec.
+        Margaret needs to verify the pipeline extracted the updated
+        temperature limit tables correctly — Rev B had 5 tables,
+        Rev C should have 7 (two new thermal margin tables added).
+    gkn_aerospace:
+      role: Fan blade assembly, composite structures
+      docs_expected: GKN-FAN-xxx structural analysis reports
+      concern: >
+        GKN's fatigue life tables use merged cells for load cases.
+        Previous extractions lost the cell merges and collapsed
+        the load case hierarchy. Margaret needs to verify S05c
+        table merger handles these correctly.
+    rolls_royce:
+      role: LiftFan (F-35B variant only)
+      docs_expected: RR-LF-xxx interface specs
+      concern: >
+        Rolls-Royce specs use UK-standard units (Celsius, bar)
+        mixed with US-standard (Fahrenheit, psi). Margaret needs
+        to verify unit columns extract correctly and aren't
+        garbled by OCR or table extraction.
+  requirements_flow: >
+    JSF Program Office (JPO) → Lockheed Martin (prime) →
+    Pratt & Whitney (engine) → Honeywell/GKN/RR (sub-tier).
+    Margaret traces requirements bidirectionally through this chain.
+    Every "shall" statement must have a Lean4 lemma or explicit gap.
+
+# Jennifer Cheung's world — NIWC Pacific mission systems
+mission_systems:
+  focus: F-35C carrier variant mission systems integration
+  organization: Naval Information Warfare Center Pacific (NIWC Pacific)
+  jennifer_location: San Diego, CA → supports Ft Worth integration
+  key_deliverables:
+    - DAS/EO-DAS sensor fusion interface specs
+    - Link-16 MIDS-JTRS datalink security architecture
+    - Cybersecurity Assessment & Authorization (A&A) packages
+    - Mission Data File (MDF) loading and verification specs
+  security_domains:
+    rmf_package:
+      standards: [NIST SP 800-37, NIST SP 800-53 Rev.5, DoDI 8510.01]
+      concern: >
+        RMF control descriptions extract as long paragraphs with
+        embedded tables. Jennifer needs to verify the pipeline
+        doesn't lose control inheritance chains (e.g., AC-2(1)
+        inherits from AC-2 which inherits from AC family).
+    stig_compliance:
+      standards: [DISA STIGs for F-35 software loads]
+      concern: >
+        STIG findings tables have CAT I/II/III severity columns
+        with color-coded cells. The pipeline strips colors but
+        should preserve the category text. Jennifer needs to
+        verify CAT I findings aren't misclassified as CAT III.
+    cui_handling:
+      standards: [DFARS 252.204-7012, NIST SP 800-171, CUI Registry]
+      concern: >
+        CUI markings appear in headers/footers of every page.
+        The pipeline should detect these as markings, not content.
+        Jennifer needs to verify S03 suspicious headers correctly
+        identifies "CUI//SP-EXPT" as a marking, not a section title.
+  network_specs:
+    protocols:
+      - Link-16 (TADIL J) message format tables
+      - BLOS (Beyond Line of Sight) link budget tables
+      - CDL (Common Data Link) bandwidth allocation matrices
+    concern: >
+      Protocol tables have very specific column structures
+      (Message ID, Word Count, Update Rate, Latency). Jennifer
+      needs to verify these extract with column alignment intact.
+
+# What Margaret and Jennifer share
+shared_context:
+  rtm:
+    description: >
+      Lockheed Martin maintains a master Requirements Traceability Matrix (RTM)
+      that links system requirements → subsystem specs → test procedures → test results.
+      Both Margaret (propulsion) and Jennifer (mission systems) feed into this RTM.
+      Extraction quality directly affects RTM completeness.
+    format: >
+      The RTM is typically a large table (500+ rows) with columns:
+      Req ID | Req Text | Source Doc | Verification Method | Test Ref | Status.
+      Table extraction must handle multi-page tables with frozen headers.
+  document_types:
+    - SRS (Software Requirements Specification) — DO-178C Section 5
+    - ICD (Interface Control Document) — cross-system interfaces
+    - SDD (Software Design Description) — architecture decomposition
+    - STP (Software Test Plan) — verification approach
+    - STR (Software Test Report) — test results and coverage
+    - SEMP (Systems Engineering Management Plan) — process governance
+    - SSP (System Security Plan) — RMF security controls
+  quality_gates:
+    extraction_target: 0.88
+    table_fidelity_target: 0.90
+    section_alignment_target: 0.90
+    fail_threshold: 0.70
+    rule: Never lower thresholds — fix the extraction, not the bar.
+
+# The arrival narrative — this drives the learning progression
+arrival:
+  situation: >
+    Margaret and Jennifer arrive at Lockheed Martin's Air Force Plant 4 in
+    Fort Worth to support Block 4 integration work. They need the datalake
+    to do their jobs — Margaret needs to trace F135 engine requirements,
+    Jennifer needs to verify cybersecurity controls. But when they first
+    query the datalake, it's an evolving mess. Tables are fragmented.
+    Section hierarchies are flattened. Values are garbled by OCR. Headers
+    and footers are polluting content. Classification markings show up as
+    section titles. They can't trust any of it.
+  first_priority: >
+    Before they can ask a single real engineering question, they have to
+    clean up the datalake. Every extraction error they find is a bug report.
+    Every fragmented table is a pipeline fix request. They are the most
+    demanding users the extraction pipeline will ever have — because if
+    Margaret's thermal limit table shows 1832 instead of 1,832°F, an engine
+    could overheat. If Jennifer's CAT I finding gets misclassified as CAT III,
+    a security control gap goes unnoticed.
+  graduation: >
+    As extraction quality improves and their trust in the data grows, they
+    gradually shift from bug hunting to real work: tracing requirements,
+    building RTMs, cross-referencing vendor deliverables, verifying STIG
+    compliance. The transition isn't a switch — it's a gradient. They never
+    stop checking quality, but the ratio of cleanup-to-engineering-work
+    shifts from 80/20 to 20/80 over time.
+
+# How their questions evolve — cleanup first, engineering later
+learning_progression:
+  week_1_cleanup:
+    - How many chunks are empty or have less than 10 words?
+    - Find tables — are column counts correct? Are merged cells preserved?
+    - Are headers and footers being extracted as content?
+    - Do page numbers appear in section text?
+    - Find figures — do they have captions or are they orphaned?
+    - Are classification markings (CUI, FOUO) appearing as section titles?
+  week_2_triage:
+    - Which extraction errors are systematic vs. one-off?
+    - Find thermal limit tables — are numeric values intact or garbled?
+    - Find compliance matrices — are all columns aligned?
+    - Do multi-page tables merge correctly or fragment?
+    - Which document types have the worst extraction quality?
+    - Are requirement IDs (REQ-xxx) preserved or lost?
+  week_3_stabilize:
+    - Find "shall" statements — are requirement IDs preserved?
+    - Start building a mini-RTM from extracted requirements
+    - Check section hierarchy — does it match the original document?
+    - Verify that previous extraction fixes actually improved quality
+    - Begin cross-document comparison for consistency
+  week_4_trust:
+    - Build a bidirectional traceability chain (req → test → result)
+    - Cross-reference vendor deliverables (Honeywell, GKN, Rolls-Royce)
+    - Verify RMF control inheritance chains survive extraction
+    - Check STIG findings tables for correct severity classification
+    - Validate Link-16 protocol tables have correct column structure
+  ongoing_operate:
+    - Monitor quality scores — are they improving or regressing?
+    - Check new vendor deliverables as they arrive
+    - Create lessons from repeated failure patterns
+    - Full RTM construction and gap analysis
+    - Cross-program requirements flow-down verification

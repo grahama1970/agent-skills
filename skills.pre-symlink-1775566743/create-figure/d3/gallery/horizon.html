@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Horizon Chart</title>
+<style>
+        body {
+            background: #f8fafc; color: #1e293b;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .canvas-header { padding: 16px 24px 8px; flex-shrink: 0; }
+        .canvas-title { font-size: 24px; font-weight: 700; }
+        .canvas-body {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 8px 24px 24px; overflow: hidden;
+            animation: fade-in 800ms cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        #chart { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="canvas-header"><div class="canvas-title">Horizon Chart</div></div>
+<div class="canvas-body"><div id="chart"></div></div>
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+// Generate multi-series time data
+const series = ["API Calls", "Batch Jobs", "Voice Requests", "Embeddings"];
+const n = 60;
+const data = window.__INJECTED_DATA__ || series.map((name, si) => ({
+  name,
+  values: Array.from({length: n}, (_, i) => ({
+    x: i,
+    y: Math.sin(i * 0.1 + si) * 30 + Math.sin(i * 0.3 + si * 2) * 15 + Math.random() * 10
+  }))
+}));
+
+const container = document.getElementById('chart');
+const rect = container.getBoundingClientRect();
+const width = rect.width || 800;
+const height = rect.height || 500;
+const margin = {top: 20, right: 24, bottom: 40, left: 120};
+const bandH = (height - margin.top - margin.bottom) / series.length;
+const bands = 3;
+
+const svg = d3.select('#chart').append('svg').attr('viewBox', `0 0 ${width} ${height}`);
+
+const x = d3.scaleLinear().domain([0, n - 1]).range([margin.left, width - margin.right]);
+const positiveColors = ["#c6dbef", "#6baed6", "#2171b5"];
+const negativeColors = ["#fcbba1", "#fb6a4a", "#cb181d"];
+
+data.forEach((s, si) => {
+  const baseY = margin.top + si * bandH;
+  const maxAbs = d3.max(s.values, d => Math.abs(d.y));
+  const step = maxAbs / bands;
+
+  const g = svg.append('g').attr('transform', `translate(0,${baseY})`);
+
+  // Clip to band height
+  const clipId = `clip-${si}`;
+  g.append('clipPath').attr('id', clipId)
+    .append('rect').attr('x', margin.left).attr('width', width - margin.left - margin.right)
+    .attr('height', bandH);
+
+  const clipped = g.append('g').attr('clip-path', `url(#${clipId})`);
+
+  for (let b = 0; b < bands; b++) {
+    const area = d3.area()
+      .x(d => x(d.x))
+      .y0(bandH)
+      .y1(d => {
+        const v = d.y - b * step;
+        return bandH - Math.max(0, Math.min(step, v)) * (bandH / step);
+      })
+      .curve(d3.curveMonotoneX);
+
+    clipped.append('path').datum(s.values)
+      .attr('d', area)
+      .attr('fill', positiveColors[b])
+      .attr('opacity', 0.9);
+
+    // Negative bands
+    const areaNeg = d3.area()
+      .x(d => x(d.x))
+      .y0(bandH)
+      .y1(d => {
+        const v = -d.y - b * step;
+        return bandH - Math.max(0, Math.min(step, v)) * (bandH / step);
+      })
+      .curve(d3.curveMonotoneX);
+
+    clipped.append('path').datum(s.values)
+      .attr('d', areaNeg)
+      .attr('fill', negativeColors[b])
+      .attr('opacity', 0.9);
+  }
+
+  // Series label
+  g.append('text').attr('x', margin.left - 8).attr('y', bandH / 2)
+    .attr('text-anchor', 'end').attr('dominant-baseline', 'central')
+    .attr('font-size', '13px').attr('fill', '#1e293b')
+    .text(s.name);
+
+  // Bottom border
+  g.append('line').attr('x1', margin.left).attr('x2', width - margin.right)
+    .attr('y1', bandH).attr('y2', bandH)
+    .attr('stroke', '#e2e8f0').attr('stroke-width', 0.5);
+});
+
+svg.append('g').attr('transform', `translate(0,${height - margin.bottom})`)
+  .call(d3.axisBottom(x).ticks(10)).selectAll('text').attr('font-size', '14px');
+svg.selectAll('.domain').attr('stroke', 'currentColor').attr('stroke-opacity', 0.3);
+</script>
+</body>
+</html>

@@ -529,6 +529,32 @@ content = resp.json()["choices"][0]["message"]["content"]
 | `response_format` | NO | Claude doesn't support json_object — ask for JSON in the prompt |
 | `tools` / `tool_choice` | YES | Full tool use: Claude (Anthropic format translation), Codex (Responses API format), Gemini (native passthrough) |
 | `stream` | YES | SSE streaming with OpenAI delta format (`data: {"choices":[{"delta":{"content":"..."}}]}`) |
+| `scillm_metadata` | YES | Opaque passthrough — see below |
+
+### scillm_metadata (opaque round-trip)
+
+Send any dict as `scillm_metadata` in the request body. The proxy strips it before the LLM sees it, then staples it back onto the response unchanged. The LLM cannot fabricate or hallucinate these values.
+
+**Use case**: In large async batches, pass the ArangoDB `_key` so you can join responses back to source documents without index tracking.
+
+```python
+# Request
+resp = await client.post(url, json={
+    "model": "text",
+    "messages": [{"role": "user", "content": "Assess this control..."}],
+    "scillm_metadata": {
+        "_key": "sparta_controls/12345",
+        "collection": "sparta_qra",
+        "stage": "S12",
+    },
+}, headers=headers)
+
+# Response — scillm_metadata round-trips untouched
+data = resp.json()
+data["scillm_metadata"]["_key"]  # → "sparta_controls/12345"
+```
+
+Works with all providers (Chutes, Gemini, Claude, Codex, Ollama, DeepSeek). The field is an arbitrary dict — add whatever fields you need. Non-streaming only (streaming responses don't carry it).
 
 ### Common mistakes that cause 500s
 

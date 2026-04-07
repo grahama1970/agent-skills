@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Strip inherited venv to prevent uv conflicts in cross-skill subprocess calls
+unset VIRTUAL_ENV
+# Unified entry point for ops-arango skill
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Enforce skill-local uv environment for python invocations.
+shopt -s expand_aliases
+alias python='uv run --project "$SCRIPT_DIR" python'
+alias python3='uv run --project "$SCRIPT_DIR" python'
+
+
+PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
+
+# Load .env if present
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -a
+    source "$PROJECT_ROOT/.env"
+    set +a
+fi
+
+usage() {
+    cat <<EOF
+ops-arango: ArangoDB operations and maintenance
+
+Commands:
+  dump                   Create database backup with retention
+  check [--json]         Run all health checks
+  embeddings [--fix]     Find/fix documents missing embeddings
+  duplicates [--report]  Detect duplicate lessons
+  orphans [--fix]        Find/fix orphaned edges
+  integrity              Verify referential integrity
+  stats [--json]         Collection statistics
+  full [--fix] [--json]  Full maintenance cycle
+
+Environment:
+  ARANGO_URL       ArangoDB endpoint (default: http://127.0.0.1:8529)
+  ARANGO_DB        Database name (default: memory)
+  ARANGO_USER      Username
+  ARANGO_PASS      Password
+  CONTAINER        Docker container name (for dump)
+  RETENTION_N      Backups to keep (default: 7)
+  EMBEDDING_SERVICE_URL  Required for embeddings --fix
+  DRY_RUN          Set to 1 for preview mode
+
+Examples:
+  ./run.sh dump
+  ./run.sh check --json
+  ./run.sh embeddings --fix
+  ./run.sh full --fix
+EOF
+}
+
+if [[ $# -lt 1 ]]; then
+    usage
+    exit 1
+fi
+
+CMD="$1"
+shift
+
+case "$CMD" in
+    dump|backup)
+        exec "$SCRIPT_DIR/scripts/dump.sh" "$@"
+        ;;
+    check|embeddings|duplicates|orphans|integrity|stats|full)
+        exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/maintain.py" "$CMD" "$@"
+        ;;
+    -h|--help|help)
+        usage
+        exit 0
+        ;;
+    *)
+        echo "Unknown command: $CMD" >&2
+        usage
+        exit 1
+        ;;
+esac

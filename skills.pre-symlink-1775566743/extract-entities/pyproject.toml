@@ -1,0 +1,13 @@
+[project]
+name = "extract-entities"
+version = "0.1.0"
+description = "Extract control IDs, domain phrases, and relationships from text"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "typer>=0.9",
+    "loguru>=0.7,<0.7.3",
+    "rich>=13.0",
+    "httpx>=0.27",
+    "flashtext>=2.7",
+    "rapidfuzz>=3.0",
+]

@@ -1,0 +1,89 @@
+Found prior research on this topic in memory.
+## Memory Recall (Prior Solutions Found)
+
+1. **Problem**: Research: kill chain find fix track target engage assess F2T2EA 
+(2026-02-20)
+   **Solution**: {"query": "kill chain find fix track target enga...
+Dogpiling on: fix common violations in Python project: handwritten-tests(71) 
+(Code Related: True)...
+Tailored queries:
+  arxiv: Python unit test anti-patterns code smell detection formal v...
+  perplexity: What are common violations in handwritten Python tests and h...
+  brave: Python testing best practices documentation pytest 2025 comm...
+  github: python pytest test violations anti-patterns handwritten test...
+  youtube: how to fix Python test code smells and violations tutorial...
+  readarr: Test Driven Development testing best practices python...
+# Dogpile Report: fix common violations in Python project: handwritten-tests(71)
+
+## Codex Technical Overview
+`handwritten-tests(71)` is usually a smell category: many tests are manually authored in repetitive, brittle patterns rather than generated from shared contracts/fixtures.
+
+**What this usually means architecturally**
+- Tests are coupled to implementation details instead of behavior contracts.
+- Per-test setup is duplicated instead of using layered fixtures/factories.
+- Assertions are narrow snapshots of exact structure/string output, causing churn.
+- Mock-heavy unit tests replace runtime sanity checks, so regressions slip through.
+
+**Internal-style patterns to adopt (Python)**
+- Contract-first test modules: one behavioral spec drives many cases.
+- Parametrized matrices (`pytest.mark.parametrize`) for variants, not copy-paste tests.
+- Non-mocked sanity tests alongside unit tests (explicit house rule): test real IO boundaries in a small happy-path suite.
+- Function-first seams: keep business logic pure; integration edges are thin and testable.
+- Stable test data builders/factories with explicit defaults, not ad hoc dicts in each test.
+
+**Common pitfalls in “fix 71 violations” efforts**
+- Mechanical rewrite only (format change, no semantic improvement).
+- Over-mocking external boundaries and never validating real protocol assumptions.
+- Keeping assertions too specific (field order, formatting noise) instead of invariants.
+- Migrating to parametrization without improving failure diagnostics (unclear case IDs).
+- Not introducing coverage for failure modes and idempotency/retry behavior.
+
+**State-of-the-art approach**
+1. Classify violations by pattern (duplication, brittle assertions, mock abuse, setup sprawl).
+2. Create reusable test primitives first: factories, fixtures, assertion helpers.
+3. Convert repeated tests to parameterized/property-based forms (Hypothesis where useful).
+4. Add a thin sanity lane (real dependencies, minimal dataset, CI-gated).
+5. Enforce with tooling: lint rules for test anti-patterns, mutation testing for test strength, flaky-test quarantine + retry telemetry.
+6. Track quality metrics beyond coverage: mutation score, flaky rate, median failure triage time.
+
+**Practical target outcome for `handwritten-tests(71)`**
+- 30-50% fewer LOC in tests.
+- Higher signal per failure (named parameter cases, invariant-focused assertions).
+- Fewer false positives on refactors.
+- Better regression catch rate via combined unit + non-mocked sanity suites.
+
+
+## AI Research (Perplexity)
+No answer.
+
+## Books & Usenet (Readarr)
+No books or Usenet results found.
+
+## Discord (Security Servers)
+> Error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.
+
+## GitHub
+### Repositories
+No repositories found.
+
+### Issues/Discussions
+No issues found.
+
+## Web Results (Brave)
+- **[Good Integration Practices - pytest documentation](https://docs.pytest.org/en/stable/explanation/goodpractices.html)**
+  ... In order to ensure that pytest is being used correctly in your project, it can be helpful to use the flake8-pytest-style flake8 plugin. flake8-pytest-style checks for common mistakes and coding style violations in pytest code, such as <strong>incorrect use of fixtures, test function names, and markers</strong>.
+- **[Python Unit Testing Best Practices For Building Reliable Applications | Pytest with Eric](https://pytest-with-eric.com/introduction/python-unit-testing-best-practices/)**
+  For instance, if your application involves user input processing, your tests should include cases that check for common security issues like <strong>SQL injection or cross-site scripting (XSS).</strong>
+- **[Python Testing – Unit Tests, Pytest, and Best Practices - DEV Community](https://dev.to/nkpydev/python-testing-unit-tests-pytest-and-best-practices-45gl)**
+  ✅ <strong>Write separate test functions instead of testing everything in one function</strong>. ✅ Use meaningful test names (test_addition_returns_correct_value). ✅ Keep test cases independent – One test should not rely on another.
+- **[pytest Tutorial: Effective Python Testing – Real Python](https://realpython.com/pytest-python-testing/)**
+  Master pytest with this hands-on tutorial. Learn fixtures, parametrize, marks, and plugins to write fast, effective Python test suites.
+- **[Testing Your Code — The Hitchhiker's Guide to Python](https://docs.python-guide.org/writing/tests/)**
+  Hypothesis is practical as well as very powerful and will often find bugs that escaped all other forms of testing.
+
+## Academic Papers (ArXiv)
+
+## Videos (YouTube)
+> Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp
+
+Research findings learned to memory (2 entries).

@@ -269,6 +269,7 @@ tasks:
 | Runner | Auto-routed when | Required Fields |
 |--------|------------------|-----------------|
 | `local` | Has `command`, no `prompt` | `command` |
+| `skill` | Has `skill` field set | `skill` (+ optional `skill_command`, `skill_args`) |
 | `scillm` | Has `prompt`, no `allowlist` + DoD assertion | `prompt` (backend/mode auto-filled) |
 | `code-runner` | Has `prompt` + `allowlist` + DoD assertion | `prompt`, `allowlist`, `definition_of_done.assertion` |
 

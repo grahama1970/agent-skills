@@ -1,0 +1,15 @@
+[project]
+name = "discover-lut"
+version = "0.1.0"
+description = "Search and retrieve cinematic LUTs"
+dependencies = [
+    "typer>=0.9.0",
+    "loguru>=0.7.0,<0.7.3",
+    "rich",
+    "httpx>=0.24.0",
+    "requests",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

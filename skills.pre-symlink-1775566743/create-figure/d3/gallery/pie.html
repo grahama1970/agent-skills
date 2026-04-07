@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pie Chart</title>
+<style>
+        body {
+            background: #f8fafc; color: #1e293b;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .canvas-header { padding: 16px 24px 8px; flex-shrink: 0; }
+        .canvas-title { font-size: 24px; font-weight: 700; }
+        .canvas-body {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 8px 24px 24px; overflow: hidden;
+            animation: fade-in 800ms cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        #chart { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="canvas-header"><div class="canvas-title">Pie Chart</div></div>
+<div class="canvas-body"><div id="chart"></div></div>
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+const data = window.__INJECTED_DATA__ || [
+  {label: "Python", value: 35}, {label: "JavaScript", value: 25},
+  {label: "TypeScript", value: 18}, {label: "Rust", value: 12},
+  {label: "Go", value: 10}
+];
+
+const container = document.getElementById('chart');
+const rect = container.getBoundingClientRect();
+const width = rect.width || 800;
+const height = rect.height || 500;
+const radius = Math.min(width, height) / 2 - 40;
+
+const svg = d3.select('#chart').append('svg')
+  .attr('viewBox', `0 0 ${width} ${height}`)
+  .append('g')
+  .attr('transform', `translate(${width / 2},${height / 2})`);
+
+const colors = d3.scaleOrdinal(d3.schemeTableau10);
+
+const pie = d3.pie().value(d => d.value).sort(null).padAngle(0.02);
+const arc = d3.arc().innerRadius(0).outerRadius(radius);
+const labelArc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius * 0.6);
+
+const arcs = svg.selectAll('g.slice').data(pie(data)).join('g').attr('class', 'slice');
+
+// Animated slices
+arcs.append('path')
+  .attr('data-label', d => d.data.label)
+  .attr('fill', (d, i) => colors(i))
+  .attr('stroke', '#fff').attr('stroke-width', 2)
+  .transition().duration(800).ease(d3.easeCubicOut)
+  .attrTween('d', function(d) {
+    const i = d3.interpolate({startAngle: 0, endAngle: 0}, d);
+    return t => arc(i(t));
+  });
+
+// Labels
+arcs.append('text')
+  .attr('transform', d => `translate(${labelArc.centroid(d)})`)
+  .attr('text-anchor', 'middle')
+  .attr('font-size', '14px').attr('fill', '#fff').attr('font-weight', 600)
+  .text(d => d.data.value > 10 ? d.data.label : '');
+
+// Percentage labels outside
+arcs.append('text')
+  .attr('transform', d => {
+    const pos = arc.centroid(d);
+    const mid = (d.startAngle + d.endAngle) / 2;
+    pos[0] = radius * 1.15 * (mid < Math.PI ? 1 : -1);
+    return `translate(${pos})`;
+  })
+  .attr('text-anchor', d => {
+    const mid = (d.startAngle + d.endAngle) / 2;
+    return mid < Math.PI ? 'start' : 'end';
+  })
+  .attr('font-size', '13px').attr('fill', '#64748b')
+  .text(d => {
+    const total = d3.sum(data, d => d.value);
+    return `${((d.data.value / total) * 100).toFixed(0)}%`;
+  });
+</script>
+</body>
+</html>

@@ -238,23 +238,30 @@ class EvidenceCaseRunner:
         with _timed("step_1b_decompose"):
             decomposition = decompose_sentence(claim_text, agent_decomposition)
 
-        # Step 2: Per-component recall + entity extraction
+        # Step 2: Per-component recall + entity extraction (parallel)
         if show_progress:
-            console.print("[dim]Step 2: Calling /memory recall + /extract-entities...[/]")
-        with _timed("step_2_recall"):
-            qra_items = collect_recall(claim_text)
-        try:
-            with _timed("step_2_entities"):
-                entities = collect_entities(claim_text)
-        except EntityExtractionFailure as exc:
+            console.print("[dim]Step 2: Calling /memory recall + /extract-entities (parallel)...[/]")
+        from concurrent.futures import ThreadPoolExecutor, Future
+        entity_error: Exception | None = None
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            recall_future = pool.submit(collect_recall, claim_text)
+            entity_future = pool.submit(collect_entities, claim_text)
+            with _timed("step_2_recall"):
+                qra_items = recall_future.result()
+            try:
+                with _timed("step_2_entities"):
+                    entities = entity_future.result()
+            except EntityExtractionFailure as exc:
+                entity_error = exc
+        if entity_error:
             steps.append({
                 "gate": "step_2_entities",
                 "passed": False,
-                "detail": f"Entity extraction failed: {exc}",
+                "detail": f"Entity extraction failed: {entity_error}",
                 "data": {
                     "system_failure": True,
                     "failure_kind": "entity_extraction_unavailable",
-                    "error": str(exc),
+                    "error": str(entity_error),
                 },
             })
             return self.store.persist_case(
@@ -265,7 +272,7 @@ class EvidenceCaseRunner:
                 score=0.0,
                 gates=steps,
                 evidence_items=[],
-                answer=f"System failure: entity extraction failed. {exc}",
+                answer=f"System failure: entity extraction failed. {entity_error}",
                 decomposition=decomposition,
             )
 

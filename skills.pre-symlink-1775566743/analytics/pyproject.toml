@@ -1,0 +1,27 @@
+[project]
+name = "analytics"
+version = "0.1.0"
+description = "Data science analytics for timestamped content consumption"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "joblib",
+    "loguru>=0.7.0,<0.7.3",
+    "pandas>=2.0.0",
+    "rich>=13.0.0",
+    "setfit",
+    "typer>=0.9.0",
+]
+
+[project.optional-dependencies]
+charts = [
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+]
+dev = [
+    "pytest>=7.4.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.4.0",
+]

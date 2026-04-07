@@ -78,6 +78,9 @@ def summarize_structured_plan(data: dict[str, Any]) -> dict[str, Any]:
                 "read_context": _as_list(task.get("read_context")),
                 "allowlist_optional": bool(task.get("allowlist_optional")),
                 "skills": _as_list(task.get("skills")),
+                "skill": str(task.get("skill") or ""),
+                "skill_command": str(task.get("skill_command") or ""),
+                "skill_args": _as_list(task.get("skill_args")),
             }
         )
     return {

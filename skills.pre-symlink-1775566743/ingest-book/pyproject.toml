@@ -1,0 +1,15 @@
+[project]
+name = "pi-skill-ingest-book"
+version = "0.1.0"
+description = "Runtime package for the ingest-book skill"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "httpx>=0.27",
+    "typer>=0.9",
+    "rich>=13.0",
+    "python-dotenv>=1.0",
+    "loguru>=0.7,<0.7.3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

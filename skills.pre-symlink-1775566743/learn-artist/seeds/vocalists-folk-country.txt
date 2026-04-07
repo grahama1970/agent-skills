@@ -1,0 +1,23 @@
+# Folk & Country Vocalists
+# Import with: ./run.sh import seeds/vocalists-folk-country.txt
+
+Sierra Ferrell
+Brennen Leigh
+Lucinda Williams
+Emmylou Harris
+Gillian Welch
+Iris DeMent
+Nanci Griffith
+Townes Van Zandt
+Guy Clark
+John Prine
+Jason Isbell
+Tyler Childers
+Sturgill Simpson
+Colter Wall
+Charley Crockett
+Margo Price
+Amanda Shires
+Sarah Jarosz
+Molly Tuttle
+Billy Strings

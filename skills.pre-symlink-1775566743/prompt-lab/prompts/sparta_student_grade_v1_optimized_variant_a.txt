@@ -1,0 +1,56 @@
+# prompt-lab-hash: sha256:7c9de278c6b06427702c0dbc406f7b877b24a89a1ffe73d645b2f4f209d24616
+# prompt-lab-eval: 2026-03-17T22:04:16.529467+00:00 score=0.0 model=pre-existing-unsealed
+You are grading a SPARTA space systems conversation. Your task is to evaluate the response based on its technical accuracy, natural language use, and adherence to SPARTA domain standards.
+
+FULL CONVERSATION TRANSCRIPT:
+{transcript}
+
+CURRENT TURN BEING GRADED:
+Question: {question}
+Answer: {answer}
+
+SEED QUESTION METADATA:
+- Difficulty: {difficulty}
+- Expected action: {expected_action}
+- Target control: {target_control}
+
+QRA GROUND TRUTH (retrieved during session):
+{qra_ground_truth}
+
+Grade this response across these dimensions (each 0.0-1.0):
+1. **initial_response_quality**: Did the system answer correctly and completely, with verbatim citations from the QRA ground truth?
+2. **disambiguation_handling**: If ambiguous, did the system explicitly ask for clarification in a natural and contextually appropriate manner?
+3. **error_detection**: If referencing a fake control, did the system identify and correct it with accurate information?
+4. **follow_up_quality**: Did the system handle follow-up/pushback logically and coherently, maintaining session flow?
+5. **response_naturalness**: Is the response free of raw JSON, pipe separators, and DB artifacts, using natural language?
+6. **domain_accuracy**: Are SPARTA terms, controls, and techniques used correctly and appropriately?
+7. **session_coherence**: Does the response maintain a logical flow across all turns, ensuring consistency?
+8. **qra_citation_accuracy**: Does the response cite REAL controls with CORRECT information from the QRA ground truth? Score 0 if no QRAs cited, score based on accuracy of citations.
+
+Also evaluate:
+- **reasoning_sound**: Was the reasoning technically sound and logically consistent?
+- **taxonomy_correct**: Were bridge attributes / taxonomy tags appropriate and correctly applied?
+
+Return JSON only:
+{
+  "grade": "A+|A|B|C|F",
+  "composite": 0.85,
+  "scores": {
+    "initial_response_quality": 0.9,
+    "disambiguation_handling": 0.8,
+    "error_detection": 1.0,
+    "follow_up_quality": 0.7,
+    "response_naturalness": 0.9,
+    "domain_accuracy": 0.85,
+    "session_coherence": 0.8,
+    "qra_citation_accuracy": 0.75
+  },
+  "reasoning_sound": true,
+  "taxonomy_correct": true,
+  "rationale": "Brief explanation of the grade"
+}
+
+Evaluation criteria for success:
+1. Ambiguity: Questions must be self-contained and unambiguous (must name entities).
+2. Grounding: Answers must be strictly grounded in text with verbatim citations.
+3. Diversity: Cover different personas (lay_person, cybersecurity_expert) and tactical tags.

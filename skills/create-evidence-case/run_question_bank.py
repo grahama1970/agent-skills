@@ -181,28 +181,40 @@ def run(
         bank = bank[:limit]
         console.print(f"[dim]Limited to first {limit} questions[/]")
 
+    workers = 5 if gates_only else 1  # daemon handles concurrent requests
     runner = EvidenceCaseRunner(gates_only=gates_only)
-    results = []
+    results: list[dict] = [{}] * len(bank)  # pre-allocate for ordered results
     total_start = time.monotonic()
+    correct_count = 0
+    done_count = 0
 
-    for idx, q in enumerate(bank, 1):
-        console.print(
-            f"\n[bold cyan]Q{idx:03d}/{len(bank)}[/] "
-            f"[{q.category}] [{q.expected_verdict}] {q.question[:80]}..."
-        )
-        result = _run_one(runner, q, idx, len(bank))
-        results.append(result)
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        # Save per-question JSON
-        q_path = out / f"q{idx:03d}.json"
-        q_path.write_text(json.dumps(result, indent=2, default=str))
+    def _process(idx_q: tuple[int, TestQuestion]) -> tuple[int, dict]:
+        idx, q = idx_q
+        return idx, _run_one(runner, q, idx, len(bank))
 
-        m = result["_meta"]
-        icon = "[green]CORRECT[/]" if m["correct"] else "[red]WRONG[/]"
-        console.print(
-            f"  {icon} expected={m['expected_verdict']} got={m['verdict_state']} "
-            f"({m['elapsed_sec']:.1f}s)"
-        )
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_process, (idx, q)): idx for idx, q in enumerate(bank, 1)}
+        for future in as_completed(futures):
+            idx, result = future.result()
+            results[idx - 1] = result
+
+            # Save per-question JSON
+            q_path = out / f"q{idx:03d}.json"
+            q_path.write_text(json.dumps(result, indent=2, default=str))
+
+            m = result["_meta"]
+            done_count += 1
+            if m["correct"]:
+                correct_count += 1
+            icon = "[green]CORRECT[/]" if m["correct"] else "[red]WRONG[/]"
+            console.print(
+                f"[bold cyan]Q{idx:03d}[/] ({done_count}/{len(bank)}) "
+                f"{icon} expected={m['expected_verdict']} got={m['verdict_state']} "
+                f"({m['elapsed_sec']:.1f}s) "
+                f"[dim]running={correct_count}/{done_count}[/]"
+            )
 
     total_elapsed = time.monotonic() - total_start
 

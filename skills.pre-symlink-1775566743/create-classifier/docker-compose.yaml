@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  classifier:
+    build: .
+    image: extractor-classifier:latest
+    runtime: nvidia
+    volumes:
+      - /mnt/storage12tb/extractor_corpus:/data
+      - ./data:/app/data
+      - ./scripts:/app/scripts
+      - ./configs:/app/configs
+      - ./templates:/app/templates
+    environment:
+      - PYTHONPATH=/app
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: python scripts/iterative_train.py --task document_type --model efficientnet_b0 --labels data/labels/deduped_labels.jsonl --output-dir data/results/s00_classifier_v1

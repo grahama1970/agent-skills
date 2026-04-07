@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import httpx
+from loguru import logger
 
 # Load .env for HF_TOKEN
 _env_path = Path(__file__).resolve().parents[3] / ".env"
@@ -235,175 +236,159 @@ def _generate_satisfied(seed: int = 42) -> list[TestQuestion]:
 
 
 # ---------------------------------------------------------------------------
-# 2. NOT_SATISFIED: Plausible terms NOT in corpus
+# 2+3. NOT_SATISFIED + INCONCLUSIVE: LLM-generated adversarial mutations
 # ---------------------------------------------------------------------------
 
-def _generate_not_satisfied(seed: int = 42) -> list[TestQuestion]:
-    """Generate questions with plausible space/security terms that don't exist
-    in the SPARTA corpus. The pipeline MUST reject these — not hallucinate.
+_ADVERSARIAL_PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompt-lab" / "prompts" / "evidence_case_adversarial_v1.txt"
 
-    Strategy: recombine real vocabulary from control names into phrases
-    that sound right but aren't indexed anywhere.
+_SCILLM_URL = "http://localhost:4001/v1/chat/completions"
+_SCILLM_KEY = "sk-dev-proxy-123"
+
+
+def _generate_adversarial(seed: int = 42) -> list[TestQuestion]:
+    """Generate adversarial questions by mutating real QRAs via /scillm.
+
+    Pulls real QRAs from daemon, sends batches of 5 to scillm with the
+    adversarial mutation prompt. Each batch returns ~18 mutations
+    (3 per source QRA + 3 UNRELATED_PAIR). Runs 3 batches concurrently.
+
+    Returns NOT_SATISFIED (FABRICATED_ID, PHANTOM_TERM, NON_SECURITY_ENTITY)
+    and INCONCLUSIVE (UNRELATED_PAIR) questions.
     """
-    questions: list[TestQuestion] = []
+    import asyncio
+    import json as _json
 
-    # Plausible-but-nonexistent space/security compound terms
-    # These combine real domain vocabulary into phrases that SOUND right
-    # but have zero matches in sparta_qra or sparta_controls
-    phantom_terms = [
-        "fusion-controlled reaction wheel shielding",
-        "quantum-resistant bus arbitration protocol",
-        "orbital debris trajectory encryption",
-        "magnetospheric plasma authentication layer",
-        "cryogenic propellant telemetry hardening",
-        "solar sail deployment integrity verification",
-        "ion thruster command sanitization",
-        "star tracker firmware attestation module",
-        "thermal vacuum chamber access provisioning",
-        "radiation belt transit key rotation",
-        "lunar relay node certificate pinning",
-        "deep space network packet deduplication",
-        "attitude determination gyroscope tampering",
-        "electric propulsion bus isolation protocol",
-        "optical crosslink frequency hopping defense",
-        "payload fairing jettison command verification",
-        "reaction control system nonce generation",
-        "space debris collision avoidance authentication",
-        "transponder frequency allocation hardening",
-        "umbilical disconnect command injection prevention",
-        "vibration test stand telemetry spoofing",
-        "xenon tank pressure sensor integrity check",
-        "zero-gravity fluid dynamics buffer overflow",
-        "ablative heat shield firmware rollback",
-        "berthing mechanism handshake protocol validation",
-        "constellation mesh network session hijacking",
-        "de-orbit burn authorization chain",
-        "electromagnetic compatibility shielding attestation",
-        "flight termination system key escrow",
-        "gravity gradient stabilization replay attack",
-    ]
-
-    # Include all phantom terms — the pipeline's job is to detect they're not real.
-    # No pre-verification. BM25 partial matches don't mean grounding exists.
-    for term in phantom_terms:
-        questions.append(TestQuestion(
-            question=f"What SPARTA countermeasures address {term}?",
-            category="not_satisfied",
-            framework="none",
-            control_id="",
-            expected_verdict="NOT_SATISFIED",
-            rationale=f"Phantom term '{term}' sounds like real space/security vocabulary "
-                      f"but is a recombination of domain words into a nonexistent concept. "
-                      f"Entity extraction should classify as not_in_corpus. "
-                      f"Pipeline must NOT hallucinate an answer.",
-            source="recombined",
-        ))
-
-    # Also add questions with fabricated control IDs
-    fabricated_ids = [
-        ("CWE-99999", "Improper Spacecraft Thermal Management"),
-        ("CAPEC-9001", "Quantum Decoherence Exploitation"),
-        ("NIST-SP-800-999", "Guidelines for Lunar Network Security"),
-        ("SPARTA-EX-9999", "Hypothetical Warp Drive Attack Vector"),
-        ("CVE-2099-00001", "Future Vulnerability in Space Protocol"),
-        ("CWE-88888", "Gravitational Lensing Side Channel"),
-        ("CAPEC-7777", "Dark Matter Signal Injection"),
-        ("ATT&CK-T9999", "Fictional Persistence Technique"),
-        ("D3FEND-D9999", "Nonexistent Defensive Technique"),
-        ("SPARTA-CM-9999", "Phantom Countermeasure"),
-    ]
-
-    for fid, fname in fabricated_ids:
-        questions.append(TestQuestion(
-            question=f"How does {fid} ({fname}) apply to spacecraft cybersecurity?",
-            category="not_satisfied",
-            framework="fabricated",
-            control_id=fid,
-            expected_verdict="NOT_SATISFIED",
-            rationale=f"Fabricated control ID {fid} does not exist in sparta_controls. "
-                      f"Entity extraction must flag as fabricated_id. "
-                      f"Pipeline must return NOT_SATISFIED.",
-            source="generated",
-        ))
-
-    return questions
-
-
-# ---------------------------------------------------------------------------
-# 3. INCONCLUSIVE: Real controls that DON'T share a technique
-# ---------------------------------------------------------------------------
-
-def _generate_inconclusive(seed: int = 42) -> list[TestQuestion]:
-    """Pair real controls from different frameworks that have NO graph path
-    between them. The pipeline should say INCONCLUSIVE, not fabricate a link.
-
-    Strategy: pick controls from unrelated domains (e.g., a web-specific CWE
-    and a space-specific SPARTA technique) and verify via /recall that they
-    don't co-occur.
-    """
-    questions: list[TestQuestion] = []
     rng = random.Random(seed)
+    system_prompt = _ADVERSARIAL_PROMPT_PATH.read_text()
 
-    # Pairs chosen from unrelated domains — web CWEs vs space SPARTA,
-    # physical CAPEC vs network NIST, etc.
-    candidate_pairs = [
-        # Web-specific CWE + space-specific SPARTA
-        ("CWE-79", "Cross-Site Scripting", "CWE",
-         "SV-MA-3", "Attitude Determination Error", "SPARTA"),
-        ("CWE-89", "SQL Injection", "CWE",
-         "SV-CF-2", "Thermal Damage", "SPARTA"),
-        ("CWE-352", "Cross-Site Request Forgery", "CWE",
-         "EX-0016", "Jamming", "SPARTA"),
-        # Physical CAPEC + network NIST
-        ("CAPEC-390", "Bypassing Physical Security", "CAPEC",
-         "AC-17", "Remote Access", "NIST"),
-        ("CAPEC-440", "Hardware Integrity Attack", "CAPEC",
-         "SC-13", "Cryptographic Protection", "NIST"),
-        # Unrelated SPARTA techniques
-        ("REC-0001.04", "Launch Facility", "SPARTA",
-         "SV-SP-7", "Software Protection", "SPARTA"),
-        # Unrelated CWE categories
-        ("CWE-120", "Buffer Copy without Checking Size", "CWE",
-         "CWE-613", "Insufficient Session Expiration", "CWE"),
-        ("CWE-476", "NULL Pointer Dereference", "CWE",
-         "CWE-1021", "Improper Restriction of Rendered UI Layers", "CWE"),
-        # CAPEC physical vs CAPEC social
-        ("CAPEC-1", "Accessing Functionality Not Properly Constrained", "CAPEC",
-         "CAPEC-410", "Information Elicitation", "CAPEC"),
-        ("CAPEC-100", "Overflow Buffers", "CAPEC",
-         "CAPEC-416", "Manipulate Human Behavior", "CAPEC"),
+    # Pull 15 diverse real QRAs from daemon (3 queries x 5 results)
+    source_qras: list[dict] = []
+    seen_keys: set[str] = set()
+    recall_queries = [
+        "spacecraft firmware tampering countermeasure",
+        "ground station authentication remote access",
+        "satellite telemetry encryption vulnerability",
     ]
-
-    # Verify pairs don't share techniques via /recall
-    verified_pairs = []
     with _client() as c:
-        for cid1, name1, fw1, cid2, name2, fw2 in candidate_pairs:
-            # Search for both together
+        for query in recall_queries:
             r = c.post("/recall", json={
-                "q": f"{cid1} {name1} {cid2} {name2}",
-                "collections": ["sparta_qra"],
-                "limit": 3,
+                "q": query, "collections": ["sparta_qra"], "limit": 8,
             })
-            items = r.json().get("items", [])
-            # If recall finds items mentioning BOTH controls, they DO share context
-            both_mentioned = any(
-                cid1 in str(it) and cid2 in str(it) for it in items
-            )
-            if not both_mentioned:
-                verified_pairs.append((cid1, name1, fw1, cid2, name2, fw2))
+            for item in r.json().get("items", []):
+                key = item.get("_key", "")
+                q_text = item.get("question", "")
+                cid = item.get("control_id", "")
+                if key and q_text and cid and key not in seen_keys:
+                    seen_keys.add(key)
+                    source_qras.append({
+                        "_key": key, "question": q_text, "control_id": cid,
+                    })
 
-    for cid1, name1, fw1, cid2, name2, fw2 in verified_pairs[:20]:
+    rng.shuffle(source_qras)
+    source_qras = source_qras[:15]
+
+    # Split into 3 batches of 5
+    batches = [source_qras[i:i + 5] for i in range(0, len(source_qras), 5)]
+
+    async def _call_one(batch_idx: int, batch: list[dict]) -> list[dict]:
+        user_lines = []
+        for i, q in enumerate(batch):
+            user_lines.append(
+                f'{i + 1}. "{q["question"]}" (control_id: {q["control_id"]})'
+            )
+        user_prompt = (
+            "Here are 5 real QRA questions from the SPARTA corpus. "
+            "For EACH question, generate 3 adversarial mutations — "
+            "one FABRICATED_ID, one PHANTOM_TERM, and one NON_SECURITY_ENTITY. "
+            "Then generate 3 additional UNRELATED_PAIR questions using control IDs "
+            "from different questions below.\n\n"
+            + "\n".join(user_lines)
+            + "\n\nReturn 18 total: 15 mutations (3 per source QRA) + 3 UNRELATED_PAIR."
+        )
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                _SCILLM_URL,
+                headers={"Authorization": f"Bearer {_SCILLM_KEY}"},
+                json={
+                    "model": "text",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.9,
+                    "scillm_metadata": {
+                        "source_keys": [q["_key"] for q in batch],
+                        "control_ids": [q["control_id"] for q in batch],
+                        "batch_index": batch_idx,
+                    },
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+            meta = data.get("scillm_metadata", {})
+            source_keys = meta.get("source_keys", [q["_key"] for q in batch])
+
+            # Parse mutations
+            mutations = _json.loads(content)
+            if isinstance(mutations, dict):
+                mutations = mutations.get("mutations", mutations.get("questions", []))
+
+            # Join source_index with metadata
+            for m in mutations:
+                idx = m.get("source_index", 0)
+                if idx < len(source_keys):
+                    m["source_key"] = source_keys[idx]
+                m["batch_index"] = batch_idx
+
+            return mutations
+
+    async def _run_all():
+        tasks = [_call_one(i, b) for i, b in enumerate(batches) if b]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        all_mutations = []
+        for r in results:
+            if isinstance(r, list):
+                all_mutations.extend(r)
+            else:
+                logger.warning("Adversarial batch failed: {}", r)
+        return all_mutations
+
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                mutations = pool.submit(lambda: asyncio.run(_run_all())).result()
+        else:
+            mutations = asyncio.run(_run_all())
+    except Exception as exc:
+        logger.warning("Adversarial generation failed, using empty set: {}", exc)
+        mutations = []
+
+    # Convert mutations to TestQuestion objects
+    _TYPE_MAP = {
+        "FABRICATED_ID": ("not_satisfied", "NOT_SATISFIED", "fabricated"),
+        "PHANTOM_TERM": ("not_satisfied", "NOT_SATISFIED", "none"),
+        "NON_SECURITY_ENTITY": ("not_satisfied", "NOT_SATISFIED", "none"),
+        "UNRELATED_PAIR": ("inconclusive", "INCONCLUSIVE", "cross"),
+    }
+    questions: list[TestQuestion] = []
+    for m in mutations:
+        mut_type = m.get("type", "")
+        category, verdict, framework = _TYPE_MAP.get(mut_type, ("not_satisfied", "NOT_SATISFIED", "none"))
         questions.append(TestQuestion(
-            question=f"How does {cid1} ({name1}) in {fw1} relate to "
-                     f"{cid2} ({name2}) in {fw2} for spacecraft threat mitigation?",
-            category="inconclusive",
-            framework="cross",
-            control_id=f"{cid1}+{cid2}",
-            expected_verdict="INCONCLUSIVE",
-            rationale=f"Controls {cid1} ({fw1}) and {cid2} ({fw2}) exist but do NOT "
-                      f"share a technique or graph path. Pipeline must return "
-                      f"INCONCLUSIVE, not fabricate a connection between them.",
-            source="generated",
+            question=m.get("question", ""),
+            category=category,
+            framework=framework,
+            control_id=m.get("payload", ""),
+            expected_verdict=verdict,
+            rationale=f"LLM-generated {mut_type} mutation of real QRA "
+                      f"(source_key={m.get('source_key', 'unknown')}). "
+                      f"Payload: {m.get('payload', '')}",
+            source=f"scillm_{mut_type.lower()}",
         ))
 
     return questions
@@ -557,17 +542,15 @@ def generate_bank(seed: int = 42) -> list[TestQuestion]:
 
     Returns:
         List of TestQuestion testing four verdict paths:
-        - satisfied (~600): real QRAs the pipeline MUST answer
-        - not_satisfied (~200): plausible phantom terms + fabricated IDs
-        - inconclusive (~50): real controls with no shared technique
-        - off_topic (~150): non-security questions for deflect
+        - satisfied (~750): real QRAs the pipeline MUST answer
+        - not_satisfied + inconclusive (~54): LLM-generated adversarial mutations
+        - off_topic (~200): non-security questions for deflect
     """
     satisfied = _generate_satisfied(seed)
-    not_satisfied = _generate_not_satisfied(seed)
-    inconclusive = _generate_inconclusive(seed)
+    adversarial = _generate_adversarial(seed)  # NOT_SATISFIED + INCONCLUSIVE
     off_topic = _generate_off_topic(seed)
 
-    bank = satisfied + not_satisfied + inconclusive + off_topic
+    bank = satisfied + adversarial + off_topic
 
     # Tag each with a stable ID
     for q in bank:

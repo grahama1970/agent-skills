@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inline Trend</title>
+<style>
+  body {
+    background: #111;
+    color: #e2e8f0;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .canvas-header {
+    padding: 24px 32px 12px;
+    flex-shrink: 0;
+  }
+  .canvas-title {
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .canvas-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 32px 32px;
+    overflow: hidden;
+    animation: fade-in 800ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #chart { width: 100%; height: 100%; }
+  /* Override D3 axis/tick colors for dark theme */
+  .domain, .tick line { stroke: #475569 !important; }
+  .tick text { fill: #e2e8f0 !important; }
+  text { fill: #e2e8f0; }
+</style>
+</head>
+<body>
+<div class="canvas-header"><div class="canvas-title">Inline Trend</div></div>
+<div class="canvas-body">
+<div id="chart"></div>
+</div>
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+const data = window.__INJECTED_DATA__ || [{"value": 10}, {"value": 15}, {"value": 12}, {"value": 18}, {"value": 22}, {"value": 20}, {"value": 25}, {"value": 30}, {"value": 28}, {"value": 35}, {"value": 32}, {"value": 40}];
+const container = document.getElementById('chart');
+const rect = container.getBoundingClientRect();
+const width = rect.width || 800;
+const height = rect.height || 200;
+
+const svg = d3.select('#chart').append('svg')
+  .attr('viewBox', `0 0 ${width} ${height}`);
+
+const margin = {top: 20, right: 40, bottom: 20, left: 40};
+
+const x = d3.scaleLinear()
+  .domain([0, data.length - 1])
+  .range([margin.left, width - margin.right]);
+
+const y = d3.scaleLinear()
+  .domain(d3.extent(data, d => d.value || d.y || 0))
+  .range([height - margin.bottom, margin.top]);
+
+const line = d3.line()
+  .x((d, i) => x(i))
+  .y(d => y(d.value || d.y || 0))
+  .curve(d3.curveMonotoneX);
+
+const area = d3.area()
+  .x((d, i) => x(i))
+  .y0(height - margin.bottom)
+  .y1(d => y(d.value || d.y || 0))
+  .curve(d3.curveMonotoneX);
+
+svg.append('path').datum(data)
+  .attr('fill', '#60a5fa').attr('fill-opacity', 0.15)
+  .attr('d', area);
+
+const path = svg.append('path').datum(data)
+  .attr('fill', 'none').attr('stroke', '#60a5fa')
+  .attr('stroke-width', 3).attr('d', line);
+
+const totalLength = path.node()?.getTotalLength() || 0;
+path.attr('stroke-dasharray', `${totalLength} ${totalLength}`)
+  .attr('stroke-dashoffset', totalLength)
+  .transition().duration(800).ease(d3.easeCubicOut)
+  .attr('stroke-dashoffset', 0);
+
+// End dot
+const last = data[data.length - 1];
+svg.append('circle')
+  .attr('cx', x(data.length - 1))
+  .attr('cy', y(last.value || last.y || 0))
+  .attr('r', 6).attr('fill', '#60a5fa');
+
+// End value label
+svg.append('text')
+  .attr('x', x(data.length - 1) + 12)
+  .attr('y', y(last.value || last.y || 0) + 5)
+  .attr('font-size', '18px').attr('fill', '#e2e8f0')
+  .attr('font-weight', '700')
+  .text(last.value || last.y || 0);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+You are a code review judge. Review the generated code review below and:
+1. Answer any clarifying questions based on the original request context
+2. Critique the proposed diff - identify issues, missing cases, logic bugs, or improvements
+3. Provide specific feedback for revision
+
+ORIGINAL REQUEST:
+{request}
+
+---
+PROPOSED SOLUTION:
+{step1_output}
+
+---
+OUTPUT FORMAT:
+## Answers to Clarifying Questions
+(Answer each question or state N/A)
+
+## Critique
+(Issues found, missing cases, suggestions)
+
+## Feedback for Revision
+(Specific actionable items for the final diff)

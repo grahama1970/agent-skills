@@ -1,0 +1,166 @@
+Now I have enough context. Let me provide the fixed unified diff addressing all the Reviewer's feedback:
+
+## FIXED Unified Diff
+
+```diff
+diff --git a/.pi/skills/code-review/code_review.py b/.pi/skills/code-review/code_review.py
+index abc1234..def5678 100644
+--- a/.pi/skills/code-review/code_review.py
++++ b/.pi/skills/code-review/code_review.py
+@@ -99,6 +99,7 @@ PROVIDERS = {
+         },
+         "default_model": "gpt-5",
+         "env": {"COPILOT_ALLOW_ALL": "1"},
++        "supports_continue": True,
+     },
+     "anthropic": {
+         "cli": "claude",
+@@ -114,6 +115,7 @@ PROVIDERS = {
+         },
+         "default_model": "sonnet",
+         "env": {},
++        "supports_continue": True,
+     },
+     "openai": {
+         "cli": "codex",  # OpenAI Codex CLI
+@@ -128,6 +130,7 @@ PROVIDERS = {
+         "default_reasoning": "high",  # Always use high reasoning for best results
+         "env": {},
+         "supports_reasoning": True,
++        "supports_continue": False,  # Codex CLI does not support --continue
+     },
+     "google": {
+         # Gemini CLI: https://geminicli.com/docs/cli/headless/
+@@ -782,7 +785,7 @@ def build(
+     objectives: Optional[list[str]] = typer.Option(None, "--objective", "-o", help="Objectives (repeatable)"),
+     acceptance: Optional[list[str]] = typer.Option(None, "--acceptance", "-a", help="Acceptance criteria"),
+     touch_points: Optional[list[str]] = typer.Option(None, "--touch", help="Known touch points"),
+-    output: Optional[Path] = typer.Option(None, "--output", help="Write to file instead of stdout"),
++    output: Optional[Path] = typer.Option(None, "--output", "-O", help="Write to file instead of stdout"),
+     auto_context: bool = typer.Option(False, "--auto-context", "-A", help="Auto-detect repo, branch, modified files, and context"),
+ ):
+     """Build a review request markdown file from options.
+@@ -1671,10 +1674,18 @@ async def _loop_async(
+         if save_intermediate:
+             (output_dir / f"round{i}_review.md").write_text(reviewer_output)
+ 
+-        # LGTM Check: Look for explicit approval signal in first few lines
++        # LGTM Check: Look for explicit approval signal in first few lines.
++        # Normalize whitespace and use word boundary checks to avoid false positives.
+         first_lines = "\n".join(reviewer_output.strip().split("\n")[:3]).upper()
+-        is_lgtm = ("LGTM" in first_lines or 
+-                   "LOOKS GOOD TO ME" in first_lines or
+-                   ("LOOKS GOOD" in first_lines and "APPROVED" in first_lines))
++        first_lines_normalized = " ".join(first_lines.split())  # Collapse whitespace
++        
++        # Check for negations first - these should NOT be considered approval
++        has_negation = any(neg in first_lines_normalized for neg in [
++            "NOT LGTM", "NO LGTM", "NOT YET LGTM", "LGTM? NO", "LGTM - NO"
++        ])
++        is_lgtm = (not has_negation and
++                   ("LGTM" in first_lines_normalized or
++                    "LOOKS GOOD TO ME" in first_lines_normalized or
++                    ("LOOKS GOOD" in first_lines_normalized and "APPROVED" in first_lines_normalized)))
+         if is_lgtm:
+             typer.echo("\n[Reviewer] APPROVED (LGTM detected)", err=True)
+             break
+diff --git a/.pi/skills/code-review/SKILL.md b/.pi/skills/code-review/SKILL.md
+index abc1234..def5678 100644
+--- a/.pi/skills/code-review/SKILL.md
++++ b/.pi/skills/code-review/SKILL.md
+@@ -91,11 +91,13 @@ Run an automated feedback loop where one agent (Coder) fixes code based on anoth
+ | `--add-dir`           | `-d`  | Add directory for file access                           |
+ | `--workspace`         | `-w`  | Copy local paths to temp workspace                      |
+ | `--save-intermediate` | `-s`  | Save logs and diffs                                     |
++| `--reasoning`         |       | Reasoning effort for Reviewer (openai only, default: high) |
++| `--output-dir`        | `-o`  | Output directory (default: reviews)                     |
+ 
+ ```bash
+-code_review.py loop \
++python .pi/skills/code-review/code_review.py loop \
+   --coder-provider anthropic --coder-model opus-4.5 \
+   --reviewer-provider openai --reviewer-model gpt-5.2-codex \
+   --rounds 5 --file request.md
+ ```
+ 
+@@ -109,17 +111,17 @@ Run the complete iterative review pipeline with one provider:
+ 
+ ```bash
+ # Default (GitHub Copilot)
+-code_review.py review-full --file request.md
++python .pi/skills/code-review/code_review.py review-full --file request.md
+ 
+ # Specific provider/model
+-code_review.py review-full --file request.md --provider anthropic --model opus-4.5
++python .pi/skills/code-review/code_review.py review-full --file request.md --provider anthropic --model opus-4.5
+ ```
+ 
+ ### build (Request Generator)
+ 
+ Build a request markdown file from options. Use `--auto-context` to automatically populate repo info and context.
+ 
+ | Option           | Short | Description                         |
+ | ---------------- | ----- | ----------------------------------- |
+ | `--title`        | `-t`  | Title describing the fix (required) |
+@@ -128,10 +130,10 @@ Build a request markdown file from options. Use `--auto-context` to automaticall
+ | `--branch`       | `-b`  | Branch name                         |
+ | `--path`         | `-p`  | Paths of interest (repeatable)      |
+ | `--summary`      | `-s`  | Problem summary                     |
+-| `--output`       |       | Write to file instead of stdout     |
++| `--output`       | `-O`  | Write to file instead of stdout     |
+ 
+ ```bash
+ # Auto-gather context (Recommended)
+-code_review.py build -A -t "Fix Auth Bug" --summary "Fixing token expiry" -o request.md
++python .pi/skills/code-review/code_review.py build -A -t "Fix Auth Bug" --summary "Fixing token expiry" -O request.md
+ ```
+ 
+diff --git a/.pi/skills/code-review/README.md b/.pi/skills/code-review/README.md
+index abc1234..def5678 100644
+--- a/.pi/skills/code-review/README.md
++++ b/.pi/skills/code-review/README.md
+@@ -6,13 +6,13 @@ AI-powered code review and patch generation with support for multiple providers
+ 
+ ```bash
+ # 1. Build a request (auto-detects repo, branch, modified files)
+-uv run code_review.py build -A -t "Fix auth bug" --summary "Token expiry issue" -o request.md
++uv run .pi/skills/code-review/code_review.py build -A -t "Fix auth bug" --summary "Token expiry issue" -O request.md
+ 
+ # 2. Run the Coder-Reviewer loop
+-uv run code_review.py loop --file request.md
++uv run .pi/skills/code-review/code_review.py loop --file request.md
+ 
+ # 3. Or use a single provider
+-uv run code_review.py review-full --file request.md --provider anthropic
++uv run .pi/skills/code-review/code_review.py review-full --file request.md --provider anthropic
+ ```
+ 
+ ## Features
+@@ -21,7 +21,7 @@ uv run code_review.py review-full --file request.md --provider anthropic
+ | ----------------------- | ---------------------------------------------------- |
+ | **Multi-Provider**      | GitHub Copilot, Claude, Codex, Gemini                |
+ | **Coder-Reviewer Loop** | Opus writes code, Codex reviews—automated pingpong   |
+-| **Auto-Context**        | Gathers git status, README, CONTEXT.md automatically |
++| **Auto-Context**        | Gathers git diff, README or CONTEXT.md automatically |
+ | **Git-Aware**           | Warns about uncommitted/unpushed changes             |
+```
+
+---
+
+## Summary of Fixes
+
+| Issue | Severity | Location | Fix |
+|-------|----------|----------|-----|
+| **LGTM false positives** | High | `code_review.py:1674-1686` | Added negation guard to reject "NOT LGTM", "NO LGTM" etc. before checking for approval |
+| **Missing `supports_continue` flags** | Medium | `code_review.py:100,116,131` | Added explicit `supports_continue: True` for github/anthropic, `False` for openai |
+| **SKILL.md review-full paths** | Medium | `SKILL.md:113,116` | Changed from `code_review.py` to `python .pi/skills/code-review/code_review.py` |
+| **README Quick Start paths** | Medium | `README.md:9,12,15` | Changed from `uv run code_review.py` to `uv run .pi/skills/code-review/code_review.py` |
+| **Build `-O` short option** | Minor | `code_review.py:785`, `SKILL.md:131,135`, `README.md:9` | Added `-O` alias for `--output` (uppercase to avoid conflict with `-o` for `--objective`) |
+| **Missing loop docs** | Minor | `SKILL.md:94-95` | Added `--reasoning` and `--output-dir` to the loop options table |
+| **README auto-context description** | Minor | `README.md:24` | Changed "git status" to "git diff" to match implementation |
+
+**Notes:**
+- The `-O` (uppercase) short flag avoids conflict with `-o` used by `--objective`
+- All SKILL.md examples now use explicit paths runnable from repo root
+- README uses `uv run` style with full path for user convenience
+- Negation check list covers common reviewer phrasing patterns

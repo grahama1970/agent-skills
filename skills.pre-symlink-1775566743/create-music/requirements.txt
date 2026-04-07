@@ -1,0 +1,17 @@
+# Core dependencies
+typer>=0.9.0
+rich>=13.0.0
+numpy>=1.24.0
+scipy>=1.10.0
+soundfile>=0.12.0
+
+# Audio processing
+torch>=2.0.0
+torchaudio>=2.0.0
+demucs>=4.0.0
+
+# Optional: MusicGen (large, install separately)
+# audiocraft>=1.0.0
+
+# Optional: UVR models (install separately)
+# audio-separator>=0.17.0

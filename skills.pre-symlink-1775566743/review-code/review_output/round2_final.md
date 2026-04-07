@@ -1,0 +1,212 @@
+> **Review Metadata**: Round 2 | Final Diff | Provider: github | Model: claude-sonnet-4.5
+---
+
+```diff
+Fix security, reliability, and validation gaps in create-subagent
+
+--- a/.pi/skills/create-subagent/server.py
++++ b/.pi/skills/create-subagent/server.py
+@@ -176,17 +176,28 @@ def _build_cmd(backend_name: str, model: str, prompt: str,
+ def _clean_env(backend_name: str) -> dict:
+     """Return env dict with backend-specific guards removed.
+ 
+-    Preserves EMBEDDING_SERVICE_URL and MEMORY_ARANGO_URL so CLI agents
+-    inside the container can access host memory/embedding services.
++    Uses blocklist approach to prevent credential leaks while preserving
++    memory/embedding service URLs needed by CLI subagents.
++    
++    Blocklist includes cloud provider credentials and API keys to prevent
++    accidental leaks to subprocess environments.
+     """
+-    env = os.environ.copy()
++    # Blocklist: known-dangerous credential/auth env vars
++    blocklist = {
++        "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN",
++        "GH_TOKEN", "GITHUB_TOKEN", "SSH_AUTH_SOCK", "NPM_TOKEN",
++        "DOCKER_AUTH", "DOCKER_CONFIG", "GCR_JSON_KEY",
++        "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY",
++        "AZURE_CLIENT_SECRET", "AZURE_TENANT_ID",
++    }
++    env = {k: v for k, v in os.environ.items() if k not in blocklist}
++    
+     cfg = BACKENDS.get(backend_name, {})
+     for var in cfg.get("env_strip", []):
+         env.pop(var, None)
+-    # Ensure memory/embedding URLs are always available to subprocesses
++    
++    # Restore memory/embedding service URLs (needed by CLI subagents)
+     for key in ("EMBEDDING_SERVICE_URL", "MEMORY_ARANGO_URL"):
+-        val = os.environ.get(key)
+-        if val:
+-            env[key] = val
++        if key in os.environ:
++            env[key] = os.environ[key]
+     return env
+ 
+@@ -268,9 +279,9 @@ class ChatResponse(BaseModel):
+ async def chat(req: ChatRequest):
+     """Send a prompt to a subagent and wait for the complete response."""
+     backend_name, model = resolve_backend(req.model)
+-    cfg = BACKENDS.get(backend_name)
+-    if not cfg:
+-        raise HTTPException(status_code=400, detail=f"Unknown backend: {backend_name}")
++    if backend_name not in BACKENDS:
++        raise HTTPException(status_code=400, detail=f"Backend not configured: {backend_name}")
++    cfg = BACKENDS[backend_name]
+ 
+     cmd = _build_cmd(backend_name, model, req.prompt, req.max_turns, req.system_prompt)
+     t0 = time.monotonic()
+@@ -283,11 +294,13 @@ async def chat(req: ChatRequest):
+     )
+ 
+     try:
+-        result_text, num_events, events = await _collect_with_idle_timeout(
++        result_text, num_events, events, stderr_text = await _collect_with_idle_timeout(
+             proc, req.idle_timeout, backend_name,
+         )
+     except TimeoutError:
+         proc.kill()
++        await proc.wait()
+         raise HTTPException(
+             status_code=504,
+             detail=f"{backend_name} idle for {req.idle_timeout}s",
+@@ -302,19 +315,13 @@ async def chat(req: ChatRequest):
+     exit_code = proc.returncode or 0
+ 
+     if exit_code != 0 and not result_text:
+-        stderr = ""
+-        if proc.stderr:
+-            stderr = (await proc.stderr.read()).decode()
+         raise HTTPException(
+             status_code=502,
+-            detail=f"{backend_name} exited {exit_code}: {stderr[:500]}",
++            detail=f"{backend_name} exited {exit_code}: {stderr_text[:500]}",
+         )
+ 
+     cost_usd, tokens_in, tokens_out = _extract_usage_from_events(events)
+ 
+     # Try stderr for token info from codex/gemini if no structured events
+-    stderr_text = ""
+-    if proc.stderr:
+-        stderr_text = (await proc.stderr.read()).decode()
+     if not tokens_in and stderr_text:
+         t_in, t_out = _parse_tokens_from_stderr(stderr_text)
+         tokens_in = t_in or tokens_in
+@@ -344,9 +351,9 @@ async def chat(req: ChatRequest):
+ async def chat_stream(req: ChatRequest):
+     """Stream subagent response as Server-Sent Events."""
+     backend_name, model = resolve_backend(req.model)
+-    cfg = BACKENDS.get(backend_name)
+-    if not cfg:
+-        raise HTTPException(status_code=400, detail=f"Unknown backend: {backend_name}")
++    if backend_name not in BACKENDS:
++        raise HTTPException(status_code=400, detail=f"Backend not configured: {backend_name}")
++    cfg = BACKENDS[backend_name]
+ 
+     cmd = _build_cmd(backend_name, model, req.prompt, req.max_turns, req.system_prompt)
+ 
+@@ -379,6 +386,7 @@ async def chat_stream(req: ChatRequest):
+                             "backend": backend_name,
+                         })
+                         proc.kill()
++                        await proc.wait()
+                         break
+                     yield _sse("heartbeat", {
+                         "elapsed_ms": int((time.monotonic() - t0) * 1000),
+@@ -424,14 +432,17 @@ async def chat_stream(req: ChatRequest):
+ async def _collect_with_idle_timeout(
+     proc: asyncio.subprocess.Process,
+     idle_timeout: int,
+     backend_name: str,
+-) -> tuple[str, int, list[dict]]:
++) -> tuple[str, int, list[dict], str]:
+     """Read output from proc, enforcing idle timeout.
+ 
+     For Claude (stream-json): parses JSON events.
+     For Codex/Gemini: collects plain text lines.
++    
++    Returns: (result_text, num_events, events, stderr_text)
++    Note: stderr_text is read with 2s timeout after process completes,
++    may be truncated for very large stderr streams.
+     """
+     events: list[dict] = []
+     text_lines: list[str] = []
+     result_text = ""
+@@ -466,11 +477,18 @@ async def _collect_with_idle_timeout(
+             text_lines.append(line_str)
+ 
+     await proc.wait()
++    
++    # Read stderr after process completes (with timeout to prevent hangs)
++    stderr_text = ""
++    if proc.stderr:
++        try:
++            stderr_text = (await asyncio.wait_for(proc.stderr.read(), timeout=2.0)).decode()
++        except asyncio.TimeoutError:
++            stderr_text = "(stderr read timeout)"
+ 
+     if not result_text:
+         if text_lines:
+             result_text = "\n".join(text_lines)
+         else:
+             result_text = _extract_text_so_far(events)
+ 
+-    return result_text, num_events, events
++    return result_text, num_events, events, stderr_text
+--- a/.pi/skills/create-subagent/run.sh
++++ b/.pi/skills/create-subagent/run.sh
+@@ -75,6 +75,12 @@ start_container() {
+         build_image
+     fi
+ 
++    # Validate Claude OAuth credentials exist and are valid JSON
+     if [[ ! -f "${CLAUDE_HOME}/.credentials.json" ]]; then
+         echo "ERROR: No OAuth credentials at ${CLAUDE_HOME}/.credentials.json"
+         echo "Run 'claude' interactively first to authenticate."
+         exit 1
+     fi
++    if ! python3 -c "import sys, json; json.load(open('${CLAUDE_HOME}/.credentials.json'))" 2>/dev/null; then
++        echo "ERROR: ${CLAUDE_HOME}/.credentials.json is not valid JSON"
++        exit 1
++    fi
+ 
+     # --- Volumes: auth dirs ---
+@@ -104,10 +110,11 @@ start_container() {
+     local -a env_args=()
+     if [[ "$with_memory" == "true" ]]; then
++        # Pass service URLs - container will use these if available
+         env_args+=(-e "EMBEDDING_SERVICE_URL=${EMBEDDING_SERVICE_URL}")
+         env_args+=(-e "MEMORY_ARANGO_URL=${MEMORY_ARANGO_URL}")
+-        echo "  Memory: ${MEMORY_ARANGO_URL}"
+-        echo "  Embedding: ${EMBEDDING_SERVICE_URL}"
++        echo "  Memory: ${MEMORY_ARANGO_URL}"
++        echo "  Embedding: ${EMBEDDING_SERVICE_URL}"
+     fi
+ 
+     # Use host network so container can reach ArangoDB, embedding service,
+--- a/.pi/skills/create-subagent/sanity.sh
++++ b/.pi/skills/create-subagent/sanity.sh
+@@ -36,7 +36,13 @@ fi
+ 
+ # 5. OAuth creds exist (Claude)
+ if [[ ! -f "${HOME}/.claude/.credentials.json" ]]; then
+-    echo "WARN: No OAuth credentials at ~/.claude/.credentials.json"
++    echo "WARN: No OAuth credentials at ~/.claude/.credentials.json (container will fail to start)"
++else
++    # Validate it's valid JSON
++    if ! python3 -c "import sys, json; json.load(open('${HOME}/.claude/.credentials.json'))" 2>/dev/null; then
++        echo "FAIL: ~/.claude/.credentials.json is not valid JSON"
++        ERRORS=$((ERRORS + 1))
++    fi
+ fi
+ 
+ # 7. All three CLIs available on host
+```
+
+
+Total usage est:       1 Premium request
+Total duration (API):  42.9s
+Total duration (wall): 44.7s
+Total code changes:    0 lines added, 0 lines removed
+Usage by model:
+    claude-sonnet-4.5    72.1k input, 2.7k output, 0 cache read, 0 cache write (Est. 1 Premium request)

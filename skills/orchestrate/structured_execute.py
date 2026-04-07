@@ -2,6 +2,7 @@
 
 Executes JSON/YAML orchestration plans explicitly by runner type:
 - local: deterministic shell command
+- skill: compiled skill invocation via run.sh (no LLM, deterministic subprocess)
 - scillm: one-shot HTTP completion
 - code-runner: iterative run-and-debug loop via /code-runner skill
 

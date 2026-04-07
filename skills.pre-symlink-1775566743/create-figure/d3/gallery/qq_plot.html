@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Q-Q Plot</title>
+<style>
+        body {
+            background: #f8fafc; color: #1e293b;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .canvas-header { padding: 16px 24px 8px; flex-shrink: 0; }
+        .canvas-title { font-size: 24px; font-weight: 700; }
+        .canvas-body {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 8px 24px 24px; overflow: hidden;
+            animation: fade-in 800ms cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        #chart { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="canvas-header"><div class="canvas-title">Q-Q Plot</div></div>
+<div class="canvas-body"><div id="chart"></div></div>
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+function randn() { return Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random()); }
+
+// Inverse normal CDF approximation (Beasley-Springer-Moro)
+function qnorm(p) {
+  if (p <= 0) return -Infinity;
+  if (p >= 1) return Infinity;
+  if (p === 0.5) return 0;
+  const a = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2,
+             1.383577518672690e2, -3.066479806614716e1, 2.506628277459239e0];
+  const b = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2,
+             6.680131188771972e1, -1.328068155288572e1];
+  const c = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838e0,
+             -2.549732539343734e0, 4.374664141464968e0, 2.938163982698783e0];
+  const d = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996e0, 3.754408661907416e0];
+  const pLow = 0.02425, pHigh = 1 - pLow;
+  let q, r;
+  if (p < pLow) {
+    q = Math.sqrt(-2 * Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+           ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  } else if (p <= pHigh) {
+    q = p - 0.5; r = q * q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+           (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  } else {
+    q = Math.sqrt(-2 * Math.log(1 - p));
+    return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+            ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  }
+}
+
+// Generate sample data (mostly normal + some skew)
+const n = 100;
+const sample = window.__INJECTED_DATA__ ? window.__INJECTED_DATA__.map(d => d.value || d.x || d) : Array.from({length: n}, () => randn() * 1.2 + 0.3).sort((a, b) => a - b);
+
+// Theoretical quantiles
+const points = sample.map((v, i) => {
+  const p = (i + 0.5) / n;
+  return {theoretical: qnorm(p), sample: v};
+});
+
+const container = document.getElementById('chart');
+const rect = container.getBoundingClientRect();
+const width = rect.width || 800;
+const height = rect.height || 500;
+const margin = {top: 20, right: 24, bottom: 60, left: 64};
+
+const svg = d3.select('#chart').append('svg').attr('viewBox', `0 0 ${width} ${height}`);
+
+const xExt = d3.extent(points, d => d.theoretical);
+const yExt = d3.extent(points, d => d.sample);
+const x = d3.scaleLinear().domain(xExt).nice().range([margin.left, width - margin.right]);
+const y = d3.scaleLinear().domain(yExt).nice().range([height - margin.bottom, margin.top]);
+
+// Reference line (y = x if standard normal)
+const refMin = Math.max(xExt[0], yExt[0]);
+const refMax = Math.min(xExt[1], yExt[1]);
+svg.append('line')
+  .attr('x1', x(refMin)).attr('y1', y(refMin))
+  .attr('x2', x(refMax)).attr('y2', y(refMax))
+  .attr('stroke', '#EF4444').attr('stroke-width', 2)
+  .attr('stroke-dasharray', '6,4').attr('opacity', 0.7);
+
+// Points
+svg.selectAll('circle').data(points).join('circle')
+  .attr('cx', d => x(d.theoretical))
+  .attr('cy', d => y(d.sample))
+  .attr('r', 3)
+  .attr('fill', '#4F46E5').attr('fill-opacity', 0.6);
+
+// Axes
+svg.append('g').attr('transform', `translate(0,${height - margin.bottom})`)
+  .call(d3.axisBottom(x).ticks(8)).selectAll('text').attr('font-size', '14px');
+svg.append('g').attr('transform', `translate(${margin.left},0)`)
+  .call(d3.axisLeft(y).ticks(6)).selectAll('text').attr('font-size', '14px');
+svg.selectAll('.domain, .tick line').attr('stroke', 'currentColor').attr('stroke-opacity', 0.3);
+
+// Axis labels
+svg.append('text').attr('x', width / 2).attr('y', height - 10)
+  .attr('text-anchor', 'middle').attr('font-size', '14px').attr('fill', '#64748b')
+  .text('Theoretical Quantiles');
+svg.append('text').attr('transform', `rotate(-90)`).attr('x', -height / 2).attr('y', 18)
+  .attr('text-anchor', 'middle').attr('font-size', '14px').attr('fill', '#64748b')
+  .text('Sample Quantiles');
+</script>
+</body>
+</html>

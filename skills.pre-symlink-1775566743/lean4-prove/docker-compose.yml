@@ -1,0 +1,34 @@
+# Lean4 Compilation Service
+# Usage: docker compose up -d
+# Health: curl http://localhost:8604/health
+
+services:
+  lean4-prove:
+    build: .
+    container_name: lean4-prove-service
+    network_mode: host
+    environment:
+      - LEAN4_SERVICE_PORT=8604
+      - LEAN4_WORKERS=4
+      - LEAN4_TIMEOUT=60
+      - LEAN4_REQUIRE=mathlib
+      - SCILLM_API_BASE=http://127.0.0.1:4001
+      - SCILLM_PROXY_KEY=sk-dev-proxy-123
+    restart: unless-stopped
+    # Lake cache persists across container restarts
+    volumes:
+      - lean4-lake-cache:/root/.elan
+      - lean4-mathlib-cache:/tmp
+      # Mount service code for hot-reload without rebuild
+      - ./service.py:/app/service.py:ro
+      - ./compiler.py:/app/compiler.py:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; r=httpx.get('http://127.0.0.1:8604/health',timeout=5); assert r.status_code==200"]
+      interval: 30s
+      timeout: 10s
+      start_period: 600s
+      retries: 3
+
+volumes:
+  lean4-lake-cache:
+  lean4-mathlib-cache:

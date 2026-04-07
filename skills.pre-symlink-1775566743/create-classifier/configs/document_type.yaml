@@ -1,0 +1,15 @@
+task_name: document_type
+num_classes: 4
+input_size: [3, 224, 224]
+model:
+  name: efficientnet_b0
+  pretrained: true
+training:
+  batch_size: 32
+  learning_rate: 0.001
+  epochs: 10
+classes:
+  - stress_test
+  - requirements_spec
+  - arxiv
+  - sparta_stress_test

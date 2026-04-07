@@ -1,0 +1,8 @@
+[project]
+name = "rate-limit-recovery"
+version = "0.1.0"
+description = "Recover from rate limits by collecting session data and logs"
+requires-python = ">=3.11,<3.13"
+
+dependencies = [    "typer>=0.9.0",
+]

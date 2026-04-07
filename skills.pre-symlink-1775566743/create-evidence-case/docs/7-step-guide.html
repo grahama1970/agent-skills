@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>/create-evidence-case — 7-Step Agent Flow</title>
+<style>
+  /* ── NVIS MIL-STD-3009 Color System ───────────────────────���─── */
+  :root {
+    --nvis-red:    #ff4444;
+    --nvis-amber:  #ffaa00;
+    --nvis-green:  #00ff88;
+    --nvis-blue:   #4a9eff;
+    --bg:          #141414;
+    --bg-card:     #1a1a1a;
+    --bg-code:     #0d0d0d;
+    --border:      rgba(255, 255, 255, 0.13);
+    --text:        #e0e0e0;
+    --text-dim:    #888;
+    --text-bright: #fff;
+    --satisfied:   var(--nvis-green);
+    --inconclusive:var(--nvis-amber);
+    --not-sat:     var(--nvis-red);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    color: var(--text-bright);
+    font-size: 1.5rem;
+    border-bottom: 2px solid var(--nvis-blue);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .subtitle {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+  }
+
+  /* ── Pipeline connector ─────────────────��───────────────────── */
+  .pipeline {
+    position: relative;
+    padding-left: 2.5rem;
+  }
+  .pipeline::before {
+    content: '';
+    position: absolute;
+    left: 1.1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+
+  /* ── Step cards ─────────────────────────────────────────────── */
+  .step {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .step::before {
+    content: attr(data-step);
+    position: absolute;
+    left: -2.5rem;
+    top: 1.25rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--nvis-blue);
+    color: var(--nvis-blue);
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 2rem;
+  }
+
+  .step-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--nvis-blue);
+    margin-bottom: 0.25rem;
+  }
+  .step-role {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+  }
+  .step-role .agent { color: var(--nvis-amber); }
+  .step-role .skill { color: var(--nvis-green); }
+  .step-role .critical { color: var(--nvis-red); }
+
+  .step-body p {
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  /* ── Section labels inside steps ────────────────────────────── */
+  .label {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 3px;
+    margin-bottom: 0.4rem;
+  }
+  .label-input  { background: rgba(74,158,255,0.15); color: var(--nvis-blue); }
+  .label-output { background: rgba(0,255,136,0.15);  color: var(--nvis-green); }
+  .label-gate   { background: rgba(255,68,68,0.15);  color: var(--nvis-red); }
+  .label-cmd    { background: rgba(255,170,0,0.15);  color: var(--nvis-amber); }
+
+  /* ── Code blocks ────────────────────────────────────────────── */
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    font-size: 0.78rem;
+    overflow-x: auto;
+    margin: 0.5rem 0;
+    line-height: 1.5;
+  }
+  code {
+    font-family: inherit;
+    color: var(--nvis-green);
+  }
+  pre code { color: var(--text); }
+  .cmd { color: var(--nvis-amber); }
+  .key { color: var(--nvis-blue); }
+  .val { color: var(--nvis-green); }
+  .dim { color: var(--text-dim); }
+  .warn { color: var(--nvis-red); }
+
+  /* ── Data flow arrow ────────────────────────────────��───────── */
+  .flow {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    padding: 0.25rem 0;
+    margin: -0.75rem 0 0.75rem 0;
+  }
+  .flow::before { content: '▼ '; color: var(--nvis-blue); }
+
+  /* ── Decision table ─────────────────────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin: 0.5rem 0;
+  }
+  th {
+    text-align: left;
+    color: var(--nvis-blue);
+    border-bottom: 1px solid var(--border);
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    vertical-align: top;
+  }
+
+  /* ── Verdict badges ─────────────────────────────────────────── */
+  .verdict {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.03em;
+  }
+  .v-satisfied    { background: rgba(0,255,136,0.15); color: var(--satisfied); border: 1px solid var(--satisfied); }
+  .v-inconclusive { background: rgba(255,170,0,0.15); color: var(--inconclusive); border: 1px solid var(--inconclusive); }
+  .v-not-sat      { background: rgba(255,68,68,0.15); color: var(--not-sat); border: 1px solid var(--not-sat); }
+
+  /* ── Gate result indicator ──────────────────────────��───────── */
+  .gate-pass { color: var(--nvis-green); }
+  .gate-pass::before { content: '● PASS — '; font-weight: bold; }
+  .gate-fail { color: var(--nvis-red); }
+  .gate-fail::before { content: '● FAIL — '; font-weight: bold; }
+
+  /* ── Conditional branch ─────────────────────────────────────── */
+  .branch {
+    background: rgba(255,170,0,0.05);
+    border-left: 3px solid var(--nvis-amber);
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    font-size: 0.8rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .branch-title {
+    color: var(--nvis-amber);
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* ── Early exit ─────────────────────────────────────────────── */
+  .early-exit {
+    background: rgba(255,68,68,0.08);
+    border-left: 3px solid var(--nvis-red);
+    padding: 0.5rem 1rem;
+    margin: 0.5rem 0;
+    font-size: 0.8rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .early-exit strong { color: var(--nvis-red); }
+
+  /* ── Worked example ─────────────────────────────────────────── */
+  .example {
+    background: rgba(74,158,255,0.05);
+    border-left: 3px solid var(--nvis-blue);
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+    font-size: 0.8rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .example-q {
+    color: var(--text-bright);
+    font-style: italic;
+    margin-bottom: 0.4rem;
+  }
+
+  /* ── Summary box ────────────────────────────────���───────────── */
+  .summary-box {
+    background: var(--bg-card);
+    border: 2px solid var(--nvis-blue);
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    margin-top: 2rem;
+  }
+  .summary-box h2 {
+    color: var(--nvis-blue);
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  ul, ol { padding-left: 1.2rem; font-size: 0.85rem; }
+  li { margin-bottom: 0.3rem; }
+
+  /* ── Responsive ───────────────────────��─────────────────────── */
+  @media (max-width: 600px) {
+    body { padding: 1rem; }
+    .pipeline { padding-left: 2rem; }
+    .step::before { left: -2rem; width: 1.5rem; height: 1.5rem; font-size: 0.65rem; line-height: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>/create-evidence-case — 7-Step Agent Flow</h1>
+<p class="subtitle">
+  CAE (Claims-Arguments-Evidence) tree builder. The agent orchestrates existing skills,
+  reasons about results, and makes all judgment calls. Python is a thin data collector.<br>
+  6 deterministic gates. 3 possible verdicts. No magic floats.
+</p>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CORE PRINCIPLE
+     ════════════════════════════════════════════════════════════════ -->
+<div style="background:rgba(255,68,68,0.08); border:1px solid var(--nvis-red); border-radius:6px; padding:1rem 1.25rem; margin-bottom:2rem;">
+  <strong style="color:var(--nvis-red);">CORE PRINCIPLE</strong>
+  <p style="font-size:0.85rem; margin-top:0.4rem;">
+    Entities from different sentence components must resolve to the <strong>same SPARTA technique</strong>.
+    If they don't, the question spans unrelated domains → verdict is <span class="verdict v-inconclusive">INCONCLUSIVE</span>.
+  </p>
+</div>
+
+
+<div class="pipeline">
+
+<!-- ═══════════════════════���════════════════════════════��═════════
+     STEP 1: Sentence Decomposition
+     ══════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="1">
+  <div class="step-title">Sentence Decomposition</div>
+  <div class="step-role"><span class="agent">AGENT</span> — native LM capability, no tool needed</div>
+
+  <div class="step-body">
+    <p>Parse the question into <strong>Given</strong> (context/constraints) and <strong>Then</strong> (search targets/threats) components. Each component becomes a separate query.</p>
+
+    <span class="label label-input">Input</span>
+    <p>The raw question text.</p>
+
+    <div class="example">
+      <div class="example-q">"Given the F-36's use of third-party FPGA vendors, which SPARTA supply chain attack vectors should we prioritize in our CMMC Level 3 compliance audits?"</div>
+      <pre><code><span class="key">Given</span> (context/constraints):
+  - F-36                        → project context
+  - third-party FPGA vendors    → SPARTA controls term
+
+<span class="key">Then</span> (search targets/threats):
+  - SPARTA supply chain attack vectors  → SPARTA controls term
+  - CMMC Level 3 compliance audits      → framework mapping term</code></pre>
+    </div>
+
+    <span class="label label-output">Output → Step 2</span>
+    <p>A <code>DecompositionNode</code> with <code>given_components[]</code>, <code>then_components[]</code>, and <code>component_queries{}</code>.</p>
+  </div>
+</div>
+
+<div class="flow">decomposition feeds per-component recall queries</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     STEP 2: Per-Component QRA Retrieval
+     ══════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="2">
+  <div class="step-title">Per-Component QRA Retrieval</div>
+  <div class="step-role"><span class="skill">SKILL</span> — /memory recall (run in PARALLEL, one per component)</div>
+
+  <div class="step-body">
+    <p>For EACH component from Step 1, query <code>/memory recall</code> scoped to <code>sparta_qra</code>.</p>
+
+    <span class="label label-cmd">Command (per component)</span>
+    <pre><code><span class="cmd">.claude/skills/memory/run.sh recall</span> \
+  <span class="key">--q</span> <span class="val">"&lt;component text&gt;"</span> \
+  <span class="key">--collections</span> <span class="val">sparta_qra</span> \
+  <span class="key">--k</span> <span class="val">10</span></code></pre>
+
+    <span class="label label-output">Output</span>
+    <p>QRA items with fields: <code>control_id</code>, <code>tactical_tags</code>, <code>question</code>, <code>answer</code>, <code>scores{bm25, graph, dense}</code>.</p>
+
+    <span class="label label-gate">Gate 1: Recall</span>
+    <p class="gate-pass">At least 1 QRA returned across all components.</p>
+    <p class="gate-fail">0 QRAs → early exit as <span class="verdict v-inconclusive">INCONCLUSIVE</span> — "Needs /dogpile Tier 3 research."</p>
+
+    <div class="early-exit">
+      <strong>Early exit if no QRAs:</strong> Persist as INCONCLUSIVE grade C, score 0.25. Skip remaining gates.
+    </div>
+  </div>
+</div>
+
+<div class="flow">QRA items + component results flow to entity extraction</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     STEP 3: Entity Extraction + Grounding Verification
+     ══════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="3">
+  <div class="step-title">Entity Extraction + Grounding Verification</div>
+  <div class="step-role"><span class="skill">SKILL</span> — /extract-entities | <span class="critical">CRITICAL GATE</span></div>
+
+  <div class="step-body">
+    <p>Extract entities from the <strong>full question</strong> and verify they exist in the corpus.</p>
+
+    <span class="label label-cmd">Command</span>
+    <pre><code><span class="cmd">.claude/skills/extract-entities/run.sh extract</span> \
+  <span class="key">--json</span> <span class="val">"&lt;full question text&gt;"</span></code></pre>
+
+    <span class="label label-output">Output — agent_view()</span>
+    <pre><code>{
+  <span class="key">"headline"</span>: <span class="val">"2 controls resolved; 1 fabricated ID(s)"</span>,
+  <span class="key">"grounding_ok"</span>: <span class="warn">false</span>,
+  <span class="key">"controls"</span>: [
+    {<span class="key">"control_id"</span>: <span class="val">"SV-AC-2"</span>, <span class="key">"confidence"</span>: <span class="val">1.0</span>, <span class="key">"match_type"</span>: <span class="val">"exact"</span>, <span class="key">"qra_count"</span>: <span class="val">44</span>}
+  ],
+  <span class="key">"warnings"</span>: [
+    {<span class="key">"term"</span>: <span class="val">"X23-MUSTARD"</span>, <span class="key">"category"</span>: <span class="warn">"fabricated_id"</span>, <span class="key">"confidence"</span>: <span class="val">0.0</span>}
+  ]
+}</code></pre>
+
+    <p><strong>Read <code>grounding_ok</code> first.</strong> Then check <code>warnings</code>:</p>
+
+    <table>
+      <tr><th>Warning Category</th><th>Meaning</th><th>Agent Action</th></tr>
+      <tr><td><code style="color:var(--nvis-red)">fabricated_id</code></td><td>ID-like term with 0 matches in 8,979+ controls</td><td>Strong block — question premise is fabricated</td></tr>
+      <tr><td><code style="color:var(--nvis-amber)">not_in_corpus</code></td><td>Term doesn't appear in domain corpus</td><td>Check if real concept outside SPARTA scope</td></tr>
+      <tr><td><code style="color:var(--nvis-amber)">misspelling</code></td><td>Close to a known term (edit distance)</td><td>Proceed with correction noted</td></tr>
+    </table>
+
+    <p style="margin-top:0.5rem"><strong>Confidence scores:</strong></p>
+    <table>
+      <tr><th>Score</th><th>Meaning</th></tr>
+      <tr><td><code class="val">1.0</code></td><td>Exact control_id match with QRAs</td></tr>
+      <tr><td><code class="val">0.9</code></td><td>Exact match, no QRAs yet</td></tr>
+      <tr><td><code class="val">0.7-0.85</code></td><td>Fuzzy ID match (probable typo)</td></tr>
+      <tr><td><code class="val">0.4-0.8</code></td><td>Phrase grounded via hybrid search</td></tr>
+      <tr><td><code class="warn">0.0</code></td><td>Unresolved — fabricated, misspelled, or not in corpus</td></tr>
+    </table>
+
+    <span class="label label-gate">Gate 2b: Grounding</span>
+    <p class="gate-pass"><code>grounding_ok == true</code> AND <code>fabricated_count == 0</code></p>
+    <p class="gate-fail">Any fabricated IDs → blocks SATISFIED verdict. Actionable typos → early exit INCONCLUSIVE/NOT_SATISFIED with /memory clarify.</p>
+
+    <div class="early-exit">
+      <strong>Early exit if actionable typos:</strong> Call <code>/memory clarify</code>, persist with clarification suggestions, skip remaining gates.
+    </div>
+  </div>
+</div>
+
+<div class="flow">grounded entities + QRAs feed the technique bridge check</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     STEP 4: Same-Technique Check
+     ══════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="4">
+  <div class="step-title">Same-Technique Check</div>
+  <div class="step-role"><span class="agent">AGENT</span> — <span class="critical">CRITICAL JUDGMENT</span></div>
+
+  <div class="step-body">
+    <p>The core question: <strong>Do entities from different components resolve to the SAME technique?</strong></p>
+
+    <span class="label label-input">What to check</span>
+    <ol>
+      <li><strong>tactical_tags</strong> across components — do they cluster into 1-2 techniques?</li>
+      <li><strong>related_pairs</strong> from /extract-entities — do cross-component edges exist?</li>
+      <li><strong>Explicit controls</strong> in question text — do they share a tactic?</li>
+    </ol>
+
+    <p style="margin-top:0.5rem"><strong>Bridge criteria (any one sufficient):</strong></p>
+    <table>
+      <tr><th>Bridge Type</th><th>Condition</th></tr>
+      <tr><td>Shared tactic</td><td>Explicit controls share the same tactic (e.g., both "Harden")</td></tr>
+      <tr><td>Related pairs</td><td>Cross-component entity edges from /extract-entities</td></tr>
+      <tr><td>Tag coherence</td><td>Dominant tag covers ≥50% of QRAs, ≤3-5 scattered techniques</td></tr>
+      <tr><td>Broad grounded</td><td>>5 techniques BUT entities are grounded AND ≥3 QRAs</td></tr>
+    </table>
+
+    <span class="label label-gate">Gate 3: Technique Bridge</span>
+    <p class="gate-pass">At least one bridge type confirmed.</p>
+    <p class="gate-fail">No shared technique → entities exist but span unrelated domains.</p>
+
+    <div class="early-exit">
+      <strong>Early exit if no bridge:</strong> Call <code>/memory clarify</code> → persist as INCONCLUSIVE grade C. Clarify explains the gaps.
+    </div>
+
+    <div class="branch">
+      <div class="branch-title">If bridge found → Semantic Relation Check</div>
+      <p>When ≥2 explicit controls in the question, run a deterministic grounded relevance check.
+         Verifies the controls are semantically related enough to produce a coherent answer.</p>
+      <span class="label label-gate">Gate 4: Semantic Relation</span>
+      <p class="gate-pass">Controls are answerable together.</p>
+      <p class="gate-fail">Controls exist but aren't related → INCONCLUSIVE with /memory clarify.</p>
+    </div>
+
+    <div class="branch" style="margin-top:0.5rem">
+      <div class="branch-title">Sub-claim decomposition</div>
+      <p>If multiple technique groups exist, build meaningful sub-claims from evidence.
+         Single technique → no decomposition needed.</p>
+      <span class="label label-gate">Gate 4c: Decompose</span>
+      <p class="gate-pass">Always passes — informational only.</p>
+    </div>
+  </div>
+</div>
+
+<div class="flow">technique bridge + sub-claims feed formal verification</div>
+
+<!-- ════════════════════════════════��═════════════════════════════
+     STEP 5: Clarification
+     ══════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="5">
+  <div class="step-title">Clarification</div>
+  <div class="step-role"><span class="skill">SKILL</span> — /memory clarify (called on failures in Steps 3-4)</div>
+
+  <div class="step-body">
+    <p>Clarification is <strong>not always a separate step</strong> — it's called inline when earlier gates fail. Produces structured disambiguation.</p>
+
+    <span class="label label-cmd">Command</span>
+    <pre><code><span class="cmd">.claude/skills/memory/run.sh clarify</span> \
+  <span class="key">--q</span> <span class="val">"&lt;question&gt;"</span></code></pre>
+
+    <span class="label label-output">Output</span>
+    <p>Related entities, unrelated entities, suggested decompositions, and clarifying questions. Used to confirm or revise the same-technique assessment.</p>
+
+    <p><strong>When called:</strong></p>
+    <ul>
+      <li>Step 3: actionable typo warnings → clarify suggests corrections</li>
+      <li>Step 4: no technique bridge → clarify explains domain gaps</li>
+      <li>Step 4: semantic relation fails → clarify suggests rephrasing</li>
+      <li>Step 6: plausibility fails → clarify suggests SPARTA-native terms</li>
+    </ul>
+  </div>
+</div>
+
+<div class="flow">all gates + evidence feed formal verification</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     STEP 6: Formal Verification
+     ══════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="6">
+  <div class="step-title">Formal Verification</div>
+  <div class="step-role"><span class="skill">SKILL</span> — /lean4-prove + plausibility gate</div>
+
+  <div class="step-body">
+    <p>Two sub-gates: Lean4 formal proof and plausibility check.</p>
+
+    <div style="margin-bottom:1rem">
+      <span class="label label-gate">Gate 5: Lean4 Proof</span>
+
+      <span class="label label-cmd">Command</span>
+      <pre><code><span class="cmd">.claude/skills/lean4-prove/run.sh</span> \
+  <span class="key">--requirement</span> <span class="val">"&lt;formal claim from evidence&gt;"</span></code></pre>
+
+      <p>Formalize: <code>"Given [components], [technique bridge] implies [verdict]."</code></p>
+
+      <table>
+        <tr><th>Proof Result</th><th>Gate Effect</th></tr>
+        <tr><td><span class="val">proof_success</span></td><td>Gate passes — strengthens SATISFIED</td></tr>
+        <tr><td><span class="dim">proof_skipped</span></td><td>Gate passes — neutral (not formalizable)</td></tr>
+        <tr><td><span class="dim">proof_failed</span></td><td>Gate passes — neutral (informational only)</td></tr>
+        <tr><td><span class="warn">gate_blocked</span></td><td>Gate FAILS — fabricated entity detected</td></tr>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label-gate">Gate 5b: Plausibility (conditional)</span>
+      <p>Only fires when grounding passed BUT <code>not_in_corpus</code> warnings exist.
+         Catches questions that use real IDs in nonsensical contexts (e.g., "CM0028 quantum encryption").</p>
+
+      <p class="gate-fail">Not plausible → call <code>/memory clarify</code>, suggest SPARTA-native terms.</p>
+    </div>
+  </div>
+</div>
+
+<div class="flow">all 6 gates determine the verdict</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     STEP 7: Final Verdict + Report
+     ══════════════════════════════════════════════════════════════ -->
+<div class="step" data-step="7">
+  <div class="step-title">Final Verdict + Report</div>
+  <div class="step-role"><span class="agent">AGENT</span> — synthesize all results</div>
+
+  <div class="step-body">
+    <p><strong>Verdict = f(gates_passed, total_gates)</strong></p>
+
+    <table>
+      <tr><th>Verdict</th><th>Condition</th><th>Meaning</th></tr>
+      <tr>
+        <td><span class="verdict v-satisfied">SATISFIED</span></td>
+        <td>All 6 gates pass</td>
+        <td>Components resolve, technique bridge confirmed, proof strengthens</td>
+      </tr>
+      <tr>
+        <td><span class="verdict v-inconclusive">INCONCLUSIVE</span></td>
+        <td>2-5 gates pass</td>
+        <td>Some covered, others need research. OR no shared technique. T2 LLM may override.</td>
+      </tr>
+      <tr>
+        <td><span class="verdict v-not-sat">NOT_SATISFIED</span></td>
+        <td>0-1 gates pass</td>
+        <td>Off-topic, no entities, or fabricated premises</td>
+      </tr>
+    </table>
+
+    <p style="margin-top:0.75rem"><strong>Grade from gates:</strong></p>
+    <table>
+      <tr><th>Grade</th><th>Ratio</th></tr>
+      <tr><td><span class="val">A+</span></td><td>6/6 gates</td></tr>
+      <tr><td><span class="val">A</span></td><td>≥75% gates</td></tr>
+      <tr><td><span class="val">B</span></td><td>≥50% gates</td></tr>
+      <tr><td><span class="val">C</span></td><td>≥25% gates</td></tr>
+      <tr><td><span class="warn">F</span></td><td>&lt;25% gates</td></tr>
+    </table>
+
+    <div class="branch" style="margin-top:0.75rem">
+      <div class="branch-title">T2 LLM Override (INCONCLUSIVE only)</div>
+      <p>When T0 gates say INCONCLUSIVE, a T2 LLM (Claude Sonnet via /scillm) reviews gates + evidence.
+         Can promote to SATISFIED or demote to NOT_SATISFIED. Cannot override definitive verdicts.</p>
+    </div>
+
+    <div class="branch" style="margin-top:0.5rem">
+      <div class="branch-title">Stage B: LLM Answer/Clarify/Deflect Routing</div>
+      <table>
+        <tr><th>Verdict</th><th>Route</th><th>Action</th></tr>
+        <tr><td><span class="verdict v-satisfied">SATISFIED</span></td><td>ANSWER</td><td>LLM generates evidence-grounded answer citing QRA _keys inline</td></tr>
+        <tr><td><span class="verdict v-inconclusive">INCONCLUSIVE</span></td><td>CLARIFY</td><td>LLM generates clarification with suggested SPARTA terms</td></tr>
+        <tr><td><span class="verdict v-not-sat">NOT_SATISFIED</span></td><td>DEFLECT</td><td>LLM explains SPARTA scope boundary, suggests correct domain</td></tr>
+      </table>
+    </div>
+
+    <span class="label label-output">Persist</span>
+    <pre><code><span class="dim"># Python (batch mode via EvidenceCaseStore2)</span>
+store.persist_case(
+    <span class="key">question</span>=<span class="val">"..."</span>,
+    <span class="key">category</span>=<span class="val">"compliance"</span>,
+    <span class="key">verdict_state</span>=<span class="val">"satisfied"</span>,
+    <span class="key">grade</span>=<span class="val">"A+"</span>,
+    <span class="key">score</span>=<span class="val">1.0</span>,
+    <span class="key">gates</span>=[...],
+    <span class="key">evidence_items</span>=qra_items,
+    <span class="key">answer</span>=<span class="val">"..."</span>,
+    <span class="key">technique_groups</span>={<span class="val">"Harden"</span>: 5, <span class="val">"Detect"</span>: 3},
+    <span class="key">sub_claims</span>=[...],
+    <span class="key">control_ids</span>=[<span class="val">"SR-3(2)"</span>, <span class="val">"SA-8"</span>],
+    <span class="key">decomposition</span>=decomp.to_dict(),
+)</code></pre>
+  </div>
+</div>
+
+</div><!-- end pipeline -->
+
+
+<!-- ════════════════════════════════��═════════════════��═════════════
+     CONDITIONAL BRANCHES
+     ════════════════════════════════════════════════════════════════ -->
+<div class="summary-box" style="border-color:var(--nvis-amber); margin-top:2rem;">
+  <h2 style="color:var(--nvis-amber);">Conditional Branches (post-verdict)</h2>
+
+  <div class="branch" style="margin:0.5rem 0">
+    <div class="branch-title">INCONCLUSIVE → Tier 3 Research</div>
+    <pre><code><span class="cmd">.claude/skills/dogpile/run.sh search</span> <span class="val">"&lt;gap query&gt;"</span> <span class="key">--auto-preset</span></code></pre>
+    <p>Re-evaluate with new evidence. If still inconclusive, report the gaps.</p>
+  </div>
+
+  <div class="branch" style="margin:0.5rem 0">
+    <div class="branch-title">Question mentions CMMC → Framework Mapping</div>
+    <pre><code><span class="cmd">.claude/skills/cmmc-assessor/run.sh assess</span> <span class="key">--level</span> <span class="val">3</span> <span class="key">--family</span> <span class="val">&lt;family&gt;</span></code></pre>
+  </div>
+
+  <div class="branch" style="margin:0.5rem 0">
+    <div class="branch-title">SATISFIED → Assurance Case + OSCAL Export</div>
+    <pre><code><span class="dim"># GSN diagram (ISO 15026)</span>
+<span class="cmd">.claude/skills/create-gsn-diagram/run.sh render</span> <span class="key">--control</span> <span class="val">&lt;primary_control_id&gt;</span>
+
+<span class="dim"># OSCAL JSON for auditors</span>
+<span class="cmd">.claude/skills/export-oscal/run.sh export</span> <span class="key">--framework</span> <span class="val">NIST-800-171</span></code></pre>
+  </div>
+
+  <div class="branch" style="margin:0.5rem 0">
+    <div class="branch-title">SATISFIED → QRA Quarantine + Human Review</div>
+    <p>Synthesized answer → <code>sparta_qra_candidates</code> collection → <code>/interview</code> review form → human approves/rejects → promote to <code>sparta_qra</code> or archive to <code>rejected_qras</code> (GRPO training data).</p>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════���═══════════
+     6-GATE SUMMARY
+     ════════════════════════════════════════════════════════════════ -->
+<div class="summary-box">
+  <h2>6-Gate Decision Tree Summary</h2>
+  <table>
+    <tr><th>#</th><th>Gate</th><th>Source</th><th>Pass Condition</th><th>Fail Action</th></tr>
+    <tr>
+      <td>1</td><td>On-topic</td><td>/assistant classify</td>
+      <td>Question is SPARTA domain</td>
+      <td>NOT_SATISFIED, grade F</td>
+    </tr>
+    <tr>
+      <td>2</td><td>Recall</td><td>/memory recall</td>
+      <td>≥1 QRA returned</td>
+      <td>INCONCLUSIVE, grade C</td>
+    </tr>
+    <tr>
+      <td>2b</td><td>Grounding</td><td>/extract-entities</td>
+      <td>grounding_ok AND 0 fabricated</td>
+      <td>Blocks SATISFIED</td>
+    </tr>
+    <tr>
+      <td>3</td><td>Technique bridge</td><td>Agent judgment</td>
+      <td>Shared tactic/coherence/pairs</td>
+      <td>INCONCLUSIVE + /clarify</td>
+    </tr>
+    <tr>
+      <td>4</td><td>Semantic relation</td><td>Deterministic check</td>
+      <td>Controls answerable together</td>
+      <td>INCONCLUSIVE + /clarify</td>
+    </tr>
+    <tr>
+      <td>5</td><td>Lean4 proof</td><td>/lean4-prove</td>
+      <td>Proof success/skip/fail (not blocked)</td>
+      <td>Gate blocked = fabricated</td>
+    </tr>
+    <tr>
+      <td>5b</td><td>Plausibility</td><td>Plausibility svc</td>
+      <td>Real IDs in sensible context</td>
+      <td>INCONCLUSIVE + /clarify</td>
+    </tr>
+  </table>
+  <p style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-dim);">
+    All 6 pass → <span class="verdict v-satisfied">SATISFIED</span>&nbsp;&nbsp;|&nbsp;&nbsp;
+    2-5 pass → <span class="verdict v-inconclusive">INCONCLUSIVE</span> (T2 may override)&nbsp;&nbsp;|&nbsp;&nbsp;
+    0-1 pass → <span class="verdict v-not-sat">NOT_SATISFIED</span>
+  </p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     GRAPH MODEL
+     ════════════════════════════════════════════════════════════════ -->
+<div class="summary-box" style="margin-top:1.5rem;">
+  <h2>Graph Model (CAE Tree)</h2>
+  <pre><code><span class="key">ClaimNode</span> <span class="dim">(root — question + verdict)</span>
+  ├── <span class="key">DecompositionNode</span> <span class="dim">(Given/Then structure)</span>
+  ├── <span class="key">StrategyNode</span> <span class="dim">(verification approach — "agent_driven")</span>
+  │   └── <span class="key">EvidenceNode</span>[] <span class="dim">(QRA or skill result, OSCAL method: TEST|EXAMINE|COMPUTE)</span>
+  └── <span class="key">VerdictNode</span> <span class="dim">(state + grade + score + reasoning)</span></code></pre>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     WHAT YOU MUST NOT DO
+     ════════════════════════════════════════════════════════════════ -->
+<div class="summary-box" style="border-color:var(--nvis-red); margin-top:1.5rem;">
+  <h2 style="color:var(--nvis-red);">What You Must NOT Do</h2>
+  <ul style="color:var(--text);">
+    <li><strong>Do NOT regex-parse control IDs</strong> — read structured fields from recall results</li>
+    <li><strong>Do NOT use stopword lists</strong> — you understand language, use that</li>
+    <li><strong>Do NOT auto-pass verdicts</strong> — if evidence coherence is unclear, say INCONCLUSIVE</li>
+    <li><strong>Do NOT skip the same-technique check</strong> — this IS the core criterion</li>
+    <li><strong>Do NOT assume one QRA matches the full question</strong> — decompose per component</li>
+    <li><strong>Do NOT use /memory recall without <code>--collections sparta_qra</code></strong></li>
+  </ul>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     WORKED EXAMPLES
+     ════════════════════════════════════════════════════════════════ -->
+<div class="summary-box" style="margin-top:1.5rem;">
+  <h2>Worked Example: SATISFIED</h2>
+  <div class="example">
+    <div class="example-q">"What SPARTA countermeasures protect F-36 flight software from firmware tampering during avionics maintenance windows?"</div>
+  </div>
+  <table style="margin-top:0.5rem">
+    <tr><th>Step</th><th>Result</th></tr>
+    <tr><td>1. Decompose</td><td>Given: F-36 flight software, maintenance windows. Then: countermeasures, firmware tampering</td></tr>
+    <tr><td>2. Recall</td><td>"firmware tampering" → 4 QRAs (CM0028), "maintenance windows" → 3 QRAs (SV-MA)</td></tr>
+    <tr><td>3. Entities</td><td>control_ids: [CM0028, SV-MA-4, SI-7], related_pairs: [(CM0028, SV-MA-4)]</td></tr>
+    <tr><td>4. Technique</td><td><span class="gate-pass" style="font-size:0.8rem">CM0028 + SV-MA share "Harden" tactic</span></td></tr>
+    <tr><td>5. Clarify</td><td>Entities related via SV-AV-7 technique family</td></tr>
+    <tr><td>6. Lean4</td><td>Harden(firmware) ∧ Harden(maintenance) → Protected(flight_software) — proof succeeds</td></tr>
+    <tr><td>7. Verdict</td><td><span class="verdict v-satisfied">SATISFIED</span> grade A+</td></tr>
+  </table>
+</div>
+
+<div class="summary-box" style="margin-top:1rem;">
+  <h2>Worked Example: INCONCLUSIVE</h2>
+  <div class="example">
+    <div class="example-q">"Given the F-36's use of third-party FPGA vendors, which SPARTA supply chain attack vectors should we prioritize in our CMMC Level 3 compliance audits?"</div>
+  </div>
+  <table style="margin-top:0.5rem">
+    <tr><th>Step</th><th>Result</th></tr>
+    <tr><td>1. Decompose</td><td>Given: F-36, FPGA vendors. Then: supply chain attacks, CMMC L3 audits</td></tr>
+    <tr><td>2. Recall</td><td>"FPGA vendors" → 0 QRAs. "supply chain" → 5 QRAs (SW chain, not HW)</td></tr>
+    <tr><td>3. Entities</td><td>control_ids: [SI-3] only. related_pairs: [] empty</td></tr>
+    <tr><td>4. Technique</td><td><span class="gate-fail" style="font-size:0.8rem">Tags scatter: Isolate/Harden/Exploit/Detect/Persist — no coherent cluster</span></td></tr>
+    <tr><td>5. Clarify</td><td>3 gaps: FPGA hardware chain, CMMC↔SPARTA mapping, HW vs SW</td></tr>
+    <tr><td>6. Lean4</td><td>Cannot construct theorem — missing FPGA→technique bridge</td></tr>
+    <tr><td>7. Verdict</td><td><span class="verdict v-inconclusive">INCONCLUSIVE</span> → /dogpile research for FPGA + CMMC</td></tr>
+  </table>
+</div>
+
+<p style="text-align:center; color:var(--text-dim); font-size:0.75rem; margin-top:2rem; padding-bottom:1rem;">
+  /create-evidence-case v4.2 — CAE (Adelard) · OSCAL (NIST) · GSN (ISO 15026) · CMMC (DoD) · Lean4
+</p>
+
+</body>
+</html>

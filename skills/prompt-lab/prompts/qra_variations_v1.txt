@@ -17,11 +17,14 @@ Rephrase the question at three expertise levels. The answer stays identical.
 
 ## Reversal-Curse Variations (3)
 
-Flip the question direction so it approaches from the answer side.
+The reversal curse: if a model learns "Q → A", it often can't answer "A → Q".
+These variations test whether the model can reverse the lookup direction.
+Present the ANSWER as the premise and ask the model to identify the original
+question's subject (the threat, control, vulnerability, or technique).
 
-1. REVERSAL_CAUSE: Given the answer as a premise, ask what would cause or require it.
-2. REVERSAL_DETECTION: Given the answer as a premise, ask how you would detect or verify it.
-3. REVERSAL_ABSENCE: Ask what would happen if the answer's content were NOT in place.
+1. REVERSAL_ENTITY: State the answer content as fact. Ask what specific threat, attack, or vulnerability it addresses.
+2. REVERSAL_CONTROL: State the answer content as fact. Ask which SPARTA/NIST control or requirement mandates it.
+3. REVERSAL_CONTEXT: State the answer content as fact. Ask in what operational scenario or system context it applies.
 
 ## GOOD EXAMPLE
 
@@ -37,9 +40,9 @@ Output:
     {"level": "LAYPERSON", "type": "expertise", "question": "How can a satellite protect itself from someone trying to listen in on its radio signals?"},
     {"level": "PROJECT_MANAGER", "type": "expertise", "question": "What countermeasure should the program implement to reduce risk from adversary RF scanning of our spacecraft communications?"},
     {"level": "CYBERSECURITY_EXPERT", "type": "expertise", "question": "Per ESA-T2001, what COMSEC technique mitigates active RF reconnaissance against spacecraft telemetry links?"},
-    {"level": "REVERSAL_CAUSE", "type": "reversal", "question": "Why would a spacecraft program implement frequency hopping and signal encryption on its communication links?"},
-    {"level": "REVERSAL_DETECTION", "type": "reversal", "question": "How would you verify that frequency hopping and signal encryption are properly deployed on a spacecraft's RF links?"},
-    {"level": "REVERSAL_ABSENCE", "type": "reversal", "question": "What vulnerability exists if a spacecraft does NOT use frequency hopping or signal encryption on its communication channels?"}
+    {"level": "REVERSAL_ENTITY", "type": "reversal", "question": "Frequency hopping and signal encryption are deployed on a spacecraft's RF links. What specific attack technique does this combination mitigate?"},
+    {"level": "REVERSAL_CONTROL", "type": "reversal", "question": "A spacecraft implements frequency hopping with signal encryption on telemetry links. Which SPARTA control ID requires this countermeasure?"},
+    {"level": "REVERSAL_CONTEXT", "type": "reversal", "question": "Frequency hopping and signal encryption reduce the effectiveness of signal interception and analysis. On what type of spacecraft subsystem are these protections applied?"}
   ]
 }
 ```
@@ -49,7 +52,7 @@ Output:
 - BAD: Adding new information not in the answer: "Implementing frequency hopping, signal encryption, AND directional antennas..."
 - BAD: Changing the answer scope: "What are ALL mitigation measures..." (original asks for "a key" measure)
 - BAD: Vague layperson: "How do you protect stuff?" (too generic, doesn't constrain to the same answer)
-- BAD: Reversal that changes the answer: "What happens if there's no encryption?" (answer is about both frequency hopping AND encryption together)
+- BAD: Reversal that doesn't reverse the lookup: "Why would you implement frequency hopping?" (that's a motivation question, not a reversal — must present the answer as fact and ask what threat/control/context it maps back to)
 - BAD: Expert question that narrows too much: "What specific FHSS algorithm..." (answer doesn't specify algorithm)
 
 OUTPUT FORMAT (strict JSON, no preamble):
@@ -59,9 +62,9 @@ OUTPUT FORMAT (strict JSON, no preamble):
     {"level": "LAYPERSON", "type": "expertise", "question": "..."},
     {"level": "PROJECT_MANAGER", "type": "expertise", "question": "..."},
     {"level": "CYBERSECURITY_EXPERT", "type": "expertise", "question": "..."},
-    {"level": "REVERSAL_CAUSE", "type": "reversal", "question": "..."},
-    {"level": "REVERSAL_DETECTION", "type": "reversal", "question": "..."},
-    {"level": "REVERSAL_ABSENCE", "type": "reversal", "question": "..."}
+    {"level": "REVERSAL_ENTITY", "type": "reversal", "question": "..."},
+    {"level": "REVERSAL_CONTROL", "type": "reversal", "question": "..."},
+    {"level": "REVERSAL_CONTEXT", "type": "reversal", "question": "..."}
   ]
 }
 ```

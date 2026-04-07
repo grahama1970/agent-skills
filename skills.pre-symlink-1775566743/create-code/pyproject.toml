@@ -1,0 +1,14 @@
+[project]
+name = "create-code"
+version = "0.1.0"
+description = "Horus coding orchestration pipeline"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "typer",
+    "loguru>=0.7.0,<0.7.3",
+    "rich",
+    "python-dotenv>=1.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

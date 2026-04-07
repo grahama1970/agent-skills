@@ -1,0 +1,15 @@
+[project]
+name = "pi-skill-review-design"
+version = "0.1.0"
+description = "Runtime package for the review-design skill"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "anthropic",
+    "httpx>=0.24.0",
+    "loguru>=0.7.0,<0.7.3",
+    "pillow",
+    "typer>=0.9.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
