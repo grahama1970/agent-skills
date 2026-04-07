@@ -107,9 +107,11 @@ class EvidenceCaseRunner:
         max_workers: int = 3,
         timeout: int = 60,
         enable_t2: bool = True,
+        gates_only: bool = False,
     ):
         self.store = EvidenceCaseStore2()
-        self.enable_t2 = enable_t2
+        self.enable_t2 = enable_t2 and not gates_only
+        self.gates_only = gates_only
 
     def _run_t2_verdict(
         self,
@@ -405,10 +407,12 @@ class EvidenceCaseRunner:
                 if "possible_typo" in categories or fabricated_f36_module
                 else "inconclusive"
             )
-            if show_progress:
-                console.print("[dim]Step 2c: Calling /memory clarify for typo ambiguity...[/]")
-            with _timed("step_2c_clarify"):
-                clarify_result = collect_clarify(claim_text)
+            clarify_result = None
+            if not self.gates_only:
+                if show_progress:
+                    console.print("[dim]Step 2c: Calling /memory clarify for typo ambiguity...[/]")
+                with _timed("step_2c_clarify"):
+                    clarify_result = collect_clarify(claim_text)
             steps.append({
                 "gate": "step_2c_grounding_typo",
                 "passed": False,
@@ -517,10 +521,12 @@ class EvidenceCaseRunner:
             grounding_evidence["no_technique_bridge"] = True
 
         if not has_technique_bridge:
-            if show_progress:
-                console.print("[dim]Step 4: Calling /memory clarify...[/]")
-            with _timed("step_4_clarify"):
-                clarify_result = collect_clarify(claim_text)
+            clarify_result = None
+            if not self.gates_only:
+                if show_progress:
+                    console.print("[dim]Step 4: Calling /memory clarify...[/]")
+                with _timed("step_4_clarify"):
+                    clarify_result = collect_clarify(claim_text)
             steps.append({"gate": "step_4_clarify", "passed": False,
                            "detail": "Entities don't share technique — clarify explains gaps",
                            "data": {"clarify": clarify_result or {}}})
@@ -579,8 +585,10 @@ class EvidenceCaseRunner:
         })
 
         if semantic_required and not semantic_relation:
-            with _timed("step_4b_clarify"):
-                clarify_result = collect_clarify(claim_text)
+            clarify_result = None
+            if not self.gates_only:
+                with _timed("step_4b_clarify"):
+                    clarify_result = collect_clarify(claim_text)
             steps.append({
                 "gate": "step_4b_clarify",
                 "passed": False,
@@ -614,8 +622,10 @@ class EvidenceCaseRunner:
             return result
 
         if semantic_relation and not semantic_ok:
-            with _timed("step_4b_clarify"):
-                clarify_result = collect_clarify(claim_text)
+            clarify_result = None
+            if not self.gates_only:
+                with _timed("step_4b_clarify"):
+                    clarify_result = collect_clarify(claim_text)
             steps.append({
                 "gate": "step_4b_clarify",
                 "passed": False,
@@ -672,33 +682,41 @@ class EvidenceCaseRunner:
             console.print(f"[bold green]Steps passed — {len(qra_items)} QRAs, "
                           f"{len(technique_groups)} techniques, {len(overlap)} entity overlap[/]")
 
-        # Step 5: Formal verification
-        lean4_result, proof_result = self._run_lean4_gate(
-            claim_text, control_ids, dominant_tag, coherence,
-            show_progress, _timed,
-        )
+        # Step 5: Formal verification (skipped in gates_only mode)
+        lean4_result: dict[str, Any] = {}
+        proof_result: dict[str, Any] = {}
+        proof_success = False
+        proof_attempted = False
+        gate_blocked = False
+        if self.gates_only:
+            lean4_result = {
+                "provable": False, "prediction": "skipped_gates_only",
+                "proof_attempted": False, "proof_skipped": True,
+                "proof_success": False, "gate_blocked": False,
+            }
+            steps.append({"gate": "step_5_lean4", "passed": True,
+                           "detail": "Skipped (gates_only mode)", "data": lean4_result})
+        else:
+            lean4_result, proof_result = self._run_lean4_gate(
+                claim_text, control_ids, dominant_tag, coherence,
+                show_progress, _timed,
+            )
 
-        proof_success = lean4_result.get("proof_success", False)
-        proof_attempted = lean4_result.get("proof_attempted", False)
-        proof_skipped = lean4_result.get("proof_skipped", False)
-        gate_blocked = lean4_result.get("gate_blocked", False)
-        # Lean4 gate: proof failure does NOT block SATISFIED.
-        # Only gate_blocked (fabricated entities) blocks. Proof failure is informational.
-        # proof_success → gate passes (strengthens verdict)
-        # proof_skipped → gate passes (neutral)
-        # proof_failed → gate passes (neutral — LLM couldn't formalize, not evidence failure)
-        # gate_blocked → gate fails (fabricated entity detected)
-        lean4_gate_passed = not gate_blocked
-        steps.append({"gate": "step_5_lean4", "passed": lean4_gate_passed,
-                       "detail": (f"provable={lean4_result.get('prediction', 'unknown')}, "
-                                   f"proof={'success' if proof_success else 'skipped' if proof_skipped else 'failed'}"),
-                        "data": lean4_result})
+            proof_success = lean4_result.get("proof_success", False)
+            proof_attempted = lean4_result.get("proof_attempted", False)
+            gate_blocked = lean4_result.get("gate_blocked", False)
+            # Lean4 gate: proof failure does NOT block SATISFIED.
+            # Only gate_blocked (fabricated entities) blocks. Proof failure is informational.
+            lean4_gate_passed = not gate_blocked
+            steps.append({"gate": "step_5_lean4", "passed": lean4_gate_passed,
+                           "detail": (f"provable={lean4_result.get('prediction', 'unknown')}, "
+                                       f"proof={'success' if proof_success else 'skipped' if lean4_result.get('proof_skipped') else 'failed'}"),
+                            "data": lean4_result})
 
-        # Step 5b: Plausibility gate — catch questions that use real IDs
-        # in nonsensical contexts (e.g. "CM0028 quantum encryption").
-        # Only fires when verdict would be satisfied AND not_in_corpus warnings exist.
+        # Step 5b: Plausibility gate (skipped in gates_only mode)
         plausibility_result = {"plausible": True, "checked": False}
-        if grounding_gate_passed and n_not_in_corpus > 0:
+        clarify_result = None
+        if not self.gates_only and grounding_gate_passed and n_not_in_corpus > 0:
             try:
                 from plausibility import check_plausibility
                 plausibility_result = check_plausibility(
@@ -720,7 +738,6 @@ class EvidenceCaseRunner:
         # When plausibility says "not answerable" due to not_in_corpus terms,
         # call /memory clarify to produce structured rephrasing suggestions
         # using SPARTA-native terms for the next conversation turn.
-        clarify_result = None
         if plausibility_result.get("checked") and not plaus_passed:
             try:
                 with _timed("step_5c_clarify"):
@@ -803,10 +820,12 @@ class EvidenceCaseRunner:
             gates_passed, total_gates=len(steps), t2_override=t2_override,
         )
 
-        # Stage B: LLM routing via scillm → Claude Opus
+        # Stage B: LLM routing via scillm → Claude Opus (skipped in gates_only mode)
         # Three paths: ANSWER (satisfied), CLARIFY (not_satisfied + clarify data), DEFLECT (not_satisfied + off-topic)
         llm_route = None
-        if final_verdict == "satisfied" and qra_items:
+        if self.gates_only:
+            pass  # No LLM routing in gates_only mode
+        elif final_verdict == "satisfied" and qra_items:
             with _timed("step_5b_llm_answer"):
                 llm_answer = self._generate_llm_answer(claim_text, qra_items[:10])
                 if llm_answer:

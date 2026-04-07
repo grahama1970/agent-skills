@@ -292,6 +292,15 @@ def collect_entities(question: str) -> dict | None:
             result = direct.to_dict() if hasattr(direct, "to_dict") else {}
             if hasattr(direct, "agent_view"):
                 result.update(direct.agent_view() or {})
+            # Pull dataclass fields needed by runner gates
+            if hasattr(direct, "resolution_map"):
+                result["resolution_map"] = direct.resolution_map
+            if hasattr(direct, "unresolved_terms"):
+                result["unresolved_terms"] = direct.unresolved_terms
+            if hasattr(direct, "all_control_ids"):
+                result["all_control_ids"] = direct.all_control_ids
+            if hasattr(direct, "related_pairs"):
+                result["related_pairs"] = direct.related_pairs
             result.setdefault("all_control_ids", result.get("control_ids", []))
             result.setdefault("control_ids", result.get("all_control_ids", []))
         else:
@@ -850,7 +859,7 @@ def collect_grounding_gate_context(question: str, k: int = 10) -> dict[str, Any]
     if entities is None:
         entities = {}
     
-    spans = entities.get("spans", [])
+    spans = entities.get("entities", entities.get("spans", []))
     control_ids = entities.get("control_ids", [])
     control_metadata = entities.get("control_metadata", [])
     

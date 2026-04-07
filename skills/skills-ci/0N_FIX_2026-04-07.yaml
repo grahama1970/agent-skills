@@ -1,0 +1,1158 @@
+plan: skills-ci-fix-2026-04-07
+description: Auto-generated fix plan for 40 violations (2026-04-07)
+tasks:
+- id: fix-004-subprocess-venv_leak
+  title: "[battle] Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014\
+    \ breaks in schedule"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/battle
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/battle/patch_writer.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in patch_writer.py:\n\nRule: subprocess.venv_leak\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/battle/patch_writer.py\n\
+    Message: Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks\
+    \ in scheduler context.\n\nInstructions: Add env={{k: v for k, v in os.environ.items()\
+    \ if k != 'VIRTUAL_ENV'}} to the subprocess.run() or subprocess.Popen() call that\
+    \ references run.sh or /skills/. Add 'import os' if not present. Do NOT change\
+    \ any other code.\n\nIMPORTANT: Read the file first. Make minimal changes. Do\
+    \ not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.venv_leak.*battle'
+    assertion: exit_code == 1
+- id: fix-006-routing-composes_common
+  title: "[best-practices-cots] composes references 'common/vlm_image.py' \u2014 common/\
+    \ is a shared module, not a sk"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/best-practices-cots
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/best-practices-cots/SKILL.md
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in SKILL.md:\n\nRule: routing.composes_common\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/best-practices-cots/SKILL.md\n\
+    Message: composes references 'common/vlm_image.py' \u2014 common/ is a shared\
+    \ module, not a skill.\n\nInstructions: Add the skill to _COMPOSES_COMMON_ALLOWED\
+    \ in skills-ci/scanners.py.\n\nIMPORTANT: Read the file first. Make minimal changes.\
+    \ Do not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'routing.composes_common.*best-practices-cots'
+    assertion: exit_code == 1
+- id: fix-008-python-file_length
+  title: '[checkpoint] File exceeds 900 LOC (940).'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/checkpoint
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/checkpoint/checkpoint.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in checkpoint.py:
+
+
+    Rule: python.file_length
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/checkpoint/checkpoint.py
+
+    Message: File exceeds 900 LOC (940).
+
+
+    Instructions: Split the file into two modules. Keep the main entry point / CLI
+    / public API in the original file. Move helper functions, dataclasses, and utilities
+    to a new module in the same directory. Update imports. Both files must be under
+    800 lines.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.file_length.*checkpoint'
+    assertion: exit_code == 1
+- id: fix-010-python-argparse
+  title: '[classifier-lab] Uses argparse; prefer Typer.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/templates
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/templates/text_classifier.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in text_classifier.py:
+
+
+    Rule: python.argparse
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/templates/text_classifier.py
+
+    Message: Uses argparse; prefer Typer.
+
+
+    Instructions: Replace argparse with typer. Convert ArgumentParser to typer.Typer().
+    Convert add_argument to typer.Argument/typer.Option. Convert subparsers to @app.command()
+    pattern.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.argparse.*classifier-lab'
+    assertion: exit_code == 1
+- id: fix-011-python-argparse
+  title: '[classifier-lab] Uses argparse; prefer Typer.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/benchmark.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in benchmark.py:
+
+
+    Rule: python.argparse
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/benchmark.py
+
+    Message: Uses argparse; prefer Typer.
+
+
+    Instructions: Replace argparse with typer. Convert ArgumentParser to typer.Typer().
+    Convert add_argument to typer.Argument/typer.Option. Convert subparsers to @app.command()
+    pattern.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.argparse.*classifier-lab'
+    assertion: exit_code == 1
+- id: fix-012-python-argparse
+  title: '[classifier-lab] Uses argparse; prefer Typer.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts/benchmark.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in benchmark.py:
+
+
+    Rule: python.argparse
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts/benchmark.py
+
+    Message: Uses argparse; prefer Typer.
+
+
+    Instructions: Replace argparse with typer. Convert ArgumentParser to typer.Typer().
+    Convert add_argument to typer.Argument/typer.Option. Convert subparsers to @app.command()
+    pattern.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.argparse.*classifier-lab'
+    assertion: exit_code == 1
+- id: fix-013-subprocess-stderr_fatal
+  title: "[classifier-lab] Treats stderr as fatal error \u2014 uv/pip emit warnings\
+    \ to stderr that are not error"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts/pipeline.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in pipeline.py:\n\nRule: subprocess.stderr_fatal\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts/pipeline.py\n\
+    Message: Treats stderr as fatal error \u2014 uv/pip emit warnings to stderr that\
+    \ are not errors. Check returncode instead.\n\nInstructions: Change 'if result.stderr:'\
+    \ to 'if result.returncode != 0:' for error raising. Add '(rc={{result.returncode}})'\
+    \ to the error message so returncode appears on the same line as stderr. Keep\
+    \ stderr in the message for context.\n\nIMPORTANT: Read the file first. Make minimal\
+    \ changes. Do not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.stderr_fatal.*classifier-lab'
+    assertion: exit_code == 1
+- id: fix-014-subprocess-stderr_fatal
+  title: "[classifier-lab] Treats stderr as fatal error \u2014 uv/pip emit warnings\
+    \ to stderr that are not error"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts/training_loop.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in training_loop.py:\n\nRule: subprocess.stderr_fatal\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/classifier-lab/scripts/training_loop.py\n\
+    Message: Treats stderr as fatal error \u2014 uv/pip emit warnings to stderr that\
+    \ are not errors. Check returncode instead.\n\nInstructions: Change 'if result.stderr:'\
+    \ to 'if result.returncode != 0:' for error raising. Add '(rc={{result.returncode}})'\
+    \ to the error message so returncode appears on the same line as stderr. Keep\
+    \ stderr in the message for context.\n\nIMPORTANT: Read the file first. Make minimal\
+    \ changes. Do not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.stderr_fatal.*classifier-lab'
+    assertion: exit_code == 1
+- id: fix-018-skills-memory_read_directive
+  title: '[code-review-runner] Skill composes /memory but has no ''read before use''
+    directive in first 500 chars'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-review-runner
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/code-review-runner/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: skills.memory_read_directive
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-review-runner/SKILL.md
+
+    Message: Skill composes /memory but has no ''read before use'' directive in first
+    500 chars after frontmatter. Add: ''> STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING
+    ANY ENDPOINT.'' See /memory SKILL.md for the pattern.
+
+
+    Instructions: Add ''> STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.''
+    immediately after the frontmatter closing --- with a blank line before and after.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.memory_read_directive.*code-review-runner'
+    assertion: exit_code == 1
+- id: fix-019-naming-noun_only
+  title: '[code-review-runner] Skill name ''code-review-runner'' appears noun-only;
+    consider a verb- prefix or ad'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-review-runner
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/code-review-runner/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: naming.noun_only
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-review-runner/SKILL.md
+
+    Message: Skill name ''code-review-runner'' appears noun-only; consider a verb-
+    prefix or add to _NOUN_ALLOWLIST.
+
+
+    Instructions: Add the skill name to _NOUN_ALLOWLIST in skills-ci/scanners.py.
+    These are established skills that won''t be renamed.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'naming.noun_only.*code-review-runner'
+    assertion: exit_code == 1
+- id: fix-020-skills-extra_docs
+  title: '[code-runner] Extra docs in skill root: WALKTHROUGH.md, WALKTHROUGH_V2.md.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in code-runner:
+
+
+    Rule: skills.extra_docs
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner
+
+    Message: Extra docs in skill root: WALKTHROUGH.md, WALKTHROUGH_V2.md.
+
+
+    Instructions: Move extra .md files from the skill root directory into a docs/
+    subdirectory. Update any references to the moved files.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.extra_docs.*code-runner'
+    assertion: exit_code == 1
+- id: fix-021-skills-missing_antipatterns
+  title: '[code-runner] Composed by 6 other skills but SKILL.md has no antipattern
+    documentation. Add a '
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: skills.missing_antipatterns
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner/SKILL.md
+
+    Message: Composed by 6 other skills but SKILL.md has no antipattern documentation.
+    Add a ''## Common Mistakes'' section with concrete WRONG/RIGHT examples. Agents
+    misuse high-fan-in skills repeatedly.
+
+
+    Instructions: Add a ''## Common Mistakes'' section to SKILL.md with 3-5 concrete
+    WRONG/RIGHT examples. Document actual antipatterns for this skill''s domain.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.missing_antipatterns.*code-runner'
+    assertion: exit_code == 1
+- id: fix-023-python-file_length
+  title: '[code-runner] File exceeds 900 LOC (1035).'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner/code_runner.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in code_runner.py:
+
+
+    Rule: python.file_length
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/code-runner/code_runner.py
+
+    Message: File exceeds 900 LOC (1035).
+
+
+    Instructions: Split the file into two modules. Keep the main entry point / CLI
+    / public API in the original file. Move helper functions, dataclasses, and utilities
+    to a new module in the same directory. Update imports. Both files must be under
+    800 lines.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.file_length.*code-runner'
+    assertion: exit_code == 1
+- id: fix-026-python-file_length
+  title: '[create-evidence-case] File exceeds 900 LOC (1115).'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-evidence-case
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/create-evidence-case/runner.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in runner.py:
+
+
+    Rule: python.file_length
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-evidence-case/runner.py
+
+    Message: File exceeds 900 LOC (1115).
+
+
+    Instructions: Split the file into two modules. Keep the main entry point / CLI
+    / public API in the original file. Move helper functions, dataclasses, and utilities
+    to a new module in the same directory. Update imports. Both files must be under
+    800 lines.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.file_length.*create-evidence-case'
+    assertion: exit_code == 1
+- id: fix-027-python-file_length
+  title: '[create-evidence-case] File exceeds 900 LOC (918).'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-evidence-case
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/create-evidence-case/collect.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in collect.py:
+
+
+    Rule: python.file_length
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-evidence-case/collect.py
+
+    Message: File exceeds 900 LOC (918).
+
+
+    Instructions: Split the file into two modules. Keep the main entry point / CLI
+    / public API in the original file. Move helper functions, dataclasses, and utilities
+    to a new module in the same directory. Update imports. Both files must be under
+    800 lines.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.file_length.*create-evidence-case'
+    assertion: exit_code == 1
+- id: fix-031-skills-skill_md_bloat
+  title: '[create-walkthrough] SKILL.md is 571 lines (limit 500). Move rules to best-practices-*
+    skill.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-walkthrough
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/create-walkthrough/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: skills.skill_md_bloat
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-walkthrough/SKILL.md
+
+    Message: SKILL.md is 571 lines (limit 500). Move rules to best-practices-* skill.
+
+
+    Instructions: Move detailed content from SKILL.md to references/ subdirectory.
+    Keep frontmatter, quick start, and CLI reference. Extract examples, architecture,
+    detailed docs to separate .md files. Replace extracted sections with one-line
+    links.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.skill_md_bloat.*create-walkthrough'
+    assertion: exit_code == 1
+- id: fix-036-python-argparse
+  title: '[embedding] Uses argparse; prefer Typer.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding/batch_embed_images.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in batch_embed_images.py:
+
+
+    Rule: python.argparse
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding/batch_embed_images.py
+
+    Message: Uses argparse; prefer Typer.
+
+
+    Instructions: Replace argparse with typer. Convert ArgumentParser to typer.Typer().
+    Convert add_argument to typer.Argument/typer.Option. Convert subparsers to @app.command()
+    pattern.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.argparse.*embedding'
+    assertion: exit_code == 1
+- id: fix-037-subprocess-venv_leak
+  title: "[embedding] Subprocess calls skill run.sh without stripping VIRTUAL_ENV\
+    \ \u2014 breaks in schedule"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding/backfill_multimodal.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in backfill_multimodal.py:\n\nRule: subprocess.venv_leak\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding/backfill_multimodal.py\n\
+    Message: Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks\
+    \ in scheduler context.\n\nInstructions: Add env={{k: v for k, v in os.environ.items()\
+    \ if k != 'VIRTUAL_ENV'}} to the subprocess.run() or subprocess.Popen() call that\
+    \ references run.sh or /skills/. Add 'import os' if not present. Do NOT change\
+    \ any other code.\n\nIMPORTANT: Read the file first. Make minimal changes. Do\
+    \ not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.venv_leak.*embedding'
+    assertion: exit_code == 1
+- id: fix-040-subprocess-hardcoded_skill_path
+  title: "[embedding] Hardcoded ~/.pi/skills/ path \u2014 use SKILLS_DIR env var with\
+    \ fallback."
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding/backfill_multimodal.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in backfill_multimodal.py:\n\nRule: subprocess.hardcoded_skill_path\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/embedding/backfill_multimodal.py\n\
+    Message: Hardcoded ~/.pi/skills/ path \u2014 use SKILLS_DIR env var with fallback.\n\
+    \nInstructions: Replace hardcoded absolute path to /home/graham/.../.pi/skills/\
+    \ with Path(__file__).resolve().parent.parent / 'skill-name' / 'run.sh' or similar\
+    \ relative path computation.\n\nIMPORTANT: Read the file first. Make minimal changes.\
+    \ Do not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.hardcoded_skill_path.*embedding'
+    assertion: exit_code == 1
+- id: fix-041-subprocess-venv_leak
+  title: "[hack] Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014\
+    \ breaks in schedule"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/hack
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/hack/exploit_writer.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in exploit_writer.py:\n\nRule: subprocess.venv_leak\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/hack/exploit_writer.py\n\
+    Message: Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks\
+    \ in scheduler context.\n\nInstructions: Add env={{k: v for k, v in os.environ.items()\
+    \ if k != 'VIRTUAL_ENV'}} to the subprocess.run() or subprocess.Popen() call that\
+    \ references run.sh or /skills/. Add 'import os' if not present. Do NOT change\
+    \ any other code.\n\nIMPORTANT: Read the file first. Make minimal changes. Do\
+    \ not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.venv_leak.*hack'
+    assertion: exit_code == 1
+- id: fix-044-python-file_length
+  title: '[ingest-code] File exceeds 900 LOC (1140).'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-code
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-code/ingest_code.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in ingest_code.py:
+
+
+    Rule: python.file_length
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-code/ingest_code.py
+
+    Message: File exceeds 900 LOC (1140).
+
+
+    Instructions: Split the file into two modules. Keep the main entry point / CLI
+    / public API in the original file. Move helper functions, dataclasses, and utilities
+    to a new module in the same directory. Update imports. Both files must be under
+    800 lines.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.file_length.*ingest-code'
+    assertion: exit_code == 1
+- id: fix-045-subprocess-venv_leak
+  title: "[ingest-code] Subprocess calls skill run.sh without stripping VIRTUAL_ENV\
+    \ \u2014 breaks in schedule"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-code
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-code/treesitter_scan.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in treesitter_scan.py:\n\nRule: subprocess.venv_leak\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/ingest-code/treesitter_scan.py\n\
+    Message: Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks\
+    \ in scheduler context.\n\nInstructions: Add env={{k: v for k, v in os.environ.items()\
+    \ if k != 'VIRTUAL_ENV'}} to the subprocess.run() or subprocess.Popen() call that\
+    \ references run.sh or /skills/. Add 'import os' if not present. Do NOT change\
+    \ any other code.\n\nIMPORTANT: Read the file first. Make minimal changes. Do\
+    \ not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.venv_leak.*ingest-code'
+    assertion: exit_code == 1
+- id: fix-046-skills-extra_docs
+  title: '[intent-mapper] Extra docs in skill root: queryspec_ui_prompt.md.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/intent-mapper
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in intent-mapper:
+
+
+    Rule: skills.extra_docs
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/intent-mapper
+
+    Message: Extra docs in skill root: queryspec_ui_prompt.md.
+
+
+    Instructions: Move extra .md files from the skill root directory into a docs/
+    subdirectory. Update any references to the moved files.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.extra_docs.*intent-mapper'
+    assertion: exit_code == 1
+- id: fix-048-subprocess-venv_leak
+  title: "[mockup-lab] Subprocess calls skill run.sh without stripping VIRTUAL_ENV\
+    \ \u2014 breaks in schedule"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/mockup-lab
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/mockup-lab/gemini_mockup.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in gemini_mockup.py:\n\nRule: subprocess.venv_leak\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/mockup-lab/gemini_mockup.py\n\
+    Message: Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks\
+    \ in scheduler context.\n\nInstructions: Add env={{k: v for k, v in os.environ.items()\
+    \ if k != 'VIRTUAL_ENV'}} to the subprocess.run() or subprocess.Popen() call that\
+    \ references run.sh or /skills/. Add 'import os' if not present. Do NOT change\
+    \ any other code.\n\nIMPORTANT: Read the file first. Make minimal changes. Do\
+    \ not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.venv_leak.*mockup-lab'
+    assertion: exit_code == 1
+- id: fix-055-skills-missing_antipatterns
+  title: '[orchestrate] Composed by 3 other skills but SKILL.md has no antipattern
+    documentation. Add a '
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: skills.missing_antipatterns
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/SKILL.md
+
+    Message: Composed by 3 other skills but SKILL.md has no antipattern documentation.
+    Add a ''## Common Mistakes'' section with concrete WRONG/RIGHT examples. Agents
+    misuse high-fan-in skills repeatedly.
+
+
+    Instructions: Add a ''## Common Mistakes'' section to SKILL.md with 3-5 concrete
+    WRONG/RIGHT examples. Document actual antipatterns for this skill''s domain.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.missing_antipatterns.*orchestrate'
+    assertion: exit_code == 1
+- id: fix-056-python-file_length
+  title: '[orchestrate] File exceeds 900 LOC (1060).'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured_execute.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in structured_execute.py:
+
+
+    Rule: python.file_length
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/orchestrate/structured_execute.py
+
+    Message: File exceeds 900 LOC (1060).
+
+
+    Instructions: Split the file into two modules. Keep the main entry point / CLI
+    / public API in the original file. Move helper functions, dataclasses, and utilities
+    to a new module in the same directory. Update imports. Both files must be under
+    800 lines.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.file_length.*orchestrate'
+    assertion: exit_code == 1
+- id: fix-059-subprocess-hardcoded_skill_path
+  title: "[pdf-lab] Hardcoded ~/.pi/skills/ path \u2014 use SKILLS_DIR env var with\
+    \ fallback."
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab/lib
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab/lib/render.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in render.py:\n\nRule: subprocess.hardcoded_skill_path\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/pdf-lab/lib/render.py\n\
+    Message: Hardcoded ~/.pi/skills/ path \u2014 use SKILLS_DIR env var with fallback.\n\
+    \nInstructions: Replace hardcoded absolute path to /home/graham/.../.pi/skills/\
+    \ with Path(__file__).resolve().parent.parent / 'skill-name' / 'run.sh' or similar\
+    \ relative path computation.\n\nIMPORTANT: Read the file first. Make minimal changes.\
+    \ Do not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.hardcoded_skill_path.*pdf-lab'
+    assertion: exit_code == 1
+- id: fix-062-skills-missing_antipatterns
+  title: '[recommend-skill-chain] Composed by 3 other skills but SKILL.md has no antipattern
+    documentation. Add a '
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/recommend-skill-chain
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/recommend-skill-chain/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: skills.missing_antipatterns
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/recommend-skill-chain/SKILL.md
+
+    Message: Composed by 3 other skills but SKILL.md has no antipattern documentation.
+    Add a ''## Common Mistakes'' section with concrete WRONG/RIGHT examples. Agents
+    misuse high-fan-in skills repeatedly.
+
+
+    Instructions: Add a ''## Common Mistakes'' section to SKILL.md with 3-5 concrete
+    WRONG/RIGHT examples. Document actual antipatterns for this skill''s domain.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.missing_antipatterns.*recommend-skill-chain'
+    assertion: exit_code == 1
+- id: fix-063-subprocess-venv_leak
+  title: "[recommend-skill-chain] Subprocess calls skill run.sh without stripping\
+    \ VIRTUAL_ENV \u2014 breaks in schedule"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/recommend-skill-chain/src
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/recommend-skill-chain/src/commit_chain_extractor.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in commit_chain_extractor.py:\n\nRule: subprocess.venv_leak\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/recommend-skill-chain/src/commit_chain_extractor.py\n\
+    Message: Subprocess calls skill run.sh without stripping VIRTUAL_ENV \u2014 breaks\
+    \ in scheduler context.\n\nInstructions: Add env={{k: v for k, v in os.environ.items()\
+    \ if k != 'VIRTUAL_ENV'}} to the subprocess.run() or subprocess.Popen() call that\
+    \ references run.sh or /skills/. Add 'import os' if not present. Do NOT change\
+    \ any other code.\n\nIMPORTANT: Read the file first. Make minimal changes. Do\
+    \ not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.venv_leak.*recommend-skill-chain'
+    assertion: exit_code == 1
+- id: fix-064-naming-noun_only
+  title: '[remote-control] Skill name ''remote-control'' appears noun-only; consider
+    a verb- prefix or add to'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/remote-control
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/remote-control/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: naming.noun_only
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/remote-control/SKILL.md
+
+    Message: Skill name ''remote-control'' appears noun-only; consider a verb- prefix
+    or add to _NOUN_ALLOWLIST.
+
+
+    Instructions: Add the skill name to _NOUN_ALLOWLIST in skills-ci/scanners.py.
+    These are established skills that won''t be renamed.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'naming.noun_only.*remote-control'
+    assertion: exit_code == 1
+- id: fix-065-python-file_length
+  title: '[review-plan] File exceeds 900 LOC (940).'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/review-plan
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/review-plan/review_plan.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in review_plan.py:
+
+
+    Rule: python.file_length
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/review-plan/review_plan.py
+
+    Message: File exceeds 900 LOC (940).
+
+
+    Instructions: Split the file into two modules. Keep the main entry point / CLI
+    / public API in the original file. Move helper functions, dataclasses, and utilities
+    to a new module in the same directory. Update imports. Both files must be under
+    800 lines.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.file_length.*review-plan'
+    assertion: exit_code == 1
+- id: fix-066-skills-missing_antipatterns
+  title: '[scillm] Composed by 38 other skills but SKILL.md has no antipattern documentation.
+    Add a'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/scillm
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/scillm/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: skills.missing_antipatterns
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/scillm/SKILL.md
+
+    Message: Composed by 38 other skills but SKILL.md has no antipattern documentation.
+    Add a ''## Common Mistakes'' section with concrete WRONG/RIGHT examples. Agents
+    misuse high-fan-in skills repeatedly.
+
+
+    Instructions: Add a ''## Common Mistakes'' section to SKILL.md with 3-5 concrete
+    WRONG/RIGHT examples. Document actual antipatterns for this skill''s domain.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.missing_antipatterns.*scillm'
+    assertion: exit_code == 1
+- id: fix-067-skills-skill_md_bloat
+  title: '[scillm] SKILL.md is 679 lines (limit 500). Move rules to best-practices-*
+    skill.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/scillm
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/scillm/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: skills.skill_md_bloat
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/scillm/SKILL.md
+
+    Message: SKILL.md is 679 lines (limit 500). Move rules to best-practices-* skill.
+
+
+    Instructions: Move detailed content from SKILL.md to references/ subdirectory.
+    Keep frontmatter, quick start, and CLI reference. Extract examples, architecture,
+    detailed docs to separate .md files. Replace extracted sections with one-line
+    links.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.skill_md_bloat.*scillm'
+    assertion: exit_code == 1
+- id: fix-068-skills-extra_docs
+  title: '[skills-ci] Extra docs in skill root: nightly-report-2026-03-31.md, nightly-report-2026-04-0'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in skills-ci:
+
+
+    Rule: skills.extra_docs
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci
+
+    Message: Extra docs in skill root: nightly-report-2026-03-31.md, nightly-report-2026-04-05.md,
+    nightly-report-2026-04-06.md.
+
+
+    Instructions: Move extra .md files from the skill root directory into a docs/
+    subdirectory. Update any references to the moved files.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.extra_docs.*skills-ci'
+    assertion: exit_code == 1
+- id: fix-069-python-file_length
+  title: '[skills-ci] File exceeds 900 LOC (910).'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci/scanners.py
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in scanners.py:
+
+
+    Rule: python.file_length
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci/scanners.py
+
+    Message: File exceeds 900 LOC (910).
+
+
+    Instructions: Split the file into two modules. Keep the main entry point / CLI
+    / public API in the original file. Move helper functions, dataclasses, and utilities
+    to a new module in the same directory. Update imports. Both files must be under
+    800 lines.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'python.file_length.*skills-ci'
+    assertion: exit_code == 1
+- id: fix-072-subprocess-stderr_fatal
+  title: "[skills-ci] Treats stderr as fatal error \u2014 uv/pip emit warnings to\
+    \ stderr that are not error"
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci/generate_fix_plan.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in generate_fix_plan.py:\n\nRule: subprocess.stderr_fatal\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci/generate_fix_plan.py\n\
+    Message: Treats stderr as fatal error \u2014 uv/pip emit warnings to stderr that\
+    \ are not errors. Check returncode instead.\n\nInstructions: Change 'if result.stderr:'\
+    \ to 'if result.returncode != 0:' for error raising. Add '(rc={{result.returncode}})'\
+    \ to the error message so returncode appears on the same line as stderr. Keep\
+    \ stderr in the message for context.\n\nIMPORTANT: Read the file first. Make minimal\
+    \ changes. Do not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.stderr_fatal.*skills-ci'
+    assertion: exit_code == 1
+- id: fix-073-subprocess-service_bypass
+  title: '[skills-ci] Subprocess calls /memory run.sh but embry-memory (Unix socket
+    / port 8601) is a '
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci/generate_fix_plan.py
+  max_rounds: 3
+  prompt: "Fix this skills-ci violation in generate_fix_plan.py:\n\nRule: subprocess.service_bypass\n\
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci/generate_fix_plan.py\n\
+    Message: Subprocess calls /memory run.sh but embry-memory (Unix socket / port\
+    \ 8601) is a running HTTP service \u2014 POST to it instead.\n\nInstructions:\
+    \ Replace the subprocess call to run.sh with a direct httpx call to the service.\
+    \ Memory service: Unix socket /run/user/1000/embry/memory.sock. Scillm: http://localhost:4001/v1/chat/completions.\
+    \ Chutes: http://localhost:8630/batch. Embedding: http://localhost:8602/embed.\
+    \ Add 'import httpx' if not present.\n\nIMPORTANT: Read the file first. Make minimal\
+    \ changes. Do not modify anything beyond what's needed to fix this violation."
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'subprocess.service_bypass.*skills-ci'
+    assertion: exit_code == 1
+- id: fix-078-skills-extra_docs
+  title: '[taxonomy] Extra docs in skill root: WALKTHROUGH.md.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/taxonomy
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in taxonomy:
+
+
+    Rule: skills.extra_docs
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/taxonomy
+
+    Message: Extra docs in skill root: WALKTHROUGH.md.
+
+
+    Instructions: Move extra .md files from the skill root directory into a docs/
+    subdirectory. Update any references to the moved files.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.extra_docs.*taxonomy'
+    assertion: exit_code == 1
+- id: fix-080-skills-extra_docs
+  title: '[test-interactions] Extra docs in skill root: INTERACTION_REPORT.md.'
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/test-interactions
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in test-interactions:
+
+
+    Rule: skills.extra_docs
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/test-interactions
+
+    Message: Extra docs in skill root: INTERACTION_REPORT.md.
+
+
+    Instructions: Move extra .md files from the skill root directory into a docs/
+    subdirectory. Update any references to the moved files.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.extra_docs.*test-interactions'
+    assertion: exit_code == 1
+- id: fix-081-skills-missing_antipatterns
+  title: '[test-lab] Composed by 3 other skills but SKILL.md has no antipattern documentation.
+    Add a '
+  runner: code-runner
+  lane: default
+  backend: sonnet
+  mode: edit
+  cwd: /home/graham/workspace/experiments/pi-mono/.pi/skills/test-lab
+  allowlist:
+  - /home/graham/workspace/experiments/pi-mono/.pi/skills/test-lab/SKILL.md
+  max_rounds: 3
+  prompt: 'Fix this skills-ci violation in SKILL.md:
+
+
+    Rule: skills.missing_antipatterns
+
+    File: /home/graham/workspace/experiments/pi-mono/.pi/skills/test-lab/SKILL.md
+
+    Message: Composed by 3 other skills but SKILL.md has no antipattern documentation.
+    Add a ''## Common Mistakes'' section with concrete WRONG/RIGHT examples. Agents
+    misuse high-fan-in skills repeatedly.
+
+
+    Instructions: Add a ''## Common Mistakes'' section to SKILL.md with 3-5 concrete
+    WRONG/RIGHT examples. Document actual antipatterns for this skill''s domain.
+
+
+    IMPORTANT: Read the file first. Make minimal changes. Do not modify anything beyond
+    what''s needed to fix this violation.'
+  definition_of_done:
+    command: cd /home/graham/workspace/experiments/pi-mono/.pi/skills/skills-ci &&
+      uv run python skills_ci.py --mode scan 2>&1 | grep -c 'skills.missing_antipatterns.*test-lab'
+    assertion: exit_code == 1

@@ -61,8 +61,6 @@ class EvidenceCaseStore2:
         question: str,
         category: str,
         verdict_state: str,
-        grade: str,
-        score: float,
         gates: list[dict],
         evidence_items: list[dict],
         answer: str,
@@ -70,6 +68,8 @@ class EvidenceCaseStore2:
         sub_claims: list[str] | None = None,
         control_ids: list[str] | None = None,
         decomposition: dict | None = None,
+        grade: str | None = None,
+        score: float | None = None,
     ) -> dict:
         """Persist a complete evidence case. Called by the agent after reasoning."""
         claim = ClaimNode(

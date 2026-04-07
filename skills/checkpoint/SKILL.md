@@ -96,7 +96,7 @@ Session ends
    - code tags (workflow type, from classify_task)
    - embedding (for semantic search)
     ↓
-4. store_skill_chain() → lessons_v2 (legacy, backward compat)
+4. store_skill_chain() → lessons_v2 via /store (legacy, backward compat; /learn is deprecated)
     ↓
 5. git push + tag → project AND skills repos
     ↓
@@ -109,7 +109,7 @@ Next similar problem → agent gets proven chain + grade
 
 | Collection | What | Searchable via |
 |------------|------|----------------|
-| `checkpoints` | Session snapshot (topic, resume, grade, git state) | BM25, tags |
+| `checkpoints` | Session snapshot (topic, resume, grade, git state, transcript_paths, skill_chain) | BM25, tags |
 | `skill_chains` | **Self-contained**: problem, solution, skills, grade, mind, code, embedding | BM25 + semantic + graph traversal |
 | `lessons_v2` | Legacy skill-chain lesson (backward compat) | BM25 |
 | git commit | `Skills:` and `Grade:` trailers in commit message | `git log --grep="Skills:"` |
@@ -136,6 +136,7 @@ Only the axes that make sense for code:
 | `--episode-key` | No | Link to episodic archive document in ArangoDB |
 | `--ingest-claude-memory` | No | Cross-reference ~/.claude/ project memory files |
 | `--mine-session` | No | Extract skill chains from transcript via /mine-transcripts |
+| `--transcript-paths` | No | Auto-detected Claude Code session transcript .jsonl files (usually auto-populated) |
 | `--files` / `-f` | No | Key file paths (repeatable) |
 | `--decisions` | No | Key decisions made (repeatable) |
 | `--next-steps` | No | What should happen next (repeatable) |
@@ -167,6 +168,17 @@ All grades feed `/recommend-skill-chain`: clean/reusable → proven-success, unr
 | `--limit` / `-k` | Max results (default: 3) |
 | `--json` | Output as JSON |
 
+## What Resume Shows
+
+Resume (`./run.sh recall` or `./run.sh last`) displays frozen session context from the stored checkpoint:
+
+- **FILES TOUCHED IN THAT SESSION** — files modified during the saved session (frozen at save time, not live git)
+- **COMMITS IN THAT SESSION** — commits made during the saved session (frozen at save time)
+- **>>> USE THIS CHAIN:** — shown when `skill_chain` is present in the checkpoint doc, gives the proven skill sequence
+- **Prior solutions / recommended chains** — from `/memory recall` against the `skill_chains` collection
+
+All session context (files, commits, transcript paths) is frozen at save time. Resume reads from the checkpoint doc, not from live git state.
+
 ## What Gets Stored (v3 schema)
 
 **Problem field** (BM25-searchable):
@@ -188,6 +200,8 @@ Fixed false negative rate from 0.85 threshold in QRA validation pipeline.
 - `commit_hash`, `diff_stat` — git provenance (run `git show {hash}` for full diff)
 - `session_id`, `episode_key` — episodic archiver linkage
 - `claude_memory_refs` — cross-references to ~/.claude/ project memory files
+- `transcript_paths` — auto-detected Claude Code session transcript .jsonl files, frozen at save time
+- `skill_chain` — proven skill chain from the session (stored directly in checkpoint doc, not just skill_chains collection)
 - `git` — branch, commit, recent commits, modified files
 - `files`, `decisions`, `next_steps`, `blockers`, `evidence`
 
@@ -213,6 +227,12 @@ Fixed false negative rate from 0.85 threshold in QRA validation pipeline.
 
 # RIGHT: Pass episode key when available
 ./run.sh save -t "..." -s "..." --episode-key "ep_abc123"
+
+# WRONG: Use /learn to store knowledge
+# → /learn is deprecated
+
+# RIGHT: Use /store with collection param
+# httpx POST /store with collection="lessons_v2" (or any target collection)
 ```
 
 ## How Agents Use Proven Chains

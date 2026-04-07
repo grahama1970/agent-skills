@@ -1,10 +1,14 @@
-"""Live validation: run all 12 question_bank questions through the evidence case pipeline.
+"""Run question bank through the evidence case pipeline.
 
-Saves per-question JSON + aggregate report + eval-compatible output.
+Generates ~999 questions from live data sources, then runs each through
+EvidenceCaseRunner. Supports --gates-only for deterministic-only checks
+(no LLM, no lean4, no plausibility — just entity extraction + recall +
+same-technique check).
 
 Usage:
-    python run_question_bank.py [--output-dir /tmp/evidence-case-v2-results]
-    python run_question_bank.py --check-regression  # compare against baseline
+    python run_question_bank.py
+    python run_question_bank.py --gates-only --limit 50
+    python run_question_bank.py --check-regression
 """
 from __future__ import annotations
 
@@ -18,9 +22,8 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
-from question_bank import QUESTIONS, TestQuestion
+from question_bank import TestQuestion, generate_bank, bank_summary
 from runner import EvidenceCaseRunner
-from report import render_markdown_report
 
 app = typer.Typer()
 console = Console()
@@ -29,21 +32,35 @@ OUTPUT_DIR = Path("/tmp/evidence-case-v2-results")
 STATE_DIR = Path(__file__).parent / "state"
 BASELINE_FILE = STATE_DIR / "eval_baseline.json"
 
+# Map expected_verdict → accepted runner verdict_state values
+_VERDICT_MAP = {
+    "SATISFIED": {"satisfied"},
+    "NOT_SATISFIED": {"not_satisfied"},
+    "INCONCLUSIVE": {"inconclusive"},
+    "DEFLECT": {"not_satisfied"},  # off-topic → not_satisfied in runner
+}
 
-def _run_one(runner: EvidenceCaseRunner, q: TestQuestion, idx: int) -> dict:
+
+def _is_correct(expected_verdict: str, actual_verdict: str) -> bool:
+    """Check if the actual verdict matches the expected one."""
+    accepted = _VERDICT_MAP.get(expected_verdict, set())
+    return actual_verdict in accepted
+
+
+def _run_one(runner: EvidenceCaseRunner, q: TestQuestion, idx: int, total: int) -> dict:
     """Run a single question and return the result with metadata."""
     start = time.monotonic()
     try:
         result = runner.run(
             claim_text=q.question,
-            category=q.category_hint,
+            category=q.category,
             show_progress=False,
         )
     except Exception as exc:
-        logger.error("Q{:02d} crashed: {}", idx, exc)
+        logger.error("Q{:03d} crashed: {}", idx, exc)
         result = {
-            "claim": {"text": q.question, "category": q.category_hint, "id": f"error_{idx}"},
-            "verdict": {"state": "not_satisfied", "grade": "F", "score": 0.0},
+            "claim": {"text": q.question, "category": q.category, "id": f"error_{idx}"},
+            "verdict": {"state": "error", "grade": "F", "score": 0.0},
             "answer": f"CRASH: {exc}",
             "gate_trace": [],
             "gates_passed": 0,
@@ -51,85 +68,74 @@ def _run_one(runner: EvidenceCaseRunner, q: TestQuestion, idx: int) -> dict:
         }
     elapsed = time.monotonic() - start
 
-    # Annotate with expected values
+    verdict_state = result.get("verdict", {}).get("state", "unknown")
+    correct = _is_correct(q.expected_verdict, verdict_state)
+
     result["_meta"] = {
         "question_index": idx,
-        "persona": q.persona,
-        "difficulty": q.difficulty,
-        "expected_answerable": q.expected_answerable,
-        "category_hint": q.category_hint,
-        "rationale": q.rationale,
+        "category": q.category,
+        "framework": q.framework,
+        "control_id": q.control_id,
+        "expected_verdict": q.expected_verdict,
+        "verdict_state": verdict_state,
+        "correct": correct,
+        "source": q.source,
         "elapsed_sec": round(elapsed, 2),
     }
-
-    # Determine correctness
-    verdict_state = result.get("verdict", {}).get("state", "unknown")
-    expected = q.expected_answerable
-    if expected == "yes":
-        correct = verdict_state == "satisfied"
-    elif expected == "no":
-        correct = verdict_state in ("not_satisfied",) or result.get("needs_clarification", False)
-    elif expected == "inconclusive":
-        # Q10/Q11: must be INCONCLUSIVE (not false-positive SATISFIED)
-        correct = verdict_state == "inconclusive"
-    elif expected == "maybe":
-        correct = True  # inconclusive/decomposition/clarification all acceptable
-    else:
-        correct = None
-
-    result["_meta"]["correct"] = correct
-    result["_meta"]["verdict_state"] = verdict_state
     return result
 
 
-def _build_report(results: list[dict], elapsed_total: float) -> str:
+def _build_report(results: list[dict], elapsed_total: float, gates_only: bool) -> str:
     """Build aggregate validation report."""
     lines = []
-    lines.append("# Evidence Case v3 (Technique-Centric) — Live Validation Report")
+    mode = "Gates-Only" if gates_only else "Full Pipeline"
+    lines.append(f"# Evidence Case Test Bank — {mode} Report")
     lines.append(f"\n**Date**: {time.strftime('%Y-%m-%d %H:%M')}")
     lines.append(f"**Total time**: {elapsed_total:.1f}s")
     lines.append(f"**Questions**: {len(results)}")
     lines.append("")
 
-    # Accuracy
     correct = sum(1 for r in results if r.get("_meta", {}).get("correct"))
     total = len(results)
     accuracy = correct / total if total else 0
     lines.append(f"## Accuracy: {correct}/{total} ({accuracy:.0%})")
     lines.append("")
 
-    # False positives (expected=no but got satisfied)
-    fp = [r for r in results if r["_meta"]["expected_answerable"] == "no"
-          and r["_meta"]["verdict_state"] == "satisfied"]
-    lines.append(f"**False positives**: {len(fp)}")
-    for r in fp:
-        lines.append(f"  - Q{r['_meta']['question_index']:02d}: {r['claim']['text'][:60]}...")
+    # Per-category accuracy
+    lines.append("## Accuracy by Category")
+    lines.append("")
+    for cat in ("satisfied", "not_satisfied", "inconclusive", "off_topic"):
+        subset = [r for r in results if r["_meta"]["category"] == cat]
+        if subset:
+            cat_correct = sum(1 for r in subset if r["_meta"]["correct"])
+            lines.append(f"- {cat}: {cat_correct}/{len(subset)} ({cat_correct/len(subset):.0%})")
 
-    # False negatives (expected=yes but got not_satisfied)
-    fn = [r for r in results if r["_meta"]["expected_answerable"] == "yes"
+    # False positives (expected NOT_SATISFIED/INCONCLUSIVE/DEFLECT but got satisfied)
+    fp = [r for r in results if r["_meta"]["expected_verdict"] != "SATISFIED"
+          and r["_meta"]["verdict_state"] == "satisfied"]
+    lines.append(f"\n**False positives**: {len(fp)}")
+    for r in fp[:10]:
+        lines.append(f"  - Q{r['_meta']['question_index']:03d}: {r['claim']['text'][:60]}...")
+
+    # False negatives (expected SATISFIED but got not_satisfied)
+    fn = [r for r in results if r["_meta"]["expected_verdict"] == "SATISFIED"
           and r["_meta"]["verdict_state"] == "not_satisfied"]
     lines.append(f"**False negatives**: {len(fn)}")
-    for r in fn:
-        q_idx = r['_meta']['question_index']
-        stopped = r.get('stopped_at_gate', '?')
-        lines.append(f"  - Q{q_idx:02d}: stopped at {stopped} — {r['claim']['text'][:60]}...")
+    for r in fn[:10]:
+        lines.append(f"  - Q{r['_meta']['question_index']:03d}: {r['claim']['text'][:60]}...")
 
     lines.append("")
 
-    # Per-question table
-    lines.append("## Per-Question Results")
+    # Per-framework accuracy
+    lines.append("## Accuracy by Framework")
     lines.append("")
-    lines.append("| Q# | Difficulty | Expected | Got | Gates | Stopped At | Correct | Time |")
-    lines.append("|-----|-----------|----------|-----|-------|------------|---------|------|")
-    for r in results:
-        m = r["_meta"]
-        stopped = r.get("stopped_at_gate", "—")
-        icon = "YES" if m["correct"] else "NO"
-        lines.append(
-            f"| Q{m['question_index']:02d} | {m['difficulty']} | {m['expected_answerable']} "
-            f"| {m['verdict_state']} | {r.get('gates_passed', 0)}/{r.get('gates_total', 0)} "
-            f"| {stopped or '—'} | {icon} | {m['elapsed_sec']:.1f}s |"
-        )
+    frameworks = sorted({r["_meta"]["framework"] for r in results})
+    for fw in frameworks:
+        subset = [r for r in results if r["_meta"]["framework"] == fw]
+        if subset:
+            fw_correct = sum(1 for r in subset if r["_meta"]["correct"])
+            lines.append(f"- {fw}: {fw_correct}/{len(subset)} ({fw_correct/len(subset):.0%})")
+
     lines.append("")
 
     # Gate failure distribution
@@ -145,62 +151,63 @@ def _build_report(results: list[dict], elapsed_total: float) -> str:
             lines.append(f"- {gate}: {count} questions stopped here")
         lines.append("")
 
-    # Per-difficulty accuracy
-    lines.append("## Accuracy by Difficulty")
-    lines.append("")
-    for diff in ("easy", "medium", "hard"):
-        subset = [r for r in results if r["_meta"]["difficulty"] == diff]
-        if subset:
-            diff_correct = sum(1 for r in subset if r["_meta"]["correct"])
-            lines.append(f"- {diff}: {diff_correct}/{len(subset)} ({diff_correct/len(subset):.0%})")
-    lines.append("")
-
     return "\n".join(lines)
 
 
 @app.command()
 def run(
     output_dir: str = typer.Option(str(OUTPUT_DIR), "--output-dir", "-o"),
+    gates_only: bool = typer.Option(False, "--gates-only",
+                                     help="Run deterministic gates only (no LLM, no lean4)"),
+    limit: int = typer.Option(0, "--limit", "-n",
+                               help="Max questions to run (0 = all)"),
+    seed: int = typer.Option(42, "--seed", help="Random seed for bank generation"),
     json_output: bool = typer.Option(False, "--json"),
-    check_regression: bool = typer.Option(False, "--check-regression",
-                                          help="Compare against baseline and exit 1 if accuracy drops > threshold"),
-    save_baseline: bool = typer.Option(False, "--save-baseline",
-                                       help="Save results as the new eval baseline"),
+    check_regression: bool = typer.Option(False, "--check-regression"),
+    save_baseline: bool = typer.Option(False, "--save-baseline"),
 ) -> None:
-    """Run all 12 question_bank questions through the evidence case pipeline."""
+    """Run question bank through the evidence case pipeline."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    runner = EvidenceCaseRunner()
+    console.print(f"[bold]Generating question bank (seed={seed})...[/]")
+    bank = generate_bank(seed=seed)
+    summary = bank_summary(bank)
+    console.print(f"[bold]Bank: {len(bank)} questions[/]")
+    for k, v in summary.get("by_category", {}).items():
+        console.print(f"  {k}: {v}")
+
+    if limit > 0:
+        bank = bank[:limit]
+        console.print(f"[dim]Limited to first {limit} questions[/]")
+
+    runner = EvidenceCaseRunner(gates_only=gates_only)
     results = []
     total_start = time.monotonic()
 
-    for idx, q in enumerate(QUESTIONS, 1):
-        console.print(f"\n[bold cyan]Q{idx:02d}/{len(QUESTIONS)}[/] [{q.difficulty}] {q.question[:80]}...")
-        result = _run_one(runner, q, idx)
+    for idx, q in enumerate(bank, 1):
+        console.print(
+            f"\n[bold cyan]Q{idx:03d}/{len(bank)}[/] "
+            f"[{q.category}] [{q.expected_verdict}] {q.question[:80]}..."
+        )
+        result = _run_one(runner, q, idx, len(bank))
         results.append(result)
 
         # Save per-question JSON
-        q_path = out / f"q{idx:02d}.json"
+        q_path = out / f"q{idx:03d}.json"
         q_path.write_text(json.dumps(result, indent=2, default=str))
-
-        # Also save the markdown report for this question
-        try:
-            report_md = render_markdown_report(result)
-            (out / f"q{idx:02d}_report.md").write_text(report_md)
-        except Exception:
-            pass
 
         m = result["_meta"]
         icon = "[green]CORRECT[/]" if m["correct"] else "[red]WRONG[/]"
-        console.print(f"  {icon} expected={m['expected_answerable']} got={m['verdict_state']} "
-                      f"gates={result.get('gates_passed', 0)}/{result.get('gates_total', 0)} "
-                      f"({m['elapsed_sec']:.1f}s)")
+        console.print(
+            f"  {icon} expected={m['expected_verdict']} got={m['verdict_state']} "
+            f"({m['elapsed_sec']:.1f}s)"
+        )
 
     total_elapsed = time.monotonic() - total_start
 
     # Save aggregate report
-    report = _build_report(results, total_elapsed)
+    report = _build_report(results, total_elapsed, gates_only)
     report_path = out / "REPORT.md"
     report_path.write_text(report)
 
@@ -211,56 +218,47 @@ def run(
     # Compute summary
     correct = sum(1 for r in results if r["_meta"]["correct"])
     accuracy = correct / len(results) if results else 0
-    false_positives = sum(1 for r in results if r["_meta"]["expected_answerable"] == "no"
-                          and r["_meta"]["verdict_state"] == "satisfied")
-    false_negatives = sum(1 for r in results if r["_meta"]["expected_answerable"] == "yes"
-                          and r["_meta"]["verdict_state"] == "not_satisfied")
+    false_positives = sum(
+        1 for r in results
+        if r["_meta"]["expected_verdict"] != "SATISFIED"
+        and r["_meta"]["verdict_state"] == "satisfied"
+    )
+    false_negatives = sum(
+        1 for r in results
+        if r["_meta"]["expected_verdict"] == "SATISFIED"
+        and r["_meta"]["verdict_state"] == "not_satisfied"
+    )
 
-    # Build wrong questions map
-    wrong_questions = {}
-    for r in results:
-        m = r["_meta"]
-        if not m["correct"]:
-            q_key = f"q{m['question_index']:02d}"
-            wrong_questions[q_key] = {
-                "expected": m["expected_answerable"],
-                "got": m["verdict_state"],
-                "type": "false_positive" if m["expected_answerable"] in ("no", "inconclusive")
-                        and m["verdict_state"] == "satisfied" else "false_negative",
-            }
-
-    summary = {
-        "version": 1,
+    run_summary = {
+        "version": 2,
         "date": time.strftime("%Y-%m-%d"),
+        "gates_only": gates_only,
         "accuracy": round(accuracy, 3),
         "correct": correct,
         "total": len(results),
         "false_positives": false_positives,
         "false_negatives": false_negatives,
-        "wrong_questions": wrong_questions,
         "elapsed_sec": round(total_elapsed, 2),
         "output_dir": str(out),
     }
 
-    # Print summary
     console.print(f"\n[bold]Results: {correct}/{len(results)} correct ({accuracy:.0%})[/]")
+    console.print(f"False positives: {false_positives}, False negatives: {false_negatives}")
     console.print(f"Report: {report_path}")
-    console.print(f"Results: {all_path}")
+    console.print(f"Time: {total_elapsed:.1f}s ({total_elapsed/len(results):.1f}s/question)")
 
     if json_output:
-        print(json.dumps(summary, indent=2))
+        print(json.dumps(run_summary, indent=2))
 
-    # Save as baseline if requested
     if save_baseline:
         STATE_DIR.mkdir(parents=True, exist_ok=True)
-        baseline = {**summary, "regression_threshold": 0.08}
+        baseline = {**run_summary, "regression_threshold": 0.08}
         BASELINE_FILE.write_text(json.dumps(baseline, indent=2))
         console.print(f"[green]Saved baseline: {BASELINE_FILE}[/]")
 
-    # Check regression against baseline
     if check_regression:
         if not BASELINE_FILE.exists():
-            console.print("[yellow]No baseline file found — skipping regression check[/]")
+            console.print("[yellow]No baseline file — skipping regression check[/]")
             return
 
         baseline = json.loads(BASELINE_FILE.read_text())
@@ -269,12 +267,16 @@ def run(
         drop = baseline_accuracy - accuracy
 
         if drop > threshold:
-            console.print(f"[bold red]REGRESSION: accuracy dropped {drop:.1%} "
-                          f"(baseline={baseline_accuracy:.0%}, current={accuracy:.0%}, threshold={threshold:.0%})[/]")
+            console.print(
+                f"[bold red]REGRESSION: accuracy dropped {drop:.1%} "
+                f"(baseline={baseline_accuracy:.0%}, current={accuracy:.0%})[/]"
+            )
             sys.exit(1)
         else:
-            console.print(f"[green]No regression: baseline={baseline_accuracy:.0%}, "
-                          f"current={accuracy:.0%} (threshold={threshold:.0%})[/]")
+            console.print(
+                f"[green]No regression: baseline={baseline_accuracy:.0%}, "
+                f"current={accuracy:.0%}[/]"
+            )
 
 
 if __name__ == "__main__":

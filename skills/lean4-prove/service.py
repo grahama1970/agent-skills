@@ -317,6 +317,11 @@ class ProveRequest(BaseModel):
 class ProveResponse(BaseModel):
     success: bool
     code: Optional[str] = None
+    formalized_as: Optional[str] = Field(
+        None,
+        description="The proposition extracted from the generated Lean4 code. "
+        "Shows how the natural language requirement was autoformalized.",
+    )
     attempts: int = 0
     errors: Optional[List[str]] = None
     proof_mode: Optional[str] = Field(None, description="Which proof mode won")
@@ -345,6 +350,25 @@ def _extract_lean_code(text: str) -> str:
         return fence.group(1).strip()
     lines = [l for l in text.split('\n') if not l.startswith('#') and l.strip()]
     return '\n'.join(lines).strip()
+
+
+def _extract_proposition(code: str) -> str | None:
+    """Extract the theorem/def proposition from compiled Lean4 code.
+
+    Looks for 'theorem NAME ... :' or 'def NAME ... :' and returns
+    the type signature (everything after the colon up to ':= by' or ':=').
+    This shows what the LLM autoformalized the question into.
+    """
+    if not code:
+        return None
+    # Match theorem or def with type signature
+    m = re.search(
+        r'(?:theorem|def|lemma)\s+\w+[^:]*:\s*(.*?)(?::=\s*by\b|:=)',
+        code, re.DOTALL,
+    )
+    if m:
+        return " ".join(m.group(1).split()).strip()
+    return None
 
 
 def _run_proof_mode(
@@ -390,7 +414,9 @@ def _run_proof_mode(
 
         result = c.compile_one(code)
         if result.success:
-            return {"success": True, "code": code, "attempts": attempt + 1,
+            return {"success": True, "code": code,
+                    "formalized_as": _extract_proposition(code),
+                    "attempts": attempt + 1,
                     "strategy_index": strategy_idx, "proof_mode": mode_name,
                     "errors": errors or None}
 
@@ -469,7 +495,9 @@ async def prove_endpoint(req: ProveRequest):
     if winner:
         _stats["proofs_succeeded"] += 1
         return ProveResponse(
-            success=True, code=winner["code"], attempts=winner["attempts"],
+            success=True, code=winner["code"],
+            formalized_as=winner.get("formalized_as"),
+            attempts=winner["attempts"],
             proof_mode=winner.get("proof_mode"), strategy_index=winner["strategy_index"],
             all_results=all_results,
         )

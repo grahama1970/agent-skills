@@ -36,6 +36,17 @@ from evidence import (
     get_strategy,
     build_fix_prompt,
 )
+from llm_invocations import log_invocation
+from diagnose import (
+    call_diagnose,
+    validate_diagnosis,
+    check_stagnation,
+    check_fix_consistency,
+    _treesitter_symbols,
+    build_fix_from_diagnosis,
+    Diagnosis,
+    DiagnosisRejected,
+)
 from apply import (
     build_file_context,
     generate_hunk_review,
@@ -194,60 +205,45 @@ def log_round(output_dir: Path, task_id: str, entry: dict,
         _learn_round_to_memory(task_id, entry, session_key=session_key, symbols=symbols)
 
 
-MEMORY_SOCKET = "/run/user/1000/embry/memory.sock"
-
-
 def _learn_round_to_memory(task_id: str, entry: dict, session_key: str = "",
                            symbols: str = "") -> None:
-    """Store round to ArangoDB /memory via httpx Unix socket.
+    """Store round to ArangoDB llm_invocations via unified logger.
 
     session_key links all rounds for one code-runner invocation.
     symbols contains /treesitter output for the modified files.
     """
-    problem = (
-        f"CODE-RUNNER:{task_id}:round{entry.get('round', 0)} — "
-        f"strategy={entry.get('strategy', '?')} "
-        f"score={entry.get('score', 0):.3f} "
-        f"severity={entry.get('error_severity', '?')} "
-        f"status={entry.get('status', '?')}"
+    log_invocation(
+        agent="code-runner",
+        session_key=session_key,
+        round=entry.get("round", 1),
+        role="assistant",
+        turn_index=entry.get("round", 1),
+        input=entry.get("prompt_snippet", ""),
+        output=entry.get("response_snippet", ""),
+        outcome="success" if entry.get("dod_passed") else "failed",
+        duration_ms=entry.get("duration_ms", 0),
+        model=entry.get("model", ""),
+        score=entry.get("score"),
+        error=entry.get("error_severity"),
+        tags=[
+            "code-runner", "self-improvement",
+            f"task:{task_id}",
+            f"strategy:{entry.get('strategy', '')}",
+            f"severity:{entry.get('error_severity', '')}",
+            f"outcome:{'pass' if entry.get('dod_passed') else 'fail'}",
+        ],
+        parent_session="",
+        metadata={
+            "task_id": task_id,
+            "status": entry.get("status", ""),
+            "errors_by_type": entry.get("errors_by_type", {}),
+            "lint_violations": entry.get("lint_violations", 0),
+            "bp_violations": entry.get("bp_violations", []),
+            "commit": entry.get("commit", ""),
+            "symbols": symbols[:1000] if symbols else "",
+            "dod_passed": entry.get("dod_passed", False),
+        },
     )
-    solution = json.dumps({
-        "task_id": task_id,
-        "session_key": session_key,
-        "round": entry.get("round", 0),
-        "score": entry.get("score", 0),
-        "strategy": entry.get("strategy", ""),
-        "status": entry.get("status", ""),
-        "error_severity": entry.get("error_severity", ""),
-        "errors_by_type": entry.get("errors_by_type", {}),
-        "dod_passed": entry.get("dod_passed", False),
-        "lint_violations": entry.get("lint_violations", 0),
-        "bp_violations": entry.get("bp_violations", []),
-        "commit": entry.get("commit", ""),
-        "symbols": symbols[:1000] if symbols else "",
-        "prior_rounds": [r for r in range(1, entry.get("round", 1))],
-    })
-    tags = [
-        "code-runner", "self-improvement",
-        f"task:{task_id}",
-        f"session:{session_key}" if session_key else "",
-        f"strategy:{entry.get('strategy', '')}",
-        f"severity:{entry.get('error_severity', '')}",
-        f"outcome:{'pass' if entry.get('dod_passed') else 'fail'}",
-    ]
-    tags = [t for t in tags if t and (":" not in t or t.split(":", 1)[1])]
-
-    try:
-        transport = httpx.HTTPTransport(uds=MEMORY_SOCKET)
-        with httpx.Client(transport=transport, timeout=10.0) as client:
-            client.post("http://localhost/learn", json={
-                "problem": problem, "solution": solution,
-                "scope": "code-runner", "tags": tags,
-            })
-    except (httpx.ConnectError, OSError):
-        pass  # memory service down — non-fatal, don't block the loop
-    except Exception:
-        pass  # best-effort
 
 
 
@@ -563,6 +559,7 @@ def run(
     snapshot = git_snapshot(cwd)
 
     rounds_history: list[dict] = []
+    prior_diagnoses: list[Diagnosis] = []
     best_score = 0.0
     best_commit = snapshot
     try:  # try/finally guarantees stash pop + lock release even on crash
@@ -664,7 +661,95 @@ def run(
                                 logger.info("  Context escalation: {} promoted to full content", rc)
 
                 file_context = build_file_context(allowlist, cwd, read_context, escalated_files)
-                current_prompt = build_fix_prompt(evidence, rounds_history, strategy, prompt, file_context, allowlist=allowlist)
+
+                # Snapshot treesitter symbols BEFORE LLM writes (for consistency Check 4)
+                pre_fix_symbols: dict[str, set[str]] = {}
+                if allowlist and round_num > 1:
+                    for af in allowlist[:5]:
+                        abs_af = Path(cwd) / af if not Path(af).is_absolute() else Path(af)
+                        if abs_af.exists() and abs_af.is_file():
+                            pre_fix_symbols[af] = _treesitter_symbols(abs_af)
+
+                # ── DIAGNOSE/FIX SPLIT (two scillm calls instead of one) ──
+                # Call 1: DIAGNOSE — structured root-cause inference, no code
+                from stderr_parser import condense_stderr
+                error_ev_obj = condense_stderr(
+                    evidence.get("stderr", ""), evidence.get("stdout", ""),
+                )
+                file_symbols = extract_symbols(evidence.get("written_files", []), cwd)
+
+                diag_backend, diag_reasoning = cur_backend, "high"  # diagnoser always high effort
+                _emit_event("diagnose_start", task_id=task_id, round=round_num,
+                            backend=diag_backend)
+
+                try:
+                    diagnosis = call_diagnose(
+                        error_evidence=error_ev_obj,
+                        stderr=evidence.get("stderr", ""),
+                        stdout=evidence.get("stdout", ""),
+                        file_content=file_context,
+                        symbols=file_symbols,
+                        task_prompt=prompt,
+                        backend=diag_backend,
+                        reasoning=diag_reasoning,
+                    )
+                    logger.info("  DIAGNOSIS: {} in {}::{} (confidence={:.2f})",
+                                diagnosis.failure_kind,
+                                diagnosis.primary_target.file,
+                                diagnosis.primary_target.symbol,
+                                diagnosis.confidence)
+                    logger.info("  ROOT CAUSE: {}", diagnosis.root_cause)
+                    logger.info("  REPAIR INTENT: {}", diagnosis.repair_intent)
+
+                    # Save diagnosis to disk for audit
+                    diag_path = output_dir / "logs" / f"round_{round_num}_diagnosis.json"
+                    diag_path.parent.mkdir(exist_ok=True)
+                    diag_path.write_text(diagnosis.model_dump_json(indent=2))
+
+                    # HARD GATE: validate diagnosis against reality
+                    validation = validate_diagnosis(
+                        diagnosis, cwd, symbols=file_symbols,
+                        stderr=evidence.get("stderr", ""),
+                        stdout=evidence.get("stdout", ""),
+                    )
+                    if validation.hard_failures:
+                        for f in validation.hard_failures:
+                            logger.error("  DIAGNOSIS REJECTED: {}", f)
+                        raise DiagnosisRejected(validation.hard_failures)
+                    if validation.warnings:
+                        for w in validation.warnings:
+                            logger.warning("  DIAGNOSIS WARNING: {}", w)
+
+                    # Check stagnation: understanding stuck vs implementation stuck
+                    prior_scores = [r.get("score", 0) for r in rounds_history]
+                    stagnation = check_stagnation(diagnosis, prior_diagnoses, prior_scores)
+
+                    if stagnation.stagnation_type == "understanding":
+                        # Escalate diagnoser, not fixer
+                        logger.warning("  STAGNATION: understanding stuck — {}", stagnation.reason)
+                        escalation_idx = min(escalation_idx + 1, len(escalation_chain) - 1)
+                    elif stagnation.stagnation_type == "implementation":
+                        logger.warning("  STAGNATION: implementation stuck — {}", stagnation.reason)
+
+                    prior_diagnoses.append(diagnosis)
+
+                    # Call 2: FIX — lean prompt constrained by diagnosis
+                    current_prompt = build_fix_from_diagnosis(
+                        diagnosis, file_context, allowlist=allowlist,
+                    )
+
+                except DiagnosisRejected as exc:
+                    logger.warning("  Diagnosis REJECTED ({}), falling back to combined prompt", exc.reasons)
+                    _emit_event("diagnosis_rejected", task_id=task_id, round=round_num,
+                                reasons=exc.reasons)
+                    current_prompt = build_fix_prompt(evidence, rounds_history, strategy, prompt, file_context, allowlist=allowlist)
+                except (httpx.HTTPStatusError, httpx.RequestError, httpx.TimeoutException) as exc:
+                    logger.warning("  Diagnosis call failed ({}), falling back to combined prompt", exc)
+                    current_prompt = build_fix_prompt(evidence, rounds_history, strategy, prompt, file_context, allowlist=allowlist)
+                except (ValueError, KeyError) as exc:
+                    logger.warning("  Diagnosis parse failed ({}), falling back to combined prompt", exc)
+                    current_prompt = build_fix_prompt(evidence, rounds_history, strategy, prompt, file_context, allowlist=allowlist)
+
                 if dogpile_context:
                     current_prompt += dogpile_context
 
@@ -732,6 +817,27 @@ def run(
             if written:
                 logger.info("  Applied {} files: {}", len(written), written)
                 consecutive_zero_writes = 0
+
+                # Fix-to-diagnosis consistency check (round 2+ only, when diagnosis exists)
+                if prior_diagnoses and round_num > 1:
+                    last_diag = prior_diagnoses[-1]
+                    # pre_fix_symbols captured before LLM call at top of round
+                    consistency = check_fix_consistency(
+                        last_diag, written, allowlist,
+                        cwd=cwd,
+                        pre_fix_symbols=pre_fix_symbols if 'pre_fix_symbols' in dir() else None,
+                    )
+                    if not consistency.consistent:
+                        for v in consistency.violations:
+                            logger.error("  FIX DRIFT: {}", v)
+                        _emit_event("fix_drift", task_id=task_id, round=round_num,
+                                    violations=consistency.violations)
+                        # Revert drifted fix — don't let it pollute scoring
+                        if is_git_repo:
+                            git_revert_to(cwd, best_commit, written)
+                        logger.warning("  Reverted drifted fix — diagnosis targets {}, fix edited {}",
+                                       last_diag.primary_target.file, written)
+                        written = []  # force zero-write path
             else:
                 consecutive_zero_writes += 1
                 if consecutive_zero_writes >= MAX_CONSECUTIVE_ZERO_WRITES:

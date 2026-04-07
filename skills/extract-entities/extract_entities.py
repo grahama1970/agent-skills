@@ -1,11 +1,11 @@
 """CLI for /extract-entities skill.
 
-Thin wrapper around graph_memory.entity_extraction.extract_entities().
-All logic lives in graph_memory — this is just the Typer CLI + formatting.
+Thin httpx client for the memory daemon's /extract-entities endpoint.
+No graph_memory imports — all AQL lives in the memory project.
 
 Inputs: Question text via CLI arg or --text flag.
 Outputs: JSON EntityExtractionResult to stdout.
-Failures: Falls back to regex-only if ArangoDB unavailable.
+Failures: Falls back to empty result if daemon unavailable.
 """
 
 from __future__ import annotations
@@ -21,8 +21,7 @@ from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
-# graph_memory is imported lazily inside extract() and check() commands only.
-# The resolve() command uses httpx + flashtext directly — no graph_memory needed.
+# All commands use httpx to call the memory daemon — no graph_memory imports.
 
 app = typer.Typer(
     name="extract-entities",
@@ -294,6 +293,20 @@ def _extract_delimited_entities(
     return entities
 
 
+def _call_extract_entities(text: str, include_taxonomy: bool = False) -> dict:
+    """Call daemon /extract-entities endpoint via httpx. Returns JSON dict."""
+    client = _make_memory_client()
+    try:
+        r = client.post("/extract-entities", json={
+            "text": text,
+            "include_taxonomy": include_taxonomy,
+        })
+        r.raise_for_status()
+        return r.json()
+    finally:
+        client.close()
+
+
 @app.command()
 def extract(
     text: str = typer.Argument(..., help="Question or claim text to extract entities from"),
@@ -302,16 +315,10 @@ def extract(
     quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress Rich formatting"),
 ) -> None:
     """Extract entities from question text."""
-    from graph_memory.entity_extraction import extract_entities
-
-    result = extract_entities(text, include_taxonomy=taxonomy)
+    result = _call_extract_entities(text, include_taxonomy=taxonomy)
 
     if json_output or quiet:
-        # Merge to_dict() (serializable fields) with agent_view() (grounding_ok, warnings, headline)
-        output = result.to_dict()
-        if hasattr(result, "agent_view"):
-            output.update(result.agent_view() or {})
-        print(json.dumps(output, indent=2, default=str))
+        print(json.dumps(result, indent=2, default=str))
         return
 
     # Rich formatted output
@@ -319,23 +326,31 @@ def extract(
     console.print(f"[dim]Question:[/] {text[:100]}")
     console.print()
 
-    if result.control_ids:
-        console.print(f"[cyan]Regex control IDs:[/] {', '.join(result.control_ids)}")
-    if result.phrase_controls:
-        console.print(f"[cyan]Phrase-discovered:[/] {', '.join(result.phrase_controls)}")
-    if result.phrases:
-        console.print(f"[cyan]Domain phrases:[/] {', '.join(result.phrases)}")
+    control_ids = result.get("control_ids", [])
+    phrase_controls = result.get("phrase_controls", [])
+    phrases = result.get("phrases", [])
+    all_control_ids = result.get("all_control_ids", [])
+    control_metadata = result.get("control_metadata", [])
+    related_pairs = result.get("related_pairs", [])
+    taxonomy_tags = result.get("taxonomy_tags", {})
 
-    console.print(f"\n[bold]All control IDs ({len(result.all_control_ids)}):[/] {', '.join(result.all_control_ids)}")
+    if control_ids:
+        console.print(f"[cyan]Regex control IDs:[/] {', '.join(control_ids)}")
+    if phrase_controls:
+        console.print(f"[cyan]Phrase-discovered:[/] {', '.join(phrase_controls)}")
+    if phrases:
+        console.print(f"[cyan]Domain phrases:[/] {', '.join(phrases)}")
 
-    if result.control_metadata:
+    console.print(f"\n[bold]All control IDs ({len(all_control_ids)}):[/] {', '.join(all_control_ids)}")
+
+    if control_metadata:
         console.print()
         table = Table(title="Control Metadata")
         table.add_column("Control ID", style="cyan")
         table.add_column("Name")
         table.add_column("Framework", style="green")
         table.add_column("Domain")
-        for c in result.control_metadata:
+        for c in control_metadata:
             table.add_row(
                 c.get("control_id", ""),
                 str(c.get("name", ""))[:40],
@@ -344,30 +359,30 @@ def extract(
             )
         console.print(table)
 
-    if result.related_pairs:
+    if related_pairs:
         console.print()
-        console.print(f"[bold green]Related pairs ({len(result.related_pairs)}):[/]")
-        for pair in result.related_pairs[:10]:
+        console.print(f"[bold green]Related pairs ({len(related_pairs)}):[/]")
+        for pair in related_pairs[:10]:
             console.print(f"  {pair['source']} --[{pair.get('method', '?')}]--> {pair['target']}")
-    elif len(result.all_control_ids) > 1:
+    elif len(all_control_ids) > 1:
         console.print()
         console.print("[bold red]No relationship edges found between controls[/]")
         console.print("[dim]These controls may not be in the same SPARTA technique[/]")
 
-    if result.taxonomy_tags:
+    if taxonomy_tags:
         console.print()
         console.print(f"[bold]Taxonomy tags:[/]")
-        for collection, tags in result.taxonomy_tags.items():
+        for collection, tags in taxonomy_tags.items():
             if tags:
                 console.print(f"  {collection}: {', '.join(tags)}")
 
     # Summary verdict
     console.print()
-    if result.all_control_ids and result.related_pairs:
+    if all_control_ids and related_pairs:
         console.print("[bold green]Coherent:[/] Entities share technique relationships")
-    elif result.all_control_ids and not result.related_pairs and len(result.all_control_ids) > 1:
+    elif all_control_ids and not related_pairs and len(all_control_ids) > 1:
         console.print("[bold yellow]Incoherent:[/] Entities exist but no shared technique — may need decomposition")
-    elif result.all_control_ids:
+    elif all_control_ids:
         console.print("[bold green]Single entity:[/] Coherent by definition")
     else:
         console.print("[bold red]No entities found:[/] Question may be off-topic or too vague")
@@ -378,25 +393,26 @@ def check(
     text: str = typer.Argument(..., help="Quick coherence check — are all entities in the same technique?"),
 ) -> None:
     """Quick boolean: are extracted entities coherent (same technique)?"""
-    from graph_memory.entity_extraction import extract_entities
+    result = _call_extract_entities(text)
 
-    result = extract_entities(text)
+    all_control_ids = result.get("all_control_ids", [])
+    related_pairs = result.get("related_pairs", [])
 
     coherent = (
-        len(result.all_control_ids) <= 1
-        or len(result.related_pairs) > 0
+        len(all_control_ids) <= 1
+        or len(related_pairs) > 0
     )
 
     output = {
         "coherent": coherent,
-        "control_count": len(result.all_control_ids),
-        "control_ids": result.all_control_ids,
-        "related_pairs": len(result.related_pairs),
-        "phrases": result.phrases,
+        "control_count": len(all_control_ids),
+        "control_ids": all_control_ids,
+        "related_pairs": len(related_pairs),
+        "phrases": result.get("phrases", []),
     }
 
     if not coherent:
-        output["reason"] = f"Controls {result.all_control_ids} have no shared relationship edges"
+        output["reason"] = f"Controls {all_control_ids} have no shared relationship edges"
 
     print(json.dumps(output, indent=2))
 
@@ -469,7 +485,7 @@ def _run_default_mode() -> None:
 
     Reads text from stdin, then:
     - If ``--delimiter`` is present: split tokens and lookup each via /list filters.
-    - Otherwise: use the existing NLP extraction path (graph_memory).
+    - Otherwise: use the NLP extraction path via daemon /extract-entities.
 
     Flags:
       --delimiter <mode>    auto | custom string | omit for NLP

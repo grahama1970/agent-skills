@@ -59,7 +59,7 @@ Round 1: /scillm proposes code (system prompt = v2 template from /prompt-lab)
   → T0 evidence: run DoD, classify errors (regex), ruff lint, best-practices
   → composite score (0.0-1.0, DoD-dominant)
   → score > best + ε? → git commit written files (KEEP) : git checkout (DISCARD)
-  → /memory learn (ALL rounds — failures are training signal for recall filtering)
+  → log to llm_invocations collection (ALL rounds — failures are training signal)
   → DoD passed? → DONE, send to project agent for review
 
 Round 2+: Memory-backed system prompt (refreshed each round):
@@ -227,21 +227,28 @@ Override via spec:
 Only written files are staged/reverted. Never `git add -A`. Never `git reset --hard`.
 User work is never touched.
 
-## /memory Integration (Cross-Session Learning)
+## llm_invocations (Unified Agent Turn Logging)
 
-**ALL rounds** are stored to ArangoDB via `/memory learn` — failures are training signal for recall filtering:
+**ALL rounds** are stored to ArangoDB `llm_invocations` collection via `common/llm_invocations.log_invocation()`:
 
-```json
-{
-  "problem": "CODE-RUNNER:fix-auth:round2 — strategy=structured_analysis score=1.000 severity=contract status=keep",
-  "solution": {"task_id": "fix-auth", "session_key": "cr-fix-auth-1774789000", "round": 2, "score": 1.0, "strategy": "structured_analysis", "symbols": "auth.py: login(user: str), validate(token: str)"},
-  "tags": ["code-runner", "self-improvement", "session:cr-fix-auth-1774789000", "outcome:pass", "severity:contract"]
-}
+```python
+log_invocation(
+    agent="code-runner",
+    session_key="cr-fix-auth-1774789000",
+    round=2,
+    outcome="success",  # or "failed"
+    score=1.0,
+    model="gpt-5.3-codex",
+    tags=["code-runner", "task:fix-auth", "strategy:structured_analysis", "outcome:pass"],
+    metadata={"task_id": "fix-auth", "errors_by_type": {}, "commit": "abc123", ...},
+)
 ```
+
+Write-only via memory daemon `/store` endpoint. No bespoke AQL — querying uses `/memory recall`.
 
 **session_key** links all rounds for one invocation. Enables:
 - `/recommend-skill-chain` traversal across related sessions
-- `recall_similar_fixes()` finding what worked for similar error types
+- `/memory recall` finding what worked for similar error types
 - `/episodic-archiver` linking code-runner sessions to conversations
 
 **Recall** on each round queries `/memory` twice:
@@ -264,7 +271,7 @@ src/auth.py:
 ```
 
 This gives the /scillm fix call deterministic context — no hallucinated function
-signatures. Stored in /memory entries so recalled fixes include the code structure.
+signatures. Stored in llm_invocations metadata so recalled fixes include the code structure.
 
 ## File Safety
 
@@ -349,7 +356,7 @@ The standard pipeline for code projects:
 /orchestrate dispatches each task to its runner (async DAG scheduler).
 /code-runner handles code authoring with self-improvement loop.
 Local tasks handle deterministic shell commands.
-All code-runner rounds store to /memory for cross-session learning.
+All code-runner rounds store to llm_invocations for cross-session learning.
 ```
 
 ### Pattern 4: /code-runner as subagent (Bounded Worker)

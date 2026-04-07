@@ -105,7 +105,7 @@ def _memory_cmd(args: list, timeout: int = 60) -> dict:
             resp = client.post("/learn", json=body)
         elif subcmd == "count":
             coll = params.get("collection", params.get("scope", "lessons"))
-            resp = client.post("/query", json={"aql": f"RETURN LENGTH({coll})", "bind_vars": {}})
+            resp = client.post("/list", json={"collection": coll, "limit": 0})
         elif subcmd == "sample":
             body = {"collection": params.get("collection", "lessons"), "limit": int(params.get("limit", 10))}
             if "fields" in params:

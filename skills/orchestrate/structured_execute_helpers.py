@@ -42,6 +42,9 @@ class TaskRuntime:
     read_context: list[str] = field(default_factory=list)
     blind_tests: list[str] = field(default_factory=list)
     skills: list[str] = field(default_factory=list)  # skill names for context compilation
+    skill: str = ""  # skill name for runner=skill (e.g., "assess")
+    skill_command: str = ""  # skill subcommand (e.g., "run", "search")
+    skill_args: list[str] = field(default_factory=list)  # additional CLI args
     max_rounds: int = 5
     timeout_seconds: int = 1800  # per-task timeout (default 30min)
     worktree: bool = False  # opt-in git worktree isolation (for parallel file-only tasks)
@@ -146,6 +149,38 @@ def _compile_skill_context(skill_names: list[str]) -> str:
     return "\n".join(sections)
 
 
+def _compile_skill_task(skill_name: str, skill_command: str, skill_args: list[str]) -> str:
+    """Compile a skill invocation into a typed run.sh command.
+
+    Reads SKILL.md to validate the skill exists and has a run.sh entrypoint,
+    then generates the exact shell command that _run_skill() will execute.
+    Returns the compiled command string for logging/display.
+    """
+    skill_dir = SKILLS_DIR / skill_name
+    run_sh = skill_dir / "run.sh"
+    skill_md = skill_dir / "SKILL.md"
+
+    if not skill_dir.exists():
+        raise ValueError(
+            f"Skill '{skill_name}' not found at {skill_dir}. "
+            f"Check .pi/skills/ for available skills."
+        )
+    if not run_sh.exists():
+        raise ValueError(
+            f"Skill '{skill_name}' has no run.sh entrypoint at {run_sh}."
+        )
+    if not skill_md.exists():
+        logger.warning("Skill '{}' has no SKILL.md — invocation may be incorrect", skill_name)
+
+    parts = [str(run_sh)]
+    if skill_command:
+        parts.append(skill_command)
+    parts.extend(skill_args)
+    compiled = " ".join(parts)
+    logger.info("Compiled skill task: {}", compiled)
+    return compiled
+
+
 def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRuntime]:
     runtimes: dict[str, TaskRuntime] = {}
     for raw_task in _as_list(plan.get("tasks")):
@@ -164,7 +199,25 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
         task_skills = _as_list(raw_task.get("skills"))
         read_ctx = list(raw_task.get("read_context") or [])
 
+        # Skill compiler: extract skill invocation fields
+        task_skill = str(raw_task.get("skill") or "").strip()
+        task_skill_command = str(raw_task.get("skill_command") or "").strip()
+        task_skill_args = _as_list(raw_task.get("skill_args"))
+
         runner = str(raw_task.get("runner") or "").strip()
+
+        # Auto-route: if skill is set and runner is empty, set runner=skill
+        if task_skill and not runner:
+            runner = "skill"
+
+        # Compile skill invocation at build time — validates skill exists
+        if runner == "skill":
+            if not task_skill:
+                raise ValueError(
+                    f"Task {task_id} uses runner=skill but has no 'skill' field. "
+                    f"Set skill: <skill-name> (e.g., skill: assess)."
+                )
+            _compile_skill_task(task_skill, task_skill_command, task_skill_args)
 
         # Auto-migrate: subagent-service → code-runner (writes files) or scillm (one-shot)
         if runner == "subagent-service":
@@ -202,6 +255,9 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             read_context=read_ctx,
             blind_tests=raw_task.get("blind_tests") or [],
             skills=task_skills,
+            skill=task_skill,
+            skill_command=task_skill_command,
+            skill_args=[str(a) for a in task_skill_args],
             max_rounds=int(raw_task.get("max_rounds") or 5),
             timeout_seconds=int(raw_task.get("timeout_seconds") or 1800),
             worktree=bool(raw_task.get("worktree", False)),

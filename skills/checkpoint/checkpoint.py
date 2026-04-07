@@ -356,13 +356,24 @@ def save(
     checkpoint_key = result.get("_key", "") if isinstance(result, dict) else ""
 
     # Skill chain storage — links checkpoint → skill_chain via edge
+    # Also store the chain directly in the checkpoint doc for resume display
     if skills:
+        chain = [s.lstrip("/") for s in skills if s.strip()]
         store_skill_chain(
             topic=topic, summary=resume_instruction, decisions=[],
             scope=scope_val, outcome=outcome,
             explicit_skills=skills, console=console,
             checkpoint_key=checkpoint_key,
         )
+        # Write skill_chain into the checkpoint document itself
+        if chain and checkpoint_key:
+            memory_post("/store", {
+                "document": {
+                    "_key": checkpoint_key,
+                    "skill_chain": chain,
+                },
+                "collection": "checkpoints",
+            }, console=None)
 
     if output_json:
         print(json.dumps({"status": "saved", "tag": tag_name, **solution_doc}, indent=2))
@@ -390,6 +401,76 @@ def save(
     ))
 
 
+def _find_plan_context(root: str) -> dict | None:
+    """Find the most recent plan file and return its contents.
+
+    Checks session-specific plans first (plan-{session_id}.json),
+    then falls back to the shared plan.json.
+    """
+    plans_dir = os.path.join(root, ".claude", "plans")
+    if os.path.isdir(plans_dir):
+        # Find the most recently modified plan file
+        plan_files = []
+        for f in os.listdir(plans_dir):
+            if f.startswith("plan-") and f.endswith(".json"):
+                full = os.path.join(plans_dir, f)
+                plan_files.append((os.path.getmtime(full), full))
+        if plan_files:
+            plan_files.sort(reverse=True)
+            plan_path = plan_files[0][1]
+            try:
+                data = json.loads(open(plan_path).read())
+                data["_plan_file"] = plan_path
+                return data
+            except (json.JSONDecodeError, OSError):
+                pass
+
+    # Fallback: shared plan.json
+    shared = os.path.join(root, ".claude", "plan.json")
+    if os.path.isfile(shared):
+        try:
+            data = json.loads(open(shared).read())
+            data["_plan_file"] = shared
+            return data
+        except (json.JSONDecodeError, OSError):
+            pass
+    return None
+
+
+def _recent_commit_details(root: str, since_tag: str, limit: int = 5) -> list[dict]:
+    """Get detailed commit info (hash, subject, files) for recent commits.
+
+    More useful than one-line summaries — the agent needs to see what files
+    each commit touched to understand the work done.
+    """
+    if since_tag:
+        log_range = f"{since_tag}..HEAD"
+    else:
+        log_range = f"-{limit}"
+
+    # Get commits with files changed
+    raw = git(["log", log_range, f"--max-count={limit}",
+               "--format=%h|%s", "--name-only"], cwd=root)
+    if not raw:
+        return []
+
+    results = []
+    current: dict | None = None
+    for line in raw.splitlines():
+        if "|" in line and not line.startswith(" "):
+            # Commit line: hash|subject
+            if current:
+                results.append(current)
+            parts = line.split("|", 1)
+            current = {"hash": parts[0], "subject": parts[1], "files": []}
+        elif line.strip() and current is not None:
+            current["files"].append(line.strip())
+    if current:
+        results.append(current)
+
+    return results
+
+
 @app.command()
 def resume(
     session_name: Optional[str] = typer.Option(None, "--session", help="Terminal session (default: $CLAUDE_SESSION)"),
@@ -397,9 +478,9 @@ def resume(
     scope: Optional[str] = typer.Option(None, "--scope", help="Memory scope filter"),
     output_json: bool = typer.Option(False, "--json", is_flag=True, help="Output as JSON"),
 ) -> None:
-    """Resume after /clear. Shows git-derived state + human's resume instruction.
+    """Resume after /clear. Provides full working context for the next agent.
 
-    Deterministic: branch, dirty files, commits since checkpoint, test results.
+    Deterministic: branch, dirty files, commits since checkpoint, file diffs, plan.
     Human-authored: resume instruction, failures to avoid.
 
     Session auto-detected from $CLAUDE_SESSION env var, or use --session.
@@ -426,6 +507,12 @@ def resume(
     preflight = _git_preflight(root)
     last_tag = _last_checkpoint_tag(root)
     since = _git_since_tag(root, last_tag)
+
+    # === PLAN FILE: session-specific working context ===
+    plan_context = _find_plan_context(root)
+
+    # === DETAILED DIFFS: what actually changed in recent commits ===
+    recent_diffs = _recent_commit_details(root, last_tag, limit=5)
 
     # === RECALL: prior solutions + recommended skill chains ===
     prior_solutions: list[dict] = []
@@ -480,6 +567,8 @@ def resume(
                 "commits_since": since["commit_count"],
                 "files_changed": since["files_changed"][:20],
             },
+            "plan": plan_context,
+            "recent_diffs": recent_diffs,
             "prior_solutions": prior_solutions,
             "recommended_chains": recommended_chains,
         }
@@ -489,30 +578,7 @@ def resume(
     # === RENDER ===
     lines = []
 
-    # Section 1: Git preflight (deterministic, current)
-    lines.append("[bold]GIT STATE (live):[/bold]")
-    lines.append(f"  Branch: [cyan]{preflight['branch']}[/cyan] @ {preflight['commit']}")
-    if preflight["dirty_count"] > 0:
-        lines.append(f"  [yellow]Dirty: {preflight['dirty_count']} uncommitted files[/yellow]")
-        for f in preflight["dirty_files"][:5]:
-            lines.append(f"    - {f}")
-    else:
-        lines.append("  [green]Clean working tree[/green]")
-    if preflight["ahead_behind"]:
-        lines.append(f"  Remote: {preflight['ahead_behind']}")
-    lines.append("")
-
-    # Section 2: What changed since last checkpoint (deterministic)
-    if last_tag:
-        lines.append(f"[bold]SINCE {last_tag}:[/bold]")
-        lines.append(f"  {since['commit_count']} commits, {len(since['files_changed'])} files changed")
-        if since["commits_since"]:
-            lines.append("  [dim]Recent commits:[/dim]")
-            for c in since["commits_since"][:10]:
-                lines.append(f"    {c}")
-        lines.append("")
-
-    # Section 3: Human-authored context from checkpoint
+    # Section 1: Human-authored context (THE MOST IMPORTANT PART — show first)
     if checkpoints:
         cp = checkpoints[0]
         grade = cp.get("grade", "")
@@ -532,11 +598,84 @@ def resume(
             for f in cp_failures:
                 lines.append(f"  - {f}")
 
+        if cp.get("skill_chain"):
+            chain_str = " → ".join(f"/{s}" for s in cp["skill_chain"])
+            lines.append(f"\n[bold cyan]>>> USE THIS CHAIN:[/bold cyan] {chain_str}")
+        elif cp.get("skills_used"):
+            lines.append(f"\n[bold]Skills used:[/bold] {', '.join('/' + s for s in cp['skills_used'])}")
+
+        # Show files from the STORED checkpoint (frozen at save time)
+        cp_since = cp.get("since_last_checkpoint", {})
+        cp_files = cp_since.get("files_changed", [])
+        cp_commits = cp_since.get("commits", [])
+        if cp_files:
+            lines.append(f"\n[bold]FILES TOUCHED IN THAT SESSION ({len(cp_files)}):[/bold]")
+            for f in cp_files[:15]:
+                lines.append(f"  - {f}")
+            if len(cp_files) > 15:
+                lines.append(f"  [dim]... and {len(cp_files) - 15} more[/dim]")
+        if cp_commits:
+            lines.append(f"\n[bold]COMMITS IN THAT SESSION ({len(cp_commits)}):[/bold]")
+            for c in cp_commits[:10]:
+                lines.append(f"  [dim]{c}[/dim]")
+
         lines.append(f"\n[dim]Saved: {cp.get('timestamp', '?')}[/dim]")
     else:
         lines.append("[yellow]No previous checkpoint found.[/yellow]")
 
-    # Section 4: Prior solutions from /memory recall
+    # Section 2: Plan file (working context from last session)
+    if plan_context:
+        lines.append("")
+        lines.append("[bold]ACTIVE PLAN:[/bold]")
+        lines.append(f"  [bold]Task:[/bold] {plan_context.get('task', '?')}")
+        target_files = plan_context.get("target_files", [])
+        if target_files:
+            lines.append(f"  [bold]Target files:[/bold]")
+            for tf in target_files[:10]:
+                lines.append(f"    - {tf}")
+        skills_sel = plan_context.get("skills_selected", [])
+        if skills_sel:
+            lines.append(f"  [bold]Skills:[/bold] {', '.join('/' + s for s in skills_sel)}")
+        plan_file = plan_context.get("_plan_file", "")
+        if plan_file:
+            lines.append(f"  [dim]Plan file: {plan_file}[/dim]")
+
+    # Section 3: Git state (deterministic)
+    lines.append("")
+    lines.append("[bold]GIT STATE (live):[/bold]")
+    lines.append(f"  Branch: [cyan]{preflight['branch']}[/cyan] @ {preflight['commit']}")
+    if preflight["dirty_count"] > 0:
+        lines.append(f"  [yellow]Dirty: {preflight['dirty_count']} uncommitted files[/yellow]")
+        for f in preflight["dirty_files"][:5]:
+            lines.append(f"    - {f}")
+    else:
+        lines.append("  [green]Clean working tree[/green]")
+    if preflight["ahead_behind"]:
+        lines.append(f"  Remote: {preflight['ahead_behind']}")
+
+    # Section 4: What changed since last checkpoint — with details
+    if last_tag:
+        lines.append("")
+        lines.append(f"[bold]SINCE {last_tag}:[/bold]")
+        lines.append(f"  {since['commit_count']} commits, {len(since['files_changed'])} files changed")
+
+    if recent_diffs:
+        lines.append("")
+        lines.append("[bold]RECENT COMMITS (read these to understand prior work):[/bold]")
+        for rd in recent_diffs:
+            lines.append(f"  [cyan]{rd['hash']}[/cyan] {rd['subject']}")
+            if rd.get("files"):
+                for f in rd["files"][:5]:
+                    lines.append(f"    {f}")
+
+    # Section 5: Files changed — the agent should READ these
+    if since.get("files_changed"):
+        lines.append("")
+        lines.append("[bold]FILES TO READ (changed since last checkpoint):[/bold]")
+        for f in since["files_changed"][:20]:
+            lines.append(f"  - {f}")
+
+    # Section 6: Prior solutions
     if prior_solutions:
         lines.append("")
         lines.append("[bold]PRIOR SOLUTIONS:[/bold]")
@@ -544,7 +683,7 @@ def resume(
             lines.append(f"  [dim]{ps['problem']}[/dim]")
             lines.append(f"    → {ps['solution']}")
 
-    # Section 5: Recommended skill chains
+    # Section 7: Recommended skill chains
     if recommended_chains:
         lines.append("")
         lines.append("[bold]RECOMMENDED SKILL CHAINS:[/bold]")

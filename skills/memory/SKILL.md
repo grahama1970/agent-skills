@@ -61,7 +61,10 @@ Pi is the only CLI agent that can reliably enforce Memory First (other CLIs trea
 | ------------------------------------------------- | ---------------------------------------------------------------------- |
 | `./run.sh recall --q "..." --brief`               | **DEFAULT.** Slim output + proven skill chain. Use this.               |
 | `./run.sh recall --q "..."`                       | Full output with taxonomy, raw scores, _key (when you need metadata)   |
-| `./run.sh learn --problem "..." --solution "..."` | After solving something new                                            |
+| `httpx POST /store {document, collection}`         | **THE write endpoint.** Write to ANY collection. Auto-upserts by `_key`. |
+| `httpx POST /store {document}` (no collection)     | Writes to `lessons` with embeddings + dedup (same as old `/learn`)     |
+| `httpx POST /upsert {collection, documents}`       | Batch write (multiple docs). Same rules as `/store`.                   |
+| `./run.sh learn --problem "..." --solution "..."`  | **Deprecated.** CLI shorthand that calls `/store` with `collection=lessons` |
 | `./run.sh clarify --q "..."`                      | Detect ambiguity + generate clarifying questions when recall is weak    |
 | `./run.sh chain-recall "query"`                   | Search proven skill chains directly                                    |
 | `./run.sh chain-learn --skills "a,b,c" --task "..."` | Store a proven skill chain                                          |
@@ -301,10 +304,18 @@ db.aql.execute("FOR doc IN lessons FILTER ...")
 # → ALL AQL must reside ONLY in ~/workspace/experiments/memory/
 # RIGHT: use /recall, /list, /analytics/run endpoints
 
-# WRONG: /memory learn without taxonomy tags
-./run.sh learn --problem "X" --solution "Y"
-# RIGHT: include bridge tags so /recall can find it later
-./run.sh learn --problem "X" --solution "Y" --tag "Fragility" --tag "extraction"
+# WRONG: /learn to write to a specific collection
+client.post("/learn", json={"problem": "...", "solution": "..."})
+# → /learn is DEPRECATED. It always writes to lessons.
+# RIGHT: /store with explicit collection
+client.post("/store", json={"document": {"_key": "...", ...}, "collection": "sparta_qra"})
+# For lessons specifically:
+client.post("/store", json={"document": {"problem": "X", "solution": "Y", "tags": ["extraction"]}})
+
+# WRONG: /store to lessons without taxonomy tags
+client.post("/store", json={"document": {"problem": "X", "solution": "Y"}})
+# RIGHT: include tags so /recall can find it via multi-hop
+client.post("/store", json={"document": {"problem": "X", "solution": "Y", "tags": ["Fragility", "extraction"]}})
 
 # WRONG: ignoring should_scan in recall response
 if data["found"]: return data["items"]

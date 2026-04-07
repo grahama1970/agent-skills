@@ -148,6 +148,10 @@ def validate_structured_plan(data: dict[str, Any]) -> dict[str, Any]:
             warnings.append(f"Task {task['id']} is local but also specifies backend")
         if task["runner"] == "local" and not task["command"]:
             issues.append(f"Task {task['id']} uses local runner but has no command")
+        if task["runner"] == "skill":
+            skill_name = str(task.get("skill") or "")
+            if not skill_name:
+                issues.append(f"Task {task['id']} uses skill runner but has no 'skill' field")
         if task["runner"] == "scillm":
             has_prompt = bool(task["prompt"] or task["implementation"])
             if not has_prompt:

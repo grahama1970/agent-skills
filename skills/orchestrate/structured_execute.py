@@ -49,6 +49,7 @@ from structured_execute_helpers import (  # noqa: E402
     TaskRuntime,
     _build_runtimes,
     _build_system_prompt,
+    _compile_skill_task,
     _dependency_graph,
     _render_state,
     _subagent_backend_name,
@@ -102,6 +103,55 @@ async def _run_local(task: TaskRuntime, session_dir: Path) -> str:
     output = (stdout.decode() if stdout else "") + (("\n" + stderr.decode()) if stderr else "")
     if proc.returncode != 0:
         raise RuntimeError(f"Command failed ({proc.returncode}): {task.command}\n{output}".strip())
+    output_path = session_dir / f"{task.task_id}.stdout.txt"
+    output_path.write_text(output)
+    task.output_path = output_path
+    return output
+
+
+async def _run_skill(task: TaskRuntime, session_dir: Path) -> str:
+    """Run a compiled skill invocation via run.sh subprocess.
+
+    Like _run_local but the command is built from skill/skill_command/skill_args
+    at compile time by _compile_skill_task(). The skill's run.sh is invoked
+    directly — no LLM involved, just deterministic subprocess execution.
+    """
+    skill_dir = SKILLS_DIR / task.skill
+    run_sh = skill_dir / "run.sh"
+    cmd_parts = ["bash", str(run_sh)]
+    if task.skill_command:
+        cmd_parts.append(task.skill_command)
+    cmd_parts.extend(task.skill_args)
+
+    logger.info("Running skill /{} {} {}", task.skill, task.skill_command, " ".join(task.skill_args))
+
+    clean_env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    clean_env["PATH"] = os.pathsep.join(
+        p for p in clean_env.get("PATH", "").split(os.pathsep)
+        if ".venv" not in p
+    )
+    proc = await asyncio.create_subprocess_exec(
+        *cmd_parts, cwd=str(task.cwd),
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        env=clean_env,
+    )
+    task._proc = proc
+
+    cancel_task = asyncio.create_task(_wait_for_cancel(task))
+    try:
+        stdout, stderr = await proc.communicate()
+    finally:
+        cancel_task.cancel()
+        task._proc = None
+
+    if task._cancel_event.is_set():
+        raise RuntimeError(f"Task {task.task_id} cancelled by operator")
+
+    output = (stdout.decode() if stdout else "") + (("\n" + stderr.decode()) if stderr else "")
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"Skill /{task.skill} {task.skill_command} failed ({proc.returncode}):\n{output}".strip()
+        )
     output_path = session_dir / f"{task.task_id}.stdout.txt"
     output_path.write_text(output)
     task.output_path = output_path
@@ -164,6 +214,9 @@ async def _execute_task(task: TaskRuntime, session_dir: Path) -> None:
         elif task.runner == "subagent-service":
             # Deprecated: fall back to scillm
             await _run_subagent_via_scillm(task, session_dir)
+        elif task.runner == "skill":
+            # Compiled skill invocation — deterministic subprocess via run.sh
+            await _run_skill(task, session_dir)
         elif task.runner == "code-runner":
             # Deterministic run-and-debug loop via /code-runner skill
             await _run_code_runner(task, session_dir)
