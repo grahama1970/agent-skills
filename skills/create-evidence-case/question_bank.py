@@ -624,6 +624,68 @@ def _generate_off_topic(seed: int = 42) -> list[TestQuestion]:
 # Public API
 # ---------------------------------------------------------------------------
 
+def _relabel_by_entity_check(questions: list[TestQuestion]) -> list[TestQuestion]:
+    """Call /extract-entities on questions and relabel based on what the
+    pipeline will actually produce. Fixes label mismatches:
+
+    - SATISFIED with disjoint SPARTA parents → INCONCLUSIVE
+    - INCONCLUSIVE with no resolved entities → NOT_SATISFIED
+    - SATISFIED with grounding_ok=False → NOT_SATISFIED
+
+    /extract-entities is deterministic and fast (~0.5s per question).
+    """
+    relabeled = 0
+    with _client() as c:
+        for q in questions:
+            if q.category == "off_topic":
+                continue
+            try:
+                r = c.post("/extract-entities", json={"text": q.question}, timeout=10)
+                r.raise_for_status()
+                entities = r.json()
+                resolved = entities.get("resolved_entities", [])
+                grounding_ok = entities.get("grounding_ok", False)
+                tc = entities.get("technique_coherence", {})
+                technique_ok = tc.get("ok", True)
+                technique_detail = tc.get("detail", "")
+
+                if q.category == "satisfied":
+                    if not technique_ok:
+                        object.__setattr__(q, "category", "inconclusive")
+                        object.__setattr__(q, "expected_verdict", "INCONCLUSIVE")
+                        object.__setattr__(q, "rationale",
+                            f"Real QRA but disjoint techniques: {technique_detail}. "
+                            f"Original control_id={q.control_id}.")
+                        relabeled += 1
+                    elif not grounding_ok or not resolved:
+                        object.__setattr__(q, "category", "not_satisfied")
+                        object.__setattr__(q, "expected_verdict", "NOT_SATISFIED")
+                        object.__setattr__(q, "rationale",
+                            f"Real QRA but grounding failed. "
+                            f"Original control_id={q.control_id}.")
+                        relabeled += 1
+
+                elif q.category == "inconclusive":
+                    if not resolved:
+                        object.__setattr__(q, "category", "not_satisfied")
+                        object.__setattr__(q, "expected_verdict", "NOT_SATISFIED")
+                        object.__setattr__(q, "rationale",
+                            f"Inconclusive question but no entities resolved → not_satisfied.")
+                        relabeled += 1
+                    elif grounding_ok and technique_ok:
+                        object.__setattr__(q, "category", "satisfied")
+                        object.__setattr__(q, "expected_verdict", "SATISFIED")
+                        object.__setattr__(q, "rationale",
+                            f"Inconclusive question but entities resolved + grounding OK → satisfied.")
+                        relabeled += 1
+
+            except Exception as exc:
+                logger.debug("entity pre-check failed for '{}': {}", q.question[:60], exc)
+    if relabeled:
+        logger.info("Relabeled {} questions based on /extract-entities pre-check", relabeled)
+    return questions
+
+
 def generate_bank(seed: int = 42, balanced: bool = True) -> list[TestQuestion]:
     """Generate the test bank.
 
@@ -659,6 +721,14 @@ def generate_bank(seed: int = 42, balanced: bool = True) -> list[TestQuestion]:
         rng.shuffle(off_topic)
         adversarial = not_sat[:cap] + inconcl[:cap]
         off_topic = off_topic[:cap]
+
+    # Pre-check: run /extract-entities on SATISFIED questions to catch
+    # disjoint technique pairs. CWE mapping is experimental — questions
+    # whose controls resolve to different SPARTA parents are INCONCLUSIVE.
+    all_questions = satisfied + adversarial
+    all_questions = _relabel_by_entity_check(all_questions)
+    satisfied = [q for q in all_questions if q.category == "satisfied"]
+    adversarial = [q for q in all_questions if q.category != "satisfied"]
 
     bank = satisfied + adversarial + off_topic
 

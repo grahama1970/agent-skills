@@ -46,43 +46,6 @@ class AgentAction(str, Enum):
     RETRY = "retry_with_more_context"
 
 
-def _techniques_intersect(resolved_entities: list[dict]) -> tuple[bool, str]:
-    """Check if resolved SPARTA entities share a parent technique family.
-
-    Only flags disjoint when 2+ entities are SPARTA controls from different
-    parent techniques (e.g. ST0001 vs ST0005). Cross-framework entities
-    (CWE, ATT&CK, NIST) are connected by the crosswalk itself and always pass.
-
-    Returns (coherent, detail_string).
-    """
-    if len(resolved_entities) < 2:
-        return True, "single_entity"
-
-    # Collect SPARTA parent techniques only — non-SPARTA entities don't
-    # participate because cross-framework bridging is the normal case.
-    sparta_parents: dict[str, list[str]] = {}  # parent → [canonical_ids]
-    for e in resolved_entities:
-        fw = e.get("framework", "")
-        if fw != "SPARTA":
-            continue
-        cid = e.get("canonical_id", "")
-        # SPARTA parent: RD-0001.03 → RD-0001, SV-AC-4 → SV-AC
-        parts = cid.rsplit("-", 1)
-        if len(parts) == 2 and parts[1].isdigit():
-            parent = parts[0]
-        else:
-            parts2 = cid.rsplit(".", 1)
-            parent = parts2[0] if len(parts2) > 1 else cid
-        sparta_parents.setdefault(parent, []).append(cid)
-
-    # 0-1 SPARTA entities → can't be disjoint within SPARTA
-    if len(sparta_parents) <= 1:
-        parents_str = list(sparta_parents.keys())[0] if sparta_parents else "none"
-        return True, f"sparta_coherent:{parents_str}"
-
-    return False, f"disjoint_sparta_parents:{list(sparta_parents.keys())}"
-
-
 class EvidenceCaseRunner:
     """4-call evidence case pipeline for batch and live use."""
 
@@ -199,15 +162,19 @@ class EvidenceCaseRunner:
         })
 
         # --- Step 2: Deterministic verdict + LLM render ---
-        # Lean4 is fire-and-forget background — does not affect verdict.
-        technique_ok, technique_detail = _techniques_intersect(resolved)
+        # Technique coherence comes from /extract-entities response
+        tc = entities.get("technique_coherence", {})
+        technique_ok = tc.get("ok", True)
+        technique_detail = tc.get("detail", "")
         steps.append({
             "gate": "technique_intersection",
             "passed": technique_ok,
             "detail": technique_detail,
         })
 
-        if grounding_ok and len(resolved) > 0 and len(qra_items) > 0 and technique_ok:
+        if not technique_ok and len(resolved) > 0:
+            verdict_state = "inconclusive"
+        elif grounding_ok and len(resolved) > 0 and len(qra_items) > 0:
             verdict_state = "satisfied"
         elif grounding_ok and len(resolved) > 0:
             verdict_state = "inconclusive"
