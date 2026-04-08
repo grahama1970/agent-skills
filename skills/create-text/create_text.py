@@ -48,34 +48,32 @@ def create_text(
 
 
 def list_banks() -> dict[str, dict]:
-    """List available domains with content type counts."""
+    """List available domains with content type counts (reads domain from chunk data)."""
+    from collections import Counter
+    all_chunks = _load_pool(None)
+    by_domain: dict[str, list] = {}
+    for c in all_chunks:
+        by_domain.setdefault(c.get("domain", "unknown"), []).append(c)
     summary = {}
-    for bank_file in sorted(BANK_DIR.glob("*.json")):
-        domain = bank_file.stem
-        try:
-            chunks = json.loads(bank_file.read_text())
-        except (json.JSONDecodeError, OSError):
-            continue
-        from collections import Counter
+    for domain, chunks in sorted(by_domain.items()):
         types = Counter(c["content_type"] for c in chunks)
         summary[domain] = {"total": len(chunks), "types": dict(types)}
     return summary
 
 
 def _load_pool(domain: str | None) -> list[dict]:
-    """Load chunks from bank files."""
-    if domain:
-        bank_file = BANK_DIR / f"{domain}.json"
-        if not bank_file.exists():
-            logger.error(f"Bank not found: {bank_file}")
-            return []
-        return json.loads(bank_file.read_text())
-
-    # All domains
+    """Load chunks from bank files, filtering by domain field inside chunks."""
     pool = []
     for bank_file in BANK_DIR.glob("*.json"):
         try:
             pool.extend(json.loads(bank_file.read_text()))
         except (json.JSONDecodeError, OSError):
             continue
+
+    if domain:
+        filtered = [c for c in pool if c.get("domain") == domain]
+        if not filtered:
+            logger.error(f"No chunks with domain={domain}. Available: {sorted(set(c.get('domain','?') for c in pool))}")
+        return filtered
+
     return pool
