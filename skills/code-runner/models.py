@@ -266,11 +266,12 @@ class TaskResult(BaseModel):
     """Schema for the final result.json output."""
     task_id: str
     title: str = ""
-    status: str  # pass | fail | preflight_fail
+    status: str  # pass | fail | preflight_fail | timeout | stash_conflict
     rounds: int = 0
     best_score: float = 0
     dod_passed: bool = False
     backend: str = ""
     best_commit: str = ""
+    error: str = ""  # actionable error message for calling agent
     round_details: list[dict[str, Any]] = Field(default_factory=list)
     preflight_errors: list[PreflightError] = Field(default_factory=list)

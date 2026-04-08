@@ -242,7 +242,19 @@ def _generate_satisfied(seed: int = 42) -> list[TestQuestion]:
 # 2+3. NOT_SATISFIED + INCONCLUSIVE: LLM-generated adversarial mutations
 # ---------------------------------------------------------------------------
 
-_ADVERSARIAL_PROMPT_PATH = Path(__file__).resolve().parents[2] / "prompt-lab" / "prompts" / "evidence_case_adversarial_v1.txt"
+def _find_project_root() -> Path:
+    """Walk up from __file__ to find the directory containing .pi/."""
+    p = Path(__file__).resolve().parent
+    while p != p.parent:
+        if (p / ".pi").is_dir():
+            return p
+        p = p.parent
+    raise FileNotFoundError("No .pi/ directory found in parents")
+
+
+_PROJECT_ROOT = _find_project_root()
+_SKILLS_DIR = _PROJECT_ROOT / ".pi" / "skills"
+_ADVERSARIAL_PROMPT_PATH = _SKILLS_DIR / "prompt-lab" / "prompts" / "evidence_case_adversarial_v1.txt"
 
 _SCILLM_URL = os.environ.get("SCILLM_URL", "http://localhost:4001") + "/v1/chat/completions"
 _SCILLM_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")
@@ -287,7 +299,7 @@ def _call_scillm_batch(batch_idx: int, batch: list[dict], system_prompt: str) ->
                 "batch_index": batch_idx,
             },
         },
-        timeout=60.0,
+        timeout=120.0,
     )
     resp.raise_for_status()
     data = resp.json()
@@ -597,7 +609,11 @@ def generate_bank(seed: int = 42) -> list[TestQuestion]:
         - off_topic (~200): non-security questions for deflect
     """
     satisfied = _generate_satisfied(seed)
-    adversarial = _generate_adversarial(seed)  # NOT_SATISFIED + INCONCLUSIVE
+    try:
+        adversarial = _generate_adversarial(seed)  # NOT_SATISFIED + INCONCLUSIVE
+    except Exception as exc:
+        logger.warning("Adversarial generation failed (non-fatal): {}", exc)
+        adversarial = []
     off_topic = _generate_off_topic(seed)
 
     bank = satisfied + adversarial + off_topic

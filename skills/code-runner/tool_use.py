@@ -422,6 +422,10 @@ def run_tool_use_loop(
         max_retries = 3
         for attempt in range(1, max_retries + 1):
             try:
+                if iteration == 0 and attempt == 1:
+                    logger.debug("  Payload model={} system_len={} user_len={} tools={}",
+                                 payload.get("model"), len(payload["messages"][0]["content"]),
+                                 len(payload["messages"][1]["content"]), len(payload.get("tools", [])))
                 resp = httpx.post(
                     SCILLM_URL,
                     headers={"Authorization": f"Bearer {SCILLM_KEY}"},
@@ -469,8 +473,11 @@ def run_tool_use_loop(
 
         # If no tool calls — LLM is done (text response or stop)
         tool_calls = msg.get("tool_calls")
-        if not tool_calls or finish == "stop":
-            logger.info("  Tool loop complete after {} iterations", iteration + 1)
+        if tool_calls and finish == "stop":
+            logger.warning("  LLM returned {} tool_calls but finish_reason=stop — processing tool calls anyway", len(tool_calls))
+            finish = "tool_calls"  # Fix: treat as tool_calls if tools present
+        if not tool_calls:
+            logger.info("  Tool loop complete after {} iterations (no tool_calls, finish={})", iteration + 1, finish)
             break
 
         # Execute each tool call and append results

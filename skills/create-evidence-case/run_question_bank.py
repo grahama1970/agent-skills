@@ -54,7 +54,6 @@ def _run_one(runner: EvidenceCaseRunner, q: TestQuestion, idx: int, total: int) 
         result = runner.run(
             claim_text=q.question,
             category=q.category,
-            show_progress=False,
         )
     except Exception as exc:
         logger.error("Q{:03d} crashed: {}", idx, exc)

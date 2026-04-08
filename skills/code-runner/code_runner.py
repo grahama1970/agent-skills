@@ -29,6 +29,12 @@ import httpx
 import typer
 from loguru import logger
 
+# common/ modules (llm_invocations, estimate_timeout, json_utils)
+_skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
+_common = str(_skills_dir / "common")
+if _common not in sys.path:
+    sys.path.insert(0, _common)
+
 from evidence import (
     classify_errors,
     collect_evidence,
@@ -36,7 +42,7 @@ from evidence import (
     get_strategy,
     build_fix_prompt,
 )
-from llm_invocations import log_invocation
+from llm_invocations import log_invocation  # noqa: E402
 from diagnose import (
     call_diagnose,
     validate_diagnosis,
@@ -109,22 +115,35 @@ def git_snapshot(cwd: str) -> str:
 
 
 def git_stash_save(cwd: str) -> bool:
-    """Stash uncommitted changes before code-runner starts. Returns True if stashed."""
+    """Stash uncommitted changes before code-runner starts. Returns True if stashed.
+
+    Only stashes tracked modifications (not untracked files) to avoid conflicts
+    when code-runner commits new files that overlap with stashed untracked files.
+    """
     proc = subprocess.run(
-        ["git", "stash", "push", "-m", "code-runner-pre-run-stash", "--include-untracked"],
+        ["git", "stash", "push", "-m", "code-runner-pre-run-stash"],
         capture_output=True, text=True, cwd=cwd, timeout=GIT_TIMEOUT,
     )
     stashed = "Saved working directory" in proc.stdout
     if stashed:
-        logger.info("Stashed pre-existing changes")
+        logger.info("Stashed pre-existing changes (tracked only)")
     return stashed
 
 
 def git_stash_pop(cwd: str) -> None:
-    """Restore stashed changes after code-runner finishes."""
+    """Restore stashed changes after code-runner finishes.
+
+    Falls back to git stash drop if pop conflicts (e.g., code-runner committed
+    files that overlap with stashed content).
+    """
     proc = subprocess.run(["git", "stash", "pop"], capture_output=True, text=True, cwd=cwd, timeout=GIT_TIMEOUT)
     if proc.returncode != 0:
-        logger.error("git stash pop FAILED — user changes may be trapped in stash: {}", proc.stderr[:300])
+        # Conflict: code-runner committed files that clash with stash
+        if "conflict" in proc.stderr.lower() or "already exists" in proc.stderr.lower():
+            logger.warning("git stash pop conflict — dropping stash (code-runner committed overlapping files)")
+            subprocess.run(["git", "stash", "drop"], capture_output=True, text=True, cwd=cwd, timeout=GIT_TIMEOUT)
+        else:
+            logger.error("git stash pop FAILED — user changes may be trapped in stash: {}", proc.stderr[:300])
     else:
         logger.info("Restored stashed changes")
 
@@ -547,6 +566,7 @@ def run(
 
     # Session key links all rounds in /memory for graph traversal
     session_key = f"cr-{task_id}-{int(time.time())}"
+    failure_reason = ""  # populated on timeout, zero-writes, stash conflict
     run_start_time = time.monotonic()
 
     # Git safety: stash pre-existing changes before we start
@@ -793,6 +813,8 @@ def run(
                     _emit_event("round_timeout", task_id=task_id, round=round_num,
                                 timeout_seconds=ROUND_TIMEOUT)
                     logger.error("  ROUND TIMEOUT: tool_use loop exceeded {}s", ROUND_TIMEOUT)
+                    failure_reason = (f"Round {round_num} timed out after {ROUND_TIMEOUT}s. "
+                                      f"Set CODE_RUNNER_ROUND_TIMEOUT={ROUND_TIMEOUT * 2} or increase timeout_seconds in task spec.")
                     written, tool_messages = [], []
 
             # Extract final text response (last assistant message without tool_calls)
@@ -845,19 +867,23 @@ def run(
                                 reason=f"{consecutive_zero_writes} consecutive rounds wrote 0 files")
                     logger.error("  EARLY ABORT: {} consecutive rounds wrote 0 files — LLM not producing edits",
                                  consecutive_zero_writes)
+                    failure_reason = (f"LLM wrote 0 files for {consecutive_zero_writes} consecutive rounds. "
+                                      f"Backend '{llm_backend}' may not be executing tool calls. "
+                                      f"Try backend 'codex' or check scillm health.")
                     break
 
             # 3. T0 deterministic evidence collection (NOW evaluates changed files)
             evidence_raw = collect_evidence(cwd, dod_command, dod_assertion)
             score = evidence_raw["score"]
 
-            # If LLM wrote zero files, DoD may pass on vacuous truth (0/0 = 100%).
-            # Force score to 0 — you can't "pass" without writing code.
+            # If LLM wrote zero files AND DoD didn't pass, force score to 0.
+            # But if DoD genuinely passes (work already done, or read-only task),
+            # respect that — don't override a real pass.
             if not written:
-                score = 0.0
-                evidence_raw["score"] = 0.0
-                evidence_raw["dod_passed"] = False
-                evidence_raw["_zero_files_override"] = True
+                if not evidence_raw["dod_passed"]:
+                    score = 0.0
+                    evidence_raw["score"] = 0.0
+                    evidence_raw["_zero_files_override"] = True
                 evidence_raw["_zero_write_reason"] = "tool_use_no_writes"
             _emit_event("round_score", task_id=task_id, round=round_num,
                         score=round(score, 4), dod_passed=evidence_raw["dod_passed"],
@@ -971,13 +997,21 @@ def run(
         response_file = output_dir / f"{task_id}.response.txt"
         response_file.write_text(final_response)
 
+        status = "pass" if rounds_history and rounds_history[-1]["dod_passed"] else "fail"
+        if not rounds_history:
+            failure_reason = failure_reason or "No rounds completed. Check git state and scillm connectivity."
+        elif not failure_reason and status == "fail":
+            last = rounds_history[-1]
+            failure_reason = (f"DoD failed after {len(rounds_history)} rounds. "
+                              f"Best score: {best_score:.3f}. Last strategy: {last.get('strategy', '?')}.")
         result = TaskResult(
             task_id=task_id, title=title,
-            status="pass" if rounds_history and rounds_history[-1]["dod_passed"] else "fail",
+            status=status,
             rounds=len(rounds_history), best_score=best_score,
             dod_passed=rounds_history[-1]["dod_passed"] if rounds_history else False,
             backend=llm_backend,
             best_commit=best_commit[:8] if best_commit else "",
+            error=failure_reason,
             round_details=rounds_history,
         )
         result_file = output_dir / f"{task_id}.result.json"
@@ -1008,14 +1042,48 @@ def run(
 
         if not result.dod_passed:
             sys.exit(1)
+    except Exception as exc:
+        # ── Crash reporting: write result.json + structured event so failures are NEVER silent ──
+        import traceback
+        crash_msg = f"{type(exc).__name__}: {exc}"
+        crash_tb = traceback.format_exc()
+        logger.critical("CODE-RUNNER CRASHED: {}", crash_msg)
+        logger.critical("Traceback:\n{}", crash_tb)
+        _emit_event("crash", task_id=task_id, error=crash_msg,
+                     traceback=crash_tb[-500:])
+        # Write result.json so orchestrator has structured failure data
+        try:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            crash_result = TaskResult(
+                task_id=task_id, title=title,
+                status="crash",
+                rounds=len(rounds_history) if 'rounds_history' in dir() else 0,
+                best_score=best_score if 'best_score' in dir() else 0,
+                dod_passed=False,
+                backend=llm_backend,
+                error=f"CRASH: {crash_msg}",
+                round_details=rounds_history if 'rounds_history' in dir() else [],
+            )
+            crash_result_file = output_dir / f"{task_id}.result.json"
+            crash_result_file.write_text(crash_result.model_dump_json(indent=2))
+            logger.info("Crash result written to {}", crash_result_file)
+        except Exception as write_exc:
+            logger.error("Failed to write crash result: {}", write_exc)
+        raise  # re-raise so exit code is still non-zero
     finally:
         # Always restore stashed changes, even on crash
         if stashed:
             git_stash_pop(cwd)
-        # Release repo lock
+        # Release repo lock and remove lock file
         if lock_file:
-            fcntl.flock(lock_file, fcntl.LOCK_UN)
-            lock_file.close()
+            try:
+                fcntl.flock(lock_file, fcntl.LOCK_UN)
+                lock_file.close()
+                lock_path = git_dir / "code-runner.lock" if git_dir else None
+                if lock_path and lock_path.exists():
+                    lock_path.unlink()
+            except Exception:
+                pass  # best-effort cleanup
 
 
 @app.command(name="dry-run")

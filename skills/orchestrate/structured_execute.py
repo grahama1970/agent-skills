@@ -336,6 +336,10 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
         p for p in clean_env.get("PATH", "").split(os.pathsep)
         if ".venv" not in p
     )
+    # Forward per-round timeout to code-runner (uses max of this and static floor)
+    if "CODE_RUNNER_ROUND_TIMEOUT" not in clean_env and task.timeout_seconds:
+        per_round = min(task.timeout_seconds // task.max_rounds, 600)
+        clean_env["CODE_RUNNER_ROUND_TIMEOUT"] = str(max(per_round, 180))
 
     max_blind_attempts = 3
     accumulated_feedback: list[str] = []

@@ -10,6 +10,7 @@ Endpoints:
 """
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import textwrap
@@ -65,7 +66,7 @@ def _sanitize(text: str) -> str:
     return "\n".join(lines[-6:])[:500]
 
 
-def _run_python_assertion(assertion: str, target_dir: str) -> BlindCheckResult:
+def _run_python_assertion(assertion: str, target_dir: str, _cwd: str = "") -> BlindCheckResult:
     """Run a single Python assertion against the target directory."""
     # Wrap the assertion in a test script that adds target_dir to sys.path
     test_code = textwrap.dedent(f"""\
@@ -96,11 +97,14 @@ def _run_python_assertion(assertion: str, target_dir: str) -> BlindCheckResult:
 
 def _run_shell_assertion(assertion: str, target_dir: str) -> BlindCheckResult:
     """Run a shell command assertion against the target directory."""
+    # In Docker, the workspace is always mounted at /workspace
+    # Map any host path to /workspace if running inside container
+    cwd = "/workspace" if os.path.isdir("/workspace") else target_dir
     try:
         proc = subprocess.run(
             ["bash", "-c", assertion],
             capture_output=True, text=True, timeout=30,
-            cwd=target_dir,
+            cwd=cwd,
         )
         if proc.returncode == 0:
             return BlindCheckResult(index=-1, passed=True, message="passed")

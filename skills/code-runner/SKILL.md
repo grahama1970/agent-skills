@@ -128,6 +128,8 @@ Round 2+: Memory-backed system prompt (refreshed each round):
 | `read_context` | No | Files for interface-map context (read-only, not editable) |
 | `blind_tests` | No | Hidden tests for /orchestrate blind eval (code-runner never sees these) |
 | `timeout_seconds` | No | Per-task timeout in seconds (default: 1800) |
+
+**Round timeout:** Each LLM round has a per-round timeout from `common/estimate_timeout.py`. Uses `max(historical_P95, 180s)` with 1.2x buffer — minimum 216s per round. Override with `CODE_RUNNER_ROUND_TIMEOUT` env var (seconds).
 | `escalation_chain` | No | Backend escalation: `[["codex","medium"],["codex","high"],["claude","high"]]` |
 
 ## Output
@@ -245,6 +247,8 @@ log_invocation(
 ```
 
 Write-only via memory daemon `/store` endpoint. No bespoke AQL — querying uses `/memory recall`.
+
+**Requires:** `SKILLS_DIR` env var (set by `run.sh`) or `common/` as sibling of skill directory. The module is imported at startup via `sys.path` from `$SKILLS_DIR/common/llm_invocations.py`.
 
 **session_key** links all rounds for one invocation. Enables:
 - `/recommend-skill-chain` traversal across related sessions

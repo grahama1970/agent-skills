@@ -83,6 +83,7 @@ STATIC_BUDGETS: dict[str, float] = {
     "monitor-pi": 10,
     "monitor-claude": 10,
     "learn-datalake": 60,
+    "code-runner": 180,
 }
 
 # ── Composite profiles ───────────────────────────────────────────────────────
@@ -314,11 +315,16 @@ def _historical_budget(skill: str) -> float | None:
 
 
 def get_budget(skill: str) -> float:
-    """Get the best available budget for a skill: historical p95, or static fallback."""
+    """Get the best available budget for a skill: historical p95, or static fallback.
+
+    Uses max(historical, static) so the static budget acts as a floor —
+    prevents fast-task P95 from setting timeouts too low for complex tasks.
+    """
+    static = STATIC_BUDGETS.get(skill, 300)  # 5min default for unknown skills
     historical = _historical_budget(skill)
     if historical is not None:
-        return historical
-    return STATIC_BUDGETS.get(skill, 300)  # 5min default for unknown skills
+        return max(historical, static)
+    return static
 
 
 def estimate_skill(skill: str, units: int = 1, buffer: float = DEFAULT_BUFFER) -> int:

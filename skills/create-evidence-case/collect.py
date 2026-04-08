@@ -197,7 +197,7 @@ def _shadow_assistant(task: str, data: dict) -> None:
 # Data collection — call skills, return raw results for agent reasoning
 # ---------------------------------------------------------------------------
 
-def collect_recall(question: str, k: int = 20) -> list[dict]:
+def collect_recall(question: str, k: int = 20, collections: list[str] | None = None) -> list[dict]:
     """Call /memory recall via daemon. Full hybrid search, no degraded paths.
 
     The daemon does:
@@ -207,7 +207,7 @@ def collect_recall(question: str, k: int = 20) -> list[dict]:
 
     Fails loudly if daemon is broken. NEVER returns degraded results.
     """
-    result = collect_recall_with_confidence(question, k=k)
+    result = collect_recall_with_confidence(question, k=k, collections=collections)
     return result["items"]
 
 
@@ -239,7 +239,7 @@ def _filter_sparta_items(raw_items: list[dict]) -> list[dict]:
     return sparta_items
 
 
-def collect_recall_with_confidence(question: str, k: int = 20) -> dict:
+def collect_recall_with_confidence(question: str, k: int = 20, collections: list[str] | None = None) -> dict:
     """Call /memory recall via daemon. SPARTA-specific results only.
 
     Calls /recall with scope=sparta, then filters results to only keep
@@ -254,11 +254,14 @@ def collect_recall_with_confidence(question: str, k: int = 20) -> dict:
     Returns dict with keys: items, confidence, source, tier
     """
     client = _get_memory_http()
-    resp = client.post("/recall", json={
+    payload: dict = {
         "q": question[:400],
         "scope": "sparta",
         "limit": k,
-    })
+    }
+    if collections:
+        payload["collections"] = collections
+    resp = client.post("/recall", json=payload)
     if resp.status_code != 200:
         raise RuntimeError(f"/memory recall failed: HTTP {resp.status_code} — {resp.text}")
 
@@ -279,8 +282,14 @@ def collect_recall_with_confidence(question: str, k: int = 20) -> dict:
 def collect_entities(question: str) -> dict | None:
     """Extract entities via daemon /extract-entities HTTP endpoint.
 
-    Uses the warm daemon (spaCy already loaded in-process) instead of
-    importing extract_entities directly (which reloads the model every call).
+    Returns the new agent-friendly contract directly. Consumers read:
+      - grounding_ok: bool
+      - resolved_entities: [{mention, span, canonical_id, canonical_name, framework, entity_type, crosswalk_path}]
+      - external_entities: [{mention, span, wordnet_category, routing_effect}]
+      - unresolved_entities: [{mention, reason, detail}]
+      - domain_terms: [{text, span, kind}]
+      - agent_decision: {safe_to_answer, needs_clarification, needs_retry, suggested_action, reason}
+      - summary: {resolved_count, external_count, unresolved_count, domain_term_count}
     """
     client = _get_memory_http()
     try:
@@ -295,27 +304,151 @@ def collect_entities(question: str) -> dict | None:
             f"Daemon /extract-entities call failed: {exc}"
         )
 
-    if not isinstance(result, dict):
+    if not isinstance(result, dict) or not result.get("ok", False):
         raise EntityExtractionFailure(
-            f"Entity extraction failed: no valid result returned (type={type(result).__name__})"
+            f"Entity extraction failed: {result}"
         )
 
-    required_fields = ("grounding_ok", "resolution_map", "unresolved_terms")
-    missing_fields = [field for field in required_fields if field not in result]
-    if missing_fields:
-        raise EntityExtractionFailure(
-            "Entity extraction returned invalid contract: missing "
-            + ", ".join(missing_fields)
-        )
+    # Backward-compat fields for runner.py consumers that haven't migrated yet
+    resolved = result.get("resolved_entities", [])
+    unresolved = result.get("unresolved_entities", [])
+    external = result.get("external_entities", [])
 
-    # Daemon response already has warnings from agent_view(). Normalize defaults.
-    result.setdefault("all_control_ids", result.get("control_ids", []))
-    result.setdefault("control_ids", result.get("all_control_ids", []))
+    result["all_control_ids"] = [e["canonical_id"] for e in resolved]
+    result["control_ids"] = result["all_control_ids"]
+
+    # Build control_metadata from resolved_entities (for concept intersection)
+    result["control_metadata"] = []
+    for ent in resolved:
+        cp = ent.get("crosswalk_path", {})
+        # Rebuild taxonomy edges from crosswalk path for collect_concept_intersection
+        taxonomy = []
+        path_ids = cp.get("ids", [])
+        for i in range(len(path_ids) - 1):
+            taxonomy.append({"from": path_ids[i], "to": path_ids[i + 1], "framework": ""})
+        if cp.get("terminal_framework") == "SPARTA" and cp.get("terminal_id"):
+            taxonomy.append({"from": path_ids[-2] if len(path_ids) > 1 else ent["canonical_id"],
+                             "to": cp["terminal_id"], "framework": "SPARTA"})
+        result["control_metadata"].append({
+            "control_id": ent["canonical_id"],
+            "name": ent.get("canonical_name", ""),
+            "framework": ent.get("framework", ""),
+            "type": ent.get("entity_type", ""),
+            "taxonomy": taxonomy,
+            "chain_path": path_ids,
+            "chain_stop": None if cp.get("exists") else cp.get("from_framework"),
+        })
+
+    # Build warnings from unresolved + external for grounding gate
+    warnings = []
+    for u in unresolved:
+        warnings.append({"term": u["mention"], "category": u.get("reason", "fabricated_id"),
+                         "detail": u.get("detail", "")})
+    for e in external:
+        warnings.append({"term": e["mention"], "category": "not_in_corpus",
+                         "detail": f"WordNet: {e.get('wordnet_category', 'unknown')}"})
+    result["warnings"] = warnings
+
+    # Build resolution_map for plausibility.py
+    resolution_map: dict[str, dict] = {}
+    for ent in resolved:
+        resolution_map[ent["canonical_id"]] = {"exists": True, "match_type": "exact",
+                                                "control_id": ent["canonical_id"],
+                                                "name": ent.get("canonical_name", "")}
+    for u in unresolved:
+        resolution_map[u["mention"]] = {"exists": False, "reason": u.get("reason", "")}
+    result["resolution_map"] = resolution_map
+
+    result.setdefault("headline", f"{len(resolved)} resolved")
     result.setdefault("related_pairs", [])
-    result.setdefault("warnings", [])
-    result.setdefault("headline", "No controls resolved")
+    result.setdefault("phrases", [dt["text"] for dt in result.get("domain_terms", [])])
+    result.setdefault("unresolved_terms", [{"term": u["mention"], "type": u.get("reason", "")}
+                                            for u in unresolved])
     result["method"] = "daemon_http"
     return result
+
+
+def collect_concept_intersection(
+    question: str,
+    entities: dict,
+    recall_items: list[dict],
+) -> dict[str, Any]:
+    """Concept-in-technique intersection via /extract-entities.
+
+    1. Get SPARTA technique IDs from the question's entity taxonomy edges.
+    2. For each non-SPARTA entity name (the concept), call /extract-entities
+       to get its own SPARTA taxonomy edges.
+    3. Intersect the two SPARTA ID sets.
+
+    All corpus grounding is done by /extract-entities. No bespoke search.
+    """
+    client = _get_memory_http()
+
+    # 1. Collect SPARTA technique IDs from question entity taxonomy edges
+    taxonomy_sparta_ids: set[str] = set()
+    for cm in (entities or {}).get("control_metadata", []):
+        for edge in cm.get("taxonomy", []):
+            if edge.get("framework") == "SPARTA":
+                taxonomy_sparta_ids.add(edge["to"])
+
+    if not taxonomy_sparta_ids:
+        return {
+            "taxonomy_sparta_ids": [],
+            "intersection_count": 0,
+            "skipped": True,
+            "reason": "no taxonomy SPARTA edges",
+        }
+
+    # 2. Get concept names from entity extraction (non-SPARTA, non-ID names)
+    concept_names: list[str] = []
+    for cm in (entities or {}).get("control_metadata", []):
+        name = cm.get("name", "")
+        if name and name != cm.get("control_id", "") and cm.get("framework") != "SPARTA":
+            concept_names.append(name)
+
+    if not concept_names:
+        return {
+            "taxonomy_sparta_ids": sorted(taxonomy_sparta_ids)[:20],
+            "taxonomy_sparta_count": len(taxonomy_sparta_ids),
+            "intersection_count": 0,
+            "skipped": True,
+            "reason": "no concept names from entity extraction",
+        }
+
+    # 3. Call /extract-entities with each concept name to get its SPARTA edges
+    concept_sparta_ids: set[str] = set()
+    concept_entities: list[dict] = []
+    for concept in concept_names[:3]:
+        try:
+            resp = client.post("/extract-entities", json={"text": concept})
+            resp.raise_for_status()
+            result = resp.json()
+            for cm in result.get("control_metadata", []):
+                for edge in cm.get("taxonomy", []):
+                    if edge.get("framework") == "SPARTA":
+                        concept_sparta_ids.add(edge["to"])
+                if cm.get("framework") == "SPARTA":
+                    concept_entities.append({
+                        "control_id": cm.get("control_id"),
+                        "name": cm.get("name"),
+                        "type": cm.get("type"),
+                    })
+        except Exception:
+            pass
+
+    # 4. Intersect
+    intersection = sorted(taxonomy_sparta_ids & concept_sparta_ids)
+
+    return {
+        "taxonomy_sparta_ids": sorted(taxonomy_sparta_ids)[:20],
+        "taxonomy_sparta_count": len(taxonomy_sparta_ids),
+        "concept_names": concept_names,
+        "concept_sparta_ids": sorted(concept_sparta_ids)[:20],
+        "concept_sparta_count": len(concept_sparta_ids),
+        "concept_entities": concept_entities,
+        "intersection": intersection,
+        "intersection_count": len(intersection),
+    }
 
 
 def collect_topic(question: str) -> dict:

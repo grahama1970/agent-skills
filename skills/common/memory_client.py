@@ -41,8 +41,11 @@ from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 from loguru import logger
 
-from dotenv import load_dotenv, find_dotenv
-load_dotenv(find_dotenv(usecwd=True), override=False)
+try:
+    from dotenv import load_dotenv, find_dotenv
+    load_dotenv(find_dotenv(usecwd=True), override=False)
+except ImportError:
+    logger.debug("python-dotenv not installed; skipping .env loading")
 
 # =============================================================================
 # CONFIGURATION
