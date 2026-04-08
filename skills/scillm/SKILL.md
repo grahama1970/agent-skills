@@ -567,10 +567,10 @@ content = resp.json()["choices"][0]["message"]["content"]
 | `temperature` | YES | 0.0-1.0 |
 | `top_p` | YES | |
 | `stop` | YES | String or list |
-| `system` role in messages | PARTIAL | Injected as user message (OAuth locks system prompt) |
+| `system` role in messages | YES | Native system prompt array for Claude OAuth (matches Pi CLI). Codex uses `instructions` field. |
 | `response_format` | NO | Claude doesn't support json_object — ask for JSON in the prompt |
-| `tools` / `tool_choice` | YES | Full tool use: Claude (Anthropic format translation), Codex (Responses API format), Gemini (native passthrough) |
-| `stream` | YES | SSE streaming with OpenAI delta format (`data: {"choices":[{"delta":{"content":"..."}}]}`) |
+| `tools` / `tool_choice` | YES | Full tool use with streaming. Claude (Anthropic format), Codex (Responses API + reasoning + parallel_tool_calls), Gemini (native). Codex forces `tool_choice: "auto"` (no `"required"`). |
+| `stream` | YES | SSE streaming with OpenAI delta format, including streaming tool call deltas |
 | `scillm_metadata` | YES | Opaque passthrough — see below |
 
 ### scillm_metadata (opaque round-trip)

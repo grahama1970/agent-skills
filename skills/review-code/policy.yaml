@@ -1,0 +1,28 @@
+# /review-code skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: paid providers, split reviews, missing request file
+
+name: review-code
+slash_command: /review-code
+
+required_reads:
+  - .pi/skills/review-code/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Using paid providers directly (Common Mistakes #1)
+    - shell_contains: "--provider anthropic"
+      reason: "Use --provider github for free access to Claude models. Anthropic provider costs money."
+    - shell_contains: "--provider openai"
+      reason: "Use --provider github for free access. OpenAI provider costs money. Only use if user explicitly requests Codex."
+    - shell_contains: "--provider google"
+      reason: "Use --provider github for free access. Google provider costs money."
+
+    # WRONG: Running review-full without --file (Common Mistakes #3)
+    - pattern: "review-full(?!.*--file)"
+      reason: "Always build a request file first with 'build -A -t' then pass it via --file."
+
+    # WRONG: Reimplementing code review inline instead of using the skill
+    - import: "openai"
+      reason: "Do not call OpenAI API directly for code review. Use review-code skill which handles multi-provider routing."
+    - import: "anthropic"
+      reason: "Do not call Anthropic API directly for code review. Use review-code skill which handles multi-provider routing."

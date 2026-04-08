@@ -194,8 +194,91 @@ def _shadow_assistant(task: str, data: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Pre-existing QRA check — skip pipeline if identical question already answered
+# ---------------------------------------------------------------------------
+
+
+def check_pre_existing_qra(
+    question: str,
+    entities: dict,
+    similarity_threshold: int = 95,
+) -> tuple[dict | None, list[dict]]:
+    """Check if a near-identical QRA already exists in sparta_qra.
+
+    Three-layer verification:
+    1. /recall against sparta_qra for semantic candidates (k=10)
+    2. rapidfuzz token_sort_ratio >= threshold on question text
+    3. /extract-entities on candidate question must produce identical entities
+
+    Args:
+        question: The incoming question text.
+        entities: Already-extracted entities from the incoming question
+                  (from collect_entities). Reused to avoid redundant extraction.
+        similarity_threshold: Minimum rapidfuzz score (default 95).
+
+    Returns:
+        Tuple of (match, candidates):
+        - match: Matching QRA dict with "pre_existing": True, or None.
+        - candidates: All recall results (reusable as QRA evidence if no match).
+    """
+    from rapidfuzz import fuzz
+
+    incoming_ids = sorted({
+        e.get("canonical_id", "") for e in entities.get("resolved_entities", [])
+        if e.get("canonical_id")
+    })
+    if not incoming_ids:
+        return None, []
+
+    client = _get_memory_http()
+    try:
+        resp = client.post("/recall", json={
+            "q": question[:500],
+            "k": 10,
+            "collections": ["sparta_qra"],
+        })
+        resp.raise_for_status()
+        candidates = resp.json().get("items", [])
+    except Exception as exc:
+        logger.warning("Pre-existing QRA check recall failed: {}", exc)
+        return None, []
+
+    for candidate in candidates:
+        candidate_q = candidate.get("question", candidate.get("problem", ""))
+        if not candidate_q:
+            continue
+
+        # Layer 2: string similarity
+        score = fuzz.token_sort_ratio(question.strip(), candidate_q.strip())
+        if score < similarity_threshold:
+            continue
+
+        # Layer 3: entity identity — extract entities from candidate question
+        try:
+            candidate_entities = collect_entities(candidate_q)
+        except EntityExtractionFailure:
+            continue
+
+        candidate_ids = sorted({
+            e.get("canonical_id", "") for e in candidate_entities.get("resolved_entities", [])
+            if e.get("canonical_id")
+        })
+
+        if incoming_ids == candidate_ids:
+            logger.info(
+                "Pre-existing QRA match: score={}, entities={}, key={}",
+                score, incoming_ids, candidate.get("_key", "?"),
+            )
+            candidate["pre_existing"] = True
+            return candidate, candidates
+
+    return None, candidates
+
+
+# ---------------------------------------------------------------------------
 # Data collection — call skills, return raw results for agent reasoning
 # ---------------------------------------------------------------------------
+
 
 def collect_recall(question: str, k: int = 20, collections: list[str] | None = None) -> list[dict]:
     """Call /memory recall via daemon. Full hybrid search, no degraded paths.
@@ -517,28 +600,51 @@ def collect_lean4_provable(question: str, control_ids: list[str]) -> dict | None
 LEAN4_SERVICE_URL = os.getenv("LEAN4_SERVICE_URL", "http://127.0.0.1:8604")
 
 
-def collect_lean4_proof(requirement: str) -> dict | None:
+def collect_lean4_proof(
+    requirement: str, candidates: int = 3, max_retries: int = 1,
+) -> dict | None:
     """Call lean4-prove-service /prove endpoint via httpx.
 
-    No subprocess — direct HTTP to the lean4 container which has
-    lean-interact + Mathlib cached. The container calls /scillm
-    for LLM generation and compiles locally.
+    Runs `candidates` concurrent proof attempts via asyncio.gather,
+    each with `max_retries`. Returns first success or first non-None.
     """
+    import asyncio
+
+    async def _prove_one(client: httpx.AsyncClient, idx: int) -> dict | None:
+        try:
+            resp = await client.post(
+                f"{LEAN4_SERVICE_URL}/prove",
+                json={
+                    "requirement": requirement[:700],
+                    "max_retries": max_retries,
+                    "timeout": 30,
+                },
+                timeout=60,
+            )
+            if resp.status_code == 200:
+                result = resp.json()
+                result["candidate"] = idx
+                return result
+            return None
+        except Exception:
+            return None
+
+    async def _run() -> dict | None:
+        async with httpx.AsyncClient() as client:
+            results = await asyncio.gather(
+                *[_prove_one(client, i) for i in range(candidates)]
+            )
+            for r in results:
+                if r and r.get("success"):
+                    return r
+            for r in results:
+                if r:
+                    return r
+            return None
+
     try:
-        resp = httpx.post(
-            f"{LEAN4_SERVICE_URL}/prove",
-            json={
-                "requirement": requirement[:700],
-                "max_retries": 3,
-                "timeout": 60,
-            },
-            timeout=180,
-        )
-        if resp.status_code == 200:
-            return resp.json()
-        logger.warning("lean4-prove-service /prove returned {}: {}", resp.status_code, resp.text[:200])
-        return None
-    except (httpx.ConnectError, httpx.TimeoutException) as e:
+        return asyncio.run(_run())
+    except (ConnectionError, OSError) as e:
         logger.debug("lean4-prove-service unavailable: {}", e)
         return None
     except Exception as e:

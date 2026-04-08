@@ -1,0 +1,27 @@
+# /ux-lab skill policy — enforced by .claude/hooks/skill_policy.py
+# Agents modify components without Vite HMR running, use raw hex colors,
+# and skip the component manifest.
+
+name: ux-lab
+slash_command: /ux-lab
+
+required_reads:
+  - .pi/skills/ux-lab/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Raw hex colors — must use EMBRY tokens
+    - pattern: "style.*#[0-9a-fA-F]{6}"
+      reason: "Never use raw hex colors in components. Import and use EMBRY.* tokens from EmbryStyle.ts."
+
+    # Tailwind (explicitly banned in SKILL.md)
+    - pattern: "className=.*tw-|tailwind"
+      reason: "Tailwind is banned. Use inline style objects with EMBRY.* tokens for zero-config isolation."
+
+    # Editing components without reading manifest first
+    - pattern: "from.*EmbryStyle|from.*sampleData"
+      reason: "Read component-manifest.json BEFORE editing any component. It contains token rules and composition relationships."
+
+    # Direct ArangoDB calls from frontend (must go through Express proxy)
+    - pattern: "localhost:8529|:8529/|arango"
+      reason: "Frontend must use /api/memory/* proxy at localhost:3001, not direct ArangoDB at :8529."

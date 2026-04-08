@@ -1,0 +1,26 @@
+# /dogpile skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns: calling search providers directly instead of through dogpile
+
+name: dogpile
+slash_command: /dogpile
+
+required_reads:
+  - .pi/skills/dogpile/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Calling Brave Search API directly instead of through dogpile
+    - pattern: "api\\.search\\.brave\\.com"
+      reason: "Don't call Brave Search API directly. Use /dogpile which adds rate limiting, retry, and memory integration."
+    - pattern: "BRAVE_API_KEY.*httpx|httpx.*brave.*search"
+      reason: "Don't call Brave directly. Use ./run.sh search which handles rate limits and resilience."
+
+    # Calling Perplexity API directly
+    - pattern: "api\\.perplexity\\.ai"
+      reason: "Don't call Perplexity API directly. Use /dogpile which consolidates results across all sources."
+    - pattern: "PERPLEXITY_API_KEY.*httpx|httpx.*perplexity"
+      reason: "Don't call Perplexity directly. Use ./run.sh search for multi-source aggregation."
+
+    # Wrong HTTP client
+    - import: requests
+      reason: "Use httpx, not requests. Dogpile uses httpx with async support."

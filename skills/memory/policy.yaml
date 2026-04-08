@@ -1,0 +1,46 @@
+# /memory skill policy — enforced by .claude/hooks/skill_policy.py
+# These are the anti-patterns agents repeat EVERY session per SKILL.md
+
+name: memory
+slash_command: /memory
+
+required_reads:
+  - .pi/skills/memory/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Direct ArangoDB access — must go through daemon
+    - import: python_arango
+      reason: "Direct ArangoDB import. Use httpx to memory daemon, not python-arango."
+    - pattern: "arango_client|ArangoClient|arangodb\\.connect|:8529"
+      reason: "Direct ArangoDB connection. Use httpx to memory daemon."
+    - pattern: "db\\.aql\\.execute|aql\\.execute"
+      reason: "Raw AQL outside memory project. Use /recall, /list, /store endpoints."
+
+    # Wrong HTTP client
+    - import: requests
+      reason: "Use httpx, not requests. requests has no Unix socket support."
+
+    # Subprocess wrapping (fork-bomb risk)
+    - pattern: "subprocess.*memory.*run\\.sh.*recall"
+      reason: "Don't subprocess run.sh in loops. Use httpx client with connection pool."
+
+    # Bypassing daemon
+    - pattern: "from graph_memory|from graph_memory\\.api"
+      reason: "Don't import graph_memory directly. Use httpx to daemon."
+
+    # Reimplementing recall
+    - import: rapidfuzz
+      reason: "Don't reimplement /recall with rapidfuzz. The daemon does BM25+cosine+graph."
+    - pattern: "fuzz\\.partial_ratio|fuzz\\.ratio"
+      reason: "Don't reimplement /recall with fuzzy matching. Use daemon's confidence score."
+
+    # Deprecated endpoint
+    - endpoint: POST /learn
+      reason: "/learn is deprecated. Use /store with explicit collection."
+
+    # Wrong response key
+    - pattern: 'data\\.get\\("results"'
+      reason: "The key is 'items', not 'results'. data['items'] is correct."
+    - pattern: "data\\[.results.\\]"
+      reason: "The key is 'items', not 'results'. data['items'] is correct."

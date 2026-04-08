@@ -1,0 +1,26 @@
+# /checkpoint skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: bypassing /store, skipping grade/skills params
+
+name: checkpoint
+slash_command: /checkpoint
+
+required_reads:
+  - .pi/skills/checkpoint/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Bypassing /store endpoint — must go through memory daemon
+    - pattern: "from graph_memory|from graph_memory\\.api"
+      reason: "Don't import graph_memory directly. Checkpoint uses httpx POST /store."
+    - import: python_arango
+      reason: "Direct ArangoDB import. Checkpoint writes via memory daemon /store endpoint."
+    - pattern: "db\\.aql\\.execute|aql\\.execute"
+      reason: "Raw AQL. Checkpoint writes via memory daemon /store endpoint."
+
+    # Deprecated /learn endpoint
+    - endpoint: POST /learn
+      reason: "/learn is deprecated. Use /store with explicit collection param."
+
+    # Wrong HTTP client
+    - import: requests
+      reason: "Use httpx, not requests. requests has no Unix socket support."

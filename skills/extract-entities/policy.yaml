@@ -1,0 +1,30 @@
+# /extract-entities skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: regex entity extraction, skipping grounding checks
+
+name: extract-entities
+slash_command: /extract-entities
+
+required_reads:
+  - .pi/skills/extract-entities/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Using regex to parse control IDs (Common Mistakes section)
+    - pattern: "re\\.findall.*[A-Z].*\\d+.*text"
+      reason: "Don't use regex to extract control IDs. Use /extract-entities for Flashtext+RapidFuzz grounded extraction."
+    - pattern: "re\\.findall.*SV-|re\\.findall.*CWE-|re\\.findall.*CAPEC-"
+      reason: "Don't use regex for control ID extraction. Use /extract-entities which handles fuzzy matches and grounding."
+
+    # Reimplementing entity extraction inline
+    - import: flashtext
+      reason: "Don't import flashtext directly. Use /extract-entities which manages vocabulary loading from ArangoDB."
+    - pattern: "KeywordProcessor\\(\\)"
+      reason: "Don't instantiate KeywordProcessor directly. Use /extract-entities skill endpoint."
+
+    # Hardcoding control vocabularies instead of loading from ArangoDB
+    - pattern: "control_ids\\s*=\\s*\\[.*(SV-|CWE-|CAPEC-)"
+      reason: "Don't hardcode control ID lists. Vocabulary comes from ArangoDB via /memory, not hardcoded lists."
+
+    # Using NLP mode for delimiter-separated tokens (Common Mistakes section)
+    - pattern: "extract_entities\\.py(?!.*--delimiter).*,.*,"
+      reason: "Use --delimiter auto for comma-separated token lists, not default NLP mode."

@@ -1,0 +1,29 @@
+# /create-figure skill policy — enforced by .claude/hooks/skill_policy.py
+# Agents use matplotlib directly without the multi-backend skill,
+# pick wrong chart types by guessing instead of using domain navigation.
+
+name: create-figure
+slash_command: /create-figure
+
+required_reads:
+  - .pi/skills/create-figure/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Direct matplotlib usage — must go through create-figure skill
+    - import: matplotlib
+      reason: "Don't import matplotlib directly. Use ./run.sh with the appropriate command (metrics, confusion-matrix, heatmap, etc.)."
+    - import: matplotlib.pyplot
+      reason: "Don't import matplotlib.pyplot directly. Use create-figure/run.sh which handles IEEE publication settings automatically."
+
+    # Direct plotly usage
+    - import: plotly
+      reason: "Don't import plotly directly. Use create-figure/run.sh (sankey, sunburst, treemap commands) for consistent styling."
+
+    # Direct seaborn usage
+    - import: seaborn
+      reason: "Don't import seaborn directly. Use create-figure/run.sh (heatmap, violin commands) for IEEE publication settings."
+
+    # Guessing chart type without domain navigation (documented Common Mistake)
+    - shell_contains: "run.sh metrics --input"
+      reason: "Don't guess chart type. Run ./run.sh describe <data.json> first to get domain-specific recommendations."

@@ -122,76 +122,36 @@ class EvidenceCaseStore2:
             grader={"type": "agent_driven", "model_id": "", "modified_in_session": False},
         )
 
-        # Persist to /memory
-        self.store.learn_node(claim.to_dict())
-        self.store.learn_node(strategy.to_dict())
-        self.store.learn_edge(claim.id, strategy.id, "has_strategy")
+        # Persist to /memory — single batch upsert, background thread.
+        # Record-keeping does not block the pipeline return.
+        import threading
+        from storage import _upsert_evidence_case, _get_memory_http
 
-        # Persist decomposition if provided
-        decomposition_node = None
-        if decomposition:
-            if isinstance(decomposition, dict) and decomposition.get("id"):
-                decomposition_node = decomposition
-            else:
-                decomposition_node = DecompositionNode(
-                    question=decomposition.get("question", question) if isinstance(decomposition, dict) else question,
-                    given_components=decomposition.get("given_components", []) if isinstance(decomposition, dict) else [],
-                    then_components=decomposition.get("then_components", []) if isinstance(decomposition, dict) else [],
-                    component_queries=decomposition.get("component_queries", {}) if isinstance(decomposition, dict) else {},
-                    component_entity_types=decomposition.get("component_entity_types", {}) if isinstance(decomposition, dict) else {},
-                    mermaid=decomposition.get("mermaid", "") if isinstance(decomposition, dict) else "",
-                ).to_dict()
-            self.store.learn_node(decomposition_node)
-            self.store.learn_edge(claim.id, decomposition_node.get("id", ""), "decomposed_as")
-
-        for e in evidence:
-            self.store.learn_node(e.to_dict())
-        self.store.learn_node(verdict.to_dict())
-        self.store.learn_edge(claim.id, verdict.id, "resolved_by")
-        self.store.learn_edge(verdict.id, strategy.id, "via_strategy")
-        for eid in verdict.evidence_ids:
-            self.store.learn_edge(verdict.id, eid, "cites")
-
-        self.store.append_audit(claim.id, {
-            "event": "case_created_v4_agent",
-            "claim_id": claim.id,
-            "verdict": verdict.state,
-            "grade": verdict.grade,
-            "gates_passed": gates_passed,
-        })
-
-        # Store consolidated training label for Sensai Cascade.
-        # Every verdict (SATISFIED, INCONCLUSIVE, NOT_SATISFIED) is a label.
-        # When 1000+ labels accumulate, /assistant-lab harvests for LoRA training.
-        gate_summary = "; ".join(
-            f"{'PASS' if g.get('passed') else 'FAIL'}: {g.get('gate', '?')}"
-            for g in gates
-        )
-        training_label = {
+        # Build consolidated case document for single upsert
+        case_doc = {
             "question": question[:500],
+            "category": category,
             "verdict": verdict.state,
             "grade": verdict.grade,
+            "score": verdict.score,
             "gates_passed": gates_passed,
             "gates_total": len(gates),
-            "gate_summary": gate_summary,
+            "gate_results": gates,
             "control_ids": control_ids[:10] if control_ids else [],
-            "category": category,
             "answer_preview": answer[:300],
+            "claim": claim.to_dict(),
+            "strategy": strategy.to_dict(),
+            "evidence_nodes": [e.to_dict() for e in evidence],
+            "verdict_node": verdict.to_dict(),
         }
-        try:
-            from storage import _upsert_evidence_case
-            _upsert_evidence_case(training_label)
-        except Exception:
-            pass  # Non-critical — labels accumulate over time
 
-        # UCT update
-        cached = self.store.load_uct_cache(category)
-        cache_map = {s["name"]: s for s in cached}
-        entry = cache_map.get("agent_driven", {"name": "agent_driven", "wins": 0, "visits": 0, "skills": strategy.skills})
-        entry["visits"] = entry.get("visits", 0) + 1
-        entry["wins"] = entry.get("wins", 0) + win_credit(gates_passed)
-        cache_map["agent_driven"] = entry
-        self.store.save_uct_cache(category, list(cache_map.values()))
+        def _persist_background():
+            try:
+                _upsert_evidence_case(case_doc)
+            except Exception as exc:
+                logger.warning("Background persist failed: {}", exc)
+
+        threading.Thread(target=_persist_background, daemon=True).start()
 
         return {
             "claim": claim.to_dict(),

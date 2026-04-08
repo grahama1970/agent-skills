@@ -1,12 +1,18 @@
 """Session checkpoint — 50% deterministic (git), 50% human/agent.
 
-v5: Git provides the WHAT (files changed, commits, test results, branch state).
+v6: Git provides the WHAT (files changed, commits, test results, branch state).
 Human provides the WHY (grade, resume instruction). Agent provides topic + failures.
 No more agent-authored summaries or self-reported file lists.
 
+Resume outputs a structured plain-text briefing to stdout that survives /clear.
+Rich panel goes to stderr for human display. The stdout briefing is what the
+agent actually sees when the user runs `! .pi/skills/checkpoint/run.sh resume`
+after /clear — it contains everything the agent needs to continue work.
+
 Workflow:
   End of session:  /checkpoint save -t "topic" --grade clean --resume "read X, do Y"
-  Next session:    /clear → /checkpoint resume
+  Free context:    /clear
+  Resume:          ! .pi/skills/checkpoint/run.sh resume
 """
 
 from __future__ import annotations
@@ -186,23 +192,48 @@ def _run_tests(root: str) -> dict:
 
 
 def _query_checkpoints_by_time(limit: int = 1, scope: str = "", extra_tags: list[str] | None = None) -> list[dict]:
-    tags = ["checkpoint"] + (extra_tags or [])
-    payload: dict = {
-        "q": CHECKPOINT_PREFIX, "k": limit, "tags": tags,
-        "sort": "created_at", "prefix": CHECKPOINT_PREFIX,
-        "collections": ["checkpoints", "lessons"],
-    }
+    """Query checkpoints by recency using /list with scope filter.
+
+    /recall uses BM25 ranking (not time-sorted), so we use /list with
+    filters for recency-based queries like 'last' and 'list'.
+    /list returns oldest-first, so we fetch from the end using offset.
+    """
+    filters: dict = {}
     if scope:
-        payload["scope"] = scope
-    result = memory_post("/recall", payload, console=console)
-    return result.get("items", [])
+        filters["scope"] = scope
+
+    # First get total count to calculate offset for newest-first
+    count_payload: dict = {"collection": "checkpoints", "limit": 1}
+    if filters:
+        count_payload["filters"] = filters
+    count_result = memory_post("/list", count_payload, console=console)
+    total = count_result.get("total", 0)
+    if total == 0:
+        return []
+
+    # Fetch the last N docs (newest) using offset
+    offset = max(0, total - limit)
+    payload: dict = {
+        "collection": "checkpoints",
+        "limit": limit,
+        "offset": offset,
+    }
+    if filters:
+        payload["filters"] = filters
+    result = memory_post("/list", payload, console=console)
+    docs = result.get("documents", [])
+    # Filter to actual checkpoint docs (have checkpoint_version field)
+    docs = [d for d in docs if d.get("checkpoint_version")]
+    # Reverse so newest is first
+    docs.reverse()
+    return docs
 
 
 def _recall_with_scope_fallback(query: str, scope: str, limit: int, extra_tags: list[str] | None = None) -> list[dict]:
     tags = ["checkpoint"] + (extra_tags or [])
     result = memory_post("/recall", {
         "q": query, "scope": scope, "k": limit, "tags": tags,
-        "prefix": CHECKPOINT_PREFIX, "collections": ["checkpoints", "lessons"],
+        "prefix": CHECKPOINT_PREFIX, "collections": ["checkpoints"],
     }, console=console)
     items = result.get("items", [])
     if items:
@@ -210,7 +241,7 @@ def _recall_with_scope_fallback(query: str, scope: str, limit: int, extra_tags: 
 
     result_all = memory_post("/recall", {
         "q": query, "k": limit, "tags": tags,
-        "prefix": CHECKPOINT_PREFIX, "collections": ["checkpoints", "lessons"],
+        "prefix": CHECKPOINT_PREFIX, "collections": ["checkpoints"],
     }, console=console)
     return _parse_checkpoint_items(result_all.get("items", []))
 
@@ -234,7 +265,7 @@ def save(
     topic: str = typer.Option(..., "--topic", "-t", help="What was attempted this session"),
     grade: str = typer.Option(..., "--grade", "-g", help="Human grade: unresolved|workaround|solved|clean|reusable"),
     resume_instruction: str = typer.Option(..., "--resume", "-r", help="Literal instruction for next session (REQUIRED)"),
-    session_name: Optional[str] = typer.Option(None, "--session", help="Terminal session name (default: $CLAUDE_SESSION env var)"),
+    session_name: Optional[str] = typer.Option(None, "--session", "-s", help="Session name (e.g., sparta, bugs). Used for multi-terminal resume."),
     failures: Optional[list[str]] = typer.Option(None, "--failures", help="What failed and why (repeatable)"),
     skills: Optional[list[str]] = typer.Option(None, "--skills", help="Skills used (repeatable)"),
     run_tests: bool = typer.Option(False, "--test", is_flag=True, help="Run tests and include results"),
@@ -249,9 +280,9 @@ def save(
         console.print(f"[red]Invalid grade '{grade}'. Valid: {VALID_GRADES}[/red]")
         raise typer.Exit(1)
 
-    # Auto-detect session name from env if not provided
-    if not session_name:
-        session_name = os.environ.get("CLAUDE_SESSION", "") or None
+    # Session name is optional but enables multi-terminal resume.
+    # User says: /checkpoint save -s sparta ...
+    # Later:     /checkpoint resume -s sparta (or: "resume sparta" after /clear)
 
     # Require --failures for non-success grades
     outcome = GRADE_TO_OUTCOME[grade]
@@ -400,6 +431,15 @@ def save(
         border_style=gc,
     ))
 
+    # Emit deterministic resume command — user pastes this after /clear
+    resume_args = f" -s {session_name}" if session_name else ""
+    console.print()
+    console.print("[bold yellow]To free context:[/bold yellow]")
+    console.print(f"  1. [bold]/clear[/bold]")
+    console.print(f"  2. [bold cyan]/checkpoint resume{resume_args}[/bold cyan]")
+    # Also print to stdout so the agent sees it
+    print(f"\nRESUME_CMD: /checkpoint resume{resume_args}")
+
 
 def _find_plan_context(root: str) -> dict | None:
     """Find the most recent plan file and return its contents.
@@ -473,7 +513,7 @@ def _recent_commit_details(root: str, since_tag: str, limit: int = 5) -> list[di
 
 @app.command()
 def resume(
-    session_name: Optional[str] = typer.Option(None, "--session", help="Terminal session (default: $CLAUDE_SESSION)"),
+    session_name: Optional[str] = typer.Option(None, "--session", "-s", help="Session name (e.g., sparta, bugs)"),
     topic: Optional[str] = typer.Option(None, "--topic", "-t", help="Search by topic (default: latest)"),
     scope: Optional[str] = typer.Option(None, "--scope", help="Memory scope filter"),
     output_json: bool = typer.Option(False, "--json", is_flag=True, help="Output as JSON"),
@@ -483,16 +523,11 @@ def resume(
     Deterministic: branch, dirty files, commits since checkpoint, file diffs, plan.
     Human-authored: resume instruction, failures to avoid.
 
-    Session auto-detected from $CLAUDE_SESSION env var, or use --session.
+    With -s/--session, resumes that specific session. Without, resumes latest.
     """
-    # Auto-detect session from env
-    if not session_name:
-        session_name = os.environ.get("CLAUDE_SESSION", "") or None
-
     scope_val = scope or default_workspace_scope()
     root = detect_project_root()
 
-    # Build query with optional session filter
     extra_tags = [f"session:{session_name}"] if session_name else []
 
     # Fetch last checkpoint from ArangoDB
@@ -695,6 +730,46 @@ def resume(
 
     console.print(Panel("\n".join(lines), title="RESUME", border_style="cyan"))
 
+    # === STDOUT BRIEFING: agent-readable plain text for post-/clear resume ===
+    # After /clear all Rich output is gone. This stdout block is what the agent
+    # actually sees when the user pastes `! .pi/skills/checkpoint/run.sh resume`.
+    briefing_parts: list[str] = ["--- CHECKPOINT RESUME BRIEFING ---"]
+    briefing_parts.append(f"BRANCH: {preflight['branch']}")
+    if checkpoints:
+        cp = checkpoints[0]
+        briefing_parts.append(f"TOPIC: {cp.get('topic', '?')}")
+        briefing_parts.append(f"GRADE: {cp.get('grade', '?').upper()}")
+        resume_text = cp.get("resume", "")
+        if resume_text:
+            briefing_parts.append(f"\nDO THIS NEXT:\n  {resume_text}")
+        cp_failures = cp.get("failures", [])
+        if cp_failures:
+            briefing_parts.append("\nDON'T REPEAT:")
+            for f in cp_failures:
+                briefing_parts.append(f"  - {f}")
+        if cp.get("skills_used"):
+            briefing_parts.append(f"\nSKILLS USED: {', '.join('/' + s for s in cp['skills_used'])}")
+    else:
+        briefing_parts.append("No previous checkpoint found.")
+
+    briefing_parts.append(f"\nGIT: {preflight['branch']} @ {preflight['commit']}")
+    if preflight["dirty_count"] > 0:
+        briefing_parts.append(f"DIRTY: {preflight['dirty_count']} uncommitted files")
+    if last_tag and since.get("files_changed"):
+        briefing_parts.append(f"CHANGED SINCE {last_tag}: {len(since['files_changed'])} files")
+        for f in since["files_changed"][:10]:
+            briefing_parts.append(f"  - {f}")
+
+    if plan_context:
+        briefing_parts.append(f"\nACTIVE PLAN: {plan_context.get('task', '?')}")
+        target_files = plan_context.get("target_files", [])
+        if target_files:
+            for tf in target_files[:5]:
+                briefing_parts.append(f"  - {tf}")
+
+    briefing_parts.append("--- END BRIEFING ---")
+    print("\n".join(briefing_parts))
+
 
 @app.command()
 def recall(
@@ -760,25 +835,138 @@ def list_cmd(
 
     table = Table(title="Checkpoints", show_lines=True)
     table.add_column("#", style="dim", width=3)
+    table.add_column("Session", style="magenta", width=10)
     table.add_column("Topic", style="bold", max_width=30)
     table.add_column("Grade", width=12)
     table.add_column("Branch", style="cyan", width=15)
-    table.add_column("Tag", style="dim", width=28)
     table.add_column("Time", style="green", width=19)
 
     for i, cp in enumerate(checkpoints, 1):
         grade = cp.get("grade", "?")
         gc = {"unresolved": "red", "workaround": "yellow", "solved": "bright_yellow",
               "clean": "green", "reusable": "blue"}.get(grade, "white")
+        # Extract session from tags
+        session = ""
+        for tag in (cp.get("tags") or []):
+            if isinstance(tag, str) and tag.startswith("session:"):
+                session = tag[8:]
+                break
+        if not session:
+            session = cp.get("session", "")
         table.add_row(
             str(i),
+            session or "-",
             _truncate(cp.get("topic", "?"), 30),
             f"[{gc}]{grade}[/{gc}]",
             cp.get("git", {}).get("branch", "?"),
-            cp.get("tag", ""),
             cp.get("timestamp", "?")[:19],
         )
     console.print(table)
+
+
+@app.command()
+def rewind(
+    key: Optional[str] = typer.Option(None, "--key", "-k", help="Checkpoint _key to rewind to"),
+    limit: int = typer.Option(10, "--limit", "-n", help="Number of checkpoints to show"),
+    scope: Optional[str] = typer.Option(None, "--scope", help="Memory scope filter"),
+    output_json: bool = typer.Option(False, "--json", is_flag=True, help="Output as JSON"),
+) -> None:
+    """Rewind git state to a saved checkpoint.
+
+    Without --key: list recent checkpoints with index numbers.
+    With --key: stash current changes, checkout that commit, print resume.
+    """
+    scope_val = scope or default_workspace_scope()
+    root = detect_project_root()
+
+    if not key:
+        # List mode — show checkpoints with _key so user can pick
+        items = _query_checkpoints_by_time_with_fallback(limit=limit, scope=scope_val)
+        checkpoints = _parse_checkpoint_items(items)
+
+        if output_json:
+            print(json.dumps(checkpoints, indent=2))
+            return
+
+        if not checkpoints:
+            console.print("[yellow]No checkpoints found.[/yellow]")
+            return
+
+        table = Table(title="Rewind — pick a checkpoint", show_lines=True)
+        table.add_column("#", style="dim", width=3)
+        table.add_column("Topic", style="bold", max_width=40)
+        table.add_column("Grade", width=12)
+        table.add_column("Date", style="green", width=19)
+        table.add_column("Key", style="dim cyan", width=14)
+
+        for i, cp in enumerate(checkpoints, 1):
+            grade = cp.get("grade", "?")
+            gc = {"unresolved": "red", "workaround": "yellow", "solved": "bright_yellow",
+                  "clean": "green", "reusable": "blue"}.get(grade, "white")
+            table.add_row(
+                str(i),
+                _truncate(cp.get("topic", "?"), 40),
+                f"[{gc}]{grade}[/{gc}]",
+                cp.get("timestamp", "?")[:19],
+                cp.get("_key", "?"),
+            )
+        console.print(table)
+        console.print("\n[dim]Usage: ./run.sh rewind --key <key>[/dim]")
+        return
+
+    # Rewind mode — checkout the checkpoint's commit
+    # Fetch the checkpoint doc
+    result = memory_post("/recall/by-keys", {
+        "collection": "checkpoints",
+        "keys": [key],
+    }, console=console)
+    docs = result.get("documents", [])
+    if not docs:
+        console.print(f"[red]Checkpoint {key} not found.[/red]")
+        raise typer.Exit(1)
+
+    cp = docs[0]
+    commit = cp.get("git", {}).get("commit", "")
+    if not commit:
+        console.print(f"[red]Checkpoint {key} has no commit hash stored.[/red]")
+        raise typer.Exit(1)
+
+    # Verify commit exists in this repo
+    check = git(["cat-file", "-t", commit], cwd=root)
+    if not check or "commit" not in check:
+        console.print(f"[red]Commit {commit} not found in this repo.[/red]")
+        raise typer.Exit(1)
+
+    # Stash if dirty
+    status = git(["status", "--porcelain"], cwd=root)
+    stashed = False
+    if status and status.strip():
+        console.print("[yellow]Stashing uncommitted changes...[/yellow]")
+        git_exec(["stash", "push", "-m", f"rewind-to-{key}"], cwd=root)
+        stashed = True
+
+    # Checkout the commit (detached HEAD)
+    git_exec(["checkout", commit], cwd=root)
+
+    topic = cp.get("topic", "?")
+    console.print(f"\n[bold green]Rewound to checkpoint {key}[/bold green]")
+    console.print(f"  Topic:  {topic}")
+    console.print(f"  Commit: {commit}")
+    console.print(f"  Date:   {cp.get('timestamp', '?')[:19]}")
+    if stashed:
+        console.print("[yellow]  Previous changes stashed (git stash pop to restore)[/yellow]")
+
+    # Print resume context
+    resume_text = cp.get("resume", "")
+    if resume_text:
+        console.print(f"\n[bold]Resume:[/bold] {resume_text}")
+
+    skill_chain = cp.get("skill_chain")
+    if skill_chain and isinstance(skill_chain, list):
+        chain_str = " → ".join(f"/{s}" for s in skill_chain)
+        console.print(f"[bold cyan]Chain:[/bold cyan] {chain_str}")
+
+    console.print(f"\n[dim]HEAD is detached. Create a branch: git checkout -b rewind/{key}[/dim]")
 
 
 # ---------------------------------------------------------------------------
@@ -798,7 +986,8 @@ def _parse_checkpoint_items(items: list[dict]) -> list[dict]:
         source = item.get("_source", "")
 
         # New format: checkpoints collection — fields are directly on the document
-        if source == "checkpoints":
+        # Detect by _source field (from /recall) or checkpoint_version (from /list)
+        if source == "checkpoints" or item.get("checkpoint_version"):
             # solution_doc was stored as a nested dict; parse if JSON string
             sol = item.get("solution", "")
             if isinstance(sol, str) and sol.startswith("{"):

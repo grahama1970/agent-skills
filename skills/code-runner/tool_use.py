@@ -242,13 +242,17 @@ def execute_tool(
         stale_msg = _check_file_stale(target)
         if stale_msg:
             return f"ERROR: {stale_msg}"
-        # Truncation guard
+        # Full-file rewrite guard — force edit_file for existing large files
         if target.exists():
             existing_lines = len(target.read_text(errors="replace").splitlines())
             new_lines = len(content.splitlines())
             if existing_lines > 500 and new_lines < existing_lines * 0.5:
                 return (f"ERROR: Truncation guard — existing file has {existing_lines} lines, "
                         f"replacement has {new_lines}. Use edit_file for surgical changes.")
+            if existing_lines > 100:
+                return (f"ERROR: File '{safe}' already exists with {existing_lines} lines. "
+                        f"Use edit_file to make surgical changes instead of rewriting the entire file. "
+                        f"First use read_file to see the current content, then edit_file to change specific lines.")
         # Python lint gate
         if safe.endswith(".py"):
             try:
@@ -379,6 +383,23 @@ def run_tool_use_loop(
     If dod_command is provided, the LLM is instructed to run it after editing
     to verify its changes pass. This gives it in-conversation feedback.
     """
+    # Strip JSON output format instructions — tool_use path uses tools, not JSON responses.
+    # The system prompt template (code_runner_system_v3.txt) was designed for text-mode
+    # which returns structured JSON. In tool_use mode, the LLM must call write_file/edit_file
+    # tools instead. Without this strip, Codex follows the JSON instruction and returns
+    # {"summary":...,"operations":[...]} instead of making tool calls.
+    import re
+    system_prompt = re.sub(
+        r"(?s)Return ONLY a JSON object\..*?OPERATION RULES:.*?(?=\nSKILL DOCUMENTATION|\nSAFETY|\Z)",
+        "You have tools: write_file, edit_file, read_file, run_command. "
+        "Use these tools to make changes. Do NOT return JSON — call the tools directly.\n\n",
+        system_prompt,
+    )
+    system_prompt = system_prompt.replace(
+        "You are a code-fixing agent. Return ONLY a JSON object. No prose, no markdown, no explanations.",
+        "You are a code-fixing agent. Use the provided tools to read, edit, and write files.",
+    )
+
     # Inject DoD verification instruction into system prompt
     if dod_command:
         system_prompt += (

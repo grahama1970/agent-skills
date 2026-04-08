@@ -1,0 +1,22 @@
+# /vector-store skill policy — enforced by .claude/hooks/skill_policy.py
+# Agents import faiss directly instead of using the transient service at :8600.
+
+name: vector-store
+slash_command: /vector-store
+
+required_reads:
+  - .pi/skills/vector-store/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Direct FAISS import — must go through the service at :8600
+    - import: faiss
+      reason: "Don't import faiss directly. Use the vector-store service at localhost:8600 (/index, /search, /reset, /info)."
+
+    # Building custom FAISS indexes
+    - pattern: "faiss\\.IndexFlat|faiss\\.IndexIVF|faiss\\.index_factory"
+      reason: "Don't build FAISS indexes directly. Use POST /index on the vector-store service at localhost:8600."
+
+    # Direct numpy vector search (reimplementing what the service does)
+    - pattern: "np\\.dot.*cosine|cosine_similarity.*numpy"
+      reason: "Don't reimplement vector search with numpy. Use POST /search on the vector-store service at localhost:8600."

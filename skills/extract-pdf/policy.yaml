@@ -1,0 +1,28 @@
+# /extract-pdf skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns: PyMuPDF (AGPL license), bypassing pdf_oxide Rust engine
+
+name: extract-pdf
+slash_command: /extract-pdf
+
+required_reads:
+  - .pi/skills/extract-pdf/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Using PyMuPDF — AGPL license violation!
+    - import: "fitz"
+      reason: "PyMuPDF (fitz) is AGPL-licensed. Use pdf_oxide (MIT-licensed Rust engine) via /extract-pdf skill."
+    - import: "pymupdf"
+      reason: "PyMuPDF is AGPL-licensed. Use pdf_oxide (MIT-licensed Rust engine) via /extract-pdf skill."
+    - shell_contains: "pip install pymupdf"
+      reason: "PyMuPDF is AGPL-licensed. Use pdf_oxide (MIT-licensed Rust engine) via /extract-pdf skill."
+    - shell_contains: "pip install fitz"
+      reason: "PyMuPDF (fitz) is AGPL-licensed. Use pdf_oxide (MIT-licensed Rust engine) via /extract-pdf skill."
+
+    # WRONG: Using pdfplumber or other non-approved PDF libraries
+    - import: "pdfplumber"
+      reason: "Use pdf_oxide via /extract-pdf skill. Do not add alternative PDF extraction libraries."
+
+    # WRONG: Reimplementing PDF text extraction inline
+    - import: "pdfminer"
+      reason: "Use pdf_oxide via /extract-pdf skill for text extraction. Do not reimplement with pdfminer."
