@@ -1,12 +1,10 @@
 """Evidence case test bank — generates ~160 questions from live data.
 
-Tests three compliance behaviors:
-  1. SATISFIED (~80): Real QRA questions from sparta_qra. Pipeline MUST find evidence.
-  2. NOT_SATISFIED (~40): Plausible space/security terms NOT in corpus. Pipeline MUST
-     reject — no grounding means no answer, not a hallucinated one.
-  3. INCONCLUSIVE (~20): Real controls that DON'T share a technique. Pipeline MUST
-     say "inconclusive" not fabricate a connection.
-  4. OFF_TOPIC (~20): Non-security questions. Pipeline MUST deflect.
+Tests four deterministic behaviors (gates-only, no LLM needed):
+  1. SATISFIED (~50): Real QRA questions from sparta_qra. Pipeline MUST find evidence.
+  2. NOT_SATISFIED (~20): Fabricated control IDs that don't exist. Pipeline MUST reject.
+  3. INCONCLUSIVE (~40): Nonsense terms OR disjoint technique pairs. Pipeline can't resolve.
+  4. OFF_TOPIC (~50): Non-security questions. Requires LLM — excluded from gates-only eval.
 
 Every run pulls fresh data from the daemon. No hardcoded questions.
 """
@@ -348,111 +346,138 @@ def _call_scillm_batch(batch_idx: int, batch: list[dict], system_prompt: str) ->
 
 
 def _generate_adversarial(seed: int = 42) -> list[TestQuestion]:
-    """Generate adversarial questions by mutating real QRAs via /scillm.
+    """Generate adversarial questions deterministically — no LLM needed.
 
-    Pulls real QRAs from daemon, sends batches of 5 to scillm with the
-    adversarial mutation prompt. Each batch returns ~18 mutations
-    (3 per source QRA + 3 UNRELATED_PAIR). Runs 3 batches concurrently
-    via ThreadPoolExecutor (no asyncio).
-
-    Raises if adversarial generation produces fewer than 10 mutations.
+    Three mutation types from real data:
+    1. FABRICATED_ID (~20): Real QRA with control ID swapped to a non-existent one
+    2. NONSENSE_TERM (~20): Real QRA with a nonsensical term injected
+    3. UNRELATED_PAIR (~20): Two real controls that don't share any technique (AQL)
     """
-    from concurrent.futures import ThreadPoolExecutor
-
     rng = random.Random(seed)
+    questions: list[TestQuestion] = []
 
-    if not _ADVERSARIAL_PROMPT_PATH.exists():
-        raise FileNotFoundError(f"Adversarial prompt not found: {_ADVERSARIAL_PROMPT_PATH}")
-    system_prompt = _ADVERSARIAL_PROMPT_PATH.read_text()
-
-    # Pull 15 diverse real QRAs from daemon (3 queries x 5 results)
+    # --- Pull source QRAs for mutation ---
     source_qras: list[dict] = []
     seen_keys: set[str] = set()
-    recall_queries = [
-        "spacecraft firmware tampering countermeasure",
-        "ground station authentication remote access",
-        "satellite telemetry encryption vulnerability",
-    ]
     with _client() as c:
-        for query in recall_queries:
-            r = c.post("/recall", json={
-                "q": query, "collections": ["sparta_qra"], "limit": 8,
-            })
+        for query in ["spacecraft firmware", "ground station authentication", "satellite encryption"]:
+            r = c.post("/recall", json={"q": query, "collections": ["sparta_qra"], "limit": 15})
             r.raise_for_status()
-            resp_data = r.json()
-            if "items" not in resp_data:
-                logger.warning("Recall returned no items for query '{}': {}", query, list(resp_data.keys()))
-                continue
-            for item in resp_data["items"]:
+            for item in r.json().get("items", []):
                 key = item.get("_key", "")
                 q_text = item.get("question", "")
                 cid = item.get("control_id", "")
                 if key and q_text and cid and key not in seen_keys:
                     seen_keys.add(key)
-                    source_qras.append({
-                        "_key": key, "question": q_text, "control_id": cid,
-                    })
-
-    if len(source_qras) < 5:
-        raise RuntimeError(
-            f"Only {len(source_qras)} QRAs found from daemon — need at least 5 for adversarial generation"
-        )
+                    source_qras.append({"question": q_text, "control_id": cid, "_key": key})
 
     rng.shuffle(source_qras)
-    source_qras = source_qras[:15]
 
-    # Split into batches of 5, run concurrently via threads
-    batches = [source_qras[i:i + 5] for i in range(0, len(source_qras), 5)]
-
-    all_mutations: list[dict] = []
-    errors: list[str] = []
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        futures = {
-            pool.submit(_call_scillm_batch, i, b, system_prompt): i
-            for i, b in enumerate(batches) if b
-        }
-        for future in futures:
-            batch_idx = futures[future]
-            try:
-                mutations = future.result()
-                all_mutations.extend(mutations)
-                logger.info("Adversarial batch {} returned {} mutations", batch_idx, len(mutations))
-            except Exception as exc:
-                errors.append(f"batch {batch_idx}: {exc}")
-                logger.error("Adversarial batch {} failed: {}", batch_idx, exc)
-
-    if errors and not all_mutations:
-        raise RuntimeError(f"All adversarial batches failed: {'; '.join(errors)}")
-
-    if len(all_mutations) < 10:
-        logger.warning(
-            "Only {} adversarial mutations generated (expected ~54). "
-            "Errors: {}", len(all_mutations), errors or "none"
-        )
-
-    # Convert mutations to TestQuestion objects
-    _TYPE_MAP = {
-        "FABRICATED_ID": ("not_satisfied", "NOT_SATISFIED", "fabricated"),
-        "PHANTOM_TERM": ("not_satisfied", "NOT_SATISFIED", "none"),
-        "NON_SECURITY_ENTITY": ("not_satisfied", "NOT_SATISFIED", "none"),
-        "UNRELATED_PAIR": ("inconclusive", "INCONCLUSIVE", "cross"),
-    }
-    questions: list[TestQuestion] = []
-    for m in all_mutations:
-        mut_type = m["type"]
-        category, verdict, framework = _TYPE_MAP[mut_type]
+    # --- 1. FABRICATED_ID: swap real control ID for a fake one ---
+    _FAKE_IDS = [
+        "SV-AC-999", "CM9999", "EX-0099.07", "RD-9999.03", "LM-9999",
+        "T9999.001", "CWE-99999", "CAPEC-99999", "ESA-T9999.001",
+        "SC-999(7)", "PE-99", "AC-999", "SI-999", "CP-999", "MA-999",
+        "SV-IT-999", "SV-SP-999", "SV-MA-999", "REC-9999.01", "DE-9999",
+    ]
+    for i, qra in enumerate(source_qras[:20]):
+        fake_id = _FAKE_IDS[i % len(_FAKE_IDS)]
+        orig_q = qra["question"]
+        orig_cid = qra["control_id"]
+        if orig_cid in orig_q:
+            mutated_q = orig_q.replace(orig_cid, fake_id)
+        else:
+            mutated_q = f"How does {fake_id} address the threats described in: {orig_q}"
         questions.append(TestQuestion(
-            question=m["question"],
-            category=category,
-            framework=framework,
-            control_id=m.get("payload", ""),
-            expected_verdict=verdict,
-            rationale=f"LLM-generated {mut_type} mutation of real QRA "
-                      f"(source_key={m.get('source_key', 'unknown')}). "
-                      f"Payload: {m.get('payload', '')}",
-            source=f"scillm_{mut_type.lower()}",
+            question=mutated_q,
+            category="not_satisfied",
+            framework="fabricated",
+            control_id=fake_id,
+            expected_verdict="NOT_SATISFIED",
+            rationale=f"Fabricated ID {fake_id} replacing real {orig_cid}",
+            source="deterministic_fabricated_id",
         ))
 
+    # --- 2. NONSENSE_TERM: inject absurd terms into real questions ---
+    _NONSENSE = [
+        "ham sandwich", "fusion-controlled space gloves", "quantum banana protocol",
+        "thermonuclear yoga mat", "suborbital cheese wheel", "photonic breadstick array",
+        "gravitational waffle iron", "dark matter toaster", "hypersonic umbrella",
+        "plasma-infused garden hose", "antimatter stapler", "cosmic lint trap",
+        "neutron-powered blender", "interstellar sock drawer", "warp-drive pencil sharpener",
+        "dilithium-crystal napkin holder", "tachyonic rubber duck", "zero-gravity snow globe",
+        "relativistic paper clip", "chronosynclastic dishwasher",
+    ]
+    for i, qra in enumerate(source_qras[20:40]):
+        nonsense = _NONSENSE[i % len(_NONSENSE)]
+        orig_q = qra["question"]
+        mutated_q = orig_q.replace("?", f" involving {nonsense}?") if "?" in orig_q else (
+            f"{orig_q} involving {nonsense}"
+        )
+        questions.append(TestQuestion(
+            question=mutated_q,
+            category="inconclusive",
+            framework="none",
+            control_id="",
+            expected_verdict="INCONCLUSIVE",
+            rationale=f"Nonsense term '{nonsense}' injected — unresolvable, not fabricated",
+            source="deterministic_nonsense_term",
+        ))
+
+    # --- 3. UNRELATED_PAIR: two real controls from different technique families ---
+    # SPARTA controls have parent_id (ST0001-ST0009) indicating technique category.
+    # Controls from different parents are in unrelated technique families.
+    from arango import ArangoClient
+    pairs: list[dict] = []
+    try:
+        arango_client = ArangoClient(hosts="http://127.0.0.1:8529")
+        db = arango_client.db("memory", username="root", password="openSesame")
+        cursor = db.aql.execute("""
+            FOR a IN sparta_controls
+              FILTER a.source_framework == "SPARTA"
+              FILTER a.parent_id != null AND a.parent_id != ""
+              FOR b IN sparta_controls
+                FILTER b.source_framework == "SPARTA"
+                FILTER b.parent_id != null AND b.parent_id != ""
+                FILTER a.parent_id != b.parent_id
+                FILTER a.control_id < b.control_id
+                LIMIT 100
+                RETURN {
+                  a_id: a.control_id, b_id: b.control_id,
+                  a_name: a.name || a.control_id,
+                  b_name: b.name || b.control_id,
+                  a_tags: [a.parent_id], b_tags: [b.parent_id]
+                }
+        """)
+        pairs = list(cursor)
+    except Exception as exc:
+        logger.warning("AQL cross-category technique query failed: {}", exc)
+
+    rng.shuffle(pairs)
+    _PAIR_TEMPLATES = [
+        "How does {a_id} ({a_name}) relate to {b_id} ({b_name}) for spacecraft defense?",
+        "What is the relationship between {a_id} and {b_id} in protecting satellite systems?",
+        "How do {a_id} and {b_id} work together to mitigate space vehicle threats?",
+    ]
+    for i, pair in enumerate(pairs[:20]):
+        template = _PAIR_TEMPLATES[i % len(_PAIR_TEMPLATES)]
+        q = template.format(**pair)
+        questions.append(TestQuestion(
+            question=q,
+            category="inconclusive",
+            framework="cross",
+            control_id=f"{pair['a_id']}+{pair['b_id']}",
+            expected_verdict="INCONCLUSIVE",
+            rationale=f"Disjoint techniques: {pair['a_id']} ({pair['a_tags']}) vs {pair['b_id']} ({pair['b_tags']})",
+            source="deterministic_unrelated_pair",
+        ))
+
+    logger.info(
+        "Adversarial generation: {} fabricated_id, {} nonsense_term, {} unrelated_pair",
+        min(20, len(source_qras)),
+        min(20, max(0, len(source_qras) - 20)),
+        min(20, len(pairs)),
+    )
     return questions
 
 
@@ -599,15 +624,22 @@ def _generate_off_topic(seed: int = 42) -> list[TestQuestion]:
 # Public API
 # ---------------------------------------------------------------------------
 
-def generate_bank(seed: int = 42) -> list[TestQuestion]:
-    """Generate the full test bank (~1000 questions).
+def generate_bank(seed: int = 42, balanced: bool = True) -> list[TestQuestion]:
+    """Generate the test bank.
+
+    Args:
+        seed: Random seed for reproducibility.
+        balanced: If True, cap each category at 50 for balanced evaluation.
+                  If False, return full bank (~1000 questions).
 
     Returns:
         List of TestQuestion testing four verdict paths:
-        - satisfied (~750): real QRAs the pipeline MUST answer
-        - not_satisfied + inconclusive (~54): LLM-generated adversarial mutations
-        - off_topic (~200): non-security questions for deflect
+        - satisfied: real QRAs the pipeline MUST answer
+        - not_satisfied: fabricated IDs + nonsense terms
+        - inconclusive: cross-category technique pairs
+        - off_topic: non-security questions for deflect
     """
+    rng = random.Random(seed)
     satisfied = _generate_satisfied(seed)
     try:
         adversarial = _generate_adversarial(seed)  # NOT_SATISFIED + INCONCLUSIVE
@@ -615,6 +647,18 @@ def generate_bank(seed: int = 42) -> list[TestQuestion]:
         logger.warning("Adversarial generation failed (non-fatal): {}", exc)
         adversarial = []
     off_topic = _generate_off_topic(seed)
+
+    if balanced:
+        cap = 50
+        rng.shuffle(satisfied)
+        satisfied = satisfied[:cap]
+        not_sat = [q for q in adversarial if q.category == "not_satisfied"]
+        inconcl = [q for q in adversarial if q.category == "inconclusive"]
+        rng.shuffle(not_sat)
+        rng.shuffle(inconcl)
+        rng.shuffle(off_topic)
+        adversarial = not_sat[:cap] + inconcl[:cap]
+        off_topic = off_topic[:cap]
 
     bank = satisfied + adversarial + off_topic
 

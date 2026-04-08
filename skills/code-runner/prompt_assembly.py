@@ -85,20 +85,31 @@ def build_system_prompt(
     skill_docs = _compile_skill_docs(skills_used or [])
     base = base.replace("{skill_docs}", skill_docs)
 
-    # 2. Last 2 rounds (local history — what just happened)
+    # 2. Turn history (last 2 rounds, enriched with tool trace + diagnosis)
     rounds_block = "(first round — no prior history)"
     if recent_rounds:
         last_2 = recent_rounds[-2:]
-        lines = []
+        sections = []
         for r in last_2:
-            lines.append(
-                f"  Round {r.get('round', '?')}: "
-                f"score={r.get('score', 0):.3f} "
-                f"strategy={r.get('strategy', '?')} "
-                f"status={r.get('status', '?')} "
-                f"errors={r.get('error_count', 0)}"
-            )
-        rounds_block = "\n".join(lines)
+            lines = [
+                f"Round {r.get('round', '?')} "
+                f"[score={r.get('score', 0):.3f}, "
+                f"strategy={r.get('strategy', '?')}, "
+                f"status={r.get('status', '?')}]:"
+            ]
+            if r.get("llm_summary"):
+                lines.append(f"  Summary: {r['llm_summary'][:200]}")
+            if r.get("llm_approach"):
+                lines.append(f"  Approach: {r['llm_approach']}")
+            if r.get("error_count", 0) > 0:
+                lines.append(f"  Errors: {r['error_count']} ({r.get('error_severity', '?')})")
+                ev = r.get("error_evidence") or {}
+                if ev.get("summary"):
+                    lines.append(f"  Error: {ev['summary'][:150]}")
+            if r.get("tool_trace"):
+                lines.append(f"  Actions:\n{r['tool_trace']}")
+            sections.append("\n".join(lines))
+        rounds_block = "PRIOR ROUNDS:\n\n" + "\n\n".join(sections)
     base = base.replace("{last_2_rounds}", rounds_block)
 
     # 3. Similar solved problems (from /memory — cross-session)

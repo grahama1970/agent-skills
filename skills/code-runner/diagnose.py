@@ -471,6 +471,7 @@ def build_fix_from_diagnosis(
     diagnosis: Diagnosis,
     file_content: str,
     allowlist: list[str] | None = None,
+    prior_tool_trace: str = "",
 ) -> str:
     """Build a lean fix prompt constrained by the diagnosis. No trajectory dump."""
     allowlist_block = ""
@@ -480,6 +481,13 @@ def build_fix_from_diagnosis(
     do_not_block = ""
     if diagnosis.do_not_do:
         do_not_block = "DO NOT:\n" + "\n".join(f"  - {d}" for d in diagnosis.do_not_do) + "\n\n"
+
+    tool_trace_block = ""
+    if prior_tool_trace:
+        tool_trace_block = (
+            "WHAT YOU TRIED LAST ROUND (do not repeat failed approaches):\n"
+            f"{prior_tool_trace}\n\n"
+        )
 
     return (
         f"OBJECTIVE: {diagnosis.repair_intent}\n\n"
@@ -491,6 +499,7 @@ def build_fix_from_diagnosis(
         f"{'::' + diagnosis.primary_target.symbol if diagnosis.primary_target.symbol else ''}"
         f"{':' + str(diagnosis.primary_target.line) if diagnosis.primary_target.line else ''}\n"
         f"  Evidence:\n" + "\n".join(f"    {e}" for e in diagnosis.evidence[:5]) + "\n\n"
+        f"{tool_trace_block}"
         f"{do_not_block}"
         f"FILE CONTENT:\n{file_content}\n"
     )

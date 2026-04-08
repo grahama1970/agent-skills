@@ -94,10 +94,16 @@ def _build_report(results: list[dict], elapsed_total: float, gates_only: bool) -
     lines.append(f"**Questions**: {len(results)}")
     lines.append("")
 
-    correct = sum(1 for r in results if r.get("_meta", {}).get("correct"))
-    total = len(results)
+    # In gates-only mode, exclude off_topic (requires LLM)
+    scorable = [r for r in results if not (gates_only and r.get("_meta", {}).get("category") == "off_topic")]
+    skipped_off_topic = len(results) - len(scorable)
+
+    correct = sum(1 for r in scorable if r.get("_meta", {}).get("correct"))
+    total = len(scorable)
     accuracy = correct / total if total else 0
     lines.append(f"## Accuracy: {correct}/{total} ({accuracy:.0%})")
+    if skipped_off_topic:
+        lines.append(f"*({skipped_off_topic} off_topic questions excluded — requires LLM)*")
     lines.append("")
 
     # Per-category accuracy
@@ -107,7 +113,8 @@ def _build_report(results: list[dict], elapsed_total: float, gates_only: bool) -
         subset = [r for r in results if r["_meta"]["category"] == cat]
         if subset:
             cat_correct = sum(1 for r in subset if r["_meta"]["correct"])
-            lines.append(f"- {cat}: {cat_correct}/{len(subset)} ({cat_correct/len(subset):.0%})")
+            suffix = " *(excluded from accuracy)*" if gates_only and cat == "off_topic" else ""
+            lines.append(f"- {cat}: {cat_correct}/{len(subset)} ({cat_correct/len(subset):.0%}){suffix}")
 
     # False positives (expected NOT_SATISFIED/INCONCLUSIVE/DEFLECT but got satisfied)
     fp = [r for r in results if r["_meta"]["expected_verdict"] != "SATISFIED"
@@ -177,8 +184,24 @@ def run(
         console.print(f"  {k}: {v}")
 
     if limit > 0:
-        bank = bank[:limit]
-        console.print(f"[dim]Limited to first {limit} questions[/]")
+        # Stratified sample: proportional representation of each category
+        import random as _rng
+        _rng.seed(seed)
+        by_cat: dict[str, list] = {}
+        for q in bank:
+            by_cat.setdefault(q.category, []).append(q)
+        sampled: list = []
+        total = len(bank)
+        for cat, questions in by_cat.items():
+            n = max(1, round(limit * len(questions) / total))
+            _rng.shuffle(questions)
+            sampled.extend(questions[:n])
+        _rng.shuffle(sampled)
+        bank = sampled[:limit]
+        cats_in_sample = {}
+        for q in bank:
+            cats_in_sample[q.category] = cats_in_sample.get(q.category, 0) + 1
+        console.print(f"[dim]Stratified sample of {len(bank)}: {cats_in_sample}[/]")
 
     workers = 5 if gates_only else 1  # daemon handles concurrent requests
     runner = EvidenceCaseRunner(gates_only=gates_only)

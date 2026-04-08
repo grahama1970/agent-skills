@@ -754,8 +754,10 @@ def run(
                     prior_diagnoses.append(diagnosis)
 
                     # Call 2: FIX — lean prompt constrained by diagnosis
+                    prior_trace = rounds_history[-1].get("tool_trace", "") if rounds_history else ""
                     current_prompt = build_fix_from_diagnosis(
                         diagnosis, file_context, allowlist=allowlist,
+                        prior_tool_trace=prior_trace,
                     )
 
                 except DiagnosisRejected as exc:
@@ -816,6 +818,11 @@ def run(
                     failure_reason = (f"Round {round_num} timed out after {ROUND_TIMEOUT}s. "
                                       f"Set CODE_RUNNER_ROUND_TIMEOUT={ROUND_TIMEOUT * 2} or increase timeout_seconds in task spec.")
                     written, tool_messages = [], []
+
+            # Compress tool trace for inter-round context persistence
+            from trace_compress import compress_tool_trace, trace_events_to_dict
+            trace_events, trace_text = compress_tool_trace(tool_messages)
+            trace_events_json = trace_events_to_dict(trace_events)
 
             # Extract final text response (last assistant message without tool_calls)
             response = ""
@@ -972,6 +979,9 @@ def run(
                 "llm_approach": (llm_metadata or {}).get("approach", ""),
                 # Zero-write diagnosis (only present when LLM wrote nothing)
                 "zero_write_reason": evidence_raw.get("_zero_write_reason", ""),
+                # Tool call trace (compressed text for prompt, structured for /memory)
+                "tool_trace": trace_text,
+                "tool_trace_events": trace_events_json,
             }
             rounds_history.append(round_entry)
 
