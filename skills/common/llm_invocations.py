@@ -62,6 +62,7 @@ def log_invocation(
     tags: Optional[list[str]] = None,
     parent_session: str = "",
     metadata: Optional[dict] = None,
+    scope: str = "",
 ) -> Optional[str]:
     """Log a single agent turn to llm_invocations.
 
@@ -85,6 +86,7 @@ def log_invocation(
         "tags": tags or [],
         "parent_session": parent_session,
         "metadata": metadata or {},
+        "scope": scope,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     try:

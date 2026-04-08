@@ -19,6 +19,7 @@ def create_text(
     domain: str | None = None,
     count: int = 10,
     seed: int = 42,
+    corrupt: str | None = None,
 ) -> list[dict]:
     """Return deterministic text chunks from pre-built banks.
 
@@ -29,9 +30,12 @@ def create_text(
                 None = all domains.
         count: Number of chunks to return.
         seed: Random seed for reproducible selection.
+        corrupt: Apply corruption transform (ligature, ocr, whitespace, all, etc.).
+                 None = clean text.
 
     Returns:
         List of dicts with keys: text, content_type, domain, source_doc, block_id
+        If corrupt is set, each dict also has: original_text, corruption
     """
     pool = _load_pool(domain)
 
@@ -44,6 +48,14 @@ def create_text(
 
     rng = random.Random(seed)
     selected = rng.sample(pool, min(count, len(pool)))
+
+    if corrupt:
+        from corrupt import apply_corruption
+        for chunk in selected:
+            chunk["original_text"] = chunk["text"]
+            chunk["text"] = apply_corruption(chunk["text"], corrupt, seed)
+            chunk["corruption"] = corrupt
+
     return selected
 
 

@@ -28,6 +28,7 @@ from pathlib import Path
 import httpx
 import typer
 from loguru import logger
+from trace_compress import compress_tool_trace, trace_events_to_dict
 
 # common/ modules (llm_invocations, estimate_timeout, json_utils)
 _skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
@@ -212,7 +213,7 @@ def git_revert_to(cwd: str, commit_hash: str, written_files: list[str]) -> None:
 
 def log_round(output_dir: Path, task_id: str, entry: dict,
               session_key: str = "", symbols: str = "",
-              learn_to_memory: bool = True) -> None:
+              learn_to_memory: bool = True, scope: str = "") -> None:
     """Append round result to local experiment log + optionally /memory."""
     # Local log (always — full history for debugging)
     log_file = output_dir / f"{task_id}.rounds.jsonl"
@@ -221,16 +222,21 @@ def log_round(output_dir: Path, task_id: str, entry: dict,
 
     # /memory learn (only for kept rounds + terminal — avoids polluting recall with noise)
     if learn_to_memory:
-        _learn_round_to_memory(task_id, entry, session_key=session_key, symbols=symbols)
+        _learn_round_to_memory(task_id, entry, session_key=session_key, symbols=symbols, scope=scope)
 
 
 def _learn_round_to_memory(task_id: str, entry: dict, session_key: str = "",
-                           symbols: str = "") -> None:
+                           symbols: str = "", scope: str = "") -> None:
     """Store round to ArangoDB llm_invocations via unified logger.
 
     session_key links all rounds for one code-runner invocation.
     symbols contains /treesitter output for the modified files.
     """
+    # Build output: include tool trace text so it's BM25-searchable at top level
+    output_text = entry.get("response_snippet", "")
+    if entry.get("tool_trace"):
+        output_text = f"{output_text}\n\nTOOL TRACE:\n{entry['tool_trace']}"
+
     log_invocation(
         agent="code-runner",
         session_key=session_key,
@@ -238,7 +244,7 @@ def _learn_round_to_memory(task_id: str, entry: dict, session_key: str = "",
         role="assistant",
         turn_index=entry.get("round", 1),
         input=entry.get("prompt_snippet", ""),
-        output=entry.get("response_snippet", ""),
+        output=output_text,
         outcome="success" if entry.get("dod_passed") else "failed",
         duration_ms=entry.get("duration_ms", 0),
         model=entry.get("model", ""),
@@ -252,6 +258,7 @@ def _learn_round_to_memory(task_id: str, entry: dict, session_key: str = "",
             f"outcome:{'pass' if entry.get('dod_passed') else 'fail'}",
         ],
         parent_session="",
+        scope=scope,
         metadata={
             "task_id": task_id,
             "status": entry.get("status", ""),
@@ -261,6 +268,7 @@ def _learn_round_to_memory(task_id: str, entry: dict, session_key: str = "",
             "commit": entry.get("commit", ""),
             "symbols": symbols[:1000] if symbols else "",
             "dod_passed": entry.get("dod_passed", False),
+            "tool_trace_events": entry.get("tool_trace_events", []),
         },
     )
 
@@ -820,7 +828,6 @@ def run(
                     written, tool_messages = [], []
 
             # Compress tool trace for inter-round context persistence
-            from trace_compress import compress_tool_trace, trace_events_to_dict
             trace_events, trace_text = compress_tool_trace(tool_messages)
             trace_events_json = trace_events_to_dict(trace_events)
 
@@ -994,7 +1001,7 @@ def run(
             # Tags distinguish outcome:pass vs outcome:fail for recall filtering.
             log_round(output_dir, task_id, round_entry,
                       session_key=session_key, symbols=file_symbols,
-                      learn_to_memory=True)
+                      learn_to_memory=True, scope=Path(cwd).name)
 
             # 6. Check if DoD passed
             if evidence_raw["dod_passed"]:

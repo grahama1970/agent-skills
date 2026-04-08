@@ -40,9 +40,10 @@ def main(
     domain: str = typer.Option(None, '--domain', '-d', help='arxiv, defense, nist, wikipedia, ...'),
     count: int = typer.Option(10, '--count', '-n'),
     seed: int = typer.Option(42, '--seed', '-s'),
+    corrupt: str = typer.Option(None, '--corrupt', '-c', help='Corruption: ligature, ocr, whitespace, homoglyph, header_bleed, all, ...'),
     json_out: bool = typer.Option(False, '--json', help='Output as JSON'),
 ):
-    chunks = create_text(content_type=content_type, domain=domain, count=count, seed=seed)
+    chunks = create_text(content_type=content_type, domain=domain, count=count, seed=seed, corrupt=corrupt)
     if json_out:
         print(json.dumps(chunks, indent=2))
     else:

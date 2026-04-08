@@ -111,10 +111,11 @@ def compress_tool_trace(
         if role == "assistant" and msg.get("tool_calls"):
             for tc in msg["tool_calls"]:
                 step += 1
-                fn = tc["function"]["name"]
-                tc_id = tc.get("id", "")
+                func = tc.get("function") or {}
+                fn = func.get("name", "unknown")
+                tc_id = tc.get("id") or f"syn_{step}_{fn}"
                 try:
-                    args = json.loads(tc["function"].get("arguments", "{}"))
+                    args = json.loads(func.get("arguments", "{}"))
                 except (json.JSONDecodeError, TypeError):
                     args = {}
 
@@ -124,15 +125,15 @@ def compress_tool_trace(
                     ev.file = args.get("path", "?")
                     start = args.get("start_line")
                     end = args.get("end_line")
-                    if start:
-                        ev.line_range = f"{start}-{end}" if end else str(start)
+                    if start is not None:
+                        ev.line_range = f"{start}-{end}" if end is not None else str(start)
 
                 elif fn == "edit_file":
                     ev.file = args.get("path", "?")
-                    start = args.get("start_line", "")
-                    end = args.get("end_line", "")
-                    if start:
-                        ev.line_range = f"{start}-{end}" if end else str(start)
+                    start = args.get("start_line")
+                    end = args.get("end_line")
+                    if start is not None:
+                        ev.line_range = f"{start}-{end}" if end is not None else str(start)
                     content = args.get("content", "")
                     ev.content_preview = content[:80].replace("\n", " ").strip()
                     # Try to extract symbol from content
@@ -154,6 +155,9 @@ def compress_tool_trace(
         elif role == "tool":
             tc_id = msg.get("tool_call_id", "")
             content = msg.get("content", "")
+            # Guard: content may be list/dict in some OpenAI-style responses
+            if not isinstance(content, str):
+                content = str(content)[:500]
             ev = pending.get(tc_id)
             if not ev:
                 continue
