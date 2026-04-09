@@ -252,40 +252,28 @@ class EvidenceCaseRunner:
         return result
 
     def build_payload(self, claim_text: str) -> dict[str, Any] | None:
-        """Build evidence case payload WITHOUT scillm render or persist.
+        """Build evidence case payload via daemon /build-evidence-case endpoint.
 
-        Runs entity extraction + recall + _build_evidence_case() and returns
-        the raw evidence case JSON suitable for feeding to an LLM prompt.
-        Returns None if entity extraction fails or no entities resolve.
+        Returns the enriched evidence case JSON or None on failure.
         """
-        try:
-            entities = collect_entities(claim_text)
-        except EntityExtractionFailure as exc:
-            logger.warning("build_payload: entity extraction failed: {}", exc)
-            return None
+        import os
+        import httpx
 
-        if not entities.get("ok", False):
-            return None
-
-        resolved = entities.get("resolved_entities", [])
-        unresolved = entities.get("unresolved_entities", [])
-        external = entities.get("external_entities", [])
-
-        if not resolved:
-            return None
-
-        qra_items = collect_recall(claim_text)
-
-        steps = [{
-            "gate": "extract_entities",
-            "passed": True,
-            "detail": f"{len(resolved)} resolved",
-        }]
-
-        return self._build_evidence_case(
-            claim_text, "satisfied", resolved, unresolved,
-            external, qra_items, steps,
+        socket = os.environ.get(
+            "EMBRY_MEMORY_SOCKET",
+            f"/run/user/{os.getuid()}/embry/memory.sock",
         )
+        try:
+            transport = httpx.HTTPTransport(uds=socket)
+            with httpx.Client(transport=transport, base_url="http://localhost", timeout=30) as client:
+                resp = client.post("/build-evidence-case", json={"question": claim_text})
+                data = resp.json()
+                if data.get("error") or not data.get("glossary"):
+                    return None
+                return data
+        except Exception as exc:
+            logger.warning("build_payload: daemon call failed: {}", exc)
+            return None
 
     # --- Renderer prompt (static) ---
     RENDER_PROMPT = """\
