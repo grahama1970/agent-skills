@@ -1,0 +1,373 @@
+{
+  "template": "/home/graham/workspace/experiments/agent-skills/skills/create-evidence-case/ground_truth/prompts/crosswalk_question_gen_v2.txt",
+  "models": [
+    "gpt-5.3-codex",
+    "text-gemini",
+    "text"
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "findings_count": 19,
+      "score": 34,
+      "critical": 3,
+      "major": 9,
+      "findings": [
+        {
+          "severity": "critical",
+          "location": "Pre-checks + Step 4b + Rejection criteria",
+          "finding": "Prompt requires cross-framework pairing, but actual payload crosswalk_chains only contains SPARTA->SPARTA links (from SV-AC-2 to SPARTA countermeasures). No chain links CWE-294 to any non-CWE item, so strict chain requirement makes valid cross-framework generation impossible despite glossary having multiple frameworks.",
+          "fix": "Add an explicit early-exit condition: if no crosswalk_chains connect any usable QRA-referenced glossary ID to a different-framework glossary ID, return {\"questions\": [], \"reason\": \"no_valid_cross_framework_pair\"}. Also clarify whether chain traversal is required to be cross-framework at edge level or only at endpoint level.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Output contract (reason codes)",
+          "finding": "Two different allowed no-question reason sets are specified. Early pre-checks list only 4 reasons, final no-valid list adds no_valid_cross_framework_pair and insufficient_evidence_linkage. This can cause inconsistent outputs.",
+          "fix": "Define one canonical enum once and reuse it everywhere. Example: [no_usable_qra_evidence, single_framework_glossary, no_crosswalk_chains, no_valid_cross_framework_pair, insufficient_evidence_linkage, invalid_payload].",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Step 4a (QRA-to-glossary mapping)",
+          "finding": "Fallback rule uses lexical overlap between QRA answer and glossary description, but payload answers are long and may match multiple entries weakly; tie-break 'first glossary entry' is brittle and may select wrong control when question already contains explicit IDs (sometimes truncated/incomplete text).",
+          "fix": "Strengthen mapping precedence: (1) exact ID in QRA question, (2) exact ID in QRA answer, (3) citation_id if present in prior_qra_evidence, (4) lexical overlap. Explicitly mention citation_id usage since payload includes it.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Field schema section vs payload reality",
+          "finding": "Schema says glossary.type values like weakness/countermeasure/control/threat are used for actionable_for mapping, but payload uses values like cwe_weakness and space_threat. Current mapping rules may never match expected pairs.",
+          "fix": "Add type normalization map before actionable_for (e.g., cwe_weakness->weakness, space_threat->threat). Define default behavior for unmapped types.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "minor",
+          "location": "Safety instruction",
+          "finding": "Injection defense is present, but no instruction to ignore malformed/truncated field text (payload has visibly truncated strings), which may degrade generation quality or induce partial parsing confusion.",
+          "fix": "Add robustness rule: treat truncated/garbled field text as low-confidence data; do not infer missing semantics from incomplete strings.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "minor",
+          "location": "Hard constraint #3",
+          "finding": "Requires exact qra_evidence_cited whitespace preservation; many models may normalize whitespace/newlines unintentionally, causing validation failures.",
+          "fix": "Permit exact Unicode codepoint match OR provide deterministic citation key output (e.g., qra_index or citation_id) alongside raw string and validate by key.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "minor",
+          "location": "Conciseness / instruction load",
+          "finding": "Prompt repeats output-shape constraints in multiple places (Output section, final lines, no-question clause), increasing instruction collision risk.",
+          "fix": "Consolidate to one strict JSON schema block with if/then: if questions.length>0 => {questions}; else => {questions:[], reason:<enum>}.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "critical",
+          "location": "RATIONALE (Input Schema) / Actual Payload",
+          "finding": "The `threat_to_countermeasure` field is listed in the RATIONALE's input schema but is entirely absent from the provided `Actual Payload` and is not referenced in any of the prompt's `Steps` or `Hard constraints`. This creates a discrepancy between the described input and the actual input, potentially confusing the LLM or leading it to expect data that isn't there.",
+          "fix": "Remove `threat_to_countermeasure: {threat_id: [cm_id, ...]}` from the RATIONALE's input schema if it's not used or provided. Alternatively, if it is intended to be used, ensure it's present in the payload and integrated into the `Steps`.",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "major",
+          "location": "Steps 4a",
+          "finding": "The instruction 'If no ID match, use highest lexical overlap between QRA answer and glossary `description`' is vague. 'Highest lexical overlap' is not precisely defined for an LLM, which could lead to inconsistent interpretations and results. LLMs are good at semantic similarity, but 'lexical overlap' implies a more literal, token-based comparison that needs clearer rules.",
+          "fix": "Provide a more concrete definition or example of 'lexical overlap' (e.g., 'by counting shared keywords or phrases, prioritizing longer matches') or rephrase to 'highest semantic similarity' if that is the true intent, allowing the LLM to use its inherent understanding.",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "major",
+          "location": "Steps 4b",
+          "finding": "The graph traversal logic for finding connected glossary entries ('glossary ID A is connected to glossary ID B if any chain has `from==A` and any `hops[].id==B`, OR `from==B` and any `hops[].id==A`') is complex for an LLM to execute precisely and consistently. LLMs can struggle with strict logical conditions and multi-step graph searches, potentially leading to errors or approximations.",
+          "fix": "Simplify the graph traversal logic for the LLM, or consider pre-processing this connection logic outside the LLM and providing the LLM with a pre-filtered list of connected pairs, rather than asking it to perform the graph search itself.",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "major",
+          "location": "Steps 4c",
+          "finding": "The condition 'If the QRA answer + the second glossary description (or `supporting_knowledge[]` from the same entry) together answer a compliance question, generate it' is subjective. 'Together answer a compliance question' lacks specific criteria, making it difficult for the LLM to consistently determine what constitutes a valid 'answerable compliance question'.",
+          "fix": "Provide more explicit criteria for what constitutes an 'answerable compliance question' when combining the two pieces of information. For example, 'if the glossary entry describes a vulnerability or countermeasure directly related to the QRA's subject, and their combination reveals a gap, a threat, or a compliance mapping, then generate it.'",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "major",
+          "location": "No valid questions return format",
+          "finding": "The prompt lists six possible `reason` codes for returning an empty `questions` array, but only four are explicitly tied to `Pre-checks`. The conditions for using `no_valid_cross_framework_pair` and `insufficient_evidence_linkage` are not explicitly defined in the `Steps` or `Rejection criteria`, leaving ambiguity for the LLM on when to apply these specific failure reasons.",
+          "fix": "Explicitly map `no_valid_cross_framework_pair` to a condition (e.g., 'If Step 4b fails to find a connected glossary entry from a different framework, return `no_valid_cross_framework_pair`') and `insufficient_evidence_linkage` to a condition (e.g., 'If Step 4c determines the combined information does not form an answerable compliance question, return `insufficient_evidence_linkage`').",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "minor",
+          "location": "RATIONALE (Input Schema) / glossary[]",
+          "finding": "The RATIONALE's input schema for `glossary[]` lists `consequences` (singular), but the example payload shows `consequences: \"\"` (a string). The prompt's schema definition is ambiguous regarding whether `consequences` should be a string, an array, or an object. While the LLM isn't asked to use this field, consistency is good.",
+          "fix": "Clarify the expected type for `glossary[].consequences` in the RATIONALE schema to match the actual payload (e.g., `consequences: string`).",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "minor",
+          "location": "Pre-checks / Step 2",
+          "finding": "The instruction to normalize framework labels ('treat \"ATT&CK\" and \"ATT_CK_Enterprise\" as the same framework') is repeated in both the `Pre-checks` and `Step 2`. While not harmful, it's a minor redundancy.",
+          "fix": "Consolidate the framework normalization instruction to a single, prominent location, perhaps in the `Task` or a dedicated 'Definitions' section, to avoid repetition.",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "critical",
+          "location": "Pre-checks \u2014 framework normalization",
+          "finding": "The prompt instructs to normalize framework labels (treat 'ATT&CK' and 'ATT_CK_Enterprise' as same), but the payload contains 'CWE' and 'SPARTA' frameworks only, and no normalization is needed for these. However, the instruction is overly broad and may confuse the LLM if other frameworks appear.",
+          "fix": "Clarify that normalization only applies to 'ATT&CK' and 'ATT_CK_Enterprise' specifically, and only if they are present. Alternatively, remove the normalization instruction if it's not relevant to the given payload.",
+          "model": "text"
+        },
+        {
+          "severity": "major",
+          "location": "Step 4a \u2014 glossary entry identification",
+          "finding": "The prompt says to prefer explicit control ID match in the question text, but the payload's prior_qra_evidence questions do not contain glossary IDs (e.g., 'CWE-294' is not in the question text; it's in citation_id). This may lead to no matches and reliance on lexical overlap, which is less reliable.",
+          "fix": "Update the instruction to also check citation_id or other fields if control ID is not in the question text, or adjust the example to match the actual data structure.",
+          "model": "text"
+        },
+        {
+          "severity": "major",
+          "location": "Step 4b \u2014 crosswalk connection check",
+          "finding": "The prompt requires crosswalk chains to connect glossary IDs, but the payload's crosswalk_chains only has entries within the same framework (SPARTA to SPARTA), and no connections to CWE. This violates the requirement for different frameworks, so no questions should be generated, but the reason code 'no_valid_cross_framework_pair' is not explicitly handled in pre-checks.",
+          "fix": "Add a pre-check or update rejection criteria to explicitly handle cases where crosswalk_chains exist but only connect same-framework entries, and return 'no_valid_cross_framework_pair'.",
+          "model": "text"
+        },
+        {
+          "severity": "minor",
+          "location": "Output format \u2014 reason codes",
+          "finding": "The list of reason codes includes 'insufficient_evidence_linkage', but it's not referenced in the pre-checks or steps. It should be added to the rejection criteria or pre-checks for clarity.",
+          "fix": "Add 'insufficient_evidence_linkage' to the rejection criteria or ensure it's covered in the instructions for when no valid pairs are found.",
+          "model": "text"
+        },
+        {
+          "severity": "minor",
+          "location": "Payload fields \u2014 prior_qra_evidence structure",
+          "finding": "The prompt references prior_qra_evidence[].question and .answer, but the payload includes a 'citation_id' field which is not mentioned in the prompt. This doesn't break the prompt but could be leveraged for better matching.",
+          "fix": "Consider updating Step 4a to use citation_id for control ID matching if question text doesn't contain it, to improve accuracy.",
+          "model": "text"
+        }
+      ],
+      "timestamp": 1775768645.732937,
+      "action": "fix_failed"
+    },
+    {
+      "round": 2,
+      "findings_count": 12,
+      "score": 23,
+      "critical": 2,
+      "major": 7,
+      "findings": [
+        {
+          "severity": "critical",
+          "location": "Step 4a + Hard constraint 4",
+          "finding": "The prompt requires `evidence_used` to include `[QRA-referenced ID, cross-framework ID]`, but Step 4a can select the QRA-referenced glossary entry using lexical overlap from answer text rather than an explicit ID in the QRA question. In this payload, answers mention multiple IDs (e.g., CWE-294 plus ATT&CK techniques like T1578.005), some of which are not in glossary. This creates an unresolvable ambiguity about what the 'QRA-referenced ID' is and can cause invalid evidence_used IDs.",
+          "fix": "Define QRA ID resolution deterministically: `QRA-referenced ID must be chosen only from glossary IDs, preferring exact ID in prior_qra_evidence.question, else exact ID in prior_qra_evidence.citation_id (if present and exists in glossary), else no match -> skip with insufficient_evidence_linkage.` Remove or strictly bound free-text lexical fallback.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Step 1 filter for structured answers",
+          "finding": "The structured-data filter only rejects answers that start/end with `{}` or `[]`. The actual payload contains a truncated answer (`In space ground segment operations, Modify Cloud Compute Configurati`) that passes filter but is incomplete/low quality, likely producing malformed or weak questions.",
+          "fix": "Add quality gate: skip answers that are truncated/unfinished (e.g., trailing incomplete token, very short length threshold, or missing terminal punctuation) and map all-skipped case to `no_usable_qra_evidence`.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Crosswalk connectivity rule in Step 4b",
+          "finding": "Connectivity is defined only as direct `from`\u2194`hops[].id` membership, despite field name `crosswalk_chains` and hop arrays implying multi-hop paths. This can incorrectly reject valid linked pairs if the target appears at deeper hop positions or via intermediate nodes in other payloads.",
+          "fix": "Specify graph traversal explicitly: treat each chain as edges across all consecutive hop nodes (or at minimum all `from` to every `hops[].id`), and state whether multi-hop transitive matching is allowed. Provide deterministic limit (e.g., max depth 2/3).",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Hard constraints 1, 2, and 7 interaction",
+          "finding": "Constraint 1 allows using glossary `supporting_knowledge[]`, but constraint 7 says do not synthesize across multiple glossary entries. `supporting_knowledge[]` items in this payload often embed additional IDs/framework references (e.g., NIST control strings), which can implicitly introduce extra frameworks/concepts beyond the selected single glossary entry and violate 'exactly one glossary entry' intent.",
+          "fix": "Clarify that supporting_knowledge may be used only as explanatory text for the selected glossary ID and must not introduce or rely on any additional control IDs/framework mappings. If it does, ignore that snippet.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "minor",
+          "location": "Pre-check: 'required fields cannot be parsed' + payload embedding",
+          "finding": "Prompt asks model to return `invalid_payload` if payload is not valid JSON, but the payload is injected between XML-like tags and may include truncation/escaping artifacts. It is unclear whether the model should parse only inner JSON or whole prompt text; this ambiguity can lead to false `invalid_payload` returns.",
+          "fix": "Explicitly instruct: `Parse only the text inside <evidence_case_payload>...</evidence_case_payload> as JSON; ignore all surrounding prompt text for JSON validity.`",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "critical",
+          "location": "Step 4a",
+          "finding": "The prompt instructs to prefer explicit control ID match in question text, but the payload shows prior_qra_evidence entries have 'citation_id' field containing the control ID rather than the question text. The questions themselves don't contain the control IDs (e.g., 'CWE-294' appears in citation_id but not in question text). This means the primary matching mechanism will fail, forcing fallback to lexical overlap which is unreliable.",
+          "fix": "Update Step 4a to also check the 'citation_id' field for control ID matches if present in the prior_qra_evidence entries.",
+          "model": "text"
+        },
+        {
+          "severity": "major",
+          "location": "crosswalk_chains analysis",
+          "finding": "The prompt requires cross-framework connections via crosswalk_chains, but the payload shows all chains are SPARTA\u2192SPARTA. However, the rejection criteria doesn't explicitly cover this case where chains exist but are all same-framework. The LLM might incorrectly try to generate questions using same-framework chains.",
+          "fix": "Add explicit rejection criterion: 'All crosswalk_chains connect only within the same framework (after normalization)' and return reason 'no_valid_cross_framework_pair'.",
+          "model": "text"
+        },
+        {
+          "severity": "major",
+          "location": "payload structure",
+          "finding": "The payload contains truncated QRA answers (e.g., last entry ends mid-sentence: 'Modify Cloud Compute Configurati') but the prompt doesn't provide guidance on handling malformed/truncated data. This could lead to generation of incomplete or nonsensical questions.",
+          "fix": "Add instruction to skip QRA entries with obviously truncated answers (e.g., ending with incomplete words or mid-sentence without punctuation).",
+          "model": "text"
+        },
+        {
+          "severity": "minor",
+          "location": "glossary entry matching",
+          "finding": "The payload shows multiple QRA entries all citing 'CWE-294' but with different questions. The prompt's 'use each QRA entry at most once' rule combined with 'stop after 3 accepted questions' could prematurely stop processing even if better matches exist later in the list.",
+          "fix": "Clarify that QRA entries should be processed in order of best match quality rather than input order when multiple entries reference the same control ID.",
+          "model": "text"
+        },
+        {
+          "severity": "minor",
+          "location": "supporting_knowledge usage",
+          "finding": "The prompt allows using supporting_knowledge[] from glossary entries, but some entries in the payload have very long supporting_knowledge arrays (3+ items). The LLM might struggle to select the most relevant supporting knowledge item for question generation.",
+          "fix": "Add guidance to select the supporting_knowledge item with highest semantic relevance to the QRA answer when multiple options exist.",
+          "model": "text"
+        },
+        {
+          "severity": "major",
+          "location": "Steps, Step 4a",
+          "finding": "Step 4a instructs the LLM to 'Identify which `glossary` entry the QRA is about' and provides a preference rule ('Prefer explicit control ID match... If no ID match, use highest lexical overlap...'). However, the `prior_qra_evidence` questions in the `actual payload` often explicitly mention *multiple* control IDs (e.g., 'CWE-294' and 'T1578.005'). The current instruction does not specify how to select *one* primary glossary entry when multiple IDs are present in the QRA question, leading to ambiguity in which ID should be considered the 'QRA-referenced ID' for the pairing.",
+          "fix": "Clarify the rule for selecting the primary glossary entry when multiple IDs are mentioned in the `prior_qra_evidence` question. For example: 'Identify the *primary* `glossary` entry the QRA is about. If multiple control IDs are explicitly mentioned in the question text, prioritize the ID that is also present in the `citation_id` field of the `prior_qra_evidence` entry. If `citation_id` is not present or does not match any ID in the question, prefer the first ID mentioned in the question text. If no ID match, use highest lexical overlap...'",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "major",
+          "location": "`actionable_for` mapping",
+          "finding": "The `actionable_for` mapping includes `threat + technique \u2192 \"threat_assessment\"`. However, `technique` is not defined as a possible `type` within the `glossary` schema provided in the RATIONALE, nor is it observed as a `type` in the `actual payload`'s `glossary` entries (which use `cwe_weakness`, `space_threat`, `countermeasure`). This makes the `threat + technique` mapping condition ambiguous and likely unmatchable, potentially causing the LLM to incorrectly categorize or default to 'audit'.",
+          "fix": "Update the `glossary` schema in the RATIONALE to explicitly include `technique` as a possible `type` if it's intended to be used, and clarify how `glossary.type` values map to the `actionable_for` categories (e.g., 'Map `glossary.type` 'cwe_weakness' to `weakness`, 'space_threat' to `threat`, 'attack_technique' to `technique`, etc.'). Alternatively, if `technique` is not a direct `glossary.type`, clarify how it should be identified from existing `glossary` fields (e.g., 'If `glossary.framework` is ATT&CK and `glossary.type` is 'technique', use 'technique'').",
+          "model": "text-gemini"
+        }
+      ],
+      "timestamp": 1775768995.6029232,
+      "action": "fix_failed"
+    },
+    {
+      "round": 3,
+      "findings_count": 16,
+      "score": 28,
+      "critical": 2,
+      "major": 8,
+      "findings": [
+        {
+          "severity": "critical",
+          "location": "Step 4b + Hard constraint 2 + actual payload",
+          "finding": "Connectivity is required via crosswalk_chains, but the prompt never states that the selected crosswalk pair must both exist in glossary. In this payload, QRA answers mention ATT&CK technique IDs (e.g., T1578.005, T1628, T1070.006) that are not in glossary; model may treat them as valid second IDs from QRA text while failing evidence_used/glossary-based constraints.",
+          "fix": "Add explicit rule: 'Only IDs present in glossary[].id are eligible for either evidence_used position; ignore IDs that appear only in prior_qra_evidence text.'",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Step 1 answer filter",
+          "finding": "The structured-data rejection heuristic (answer starts/ends with {} or []) is too narrow and misses non-prose artifacts common in recall outputs (JSON fragments, markdown tables, key:value lists, truncated serialized text). In this payload, truncated answer text passes as usable despite being incomplete.",
+          "fix": "Extend filter with minimum quality checks: require sentence-like prose length threshold, reject clearly truncated endings (e.g., unfinished token), and reject high symbol-to-word ratio or key:value-only content.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Pre-check ordering + reason code policy",
+          "finding": "Multiple early-fail conditions can simultaneously hold, but no deterministic precedence is defined beyond bullet order. This can cause non-reproducible reason codes across models for the same payload.",
+          "fix": "Define strict precedence explicitly (e.g., invalid_payload > no_usable_qra_evidence > single_framework_glossary > no_crosswalk_chains > no_valid_cross_framework_pair > insufficient_evidence_linkage) and require first-match return.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "major",
+          "location": "Hard constraint 4/5 vs Step 4a identification",
+          "finding": "Constraint requires evidence_used[0] be 'QRA-referenced ID', but Step 4a permits semantic/lexical inference when no explicit ID match. That creates a silent mismatch: inferred ID may not actually be referenced in the QRA question string, violating the implied meaning of 'referenced' and risking evaluator disagreement.",
+          "fix": "Rename to 'QRA-mapped ID' and add verifiable rule: if no explicit glossary ID token in QRA question (or citation_id if allowed), do not generate and return insufficient_evidence_linkage.",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "minor",
+          "location": "Output contract ('Output NOTHING but...')",
+          "finding": "Prompt requires concrete values and forbids placeholders, but reason example still shows pipe-delimited meta-placeholder list (`no_usable_qra_evidence | ...`) in the no-question template, which some models may copy literally.",
+          "fix": "Remove the pipe-list from the output example and provide one concrete example per reason code or an explicit instruction: 'Do not output the pipe-delimited list literally.'",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "minor",
+          "location": "Schema/use mismatch (question_text field in payload)",
+          "finding": "Top-level payload includes question_text (the originating query), but the prompt never tells the model to ignore it for generation. This can bias model to generate a reformulation of question_text instead of deriving from prior_qra_evidence + glossary pairing.",
+          "fix": "Add instruction: 'Do not use top-level question_text as evidence; generate only from prior_qra_evidence + glossary/crosswalk_chains.'",
+          "model": "gpt-5.3-codex"
+        },
+        {
+          "severity": "critical",
+          "location": "Step 4a",
+          "finding": "The prompt instructs to prefer explicit control ID match in question text, but the payload shows prior_qra_evidence entries have 'citation_id' field containing the control ID rather than the question text. The questions themselves don't contain the control IDs (e.g., 'CWE-294' appears in citation_id but not in question text). This means the primary matching mechanism will fail, forcing fallback to lexical overlap which is unreliable.",
+          "fix": "Update Step 4a to also check the 'citation_id' field for explicit control ID matches: 'Prefer explicit control ID match in the question text OR in the citation_id field (if present)'",
+          "model": "text"
+        },
+        {
+          "severity": "major",
+          "location": "crosswalk_chains connectivity logic",
+          "finding": "The connectivity check only looks for direct from\u2194hops[].id matches, but the payload shows multi-hop chains. A glossary entry might be connected through intermediate hops that aren't directly adjacent to the source/target, but the current logic would miss these valid connections.",
+          "fix": "Update the connectivity definition to include transitive connections: 'glossary ID A is connected to glossary ID B if there exists any chain where A appears in the chain (either as 'from' or in any hop) and B appears in the same chain'",
+          "model": "text"
+        },
+        {
+          "severity": "major",
+          "location": "Rejection criteria",
+          "finding": "The payload shows all crosswalk_chains are SPARTA\u2192SPARTA (same framework), but the rejection criteria doesn't explicitly address this case where chains exist but are all same-framework. The LLM might incorrectly try to generate questions using same-framework chains.",
+          "fix": "Add explicit rejection criterion: 'Do NOT generate a question if the crosswalk chain connects glossary entries from the same framework (after normalization)'",
+          "model": "text"
+        },
+        {
+          "severity": "minor",
+          "location": "QRA answer filtering",
+          "finding": "The structured-data filter only rejects answers that start/end with {} or [], but the payload contains truncated answers that pass the filter but are incomplete/low quality (e.g., 'Modify Cloud Compute Configurati').",
+          "fix": "Add additional filter criteria to skip answers that appear to be truncated or malformed, such as those ending with incomplete words or lacking proper punctuation.",
+          "model": "text"
+        },
+        {
+          "severity": "major",
+          "location": "Step 4a, Hard constraint 4",
+          "finding": "The prompt instructs to 'Identify which `glossary` entry the QRA is about' and 'Prefer explicit control ID match in the question text'. QRA questions in the payload contain multiple control IDs (e.g., 'CWE-294' and 'T1578.005'). While 'CWE-294' is in the `glossary`, 'T1578.005' (and other ATT&CK IDs) are not. The prompt does not specify how to handle QRA questions that mention multiple IDs, where some are in the provided `glossary` and some are not. This ambiguity could lead the LLM to incorrectly identify the primary QRA-referenced glossary entry or to attempt to use an ID not present in the `glossary` for `evidence_used`.",
+          "fix": "Clarify Step 4a: 'Identify which `glossary` entry the QRA is about. The QRA-referenced ID must be an ID present in the provided `glossary`. Prefer explicit control ID match in the question text (e.g., 'SV-AC-2' appears in both QRA question and glossary[].id). If multiple glossary IDs are explicitly mentioned in the QRA question and are present in the `glossary`, prioritize the one with the highest lexical overlap with the QRA answer, or the first one encountered in the question text if overlap is tied. If no ID match, use highest lexical overlap between QRA answer and glossary `description`. If tied, use first glossary entry by input order.'",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "major",
+          "location": "Pre-checks, Rejection criteria",
+          "finding": "The `Rejection criteria` explicitly states 'No `crosswalk_chains` connect the QRA's framework to a different-framework glossary entry'. Given the `actual payload`, all `crosswalk_chains` are SPARTA-to-SPARTA, meaning no cross-framework connections exist. This *should* lead to the LLM returning `{\"questions\": [], \"reason\": \"no_valid_cross_framework_pair\"}`. However, this condition is not included in the `Pre-checks` section, which is designed for early exits. If it's not a pre-check, the LLM might proceed through more complex steps before failing, which is inefficient.",
+          "fix": "Add a pre-check: '- If, after normalizing frameworks, no `crosswalk_chains` exist that connect entries from different frameworks (i.e., all chains are within the same framework) \u2192 return `{\"questions\": [], \"reason\": \"no_valid_cross_framework_pair\"}`'",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "major",
+          "location": "`actionable_for` mapping",
+          "finding": "The `actionable_for` mapping `threat + technique \u2192 \"threat_assessment\"` is problematic because `technique` is not a defined `type` in the `glossary` schema or observed in the payload. While ATT&CK *techniques* are mentioned in `prior_qra_evidence` questions, these are not `glossary` entries. The `actionable_for` mapping relies on the `type` field of the *two glossary entries* used to form the question. Since no glossary entry will ever have `type: \"technique\"`, this specific mapping rule will never be triggered, making it dead code and potentially confusing the LLM.",
+          "fix": "Either update the `glossary` schema in the RATIONALE to include `type: \"technique\"` if such entries are expected in future payloads, or remove/rephrase the `threat + technique` mapping to use existing `glossary` types (e.g., `threat + weakness` or `threat + countermeasure`).",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "minor",
+          "location": "Output format, Reason codes list",
+          "finding": "The `reason` code `insufficient_evidence_linkage` is listed as a possible output, but no specific condition in the `Pre-checks`, `Steps`, or `Rejection criteria` explicitly instructs the LLM when to use this reason. This leaves ambiguity for the LLM, which might either never use it or use it inconsistently as a catch-all.",
+          "fix": "Define a clear condition for `insufficient_evidence_linkage` (e.g., 'If Step 4c fails to generate a question because the QRA answer and the selected cross-framework glossary description (or supporting knowledge) do not sufficiently combine to form a coherent, answerable compliance question, return `{\"questions\": [], \"reason\": \"insufficient_evidence_linkage\"}`').",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "minor",
+          "location": "Hard constraint 7, Step 4c",
+          "finding": "Hard constraint 7 states 'Do NOT ... synthesize across multiple glossary entries.' However, Step 4c allows using 'the second glossary description (or `supporting_knowledge[]` from the same entry)'. `supporting_knowledge[]` is an array, and an LLM might combine multiple items from this array *with* the description to form an `answer_sketch`. While this is technically from 'the same glossary entry', the phrasing 'synthesize across multiple glossary entries' could be misconstrued by a strict LLM to mean 'do not combine any distinct pieces of information, even if they are sub-elements of the same logical entry.' This creates a subtle ambiguity about how much combination is allowed *within* a single glossary entry's fields.",
+          "fix": "Clarify Hard constraint 7: 'Do NOT invent facts, or synthesize information from more than one *distinct* `glossary` entry (i.e., from `glossary[i]` and `glossary[j]` where `i != j`). Combining the `description` and one or more items from `supporting_knowledge[]` *from the same glossary entry* is permitted.'",
+          "model": "text-gemini"
+        },
+        {
+          "severity": "minor",
+          "location": "RATIONALE input schema, SAFETY",
+          "finding": "The `runner.py` context indicates that the `_build_evidence_case()` payload is constructed from various sources, including `resolved_entities`, `unresolved_entities`, and `external_entities`. The prompt's input schema for `_build_evidence_case()` in the RATIONALE doesn't explicitly exclude `unresolved_entities` or `external_entities` from the payload, even though the current payload doesn't include them. If future payloads were to include these for context, the prompt lacks explicit instructions on how the LLM should handle them (e.g., ignore them, or use them for context but not for question generation).",
+          "fix": "Add a clarification to the RATIONALE's input schema for `_build_evidence_case()`: 'Note: Only `glossary`, `crosswalk_chains`, and `prior_qra_evidence` are relevant for question generation. Any other fields (e.g., `unresolved_entities`, `external_entities`) should be ignored for this task.' Alternatively, add a safety instruction: 'Ignore any `unresolved_entities` or `external_entities` fields if they appear in the payload.'",
+          "model": "text-gemini"
+        }
+      ],
+      "timestamp": 1775769353.1871762,
+      "action": "fix_failed"
+    }
+  ],
+  "best_score": null
+}
