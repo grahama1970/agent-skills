@@ -542,6 +542,46 @@ EVIDENCE_CASE:
             return content
         return answer
 
+    def _fetch_control_descriptions(self, control_ids: list[str]) -> dict[str, dict]:
+        """Batch-fetch control descriptions from daemon via /recall/by-keys."""
+        if not control_ids:
+            return {}
+        try:
+            from collect import _get_memory_http
+            client = _get_memory_http()
+            resp = client.post("/recall/by-keys", json={
+                "keys": control_ids,
+                "key_field": "control_id",
+                "collection": "sparta_controls",
+            })
+            docs = resp.json().get("documents", [])
+            return {d["control_id"]: d for d in docs if d.get("control_id")}
+        except Exception as exc:
+            logger.warning("Failed to fetch control descriptions: {}", exc)
+            return {}
+
+    def _fetch_threat_countermeasures(self, threat_ids: list[str]) -> dict[str, list[str]]:
+        """Fetch countermeasure IDs for space threats via /recall/by-keys on edges."""
+        if not threat_ids:
+            return {}
+        result: dict[str, list[str]] = {}
+        try:
+            from collect import _get_memory_http
+            client = _get_memory_http()
+            resp = client.post("/recall/by-keys", json={
+                "keys": threat_ids,
+                "key_field": "source_control_id",
+                "collection": "sparta_relationships",
+            })
+            for doc in resp.json().get("documents", []):
+                src = doc.get("source_control_id", "")
+                tgt = doc.get("target_control_id", "")
+                if src and tgt and tgt.startswith("CM"):
+                    result.setdefault(src, []).append(tgt)
+        except Exception as exc:
+            logger.warning("Failed to fetch threat countermeasures: {}", exc)
+        return result
+
     def _build_evidence_case(
         self,
         question: str,
