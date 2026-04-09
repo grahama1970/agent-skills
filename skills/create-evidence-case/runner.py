@@ -251,6 +251,42 @@ class EvidenceCaseRunner:
 
         return result
 
+    def build_payload(self, claim_text: str) -> dict[str, Any] | None:
+        """Build evidence case payload WITHOUT scillm render or persist.
+
+        Runs entity extraction + recall + _build_evidence_case() and returns
+        the raw evidence case JSON suitable for feeding to an LLM prompt.
+        Returns None if entity extraction fails or no entities resolve.
+        """
+        try:
+            entities = collect_entities(claim_text)
+        except EntityExtractionFailure as exc:
+            logger.warning("build_payload: entity extraction failed: {}", exc)
+            return None
+
+        if not entities.get("ok", False):
+            return None
+
+        resolved = entities.get("resolved_entities", [])
+        unresolved = entities.get("unresolved_entities", [])
+        external = entities.get("external_entities", [])
+
+        if not resolved:
+            return None
+
+        qra_items = collect_recall(claim_text)
+
+        steps = [{
+            "gate": "extract_entities",
+            "passed": True,
+            "detail": f"{len(resolved)} resolved",
+        }]
+
+        return self._build_evidence_case(
+            claim_text, "satisfied", resolved, unresolved,
+            external, qra_items, steps,
+        )
+
     # --- Renderer prompt (static) ---
     RENDER_PROMPT = """\
 You are a cybersecurity compliance analyst reviewing an authoritative evidence case.
@@ -516,20 +552,140 @@ EVIDENCE_CASE:
         qra_items: list[dict],
         steps: list[dict],
     ) -> dict:
-        """Build the EVIDENCE_CASE JSON for the renderer prompt."""
+        """Build the EVIDENCE_CASE JSON for the renderer prompt.
+
+        Enriches the payload with:
+        - descriptions for each control (fetched from sparta_controls)
+        - full crosswalk chains with descriptions at each hop
+        - crosswalk hop entities added to glossary
+        - expanded QRA evidence limits
+        """
         review_status = "passed" if verdict_state == "satisfied" else "failed"
 
-        # Glossary: every entity the pipeline knows about (resolved + unresolved)
+        # Collect all control IDs we need descriptions for
+        all_ids = set()
+        for e in resolved:
+            cid = e.get("canonical_id", "")
+            if cid:
+                all_ids.add(cid)
+            cp = e.get("crosswalk_path", {})
+            for hop_id in cp.get("ids", []):
+                if hop_id:
+                    all_ids.add(hop_id)
+            terminal = cp.get("terminal_id", "")
+            if terminal:
+                all_ids.add(terminal)
+
+        # Identify space_threat entities for threat→CM hop
+        threat_ids = [
+            e.get("canonical_id", "")
+            for e in resolved
+            if e.get("entity_type") == "space_threat" and e.get("canonical_id")
+        ]
+        threat_cms = self._fetch_threat_countermeasures(threat_ids)
+        for cm_list in threat_cms.values():
+            all_ids.update(cm_list)
+
+        # Batch-fetch descriptions from daemon
+        descriptions = self._fetch_control_descriptions(sorted(all_ids))
+
+        # Glossary: every resolved entity with its description
         glossary = []
         for e in resolved:
-            glossary.append({
-                "id": e.get("canonical_id", "?"),
-                "name": e.get("canonical_name", e.get("name", "")),
-                "framework": e.get("framework", ""),
+            cid = e.get("canonical_id", "?")
+            desc = descriptions.get(cid, {})
+            entry = {
+                "id": cid,
+                "name": e.get("canonical_name", e.get("name", "")) or desc.get("name", ""),
+                "framework": e.get("framework", "") or desc.get("framework", ""),
                 "type": e.get("entity_type", ""),
+                "description": desc.get("description", ""),
+                "consequences": desc.get("consequences", ""),
+            }
+            sk = desc.get("supporting_knowledge", [])
+            if sk:
+                entry["supporting_knowledge"] = sk
+            glossary.append(entry)
+
+        # Crosswalk chains + add hop entities to glossary
+        glossary_ids = {g["id"] for g in glossary}
+        crosswalk_chains = []
+        for e in resolved:
+            cp = e.get("crosswalk_path", {})
+            if not cp.get("exists"):
+                continue
+            chain_ids = cp.get("ids", [])
+            terminal_id = cp.get("terminal_id", "")
+            hops = []
+            for hop_id in chain_ids:
+                hop_desc = descriptions.get(hop_id, {})
+                hop_entry = {
+                    "id": hop_id,
+                    "name": hop_desc.get("name", ""),
+                    "framework": hop_desc.get("framework", ""),
+                    "description": hop_desc.get("description", ""),
+                }
+                hops.append(hop_entry)
+                if hop_id not in glossary_ids:
+                    glossary_ids.add(hop_id)
+                    glossary.append({
+                        **hop_entry,
+                        "type": hop_desc.get("control_type", ""),
+                        "consequences": hop_desc.get("consequences", ""),
+                    })
+            if terminal_id and terminal_id not in chain_ids:
+                t_desc = descriptions.get(terminal_id, {})
+                t_entry = {
+                    "id": terminal_id,
+                    "name": t_desc.get("name", ""),
+                    "framework": t_desc.get("framework", ""),
+                    "description": t_desc.get("description", ""),
+                }
+                hops.append(t_entry)
+                if terminal_id not in glossary_ids:
+                    glossary_ids.add(terminal_id)
+                    glossary.append({
+                        **t_entry,
+                        "type": t_desc.get("control_type", ""),
+                        "consequences": t_desc.get("consequences", ""),
+                    })
+            crosswalk_chains.append({
+                "from": e.get("canonical_id", "?"),
+                "from_framework": cp.get("from_framework", e.get("framework", "")),
+                "to_framework": cp.get("to_framework", cp.get("terminal_framework", "")),
+                "hops": hops,
             })
 
-        # Entity resolution: per-entity status
+        # Threat→Countermeasure chains
+        for tid, cm_ids in threat_cms.items():
+            cm_hops = []
+            for cm_id in cm_ids:
+                cm_desc = descriptions.get(cm_id, {})
+                cm_hops.append({
+                    "id": cm_id,
+                    "name": cm_desc.get("name", ""),
+                    "framework": "SPARTA",
+                    "description": cm_desc.get("description", ""),
+                })
+                if cm_id not in glossary_ids:
+                    glossary_ids.add(cm_id)
+                    glossary.append({
+                        "id": cm_id,
+                        "name": cm_desc.get("name", ""),
+                        "framework": "SPARTA",
+                        "type": "countermeasure",
+                        "description": cm_desc.get("description", ""),
+                        "consequences": "",
+                    })
+            crosswalk_chains.append({
+                "from": tid,
+                "from_framework": "SPARTA",
+                "to_framework": "SPARTA",
+                "relationship": "threat_to_countermeasure",
+                "hops": cm_hops,
+            })
+
+        # Entity resolution
         entity_resolution = []
         for e in resolved:
             cp = e.get("crosswalk_path", {})
@@ -559,19 +715,20 @@ EVIDENCE_CASE:
             "summary": entity_step.get("detail", "") if entity_step else "",
         }
 
-        # Prior QRA evidence
+        # Prior QRA evidence — expanded limits for cross-framework synthesis
         prior_qra_evidence = []
-        for q in qra_items[:8]:
+        for q in qra_items[:12]:
             prior_qra_evidence.append({
                 "citation_id": q.get("control_id", "?"),
-                "question": q.get("question", q.get("problem", ""))[:200],
-                "answer": q.get("answer", q.get("solution", ""))[:400],
+                "question": q.get("question", q.get("problem", ""))[:400],
+                "answer": q.get("answer", q.get("solution", ""))[:800],
             })
 
         case: dict[str, Any] = {
             "question_text": question,
             "review_status": review_status,
             "glossary": glossary,
+            "crosswalk_chains": crosswalk_chains,
             "entity_resolution": entity_resolution,
             "technique_check": technique_check,
             "prior_qra_evidence": prior_qra_evidence,
