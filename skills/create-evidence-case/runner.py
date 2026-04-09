@@ -162,10 +162,22 @@ class EvidenceCaseRunner:
         })
 
         # --- Step 2: Deterministic verdict + LLM render ---
-        # Technique coherence comes from /extract-entities response
+        # Technique coherence comes from /extract-entities response.
+        # When the initial check fails for cross-framework entities
+        # (e.g. CWE + SPARTA with no graph crosswalk), use /recall
+        # to check if they're semantically related. /recall combines
+        # BM25 + cosine + multi-hop — fully deterministic.
         tc = entities.get("technique_coherence", {})
         technique_ok = tc.get("ok", True)
         technique_detail = tc.get("detail", "")
+
+        # Cross-framework recall coherence: if technique_coherence failed
+        # due to missing crosswalk (not disjoint parents), check via /recall
+        if not technique_ok and "no_sparta_crosswalk" in technique_detail and resolved:
+            technique_ok, technique_detail = self._recall_coherence_check(
+                resolved, entities, technique_detail,
+            )
+
         steps.append({
             "gate": "technique_intersection",
             "passed": technique_ok,
@@ -312,6 +324,66 @@ EVIDENCE_CASE:
 """
 
     MAX_RENDER_RETRIES = 2
+    RECALL_COHERENCE_THRESHOLD = 0.3
+
+    def _recall_coherence_check(
+        self,
+        resolved: list[dict],
+        entities: dict,
+        original_detail: str,
+    ) -> tuple[bool, str]:
+        """Check cross-framework technique coherence via /recall.
+
+        Two approaches, both deterministic (BM25 + cosine + multi-hop):
+
+        Approach 1 (graph path): Already done by /extract-entities 2-hop
+        traversal through sparta_relationships. If a CWE reaches SPARTA
+        via CAPEC→ATT&CK→SPARTA or NIST→SPARTA edges, crosswalk_path
+        is populated. This method handles the case where that path is missing.
+
+        Approach 2 (semantic recall): For each SPARTA entity in the question,
+        query /recall with its name/description against sparta_controls.
+        If the non-SPARTA entity (CWE, NIST) appears in the results,
+        they're semantically related. Query direction matters: SPARTA
+        entity text → find related CWEs (not CWE text → find SPARTA,
+        which just returns other CWEs).
+        """
+        sparta_entities = []
+        non_sparta_ids = set()
+        for ent in resolved:
+            fw = ent.get("framework", "")
+            cid = ent.get("canonical_id", "")
+            name = ent.get("canonical_name", "")
+            if fw == "SPARTA":
+                sparta_entities.append((cid, name))
+            elif cid:
+                non_sparta_ids.add(cid)
+
+        if not sparta_entities or not non_sparta_ids:
+            return False, original_detail
+
+        from collect import collect_recall_with_confidence
+
+        # Query with SPARTA entity text — finds semantically related
+        # controls across ALL frameworks (CWE, NIST, etc.)
+        for sparta_id, sparta_name in sparta_entities:
+            query = f"{sparta_name}"[:300]
+            try:
+                result = collect_recall_with_confidence(
+                    query, k=20, collections=["sparta_controls"],
+                )
+                recalled_ids = {
+                    item.get("control_id", "")
+                    for item in result.get("items", [])
+                }
+                overlap = non_sparta_ids & recalled_ids
+                if overlap:
+                    conf = result.get("confidence", 0)
+                    return True, f"recall_coherent:{sparta_id}->{sorted(overlap)},confidence={conf:.2f}"
+            except Exception:
+                pass
+
+        return False, f"recall_incoherent:{original_detail}"
 
     def _scillm_render(
         self,

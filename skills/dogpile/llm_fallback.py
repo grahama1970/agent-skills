@@ -273,15 +273,6 @@ class _DeprecatedStub(LLMProvider):
 
 # Legacy aliases — GeminiProvider and AnthropicProvider classes still exist below
 # but are never instantiated in any provider chain. All chains use scillm now.
-                return True, result.stdout
-
-            return False, result.stderr or "Empty response"
-
-        except subprocess.TimeoutExpired:
-            log_status(f"{self.name} timed out", provider=self.name, status="TIMEOUT")
-            return False, "Timeout"
-        except FileNotFoundError:
-            log_status(f"{self.name} CLI not found", provider=self.name, status="NOT_FOUND")
             return False, "CLI not found"
         except Exception as e:
             log_status(f"{self.name} error: {e}", provider=self.name, status="ERROR")
