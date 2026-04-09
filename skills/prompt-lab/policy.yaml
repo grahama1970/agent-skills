@@ -6,6 +6,7 @@ slash_command: /prompt-lab
 
 required_reads:
   - .pi/skills/prompt-lab/SKILL.md
+  - .pi/skills/best-practices-prompt/SKILL.md
 
 forbidden_use:
   any_of:

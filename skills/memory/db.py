@@ -17,6 +17,7 @@ REQUIRED_COLLECTIONS: List[Tuple[str, bool]] = [
     ("taxonomy_edges", True),
     ("personas", False),
     ("skill_chains", False),
+    ("prompt_reviews", False),
 ]
 
 

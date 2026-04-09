@@ -42,7 +42,7 @@ def _stamp_taxonomy_tags(problem: str, scope: str, bridge_tags: List[str]) -> No
 
     import json
     from pathlib import Path
-import httpx
+    import httpx
 
     # Find the document by problem_hash + scope via /memory sample
     problem_hash = hashlib.sha256(problem.encode()).hexdigest()[:16]

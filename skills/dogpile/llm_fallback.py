@@ -273,10 +273,6 @@ class _DeprecatedStub(LLMProvider):
 
 # Legacy aliases — GeminiProvider and AnthropicProvider classes still exist below
 # but are never instantiated in any provider chain. All chains use scillm now.
-            return False, "CLI not found"
-        except Exception as e:
-            log_status(f"{self.name} error: {e}", provider=self.name, status="ERROR")
-            return False, str(e)
 
 
 class GeminiProvider(LLMProvider):

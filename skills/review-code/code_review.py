@@ -55,7 +55,7 @@ try:
         review_full,
         template,
     )
-    from .commands.quick_review import quick_review
+    from .commands.one_shot import one_shot
 except ImportError:
     # Fall back to absolute imports (direct execution mode)
     from config import HELP_TEXT
@@ -71,7 +71,7 @@ except ImportError:
         review_full,
         template,
     )
-    from commands.quick_review import quick_review
+    from commands.one_shot import one_shot
 
 import typer
 
@@ -93,7 +93,7 @@ app.command()(bundle)
 app.command()(find)
 app.command()(login)
 app.command()(loop)
-app.command(name="quick-review")(quick_review)
+app.command(name="one-shot")(one_shot)
 
 
 def main():

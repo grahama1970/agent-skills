@@ -196,27 +196,16 @@ def _query_checkpoints_by_time(limit: int = 1, scope: str = "", extra_tags: list
 
     /recall uses BM25 ranking (not time-sorted), so we use /list with
     filters for recency-based queries like 'last' and 'list'.
-    /list returns oldest-first, so we fetch from the end using offset.
+    /list sort order is unreliable, so we fetch all and sort client-side
+    by updated_at descending. Checkpoint counts per scope are small (<100).
     """
     filters: dict = {}
     if scope:
         filters["scope"] = scope
 
-    # First get total count to calculate offset for newest-first
-    count_payload: dict = {"collection": "checkpoints", "limit": 1}
-    if filters:
-        count_payload["filters"] = filters
-    count_result = memory_post("/list", count_payload, console=console)
-    total = count_result.get("total", 0)
-    if total == 0:
-        return []
-
-    # Fetch the last N docs (newest) using offset
-    offset = max(0, total - limit)
     payload: dict = {
         "collection": "checkpoints",
-        "limit": limit,
-        "offset": offset,
+        "limit": 200,  # fetch all, sort client-side
     }
     if filters:
         payload["filters"] = filters
@@ -224,13 +213,14 @@ def _query_checkpoints_by_time(limit: int = 1, scope: str = "", extra_tags: list
     docs = result.get("documents", [])
     # Filter to actual checkpoint docs (have checkpoint_version field)
     docs = [d for d in docs if d.get("checkpoint_version")]
-    # Reverse so newest is first
-    docs.reverse()
-    return docs
+    # Sort by updated_at descending (newest first)
+    docs.sort(key=lambda d: d.get("updated_at", 0), reverse=True)
+    return docs[:limit]
 
 
 def _recall_with_scope_fallback(query: str, scope: str, limit: int, extra_tags: list[str] | None = None) -> list[dict]:
     tags = ["checkpoint"] + (extra_tags or [])
+    # Try BM25 recall with scope
     result = memory_post("/recall", {
         "q": query, "scope": scope, "k": limit, "tags": tags,
         "prefix": CHECKPOINT_PREFIX, "collections": ["checkpoints"],
@@ -239,11 +229,29 @@ def _recall_with_scope_fallback(query: str, scope: str, limit: int, extra_tags: 
     if items:
         return _parse_checkpoint_items(items)
 
+    # Try BM25 recall without scope
     result_all = memory_post("/recall", {
         "q": query, "k": limit, "tags": tags,
         "prefix": CHECKPOINT_PREFIX, "collections": ["checkpoints"],
     }, console=console)
-    return _parse_checkpoint_items(result_all.get("items", []))
+    items_all = result_all.get("items", [])
+    if items_all:
+        return _parse_checkpoint_items(items_all)
+
+    # BM25 index may lag after fresh save — fall back to /list with client-side
+    # topic filter. This ensures resume works immediately after save.
+    logger.warning("BM25 recall returned 0 items, falling back to /list scan")
+    all_docs = _query_checkpoints_by_time(limit=50, scope=scope)
+    if not all_docs:
+        all_docs = _query_checkpoints_by_time(limit=50, scope="")
+    # Client-side topic filter: check if query terms appear in topic/resume
+    query_lower = query.lower().replace(CHECKPOINT_PREFIX.lower(), "").strip()
+    matched = []
+    for doc in all_docs:
+        haystack = f"{doc.get('topic', '')} {doc.get('resume', '')}".lower()
+        if any(term in haystack for term in query_lower.split() if len(term) > 2):
+            matched.append(doc)
+    return _parse_checkpoint_items(matched[:limit]) if matched else _parse_checkpoint_items(all_docs[:limit])
 
 
 def _query_checkpoints_by_time_with_fallback(limit: int = 1, scope: str = "", extra_tags: list[str] | None = None) -> list[dict]:
@@ -383,8 +391,28 @@ def save(
     result = memory_post("/store", {
         "document": checkpoint_doc,
         "collection": "checkpoints",
-    }, console=console)
+    }, console=console, retries=2)
     checkpoint_key = result.get("_key", "") if isinstance(result, dict) else ""
+    actual_id = result.get("_id", "") if isinstance(result, dict) else ""
+
+    # Write verification — confirm the doc landed in checkpoints, not lessons_v2
+    if actual_id and not actual_id.startswith("checkpoints/"):
+        logger.error("Checkpoint stored in WRONG collection: _id={}", actual_id)
+        if console:
+            console.print(f"[red bold]BUG: checkpoint landed in {actual_id.split('/')[0]} instead of checkpoints[/red bold]")
+    elif checkpoint_key:
+        # Read-back verification
+        verify = memory_post("/recall/by-keys", {
+            "keys": [checkpoint_key],
+            "collection": "checkpoints",
+        }, console=None)
+        verify_docs = verify.get("documents", [])
+        if not verify_docs:
+            logger.error("Checkpoint write verification FAILED: _key={} not found in checkpoints collection", checkpoint_key)
+            if console:
+                console.print(f"[red bold]BUG: checkpoint _key={checkpoint_key} written but not found on read-back[/red bold]")
+        else:
+            logger.info("Checkpoint verified in checkpoints collection: _key={}", checkpoint_key)
 
     # Skill chain storage — links checkpoint → skill_chain via edge
     # Also store the chain directly in the checkpoint doc for resume display
@@ -404,7 +432,7 @@ def save(
                     "skill_chain": chain,
                 },
                 "collection": "checkpoints",
-            }, console=None)
+            }, console=None, retries=2)
 
     if output_json:
         print(json.dumps({"status": "saved", "tag": tag_name, **solution_doc}, indent=2))
@@ -531,12 +559,17 @@ def resume(
     extra_tags = [f"session:{session_name}"] if session_name else []
 
     # Fetch last checkpoint from ArangoDB
+    # Always use /list (reliable, no BM25 index lag) with client-side topic filter
+    all_items = _query_checkpoints_by_time_with_fallback(limit=200, scope=scope_val, extra_tags=extra_tags)
     if topic:
-        query = f"{CHECKPOINT_PREFIX} {topic}"
-        checkpoints = _recall_with_scope_fallback(query, scope_val, 1, extra_tags=extra_tags)
+        topic_lower = topic.lower()
+        terms = [t for t in topic_lower.split() if len(t) > 2]
+        matched = [d for d in all_items if any(
+            t in f"{d.get('topic', '')} {d.get('resume', '')}".lower() for t in terms
+        )]
+        checkpoints = _parse_checkpoint_items(matched[:1]) if matched else _parse_checkpoint_items(all_items[:1])
     else:
-        items = _query_checkpoints_by_time_with_fallback(limit=1, scope=scope_val, extra_tags=extra_tags)
-        checkpoints = _parse_checkpoint_items(items) if items else []
+        checkpoints = _parse_checkpoint_items(all_items[:1]) if all_items else []
 
     # Live git state (deterministic — current truth)
     preflight = _git_preflight(root)
@@ -779,9 +812,20 @@ def recall(
     output_json: bool = typer.Option(False, "--json", is_flag=True, help="Output as JSON"),
 ) -> None:
     """Search checkpoints by topic."""
-    query = f"{CHECKPOINT_PREFIX} {topic}" if topic else CHECKPOINT_PREFIX
     scope_val = scope or default_workspace_scope()
-    checkpoints = _recall_with_scope_fallback(query, scope_val, limit)
+    # Primary: /list + client-side filter (reliable, no BM25 index lag)
+    all_docs = _query_checkpoints_by_time(limit=200, scope=scope_val)
+    if not all_docs:
+        all_docs = _query_checkpoints_by_time(limit=200, scope="")
+    if topic:
+        topic_lower = topic.lower()
+        terms = [t for t in topic_lower.split() if len(t) > 2]
+        matched = [d for d in all_docs if any(
+            t in f"{d.get('topic', '')} {d.get('resume', '')}".lower() for t in terms
+        )]
+        checkpoints = _parse_checkpoint_items(matched[:limit]) if matched else _parse_checkpoint_items(all_docs[:limit])
+    else:
+        checkpoints = _parse_checkpoint_items(all_docs[:limit])
 
     if output_json:
         print(json.dumps(checkpoints, indent=2))
@@ -989,11 +1033,18 @@ def _parse_checkpoint_items(items: list[dict]) -> list[dict]:
         # Detect by _source field (from /recall) or checkpoint_version (from /list)
         if source == "checkpoints" or item.get("checkpoint_version"):
             # solution_doc was stored as a nested dict; parse if JSON string
-            sol = item.get("solution", "")
-            if isinstance(sol, str) and sol.startswith("{"):
-                try:
-                    sol = json.loads(sol)
-                except (json.JSONDecodeError, TypeError):
+            # Legacy lessons_v2 items returned via /recall with _source=checkpoints
+            # store checkpoint data in 'playbook', not 'solution'
+            sol = item.get("solution", "") or item.get("playbook", "")
+            if isinstance(sol, str):
+                # Strip YAML list prefix "- " that /store adds to playbook
+                stripped = sol.lstrip("- ").strip()
+                if stripped.startswith("{"):
+                    try:
+                        sol = json.loads(stripped)
+                    except (json.JSONDecodeError, TypeError):
+                        sol = {}
+                else:
                     sol = {}
             elif not isinstance(sol, dict):
                 sol = {}
@@ -1020,12 +1071,14 @@ def _parse_checkpoint_items(items: list[dict]) -> list[dict]:
             checkpoints.append(checkpoint)
             continue
 
-        # Legacy format: lessons_v2 — checkpoint data in JSON 'solution' field
-        solution = item.get("solution", "")
+        # Legacy format: lessons_v2 — checkpoint data in JSON 'solution' or 'playbook' field
+        solution = item.get("solution", "") or item.get("playbook", "")
         parsed = {}
         if solution:
+            # Strip YAML list prefix "- " that /store adds to playbook
+            stripped = solution.lstrip("- ").strip() if isinstance(solution, str) else solution
             try:
-                parsed = json.loads(solution)
+                parsed = json.loads(stripped)
             except (json.JSONDecodeError, TypeError):
                 parsed = {"raw_solution": solution}
 

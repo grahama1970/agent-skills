@@ -482,6 +482,173 @@ def _generate_adversarial(seed: int = 42) -> list[TestQuestion]:
 
 
 # ---------------------------------------------------------------------------
+# 3b. CROSS-FRAMEWORK: CWE↔SPARTA and NIST↔SPARTA bidirectional questions
+# ---------------------------------------------------------------------------
+
+def _generate_cross_framework(seed: int = 42) -> list[TestQuestion]:
+    """Generate CWE↔SPARTA and NIST↔SPARTA cross-framework questions.
+
+    Two mapping paths exist in the graph:
+    - Path 1: CWE → CAPEC → ATT&CK → SPARTA (curated MITRE edges)
+    - Path 2: NIST → SPARTA (128K+ curated ISO 27001 edges)
+
+    Questions test whether /extract-entities resolves entities from both
+    frameworks and /recall's multi-hop traversal finds the connection.
+
+    SATISFIED: entities from different frameworks that share a technique
+    via graph edges (NIST AC-3 → SPARTA SV-AC-1 via iso27001 edge).
+    INCONCLUSIVE: entities from different frameworks with no graph path.
+    """
+    client = _client()
+    questions: list[TestQuestion] = []
+    rng = random.Random(seed)
+
+    # --- CWE → SPARTA questions (via CAPEC/ATT&CK or NIST bridge) ---
+    _CWE_SPARTA_TEMPLATES = [
+        "Given {cwe_id} ({cwe_name}), which SPARTA countermeasures address this vulnerability for {sparta_id}?",
+        "How does {cwe_id} relate to SPARTA technique {sparta_id} ({sparta_name}) in spacecraft systems?",
+        "What {sparta_id} mitigations apply to {cwe_id} ({cwe_name}) in space vehicle software?",
+        "Does {cwe_id} ({cwe_name}) affect the same attack surface as {sparta_id} ({sparta_name})?",
+        "Which SPARTA defenses for {sparta_id} address the weakness described by {cwe_id}?",
+    ]
+
+    # Get CWE+SPARTA pairs that co-occur via NIST bridge (from sparta_relationships)
+    try:
+        resp = client.post("/list", json={
+            "collection": "sparta_relationships",
+            "limit": 200,
+            "return_fields": ["source_control_id", "target_control_id", "source_framework", "target_framework", "method"],
+        })
+        edges = resp.json().get("documents", [])
+        # Find NIST controls that bridge to SPARTA
+        nist_to_sparta = {}
+        for e in edges:
+            if e.get("source_framework") == "nist" and e.get("target_framework") == "sparta":
+                nist_id = e["source_control_id"]
+                sparta_id = e["target_control_id"]
+                nist_to_sparta.setdefault(nist_id, []).append(sparta_id)
+    except Exception:
+        nist_to_sparta = {}
+
+    # Get CWEs with their names
+    cwe_samples = []
+    try:
+        resp = client.post("/list", json={
+            "collection": "sparta_controls",
+            "limit": 50,
+            "filters": {"source_framework": "CWE"},
+            "return_fields": ["control_id", "name"],
+        })
+        cwe_samples = resp.json().get("documents", [])
+        rng.shuffle(cwe_samples)
+    except Exception:
+        pass
+
+    # Get SPARTA controls with names
+    sparta_samples = []
+    try:
+        resp = client.post("/list", json={
+            "collection": "sparta_controls",
+            "limit": 50,
+            "filters": {"source_framework": "SPARTA"},
+            "return_fields": ["control_id", "name"],
+        })
+        sparta_samples = resp.json().get("documents", [])
+        rng.shuffle(sparta_samples)
+    except Exception:
+        pass
+
+    # Generate SATISFIED: CWE + SPARTA pairs where graph connection likely exists
+    for i, (cwe, sparta) in enumerate(zip(cwe_samples[:25], sparta_samples[:25])):
+        template = _CWE_SPARTA_TEMPLATES[i % len(_CWE_SPARTA_TEMPLATES)]
+        q = template.format(
+            cwe_id=cwe["control_id"],
+            cwe_name=cwe.get("name", "")[:60],
+            sparta_id=sparta["control_id"],
+            sparta_name=sparta.get("name", "")[:60],
+        )
+        questions.append(TestQuestion(
+            question=q,
+            category="satisfied",
+            framework="cross",
+            control_id=f"{cwe['control_id']}+{sparta['control_id']}",
+            expected_verdict="SATISFIED",
+            rationale=f"Cross-framework CWE+SPARTA, graph may connect via NIST bridge",
+            source="cross_framework_cwe_sparta",
+        ))
+
+    # --- NIST → SPARTA questions (direct edge via ISO 27001) ---
+    _NIST_SPARTA_TEMPLATES = [
+        "How does NIST control {nist_id} support SPARTA technique {sparta_id} ({sparta_name}) defense?",
+        "What is the compliance mapping between {nist_id} and {sparta_id} for spacecraft?",
+        "Does implementing {nist_id} mitigate the threat described by {sparta_id} ({sparta_name})?",
+        "How do {nist_id} requirements align with SPARTA {sparta_id} countermeasures?",
+        "What role does {nist_id} play in defending against {sparta_id} ({sparta_name})?",
+    ]
+
+    # Get NIST controls with names
+    nist_samples = []
+    try:
+        resp = client.post("/list", json={
+            "collection": "sparta_controls",
+            "limit": 50,
+            "filters": {"source_framework": "NIST"},
+            "return_fields": ["control_id", "name"],
+        })
+        nist_samples = resp.json().get("documents", [])
+        rng.shuffle(nist_samples)
+    except Exception:
+        pass
+
+    # SATISFIED: NIST + SPARTA pairs with direct ISO 27001 edges
+    nist_sparta_pairs = []
+    for nist_id, sparta_ids in nist_to_sparta.items():
+        for sid in sparta_ids[:2]:
+            nist_doc = next((n for n in nist_samples if n["control_id"] == nist_id), None)
+            sparta_doc = next((s for s in sparta_samples if s["control_id"] == sid), None)
+            if nist_doc and sparta_doc:
+                nist_sparta_pairs.append((nist_doc, sparta_doc))
+    rng.shuffle(nist_sparta_pairs)
+
+    for i, (nist, sparta) in enumerate(nist_sparta_pairs[:25]):
+        template = _NIST_SPARTA_TEMPLATES[i % len(_NIST_SPARTA_TEMPLATES)]
+        q = template.format(
+            nist_id=nist["control_id"],
+            sparta_id=sparta["control_id"],
+            sparta_name=sparta.get("name", "")[:60],
+        )
+        questions.append(TestQuestion(
+            question=q,
+            category="satisfied",
+            framework="cross",
+            control_id=f"{nist['control_id']}+{sparta['control_id']}",
+            expected_verdict="SATISFIED",
+            rationale=f"NIST→SPARTA edge exists via ISO 27001 curated mapping",
+            source="cross_framework_nist_sparta",
+        ))
+
+    # INCONCLUSIVE: CWE + unrelated SPARTA (no graph path expected)
+    for i in range(min(25, len(cwe_samples), len(sparta_samples))):
+        cwe = cwe_samples[-(i + 1)]  # pick from opposite end
+        sparta = sparta_samples[i]
+        q = f"How does {cwe['control_id']} ({cwe.get('name', '')[:40]}) impact {sparta['control_id']} ({sparta.get('name', '')[:40]}) spacecraft defenses?"
+        questions.append(TestQuestion(
+            question=q,
+            category="inconclusive",
+            framework="cross",
+            control_id=f"{cwe['control_id']}+{sparta['control_id']}",
+            expected_verdict="INCONCLUSIVE",
+            rationale="Cross-framework CWE+SPARTA with likely no graph path",
+            source="cross_framework_unrelated",
+        ))
+
+    logger.info("Cross-framework generation: {} CWE+SPARTA, {} NIST+SPARTA, {} unrelated",
+                min(25, len(cwe_samples)), len(nist_sparta_pairs[:25]),
+                min(25, len(cwe_samples)))
+    return questions
+
+
+# ---------------------------------------------------------------------------
 # 4. OFF_TOPIC: Non-security questions for deflect path
 # ---------------------------------------------------------------------------
 
@@ -708,6 +875,17 @@ def generate_bank(seed: int = 42, balanced: bool = True) -> list[TestQuestion]:
     except Exception as exc:
         logger.warning("Adversarial generation failed (non-fatal): {}", exc)
         adversarial = []
+    try:
+        cross_fw = _generate_cross_framework(seed)
+    except Exception as exc:
+        logger.warning("Cross-framework generation failed (non-fatal): {}", exc)
+        cross_fw = []
+    # Merge cross-framework into satisfied/adversarial by category
+    for q in cross_fw:
+        if q.category == "satisfied":
+            satisfied.append(q)
+        else:
+            adversarial.append(q)
     off_topic = _generate_off_topic(seed)
 
     if balanced:

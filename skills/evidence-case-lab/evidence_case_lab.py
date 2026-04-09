@@ -73,8 +73,8 @@ def _run_single(question_entry: dict[str, Any]) -> dict[str, Any]:
 
     runner = EvidenceCaseRunner()
     try:
-        result = runner.run(question, show_progress=False)
-        result = _apply_plausibility_gate(result, question, show_progress=False)
+        result = runner.run(question)
+        result = _apply_plausibility_gate(result, question)
     except Exception as exc:
         import traceback
         tb = traceback.format_exc()

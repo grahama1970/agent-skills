@@ -103,8 +103,8 @@ Use the table below to map user requests to the correct command.
 | "Get a patch from Gemini"         | `review-full --file request.md --provider google`                                  |
 | "Auto-generate request from repo" | `build -A -t "Fix bug" -o request.md`                                              |
 | "Quick one-shot via subagent"     | Read files, `POST /chat` to `/subagent-service` with inline content (see above)    |
-| "Quick review via scillm/Codex"   | `quick-review -f file1.ts -f file2.py --context "..." --model gpt-5.3-codex`       |
-| "Review with Gemini via scillm"   | `quick-review -f file1.ts --model text-gemini --focus "security"`                  |
+| "Quick review via scillm/Codex"   | `one-shot -f file1.ts -f file2.py --context "..." --persona senior --model gpt-5.3-codex` |
+| "Review with Gemini via scillm"   | `one-shot -f file1.ts --context "..." --persona nico --model text-gemini --focus "security"` |
 
 > **💡 COST-SAVING TIP**: Always use `--provider github` for Claude models to avoid API charges. The `github` provider includes Claude models at no additional cost beyond your GitHub Copilot subscription.
 
@@ -226,45 +226,54 @@ Called after review completes. Learns:
 
 - `memory_integration.py` -- Pre/post hooks with graceful degradation
 
-### quick-review (Project Agent Preferred Path)
+### one-shot (Project Agent Preferred Path)
 
 Bundle all files with context and send in one call via scillm. No request.md file needed.
 The project agent reads the files, provides architectural context, and gets a review back.
 
 ```bash
-# Review with Codex (via scillm OAuth proxy)
-code_review.py quick-review \
+# Senior engineer review with Codex
+code_review.py one-shot \
   -f packages/switchboard/src/executor.ts \
   -f .pi/skills/switchboard/SKILL.md \
   -f .pi/skills/switchboard/run.sh \
   --context "Deterministic manifest executor replacing failed subagent-service approach.
     Steps execute as subprocess, not agent reasoning. Added to existing Switchboard WebSocket server." \
+  --persona senior \
   --focus "security, correctness, race conditions" \
   --model gpt-5.3-codex
 
-# Review with Gemini
-code_review.py quick-review -f src/*.py --context "Training harness" --model text-gemini
+# Security review with Tim Blazytko persona
+code_review.py one-shot -f run.sh -f probe.py \
+  --context "Model integrity probes sent to LLM via scillm" \
+  --persona tim --focus "injection, command execution"
 
-# Review with DeepSeek (cheapest)
-code_review.py quick-review -f run.sh --focus "shell injection" --model text
+# QA review with Nico persona
+code_review.py one-shot -f collect.py \
+  --context "Passive signal collector from session transcripts" \
+  --persona nico --model text-gemini
 
-# Output as JSON
-code_review.py quick-review -f executor.ts --model gpt-5.3-codex --json
+# Compliance review with Brandon Bailey persona
+code_review.py one-shot -f src/*.py \
+  --context "Training harness for classifier models" \
+  --persona brandon --model gpt-5.3-codex --json
 ```
 
 | Option | Description |
 |--------|-------------|
 | `--file` / `-f` | File paths to review (repeatable) |
-| `--context` / `-c` | Architectural context — what it does, why, what it replaces |
+| `--context` / `-c` | **REQUIRED.** Architectural context — what it does, why, what it replaces |
+| `--persona` / `-p` | **REQUIRED.** Reviewer identity — preset name or custom description |
 | `--focus` | Specific review areas (security, correctness, etc.) |
 | `--model` / `-m` | scillm model (default: `gpt-5.3-codex`) |
 | `--output` / `-o` | Write review to file |
 | `--json` | Output as JSON with metadata |
 
-**Why this exists:** The project agent should bundle ALL files with complete context
-in ONE call. Splitting files across multiple calls loses cross-cutting context.
-The `build` + `review-full` pipeline is for iterative multi-round reviews; `quick-review`
-is for single-pass reviews where the project agent already knows what needs reviewing.
+**Persona presets:** `nico` (QA/data quality), `brandon` (defense/compliance), `tim` (security/reverse engineering), `senior` (architecture/maintainability). Or pass a custom string.
+
+**Why context and persona are required:** Context-free reviews are shallow — the reviewer
+doesn't know what problem the code solves. Persona-free reviews lack domain expertise —
+a generic "code reviewer" misses domain-specific risks that Nico, Brandon, or Tim would catch.
 
 ### scillm Provider
 
@@ -289,7 +298,7 @@ No API keys needed — scillm manages credentials.
 
 ### Quick (single-pass, project agent bundles context)
 1. **Read files**: Project agent reads all relevant files
-2. **Send review**: `code_review.py quick-review -f file1 -f file2 --context "..." --model gpt-5.3-codex`
+2. **Send review**: `code_review.py one-shot -f file1 -f file2 --context "..." --model gpt-5.3-codex`
 3. **Act on findings**: Fix critical issues, file the rest
 
 ## Common Mistakes
@@ -306,13 +315,13 @@ code_review.py review-full --file request.md --provider github --model claude-so
 
 ### WRONG: Splitting files across multiple review calls (loses cross-cutting context)
 ```bash
-code_review.py quick-review -f file1.py --model gpt-5.3-codex
-code_review.py quick-review -f file2.py --model gpt-5.3-codex  # separate call!
+code_review.py one-shot -f file1.py --model gpt-5.3-codex
+code_review.py one-shot -f file2.py --model gpt-5.3-codex  # separate call!
 ```
 
 ### RIGHT: Bundle all files in one call
 ```bash
-code_review.py quick-review -f file1.py -f file2.py --context "..." --model gpt-5.3-codex
+code_review.py one-shot -f file1.py -f file2.py --context "..." --model gpt-5.3-codex
 ```
 
 ### WRONG: Running review without building a request file first

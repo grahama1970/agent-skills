@@ -102,12 +102,18 @@ def git_context(project_root: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def memory_post(endpoint: str, payload: dict, console=None) -> dict:
+def memory_post(endpoint: str, payload: dict, console=None, retries: int = 0) -> dict:
     """POST to memory daemon and return parsed JSON.
 
     Primary:  Unix socket at MEMORY_SOCK.
     Fallback: TCP at MEMORY_TCP_URL when the socket file is absent.
+
+    Args:
+        retries: Number of retry attempts on transient failures (timeout, connect).
+                 Default 0 for reads. Callers storing critical data (checkpoints)
+                 should pass retries=2.
     """
+    import time
     import typer
 
     sock_exists = Path(MEMORY_SOCK).exists()
@@ -122,31 +128,63 @@ def memory_post(endpoint: str, payload: dict, console=None) -> dict:
         base_url = MEMORY_TCP_URL
         location = MEMORY_TCP_URL
 
-    logger.debug("POST {}{} payload={}", location, endpoint, payload)
+    requested_collection = payload.get("collection", "?")
+    logger.debug("POST {}{} collection={} payload_keys={}", location, endpoint, requested_collection, list(payload.keys()))
 
-    try:
-        with httpx.Client(transport=transport, timeout=timeout) as client:
-            response = client.post(f"{base_url}{endpoint}", json=payload)
-            response.raise_for_status()
-            return response.json()
-    except httpx.ConnectError:
-        if console:
-            console.print(
-                f"[red]Memory daemon unavailable at {location} "
-                "(is embry-agent.service running?)[/red]"
-            )
-        raise typer.Exit(1)
-    except httpx.TimeoutException:
-        if console:
-            console.print("[red]Memory daemon timed out after 30s[/red]")
-        raise typer.Exit(1)
-    except httpx.HTTPStatusError as exc:
-        if console:
-            console.print(
-                f"[red]Memory daemon returned {exc.response.status_code}:[/red] "
-                f"{exc.response.text[:200]}"
-            )
-        raise typer.Exit(1)
+    max_attempts = 1 + retries
+    last_error = None
+
+    for attempt in range(max_attempts):
+        try:
+            with httpx.Client(transport=transport, timeout=timeout) as client:
+                response = client.post(f"{base_url}{endpoint}", json=payload)
+                response.raise_for_status()
+                result = response.json()
+                # Log where the document actually landed
+                if endpoint == "/store" and isinstance(result, dict):
+                    actual_id = result.get("_id", "")
+                    actual_key = result.get("_key", "")
+                    actual_collection = actual_id.split("/")[0] if actual_id and "/" in actual_id else "unknown"
+                    if requested_collection != "?" and actual_collection != "unknown" and actual_collection != requested_collection:
+                        logger.error(
+                            "COLLECTION MISMATCH: requested={} actual={} _id={} _key={}",
+                            requested_collection, actual_collection, actual_id, actual_key,
+                        )
+                    else:
+                        logger.info("Stored to {} _key={}", actual_collection or requested_collection, actual_key or actual_id)
+                if attempt > 0:
+                    logger.info("Succeeded on retry attempt {}/{}", attempt, retries)
+                return result
+        except (httpx.ConnectError, httpx.TimeoutException) as exc:
+            last_error = exc
+            if attempt < max_attempts - 1:
+                wait = 2 ** attempt  # 1s, 2s
+                logger.warning(
+                    "memory_post{} failed (attempt {}/{}): {}. Retrying in {}s...",
+                    endpoint, attempt + 1, max_attempts, type(exc).__name__, wait,
+                )
+                time.sleep(wait)
+                continue
+            # Final attempt failed
+            if isinstance(exc, httpx.ConnectError):
+                if console:
+                    console.print(
+                        f"[red]Memory daemon unavailable at {location} "
+                        f"(is embry-agent.service running?) "
+                        f"[{max_attempts} attempts exhausted][/red]"
+                    )
+            else:
+                if console:
+                    console.print(f"[red]Memory daemon timed out after 30s [{max_attempts} attempts exhausted][/red]")
+            raise typer.Exit(1)
+        except httpx.HTTPStatusError as exc:
+            # HTTP errors (4xx/5xx) are not retried -- they indicate bad data, not transient failure
+            if console:
+                console.print(
+                    f"[red]Memory daemon returned {exc.response.status_code}:[/red] "
+                    f"{exc.response.text[:200]}"
+                )
+            raise typer.Exit(1)
 
 
 # ---------------------------------------------------------------------------
