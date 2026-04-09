@@ -158,7 +158,6 @@ client = OpenAI(base_url="http://localhost:4001/v1", api_key="sk-dev-proxy-123")
 resp = client.chat.completions.create(
     model="text",
     messages=[{"role": "user", "content": "Hello"}],
-    max_tokens=64,
 )
 print(resp.choices[0].message.content)
 ```
@@ -175,7 +174,6 @@ resp = httpx.post(
         "model": "text",
         "messages": [{"role": "user", "content": "Return {name, age} for Alice who is 25"}],
         "response_format": {"type": "json_object"},
-        "max_tokens": 64,
     },
     timeout=30.0,
 )
@@ -202,7 +200,6 @@ resp = httpx.post(
             {"type": "text", "text": "Describe this image"},
             {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
         ]}],
-        "max_tokens": 512,
     },
     timeout=60.0,
 )
@@ -239,7 +236,6 @@ async def complete(client, prompt):
         json={
             "model": "text",
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 256,
         },
         timeout=45.0,
     )
@@ -356,7 +352,7 @@ async def hedged_call(client, prompt, primary="text", backup="text-gemini"):
         resp = await client.post(
             "http://localhost:4001/v1/chat/completions",
             headers={"Authorization": "Bearer sk-dev-proxy-123"},
-            json={"model": model, "messages": [{"role": "user", "content": prompt}], "max_tokens": 256},
+            json={"model": model, "messages": [{"role": "user", "content": prompt}]},
             timeout=30.0,
         )
         return resp.json()["choices"][0]["message"]["content"]
@@ -392,7 +388,6 @@ resp = httpx.post(
     json={
         "model": "text",  # works with any provider in the cascade
         "messages": [{"role": "user", "content": f"{combined}\n\nYour question here"}],
-        "max_tokens": 4096,
     },
     timeout=120.0,
 )
@@ -419,7 +414,6 @@ resp = httpx.post(
             {"type": "text", "text": "Summarize this document"},
             {"inlineData": {"mimeType": "application/pdf", "data": pdf_b64}},
         ]}],
-        "max_tokens": 4096,
     },
     timeout=120.0,
 )
@@ -442,7 +436,6 @@ resp = httpx.post(
     json={
         "model": "text-gemini",
         "messages": [{"role": "user", "content": parts}],
-        "max_tokens": 4096,
     },
     timeout=120.0,
 )
@@ -454,7 +447,7 @@ resp = httpx.post(
 
 **WARNING**: `inlineData` only works with `model: "text-gemini"` or `"text-gemini-3"` (direct). Using `model: "text"` will fail on Chutes/DeepSeek before reaching Gemini. The proxy only switches to the native Gemini API when the deployment targets `generativelanguage.googleapis.com`.
 
-**`text-gemini-3`** (Gemini 3 Flash Preview) is a thinking model — better for complex analysis of PDFs/images but uses internal reasoning tokens. Set `max_tokens` higher (4096+) to avoid budget exhaustion.
+**`text-gemini-3`** (Gemini 3 Flash Preview) is a thinking model — better for complex analysis of PDFs/images but uses internal reasoning tokens. Do NOT set `max_tokens` — reasoning models consume tokens internally and a low limit produces empty output.
 
 ### Option C: Images via image_url (all VLM providers)
 
@@ -470,7 +463,6 @@ resp = httpx.post(url, json={
         {"type": "text", "text": "Describe this screenshot"},
         {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}},
     ]}],
-    "max_tokens": 2048,
 }, headers=headers, timeout=120)
 ```
 
@@ -551,7 +543,6 @@ resp = httpx.post(
         "messages": [
             {"role": "user", "content": "Your prompt here"}
         ],
-        "max_tokens": 4096,
     },
     timeout=60.0,
 )
@@ -563,7 +554,7 @@ content = resp.json()["choices"][0]["message"]["content"]
 | Parameter | Supported? | Notes |
 |-----------|-----------|-------|
 | `messages` | YES | Standard OpenAI format |
-| `max_tokens` | YES | Required — Claude needs this |
+| `max_tokens` | OPTIONAL | Proxy defaults to 4096 for Claude. Omit for all other providers — most ignore it, some reject it. Only set it when you need a specific limit. |
 | `temperature` | YES | 0.0-1.0 |
 | `top_p` | YES | |
 | `stop` | YES | String or list |
@@ -601,7 +592,7 @@ Works with all providers (Chutes, Gemini, Claude, Codex, Ollama, DeepSeek). The 
 ### Common mistakes that cause 500s
 
 1. **Wrong model name**: `text-claude-sonnet` → use `claude-sonnet-4-6`
-2. **Missing `max_tokens`**: defaults to 4096 but include it explicitly
+2. **Setting `max_tokens` too low**: reasoning models consume tokens internally — a low `max_tokens` means zero output. Omit it and let the proxy default.
 3. **Sending `response_format: {"type": "json_object"}`**: Claude rejects this — instead say "Return valid JSON" in the prompt
 4. **Timeout too short**: Claude can take 10-30s for complex prompts — use `timeout=60.0`
 
