@@ -45,20 +45,25 @@ detection** (CUSUM on quality time series).
 
 ```
 Active Probes (on demand)          Passive Signals (from session data)
-  NIAH recall test                   Hook denials (PreToolUse blocks)
-  SKILL.md extraction test           Transcript corrections (user "no")
-  Instruction-following test         Duplicate reads (re-reading same file)
-         |                           Tool call failures
-         v                                    |
-    +-----------+                              v
-    | Probe DB  |<-------- quality_signals.jsonl
-    +-----------+
+  NIAH ladder (1K/4K/8K/16K)        Hook denials (PreToolUse blocks)
+    + adversarial distractors        Transcript corrections (user "no")
+  SKILL.md extraction test           Duplicate reads (re-reading same file)
+  Instruction-following test         Tool call failures / retry loops
+  [latency + token telemetry]        [watermark-based dedup]
+         |                                    |
+         v                                    v
+    probes.jsonl                      signals.jsonl
+    (per-probe scores,                (watermarks.json tracks
+     latency_ms, tokens)               last-scanned line)
+         |                                    |
+         v                                    v
+    Per-channel drift detection (rolling-baseline CUSUM + Page-Hinkley + EWMA)
+      probe channel ──────────┐
+      signals channel ────────┤
+      [EWMA entropy channel] ─┘
          |
          v
-    CUSUM / Page-Hinkley drift detection (built-in, same algorithms as monitor-drift-sensors)
-         |
-         v
-    D3 dashboard (quality over time, drift alerts, signal breakdown)
+    D3 dashboard (per-channel quality, drift alerts, latency, signal breakdown)
 ```
 
 ## Usage
@@ -143,10 +148,11 @@ Each probe session produces a composite score 0-100:
 Results stored in `~/.embry/dum-dum/`:
 
 ```
-probes.jsonl      # active probe results (one JSON per probe run)
-signals.jsonl     # passive signal observations
-drift.jsonl       # drift detection results
-dashboard.html    # last exported dashboard
+probes.jsonl      # active probe results (scores, latency_ms, tokens per probe)
+signals.jsonl     # passive signal observations (watermark-deduped)
+drift.jsonl       # per-channel drift detection results
+watermarks.json   # high-water marks for transcript dedup
+dashboard.html    # last exported D3 dashboard (per-channel charts)
 ```
 
 ## Research Foundation
@@ -155,6 +161,20 @@ dashboard.html    # last exported dashboard
   uniformity as a proxy for model engagement quality
 - **FPEdit** (arXiv:2508.02092v2) - faithful prompt editing for detecting when
   models deviate from instruction fidelity
+- **Retrieval heads as monitors** (arXiv:2604.02650v1) - retrieval head attention
+  scores track quality better than NIAH alone; NIAH gives "deceptive saturation"
+- **Adversarial NIAH** (arXiv:2601.20276v1) - EMB-S benchmark with collision-tested
+  hard negatives; benign NIAH saturates but models degrade under semantic interference
+- **Multi-faceted NIAH** (arXiv:2601.02023v1) - separating literal extraction,
+  logical inference, and hallucination risk across context depths
+- **EWMA entropy drift** (arXiv:2601.00554v3) - EWMA control statistic on streaming
+  KL divergence; reduces retraining triggers 1-2 orders of magnitude vs fixed schedules
+- **CDSeer** (arXiv:2410.09190v2) - model-agnostic concept drift detection with
+  57% precision improvement using 99% fewer labels
+- **CDCT compliance** (arXiv:2512.17920v1) - universal U-curve in instruction
+  compliance; RLHF helpfulness is dominant cause of constraint violations
+- **Positional bias at depth** (arXiv:2508.07479v1) - lost-in-the-middle effect
+  strongest at <50% context window; beyond that primacy weakens
 
 ## Common Mistakes
 

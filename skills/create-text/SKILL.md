@@ -1,3 +1,21 @@
+---
+name: create-text
+description: >
+  Deterministic public-domain text corpus chunker with seeded selectors for
+  reproducible sampling across engineering/government corpora.
+allowed-tools: Bash, Read, Write
+triggers:
+  - create text
+  - text chunker
+  - deterministic text
+  - build text bank
+  - select text chunks
+metadata:
+  short-description: "Deterministic corpus text chunker"
+provides:
+  - create-text
+---
+
 # /create-text
 
 Deterministic public-domain text corpus chunker with seeded selector.

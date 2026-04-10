@@ -3,6 +3,6 @@ name = "dum-dum"
 version = "0.2.0"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "loguru>=0.7",
+    "loguru>=0.7,<0.7.3",
     "typer>=0.12",
 ]

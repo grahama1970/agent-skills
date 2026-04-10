@@ -170,8 +170,8 @@ def _apply_fixes(template_text: str, findings: list[dict], context: str) -> str 
 
     user = f"## Context\n{context}\n\n## Current Prompt Template\n```\n{template_text}\n```\n\n## Findings to Fix\n{findings_text}\n\nApply ALL fixes above. Return the complete fixed prompt template."
 
-    # Use deepseek for fixes — fast, large context, cheap
-    fixed = _call_scillm("deepseek", FIX_SYSTEM, user)
+    # Use "text" for fixes — cascades through all available providers
+    fixed = _call_scillm("text", FIX_SYSTEM, user)
     if not fixed or len(fixed) < len(template_text) * 0.5:
         logger.warning("  Fix attempt returned suspiciously short result ({} chars vs {} original)", len(fixed), len(template_text))
         return None
@@ -221,7 +221,7 @@ def review(
     persona: str = typer.Option(..., "--persona", "-p", help="REQUIRED. Who reviews/consumes this prompt (e.g. 'brandon', 'nico', 'tim', or custom description)"),
     context: str = typer.Option(..., "--context", "-c", help="REQUIRED. What this prompt does, why it exists, what problem it solves"),
     models: list[str] = typer.Option([], "--models", "-m", help="Models to use"),
-    max_rounds: int = typer.Option(3, "--max-rounds", help="Max review rounds"),
+    max_rounds: int = typer.Option(1, "--max-rounds", help="Max review+fix rounds (default 1 = review only, no fix)"),
     output: str = typer.Option("", "--output", "-o", help="Write final template to file"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show prompt without calling LLM"),
 ) -> None:
@@ -389,21 +389,58 @@ def review(
         logger.info("  Fixed score: {} (was {}), critical: {} (was {}), major: {} (was {})",
                      fixed_score, score, fixed_critical, n_critical, fixed_major, n_major)
 
-        # ── Step 4: KEEP or REVERT ──
+        # ── Step 4: KEEP or REVERT (git-backed) ──
         if fixed_score < score:
+            # Git commit BEFORE writing so we can revert
+            import subprocess
+            try:
+                subprocess.run(
+                    ["git", "add", str(template_path)],
+                    cwd=template_path.parent, capture_output=True, timeout=10,
+                )
+                subprocess.run(
+                    ["git", "commit", "-m", f"review-prompt: pre-fix checkpoint round {round_num}"],
+                    cwd=template_path.parent, capture_output=True, timeout=10,
+                )
+            except Exception:
+                pass  # not a git repo or nothing to commit — that's ok
+
             template_text = fixed_text
             best_text = fixed_text
             best_score = fixed_score
-            # Write improved template to disk immediately
             template_path.write_text(fixed_text)
-            logger.info("  KEEP — wrote improved template to {}", template_path.name)
+
+            # Commit the improved version
+            try:
+                subprocess.run(
+                    ["git", "add", str(template_path)],
+                    cwd=template_path.parent, capture_output=True, timeout=10,
+                )
+                subprocess.run(
+                    ["git", "commit", "-m", f"review-prompt: round {round_num} fix (score {score}→{fixed_score})"],
+                    cwd=template_path.parent, capture_output=True, timeout=10,
+                )
+            except Exception:
+                pass
+
+            logger.info("  KEEP — wrote + committed improved template (score {}→{})", score, fixed_score)
             round_entry["action"] = "keep"
             round_entry["fixed_score"] = fixed_score
             round_entry["fixed_findings"] = fixed_findings
             all_prior_findings.extend(fixed_findings)
         else:
-            template_text = best_text  # revert
-            logger.info("  REVERT — fixed score {} >= original {}", fixed_score, score)
+            template_text = best_text  # revert in memory
+            # Also revert on disk via git checkout
+            import subprocess
+            try:
+                subprocess.run(
+                    ["git", "checkout", "--", str(template_path)],
+                    cwd=template_path.parent, capture_output=True, timeout=10,
+                )
+            except Exception:
+                # Not a git repo or checkout failed — write best_text manually
+                template_path.write_text(best_text)
+            logger.info("  REVERT — fixed score {} >= original {}, file restored", fixed_score, score)
             round_entry["action"] = "revert"
             round_entry["fixed_score"] = fixed_score
             all_prior_findings.extend(findings)

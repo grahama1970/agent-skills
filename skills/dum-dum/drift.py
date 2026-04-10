@@ -27,6 +27,9 @@ PH_THRESHOLD = 10.0
 PH_DELTA = 0.01
 WARMUP = 3
 ROLLING_WINDOW = 20
+# EWMA parameters per arXiv:2601.00554
+EWMA_LAMBDA = 0.2      # smoothing factor (higher = more reactive to recent)
+EWMA_L = 3.0           # control limit multiplier (L * sigma)
 
 app = typer.Typer(add_completion=False)
 
@@ -90,7 +93,11 @@ def rolling_stats(values: list[float], window: int) -> tuple[float, float]:
 
 
 def detect_drift_channel(series: list[dict], channel: str) -> list[dict]:
-    """Run CUSUM and Page-Hinkley on a single channel with rolling baseline."""
+    """Run CUSUM, Page-Hinkley, and EWMA on a single channel with rolling baseline.
+
+    EWMA (per arXiv:2601.00554) complements CUSUM/PH: it's more sensitive to
+    gradual shifts while CUSUM catches abrupt drops and PH catches persistent drift.
+    """
     detections = []
     values: list[float] = []
 
@@ -98,6 +105,7 @@ def detect_drift_channel(series: list[dict], channel: str) -> list[dict]:
     cusum_neg = 0.0
     ph_sum = 0.0
     ph_min = float("inf")
+    ewma_z: float | None = None  # EWMA statistic
 
     for i, point in enumerate(series):
         val = float(point["value"])
@@ -109,6 +117,7 @@ def detect_drift_channel(series: list[dict], channel: str) -> list[dict]:
         mean, std = rolling_stats(values[:i], ROLLING_WINDOW)
         z = (val - mean) / std
 
+        # --- CUSUM ---
         cusum_neg = max(0.0, cusum_neg - z - CUSUM_K)
         cusum_pos = max(0.0, cusum_pos + z - CUSUM_K)
 
@@ -125,6 +134,7 @@ def detect_drift_channel(series: list[dict], channel: str) -> list[dict]:
                 "baseline_mean": round(mean, 2),
             })
 
+        # --- Page-Hinkley ---
         ph_sum += mean - val - PH_DELTA
         ph_min = min(ph_min, ph_sum)
 
@@ -136,6 +146,31 @@ def detect_drift_channel(series: list[dict], channel: str) -> list[dict]:
                 "timestamp": point["timestamp"],
                 "cusum_value": round(ph_sum - ph_min, 2),
                 "method": "PAGE_HINKLEY",
+                "severity": severity,
+                "quality_score": val,
+                "baseline_mean": round(mean, 2),
+            })
+
+        # --- EWMA (arXiv:2601.00554) ---
+        # Exponentially weighted moving average of z-scores
+        if ewma_z is None:
+            ewma_z = z
+        else:
+            ewma_z = EWMA_LAMBDA * z + (1 - EWMA_LAMBDA) * ewma_z
+
+        # EWMA control limit: L * sigma_ewma where sigma_ewma accounts for smoothing
+        # sigma_ewma = sqrt(lambda / (2 - lambda)) * sigma_z (sigma_z ~ 1 for z-scores)
+        ewma_sigma = math.sqrt(EWMA_LAMBDA / (2 - EWMA_LAMBDA))
+        ewma_limit = EWMA_L * ewma_sigma
+
+        if ewma_z < -ewma_limit:  # negative = quality dropping
+            severity = "HIGH" if ewma_z < -ewma_limit * 1.5 else "MEDIUM"
+            detections.append({
+                "channel": channel,
+                "sample_idx": i,
+                "timestamp": point["timestamp"],
+                "cusum_value": round(abs(ewma_z), 2),
+                "method": "EWMA",
                 "severity": severity,
                 "quality_score": val,
                 "baseline_mean": round(mean, 2),

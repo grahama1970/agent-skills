@@ -25,6 +25,22 @@ app = typer.Typer(add_completion=False)
 
 NIAH_NEEDLE = "DUMDUM-NEEDLE-7f3a9c2e"
 
+# Near-miss decoy needles per arXiv:2601.20276 -- semantically similar codes
+# that force the model to discriminate rather than pattern-match on "DUMDUM-NEEDLE"
+_DECOY_NEEDLES = [
+    "DUMDUM-MARKER-7f3a9c2e",   # same suffix, different tag
+    "DUMDUM-NEEDLE-8g4b0d3f",   # same prefix, different hash
+    "DUMDUM-NEEDLE-7f3a9c2f",   # off-by-one in last char
+    "VERIFY-NEEDLE-7f3a9c2e",   # different prefix, same hash
+]
+
+# Distractor sentence templates that embed decoy needles in plausible context
+_DISTRACTOR_TEMPLATES = [
+    "Note: the deprecated reference code {decoy} was used in an earlier revision but is no longer valid.",
+    "The test harness previously checked for {decoy} but this was superseded in version 3.1.",
+    "Internal audit log entry: validator rejected {decoy} as a stale token.",
+]
+
 # Filler paragraph (~200 tokens) used to pad context for ladder sweep
 _FILLER_PARA = (
     "The onboard telemetry subsystem continuously monitors thermal sensors across "
@@ -143,16 +159,35 @@ DEFAULT_DEPTHS = [1, 4, 8, 16]
 
 
 def _build_niah_prompt(depth_k: int) -> str:
-    """Build NIAH prompt padded to approximately depth_k * 1000 tokens."""
+    """Build NIAH prompt padded to ~depth_k*1000 tokens with adversarial distractors.
+
+    Per arXiv:2601.20276, benign filler lets NIAH trivially saturate. We inject
+    near-miss decoy needles in plausible sentences so the model must discriminate
+    the real needle from semantically similar distractors.
+    """
     base = NIAH_CONTEXT_TEMPLATE.format(needle=NIAH_NEEDLE, filler_before="", filler_after="")
     base_tokens = len(base.split()) * 4 // 3
     target_tokens = depth_k * 1000
     extra_needed = max(0, target_tokens - base_tokens)
     filler_tokens_per_para = max(1, len(_FILLER_PARA.split()) * 4 // 3)
     n_paragraphs = extra_needed // filler_tokens_per_para
-    half = n_paragraphs // 2
-    filler_before = _FILLER_PARA * half
-    filler_after = _FILLER_PARA * (n_paragraphs - half)
+
+    # Build filler blocks, injecting one distractor every ~4 paragraphs
+    filler_paras: list[str] = []
+    distractor_idx = 0
+    for i in range(n_paragraphs):
+        filler_paras.append(_FILLER_PARA)
+        if (i + 1) % 4 == 0 and distractor_idx < len(_DECOY_NEEDLES):
+            template = _DISTRACTOR_TEMPLATES[distractor_idx % len(_DISTRACTOR_TEMPLATES)]
+            decoy_sentence = template.format(decoy=_DECOY_NEEDLES[distractor_idx])
+            filler_paras.append(decoy_sentence + "\n\n")
+            distractor_idx += 1
+
+    # Split filler: needle goes in the middle
+    half = len(filler_paras) // 2
+    filler_before = "".join(filler_paras[:half])
+    filler_after = "".join(filler_paras[half:])
+
     return NIAH_CONTEXT_TEMPLATE.format(
         needle=NIAH_NEEDLE,
         filler_before=filler_before,
