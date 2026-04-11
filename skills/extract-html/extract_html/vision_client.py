@@ -1,7 +1,6 @@
 """vision_client - extract_html.
 
-Purpose: Auto-generated module docstring. Review for accuracy.
-Inputs/Outputs/Failures: See functions below.
+VLM-based image text extraction using scillm proxy at localhost:4001.
 """
 
 from __future__ import annotations
@@ -9,19 +8,14 @@ from __future__ import annotations
 import base64
 import asyncio
 import os
-import sys
-from pathlib import Path
 from typing import Dict, List, Optional
 
+import httpx
 from loguru import logger
 
-# ---------------------------------------------------------------------------
-# Wire up scillm (sibling skill) for VLM completions
-# ---------------------------------------------------------------------------
-_SKILLS_DIR = Path(__file__).resolve().parents[2]
-_SCILLM_DIR = str(_SKILLS_DIR / "scillm")
-if _SCILLM_DIR not in sys.path:
-    sys.path.insert(0, _SCILLM_DIR)
+# scillm proxy config
+SCILLM_API_BASE = os.environ.get("SCILLM_API_BASE", "http://localhost:4001")
+SCILLM_PROXY_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 # ---------------------------------------------------------------------------
 # Shadow gateway: route through /assistant validate() cascade
@@ -60,38 +54,19 @@ def _guess_mime(path_or_url: str) -> str:
 
 async def _vision_one(
     *,
-    api_base: str,
-    api_key: str,
-    model: str,
+    api_base: str = None,  # Ignored - uses scillm proxy
+    api_key: str = None,   # Ignored - uses scillm proxy
+    model: str = None,     # Ignored - uses "vlm" via scillm proxy
     image_bytes: bytes,
     image_id: str,
     alt: Optional[str],
     timeout: int = 120,
 ) -> str:
     """
-    Calls VLM via scillm acompletion with vision content.
-    Routes through /assistant gateway cascade when available.
+    Calls VLM via scillm proxy at localhost:4001.
+    Uses model="vlm" which routes to the best available VLM provider.
     Returns extracted text.
     """
-    # --- Gateway path: try cascade first ---
-    if _gateway_available:
-        try:
-            import base64 as _b64
-            img_b64 = _b64.b64encode(image_bytes).decode("utf-8")
-            gw_result = _gw_validate(
-                input_data={"image_b64": img_b64, "alt_text": alt or ""},
-                task="vision-ocr-extractor",
-            )
-            if gw_result and gw_result.result:
-                text = gw_result.result.get("text", "")
-                if text and len(text) > 50:
-                    return text
-        except Exception as e:
-            logger.debug("gateway vision extraction failed, falling through to scillm: {}", e)
-
-    # --- Direct scillm path (fallback) ---
-    from scillm import acompletion
-
     mime = _guess_mime(image_id)
     img_url = _b64_data_url(image_bytes, mime)
 
@@ -114,17 +89,22 @@ async def _vision_one(
         },
     ]
 
-    resp = await acompletion(
-        model=model,
-        api_base=api_base,
-        api_key=api_key,
-        custom_llm_provider="openai_like",
-        messages=messages,
-        temperature=0,
-        timeout=timeout,
-    )
-
-    return resp.choices[0].message.content.strip()
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        resp = await client.post(
+            f"{SCILLM_API_BASE}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {SCILLM_PROXY_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "vlm",  # Proxy routes to best available VLM provider
+                "messages": messages,
+                "temperature": 0,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"].strip()
 
 
 async def extract_text_batched(

@@ -255,12 +255,40 @@ def _recall_with_scope_fallback(query: str, scope: str, limit: int, extra_tags: 
 
 
 def _query_checkpoints_by_time_with_fallback(limit: int = 1, scope: str = "", extra_tags: list[str] | None = None) -> list[dict]:
-    items = _query_checkpoints_by_time(limit=limit, scope=scope, extra_tags=extra_tags)
-    if items:
-        return items
-    if scope:
-        return _query_checkpoints_by_time(limit=limit, scope="", extra_tags=extra_tags)
-    return []
+    """Query checkpoints by recency, searching both scoped and cross-scope.
+
+    Checkpoints are sometimes saved from a different project directory than
+    the one they're about (e.g., scillm work saved from pi-mono).  To handle
+    this, we merge scoped results with cross-scope results whose topic
+    mentions the scope name, then return the newest ``limit`` items.
+    """
+    scoped = _query_checkpoints_by_time(limit=limit, scope=scope, extra_tags=extra_tags)
+
+    if not scope:
+        return scoped
+
+    # Also search all scopes for checkpoints that mention this project in topic
+    all_docs = _query_checkpoints_by_time(limit=50, scope="", extra_tags=extra_tags)
+    scope_lower = scope.lower()
+    cross_scope = [
+        d for d in all_docs
+        if scope_lower in d.get("topic", "").lower()
+        and d.get("scope", "") != scope  # avoid duplicates
+    ]
+
+    if not cross_scope:
+        return scoped
+
+    # Merge, deduplicate by _key, sort by updated_at descending
+    seen = set()
+    merged = []
+    for d in scoped + cross_scope:
+        key = d.get("_key", id(d))
+        if key not in seen:
+            seen.add(key)
+            merged.append(d)
+    merged.sort(key=lambda d: d.get("updated_at", 0), reverse=True)
+    return merged[:limit]
 
 
 # ---------------------------------------------------------------------------

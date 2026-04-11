@@ -118,16 +118,9 @@ def _memory_cmd(args: list, timeout: int = 60) -> dict:
         resp.raise_for_status()
         return resp.json()
 
-try:
-    from scillm import parallel_acompletions
-except ImportError:
-    scillm_path = os.getenv("SCILLM_PATH")
-    if scillm_path and scillm_path not in sys.path:
-        sys.path.append(scillm_path)
-    try:
-        from scillm import parallel_acompletions
-    except ImportError:
-        parallel_acompletions = None
+# scillm is an HTTP API at localhost:4001 - call via httpx, not import
+parallel_acompletions = None  # Use httpx fallback below
+
 
 if not parallel_acompletions:
 

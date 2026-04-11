@@ -59,24 +59,18 @@ DuckDB remains as read-only data layer via SpartaDataBridge.
 ## Commands
 
 ```bash
-# Run a specific pipeline step
-./run.sh step 03 --run-id myrun --limit 100
-./run.sh step 12 --run-id myrun
-./run.sh step 05d --run-id myrun --dry-run
+# Run a specific pipeline step (from sparta project root)
+cd /home/graham/workspace/experiments/sparta
+python -m sparta.pipeline.steps.01d_map_cwe_nist --run-id myrun
+python -m sparta.pipeline.steps.12_qra --run-id myrun --limit 100
+python -m sparta.pipeline.steps.05d_chunk_url_content --dry-run
 
-# List all available steps
-./run.sh steps
+# Run tests
+uv run pytest tests/ -v
+uv run pytest tests/ -k "test_qra"
 
-# Pipeline health check
-./run.sh status
-
-# Run tests (486 tests)
-./run.sh test
-./run.sh test -k "test_qra"
-
-# Launch Explorer UX (Vite :3002 + Express API :3001)
-./run.sh explorer
-./run.sh explorer --no-browser
+# List available steps
+ls src/sparta/pipeline/steps/*.py | grep -E "^[0-9]"
 ```
 
 ## Pipeline Steps (real, in src/sparta/pipeline/steps/)
@@ -86,6 +80,9 @@ DuckDB remains as read-only data layer via SpartaDataBridge.
 | 00 | fetch_sources | Download SPARTA xlsx, ATT&CK JSON, CWE XML |
 | 01 | extract_worksheets | Parse SPARTA spreadsheet into structured data |
 | 01b | load_external | Import ATT&CK, CWE, D3FEND, NIST data |
+| 01c | load_capec | Import CAPEC attack patterns |
+| 01d | map_cwe_nist | CWE→NIST via MITRE Heimdall (authoritative) |
+| 01e | enrich_cross_refs | Enrich cross-framework references |
 | 02 | url_inventory | Build URL manifest from controls |
 | 03 | fetch_urls | Download referenced URLs (ArangoDB) |
 | 04 | extract_controls | Extract control metadata |
@@ -99,10 +96,33 @@ DuckDB remains as read-only data layer via SpartaDataBridge.
 | 09 | relationships_llm | LLM-verified relationship edges |
 | 10 | extract_features | Feature extraction |
 | 11 | parameter_discovery | Parameter discovery |
+| 11b | parameter_discovery_enhanced | GPT-5 enhanced variant |
 | 12 | qra | QRA generation with quality cascade |
 | 12b | qra_audit | QRA quality audit |
-| 13-55 | calibration | Threshold calibration, active learning, export |
-| 60-61 | technique_knowledge | Build technique knowledge corpus (new) |
+| 12c | batched_verification | Uncertain relationship verification |
+| 13 | lean4_verify | Lean4 formal verification |
+| 13b | sample_uncertain_band | Sample uncertain bands for calibration |
+| 14-25 | calibration | Threshold calibration, active learning |
+| 48-55 | export | Discriminative attributes, audit, tiered graph export |
+| 60-61 | technique_knowledge | Build technique knowledge corpus |
+
+## Crosswalk Paths (CWE → SPARTA SV)
+
+Two paths connect CWE weaknesses to SPARTA countermeasures:
+
+| Path | Hops | Data Source |
+|------|------|-------------|
+| CWE → NIST (`nist_control_ids`) → SV (`tor_threats`) | 2 | MITRE Heimdall CSV |
+| CWE → CAPEC (`capec_ids`) → ATT&CK (`attack_technique_ids`) → SPARTA | 4 | MITRE curated |
+
+The 2-hop NIST path is populated by pipeline step `01d_map_cwe_nist.py` (138 CWEs mapped).
+Field `nist_source` tracks provenance (`mitre_heimdall_800-53r4`).
+
+```bash
+# Run CWE→NIST mapping step
+python -m sparta.pipeline.steps.01d_map_cwe_nist --run-id <run-id>
+python -m sparta.pipeline.steps.01d_map_cwe_nist --download  # Fetch fresh CSV
+```
 
 ## Explorer UX
 

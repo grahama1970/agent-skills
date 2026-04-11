@@ -1,12 +1,20 @@
 """Summary generation for doc2qra skill.
 
-Provides LLM-based document summarization with heuristic fallback
-when no LLM provider is available.
+Provides LLM-based document summarization with heuristic fallback.
+Uses scillm proxy at localhost:4001.
 """
 
 from __future__ import annotations
 
+import os
+
+import httpx
+
 from .utils import log
+
+# scillm proxy config
+SCILLM_API_BASE = os.environ.get("SCILLM_API_BASE", "http://localhost:4001")
+SCILLM_PROXY_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 
 # =============================================================================
@@ -44,6 +52,8 @@ async def generate_summary_async(
 ) -> str:
     """Generate a 2-3 paragraph summary of the document using LLM.
 
+    Uses scillm proxy at localhost:4001 which handles provider routing.
+
     Args:
         content: Full document content (will be truncated if too long)
         context: Optional domain context for focused summarization
@@ -52,19 +62,6 @@ async def generate_summary_async(
     Returns:
         Summary string (2-3 paragraphs)
     """
-    from .config import get_llm_provider_chain
-
-    providers = get_llm_provider_chain()
-    if not providers:
-        log("No LLM providers configured, using heuristic summary", style="yellow")
-        return heuristic_summary(content)
-
-    try:
-        from scillm import acompletion
-    except ImportError:
-        log("scillm not available, using heuristic summary", style="yellow")
-        return heuristic_summary(content)
-
     system_prompt = SUMMARY_SYSTEM_PROMPT
     if context:
         system_prompt = f"You are a {context}.\n\n{system_prompt}"
@@ -76,35 +73,30 @@ async def generate_summary_async(
 
     user_prompt = SUMMARY_PROMPT.format(text=truncated_content)
 
-    for provider in providers:
-        provider_name = provider.get("name", provider["model"][:20])
-        try:
-            resp = await acompletion(
-                model=provider["model"],
-                api_base=provider["api_base"],
-                api_key=provider["api_key"],
-                custom_llm_provider="openai_like",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=500,
-                temperature=0.3,
-                timeout=timeout,
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(
+                f"{SCILLM_API_BASE}/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {SCILLM_PROXY_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "text",  # Proxy routes to best available provider
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "temperature": 0.3,
+                },
             )
-            summary = resp.choices[0].message.content
+            resp.raise_for_status()
+            data = resp.json()
+            summary = data["choices"][0]["message"]["content"]
             return (summary or "").strip()
-        except Exception as e:
-            error_str = str(e)
-            is_429 = "429" in error_str or "rate" in error_str.lower()
-            if is_429:
-                log(f"Summary [{provider_name}] rate-limited, trying next provider", style="yellow")
-                continue
-            log(f"Summary [{provider_name}] failed: {e}", style="red")
-            continue
-
-    log("All providers failed for summary, using heuristic", style="red")
-    return heuristic_summary(content)
+    except Exception as e:
+        log(f"scillm proxy call failed: {e}", style="red")
+        return heuristic_summary(content)
 
 
 def generate_summary(content: str, context: str = None, timeout: int = 60) -> str:

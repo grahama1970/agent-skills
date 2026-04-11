@@ -40,6 +40,20 @@ taxonomy:
 
 # scillm — One Endpoint for All LLM Calls
 
+## Architecture
+
+```
+Client → scillm :4001 (Python) → Bifrost :4002 (Go) → Provider
+                                        ↓
+                               utls-proxy :8444 (Codex only)
+                                        ↓
+                               chatgpt.com (Chrome TLS fingerprint)
+```
+
+- **scillm** (Python): Public API, request validation, JSON guard, VLM auto-routing, OAuth token injection
+- **Bifrost** (Go): High-performance routing gateway with native provider support, retries, circuit breakers
+- **utls-proxy** (Go): TLS fingerprint proxy for Cloudflare-protected endpoints (Codex). Presents Chrome's JA3 fingerprint.
+
 ## Setup (one-time per provider)
 
 Most providers need zero setup — scillm reads existing credentials automatically.
@@ -109,33 +123,9 @@ Cascade aliases still work: `text` (Chutes → Gemini free → Gemini paid → D
 
 ---
 
-## Single Call (Paved Path)
+## Single Call
 
-The easiest way — zero boilerplate:
-
-```python
-from scillm.paved import chat, chat_json, analyze_image, analyze_image_json
-
-# Text
-answer = await chat("What is the capital of France?")
-
-# With system prompt
-answer = await chat("Summarize AC-17", system="You are a compliance analyst.")
-
-# JSON response (auto-validated, auto-repaired)
-data = await chat_json("Return {name, age} for Alice who is 25")
-
-# Image analysis (local file or URL — auto base64-encoded)
-desc = await analyze_image("/path/to/diagram.png", "What does this show?")
-desc = await analyze_image("https://example.com/chart.jpg", "Describe this chart")
-
-# Image → structured JSON
-data = await analyze_image_json("receipt.jpg", 'Extract {"total": number, "items": [...]}')
-```
-
-Defaults to `localhost:4001` + `sk-dev-proxy-123`. Override via env vars (`SCILLM_API_BASE`, `SCILLM_PROXY_KEY`, `SCILLM_MODEL`) or function kwargs.
-
-### With httpx (no scillm import)
+**scillm is an HTTP API, not a Python package. Do NOT `import scillm`. Use httpx.**
 
 ```python
 import httpx
@@ -251,29 +241,32 @@ async def main():
     return results
 ```
 
-### Advanced: parallel_acompletions_iter (request-response pairing)
+### With Semaphore (controlled concurrency)
 
-Async iterator that yields results as they complete, with every result carrying its original request.
-`messages` accepts a plain string (auto-wrapped as `[{"role": "user", "content": str}]`) or
-an OpenAI-style message array (required for multi-turn, system prompts, or multimodal/VLM content):
+The proxy queues requests internally, but for very large batches (100+), use a client-side semaphore:
 
 ```python
-from scillm.batch import parallel_acompletions_iter
+import asyncio, httpx
 
-requests = [
-    {"messages": f"Summarize document {doc_id}", "metadata": {"doc_id": doc_id}}
-    for doc_id in document_ids
-]
+async def complete(client, semaphore, prompt):
+    async with semaphore:
+        resp = await client.post(
+            "http://localhost:4001/v1/chat/completions",
+            headers={"Authorization": "Bearer sk-dev-proxy-123"},
+            json={"model": "text", "messages": [{"role": "user", "content": prompt}]},
+            timeout=60.0,
+        )
+        return resp.json()["choices"][0]["message"]["content"]
 
-async for result in parallel_acompletions_iter(requests, concurrency=6):
-    doc_id = result["request"]["metadata"]["doc_id"]
-    if result["ok"]:
-        save(doc_id, result["response"])
-    else:
-        retry_queue.append(doc_id)
+async def main():
+    semaphore = asyncio.Semaphore(10)  # 10 concurrent
+    async with httpx.AsyncClient() as client:
+        tasks = [complete(client, semaphore, f"Prompt {i}") for i in range(100)]
+        results = await asyncio.gather(*tasks)
+    return results
 ```
 
-For multimodal (VLM), use convenience fields — scillm auto-detects images and routes to VLM:
+For image/VLM tasks, use `model: "vlm"` or just include image content — auto-detected and routed:
 
 ```python
 # Local file paths — auto base64-encoded, auto-routed to VLM

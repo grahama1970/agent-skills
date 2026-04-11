@@ -1,10 +1,17 @@
 """LLM interface and session assessment for episodic archiver analysis."""
 
+import asyncio
 import json
 import os
 import sys
 from typing import Any, Dict, List
+
+import httpx
 from loguru import logger
+
+# scillm proxy config
+SCILLM_API_BASE = os.environ.get("SCILLM_API_BASE", "http://localhost:4001")
+SCILLM_PROXY_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 # ---------------------------------------------------------------------------
 # Shadow gateway: route through /assistant validate() cascade
@@ -46,7 +53,7 @@ def _get_llm_config() -> dict:
 
 
 async def _llm_completion(prompt: str, max_tokens: int = 2048, json_mode: bool = True) -> str:
-    """Single LLM completion via scillm, with /assistant gateway cascade."""
+    """Single LLM completion via scillm proxy, with /assistant gateway cascade."""
     # --- Gateway path: try cheaper tiers first ---
     if _gateway_available and json_mode:
         try:
@@ -60,32 +67,35 @@ async def _llm_completion(prompt: str, max_tokens: int = 2048, json_mode: bool =
         except Exception as e:
             logger.debug("gateway episodic analysis failed, falling through to scillm: {}", e)
 
-    # --- Direct scillm path (fallback) ---
-    from scillm import acompletion
-
-    cfg = _get_llm_config()
-    if not cfg["api_key"]:
-        return "{}" if json_mode else ""
-
-    kwargs = dict(
-        model=cfg["model"],
-        api_base=cfg["api_base"],
-        api_key=cfg["api_key"],
-        custom_llm_provider="openai",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=max_tokens,
-        temperature=0.2,
-        timeout=60,
-    )
+    # --- Direct scillm proxy path (fallback) ---
+    headers = {
+        "Authorization": f"Bearer {SCILLM_PROXY_KEY}",
+        "Content-Type": "application/json",
+    }
     if json_mode:
-        kwargs["response_format"] = {"type": "json_object"}
+        headers["x-expect-json"] = "true"
 
-    resp = await acompletion(**kwargs)
-    return resp.choices[0].message.content
+    payload = {
+        "model": "text",  # Proxy routes to best available provider
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.post(
+            f"{SCILLM_API_BASE}/v1/chat/completions",
+            headers=headers,
+            json=payload,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
 
 
 async def _llm_batch(requests: list, concurrency: int = 4) -> list:
-    """Batch LLM completions via scillm, with /assistant gateway cascade."""
+    """Batch LLM completions via scillm proxy, with /assistant gateway cascade."""
     # --- Gateway path: route each request through cascade ---
     if _gateway_available:
         results = []
@@ -114,27 +124,38 @@ async def _llm_batch(requests: list, concurrency: int = 4) -> list:
         if not needs_direct:
             return results
 
-    # --- Direct scillm path (fallback) ---
-    from scillm import batch_acompletions_iter
-
-    cfg = _get_llm_config()
-    if not cfg["api_key"]:
-        return [{"index": r.get("index", i), "ok": False, "error": "no api key"} for i, r in enumerate(requests)]
-
+    # --- Direct scillm proxy path (fallback) ---
+    sem = asyncio.Semaphore(concurrency)
     results = []
-    async for res in batch_acompletions_iter(
-        requests,
-        api_base=cfg["api_base"],
-        api_key=cfg["api_key"],
-        custom_llm_provider="openai",
-        concurrency=concurrency,
-        timeout=60,
-        wall_time_s=300,
-        response_format={"type": "json_object"},
-        retry_invalid_json=1,
-    ):
-        results.append(res)
-    return results
+
+    async def do_one(i: int, req: dict) -> dict:
+        async with sem:
+            try:
+                async with httpx.AsyncClient(timeout=60) as client:
+                    resp = await client.post(
+                        f"{SCILLM_API_BASE}/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {SCILLM_PROXY_KEY}",
+                            "Content-Type": "application/json",
+                            "x-expect-json": "true",
+                        },
+                        json={
+                            "model": "text",
+                            "messages": req.get("messages", []),
+                            "response_format": {"type": "json_object"},
+                            "temperature": 0.2,
+                        },
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    return {"index": req.get("index", i), "ok": True, "content": content}
+            except Exception as e:
+                return {"index": req.get("index", i), "ok": False, "error": str(e)}
+
+    tasks = [do_one(i, req) for i, req in enumerate(requests)]
+    results = await asyncio.gather(*tasks)
+    return list(results)
 
 
 def _format_turns_for_llm(turns: list, max_chars: int = 12000) -> str:
