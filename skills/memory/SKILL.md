@@ -6,6 +6,8 @@ description: >
   nothing found. Triggers: "check memory", "recall", "have we seen", "remember how".
 allowed-tools: Bash, Read
 triggers:
+  - assess memory usage
+  - check memory API usage
   - check memory
   - recall
   - clarify
@@ -26,6 +28,7 @@ provides:
   - memory-recall
   - memory-learn
   - edge-verification
+  - usage-assessment
 composes:
   - extractor
   - edge-verifier

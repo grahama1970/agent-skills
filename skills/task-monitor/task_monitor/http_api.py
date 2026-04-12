@@ -9,13 +9,19 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from rich.console import Console
 
 from task_monitor.config import BATCH_REPORT_PATHS, HOOK_POLL_INTERVAL
 from task_monitor.models import HistoryEntry, QualityMetrics, TaskConfig
 from task_monitor.stores import HistoryStore, QualityStore, SessionTracker, TaskRegistry
 from task_monitor.utils import get_task_status
+from task_monitor._misuse_guard import (
+    create_register_guard,
+    create_quality_guard,
+    ValidationError,
+)
 
 
 # =============================================================================
@@ -33,6 +39,19 @@ console = Console()
 # Global registry and quality store instances
 registry = TaskRegistry()
 quality_store = QualityStore()
+
+# Misuse guards
+register_guard = create_register_guard()
+quality_guard = create_quality_guard()
+
+
+@app_api.exception_handler(ValidationError)
+async def validation_error_handler(request: Request, exc: ValidationError):
+    """Handle misuse guard validation errors with helpful messages."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.message, "error_type": exc.error_type},
+    )
 
 
 # =============================================================================
@@ -100,8 +119,10 @@ async def get_all_status():
 
 
 @app_api.post("/tasks")
-async def register_task(config: TaskConfig):
+async def register_task(config: TaskConfig, request: Request):
     """Register a new task to monitor."""
+    caller = request.headers.get("x-caller-skill")
+    register_guard.validate(config.model_dump(), endpoint="/tasks", caller=caller)
     registry.register(config)
     return {"status": "registered", "name": config.name}
 
@@ -143,8 +164,10 @@ async def update_task_state(name: str, state: dict):
 # =============================================================================
 
 @app_api.post("/tasks/{name}/quality")
-async def push_quality_metrics(name: str, metrics: QualityMetrics):
+async def push_quality_metrics(name: str, metrics: QualityMetrics, request: Request):
     """Push quality metrics for a task."""
+    caller = request.headers.get("x-caller-skill")
+    quality_guard.validate(metrics.model_dump(), endpoint=f"/tasks/{name}/quality", caller=caller)
     # Note: Task doesn't need to be registered to push quality
     # This allows standalone quality monitoring
     quality_store.push(name, metrics)

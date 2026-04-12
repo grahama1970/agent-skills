@@ -320,8 +320,14 @@ app = typer.Typer(help="Embedding Service")
 def serve():
     """Start FastAPI server (runs forever until Ctrl+C). Used inside Docker container."""
     import uvicorn
-    from fastapi import FastAPI
+    from fastapi import FastAPI, Request
+    from fastapi.responses import JSONResponse
     from pydantic import BaseModel
+
+    from _misuse_guard import create_embed_guard, create_batch_guard, ValidationError
+
+    embed_guard = create_embed_guard()
+    batch_guard = create_batch_guard()
 
     @asynccontextmanager
     async def lifespan(app):
@@ -334,6 +340,13 @@ def serve():
 
     api = FastAPI(title="Embedding Service", version="2.0.0", lifespan=lifespan)
 
+    @api.exception_handler(ValidationError)
+    async def validation_error_handler(request: Request, exc: ValidationError):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": exc.message, "error_type": exc.error_type},
+        )
+
     class EmbedRequest(BaseModel):
         text: str
 
@@ -341,12 +354,16 @@ def serve():
         texts: list[str]
 
     @api.post("/embed")
-    async def embed_endpoint(req: EmbedRequest):
+    async def embed_endpoint(req: EmbedRequest, request: Request):
+        caller = request.headers.get("x-caller-skill")
+        embed_guard.validate(req.model_dump(), endpoint="/embed", caller=caller)
         vector = _embed_text_local(req.text)
         return {"embedding": vector, "model": _model_name, "dimensions": len(vector)}
 
     @api.post("/embed/batch")
-    async def embed_batch_endpoint(req: EmbedBatchRequest):
+    async def embed_batch_endpoint(req: EmbedBatchRequest, request: Request):
+        caller = request.headers.get("x-caller-skill")
+        batch_guard.validate(req.model_dump(), endpoint="/embed/batch", caller=caller)
         vectors = _embed_batch_local(req.texts)
         return {
             "vectors": vectors, "model": _model_name,

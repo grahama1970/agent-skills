@@ -7,6 +7,10 @@ description: >
   ZIP explosion, PDF inlineData, fallback cascades, JSON repair.
 allowed-tools: Bash, Read
 triggers:
+  - assess scillm usage
+  - check LLM API usage
+  - warm model check
+  - cold model
   - batch LLM calls
   - parallel completions
   - describe image
@@ -31,6 +35,7 @@ metadata:
   short-description: scillm (universal LLM proxy — Chutes, Gemini, Claude, Codex, GLM, Ollama)
 provides:
   - llm-completion
+  - usage-assessment
 composes: [task-monitor, create-evidence-case, analytics, create-figure, llm-eval-lab]
 
 taxonomy:
@@ -86,11 +91,12 @@ concurrency limits, budget tracking, and optional Redis caching.
 
 | Model | Backend | Use Case | Fallback |
 |-------|---------|----------|----------|
-| `text` | Chutes DeepSeek-V3 (non-TEE → V3.1-TEE) | General text, extraction, summarization | → text-gemini → text-gemini-paid → text-deepseek |
+| `text` | Chutes DeepSeek-V3.1-TEE | General text, extraction, summarization | → text-deepseek → text-gemini → text-gemini-paid |
+| `text-research` | Chutes (Harvard research endpoint) | **25% off**, non-sensitive batch work | (none) |
 | `vlm` | Gemini 2.5 Flash (free key) | Image/PDF/screenshot description | → vlm-paid → vlm-claude → vlm-codex |
 | `local-text` | Ollama qwen2.5:0.5b (local) | Smoke tests, always-on fallback | (none) |
 | `moonshot-text` | Moonshot Kimi K2 | Alternative text provider | (none) |
-| `text-gemini` | Gemini 2.5 Flash (free key) | Fast, 1M context | → text-gemini-paid → text-deepseek |
+| `text-gemini` | Gemini 2.5 Flash (free key) | Fast, 1M context | → text-gemini-paid |
 | `text-gemini-paid` | Gemini 2.5 Flash (paid key) | Paid fallback when free exhausted | (none) |
 | `text-gemini-3` | Gemini 3 Flash Preview (free key) | Thinking model, 1M context | → text-gemini-3-paid |
 | `claude-sonnet-4-6` | Anthropic Claude Sonnet (OAuth) | Max subscription via ~/.claude | (none) |
@@ -118,6 +124,17 @@ concurrency limits, budget tracking, and optional Redis caching.
 Cascade aliases still work: `text` (Chutes → Gemini free → Gemini paid → DeepSeek), `vlm` (Gemini free → Gemini paid → Claude → Codex).
 
 **Chutes cold-start handling**: Non-TEE tried first (1 retry), falls through to TEE on 503. Warmup API fires in background on cold detect — miners notified to spin up. Next call may hit warm non-TEE.
+
+> **`text-research` — Harvard Research Endpoint (25% off)**
+>
+> Chutes is running a research collaboration with Harvard to build a caching algorithm. Use `model: "text-research"` to opt in:
+> - **25% discount** on inference costs
+> - Same models, same API, same quality
+> - **Prompts and responses are logged** for research
+>
+> **DO NOT use for sensitive data** — SPARTA extractions, compliance docs, credentials, PII. Keep those on `text` (standard endpoint).
+>
+> Good for: batch processing, summarization, general extraction, non-sensitive workloads.
 
 **Discover all available models:** `GET /v1/scillm/providers` returns every provider, its auto-routing pattern, available models, and auth status.
 
@@ -212,9 +229,32 @@ OpenAI-style arrays pass through unchanged — full control for multi-turn, syst
 
 ## Batch Calls (Parallel Completions)
 
-### Simple: asyncio.gather
+**NO IMPORT REQUIRED.** Batch calls use standard `httpx` + `asyncio` — you do NOT import scillm.
+The proxy is an HTTP endpoint. Batching is just "make N HTTP calls with pacing."
 
-Call the same endpoint concurrently. The proxy handles concurrency internally:
+**CRITICAL: Batch size limits.** The proxy queues requests internally (4-8 slots depending on provider). For batches of **50+ requests**, you MUST pace your HTTP calls — otherwise requests queue up, hit the 300s queue timeout, and fail before they ever reach the LLM.
+
+| Batch size | Pattern | Why |
+|------------|---------|-----|
+| 1-10 | `asyncio.gather(*)` | Queue drains fast enough |
+| 10-50 | `Semaphore(8)` + gather | Prevents queue buildup |
+| 50+ | **Chunked processing** | REQUIRED — queue timeout will kill unbounded requests |
+
+**WRONG** (fires 400 HTTP requests at once — most will timeout in queue):
+```python
+tasks = [call_proxy(p) for p in all_400_prompts]
+results = await asyncio.gather(*tasks)  # DON'T DO THIS
+```
+
+**RIGHT** (processes 4 at a time — each gets a slot immediately):
+```python
+for chunk in chunks(prompts, 4):
+    chunk_results = await asyncio.gather(*[call_proxy(p) for p in chunk])
+```
+
+### Small batches (1-10): asyncio.gather
+
+For small batches, fire all at once — the proxy queues and drains fast:
 
 ```python
 import asyncio, httpx
@@ -241,9 +281,9 @@ async def main():
     return results
 ```
 
-### With Semaphore (controlled concurrency)
+### Medium batches (10-50): Semaphore
 
-The proxy queues requests internally, but for very large batches (100+), use a client-side semaphore:
+Limit in-flight requests to avoid queue buildup:
 
 ```python
 import asyncio, httpx
@@ -259,12 +299,46 @@ async def complete(client, semaphore, prompt):
         return resp.json()["choices"][0]["message"]["content"]
 
 async def main():
-    semaphore = asyncio.Semaphore(10)  # 10 concurrent
+    semaphore = asyncio.Semaphore(8)  # Match provider slot count
     async with httpx.AsyncClient() as client:
-        tasks = [complete(client, semaphore, f"Prompt {i}") for i in range(100)]
+        tasks = [complete(client, semaphore, f"Prompt {i}") for i in range(50)]
         results = await asyncio.gather(*tasks)
     return results
 ```
+
+### Large batches (50+): Chunked processing (REQUIRED)
+
+**This is the only safe pattern for 50+ requests.** Process in chunks that complete before starting the next:
+
+```python
+import asyncio, httpx
+
+CHUNK_SIZE = 4  # Match provider concurrency (Chutes/DeepSeek = 4-8 slots)
+
+async def complete(client, prompt):
+    resp = await client.post(
+        "http://localhost:4001/v1/chat/completions",
+        headers={"Authorization": "Bearer sk-dev-proxy-123"},
+        json={"model": "text", "messages": [{"role": "user", "content": prompt}]},
+        timeout=120.0,  # Generous timeout per request
+    )
+    return resp.json()["choices"][0]["message"]["content"]
+
+async def main(prompts: list[str]):
+    all_results = []
+    async with httpx.AsyncClient() as client:
+        for chunk_start in range(0, len(prompts), CHUNK_SIZE):
+            chunk = prompts[chunk_start:chunk_start + CHUNK_SIZE]
+            print(f"Processing chunk {chunk_start // CHUNK_SIZE + 1}...")
+            chunk_results = await asyncio.gather(*[complete(client, p) for p in chunk])
+            all_results.extend(chunk_results)
+    return all_results
+
+# 400 prompts processed 4 at a time — no queue timeout issues
+asyncio.run(main([f"Prompt {i}" for i in range(400)]))
+```
+
+**Why chunking is required:** Firing 400 requests at once puts 396 in the proxy queue. The queue has a 300s timeout. By the time slot #200 opens up, the request has already timed out. Chunking ensures each request gets a slot immediately.
 
 For image/VLM tasks, use `model: "vlm"` or just include image content — auto-detected and routed:
 
@@ -661,15 +735,19 @@ The proxy runs these middleware components on every request:
 When a provider fails, the proxy cascades to the next group:
 
 ```
-text:          Chutes V3 (non-TEE, 1 retry) → V3.1-TEE → Gemini free → Gemini paid → DeepSeek
-text-gemini:   Gemini free → Gemini paid → DeepSeek
+text:          Chutes V3.1-TEE → DeepSeek → Gemini free → Gemini paid
+text-gemini:   Gemini free → Gemini paid
 vlm:           Gemini free → Gemini paid → Claude OAuth → Codex OAuth
 text-gemini-3: Gemini 3 free → Gemini 3 paid
 ```
 
+**Same-family fallback**: DeepSeek comes before Gemini so a cold Chutes model cascades to warm DeepSeek (same family, similar params) before falling back to a different model family.
+
 **Gemini free/paid are separate groups** — 429 on free cascades immediately to paid (no wasted retries on an exhausted key).
 
-**Chutes cold-start**: Non-TEE deployment tried first with 1 retry (fast-fail). On 503, warmup API fires in background to notify miners. Falls through to TEE which is hot. Multi-model groups preserve config order (non-TEE before TEE).
+**Cold model fast-fail**: When Chutes returns 503 "No instances available" (cold model), the proxy **skips all retries** and cascades immediately to the fallback chain. No point retrying — miners need minutes to spin up. The warmup API fires in background to notify miners for next time.
+
+**Detecting fallback**: The response `model` field shows which model actually served the request. Compare to what you requested — if different, a fallback occurred.
 
 Circuit breaker: 3 consecutive failures trigger a 20-second cooldown per group.
 
@@ -695,6 +773,101 @@ Redis caching is auto-enabled when `REDIS_HOST` or `REDIS_URL` is set:
 - TTL: `SCILLM_CACHE_TTL_SEC` (default 3600s)
 - Namespace: `SCILLM_CACHE_NAMESPACE` (default "scillm")
 - Core compose (no Redis) works fine — caching is optional
+
+---
+
+## Troubleshooting
+
+**BEFORE calling scillm, check if the proxy is running:**
+
+```python
+import httpx
+
+def check_proxy() -> bool:
+    """Returns True if scillm proxy is up."""
+    try:
+        resp = httpx.get("http://localhost:4001/health/liveliness", timeout=2.0)
+        return resp.status_code == 200
+    except httpx.ConnectError:
+        return False
+
+if not check_proxy():
+    raise RuntimeError(
+        "scillm proxy not running. Start it with: "
+        "docker compose -p scillm -f deploy/docker/compose.scillm.core.yml up -d"
+    )
+```
+
+### Common Errors and Fixes
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Connection refused` | Proxy not running | `docker compose -p scillm ... up -d` |
+| `404 /health` | Wrong endpoint | Use `/health/liveliness` (no auth) or `/v1/scillm/health` (with auth) |
+| `BATCH MISUSE: N requests queued` | Firing 100+ requests at once | Use chunked batching (CHUNK_SIZE=4 loop) |
+| `QUEUE TIMEOUT: Request waited 300s` | Too many concurrent requests | Reduce batch size, use chunking |
+| `Unknown model 'foo'` | Model name not in config | Use `text`, `vlm`, or check `/v1/scillm/models` |
+| `401 Unauthorized` | Missing/wrong auth header | Use `Bearer sk-dev-proxy-123` |
+| `JSON validation failed` | Provider returned prose | Already auto-repaired; if persistent, prompt needs "Return valid JSON" |
+| `Empty response` | max_tokens set too low | Remove max_tokens (auto-stripped, but don't set it) |
+
+### Preflight Check (scripts)
+
+Add this at the top of any script that makes LLM calls:
+
+```python
+import sys
+import httpx
+
+def scillm_preflight():
+    """Check scillm proxy health before making calls."""
+    try:
+        resp = httpx.get(
+            "http://localhost:4001/v1/scillm/health",
+            headers={"Authorization": "Bearer sk-dev-proxy-123"},
+            timeout=5.0,
+        )
+        if resp.status_code != 200:
+            print(f"scillm proxy unhealthy: {resp.status_code}", file=sys.stderr)
+            sys.exit(1)
+        health = resp.json()
+        if health.get("status") != "ok":
+            print(f"scillm proxy status: {health.get('status')}", file=sys.stderr)
+            sys.exit(1)
+    except httpx.ConnectError:
+        print(
+            "scillm proxy not running. Start with:\n"
+            "  docker compose -p scillm -f deploy/docker/compose.scillm.core.yml up -d",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+scillm_preflight()  # Fails fast if proxy is down
+```
+
+---
+
+## Skill Commands
+
+```bash
+# Check external code for correct scillm usage patterns
+./run.sh assess /path/to/script.py          # Human-readable
+./run.sh assess /path/to/script.py --json   # JSON for automation
+
+# Check if current Chutes model is hot (warm variant discovery)
+./run.sh warm-check                          # Check current text model
+./run.sh warm-check <model_id>               # Check specific model
+./run.sh warm-check --json                   # JSON output
+```
+
+**assess** detects common misuse patterns:
+- `max_tokens` (FORBIDDEN — causes empty/truncated output)
+- Fire-all-at-once batching (>4 requests via `asyncio.gather` causes timeout)
+- Hardcoded model names (should use aliases like `text`, `vlm`)
+- Direct provider URLs (bypasses proxy cascade and caching)
+- Missing `response_format` for JSON output
+
+**warm-check** queries `/ops-chutes recommend` to find hot model variants. Use before batch operations to avoid cold model timeouts.
 
 ---
 

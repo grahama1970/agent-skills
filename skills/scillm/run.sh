@@ -27,14 +27,25 @@ case "$1" in
         shift
         exec uv run --directory "$SCRIPT_DIR" python prove.py "$@"
         ;;
+    assess)
+        shift
+        exec python3 "$SCRIPT_DIR/scripts/assess_usage.py" "$@"
+        ;;
+    warm-check)
+        shift
+        exec python3 "$SCRIPT_DIR/scripts/warm_check.py" "$@"
+        ;;
     *)
-        echo "Usage: $0 {prove} [args...]"
+        echo "Usage: $0 {prove|assess|warm-check} [args...]"
         echo ""
         echo "Commands:"
         echo "  prove    Lean4 formal theorem proving via certainly-bridge"
+        echo "  assess   Check external code for correct scillm usage patterns"
         echo ""
         echo "Examples:"
         echo "  $0 prove 'Prove n+0=n'"
+        echo "  $0 assess /path/to/script.py"
+        echo "  $0 assess /path/to/script.py --json"
         echo ""
         echo "For LLM completions, call the proxy directly:"
         echo "  curl http://localhost:4001/v1/chat/completions \\"

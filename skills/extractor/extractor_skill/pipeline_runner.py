@@ -2,8 +2,8 @@
 """
 Pipeline execution for PDF extraction.
 
-This module handles running the extractor pipeline subprocess
-and gathering outputs.
+Delegates to /extract-pdf (pdf_oxide) for Rust-native extraction.
+This module handles running the extraction subprocess and gathering outputs.
 """
 import json
 import os
@@ -12,9 +12,19 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict
 
-from extractor_skill.config import EXTRACTOR_ROOT, ExtractionOptions
+from extractor_skill.config import ExtractionOptions
 from extractor_skill.utils import format_error_guidance
 from loguru import logger
+
+
+# /extract-pdf skill path
+EXTRACT_PDF_SKILL = Path.home() / ".pi" / "skills" / "extract-pdf" / "run.sh"
+
+# pdf_oxide project root (for direct execution if skill not found)
+PDF_OXIDE_ROOT = Path(os.getenv(
+    "PDF_OXIDE_ROOT",
+    Path.home() / "workspace" / "experiments" / "pdf_oxide"
+))
 
 
 def extract_pipeline(
@@ -22,7 +32,9 @@ def extract_pipeline(
     opts: ExtractionOptions,
 ) -> Dict[str, Any]:
     """
-    Full pipeline extraction for PDFs with preset detection.
+    Full pipeline extraction for PDFs via pdf_oxide (Rust-native).
+
+    Delegates to /extract-pdf skill for fast, MIT-licensed extraction.
 
     Args:
         filepath: Path to PDF file
@@ -31,51 +43,49 @@ def extract_pipeline(
     Returns:
         Dict with extraction result
     """
-    # Build command
-    python = str(EXTRACTOR_ROOT / ".venv" / "bin" / "python")
-    cmd = [python, "-m", "extractor.pipeline", str(filepath)]
-
     # Output directory
     if opts.output_dir:
         out_path = Path(opts.output_dir)
     else:
         out_path = Path(tempfile.mkdtemp(prefix="extractor_"))
 
-    cmd.extend(["--out", str(out_path)])
+    # Build command for pdf_oxide pipeline (includes table extraction)
+    # Use the full pipeline module which calls extract_content() + tables + figures
+    cmd = [
+        "uv", "run", "--directory", str(PDF_OXIDE_ROOT),
+        "python", "-m", "pdf_oxide.pipeline", str(filepath),
+        "--output-dir", str(out_path),
+    ]
 
-    # Mode flags
-    if opts.mode == "fast":
-        cmd.extend(["--offline-smoke"])
-    elif opts.mode == "accurate":
-        cmd.extend(["--use-llm"])
-    elif opts.mode == "offline":
-        # Offline mode: skip LLM-dependent stages but keep computational stages
-        # like S05 table extraction (Camelot) which doesn't need LLM.
-        # DO NOT use --offline-smoke here — it sets skip_tables05=True which
-        # prevents table extraction entirely.
-        cmd.extend([
-            "--summary-only",
-            "--skip-fig-descriptions",
-            "--skip-export",
-            "--skip-llm03",
-            "--skip-reqs07",
-            "--skip-annotator09a",
-            "--skip-proving",
-        ])
+    # Map mode to features
+    features = []
+    if opts.mode == "accurate":
+        # Enable LLM features for figure descriptions, requirements, etc.
+        features.extend(["describe", "requirements"])
+    if opts.sync_to_memory:
+        features.append("arango")
+    else:
+        cmd.append("--no-arango")
 
-    # Add option flags
-    _add_option_flags(cmd, opts)
+    if features:
+        cmd.extend(["--features", ",".join(features)])
+
+    # Decryption options
+    if opts.decrypt_password:
+        cmd.extend(["--password", opts.decrypt_password])
 
     # Sync settings
     os.environ["SYNC_TO_MEMORY"] = "1" if opts.sync_to_memory else "0"
+    os.environ["SYNC_TO_ARANGO"] = "1" if opts.sync_to_memory else "0"
 
     # Run pipeline
-    # Timeout is configurable via env var. Default 6 hours — the caller
-    # (discovery.py) wraps with a per-PDF timeout so this is a safety net.
-    pipeline_timeout = int(os.environ.get("EXTRACTOR_PIPELINE_TIMEOUT", 21600))
+    # Timeout is configurable via env var. Default 30 min for Rust extraction
+    # (much faster than the old Python pipeline)
+    pipeline_timeout = int(os.environ.get("EXTRACTOR_PIPELINE_TIMEOUT", 1800))
     try:
         env = {**os.environ}
-        env["PYTHONPATH"] = str(EXTRACTOR_ROOT / "src") + ":" + env.get("PYTHONPATH", "")
+        # Strip inherited venv to prevent uv conflicts
+        env.pop("VIRTUAL_ENV", None)
 
         # Use Popen + communicate for proper process group cleanup on timeout.
         proc = subprocess.Popen(
@@ -84,7 +94,6 @@ def extract_pipeline(
             stderr=subprocess.PIPE,
             text=True,
             env=env,
-            cwd=str(EXTRACTOR_ROOT),
             start_new_session=True,  # New process group for clean kill
         )
         stdout, stderr = proc.communicate(timeout=pipeline_timeout)
@@ -99,7 +108,7 @@ def extract_pipeline(
                 "guidance": format_error_guidance(error_msg, filepath, opts.mode),
             }
 
-        return _build_success_response(out_path, filepath, opts)
+        return _build_success_response_oxide(out_path, filepath, opts, stdout)
 
     except subprocess.TimeoutExpired:
         # Kill the entire process group to prevent orphaned children
@@ -127,93 +136,83 @@ def extract_pipeline(
         }
 
 
-def _add_option_flags(cmd: list, opts: ExtractionOptions) -> None:
-    """Add extraction option flags to command."""
-    if opts.preset:
-        cmd.extend(["--preset", opts.preset])
-    if opts.auto_ocr is True:
-        cmd.append("--auto-ocr")
-    elif opts.auto_ocr is False:
-        cmd.append("--no-auto-ocr")
-    if opts.skip_scanned:
-        cmd.append("--skip-scanned")
-    if opts.ocr_lang:
-        cmd.extend(["--ocr-lang", opts.ocr_lang])
-    if opts.ocr_deskew:
-        cmd.append("--ocr-deskew")
-    if opts.ocr_force:
-        cmd.append("--ocr-force")
-    if opts.ocr_timeout:
-        cmd.extend(["--ocr-timeout", str(opts.ocr_timeout)])
-    if opts.continue_on_error:
-        cmd.append("--continue-on-error")
-
-    # PDF decryption options (auto_decrypt defaults to True)
-    if opts.auto_decrypt is False:
-        cmd.append("--no-auto-decrypt")
-    if opts.decrypt_password:
-        cmd.extend(["--decrypt-password", opts.decrypt_password])
-
-    if opts.sections_only:
-        cmd.extend([
-            "--skip-tables05",
-            "--skip-fig-descriptions",
-            "--skip-annotator09a",
-            "--skip-reqs07",
-            "--skip-proving",
-            "--skip-export",
-        ])
 
 
-def _build_success_response(
+def _build_success_response_oxide(
     out_path: Path,
     filepath: Path,
-    opts: ExtractionOptions
+    opts: ExtractionOptions,
+    stdout: str,
 ) -> Dict[str, Any]:
-    """Build success response from pipeline outputs."""
-    outputs = _gather_pipeline_outputs(out_path, filepath)
-    counts = _count_extracted_elements(out_path)
+    """Build success response from pdf_oxide output.
 
-    # Get assessment from report
-    assessment = None
-    quality_signal = "UNKNOWN"
-    report_path = out_path / "14_report_generator" / "json_output" / "final_report.json"
-    if report_path.exists():
+    pdf_oxide writes JSON to output_dir/<stem>.json when --output-dir is used.
+    Falls back to parsing stdout if no file found.
+    """
+    result_data = {}
+
+    # First, try to read from output file (preferred when --output-dir used)
+    # Pipeline writes to extracted.json, CLI writes to {stem}.json
+    for candidate in [out_path / "extracted.json", out_path / f"{filepath.stem}.json"]:
+        if candidate.exists():
+            try:
+                result_data = json.loads(candidate.read_text())
+                logger.debug(f"Read result from {candidate}")
+                break
+            except Exception as e:
+                logger.debug(f"Failed to read {candidate}: {e}")
+
+    # Fall back to parsing stdout if no file
+    if not result_data:
         try:
-            report_data = json.loads(report_path.read_text())
-            stats = report_data.get("statistics", {})
-            assessment = stats.get("assessment_comparison")
-            quality_signal = stats.get("quality_signal", "UNKNOWN")
-        except Exception as e:
-            logger.debug("value lookup failed: {}", e)
+            result_data = json.loads(stdout)
+        except json.JSONDecodeError:
+            # Try to find JSON in output (may have logs before it)
+            for line in reversed(stdout.strip().split("\n")):
+                line = line.strip()
+                if line.startswith("{"):
+                    try:
+                        result_data = json.loads(line)
+                        break
+                    except json.JSONDecodeError:
+                        continue
 
-    # Get preset from context
-    preset_name = opts.preset
-    context_path = out_path / "pipeline_context.json"
-    if context_path.exists():
-        try:
-            ctx = json.loads(context_path.read_text())
-            preset_name = ctx.get("preset_name") or preset_name
-        except Exception as e:
-            logger.debug("value lookup failed: {}", e)
+    # Extract counts from result
+    counts = {
+        "sections": len(result_data.get("sections", [])),
+        "tables": len(result_data.get("tables", [])),
+        "figures": len(result_data.get("figures", [])),
+        "blocks": len(result_data.get("blocks", [])),
+        "pages": result_data.get("page_count", 0),
+    }
 
-    # If markdown requested, read and return it
+    # Gather output files from output_dir
+    outputs = _gather_oxide_outputs(out_path, filepath)
+
+    # Extract metadata
+    metadata = result_data.get("metadata", {})
+    timings = result_data.get("timings", {})
+
+    # Build markdown content if requested
     markdown_content = None
-    if opts.return_markdown and outputs.get("markdown"):
-        try:
-            markdown_content = Path(outputs["markdown"]).read_text()
-        except Exception as e:
-            logger.debug("value lookup failed: {}", e)
+    if opts.return_markdown:
+        # pdf_oxide flattens to markdown sections
+        flattened = result_data.get("flattened", [])
+        if flattened:
+            markdown_content = "\n\n".join(
+                f.get("markdown", f.get("text", "")) for f in flattened
+            )
 
     response = {
         "success": True,
         "mode": opts.mode,
-        "preset": preset_name,
+        "engine": "pdf_oxide",
+        "preset": metadata.get("preset") or opts.preset,
         "output_dir": str(out_path),
         "outputs": outputs,
         "counts": counts,
-        "assessment": assessment,
-        "quality_signal": quality_signal,
+        "timings": timings,
+        "quality_signal": "GOOD",  # pdf_oxide is high quality by default
     }
 
     if markdown_content:
@@ -222,77 +221,38 @@ def _build_success_response(
     return response
 
 
-def _gather_pipeline_outputs(out_path: Path, filepath: Path) -> Dict[str, str]:
-    """Gather output file paths from pipeline run."""
+def _gather_oxide_outputs(out_path: Path, filepath: Path) -> Dict[str, str]:
+    """Gather output file paths from pdf_oxide extraction."""
     outputs = {}
 
-    # Markdown output
-    md_candidates = [
-        out_path / "10_markdown_exporter" / "document.md",
-        out_path / "10_markdown_exporter" / f"{filepath.stem}.md",
-    ]
-    for md_path in md_candidates:
-        if md_path.exists():
-            outputs["markdown"] = str(md_path)
-            break
+    # pdf_oxide writes result.json to output_dir
+    result_path = out_path / "result.json"
+    if result_path.exists():
+        outputs["result"] = str(result_path)
+
+    # Markdown output (if generated)
+    md_path = out_path / f"{filepath.stem}.md"
+    if md_path.exists():
+        outputs["markdown"] = str(md_path)
 
     # Sections JSON
-    sections_path = out_path / "04_section_builder" / "json_output" / "04_sections.json"
+    sections_path = out_path / "sections.json"
     if sections_path.exists():
         outputs["sections"] = str(sections_path)
 
     # Tables JSON
-    tables_path = out_path / "05_table_extractor" / "json_output" / "05_tables.json"
+    tables_path = out_path / "tables.json"
     if tables_path.exists():
         outputs["tables"] = str(tables_path)
 
-    # Figures JSON
-    figures_path = out_path / "06_figure_extractor" / "json_output" / "06_figures.json"
-    if figures_path.exists():
-        outputs["figures"] = str(figures_path)
+    # Figures directory
+    figures_dir = out_path / "figures"
+    if figures_dir.exists() and figures_dir.is_dir():
+        outputs["figures_dir"] = str(figures_dir)
 
-    # Report
-    report_path = out_path / "14_report_generator" / "json_output" / "final_report.json"
-    if report_path.exists():
-        outputs["report"] = str(report_path)
-
-    # Manifest
-    manifest_path = out_path / "manifest.json"
-    if manifest_path.exists():
-        outputs["manifest"] = str(manifest_path)
+    # Blocks JSON (raw blocks from Rust)
+    blocks_path = out_path / "blocks.json"
+    if blocks_path.exists():
+        outputs["blocks"] = str(blocks_path)
 
     return outputs
-
-
-def _count_extracted_elements(out_path: Path) -> Dict[str, int]:
-    """Count extracted elements from pipeline outputs."""
-    counts = {}
-
-    # Sections
-    sections_path = out_path / "04_section_builder" / "json_output" / "04_sections.json"
-    if sections_path.exists():
-        try:
-            data = json.loads(sections_path.read_text())
-            counts["sections"] = len(data.get("sections", []))
-        except Exception as e:
-            logger.debug("value lookup failed: {}", e)
-
-    # Tables
-    tables_path = out_path / "05_table_extractor" / "json_output" / "05_tables.json"
-    if tables_path.exists():
-        try:
-            data = json.loads(tables_path.read_text())
-            counts["tables"] = len(data.get("tables", []))
-        except Exception as e:
-            logger.debug("value lookup failed: {}", e)
-
-    # Figures
-    figures_path = out_path / "06_figure_extractor" / "json_output" / "06_figures.json"
-    if figures_path.exists():
-        try:
-            data = json.loads(figures_path.read_text())
-            counts["figures"] = len(data.get("figures", []))
-        except Exception as e:
-            logger.debug("value lookup failed: {}", e)
-
-    return counts

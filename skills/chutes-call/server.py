@@ -21,10 +21,12 @@ from typing import Optional
 
 import httpx
 import yaml
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 from pydantic import BaseModel
+
+from _misuse_guard import create_chat_guard, create_batch_guard, ValidationError as MisuseValidationError
 
 BACKENDS_FILE = os.path.join(os.path.dirname(__file__), "backends.yml")
 PORT = int(os.getenv("CHUTES_CALL_PORT", "8630"))
@@ -537,14 +539,32 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="chutes-call", version="1.0.0", lifespan=lifespan)
 
+# Misuse guards
+chat_guard = create_chat_guard()
+batch_guard = create_batch_guard()
+
+
+@app.exception_handler(MisuseValidationError)
+async def misuse_validation_handler(request: Request, exc: MisuseValidationError):
+    """Handle misuse guard validation errors with helpful messages."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.message, "error_type": exc.error_type},
+    )
+
 
 @app.post("/chat")
-async def chat_endpoint(req: ChatRequest) -> ChatResponse:
+async def chat_endpoint(req: ChatRequest, request: Request) -> ChatResponse:
+    caller = request.headers.get("x-caller-skill", req.caller)
+    chat_guard.validate(req.model_dump(), endpoint="/chat", caller=caller)
     return await call_with_retries(req)
 
 
 @app.post("/batch")
-async def batch_endpoint(req: BatchRequest):
+async def batch_endpoint(req: BatchRequest, request: Request):
+    caller = request.headers.get("x-caller-skill", req.caller)
+    batch_guard.validate(req.model_dump(), endpoint="/batch", caller=caller)
+
     # Apply batch-level tenacious/caller to individual requests
     for r in req.requests:
         if req.tenacious:

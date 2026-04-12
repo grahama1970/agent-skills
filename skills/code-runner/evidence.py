@@ -2,6 +2,9 @@
 
 All functions are pure subprocess + regex — no LLM calls.
 Strategy escalation follows the same 5-step pattern as classifier-lab's 10-step.
+
+NOTE: Core patterns (Strategy, ErrorSeverity, should_keep) are now in common/self_improvement.py
+for sharing with prompt-lab and other self-improvement skills.
 """
 from __future__ import annotations
 
@@ -10,15 +13,35 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import time
 from pathlib import Path
 
 import httpx
 from loguru import logger
 
+# Import shared patterns from common/
+_skills_dir = Path(__file__).resolve().parent.parent
+_common = str(_skills_dir / "common")
+if _common not in sys.path:
+    sys.path.insert(0, _common)
+
+from self_improvement import (
+    Strategy,
+    STRATEGIES as _STRATEGIES_ENUM,
+    get_strategy as _get_strategy_common,
+    should_keep,  # noqa: F401 - re-exported for code_runner.py
+    ErrorSeverity,
+    ERROR_TYPE_TO_SEVERITY,
+    classify_error_severity,
+    strategy_instruction,  # noqa: F401 - re-exported
+)
+
 MEMORY_SOCKET = "/run/user/1000/embry/memory.sock"
 
 # ── Error types for T0 classification ────────────────────────────────
+# Legacy dict format for backwards compatibility. New code should use
+# ErrorSeverity enum and ERROR_TYPE_TO_SEVERITY from common/self_improvement.py
 
 ERROR_PATTERNS = {
     "SyntaxError": "syntax", "IndentationError": "syntax",
@@ -30,29 +53,42 @@ ERROR_PATTERNS = {
 }
 
 # ── Strategy escalation (5-step, like classifier-lab 10-step) ────────
+# String list for backwards compatibility. New code should use Strategy enum.
 
 STRATEGIES = ["direct_fix", "structured_analysis", "different_approach", "simplify", "escalate"]
 
 
 def get_strategy(round_num: int, classification: dict, rounds_history: list[dict]) -> str:
-    """Deterministic strategy selection based on round + error trajectory."""
-    if round_num == 1:
-        return "direct_fix"
+    """Deterministic strategy selection based on round + error trajectory.
 
-    # If same error severity repeated → skip ahead
-    if len(rounds_history) >= 2:
+    Wrapper around common/self_improvement.get_strategy() that maintains
+    the existing interface (dict-based classification, string return).
+    """
+    # Extract previous error severity from rounds_history
+    prev_sev = None
+    if rounds_history:
         prev_sev = rounds_history[-1].get("error_severity", "")
-        if prev_sev and prev_sev == classification.get("severity", ""):
-            # Same error type repeating — escalate faster
-            return STRATEGIES[min(round_num, len(STRATEGIES) - 1)]
 
-    # Score trajectory: if improving, stay at current level
+    # Current error severity from classification dict
+    curr_sev = classification.get("severity", "")
+
+    # Check if score is improving
+    score_improving = False
     if len(rounds_history) >= 2:
         recent_scores = [r.get("score", 0) for r in rounds_history[-2:]]
         if len(recent_scores) == 2 and recent_scores[-1] > recent_scores[-2]:
-            return STRATEGIES[min(round_num - 1, len(STRATEGIES) - 1)]
+            score_improving = True
 
-    return STRATEGIES[min(round_num - 1, len(STRATEGIES) - 1)]
+    # Call common implementation
+    strategy = _get_strategy_common(
+        round_num=round_num,
+        prev_error_severity=prev_sev,
+        curr_error_severity=curr_sev,
+        score_improving=score_improving,
+    )
+
+    # Return string for backwards compatibility
+    return strategy.value
 
 
 # ── T0 Deterministic Evidence Collection ─────────────────────────────

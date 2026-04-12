@@ -12,13 +12,20 @@ triggers:
   - watch corpus and learn
 metadata:
   short-description: Continuous directory-to-memory learning with PDF QC gates
-  version: "0.4.0"
+  version: "0.5.0"
   note: >
     New PDFs automatically get control extraction via extractor s12_framework_mapper.
     Creates chunk_control_edges and requirement_control_edges in ArangoDB, enabling
     /memory recall to traverse from document chunks to framework controls (NIST, CWE,
     ATT&CK, SPARTA, D3FEND, ISO). Existing chunks backfilled via
     scripts/backfill_chunk_control_edges.py (86,552 edges from 2.2M chunks).
+    
+    NEW in 0.5.0: Autonomous requirement-to-control matching via /match-requirement.
+    When --match-requirements is enabled, extracted requirement chunks are automatically
+    compared to SPARTA controls (NIST, ISO, SPARTA) using /create-evidence-case for
+    validation and /lean4-prove for formal equivalence classification. Results are
+    persisted to requirement_control_edges with relationship_type (refines, equivalent,
+    partial_coverage, conflicts). Low-confidence matches are flagged for human review.
 
 provides:
   - learn-datalake
@@ -27,6 +34,9 @@ composes:
   - memory
   - dogpile
   - task-monitor
+  - match-requirement
+  - create-evidence-case
+  - lean4-prove
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
@@ -187,6 +197,98 @@ LEARN_DATALAKE_WORKERS=8 ./run.sh start-supervised /mnt/storage12tb/extractor_co
 - Per-worker state files: `review_state_worker_{i}.json` — supervisor aggregates across all.
 - Circuit breaker applies to aggregate failure rate across all workers.
 - The `status-supervised` table includes a `workers` row showing the active count.
+
+## Autonomous Requirement Matching (NEW in 0.5.0)
+
+When enabled, `/learn-datalake` automatically matches extracted requirements to SPARTA
+controls (NIST, ISO, SPARTA). This does the grunt work so security engineers can
+refine rather than start from scratch.
+
+### Enable Matching
+
+```bash
+# One-shot with requirement matching
+./run.sh once /mnt/storage12tb/extractor_corpus --match-requirements
+
+# Continuous with matching enabled
+./run.sh start /mnt/storage12tb/extractor_corpus --match-requirements
+
+# With confidence threshold for human review (default: 0.7)
+./run.sh once /mnt/storage12tb/extractor_corpus --match-requirements --match-confidence 0.8
+```
+
+### Pipeline Flow
+
+```
+PDF → /extractor → chunks → /extract-controls → candidate edges
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │ /match-requirement (per chunk)│
+                    │                               │
+                    │ 1. /create-evidence-case      │
+                    │    (validate requirement)     │
+                    │                               │
+                    │ 2. /create-evidence-case      │
+                    │    (validate each control)    │
+                    │                               │
+                    │ 3. Same-technique check       │
+                    │                               │
+                    │ 4. /lean4-prove               │
+                    │    (formal equivalence)       │
+                    └───────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+              High confidence               Low confidence
+              (>= threshold)                (< threshold)
+                    │                               │
+                    ▼                               ▼
+          requirement_control_edges       pending_review collection
+          with relationship_type          (human review queue)
+```
+
+### Output Collections
+
+| Collection | Contents |
+|------------|----------|
+| `requirement_control_edges` | Verified matches with `relationship_type` |
+| `pending_review` | Low-confidence matches for human refinement |
+| `match_conflicts` | Detected conflicts (requirement contradicts control) |
+
+### Human Review Queue
+
+Low-confidence matches are queued in `pending_review`:
+
+```bash
+# List pending reviews
+./run.sh review-queue
+
+# Review in browser
+./run.sh review-queue --ui
+
+# Export to CSV for offline review
+./run.sh review-queue --export reviews.csv
+```
+
+### Relationship Types
+
+| Type | Meaning | Auto-Accept? |
+|------|---------|--------------|
+| `refines` | Requirement implements control | Yes (if confidence >= threshold) |
+| `equivalent` | Same obligation | Yes |
+| `partial_coverage` | Requirement covers subset | Queue for review |
+| `conflicts` | Contradictory obligations | Flag as conflict |
+| `unknown` | Proof failed | Queue for review |
+
+### What Brandon Gets
+
+Instead of manually tracing requirements to controls:
+
+1. **Pre-matched edges** — Most requirement-control links are already established
+2. **Conflict alerts** — Contradictory requirements flagged before integration testing
+3. **Review queue** — Only edge cases need human judgment
+4. **Audit trail** — Every match has evidence_case_id and proof_key for traceability
 
 ## Notes
 

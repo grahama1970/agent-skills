@@ -283,3 +283,41 @@ echo "CA-7,PM-6,REC-0001" | python3 extract_entities.py --delimiter auto
 - `entities`: list of per-match or per-token objects
 - Each entity includes `id`, `name`, `label`, `framework`, `exists`
 - In delimiter modes, each input token is looked up via `/list` and returned with `exists: true|false`
+
+## Framework Reference (sparta_controls)
+
+Entities are stored in `sparta_controls` with `source_framework` indicating origin.
+
+### Frameworks in sparta_controls
+
+| Framework | ID Pattern | Count | Has crosswalk to SPARTA? |
+|-----------|------------|-------|--------------------------|
+| `SPARTA` | `DE-*`, `EX-*`, `IA-*`, `CM*`, `ARFS-*` | 500+ | (is SPARTA) |
+| `CWE` | `CWE-*` | 964 | Yes (2,825+ direct edges) |
+| `NIST` | `AC-*`, `SI-*`, `CM-*`, etc. | 1,000+ | Yes (NIST→SPARTA edges) |
+| `CAPEC` | `CAPEC-*` | 615 | Yes (via ATT&CK) |
+| `ATT&CK` | `T*` | 700+ | Yes (sparse) |
+| `ISO` | `A.*`, numeric | 100+ | No |
+| `D3FEND` | `D3-*` | 200+ | No |
+
+### Key Fields by Framework
+
+| Framework | Key Fields | Use |
+|-----------|------------|-----|
+| CWE | `nist_control_ids`, `capec_ids`, `pillar_cwe` | Crosswalk lookups |
+| SPARTA | `cwe_class_ids`, `tor_threats` | CWE mapping, NIST links |
+| NIST | `related_controls` | Enhancement hierarchy |
+| CAPEC | `attack_technique_ids` | ATT&CK links |
+
+### Crosswalk Edge Casing (CRITICAL for /list filters)
+
+When querying `sparta_relationships` for crosswalk chains:
+
+| Edge Type | source_framework | target_framework |
+|-----------|-----------------|------------------|
+| CWE→SPARTA | `"CWE"` | `"SPARTA"` (uppercase) |
+| NIST→SPARTA | `"nist"` | `"sparta"` (lowercase) |
+| CAPEC→CWE | `"CAPEC"` | `"CWE"` |
+| CWE→CWE | `"cwe"` | `"cwe"` (lowercase) |
+
+**Always check both `"sparta"` and `"SPARTA"`** when filtering for SPARTA targets.

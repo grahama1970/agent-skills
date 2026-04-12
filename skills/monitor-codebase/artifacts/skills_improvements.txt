@@ -1,1 +1,227 @@
-dogpile timeout or unavailable
+Found prior research on this topic in memory.
+## Memory Recall (Prior Solutions Found)
+
+1. **Problem**: Research: fix common violations in Python project: 
+handwritten-tests(49) (2026-04-02)
+   **Solution**: {"query": "fix common violations in Pyt...
+Dogpiling on: fix common violations in Python project: handwritten-tests(49) 
+(Code Related: True)...
+Tailored queries:
+  arxiv: static analysis Python test code smells refactoring automate...
+  perplexity: How to identify and fix common violations in Python handwrit...
+  brave: Python unit test anti-patterns refactoring guide documentati...
+  github: python pytest common test code violations refactor examples...
+  youtube: How to fix Python test code smells refactoring tutorial 2025...
+  readarr: Python Testing Clean Code Refactoring books...
+# Dogpile Report: fix common violations in Python project: handwritten-tests(49)
+
+## Codex Technical Overview
+Of course. This is an excellent topic that gets to the heart of software quality and maintainability. The violation "handwritten-tests(49)" from a tool like `wemake-python-styleguide` or a similar linter is not just a stylistic nitpick; it's a profound warning about the scalability and reliability of your testing strategy.
+
+Here is a high-reasoning technical overview focusing on architecture, pitfalls, and modern solutions.
+
+### Executive Summary
+
+The violation "handwritten-tests" flags the use of manually written, imperative test code (e.g., using `unittest` or raw `pytest` in a basic way) instead of leveraging **Declarative Testing** and **Parameterization**. The core issue is that imperative tests are often brittle, repetitive, and scale poorly. The state-of-the-art solution is to treat test data as a first-class citizen, separate from the test logic, and to generate tests programmatically.
+
+---
+
+### 1. Architectural Pattern: The Problem with "Handwritten" Tests
+
+"Handwritten" in this context refers to a procedural style where each test case is a separate method or function, with the setup, execution, and assertion all written out by hand.
+
+**Example of a Violation (The "Anti-Pattern"):**
+
+```python
+# test_calculator_handwritten.py (INEFFICIENT & ERROR-PRONE)
+
+def test_add_positive_numbers():
+    calculator = Calculator()
+    result = calculator.add(2, 3)
+    assert result == 5
+
+def test_add_negative_numbers():
+    calculator = Calculator()
+    result = calculator.add(-2, -3)
+    assert result == -5
+
+def test_add_mixed_numbers():
+    calculator = Calculator()
+    result = calculator.add(5, -3)
+    assert result == 2
+
+def test_add_zero():
+    calculator = Calculator()
+    result = calculator.add(0, 0)
+    assert result == 0
+```
+
+**Architectural Flaws (Common Pitfalls):**
+
+1.  **DRY (Don't Repeat Yourself) Violation:** The line `calculator = Calculator()` is repeated in every test. If the instantiation logic changes (e.g., requires a configuration), you must change it in *every* test.
+2.  **High Maintenance Cost:** Adding a new test case (e.g., `test_add_decimal_numbers`) requires writing a nearly identical function from scratch. This is tedious and increases the chance of errors.
+3.  **Poor Scannability:** It's hard to see the complete set of inputs and expected outputs at a glance. You have to read each function individually.
+4.  **Inconsistent Test Quality:** Some tests might have more robust assertions or better edge-case coverage than others, leading to an inconsistent safety net.
+
+### 2. The State-of-the-Art Approach: Declarative & Parameterized Tests
+
+The solution is to shift from an **imperative** ("how" to test) to a **declarative** ("what" to test) mindset. You declare your test cases as data, and a framework generates the actual test functions for you.
+
+#### A. Parameterization with `@pytest.mark.parametrize`
+
+This is the most common and powerful technique in the Python ecosystem (using `pytest`).
+
+**Corrected Example (The Ideal Pattern):**
+
+```python
+# test_calculator_parametrized.py (EFFICIENT & ROBUST)
+
+import pytest
+
+class TestCalculator:
+    # Single source of truth for setup. Runs once per test in the class.
+    @pytest.fixture(autouse=True)
+    def _setup(self):
+        self.calc = Calculator()
+
+    # Declarative test data. Each tuple is a test case.
+    @pytest.mark.parametrize(
+        "a, b, expected",
+        [
+            (2, 3, 5),       # Positive numbers
+            (-2, -3, -5),    # Negative numbers
+            (5, -3, 2),      # Mixed numbers
+            (0, 0, 0),       # Zeros
+            (1.5, 2.5, 4.0), # Decimals
+        ],
+    )
+    def test_add(self, a, b, expected):
+        result = self.calc.add(a, b)
+        assert result == expected
+```
+
+**Architectural Benefits:**
+
+*   **Conciseness & DRY:** The test logic is written once. Adding a new test case is as simple as adding a new line of data to the list.
+*   **Clarity:** The complete test matrix is visible in one place. It serves as living documentation for the function's behavior.
+*   **Isolation:** Each test case is still completely isolated. A failure in one data tuple does not affect the others, and `pytest` will report each failed case individually.
+*   **Scalability:** This pattern scales effortlessly to dozens or even hundreds of test cases.
+
+#### B. Advanced Pattern: Externalizing Test Data
+
+For extremely large or complex test data sets, or when tests should be readable by non-programmers (e.g., QA teams), you can externalize the data.
+
+**Example using JSON:**
+
+```python
+# test_data/add_cases.json
+[
+    {"a": 2, "b": 3, "expected": 5},
+    {"a": -2, "b": -3, "expected": -5}
+]
+
+# test_calculator_external.py
+import json
+import pytest
+
+class TestCalculatorExternal:
+    @pytest.fixture(autouse=True)
+    def _setup(self):
+        self.calc = Calculator()
+
+    @pytest.fixture
+    def add_cases(self):
+        with open('test_data/add_cases.json') as f:
+            return json.load(f)
+
+    @pytest.mark.parametrize("case", add_cases(), ids=lambda c: f"{c['a']}+{c['b']}")
+    def test_add(self, case):
+        result = self.calc.add(case['a'], case['b'])
+        assert result == case['expected']
+```
+
+**Architectural Benefits:**
+
+*   **Separation of Concerns:** Test logic (Python code) is completely separate from test data (JSON/YAML/CSV).
+*   **Tooling Integration:** External files can be generated by other tools or managed in spreadsheets.
+*   **Reusability:** The same data file can be used by integration tests or tests in other languages.
+
+#### C. Hypothesis: Property-Based Testing
+
+For a truly state-of-the-art approach, move beyond **example-based testing** (which tests specific examples) to **property-based testing**. The `hypothesis` library automatically generates a wide range of inputs to test universal "properties" of your code.
+
+**Example:**
+
+```python
+from hypothesis import given, strategies as st
+
+class TestCalculatorAdvanced:
+    @pytest.fixture(autouse=True)
+    def _setup(self):
+        self.calc = Calculator()
+
+    # Property: Adding two positive numbers should result in a positive number.
+    @given(a=st.floats(min_value=0.1, exclude_min=True), b=st.floats(min_value=0.1, exclude_min=True))
+    def test_add_positive_property(self, a, b):
+        result = self.calc.add(a, b)
+        assert result > a and result > b  # The property
+
+    # Property: Addition is commutative (a + b == b + a).
+    @given(a=st.floats(), b=st.floats())
+    def test_add_commutative(self, a, b):
+        assert self.calc.add(a, b) == self.calc.add(b, a)
+```
+
+**Architectural Benefits:**
+
+*   **Finds Edge Cases Automatically:** `hypothesis` is excellent at finding edge cases you never would have thought of (like very large numbers, `NaN`, `inf`), leading to more robust code.
+*   **Tests Invariants:** It forces you to think about the fundamental mathematical or logical properties of your code, which is a higher level of testing.
+
+### 3. Internal Knowledge and Best Practices
+
+*   **The "49" in the Violation:** This number likely comes from a linter configuration threshold. It means the linter found 49 instances of this pattern. Addressing this is a high-impact refactoring.
+*   **Refactoring Strategy:**
+    1.  **Group Similar Tests:** Identify test functions that have identical or nearly identical logic.
+    2.  **Extract Test Data:** List all the input/output pairs from these tests.
+    3.  **Create a Single Parameterized Test:** Replace the group with one parameterized test.
+    4.  **Iterate:** Repeat for the next group of similar tests.
+*   **When Handwritten Tests are Okay:** There are exceptions. Complex integration tests or tests requiring very specific, non-repeatable sequences of actions may still be best written imperatively. The rule of thumb is: if you can easily express it as data, you should.
+
+### Conclusion
+
+Fixing the "handwritten-tests" violation is not about blind compliance with a linter rule. It is a strategic refactoring towards a more **maintainable, scalable, and effective testing architecture**. By embracing **declarative testing patterns** like parameterization and property-based testing, you transform your test suite from a costly liability into a genuine asset that accelerates development by providing rapid, high-quality feedback.
+
+## AI Research (Perplexity)
+No answer.
+
+## Books & Usenet (Readarr)
+No books or Usenet results found.
+
+## Discord (Security Servers)
+> Error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.
+
+## GitHub
+### Repositories
+No repositories found.
+
+### Issues/Discussions
+No issues found.
+
+## Web Results (Brave)
+- **[The Little Book of Python Anti-Patterns — Python Anti-Patterns documentation](https://docs.quantifiedcode.com/python-anti-patterns/)**
+  Welcome, fellow Pythoneer! <strong>This is a small book of Python anti-patterns and worst practices</strong> · Learning about these anti-patterns will help you to avoid them in your own code and make you a better programmer (hopefully). Each pattern comes with a small description, examples and possible solutions.
+- **[Python Anti-Patterns The Little Book of Python Anti-Patterns and Worst Practice](https://frostyx.fedorapeople.org/The-Little-Book-of-Python-Anti-Patterns-1.0.pdf)**
+  <strong>The import statement should be refactored to be more speciﬁc about what functions or variables it is using</strong>
+- **[Anti-Patterns in Python | Useful Codes](https://useful.codes/anti-patterns-in-python/)**
+  These tools analyze the codebase for common pitfalls and suggest improvements. <strong>Writing unit tests can reveal anti-patterns by demonstrating how difficult it is to test certain pieces of code</strong>.
+- **[Easy Patterns for Testable Python Code | by Just a ML guy | Jul, 2025 | Medium](https://medium.com/@justamlguy/easy-patterns-for-testable-python-code-6e103cc68616)**
+  Mocks assert on how something was called, i.e. methods, arguments, call counts and orders, tying tests tightly to internals of your function. Fakes, instead, let you assert on what happened as a result, focusing on the outcomes. This decoupling from internal mechanics makes fakes more robust to refactors, clearer in intent, and better aligned with real usage.
+- **[Unit Testing and Refactoring - Clean Code in Python - Second Edition [Book]](https://www.oreilly.com/library/view/clean-code-in/9781800560215/Text/Chapter_8.xhtml)**
+  Design by contractPreconditionsPostconditionsPythonic contractsDesign by contract – conclusionsDefensive programmingError handlingValue substitutionException handlingUsing assertions in PythonSeparation of concernsCohesion and couplingAcronyms to live byDRY/OAOOYAGNIKISEAFP/LBYLInheritance in PythonWhen inheritance is a good decisionAnti-patterns for inheritanceMultiple inheritance in PythonMethod Resolution Order (MRO)MixinsArguments in functions and methodsHow function arguments work in PythonHow arguments are copied to functionsVariable number of argumentsPositional-only parametersKeyword-only argumentsThe number of arguments in functionsFunction arguments and couplingCompact function signatures that take too many argumentsFinal remarks on good practices for software designOrthogonality in softwareStructuring the codeSummaryReferences
+
+## Academic Papers (ArXiv)
+
+## Videos (YouTube)
+> Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp
+
+Research findings learned to memory (2 entries).

@@ -61,6 +61,149 @@ from extractor_skill.toc_checker import run_toc_check
 from extractor_skill.utils import format_error_guidance
 
 
+def _is_youtube_url(s: str) -> bool:
+    """Check if string is a YouTube URL."""
+    import re
+    return bool(re.match(
+        r'^(https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/)',
+        s
+    ))
+
+
+def _extract_youtube(url: str) -> Dict[str, Any]:
+    """Extract YouTube transcript via /ingest-youtube skill."""
+    import subprocess
+    import tempfile
+
+    skill_path = Path.home() / ".pi/skills/ingest-youtube"
+    if not skill_path.exists():
+        return {
+            "success": False,
+            "error": "YouTube URL detected but /ingest-youtube skill not found",
+            "guidance": "Install /ingest-youtube skill to extract YouTube transcripts",
+        }
+
+    # Create temp file for transcript output
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+        tmp_path = tmp.name
+
+    try:
+        result = subprocess.run(
+            ["uv", "run", "python", "youtube_transcript.py", "get", "-u", url, "-o", tmp_path],
+            cwd=str(skill_path),
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+
+        if result.returncode != 0:
+            return {
+                "success": False,
+                "error": f"YouTube transcript extraction failed: {result.stderr[:200]}",
+                "guidance": "Check if video has captions. Try: /ingest-youtube directly for more options.",
+            }
+
+        # Now extract the transcript JSON through normal flow
+        from extractor.core.providers.json import JSONProvider
+        provider = JSONProvider()
+        doc = provider.extract_document(tmp_path)
+
+        return {
+            "success": True,
+            "mode": "structured",
+            "format": "youtube_transcript",
+            "source_url": url,
+            "document": doc.model_dump(),
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "success": False,
+            "error": "YouTube transcript extraction timed out (120s)",
+            "guidance": "Video may be very long. Try /ingest-youtube directly with --no-whisper.",
+        }
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+
+
+def _generate_qra(
+    filepath: Path,
+    result: Dict[str, Any],
+    scope: str = "research",
+    domain: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Generate QRA pairs via /doc2qra skill.
+
+    If extractor output directory exists, uses --from-extractor for better quality.
+    Otherwise falls back to direct file processing.
+
+    Args:
+        filepath: Path to the extracted document
+        result: Extraction result (may contain output_dir)
+        scope: Memory scope for QRA storage
+        domain: Optional domain context (e.g., "ML researcher")
+
+    Returns:
+        Dict with success status and QRA count
+    """
+    import subprocess
+
+    doc2qra_path = Path.home() / ".pi/skills/doc2qra/run.sh"
+    if not doc2qra_path.exists():
+        return {
+            "success": False,
+            "error": "/doc2qra skill not found",
+        }
+
+    # Build command - prefer --from-extractor if we have output directory
+    cmd = ["bash", str(doc2qra_path)]
+    output_dir = result.get("outputs", {}).get("report", "")
+    if output_dir and Path(output_dir).parent.exists():
+        # Use extractor results directory
+        cmd.extend(["--from-extractor", str(Path(output_dir).parent)])
+    else:
+        # Fall back to direct file processing
+        cmd.extend(["--file", str(filepath)])
+
+    cmd.extend(["--scope", scope, "--json"])
+    if domain:
+        cmd.extend(["--context", domain])
+
+    try:
+        proc = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,  # 5 min timeout for large docs
+        )
+
+        if proc.returncode != 0:
+            return {
+                "success": False,
+                "error": f"doc2qra failed: {proc.stderr[:200]}",
+            }
+
+        # Parse JSON output
+        import json
+        qra_result = json.loads(proc.stdout)
+        return {
+            "success": True,
+            "qra_count": qra_result.get("stored", 0),
+            "summary": qra_result.get("summary", "")[:200],
+        }
+
+    except subprocess.TimeoutExpired:
+        return {
+            "success": False,
+            "error": "QRA generation timed out (300s)",
+        }
+    except json.JSONDecodeError:
+        return {
+            "success": False,
+            "error": "Failed to parse doc2qra output",
+        }
+
+
 def extract(
     filepath: str,
     opts: ExtractionOptions,
@@ -69,12 +212,16 @@ def extract(
     Universal extraction entry point. Routes to appropriate extractor.
 
     Args:
-        filepath: Path to document
+        filepath: Path to document or URL
         opts: Extraction options
 
     Returns:
         Dict with extraction result
     """
+    # Handle YouTube URLs directly
+    if _is_youtube_url(filepath):
+        return _extract_youtube(filepath)
+
     path = Path(filepath)
 
     if not path.exists():
@@ -90,22 +237,21 @@ def extract(
     # /ingest-youtube outputs {meta, transcript[], full_text} as .md/.txt/.json
     if suffix in {".md", ".txt", ".json"}:
         try:
-            head = path.read_text(encoding="utf-8", errors="ignore")[:256]
-            if head.lstrip().startswith("{"):
-                import json as _json
-                data = _json.loads(path.read_text(encoding="utf-8"))
-                if isinstance(data, dict) and ("transcript" in data or "full_text" in data) and "meta" in data:
-                    # Explicitly use JSONProvider (not extension-based routing)
-                    from extractor.core.providers.json import JSONProvider
-                    provider = JSONProvider()
-                    doc = provider.extract_document(str(path))
-                    return {
-                        "success": True,
-                        "mode": "structured",
-                        "format": "youtube_transcript",
-                        "document": doc.model_dump(),
-                    }
-        except (ValueError, OSError):
+            from extractor.pipeline.utils.json_utils import load_json_file
+            data = load_json_file(str(path))
+            if isinstance(data, dict) and ("transcript" in data or "full_text" in data) and "meta" in data:
+                # Explicitly use JSONProvider (not extension-based routing)
+                from extractor.core.providers.json import JSONProvider
+                provider = JSONProvider()
+                doc = provider.extract_document(str(path))
+                return {
+                    "success": True,
+                    "mode": "structured",
+                    "format": "youtube_transcript",
+                    "document": doc.model_dump(),
+                }
+        except (json.JSONDecodeError, ValueError):
+            # Not a YouTube transcript JSON, continue with normal extraction
             pass
 
     # Route by format
@@ -152,6 +298,10 @@ def main(
     # Memory integration
     learn: bool = typer.Option(False, help="Auto-learn extraction summaries to memory"),
     scope: str = typer.Option("documents", help="Memory scope for --learn"),
+    # QRA generation
+    qra: bool = typer.Option(False, "--qra", help="Generate QRA pairs via /doc2qra after extraction"),
+    qra_scope: str = typer.Option("research", "--qra-scope", help="Memory scope for QRA pairs"),
+    qra_domain: Optional[str] = typer.Option(None, "--qra-domain", help="Domain focus for QRA generation"),
     # Edge verification
     verify_edges: bool = typer.Option(False, "--verify-edges", help="Run LLM-verified edge creation after extraction"),
     edge_scope: str = typer.Option("intra", "--edge-scope", help="Edge verification scope (intra, cross, both)"),
@@ -322,6 +472,17 @@ def main(
             if learn_failure_to_memory(file, error_msg, scope=scope):
                 result["failure_learned"] = True
                 print(f"Learned failure pattern to memory (scope: {scope})", file=sys.stderr)
+
+    # QRA generation if enabled
+    if qra and result.get("success"):
+        qra_result = _generate_qra(file, result, qra_scope, qra_domain)
+        if qra_result.get("success"):
+            result["qra_generated"] = True
+            result["qra_count"] = qra_result.get("qra_count", 0)
+            print(f"Generated {qra_result['qra_count']} QRA pairs (scope: {qra_scope})", file=sys.stderr)
+        else:
+            result["qra_error"] = qra_result.get("error", "Unknown error")
+            print(f"QRA generation failed: {result['qra_error']}", file=sys.stderr)
 
     # Output
     if markdown and result.get("markdown"):

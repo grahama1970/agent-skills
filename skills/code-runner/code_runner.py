@@ -60,6 +60,12 @@ from apply import (
 )
 from tool_use import run_tool_use_loop
 from models import TaskSpec, TaskResult, PreflightError
+from _misuse_guard import (
+    validate_task_spec,
+    format_misuse_errors,
+    MisuseError,
+)
+from _debug_dashboard import TraceCollector, generate_dashboard
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -405,6 +411,7 @@ def run(
     spec_file: str = typer.Argument(..., help="Path to task spec JSON"),
     max_rounds: int = typer.Option(5, help="Max self-improvement rounds"),
     backend: str = typer.Option("", help="Override LLM backend"),
+    debug: bool = typer.Option(False, "--debug", help="Generate debug HTML dashboard"),
 ) -> None:
     """Run task with autoresearch-pattern self-improvement loop."""
     # Wrap spec read in error handling — crash here = no stash to restore, but produce structured error
@@ -414,10 +421,53 @@ def run(
         logger.error("Cannot read spec file {}: {}", spec_file, e)
         sys.exit(1)
 
-    # ── Pydantic validation (declarative preflight) ──────────────
+    # ── Misuse detection (catches common mistakes before Pydantic) ──────────────
     task_id = raw_spec.get("task_id", "unknown")
     output_dir = Path(raw_spec.get("output_dir", "/tmp/code-runner"))
 
+    # Debug trace collector (only initialized when --debug is passed)
+    trace_collector: TraceCollector | None = None
+    if debug:
+        trace_collector = TraceCollector(task_id=task_id)
+        trace_collector.set_task_spec(raw_spec)
+
+    misuse_errors, misuse_warnings = validate_task_spec(raw_spec, task_id)
+
+    # Log warnings (non-fatal)
+    for warn in misuse_warnings:
+        logger.warning("[{}] {}", warn.field, warn.message)
+        logger.warning("  SUGGESTION: {}", warn.suggestion)
+
+    # Track preflight in debug trace
+    if trace_collector:
+        trace_collector.add_preflight(
+            errors=[{"field": e.field, "message": e.message, "suggestion": e.correct_value} for e in misuse_errors],
+            warnings=[{"field": w.field, "message": w.message, "suggestion": w.suggestion} for w in misuse_warnings],
+        )
+
+    # Fail on misuse errors (before Pydantic validation)
+    if misuse_errors:
+        logger.error("=== TASK SPEC MISUSE DETECTED for {} ({} issues) ===", task_id, len(misuse_errors))
+        print(format_misuse_errors(misuse_errors, misuse_warnings), file=sys.stderr)
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+        preflight_errors = [
+            PreflightError(
+                field=err.field,
+                error=err.message,
+                fix=err.correct_value or "See SKILL.md for correct usage.",
+            )
+            for err in misuse_errors
+        ]
+        result = TaskResult(
+            task_id=task_id, title=raw_spec.get("title", ""),
+            status="preflight_fail",
+            preflight_errors=preflight_errors,
+        )
+        (output_dir / f"{task_id}.result.json").write_text(result.model_dump_json(indent=2))
+        sys.exit(1)
+
+    # ── Pydantic validation (declarative preflight) ──────────────
     try:
         spec = TaskSpec.model_validate(raw_spec)
     except Exception as e:
@@ -647,6 +697,8 @@ def run(
                         max_rounds=max_rounds, strategy=strategy,
                         backend=cur_backend, reasoning=cur_reasoning,
                         temperature=round(temperature, 2))
+            if trace_collector:
+                trace_collector.add_round_start(round_num)
             if same_error_repeating:
                 logger.info("── Round {}/{} [strategy={} temp={:.1f}↑ {}:{}] ──",
                             round_num, max_rounds, strategy, temperature, cur_backend, cur_reasoning)
@@ -839,9 +891,28 @@ def run(
                     break
             final_response = response
             llm_metadata = {"summary": response[:200], "approach": strategy}
+            tool_call_count = sum(1 for m in tool_messages if m.get("role") == "assistant" and m.get("tool_calls"))
             _emit_event("tool_use_complete", task_id=task_id, round=round_num,
-                        files_written=len(written), tool_calls=sum(
-                            1 for m in tool_messages if m.get("role") == "assistant" and m.get("tool_calls")))
+                        files_written=len(written), tool_calls=tool_call_count)
+
+            # Track LLM response in debug trace
+            if trace_collector:
+                # Extract tool calls from messages
+                all_tool_calls = []
+                for m in tool_messages:
+                    if m.get("role") == "assistant" and m.get("tool_calls"):
+                        for tc in m["tool_calls"]:
+                            all_tool_calls.append({
+                                "id": tc.get("id", ""),
+                                "name": tc.get("function", {}).get("name", ""),
+                                "arguments": tc.get("function", {}).get("arguments", ""),
+                            })
+                trace_collector.add_llm_response(
+                    round_num=round_num,
+                    content=response[:500] if response else None,
+                    tool_calls=all_tool_calls,
+                    finish_reason="tool_calls" if all_tool_calls else "stop",
+                )
 
             # Save round response
             round_file = output_dir / f"{task_id}.round_{round_num}.txt"
@@ -1054,6 +1125,19 @@ def run(
 
         if is_git_repo:
             generate_hunk_review(output_dir, task_id, cwd, rounds_history, snapshot)
+
+        # Generate debug dashboard if --debug was passed
+        if trace_collector:
+            trace_collector.set_result(
+                success=result.dod_passed,
+                dod_passed=result.dod_passed,
+                files_written=[f for r in rounds_history for f in r.get("written_files", [])],
+                error_message=failure_reason if not result.dod_passed else None,
+            )
+            dashboard_html = generate_dashboard(trace_collector)
+            dashboard_path = output_dir / f"{task_id}.debug.html"
+            dashboard_path.write_text(dashboard_html)
+            logger.info("Debug dashboard: {}", dashboard_path)
 
         print(final_response)
 

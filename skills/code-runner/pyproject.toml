@@ -10,4 +10,5 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "typer>=0.9",
     "rich>=13.0",
+    "json-repair>=0.59.1",
 ]

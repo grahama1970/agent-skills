@@ -45,20 +45,16 @@ def _resolve_extractor_root() -> Path:
 
 EXTRACTOR_ROOT = _resolve_extractor_root()
 
-if not EXTRACTOR_ROOT.exists():
-    print(f"FATAL: Extractor root not found at {EXTRACTOR_ROOT}", file=sys.stderr)
-    sys.exit(1)
-
-# Add extractor src to path
-sys.path.insert(0, str(EXTRACTOR_ROOT / "src"))
-
-# Memory skill path
-MEMORY_SKILL_PATH = Path(os.environ.get(
-    "MEMORY_SKILL_PATH",
-    EXTRACTOR_ROOT.parent / "pi-mono/.pi/skills/memory/run.sh"
-))
-if not MEMORY_SKILL_PATH.exists():
-    MEMORY_SKILL_PATH = Path(__file__).resolve().parents[3] / "memory/run.sh"
+# Legacy extractor path - non-fatal since pdf_oxide is primary now
+if EXTRACTOR_ROOT.exists():
+    sys.path.insert(0, str(EXTRACTOR_ROOT / "src"))
+else:
+    # pdf_oxide is the primary path now, legacy extractor optional
+    print(
+        f"INFO: Legacy extractor not found at {EXTRACTOR_ROOT}. "
+        "Using pdf_oxide for PDF extraction.",
+        file=sys.stderr,
+    )
 
 # --------------------------------------------------------------------------
 # Format Definitions

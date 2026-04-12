@@ -1,1 +1,200 @@
-dogpile timeout or unavailable
+Found prior research on this topic in memory.
+## Memory Recall (Prior Solutions Found)
+
+1. **Problem**: Research: fix common violations in Python project: 
+handwritten-tests(71) (2026-03-17)
+   **Solution**: {"query": "fix common violations in Pyt...
+Dogpiling on: fix common violations in Python project: handwritten-tests(20) 
+(Code Related: True)...
+Tailored queries:
+  arxiv: software test suite quality metrics Python static analysis...
+  perplexity: What are the common anti-patterns and violations in handwrit...
+  brave: Python unit testing best practices guide 2025 maintainable t...
+  github: python pytest refactoring bad tests examples...
+  youtube: how to fix flaky Python unit tests tutorial 2025...
+  readarr: book Python Testing with Pytest effective strategies...
+# Dogpile Report: fix common violations in Python project: handwritten-tests(20)
+
+## Codex Technical Overview
+Of course. Here is a high-reasoning technical overview of fixing the common architectural violation of "handwritten tests," focusing on the underlying principles, pitfalls, and modern solutions.
+
+### Executive Summary: The Core Violation
+
+The violation "handwritten-tests(20)" typically indicates a static analysis tool (like **SonarQube**, **CodeClimate**, or **Pylint**) has detected that a significant portion of your project's tests are not following established patterns for automation and maintainability. "Handwritten" here is a pejorative term; it doesn't mean "written by a person," but rather **"written in an ad-hoc, non-systematic, and often fragile manner."** The core issue is the lack of a structured, repeatable, and scalable approach to testing.
+
+The number `(20)` is likely a metric, such as the percentage of test files or test lines flagged for this violation.
+
+---
+
+### 1. Architectural Patterns vs. "Handwritten" Chaos
+
+The goal is to replace manual, imperative test scripts with declarative, pattern-driven testing. The primary architectural pattern for this is the **Page Object Model (POM)**, often used in conjunction with other patterns.
+
+#### A. The "Handwritten" Anti-Pattern (The Problem)
+
+A "handwritten" test is typically a long, sequential script that mixes multiple concerns. It's characterized by:
+
+*   **Hard-coded Data:** Test data (inputs, expected outputs) is embedded directly within the test logic.
+    ```python
+    # BAD: Handwritten anti-pattern
+    def test_login():
+        driver.get("http://myapp.com")
+        driver.find_element(By.ID, "username").send_keys("admin")  # Hard-coded
+        driver.find_element(By.ID, "password").send_keys("password123") # Hard-coded
+        driver.find_element(By.ID, "login-btn").click()
+        # ... then assertions
+    ```
+*   **No Abstraction:** Direct, low-level interactions with the system under test (SUT). For UI tests, this means repeated `find_element` and `click` calls scattered everywhere.
+*   **High Coupling:** The test is tightly coupled to the UI's implementation details (e.g., specific CSS selectors). A minor UI change breaks many tests.
+*   **Poor Reusability:** Common actions (like logging in) are copied and pasted across tests.
+*   **Brittle Assertions:** Assertions are often not robust, checking for exact string matches or transient states.
+
+#### B. The Page Object Model (POM) - The Foundational Pattern
+
+POM is an architectural pattern that abstracts a web page or a UI component into a dedicated class.
+
+*   **Separation of Concerns:**
+    *   **Page Classes:** Contain locators (e.g., `username_field = (By.ID, "username")`) and methods representing user interactions (`login(username, password)`).
+    *   **Test Scripts:** Contain only the high-level test logic and assertions, using the page objects.
+*   **Benefits:** Reduces code duplication, improves readability, and centralizes changes. If the UI changes, you only update the corresponding Page Object.
+
+    ```python
+    # GOOD: Using POM
+    # pages/login_page.py
+    class LoginPage:
+        def __init__(self, driver):
+            self.driver = driver
+            self.username_field = (By.ID, "username")
+            self.password_field = (By.ID, "password")
+            self.login_button = (By.ID, "login-btn")
+
+        def login(self, username, password):
+            self.driver.find_element(*self.username_field).send_keys(username)
+            self.driver.find_element(*self.password_field).send_keys(password)
+            self.driver.find_element(*self.login_button).click()
+
+    # tests/test_login.py
+    def test_successful_login(login_page):  # 'login_page' is a fixture providing the Page Object
+        login_page.login("admin", "secure_password")
+        # Assert on a resulting page object, e.g., DashboardPage
+    ```
+
+#### C. Advanced Patterns: Building on POM
+
+*   **Page Components:** For complex pages, break them down into reusable component objects (e.g., `NavigationBar`, `DataGrid`). A Page Object can then be composed of these components.
+*   **Facade Pattern:** Create a higher-level facade over complex multi-step workflows (e.g., `ApplicationFacade.add_item_to_cart()`) that internally uses multiple page objects, simplifying the test scripts even further.
+*   **Strategy Pattern:** Useful for selecting different implementations, such as choosing a test data generation strategy (faker, factory, static file).
+
+---
+
+### 2. Common Pitfalls in Test Architecture (Why "Handwritten" Tests Fail)
+
+1.  **The Test Data Problem:**
+    *   **Pitfall:** Tests are either too specific (brittle) or too vague (non-deterministic) because of poorly managed data.
+    *   **Solution:** Implement a **Test Data Factory** pattern. Use libraries like `factory_boy` to create model instances with realistic but dynamic data. This separates data generation from test logic.
+        ```python
+        # Using factory_boy
+        class UserFactory(factory.Factory):
+            class Meta:
+                model = User
+            username = factory.Faker('user_name')
+            email = factory.Faker('email')
+
+        # In a test
+        user = UserFactory.create()  # Creates a unique user every time
+        ```
+
+2.  **Flaky Tests:**
+    *   **Pitfall:** Tests that pass or fail intermittently due to timing issues, asynchronous operations, or dependencies on external state.
+    *   **Solution:**
+        *   **Explicit Waits:** Never use `time.sleep()`. Use WebDriverWait or similar constructs to wait for specific conditions.
+        *   **Test Isolation:** Each test should set up and tear down its own state. Use pytest fixtures with a scope of `function` to ensure a clean slate. Avoid shared state between tests.
+        *   **Mock External Dependencies:** Use `unittest.mock` to mock APIs, databases, or other services to ensure tests are fast and reliable.
+
+3.  **Poor Test Structure and Naming:**
+    *   **Pitfall:** Tests named `test_1()`, `test_2()` or one giant test function that does everything.
+    *   **Solution:** Follow the **Arrange-Act-Assert (AAA)** pattern. Structure every test clearly into three sections. Use descriptive names (`test_login_with_invalid_password_shows_error_message`).
+
+---
+
+### 3. State-of-the-Art Approaches and Tooling
+
+Modern Python testing goes beyond just `unittest`. The ecosystem provides tools to enforce good architecture.
+
+1.  **pytest as the Core Framework:**
+    *   **Why:** It's more Pythonic and powerful than `unittest`.
+    *   **Key Features:**
+        *   **Fixtures:** A powerful dependency injection system for setup/teardown. This is superior to `setUp` and `tearDown` methods.
+        *   **Parametrization:** Easily run the same test logic with multiple sets of data using `@pytest.mark.parametrize`. This eliminates copy-pasted tests.
+        *   **Rich Plugin Ecosystem:** (e.g., `pytest-django`, `pytest-selenium`, `pytest-mock`).
+
+2.  **Property-Based Testing (Hypothesis):**
+    *   **Concept:** Instead of testing with a few hand-picked examples, you define the "properties" your code should always have. The framework (like `Hypothesis`) generates hundreds of random inputs to try and break those properties.
+    *   **This is the antithesis of "handwritten" tests.** It systematically explores edge cases you would never think of.
+    ```python
+    from hypothesis import given, strategies as st
+
+    @given(st.integers(), st.integers())
+    def test_addition_commutative(a, b):
+        assert add(a, b) == add(b, a)  # Testing a mathematical property
+    ```
+
+3.  **Visual Testing (Applitools, Percy):**
+    *   For UI tests, state-of-the-art goes beyond functional checks. These tools take screenshots and compare them to a baseline to detect visual regressions, which is crucial for CSS and layout changes.
+
+4.  **API Contract Testing (Pact):**
+    *   For microservices, "handwritten" API integration tests are a nightmare. Pact allows each service to define a contract (in consumer-driven contracts) which can be verified independently, ensuring services can communicate correctly without full integration environments.
+
+5.  **Static Analysis for Tests (e.g., `pytest-flake8`, `pytest-black`):**
+    *   Apply the same linting and formatting rules to your test code as you do to your production code. This enforces consistency and quality.
+
+### Actionable Remediation Plan
+
+To fix the `handwritten-tests(20)` violation, follow this reasoned approach:
+
+1.  **Analyze:** Run the static analysis tool to get a list of the specific files flagged. Identify the most common anti-patterns (e.g., hard-coded data, no POM).
+2.  **Prioritize:** Focus on high-impact, frequently failing tests first.
+3.  **Refactor Iteratively:**
+    *   **Step 1: Introduce Fixtures and POM.** Start by extracting low-level Selenium calls into Page Objects. Use pytest fixtures to manage the driver and page object lifecycle.
+    *   **Step 2: Externalize Test Data.** Replace hard-coded values with factories or data files (JSON, YAML).
+    *   **Step 3: Eliminate Flakiness.** Replace all `time.sleep` with explicit waits. Ensure tests are isolated.
+    *   **Step 4: Improve Assertions.** Make assertions more robust, checking for logical conditions rather than exact string matches.
+    *   **Step 5: Consolidate with Parametrization.** Look for similar tests and combine them using `@pytest.mark.parametrize`.
+4.  **Establish Guardrails:** Introduce `pre-commit` hooks that run linters and formatters on test code to prevent regression into "handwritten" styles.
+
+By adopting these architectural patterns and modern tools, you transform your test suite from a fragile, high-maintenance liability into a robust, scalable, and valuable asset that genuinely supports rapid development and refactoring.
+
+## AI Research (Perplexity)
+No answer.
+
+## Books & Usenet (Readarr)
+No books or Usenet results found.
+
+## Discord (Security Servers)
+> Error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.
+
+## GitHub
+### Repositories
+No repositories found.
+
+### Issues/Discussions
+No issues found.
+
+## Web Results (Brave)
+- **[Python Unit Testing Best Practices For Building Reliable Applications | Pytest with Eric](https://pytest-with-eric.com/introduction/python-unit-testing-best-practices/)**
+  This article will guide you through the labyrinth of best practices and strategies to ensure your tests are reliable, maintainable and efficient.
+- **[Unit Testing in Python: Complete Guide with Examples - Rost Glukhov | Personal site and technical blog](https://www.glukhov.org/post/2025/10/unit-testing-in-python/)**
+  Comprehensive guide to unit testing in Python covering pytest, unittest, TDD practices, mocking, fixtures, and best practices for writing maintainable tests with real-world examples and code coverage strategies.
+- **[Python Unit Testing: Best Practices & Frameworks](https://www.testingxperts.com/blog/python-unit-testing)**
+  Learn the benefits, features, and top frameworks of Python unit testing to write reliable, maintainable, and bug-free code efficiently.
+- **[Best Practices for Writing Unit Tests in Python | by Madhu deepak | Infosec Matrix | Medium](https://medium.com/infosecmatrix/best-practices-for-writing-unit-tests-in-python-cd1da23d3b79)**
+  In this article, we’ll explore the best practices for writing efficient, maintainable, and effective unit tests in Python.
+- **[Best Practices for Writing Unit Tests in Python with pytest](https://www.c-sharpcorner.com/article/best-practices-for-writing-unit-tests-in-python-with-pytest/)**
+  Master Python unit testing with pytest! <strong>This guide covers best practices for writing effective and maintainable tests</strong>. Learn how to organize tests, use fixtures, parameterization, and mocking.
+
+## Academic Papers (ArXiv)
+
+## Videos (YouTube)
+> Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp
+
+Research findings learned to memory (2 entries).

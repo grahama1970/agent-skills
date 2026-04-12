@@ -67,6 +67,8 @@ from worker_pool import (
     summarize_review_output,
 )
 
+MATCH_REQUIREMENT_SKILL = Path("/home/graham/.claude/skills/match-requirement")
+
 app = typer.Typer(no_args_is_help=True, add_completion=False)
 quarantine_app = typer.Typer(no_args_is_help=True, add_completion=False, help="Review and resolve quarantined PDFs.")
 app.add_typer(quarantine_app, name="review-quarantine")
@@ -94,6 +96,8 @@ def cmd_once(
     review_incremental: bool = typer.Option(True),
     inline_review: bool = typer.Option(False, help="Enable inline persona review after each PDF extraction"),
     extract_missing: bool = typer.Option(True, help="Extract un-profiled PDFs during discovery"),
+    match_requirements: bool = typer.Option(False, help="Run /match-requirement on extracted requirement chunks"),
+    match_confidence: float = typer.Option(0.7, min=0.0, max=1.0, help="Confidence threshold for auto-accept (low → pending_review)"),
 ) -> None:
     """Run one datalake learning cycle."""
     cfg = ReviewConfig(
@@ -151,12 +155,25 @@ def cmd_once(
         _validate_taxonomy_coverage(memory_scope_pdf)
         _run_threat_delta_check()
 
+        # Autonomous requirement matching (if enabled)
+        match_stats = {"matched": 0, "pending_review": 0, "conflicts": 0}
+        if match_requirements:
+            logger.info("Running requirement matching on extracted chunks")
+            match_stats = _run_requirement_matching(
+                since_seconds=3600,  # Match chunks from last hour
+                confidence_threshold=match_confidence,
+            )
+
         write_task_state(
             cycle_state,
             {
                 "completed": 1,
                 "stats": {
                     "review_returncode": review.returncode,
+                    "match_requirements_enabled": match_requirements,
+                    "match_matched": match_stats.get("matched", 0),
+                    "match_pending_review": match_stats.get("pending_review", 0),
+                    "match_conflicts": match_stats.get("conflicts", 0),
                 },
                 "current_item": str(root),
                 "consecutive_failures": 1 if review.returncode != 0 else 0,
@@ -167,10 +184,13 @@ def cmd_once(
             raise typer.Exit(code=1)
 
         final_notes = "learn-datalake once completed"
+        if match_requirements:
+            final_notes += f" (matched={match_stats['matched']} pending={match_stats['pending_review']})"
         tm_add_accomplishment(
             text=(
                 f"one-shot cycle complete root={root} "
                 f"review_rc={review.returncode}"
+                + (f" matched={match_stats['matched']}" if match_requirements else "")
             ),
             enabled=task_monitor, strict=task_monitor_strict,
         )
@@ -197,6 +217,8 @@ def cmd_start(
     workers: int = typer.Option(0, min=0),
     inline_review: bool = typer.Option(False, help="Enable inline persona review after each PDF extraction"),
     extract_missing: bool = typer.Option(True, help="Extract un-profiled PDFs during discovery"),
+    match_requirements: bool = typer.Option(False, help="Run /match-requirement on extracted requirement chunks"),
+    match_confidence: float = typer.Option(0.7, min=0.0, max=1.0, help="Confidence threshold for auto-accept (low → pending_review)"),
 ) -> None:
     """Continuously learn directory content into memory and monitor PDF quality."""
     effective_workers = resolve_workers(workers)
@@ -275,6 +297,21 @@ def cmd_start(
                 )
                 _run_threat_delta_check()
 
+            # Autonomous requirement matching (if enabled)
+            match_stats = {"matched": 0, "pending_review": 0, "conflicts": 0}
+            if match_requirements:
+                match_stats = _run_requirement_matching(
+                    since_seconds=poll_seconds + 60,  # Match chunks since last cycle
+                    confidence_threshold=match_confidence,
+                )
+                if match_stats.get("matched", 0) > 0 or match_stats.get("conflicts", 0) > 0:
+                    print(
+                        f"cycle={cycle_count} match_matched={match_stats['matched']} "
+                        f"match_pending={match_stats['pending_review']} "
+                        f"match_conflicts={match_stats['conflicts']}",
+                        flush=True,
+                    )
+
             if review_rc != 0:
                 cycle_failures += 1
             else:
@@ -290,6 +327,10 @@ def cmd_start(
                         "last_extracted_new_max": review_summary.get("extracted_new_max", 0),
                         "last_timeout_count": review_summary.get("timeout_count", 0),
                         "workers": effective_workers,
+                        "match_requirements_enabled": match_requirements,
+                        "match_matched": match_stats.get("matched", 0),
+                        "match_pending_review": match_stats.get("pending_review", 0),
+                        "match_conflicts": match_stats.get("conflicts", 0),
                     },
                     "current_item": f"cycle_{cycle_count}",
                     "consecutive_failures": cycle_failures,
@@ -300,6 +341,7 @@ def cmd_start(
                     f"cycle={cycle_count} review_rc={review_rc} "
                     f"workers={effective_workers} "
                     f"consecutive_failures={cycle_failures}"
+                    + (f" matched={match_stats['matched']}" if match_requirements else "")
                 ),
                 enabled=task_monitor, strict=task_monitor_strict,
             )
@@ -742,6 +784,116 @@ def cmd_quarantine_approve_all(
             skipped += 1
 
     print(f"\nBatch complete: approved={approved} skipped={skipped} threshold={min_confidence:.3f}")
+
+
+def _run_requirement_matching(
+    since_seconds: int = 3600,
+    confidence_threshold: float = 0.7,
+    dry_run: bool = False,
+) -> dict:
+    """Run /match-requirement on recently extracted requirement chunks.
+
+    Returns stats: {chunks_queried, matched, failed, pending_review, conflicts}.
+    """
+    import subprocess as _sp
+
+    stats = {
+        "chunks_queried": 0,
+        "matched": 0,
+        "failed": 0,
+        "pending_review": 0,
+        "conflicts": 0,
+    }
+
+    try:
+        import httpx
+
+        since = int(time.time()) - since_seconds
+
+        # Query for requirement chunks ingested since last cycle
+        # Look for chunks with chunk_type="requirement" or obligation markers
+        query_payload = {
+            "aql": """
+                FOR c IN datalake_chunks
+                FILTER c.ingested_at >= @since
+                FILTER c.chunk_type == "requirement"
+                   OR CONTAINS(LOWER(c.text), "shall")
+                   OR CONTAINS(LOWER(c.text), "must")
+                LIMIT 50
+                RETURN c._key
+            """,
+            "bind_vars": {"since": since},
+        }
+
+        transport = httpx.HTTPTransport(uds=MEMORY_SOCKET)
+        with httpx.Client(transport=transport, base_url=MEMORY_BASE_URL, timeout=30.0) as client:
+            response = client.post("/query", json=query_payload)
+            response.raise_for_status()
+            body = response.json()
+
+        rows = body if isinstance(body, list) else body.get("results", [])
+        chunk_keys = [row if isinstance(row, str) else row.get("_key") for row in rows if row]
+        stats["chunks_queried"] = len(chunk_keys)
+
+        if not chunk_keys:
+            logger.info("requirement matching skipped: no recent requirement chunks")
+            return stats
+
+        logger.info(f"requirement matching: processing {len(chunk_keys)} chunks")
+
+        # Process each chunk via /match-requirement
+        match_script = MATCH_REQUIREMENT_SKILL / "match_requirement.py"
+
+        for chunk_key in chunk_keys:
+            cmd = [
+                "uv", "run", "--project", str(MATCH_REQUIREMENT_SKILL),
+                "python", str(match_script),
+                "match",
+                "--chunk-key", chunk_key,
+            ]
+            if dry_run:
+                cmd.append("--dry-run")
+
+            proc = _sp.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=180,
+                check=False,
+            )
+
+            if proc.returncode != 0:
+                logger.warning(f"match failed for {chunk_key}: {proc.stderr[:200]}")
+                stats["failed"] += 1
+                continue
+
+            try:
+                result = json.loads(proc.stdout)
+                relationships = result.get("relationships", [])
+
+                for rel in relationships:
+                    rel_type = rel.get("relationship_type", "unknown")
+                    if rel_type == "conflicts":
+                        stats["conflicts"] += 1
+                    elif rel_type == "unknown":
+                        stats["pending_review"] += 1
+                    else:
+                        stats["matched"] += 1
+
+            except json.JSONDecodeError:
+                logger.warning(f"failed to parse match output for {chunk_key}")
+                stats["failed"] += 1
+
+        logger.info(
+            f"requirement matching complete: queried={stats['chunks_queried']} "
+            f"matched={stats['matched']} pending={stats['pending_review']} "
+            f"conflicts={stats['conflicts']} failed={stats['failed']}"
+        )
+
+    except Exception as e:
+        logger.warning(f"requirement matching failed: {e}")
+
+    return stats
 
 
 def _validate_taxonomy_coverage(scope: str) -> None:

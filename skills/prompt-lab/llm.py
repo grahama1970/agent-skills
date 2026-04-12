@@ -5,11 +5,21 @@ Handles LLM API calls via scillm paved path with correction capabilities.
 import asyncio
 import json
 import os
+import sys
 import time
+from pathlib import Path
 
 from loguru import logger
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Callable
+
+# Import shared self-improvement patterns from common/
+_skills_dir = Path(__file__).resolve().parent.parent
+_common = str(_skills_dir / "common")
+if _common not in sys.path:
+    sys.path.insert(0, _common)
+
+from self_improvement import Strategy, correction_message as _correction_message
 
 # Retry configuration via environment variables
 MAX_TRANSIENT_RETRIES = int(os.getenv("PROMPT_LAB_MAX_TRANSIENT_RETRIES", "3"))
@@ -39,6 +49,8 @@ from config import (
     SCILLM_PROXY_KEY,
     CHUTES_MODEL_ID,
     CHUTES_TEXT_MODEL,
+    TIER0_CONCEPTUAL,
+    TIER1_TACTICAL,
 )
 # Backwards compat aliases for code below
 CHUTES_API_BASE = SCILLM_API_BASE
@@ -514,13 +526,17 @@ async def call_llm_with_correction(
     total_latency += latency
     validated, rejected = parse_llm_response(content)
 
-    # Self-correction loop
+    # Self-correction loop with escalating strategy
+    # Round 1: direct_fix, Round 2: structured_analysis (explains why)
+    valid_tags = list(TIER0_CONCEPTUAL | TIER1_TACTICAL)
     while rejected and correction_rounds < max_correction_rounds:
         correction_rounds += 1
-        correction_msg = (
-            f"Your response contained invalid tags: {rejected}. "
-            f"Please fix your output to only use valid tags from the vocabulary. "
-            f"Return corrected JSON."
+        # Escalate strategy: round 1 = direct_fix, round 2 = structured_analysis
+        strategy = Strategy.direct_fix if correction_rounds == 1 else Strategy.structured_analysis
+        correction_msg = _correction_message(
+            error_description=f"Invalid tags: {', '.join(rejected)}",
+            valid_options=valid_tags,
+            strategy=strategy,
         )
         messages.append({"role": "assistant", "content": content})
         messages.append({"role": "user", "content": correction_msg})

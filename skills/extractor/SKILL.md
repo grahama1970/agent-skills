@@ -3,7 +3,7 @@ name: extractor
 description: >
   Extract content from any document using the Preset-First Agentic Pipeline.
   Auto-detects format and document type (scientific papers, requirements specs, etc.).
-  Supports PDF, DOCX, HTML, XML, PPTX, XLSX, EPUB, Markdown, images.
+  Supports PDF, DOCX, HTML, XML, PPTX, XLSX, EPUB, Markdown, images, YouTube URLs.
   Use when user says "extract this", "convert to markdown", "process pdf", or provides a document.
 allowed-tools: Bash, Read
 triggers:
@@ -22,16 +22,24 @@ triggers:
   - pdf to markdown
   - docx to markdown
   - document to json
+  - extract youtube
+  - youtube transcript
+  - extract and create qra
+  - extract with qra
 metadata:
-  short-description: Preset-First document extraction (PDF/DOCX/HTML/XML)
+  short-description: Preset-First document extraction (PDF/DOCX/HTML/XML/YouTube)
   project-path: /home/graham/workspace/experiments/extractor
 provides:
   - pdf-extraction
   - html-extraction
+  - youtube-extraction
 composes:
+  - extract-pdf         # Rust-native PDF extraction via pdf_oxide
   - scillm
   - memory
   - task-monitor
+  - ingest-youtube
+  - doc2qra
 
 taxonomy:
   - ingestion
@@ -60,6 +68,9 @@ Auto-detects document type and applies calibrated extraction settings.
 
 # OCR scanned PDFs (lazy-loads OCRmyPDF docker image if needed)
 .pi/skills/extractor/run.sh scanned.pdf --auto-ocr
+
+# Extract + generate QRA pairs for memory recall
+.pi/skills/extractor/run.sh paper.pdf --qra --qra-scope research
 ```
 
 ## Extraction Modes
@@ -174,24 +185,38 @@ Cross-format parity measured against HTML reference (2026-01-17):
 
 ## Pipeline Stages
 
-The full pipeline runs 14+ stages:
+PDF extraction delegates to `/extract-pdf` (Rust-native via pdf_oxide). This is
+**significantly faster** than the legacy Python pipeline.
 
 ```
-00_profile_detector      Detect document type, select preset
-01_annotation_processor  Strip PDF annotations
-02_marker_extractor      Extract blocks (text, tables, figures)
-03_suspicious_headers    Verify header classifications with VLM
-04_section_builder       Build document sections
-05_table_extractor       Extract tables (uses ML classifier for strategy)
-06_figure_extractor      Extract and describe figures
-07_duckdb_ingest         Assemble into queryable DB
-08_extract_requirements  Mine requirements (if detected)
-08b_lean4_theorem_prover Formal proofs (scientific only)
-09_section_summarizer    Generate section summaries
-10_markdown_exporter     Export to Markdown
-12_framework_mapper      Extract control refs → chunk_control_edges (NEW)
-14_report_generator      Generate extraction report
+[/extract-pdf pipeline — Rust core]
+├── profile_document()     Domain detection, preset selection, complexity scoring
+├── extract_spans()        Text extraction with font/bbox metadata
+├── classify_blocks()      Header/body/equation/boilerplate classification
+├── build_flat_sections()  Section hierarchy from headers
+├── extract_tables()       Table detection via pdfplumber/Camelot
+└── extract_figures()      Figure/image extraction
+
+[Optional plugins — enabled via --accurate]
+├── describe              VLM figure descriptions
+├── requirements          Requirement mining (SHALL/MUST/WILL)
+├── arango                Sync to ArangoDB graph
+└── embeddings            Generate semantic embeddings
 ```
+
+**Performance comparison:**
+
+| Document | Legacy Pipeline | pdf_oxide (Rust) | Speedup |
+|----------|-----------------|------------------|---------|
+| 10-page PDF | ~45s | ~2s | **22x** |
+| 100-page PDF | ~8 min | ~15s | **32x** |
+| 492-page NIST | ~37 min | ~2 min | **18x** |
+
+**pdf_oxide** is the Rust-based extraction core (MIT-licensed). It provides:
+- Fast text extraction via native Rust PDF parsing
+- Block classification without ML dependencies
+- Section hierarchy building
+- Table detection via pdfplumber/Camelot delegation
 
 ### Stage 12: Framework Mapper (Control Extraction)
 
@@ -277,6 +302,9 @@ STRATEGY_PREDICTOR_CONFIDENCE_THRESHOLD=0.75  # Min confidence to use prediction
 | `--ocr-force`         | Force OCR even if text exists                            |
 | `--ocr-timeout <sec>` | OCR timeout in seconds                                   |
 | `--continue-on-error` | Continue pipeline on step failures (batch-friendly)      |
+| `--qra`               | Generate QRA pairs via /doc2qra after extraction         |
+| `--qra-scope <scope>` | Memory scope for QRA pairs (default: research)           |
+| `--qra-domain <ctx>`  | Domain focus for QRA generation (e.g. "ML researcher")   |
 
 ## TOC Integrity Check
 

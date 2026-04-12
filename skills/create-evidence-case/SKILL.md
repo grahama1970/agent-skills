@@ -449,3 +449,62 @@ if len(recall_results) > 0:
 ```bash
 .claude/skills/memory/run.sh recall --q "firmware tampering" --collections sparta_qra --k 10
 ```
+
+## Crosswalk Edge Reference (sparta_relationships)
+
+When querying crosswalk chains, edges are stored in `sparta_relationships` with specific framework casing.
+
+### Edge Types and Casing (CRITICAL)
+
+| Edge Type | source_framework | target_framework | Count |
+|-----------|-----------------|------------------|-------|
+| CWE→SPARTA | `"CWE"` | `"SPARTA"` (uppercase) | 2,825+ |
+| NIST→SPARTA | `"nist"` | `"sparta"` (lowercase) | 289+ per NIST |
+| CAPEC→CWE | `"CAPEC"` | `"CWE"` | 1,212+ |
+| CWE→CWE | `"cwe"` | `"cwe"` (lowercase) | parent/child |
+
+**Always check both cases** when filtering for SPARTA targets:
+```python
+for tf_case in ["sparta", "SPARTA"]:
+    resp = client.post("/list", json={
+        "collection": "sparta_relationships",
+        "filters": {"source_control_id": control_id, "target_framework": tf_case}
+    })
+```
+
+### Crosswalk Lookup Paths
+
+| Start | Path | Data Source |
+|-------|------|-------------|
+| CWE | CWE→SPARTA (direct edge) | SPARTA v3.1 `cwe_class_ids` |
+| CWE | CWE→NIST→SPARTA (2-hop) | Heimdall `nist_control_ids` field + NIST→SPARTA edges |
+| CWE | CWE→CAPEC→ATT&CK→SPARTA (4-hop) | MITRE curated `capec_ids`, `attack_technique_ids` |
+
+### Key Document Fields
+
+| Collection | Field | Contains |
+|------------|-------|----------|
+| `sparta_controls` (CWE) | `nist_control_ids` | NIST control IDs from Heimdall mapping |
+| `sparta_controls` (CWE) | `capec_ids` | CAPEC attack pattern IDs |
+| `sparta_controls` (SPARTA) | `cwe_class_ids` | CWE IDs this technique addresses |
+| `sparta_controls` (any) | `source_framework` | Framework name (SPARTA, CWE, NIST, etc.) |
+
+### Example: Finding SPARTA Targets for CWE-287
+
+```python
+# Path 1: Direct CWE→SPARTA edges (preferred)
+resp = client.post("/list", json={
+    "collection": "sparta_relationships",
+    "filters": {"source_control_id": "CWE-287", "target_framework": "SPARTA"}
+})
+# Returns: DE-0001, IA-0001, etc.
+
+# Path 2: NIST 2-hop (for unmapped CWEs like CWE-79)
+cwe = fetch_control("CWE-79")  # nist_control_ids: ['SI-10']
+for nist_id in cwe["nist_control_ids"]:
+    resp = client.post("/list", json={
+        "collection": "sparta_relationships",
+        "filters": {"source_control_id": nist_id, "target_framework": "sparta"}  # lowercase!
+    })
+    # Returns: CM0001, CM0002, etc.
+```

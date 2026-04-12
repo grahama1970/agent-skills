@@ -28,7 +28,7 @@ from extractor_skill.pipeline_runner import extract_pipeline
 
 def detect_scanned_pdf(filepath: Path) -> Optional[Dict[str, Any]]:
     """
-    Detect if a PDF is scanned (image-based).
+    Detect if a PDF is scanned (image-based) using pdf_oxide.
 
     Args:
         filepath: Path to PDF file
@@ -37,11 +37,23 @@ def detect_scanned_pdf(filepath: Path) -> Optional[Dict[str, Any]]:
         Dict with scanned detection info, or None on error
     """
     try:
-        import fitz
-        from extractor.pipeline.steps.s02_pymupdf_extractor import _detect_scanned_pdf
-
-        with fitz.open(str(filepath)) as doc:
-            return _detect_scanned_pdf(doc)
+        from pdf_oxide import PdfDocument
+        doc = PdfDocument(str(filepath))
+        profile = doc.profile_document()
+        return {
+            "is_scanned": profile.get("is_scanned", False),
+            "text_density": profile.get("text_density", 0.0),
+            "page_count": doc.page_count(),
+        }
+    except ImportError:
+        # Fallback to fitz if pdf_oxide not available
+        try:
+            import fitz
+            from extractor.pipeline.steps.s02_pymupdf_extractor import _detect_scanned_pdf
+            with fitz.open(str(filepath)) as doc:
+                return _detect_scanned_pdf(doc)
+        except Exception:
+            return None
     except Exception:
         return None
 
@@ -134,10 +146,41 @@ def maybe_prefetch_ocr_resources(filepath: Path) -> None:
 
 
 def profile_pdf(filepath: Path) -> Dict[str, Any]:
-    """Run s00_profile_detector to analyze PDF without extraction."""
+    """Profile PDF using pdf_oxide Rust-native profiler.
+
+    Falls back to survey_document for fuller analysis.
+    """
     try:
-        from extractor.pipeline.steps.s00_profile_detector import detect_preset
-        return detect_preset(filepath)
+        from pdf_oxide import PdfDocument
+        doc = PdfDocument(str(filepath))
+        profile = doc.profile_document()
+
+        # Map to expected format
+        return {
+            "preset_match": {
+                "matched": profile.get("preset", "auto"),
+                "confidence": profile.get("confidence", 0),
+            },
+            "elements": {
+                "tables": profile.get("has_tables", False),
+                "figures": profile.get("has_figures", False),
+                "formulas": profile.get("has_equations", False),
+                "requirements": profile.get("has_requirements", False),
+            },
+            "layout": {
+                "columns": 2 if profile.get("layout", {}).get("is_multi_column") else 1,
+            },
+            "domain": profile.get("domain", "general"),
+            "is_scanned": profile.get("is_scanned", False),
+            "page_count": doc.page_count(),
+        }
+    except ImportError:
+        # Fallback to legacy if pdf_oxide not available
+        try:
+            from extractor.pipeline.steps.s00_profile_detector import detect_preset
+            return detect_preset(filepath)
+        except Exception as e:
+            return {"error": str(e)}
     except Exception as e:
         return {"error": str(e)}
 

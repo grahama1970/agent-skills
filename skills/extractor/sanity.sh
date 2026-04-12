@@ -4,6 +4,7 @@
 # Note: We don't use 'set -e' because ((PASS++)) returns false when PASS=0
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILLS_DIR="$(dirname "$SCRIPT_DIR")"
 EXTRACTOR_ROOT="${EXTRACTOR_ROOT:-/home/graham/workspace/experiments/extractor}"
 FIXTURE_DIR="${EXTRACTOR_ROOT}/data/input/twins/preset_twin"
 
@@ -57,6 +58,7 @@ echo -n "0b. Import check... "
 IMPORT_CHECK=$("$EXTRACTOR_ROOT/.venv/bin/python" -c "
 import sys
 sys.path.insert(0, '$SCRIPT_DIR')
+sys.path.insert(0, '$SKILLS_DIR')
 try:
     from extractor_skill import config
     from extractor_skill import utils
@@ -92,7 +94,7 @@ if [[ ! -f "$PYTHON" ]]; then
     echo "FAIL (venv not found at $EXTRACTOR_ROOT/.venv)"
     exit 1
 fi
-export PYTHONPATH="${EXTRACTOR_ROOT}/src:${SCRIPT_DIR}:${PYTHONPATH}"
+export PYTHONPATH="${EXTRACTOR_ROOT}/src:${SCRIPT_DIR}:${SKILLS_DIR}:${PYTHONPATH}"
 echo "OK"
 
 # 3. Check fixtures exist
@@ -193,7 +195,80 @@ else
     echo "SKIP (no fixture)"
 fi
 
-# 7. Test image (expected low parity without VLM)
+# 7. Test --profile-only flag
+echo ""
+echo -n "  PDF --profile-only: "
+FILE="${FIXTURE_DIR}/preset_twin.pdf"
+if [[ -f "$FILE" ]]; then
+    START=$(date +%s.%N)
+    RESULT=$("$PYTHON" "$SCRIPT_DIR/extract.py" "$FILE" --profile-only 2>&1)
+    EXIT_CODE=$?
+    END=$(date +%s.%N)
+    ELAPSED=$(echo "$END - $START" | bc)
+
+    if [[ $EXIT_CODE -eq 0 ]] && echo "$RESULT" | grep -q '"preset"'; then
+        PRESET=$(echo "$RESULT" | grep -o '"preset": "[^"]*"' | head -1)
+        echo "OK (${ELAPSED}s, $PRESET)"
+        ((PASS++))
+    else
+        echo "FAIL (exit=$EXIT_CODE)"
+        ((FAIL++))
+    fi
+else
+    echo "SKIP (no fixture)"
+fi
+
+# 8. Test YouTube URL detection (function only, no network call)
+echo ""
+echo -n "  YouTube URL detection: "
+YT_CHECK=$("$PYTHON" -c "
+import sys
+sys.path.insert(0, '$SCRIPT_DIR')
+from extract import _is_youtube_url
+tests = [
+    ('https://www.youtube.com/watch?v=dQw4w9WgXcQ', True),
+    ('https://youtu.be/dQw4w9WgXcQ', True),
+    ('https://youtube.com/shorts/abc123', True),
+    ('https://example.com/video.mp4', False),
+    ('paper.pdf', False),
+]
+passed = all(_is_youtube_url(url) == expected for url, expected in tests)
+print('OK' if passed else 'FAIL')
+" 2>&1)
+echo "$YT_CHECK"
+if [[ "$YT_CHECK" == "OK" ]]; then
+    ((PASS++))
+else
+    ((FAIL++))
+fi
+
+# 9. Test --qra flag parsing (CLI validation only, no actual QRA generation)
+echo -n "  QRA flag parsing: "
+QRA_CHECK=$("$PYTHON" -c "
+import sys
+sys.path.insert(0, '$SCRIPT_DIR')
+# Just verify the CLI accepts the flags without error
+import subprocess
+result = subprocess.run(
+    [sys.executable, '$SCRIPT_DIR/extract.py', '--help'],
+    capture_output=True, text=True
+)
+has_qra = '--qra' in result.stdout
+has_qra_scope = '--qra-scope' in result.stdout
+has_qra_domain = '--qra-domain' in result.stdout
+if has_qra and has_qra_scope and has_qra_domain:
+    print('OK')
+else:
+    print(f'FAIL (qra={has_qra}, scope={has_qra_scope}, domain={has_qra_domain})')
+" 2>&1)
+echo "$QRA_CHECK"
+if [[ "$QRA_CHECK" == "OK" ]]; then
+    ((PASS++))
+else
+    ((FAIL++))
+fi
+
+# 10. Test image (expected low parity without VLM)
 echo ""
 echo -n "  PNG (image): "
 FILE="${FIXTURE_DIR}/preset_twin.png"

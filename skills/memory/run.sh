@@ -42,6 +42,10 @@ fi
 
 # Multiplex between legacy graph_memory and new horus_lore_cli
 case "$1" in
+    assess)
+        shift
+        exec python3 "$SCRIPT_DIR/scripts/assess_usage.py" "$@"
+        ;;
     chain-learn)
         shift
         export PYTHONPATH="$MEMORY_ROOT/src"

@@ -4,6 +4,18 @@ The LLM calls tools (write_file, edit_file, read_file, run_command) and
 code-runner executes them. No output parsing. No diff guessing.
 
 This is how Cursor, Claude Code, Aider, and every working agent CLI works.
+
+v4.1: Hermes-inspired reliability improvements:
+  - Structured JSON tool results (consistent schema for all tools)
+  - Strict invalid-args handling (no silent coercion to {})
+  - Message sanitization (strip surrogates before API calls)
+  - Duplicate-call suppression (block repeated identical failing calls)
+  - Stronger mutation blocking (expanded destructive command patterns)
+
+v4.2: Error classification and fallback parsing:
+  - Smart error classifier (context overflow, billing, rate limit → recovery action)
+  - Fallback tool call parser (Hermes, DeepSeek V3, generic XML formats)
+  - Reasoning extraction (<think> blocks, reasoning_content fields)
 """
 from __future__ import annotations
 
@@ -11,21 +23,110 @@ import hashlib
 import json
 import os
 import random
+import re
 import subprocess
 import time
 from pathlib import Path
+from typing import Any, Optional
 
 import httpx
 from loguru import logger
 
+# Common utilities
+import sys
+_skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
+_common = str(_skills_dir / "common")
+if _common not in sys.path:
+    sys.path.insert(0, _common)
+
+from json_utils import parse_json
+from message_utils import sanitize_messages
+
+# Local modules
+from _error_classifier import classify_api_error, classify_response_error, FailoverReason
+from _tool_call_parser import parse_tool_calls, to_openai_format
+
 SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
+
+# Valid tool names for this agent
+VALID_TOOLS = {"write_file", "edit_file", "read_file", "run_command"}
 
 # Paths that should NEVER be written by an LLM
 DENYLIST = {".git", ".gitignore", ".env", "SKILL.md", "run.sh", "sanity.sh", "pyproject.toml", "package.json"}
 
 # Max iterations to prevent runaway tool loops
 MAX_TOOL_ITERATIONS = 20
+
+# Destructive command patterns for run_command blocking (Hermes-inspired)
+# Each tuple is (compiled_regex, error_message)
+DESTRUCTIVE_PATTERNS = [
+    (re.compile(r'\bgit\s+reset\s+--hard'), "git reset --hard blocked — use git checkout for specific files"),
+    (re.compile(r'\bgit\s+clean\s+-[fd]'), "git clean blocked — could delete untracked work"),
+    (re.compile(r'\bsed\s+-i'), "sed -i blocked — use edit_file for modifications"),
+    (re.compile(r'\btruncate\s'), "truncate blocked — use write_file instead"),
+    (re.compile(r'\bdd\s+.*\bof='), "dd with output blocked — use write_file instead"),
+    (re.compile(r'\bshred\s'), "shred blocked — files cannot be securely deleted"),
+    (re.compile(r"<<['\"]?EOF"), "Heredoc to file blocked — use write_file instead"),
+    (re.compile(r'\bchmod\s+[+0-7]*x'), "chmod +x blocked — code-runner manages execution"),
+    (re.compile(r'\b(cat|echo)\s+.*>\s*\S+\.(py|ts|js|sh|json|yaml|yml)\b'), "Redirect to code file blocked — use write_file"),
+]
+
+
+# ── Structured Tool Results ────────────────────────────────────────────
+# All tools return JSON with a consistent schema for reliable downstream parsing.
+
+
+def _tool_result(
+    ok: bool,
+    tool: str,
+    *,
+    path: Optional[str] = None,
+    exit_code: Optional[int] = None,
+    stdout_preview: Optional[str] = None,
+    stderr_preview: Optional[str] = None,
+    error_type: Optional[str] = None,
+    error_message: Optional[str] = None,
+    retryable: bool = True,
+    lines_affected: Optional[int] = None,
+    **extra: Any,
+) -> str:
+    """Return structured JSON tool result.
+
+    Error types:
+    - PERMISSION: Path not in allowlist or denylisted
+    - SYNTAX: Python syntax error in written code
+    - STALE: File modified since last read
+    - TRUNCATION: Write would truncate existing file
+    - INVALID_ARGS: Could not parse tool arguments
+    - UNKNOWN_TOOL: Tool name not recognized
+    - DUPLICATE_CALL: Same call already made this round
+    - BLOCKED_COMMAND: Destructive command pattern detected
+    - NOT_FOUND: File does not exist
+    - LINE_RANGE: Invalid line range for edit
+    - TIMEOUT: Command timed out
+    - EXECUTION: Command execution failed
+    """
+    result: dict[str, Any] = {"ok": ok, "tool": tool}
+    if path is not None:
+        result["path"] = path
+    if exit_code is not None:
+        result["exit_code"] = exit_code
+    if stdout_preview is not None:
+        result["stdout_preview"] = stdout_preview
+    if stderr_preview is not None:
+        result["stderr_preview"] = stderr_preview
+    if error_type is not None:
+        result["error_type"] = error_type
+    if error_message is not None:
+        result["error_message"] = error_message
+    if not ok:
+        result["retryable"] = retryable
+    if lines_affected is not None:
+        result["lines_affected"] = lines_affected
+    if extra:
+        result.update(extra)
+    return json.dumps(result)
 
 TREESITTER_RUN = Path(__file__).resolve().parent.parent / "treesitter" / "run.sh"
 
@@ -34,6 +135,37 @@ def _retry_delay(attempt: int, max_delay: float = 32.0) -> float:
     """Exponential backoff with jitter. Prevents thundering herd."""
     base = min(0.5 * (2 ** attempt), max_delay)
     return base + random.random() * 0.25 * base
+
+
+# Pattern for extracting <think>...</think> blocks from content
+_THINK_PATTERN = re.compile(r"<think>(.*?)</think>", re.DOTALL)
+
+
+def _extract_reasoning(msg: dict) -> Optional[str]:
+    """Extract reasoning from assistant message.
+
+    Handles multiple provider formats:
+    1. msg["reasoning_content"] field (Anthropic, some providers)
+    2. msg["reasoning"] field (OpenRouter)
+    3. <think>...</think> blocks in content (Qwen, DeepSeek)
+
+    Returns:
+        Extracted reasoning text, or None if not found
+    """
+    # Check dedicated reasoning fields
+    if msg.get("reasoning_content"):
+        return msg["reasoning_content"]
+    if msg.get("reasoning"):
+        return msg["reasoning"]
+
+    # Check for <think> blocks in content
+    content = msg.get("content", "")
+    if content and "<think>" in content:
+        matches = _THINK_PATTERN.findall(content)
+        if matches:
+            return "\n".join(m.strip() for m in matches)
+
+    return None
 
 
 # File staleness tracking: {path: (content_hash, mtime)}
@@ -229,41 +361,57 @@ def _is_path_safe(path: str, cwd: str, allowlist: list[str] | None) -> str | Non
 def execute_tool(
     name: str, arguments: dict, cwd: str, allowlist: list[str] | None,
 ) -> str:
-    """Execute a tool call and return the result string."""
+    """Execute a tool call and return structured JSON result."""
 
     if name == "write_file":
         path = arguments.get("path", "")
         content = arguments.get("content", "")
         safe = _is_path_safe(path, cwd, allowlist)
         if not safe:
-            return f"ERROR: Path '{path}' not in allowlist or is denylisted. Allowlist: {allowlist}"
+            return _tool_result(
+                ok=False, tool="write_file", path=path,
+                error_type="PERMISSION",
+                error_message=f"Path not in allowlist or is denylisted. Allowlist: {allowlist}",
+            )
         target = Path(cwd) / safe
         # Staleness check — reject if file changed since last read
         stale_msg = _check_file_stale(target)
         if stale_msg:
-            return f"ERROR: {stale_msg}"
+            return _tool_result(
+                ok=False, tool="write_file", path=safe,
+                error_type="STALE", error_message=stale_msg,
+            )
         # Full-file rewrite guard — force edit_file for existing large files
         if target.exists():
             existing_lines = len(target.read_text(errors="replace").splitlines())
             new_lines = len(content.splitlines())
             if existing_lines > 500 and new_lines < existing_lines * 0.5:
-                return (f"ERROR: Truncation guard — existing file has {existing_lines} lines, "
-                        f"replacement has {new_lines}. Use edit_file for surgical changes.")
+                return _tool_result(
+                    ok=False, tool="write_file", path=safe,
+                    error_type="TRUNCATION",
+                    error_message=f"Existing file has {existing_lines} lines, replacement has {new_lines}. Use edit_file for surgical changes.",
+                )
             if existing_lines > 100:
-                return (f"ERROR: File '{safe}' already exists with {existing_lines} lines. "
-                        f"Use edit_file to make surgical changes instead of rewriting the entire file. "
-                        f"First use read_file to see the current content, then edit_file to change specific lines.")
+                return _tool_result(
+                    ok=False, tool="write_file", path=safe,
+                    error_type="TRUNCATION",
+                    error_message=f"File exists with {existing_lines} lines. Use read_file then edit_file for surgical changes.",
+                )
         # Python lint gate
         if safe.endswith(".py"):
             try:
                 compile(content, safe, "exec")
             except SyntaxError as e:
-                return f"ERROR: Python syntax error — {e}. Fix and retry."
+                return _tool_result(
+                    ok=False, tool="write_file", path=safe,
+                    error_type="SYNTAX", error_message=f"Python syntax error: {e}",
+                )
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content)
         _track_file_read(target)  # Update tracking after write
-        logger.info("  tool: write_file {} ({} lines)", safe, len(content.splitlines()))
-        return f"OK: Wrote {safe} ({len(content.splitlines())} lines)"
+        lines_written = len(content.splitlines())
+        logger.info("  tool: write_file {} ({} lines)", safe, lines_written)
+        return _tool_result(ok=True, tool="write_file", path=safe, lines_affected=lines_written)
 
     elif name == "edit_file":
         path = arguments.get("path", "")
@@ -272,28 +420,44 @@ def execute_tool(
         content = arguments.get("content", "")
         safe = _is_path_safe(path, cwd, allowlist)
         if not safe:
-            return f"ERROR: Path '{path}' not in allowlist. Allowlist: {allowlist}"
+            return _tool_result(
+                ok=False, tool="edit_file", path=path,
+                error_type="PERMISSION",
+                error_message=f"Path not in allowlist. Allowlist: {allowlist}",
+            )
         target = Path(cwd) / safe
         if not target.exists():
-            return f"ERROR: File '{safe}' does not exist. Use write_file to create it."
+            return _tool_result(
+                ok=False, tool="edit_file", path=safe,
+                error_type="NOT_FOUND",
+                error_message="File does not exist. Use write_file to create it.",
+            )
         # Staleness check
         stale_msg = _check_file_stale(target)
         if stale_msg:
-            return f"ERROR: {stale_msg}"
+            return _tool_result(
+                ok=False, tool="edit_file", path=safe,
+                error_type="STALE", error_message=stale_msg,
+            )
         lines = target.read_text(errors="replace").splitlines(keepends=True)
         if start < 1 or end > len(lines) or start > end:
-            return f"ERROR: Line range {start}-{end} invalid for file with {len(lines)} lines."
+            return _tool_result(
+                ok=False, tool="edit_file", path=safe,
+                error_type="LINE_RANGE",
+                error_message=f"Line range {start}-{end} invalid for file with {len(lines)} lines.",
+            )
         replacement = content.splitlines(keepends=True)
         if replacement and not replacement[-1].endswith("\n"):
             replacement[-1] += "\n"
-        # Truncation guard for edit_file — same as write_file
-        # Catches LLM replacing entire large file via edit_file(1, N, <truncated>)
+        # Truncation guard for edit_file
         replaced_lines = end - start + 1
         new_lines_count = len(replacement)
         if len(lines) > 500 and replaced_lines > len(lines) * 0.8 and new_lines_count < replaced_lines * 0.5:
-            return (f"ERROR: Truncation guard — editing {replaced_lines}/{len(lines)} lines "
-                    f"but replacement is only {new_lines_count} lines ({new_lines_count*100//replaced_lines}%). "
-                    f"This looks like a truncated output. Use smaller edit ranges.")
+            return _tool_result(
+                ok=False, tool="edit_file", path=safe,
+                error_type="TRUNCATION",
+                error_message=f"Editing {replaced_lines}/{len(lines)} lines but replacement is only {new_lines_count} lines ({new_lines_count*100//replaced_lines}%). Use smaller edit ranges.",
+            )
 
         lines[start - 1:end] = replacement
         new_content = "".join(lines)
@@ -301,40 +465,75 @@ def execute_tool(
             try:
                 compile(new_content, safe, "exec")
             except SyntaxError as e:
-                return f"ERROR: Edit would create syntax error — {e}. Fix and retry."
+                return _tool_result(
+                    ok=False, tool="edit_file", path=safe,
+                    error_type="SYNTAX",
+                    error_message=f"Edit would create syntax error: {e}",
+                )
         target.write_text(new_content)
         _track_file_read(target)  # Update tracking after edit
-        logger.info("  tool: edit_file {} lines {}-{} → {} lines", safe, start, end, len(replacement))
-        return f"OK: Edited {safe} lines {start}-{end}"
+        logger.info("  tool: edit_file {} lines {}-{} → {} lines", safe, start, end, new_lines_count)
+        return _tool_result(
+            ok=True, tool="edit_file", path=safe,
+            lines_affected=new_lines_count, start_line=start, end_line=end,
+        )
 
     elif name == "read_file":
         path = arguments.get("path", "")
         clean = path.lstrip("/")
         target = Path(cwd) / clean
         if not target.exists():
-            return f"ERROR: File '{clean}' does not exist."
+            return _tool_result(
+                ok=False, tool="read_file", path=clean,
+                error_type="NOT_FOUND", error_message="File does not exist.",
+            )
         content = target.read_text(errors="replace")
         _track_file_read(target)  # Track for staleness detection
         # Cap at 500 lines to prevent context flooding
         lines = content.splitlines()
-        if len(lines) > 500:
-            return f"File: {clean} ({len(lines)} lines — showing first 500)\n" + "\n".join(
-                f"{i+1}: {l}" for i, l in enumerate(lines[:500])
-            ) + f"\n... ({len(lines) - 500} more lines)"
-        return f"File: {clean} ({len(lines)} lines)\n" + "\n".join(
-            f"{i+1}: {l}" for i, l in enumerate(lines)
+        total_lines = len(lines)
+        if total_lines > 500:
+            preview = "\n".join(f"{i+1}: {l}" for i, l in enumerate(lines[:500]))
+            return _tool_result(
+                ok=True, tool="read_file", path=clean,
+                lines_affected=total_lines, truncated=True,
+                content=f"File: {clean} ({total_lines} lines — showing first 500)\n{preview}\n... ({total_lines - 500} more lines)",
+            )
+        file_content = "\n".join(f"{i+1}: {l}" for i, l in enumerate(lines))
+        return _tool_result(
+            ok=True, tool="read_file", path=clean,
+            lines_affected=total_lines,
+            content=f"File: {clean} ({total_lines} lines)\n{file_content}",
         )
 
     elif name == "run_command":
         command = arguments.get("command", "")
-        # Block destructive commands that bypass write/edit guards
-        import re as _re
-        if _re.search(r'\brm\s', command) and not _re.search(r'\brm\s+(-rf?\s+)?(\/tmp|__pycache__|\.pytest_cache|node_modules|dist|build)\b', command):
-            return "ERROR: rm blocked in run_command. Use edit_file or write_file to modify files."
-        if _re.search(r'\bmv\s.*\.(py|ts|tsx|js|jsx|sh)\b', command):
-            return "ERROR: mv of code files blocked. Use write_file to create files at new paths."
-        if _re.search(r'>\s*\S+\.(py|ts|tsx|js|jsx|sh)\b', command):
-            return "ERROR: Shell redirect to code files blocked. Use write_file instead."
+
+        # Check destructive patterns (expanded from Hermes-inspired analysis)
+        for pattern, msg in DESTRUCTIVE_PATTERNS:
+            if pattern.search(command):
+                return _tool_result(
+                    ok=False, tool="run_command",
+                    error_type="BLOCKED_COMMAND", error_message=msg, retryable=False,
+                    command=command[:100],
+                )
+
+        # Legacy rm/mv/redirect blocks (kept for completeness)
+        if re.search(r'\brm\s', command) and not re.search(r'\brm\s+(-rf?\s+)?(\/tmp|__pycache__|\.pytest_cache|node_modules|dist|build)\b', command):
+            return _tool_result(
+                ok=False, tool="run_command",
+                error_type="BLOCKED_COMMAND",
+                error_message="rm blocked — use edit_file or write_file to modify files.",
+                retryable=False, command=command[:100],
+            )
+        if re.search(r'\bmv\s.*\.(py|ts|tsx|js|jsx|sh)\b', command):
+            return _tool_result(
+                ok=False, tool="run_command",
+                error_type="BLOCKED_COMMAND",
+                error_message="mv of code files blocked — use write_file to create files at new paths.",
+                retryable=False, command=command[:100],
+            )
+
         # Strip .venv from PATH
         clean_env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
         clean_env["PATH"] = os.pathsep.join(
@@ -346,18 +545,38 @@ def execute_tool(
                 ["bash", "-lc", command],
                 capture_output=True, text=True, timeout=30, cwd=cwd, env=clean_env,
             )
-            output = proc.stdout + ("\n" + proc.stderr if proc.stderr else "")
-            # Cap output
-            if len(output) > 5000:
-                output = output[:5000] + "\n... (truncated)"
+            stdout = proc.stdout[:2500] if len(proc.stdout) > 2500 else proc.stdout
+            stderr = proc.stderr[:2500] if len(proc.stderr) > 2500 else proc.stderr
             logger.info("  tool: run_command exit={} '{}'", proc.returncode, command[:80])
-            return f"exit_code: {proc.returncode}\n{output}"
+            return _tool_result(
+                ok=(proc.returncode == 0), tool="run_command",
+                exit_code=proc.returncode,
+                stdout_preview=stdout if stdout else None,
+                stderr_preview=stderr if stderr else None,
+                command=command[:100],
+            )
         except subprocess.TimeoutExpired:
-            return "ERROR: Command timed out after 30 seconds."
+            return _tool_result(
+                ok=False, tool="run_command",
+                error_type="TIMEOUT",
+                error_message="Command timed out after 30 seconds.",
+                command=command[:100],
+            )
         except Exception as e:
-            return f"ERROR: {e}"
+            return _tool_result(
+                ok=False, tool="run_command",
+                error_type="EXECUTION",
+                error_message=str(e),
+                command=command[:100],
+            )
 
-    return f"ERROR: Unknown tool '{name}'"
+    # Unknown tool — should not happen if VALID_TOOLS is checked first
+    return _tool_result(
+        ok=False, tool=name,
+        error_type="UNKNOWN_TOOL",
+        error_message=f"Unknown tool '{name}'. Available: {', '.join(sorted(VALID_TOOLS))}",
+        retryable=False,
+    )
 
 
 # ── Agent Loop ──────────────────────────────────────────────────────
@@ -388,7 +607,6 @@ def run_tool_use_loop(
     # which returns structured JSON. In tool_use mode, the LLM must call write_file/edit_file
     # tools instead. Without this strip, Codex follows the JSON instruction and returns
     # {"summary":...,"operations":[...]} instead of making tool calls.
-    import re
     system_prompt = re.sub(
         r"(?s)Return ONLY a JSON object\..*?OPERATION RULES:.*?(?=\nSKILL DOCUMENTATION|\nSAFETY|\Z)",
         "You have tools: write_file, edit_file, read_file, run_command. "
@@ -435,52 +653,97 @@ def run_tool_use_loop(
     if not model.startswith("gpt-"):
         payload_base["temperature"] = min(temperature, 1.0)
 
+    # Duplicate-call suppression: track calls this loop to block repeated identical failing calls
+    seen_calls: set[str] = set()
+
     for iteration in range(MAX_TOOL_ITERATIONS):
+        # Message sanitization: strip surrogates before API call (Hermes-inspired)
+        sanitize_messages(messages)
+
         payload = {**payload_base, "messages": messages}
 
-        # Call LLM with retry on transient errors
+        # Call LLM with smart retry using error classifier
         data = None
         max_retries = 3
+        # Estimate tokens for context overflow detection
+        approx_tokens = sum(len(m.get("content", "")) // 4 for m in messages)
+
         for attempt in range(1, max_retries + 1):
             try:
                 if iteration == 0 and attempt == 1:
-                    logger.debug("  Payload model={} system_len={} user_len={} tools={}",
+                    logger.debug("  Payload model={} system_len={} user_len={} tools={} approx_tokens={}",
                                  payload.get("model"), len(payload["messages"][0]["content"]),
-                                 len(payload["messages"][1]["content"]), len(payload.get("tools", [])))
+                                 len(payload["messages"][1]["content"]), len(payload.get("tools", [])),
+                                 approx_tokens)
                 resp = httpx.post(
                     SCILLM_URL,
                     headers={"Authorization": f"Bearer {SCILLM_KEY}"},
                     json=payload,
                     timeout=180.0,
                 )
-                if resp.status_code in (500, 502, 503, 429) and attempt < max_retries:
-                    wait = _retry_delay(attempt)
-                    logger.warning("/scillm {} (attempt {}/{}) — retrying in {:.1f}s",
-                                   resp.status_code, attempt, max_retries, wait)
-                    time.sleep(wait)
-                    continue
+
+                # Use error classifier for non-2xx responses
+                if resp.status_code >= 400:
+                    try:
+                        body = resp.json()
+                    except Exception:
+                        body = None
+                    classified = classify_response_error(resp.status_code, body, approx_tokens)
+                    logger.warning("/scillm {} → {} (attempt {}/{})",
+                                   resp.status_code, classified.reason.value, attempt, max_retries)
+
+                    # Context overflow: abort with clear message (no retry will help)
+                    if classified.should_compress:
+                        logger.error("  Context overflow detected — task too large for model context")
+                        break
+
+                    # Non-retryable errors: abort immediately
+                    if not classified.retryable:
+                        logger.error("  Non-retryable error: {} — {}", classified.reason.value, classified.message[:200])
+                        break
+
+                    # Retryable: backoff and retry
+                    if attempt < max_retries:
+                        wait = _retry_delay(attempt)
+                        time.sleep(wait)
+                        continue
+                    break
+
                 resp.raise_for_status()
                 data = resp.json()
                 break
-            except httpx.TimeoutException:
-                if attempt < max_retries:
+
+            except httpx.TimeoutException as e:
+                classified = classify_api_error(e, approx_tokens=approx_tokens)
+                if attempt < max_retries and classified.retryable:
                     wait = _retry_delay(attempt)
                     logger.warning("/scillm timeout (attempt {}/{}) — retrying in {:.1f}s",
                                    attempt, max_retries, wait)
                     time.sleep(wait)
                     continue
                 logger.error("/scillm timeout after {} attempts", max_retries)
+
             except (httpx.ConnectError, OSError) as e:
-                if attempt < max_retries:
+                classified = classify_api_error(e, approx_tokens=approx_tokens)
+                if attempt < max_retries and classified.retryable:
                     wait = _retry_delay(attempt)
                     logger.warning("/scillm connection error (attempt {}/{}) — retrying in {:.1f}s: {}",
                                    attempt, max_retries, wait, e)
                     time.sleep(wait)
                     continue
                 logger.error("/scillm connection failed after {} attempts: {}", max_retries, e)
+
             except Exception as e:
-                logger.error("Tool loop LLM call failed: {}", e)
+                classified = classify_api_error(e, approx_tokens=approx_tokens)
+                logger.error("Tool loop LLM call failed: {} ({})", e, classified.reason.value)
+                if not classified.retryable:
+                    break
+                if attempt < max_retries:
+                    wait = _retry_delay(attempt)
+                    time.sleep(wait)
+                    continue
                 break
+
         if data is None:
             logger.error("  Tool loop aborting — LLM unreachable after retries")
             break
@@ -489,14 +752,33 @@ def run_tool_use_loop(
         msg = choice["message"]
         finish = choice.get("finish_reason", "stop")
 
+        # Extract reasoning if present (for debugging)
+        reasoning = _extract_reasoning(msg)
+        if reasoning:
+            logger.debug("  Reasoning (turn {}): {}", iteration + 1, reasoning[:200])
+
         # Append assistant message to conversation
         messages.append(msg)
 
-        # If no tool calls — LLM is done (text response or stop)
+        # If no tool calls — try fallback parsing for raw tags (Qwen, DeepSeek)
         tool_calls = msg.get("tool_calls")
+        content = msg.get("content", "")
+
+        # Fallback: parse raw tool call tags from content if no structured tool_calls
+        if not tool_calls and content and ("<tool_call>" in content or "<｜tool" in content or "<function" in content):
+            cleaned_content, parsed_calls = parse_tool_calls(content)
+            if parsed_calls:
+                # Inject parsed calls into the message
+                tool_calls = to_openai_format(parsed_calls)
+                msg["tool_calls"] = tool_calls
+                if cleaned_content is not None:
+                    msg["content"] = cleaned_content
+                logger.info("  Fallback parser extracted {} tool calls from raw content", len(parsed_calls))
+
         if tool_calls and finish == "stop":
             logger.warning("  LLM returned {} tool_calls but finish_reason=stop — processing tool calls anyway", len(tool_calls))
             finish = "tool_calls"  # Fix: treat as tool_calls if tools present
+
         if not tool_calls:
             logger.info("  Tool loop complete after {} iterations (no tool_calls, finish={})", iteration + 1, finish)
             break
@@ -504,24 +786,67 @@ def run_tool_use_loop(
         # Execute each tool call and append results
         for tc in tool_calls:
             fn_name = tc["function"]["name"]
-            try:
-                fn_args = json.loads(tc["function"]["arguments"])
-            except json.JSONDecodeError:
-                fn_args = {}
+            fn_args_raw = tc["function"].get("arguments", "{}")
+            tc_id = tc.get("id", f"call_{hashlib.sha256(fn_args_raw.encode()).hexdigest()[:8]}")
 
+            # 1. Unknown tool check (before parsing args)
+            if fn_name not in VALID_TOOLS:
+                result = _tool_result(
+                    ok=False, tool=fn_name,
+                    error_type="UNKNOWN_TOOL",
+                    error_message=f"Unknown tool '{fn_name}'. Available: {', '.join(sorted(VALID_TOOLS))}",
+                    retryable=False,
+                )
+                messages.append({"role": "tool", "tool_call_id": tc_id, "content": result})
+                logger.warning("  Unknown tool '{}' — returning error", fn_name)
+                continue
+
+            # 2. Parse arguments with repair (uses json_utils.parse_json)
+            fn_args = parse_json(fn_args_raw)
+            if isinstance(fn_args, str):
+                # parse_json returns original string if all parsing failed
+                result = _tool_result(
+                    ok=False, tool=fn_name,
+                    error_type="INVALID_ARGS",
+                    error_message=f"Could not parse arguments as JSON. Raw: {fn_args_raw[:200]}",
+                    retryable=True,
+                )
+                messages.append({"role": "tool", "tool_call_id": tc_id, "content": result})
+                logger.warning("  Invalid JSON args for '{}' — returning error", fn_name)
+                continue
+
+            # 3. Duplicate-call suppression (same tool + args = blocked)
+            call_hash = hashlib.sha256(f"{fn_name}:{fn_args_raw}".encode()).hexdigest()[:16]
+            if call_hash in seen_calls:
+                result = _tool_result(
+                    ok=False, tool=fn_name,
+                    error_type="DUPLICATE_CALL",
+                    error_message="This exact tool call was already made this loop. Try a different approach.",
+                    retryable=False,
+                )
+                messages.append({"role": "tool", "tool_call_id": tc_id, "content": result})
+                logger.warning("  Duplicate call to '{}' — blocked", fn_name)
+                continue
+            seen_calls.add(call_hash)
+
+            # 4. Execute tool
             result = execute_tool(fn_name, fn_args, cwd, allowlist)
 
-            # Track written files
-            if fn_name in ("write_file", "edit_file") and result.startswith("OK:"):
-                path = fn_args.get("path", "")
-                safe = _is_path_safe(path, cwd, allowlist)
-                if safe and safe not in files_written:
-                    files_written.append(safe)
+            # 5. Track written files (parse JSON result to check success)
+            if fn_name in ("write_file", "edit_file"):
+                try:
+                    result_data = json.loads(result)
+                    if result_data.get("ok") and result_data.get("path"):
+                        path = result_data["path"]
+                        if path not in files_written:
+                            files_written.append(path)
+                except (json.JSONDecodeError, KeyError):
+                    pass
 
-            # Feed result back to LLM
+            # 6. Feed result back to LLM
             messages.append({
                 "role": "tool",
-                "tool_call_id": tc["id"],
+                "tool_call_id": tc_id,
                 "content": result,
             })
 

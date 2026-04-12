@@ -17,6 +17,7 @@ dependencies = [
     "numpy",
     "soundfile",
     "flashtext>=2.7",
+    "json-repair>=0.59.1",
 ]
 
 [project.optional-dependencies]

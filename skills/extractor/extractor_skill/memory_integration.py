@@ -4,18 +4,13 @@ Memory skill integration for extractor.
 
 Provides functions to sync extraction results to the memory system
 for future recall and knowledge retrieval.
-"""
-import subprocess
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 
-from extractor_skill.config import MEMORY_SKILL_PATH
-from extractor_skill.utils import (
-    HAS_MEMORY_CLIENT,
-    MemoryClient,
-    get_memory_limiter,
-    with_retries,
-)
+Uses MemoryClient from common.memory_client - /memory is always available.
+"""
+from pathlib import Path
+from typing import Any, Dict
+
+from common.memory_client import MemoryClient
 
 
 def learn_to_memory(
@@ -25,8 +20,6 @@ def learn_to_memory(
 ) -> bool:
     """
     Auto-learn extraction summary to memory for future recall.
-
-    Uses retry logic for resilience against transient failures.
 
     Args:
         filepath: Path to the extracted document
@@ -57,42 +50,9 @@ def learn_to_memory(
     solution = ", ".join(solution_parts)
     tags = ["extractor", "document", preset]
 
-    # Use common MemoryClient if available for standardized resilience
-    if HAS_MEMORY_CLIENT and MemoryClient is not None:
-        try:
-            client = MemoryClient(scope=scope)
-            mem_result = client.learn(problem=problem, solution=solution, tags=tags)
-            return mem_result.success
-        except Exception:
-            return False
-
-    # Fallback: direct subprocess with inline retry logic
-    if not MEMORY_SKILL_PATH.exists():
-        return False
-
-    @with_retries(max_attempts=3, base_delay=0.5)
-    def _learn_with_retry() -> bool:
-        get_memory_limiter().acquire()
-        cmd = [
-            str(MEMORY_SKILL_PATH),
-            "learn",
-            "--problem", problem,
-            "--solution", solution,
-        ]
-        if scope:
-            cmd.extend(["--scope", scope])
-        for tag in tags:
-            cmd.extend(["--tag", tag])
-
-        proc_result = subprocess.run(cmd, capture_output=True, timeout=30)
-        if proc_result.returncode != 0:
-            raise RuntimeError(f"Memory learn failed (rc={proc_result.returncode}): {proc_result.stderr}")
-        return True
-
-    try:
-        return _learn_with_retry()
-    except Exception:
-        return False
+    client = MemoryClient(scope=scope)
+    mem_result = client.learn(problem=problem, solution=solution, tags=tags)
+    return mem_result.success
 
 
 def learn_failure_to_memory(
@@ -131,39 +91,6 @@ def learn_failure_to_memory(
     solution = ". ".join(solution_parts)
     tags = ["extractor", "failure", "error-pattern", filepath.suffix.lstrip(".")]
 
-    # Use common MemoryClient if available
-    if HAS_MEMORY_CLIENT and MemoryClient is not None:
-        try:
-            client = MemoryClient(scope=scope)
-            mem_result = client.learn(problem=problem, solution=solution, tags=tags)
-            return mem_result.success
-        except Exception:
-            return False
-
-    # Fallback: direct subprocess with retry logic
-    if not MEMORY_SKILL_PATH.exists():
-        return False
-
-    @with_retries(max_attempts=3, base_delay=0.5)
-    def _learn_failure_with_retry() -> bool:
-        get_memory_limiter().acquire()
-        cmd = [
-            str(MEMORY_SKILL_PATH),
-            "learn",
-            "--problem", problem,
-            "--solution", solution,
-        ]
-        if scope:
-            cmd.extend(["--scope", scope])
-        for tag in tags:
-            cmd.extend(["--tag", tag])
-
-        proc_result = subprocess.run(cmd, capture_output=True, timeout=30)
-        if proc_result.returncode != 0:
-            raise RuntimeError(f"Memory learn failed (rc={proc_result.returncode}): {proc_result.stderr}")
-        return True
-
-    try:
-        return _learn_failure_with_retry()
-    except Exception:
-        return False
+    client = MemoryClient(scope=scope)
+    mem_result = client.learn(problem=problem, solution=solution, tags=tags)
+    return mem_result.success

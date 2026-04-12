@@ -106,22 +106,51 @@ ls src/sparta/pipeline/steps/*.py | grep -E "^[0-9]"
 | 48-55 | export | Discriminative attributes, audit, tiered graph export |
 | 60-61 | technique_knowledge | Build technique knowledge corpus |
 
-## Crosswalk Paths (CWE → SPARTA SV)
+## Crosswalk Paths (CWE → SPARTA)
 
-Two paths connect CWE weaknesses to SPARTA countermeasures:
+Three paths connect CWE weaknesses to SPARTA countermeasures:
 
-| Path | Hops | Data Source |
-|------|------|-------------|
-| CWE → NIST (`nist_control_ids`) → SV (`tor_threats`) | 2 | MITRE Heimdall CSV |
-| CWE → CAPEC (`capec_ids`) → ATT&CK (`attack_technique_ids`) → SPARTA | 4 | MITRE curated |
+| Path | Hops | Data Source | Edges |
+|------|------|-------------|-------|
+| CWE → SPARTA (direct) | 1 | SPARTA v3.1 `cwe_class_ids` | 2,825+ |
+| CWE → NIST → SPARTA | 2 | Heimdall `nist_control_ids` + `tor_threats` | 289+ per NIST |
+| CWE → CAPEC → ATT&CK → SPARTA | 4 | MITRE curated fields | sparse |
 
-The 2-hop NIST path is populated by pipeline step `01d_map_cwe_nist.py` (138 CWEs mapped).
-Field `nist_source` tracks provenance (`mitre_heimdall_800-53r4`).
+### Direct Path (SPARTA v3.1)
+
+Step 08 extracts `cwe_class_ids` from SPARTA Techniques and creates CWE→SPARTA edges.
+
+```bash
+# Run Step 08 to create/update CWE→SPARTA edges
+python -m sparta.pipeline.steps.08_relationships --run-id <run-id>
+```
+
+### NIST 2-hop Path (Heimdall)
+
+Step 01d populates `nist_control_ids` on CWE controls from MITRE Heimdall CSV.
 
 ```bash
 # Run CWE→NIST mapping step
 python -m sparta.pipeline.steps.01d_map_cwe_nist --run-id <run-id>
 python -m sparta.pipeline.steps.01d_map_cwe_nist --download  # Fetch fresh CSV
+```
+
+### Edge Casing in sparta_relationships (CRITICAL)
+
+| Edge Type | source_framework | target_framework |
+|-----------|-----------------|------------------|
+| CWE→SPARTA | `"CWE"` | `"SPARTA"` (uppercase) |
+| NIST→SPARTA | `"nist"` | `"sparta"` (lowercase) |
+| CAPEC→CWE | `"CAPEC"` | `"CWE"` |
+
+**When querying for SPARTA targets, check BOTH cases:**
+
+```python
+for tf_case in ["sparta", "SPARTA"]:
+    resp = client.post("/list", json={
+        "collection": "sparta_relationships",
+        "filters": {"source_control_id": control_id, "target_framework": tf_case}
+    })
 ```
 
 ## Explorer UX
