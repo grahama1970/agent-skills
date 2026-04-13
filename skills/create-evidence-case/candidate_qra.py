@@ -70,8 +70,26 @@ class EvidenceCaseStore2:
         decomposition: dict | None = None,
         grade: str | None = None,
         score: float | None = None,
+        # v4.3 schema fields — self-contained QRA metadata
+        source_framework: str | None = None,
+        source_control_id: str | None = None,
+        relationship_id: str | None = None,
+        expertise: str | None = None,
+        difficulty: str | None = None,
+        mind: list[str] | None = None,
+        evidence_case: dict | None = None,
+        formal_proof: dict | None = None,
+        sacm_ref: dict | None = None,
     ) -> dict:
-        """Persist a complete evidence case. Called by the agent after reasoning."""
+        """Persist a complete evidence case. Called by the agent after reasoning.
+
+        v4.3 adds self-contained QRA metadata:
+        - source_framework: SPARTA, NIST-800-53, CWE, CAPEC
+        - source_control_id: SA-1, IA-5, CWE-287
+        - evidence_case: crosswalk chains (null if no edges = valid)
+        - formal_proof: Lean4 proof refs (null if not verified)
+        - sacm_ref: SACM context/claim node refs
+        """
         claim = ClaimNode(
             text=question,
             category=category,
@@ -143,6 +161,16 @@ class EvidenceCaseStore2:
             "strategy": strategy.to_dict(),
             "evidence_nodes": [e.to_dict() for e in evidence],
             "verdict_node": verdict.to_dict(),
+            # v4.3 self-contained QRA metadata
+            "source_framework": source_framework,
+            "source_control_id": source_control_id,
+            "relationship_id": relationship_id,
+            "expertise": expertise or "expert",
+            "difficulty": difficulty or "single_hop",
+            "mind": mind or [],
+            "evidence_case": evidence_case,  # null = no crosswalk edges (valid)
+            "formal_proof": formal_proof,    # null = not verified (valid)
+            "sacm_ref": sacm_ref,            # null = not exported (valid)
         }
 
         def _persist_background():
@@ -167,6 +195,16 @@ class EvidenceCaseStore2:
             "technique_groups": technique_groups or {},
             "sub_claims": sub_claims or [],
             "decomposition": decomposition_node,
+            # v4.3 self-contained QRA metadata
+            "source_framework": source_framework,
+            "source_control_id": source_control_id,
+            "relationship_id": relationship_id,
+            "expertise": expertise or "expert",
+            "difficulty": difficulty or "single_hop",
+            "mind": mind or [],
+            "evidence_case": evidence_case,
+            "formal_proof": formal_proof,
+            "sacm_ref": sacm_ref,
         }
 
 
@@ -213,6 +251,16 @@ def quarantine_as_candidate_qra(
         "created_at": time.time(),
         "reviewed_at": None,
         "reviewer_decision": None,
+        # v4.3 self-contained QRA metadata (passed through from persist_case)
+        "source_framework": case_result.get("source_framework"),
+        "source_control_id": case_result.get("source_control_id"),
+        "relationship_id": case_result.get("relationship_id"),
+        "expertise": case_result.get("expertise", "expert"),
+        "difficulty": case_result.get("difficulty", "single_hop"),
+        "mind": case_result.get("mind", []),
+        "evidence_case": case_result.get("evidence_case"),
+        "formal_proof": case_result.get("formal_proof"),
+        "sacm_ref": case_result.get("sacm_ref"),
     }
 
     tags = ["qra_candidate", "pending_review"] + control_ids[:5]
@@ -391,6 +439,16 @@ def promote_candidate_qra(candidate_id: str, edited_answer: str | None = None) -
         "source_candidate_id": candidate_id,
         "source_qra_keys": candidate.get("source_qra_keys", []),
         "promoted_at": time.time(),
+        # v4.3 self-contained QRA metadata
+        "source_framework": candidate.get("source_framework"),
+        "source_control_id": candidate.get("source_control_id"),
+        "relationship_id": candidate.get("relationship_id"),
+        "expertise": candidate.get("expertise", "expert"),
+        "difficulty": candidate.get("difficulty", "single_hop"),
+        "mind": candidate.get("mind", []),
+        "evidence_case": candidate.get("evidence_case"),
+        "formal_proof": candidate.get("formal_proof"),
+        "sacm_ref": candidate.get("sacm_ref"),
     }
 
     tags = ["promoted_qra", "evidence_case"] + candidate["tactical_tags"][:5]

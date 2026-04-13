@@ -219,6 +219,57 @@ if data["found"]:
     print(data["confidence"])         # ← combined grounding signal
 ```
 
+## scillm Persistence Collections
+
+scillm uses ArangoDB (via the memory daemon) for all persistent state — no Redis needed.
+
+### Collections
+
+| Collection | Purpose | Written By |
+|------------|---------|------------|
+| `llm_call_log` | LLM execution telemetry (duration, model, tokens, cost, errors) | ArangoLogMiddleware |
+| `scillm_response_cache` | Response caching + request deduplication | CacheMiddleware |
+| `scillm_concurrency_state` | Concurrency backoff state (survives restarts) | ConcurrencyMiddleware |
+
+### Response Caching (`scillm_response_cache`)
+
+Caches LLM responses by model + messages hash. Identical requests return cached responses
+instead of hitting the provider. Also deduplicates in-flight requests — if 3 agents ask
+the same question simultaneously, only 1 API call is made.
+
+```python
+# Document structure
+{
+    "_key": "sha256-hash[:32]",
+    "response": {...},           # Full OpenAI response object
+    "created_at": 1712934567.0,
+    "expires_at": 1712938167.0   # TTL (default 1hr)
+}
+```
+
+Env vars: `SCILLM_CACHE_TTL_SEC=3600`, `SCILLM_CACHE_DISABLE=1`
+
+### Concurrency Backoff State (`scillm_concurrency_state`)
+
+Persists adaptive concurrency limits. When a provider returns 429s, scillm halves
+concurrency. This state survives restarts — won't immediately hammer a rate-limited
+provider after restart.
+
+```python
+# Document structure
+{
+    "_key": "concurrency_chutes",
+    "provider": "chutes",
+    "effective_limit": 2,         # Current limit (may be reduced from configured)
+    "configured_limit": 4,        # Original limit from config
+    "rate_limit_hits": [...],     # Recent 429 timestamps
+    "last_recovery": 1712934567.0,
+    "updated_at": 1712934567.0
+}
+```
+
+State expires after 1 hour — stale backoff won't persist forever.
+
 ## LLM Execution Telemetry (`llm_call_log`)
 
 Every `/scillm` call is automatically logged to `llm_call_log` with duration, model,
@@ -256,6 +307,66 @@ Multi-hop graph traversal works automatically — no extra params needed.
 **To tag which skill made the call**, pass an HTTP header to scillm:
 ```python
 httpx.post(SCILLM_URL, headers={"x-caller-skill": "dogpile", ...}, json={...})
+```
+
+## Timeout Estimation (`/latency-stats`)
+
+Calculates latency percentiles and throughput stats from `llm_call_log` for timeout estimation.
+Agents call this endpoint instead of writing AQL — keeps all database queries in the memory project.
+
+```python
+# Basic: get p95 latency for a model
+resp = client.post("/latency-stats", json={
+    "model": "deepseek-ai/DeepSeek-V3",
+    "days": 7
+})
+# Returns: {recommended_timeout_ms: 8100, percentiles: {p50: 2100, p95: 8100, ...}}
+
+# Token-aware: estimate timeout for a specific request size
+resp = client.post("/latency-stats", json={
+    "model": "deepseek-ai/DeepSeek-V3",
+    "prompt_tokens": 3000,
+    "completion_tokens": 1000
+})
+# Returns: {recommended_timeout_ms: 28500, estimated_timeout_ms: 28500,
+#           throughput: {p50_tps: 45.2, p95_tps: 22.1}, ...}
+
+# Batch: get stats for all models at once
+resp = client.post("/latency-stats/batch", json={"days": 7})
+# Returns: {models: [{model: "deepseek...", p95_ms: 8100, ...}, ...]}
+```
+
+**Request fields:**
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `model` | str | null | Filter by model_served |
+| `provider` | str | null | Filter by provider (chutes, google, anthropic) |
+| `days` | int | 7 | Lookback window (1-90) |
+| `status` | str | "ok" | Filter by status (ok/error/all) |
+| `prompt_tokens` | int | null | Expected prompt size for token-aware estimation |
+| `completion_tokens` | int | null | Expected output size for token-aware estimation |
+
+**Response fields:**
+| Field | Description |
+|-------|-------------|
+| `sample_count` | Number of calls used for calculation |
+| `percentiles` | {p50, p75, p90, p95, p99} in milliseconds |
+| `throughput` | {p50_tps, p95_tps} tokens per second |
+| `estimated_timeout_ms` | Based on token counts (if provided) |
+| `recommended_timeout_ms` | Safe timeout — estimated_timeout_ms or p95 |
+
+**How agents use it:**
+```python
+# Before making a large LLM call, estimate timeout
+stats = client.post("/latency-stats", json={
+    "model": model,
+    "prompt_tokens": len(prompt) // 4,  # rough estimate
+    "completion_tokens": 2000
+}).json()
+
+timeout = stats.get("recommended_timeout_ms", 30000) / 1000
+response = await scillm_client.post("/v1/chat/completions", 
+    json=request, timeout=timeout)
 ```
 
 ## Common Mistakes
@@ -305,7 +416,13 @@ resp = client.post("/recall", json={"q": query, "k": 10,
 # WRONG: writing raw AQL outside the memory project
 db.aql.execute("FOR doc IN lessons FILTER ...")
 # → ALL AQL must reside ONLY in ~/workspace/experiments/memory/
-# RIGHT: use /recall, /list, /analytics/run endpoints
+# RIGHT: use /recall, /list, /analytics/run, /latency-stats endpoints
+
+# WRONG: calculating latency percentiles with custom AQL
+db.aql.execute("FOR doc IN llm_call_log SORT doc.duration_ms ...")
+# → Use /latency-stats endpoint instead
+# RIGHT: call /latency-stats with model/provider filter
+client.post("/latency-stats", json={"model": "deepseek-ai/DeepSeek-V3"})
 
 # WRONG: /learn to write to a specific collection
 client.post("/learn", json={"problem": "...", "solution": "..."})

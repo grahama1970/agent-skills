@@ -22,6 +22,7 @@ class TaskSpec(BaseModel):
     title: str = Field("", description="Human-readable task title")
     prompt: str = Field(..., min_length=20, description="Specific task instructions (>=20 chars)")
     backend: str = Field("codex", description="LLM backend: codex, claude, text, gemini, deepseek")
+    lang: str = Field("", description="Language: python, rust, typescript. Empty = auto-detect from cwd")
     cwd: str = Field(..., min_length=1, description="Working directory (must exist)")
     output_dir: str = Field("/tmp/code-runner", description="Where to write logs and results")
     definition_of_done: DefinitionOfDone
@@ -48,6 +49,14 @@ class TaskSpec(BaseModel):
         if v and v not in known:
             raise ValueError(f"Unknown backend '{v}'. Valid: {', '.join(sorted(known))}")
         return v
+
+    @field_validator("lang")
+    @classmethod
+    def lang_must_be_known(cls, v: str) -> str:
+        known = {"", "python", "rust", "typescript", "ts", "node"}
+        if v and v.lower() not in known:
+            raise ValueError(f"Unknown lang '{v}'. Valid: python, rust, typescript")
+        return v.lower()
 
     @model_validator(mode="after")
     def require_allowlist_or_opt_out(self) -> "TaskSpec":

@@ -560,6 +560,7 @@ def run(
     title = spec.title
     prompt = spec.prompt
     llm_backend = backend or spec.backend
+    lang = spec.lang  # Language profile: python, rust, typescript, or empty for auto-detect
     cwd = spec.cwd
     output_dir = Path(spec.output_dir)
     dod_command = spec.definition_of_done.command
@@ -693,6 +694,7 @@ def run(
                     dogpile_done = True  # only search once per run
 
             cur_backend, cur_reasoning = escalation_chain[escalation_idx]
+            round_start_time = time.time()  # Track round duration for memory logging
             _emit_event("round_start", task_id=task_id, round=round_num,
                         max_rounds=max_rounds, strategy=strategy,
                         backend=cur_backend, reasoning=cur_reasoning,
@@ -958,7 +960,7 @@ def run(
                     break
 
             # 3. T0 deterministic evidence collection (NOW evaluates changed files)
-            evidence_raw = collect_evidence(cwd, dod_command, dod_assertion)
+            evidence_raw = collect_evidence(cwd, dod_command, dod_assertion, lang=lang)
             score = evidence_raw["score"]
 
             # If LLM wrote zero files AND DoD didn't pass, force score to 0.
@@ -1005,9 +1007,10 @@ def run(
             if score > best_score + EPSILON:
                 commit = git_commit_round(cwd, task_id, round_num, score, written) if is_git_repo else ""
                 if is_git_repo and not commit:
-                    # Git commit failed — don't advance best_score or it'll diverge from recoverable state
+                    # Git commit failed — revert files to maintain filesystem/score consistency
+                    git_revert_to(cwd, best_commit, written)
                     status = "discard"
-                    logger.warning("  DISCARD (score improved but git commit failed)")
+                    logger.warning("  DISCARD (score improved but git commit failed — reverted files)")
                 else:
                     best_score = score
                     best_commit = commit or best_commit
@@ -1060,6 +1063,11 @@ def run(
                 # Tool call trace (compressed text for prompt, structured for /memory)
                 "tool_trace": trace_text,
                 "tool_trace_events": trace_events_json,
+                # Memory logging fields (expected by _learn_round_to_memory)
+                "model": cur_backend,
+                "duration_ms": int((time.time() - round_start_time) * 1000),
+                "prompt_snippet": f"{title}: {strategy}",
+                "response_snippet": (llm_metadata or {}).get("summary", "")[:200] or trace_text[:200],
             }
             rounds_history.append(round_entry)
 

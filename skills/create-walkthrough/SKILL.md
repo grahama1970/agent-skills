@@ -424,12 +424,62 @@ Prefer Mermaid over ASCII art — it survives edits when the implementation chan
 
 ### Phase 6: Publish (AUTO — NON-NEGOTIABLE)
 
-After writing the walkthrough, two things happen automatically. The agent does NOT
+After writing the walkthrough, three things happen automatically. The agent does NOT
 skip these or ask the user first.
 
-#### 6a. Learn to /memory
+#### 6a. Store to `walkthroughs` collection (STRUCTURED)
 
-Store the walkthrough's key findings as lessons so future agents can recall them.
+Store the walkthrough as a structured document in the dedicated `walkthroughs` ArangoDB
+collection. This enables clean retrieval via `/recall --collections walkthroughs`.
+
+```python
+import httpx
+
+transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
+client = httpx.Client(transport=transport, base_url="http://localhost", timeout=30.0)
+
+walkthrough_doc = {
+    "_key": f"{skill_name}_{version}_{date}",  # e.g., "create-evidence-case_v43_20260412"
+    "skill_name": skill_name,
+    "version": version,
+    "date": date,
+    
+    # Core content
+    "summary": "One-paragraph summary of what the skill does",
+    "pipeline_flow": "Step → Step → Step description",
+    "gate_logic": "Any deterministic gates that control expensive operations",
+    "three_tier_output": ["list", "of", "output", "tiers"],
+    
+    # Expert review
+    "expert_reviewer": "Persona Name",
+    "expert_role": "Title/Organization",
+    "expert_concerns": ["concern 1", "concern 2"],
+    "expert_satisfied": ["satisfaction 1", "satisfaction 2"],
+    
+    # Standards alignment (if applicable)
+    "standards_alignment": ["DO-178C", "ISO 26262"],
+    "research_citations": ["Citation 1", "Citation 2"],
+    "innovations": ["Innovation 1", "Innovation 2"],
+    
+    # Metadata
+    "file_path": "~/.claude/skills/{skill}/WALKTHROUGH.md",
+    "tags": ["walkthrough", skill_name, "architecture"],
+    "type": "walkthrough",
+}
+
+resp = client.post("/store", json={
+    "document": walkthrough_doc,
+    "collection": "walkthroughs",
+})
+```
+
+**Why this can't be skipped:** Walkthroughs in a dedicated collection are easily retrieved
+via `/recall --collections walkthroughs "how does X work"`. Mixing them with lessons_v2
+(161K docs) makes retrieval noisy.
+
+#### 6b. Learn overview to lessons_v2
+
+Also store the walkthrough's key findings as lessons so future agents can recall them.
 Store BOTH:
 1. **The overview lesson** — "How does [system] work?" with the full pipeline summary
 2. **Individual decision lessons** — one per key decision, separately recallable

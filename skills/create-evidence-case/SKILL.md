@@ -20,7 +20,7 @@ triggers:
   - evidence tree
 metadata:
   short-description: "Composable CAE evidence orchestrator"
-  version: "4.2.0"
+  version: "4.3.0"
 provides:
   - evidence-case-creation
   - uct-strategy-selection
@@ -54,9 +54,150 @@ taxonomy:
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
-# /create-evidence-case v4.1 — Composable Orchestrator
+# /create-evidence-case v4.3 — Composable Orchestrator
 
 Build structured **Claims-Arguments-Evidence (CAE)** trees. This is an **agent-driven** skill — you (the agent) orchestrate existing skills, reason about results, and make all judgment calls. The Python code is a thin data collector.
+
+## INPUT/OUTPUT MODEL (v4.2)
+
+**Input**: Any control from `sparta_controls` (SPARTA, NIST, CWE, CAPEC) OR a raw question.
+
+**Output**: Always a QRA document in `sparta_qra`, regardless of input source.
+
+| Input Source | Example | Output |
+|--------------|---------|--------|
+| SPARTA control | SA-1 | QRA with `source_framework: "SPARTA"` |
+| NIST control | IA-5 | QRA with `source_framework: "NIST-800-53"` |
+| CWE | CWE-287 | QRA with `source_framework: "CWE"` |
+| Raw question | "What is CWE-287?" | QRA with extracted `source_control_id` |
+
+### QRA Output Tiers
+
+Not every QRA has evidence. The `evidence_case` field being `null` is a **deterministic signal** (no crosswalk edges exist), not a failure.
+
+| Tier | evidence_case | Use Case |
+|------|---------------|----------|
+| **Informational** | null | Explanation, lookup (no crosswalk edges) |
+| **Grounded** | `{chains: [...], formal_proof: null}` | Compliance, audit |
+| **Verified** | `{chains: [...], formal_proof: {success: true}}` | Safety-critical, formal methods |
+
+All fields (chains, formal_proof, sacm_ref) live **inside** evidence_case. One null check.
+
+### Entity Extraction → Evidence Case Flow
+
+```
+"What is CWE-287?"
+       │
+       ▼
+/extract-entities → "CWE-287" ✓
+       │
+       ▼
+/create-evidence-case
+├── Query crosswalk edges in sparta_relationships
+├── Has edges → evidence_case: {chains: [...]}
+└── No edges  → evidence_case: null (valid output)
+       │
+       ▼
+QRA created in sparta_qra
+├── question: "What is CWE-287?"
+├── requirement: CWE-287 description
+├── answer: Explanation text
+├── source_framework: "CWE"
+├── source_control_id: "CWE-287"
+└── evidence_case: {...} or null  # SELF-CONTAINED: includes chains, proof, sacm_ref
+```
+
+### Self-Contained QRA Schema (v4.3)
+
+Every QRA embeds all metadata for downstream consumption. **evidence_case is fully
+self-contained** — formal proofs and SACM references live INSIDE it, not at top level.
+This ensures traceability in ArangoDB and portability for OSCAL/SACM export.
+
+```python
+{
+    # Core QRA fields
+    "question": str,
+    "requirement": str,
+    "answer": str,
+    "source_framework": str,        # SPARTA, NIST-800-53, CWE, CAPEC
+    "source_control_id": str,       # SA-1, IA-5, CWE-287
+    "relationship_id": str,         # Links persona variations
+    "expertise": str,               # expert, layperson, pm, compliance
+    "difficulty": str,              # single_hop, multi_hop, synthesis
+    
+    # Taxonomy (Mind tags for SPARTA scope)
+    "mind": list[str],              # ["Detect", "Harden"]
+    
+    # Evidence case — SELF-CONTAINED (null if no crosswalk edges)
+    # All verification evidence lives here: chains, proof, SACM ref
+    "evidence_case": {
+        "chains": [...],            # Crosswalk paths (source → hops → target)
+        "confidence": float,        # 0.0-1.0 combined confidence
+        "methods": list[str],       # ["direct", "mitre_chain", "nist_nvd"]
+        
+        # Formal proof (null if not verified) — INSIDE evidence_case
+        "formal_proof": {
+            "success": bool,
+            "code": str,            # Lean4 source code
+            "attempts": int,
+            "errors": list | None,
+            "proved_at": int | None,
+        } | None,
+        
+        # SACM reference (null if not exported) — INSIDE evidence_case
+        "sacm_ref": {
+            "gid": str,             # SACM Goal node GID (lookup key)
+            "xml_snippet": str,     # First 500 chars (preview)
+            "generated_at": int,
+        } | None,
+    } | None,
+}
+```
+
+**Why self-contained?** ISO 26262 and DO-178C refinement checking patterns bundle
+verification evidence with the claim. Separate collections would require joins,
+lose portability, and break single-document export to OSCAL/SACM XML.
+
+## TRACEABILITY vs VERIFICATION
+
+Matching requirements to controls (via `/match/requirement`) provides **traceability** —
+linking related concepts. But traceability alone is NOT SUFFICIENT for certification.
+
+| Level | What it proves | Provides | Sufficient for |
+|-------|----------------|----------|----------------|
+| **Matching** | "Related concepts" | Traceability | Gap detection, triage |
+| **Confidence scoring** | "Probably covers" | Prioritization | Audit prep |
+| **Formal proof** | "Functionally entails" | Verification | ISO 26262, DO-178C certification |
+
+**Why matching is insufficient:**
+```
+Requirement: "shall implement multi-factor authentication for all users"
+Control: SV-AC-2 "implement access control mechanisms"
+
+Matching confidence: 0.82
+  - Crosswalk chain exists (CWE → NIST → SPARTA)
+  - QRA evidence mentions both
+  - Semantic similarity is high
+
+Problem: Does SV-AC-2 ACTUALLY cover MFA?
+  - Words overlap, but FUNCTIONS might not
+  - Control might be narrower/broader than requirement
+  - Edge cases might not be addressed
+```
+
+**Why formal proofs are needed:**
+```
+Formal proof (Lean4):
+  theorem control_satisfies_requirement :
+    ∀ u : User, implements(SV-AC-2, u) → authenticated(u) ∧ factors(u) ≥ 2
+
+  Proof result: success=true
+  Meaning: The control ENTAILS the requirement — not just similar words,
+           but the control is a valid implementation of the requirement.
+```
+
+The `evidence_case.formal_proof` field stores this verification evidence.
+Matching builds the edges; formal proofs prove they're functionally valid.
 
 ## EXECUTION MODES
 

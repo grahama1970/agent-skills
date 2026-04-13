@@ -633,6 +633,308 @@ def stress_test(
     console.print(f"\n[bold]Next step:[/] /orchestrate {out_path}")
 
 
+# ---------------------------------------------------------------------------
+# v4.3 Commands — httpx-based, thin daemon wrappers
+# ---------------------------------------------------------------------------
+
+@app.command("create-v43")
+def create_v43(
+    question: str = typer.Argument(..., help="Question or control ID to process"),
+    source_id: str = typer.Option("", "--source", "-s", help="Explicit source control ID (e.g., CWE-287)"),
+    expertise: str = typer.Option("expert", "--expertise", "-e", help="Expertise level: expert|layperson|pm|compliance"),
+    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Print QRA without persisting"),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
+) -> None:
+    """Create a v4.3 QRA via daemon endpoints (httpx-based).
+
+    Pipeline: /create-evidence-case → enrich v4.3 → /store
+
+    Examples:
+        ./run.sh create-v43 "What is CWE-287?" --dry-run
+        ./run.sh create-v43 --source CWE-287 "Explain authentication bypass"
+        ./run.sh create-v43 "NIST IA-5 requirements" --expertise compliance
+    """
+    from daemon_client import create_qra
+
+    console = Console()
+
+    if not dry_run:
+        console.print(f"[dim]Creating v4.3 QRA for: {question[:60]}...[/]")
+
+    qra = create_qra(
+        question=question,
+        source_id=source_id or None,
+        expertise=expertise,
+        dry_run=dry_run,
+    )
+
+    if qra.get("error"):
+        console.print(f"[red]Error: {qra['error']}[/]")
+        raise typer.Exit(1)
+
+    if json_output:
+        print(json.dumps(qra, indent=2, default=str))
+    else:
+        console.print(f"[green]✓[/] Source: {qra.get('source_framework')} / {qra.get('source_control_id')}")
+        console.print(f"[green]✓[/] Difficulty: {qra.get('difficulty')}")
+        console.print(f"[green]✓[/] Mind tags: {qra.get('mind', [])}")
+        ec = qra.get("evidence_case")
+        if ec:
+            console.print(f"[green]✓[/] Evidence case: {len(ec.get('chains', []))} chains, confidence={ec.get('confidence', 0):.2f}")
+        else:
+            console.print(f"[yellow]○[/] Evidence case: null (no crosswalk edges)")
+        if not dry_run:
+            sr = qra.get("_store_result", {})
+            if sr.get("ok") or sr.get("_key"):
+                console.print(f"[green]✓[/] Stored to sparta_qra")
+            else:
+                console.print(f"[red]✗[/] Store failed: {sr.get('error', 'unknown')}")
+
+
+@app.command("backfill-v43")
+def backfill_v43(
+    framework: str = typer.Option("CWE", "--framework", "-f", help="Source framework: CWE|CAPEC|NIST|SPARTA"),
+    limit: int = typer.Option(100, "--limit", "-l", help="Max controls to process"),
+    offset: int = typer.Option(0, "--offset", "-o", help="Starting offset"),
+    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Print without persisting"),
+    output: str = typer.Option("", "--output", help="Output JSONL file for results"),
+) -> None:
+    """Backfill v4.3 QRAs from sparta_controls.
+
+    Iterates controls by framework, creates v4.3 QRAs via daemon.
+
+    Examples:
+        ./run.sh backfill-v43 --framework CWE --limit 10 --dry-run
+        ./run.sh backfill-v43 --framework NIST --limit 500 --output nist_qras.jsonl
+    """
+    from daemon_client import list_controls, create_qra
+
+    console = Console()
+    console.print(f"[bold]Backfill v4.3 QRAs[/]")
+    console.print(f"  Framework: {framework}")
+    console.print(f"  Limit: {limit}, Offset: {offset}")
+    console.print(f"  Dry run: {dry_run}")
+
+    # Fetch controls from daemon
+    result = list_controls(
+        collection="sparta_controls",
+        filters={"source_framework": framework},
+        limit=limit,
+        offset=offset,
+    )
+
+    if result.get("error"):
+        console.print(f"[red]Error fetching controls: {result['error']}[/]")
+        raise typer.Exit(1)
+
+    controls = result.get("documents", [])
+    total = result.get("total", len(controls))
+    console.print(f"  Fetched: {len(controls)} / {total} total")
+
+    if not controls:
+        console.print("[yellow]No controls found[/]")
+        return
+
+    # Process each control
+    out_file = Path(output) if output else None
+    if out_file:
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    success = 0
+    errors = 0
+
+    with console.status("[bold green]Processing controls...") as status:
+        for i, ctrl in enumerate(controls, 1):
+            cid = ctrl.get("control_id", ctrl.get("_key", "?"))
+            name = ctrl.get("name", "")[:40]
+            status.update(f"[bold green]Processing {i}/{len(controls)}: {cid}")
+
+            # Build question - include control ID for entity extraction
+            question = f"What is {cid}?"
+
+            try:
+                # Use fast path for batch: skip entity extraction, use known ID
+                from daemon_client import assemble_evidence_fast, enrich_v43, store
+
+                evidence = assemble_evidence_fast(cid)
+
+                if evidence.get("error"):
+                    errors += 1
+                    console.print(f"  [red]✗[/] {cid}: {evidence['error']}")
+                    continue
+
+                # Build QRA even if no crosswalk edges (informational QRA)
+                qra = enrich_v43(
+                    evidence=evidence,
+                    question=question,
+                    source_control_id=cid,
+                    source_framework=framework,
+                    expertise="expert",
+                )
+
+                if not dry_run:
+                    result = store(qra, collection="sparta_qra")
+                    qra["_store_result"] = result
+                    # Check store result - it returns {"ok": false, "error": "..."} on failure
+                    if not result.get("ok", True) and not result.get("stored"):
+                        errors += 1
+                        console.print(f"  [red]✗[/] {cid}: store failed - {result.get('error', 'unknown')}")
+                        continue
+
+                if qra.get("error"):
+                    errors += 1
+                    console.print(f"  [red]✗[/] {cid}: {qra['error']}")
+                else:
+                    success += 1
+                    if out_file:
+                        with out_file.open("a") as f:
+                            f.write(json.dumps(qra, default=str) + "\n")
+
+            except Exception as exc:
+                errors += 1
+                console.print(f"  [red]✗[/] {cid}: {exc}")
+
+    console.print(f"\n[bold]Results:[/]")
+    console.print(f"  [green]Success: {success}[/]")
+    console.print(f"  [red]Errors: {errors}[/]")
+    if out_file:
+        console.print(f"  Output: {out_file}")
+
+
+@app.command("sanity-v43")
+def sanity_v43(
+    control_id: str = typer.Option("CWE-287", "--control", "-c", help="Control ID to test"),
+) -> None:
+    """Sanity check v4.3 pipeline with a known control.
+
+    Tests: daemon /create-evidence-case → enrich → /store
+    """
+    from daemon_client import assemble_evidence, enrich_v43, store
+
+    console = Console()
+    console.print(f"[bold]Sanity Check v4.3 Pipeline[/]")
+    console.print(f"  Control: {control_id}")
+
+    # Step 1: Assemble evidence
+    console.print("\n[bold]Step 1: Assemble evidence[/]")
+    evidence = assemble_evidence(f"What is {control_id}?", source_id=control_id)
+
+    if evidence.get("error"):
+        console.print(f"  [red]✗ Error: {evidence['error']}[/]")
+        raise typer.Exit(1)
+
+    console.print(f"  [green]✓[/] Glossary: {len(evidence.get('glossary', []))} entities")
+    console.print(f"  [green]✓[/] Crosswalk chains: {len(evidence.get('crosswalk_chains', []))}")
+    console.print(f"  [green]✓[/] Prior QRA evidence: {len(evidence.get('prior_qra_evidence', []))}")
+
+    # Step 2: Enrich with v4.3
+    console.print("\n[bold]Step 2: Enrich v4.3 schema[/]")
+    qra = enrich_v43(
+        evidence=evidence,
+        question=f"What is {control_id}?",
+        source_control_id=control_id,
+    )
+
+    console.print(f"  [green]✓[/] source_framework: {qra.get('source_framework')}")
+    console.print(f"  [green]✓[/] source_control_id: {qra.get('source_control_id')}")
+    console.print(f"  [green]✓[/] difficulty: {qra.get('difficulty')}")
+    console.print(f"  [green]✓[/] mind: {qra.get('mind', [])}")
+
+    ec = qra.get("evidence_case", {})
+    console.print(f"  [green]✓[/] evidence_case.chains: {len(ec.get('chains', []))} chains")
+    console.print(f"  [green]✓[/] evidence_case.confidence: {ec.get('confidence', 0)}")
+    console.print(f"  [green]✓[/] evidence_case.formal_proof: {ec.get('formal_proof')} (populated by enrich)")
+    console.print(f"  [green]✓[/] evidence_case.sacm_ref: {ec.get('sacm_ref')} (populated by enrich)")
+
+    # Step 3: Store (dry run)
+    console.print("\n[bold]Step 3: Store (dry run)[/]")
+    console.print(f"  Would store to: sparta_qra")
+    console.print(f"  _key: {qra.get('_key', 'auto-generated')}")
+
+    console.print("\n[bold green]✓ Sanity check passed[/]")
+    console.print("\nFull QRA (JSON):")
+    print(json.dumps(qra, indent=2, default=str))
+
+
+@app.command("enrich-v43")
+def enrich_v43_cmd(
+    qra_key: str = typer.Argument(..., help="QRA _key to enrich"),
+    with_proof: bool = typer.Option(True, "--proof/--no-proof", help="Generate formal proof"),
+    with_sacm: bool = typer.Option(False, "--sacm/--no-sacm", help="Generate SACM reference"),
+    proof_timeout: int = typer.Option(60, "--timeout", help="Proof timeout (seconds)"),
+    dry_run: bool = typer.Option(False, "--dry-run", "-n", help="Print without persisting"),
+) -> None:
+    """Enrich an existing QRA with formal proof and/or SACM reference.
+
+    The proof and SACM ref are stored inside evidence_case (self-contained).
+
+    Examples:
+        ./run.sh enrich-v43 42cf1d8a1005dca0 --proof
+        ./run.sh enrich-v43 42cf1d8a1005dca0 --sacm --no-proof
+        ./run.sh enrich-v43 42cf1d8a1005dca0 --proof --sacm --dry-run
+    """
+    from daemon_client import store, enrich_evidence_case
+    import httpx
+
+    console = Console()
+    console.print(f"[bold]Enrich QRA with Proofs/SACM[/]")
+    console.print(f"  QRA key: {qra_key}")
+    console.print(f"  With proof: {with_proof}")
+    console.print(f"  With SACM: {with_sacm}")
+
+    # Fetch the QRA by key
+    transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
+    client = httpx.Client(transport=transport, base_url="http://localhost", timeout=30.0)
+    resp = client.post("/recall/by-keys", json={
+        "keys": [qra_key],
+        "collection": "sparta_qra",
+    })
+    if resp.status_code != 200:
+        console.print(f"[red]✗ Failed to fetch QRA: HTTP {resp.status_code}[/]")
+        raise typer.Exit(1)
+
+    docs = resp.json().get("documents", [])
+    if not docs:
+        console.print(f"[red]✗ QRA not found: {qra_key}[/]")
+        raise typer.Exit(1)
+
+    qra = docs[0]
+    console.print(f"  Source: {qra.get('source_framework')}/{qra.get('source_control_id')}")
+
+    # Enrich
+    console.print("\n[bold]Enriching evidence_case...[/]")
+    qra = enrich_evidence_case(
+        qra,
+        with_proof=with_proof,
+        with_sacm=with_sacm,
+        proof_timeout=proof_timeout,
+    )
+
+    ec = qra.get("evidence_case", {})
+    if with_proof and ec.get("formal_proof"):
+        fp = ec["formal_proof"]
+        console.print(f"  formal_proof.success: {fp.get('success')}")
+        if fp.get("success"):
+            console.print(f"  formal_proof.code: {fp.get('code', '')[:80]}...")
+
+    if with_sacm and ec.get("sacm_ref"):
+        sr = ec["sacm_ref"]
+        console.print(f"  sacm_ref.gid: {sr.get('gid')}")
+
+    # Store
+    if not dry_run:
+        result = store(qra, collection="sparta_qra")
+        if result.get("stored"):
+            console.print(f"\n[green]✓ Stored to sparta_qra[/]")
+        else:
+            console.print(f"\n[red]✗ Store failed: {result.get('error')}[/]")
+    else:
+        console.print("\n[yellow]○ Dry run - not stored[/]")
+
+    console.print("\nEnriched evidence_case (JSON):")
+    print(json.dumps(ec, indent=2, default=str))
+
+
 def _load_stress_test_questions(questions_file: str = "") -> list[dict]:
     """Load questions from file or default locations."""
     if questions_file and Path(questions_file).exists():

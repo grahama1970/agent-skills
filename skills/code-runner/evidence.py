@@ -37,6 +37,8 @@ from self_improvement import (
     strategy_instruction,  # noqa: F401 - re-exported
 )
 
+from language_profiles import get_profile, LanguageProfile
+
 MEMORY_SOCKET = "/run/user/1000/embry/memory.sock"
 
 # ── Error types for T0 classification ────────────────────────────────
@@ -114,8 +116,19 @@ def classify_errors(stderr: str) -> dict:
     return {"error_types": errors_by_type, "total": total, "severity": severity}
 
 
-def collect_evidence(cwd: str, dod_command: str, dod_assertion: str) -> dict:
-    """T0: Run ALL deterministic checks, return structured evidence JSON."""
+def collect_evidence(cwd: str, dod_command: str, dod_assertion: str, lang: str = "") -> dict:
+    """T0: Run ALL deterministic checks, return structured evidence JSON.
+
+    Args:
+        cwd: Working directory
+        dod_command: Definition of Done shell command
+        dod_assertion: Assertion to check in output
+        lang: Language profile to use (python, rust, typescript). Empty = auto-detect.
+    """
+    # Get language profile for language-aware checks
+    profile = get_profile(lang, cwd)
+    logger.info("Using {} profile for evidence collection", profile.name)
+
     # 1. Run DoD command
     if dod_command:
         try:
@@ -137,53 +150,36 @@ def collect_evidence(cwd: str, dod_command: str, dod_assertion: str) -> dict:
     else:
         stdout, stderr, exit_code = "", "", 0
 
-    # 2. Classify errors (regex)
-    classification = classify_errors(stderr)
+    # 2. Classify errors (language-aware)
+    error_result = profile.classify_errors(stderr, stdout)
+    classification = {
+        "error_types": error_result.error_types,
+        "total": error_result.total,
+        "severity": error_result.severity,
+    }
 
-    # 3. Lint modified files (ruff JSON output for accurate counts)
-    lint_violations = 0
-    try:
-        git_proc = subprocess.run(
-            ["git", "diff", "--name-only", "HEAD"], capture_output=True, text=True, cwd=cwd, timeout=30,
-        )
-        py_files = [f.strip() for f in git_proc.stdout.splitlines() if f.strip().endswith(".py")]
-        if py_files:
-            ruff_proc = subprocess.run(
-                ["ruff", "check", "--output-format", "json", *py_files],
-                capture_output=True, text=True, cwd=cwd, timeout=30,
-            )
-            try:
-                violations = json.loads(ruff_proc.stdout or "[]")
-                lint_violations = len(violations) if isinstance(violations, list) else 0
-            except json.JSONDecodeError:
-                lint_violations = ruff_proc.returncode  # non-zero = has issues
-    except (FileNotFoundError, subprocess.SubprocessError):
-        pass
+    # 3. Lint modified files (language-aware)
+    modified_files = profile.get_modified_files(cwd)
+    lint_result = profile.lint_check(modified_files, cwd)
+    lint_violations = lint_result.violations
 
     # 3b. File size check — penalize files over 800 lines (project convention + LLM reliability limit)
     oversized_files: list[str] = []
-    for f in py_files if 'py_files' in dir() else []:
+    for f in modified_files:
         fpath = Path(cwd) / f
         if fpath.exists():
             loc = len(fpath.read_text(encoding="utf-8", errors="replace").splitlines())
             if loc > 800:
                 oversized_files.append(f"{f} ({loc} lines)")
 
-    # 4. Best-practices violations
+    # 4. Best-practices violations (language-aware)
     bp_violations: list[str] = []
-    bp_checks = [
-        ("import logging", "Use 'from loguru import logger'"),
-        ("import requests", "Use 'httpx'"),
-        ("import argparse", "Use 'typer'"),
-    ]
     try:
         git_proc = subprocess.run(
             ["git", "diff", "HEAD"], capture_output=True, text=True, cwd=cwd, timeout=30,
         )
-        diff_text = git_proc.stdout
-        for pattern, msg in bp_checks:
-            if f"+{pattern}" in diff_text or f"+ {pattern}" in diff_text:
-                bp_violations.append(msg)
+        bp_result = profile.best_practices(git_proc.stdout)
+        bp_violations = bp_result.violations
     except subprocess.SubprocessError:
         pass
 

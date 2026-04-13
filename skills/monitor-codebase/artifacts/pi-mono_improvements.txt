@@ -2,244 +2,159 @@ Found prior research on this topic in memory.
 ## Memory Recall (Prior Solutions Found)
 
 1. **Problem**: Research: fix common violations in Python project: 
-handwritten-tests(66) (2026-04-04)
+handwritten-tests(49) (2026-04-02)
    **Solution**: {"query": "fix common violations in Pyt...
-Dogpiling on: fix common violations in Python project: handwritten-tests(66) 
+Dogpiling on: fix common violations in Python project: handwritten-tests(68) 
 (Code Related: True)...
 Tailored queries:
-  arxiv: software test quality metrics, test suite refactoring strate...
-  perplexity: What are the common violations in handwritten Python tests a...
-  brave: Python pytest test suite refactoring guide, unittest module ...
-  github: python pytest fixture patterns, unittest common assertion he...
-  youtube: Python unit test refactoring tutorial, how to improve handwr...
-  readarr: xUnit Test Patterns: Refactoring Test Code, Working Effectiv...
-# Dogpile Report: fix common violations in Python project: handwritten-tests(66)
+  arxiv: Python unit test quality metrics static analysis refactoring...
+  perplexity: What are the best practices for fixing common code quality v...
+  brave: Python unittest pytest best practices documentation 2025...
+  github: python pytest unittest refactor test code examples...
+  youtube: Python unit test refactoring best practices tutorial 2025...
+  readarr: Working Effectively with Legacy Code Michael C. Feathers...
+# Dogpile Report: fix common violations in Python project: handwritten-tests(68)
 
 ## Codex Technical Overview
-Of course. This is an excellent topic that strikes at the heart of software quality and maintainability. The violation "handwritten-tests(66)" typically refers to a code quality metric, likely from a tool like SonarQube, which flags the *number* of handwritten tests as a potential issue, not the act of testing itself.
-
-The core problem isn't that you have tests; it's that you may have an excessive number of **brittle, repetitive, and poorly architected** tests that are handwritten. This indicates a lack of good testing patterns and abstractions.
+Of course. This is an excellent and very common topic in software engineering. The violation "handwritten-tests" (likely flagged by a tool like `wemake-python-styleguide` or a similar linter) doesn't mean tests are bad; it means the *method* of creating and maintaining them is suboptimal and prone to human error.
 
 Here is a high-reasoning technical overview focusing on architecture, pitfalls, and modern solutions.
 
 ---
 
-### Executive Summary
+### 1. Core Problem Definition: What Does "Handwritten-Tests" Violation Mean?
 
-The violation "handwritten-tests(66)" is a symptom of a test suite that has scaled without a corresponding evolution in test architecture. The goal is not to reduce the number of tests, but to refactor them towards a state of being **maintainable, reliable, and expressive**. This is achieved by replacing repetitive "handwritten" logic with established patterns like the **Builder Pattern, Object Mother Pattern, and Test Data Factories**, and leveraging libraries like `pytest` to its full potential.
+The term "handwritten-tests" is a catch-all for several anti-patterns where tests are written in a manual, repetitive, and non-systematic way. The core issue is a lack of **abstraction and automation** in the test suite itself.
 
----
+**Key characteristics of a "handwritten" test suite:**
+*   **Brittleness:** Tests break easily with minor changes to the System Under Test (SUT) because they are tightly coupled to its internal implementation (e.g., mocking exact internal function calls rather than public interfaces).
+*   **Repetition (DRY Violation):** The same setup, assertion, or teardown logic is copied and pasted across multiple test cases.
+*   **Poor Readability:** Tests are long, imperative, and filled with boilerplate. The core "act" and "assert" logic is buried and hard to discern.
+*   **Low Maintainability:** Adding a new test case or modifying the test pattern requires changing many files.
+*   **Inconsistent Data:** Test data is hardcoded inline, making it difficult to ensure consistency and leading to "magic numbers" and strings.
 
-### 1. Deconstructing the "Handwritten" Problem: Common Pitfalls
+### 2. Architectural Patterns to Remediate the Violation
 
-The term "handwritten" here implies tests are constructed in an ad-hoc, manual way. This leads to several critical pitfalls:
+The goal is to shift from writing individual *test scripts* to designing a robust *test architecture*. This involves applying standard software design principles (like DRY, Single Responsibility, and Composition) to the test suite itself.
 
-#### **Pitfall 1: Violation of DRY (Don't Repeat Yourself) in Test Data Setup**
-This is the most common issue. Each test method contains its own lengthy setup code to create the complex object graph required for the test.
-```python
-# BAD: Handwritten, repetitive setup
-def test_calculate_total_with_discount(self):
-    customer = Customer()
-    customer.name = "John Doe"
-    customer.is_vip = True
-    customer.join_date = datetime(2020, 1, 1)
+#### a) The Page Object Model (POM) & Screenplay Pattern (for UI/E2E)
+While traditionally for UI testing, the conceptual framework is applicable to any system with a complex interface.
 
-    item1 = Item()
-    item1.sku = "SKU123"
-    item1.price = 10.0
-    item1.is_taxable = True
+*   **POM:** Encapsulates the structure and behavior of a "page" (or a API endpoint, or a CLI command) into a single class. Tests then interact with these objects, not with low-level details (e.g., `login_page.enter_credentials(user)` vs. `driver.find_element(By.ID, "user").send_keys("test_user")`).
+*   **Screenplay Pattern (Modern Evolution):** Models tests as interactions between **Actors** (who have **Abilities**), performing **Tasks** (composed of **Actions**) on **Targets**. This is a more scalable and expressive pattern than POM, emphasizing user-centric behavior and better composition of test steps.
+    *   **Architectural Benefit:** Decouples test logic from the UI/API implementation details. A change in a button's ID now only requires an update in one `Target` class, not in hundreds of tests.
 
-    item2 = Item()
-    item2.sku = "SKU456"
-    item2.price = 25.0
-    item2.is_taxable = False
+#### b) Factory Pattern for Test Data Creation
+Instead of hardcoding data in each test, use dedicated factories.
 
-    order = Order()
-    order.customer = customer
-    order.items = [item1, item2]
-    order.discount_code = "WELCOME10"
+*   **Basic:** Factory functions (e.g., `create_user(**overrides)`).
+*   **Advanced:** Use a library like `factory_boy` which integrates with ORMs (e.g., Django, SQLAlchemy). It allows you to define blueprints for your models.
+    ```python
+    # Instead of this in every test:
+    # user = User(name="Test User", email="test@test.com", is_admin=False)
 
-    # ... finally, the actual test assertion
-    total = order.calculate_total()
-    assert total == 31.5
-```
-**Problems:** This code is verbose. If the `Customer` constructor changes, you must update dozens of tests. It obscures the **Arrange-Act-Assert** structure because the "Arrange" section is so large.
+    # Use a factory (factory_boy example)
+    class UserFactory(factory.Factory):
+        class Meta:
+            model = User
+        name = "Test User"
+        email = factory.Sequence(lambda n: f"user{n}@example.com")
+        is_admin = False
 
-#### **Pitfall 2: High Test Coupling and Brittleness**
-Tests are tightly coupled to the internal default state of your models. A change in a model's default value (e.g., a new required field) can break every single test that instantiates that model, even if the test doesn't care about that field.
+    # In a test:
+    user = UserFactory()  # Creates a standard user
+    admin = UserFactory(is_admin=True)  # Creates an admin, overriding default
+    ```
+    *   **Architectural Benefit:** Centralizes data definition, makes tests cleaner, and provides a single source of truth for what valid data looks like. Essential for maintaining data consistency.
 
-#### **Pitfall 3: Poor Test Readability**
-The essential preconditions for the test are buried in boilerplate. It's hard to discern what specific scenario is being tested (e.g., "VIP customer with a mix of taxable and non-taxable items using a discount") because the signal is lost in the noise.
+#### c) Parametrized Tests & Hypothesis
+This is the absolute antidote to handwritten, repetitive test cases.
 
-#### **Pitfall 4: Inconsistent Test Data**
-When everyone handwrites setup, slight variations creep in. One test might set `customer.is_vip = True`, another might use `customer.vip_status = VIPStatus.PLATINUM`. This leads to non-deterministic tests and false positives/negatives.
+*   **Built-in (`pytest.mark.parametrize`):** Allows you to define multiple inputs and expected outputs for a single test function.
+    ```python
+    # Instead of three separate test functions
+    @pytest.mark.parametrize("input_a, input_b, expected", [
+        (1, 2, 3),
+        (5, 5, 10),
+        (100, -100, 0),
+    ])
+    def test_addition(input_a, input_b, expected):
+        assert input_a + input_b == expected
+    ```
+*   **Property-Based Testing (Hypothesis):** This is a state-of-the-art approach. You define *properties* that should always hold true for your function, and Hypothesis *automatically generates* a wide range of inputs (including edge cases) to test it.
+    ```python
+    from hypothesis import given, strategies as st
 
----
+    @given(st.integers(), st.integers())
+    def test_addition_commutative(a, b):
+        """The order of operands should not matter."""
+        assert a + b == b + a
 
-### 2. Architectural Patterns and State-of-the-Art Approaches
+    @given(st.lists(st.integers()))
+    def test_list_reversal_is_involutive(ls):
+        """Reversing a list twice returns the original list."""
+        assert ls[::-1][::-1] == ls
+    ```
+    *   **Architectural Benefit:** Drastically increases test coverage and robustness with less code. It forces you to think about the abstract properties of your code, not just example-based testing. It often finds edge-case bugs that humans would never think to write a test for.
 
-The solution is to abstract the creation and configuration of test data. The patterns below are complementary and often used together.
+#### d) Dependency Injection (DI) and Mocking Patterns
+"Handwritten" tests often involve messy, inline `unittest.mock.patch` calls.
 
-#### **Pattern 1: Object Mother Pattern**
-A simple, static factory class that provides ready-made, valid objects.
-```python
-# tests/factories/object_mothers.py
-class CustomerMother:
-    @staticmethod
-    def a_valid_customer():
-        return Customer(name="Default Customer", is_vip=False, join_date=datetime.now())
+*   **Pattern:** Use Dependency Injection to provide dependencies to your SUT. This makes it trivial to replace real implementations with mocks/fakes in tests.
+*   **Fixtures (pytest):** Fixtures are a powerful form of Dependency Injection for your tests. They handle setup and teardown in a reusable, composable way.
+    ```python
+    @pytest.fixture
+    def mock_database():
+        with patch('myapp.models.DatabaseConnection') as MockDB:
+            yield MockDB()
 
-    @staticmethod
-    def a_vip_customer():
-        return Customer(name="VIP Customer", is_vip=True, join_date=datetime.now())
+    def test_service_creates_user(mock_database):
+        service = UserService(db=mock_database)  # Inject the mock
+        service.create_user("test")
+        mock_database.save.assert_called_once()  # Assert interaction
+    ```
+    *   **Architectural Benefit:** Decouples test setup from test logic. Makes it clear what the dependencies of a test are. Fixtures can be built hierarchically, sharing common setup across an entire module or test session.
 
-class OrderMother:
-    @staticmethod
-    def an_order_with_items(*items):
-        order = Order()
-        order.customer = CustomerMother.a_valid_customer()
-        order.items = list(items)
-        return order
-```
-**Usage:**
-```python
-def test_calculate_total_with_discount(self):
-    # Much more concise and clear
-    item1 = Item(sku="SKU123", price=10.0, is_taxable=True)
-    item2 = Item(sku="SKU456", price=25.0, is_taxable=False)
-    order = OrderMother.an_order_with_items(item1, item2)
-    order.discount_code = "WELCOME10"
+### 3. Common Pitfalls to Avoid (The "How Not To")
 
-    total = order.calculate_total()
-    assert total == 31.5
-```
-**Pros:** Simple to implement, greatly reduces duplication.
-**Cons:** Can become a "god class" if not managed. Limited flexibility for variations.
+1.  **Testing Implementation, Not Behavior:** Mocking internal functions your code calls. This makes tests brittle. Instead, mock only external I/O (databases, APIs, file systems) and assert on the public output/state/side-effects.
+2.  **Over-Mocking:** If your test is 90% mock setup and 10% actual test, it's a sign of a design problem. The SUT is likely doing too much and has too many dependencies. Consider refactoring the production code (e.g., breaking down a large function).
+3.  **Flaky Tests:** Tests that sometimes pass and sometimes fail. Often caused by:
+    *   Non-deterministic factors (e.g., timing, random data).
+    *   Shared state between tests (e.g., a global variable or a dirty database). **Solution:** Use fixtures to ensure a fresh state for each test. Prefer `tmp_path` for files and database transactions that are rolled back.
+4.  **Missing Assertions:** A test that executes code but doesn't assert anything meaningful is a false positive. Always assert an expected outcome.
 
-#### **Pattern 2: Test Data Builders (Builder Pattern for Tests)**
-This is a more powerful and flexible approach. It uses a fluent interface to create objects step-by-step, with sensible defaults.
-```python
-# tests/factories/builders.py
-class CustomerBuilder:
-    def __init__(self):
-        self.name = "Default Customer"
-        self.is_vip = False
-        self.join_date = datetime.now()
+### 4. State-of-the-Art Approach: A Modern Test Suite Architecture
 
-    def with_name(self, name):
-        self.name = name
-        return self
+A modern Python test suite is not a collection of scripts but a well-designed software component.
 
-    def as_vip(self):
-        self.is_vip = True
-        return self
+1.  **Layered Structure:**
+    *   **Unit Tests (Fast, Isolated):** Use `pytest` with parametrization and `hypothesis`. Heavily use fixtures and factories. Should be the majority of your tests and run in seconds.
+    *   **Integration Tests (Medium Speed):** Test the interaction between key modules (e.g., a service and a database). Use a real database in a Docker container spun up by `testcontainers` or a temporary SQLite file. Still use factories for data.
+    *   **E2E/API Tests (Slower):** Use the Screenplay pattern or a robust wrapper around tools like `requests` or `playwright`. Focus on user journeys. These are run less frequently (e.g., on a merge to main).
 
-    def build(self):
-        return Customer(name=self.name, is_vip=self.is_vip, join_date=self.join_date)
+2.  **Toolchain:**
+    *   **Framework:** `pytest` (de facto standard, far superior to `unittest`).
+    *   **Mocking:** `unittest.mock` (built-in) or `pytest-mock` plugin.
+    *   **Data Factories:** `factory_boy`.
+    *   **Property-Based Testing:** `hypothesis`.
+    *   **Coverage:** `pytest-cov` to ensure your refactoring doesn't drop coverage.
+    *   **Fixtures:** The cornerstone of everything. Use them extensively.
 
-    # Class method for a convenient starting point
-    @classmethod
-    def a_customer(cls):
-        return CustomerBuilder()
-```
-**Usage:**
-```python
-def test_calculate_total_with_discount(self):
-    # Highly expressive and flexible
-    customer = CustomerBuilder.a_customer().as_vip().with_name("John Doe").build()
-    order = (
-        OrderBuilder.an_order()
-        .with_customer(customer)
-        .with_discount_code("WELCOME10")
-        .with_items(
-            ItemBuilder.an_item().with_price(10.0).with_taxable(True).build(),
-            ItemBuilder.an_item().with_price(25.0).with_taxable(False).build(),
-        )
-        .build()
-    )
-
-    total = order.calculate_total()
-    assert total == 31.5
-```
-**Pros:** Extremely readable, highly flexible, follows the Single Responsibility Principle.
-**Cons:** Requires more upfront code to write the builders.
-
-#### **Pattern 3: Factory Boy (The State-of-the-Art Library)**
-For Python, **Factory Boy** is the industry-standard library that implements and extends these patterns seamlessly. It integrates perfectly with Django, SQLAlchemy, and plain Python objects. It uses a declarative syntax and has built-in support for sequences, lazy attributes, and post-generation hooks.
-
-```python
-# tests/factories.py
-import factory
-from myapp.models import Customer, Item, Order
-
-class CustomerFactory(factory.Factory):
-    class Meta:
-        model = Customer
-
-    name = factory.Faker('name')
-    is_vip = False
-    join_date = factory.LazyFunction(datetime.now)
-
-class ItemFactory(factory.Factory):
-    class Meta:
-        model = Item
-
-    sku = factory.Sequence(lambda n: f"SKU{n:05d}")
-    price = 10.0
-    is_taxable = True
-
-class OrderFactory(factory.Factory):
-    class Meta:
-        model = Order
-
-    customer = factory.SubFactory(CustomerFactory)
-    items = factory.RelatedFactoryList(ItemFactory, size=2) # Creates 2 items by default
-
-    # A post-generation hook to add a discount code only if needed
-    @factory.post_generation
-    def with_discount(self, create, extracted, **kwargs):
-        if not create:
-            return
-        if extracted:
-            self.discount_code = extracted
-```
-**Usage:**
-```python
-import pytest
-
-def test_calculate_total_with_discount():
-    # Clean, declarative, and powerful
-    order = OrderFactory(items=[ItemFactory(price=10.0), ItemFactory(price=25.0, is_taxable=False)], with_discount="WELCOME10")
-    # You can also override the customer inline
-    order = OrderFactory(customer__is_vip=True) # Uses Factory Boy's deep parameter passing
-
-    total = order.calculate_total()
-    assert total == 31.5
-
-# Use fixtures for common setups
-@pytest.fixture
-def vip_order():
-    return OrderFactory(customer__is_vip=True)
-
-def test_vip_gets_free_shipping(vip_order):
-    assert vip_order.get_shipping_cost() == 0
-```
-**Pros:** Drastically reduces boilerplate, includes fake data generation (`Faker`), encourages consistency, very powerful and flexible.
-**Cons:** Small learning curve.
-
----
-
-### 3. High-Level Refactoring Strategy
-
-1.  **Analyze:** Use the violation report to identify the test files with the most duplication.
-2.  **Prioritize:** Start with the most critical models (core domain, frequently changed).
-3.  **Implement Factories:** Choose a pattern. For new projects or large refactors, **Factory Boy is strongly recommended**. For smaller scopes, start with Builders or Object Mothers.
-4.  **Refactor Incrementally:** Don't try to fix all 66 violations at once. Pick a handful of tests, refactor their setup to use the new factories, and ensure they still pass.
-5.  **Establish a Standard:** Document the chosen pattern and ensure all new tests use it. This prevents the problem from reoccurring.
+3.  **CI/CD Integration:**
+    *   Tests must run automatically on every commit/PR.
+    *   The test suite must be **fast**. If it's slow, developers won't run it. Use parallelization (`pytest-xdist`) and separate test types into different CI stages.
 
 ### Conclusion
 
-Fixing "handwritten-tests" is an architectural refactoring exercise. By moving from imperative, ad-hoc object creation to declarative, pattern-driven creation (using Builders, Object Mothers, or Factory Boy), you transform your test suite from a maintenance liability into a scalable, readable, and robust asset. This investment pays continuous dividends in development velocity and software reliability. The violation count itself will decrease as you replace many lines of handwritten setup with a single, clear factory call.
+Fixing "handwritten-tests" is not about deleting tests; it's about **refactoring and elevating them**. It's an architectural refactoring that applies software engineering best practices to the test code itself. The transition involves:
+
+*   **Eliminating Repetition** with Fixtures and Factories.
+*   **Increasing Robustness and Coverage** with Parametrization and Hypothesis.
+*   **Improving Maintainability** with patterns like POM/Screenplay and Dependency Injection.
+*   **Ensuring Reliability** by avoiding common pitfalls like flaky tests and over-mocking.
+
+The result is a test suite that is no longer a maintenance burden but a resilient, executable specification of your system's behavior and a powerful enabler of agile development and confident refactoring.
 
 ## AI Research (Perplexity)
 No answer.
@@ -258,16 +173,16 @@ No repositories found.
 No issues found.
 
 ## Web Results (Brave)
-- **[Python Unit Testing Best Practices For Building Reliable Applications | Pytest with Eric](https://pytest-with-eric.com/introduction/python-unit-testing-best-practices/)**
-  This distinction is crucial for creating robust, maintainable tests that remain valid even when the underlying implementation changes. ... In the second example, the test checks if add correctly computes the sum, independent of how the function achieves this. This approach allows the add function to evolve (e.g., optimization, refactoring) without requiring changes to the test as long as it fulfils its intended behaviour.
-- **[pytest Tutorial: Effective Python Testing – Real Python](https://realpython.com/pytest-python-testing/)**
-  Master pytest with this hands-on tutorial. Learn fixtures, parametrize, marks, and plugins to write fast, effective Python test suites.
-- **[unittest — Unit testing framework — Python 3.14.4 documentation](https://docs.python.org/3/library/unittest.html)**
-  Even though FunctionTestCase can be used to quickly convert an existing test base over to a unittest-based system, this approach is not recommended. Taking the time to set up proper TestCase subclasses will make future test refactorings infinitely easier.
+- **[Python Testing – Unit Tests, Pytest, and Best Practices - DEV Community](https://dev.to/nkpydev/python-testing-unit-tests-pytest-and-best-practices-45gl)**
+  ✅ <strong>Keep test cases independent – One test should not rely on another</strong>. ✅ Run tests frequently to catch bugs early. ✅ Use pytest for simple and powerful test management. ✅ Unit tests ensure correctness and prevent regressions.
 - **[Unit Testing in Python: Complete Guide with Examples - Rost Glukhov | Personal site and technical blog](https://www.glukhov.org/post/2025/10/unit-testing-in-python/)**
   Comprehensive guide to unit testing in Python covering pytest, unittest, TDD practices, mocking, fixtures, and best practices for writing maintainable tests with real-world examples and code coverage strategies.
-- **[A Beginner's Guide to Unit Testing with Pytest | Better Stack Community](https://betterstack.com/community/guides/testing/pytest-guide/)**
-  <strong>In this section, you&#x27;ll explore conventions and best practices you should follow when designing tests with Pytest to ensure clarity and maintainability</strong>.
+- **[Best Practices for Writing Unit Tests in Python | by Madhu deepak | Infosec Matrix | Medium](https://medium.com/infosecmatrix/best-practices-for-writing-unit-tests-in-python-cd1da23d3b79)**
+  <strong>Unit tests should focus on a specific piece of functionality, avoiding dependencies on external systems like databases or APIs</strong>. Python’s built-in unittest framework provides a solid foundation for testing.
+- **[Python Unit Testing Best Practices For Building Reliable Applications | Pytest with Eric](https://pytest-with-eric.com/introduction/python-unit-testing-best-practices/)**
+  In Python unit testing, <strong>Dependency Injection (DI) is a best practice that enhances code testability and modularity</strong>.
+- **[Good Integration Practices - pytest documentation](https://docs.pytest.org/en/stable/explanation/goodpractices.html)**
+  Within Python modules, pytest also discovers tests using the standard unittest.TestCase subclassing technique.
 
 ## Academic Papers (ArXiv)
 

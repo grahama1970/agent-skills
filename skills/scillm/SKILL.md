@@ -722,6 +722,7 @@ The proxy runs these middleware components on every request:
 
 | Middleware | File | Purpose |
 |-----------|------|---------|
+| **Timeout Estimator** | `timeout_estimator.py` | Estimates dynamic timeout from historical latency (p95 from `/latency-stats`). Sets provider timeout per-call. |
 | **JSON Guard** | `json_guard.py` | Validates JSON when `response_format.type == "json_object"`. Attempts repair (brace trim + json_repair lib) before rejecting. Failed validation triggers cascade to next provider. |
 | **Concurrency Guard** | `concurrency_guard.py` | Per-provider semaphore (chutes=4, ollama=1, etc). Queues excess requests instead of 429. Prevents Chutes 90s penalty. |
 | **VLM Auto-Router** | `vlm_router.py` | Detects `image_url` parts in messages, rewrites text model to `vlm`. Callers don't need to know model names. |
@@ -773,6 +774,33 @@ Redis caching is auto-enabled when `REDIS_HOST` or `REDIS_URL` is set:
 - TTL: `SCILLM_CACHE_TTL_SEC` (default 3600s)
 - Namespace: `SCILLM_CACHE_NAMESPACE` (default "scillm")
 - Core compose (no Redis) works fine — caching is optional
+
+## Automatic Timeout Estimation
+
+**Agents don't need to estimate timeouts.** scillm automatically sets per-call provider timeouts based on historical latency data.
+
+How it works:
+1. Middleware queries `/latency-stats` (memory service) for p95 latency and throughput
+2. Estimates timeout based on model, provider, and token count
+3. Sets internal provider timeout (clients use generous 5-min HTTP timeout)
+4. Returns timeout info in response headers
+
+**Response headers** (always present):
+
+| Header | Value | Example |
+|--------|-------|---------|
+| `x-scillm-timeout-ms` | Timeout used for provider call (ms) | `45000` |
+| `x-scillm-timeout-source` | How timeout was determined | `p95`, `estimated`, `default` |
+| `x-scillm-timeout-samples` | Historical samples used (if available) | `127` |
+
+**Timeout sources:**
+- `estimated` — Token-aware calculation: `(prompt_tokens + completion_tokens) / throughput_tps * 1.2`
+- `p95` — 95th percentile from historical calls for this model/provider
+- `default` — No historical data; using 120s fallback
+
+**Bounds:** 10s minimum, 10min maximum. Clamped automatically.
+
+**Data source:** `/latency-stats` in memory service queries `llm_call_log` for duration, tokens, and throughput. Stats cached 5 minutes.
 
 ---
 

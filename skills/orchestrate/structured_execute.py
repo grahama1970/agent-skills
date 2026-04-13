@@ -374,6 +374,8 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
                 spec["read_context"] = task.read_context
             if task.max_rounds != 5:
                 spec["max_rounds"] = task.max_rounds
+            if task.lang:
+                spec["lang"] = task.lang
 
             spec_file = session_dir / f"{task.task_id}{attempt_tag}.code-runner-spec.json"
             spec_file.write_text(json.dumps(spec, indent=2))

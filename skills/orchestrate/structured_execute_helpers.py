@@ -45,6 +45,7 @@ class TaskRuntime:
     skill: str = ""  # skill name for runner=skill (e.g., "assess")
     skill_command: str = ""  # skill subcommand (e.g., "run", "search")
     skill_args: list[str] = field(default_factory=list)  # additional CLI args
+    lang: str = ""  # Language profile: python, rust, typescript. Empty = auto-detect.
     max_rounds: int = 5
     timeout_seconds: int = 1800  # per-task timeout (default 30min)
     worktree: bool = False  # opt-in git worktree isolation (for parallel file-only tasks)
@@ -258,6 +259,7 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             skill=task_skill,
             skill_command=task_skill_command,
             skill_args=[str(a) for a in task_skill_args],
+            lang=str(raw_task.get("lang") or "").strip(),
             max_rounds=int(raw_task.get("max_rounds") or 5),
             timeout_seconds=int(raw_task.get("timeout_seconds") or 1800),
             worktree=bool(raw_task.get("worktree", False)),
