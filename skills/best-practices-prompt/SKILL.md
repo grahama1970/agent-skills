@@ -74,6 +74,7 @@ These rules apply to ANY prompt that operates on cross-framework compliance data
 
 ## Quick Reference (all rules)
 
+**Core Rules:**
 - `clarity-one-meaning-per-sentence`
 - `clarity-no-weasel-words`
 - `clarity-imperative-voice`
@@ -92,6 +93,16 @@ These rules apply to ANY prompt that operates on cross-framework compliance data
 - `structure-constraints-after-task`
 - `testability-deterministic-check`
 - `structure-rationale-header`
+
+**Inference-Time Patterns (2026-04-14):**
+- `output-format-anchor-first` — open with "Return exactly one JSON object with keys: ..."
+- `output-no-mcq-format` — FORBIDDEN OUTPUT FORMATS section for DeepSeek-V3
+- `structure-decision-order` — step-by-step evaluation instead of prose criteria
+- `structure-gate-vs-ranking` — separate hard gates from ranking signals
+- `specificity-insufficiency-rules` — "X alone is insufficient" framing
+- `structure-json-input` — pure JSON user message, not mixed prose
+- `output-ordering-specification` — "judgments in input order"
+- `output-reason-length-cap` — "reason must be ≤25 words"
 
 ---
 
@@ -759,6 +770,386 @@ On 2026-04-09, a crosswalk question generation prompt used a flat glossary dict 
 
 ---
 
+---
+
+## Inference-Time Prompt Patterns (2026-04-14)
+
+These patterns emerged from the QRA-related-filter prompt engineering session. They apply to prompts that run at inference time with strict output requirements.
+
+### Rule 16: Positive Format Anchor First (HIGH)
+
+### Rule: `output-format-anchor-first`
+
+Open the system prompt with a single-line format anchor BEFORE any prose. Models stabilize when the first thing they see is the exact output shape expected.
+
+### WRONG:
+```
+You are a cybersecurity analyst.
+
+Your task is to evaluate candidate QRAs...
+[... 50 lines of instructions ...]
+
+Output format: JSON with keys relevant_keys, excluded_count, judgments
+```
+
+### RIGHT:
+```
+Return exactly one JSON object with keys: relevant_keys, excluded_count, judgments
+
+You are a cybersecurity analyst filtering candidate QRAs...
+```
+
+### Why this matters
+
+The format anchor is the first instruction in the model's attention. Combined with schema-last (Rule 12), this creates a "format sandwich" — the model knows the shape before reading instructions, and sees it again right before generating.
+
+---
+
+### Rule 17: Anti-MCQ Guardrails (CRITICAL for DeepSeek)
+
+### Rule: `output-no-mcq-format`
+
+DeepSeek-V3 (and some other models) drift to multiple-choice quiz format when given classification or judgment tasks. The model outputs:
+
+```
+Q1. Is this candidate relevant?
+A) Yes, it addresses authentication
+B) No, it's about logging
+C) Partially
+D) Cannot determine
+```
+
+This is useless for programmatic consumption. Add explicit anti-MCQ instructions.
+
+### WRONG:
+```
+Evaluate each candidate and determine if it should be included.
+```
+
+### RIGHT:
+```
+FORBIDDEN OUTPUT FORMATS:
+- NO multiple-choice questions (A/B/C/D options)
+- NO quiz-style formatting
+- NO markdown code blocks
+- NO prose before or after the JSON
+- NO explanatory text outside the JSON structure
+- NO numbered lists outside the JSON structure
+
+If you deviate from pure JSON output, the system will reject your response.
+```
+
+### When to apply:
+- Classification prompts (true/false, include/exclude)
+- Multi-criteria evaluation prompts
+- Any prompt targeting DeepSeek-V3
+- Any prompt that has historically drifted to non-JSON output
+
+---
+
+### Rule 18: Decision Order Over Prose Descriptions (HIGH)
+
+### Rule: `structure-decision-order`
+
+When a prompt requires multi-criteria evaluation, use explicit step-by-step DECISION ORDER instead of prose descriptions. Models are more stable when following a sequence than reconciling overlapping instructions.
+
+### WRONG:
+```
+Evaluate the candidate against these criteria:
+- Does it address the same concern?
+- Does it complement without duplicating?
+- Does it help answer the query?
+- Is the shared technique central?
+
+Include the candidate if all criteria are met.
+```
+
+### RIGHT:
+```
+DECISION ORDER:
+
+Step 1: If candidate.shared_techniques is empty, set include=false.
+Step 2: Evaluate aids_user_query. If false, set include=false.
+Step 3: Evaluate addresses_same_concern. If false, set include=false.
+Step 4: Evaluate complements_not_duplicates. If false, set include=false.
+Step 5: Evaluate shares_technique_meaningfully. If false, set include=false.
+Step 6: Evaluate evidence_chain_overlap (for ranking only).
+Step 7: If all gates passed, set include=true.
+```
+
+### Why this matters
+
+Prose criteria ("evaluate against these criteria") lets the model reconcile them in any order, creating variance. Step-by-step decision order forces a deterministic evaluation path. The model can't include a candidate that fails Step 2 by passing Steps 3-5.
+
+---
+
+### Rule 19: Gates vs Ranking Signals (HIGH)
+
+### Rule: `structure-gate-vs-ranking`
+
+When some criteria are hard requirements (gates) and others are soft preferences (ranking signals), separate them explicitly. Never mix "must pass" and "nice to have" in the same list.
+
+### WRONG:
+```
+Evaluate these 5 checks. All must be true to include.
+1. aids_user_query
+2. addresses_same_concern
+3. complements_not_duplicates
+4. shares_technique_meaningfully
+5. evidence_chain_overlap
+```
+
+(But your expected output shows evidence_chain_overlap=false for included items — contradiction!)
+
+### RIGHT:
+```
+INCLUSION GATE (all 4 must be TRUE to include):
+- aids_user_query = TRUE
+- addresses_same_concern = TRUE
+- complements_not_duplicates = TRUE
+- shares_technique_meaningfully = TRUE
+
+RANKING SIGNAL (not an inclusion gate):
+evidence_chain_overlap = true ranks higher, but false does NOT block inclusion.
+Use only to rank candidates that already passed all four gates.
+```
+
+---
+
+### Rule 20: Insufficiency Framing (MEDIUM)
+
+### Rule: `specificity-insufficiency-rules`
+
+When multiple conditions together are insufficient, say "X alone is insufficient" rather than "do not include just because X". The positive framing ("alone is insufficient") is more precise than the negative ("do not include just because").
+
+### WRONG:
+```
+Do not include candidates just because they share a control ID.
+Do not include candidates just because they share keywords.
+```
+
+### RIGHT:
+```
+IMPORTANT INSUFFICIENCY RULES:
+- Shared control_id alone is insufficient for inclusion
+- Shared keywords alone is insufficient for inclusion
+- Shared SPARTA technique alone is insufficient unless it is central to both QRAs
+- Shared CWE/CAPEC without shared SPARTA technique is insufficient
+```
+
+### Why this matters
+
+"Do not include just because X" is directionally right but too absolute — same control ID MAY be relevant. "X alone is insufficient" clarifies that X is necessary but not sufficient.
+
+---
+
+### Rule 21: Pure JSON Input (HIGH)
+
+### Rule: `structure-json-input`
+
+For inference-time prompts with complex input data, send the user message as pure JSON rather than mixed prose. Models behave better when parsing structured data than when extracting fields from prose templates.
+
+### WRONG:
+```
+USER QUERY
+How do I protect against credential stuffing?
+
+PRIMARY QRA (matched via BM25 + semantic + graph traversal)
+
+_key: qra_cwe287_ia0001
+control_id: CWE-287
+question: How does improper authentication enable unauthorized access?
+...
+
+CANDIDATE RELATED QRAs (3 candidates)
+<candidates>
+[{"_key": "...", ...}]
+</candidates>
+
+TASK: Filter the 3 candidates...
+```
+
+### RIGHT:
+```json
+{
+  "user_query": "How do I protect against credential stuffing?",
+  "primary_qra": {
+    "_key": "qra_cwe287_ia0001",
+    "control_id": "CWE-287",
+    "question": "How does improper authentication enable unauthorized access?",
+    "lineage": {...}
+  },
+  "candidates": [
+    {"_key": "...", "control_id": "...", ...}
+  ]
+}
+```
+
+### Why this matters
+
+Mixed prose + JSON forces the model to parse structure from formatting cues ("PRIMARY QRA", "---", `<candidates>`). Pure JSON is unambiguous — field names are explicit, nesting is clear, there's no interpretation needed.
+
+---
+
+### Rule 22: Output Ordering Specification (MEDIUM)
+
+### Rule: `output-ordering-specification`
+
+If the output contains arrays that must match input order, say so explicitly. Don't assume the model will preserve order.
+
+### WRONG:
+```
+Return a judgment for each candidate.
+```
+
+### RIGHT:
+```
+OUTPUT RULES:
+- judgments must contain exactly one entry for every input candidate, in input order
+- relevant_keys must list only included candidate keys, in the same order they appear in judgments
+```
+
+---
+
+### Rule 23: Reason Length Cap (MEDIUM)
+
+### Rule: `output-reason-length-cap`
+
+For explanation/reason fields, cap the length. Without a cap, models produce verbose explanations that waste tokens and introduce variance.
+
+### WRONG:
+```
+Include a reason for each judgment.
+```
+
+### RIGHT:
+```
+reason must be one sentence of 25 words or fewer.
+```
+
+---
+
+## Pydantic Validation Patterns
+
+For inference-time prompts with strict output requirements, use Pydantic models with validators to enforce consistency. This catches errors the LLM makes even with perfect prompts.
+
+### Pattern: Retry on Validation Failure
+
+```python
+from pydantic import BaseModel, model_validator
+
+class JudgmentResult(BaseModel):
+    key: str
+    include: bool
+    checks: dict[str, bool]
+    reason: str
+
+    @model_validator(mode="after")
+    def validate_inclusion_logic(self) -> "JudgmentResult":
+        """If include=true, all gate checks must be true."""
+        if self.include:
+            gates = ["aids_user_query", "addresses_same_concern", 
+                     "complements_not_duplicates", "shares_technique_meaningfully"]
+            failed = [g for g in gates if not self.checks.get(g)]
+            if failed:
+                raise ValueError(f"include=true but gates failed: {failed}")
+        
+        # Cap reason length
+        if len(self.reason.split()) > 30:
+            raise ValueError(f"reason too long: {len(self.reason.split())} words")
+        return self
+
+class FilterResult(BaseModel):
+    relevant_keys: list[str]
+    excluded_count: int
+    judgments: list[JudgmentResult]
+
+    @model_validator(mode="after")
+    def validate_consistency(self) -> "FilterResult":
+        """Ensure relevant_keys matches included judgments."""
+        included = [j.key for j in self.judgments if j.include]
+        if self.relevant_keys != included:
+            raise ValueError(f"relevant_keys mismatch: {self.relevant_keys} != {included}")
+        
+        excluded = [j for j in self.judgments if not j.include]
+        if self.excluded_count != len(excluded):
+            raise ValueError(f"excluded_count wrong: {self.excluded_count} != {len(excluded)}")
+        return self
+```
+
+### Pattern: Retry with Error Context
+
+When validation fails, retry with the error message included:
+
+```python
+def filter_with_retry(query, candidates, max_retries=2):
+    for attempt in range(max_retries + 1):
+        if attempt == 0:
+            prompt = build_prompt(query, candidates)
+        else:
+            prompt = f"""Your previous response failed validation.
+
+VALIDATION ERROR:
+{last_error}
+
+YOUR PREVIOUS RESPONSE (truncated):
+{last_response[:1000]}
+
+Please fix the error and return valid JSON.
+
+---
+
+{original_prompt}"""
+        
+        response = call_llm(prompt)
+        try:
+            return FilterResult.model_validate(parse_json(response))
+        except ValidationError as e:
+            last_error = str(e)
+            last_response = response
+    
+    # Fall back after all retries exhausted
+    return conservative_fallback(candidates)
+```
+
+### Pattern: Conservative Fallback (Empty-Result)
+
+When the LLM fails after retries, use conservative fallback — NOT permissive heuristic.
+
+### WRONG (permissive):
+```python
+def fallback(candidates):
+    """Return top 5 by shared_techniques count, assume all gates pass."""
+    sorted_c = sorted(candidates, key=lambda c: -len(c["shared_techniques"]))
+    return FilterResult(
+        relevant_keys=[c["_key"] for c in sorted_c[:5]],
+        excluded_count=len(candidates) - 5,
+        judgments=[...]  # All gates set to True
+    )
+```
+
+This reintroduces exactly the noise the filter exists to remove.
+
+### RIGHT (conservative):
+```python
+def fallback(candidates):
+    """Return empty result — prefer false negatives."""
+    return FilterResult(
+        relevant_keys=[],
+        excluded_count=len(candidates),
+        judgments=[
+            JudgmentResult(
+                key=c["_key"],
+                include=False,
+                checks={...},  # All False
+                reason="LLM validation failed; no safe inclusion."
+            ) for c in candidates
+        ]
+    )
+```
+
+---
+
 ## Integration
 
 | Skill | Role |
@@ -770,3 +1161,37 @@ On 2026-04-09, a crosswalk question generation prompt used a flat glossary dict 
 | `/scillm` | LLM backend — receives the prompts |
 
 **Workflow:** Write prompt (apply these rules) -> `/review-prompt` (multi-model review) -> `/prompt-lab` (test against ground truth) -> deploy
+
+---
+
+## Real Incidents (prompt failures in this project)
+
+### 2026-04-14: MCQ Format Drift
+**Prompt:** QRA relevance filter for DeepSeek-V3
+**Failure:** Model output multiple-choice quiz format instead of JSON
+**Root cause:** No anti-MCQ guardrails
+**Fix:** Added FORBIDDEN OUTPUT FORMATS section
+
+### 2026-04-14: Gate vs Ranking Signal Contradiction
+**Prompt:** Related QRA filter with 5 boolean checks
+**Failure:** Expected output showed `evidence_chain_overlap=false` for included candidate, but prompt said "all checks must pass"
+**Root cause:** Mixed hard gates and ranking signals in same list
+**Fix:** Separated into INCLUSION GATE (4 checks) and RANKING SIGNAL (1 check)
+
+### 2026-04-14: Permissive Fallback
+**Prompt:** Related QRA filter with "top 5 by shared_techniques" fallback
+**Failure:** On LLM timeout, returned noisy candidates that defeated the filter's purpose
+**Root cause:** Fallback assumed all gates pass
+**Fix:** Changed to empty-result fallback (prefer false negatives)
+
+### 2026-04-09: Schema Mismatch
+**Prompt:** Crosswalk question generation
+**Failure:** 0/86 questions answerable
+**Root cause:** Prompt used flat glossary dict without `framework` field; pipeline produces array with framework identification
+**Fix:** Matched prompt schema to `_build_evidence_case()` output (Rule 15)
+
+### 2026-03-22: Weasel Word Hallucination
+**Prompt:** "Extract relevant security controls"
+**Failure:** 40% hallucinated controls
+**Root cause:** "Relevant" gave LLM permission to invent plausible controls
+**Fix:** "Extract only controls whose ID appears verbatim in the source text" — 2% hallucinations

@@ -54,6 +54,8 @@ taxonomy:
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
+**User-facing documentation:** See [COMPLETE_EXAMPLE.md](COMPLETE_EXAMPLE.md) for compliance officer workflow, CAE tree examples, and the tool's role as a research assistant (not compliance oracle).
+
 # /create-evidence-case v4.3 — Composable Orchestrator
 
 Build structured **Claims-Arguments-Evidence (CAE)** trees. This is an **agent-driven** skill — you (the agent) orchestrate existing skills, reason about results, and make all judgment calls. The Python code is a thin data collector.

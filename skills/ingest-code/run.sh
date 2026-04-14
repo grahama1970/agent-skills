@@ -25,8 +25,8 @@ PYTHON="${PYTHON:-python3}"
 
 # Check for uv
 if command -v uv &>/dev/null; then
-    cd "$SCRIPT_DIR"
-    exec uv run python ingest_code.py "$@"
+    # Don't cd - preserve user's working directory so paths like "." resolve correctly
+    exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/ingest_code.py" "$@"
 else
     exec "$PYTHON" "$SCRIPT_DIR/ingest_code.py" "$@"
 fi

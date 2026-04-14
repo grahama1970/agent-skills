@@ -50,7 +50,10 @@ SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/co
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 # Valid tool names for this agent
-VALID_TOOLS = {"write_file", "edit_file", "read_file", "run_command"}
+VALID_TOOLS = {"write_file", "edit_file", "read_file", "run_command", "lookup_docs", "search_code", "get_symbols", "research"}
+
+# Research rate limiting: track if research was already used this session
+_research_used = False
 
 # Paths that should NEVER be written by an LLM
 DENYLIST = {".git", ".gitignore", ".env", "SKILL.md", "run.sh", "sanity.sh", "pyproject.toml", "package.json"}
@@ -326,6 +329,64 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "lookup_docs",
+            "description": "Look up documentation for a library/package. Use when you need API reference, usage examples, or function signatures for external dependencies.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "library": {"type": "string", "description": "Library/package name (e.g. 'httpx', 'pandas', 'lodash')"},
+                    "query": {"type": "string", "description": "What to look up (e.g. 'async client timeout', 'DataFrame merge')"},
+                },
+                "required": ["library", "query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_code",
+            "description": "Search codebase for patterns using ripgrep. Use to find usages, implementations, or related code. Returns file:line matches.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "pattern": {"type": "string", "description": "Regex pattern to search for"},
+                    "glob": {"type": "string", "description": "File glob filter (e.g. '*.py', 'src/**/*.ts'). Optional."},
+                },
+                "required": ["pattern"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_symbols",
+            "description": "Extract code symbols (functions, classes, methods) from a file using tree-sitter. Use to understand code structure before editing.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "File path relative to working directory"},
+                },
+                "required": ["path"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "research",
+            "description": "Deep research via /dogpile. Use ONLY when stuck on unfamiliar APIs or error messages. Rate limited: once per task. Returns multi-source synthesis.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Research question (e.g. 'httpx AsyncClient connection pooling', 'Python asyncio.gather exception handling')"},
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 
@@ -568,6 +629,280 @@ def execute_tool(
                 error_type="EXECUTION",
                 error_message=str(e),
                 command=command[:100],
+            )
+
+    elif name == "lookup_docs":
+        library = arguments.get("library", "")
+        query = arguments.get("query", "")
+        if not library or not query:
+            return _tool_result(
+                ok=False, tool="lookup_docs",
+                error_type="MISSING_ARGS",
+                error_message="Both 'library' and 'query' are required.",
+            )
+        # Call /context7 skill
+        skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
+        context7_run = skills_dir / "context7" / "run.sh"
+        if not context7_run.exists():
+            return _tool_result(
+                ok=False, tool="lookup_docs",
+                error_type="SKILL_NOT_FOUND",
+                error_message="context7 skill not available.",
+            )
+        try:
+            proc = subprocess.run(
+                [str(context7_run), "search", library, query],
+                capture_output=True, text=True, timeout=30, cwd=cwd,
+            )
+            output = proc.stdout[:3000] if proc.stdout else ""
+            if proc.returncode != 0:
+                return _tool_result(
+                    ok=False, tool="lookup_docs",
+                    error_type="SKILL_ERROR",
+                    error_message=proc.stderr[:500] if proc.stderr else "context7 failed",
+                    library=library, query=query,
+                )
+            logger.info("  tool: lookup_docs {} '{}'", library, query[:50])
+            return _tool_result(
+                ok=True, tool="lookup_docs",
+                library=library, query=query,
+                content=output if output else "No documentation found.",
+            )
+        except subprocess.TimeoutExpired:
+            return _tool_result(
+                ok=False, tool="lookup_docs",
+                error_type="TIMEOUT",
+                error_message="Documentation lookup timed out after 30 seconds.",
+                library=library, query=query,
+            )
+        except Exception as e:
+            return _tool_result(
+                ok=False, tool="lookup_docs",
+                error_type="EXECUTION",
+                error_message=str(e),
+                library=library, query=query,
+            )
+
+    elif name == "search_code":
+        pattern = arguments.get("pattern", "")
+        glob_filter = arguments.get("glob", "")
+        if not pattern:
+            return _tool_result(
+                ok=False, tool="search_code",
+                error_type="MISSING_ARGS",
+                error_message="'pattern' is required.",
+            )
+
+        # Check if codebase is indexed (semantic search available)
+        marker_path = Path(cwd) / ".ingest-code.json"
+        semantic_results = None
+        source = "ripgrep"
+
+        if marker_path.exists():
+            # Try semantic search via /memory first
+            try:
+                memory_socket = Path("/run/user/1000/embry/memory.sock")
+                if memory_socket.exists():
+                    import httpx
+                    transport = httpx.HTTPTransport(uds=str(memory_socket))
+                    with httpx.Client(transport=transport, base_url="http://localhost", timeout=10.0) as client:
+                        # Query with codebase tag for scoped results
+                        marker = json.loads(marker_path.read_text())
+                        codebase_stem = marker.get("stem", Path(cwd).name)
+                        resp = client.post("/recall", json={
+                            "q": pattern,
+                            "k": 10,
+                            "tags": ["codebase", codebase_stem],
+                        })
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            items = data.get("items", [])
+                            if items and data.get("confidence", 0) > 0.3:
+                                # Format semantic results
+                                lines = []
+                                for item in items[:10]:
+                                    problem = item.get("problem", "")
+                                    solution = item.get("solution", "")[:200]
+                                    score = item.get("score", 0)
+                                    lines.append(f"[{score:.2f}] {problem}\n  {solution}")
+                                semantic_results = "\n\n".join(lines)
+                                source = "memory"
+                                logger.info("  tool: search_code '{}' → {} semantic matches", pattern[:40], len(items))
+            except Exception as e:
+                logger.debug("  semantic search failed, falling back to ripgrep: {}", e)
+
+        # If semantic search found results, return them
+        if semantic_results:
+            return _tool_result(
+                ok=True, tool="search_code",
+                pattern=pattern, glob=glob_filter or None,
+                source=source,
+                match_count=len(semantic_results.split("\n\n")),
+                content=f"[Semantic search - codebase indexed]\n\n{semantic_results}",
+            )
+
+        # Fall back to ripgrep for pattern matching
+        cmd = ["rg", "--line-number", "--no-heading", "--max-count=50", pattern]
+        if glob_filter:
+            cmd.extend(["--glob", glob_filter])
+        try:
+            proc = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=15, cwd=cwd,
+            )
+            # rg returns 1 when no matches found (not an error)
+            output = proc.stdout[:4000] if proc.stdout else ""
+            match_count = len(output.strip().split("\n")) if output.strip() else 0
+            logger.info("  tool: search_code '{}' → {} ripgrep matches", pattern[:40], match_count)
+            return _tool_result(
+                ok=True, tool="search_code",
+                pattern=pattern, glob=glob_filter or None,
+                source="ripgrep",
+                match_count=match_count,
+                content=output if output else "No matches found.",
+            )
+        except subprocess.TimeoutExpired:
+            return _tool_result(
+                ok=False, tool="search_code",
+                error_type="TIMEOUT",
+                error_message="Search timed out after 15 seconds.",
+                pattern=pattern,
+            )
+        except FileNotFoundError:
+            return _tool_result(
+                ok=False, tool="search_code",
+                error_type="TOOL_NOT_FOUND",
+                error_message="ripgrep (rg) not installed. Install with: apt install ripgrep",
+            )
+        except Exception as e:
+            return _tool_result(
+                ok=False, tool="search_code",
+                error_type="EXECUTION",
+                error_message=str(e),
+                pattern=pattern,
+            )
+
+    elif name == "get_symbols":
+        path = arguments.get("path", "")
+        if not path:
+            return _tool_result(
+                ok=False, tool="get_symbols",
+                error_type="MISSING_ARGS",
+                error_message="'path' is required.",
+            )
+        clean = path.lstrip("/")
+        target = Path(cwd) / clean
+        if not target.exists():
+            return _tool_result(
+                ok=False, tool="get_symbols", path=clean,
+                error_type="NOT_FOUND",
+                error_message="File does not exist.",
+            )
+        # Call /treesitter skill
+        skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
+        treesitter_run = skills_dir / "treesitter" / "run.sh"
+        if not treesitter_run.exists():
+            return _tool_result(
+                ok=False, tool="get_symbols",
+                error_type="SKILL_NOT_FOUND",
+                error_message="treesitter skill not available.",
+            )
+        try:
+            proc = subprocess.run(
+                [str(treesitter_run), "symbols", str(target), "--json"],
+                capture_output=True, text=True, timeout=15, cwd=cwd,
+            )
+            if proc.returncode != 0:
+                return _tool_result(
+                    ok=False, tool="get_symbols", path=clean,
+                    error_type="SKILL_ERROR",
+                    error_message=proc.stderr[:500] if proc.stderr else "treesitter failed",
+                )
+            output = proc.stdout[:5000] if proc.stdout else "[]"
+            # Parse JSON to count symbols
+            try:
+                symbols = json.loads(output)
+                symbol_count = len(symbols) if isinstance(symbols, list) else 0
+            except Exception:
+                symbol_count = 0
+            logger.info("  tool: get_symbols {} → {} symbols", clean, symbol_count)
+            return _tool_result(
+                ok=True, tool="get_symbols", path=clean,
+                symbol_count=symbol_count,
+                content=output,
+            )
+        except subprocess.TimeoutExpired:
+            return _tool_result(
+                ok=False, tool="get_symbols", path=clean,
+                error_type="TIMEOUT",
+                error_message="Symbol extraction timed out after 15 seconds.",
+            )
+        except Exception as e:
+            return _tool_result(
+                ok=False, tool="get_symbols", path=clean,
+                error_type="EXECUTION",
+                error_message=str(e),
+            )
+
+    elif name == "research":
+        global _research_used
+        query = arguments.get("query", "")
+        if not query:
+            return _tool_result(
+                ok=False, tool="research",
+                error_type="MISSING_ARGS",
+                error_message="'query' is required.",
+            )
+        # Rate limit: once per task
+        if _research_used:
+            return _tool_result(
+                ok=False, tool="research",
+                error_type="RATE_LIMITED",
+                error_message="Research already used this task. Use search_code or lookup_docs instead.",
+                query=query,
+            )
+        _research_used = True
+        # Call /dogpile skill
+        skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
+        dogpile_run = skills_dir / "dogpile" / "run.sh"
+        if not dogpile_run.exists():
+            _research_used = False  # Reset on skill not found
+            return _tool_result(
+                ok=False, tool="research",
+                error_type="SKILL_NOT_FOUND",
+                error_message="dogpile skill not available.",
+            )
+        try:
+            proc = subprocess.run(
+                [str(dogpile_run), "search", query, "--preset", "general"],
+                capture_output=True, text=True, timeout=60, cwd=cwd,
+            )
+            output = proc.stdout[:2500] if proc.stdout else ""
+            if proc.returncode != 0:
+                return _tool_result(
+                    ok=False, tool="research",
+                    error_type="SKILL_ERROR",
+                    error_message=proc.stderr[:500] if proc.stderr else "dogpile failed",
+                    query=query,
+                )
+            logger.info("  tool: research '{}' (rate limit consumed)", query[:50])
+            return _tool_result(
+                ok=True, tool="research",
+                query=query,
+                content=output if output else "No research results.",
+            )
+        except subprocess.TimeoutExpired:
+            return _tool_result(
+                ok=False, tool="research",
+                error_type="TIMEOUT",
+                error_message="Research timed out after 60 seconds.",
+                query=query,
+            )
+        except Exception as e:
+            return _tool_result(
+                ok=False, tool="research",
+                error_type="EXECUTION",
+                error_message=str(e),
+                query=query,
             )
 
     # Unknown tool — should not happen if VALID_TOOLS is checked first

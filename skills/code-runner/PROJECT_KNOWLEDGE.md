@@ -102,6 +102,35 @@ round 2+ → error_ev from stderr → LLM fix response → verify_fix_grounding(
 - [ ] Hedged calls (race codex + gemini, take first response)
 - [ ] Streaming for long generations (avoid timeouts on complex fixes)
 
+## Tool-Use Agent Expansion (2026-04)
+
+Extended the tool-use agent with 4 new tools beyond the original 4 (write_file, edit_file, read_file, run_command):
+
+| Tool | Backend | Purpose | Guardrails |
+|------|---------|---------|------------|
+| `lookup_docs` | /context7 | Library documentation lookup | 30s timeout |
+| `search_code` | ripgrep (rg) | Fast codebase pattern search | 15s timeout, 50 match cap |
+| `get_symbols` | /treesitter | AST symbol extraction | 15s timeout |
+| `research` | /dogpile | Deep multi-source research | **Once per task**, 60s timeout, 2500 char output cap |
+
+**Design decisions:**
+- Ripgrep over grep: faster, respects .gitignore, better for code
+- Smart routing in search_code: checks `.ingest-code.json` marker → semantic search via /memory if indexed, ripgrep fallback if not
+- Research rate-limited: prevents runaway API costs during self-improvement loops
+- All tools return structured JSON via `_tool_result()` helper for consistent parsing
+
+**Semantic search integration:**
+- `/ingest-code` writes `.ingest-code.json` marker after successful scan
+- `search_code` checks for marker in cwd
+- If found: queries `/memory recall` with codebase-scoped tags
+- If confidence > 0.3: returns semantic results with `source: "memory"`
+- Otherwise: falls back to ripgrep with `source: "ripgrep"`
+
+**Implementation:**
+- Tool definitions in `TOOLS` list (OpenAI function format)
+- Execute handlers in `execute_tool()` function
+- `_research_used` global flag tracks rate limit per session
+
 ## Related Skills
 
 - `/orchestrate` - Dispatches tasks to code-runner

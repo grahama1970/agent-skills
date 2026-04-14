@@ -201,6 +201,31 @@ Keep/discard uses epsilon threshold (0.01) to avoid churn.
 in consecutive rounds, strategy jumps ahead (e.g., round 2 with repeat import
 error → skip to `different_approach`).
 
+## Source Grounding Verification
+
+On round 2+, code-runner verifies that the LLM's fix actually references the
+error it's supposed to fix. This catches hallucinated fixes that don't address
+the actual problem.
+
+**Grounding terms extracted from stderr:**
+- File names (e.g., `cache.py`)
+- Error type keywords (e.g., `TypeError`, `ImportError`)
+- Quoted identifiers from error messages
+- Line numbers
+
+**Grounding score:** 0.0–1.0 based on how many terms the response references.
+If score < 0.5, a reminder is appended to the next round's prompt:
+
+```
+IMPORTANT: Your fix must address the ACTUAL error shown above.
+The error is in cache.py at line 42.
+Reference these specific terms: TypeError, get_value
+The actual error message is: TypeError: 'NoneType' object is not subscriptable
+```
+
+Emits `grounding_low` event when triggered. Grounding score is tracked in
+`llm_metadata` and round details.
+
 ### Escalation Chain (backend + reasoning)
 
 When the same error severity repeats, code-runner also escalates the LLM:
@@ -283,6 +308,39 @@ signatures. Stored in llm_invocations metadata so recalled fixes include the cod
 - **Allowlist:** If `allowlist` is in task spec, ONLY those files can be written (default-deny)
 - **Path boundary:** `relative_to()` check prevents traversal outside cwd
 - **Atomic writes:** temp file → validate → rename. On any failure, all temp files rolled back
+
+## Tool-Use Agent
+
+The LLM operates via tool calls, not output parsing. Available tools:
+
+| Tool | Purpose | Limits |
+|------|---------|--------|
+| `write_file` | Create new file or full rewrite | Allowlist enforced, Python syntax-checked, max 100 lines for existing files |
+| `edit_file` | Surgical line-range replacement | Staleness check, truncation guard |
+| `read_file` | Read file contents | 500 line cap, numbered output |
+| `run_command` | Execute shell command | 30s timeout, destructive patterns blocked |
+| `lookup_docs` | Library documentation via /context7 | 30s timeout |
+| `search_code` | Smart search: semantic if indexed, ripgrep fallback | 15s timeout, 50 match cap |
+| `get_symbols` | AST symbols via /treesitter | 15s timeout |
+| `research` | Deep research via /dogpile | **Once per task** (rate limited), 60s timeout |
+
+### Tool Usage Guidelines
+
+**File operations** (`write_file`, `edit_file`, `read_file`):
+- Always `read_file` before `edit_file` — staleness detection rejects edits to files changed since last read
+- Use `edit_file` for surgical changes to large files (>100 lines)
+- Python files are `compile()`-checked before writing
+
+**Search tools** (`search_code`, `get_symbols`):
+- `search_code` is smart: checks for `.ingest-code.json` marker first
+  - If indexed: queries `/memory` for semantic search (BM25 + cosine)
+  - If not indexed: falls back to ripgrep pattern matching
+  - Response includes `source: "memory"` or `source: "ripgrep"` to indicate which was used
+- `get_symbols` extracts function/class signatures — use before editing unfamiliar files
+
+**Research tools** (`lookup_docs`, `research`):
+- `lookup_docs` for API reference (free, fast)
+- `research` for complex questions (expensive, rate-limited to once per task)
 
 See [PATTERNS.md](references/PATTERNS.md) for composition patterns with /orchestrate, /thunderdome, /classifier-lab, and subagent usage.
 

@@ -106,7 +106,7 @@ working directory) + a separate `local` task to restart the server and verify wi
 - `allowlist` — files the LLM can write (scope boundary)
 - `read_context` — files the LLM should read for interface context (NOT write)
 - `definition_of_done` — runnable verification command with assertions
-- `blind_tests` — hidden assertions in `/test-lab` (optional, for adversarial verification)
+- `blind_tests` — hidden assertions in `/test-lab` (required for code-runner, enforced by /review-plan)
 
 ### Step 3: Skill Discovery (BLOCKING — do NOT skip)
 
@@ -393,4 +393,34 @@ tasks:
 tasks:
   - title: "Generate mockup"
     command: "mockup-lab generate --device desktop"
+```
+
+### WRONG: Inline Python that reads .env without load_dotenv
+```yaml
+tasks:
+  - id: "1"
+    title: "Query ArangoDB"
+    runner: "local"
+    command: |
+      python3 -c "
+      from arango import ArangoClient
+      # Fails: ARANGO_PASS not loaded from .env
+      client = ArangoClient().db('memory', password=os.environ['ARANGO_PASS'])
+      "
+```
+
+### RIGHT: Load .env before accessing environment variables
+```yaml
+tasks:
+  - id: "1"
+    title: "Query ArangoDB"
+    runner: "local"
+    command: |
+      python3 -c "
+      from dotenv import load_dotenv, find_dotenv
+      load_dotenv(find_dotenv())  # Load .env FIRST
+      import os
+      from arango import ArangoClient
+      client = ArangoClient().db('memory', password=os.environ['ARANGO_PASS'])
+      "
 ```

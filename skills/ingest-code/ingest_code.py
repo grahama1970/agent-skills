@@ -42,6 +42,15 @@ try:
 except ImportError:
     TaskClient = None
 
+# Import Monitor adapter for TUI progress bar
+try:
+    _task_monitor_path = _Path.home() / ".pi" / "skills" / "task-monitor"
+    if str(_task_monitor_path) not in _sys.path:
+        _sys.path.insert(0, str(_task_monitor_path))
+    from monitor_adapter import Monitor
+except ImportError:
+    Monitor = None
+
 
 # Default file patterns for scanning
 DEFAULT_GLOB_PATTERNS = [
@@ -702,7 +711,7 @@ def extract_edges(
     return edges
 
 
-def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False) -> int:
+def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, monitor=None) -> int:
     """Store dependency edges in /memory via batch HTTP endpoint."""
     if dry_run:
         stored = 0
@@ -712,6 +721,8 @@ def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False) -
             names = ", ".join(edge.get("names", [])[:3])
             print(f"  [EDGE] {from_name} → {to_name} (imports {names})")
             stored += 1
+            if monitor:
+                monitor.update(1, item=f"{from_name}→{to_name}")
         return stored
 
     # Build batch payload — use empty scope so add_edge matches any scope
@@ -744,12 +755,19 @@ def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False) -
             )
             if resp.status_code == 200:
                 data = resp.json()
-                stored += data.get("stored", 0)
+                chunk_stored = data.get("stored", 0)
+                stored += chunk_stored
+                if monitor:
+                    monitor.update(len(chunk), item=f"{stored} edges stored")
                 print(f"  Progress: {min(i + CHUNK, len(batch))}/{len(batch)} edges sent, {stored} stored", flush=True)
             else:
                 print(f"  [WARN] Batch {i//CHUNK}: HTTP {resp.status_code}", flush=True)
+                if monitor:
+                    monitor.update(len(chunk))  # Still advance progress
         except Exception as exc:
             print(f"  [WARN] Batch {i//CHUNK}: {exc}", flush=True)
+            if monitor:
+                monitor.update(len(chunk))  # Still advance progress
     return stored
 
 
@@ -775,8 +793,52 @@ def _load_monitor_config(codebase_path: Path) -> Optional[dict]:
     return None
 
 
+def _is_git_repo(path: Path) -> bool:
+    """Check if path is inside a git repository."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            cwd=str(path),
+            capture_output=True,
+            timeout=5,
+        )
+        return result.returncode == 0
+    except Exception:
+        return False
+
+
+def _git_ls_files(codebase_path: Path, patterns: list[str]) -> list[Path]:
+    """Use git ls-files to get tracked files (respects .gitignore)."""
+    # Build set of extensions from patterns like "*.py" -> ".py"
+    extensions = set()
+    for pattern in patterns:
+        if pattern.startswith("*."):
+            extensions.add(pattern[1:])  # "*.py" -> ".py"
+
+    files = []
+    try:
+        # Get all tracked + untracked-but-not-ignored files
+        result = subprocess.run(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+            cwd=str(codebase_path),
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.strip().split("\n"):
+                if line:
+                    path = codebase_path / line
+                    # Filter by extension
+                    if path.suffix in extensions:
+                        files.append(path)
+    except Exception:
+        pass
+    return files
+
+
 def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optional[datetime] = None) -> list[Path]:
-    """Collect files matching patterns, scoped by .monitor-codebase.json if present."""
+    """Collect files matching patterns, respecting .gitignore and .monitor-codebase.json."""
     config = _load_monitor_config(codebase_path)
     exclude_dirs = SKIP_DIRS.copy()
     if config:
@@ -787,16 +849,35 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
     # Determine scan roots — either scoped dirs or full codebase
     scan_roots = _extract_configured_scan_roots(codebase_path)
 
+    # Use git ls-files if in a git repo (respects .gitignore)
+    use_git = _is_git_repo(codebase_path)
+
     for root in scan_roots:
-        for pattern in patterns:
-            for f in root.rglob(pattern):
+        if use_git and root == codebase_path:
+            # Use git ls-files for the main codebase root
+            git_files = _git_ls_files(root, patterns)
+            for f in git_files:
                 if any(skip in f.parts for skip in exclude_dirs):
                     continue
                 if mtime_after:
-                    file_mtime = datetime.fromtimestamp(f.stat().st_mtime)
-                    if file_mtime < mtime_after:
+                    try:
+                        file_mtime = datetime.fromtimestamp(f.stat().st_mtime)
+                        if file_mtime < mtime_after:
+                            continue
+                    except OSError:
                         continue
                 files.append(f)
+        else:
+            # Fallback to rglob for non-git or scoped subdirectories
+            for pattern in patterns:
+                for f in root.rglob(pattern):
+                    if any(skip in f.parts for skip in exclude_dirs):
+                        continue
+                    if mtime_after:
+                        file_mtime = datetime.fromtimestamp(f.stat().st_mtime)
+                        if file_mtime < mtime_after:
+                            continue
+                    files.append(f)
 
     # Also include markdown docs at project root (always)
     for md_name in ["CONTEXT.md", "README.md", "CLAUDE.md", "MEMORY.md", "AGENTS.md"]:
@@ -911,7 +992,8 @@ def scan(
 
         # Phase 1a: Extract all knowledge items (CPU-bound, fast)
         all_items: list[dict] = []
-        for filepath in files:
+        file_iter = Monitor(files, name="ingest-code-extract", desc="Extracting knowledge", total=len(files)) if Monitor else files
+        for filepath in file_iter:
             items = extract_knowledge(filepath)
             all_items.extend(items)
         knowledge_total = len(all_items)
@@ -937,6 +1019,7 @@ def scan(
                 )
 
             print(f"  Storing with {workers} threads...", flush=True)
+            store_monitor = Monitor(None, name="ingest-code-store", desc="Storing to memory", total=knowledge_total) if Monitor else None
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 futures = {pool.submit(_learn_item, item): i for i, item in enumerate(all_items)}
                 done_count = 0
@@ -948,8 +1031,14 @@ def scan(
                     else:
                         with _lock:
                             failed += 1
+                        if store_monitor:
+                            store_monitor.fail()
+                    if store_monitor:
+                        store_monitor.update(1, item=f"{knowledge_stored} stored")
                     if done_count % 100 == 0:
                         print(f"  Progress: {knowledge_stored} stored, {failed} blocked, {done_count}/{knowledge_total} done", flush=True)
+            if store_monitor:
+                store_monitor._update(final=True)
 
         print(f"Knowledge: {knowledge_stored} stored of {knowledge_total} extracted ({failed} blocked)", flush=True)
 
@@ -961,14 +1050,13 @@ def scan(
 
     if taxonomy:
         print("\n--- Phase 2: CWE scanning ---", flush=True)
-        monitor = TaskClient("ingest-code", total=len(files)) if TaskClient else None
+        cwe_files = [f for f in files if f.suffix not in (".md", ".mdx")]
+        cwe_monitor = Monitor(None, name="ingest-code-cwe", desc="CWE scanning", total=len(cwe_files)) if Monitor else None
         scanned = 0
 
-        for i in range(0, len(files), batch_size):
-            batch = files[i:i + batch_size]
+        for i in range(0, len(cwe_files), batch_size):
+            batch = cwe_files[i:i + batch_size]
             for filepath in batch:
-                if filepath.suffix in (".md", ".mdx"):
-                    continue  # Skip docs for CWE scanning
                 result = scan_file_cwe(filepath, taxonomy, validate)
                 scanned += 1
                 cwes = result.get("cwe_mappings", [])
@@ -992,13 +1080,13 @@ def scan(
                             )
                             if ok:
                                 cwe_stored += 1
-                if monitor:
-                    monitor.update(item=str(filepath))
+                if cwe_monitor:
+                    cwe_monitor.update(1, item=filepath.name)
                 if scanned % 100 == 0:
                     print(f"  Progress: {scanned} scanned, {total_cwes} CWEs in {files_with_cwes} files", flush=True)
 
-        if monitor:
-            monitor.finish()
+        if cwe_monitor:
+            cwe_monitor._update(final=True)
         print(f"CWEs: {cwe_stored} stored, {total_cwes} found in {files_with_cwes} files", flush=True)
     else:
         print("Taxonomy module not found — skipping CWE scan (knowledge extraction still runs)", flush=True)
@@ -1013,7 +1101,10 @@ def scan(
         edges_total = len(edges)
         print(f"  Found {edges_total} internal dependency edges", flush=True)
         if edges_total > 0:
-            edges_stored = store_edges(edges, scope=scope, dry_run=dry_run)
+            edge_monitor = Monitor(None, name="ingest-code-edges", desc="Storing edges", total=edges_total) if Monitor else None
+            edges_stored = store_edges(edges, scope=scope, dry_run=dry_run, monitor=edge_monitor)
+            if edge_monitor:
+                edge_monitor._update(final=True)
             print(f"Edges: {edges_stored} stored of {edges_total} found", flush=True)
 
     # Output summary
@@ -1030,6 +1121,33 @@ def scan(
         "dry_run": dry_run,
     }
     print(f"\n{json.dumps(result, indent=2)}")
+
+    # --- Write marker file + store ingestion record in /memory ---
+    if not dry_run and knowledge_stored > 0:
+        marker = {
+            "ingested_at": datetime.now().isoformat(),
+            "path": str(path.resolve()),
+            "stem": path.resolve().name,
+            "files_scanned": len(files),
+            "knowledge_stored": knowledge_stored,
+            "cwe_stored": cwe_stored,
+            "edges_stored": edges_stored,
+            "scope": scope,
+        }
+        marker_path = path / ".ingest-code.json"
+        try:
+            marker_path.write_text(json.dumps(marker, indent=2))
+            print(f"\nMarker written: {marker_path}")
+        except Exception as e:
+            print(f"Warning: Could not write marker file: {e}", file=sys.stderr)
+
+        # Store ingestion record in /memory for discoverability
+        _learn_http(
+            problem=f"Has codebase {path.resolve().name} been indexed for semantic search?",
+            solution=f"Yes, indexed on {marker['ingested_at']}. {knowledge_stored} symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
+            scope="system",
+            tags=["ingest-code", "indexed-codebase", path.resolve().name, str(path.resolve())],
+        )
 
 
 @cli.command()

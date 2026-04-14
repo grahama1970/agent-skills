@@ -67,7 +67,8 @@ Most providers need zero setup — scillm reads existing credentials automatical
 |----------|-------|--------------|
 | **Claude** | None (if using Claude Code) | Reads `~/.claude/.credentials.json` automatically. Already there if you're in Claude Code. |
 | **Codex** | `npm install -g @openai/codex && codex login` | Creates `~/.codex/auth.json`. One-time login, scillm reads it. |
-| **Gemini** | Add `GEMINI_API_KEY=your-key` to `.env` | Get key from [aistudio.google.com](https://aistudio.google.com/apikey) |
+| **Gemini (OAuth)** | `npm install -g @anthropic-ai/gemini-cli && gemini login` | Creates `~/.gemini/oauth_creds.json`. **Recommended**: bypasses 20 RPD API limit. |
+| **Gemini (API)** | Add `GEMINI_API_KEY=your-key` to `.env` | Get key from [aistudio.google.com](https://aistudio.google.com/apikey). **Limited to 20 RPD on gemini-2.5-flash.** |
 | **GLM** | Add `GLM_API_Key=your-key` to `.env` | Get key from [z.ai](https://z.ai) (Coding Lite plan or higher) |
 | **Chutes** | Add `CHUTES_API_KEY` and `CHUTES_API_BASE` to `.env` | PAYG or subscription at [chutes.ai](https://chutes.ai) |
 | **DeepSeek** | Add `DEEPSEEK_API` to `.env` | Get key from [platform.deepseek.com](https://platform.deepseek.com) |
@@ -96,11 +97,14 @@ concurrency limits, budget tracking, and optional Redis caching.
 | `vlm` | Gemini 2.5 Flash (free key) | Image/PDF/screenshot description | → vlm-paid → vlm-claude → vlm-codex |
 | `local-text` | Ollama qwen2.5:0.5b (local) | Smoke tests, always-on fallback | (none) |
 | `moonshot-text` | Moonshot Kimi K2 | Alternative text provider | (none) |
-| `text-gemini` | Gemini 2.5 Flash (free key) | Fast, 1M context | → text-gemini-paid |
-| `text-gemini-paid` | Gemini 2.5 Flash (paid key) | Paid fallback when free exhausted | (none) |
-| `text-gemini-3` | Gemini 3 Flash Preview (free key) | Thinking model, 1M context | → text-gemini-3-paid |
-| `claude-sonnet-4-6` | Anthropic Claude Sonnet (OAuth) | Max subscription via ~/.claude | (none) |
-| `claude-haiku-4-5` | Anthropic Claude Haiku (OAuth) | Fast, cheap via Max subscription | (none) |
+| `text-gemini-oauth` | Gemini via CLI subprocess | **Recommended**: 1M context, no RPD limit | (none) |
+| `text-gemini` | Gemini 2.0 Flash (free key) | Fast, 1500 RPD | → text-gemini-free2 → text-gemini-paid |
+| `text-gemini-paid` | Gemini 2.0 Flash (paid key) | Paid fallback when free exhausted | (none) |
+| `text-gemini-3` | Gemini 3 Flash Preview (free key) | Thinking model, 20 RPD | → text-gemini-3-paid |
+| `text-claude` | Claude Sonnet 4.6 (OAuth) | General Claude tasks | (none) |
+| `text-claude-opus` | Claude Opus 4.5 (OAuth) | Complex reasoning, large tasks | (none) |
+| `text-claude-haiku` | Claude Haiku 4.5 (OAuth) | Fast, cheap, simple tasks | (none) |
+| `text-kimi` | Kimi K2.5-TEE (Chutes) | Alternative large model | → text-deepseek → text-gemini |
 | `gpt-5.3-codex` | OpenAI Codex (OAuth) | High-reasoning via ~/.codex | (none) |
 | `vlm-claude` | Claude Sonnet (OAuth) | VLM fallback (images + PDFs) | (none) |
 | `vlm-codex` | GPT-5.3 Codex (OAuth) | VLM fallback (images + PDFs) | (none) |
@@ -114,9 +118,13 @@ concurrency limits, budget tracking, and optional Redis caching.
 
 | Pattern | Provider | Auth | Example |
 |---------|----------|------|---------|
+| `claude` / `sonnet` | Anthropic Claude Sonnet | Claude Code Max OAuth | `text-claude` |
+| `opus` | Anthropic Claude Opus 4.5 | Claude Code Max OAuth | `text-claude-opus` |
+| `haiku` | Anthropic Claude Haiku | Claude Code Max OAuth | `text-claude-haiku` |
 | `claude-*` | Anthropic | Claude Code Max OAuth | `claude-sonnet-4-6` |
 | `gpt-*` / `codex-*` | OpenAI Codex | ChatGPT OAuth | `gpt-5.3-codex` |
-| `gemini-*` | Google | API key | `gemini-2.5-flash` |
+| `text-gemini-oauth` | Google | Gemini CLI OAuth | Uses `gemini -p` subprocess, bypasses API limits |
+| `gemini-*` | Google | API key | `gemini-2.0-flash` (1500 RPD), `gemini-2.5-flash` (20 RPD) |
 | `glm-*` (via `text-glm`) | Z.AI GLM | API key | `text-glm` → glm-5.1 |
 | `Org/Model` | Chutes | API key | `Qwen/Qwen3-30B-A3B` |
 | `model:tag` | Ollama (local) | none | `qwen2.5:7b` |

@@ -706,6 +706,18 @@ def check_execution_routing(task: dict, findings: list[Finding]):
                 suggestion="Add `assertion:` or include assert statements in the DoD command. "
                            "Consider adding `blind_tests:` for adversarial verification.",
             ))
+        # Blind tests enforcement — code-runner tasks MUST have blind_tests for adversarial verification
+        blind_tests = task.get("blind_tests") or task.get("tests") or []
+        if not blind_tests:
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="blind_tests",
+                grade="FAIL",
+                message="code-runner task has no blind_tests — agent can game DoD without adversarial verification",
+                line=task["line"],
+                suggestion="Add `blind_tests:` with assertions the implementing agent cannot see. "
+                           "Use `/test-lab verify-task` or `sanity.sh` for truly blind verification.",
+            ))
         # External API detection — DoD should use mocks, real API calls go in blind_tests
         import re as _re
         if dod_cmd and _re.search(r'https?://|curl\s|requests\.get|httpx\.\w+|urllib', dod_cmd):

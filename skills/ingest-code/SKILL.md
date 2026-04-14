@@ -106,10 +106,12 @@ Options:
 
 ## Directory Filtering
 
-Files in these directories are always skipped:
+**Git repositories:** When scanning a git repo, `/ingest-code` uses `git ls-files` which automatically respects `.gitignore`. Files ignored by git are excluded from ingestion.
+
+**Hardcoded skip directories** (always skipped, even in non-git dirs):
 `.venv`, `venv`, `node_modules`, `__pycache__`, `.git`, `dist`, `build`, `.eggs`, `.mypy_cache`, `.pytest_cache`, `site-packages`, `.uv`
 
-Markdown docs are always included: `CONTEXT.md`, `README.md`, `CLAUDE.md`, `MEMORY.md`, `AGENTS.md`, plus `docs/` and `local/docs/`.
+**Always included** (regardless of .gitignore): `CONTEXT.md`, `README.md`, `CLAUDE.md`, `MEMORY.md`, `AGENTS.md`, plus `docs/` and `local/docs/`.
 
 ## Integration with /monitor-codebase
 
@@ -121,6 +123,8 @@ The nightly pipeline calls `rescan` with scoped directories from `.monitor-codeb
   "exclude_dirs": [".venv", "node_modules", "checkpoints"]
 }
 ```
+
+The `exclude_dirs` list is additive — it supplements both `.gitignore` and the hardcoded skip directories.
 
 ## Output Format
 
@@ -135,6 +139,27 @@ The nightly pipeline calls `rescan` with scoped directories from `.monitor-codeb
   "cwe_summary": {"CWE-78": 5, "CWE-20": 12}
 }
 ```
+
+## Indexing Marker
+
+After a successful scan, `/ingest-code` writes a `.ingest-code.json` marker file to the scanned directory:
+
+```json
+{
+  "ingested_at": "2026-04-14T13:30:00",
+  "path": "/home/graham/workspace/my-project",
+  "stem": "my-project",
+  "files_scanned": 968,
+  "knowledge_stored": 1520,
+  "cwe_stored": 45,
+  "edges_stored": 234,
+  "scope": "code"
+}
+```
+
+**Why this exists:** Other skills (like `/code-runner`) can check for this marker to determine if a codebase has been semantically indexed. If indexed, they can use `/memory recall` for semantic search instead of falling back to ripgrep pattern matching.
+
+The marker is also stored in `/memory` with tags `["ingest-code", "indexed-codebase", <stem>, <path>]` for discovery via recall.
 
 ## Related Skills
 

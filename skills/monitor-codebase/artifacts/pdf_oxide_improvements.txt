@@ -1,1 +1,134 @@
-dogpile timeout or unavailable
+Found prior research on this topic in memory.
+## Prior Research Found
+
+1. **fix common violations in Python project: ...** (score=8.74)
+2. **Formal verification of requirement refinement with categorical taxonomies 
+DO-178...** (score=0.75)
+   Com...
+Dogpiling on: fix common violations in Python project: handwritten-tests(37) 
+(Code Related: True)...
+Tailored queries:
+  arxiv: automated test case generation property-based testing python...
+  perplexity: What is the 'handwritten-tests(37)' violation in Python stat...
+  brave: Python static analysis rule 'handwritten-tests(37)' document...
+  github: path:**/test_*.py "handwritten-tests" violation fix hypothes...
+  youtube: how to fix python testing violations tutorial property-based...
+  readarr: Python Testing with pytest Brian Okken 2025...
+# Dogpile Report: fix common violations in Python project: handwritten-tests(37)
+
+## Codex Technical Overview
+The violation code **`handwritten-tests(37)`** typically surfaces in modern Python static analysis or architectural linting (often associated with tools like `ruff`, `flake8-pytest-style`, or custom enterprise governance tools). It flags a specific type of technical debt: **manual, repetitive test cases that should be abstracted into data-driven or generative patterns.**
+
+In high-scale Python engineering, "handwritten" is often synonymous with "unscalable" and "error-prone." Below is a technical deep dive into why this violation occurs and how to architecturally resolve it.
+
+---
+
+### 1. The Core Violation: Manual Orchestration
+Violation 37 generally identifies instances where a developer has written $N$ nearly identical test functions to cover $N$ variations of an input.
+
+*   **The Pitfall (Anti-pattern):** Writing 20 different `test_user_login_with_invalid_email_X` functions.
+*   **The Risk:** "Testing the Test Suite." When the logic of the underlying feature changes, you must manually update 20 locations. This leads to **assertion drift**, where some tests validate more strictly than others by mistake.
+
+---
+
+### 2. Architectural Patterns for Resolution
+
+To clear this violation, you must shift from **Procedural Testing** to **Declarative/Model-Based Testing**.
+
+#### A. Data-Driven Testing (DDT) via Parametrization
+Instead of writing the test logic multiple times, you decouple the **test runner** from the **test data**.
+
+*   **Implementation:** Use `@pytest.mark.parametrize`.
+*   **Technical Benefit:** It treats the test as a pure function. This reduces the cognitive load of the test suite and ensures that the execution logic is identical across all permutations.
+
+```python
+# Instead of 5 handwritten tests, use a single parameterized engine
+@pytest.mark.parametrize("email, expected_error", [
+    ("missing_at.com", "Invalid format"),
+    ("@no_user.com", "Invalid format"),
+    ("user@no_tld", "Domain incomplete"),
+])
+def test_email_validation(email, expected_error):
+    with pytest.raises(ValueError, match=expected_error):
+        validate_email(email)
+```
+
+#### B. The Fixture Factory Pattern
+Violations often occur because of "handwritten" setup code (instantiating complex objects manually).
+*   **Implementation:** Use `pytest` fixtures that return factory functions.
+*   **Internal Logic:** This allows you to generate valid domain objects with default values, overriding only what is necessary for the specific test. This prevents "Handwritten Setup" violations where 50 lines of boilerplate precede a 1-line assertion.
+
+#### C. Property-Based Testing (PBT)
+This is the State-of-the-Art (SOTA) approach to eliminating handwritten tests. Instead of choosing specific examples, you define the **properties** of the output.
+*   **Tooling:** `Hypothesis`.
+*   **Logic:** If you are writing tests for a sorting algorithm, instead of handwritten lists, you define: "For any list of integers, the output must be monotonic and have the same elements as the input."
+
+---
+
+### 3. Common Pitfalls in Fixing Violation 37
+
+While refactoring handwritten tests, developers often fall into these traps:
+
+1.  **Logic in the Parametrize Decorator:** Avoid putting complex logic or object instantiation inside `@pytest.mark.parametrize`. This is executed at collection time, not run time, which can slow down test discovery and hide errors.
+2.  **The "Mega-Test" Trap:** In an attempt to reduce handwritten code, developers sometimes create one giant test function with multiple `if/else` blocks and loops. **This is a regression.** If a failure occurs in the middle of a loop, later assertions may not run, obscuring the full scope of the failure.
+3.  **Brittle Mocking:** Handwritten tests often rely on "Handwritten Mocks." If the internal API changes, the mock continues to pass while the production code fails (The False Positive).
+
+---
+
+### 4. State-of-the-Art (SOTA) Approaches
+
+Modern Python projects (like those using `FastAPI`, `Pydantic`, or `SQLAlchemy 2.0`) use the following to automate away "Handwritten-37" violations:
+
+#### I. Schema-Driven Testing
+If you use Pydantic, you can use `pydantic-factories` or `polyfactory`. These tools inspect your models and **automatically generate valid test data**. This eliminates the need to manually write "valid" and "invalid" test cases—the schema defines the test boundaries.
+
+#### II. Mutation Testing
+To verify if your "de-handwritten" tests are actually effective, use **Mutation Testing** (e.g., `mutmut` or `Cosmic Ray`).
+*   **Mechanism:** It modifies your source code (e.g., changing `>` to `>=`) and checks if your tests fail. If the tests still pass, your "automated" tests are weak. This is the ultimate "meta-check" for test quality.
+
+#### III. Contract Testing (Pact/Schemathesis)
+For API-heavy projects, "handwritten" integration tests are replaced by **Schemathesis**. It reads your OpenAPI (Swagger) spec and automatically generates hundreds of test cases to ensure the implementation matches the documentation. This effectively automates away the entire category of "handwritten" endpoint testing.
+
+---
+
+### Summary Checklist for fixing `handwritten-tests(37)`:
+
+1.  **Identify Repetition:** Are there $>2$ tests testing the same code path with different data? **Fix:** Use `@pytest.mark.parametrize`.
+2.  **Check Setup Complexity:** Is the setup logic $>5$ lines? **Fix:** Abstract into a `conftest.py` fixture or a Factory.
+3.  **Evaluate Edge Cases:** Are you manually trying to think of edge cases? **Fix:** Implement `Hypothesis` for property-based generation.
+4.  **Schema Alignment:** Can the test data be inferred from a type hint or Pydantic model? **Fix:** Use a Factory provider to auto-generate payloads.
+
+## AI Research (Perplexity)
+No answer.
+
+## Books & Usenet (Readarr)
+No books or Usenet results found.
+
+## Discord (Security Servers)
+> Error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.
+
+## GitHub
+### Repositories
+No repositories found.
+
+### Issues/Discussions
+No issues found.
+
+## Web Results (Brave)
+- **[Static analysis and style checking in Python packages - Python for HPC: Community Materials](https://betterscientificsoftware.github.io/python-for-hpc/syntax-and-style-analysis/)**
+  Flake8 for static analysis and style checking in Python
+- **[Top 20 Python Static Analysis Tools: Improve Code Quality and Performance - IN-COM DATA SYSTEMS](https://www.in-com.com/blog/top-20-python-static-analysis-tools-in-2025-improve-code-quality-and-performance/)**
+  <strong>Improve Python code quality with static code analysis tools</strong>. Detect security vulnerabilities, optimize performance, and enforce best practices to build scalable, maintainable applications. Explore the best tools for static analysis today.
+- **[Python Static Analysis Tools](https://luminousmen.com/post/python-static-analysis-tools)**
+  Improve code quality with Python static analysis tools like Mypy, Pylint, Pyflakes, and more. Detect bugs and security issues efficiently. Optimize your code now!
+- **[Top 5 Best Static Code Analysis Tools in 2025](https://www.techtimes.com/articles/308954/20250106/top-5-best-static-code-analysis-tools-2025.htm)**
+  Language Support: Covers 30+ programming languages with over 6,000 rules, including industry-leading taint analysis for security.
+- **[Python Static Code Analysis & Quality Code | Sonar](https://www.sonarsource.com/knowledge/languages/python/)**
+  SonarQube, SonarCloud &amp; SonarLint use hundreds of unique rules to find Python bugs, code smells &amp; vulnerabilities with Sonar.
+
+## Academic Papers (ArXiv)
+
+## Videos (YouTube)
+> Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp
+
+Research findings learned to memory (1 entries).

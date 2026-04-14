@@ -276,6 +276,39 @@ FOR doc IN sparta_qra
 
 **Real incident (2026-04-13):** 171K QRA lineage backfill started at 20/s, degraded to 7/s by 50% completion. Root cause: unindexed `lineage == null` filter.
 
+### 21. HIGH: Sparse Vector Index UPDATE Bug — `arango-vector-update-bug`
+
+ArangoDB versions < 3.12.9 have a bug where sparse vector indexes block UPDATE operations on documents that don't have the vector field, even though `sparse: true` should allow this.
+
+**Error:** `[HTTP 400][ERR 10] vector field not present in document <key>`
+
+**GitHub Issue:** [arangodb/arangodb#22568](https://github.com/arangodb/arangodb/issues/22568)
+
+```python
+# BAD — fails on docs without embedding (versions < 3.12.9)
+db.aql.execute("UPDATE {_key: @key} WITH {lineage: @lin} IN sparta_qra", ...)
+
+# WORKAROUND — drop index, update, recreate
+coll = db.collection('sparta_qra')
+idx_config = next(i for i in coll.indexes() if i['type'] == 'vector')
+coll.delete_index(idx_config['id'])
+
+# ... do all updates ...
+
+coll.add_index({
+    'type': 'vector',
+    'name': idx_config['name'],
+    'fields': idx_config['fields'],
+    'params': idx_config['params'],
+    'sparse': True,
+    'inBackground': True
+})
+```
+
+**When to apply:** Any batch update to a collection with a sparse vector index where some docs lack the vector field.
+
+**Real incident (2026-04-14):** Lineage backfill failed on 269 docs without embeddings. Error message was misleading ("vector field not present") even when providing the embedding in the UPDATE — the index validates against the OLD document state.
+
 ## Enforcement
 
 - **PostToolUse hook** `no-regex-silo.sh` fires on every Edit/Write to .py files
