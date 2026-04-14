@@ -386,7 +386,7 @@ def transcribe_book(book: BookState, state: PipelineState, console) -> bool:
 app = typer.Typer(help="Audiobook transcription pipeline")
 
 # Default model for LLM routing (--model flag for `with <model>` routing)
-_DEFAULT_MODEL = "deepseek-ai/DeepSeek-V3"
+_DEFAULT_MODEL = "text"
 
 
 @app.command()

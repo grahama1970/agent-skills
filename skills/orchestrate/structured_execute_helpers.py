@@ -311,6 +311,155 @@ def _render_state(session_dir: Path, runtimes: dict[str, TaskRuntime],
     (session_dir / "status.json").write_text(json.dumps(payload, indent=2))
 
 
+def render_report(
+    session_dir: Path,
+    runtimes: dict[str, TaskRuntime],
+    plan: dict[str, Any],
+    verbose: bool = False,
+) -> str:
+    """Render human-readable execution report (pytest/GitHub Actions style).
+
+    Args:
+        session_dir: Path to session directory
+        runtimes: Task ID -> TaskRuntime mapping
+        plan: Original plan dict (for metadata, lanes)
+        verbose: Include stdout/stderr excerpts for failed tasks
+    """
+    lines: list[str] = []
+    metadata = plan.get("metadata", {})
+    title = metadata.get("title", "Orchestrate Execution")
+    lanes = {str(l.get("id")): l.get("label", f"Lane {l.get('id')}") for l in plan.get("lanes", [])}
+
+    # Header
+    lines.append("╭" + "─" * 67 + "╮")
+    lines.append(f"│ ORCHESTRATE: {title[:52]:<52} │")
+    lines.append(f"│ Session: {session_dir.name:<56} │")
+    lines.append("╰" + "─" * 67 + "╯")
+    lines.append("")
+
+    # Group tasks by lane
+    tasks_by_lane: dict[str, list[TaskRuntime]] = {}
+    for t in runtimes.values():
+        lane_id = t.lane or "default"
+        if lane_id not in tasks_by_lane:
+            tasks_by_lane[lane_id] = []
+        tasks_by_lane[lane_id].append(t)
+
+    # Sort lanes by ID (numeric if possible)
+    def lane_sort_key(lid: str) -> tuple[int, str]:
+        try:
+            return (0, str(int(lid)).zfill(10))
+        except ValueError:
+            return (1, lid)
+
+    # Render each lane
+    for lane_id in sorted(tasks_by_lane.keys(), key=lane_sort_key):
+        lane_tasks = sorted(tasks_by_lane[lane_id], key=lambda t: t.task_id)
+        lane_label = lanes.get(lane_id, f"Lane {lane_id}")
+
+        # Calculate lane timing and status
+        lane_times = [
+            (t.finished_at or 0) - (t.started_at or 0)
+            for t in lane_tasks if t.started_at and t.finished_at
+        ]
+        lane_total = sum(lane_times)
+        lane_statuses = [t.status for t in lane_tasks]
+
+        if "failed" in lane_statuses:
+            lane_status = "FAILED"
+        elif all(s == "completed" for s in lane_statuses):
+            lane_status = f"{_fmt_duration(lane_total)}"
+        elif all(s in ("queued", "blocked") for s in lane_statuses):
+            lane_status = "skipped"
+        else:
+            lane_status = "partial"
+
+        lines.append(f"{lane_label} {'─' * (60 - len(lane_label))} {lane_status}")
+
+        # Render tasks in lane
+        for t in lane_tasks:
+            duration = ""
+            if t.started_at and t.finished_at:
+                duration = f"{t.finished_at - t.started_at:.1f}s"
+
+            # Status symbol
+            if t.status == "completed":
+                symbol = "✓"
+            elif t.status == "failed":
+                symbol = "✗"
+            elif t.status == "running":
+                symbol = "▶"
+            elif t.status == "blocked":
+                symbol = "○"
+            else:
+                symbol = "·"
+
+            # Backend tag
+            backend_tag = f"[{t.backend}]" if t.backend else f"[{t.runner}]"
+
+            # Main task line
+            title_trunc = t.title[:38] if len(t.title) > 38 else t.title
+            lines.append(f"  {symbol} {t.task_id:<3} {title_trunc:<40} {backend_tag:<10} {duration:>6}")
+
+            # Error details for failed tasks
+            if t.status == "failed" and t.error:
+                # Extract key error info
+                error_line = t.error.split("\n")[0][:60] if t.error else "unknown"
+                lines.append(f"       └─ {error_line}")
+
+                # Load result.json for more detail if available
+                if verbose:
+                    result_file = session_dir / f"{t.task_id}.result.json"
+                    if result_file.exists():
+                        try:
+                            result = json.loads(result_file.read_text())
+                            rounds = result.get("rounds", 0)
+                            best_score = result.get("best_score", 0)
+                            lines.append(f"       └─ Rounds: {rounds} | Score: {best_score:.3f}")
+                        except (json.JSONDecodeError, IOError):
+                            pass
+
+            # Blocked indicator
+            elif t.status == "blocked":
+                # Find which parent failed
+                blocked_by = t.error.split("blocked by")[-1].strip()[:20] if "blocked by" in t.error else ""
+                if blocked_by:
+                    lines.append(f"       └─ blocked by {blocked_by}")
+
+        lines.append("")
+
+    # Summary footer
+    completed = sum(1 for t in runtimes.values() if t.status == "completed")
+    failed = sum(1 for t in runtimes.values() if t.status == "failed")
+    blocked = sum(1 for t in runtimes.values() if t.status in ("blocked", "queued"))
+
+    total_time = sum(
+        (t.finished_at or 0) - (t.started_at or 0)
+        for t in runtimes.values() if t.started_at and t.finished_at
+    )
+
+    lines.append("─" * 68)
+    lines.append(f"SUMMARY: {completed} ✓ | {failed} ✗ | {blocked} ○ | Total: {_fmt_duration(total_time)}")
+    lines.append(f"Session: {session_dir}/")
+    if failed or blocked:
+        lines.append(f"Resume:  orchestrate run <plan.yaml> --resume")
+
+    return "\n".join(lines)
+
+
+def _fmt_duration(seconds: float) -> str:
+    """Format duration as human-readable string."""
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    elif seconds < 3600:
+        m, s = divmod(int(seconds), 60)
+        return f"{m}m {s}s"
+    else:
+        h, rem = divmod(int(seconds), 3600)
+        m, s = divmod(rem, 60)
+        return f"{h}h {m}m"
+
+
 def _subagent_backend_name(model: str) -> str:
     low = model.lower()
     if low.startswith(("gpt", "codex", "o3", "o4")):

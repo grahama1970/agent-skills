@@ -24,7 +24,7 @@ import typer
 app = typer.Typer(add_completion=False, help="Lean4 theorem proving via scillm")
 
 # Default model for LLM routing (--model flag for `with <model>` routing)
-_DEFAULT_MODEL = "deepseek-ai/DeepSeek-V3"
+_DEFAULT_MODEL = "text"
 
 
 @app.command()

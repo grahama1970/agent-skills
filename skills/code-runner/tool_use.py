@@ -677,7 +677,10 @@ def run_tool_use_loop(
                                  approx_tokens)
                 resp = httpx.post(
                     SCILLM_URL,
-                    headers={"Authorization": f"Bearer {SCILLM_KEY}"},
+                    headers={
+                        "Authorization": f"Bearer {SCILLM_KEY}",
+                        "X-Caller-Skill": "code-runner",  # Required by scillm for cost tracking
+                    },
                     json=payload,
                     timeout=180.0,
                 )

@@ -97,7 +97,7 @@ class KSMLBridge:
             image_url = f"data:image/jpeg;base64,{image_data}"
 
             payload = {
-                "model": "deepseek-ai/DeepSeek-V3",
+                "model": "text",
                 "messages": [
                     {
                         "role": "user",

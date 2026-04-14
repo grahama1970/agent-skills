@@ -4,7 +4,7 @@ description: >
   Universal LLM proxy on localhost:4001. One endpoint for all providers:
   Chutes, DeepSeek, Gemini, Ollama, Claude (OAuth), Codex (OAuth), GLM.
   Auto-routes by model name. POST /v1/chat/completions (OpenAI-compatible).
-  ZIP explosion, PDF inlineData, fallback cascades, JSON repair.
+  Utilization-aware Chutes routing, ZIP explosion, PDF inlineData, fallback cascades, JSON repair.
 allowed-tools: Bash, Read
 triggers:
   - assess scillm usage
@@ -91,7 +91,7 @@ concurrency limits, budget tracking, and optional Redis caching.
 
 | Model | Backend | Use Case | Fallback |
 |-------|---------|----------|----------|
-| `text` | Chutes DeepSeek-V3.1-TEE | General text, extraction, summarization | → text-deepseek → text-gemini → text-gemini-paid |
+| `text` | Chutes (auto-selects least utilized large DeepSeek) | General text, extraction, summarization | → text-deepseek → text-gemini → text-gemini-paid |
 | `text-research` | Chutes (Harvard research endpoint) | **25% off**, non-sensitive batch work | (none) |
 | `vlm` | Gemini 2.5 Flash (free key) | Image/PDF/screenshot description | → vlm-paid → vlm-claude → vlm-codex |
 | `local-text` | Ollama qwen2.5:0.5b (local) | Smoke tests, always-on fallback | (none) |
@@ -125,6 +125,14 @@ Cascade aliases still work: `text` (Chutes → Gemini free → Gemini paid → D
 
 **Chutes cold-start handling**: Non-TEE tried first (1 retry), falls through to TEE on 503. Warmup API fires in background on cold detect — miners notified to spin up. Next call may hit warm non-TEE.
 
+**Chutes utilization-aware routing**: The ChutesRouter middleware automatically selects the least saturated model variant within a capability family. When you request `model: "text"`, the router:
+1. Fetches utilization data from Chutes API (cached for 5 minutes)
+2. Scores all variants in the model family (deepseek-v3, deepseek-r1, qwen3-large, qwen3-small, kimi)
+3. Avoids models with >10% rate limiting (score=100) or >95% utilization
+4. Selects the variant with the lowest score
+
+Example: If V3.2-TEE is at 99% utilization with 88% rate-limiting, the router automatically switches to V3.1-TEE at 58% utilization. No client-side changes needed — just use `model: "text"`.
+
 > **`text-research` — Harvard Research Endpoint (25% off)**
 >
 > Chutes is running a research collaboration with Harvard to build a caching algorithm. Use `model: "text-research"` to opt in:
@@ -144,12 +152,17 @@ Cascade aliases still work: `text` (Chutes → Gemini free → Gemini paid → D
 
 **scillm is an HTTP API, not a Python package. Do NOT `import scillm`. Use httpx.**
 
+**REQUIRED: Always include `X-Caller-Skill` header** — identifies who made the call for debugging, cost tracking, and error correlation. Use your skill name or project name (derived from pwd).
+
 ```python
 import httpx
 
 resp = httpx.post(
     "http://localhost:4001/v1/chat/completions",
-    headers={"Authorization": "Bearer sk-dev-proxy-123"},
+    headers={
+        "Authorization": "Bearer sk-dev-proxy-123",
+        "X-Caller-Skill": "my-skill-name",  # REQUIRED: your skill or project name
+    },
     json={"model": "text", "messages": [{"role": "user", "content": "What is 2+2?"}]},
     timeout=30.0,
 )
@@ -161,7 +174,11 @@ content = resp.json()["choices"][0]["message"]["content"]
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://localhost:4001/v1", api_key="sk-dev-proxy-123")
+client = OpenAI(
+    base_url="http://localhost:4001/v1",
+    api_key="sk-dev-proxy-123",
+    default_headers={"X-Caller-Skill": "my-skill-name"},  # REQUIRED
+)
 resp = client.chat.completions.create(
     model="text",
     messages=[{"role": "user", "content": "Hello"}],
@@ -176,7 +193,10 @@ Add `response_format` — the proxy auto-validates and retries on broken JSON:
 ```python
 resp = httpx.post(
     "http://localhost:4001/v1/chat/completions",
-    headers={"Authorization": "Bearer sk-dev-proxy-123"},
+    headers={
+        "Authorization": "Bearer sk-dev-proxy-123",
+        "X-Caller-Skill": "my-skill-name",
+    },
     json={
         "model": "text",
         "messages": [{"role": "user", "content": "Return {name, age} for Alice who is 25"}],
@@ -200,7 +220,10 @@ with open("photo.png", "rb") as f:
 
 resp = httpx.post(
     "http://localhost:4001/v1/chat/completions",
-    headers={"Authorization": "Bearer sk-dev-proxy-123"},
+    headers={
+        "Authorization": "Bearer sk-dev-proxy-123",
+        "X-Caller-Skill": "my-skill-name",
+    },
     json={
         "model": "text",  # auto-routed to vlm when image detected
         "messages": [{"role": "user", "content": [
@@ -259,10 +282,15 @@ For small batches, fire all at once — the proxy queues and drains fast:
 ```python
 import asyncio, httpx
 
+HEADERS = {
+    "Authorization": "Bearer sk-dev-proxy-123",
+    "X-Caller-Skill": "my-skill-name",  # REQUIRED
+}
+
 async def complete(client, prompt):
     resp = await client.post(
         "http://localhost:4001/v1/chat/completions",
-        headers={"Authorization": "Bearer sk-dev-proxy-123"},
+        headers=HEADERS,
         json={
             "model": "text",
             "messages": [{"role": "user", "content": prompt}],
@@ -288,11 +316,16 @@ Limit in-flight requests to avoid queue buildup:
 ```python
 import asyncio, httpx
 
+HEADERS = {
+    "Authorization": "Bearer sk-dev-proxy-123",
+    "X-Caller-Skill": "my-skill-name",  # REQUIRED
+}
+
 async def complete(client, semaphore, prompt):
     async with semaphore:
         resp = await client.post(
             "http://localhost:4001/v1/chat/completions",
-            headers={"Authorization": "Bearer sk-dev-proxy-123"},
+            headers=HEADERS,
             json={"model": "text", "messages": [{"role": "user", "content": prompt}]},
             timeout=60.0,
         )
@@ -656,6 +689,49 @@ data["scillm_metadata"]["_key"]  # → "sparta_controls/12345"
 
 Works with all providers (Chutes, Gemini, Claude, Codex, Ollama, DeepSeek). The field is an arbitrary dict — add whatever fields you need. Non-streaming only (streaming responses don't carry it).
 
+### Automatic Batch Resume
+
+For large batches that might fail mid-way, use `batch_id` + `item_id` in `scillm_metadata`. The proxy automatically skips already-completed items on retry:
+
+```python
+# Skill submits batch with unique item identifiers
+requests = [
+    {
+        "model": "text",
+        "messages": [{"role": "user", "content": f"Process {cwe_id}"}],
+        "scillm_metadata": {
+            "batch_id": "cwe-qra-batch-2026-04-13",  # unique per batch run
+            "item_id": cwe_id,                        # unique per work item
+        },
+    }
+    for cwe_id in all_cwe_ids
+]
+
+# If batch fails at 500/1000, re-run entire batch — proxy auto-skips completed items
+# Response header x-batch-resumed: true indicates a cached hit
+```
+
+**How it works:**
+1. Every completion is logged to ArangoDB `llm_call_log` with the metadata
+2. On subsequent calls, proxy queries for existing success with same `(batch_id, item_id)`
+3. If found: returns cached response instantly (no LLM call), sets `x-batch-resumed: true` header
+4. If not found: normal LLM call, logged for future resume
+
+**Fire and forget:** Skills don't track progress — just pass the full batch every time. scillm handles deduplication automatically.
+
+### Skill Identification (x-caller-skill header)
+
+Skills should identify themselves for debugging and analytics:
+
+```python
+resp = await client.post(url, json=body, headers={
+    "Authorization": "Bearer sk-dev-proxy-123",
+    "x-caller-skill": "create-qras",  # your skill name
+})
+```
+
+The header is logged to `llm_call_log.caller` for per-skill usage tracking and error correlation.
+
 ### Common mistakes that cause 500s
 
 1. **Wrong model name**: `text-claude-sonnet` → use `claude-sonnet-4-6`
@@ -730,6 +806,7 @@ The proxy runs these middleware components on every request:
 | **Budget Guard** | `budget_guard.py` | Tracks Chutes daily usage. Classifies 429s as budget vs throttle. |
 | **Pricing** | `pricing.py` | Per-1k token cost estimation. |
 | **Metrics** | `metrics.py` | Prometheus counters: calls, 429s, budget limits, retries. |
+| **ArangoDB Log** | `arango_log.py` | Logs every LLM call to `llm_call_log` collection. Stores request prompt, response content, tokens, cost, latency. |
 
 ## Fallback Cascade
 
@@ -775,6 +852,36 @@ Redis caching is auto-enabled when `REDIS_HOST` or `REDIS_URL` is set:
 - Namespace: `SCILLM_CACHE_NAMESPACE` (default "scillm")
 - Core compose (no Redis) works fine — caching is optional
 
+## Logging (ArangoDB)
+
+All LLM calls are logged to the `llm_call_log` collection in ArangoDB (via memory service):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts` | ISO8601 | Timestamp |
+| `date` | YYYY-MM-DD | Date partition key |
+| `model_requested` | string | What caller asked for (e.g., `text`) |
+| `model_served` | string | What actually served (e.g., `deepseek-ai/DeepSeek-V3.2-TEE`) |
+| `provider` | string | Inferred provider (chutes, gemini, anthropic, etc.) |
+| `duration_ms` | int | Total call time |
+| `prompt_tokens` | int | Input tokens |
+| `completion_tokens` | int | Output tokens |
+| `cost_usd` | float | Estimated cost (from x-cost-usd header) |
+| `status` | string | `ok` or `error` |
+| `error` | string | Error type if failed |
+| `request_prompt` | string | Last user message (truncated to 4000 chars) |
+| `response_content` | string | Raw response content for debugging |
+| `caller` | string | x-caller-skill header value |
+
+**No Redis for logging.** Redis is ONLY for optional caching. All persistent logging goes to ArangoDB.
+
+Query logs via memory service:
+```bash
+curl -X POST http://localhost:8601/query -H "Content-Type: application/json" -d '{
+  "aql": "FOR doc IN llm_call_log FILTER doc.date == \"2026-04-13\" SORT doc.ts DESC LIMIT 10 RETURN doc"
+}'
+```
+
 ## Automatic Timeout Estimation
 
 **Agents don't need to estimate timeouts.** scillm automatically sets per-call provider timeouts based on historical latency data.
@@ -801,6 +908,21 @@ How it works:
 **Bounds:** 10s minimum, 10min maximum. Clamped automatically.
 
 **Data source:** `/latency-stats` in memory service queries `llm_call_log` for duration, tokens, and throughput. Stats cached 5 minutes.
+
+---
+
+## Self-Correction
+
+scillm is designed to self-correct common issues so agents don't need to be scillm experts:
+
+| Issue | Self-Correction |
+|-------|-----------------|
+| Deprecated model names (e.g. `deepseek-ai/DeepSeek-V3`) | Auto-remapped to `text` via alias — just works |
+| Provider rate limits (429) | Handled via fallback chain — not counted against client |
+| JSON fence wrapping (```json...```) | Auto-stripped when `response_format: {"type": "json_object"}` set |
+| Malformed JSON | Auto-repaired via json_repair lib before rejection |
+
+**Agents should just call the proxy with `model="text"` or `model="vlm"` and let scillm handle the rest.**
 
 ---
 
@@ -838,6 +960,13 @@ if not check_proxy():
 | `401 Unauthorized` | Missing/wrong auth header | Use `Bearer sk-dev-proxy-123` |
 | `JSON validation failed` | Provider returned prose | Already auto-repaired; if persistent, prompt needs "Return valid JSON" |
 | `Empty response` | max_tokens set too low | Remove max_tokens (auto-stripped, but don't set it) |
+| `Stored 0/N` with no errors | Schema mismatch in response parsing | Check field names match LLM output (e.g., `reason` vs `abstain_reason`). Query `llm_call_log` for raw `response_content`. |
+| `Silent batch failure` | 0% success but no actionable error | FORBIDDEN. Batch code must log first failure with expected vs actual schema. |
+| `Missing x-caller-skill header` | Can't identify which skill made the call | Add `"x-caller-skill": "your-skill-name"` header. Without it, only `user_agent` is logged as fallback. |
+| `Manual batch progress tracking` | Skill tracks completed items itself | WRONG. Use `scillm_metadata: {"batch_id": X, "item_id": Y}` — scillm auto-resumes on retry. |
+| `Re-running entire batch from scratch` | Batch failed, skill starts over | Use batch_id + item_id. scillm skips completed items automatically (x-batch-resumed header). |
+| `Deprecated model 'X' requested` | Using deprecated model name | Auto-remapped to `text` — no action needed. Prefer `text`/`vlm` aliases in new code. |
+| `abuse_guard: blocking key` | 5+ client errors (400/401/422) in 30s | Fix the underlying error (bad model, auth issue). Note: 429 rate limits don't trigger blocking. |
 
 ### Preflight Check (scripts)
 
@@ -894,6 +1023,10 @@ scillm_preflight()  # Fails fast if proxy is down
 - Hardcoded model names (should use aliases like `text`, `vlm`)
 - Direct provider URLs (bypasses proxy cascade and caching)
 - Missing `response_format` for JSON output
+- **Silent batch failures** (0% success rate without actionable error messages)
+- **Schema mismatch** (checking wrong field names in LLM responses, e.g., `reason` vs `abstain_reason`)
+- **No response logging** (batch operations must log raw responses for post-mortem debugging)
+- **Redis for logging** (WRONG — use ArangoDB via arango_log.py, Redis is caching only)
 
 **warm-check** queries `/ops-chutes recommend` to find hot model variants. Use before batch operations to avoid cold model timeouts.
 
@@ -905,6 +1038,7 @@ scillm_preflight()  # Fails fast if proxy is down
 |---|---|---|
 | `/health/liveliness` | GET | Is the proxy alive? |
 | `/v1/scillm/health` | GET | Router health + fallback config + concurrency status |
+| `/v1/scillm/concurrency` | GET | **Dynamic batch sizing** — get optimal chunk_size for a model |
 | `/v1/scillm/models` | GET | Model groups, deployments, aliases |
 | `/v1/scillm/providers` | GET | **All available providers, auto-routing patterns, and examples** |
 | `/v1/scillm/auth` | GET | **OAuth token health** — Claude/Codex token status, expiry, subscription tier |
@@ -918,6 +1052,61 @@ curl http://localhost:4001/v1/scillm/models -H "Authorization: Bearer sk-dev-pro
 curl http://localhost:4001/v1/budget -H "Authorization: Bearer sk-dev-proxy-123"
 curl http://localhost:4001/metrics
 ```
+
+### Dynamic Concurrency for Batch Sizing
+
+Query `/v1/scillm/concurrency?model=<model>` to get the optimal `chunk_size` for batch processing.
+The endpoint returns the **effective limit** — accounting for adaptive backoff when 429s occur.
+
+```bash
+curl "http://localhost:4001/v1/scillm/concurrency?model=text" -H "Authorization: Bearer sk-dev-proxy-123"
+```
+
+Response:
+```json
+{
+  "model": "text",
+  "provider": "chutes",
+  "chunk_size": 4,
+  "configured_limit": 4,
+  "effective_limit": 4,
+  "in_flight": 0,
+  "available": 4,
+  "backoff_active": false
+}
+```
+
+**Use `chunk_size` for batch processing:**
+
+```python
+import httpx
+
+def get_chunk_size(model: str = "text") -> int:
+    """Query proxy for optimal batch chunk size."""
+    try:
+        resp = httpx.get(
+            f"http://localhost:4001/v1/scillm/concurrency?model={model}",
+            headers={"Authorization": "Bearer sk-dev-proxy-123"},
+            timeout=5.0,
+        )
+        if resp.status_code == 200:
+            return resp.json().get("chunk_size", 4)
+    except Exception:
+        pass
+    return 4  # Default fallback
+
+# Use in batch processing
+chunk_size = get_chunk_size("text")  # Returns 4 for chutes, 8 for deepseek, etc.
+for i in range(0, len(prompts), chunk_size):
+    chunk = prompts[i:i + chunk_size]
+    results = await asyncio.gather(*[call_proxy(p) for p in chunk])
+```
+
+**Key fields:**
+- `chunk_size` — Use this for batch sizing (equals effective_limit)
+- `effective_limit` — May be lower than configured if 429 backoff is active
+- `backoff_active` — True if the proxy reduced concurrency due to rate limits
+- `available` — Slots currently free (effective_limit - in_flight)
 
 ---
 

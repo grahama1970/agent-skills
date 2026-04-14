@@ -43,6 +43,8 @@ from evidence import (
     get_strategy,
     build_fix_prompt,
 )
+from event_emitter import EventEmitter
+from models import EventType, ReasonCode, RunState
 from llm_invocations import log_invocation  # noqa: E402
 from diagnose import (
     call_diagnose,
@@ -332,7 +334,8 @@ def _dogpile_research(rounds_history: list[dict], cwd: str) -> str:
 
 
 def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
-              reasoning: str = "low", system_prompt: str = "") -> str:
+              reasoning: str = "low", system_prompt: str = "",
+              task_id: str = "", round_num: int = 0, strategy: str = "") -> str:
     """Call LLM backend to propose or fix code. Returns response text.
 
     ALL backends route through /scillm API (text in, text out). The agent
@@ -343,7 +346,7 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     """
     model = {
         "codex": "gpt-5.3-codex",
-        "claude": "text-claude",
+        "claude": "claude-sonnet-4-6",  # Fixed: was text-claude (invalid)
         "text": "text",
         "gemini": "text-gemini",
         "deepseek": "text",
@@ -364,13 +367,26 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     if not model.startswith("gpt-"):
         payload["temperature"] = min(temperature, 1.0)
 
+    # scillm_metadata for llm_call_log correlation (round-trips untouched)
+    if task_id:
+        payload["scillm_metadata"] = {
+            "task_id": task_id,
+            "round": round_num,
+            "strategy": strategy,
+            "backend": backend,
+            "reasoning": reasoning,
+        }
+
     # Retry with backoff + jitter on transient errors
     max_retries = 3
     for attempt in range(1, max_retries + 1):
         try:
             resp = httpx.post(
                 SCILLM_URL,
-                headers={"Authorization": f"Bearer {SCILLM_KEY}"},
+                headers={
+                    "Authorization": f"Bearer {SCILLM_KEY}",
+                    "X-Caller-Skill": "code-runner",  # Required by scillm for cost tracking
+                },
                 json=payload,
                 timeout=180.0,
             )
@@ -425,6 +441,12 @@ def run(
     task_id = raw_spec.get("task_id", "unknown")
     output_dir = Path(raw_spec.get("output_dir", "/tmp/code-runner"))
 
+    # Initialize event emitter for normalized events.jsonl output
+    output_dir.mkdir(parents=True, exist_ok=True)
+    emitter = EventEmitter(output_dir, task_id)
+    emitter.emit(EventType.run_queued, payload={"spec_file": spec_file})
+    emitter.emit(EventType.preflight_started)
+
     # Debug trace collector (only initialized when --debug is passed)
     trace_collector: TraceCollector | None = None
     if debug:
@@ -464,6 +486,12 @@ def run(
             status="preflight_fail",
             preflight_errors=preflight_errors,
         )
+        emitter.emit(
+            EventType.preflight_failed,
+            state_after=RunState.preflight_failed,
+            reason_code=ReasonCode.bad_spec,
+            payload={"errors": [e.model_dump() for e in preflight_errors]},
+        )
         (output_dir / f"{task_id}.result.json").write_text(result.model_dump_json(indent=2))
         sys.exit(1)
 
@@ -498,6 +526,12 @@ def run(
             status="preflight_fail",
             preflight_errors=preflight_errors,
         )
+        emitter.emit(
+            EventType.preflight_failed,
+            state_after=RunState.preflight_failed,
+            reason_code=ReasonCode.bad_spec,
+            payload={"errors": [e.model_dump() for e in preflight_errors]},
+        )
         (output_dir / f"{task_id}.result.json").write_text(result.model_dump_json(indent=2))
         sys.exit(1)
 
@@ -519,6 +553,12 @@ def run(
                 fix="Use 'exit_code == 0' for commands that output nothing on success. "
                     "Or use a command that produces output (e.g., 'npx tsc --noEmit && echo passed').",
             )],
+        )
+        emitter.emit(
+            EventType.preflight_failed,
+            state_after=RunState.preflight_failed,
+            reason_code=ReasonCode.bad_dod,
+            payload={"error": spec.silent_dod_detail},
         )
         (output_dir / f"{spec.task_id}.result.json").write_text(result.model_dump_json(indent=2))
         sys.exit(1)
@@ -547,6 +587,12 @@ def run(
                         fix="Fix the syntax in the DoD command. Multi-line Python in -c requires proper escaping. "
                             "Consider using a test file instead of inline python3 -c.",
                     )],
+                )
+                emitter.emit(
+                    EventType.preflight_failed,
+                    state_after=RunState.preflight_failed,
+                    reason_code=ReasonCode.bad_dod,
+                    payload={"error": "DoD command has Python SyntaxError"},
                 )
                 (output_dir / f"{spec.task_id}.result.json").write_text(result.model_dump_json(indent=2))
                 sys.exit(1)
@@ -620,6 +666,12 @@ def run(
             fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
             logger.error("Another code-runner is already running in {}. Aborting.", cwd)
+            emitter.emit(
+                EventType.run_blocked,
+                state_after=RunState.blocked,
+                reason_code=ReasonCode.repo_lock_conflict,
+                payload={"cwd": cwd},
+            )
             lock_file.close()
             sys.exit(1)
 
@@ -641,6 +693,14 @@ def run(
     prior_diagnoses: list[Diagnosis] = []
     best_score = 0.0
     best_commit = snapshot
+
+    # Emit run_started after all preflight checks pass
+    emitter.emit(
+        EventType.run_started,
+        state_after=RunState.running,
+        payload={"max_rounds": max_rounds, "backend": llm_backend, "cwd": cwd},
+    )
+
     try:  # try/finally guarantees stash pop + lock release even on crash
         # Staged context escalation: start with interface maps for read_context,
         # escalate specific files to full content on failure (research-validated pattern)
@@ -653,6 +713,8 @@ def run(
         temperature = 0.2  # Dynamic: increments by 0.1 on repeated same-error (LLMLOOP pattern)
         dogpile_done = False  # only search once per run
         dogpile_context = ""  # research results injected into prompt
+        grounding_reminder = ""  # source grounding reminder for next round (if LLM didn't reference actual error)
+        last_error_ev = None  # ErrorEvidence from previous round for grounding verification
 
         # Memory-backed system prompt: fixed context (recalled once, doesn't grow)
         # Original request + DoD are embedded as immutable anchors to prevent drift
@@ -699,6 +761,11 @@ def run(
                         max_rounds=max_rounds, strategy=strategy,
                         backend=cur_backend, reasoning=cur_reasoning,
                         temperature=round(temperature, 2))
+            emitter.emit(
+                EventType.round_started,
+                round=round_num,
+                payload={"strategy": strategy, "backend": cur_backend, "temperature": round(temperature, 2)},
+            )
             if trace_collector:
                 trace_collector.add_round_start(round_num)
             if same_error_repeating:
@@ -754,10 +821,11 @@ def run(
 
                 # ── DIAGNOSE/FIX SPLIT (two scillm calls instead of one) ──
                 # Call 1: DIAGNOSE — structured root-cause inference, no code
-                from stderr_parser import condense_stderr
+                from stderr_parser import condense_stderr, verify_fix_grounding, grounding_reminder_prompt
                 error_ev_obj = condense_stderr(
                     evidence.get("stderr", ""), evidence.get("stdout", ""),
                 )
+                last_error_ev = error_ev_obj  # Store for grounding verification after LLM response
                 file_symbols = extract_symbols(evidence.get("written_files", []), cwd)
 
                 diag_backend, diag_reasoning = cur_backend, "high"  # diagnoser always high effort
@@ -837,6 +905,10 @@ def run(
                 if dogpile_context:
                     current_prompt += dogpile_context
 
+                # Add grounding reminder if previous fix didn't reference actual error
+                if grounding_reminder:
+                    current_prompt += "\n\n" + grounding_reminder
+
             # Refresh system prompt every round with latest round history
             if round_num > 1:
                 system_prompt = _build_system_prompt(
@@ -876,6 +948,13 @@ def run(
                 except concurrent.futures.TimeoutError:
                     _emit_event("round_timeout", task_id=task_id, round=round_num,
                                 timeout_seconds=ROUND_TIMEOUT)
+                    emitter.emit(
+                        EventType.round_timeout,
+                        round=round_num,
+                        state_after=RunState.timed_out,
+                        reason_code=ReasonCode.backend_timeout,
+                        payload={"timeout_seconds": ROUND_TIMEOUT},
+                    )
                     logger.error("  ROUND TIMEOUT: tool_use loop exceeded {}s", ROUND_TIMEOUT)
                     failure_reason = (f"Round {round_num} timed out after {ROUND_TIMEOUT}s. "
                                       f"Set CODE_RUNNER_ROUND_TIMEOUT={ROUND_TIMEOUT * 2} or increase timeout_seconds in task spec.")
@@ -896,6 +975,27 @@ def run(
             tool_call_count = sum(1 for m in tool_messages if m.get("role") == "assistant" and m.get("tool_calls"))
             _emit_event("tool_use_complete", task_id=task_id, round=round_num,
                         files_written=len(written), tool_calls=tool_call_count)
+
+            # Source grounding verification: check if fix references actual error
+            grounding_score = 1.0  # Default: assume grounded (round 1 has no prior error)
+            if round_num > 1 and last_error_ev and response:
+                grounding_result = verify_fix_grounding(last_error_ev, response, threshold=0.5)
+                grounding_score = grounding_result.score
+                if not grounding_result.is_grounded:
+                    logger.warning("  GROUNDING LOW: {:.2f} — fix may not address actual error", grounding_score)
+                    logger.warning("    Matched: {}; Missing: {}",
+                                   grounding_result.matched_terms[:3],
+                                   grounding_result.missing_terms[:3])
+                    grounding_reminder = grounding_reminder_prompt(grounding_result, last_error_ev)
+                    _emit_event("grounding_low", task_id=task_id, round=round_num,
+                                score=grounding_score,
+                                matched=grounding_result.matched_terms[:3],
+                                missing=grounding_result.missing_terms[:3])
+                else:
+                    grounding_reminder = ""  # Clear reminder if grounding is now good
+                    logger.info("  Grounding: {:.2f} (terms: {})", grounding_score,
+                                grounding_result.matched_terms[:3])
+            llm_metadata["grounding_score"] = grounding_score
 
             # Track LLM response in debug trace
             if trace_collector:
@@ -949,9 +1049,21 @@ def run(
                         written = []  # force zero-write path
             else:
                 consecutive_zero_writes += 1
+                emitter.emit(
+                    EventType.zero_write_detected,
+                    round=round_num,
+                    payload={"consecutive_count": consecutive_zero_writes},
+                )
                 if consecutive_zero_writes >= MAX_CONSECUTIVE_ZERO_WRITES:
                     _emit_event("early_abort", task_id=task_id, round=round_num,
                                 reason=f"{consecutive_zero_writes} consecutive rounds wrote 0 files")
+                    emitter.emit(
+                        EventType.run_blocked,
+                        round=round_num,
+                        state_after=RunState.blocked,
+                        reason_code=ReasonCode.zero_write,
+                        payload={"consecutive_count": consecutive_zero_writes},
+                    )
                     logger.error("  EARLY ABORT: {} consecutive rounds wrote 0 files — LLM not producing edits",
                                  consecutive_zero_writes)
                     failure_reason = (f"LLM wrote 0 files for {consecutive_zero_writes} consecutive rounds. "
@@ -962,6 +1074,16 @@ def run(
             # 3. T0 deterministic evidence collection (NOW evaluates changed files)
             evidence_raw = collect_evidence(cwd, dod_command, dod_assertion, lang=lang)
             score = evidence_raw["score"]
+            emitter.emit(
+                EventType.evidence_collected,
+                round=round_num,
+                payload={
+                    "score": round(score, 4),
+                    "dod_passed": evidence_raw["dod_passed"],
+                    "error_count": evidence_raw["error_count"],
+                    "lint_violations": evidence_raw["lint_violations"],
+                },
+            )
 
             # If LLM wrote zero files AND DoD didn't pass, force score to 0.
             # But if DoD genuinely passes (work already done, or read-only task),
@@ -977,6 +1099,17 @@ def run(
                         errors=evidence_raw["error_count"], lint=evidence_raw["lint_violations"],
                         files_written=len(written),
                         zero_write_reason=evidence_raw.get("_zero_write_reason", ""))
+            emitter.emit(
+                EventType.round_scored,
+                round=round_num,
+                payload={
+                    "score": round(score, 4),
+                    "dod_passed": evidence_raw["dod_passed"],
+                    "error_count": evidence_raw["error_count"],
+                    "files_written": len(written),
+                },
+            )
+            emitter.set_score(score)  # Track best score in run.json
             logger.info("  Score: {:.3f} (DoD:{} errors:{} lint:{} bp:{})",
                          score, evidence_raw["dod_passed"], evidence_raw["error_count"],
                          evidence_raw["lint_violations"], len(evidence_raw["bp_violations"]))
@@ -1024,6 +1157,18 @@ def run(
 
             _emit_event("round_decision", task_id=task_id, round=round_num,
                         status=status, score=round(score, 4), best_score=round(best_score, 4))
+            if status == "keep":
+                emitter.emit(
+                    EventType.round_kept,
+                    round=round_num,
+                    payload={"score": round(score, 4), "prev_best": round(prev_best, 4)},
+                )
+            else:
+                emitter.emit(
+                    EventType.round_discarded,
+                    round=round_num,
+                    payload={"score": round(score, 4), "best_score": round(best_score, 4)},
+                )
 
             # 5. Log round — structured context for next iteration and audit trail
             round_entry = {
@@ -1086,6 +1231,11 @@ def run(
             if evidence_raw["dod_passed"]:
                 _emit_event("dod_passed", task_id=task_id, round=round_num,
                             score=round(score, 4), total_rounds=round_num)
+                emitter.emit(
+                    EventType.dod_passed,
+                    round=round_num,
+                    payload={"score": round(score, 4), "total_rounds": round_num},
+                )
                 logger.info("=== DoD PASSED on round {} (score={:.3f}) ===", round_num, score)
                 break
 
@@ -1116,6 +1266,19 @@ def run(
         _emit_event("run_complete", task_id=task_id, status=result.status,
                     score=round(best_score, 4), rounds=len(rounds_history),
                     dod_passed=result.dod_passed, backend=llm_backend)
+        if result.dod_passed:
+            emitter.emit(
+                EventType.run_passed,
+                state_after=RunState.passed,
+                payload={"score": round(best_score, 4), "rounds": len(rounds_history)},
+            )
+        else:
+            emitter.emit(
+                EventType.run_failed,
+                state_after=RunState.failed,
+                reason_code=ReasonCode.max_rounds_exhausted,
+                payload={"score": round(best_score, 4), "rounds": len(rounds_history), "error": failure_reason},
+            )
         logger.info("=== RESULT: {} | score={:.3f} | {} rounds ===",
                      result.status.upper(), best_score, len(rounds_history))
 
@@ -1160,6 +1323,14 @@ def run(
         logger.critical("Traceback:\n{}", crash_tb)
         _emit_event("crash", task_id=task_id, error=crash_msg,
                      traceback=crash_tb[-500:])
+        # Emit normalized crash event (emitter may not exist if crash was early)
+        if 'emitter' in dir():
+            emitter.emit(
+                EventType.run_crashed,
+                state_after=RunState.crashed,
+                reason_code=ReasonCode.runner_exception,
+                payload={"error": crash_msg, "traceback": crash_tb[-500:]},
+            )
         # Write result.json so orchestrator has structured failure data
         try:
             output_dir.mkdir(parents=True, exist_ok=True)

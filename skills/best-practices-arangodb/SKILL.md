@@ -246,6 +246,36 @@ db.aql.execute(aql, bind_vars={"@coll": collection, "key": key})
 
 DB-backed cache `except` blocks MUST log at `logger.error`. Cross-ref: `/best-practices-python` rule `correctness-no-silent-fallback`.
 
+### 20. HIGH: No Null Filters for Backfills — `arango-no-null-backfill`
+
+NEVER use `FILTER doc.field == null` for batch backfill operations on large collections.
+
+**Why it fails:** As documents get updated, fewer match `field == null`. Without an index on the field, ArangoDB scans progressively more documents to find fewer matches. Rate degrades from 20/s → 7/s → worse.
+
+```aql
+-- BAD — progressively slower as nulls decrease (no index helps)
+FOR doc IN sparta_qra
+    FILTER doc.lineage == null
+    FILTER doc._key > @last_key
+    LIMIT 200
+    RETURN doc
+
+-- GOOD — version-based, indexable, constant performance
+FOR doc IN sparta_qra
+    FILTER doc.lineage.graph_version < @target_version OR doc.lineage == null
+    FILTER doc._key > @last_key
+    LIMIT 200
+    RETURN doc
+```
+
+**Pattern:**
+1. Add a version field (e.g., `lineage.graph_version`)
+2. Create persistent index: `db.sparta_qra.ensureIndex({type: "persistent", fields: ["lineage.graph_version"]})`
+3. Query by version, not null
+4. Bump version constant when schema changes
+
+**Real incident (2026-04-13):** 171K QRA lineage backfill started at 20/s, degraded to 7/s by 50% completion. Root cause: unindexed `lineage == null` filter.
+
 ## Enforcement
 
 - **PostToolUse hook** `no-regex-silo.sh` fires on every Edit/Write to .py files

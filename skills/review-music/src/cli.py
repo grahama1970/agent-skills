@@ -27,7 +27,7 @@ except ImportError:
 app = typer.Typer(help="Audio feature extraction and HMT review generation")
 
 # Default model for LLM routing (--model flag for `with <model>` routing)
-_DEFAULT_MODEL = "deepseek-ai/DeepSeek-V3"
+_DEFAULT_MODEL = "text"
 
 
 @app.command()

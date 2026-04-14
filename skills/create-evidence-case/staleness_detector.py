@@ -16,13 +16,14 @@ from __future__ import annotations
 
 import os
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from threading import Lock
 from typing import Any
 
 import httpx
 from loguru import logger
+
+# AQL operations live in the memory project — no bespoke AQL in skills
+from graph_memory.maintenance.lineage_backfill import backfill_lineage
 
 
 SOCKET_PATH = "/run/user/1000/embry/memory.sock"
@@ -50,9 +51,15 @@ class StalenessResult:
 # ---------------------------------------------------------------------------
 
 def get_current_graph_version() -> dict[str, Any]:
-    """Get current graph state: edge count, version hash."""
+    """Get current graph state: edge count + hash of edge keys.
+
+    The hash detects ANY edge change (add/delete/modify), not just count changes.
+    Uses _key values which are stable and indexed.
+    """
+    import hashlib
+
     with _get_client() as c:
-        # Count edges in sparta_relationships
+        # Get edge count
         r = c.post("/list", json={
             "collection": "sparta_relationships",
             "limit": 1,
@@ -60,11 +67,24 @@ def get_current_graph_version() -> dict[str, Any]:
         r.raise_for_status()
         total = r.json().get("total", 0)
 
-        # Simple version: edge count as proxy for graph state
-        # Future: compute hash of edge set
+        # Hash the edge keys - detects any change to edge set
+        # Uses AQL to get sorted keys server-side for deterministic hash
+        edge_r = c.post("/aql", json={
+            "query": "FOR e IN sparta_relationships SORT e._key RETURN e._key",
+            "batch_size": 10000,
+        })
+        edge_keys = []
+        if edge_r.status_code == 200:
+            edge_keys = edge_r.json().get("result", [])
+
+        # SHA256 of sorted keys = deterministic version
+        key_string = ",".join(edge_keys)
+        edge_hash = hashlib.sha256(key_string.encode()).hexdigest()[:16]
+
         return {
             "edge_count": total,
-            "version": f"v_{total}_{int(time.time()) // 86400}",
+            "edge_hash": edge_hash,
+            "version": f"v_{edge_hash}",
             "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
 
@@ -428,293 +448,6 @@ def mark_qras_stale(keys: list[str], reason: str) -> dict[str, Any]:
         "ok": len(errors) == 0,
         "updated": updated,
         "errors": errors,
-    }
-
-
-# ---------------------------------------------------------------------------
-# Lineage Backfill
-# ---------------------------------------------------------------------------
-
-def _get_embedding(text: str) -> list[float] | None:
-    """Get embedding for text from embedding service."""
-    try:
-        resp = httpx.post(
-            "http://localhost:8602/embed",
-            json={"text": text[:2000]},  # Truncate long texts
-            timeout=30,
-        )
-        if resp.status_code == 200:
-            return resp.json().get("embedding")
-    except Exception as e:
-        logger.warning("Embedding failed: {}", e)
-    return None
-
-
-def _process_batch_lineage(
-    docs: list[dict],
-    dry_run: bool,
-    enrich_v43,
-    assemble_evidence_batch,
-) -> list[dict[str, Any]]:
-    """Process a batch of documents for lineage backfill.
-
-    Uses daemon batch endpoint for evidence assembly (much faster).
-    Returns list of {key, status, embedded, error?}
-    """
-    # Build batch items: (question, control_id)
-    items = []
-    doc_map = {}  # Map question to doc for result matching
-    skipped = []
-
-    for doc in docs:
-        key = doc.get("_key", "")
-        question = doc.get("question", doc.get("problem", ""))
-        control_id = doc.get("control_id", "")
-
-        if not question:
-            skipped.append({"key": key, "status": "skipped"})
-            continue
-
-        items.append((question, control_id))
-        doc_map[question] = doc
-
-    if not items:
-        return skipped
-
-    # Batch assemble evidence
-    batch_results = assemble_evidence_batch(items, max_workers=8)
-
-    results = list(skipped)
-
-    # Process batch results
-    docs_to_store = []
-    for br in batch_results:
-        question = br.get("question", "")
-        doc = doc_map.get(question)
-        if not doc:
-            continue
-
-        key = doc.get("_key", "")
-        control_id = doc.get("control_id", "")
-        evidence = br.get("evidence", {})
-
-        try:
-            if br.get("error") or evidence.get("error"):
-                # Can't enrich without evidence, but we can add minimal lineage
-                doc["lineage"] = {
-                    "graph_version": "unknown",
-                    "graph_edge_count": None,
-                    "entity_ids": [],
-                    "entity_frameworks": [],
-                    "upstream_qra_keys": [],
-                    "source_doc_hashes": [],
-                    "embedding_model": "unknown",
-                    "extractor_version": "v43",
-                    "assembled_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                    "_backfill_error": br.get("error") or evidence.get("error"),
-                }
-            else:
-                # Enrich with full lineage
-                enriched = enrich_v43(
-                    evidence=evidence,
-                    question=question,
-                    source_control_id=control_id if control_id else None,
-                )
-                doc["lineage"] = enriched.get("lineage", {})
-
-            # Add embedding if missing
-            embedded = False
-            if not doc.get("embedding"):
-                emb = _get_embedding(question)
-                if emb:
-                    doc["embedding"] = emb
-                    embedded = True
-
-            # Remove system fields that can't be written back
-            doc.pop("_rev", None)
-            doc.pop("_id", None)
-            docs_to_store.append(doc)
-            results.append({"key": key, "status": "updated", "embedded": embedded})
-
-        except Exception as exc:
-            results.append({"key": key, "status": "error", "error": str(exc)[:200], "embedded": False})
-
-    # Batch store all docs
-    if not dry_run and docs_to_store:
-        try:
-            with _get_client() as c:
-                store_r = c.post("/upsert", json={
-                    "documents": docs_to_store,
-                    "collection": "sparta_qra",
-                })
-                if store_r.status_code != 200:
-                    logger.warning("Batch store failed: {}", store_r.text[:200])
-        except Exception as exc:
-            logger.warning("Batch store exception: {}", exc)
-
-    return results
-
-
-def backfill_lineage(
-    batch_size: int = 100,
-    max_docs: int = 1000,
-    dry_run: bool = True,
-    max_workers: int = 16,
-) -> dict[str, Any]:
-    """Backfill lineage field for QRAs that don't have it.
-
-    Incrementally processes QRAs missing lineage and enriches them with:
-    - entity_ids, entity_frameworks
-    - upstream_qra_keys
-    - graph_version, embedding_model
-    - assembled_at timestamp
-    - embedding (if missing)
-
-    Uses daemon batch endpoint + ThreadPoolExecutor for parallel batches.
-
-    Args:
-        batch_size: Number of QRAs to process per daemon batch call
-        max_docs: Maximum total QRAs to process
-        dry_run: If True, don't persist changes
-        max_workers: Number of concurrent batch workers
-
-    Returns:
-        {processed, updated, skipped, errors, dry_run}
-    """
-    from daemon_client import assemble_evidence_batch, enrich_v43
-
-    processed = 0
-    updated = 0
-    skipped = 0
-    embedded = 0
-    errors_list = []
-
-    from queue import Queue, Empty
-    from threading import Thread
-
-    logger.info("Lineage backfill: batch_size={}, max_docs={}, dry_run={}, workers={}",
-                batch_size, max_docs, dry_run, max_workers)
-
-    # Producer-consumer: fetch and process concurrently
-    PAGE_SIZE = batch_size
-    batch_queue: Queue = Queue(maxsize=max_workers * 2)  # Buffer 2x workers
-    total_estimate = [None]  # Use list for mutability in thread
-    fetch_done = [False]
-    batches_fetched = [0]
-    lock = Lock()
-
-    start_time = time.time()
-    completed_batches = [0]
-    all_results = []
-
-    def fetch_batches():
-        """Producer: page through documents and queue batches."""
-        offset = 0
-        with _get_client() as c:
-            while max_docs is None or offset < max_docs:
-                payload = {
-                    "collection": "sparta_qra",
-                    "limit": PAGE_SIZE,
-                    "offset": offset,
-                    "filters": {"lineage": None},
-                }
-                try:
-                    r = c.post("/list", json=payload, timeout=30.0)
-                    if r.status_code != 200:
-                        logger.warning("Pagination failed at offset {}: {}", offset, r.status_code)
-                        break
-
-                    data = r.json()
-                    batch = data.get("documents", [])
-                    if not batch:
-                        break
-
-                    batch_queue.put(batch)
-                    offset += len(batch)
-                    batches_fetched[0] += 1
-
-                    # Get total estimate on first page
-                    if total_estimate[0] is None:
-                        total_estimate[0] = data.get("total", 0)
-                        if max_docs is not None:
-                            total_estimate[0] = min(total_estimate[0], max_docs)
-                        logger.info("{} QRAs missing lineage (will process up to {})",
-                                   data.get("total", 0), max_docs or "all")
-
-                    # Stop if we've got enough
-                    if max_docs and offset >= max_docs:
-                        break
-
-                except Exception as exc:
-                    logger.warning("Fetch error at offset {}: {}", offset, exc)
-                    break
-
-        fetch_done[0] = True
-
-    def process_batch(batch_docs):
-        """Process a single batch."""
-        results = _process_batch_lineage(batch_docs, dry_run, enrich_v43, assemble_evidence_batch)
-        with lock:
-            completed_batches[0] += 1
-            elapsed = time.time() - start_time
-            docs_done = completed_batches[0] * batch_size
-            rate = docs_done / elapsed if elapsed > 0 else 0
-            est_total = total_estimate[0] or batches_fetched[0] * batch_size
-            eta = (est_total - docs_done) / rate if rate > 0 else 0
-            logger.info("Batch {}: {:.1f}/s, ETA {:.0f}s",
-                        completed_batches[0], rate, eta)
-        return results
-
-    # Start producer thread
-    fetch_thread = Thread(target=fetch_batches, daemon=True)
-    fetch_thread.start()
-
-    # Process batches as they arrive
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = []
-        while True:
-            try:
-                batch = batch_queue.get(timeout=0.5)
-                futures.append(executor.submit(process_batch, batch))
-            except Empty:
-                if fetch_done[0] and batch_queue.empty():
-                    break
-
-        for future in as_completed(futures):
-            try:
-                batch_results = future.result()
-                all_results.extend(batch_results)
-            except Exception as exc:
-                errors_list.append({"key": "batch", "error": str(exc)[:200]})
-
-    fetch_thread.join(timeout=5.0)
-
-    # Aggregate results
-    for result in all_results:
-        processed += 1
-        status = result.get("status")
-        if status == "updated":
-            updated += 1
-            if result.get("embedded"):
-                embedded += 1
-        elif status == "skipped":
-            skipped += 1
-        elif status == "error":
-            errors_list.append({"key": result.get("key"), "error": result.get("error")})
-
-    elapsed = time.time() - start_time
-    logger.info("Completed {} docs in {:.1f}s ({:.1f}/s)", processed, elapsed, processed/elapsed if elapsed > 0 else 0)
-
-    return {
-        "processed": processed,
-        "updated": updated,
-        "skipped": skipped,
-        "embedded": embedded,
-        "errors": errors_list,
-        "error_count": len(errors_list),
-        "dry_run": dry_run,
-        "elapsed_seconds": elapsed,
-        "rate_per_second": processed / elapsed if elapsed > 0 else 0,
     }
 
 

@@ -5,10 +5,96 @@ caught at parse time before any LLM call, git operation, or subprocess.
 """
 from __future__ import annotations
 
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+# ── Run State Machine ────────────────────────────────────────────────────────
+# Normalized states for execution lifecycle. Maps to existing code paths.
+
+
+class RunState(str, Enum):
+    """Run-level execution states. Each maps to a distinct remediation path."""
+    queued = "queued"              # Spec loaded, not yet started
+    preflight_failed = "preflight_failed"  # Spec/DoD validation failed
+    running = "running"            # Actively executing rounds
+    blocked = "blocked"            # Stuck (zero_write, repo_lock, etc.)
+    timed_out = "timed_out"        # Round or run timeout exceeded
+    crashed = "crashed"            # Unhandled exception
+    failed = "failed"              # DoD not passed after max rounds
+    passed = "passed"              # DoD passed
+
+
+class ReasonCode(str, Enum):
+    """Reason codes for terminal states. Guides remediation."""
+    # Preflight failures
+    bad_spec = "bad_spec"          # TaskSpec validation failed
+    bad_dod = "bad_dod"            # DoD command/assertion invalid
+    missing_files = "missing_files"  # Allowlist files don't exist
+
+    # Blocking conditions
+    repo_lock_conflict = "repo_lock_conflict"  # Another runner has repo lock
+    zero_write = "zero_write"      # Repeated zero-write aborts
+    stash_conflict = "stash_conflict"  # Git stash/restore failed
+
+    # Execution failures
+    max_rounds_exhausted = "max_rounds_exhausted"  # Hit round limit
+    backend_timeout = "backend_timeout"  # LLM call timed out
+    backend_error = "backend_error"  # LLM returned error
+    diagnosis_rejected = "diagnosis_rejected"  # Diagnosis failed validation
+
+    # Crashes
+    runner_exception = "runner_exception"  # Unhandled Python exception
+
+    # Manual
+    manual_abort = "manual_abort"  # User cancelled
+
+
+class EventType(str, Enum):
+    """Event types for events.jsonl. Append-only execution log."""
+    # Run lifecycle
+    run_queued = "run_queued"
+    preflight_started = "preflight_started"
+    preflight_failed = "preflight_failed"
+    run_started = "run_started"
+    run_blocked = "run_blocked"
+    run_timed_out = "run_timed_out"
+    run_crashed = "run_crashed"
+    run_failed = "run_failed"
+    run_passed = "run_passed"
+
+    # Round lifecycle
+    round_started = "round_started"
+    diagnosis_started = "diagnosis_started"
+    diagnosis_complete = "diagnosis_complete"
+    diagnosis_rejected = "diagnosis_rejected"
+    tool_use_started = "tool_use_started"
+    tool_use_complete = "tool_use_complete"
+    evidence_collected = "evidence_collected"
+    round_scored = "round_scored"
+    round_kept = "round_kept"
+    round_discarded = "round_discarded"
+    round_timeout = "round_timeout"
+    zero_write_detected = "zero_write_detected"
+
+    # DoD
+    dod_checked = "dod_checked"
+    dod_passed = "dod_passed"
+
+
+class RunEvent(BaseModel):
+    """Schema for events.jsonl entries. ArangoDB-ingestible."""
+    run_id: str
+    event: EventType
+    ts: float  # Unix timestamp
+    round: int | None = None
+    state_before: RunState | None = None
+    state_after: RunState | None = None
+    reason_code: ReasonCode | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
 
 
 class DefinitionOfDone(BaseModel):

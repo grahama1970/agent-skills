@@ -99,8 +99,11 @@ def _get_scillm_client() -> httpx.Client:
     """Get httpx client for scillm."""
     return httpx.Client(
         base_url="http://localhost:4001",
-        headers={"Authorization": "Bearer sk-dev-proxy-123"},
-        timeout=120.0,
+        headers={
+            "Authorization": "Bearer sk-dev-proxy-123",
+            "x-caller-skill": "create-qras",
+        },
+        timeout=300.0,  # Chutes can take 200s+ per call under load
     )
 
 
@@ -108,9 +111,34 @@ def _get_async_scillm_client() -> httpx.AsyncClient:
     """Get async httpx client for scillm batch processing."""
     return httpx.AsyncClient(
         base_url="http://localhost:4001",
-        headers={"Authorization": "Bearer sk-dev-proxy-123"},
-        timeout=120.0,
+        headers={
+            "Authorization": "Bearer sk-dev-proxy-123",
+            "x-caller-skill": "create-qras",
+        },
+        timeout=300.0,  # Chutes can take 200s+ per call under load
     )
+
+
+def _get_provider_concurrency(model: str = "text") -> int:
+    """Query proxy for the target provider's concurrency limit.
+
+    Calls /v1/scillm/concurrency endpoint which handles model→provider mapping
+    and returns effective_limit (accounting for adaptive backoff from 429s).
+    Falls back to 4 if the query fails.
+    """
+    try:
+        with httpx.Client(timeout=5.0) as client:
+            resp = client.get(
+                f"http://localhost:4001/v1/scillm/concurrency?model={model}",
+                headers={"Authorization": "Bearer sk-dev-proxy-123"},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                return max(1, data.get("chunk_size", 4))
+    except Exception:
+        pass
+
+    return 4  # Default fallback
 
 
 def _detect_framework(control_id: str) -> str | None:
@@ -885,8 +913,16 @@ async def _generate_relationship_qra_async(
     target_control: dict,
     evidence: dict,
     max_pairs: int = 5,
+    batch_id: str | None = None,
+    expected_total: int | None = None,
+    chunk_index: int | None = None,
+    chunk_total: int | None = None,
+    item_index_in_chunk: int | None = None,
 ) -> dict | None:
-    """Async version: Generate relationship QRA using LLM with crosswalk evidence."""
+    """Async version: Generate relationship QRA using LLM with crosswalk evidence.
+
+    If batch_id is provided, uses scillm_metadata for automatic batch resume.
+    """
     source_id = source_control.get("control_id", source_control.get("_key"))
     target_id = target_control.get("control_id", target_control.get("_key"))
     source_framework = _detect_framework(source_id) or "UNKNOWN"
@@ -932,13 +968,28 @@ async def _generate_relationship_qra_async(
     )
 
     try:
-        resp = await client.post(
-            "/v1/chat/completions",
-            json={
-                "model": "text",
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"},
-            },
+        request_body = {
+            "model": "text",
+            "messages": [{"role": "user", "content": prompt}],
+            "response_format": {"type": "json_object"},
+        }
+        # Add scillm_metadata for automatic batch resume and chunk tracking
+        if batch_id:
+            metadata = {
+                "batch_id": batch_id,
+                "item_id": f"{source_id}->{target_id}",
+            }
+            if expected_total is not None:
+                metadata["expected_total"] = expected_total
+            if chunk_index is not None:
+                metadata["chunk_index"] = chunk_index
+            if chunk_total is not None:
+                metadata["chunk_total"] = chunk_total
+            if item_index_in_chunk is not None:
+                metadata["item_index_in_chunk"] = item_index_in_chunk
+            request_body["scillm_metadata"] = metadata
+
+        resp = await client.post("/v1/chat/completions", json=request_body,
         )
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"]
@@ -991,13 +1042,20 @@ async def _run_batch_relationship_qras(
     items: list[tuple[dict, dict, dict]],  # [(source_control, target_control, evidence), ...]
     chunk_size: int = 4,
     progress_callback=None,
+    batch_id: str | None = None,
 ) -> list[dict]:
     """Run batch relationship QRA generation with chunked parallel processing.
 
     Uses chunked asyncio.gather per scillm SKILL.md pattern for 50+ items.
+    If batch_id is provided, enables automatic resume via scillm_metadata.
     """
     all_results = []
     total = len(items)
+
+    # Generate batch_id if not provided (enables automatic resume on retry)
+    if batch_id is None:
+        from datetime import datetime
+        batch_id = f"create-qras-relationship-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
     async with _get_async_scillm_client() as client:
         for chunk_start in range(0, total, chunk_size):
@@ -1008,10 +1066,17 @@ async def _run_batch_relationship_qras(
             if progress_callback:
                 progress_callback(f"Chunk {chunk_num}/{total_chunks} ({chunk_start+1}-{min(chunk_start+chunk_size, total)}/{total})")
 
-            # Process chunk in parallel
+            # Process chunk in parallel with batch_id for resume and chunk tracking for dashboard
             chunk_tasks = [
-                _generate_relationship_qra_async(client, src, tgt, ev)
-                for src, tgt, ev in chunk
+                _generate_relationship_qra_async(
+                    client, src, tgt, ev,
+                    batch_id=batch_id,
+                    expected_total=total,
+                    chunk_index=chunk_num,
+                    chunk_total=total_chunks,
+                    item_index_in_chunk=i + 1,
+                )
+                for i, (src, tgt, ev) in enumerate(chunk)
             ]
             chunk_results = await asyncio.gather(*chunk_tasks, return_exceptions=True)
 
@@ -1362,11 +1427,19 @@ async def _generate_independent_qra_async(
     client: httpx.AsyncClient,
     control: dict,
     max_pairs: int = 6,
+    batch_id: str | None = None,
+    expected_total: int | None = None,
+    chunk_index: int | None = None,
+    chunk_total: int | None = None,
+    item_index_in_chunk: int | None = None,
 ) -> list[dict] | dict | None:
     """Async version: Generate independent QRAs for CWE/NIST/MITRE control.
 
     Returns a list of QRA dicts (one per pair), or error dict, or None.
     New schema returns 1-6 pairs per control, not exactly 3.
+
+    If batch_id is provided, uses scillm_metadata for automatic batch resume.
+    If expected_total is provided, includes it in metadata for dashboard progress.
     """
     control_id = control.get("control_id", control.get("_key"))
     framework = _detect_framework(control_id) or control.get("source_framework", "UNKNOWN")
@@ -1393,14 +1466,29 @@ async def _generate_independent_qra_async(
         )
 
     try:
-        resp = await client.post(
-            "/v1/chat/completions",
-            json={
-                "model": "text",
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"},
-            },
-        )
+        request_body = {
+            "model": "text",
+            "messages": [{"role": "user", "content": prompt}],
+            "response_format": {"type": "json_object"},
+        }
+        # Add scillm_metadata for automatic batch resume and dashboard progress
+        if batch_id:
+            metadata = {
+                "batch_id": batch_id,
+                "item_id": control_id,
+            }
+            if expected_total:
+                metadata["expected_total"] = expected_total
+            # Chunk tracking for hierarchical dashboard display
+            if chunk_index is not None:
+                metadata["chunk_index"] = chunk_index
+            if chunk_total is not None:
+                metadata["chunk_total"] = chunk_total
+            if item_index_in_chunk is not None:
+                metadata["item_index_in_chunk"] = item_index_in_chunk
+            request_body["scillm_metadata"] = metadata
+
+        resp = await client.post("/v1/chat/completions", json=request_body)
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"]
         result = json.loads(content)
@@ -1418,7 +1506,9 @@ async def _generate_independent_qra_async(
         # New schema: pairs array with 1-6 items
         pairs = result.get("pairs", [])
         if not pairs:
-            return {"error": result.get("reason", "no_pairs"), "control_id": control_id}
+            # Check both old and new schema field names
+            reason = result.get("reason") or result.get("abstain_reason") or "no_pairs"
+            return {"error": reason, "control_id": control_id, "raw_result": result}
 
         # Convert each pair to storage format
         run_id = f"skill_create_qras_{int(time.time())}"
@@ -1463,13 +1553,20 @@ async def _run_batch_independent_qras(
     controls: list[dict],
     chunk_size: int = 4,
     progress_callback=None,
+    batch_id: str | None = None,
 ) -> list[dict]:
     """Run batch independent QRA generation with chunked parallel processing.
 
     Uses chunked asyncio.gather per scillm SKILL.md pattern for 50+ items.
+    If batch_id is provided, enables automatic resume via scillm_metadata.
     """
     all_results = []
     total = len(controls)
+
+    # Generate batch_id if not provided (enables automatic resume on retry)
+    if batch_id is None:
+        from datetime import datetime
+        batch_id = f"create-qras-independent-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
     async with _get_async_scillm_client() as client:
         for chunk_start in range(0, total, chunk_size):
@@ -1480,10 +1577,17 @@ async def _run_batch_independent_qras(
             if progress_callback:
                 progress_callback(f"Chunk {chunk_num}/{total_chunks} ({chunk_start+1}-{min(chunk_start+chunk_size, total)}/{total})")
 
-            # Process chunk in parallel
+            # Process chunk in parallel with batch_id for resume and chunk tracking for dashboard
             chunk_tasks = [
-                _generate_independent_qra_async(client, ctrl)
-                for ctrl in chunk
+                _generate_independent_qra_async(
+                    client, ctrl,
+                    batch_id=batch_id,
+                    expected_total=total,
+                    chunk_index=chunk_num,
+                    chunk_total=total_chunks,
+                    item_index_in_chunk=i + 1,
+                )
+                for i, ctrl in enumerate(chunk)
             ]
             chunk_results = await asyncio.gather(*chunk_tasks, return_exceptions=True)
 
@@ -1621,6 +1725,7 @@ def generate(
     output: str = typer.Option(None, "--output", help="Write results to JSON file"),
     dump_prompts: str = typer.Option(None, "--dump-prompts", help="Save prompts to dir for human review (no LLM call)"),
     two_stage: bool = typer.Option(False, "--two-stage", help="Use two-stage pipeline (gate → generate)"),
+    batch_id: str = typer.Option(None, "--batch-id", help="Batch ID for resume (reuse same ID to skip completed items)"),
 ):
     """Generate QRA pairs from controls, documents, or text."""
     memory = _get_memory_client()
@@ -1857,7 +1962,9 @@ def generate(
                     }
                     batch_items.append((ctrl, target_doc, evidence))
 
-                typer.echo(f"Processing {len(batch_items)} items in parallel (chunk_size=4)...")
+                # Query dynamic concurrency from proxy
+                chunk_size = _get_provider_concurrency("text")
+                typer.echo(f"Processing {len(batch_items)} items in parallel (chunk_size={chunk_size})...")
 
                 # Dump prompts mode - no LLM calls
                 if dump_prompt_dir:
@@ -1871,8 +1978,9 @@ def generate(
 
                     batch_results = asyncio.run(_run_batch_relationship_qras(
                         batch_items,
-                        chunk_size=4,
+                        chunk_size=chunk_size,
                         progress_callback=progress,
+                        batch_id=batch_id,
                     ))
                     results.extend(batch_results)
             else:
@@ -1899,15 +2007,18 @@ def generate(
                     offset += len(docs)
                     typer.echo(f"  Fetched {len(controls)} {framework} controls...")
 
-                typer.echo(f"Processing {len(controls)} {framework} controls in parallel (chunk_size=4)...")
+                # Query dynamic concurrency from proxy
+                chunk_size = _get_provider_concurrency("text")
+                typer.echo(f"Processing {len(controls)} {framework} controls in parallel (chunk_size={chunk_size})...")
 
                 def progress(msg):
                     typer.echo(f"  {msg}")
 
                 batch_results = asyncio.run(_run_batch_independent_qras(
                     controls,
-                    chunk_size=4,
+                    chunk_size=chunk_size,
                     progress_callback=progress,
+                    batch_id=batch_id,
                 ))
                 results.extend(batch_results)
 

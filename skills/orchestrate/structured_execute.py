@@ -54,6 +54,7 @@ from structured_execute_helpers import (  # noqa: E402
     _dependency_graph,
     _render_state,
     _subagent_backend_name,
+    render_report,
 )
 
 app = typer.Typer(add_completion=False)
@@ -984,22 +985,15 @@ async def _execute_loop(
                         ready.append(child)
             _render_state(session_dir, runtimes, deps, failed=False)
 
-    # Summary: count completed, failed, blocked
+    # Summary: human-readable report
     failed_tasks = [t for t in runtimes.values() if t.status == "failed"]
-    blocked_tasks = [t for t in runtimes.values() if t.status == "blocked"]
-    completed_tasks = [t for t in runtimes.values() if t.status == "completed"]
 
-    logger.info("Session written to {}", session_dir)
-    if failed_tasks:
-        logger.error("FAILED tasks ({}):", len(failed_tasks))
-        for t in failed_tasks:
-            logger.error("  {} — {}", t.task_id, t.error[:150] if t.error else "unknown")
-    if blocked_tasks:
-        logger.warning("BLOCKED tasks ({}) — skipped due to failed parents:", len(blocked_tasks))
-        for t in blocked_tasks:
-            logger.warning("  {} — {}", t.task_id, t.error[:150] if t.error else "")
-    logger.info("Completed: {} | Failed: {} | Blocked: {} | Total: {}",
-                len(completed_tasks), len(failed_tasks), len(blocked_tasks), len(runtimes))
+    # Print human-readable report
+    report = render_report(session_dir, runtimes, plan, verbose=bool(failed_tasks))
+    print("\n" + report)
+
+    # Also write report to file
+    (session_dir / "report.txt").write_text(report)
 
     return 1 if failed_tasks else 0
 

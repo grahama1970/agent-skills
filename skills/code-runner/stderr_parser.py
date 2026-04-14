@@ -523,8 +523,153 @@ def condense_stderr(stderr: str, stdout: str = "", command: str = "") -> ErrorEv
     return _parse_generic(stderr_n, stdout_n, command)
 
 
+# ── Source Grounding Verification ───────────────────────────────────────────
+
+
+@dataclass
+class GroundingResult:
+    """Result of verifying that an LLM response references actual error content."""
+    score: float  # 0.0 = no grounding, 1.0 = fully grounded
+    matched_terms: list[str]
+    missing_terms: list[str]
+    is_grounded: bool  # score >= threshold
+
+
+def verify_fix_grounding(
+    evidence: ErrorEvidence,
+    llm_response: str,
+    threshold: float = 0.5,
+) -> GroundingResult:
+    """Verify that an LLM fix response references actual error content.
+
+    Extracts key grounding terms from the error evidence and checks if the
+    LLM response mentions them. This catches hallucinated fixes that don't
+    address the actual error.
+
+    Args:
+        evidence: Parsed error evidence from stderr
+        llm_response: The LLM's proposed fix response
+        threshold: Minimum score to consider the response grounded (default 0.5)
+
+    Returns:
+        GroundingResult with score, matched/missing terms, and grounded flag
+    """
+    # Extract grounding terms from evidence
+    grounding_terms: list[str] = []
+
+    # 1. File name (most important - fix should mention the file)
+    if evidence.primary_location and evidence.primary_location.file:
+        # Use just the filename, not full path
+        filename = evidence.primary_location.file.split("/")[-1].split("\\")[-1]
+        if filename and len(filename) > 2:
+            grounding_terms.append(filename)
+
+    # 2. Error type keywords from summary
+    error_type_matches = re.findall(
+        r"\b((?:Syntax|Type|Attribute|Key|Import|Module|Name|Index|Value|"
+        r"Assertion|Runtime|File|Zero)?Error|Exception)\b",
+        evidence.summary,
+        re.IGNORECASE,
+    )
+    grounding_terms.extend(set(m.lower() for m in error_type_matches))
+
+    # 3. Key identifiers from root cause (function names, variable names)
+    for line in evidence.root_cause_lines[:3]:
+        # Extract quoted strings
+        quoted = re.findall(r"['\"]([a-zA-Z_][a-zA-Z0-9_]+)['\"]", line)
+        grounding_terms.extend(q for q in quoted if len(q) > 2)
+
+        # Extract identifiers that look like function/method names
+        identifiers = re.findall(r"\b([a-z_][a-z0-9_]+)\s*\(", line.lower())
+        grounding_terms.extend(i for i in identifiers if len(i) > 2)
+
+    # 4. Line number if specific
+    if evidence.primary_location and evidence.primary_location.line:
+        line_num = str(evidence.primary_location.line)
+        if len(line_num) <= 4:  # Reasonable line number
+            grounding_terms.append(f"line {line_num}")
+            grounding_terms.append(f":{line_num}")
+
+    # Dedupe and filter
+    grounding_terms = list(dict.fromkeys(grounding_terms))  # Preserve order, dedupe
+    grounding_terms = [t for t in grounding_terms if len(t) > 2]
+
+    if not grounding_terms:
+        # No terms to check - assume grounded by default
+        return GroundingResult(
+            score=1.0,
+            matched_terms=[],
+            missing_terms=[],
+            is_grounded=True,
+        )
+
+    # Check which terms appear in the response
+    response_lower = llm_response.lower()
+    matched: list[str] = []
+    missing: list[str] = []
+
+    for term in grounding_terms:
+        term_lower = term.lower()
+        if term_lower in response_lower:
+            matched.append(term)
+        else:
+            missing.append(term)
+
+    # Calculate score with weights
+    # File name match is worth more than other terms
+    score = 0.0
+    total_weight = 0.0
+
+    for term in grounding_terms:
+        # File names get higher weight
+        weight = 2.0 if "." in term and term.endswith((".py", ".ts", ".tsx", ".js", ".rs", ".go")) else 1.0
+        total_weight += weight
+        if term.lower() in response_lower:
+            score += weight
+
+    final_score = score / total_weight if total_weight > 0 else 1.0
+
+    return GroundingResult(
+        score=round(final_score, 3),
+        matched_terms=matched,
+        missing_terms=missing,
+        is_grounded=final_score >= threshold,
+    )
+
+
+def grounding_reminder_prompt(grounding_result: GroundingResult, evidence: ErrorEvidence) -> str:
+    """Generate a reminder prompt when grounding is low.
+
+    Used to append to retry prompts when the LLM's fix doesn't reference
+    the actual error content.
+    """
+    if grounding_result.is_grounded:
+        return ""
+
+    missing = grounding_result.missing_terms[:5]
+    loc = evidence.primary_location
+
+    reminder_parts = [
+        "IMPORTANT: Your fix must address the ACTUAL error shown above.",
+    ]
+
+    if loc and loc.file:
+        reminder_parts.append(f"The error is in {loc.file}" + (f" at line {loc.line}" if loc.line else "") + ".")
+
+    if missing:
+        reminder_parts.append(f"Reference these specific terms: {', '.join(missing)}")
+
+    if evidence.root_cause_lines:
+        reminder_parts.append(f"The actual error message is: {evidence.root_cause_lines[0][:150]}")
+
+    return "\n".join(reminder_parts)
+
+
 __all__ = [
     "ErrorLocation",
     "ErrorEvidence",
     "condense_stderr",
+    "GroundingResult",
+    "verify_fix_grounding",
+    "grounding_reminder_prompt",
 ]
