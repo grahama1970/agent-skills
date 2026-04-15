@@ -92,7 +92,10 @@ concurrency limits, budget tracking, and optional Redis caching.
 
 | Model | Backend | Use Case | Fallback |
 |-------|---------|----------|----------|
-| `text` | Chutes (auto-selects least utilized large DeepSeek) | General text, extraction, summarization | → text-deepseek → text-gemini → text-gemini-paid |
+| `text` | Chutes DeepSeek (chutes_router) | General text, extraction, summarization | → V3.1-TEE → R1-0528-TEE → text-kimi → text-qwen3 → text-qwen3-large |
+| `text-kimi` | Chutes Kimi K2.5-TEE | Alternative large model (100% QRA grounding) | → text-qwen3 → text-qwen3-large |
+| `text-qwen3` | Chutes Qwen3-235B-Thinking | Faster Qwen3 (100% QRA grounding) | → text-qwen3-large |
+| `text-qwen3-large` | Chutes Qwen3.5-397B-TEE | Slowest, last resort (100% QRA grounding) | (none) |
 | `text-research` | Chutes (Harvard research endpoint) | **25% off**, non-sensitive batch work | (none) |
 | `vlm` | Gemini 2.5 Flash (free key) | Image/PDF/screenshot description | → vlm-paid → vlm-claude → vlm-codex |
 | `local-text` | Ollama qwen2.5:0.5b (local) | Smoke tests, always-on fallback | (none) |
@@ -101,11 +104,10 @@ concurrency limits, budget tracking, and optional Redis caching.
 | `text-gemini` | Gemini 2.0 Flash (free key) | Fast, 1500 RPD | → text-gemini-free2 → text-gemini-paid |
 | `text-gemini-paid` | Gemini 2.0 Flash (paid key) | Paid fallback when free exhausted | (none) |
 | `text-gemini-3` | Gemini 3 Flash Preview (free key) | Thinking model, 20 RPD | → text-gemini-3-paid |
-| `text-claude` | Claude Sonnet 4.6 (OAuth) | General Claude tasks | (none) |
-| `text-claude-opus` | Claude Opus 4.5 (OAuth) | Complex reasoning, large tasks | (none) |
-| `text-claude-haiku` | Claude Haiku 4.5 (OAuth) | Fast, cheap, simple tasks | (none) |
-| `text-kimi` | Kimi K2.5-TEE (Chutes) | Alternative large model | → text-deepseek → text-gemini |
-| `gpt-5.3-codex` | OpenAI Codex (OAuth) | High-reasoning via ~/.codex | (none) |
+| `text-claude` | Claude Sonnet 4.6 (OAuth) | General Claude tasks — **NOT for batch** | (none) |
+| `text-claude-opus` | Claude Opus 4.5 (OAuth) | Complex reasoning — **NOT for batch** | (none) |
+| `text-claude-haiku` | Claude Haiku 4.5 (OAuth) | Fast, cheap — **NOT for batch** | (none) |
+| `gpt-5.3-codex` | OpenAI Codex (OAuth) | High-reasoning — **NOT for batch** | (none) |
 | `vlm-claude` | Claude Sonnet (OAuth) | VLM fallback (images + PDFs) | (none) |
 | `vlm-codex` | GPT-5.3 Codex (OAuth) | VLM fallback (images + PDFs) | (none) |
 | Any `gemini-*` | Google | Auto-routed to Gemini API | (none) |
@@ -129,7 +131,12 @@ concurrency limits, budget tracking, and optional Redis caching.
 | `Org/Model` | Chutes | API key | `Qwen/Qwen3-30B-A3B` |
 | `model:tag` | Ollama (local) | none | `qwen2.5:7b` |
 
-Cascade aliases still work: `text` (Chutes → Gemini free → Gemini paid → DeepSeek), `vlm` (Gemini free → Gemini paid → Claude → Codex).
+**Batch fallback chain** (Chutes only, no OAuth, no paid APIs):
+```
+text → DeepSeek-V3.1-TEE → DeepSeek-R1-0528-TEE → text-kimi → text-qwen3 → text-qwen3-large
+```
+
+All 6 models verified for 100% QRA grounding accuracy. OAuth providers (Codex, Claude) excluded from batch to avoid account bans.
 
 **Chutes cold-start handling**: Non-TEE tried first (1 retry), falls through to TEE on 503. Warmup API fires in background on cold detect — miners notified to spin up. Next call may hit warm non-TEE.
 

@@ -92,6 +92,6 @@ def log_invocation(
     try:
         result = _post("/store", {"collection": COLLECTION, "document": doc})
         return result.get("_key")
-    except (httpx.ConnectError, httpx.TimeoutException, OSError) as e:
+    except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError, OSError) as e:
         logger.debug("llm_invocations log failed (non-fatal): {}", e)
         return None

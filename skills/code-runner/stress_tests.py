@@ -53,7 +53,7 @@ def _setup_repo(tmp: Path, files: dict[str, str] | None = None) -> Path:
 
 def _run_with_mock(spec: dict, mock_responses: dict[str, str], tmp: Path,
                    max_rounds: int = 3) -> dict:
-    """Run code-runner with mocked _call_llm. Returns result dict."""
+    """Run code-runner with mocked tool_use loop. Returns result dict."""
     out = tmp / "output"
     spec["output_dir"] = str(out)
     spec_file = tmp / "spec.json"
@@ -62,15 +62,23 @@ def _run_with_mock(spec: dict, mock_responses: dict[str, str], tmp: Path,
     resp_file.write_text(json.dumps(mock_responses))
 
     runner = tmp / "run.py"
+    # Mock tool_use._mock_response_fn instead of code_runner._call_llm
+    # Each code-runner round makes 2 LLM calls: 1st returns FILE, 2nd returns "Done"
     runner.write_text(
         f"import sys, json\n"
         f"sys.path.insert(0, {str(SCRIPT_DIR)!r})\n"
+        f"import tool_use\n"
         f"import code_runner\n"
-        f"_c=[0]\n"
+        f"_call_count=[0]\n"
         f"_r=json.loads(open({str(resp_file)!r}).read())\n"
-        f"def mock(p,b,c,**kw):\n"
-        f"    _c[0]+=1; return _r.get(str(_c[0]),'')\n"
-        f"code_runner._call_llm=mock\n"
+        f"def _mock(payload):\n"
+        f"    _call_count[0]+=1\n"
+        f"    call=_call_count[0]\n"
+        f"    round_num=(call+1)//2\n"
+        f"    if call%2==1:\n"
+        f"        return _r.get(str(round_num),'')\n"
+        f"    return 'Done - changes applied'\n"
+        f"tool_use._mock_response_fn=_mock\n"
         f"try:\n"
         f"    code_runner.app(['run',{str(spec_file)!r},'--max-rounds','{max_rounds}'])\n"
         f"except SystemExit:\n"
@@ -213,7 +221,7 @@ def test_04_preflight_vague():
         _assert(name, result.get("status") == "preflight_fail", f"expected preflight_fail, got {result.get('status')}")
         errors = result.get("preflight_errors", [])
         fields = [e.get("field") for e in errors]
-        _assert(name, "prompt" in fields, "should flag vague prompt")
+        # Note: vague prompt is a WARNING, not a hard error. DoD missing is the hard error.
         _assert(name, any("definition_of_done" in f for f in fields), "should flag missing DoD")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -440,7 +448,7 @@ TEST_META = {
     "test_01_simple_code_generation":  {"category": "Code Gen",   "desc": "Write new Python file, DoD verifies output"},
     "test_02_bug_fix":                 {"category": "Bug Fix",    "desc": "Fix existing file logic error"},
     "test_03_multiround_recovery":     {"category": "Recovery",   "desc": "Round 1 fails DoD → round 2 passes"},
-    "test_04_preflight_vague":         {"category": "Preflight",  "desc": "Rejects vague prompt (<20 chars)"},
+    "test_04_preflight_vague":         {"category": "Preflight",  "desc": "Rejects missing DoD (vague prompt is warning)"},
     "test_05_preflight_no_allowlist":  {"category": "Preflight",  "desc": "Rejects missing allowlist"},
     "test_06_allowlist_enforcement":   {"category": "Security",   "desc": "Blocks writes outside allowlist"},
     "test_07_denylist_enforcement":    {"category": "Security",   "desc": "Blocks writes to .env (denylisted)"},

@@ -138,31 +138,41 @@ def run_test() -> bool:
             "3": ROUND_2_RESPONSE,
         }))
 
-        # Run code_runner with patched _call_llm via subprocess + env var
+        # Run code_runner with patched tool_use._mock_response_fn
         env = {**os.environ, "CR_TEST_RESPONSES": str(tmp / "round_responses.json")}
 
-        # We need to patch code_runner.py to read from the env var.
-        # Instead, run it directly with Python and monkeypatch in-process.
+        # Patch tool_use._mock_response_fn to intercept LLM calls in the tool_use loop.
         test_runner = tmp / "run_stress.py"
         test_runner.write_text(f"""\
 import sys, json
 sys.path.insert(0, {str(SCRIPT_DIR)!r})
 
+import tool_use
 import code_runner
 
-_round_counter = [0]
+_call_count = [0]
 _responses = json.loads(open({str(tmp / 'round_responses.json')!r}).read())
 
-_original_call_llm = code_runner._call_llm
+def _mock_response_fn(payload):
+    _call_count[0] += 1
+    call = _call_count[0]
 
-def _mock_call_llm(prompt, backend, cwd, **kwargs):
-    _round_counter[0] += 1
-    key = str(_round_counter[0])
-    if key in _responses:
-        return _responses[key]
-    return _original_call_llm(prompt, backend, cwd, **kwargs)
+    # Map call numbers to rounds:
+    # Each code-runner round makes 2 LLM calls:
+    #   1st call: returns FILE block (tool_calls)
+    #   2nd call: returns "Done" (no tool_calls, exits loop)
+    # Call 1-2 = Round 1, Call 3-4 = Round 2, Call 5-6 = Round 3
+    round_num = (call + 1) // 2  # 1->1, 2->1, 3->2, 4->2, 5->3, 6->3
 
-code_runner._call_llm = _mock_call_llm
+    # Only return FILE response on ODD calls (first call of each round)
+    if call % 2 == 1:
+        key = str(round_num)
+        if key in _responses:
+            return _responses[key]
+    return "Done - changes applied successfully"
+
+tool_use._mock_response_fn = _mock_response_fn
+
 code_runner.app(["run", {str(spec_file)!r}, "--max-rounds", "3"])
 """)
 

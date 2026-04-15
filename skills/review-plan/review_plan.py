@@ -122,6 +122,7 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
             else "",
         }
         tests = item.get("tests") or []
+        blind_tests = item.get("blind_tests") or []
         impl = item.get("implementation") or []
         body_parts = [
             f"Runner: {item.get('runner', '')}",
@@ -146,6 +147,7 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
             "mode": item.get("mode", ""),
             "lane": item.get("lane", ""),
             "tests": tests,
+            "blind_tests": blind_tests,
             "command": item.get("command", ""),
             "prompt": item.get("prompt", ""),
             "allowlist": item.get("allowlist") or [],

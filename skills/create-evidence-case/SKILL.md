@@ -160,6 +160,130 @@ This ensures traceability in ArangoDB and portability for OSCAL/SACM export.
 verification evidence with the claim. Separate collections would require joins,
 lose portability, and break single-document export to OSCAL/SACM XML.
 
+### Cached Evidence Case in QRAs (v4.3.1)
+
+Every QRA has a pre-computed `evidence_case` field containing extracted entities
+with **character spans** for UI inline highlighting. This is populated by the
+`evidence_case_backfill` pipeline (not query-time extraction).
+
+```python
+{
+    "evidence_case": {
+        # Core extracted data (from /extract-entities)
+        "question_text": str,           # First 500 chars of question
+        "control_ids": list[str],       # ["IA-0006", "CWE-287"]
+        "glossary": [                   # Resolved control metadata
+            {
+                "id": "IA-0006",
+                "name": "Authentication Mechanisms",
+                "framework": "SPARTA",
+                "type": "countermeasure",
+                "description": "..."
+            }
+        ],
+        "crosswalk_chains": [...],      # Framework-to-framework links
+        "resolved_entities": [...],     # Terms that resolved to controls
+        
+        # --- SPANS FOR UI HIGHLIGHTING (SPARTA Explorer Chat) ---
+        "spans": [
+            {
+                "text": "IA-0006",       # The matched text
+                "span": [9, 16],         # [start, end] character positions
+                "kind": "control_id",    # Type: control_id, aerospace_term, phrase
+                "framework": "SPARTA",   # Only for control_id kind
+                "name": "Authentication Mechanisms",
+                "grounded_to_framework": True
+            },
+            {
+                "text": "CWE-287",
+                "span": [33, 40],
+                "kind": "control_id",
+                "framework": "CWE",
+                "name": "Improper Authentication",
+                "grounded_to_framework": True
+            }
+        ],
+        
+        "review_status": "auto",        # auto, approved, rejected
+        "extracted_at": str             # ISO timestamp
+    }
+}
+```
+
+### SPARTA Explorer Chat: Inline Evidence Highlighting
+
+The Chat agent uses `evidence_case.spans` to render inline highlights on question text:
+
+```tsx
+// React component example
+function QuestionWithHighlights({ question, spans }) {
+    // Sort spans by start position
+    const sorted = [...spans].sort((a, b) => a.span[0] - b.span[0]);
+    
+    let result = [];
+    let lastEnd = 0;
+    
+    for (const s of sorted) {
+        const [start, end] = s.span;
+        
+        // Text before this span
+        if (start > lastEnd) {
+            result.push(<span key={`t-${lastEnd}`}>{question.slice(lastEnd, start)}</span>);
+        }
+        
+        // The highlighted entity
+        const color = s.kind === 'control_id' 
+            ? FRAMEWORK_COLORS[s.framework] 
+            : 'yellow';
+        
+        result.push(
+            <Tooltip key={`e-${start}`} content={`${s.name} (${s.framework})`}>
+                <span className={`bg-${color}-200`}>{s.text}</span>
+            </Tooltip>
+        );
+        
+        lastEnd = end;
+    }
+    
+    // Remaining text
+    if (lastEnd < question.length) {
+        result.push(<span key="tail">{question.slice(lastEnd)}</span>);
+    }
+    
+    return <p>{result}</p>;
+}
+```
+
+**Span kinds and colors:**
+
+| Kind | Color | Example |
+|------|-------|---------|
+| `control_id` | Framework-specific (SPARTA=blue, CWE=orange, NIST=green) | IA-0006, CWE-287 |
+| `aerospace_term` | Purple | FPGA, TT&C, crosslink |
+| `phrase` | Yellow | supply chain attack |
+
+**Framework colors (NVIS standard):**
+
+| Framework | Color | Hex |
+|-----------|-------|-----|
+| SPARTA | Blue | `#3B82F6` |
+| CWE | Orange | `#F97316` |
+| NIST | Green | `#22C55E` |
+| CAPEC | Red | `#EF4444` |
+| ATT&CK | Purple | `#A855F7` |
+
+### Cached vs Query-Time Evidence
+
+| Field | When Populated | Use |
+|-------|----------------|-----|
+| `evidence_case.spans` | Backfill (pre-computed) | UI highlighting |
+| `evidence_case.glossary` | Backfill | Cached control metadata |
+| `cae_tree` (in endpoint response) | Query-time | Full CAE tree with traceability |
+
+The cached `evidence_case` enables fast rendering without query-time entity extraction.
+The `cae_tree` (requested via `include_cae_tree=True`) provides full CAE analysis
+with traceability strength and validation gates.
+
 ## TRACEABILITY vs VERIFICATION
 
 Matching requirements to controls (via `/match/requirement`) provides **traceability** —

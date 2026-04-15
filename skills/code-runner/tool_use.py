@@ -16,6 +16,8 @@ v4.2: Error classification and fallback parsing:
   - Smart error classifier (context overflow, billing, rate limit → recovery action)
   - Fallback tool call parser (Hermes, DeepSeek V3, generic XML formats)
   - Reasoning extraction (<think> blocks, reasoning_content fields)
+
+v4.3: Hermes-inspired duplicate-call suppression and mutation blocking
 """
 from __future__ import annotations
 
@@ -45,9 +47,15 @@ from message_utils import sanitize_messages
 # Local modules
 from _error_classifier import classify_api_error, classify_response_error, FailoverReason
 from _tool_call_parser import parse_tool_calls, to_openai_format
+from skill_tools import get_dynamic_tools, execute_skill
+
 
 SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
+
+# Mock response function for testing. When set, bypasses HTTP calls and returns mock responses.
+# Set to a callable(payload: dict) -> str that returns the LLM response text.
+_mock_response_fn: Optional[callable] = None
 
 # Valid tool names for this agent
 VALID_TOOLS = {"write_file", "edit_file", "read_file", "run_command", "lookup_docs", "search_code", "get_symbols", "research"}
@@ -927,6 +935,8 @@ def run_tool_use_loop(
     temperature: float = 0.2,
     max_tokens: int = 8000,
     dod_command: str = "",
+    event_emitter: Any = None,
+    round_num: int = 0,
 ) -> tuple[list[str], list[dict]]:
     """Run the tool-use agent loop. Returns (files_written, messages).
 
@@ -979,9 +989,14 @@ def run_tool_use_loop(
     ]
     files_written: list[str] = []
 
+    # Dynamic skill injection: match skills by task keywords and add as callable tools
+    skill_tools, skill_name_map = get_dynamic_tools(user_prompt)
+    all_tools = TOOLS + skill_tools
+    valid_tools_extended = VALID_TOOLS | set(skill_name_map.keys())
+
     payload_base: dict = {
         "model": model,
-        "tools": TOOLS,
+        "tools": all_tools,
         "tool_choice": "auto",
         "max_tokens": max_tokens,
     }
@@ -1010,6 +1025,44 @@ def run_tool_use_loop(
                                  payload.get("model"), len(payload["messages"][0]["content"]),
                                  len(payload["messages"][1]["content"]), len(payload.get("tools", [])),
                                  approx_tokens)
+
+                # Test mode: use mock response function if set
+                if _mock_response_fn is not None:
+                    mock_content = _mock_response_fn(payload)
+                    # Parse "### FILE:" format to extract file writes
+                    import re as mock_re
+                    file_matches = list(mock_re.finditer(r'### FILE: (\S+)\n```\w*\n(.*?)```', mock_content, mock_re.DOTALL))
+                    if file_matches:
+                        # Convert to write_file tool calls
+                        tool_calls_list = []
+                        for i, m in enumerate(file_matches):
+                            tool_calls_list.append({
+                                "id": f"mock_call_{i}",
+                                "type": "function",
+                                "function": {
+                                    "name": "write_file",
+                                    "arguments": json.dumps({"path": m.group(1), "content": m.group(2)}),
+                                },
+                            })
+                        assistant_msg = {"role": "assistant", "content": "", "tool_calls": tool_calls_list}
+                        # Create mock data structure that mimics HTTP response
+                        data = {
+                            "choices": [{
+                                "message": assistant_msg,
+                                "finish_reason": "tool_calls",
+                            }]
+                        }
+                    else:
+                        # No file blocks - return as content (final response)
+                        assistant_msg = {"role": "assistant", "content": mock_content}
+                        data = {
+                            "choices": [{
+                                "message": assistant_msg,
+                                "finish_reason": "stop",
+                            }]
+                        }
+                    break  # Exit retry loop with mock response
+
                 resp = httpx.post(
                     SCILLM_URL,
                     headers={
@@ -1128,11 +1181,11 @@ def run_tool_use_loop(
             tc_id = tc.get("id", f"call_{hashlib.sha256(fn_args_raw.encode()).hexdigest()[:8]}")
 
             # 1. Unknown tool check (before parsing args)
-            if fn_name not in VALID_TOOLS:
+            if fn_name not in valid_tools_extended:
                 result = _tool_result(
                     ok=False, tool=fn_name,
                     error_type="UNKNOWN_TOOL",
-                    error_message=f"Unknown tool '{fn_name}'. Available: {', '.join(sorted(VALID_TOOLS))}",
+                    error_message=f"Unknown tool '{fn_name}'. Available: {', '.join(sorted(valid_tools_extended))}",
                     retryable=False,
                 )
                 messages.append({"role": "tool", "tool_call_id": tc_id, "content": result})
@@ -1167,8 +1220,15 @@ def run_tool_use_loop(
                 continue
             seen_calls.add(call_hash)
 
-            # 4. Execute tool
-            result = execute_tool(fn_name, fn_args, cwd, allowlist)
+            # 4. Execute tool (or skill if skill_ prefixed)
+            if fn_name.startswith("skill_") and fn_name in skill_name_map:
+                skill_name = skill_name_map[fn_name]
+                skill_args = fn_args.get("args", "")
+                logger.info("  Calling skill /{} with args: {}", skill_name, skill_args[:100])
+                skill_result = execute_skill(skill_name, skill_args, cwd)
+                result = json.dumps(skill_result)
+            else:
+                result = execute_tool(fn_name, fn_args, cwd, allowlist)
 
             # 5. Track written files (parse JSON result to check success)
             if fn_name in ("write_file", "edit_file"):
@@ -1181,7 +1241,7 @@ def run_tool_use_loop(
                 except (json.JSONDecodeError, KeyError):
                     pass
 
-            # 6. Feed result back to LLM
+            # 9. Feed result back to LLM
             messages.append({
                 "role": "tool",
                 "tool_call_id": tc_id,

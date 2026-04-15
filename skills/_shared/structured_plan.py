@@ -55,6 +55,7 @@ def summarize_structured_plan(data: dict[str, Any]) -> dict[str, Any]:
             continue
         dod = task.get("definition_of_done") or {}
         tests = _as_list(task.get("tests"))
+        blind_tests = _as_list(task.get("blind_tests"))
         implementation = _as_list(task.get("implementation"))
         tasks.append(
             {
@@ -73,6 +74,7 @@ def summarize_structured_plan(data: dict[str, Any]) -> dict[str, Any]:
                 "prompt": str(task.get("prompt") or ""),
                 "definition_of_done": dod,
                 "tests": tests,
+                "blind_tests": blind_tests,
                 "implementation": implementation,
                 "allowlist": _as_list(task.get("allowlist")),
                 "read_context": _as_list(task.get("read_context")),

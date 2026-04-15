@@ -84,6 +84,16 @@ class EventType(str, Enum):
     dod_checked = "dod_checked"
     dod_passed = "dod_passed"
 
+    # LogAct-inspired tool-level events (pre-execution intent logging)
+    tool_intent = "tool_intent"      # Intent logged BEFORE execution
+    tool_result = "tool_result"      # Result logged AFTER execution
+    tool_blocked = "tool_blocked"    # Voter rejected the tool call
+
+    # Recovery events
+    recovery_started = "recovery_started"    # Crash recovery initiated
+    recovery_complete = "recovery_complete"  # Recovery action taken
+    failure_diagnosed = "failure_diagnosed"  # Semantic failure analysis
+
 
 class RunEvent(BaseModel):
     """Schema for events.jsonl entries. ArangoDB-ingestible."""

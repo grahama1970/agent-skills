@@ -988,6 +988,9 @@ async def _execute_loop(
     # Summary: human-readable report
     failed_tasks = [t for t in runtimes.values() if t.status == "failed"]
 
+    # Load plan from session for report (plan variable not in scope here)
+    plan = json.loads((session_dir / "plan.json").read_text())
+
     # Print human-readable report
     report = render_report(session_dir, runtimes, plan, verbose=bool(failed_tasks))
     print("\n" + report)

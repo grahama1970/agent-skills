@@ -942,6 +942,8 @@ def run(
                     temperature=temperature,
                     max_tokens={"low": 4000, "medium": 8000, "high": 16000}.get(cur_reasoning, 4000),
                     dod_command=dod_command,
+                    event_emitter=emitter,  # LogAct: pass emitter for tool_intent/tool_result events
+                    round_num=round_num,    # LogAct: round context for event logging
                 )
                 try:
                     written, tool_messages = future.result(timeout=ROUND_TIMEOUT)
