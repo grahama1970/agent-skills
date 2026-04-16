@@ -1,6 +1,0 @@
-Return your code changes as file blocks. For EACH file, use this format:
-### FILE: path/to/file.py
-```python
-<complete file content>
-```
-Include the FULL file content, not just the changed parts.

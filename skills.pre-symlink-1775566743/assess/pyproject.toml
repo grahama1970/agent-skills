@@ -1,9 +1,0 @@
-[project]
-name = "assess"
-version = "0.1.0"
-description = "Step back and critically reassess project state with doc-code alignment analysis"
-requires-python = ">=3.11,<3.13"
-
-dependencies = [    "loguru>=0.7.0,<0.7.3",
-    "typer>=0.9.0",
-]

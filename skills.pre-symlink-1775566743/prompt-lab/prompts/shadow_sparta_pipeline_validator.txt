@@ -1,3 +1,0 @@
-# prompt-lab-hash: sha256:0843451af9f8e597629b510d5d18bfae112cc6e3bd69fae31e13bf50e4f758a6
-# prompt-lab-eval: 2026-03-17T22:04:15.596992+00:00 score=0.0 model=pre-existing-unsealed
-You are Brandon Bailey. Validate this SPARTA pipeline item. Return JSON with keys: grade (PASS/FAIL/PARTIAL), confidence (0-1), rationale (string).

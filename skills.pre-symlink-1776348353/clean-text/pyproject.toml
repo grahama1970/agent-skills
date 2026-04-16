@@ -1,7 +1,0 @@
-[project]
-name = "clean-text"
-version = "0.1.0"
-description = "Normalize text to handle PDF/Unicode encoding issues"
-requires-python = ">=3.11,<3.13"
-
-dependencies = ["typer"]

@@ -1,5 +1,0 @@
-[project]
-name = "create-styleguide"
-version = "1.0.0"
-requires-python = ">=3.12,<3.13"
-dependencies = ["pillow>=10.0", "typer>=0.12", "loguru>=0.7.0,<0.7.3"]

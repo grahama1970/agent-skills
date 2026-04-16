@@ -1,9 +1,0 @@
-# prompt-lab-hash: sha256:6788d70c8481afc694e9ccd150d6df754cd4734bcaf999700295fca67d60010e
-# prompt-lab-eval: 2026-03-17T22:04:13.432157+00:00 score=0.0 model=pre-existing-unsealed
-Classify the difficulty of this SPARTA/F-36 question:
-
-- easy: Single-domain, direct mapping between one F-36 concern and SPARTA controls
-- medium: Cross-domain synthesis across two frameworks or F-36 categories
-- hard: Multi-hop reasoning across F-36 datalake + SPARTA + external framework mappings
-
-Output JSON: {{"difficulty": "easy|medium|hard", "reason": "brief explanation"}}
