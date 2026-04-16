@@ -42,7 +42,6 @@ async def one_shot_review(
     focus: str = "",
     model: str = "gpt-5.3-codex",
     system_prompt: str = "",
-    max_tokens: int = 4000,
 ) -> dict:
     """Send all files with context for review in one call.
 
@@ -64,11 +63,13 @@ async def one_shot_review(
     if not system_prompt:
         system_prompt = (
             f"You are: {persona}\n\n"
-            f"## Project Context\n\n{context}\n\n"
-            "## Review Instructions\n\n"
-            "Review code at a senior engineer level. Be skeptical. Challenge assumptions. "
-            "Call out missing evidence. Do not be agreeable for politeness. "
-            "Flag anything you would reject in a real PR review."
+            "## Review Behavior\n\n"
+            "- Review at senior engineer level. Be skeptical. Challenge assumptions.\n"
+            "- Flag anything you would reject in a real PR review.\n"
+            "- Every finding MUST cite a specific line number and quote the problematic code.\n"
+            "- Every finding MUST include a concrete fix (not just 'fix this').\n"
+            "- Do NOT report style preferences or hypothetical issues.\n"
+            "- Output ONLY the JSON array of findings. No commentary.\n"
         )
 
     prompt = build_review_prompt(files, context=context, focus=focus)
@@ -79,7 +80,6 @@ async def one_shot_review(
         prompt=prompt,
         model=model,
         system_prompt=system_prompt,
-        max_tokens=max_tokens,
     )
 
     return {

@@ -605,7 +605,7 @@ def _persona_summary(data: dict, visual_review: Optional[str], persona: str) -> 
         resp = _httpx.post(
             "http://localhost:4001/v1/chat/completions",
             headers={"Authorization": "Bearer sk-dev-proxy-123"},
-            json={"model": "text-gemini", "messages": [{"role": "user", "content": prompt}], "max_tokens": 512},
+            json={"model": "sonnet", "messages": [{"role": "user", "content": prompt}], "max_tokens": 512},
             timeout=30.0,
         )
         if resp.status_code == 200:

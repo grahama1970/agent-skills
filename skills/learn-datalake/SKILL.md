@@ -290,9 +290,80 @@ Instead of manually tracing requirements to controls:
 3. **Review queue** — Only edge cases need human judgment
 4. **Audit trail** — Every match has evidence_case_id and proof_key for traceability
 
+## Calibration Fixtures (PDF Cloning)
+
+When extraction fails (profile counts significantly differ from extraction counts), use PDF cloning
+to generate calibration fixtures with known ground truth.
+
+### When to Clone
+
+| Profile Count | Extraction Count | Action |
+|---------------|------------------|--------|
+| 47 tables | 47 tables | Pass - no clone needed |
+| 47 tables | 12 tables | **Clone** - investigate extraction gap |
+| 358 TOC entries | 32 sections | **Clone** - TOC extraction failing |
+
+### Calibration Flow
+
+```
+Original PDF fails extraction (profile vs extraction mismatch)
+        ↓
+Clone PDF via pdf_oxide clone_pdf_v2.py
+(same structure, QID markers as ground truth)
+        ↓
+Run extractor on clone
+        ↓
+    ┌───┴───┐
+  PASS      FAIL
+    ↓         ↓
+Extractor   Extractor bug
+works       (fix before retry)
+    ↓
+Retry original PDF
+    ↓
+    ┌───┴───┐
+  PASS      FAIL
+    ↓         ↓
+Done      PDF-specific issue
+          (encoding, corruption, layout)
+```
+
+### Usage
+
+```bash
+# Generate calibration fixture from problem PDF
+cd /home/graham/workspace/experiments/pdf_oxide
+python clone_pdf_v2.py \
+  --source /path/to/problem.pdf \
+  --output /tmp/calibration_fixture.pdf \
+  --extract-style \
+  --model sonnet
+
+# Outputs:
+# - /tmp/calibration_fixture.pdf (clone with QID markers)
+# - /tmp/calibration_fixture.truth.json (ground truth manifest)
+# - /tmp/calibration_fixture.style.json (extracted style profile)
+```
+
+### Integration with learn-datalake
+
+The supervisor can automatically trigger calibration fixture generation when extraction failures
+exceed a threshold:
+
+```bash
+./run.sh start-supervised /mnt/storage12tb/extractor_corpus \
+  --label corpus \
+  --auto-calibrate \
+  --calibrate-threshold 0.8  # clone if extraction/profile ratio < 80%
+```
+
+Calibration fixtures are saved to `state/calibration_fixtures/` with the original PDF hash
+as the filename, enabling regression testing when the extractor changes.
+
 ## Notes
 
 - `review-pdf` remains the hard quality gate for extractor outputs.
 - `start` mode keeps running and continues learning when new documents appear.
 - non-PDF ingestion is routed via memory acquire so additional modalities can be added without changing this skill.
 - coverage commands use existing `dogpile` URL corpora and `fetcher` to close sector gaps before extraction loops.
+- calibration fixtures enable deterministic regression testing via QID markers.

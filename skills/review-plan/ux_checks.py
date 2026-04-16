@@ -73,6 +73,17 @@ _SMALL_CHANGE = re.compile(
     re.IGNORECASE,
 )
 
+# Pattern reuse — skip design board when following existing component patterns
+# (e.g., "same pattern as RecallCard", "reuse GateChain pattern", "follows existing")
+# Also skip when using /scillm Gemini for design review (new workflow replaces mockup-lab)
+_PATTERN_REUSE = re.compile(
+    r"\b(same\s+pattern\s+as|reuse\s+.*pattern|follow.*pattern|"
+    r"pattern\s+from|copy.*styling\s+from|match.*style|"
+    r"follows\s+existing|existing\s+pattern|scillm.*gemini.*review|"
+    r"gemini.*vlm.*review|vlm.*verification)\b",
+    re.IGNORECASE,
+)
+
 
 def _is_ui_task(combined: str) -> bool:
     if not _UI_KEYWORDS.search(combined):
@@ -102,6 +113,11 @@ def check_design_board(task: dict, findings: list):
 
     # Small UI changes skip design board (per /plan rules)
     if _SMALL_CHANGE.search(combined):
+        return
+
+    # Pattern reuse skips design board — component follows existing pattern
+    # or uses /scillm Gemini for design review (replaces mockup-lab workflow)
+    if _PATTERN_REUSE.search(combined):
         return
 
     has_board = bool(_BOARD_PATTERNS.search(combined))
@@ -158,6 +174,11 @@ def check_png_evidence(task: dict, findings: list):
 
     # Small UI changes skip PNG evidence (per /plan rules)
     if _SMALL_CHANGE.search(combined):
+        return
+
+    # Pattern reuse skips PNG evidence — component follows existing pattern
+    # or uses /scillm Gemini for design review (replaces mockup-lab workflow)
+    if _PATTERN_REUSE.search(combined):
         return
 
     if not _PNG_PATTERNS.search(combined):

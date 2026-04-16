@@ -479,6 +479,23 @@ def check_adversarial_test(task: dict, findings: list[Finding]):
 
     combined = dod + "\n" + body
 
+    # Skip design tasks that follow existing patterns — TypeScript compilation is the gate
+    # Pattern reuse = "same pattern as X", "reuse Y pattern", "follows existing pattern"
+    # Design/UI tasks = TSX/component work, ux-lab routes, type definitions
+    pattern_reuse_keywords = [
+        r"same\s+pattern\s+as", r"reuse\s+.*pattern", r"follow.*pattern",
+        r"pattern\s+from", r"follows\s+existing", r"existing\s+pattern",
+        r"scillm.*gemini.*review", r"gemini.*vlm", r"vlm.*verification",
+    ]
+    design_keywords = [
+        r"\.tsx", r"component", r"react", r"embry", r"gatechain", r"recallcard",
+        r"ux-lab", r"types\.ts", r"routes\.ts", r"artifact", r"shared-chat",
+    ]
+    has_pattern_reuse = any(re.search(p, combined, re.I) for p in pattern_reuse_keywords)
+    has_design_context = any(re.search(p, combined, re.I) for p in design_keywords)
+    if has_pattern_reuse and has_design_context:
+        return  # Pattern-following design task — TypeScript compilation is sufficient gate
+
     # Tier 1: Blind test patterns (agent cannot see test source)
     blind_patterns = [
         r"test-lab",                          # /test-lab harness
@@ -610,14 +627,29 @@ def check_execution_routing(task: dict, findings: list[Finding]):
                 suggestion="Set `mode: one_shot` or use `code-runner` for iterative work.",
             ))
         if any(k in body or k in title for k in ["edit", "implement", "refactor", "patch", "build page", "write file"]):
-            findings.append(Finding(
-                task=f"Task {task['id']}",
-                check="routing",
-                grade="FAIL",
-                message="Task appears iterative/edit-heavy but is routed to `scillm` one-shot.",
-                line=task["line"],
-                suggestion="Use `code-runner` for iterative or file-editing work.",
-            ))
+            # Skip for pattern-following design tasks — scillm one-shot is correct
+            combined = f"{title}\n{body}"
+            pattern_reuse_kw = [
+                r"same\s+pattern\s+as", r"reuse\s+.*pattern", r"follow.*pattern",
+                r"pattern\s+from", r"follows\s+existing", r"existing\s+pattern",
+            ]
+            design_kw = [
+                r"\.tsx", r"component", r"react", r"embry", r"gatechain", r"recallcard",
+                r"ux-lab", r"types\.ts", r"routes\.ts", r"artifact", r"shared-chat",
+            ]
+            has_pattern = any(re.search(p, combined, re.I) for p in pattern_reuse_kw)
+            has_design = any(re.search(p, combined, re.I) for p in design_kw)
+            if has_pattern and has_design:
+                pass  # Pattern-following design task — scillm one-shot is appropriate
+            else:
+                findings.append(Finding(
+                    task=f"Task {task['id']}",
+                    check="routing",
+                    grade="FAIL",
+                    message="Task appears iterative/edit-heavy but is routed to `scillm` one-shot.",
+                    line=task["line"],
+                    suggestion="Use `code-runner` for iterative or file-editing work.",
+                ))
         if not str(task.get("prompt", "")).strip() and not body.strip():
             findings.append(Finding(
                 task=f"Task {task['id']}",

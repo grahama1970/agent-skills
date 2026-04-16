@@ -48,16 +48,15 @@ taxonomy:
 ## Architecture
 
 ```
-Client → scillm :4001 (Python) → Bifrost :4002 (Go) → Provider
-                                        ↓
-                               utls-proxy :8444 (Codex only)
-                                        ↓
-                               chatgpt.com (Chrome TLS fingerprint)
+Client → scillm :4001 (Python) → Provider API
+                ↓
+       utls-proxy :8444 (Codex only)
+                ↓
+       chatgpt.com (Chrome TLS fingerprint)
 ```
 
-- **scillm** (Python): Public API, request validation, JSON guard, VLM auto-routing, OAuth token injection
-- **Bifrost** (Go): High-performance routing gateway with native provider support, retries, circuit breakers
-- **utls-proxy** (Go): TLS fingerprint proxy for Cloudflare-protected endpoints (Codex). Presents Chrome's JA3 fingerprint.
+- **scillm** (Python): Public API, request validation, JSON guard, VLM auto-routing, OAuth token injection, retries, circuit breakers, fallback cascades. Routes directly to providers via openai SDK.
+- **utls-proxy** (Go): TLS fingerprint proxy for Cloudflare-protected endpoints (Codex). Presents Chrome's JA3 fingerprint to bypass Cloudflare.
 
 ## Setup (one-time per provider)
 
@@ -131,22 +130,25 @@ concurrency limits, budget tracking, and optional Redis caching.
 | `Org/Model` | Chutes | API key | `Qwen/Qwen3-30B-A3B` |
 | `model:tag` | Ollama (local) | none | `qwen2.5:7b` |
 
-**Batch fallback chain** (Chutes only, no OAuth, no paid APIs):
+**Dynamic fallback chain** (built from real-time Chutes utilization):
+
+The ENTIRE fallback chain is built dynamically — not just the primary model. When you request `model: "text"`:
+
+1. Fetches utilization data from Chutes API (cached 5 minutes)
+2. Discovers all available models in the `deepseek-large` family
+3. Scores each: `util% * 80`, penalizes >25% rate-limit (score=100) or >95% util (score=90)
+4. Sorts all models by score (lowest = best)
+5. Appends static fallbacks: `text-kimi`, `text-qwen3`, `text-qwen3-large`
+6. Injects full chain via `_dynamic_fallback_chain` to the router
+
+**Example chain** (actual 2026-04-15):
 ```
-text → DeepSeek-V3.1-TEE → DeepSeek-R1-0528-TEE → text-kimi → text-qwen3 → text-qwen3-large
+Chimera-TEE (25% util) → V3.1-TEE (37%) → R1-0528-TEE (90%) → V3.2-TEE (saturated) → text-kimi → text-qwen3 → text-qwen3-large
 ```
 
-All 6 models verified for 100% QRA grounding accuracy. OAuth providers (Codex, Claude) excluded from batch to avoid account bans.
+This means 429s **never reach the client** — the router automatically tries the next model in the utilization-sorted chain. OAuth providers (Codex, Claude) excluded to avoid account bans.
 
 **Chutes cold-start handling**: Non-TEE tried first (1 retry), falls through to TEE on 503. Warmup API fires in background on cold detect — miners notified to spin up. Next call may hit warm non-TEE.
-
-**Chutes utilization-aware routing**: The ChutesRouter middleware automatically selects the least saturated model variant within a capability family. When you request `model: "text"`, the router:
-1. Fetches utilization data from Chutes API (cached for 5 minutes)
-2. Scores all variants in the model family (deepseek-v3, deepseek-r1, qwen3-large, qwen3-small, kimi)
-3. Avoids models with >10% rate limiting (score=100) or >95% utilization
-4. Selects the variant with the lowest score
-
-Example: If V3.2-TEE is at 99% utilization with 88% rate-limiting, the router automatically switches to V3.1-TEE at 58% utilization. No client-side changes needed — just use `model: "text"`.
 
 > **`text-research` — Harvard Research Endpoint (25% off)**
 >
@@ -270,7 +272,14 @@ OpenAI-style arrays pass through unchanged — full control for multi-turn, syst
 **NO IMPORT REQUIRED.** Batch calls use standard `httpx` + `asyncio` — you do NOT import scillm.
 The proxy is an HTTP endpoint. Batching is just "make N HTTP calls with pacing."
 
-**CRITICAL: Batch size limits.** The proxy queues requests internally (4-8 slots depending on provider). For batches of **50+ requests**, you MUST pace your HTTP calls — otherwise requests queue up, hit the 300s queue timeout, and fail before they ever reach the LLM.
+**CRITICAL: Batch size limits.** The proxy queues requests internally (4-8 slots depending on provider). For batches of **50+ requests**, you MUST pace your HTTP calls — otherwise requests queue up, hit the 600s queue timeout, and fail before they ever reach the LLM.
+
+**Batch Reliability (2026-04-15):**
+- **Queue timeout:** 600s (10 min) — large batches drain rather than fail
+- **Queue rejection:** Disabled — all requests queue indefinitely (no upfront 429s)
+- **Abuse guard:** Disabled for authenticated callers — no cascade failures from transient errors
+- **Error semantics:** 503 = queue exhaustion (proxy overloaded), 429 = upstream provider rate limit only
+- **The only failure mode:** 503 after 600s queue wait = batch too large, use CHUNK_SIZE=4
 
 | Batch size | Pattern | Why |
 |------------|---------|-----|
@@ -970,7 +979,8 @@ if not check_proxy():
 | `Connection refused` | Proxy not running | `docker compose -p scillm ... up -d` |
 | `404 /health` | Wrong endpoint | Use `/health/liveliness` (no auth) or `/v1/scillm/health` (with auth) |
 | `BATCH MISUSE: N requests queued` | Firing 100+ requests at once | Use chunked batching (CHUNK_SIZE=4 loop) |
-| `QUEUE TIMEOUT: Request waited 300s` | Too many concurrent requests | Reduce batch size, use chunking |
+| `503 SERVICE_BUSY` | Queue timeout after 600s | Batch too large for capacity. Use CHUNK_SIZE=4. |
+| `429 Rate limit` | Upstream provider exhausted | Proxy auto-retries via fallback chain. Let it work. |
 | `Unknown model 'foo'` | Model name not in config | Use `text`, `vlm`, or check `/v1/scillm/models` |
 | `401 Unauthorized` | Missing/wrong auth header | Use `Bearer sk-dev-proxy-123` |
 | `JSON validation failed` | Provider returned prose | Already auto-repaired; if persistent, prompt needs "Return valid JSON" |

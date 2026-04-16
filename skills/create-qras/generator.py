@@ -18,6 +18,7 @@ from typing import Any
 
 import httpx
 import typer
+import yaml
 
 # Import schema validation for CWE QRAs
 try:
@@ -57,8 +58,78 @@ RELATIONSHIP_FRAMEWORKS = {"CWE", "CAPEC", "ATT&CK"}
 # Controls that get independent QRAs (no crosswalk needed)
 INDEPENDENT_FRAMEWORKS = {"NIST", "SPARTA"}
 
+# Worksheets.yaml location (single source of truth for framework registry)
+WORKSHEETS_YAML = Path("/home/graham/workspace/experiments/sparta/config/worksheets.yaml")
+
+# Fallback map if worksheets.yaml unavailable
+_FALLBACK_FRAMEWORK_MAP = {
+    "ATT&CK": "ATT_CK_Enterprise",
+    "ATTACK": "ATT_CK_Enterprise",
+    "ATT_CK": "ATT_CK_Enterprise",
+    "CWE": "CWE",
+    "CAPEC": "CAPEC",
+    "NIST": "NIST_800_53",
+    "SPARTA": "SPARTA",
+    "D3FEND": "D3FEND",
+}
+
+def _load_framework_source_map() -> dict[str, str]:
+    """Load framework alias → canonical value map from worksheets.yaml.
+
+    Returns dict mapping all aliases to their canonical source_framework value.
+    Falls back to hardcoded map if worksheets.yaml unavailable.
+    """
+    if not WORKSHEETS_YAML.exists():
+        return _FALLBACK_FRAMEWORK_MAP.copy()
+
+    try:
+        with open(WORKSHEETS_YAML) as f:
+            config = yaml.safe_load(f)
+
+        registry = config.get("framework_registry", {})
+        if not registry:
+            return _FALLBACK_FRAMEWORK_MAP.copy()
+
+        # Build alias → canonical map
+        alias_map = {}
+        for canonical, info in registry.items():
+            # Map canonical name to itself
+            alias_map[canonical] = canonical
+            alias_map[canonical.upper()] = canonical
+            alias_map[canonical.lower()] = canonical
+            # Map all aliases to canonical
+            for alias in info.get("aliases", []):
+                alias_map[alias] = canonical
+                alias_map[alias.upper()] = canonical
+                alias_map[alias.lower()] = canonical
+
+        return alias_map
+    except Exception:
+        return _FALLBACK_FRAMEWORK_MAP.copy()
+
+# Load framework source map from worksheets.yaml (or fallback)
+FRAMEWORK_SOURCE_MAP = _load_framework_source_map()
+
 # Prompt template directory (centralized in prompt-lab)
 PROMPT_LAB_DIR = Path("/home/graham/workspace/experiments/scillm/.skills/prompt-lab/prompts/qra")
+# Local prompts directory (for native mode prompts)
+LOCAL_PROMPTS_DIR = Path(__file__).parent / "prompts"
+
+# Framework → category mapping for native QRAs
+FRAMEWORK_TO_CATEGORY = {
+    "CWE": "cwe_native",
+    "CAPEC": "capec_native",
+    "NIST": "nist_native",
+    "ATT_CK_Enterprise": "attack_native",
+    "ATT_CK_Mobile": "attack_native",
+    "ATT_CK_ICS": "attack_native",
+    "ATT&CK": "attack_native",  # For detected framework
+    "D3FEND": "d3fend_native",
+    "SPARTA": "sparta_native",
+}
+
+# Thin frameworks that need URL enrichment for native QRAs
+THIN_FRAMEWORKS = {"NIST", "ATT_CK_Enterprise", "ATT_CK_Mobile", "ATT_CK_ICS", "CAPEC", "D3FEND", "SPARTA", "ATT&CK"}
 
 
 def _load_prompt(prompt_name: str) -> str:
@@ -70,21 +141,23 @@ def _load_prompt(prompt_name: str) -> str:
 
 
 def _load_prompt_pair(prompt_name: str) -> tuple[str, str]:
-    """Load system + user prompt pair from prompt-lab.
+    """Load system + user prompt pair from local prompts or prompt-lab.
 
     Returns (system_prompt, user_prompt_template).
-    Falls back to single-file format if _system/_user files don't exist.
+    Checks local prompts/ dir first, then falls back to prompt-lab.
     """
-    system_file = PROMPT_LAB_DIR / f"{prompt_name}_system.txt"
-    user_file = PROMPT_LAB_DIR / f"{prompt_name}_user.txt"
+    # Check local prompts directory first (for native mode)
+    for prompt_dir in [LOCAL_PROMPTS_DIR, PROMPT_LAB_DIR]:
+        system_file = prompt_dir / f"{prompt_name}_system.txt"
+        user_file = prompt_dir / f"{prompt_name}_user.txt"
 
-    if system_file.exists() and user_file.exists():
-        return system_file.read_text(), user_file.read_text()
+        if system_file.exists() and user_file.exists():
+            return system_file.read_text(), user_file.read_text()
 
-    # Fallback to single-file format (backwards compat)
-    single_file = PROMPT_LAB_DIR / f"{prompt_name}.txt"
-    if single_file.exists():
-        return "", single_file.read_text()  # Empty system, full user
+        # Fallback to single-file format (backwards compat)
+        single_file = prompt_dir / f"{prompt_name}.txt"
+        if single_file.exists():
+            return "", single_file.read_text()  # Empty system, full user
 
     raise FileNotFoundError(f"Prompt template not found: {prompt_name}")
 
@@ -130,7 +203,10 @@ def _get_provider_concurrency(model: str = "text") -> int:
         with httpx.Client(timeout=5.0) as client:
             resp = client.get(
                 f"http://localhost:4001/v1/scillm/concurrency?model={model}",
-                headers={"Authorization": "Bearer sk-dev-proxy-123"},
+                headers={
+                    "Authorization": "Bearer sk-dev-proxy-123",
+                    "X-Caller-Skill": "create-qras",
+                },
             )
             if resp.status_code == 200:
                 data = resp.json()
@@ -290,6 +366,225 @@ def _find_sparta_targets(client: httpx.Client, control_doc: dict) -> list[dict]:
         return sparta_targets[:10]
     except Exception:
         return []
+
+
+# ------------------------------------------------------------------
+# Native QRA Helpers (URL enrichment, control formatting)
+# ------------------------------------------------------------------
+
+def _load_url_content_for_control(client: httpx.Client, control_id: str) -> str:
+    """Load supplementary URL content for a control from sparta_url_knowledge.
+
+    Used by native mode to enrich thin framework descriptions with fetched web content.
+    """
+    try:
+        # First get url_ids linked to this control via sparta_control_urls
+        resp = client.post(
+            "/list",
+            json={
+                "collection": "sparta_control_urls",
+                "limit": 10,
+                "filters": {"control_id": control_id},
+            },
+        )
+        if resp.status_code != 200:
+            return ""
+
+        url_ids = [doc.get("url_id") for doc in resp.json().get("documents", []) if doc.get("url_id")]
+        if not url_ids:
+            return ""
+
+        # Get URL content chunks
+        resp = client.post(
+            "/list",
+            json={
+                "collection": "sparta_url_knowledge",
+                "limit": 10,
+                "filters": {"url_id": {"$in": url_ids[:5]}},
+            },
+        )
+        if resp.status_code != 200:
+            return ""
+
+        chunks = [doc.get("text", "") for doc in resp.json().get("documents", [])]
+        content = "\n\n".join(c for c in chunks if c)
+        return content[:20000]  # Cap at 20K chars
+    except Exception:
+        return ""
+
+
+def _format_control_details_for_native(control: dict) -> str:
+    """Format control details for native QRA prompt.
+
+    Returns structured text with control ID, name, framework, description,
+    and framework-specific fields.
+    """
+    lines = []
+
+    # Core fields
+    control_id = control.get("control_id", control.get("_key", "unknown"))
+    lines.append(f"Technique ID: {control_id}")
+    lines.append(f"Name: {control.get('name', control.get('title', ''))}")
+    lines.append(f"Framework: {control.get('source_framework', '')}")
+
+    if desc := control.get("description"):
+        lines.append(f"\nDescription:\n{desc}")
+
+    # ATT&CK-specific fields
+    framework = control.get("source_framework", "")
+    if framework.startswith("ATT_CK") or framework == "ATT&CK":
+        if tactics := control.get("tactics"):
+            lines.append(f"\nTactics: {', '.join(tactics) if isinstance(tactics, list) else tactics}")
+        if platforms := control.get("platforms"):
+            lines.append(f"Platforms: {', '.join(platforms) if isinstance(platforms, list) else platforms}")
+
+    # CAPEC-specific fields
+    if framework == "CAPEC":
+        if likelihood := control.get("likelihood_of_attack"):
+            lines.append(f"\nLikelihood of Attack: {likelihood}")
+        if severity := control.get("typical_severity"):
+            lines.append(f"Typical Severity: {severity}")
+        if cwe_ids := control.get("related_cwe_ids"):
+            cwe_list = cwe_ids[:10] if isinstance(cwe_ids, list) else [cwe_ids]
+            lines.append(f"Related CWEs: {', '.join(cwe_list)}")
+
+    # D3FEND-specific fields
+    if framework == "D3FEND":
+        if parent := control.get("parent_id"):
+            lines.append(f"\nParent: {parent}")
+
+    # NIST-specific fields
+    if framework == "NIST":
+        if parent := control.get("parent_id"):
+            lines.append(f"\nParent Control: {parent}")
+
+    return "\n".join(lines)
+
+
+def _generate_native_qra(
+    memory: httpx.Client,
+    scillm: httpx.Client,
+    control: dict,
+    max_pairs: int = 6,
+    dump_prompt: Path | None = None,
+) -> list[dict] | dict:
+    """Generate native QRAs for a control - extracts "what is X?" from framework source docs.
+
+    Native QRAs answer questions like "What is T1595 Active Scanning according to MITRE ATT&CK?"
+    grounded directly in the framework documentation, NOT in SPARTA context.
+
+    Returns list of QRA dicts or error dict.
+    """
+    control_id = control.get("control_id", control.get("_key"))
+    control_name = control.get("name", control.get("title", ""))
+    framework = control.get("source_framework", "")
+
+    # Determine which prompt to use based on framework
+    if framework.startswith("ATT_CK") or framework == "ATT&CK":
+        prompt_name = "native_attack"
+    else:
+        # For other frameworks, fall back to generic independent prompt for now
+        prompt_name = "native_attack"  # TODO: Add framework-specific native prompts
+
+    # Load system + user prompt pair
+    try:
+        system_prompt, user_template = _load_prompt_pair(prompt_name)
+    except FileNotFoundError as e:
+        return {"error": str(e), "control_id": control_id}
+
+    # Format control details
+    control_details = _format_control_details_for_native(control)
+
+    # Load supplementary URL content for thin frameworks
+    supplementary_content = ""
+    if framework in THIN_FRAMEWORKS:
+        supplementary_content = _load_url_content_for_control(memory, control_id)
+        if not supplementary_content:
+            supplementary_content = "(No supplementary URL content available)"
+
+    # Build user message with template substitution
+    user_prompt = user_template.format(
+        framework=framework,
+        control_id=control_id,
+        control_name=control_name,
+        control_details=control_details,
+        supplementary_content=supplementary_content,
+    )
+
+    # Dump prompt for human review if requested
+    if dump_prompt:
+        prompt_file = _dump_prompt_to_file(f"{system_prompt}\n\n---\n\n{user_prompt}", control_id, dump_prompt)
+        return {"prompt_dumped": str(prompt_file), "control_id": control_id}
+
+    # Call scillm
+    try:
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": user_prompt})
+
+        resp = scillm.post(
+            "/v1/chat/completions",
+            json={
+                "model": "text",  # Use stable model
+                "messages": messages,
+                "response_format": {"type": "json_object"},
+                "temperature": 0.1,
+            },
+        )
+        resp.raise_for_status()
+        content = resp.json()["choices"][0]["message"]["content"]
+        result = json.loads(content)
+
+        # Check for skipped/abstained
+        if result.get("skipped_reason"):
+            return {
+                "skipped": True,
+                "skipped_reason": result.get("skipped_reason"),
+                "control_id": control_id,
+                "pair_count": 0,
+            }
+
+        pairs = result.get("pairs", [])
+        if not pairs:
+            return {"error": "no_pairs", "control_id": control_id}
+
+        # Convert to storage format with native category
+        run_id = f"skill_create_qras_native_{int(time.time())}"
+        category = FRAMEWORK_TO_CATEGORY.get(framework, f"{framework.lower()}_native")
+        qra_docs = []
+
+        for idx, pair in enumerate(pairs, start=1):
+            qra_key = _generate_qra_key("native", f"{control_id}_p{idx}")
+
+            qra = {
+                "_key": qra_key,
+                "qra_id": qra_key,
+                "run_id": run_id,
+                "qra_type": "native",
+                "category": category,  # e.g., "attack_native", "cwe_native"
+                "source_framework": framework,
+                "source_control_id": control_id,
+                "sparta_linked": False,
+                "created_at": int(time.time()),
+                "generator": "skill:create-qras:native",
+                "prompt_version": "control_to_qra_v6",
+                "verdict": "SATISFIED",
+                # Core QRA fields
+                "question": pair.get("question", ""),
+                "reasoning": pair.get("reasoning", ""),
+                "answer": pair.get("answer", ""),
+                "pair_type": pair.get("pair_type", "threat_description"),
+                "evidence_quotes": pair.get("evidence_quotes", []),
+                "confidence": pair.get("confidence", "medium"),
+                "actionable_for": pair.get("actionable_for", "training"),
+            }
+            qra_docs.append(qra)
+
+        return qra_docs
+
+    except Exception as e:
+        return {"error": str(e), "control_id": control_id}
 
 
 # ------------------------------------------------------------------
@@ -1066,31 +1361,43 @@ async def _run_batch_relationship_qras(
             if progress_callback:
                 progress_callback(f"Chunk {chunk_num}/{total_chunks} ({chunk_start+1}-{min(chunk_start+chunk_size, total)}/{total})")
 
-            # Process chunk in parallel with batch_id for resume and chunk tracking for dashboard
-            chunk_tasks = [
-                _generate_relationship_qra_async(
-                    client, src, tgt, ev,
-                    batch_id=batch_id,
-                    expected_total=total,
-                    chunk_index=chunk_num,
-                    chunk_total=total_chunks,
-                    item_index_in_chunk=i + 1,
-                )
-                for i, (src, tgt, ev) in enumerate(chunk)
-            ]
-            chunk_results = await asyncio.gather(*chunk_tasks, return_exceptions=True)
+            # Process chunk with per-item retry (respects chunk_size concurrency)
+            max_retries = 3
 
-            # Handle results
-            for i, result in enumerate(chunk_results):
-                if isinstance(result, Exception):
-                    src, tgt, _ = chunk[i]
-                    all_results.append({
-                        "error": str(result),
-                        "source_id": src.get("control_id", src.get("_key")),
-                        "target_id": tgt.get("control_id", tgt.get("_key")),
-                    })
-                else:
-                    all_results.append(result)
+            async def process_with_retry(orig_idx: int, src: dict, tgt: dict, ev: dict):
+                """Process single item with retries."""
+                last_error = None
+                for attempt in range(max_retries + 1):
+                    if attempt > 0:
+                        await asyncio.sleep(30 * attempt)  # 30s, 60s, 90s backoff
+                    try:
+                        result = await _generate_relationship_qra_async(
+                            client, src, tgt, ev,
+                            batch_id=batch_id,
+                            expected_total=total,
+                            chunk_index=chunk_num,
+                            chunk_total=total_chunks,
+                            item_index_in_chunk=orig_idx + 1,
+                        )
+                        return result  # Success
+                    except Exception as e:
+                        last_error = e
+                        if progress_callback and attempt < max_retries:
+                            progress_callback(f"  Retry {attempt+1}/{max_retries} for {src.get('control_id', src.get('_key'))}")
+                # All retries exhausted
+                return {
+                    "error": f"Failed after {max_retries} retries: {last_error}",
+                    "source_id": src.get("control_id", src.get("_key")),
+                    "target_id": tgt.get("control_id", tgt.get("_key")),
+                }
+
+            # Run chunk in parallel (chunk_size already limits concurrency)
+            chunk_tasks = [process_with_retry(i, src, tgt, ev) for i, (src, tgt, ev) in enumerate(chunk)]
+            chunk_results = await asyncio.gather(*chunk_tasks)
+
+            # Collect results
+            for result in chunk_results:
+                all_results.append(result)
 
     return all_results
 
@@ -1444,13 +1751,29 @@ async def _generate_independent_qra_async(
     control_id = control.get("control_id", control.get("_key"))
     framework = _detect_framework(control_id) or control.get("source_framework", "UNKNOWN")
 
-    # Use CWE-specific template with rich fields, or generic independent template
+    # Use framework-specific templates or generic independent template
+    system_prompt = ""  # Default: user-only request
+
     if framework == "CWE":
         prompt_template = _load_prompt("cwe_independent")
         cwe_record = _format_cwe_record(control)
         prompt = prompt_template.format(
             control_id=control_id,
             cwe_record=cwe_record,
+        )
+    elif framework == "ATT&CK":
+        # Native ATT&CK prompts with system + user messages
+        system_prompt, user_template = _load_prompt_pair("native_attack")
+        control_name = control.get("question", control.get("title", control.get("name", "Unknown")))
+        control_details = control.get("answer", control.get("description", "No description"))
+        # For supplementary content, use extended_content if available
+        supplementary = control.get("extended_content", control.get("supplementary", ""))
+        prompt = user_template.format(
+            framework=control.get("source_framework", "ATT_CK_Enterprise"),
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            supplementary_content=supplementary or "(No supplementary content available)",
         )
     else:
         # Generic independent template for NIST/SPARTA etc
@@ -1466,9 +1789,15 @@ async def _generate_independent_qra_async(
         )
 
     try:
+        # Build messages - include system prompt if present
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
         request_body = {
             "model": "text",
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": messages,
             "response_format": {"type": "json_object"},
         }
         # Add scillm_metadata for automatic batch resume and dashboard progress
@@ -1514,14 +1843,32 @@ async def _generate_independent_qra_async(
         run_id = f"skill_create_qras_{int(time.time())}"
         qra_docs = []
 
+        # Determine qra_type based on framework
+        if framework == "ATT&CK":
+            qra_type = "attack_native"
+        elif framework == "CWE":
+            qra_type = "cwe_native"
+        else:
+            qra_type = "independent"
+
         for idx, pair in enumerate(pairs, start=1):
-            qra_key = _generate_qra_key("independent", f"{control_id}_p{idx}")
+            qra_key = _generate_qra_key(qra_type, f"{control_id}_p{idx}")
+
+            # Handle evidence format (ATT&CK uses evidence_quotes, CWE uses evidence)
+            raw_evidence = pair.get("evidence_quotes", pair.get("evidence", []))
+            evidence_quotes = [
+                {
+                    "quote": e.get("quote", ""),
+                    "relevance": e.get("relevance", e.get("field", "")),
+                }
+                for e in raw_evidence
+            ]
 
             qra = {
                 "_key": qra_key,
                 "qra_id": qra_key,
                 "run_id": run_id,
-                "qra_type": "independent",
+                "qra_type": qra_type,
                 "source_framework": framework,
                 "source_control_id": control_id,
                 "sparta_linked": False,
@@ -1535,10 +1882,7 @@ async def _generate_independent_qra_async(
                 "reasoning": pair.get("reasoning"),
                 "answer": pair.get("answer"),
                 "confidence": pair.get("confidence"),
-                "evidence_quotes": [
-                    {"field": e.get("field"), "quote": e.get("quote")}
-                    for e in pair.get("evidence", [])
-                ],
+                "evidence_quotes": evidence_quotes,
                 "evidence_case": _build_independent_evidence_case(control),
             }
             qra_docs.append(qra)
@@ -1554,13 +1898,16 @@ async def _run_batch_independent_qras(
     chunk_size: int = 4,
     progress_callback=None,
     batch_id: str | None = None,
+    store_callback=None,  # Called with each QRA after chunk completes
 ) -> list[dict]:
     """Run batch independent QRA generation with chunked parallel processing.
 
     Uses chunked asyncio.gather per scillm SKILL.md pattern for 50+ items.
     If batch_id is provided, enables automatic resume via scillm_metadata.
+    If store_callback is provided, stores QRAs immediately after each chunk (crash-safe).
     """
     all_results = []
+    stored_count = 0
     total = len(controls)
 
     # Generate batch_id if not provided (enables automatic resume on retry)
@@ -1577,8 +1924,8 @@ async def _run_batch_independent_qras(
             if progress_callback:
                 progress_callback(f"Chunk {chunk_num}/{total_chunks} ({chunk_start+1}-{min(chunk_start+chunk_size, total)}/{total})")
 
-            # Process chunk in parallel with batch_id for resume and chunk tracking for dashboard
-            chunk_tasks = [
+            # Simple parallel processing - no retry wrapper
+            tasks = [
                 _generate_independent_qra_async(
                     client, ctrl,
                     batch_id=batch_id,
@@ -1589,22 +1936,29 @@ async def _run_batch_independent_qras(
                 )
                 for i, ctrl in enumerate(chunk)
             ]
-            chunk_results = await asyncio.gather(*chunk_tasks, return_exceptions=True)
+            chunk_results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            # Handle results - new schema returns list of QRAs or dict for errors/abstentions
-            for i, result in enumerate(chunk_results):
+            # Collect and store results immediately (crash-safe)
+            chunk_stored = 0
+            for result in chunk_results:
                 if isinstance(result, Exception):
-                    ctrl = chunk[i]
-                    all_results.append({
-                        "error": str(result),
-                        "control_id": ctrl.get("control_id", ctrl.get("_key")),
-                    })
+                    all_results.append({"error": str(result)})
                 elif isinstance(result, list):
-                    # List of QRAs (1-6 per control)
-                    all_results.extend(result)
+                    for r in result:
+                        all_results.append(r)
+                        if store_callback and "error" not in r and not r.get("skipped"):
+                            if store_callback(r):
+                                chunk_stored += 1
+                                stored_count += 1
                 else:
-                    # Single dict (error or abstention)
                     all_results.append(result)
+                    if store_callback and "error" not in result and not result.get("skipped"):
+                        if store_callback(result):
+                            chunk_stored += 1
+                            stored_count += 1
+
+            if progress_callback and store_callback:
+                progress_callback(f"  Stored {chunk_stored} QRAs (total: {stored_count})")
 
     return all_results
 
@@ -1695,39 +2049,111 @@ def _generate_standalone_qra(
         return {"error": str(e), "doc_key": doc_key}
 
 
-def _store_qra(client: httpx.Client, qra: dict) -> bool:
-    """Store QRA to sparta_qra collection."""
+EMBEDDING_URL = "http://localhost:8602"
+
+
+def _get_embedding(text: str) -> list[float] | None:
+    """Get embedding vector from embedding service."""
+    if not text.strip():
+        return None
     try:
-        resp = client.post(
-            "/store",
-            json={"document": qra, "collection": "sparta_qra"},
+        resp = httpx.post(
+            f"{EMBEDDING_URL}/embed/batch",
+            json={"texts": [text]},
+            timeout=30.0,
         )
         resp.raise_for_status()
+        data = resp.json()
+        # Service returns "embeddings" key (not "vectors")
+        embeddings = data.get("embeddings", [])
+        if embeddings and len(embeddings) > 0:
+            return embeddings[0]
+    except Exception as e:
+        import sys
+        print(f"EMBEDDING ERROR: {e}", file=sys.stderr)
+    return None
+
+
+def _store_qra(client: httpx.Client, qra: dict) -> bool:
+    """Store QRA to sparta_qra collection with embedding."""
+    import sys
+    # Generate embedding from question + answer + reasoning
+    embed_text = f"{qra.get('question', '')} {qra.get('answer', '')} {qra.get('reasoning', '')}".strip()
+    print(f"DEBUG: Getting embedding for {qra.get('_key', 'unknown')} ({len(embed_text)} chars)", file=sys.stderr)
+    embedding = _get_embedding(embed_text)
+    print(f"DEBUG: Got embedding: {len(embedding) if embedding else None}", file=sys.stderr)
+    if embedding:
+        qra["embedding"] = embedding
+        print(f"DEBUG: Added embedding to qra, now has {len(qra.get('embedding', []))} dims", file=sys.stderr)
+    else:
+        print(f"WARNING: No embedding for {qra.get('_key', 'unknown')}", file=sys.stderr)
+
+    try:
+        payload = {"document": qra, "collection": "sparta_qra"}
+        print(f"DEBUG: Sending payload with embedding={len(qra.get('embedding', []))} dims, keys={list(qra.keys())}", file=sys.stderr)
+        resp = client.post("/store", json=payload)
+        if resp.status_code != 200:
+            print(f"STORAGE FAILED {resp.status_code} for {qra.get('_key', 'unknown')}: {resp.text}", file=sys.stderr)
+        resp.raise_for_status()
         return True
-    except Exception:
+    except Exception as e:
+        print(f"STORAGE ERROR for {qra.get('_key', 'unknown')}: {e}", file=sys.stderr)
         return False
 
 
 @app.command()
 def generate(
-    control: str = typer.Option(None, "--control", help="Control ID (CWE-79, AC-17, etc.)"),
+    control: str = typer.Option(None, "--control", help="Control ID (CWE-79, T1595, AC-17, etc.)"),
     source: str = typer.Option(None, "--source", help="Source control for relationship QRA"),
     target: str = typer.Option(None, "--target", help="Target control for relationship QRA"),
     doc: str = typer.Option(None, "--doc", help="Document key from sparta_url_knowledge"),
     collection: str = typer.Option(None, "--collection", help="Process all docs in collection"),
     text: str = typer.Option(None, "--text", help="Generate from raw text"),
-    framework: str = typer.Option(None, "--framework", help="Batch generate for framework"),
+    framework: str = typer.Option(None, "--framework", help="Batch generate for framework (e.g., ATT_CK_Enterprise)"),
     limit: int = typer.Option(50, "--limit", help="Limit batch size"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview without storing"),
     no_verify: bool = typer.Option(False, "--no-verify", help="Skip evidence verification"),
-    independent: bool = typer.Option(False, "--independent", help="Force independent QRA (no crosswalk)"),
+    mode: str = typer.Option(
+        "auto",
+        "--mode",
+        help="""QRA generation mode:
+        - native: 'What is X?' from framework source docs (category: attack_native, cwe_native, etc.)
+        - relationship: 'How does X relate to SPARTA Y?' via crosswalk chains (needs SPARTA target)
+        - standalone: From URL knowledge documents (no control ID needed)
+        - auto: Detect mode from input (default - relationship for CWE/CAPEC, native for ATT&CK/NIST)
+        """,
+    ),
+    independent: bool = typer.Option(False, "--independent", help="[DEPRECATED] Use --mode native instead"),
     store: bool = typer.Option(True, "--store", help="Store to sparta_qra"),
     output: str = typer.Option(None, "--output", help="Write results to JSON file"),
     dump_prompts: str = typer.Option(None, "--dump-prompts", help="Save prompts to dir for human review (no LLM call)"),
     two_stage: bool = typer.Option(False, "--two-stage", help="Use two-stage pipeline (gate → generate)"),
     batch_id: str = typer.Option(None, "--batch-id", help="Batch ID for resume (reuse same ID to skip completed items)"),
 ):
-    """Generate QRA pairs from controls, documents, or text."""
+    """Generate QRA pairs from controls, documents, or text.
+
+    MODES (use --mode to select explicitly):
+
+      native       - Extract "What is X?" QRAs from framework source documentation.
+                     Answers: "What is T1595 Active Scanning according to MITRE ATT&CK?"
+                     Category: attack_native, cwe_native, nist_native, etc.
+                     Best for: ATT&CK, CWE, NIST, CAPEC, D3FEND definitions.
+
+      relationship - Generate "How does X relate to SPARTA Y?" QRAs via crosswalk chains.
+                     Answers: "How does CWE-287 enable bypass of SPARTA control IA-0001?"
+                     Category: sparta_context
+                     Best for: CWE→SPARTA, CAPEC→SPARTA mappings with evidence chains.
+
+      standalone   - Extract QRAs from URL knowledge documents (PDFs, fetched pages).
+                     Answers: "What are satellite ground station security indicators?"
+                     Category: standalone
+                     Best for: Supplementary documents, research papers, guidelines.
+
+      auto         - Detect mode from input (default):
+                     - CWE/CAPEC → relationship (has crosswalk chains to SPARTA)
+                     - ATT&CK/NIST/D3FEND → native (definitions from source docs)
+                     - --doc → standalone
+    """
     memory = _get_memory_client()
 
     # If dumping prompts, skip scillm initialization
@@ -1740,34 +2166,49 @@ def generate(
 
     results = []
 
+    # Handle deprecated --independent flag
+    if independent:
+        typer.echo("Warning: --independent is deprecated. Use --mode native instead.", err=True)
+        if mode == "auto":
+            mode = "native"
+
     if control:
         # Single control - detect type and generate appropriate QRA
         framework_type = _detect_framework(control)
+        control_doc = _fetch_control(memory, control)
+        if not control_doc:
+            typer.echo(f"Control {control} not found in sparta_controls", err=True)
+            raise typer.Exit(1)
 
-        # --independent flag forces independent mode regardless of framework
-        if independent:
-            typer.echo(f"Generating independent QRA for {control} (forced)...")
-            control_doc = _fetch_control(memory, control)
-            if not control_doc:
-                typer.echo(f"Control {control} not found in sparta_controls", err=True)
-                raise typer.Exit(1)
+        # Determine effective mode
+        effective_mode = mode
+        if mode == "auto":
+            # Auto-detect: CWE/CAPEC → relationship, ATT&CK/NIST/D3FEND → native
+            if framework_type in RELATIONSHIP_FRAMEWORKS:
+                effective_mode = "relationship"
+            else:
+                effective_mode = "native"
 
-            qra_result = _generate_independent_qra(scillm, control_doc, dump_prompt=dump_prompt_dir)
-            # New schema returns list of QRAs or dict for error/abstention
+        # Route to appropriate generator based on mode
+        if effective_mode == "native":
+            # Native mode: "What is X?" from framework source docs
+            category = FRAMEWORK_TO_CATEGORY.get(
+                control_doc.get("source_framework", framework_type or ""),
+                f"{(framework_type or 'unknown').lower()}_native"
+            )
+            typer.echo(f"Generating native QRA for {control} (category: {category})...")
+
+            qra_result = _generate_native_qra(memory, scillm, control_doc, dump_prompt=dump_prompt_dir)
             if isinstance(qra_result, list):
                 results.extend(qra_result)
             else:
                 results.append(qra_result)
 
-        elif framework_type in RELATIONSHIP_FRAMEWORKS:
-            # Relationship QRA - needs crosswalk
+        elif effective_mode == "relationship":
+            # Relationship mode: "How does X relate to SPARTA Y?" via crosswalk
             typer.echo(f"Generating relationship QRA for {control}...")
-            control_doc = _fetch_control(memory, control)
-            if not control_doc:
-                typer.echo(f"Control {control} not found in sparta_controls", err=True)
-                raise typer.Exit(1)
 
-            # Find SPARTA targets using /recall (semantic search)
+            # Find SPARTA targets using edge traversal
             sparta_targets = _find_sparta_targets(memory, control_doc)
             if not sparta_targets:
                 typer.echo(f"No SPARTA targets found for {control}", err=True)
@@ -1798,20 +2239,9 @@ def generate(
                         qra = _generate_relationship_qra(scillm, control_doc, target_doc, evidence, dump_prompt=dump_prompt_dir)
                         results.append(qra)
 
-        elif framework_type in INDEPENDENT_FRAMEWORKS or framework_type is None:
-            # Independent QRA - direct generation
-            typer.echo(f"Generating independent QRA for {control}...")
-            control_doc = _fetch_control(memory, control)
-            if not control_doc:
-                typer.echo(f"Control {control} not found in sparta_controls", err=True)
-                raise typer.Exit(1)
-
-            qra_result = _generate_independent_qra(scillm, control_doc, dump_prompt=dump_prompt_dir)
-            # New schema returns list of QRAs or dict for error/abstention
-            if isinstance(qra_result, list):
-                results.extend(qra_result)
-            else:
-                results.append(qra_result)
+        else:
+            typer.echo(f"Unknown mode: {effective_mode}. Use native, relationship, standalone, or auto.", err=True)
+            raise typer.Exit(1)
 
     elif source and target:
         # Explicit source→target relationship QRA
@@ -1908,8 +2338,9 @@ def generate(
         framework_upper = framework.upper()
 
         try:
-            # Use independent mode if --independent flag is set, even for CWE/CAPEC
-            use_relationship = framework_upper in RELATIONSHIP_FRAMEWORKS and not independent
+            # Use native mode if --mode native or deprecated --independent flag is set
+            # mode == "native" overrides the default relationship behavior for CWE/CAPEC/ATT&CK
+            use_relationship = framework_upper in RELATIONSHIP_FRAMEWORKS and mode != "native"
             if use_relationship:
                 # For relationship frameworks: get controls that have SPARTA edges
                 # Query sparta_relationships to find distinct source controls with SPARTA targets
@@ -1984,7 +2415,9 @@ def generate(
                     ))
                     results.extend(batch_results)
             else:
-                # For independent frameworks: list controls with pagination (API max is 500)
+                # For native frameworks: list controls with pagination (API max is 500)
+                # Map user-friendly framework name to stored source_framework value
+                source_framework_filter = FRAMEWORK_SOURCE_MAP.get(framework_upper, framework_upper)
                 controls = []
                 offset = 0
                 page_size = 500
@@ -1996,7 +2429,7 @@ def generate(
                             "collection": "sparta_controls",
                             "limit": fetch_limit,
                             "offset": offset,
-                            "filters": {"source_framework": framework_upper},
+                            "filters": {"source_framework": source_framework_filter},
                         },
                     )
                     resp.raise_for_status()
@@ -2014,11 +2447,16 @@ def generate(
                 def progress(msg):
                     typer.echo(f"  {msg}")
 
+                # Store callback for immediate per-chunk storage
+                def store_cb(qra):
+                    return _store_qra(memory, qra) if store and not dry_run else False
+
                 batch_results = asyncio.run(_run_batch_independent_qras(
                     controls,
                     chunk_size=chunk_size,
                     progress_callback=progress,
                     batch_id=batch_id,
+                    store_callback=store_cb if store and not dry_run else None,
                 ))
                 results.extend(batch_results)
 
@@ -2036,14 +2474,17 @@ def generate(
         typer.echo("No input specified. Use --control, --doc, --collection, --framework, or --text", err=True)
         raise typer.Exit(1)
 
-    # Store results
+    # Store results (skip if already stored per-chunk via store_callback)
     if store and not dry_run:
-        stored = 0
-        for qra in results:
-            if "error" not in qra and not qra.get("skipped"):
-                if _store_qra(memory, qra):
-                    stored += 1
-        typer.echo(f"Stored {stored}/{len(results)} QRAs")
+        # Framework batches store per-chunk, others store here
+        already_stored = any(r.get("_stored") for r in results)
+        if not already_stored:
+            stored = 0
+            for qra in results:
+                if "error" not in qra and not qra.get("skipped"):
+                    if _store_qra(memory, qra):
+                        stored += 1
+            typer.echo(f"Stored {stored}/{len(results)} QRAs")
 
     # Output
     if output:

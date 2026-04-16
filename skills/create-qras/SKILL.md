@@ -2,19 +2,20 @@
 name: create-qras
 description: >
   Generate QRA (Question-Reasoning-Answer) pairs from controls, documents, or text.
-  Supports relationship QRAs (CWE→SPARTA) and standalone QRAs (from URL knowledge).
-  Uses /create-evidence-case for crosswalk chains and /scillm for generation.
+  Three modes: native (framework definitions), relationship (crosswalk chains), standalone (documents).
 triggers:
   - create qras
   - generate qras
   - qra from document
   - qra from control
-  - standalone qra
+  - native qra
+  - attack qra
+  - cwe qra
 provides:
   - qra-generation
+  - native-qras
   - relationship-qras
   - standalone-qras
-  - corpus-qras
 composes:
   - memory
   - scillm
@@ -29,317 +30,238 @@ taxonomy:
 
 Generate QRA pairs from any source: controls, documents, or raw text.
 
-## QRA Types
+## Quick Decision: Which Mode Do I Use?
 
-| Type | Source | Use Case |
-|------|--------|----------|
-| **relationship** | CWE-79 → SV-AC-2 | Cross-framework mappings (CWE/CAPEC/ATT&CK → SPARTA) |
-| **independent** | AC-17, SV-AC-2 | NIST/MITRE/SPARTA controls without technique mapping |
-| **standalone** | sparta_url_knowledge doc | Knowledge extraction from PDFs/URLs |
-| **corpus** | Any text | Free-form QRA generation |
+| I want to answer... | Use mode | Example |
+|---------------------|----------|---------|
+| "What is T1595 Active Scanning?" | `--mode native` | Framework definition from MITRE ATT&CK |
+| "How does CWE-287 enable bypass of SPARTA IA-0001?" | `--mode relationship` | Cross-framework mapping with evidence chains |
+| "What does this PDF say about satellite security?" | `--mode standalone` | Knowledge extraction from documents |
 
-## Usage
+## Modes (IMPORTANT - read this)
 
-```bash
-# Relationship QRA: generate from control ID (CWE/CAPEC/ATT&CK auto-detected)
-./run.sh generate --control CWE-79
-./run.sh generate --control CAPEC-115
+### native - Framework Definitions
 
-# Relationship QRA: specific source → target
-./run.sh generate --source CWE-79 --target SV-AC-2
+**Question type:** "What is X according to [framework]?"
 
-# Independent QRA: NIST/MITRE controls (no crosswalk needed)
-./run.sh generate --control AC-17
-./run.sh generate --control SV-AC-2
-./run.sh generate --framework nist --limit 100
+**Use when:** You need authoritative definitions from framework source documentation (ATT&CK, CWE, NIST, CAPEC, D3FEND).
 
-# Standalone QRA: from URL knowledge document
-./run.sh generate --doc <doc_key>
-./run.sh generate --collection sparta_url_knowledge --limit 50
-
-# Corpus QRA: from raw text
-./run.sh generate --text "Zero trust requires continuous verification..."
-
-# Batch mode (legacy compatibility)
-./run.sh generate --framework cwe --limit 50
-
-# Options
---dry-run         # Show what would be generated, don't store
---no-verify       # Skip /create-evidence-case verification
---store           # Store to sparta_qra (default: true)
---output FILE     # Write results to JSON file
---dump-prompts DIR  # Save prompts to dir for human review (no LLM call)
-```
-
-## Quality Workflow (REQUIRED for batch runs)
-
-Before running large batches, validate prompts with humans:
+**Output category:** `attack_native`, `cwe_native`, `nist_native`, etc.
 
 ```bash
-# Step 1: Pre-flight check - dump prompts for human review
-python3 generator.py preflight --output-dir ./review_prompts
+# Generate native QRAs for ATT&CK technique
+./run.sh generate --control T1595 --mode native
 
-# Step 2: Open prompts in ./review_prompts/ and paste into Claude.ai/ChatGPT
-#         Verify output quality matches expectations in fixtures/
-
-# Step 3: Run automated evaluation against ground truth
-python3 generator.py preflight --run-eval
-
-# Step 4: Only proceed with batch if preflight passes
-python3 generator.py generate --framework cwe --limit 500
+# Batch generate for all ATT&CK Enterprise techniques
+./run.sh generate --framework ATT_CK_Enterprise --mode native --limit 100
 ```
 
-### Quality Gates
+**What it does:**
+1. Loads control document from `sparta_controls`
+2. Enriches with URL content from `sparta_url_knowledge` (for thin frameworks)
+3. Uses v6 prompt with source admissibility rules, modality preservation
+4. Generates 1-6 QRAs per control covering: definition, detection, mitigation, scope, risk
 
-Every generated QRA is scored on:
+**Category field:** `attack_native`, `cwe_native`, `nist_native`, `capec_native`, `d3fend_native`, `sparta_native`
 
-| Gate | Criteria | Threshold |
-|------|----------|-----------|
-| `has_question` | Question field exists | required |
-| `has_reasoning` | Reasoning > 10 words | required |
-| `has_answer` | Answer > 5 words | required |
-| `has_evidence` | ≥2 evidence quotes | required |
-| `grounding_verified` | Quotes appear in source | score ≥ 0.5 |
+### relationship - Cross-Framework Mappings
 
-QRAs with `verdict: NEEDS_REVIEW` failed quality gates and should not be stored.
+**Question type:** "How does X relate to SPARTA Y?"
 
-### Ground Truth Fixtures
+**Use when:** You need to explain how a weakness/attack maps to SPARTA countermeasures via crosswalk chains.
 
-Located in `fixtures/cwe_relationship_ground_truth.json`:
+**Output category:** `sparta_context` (implicitly, via relationship)
 
-```json
-{
-  "id": "cwe287_ia0001",
-  "source_control": "CWE-287",
-  "target_control": "IA-0001",
-  "expected_question_contains": ["CWE-287", "authentication"],
-  "expected_reasoning_contains": ["improper", "bypass"],
-  "expected_answer_contains": ["authentication", "verification"],
-  "min_evidence_quotes": 2
-}
+```bash
+# Generate relationship QRA for CWE→SPARTA
+./run.sh generate --control CWE-79 --mode relationship
+
+# Explicit source→target
+./run.sh generate --source CWE-287 --target IA-0001
 ```
 
-Add new fixtures for any control pair before batch generation.
+**What it does:**
+1. Finds SPARTA targets via `sparta_relationships` edges
+2. Calls `/create-evidence-case` for crosswalk chains
+3. Generates QRA explaining the relationship with grounded evidence
 
-## How It Works
+**Requires:** Source control must have edges to SPARTA in `sparta_relationships`.
 
-### Prompt Templates (via /prompt-lab)
+### standalone - Document Extraction
 
-All prompts are loaded from `/prompt-lab/prompts/qra/`:
+**Question type:** "What does this document say about X?"
 
-| Template | Use Case |
-|----------|----------|
-| `cwe_relationship.txt` | CWE→SPARTA with crosswalk evidence |
-| `capec_relationship.txt` | CAPEC→target with bridge evidence |
-| `independent.txt` | NIST/MITRE controls (no crosswalk) |
-| `standalone.txt` | URL knowledge documents |
+**Use when:** You need to extract Q&A pairs from URL knowledge documents, PDFs, or fetched web content.
 
-Edit prompts in prompt-lab, not in generator.py.
+```bash
+# Generate from specific document
+./run.sh generate --doc url_knowledge_12345 --mode standalone
 
-### Relationship QRAs
-
-```
-Control ID (e.g., CWE-79)
-         ↓
-POST /create-evidence-case
-         ↓
-Extract: resolved_entities, crosswalk_chains
-         ↓
-Load prompt template from /prompt-lab
-         ↓
-For each valid target:
-    Build evidence payload
-    Call /scillm for QRA generation
-    Verify via deterministic gates
-         ↓
-Store to sparta_qra with qra_type="relationship", sparta_linked=true
+# Batch from collection
+./run.sh generate --collection sparta_url_knowledge --mode standalone --limit 50
 ```
 
-### Standalone QRAs
+**What it does:**
+1. Loads document content
+2. Extracts cybersecurity-relevant Q&A pairs
+3. Stores with `qra_type: standalone`
 
-```
-Document (sparta_url_knowledge, PDF extract, etc.)
-         ↓
-Extract content + metadata
-         ↓
-Call /scillm with standalone prompt
-    (no crosswalk needed)
-         ↓
-Verify: evidence_quotes present, cybersecurity-relevant
-         ↓
-Store to sparta_qra with qra_type="standalone"
+### auto - Detect from Input (default)
+
+When `--mode auto` (default), mode is detected from input:
+
+| Input | Detected Mode | Why |
+|-------|--------------|-----|
+| `--control CWE-79` | relationship | CWE has crosswalk chains to SPARTA |
+| `--control CAPEC-115` | relationship | CAPEC has crosswalk chains to SPARTA |
+| `--control T1595` | native | ATT&CK - extract definitions |
+| `--control AC-17` | native | NIST - extract definitions |
+| `--control SV-AC-2` | native | SPARTA - extract definitions |
+| `--doc doc123` | standalone | Document extraction |
+
+## Usage Examples
+
+```bash
+# Native: ATT&CK technique definition
+./run.sh generate --control T1595 --mode native
+
+# Native: Batch all ATT&CK Enterprise
+./run.sh generate --framework ATT_CK_Enterprise --mode native --limit 500
+
+# Relationship: CWE→SPARTA with evidence chains
+./run.sh generate --control CWE-287 --mode relationship
+
+# Standalone: From URL knowledge
+./run.sh generate --doc url_knowledge_xyz --mode standalone
+
+# Dry run: Preview what would be generated
+./run.sh generate --control T1595 --mode native --dry-run
+
+# Dump prompts for human review (no LLM call)
+./run.sh generate --control T1595 --mode native --dump-prompts ./review/
 ```
 
 ## Output Schema
 
-```json
-{
-  "_key": "qra_cwe79_svac2_abc123",
-  "qra_id": "qra_cwe79_svac2_abc123",
-  "run_id": "skill_create_qras_1712836800",
-  "question": "How does XSS weakness enable access control bypass?",
-  "reasoning": "CWE-79 describes... SV-AC-2 requires...",
-  "answer": "XSS can bypass access controls by...",
-  "evidence_quotes": ["exact quote from source"],
-  
-  "qra_type": "relationship",
-  "source_framework": "CWE",
-  "source_control_id": "CWE-79",
-  "target_framework": "SPARTA",
-  "target_control_id": "SV-AC-2",
-  "crosswalk_chain": ["CWE-79", "CAPEC-86", "T1059", "SV-AC-2"],
-  "sparta_linked": true,
-  
-  "verdict": "SATISFIED",
-  "gate_result": "gates_passed",
-  "created_at": 1712836800,
-  "generator": "skill:create-qras"
-}
-```
-
-For independent QRAs (NIST/MITRE controls):
+All QRAs share a common schema, with mode-specific fields:
 
 ```json
 {
-  "_key": "qra_independent_ac17_abc123",
-  "qra_id": "qra_independent_ac17_abc123",
-  "run_id": "skill_create_qras_1712836800",
-  "question": "How should an organization implement remote access controls?",
-  "reasoning": "AC-17 requires organizations to...",
-  "answer": "Organizations should establish remote access policies...",
-  "evidence_quotes": ["exact quote from control description"],
+  "_key": "qra_native_t1595_p1_abc123",
+  "qra_id": "qra_native_t1595_p1_abc123",
+  "run_id": "skill_create_qras_native_1712836800",
   
-  "qra_type": "independent",
-  "source_framework": "NIST",
-  "source_control_id": "AC-17",
+  "question": "What is T1595 Active Scanning according to MITRE ATT&CK?",
+  "reasoning": "The ATT&CK description defines Active Scanning as...",
+  "answer": "T1595 Active Scanning is a reconnaissance technique...",
+  "evidence_quotes": [
+    {"quote": "Adversaries may execute active reconnaissance scans...", "relevance": "Primary definition"}
+  ],
+  
+  "qra_type": "native",
+  "category": "attack_native",
+  "source_framework": "ATT_CK_Enterprise",
+  "source_control_id": "T1595",
   "sparta_linked": false,
   
-  "verdict": "SATISFIED",
+  "pair_type": "threat_description",
+  "confidence": "high",
+  "actionable_for": "training",
+  
+  "prompt_version": "control_to_qra_v6",
+  "generator": "skill:create-qras:native",
   "created_at": 1712836800,
-  "generator": "skill:create-qras"
+  "verdict": "SATISFIED"
 }
 ```
 
-For standalone QRAs (from documents):
+### Mode-Specific Fields
 
-```json
-{
-  "_key": "qra_standalone_doc123_abc",
-  "qra_id": "qra_standalone_doc123_abc",
-  "run_id": "skill_create_qras_1712836800",
-  "question": "What are indicators of satellite ground station compromise?",
-  "reasoning": "The document describes...",
-  "answer": "Key indicators include...",
-  "evidence_quotes": ["exact quote from document"],
-  
-  "qra_type": "standalone",
-  "source_doc": "url_knowledge_doc123",
-  "source_url": "https://cisa.gov/...",
-  "source_title": "Satellite Security Guidelines",
-  "sparta_linked": false,
-  
-  "verdict": "SATISFIED",
-  "created_at": 1712836800,
-  "generator": "skill:create-qras"
-}
-```
+| Field | native | relationship | standalone |
+|-------|--------|--------------|------------|
+| `qra_type` | "native" | "relationship" | "standalone" |
+| `category` | "attack_native", etc. | (sparta_context) | (standalone) |
+| `source_framework` | ATT&CK, CWE, etc. | CWE, CAPEC | - |
+| `target_framework` | - | SPARTA | - |
+| `crosswalk_chain` | - | ["CWE-79", "T1059", "SV-AC-2"] | - |
+| `source_doc` | - | - | doc key |
+| `sparta_linked` | false | true | false |
 
-## Crosswalk Paths (CWE → SPARTA)
+## Quality Gates
 
-Two paths connect CWE weaknesses to SPARTA countermeasures. Both use `sparta_relationships` edges.
+Every generated QRA is validated:
 
-| Path | Hops | Data Source | Edge Filter |
-|------|------|-------------|-------------|
-| **Direct** | 1 | SPARTA v3.1 `cwe_class_ids` | `source_control_id=CWE-*, target_framework=SPARTA` |
-| **NIST 2-hop** | 2 | Heimdall `nist_control_ids` | `source_control_id=SI-10, target_framework=sparta` |
+| Gate | Criteria | Required |
+|------|----------|----------|
+| `has_question` | Question field exists | Yes |
+| `has_reasoning` | Reasoning > 10 words | Yes |
+| `has_answer` | Answer > 5 words | Yes |
+| `has_evidence` | At least 1 evidence quote | Yes |
+| `grounding_verified` | Quotes appear in source | Score >= 0.5 |
 
-### Direct Path (2,825+ CWE→SPARTA edges)
+QRAs failing gates get `verdict: NEEDS_REVIEW` and should not be used.
 
-SPARTA Techniques have `cwe_class_ids` listing mapped CWEs. Step 08 creates edges:
-- `source_framework: "CWE"`, `target_framework: "SPARTA"` (uppercase)
-- Example: CWE-287 → DE-0001, CWE-287 → IA-0001
+## Prompt Templates
 
-```python
-# Find SPARTA targets for CWE-287
-resp = client.post("/list", json={
-    "collection": "sparta_relationships",
-    "limit": 50,
-    "filters": {"source_control_id": "CWE-287", "target_framework": "SPARTA"}
-})
-```
+Prompts live in `prompts/` (local) or `/prompt-lab/prompts/qra/` (centralized):
 
-### NIST 2-hop Path (for unmapped CWEs)
-
-CWEs have `nist_control_ids` from MITRE Heimdall. NIST→SPARTA edges exist:
-- `source_framework: "nist"`, `target_framework: "sparta"` (lowercase!)
-- Example: CWE-79 → SI-10 (field) → CM0001 (edge)
-
-```python
-# CWE-79 has nist_control_ids: ['SI-10']
-# Find SPARTA targets via SI-10
-resp = client.post("/list", json={
-    "collection": "sparta_relationships",
-    "limit": 50,
-    "filters": {"source_control_id": "SI-10", "target_framework": "sparta"}  # lowercase!
-})
-```
-
-### Framework Casing (CRITICAL)
-
-| Edge Type | source_framework | target_framework |
-|-----------|-----------------|------------------|
-| CWE→SPARTA | `"CWE"` | `"SPARTA"` (uppercase) |
-| NIST→SPARTA | `"nist"` | `"sparta"` (lowercase) |
-| CAPEC→CWE | `"CAPEC"` | `"CWE"` |
-
-**Always check both cases** when filtering `target_framework` for SPARTA.
-
-## Deterministic Gates
-
-For relationship QRAs:
-- `entity_resolved` — at least one entity extracted
-- `has_crosswalk` — chain exists between source and target
-- `same_domain` — both entities are cybersecurity-related
-
-For standalone QRAs:
-- `has_evidence` — evidence_quotes are present
-- `quote_grounded` — quotes appear in source document
-- `cybersecurity_relevant` — topic is security-related
-
-## Integration with Existing Scripts
-
-The legacy `generate_cwe_qras.py` and `generate_capec_qras.py` can be replaced with:
-
-```bash
-# Instead of: python scripts/generate_cwe_qras.py --generate --limit 50
-./run.sh generate --framework cwe --limit 50
-
-# Instead of: python scripts/generate_capec_qras.py --control-id CAPEC-115
-./run.sh generate --control CAPEC-115
-```
+| Template | Mode | Description |
+|----------|------|-------------|
+| `native_attack_system.txt` | native | System prompt for ATT&CK native QRAs |
+| `native_attack_user.txt` | native | User prompt template with v6 rules |
+| `cwe_independent.txt` | native (CWE) | CWE-specific extraction |
+| `relationship_system_prompt_v2.txt` | relationship | Cross-framework relationships |
+| `standalone.txt` | standalone | Document extraction |
 
 ## Common Mistakes
 
-### WRONG: Generate QRAs without verification
+### WRONG: Using relationship mode for ATT&CK definitions
 ```bash
-./run.sh generate --control CWE-79 --no-verify
-# → May produce ungrounded QRAs
+./run.sh generate --control T1595 --mode relationship
+# Fails: ATT&CK techniques don't have SPARTA crosswalk edges
 ```
 
-### RIGHT: Let verification filter bad QRAs
+### RIGHT: Use native mode for framework definitions
 ```bash
-./run.sh generate --control CWE-79
-# → Uses /create-evidence-case gates, only stores verified QRAs
+./run.sh generate --control T1595 --mode native
+# Works: Extracts "What is T1595?" from ATT&CK docs
 ```
 
-### WRONG: Generate standalone QRAs from relationship sources
+### WRONG: Using native mode for CWE→SPARTA mappings
 ```bash
-./run.sh generate --doc sparta_controls/SV-AC-2
-# → Controls should use relationship mode
+./run.sh generate --control CWE-79 --mode native
+# Works, but misses the point: you get "What is CWE-79?" not "How does CWE-79 relate to SPARTA?"
 ```
 
-### RIGHT: Use appropriate mode for source type
+### RIGHT: Use relationship mode for cross-framework QRAs
 ```bash
-./run.sh generate --control SV-AC-2           # relationship
-./run.sh generate --doc sparta_url_knowledge/doc123  # standalone
+./run.sh generate --control CWE-79 --mode relationship
+# Works: Generates "How does CWE-79 enable bypass of SPARTA SV-AC-2?"
 ```
+
+### WRONG: Running batch without --dry-run first
+```bash
+./run.sh generate --framework ATT_CK_Enterprise --mode native --limit 1000
+# Risk: 1000 LLM calls without verification
+```
+
+### RIGHT: Preview with dry-run, then run
+```bash
+./run.sh generate --framework ATT_CK_Enterprise --mode native --limit 5 --dry-run
+# Review output, then:
+./run.sh generate --framework ATT_CK_Enterprise --mode native --limit 1000
+```
+
+## Migration from generate_qras_from_controls.py
+
+The standalone script `scripts/generate_qras_from_controls.py` is deprecated. Use this skill instead:
+
+```bash
+# Old:
+python scripts/generate_qras_from_controls.py --generate --framework ATT_CK_Enterprise --limit 100
+
+# New:
+./run.sh generate --framework ATT_CK_Enterprise --mode native --limit 100
+```
+
+The v6 prompt from the script has been ported to `prompts/native_attack_*.txt`.
