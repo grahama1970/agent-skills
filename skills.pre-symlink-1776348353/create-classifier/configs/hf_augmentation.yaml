@@ -1,0 +1,41 @@
+defaults:
+  min_samples_per_class: 300
+  imbalance_ratio_threshold: 0.35
+  max_new_samples: 3000
+  allowed_licenses:
+    - mit
+    - apache-2.0
+    - bsd-3-clause
+    - bsd-2-clause
+    - cc0-1.0
+
+tasks:
+  document_type:
+    # Conservative mapping from public document-image datasets.
+    # Keep mappings explicit to avoid semantic drift.
+    datasets:
+      - id: aharley/rvl_cdip
+        split: train
+        label_field: label
+        image_field: image
+        text_field: text
+        require_image: true
+        max_samples: 1200
+        sample_confidence: 0.8
+        label_map:
+          scientific_publication: arxiv
+          scientific_report: arxiv
+          specification: requirements_spec
+          form: requirements_spec
+          questionnaire: requirements_spec
+
+  structural_classification:
+    # Fill with explicitly mapped structural datasets once curated.
+    datasets: []
+
+  footnote_detection:
+    # Fill with explicitly mapped structural datasets once curated.
+    datasets: []
+
+  default:
+    datasets: []

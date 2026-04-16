@@ -1,0 +1,29 @@
+[project]
+name = "create-evidence-case"
+version = "0.1.0"
+description = "CAE evidence trees with exploit-first MCTS strategy selection"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "fastapi",
+    "httpx>=0.25.0",
+    "loguru>=0.7.0,<0.7.3",
+    "numpy>=1.26.0",
+    "pydantic>=2.0",
+    "python-arango>=8.0.0",
+    "python-dotenv>=1.0.0",
+    "rapidfuzz>=3.14.0",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["evidence_case", "models", "runner", "collect", "candidate_qra", "scoring", "storage", "strategies", "synthesis", "report", "plausibility", "daemon_client"]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+]

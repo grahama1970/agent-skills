@@ -1,0 +1,10 @@
+[project]
+name = "monitor-episodic-archiver"
+version = "0.1.0"
+description = "Health monitoring for episodic archiver and session resolution"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0",
+    "python-arango>=8.0",
+]

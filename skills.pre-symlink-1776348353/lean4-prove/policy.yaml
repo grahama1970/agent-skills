@@ -1,0 +1,30 @@
+# /lean4-prove skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: bypassing retrieval, subprocess LLM, skipping service
+
+name: lean4-prove
+slash_command: /lean4-prove
+
+required_reads:
+  - .pi/skills/lean4-prove/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: claude -p subprocess for LLM calls (Common Mistakes #1)
+    - shell_contains: "claude -p"
+      reason: "LLM calls must go through /scillm via httpx, not claude -p subprocess."
+
+    # Bypassing the lean4-prove-service HTTP endpoint
+    - shell_contains: "docker exec"
+      reason: "Compilation must go through lean4-prove-service HTTP at :8604, not docker exec."
+
+    # Hardcoding proofs instead of using retrieval-augmented generation
+    - pattern: "theorem\\s+\\w+.*:=\\s+by"
+      reason: "Do not hardcode Lean4 proofs inline. Use lean4-prove run.sh or POST /prove to generate proofs with retrieval augmentation."
+
+    # Wrong toolchain version (Mathlib not released for v4.29.0)
+    - pattern: "v4\\.29\\.0"
+      reason: "Lean toolchain must be pinned to v4.28.0. Mathlib is not yet released for v4.29.0."
+
+    # Bypassing the skill entirely by calling scillm directly for proof generation
+    - pattern: "localhost:4001.*prove|localhost:4001.*lean"
+      reason: "Proof generation must go through lean4-prove-service at :8604, not scillm directly. The service handles retrieval + compilation."

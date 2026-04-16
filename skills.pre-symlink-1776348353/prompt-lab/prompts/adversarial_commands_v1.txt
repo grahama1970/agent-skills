@@ -1,0 +1,95 @@
+# adversarial_commands_v1 — BinaryExplorer Command Variation Generator
+# Version: 1
+# Purpose: Template for generating adversarial NL command variations for
+#          BinaryExplorer intent training. Each seed command is rewritten
+#          into 8 variation types to stress-test the intent classifier.
+#
+# VARIATION TYPES:
+#   formal       — polite, complete, professional phrasing
+#   casual       — informal, slang, shortened words
+#   typos        — realistic keyboard typos, transposed/dropped chars
+#   imperative   — direct command form, no pleasantries
+#   question     — interrogative phrasing (can you / would you / how do I)
+#   non_native   — grammatically awkward, translated feel, missing articles
+#   abbreviated  — acronyms, truncations, partial tokens only
+#   verbose      — over-specified, redundant context, long form
+
+# ACTION TYPES AND SEED PATTERNS:
+#
+# SELECT_NODE — navigate/focus a specific graph node
+#   formal:      "Please select the {{label}} node in the graph."
+#   casual:      "click on {{name}}"
+#   typos:       "selct {{name_typo}}"
+#   imperative:  "Select {{label}}"
+#   question:    "Can you show me {{label}}?"
+#   non_native:  "I want see the {{name}} please"
+#   abbreviated: "sel {{abbrev}}"
+#   verbose:     "I would like you to navigate to and highlight the {{label}} {{node_type}} node"
+#
+# VIEW_ALL — reset/zoom out/show everything
+#   formal:      "Please reset the graph to show all nodes."
+#   casual:      "show everything"
+#   typos:       "shwo al nodes"
+#   imperative:  "View all"
+#   question:    "Can you zoom out to show all nodes?"
+#   non_native:  "Please show me all things in graph"
+#   abbreviated: "view all"
+#   verbose:     "Please zoom the camera out and deselect everything to show the complete graph"
+#
+# SET_PERSPECTIVE — switch viewing lens (security|data_flow|protocol|overview)
+#   formal:      "Please switch to the {{perspective}} perspective."
+#   casual:      "change to {{perspective}} view"
+#   typos:       "swith to {{perspective_typo}} perpective"
+#   imperative:  "Set {{perspective}} perspective"
+#   question:    "Can you switch the perspective to {{perspective}}?"
+#   non_native:  "I want perspective {{perspective}} please change"
+#   abbreviated: "{{perspective_abbrev}} view"
+#   verbose:     "I would like to switch the graph visualization lens to the {{perspective}} perspective mode"
+#
+# SET_LAYOUT — change layout algorithm (organic|stratified|clustered)
+#   formal:      "Please change the layout to {{layout}} mode."
+#   casual:      "use {{layout}} layout"
+#   typos:       "lauout {{layout_typo}}"
+#   imperative:  "Set {{layout}} layout"
+#   question:    "How do I use {{layout}} layout?"
+#   non_native:  "Please make layout {{layout}}"
+#   abbreviated: "{{layout_abbrev}} lyt"
+#   verbose:     "Please reconfigure the graph layout algorithm to use the {{layout}} arrangement strategy"
+#
+# EXPAND — expand a namespace cluster to reveal children
+#   formal:      "Please expand the {{namespace}} namespace cluster."
+#   casual:      "open up {{namespace}}"
+#   typos:       "exapnd {{namespace_typo}}"
+#   imperative:  "Expand {{namespace}}"
+#   question:    "Can you expand the {{namespace}} cluster?"
+#   non_native:  "Show me inside {{namespace}} please expand"
+#   abbreviated: "exp {{abbrev}}"
+#   verbose:     "Please expand the {{namespace}} namespace node to reveal all of its child RPC methods and events"
+#
+# QUERY — ask a conceptual question about binary behavior
+#   formal:      "What RPC methods relate to {{concept}}?"
+#   casual:      "what does {{concept}} do"
+#   typos:       "wat dose {{concept_typo}} do"
+#   imperative:  "Explain {{concept}}"
+#   question:    "How does {{concept}} work in {{binary_name}}?"
+#   non_native:  "Tell me about {{concept}} how it working"
+#   abbreviated: "{{concept_abbrev}} ?"
+#   verbose:     "Could you provide a detailed explanation of how {{concept}} is implemented and what nodes it connects to in {{binary_name}}?"
+
+# DIFFICULTY RULES:
+#   easy:   exact label, clear action keyword, single unambiguous entity
+#   medium: partial name, casual form, cluster-level reference, abbreviation
+#   hard:   typos, wrong case, misspelling, ambiguous (maps to multiple nodes),
+#            non-existent node name, non-native phrasing
+
+# ENTITY RESOLUTION CHALLENGES:
+#   partial:     "session" → droid:session_notification (requires disambiguation)
+#   wrong_case:  "Session_Notification" → droid:session_notification
+#   abbreviation: "sess notif" → droid:session_notification
+#   non_existent: "droid.auth_token" → triggers /memory clarify
+#   ambiguous:   "notification" → droid:session_notification OR daemon:worker_notification
+
+# MEMORY CLARIFY TRIGGERS (hard difficulty):
+#   - Entity matches 0 nodes → clarify: "I don't see X in the binary graph"
+#   - Entity matches 2+ nodes → clarify: "Did you mean A or B?"
+#   - Misspelled entity with edit distance ≤ 2 → clarify with correction suggestion

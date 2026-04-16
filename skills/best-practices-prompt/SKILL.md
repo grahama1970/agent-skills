@@ -103,6 +103,7 @@ Load specialized rulesets based on prompt type:
 | 13 | `output-nothing-but` | "Return ONLY this JSON, no other text" |
 | 14 | `testability-deterministic-check` | Define how to verify output is correct |
 | 15 | `grounding-match-pipeline-schema` | Prompt schema must match pipeline payload (compliance) |
+| 16 | `structure-review-payload` | Every prompt dir needs `review/` with complete payload for Web LLM audit |
 
 ---
 
@@ -770,6 +771,71 @@ On 2026-04-09, a crosswalk question generation prompt used a flat glossary dict 
 
 ---
 
+## Rule 16: Review Payloads for External LLM Audit (HIGH)
+
+### Rule: `structure-review-payload`
+
+Every prompt directory MUST include a `review/` subdirectory containing complete prompt payloads formatted for external LLM review. These payloads enable Web LLM review (Claude web, GPT-4, etc.) without reconstructing prompts from scattered files.
+
+### Directory structure:
+```
+prompts/
+├── native/
+│   ├── nist_system.txt       # System prompt
+│   ├── nist_user.txt         # User prompt template
+│   └── review/               # REQUIRED
+│       └── nist_payload.txt  # Complete payload for review
+```
+
+### Payload file structure:
+```
+# REVIEW REQUEST FOR WEB LLM
+#
+# Purpose: [What this prompt does]
+# Consumer: [Which skill/collection receives output]
+# Task: [e.g., "Generate 1-4 grounded QRA pairs"]
+#
+# Review criteria:
+# 1. Does the prompt correctly enforce grounding?
+# 2. Are the pair_types appropriate for this framework?
+# 3. Do the valid/invalid examples clearly illustrate the rules?
+# 4. Is modality preservation properly enforced?
+# 5. Will this produce useful output for the target use case?
+#
+# Example input: [Concrete example, e.g., "AC-2 Account Management"]
+# Expected output: [Brief description]
+
+================================================================================
+SYSTEM PROMPT
+================================================================================
+
+[Full system prompt text]
+
+================================================================================
+USER PROMPT (with example values filled in)
+================================================================================
+
+[Full user prompt with template variables replaced by real example values]
+
+## VALID OUTPUT EXAMPLE
+[Complete valid JSON output showing proper behavior]
+
+## INVALID OUTPUT EXAMPLES
+[Each invalid example with WHY INVALID explanation]
+```
+
+### Why this matters
+
+Prompts split across `_system.txt` and `_user.txt` files are impossible to review atomically. External reviewers (Web LLMs, humans) need the complete prompt in one file to:
+1. Check example-vs-rule consistency (Gate 1 from the 10-gate checklist)
+2. Verify valid examples obey all stated rules
+3. See how template variables render with real data
+4. Copy-paste directly into a Web LLM for independent review
+
+### Compliance:
+- Every prompt pair (`*_system.txt` + `*_user.txt`) MUST have a corresponding `review/*_payload.txt`
+- Payload files MUST be regenerated when prompts change
+- `/review-prompt` SHOULD consume payload files, not reconstruct from components
 
 ---
 

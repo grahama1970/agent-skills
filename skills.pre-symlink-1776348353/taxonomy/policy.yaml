@@ -1,0 +1,26 @@
+# /taxonomy skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: hardcoded tags, wrong axis routing, no prompt-lab validation
+
+name: taxonomy
+slash_command: /taxonomy
+
+required_reads:
+  - .pi/skills/taxonomy/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Hardcoding taxonomy tags instead of calling the service
+    - pattern: 'mind.*=.*\[.*"Detect".*"Harden"'
+      reason: "Don't hardcode mind tags. Use /taxonomy extract to classify text."
+    - pattern: 'heart.*=.*\[.*"anger".*"fear"'
+      reason: "Don't hardcode heart tags. Use /taxonomy extract to classify text."
+    - pattern: 'bridge_tags.*=.*\[.*"Precision"|bridge_tags.*=.*\[.*"Resilience"'
+      reason: "Bridge Attributes were REMOVED (2026-03-21). bridge_tags is always empty list."
+
+    # WRONG: Putting heart tags on SPARTA data (axis routing violation)
+    - pattern: 'heart.*sparta_qra|sparta_qra.*heart'
+      reason: "Heart tags don't go on sparta_qra. Only mind tags apply to SPARTA collections."
+
+    # WRONG: Using LLM extraction without /prompt-lab validation (Common Mistakes)
+    - pattern: "taxonomy.*extract(?!.*--fast).*--collection sparta"
+      reason: "Use --fast for keyword extraction unless prompt is validated via /prompt-lab. LLM-mode prompts MUST be prompt-lab tested."

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SENTINEL_OS | Tactical Interface</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary": "#00fd87",
+                        "secondary-fixed-dim": "#00ed7e",
+                        "on-tertiary-fixed": "#331f00",
+                        "error-dim": "#d73357",
+                        "on-primary-container": "#2e006c",
+                        "error": "#ff6e84",
+                        "secondary-fixed": "#00fd87",
+                        "secondary-dim": "#00ed7e",
+                        "surface-container-low": "#10131a",
+                        "primary-fixed-dim": "#a67aff",
+                        "on-tertiary-fixed-variant": "#5c3a00",
+                        "primary-container": "#b28cff",
+                        "outline": "#73757d",
+                        "on-error": "#490013",
+                        "on-error-container": "#ffb2b9",
+                        "inverse-on-surface": "#52555c",
+                        "on-primary-fixed-variant": "#390083",
+                        "tertiary-fixed": "#ffaa00",
+                        "on-secondary": "#005b2c",
+                        "surface-container-lowest": "#000000",
+                        "surface": "#0b0e14",
+                        "surface-container": "#161a21",
+                        "on-background": "#e6e8f1",
+                        "inverse-primary": "#742fe5",
+                        "surface-tint": "#bd9dff",
+                        "on-secondary-container": "#e3ffe4",
+                        "surface-container-high": "#1c2028",
+                        "error-container": "#a70138",
+                        "on-secondary-fixed": "#004621",
+                        "surface-bright": "#282c36",
+                        "on-tertiary-container": "#503200",
+                        "secondary-container": "#006d37",
+                        "on-surface": "#e6e8f1",
+                        "background": "#0b0e14",
+                        "primary": "#bd9dff",
+                        "surface-container-highest": "#22262f",
+                        "tertiary-fixed-dim": "#ed9d00",
+                        "tertiary": "#ffbd5e",
+                        "surface-variant": "#22262f",
+                        "on-primary-fixed": "#000000",
+                        "on-surface-variant": "#a9abb3",
+                        "tertiary-container": "#ffaa00",
+                        "on-primary": "#3c0089",
+                        "primary-fixed": "#b28cff",
+                        "tertiary-dim": "#ed9d00",
+                        "outline-variant": "#45484f",
+                        "on-tertiary": "#5c3b00",
+                        "surface-dim": "#0b0e14",
+                        "inverse-surface": "#f9f9ff",
+                        "primary-dim": "#8a4cfc",
+                        "on-secondary-fixed-variant": "#006632"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Space Grotesk"]
+                    },
+                    borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; }
+        .mono { font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace; }
+        .glow-secondary { box-shadow: 0 0 8px rgba(0, 253, 135, 0.4); }
+        .glow-error { box-shadow: 0 0 8px rgba(255, 110, 132, 0.4); }
+        .glow-primary { box-shadow: 0 0 10px rgba(189, 157, 255, 0.3); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1c2028; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface overflow-hidden">
+<!-- TopNavBar Implementation -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#0b0e14] border-b border-[#ffffff]/10">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-[#7c3aed] uppercase font-headline">SENTINEL_OS</span>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="font-mono text-xs text-slate-500 hover:text-white transition-colors" href="#">REPORTS</a>
+<a class="font-mono text-xs text-slate-500 hover:text-white transition-colors" href="#">LOGS</a>
+<a class="font-mono text-xs text-[#bd9dff] border-b-2 border-[#bd9dff] pb-1" href="#">TERMINAL</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex items-center px-3 py-1 bg-surface-container-high border border-outline-variant/20 font-mono text-[10px] text-secondary">
+<span class="w-2 h-2 rounded-full bg-secondary glow-secondary mr-2"></span>
+                SYSTEM: NOMINAL
+            </div>
+<div class="flex gap-2">
+<button class="p-2 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-white transition-colors relative">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-1.5 h-1.5 bg-error rounded-full"></span>
+</button>
+</div>
+<img alt="Operator Avatar" class="w-8 h-8 bg-surface-container-highest border border-outline-variant/30" data-alt="Close-up of a futuristic digital avatar representing a system operator with subtle cybernetic enhancements and a dark tech aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhYdFVoois6s5Xkcs8qpR_YwPGtAuAP56YQHlnp2vNEUhfEjqzomalBfW3Ld7F7LRLGAPc8Wgt9HD2mo6MyeeVJ1NJDfIyRwQPn7IAdhY6HucGAPXGvTYayFiDPljuPqKbpVX1EIym1Q5tYHv31Ieeq9gjeNJMTabWycIivy9dEbib-acPIcPwk-uPcpxYzZJQBva4h_Sg-eMMgAWbEND5Sa-Id_QIA_PIZCM2HIzGWmwSInyudYtpCQJNqjjCogUKC48-qZyhxwr_"/>
+</div>
+</header>
+<!-- SideNavBar Implementation -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-[#10131a] flex flex-col pt-16 z-40 border-r border-white/5">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+</div>
+<div>
+<h2 class="text-lg font-black text-white tracking-widest font-headline">EMBRY_CHAT</h2>
+<p class="font-mono text-[11px] text-slate-500">V.2.0.4-STABLE</p>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-headline font-bold py-3 text-xs tracking-widest flex items-center justify-center gap-2 mb-8 hover:bg-primary-dim transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                NEW SESSION
+            </button>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 bg-[#1c2028] text-[#bd9dff] border-l-4 border-[#7c3aed] transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="security">security</span>
+<span class="font-headline text-sm font-medium">SPARTA Explorer</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-[#1c2028]/50 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="terminal">terminal</span>
+<span class="font-headline text-sm font-medium">Binary Explorer</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-[#1c2028]/50 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="radar">radar</span>
+<span class="font-headline text-sm font-medium">Threat Intel</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-[#1c2028]/50 hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="lock">lock</span>
+<span class="font-headline text-sm font-medium">Vault</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 space-y-1 border-t border-white/5">
+<a class="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="memory">memory</span>
+<span class="font-mono text-[11px]">Diagnostics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help_outline">help_outline</span>
+<span class="font-mono text-[11px]">Help</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Stage -->
+<main class="ml-64 mt-16 h-[calc(100vh-64px)] flex flex-col bg-surface relative">
+<!-- Chat Area -->
+<div class="flex-1 overflow-y-auto px-8 py-12 custom-scrollbar">
+<div class="max-w-4xl mx-auto space-y-12">
+<!-- 1. User Message -->
+<div class="flex justify-end">
+<div class="max-w-[80%] bg-[#1a1a1a] p-4 border border-outline-variant/10">
+<p class="text-on-surface body-md">Why did DE-0007 fail?</p>
+<div class="mt-2 flex justify-end">
+<span class="mono text-[10px] text-slate-500 uppercase tracking-widest">USER_UPLINK • 14:22:04</span>
+</div>
+</div>
+</div>
+<!-- 2. Reasoning Block -->
+<div class="w-full bg-surface-container-low border-l-4 border-[#7c3aed] p-6 space-y-6">
+<!-- Verdict Line -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-tertiary-fixed font-headline font-bold text-lg">[●] INCONCLUSIVE (C)</span>
+<span class="mono text-[11px] text-slate-500">· 5/7 gates · DE-0007, CWE-300 · 8 sources</span>
+</div>
+<span class="material-symbols-outlined text-slate-600 cursor-pointer hover:text-white" data-icon="expand_more">expand_more</span>
+</div>
+<!-- Gate Status Chain -->
+<div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4">
+<div class="flex flex-col items-center p-2 bg-surface-container-highest border border-white/5">
+<span class="mono text-[9px] text-slate-500 mb-2 uppercase">topic</span>
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex flex-col items-center p-2 bg-surface-container-highest border border-white/5">
+<span class="mono text-[9px] text-slate-500 mb-2 uppercase">recall</span>
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex flex-col items-center p-2 bg-surface-container-highest border border-white/5">
+<span class="mono text-[9px] text-slate-500 mb-2 uppercase">ground</span>
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex flex-col items-center p-2 bg-surface-container-highest border border-white/5">
+<span class="mono text-[9px] text-slate-500 mb-2 uppercase">bridge</span>
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex flex-col items-center p-2 bg-surface-container-highest border border-error/20">
+<span class="mono text-[9px] text-error/70 mb-2 uppercase">semantic</span>
+<span class="material-symbols-outlined text-error text-sm" data-icon="cancel">cancel</span>
+</div>
+<div class="flex flex-col items-center p-2 bg-surface-container-highest border border-error/20">
+<span class="mono text-[9px] text-error/70 mb-2 uppercase">decompose</span>
+<span class="material-symbols-outlined text-error text-sm" data-icon="cancel">cancel</span>
+</div>
+<div class="flex flex-col items-center p-2 bg-surface-container-highest border border-white/5">
+<span class="mono text-[9px] text-slate-500 mb-2 uppercase">lean4</span>
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="check_circle">check_circle</span>
+</div>
+</div>
+<!-- Drift Status -->
+<div class="pt-4 border-t border-white/5 flex items-center justify-between">
+<div class="flex items-center gap-2 text-error font-headline text-xs font-semibold tracking-wide">
+<span class="material-symbols-outlined text-sm" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+                            Drift: satisfied → inconclusive
+                        </div>
+<div class="flex gap-3">
+<div class="px-2 py-0.5 bg-surface-bright border border-outline-variant/30 mono text-[9px] text-slate-400">LOGS_A11</div>
+<div class="px-2 py-0.5 bg-surface-bright border border-outline-variant/30 mono text-[9px] text-slate-400">TRACE_492</div>
+</div>
+</div>
+</div>
+<!-- 3. Agent Response -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 mb-2">
+<span class="w-1.5 h-1.5 bg-primary glow-primary rounded-full"></span>
+<span class="mono text-[10px] text-primary font-bold uppercase tracking-widest">SENTINEL_AI</span>
+</div>
+<div class="space-y-4 max-w-3xl">
+<p class="text-on-surface leading-relaxed font-body">
+                            DE-0007 is currently <span class="text-tertiary font-bold">INCONCLUSIVE</span> because the <span class="mono text-sm underline decoration-tertiary/30">semantic relation</span> and <span class="mono text-sm underline decoration-tertiary/30">decomposition</span> gates failed during the validation cycle. 
+                        </p>
+<p class="text-on-surface leading-relaxed font-body">
+                            The system detected a logic fragmentation in the threat payload. While 5 of the 7 safety gates were satisfied, including the <span class="text-secondary font-mono text-sm">lean4</span> formal verification, the agent could not bridge the semantic gap between the detected CVE-300 exploit and the specific environment variables in the sandbox.
+                        </p>
+<p class="text-on-surface leading-relaxed font-body">
+                            I recommend initiating a manual audit of the <span class="mono text-primary underline decoration-primary/30">bridge gate</span> logs or re-running the decomposition module with higher compute priority.
+                        </p>
+</div>
+<div class="mt-4 flex gap-4">
+<button class="flex items-center gap-2 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="thumb_up">thumb_up</span>
+<span class="mono text-[10px]">VERIFY</span>
+</button>
+<button class="flex items-center gap-2 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="refresh">refresh</span>
+<span class="mono text-[10px]">REGENERATE</span>
+</button>
+<button class="flex items-center gap-2 text-slate-500 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="content_copy">content_copy</span>
+<span class="mono text-[10px]">COPY_TRACE</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Terminal -->
+<div class="p-8 bg-surface-container-low border-t border-white/5">
+<div class="max-w-4xl mx-auto relative group">
+<div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-secondary transition-colors">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+</div>
+<input class="w-full bg-surface-container-lowest border-0 ring-1 ring-white/10 focus:ring-secondary focus:ring-2 py-4 pl-12 pr-12 font-mono text-sm placeholder:text-slate-700 text-on-surface transition-all" placeholder="AWAITING SYSTEM COMMAND..." type="text"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-600 hover:text-white cursor-pointer" data-icon="attach_file">attach_file</span>
+<button class="w-8 h-8 bg-primary hover:bg-primary-dim flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary" data-icon="send">send</span>
+</button>
+</div>
+</div>
+<div class="max-w-4xl mx-auto mt-4 flex justify-between items-center px-2">
+<div class="flex gap-6">
+<div class="flex items-center gap-2">
+<span class="mono text-[10px] text-slate-600">ENCRYPTION:</span>
+<span class="mono text-[10px] text-secondary">AES-256-GCM</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="mono text-[10px] text-slate-600">LATENCY:</span>
+<span class="mono text-[10px] text-secondary">12ms</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="w-3 h-3 border-outline-variant bg-surface-container-high text-secondary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+<span class="mono text-[10px] text-slate-500">AUTO-DECODE</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-3 h-3 border-outline-variant bg-surface-container-high text-secondary focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+<span class="mono text-[10px] text-slate-500">SILENT_MODE</span>
+</label>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,52 @@
+# prompt-lab-hash: sha256:7bee8bb0486d0a57a15cb693f3d7998a0d0abcae4d7c03ce6c84d34203077b79
+# prompt-lab-eval: 2026-03-17T22:04:16.682721+00:00 score=0.0 model=pre-existing-unsealed
+You are grading a SPARTA space systems conversation.
+
+FULL CONVERSATION TRANSCRIPT:
+{transcript}
+
+CURRENT TURN BEING GRADED:
+Question: {question}
+Answer: {answer}
+
+SEED QUESTION METADATA:
+- Difficulty: {difficulty}
+- Expected action: {expected_action}
+- Target control: {target_control}
+
+QRA GROUND TRUTH (retrieved during session):
+{qra_ground_truth}
+
+Grade this response across these dimensions (each 0.0-1.0):
+
+1. **initial_response_quality**: Did the system answer correctly and completely?
+2. **disambiguation_handling**: If ambiguous, did the system ask for clarification?
+3. **error_detection**: If referencing a fake control, did the system catch it?
+4. **follow_up_quality**: Did the system handle follow-up/pushback well?
+5. **response_naturalness**: Natural language? No raw JSON, pipe separators, DB artifacts?
+6. **domain_accuracy**: SPARTA terms, controls, and techniques used correctly?
+7. **session_coherence**: Logical flow across all turns?
+8. **qra_citation_accuracy**: Does the response cite REAL controls with CORRECT information from the QRA ground truth above? Score 0 if no QRAs cited, score based on accuracy of citations.
+
+Also evaluate:
+- **reasoning_sound**: Was the reasoning technically sound?
+- **taxonomy_correct**: Were bridge attributes / taxonomy tags appropriate?
+
+Return JSON only:
+{
+  "grade": "A+|A|B|C|F",
+  "composite": 0.85,
+  "scores": {
+    "initial_response_quality": 0.9,
+    "disambiguation_handling": 0.8,
+    "error_detection": 1.0,
+    "follow_up_quality": 0.7,
+    "response_naturalness": 0.9,
+    "domain_accuracy": 0.85,
+    "session_coherence": 0.8,
+    "qra_citation_accuracy": 0.75
+  },
+  "reasoning_sound": true,
+  "taxonomy_correct": true,
+  "rationale": "Brief explanation of the grade"
+}

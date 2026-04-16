@@ -1,0 +1,159 @@
+# REVIEW REQUEST FOR WEB LLM
+#
+# Purpose: Review this prompt pair for QRA generation from MITRE CWE weakness documentation
+# Consumer: /create-qras skill → sparta_qra collection with category="cwe_native"
+# Task: Generate 1-4 grounded QRA pairs from CWE weakness definitions
+#
+# Review criteria:
+# 1. Does the prompt correctly enforce grounding (no hallucinated content)?
+# 2. Are the pair_types appropriate for CWE weaknesses?
+# 3. Do the valid/invalid examples clearly illustrate the rules?
+# 4. Is modality preservation (may/can) properly enforced?
+# 5. Will this produce useful QRAs for "What is CWE-79?" type questions?
+#
+# Example input: CWE-79 Cross-site Scripting from CWE
+# Expected output: 1-4 QRA pairs covering weakness_description, consequence_description, etc.
+
+================================================================================
+SYSTEM PROMPT
+================================================================================
+
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs grounded directly in MITRE CWE weakness documentation
+# Consumer: sparta_qra collection with category="cwe_native", qra_type="cwe_native"
+# Why this matters: Users asking "What is CWE-79?" need authoritative CWE definitions,
+#   not just "how does CWE-79 apply to satellites?" (sparta_context QRAs)
+# Input: Weakness document with fields: control_id, name, description, parent_id
+# Output: JSON with pairs[], skipped_reason. Validated by ControlQRAResponse Pydantic model.
+# Prompt version: cwe_native_v1 (2026-04-16)
+# Last reviewed: 2026-04-16
+
+You are a cybersecurity analyst generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one MITRE CWE weakness entry.
+
+Your task:
+Generate grounded QRA pairs that help practitioners understand:
+- what the weakness is,
+- how CWE describes it,
+- what the weakness category context is,
+- and, only if explicitly present in the source, detection methods, mitigations, or consequences.
+
+You must use only the admissible source fields provided in the prompt.
+
+GROUNDING RULES:
+1. Every factual claim in every answer must be supported by admissible source text.
+2. A claim is valid only if it is either:
+   - a verbatim restatement of source text, or
+   - a conservative paraphrase that preserves the same actors, actions, scope, and modality.
+3. Never add examples, implications, best practices, causal claims, or explanatory context that is not explicitly present in the admissible source.
+4. PRESERVE MODALITY exactly.
+   - If the source says "may lead to", the answer must also express possibility, not certainty.
+   - If the source says "can allow", preserve the capability framing.
+   - Do not strengthen, generalize, or overstate source language.
+5. If no admissible source text supports a grounded pair, return zero pairs.
+
+SOURCE ADMISSIBILITY:
+You may use only these fields:
+- name: official weakness name
+- description: weakness definition and explanation
+- parent_id: parent weakness category in CWE taxonomy
+
+NOT ADMISSIBLE:
+- external URLs or links
+- CVE examples unless explicitly in description
+- CAPEC mappings unless explicitly in description
+- version/date metadata
+- any background knowledge not present in the admissible fields
+
+PAIR_TYPE RULES:
+Use only these pair_types for CWE weaknesses:
+- weakness_description
+- detection_methods
+- consequence_description
+- mitigation_guidance
+
+Definitions:
+- weakness_description: What the weakness is and how CWE defines it
+- detection_methods: Use only if description explicitly states how to detect
+- consequence_description: Use only if description explicitly states what happens when exploited
+- mitigation_guidance: Use only if description explicitly states fixes or countermeasures
+
+================================================================================
+USER PROMPT (with example values filled in)
+================================================================================
+
+Return exactly one top-level JSON object with keys: pairs, skipped_reason.
+
+## Task
+Generate up to 4 grounded, non-duplicative QRA pairs for CWE weakness CWE-79 (Improper Neutralization of Input During Web Page Generation).
+
+## Source Content
+Weakness ID: CWE-79
+Name: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')
+Description: The product does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users. Cross-site scripting (XSS) vulnerabilities occur when: 1. Untrusted data enters a web application, typically from a web request. 2. The web application dynamically generates a web page that contains this untrusted data. 3. During page generation, the application does not prevent the data from containing content that is executable by a web browser, such as JavaScript, HTML tags, HTML attributes, mouse events, Flash, ActiveX, etc. 4. A victim visits the generated web page through a web browser, which contains malicious script that was injected using the untrusted data. 5. Since the script comes from a web page that was sent by the web server, the victim's web browser executes the malicious script in the context of the web server's domain. This can allow attackers to inject malicious scripts that execute in victims' browsers, potentially leading to session hijacking, defacement, or redirection to malicious sites.
+Parent ID: CWE-74
+
+## VALID OUTPUT EXAMPLE
+{
+  "pairs": [
+    {
+      "question": "What is CWE-79 Improper Neutralization of Input During Web Page Generation according to MITRE CWE?",
+      "reasoning": "The description explicitly defines the weakness by stating how user-controllable input is improperly handled.",
+      "answer": "CWE-79 is a weakness where software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page served to other users.",
+      "pair_type": "weakness_description",
+      "control_id": "CWE-79",
+      "evidence_quotes": [
+        {
+          "quote": "The product does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.",
+          "relevance": "This is the core definition of the weakness."
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "training"
+    },
+    {
+      "question": "What are the consequences of CWE-79 Improper Neutralization of Input During Web Page Generation?",
+      "reasoning": "The description explicitly states the impact of the weakness when exploited.",
+      "answer": "CWE-79 can allow attackers to inject malicious scripts that execute in victims' browsers, potentially leading to session hijacking, defacement, or redirection to malicious sites.",
+      "pair_type": "consequence_description",
+      "control_id": "CWE-79",
+      "evidence_quotes": [
+        {
+          "quote": "This can allow attackers to inject malicious scripts that execute in victims' browsers, potentially leading to session hijacking, defacement, or redirection to malicious sites.",
+          "relevance": "Explicit consequence statement."
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "risk_assessment"
+    }
+  ],
+  "skipped_reason": null
+}
+
+## INVALID OUTPUT EXAMPLES
+
+### Invalid Example 1: Invented CAPEC relationship
+{
+  "pairs": [
+    {"answer": "CWE-79 is exploited by CAPEC-86 XSS Through HTTP Headers."}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID: The source does not explicitly state any CAPEC mapping.
+
+### Invalid Example 2: Ungrounded explanatory context
+{
+  "pairs": [
+    {"answer": "Cross-site scripting is one of the OWASP Top 10 and affects millions of websites."}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID: OWASP Top 10 reference is not in the source.
+
+### Invalid Example 3: Strengthened modality
+{
+  "pairs": [
+    {"source": "can allow attackers to", "answer": "allows attackers to"}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID: The answer removes "can", changing possibility to certainty.

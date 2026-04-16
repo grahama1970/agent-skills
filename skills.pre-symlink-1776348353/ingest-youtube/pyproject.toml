@@ -1,0 +1,18 @@
+[project]
+name = "youtube-transcripts-skill"
+version = "0.1.0"
+description = "Extract transcripts from YouTube videos with three-tier fallback"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "typer",
+    "youtube-transcript-api",
+    "yt-dlp",
+    "openai",
+    "faster-whisper",
+    "rich",
+    "fastapi",
+    "uvicorn",
+    "python-dotenv",
+    "httpx>=0.24.0",
+    "loguru>=0.7.0,<0.7.3",
+]

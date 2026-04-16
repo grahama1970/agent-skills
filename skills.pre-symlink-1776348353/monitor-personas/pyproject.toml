@@ -1,0 +1,19 @@
+[project]
+name = "monitor-personas"
+version = "0.1.0"
+description = "Nightly persona monitoring with task-monitor integration"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "httpx>=0.27",
+    "loguru>=0.7.0,<0.7.3",
+    "numpy",
+    "python-arango>=8.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+    "rich>=13.0.0",
+    "scikit-learn",
+    "typer>=0.9.0",
+]
+
+[dependency-groups]
+dev = []

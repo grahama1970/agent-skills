@@ -1,0 +1,30 @@
+Return your code changes in ONE of these formats depending on the task:
+
+**For NEW files or SMALL files (<100 lines):**
+Use FILE blocks with the COMPLETE file content:
+### FILE: path/to/file.py
+```python
+<complete file content>
+```
+
+**For EDITING existing LARGE files (>100 lines):**
+Use a unified diff so only the changed lines are applied:
+```diff
+--- a/path/to/file.py
++++ b/path/to/file.py
+@@ -45,7 +45,12 @@ def existing_function():
+     existing_line
+-    old_line_to_remove
++    new_line_to_add
++    another_new_line
+     existing_line
+```
+
+**For MULTIPLE files:**
+Use separate FILE blocks or diffs for EACH file. Label each clearly.
+
+RULES:
+- For diffs: include enough context lines (3+) so git apply can locate the change
+- For file blocks: include the COMPLETE file, never just a function
+- NEVER return only a function body without the file path and surrounding code
+- If editing an existing file, PREFER diff format to avoid overwriting unrelated code

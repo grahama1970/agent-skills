@@ -1,0 +1,9 @@
+[project]
+name = "pi-skill-consume-music"
+version = "0.1.0"
+description = "Runtime package for the consume-music skill"
+requires-python = ">=3.11,<3.13"
+dependencies = [    "loguru>=0.7.0,<0.7.3",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+]

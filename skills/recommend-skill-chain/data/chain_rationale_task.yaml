@@ -9,7 +9,7 @@ system_prompt: |
   predict which skills should be composed to fulfill it. Output JSON with the
   selected skills and a brief rationale explaining why they work together.
 
-  Available skills include: agent-inbox, arxiv, ask, assess, assistant, cmmc-assessor, create-evidence-case, create-figure, create-gsn-diagram, create-lut, discover-books, discover-music, dogpile, edge-verifier, embedding, extractor, hack, ingest-code, interview, lean4-prove, memory, monitor-skills, orchestrate, plan, project-state, scheduler, scillm, skill-lab, skills-broadcast, task-monitor
+  Available skills include: ask, assistant-lab, cmmc-assessor, create-classifier, create-evidence-case, create-gsn-diagram, create-lut, discover-books, discover-music, doc2qra, edge-verifier, embedding, episodic-archiver, extract-entities, extractor, fetcher, ingest-code, learn-datalake, memory, monitor-skills, ops-runpod, orchestrate, project-state, review-design, review-pdf, skill-lab, task-monitor, taxonomy, test-lab, treesitter
   (and 20 more)
 
 input_schema:

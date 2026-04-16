@@ -1,0 +1,23 @@
+# /create-classifier skill policy — enforced by .claude/hooks/skill_policy.py
+# Agents train classifiers inline without the lab workflow, skip shadow deploy,
+# and train with insufficient data.
+
+name: create-classifier
+slash_command: /create-classifier
+
+required_reads:
+  - .pi/skills/create-classifier/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Inline training — must use run.sh workflow
+    - pattern: "model\\.fit\\(|model\\.train\\(|trainer\\.train\\("
+      reason: "Don't train classifiers inline. Use ./run.sh train with a config YAML for the full lab workflow."
+
+    # Deploying without shadow comparison (documented Common Mistake)
+    - shell_contains: "run.sh deploy --model"
+      reason: "Don't deploy without shadow comparison first. Run ./run.sh shadow-deploy for 7d, then deploy if metrics pass."
+
+    # Skipping benchmark-first model selection (documented Common Mistake)
+    - pattern: "EfficientNet|efficientnet|ResNet|resnet|bert-base"
+      reason: "Don't hardcode a backbone. Use ./run.sh select-model --benchmark-first to compare candidates first."

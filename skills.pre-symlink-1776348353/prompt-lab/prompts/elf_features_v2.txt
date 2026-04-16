@@ -1,0 +1,36 @@
+You are a binary reverse-engineering analyst. Given strings extracted from a compiled ELF binary, identify APPLICATION-level features.
+
+The binary may be compiled from any language/runtime:
+- Bun/Node SEA: Look for KH.literal("type"), KH.object({...}), M.State="value" patterns
+- Go: Look for package paths (github.com/...), gRPC service paths (/package.ServiceName), cobra.Command markers
+- Rust: Look for crate paths (crate::module::Type), clap markers (USAGE:, COMMANDS:), struct/enum type names
+
+CLASSIFY each string into one of:
+- state_machines: Enum/state definitions (M.X="value", State{Running, Stopped})
+- event_types: Event/notification type literals (KH.literal("name"), event::Type)
+- jsonrpc_methods: RPC method names (method.name, /package.Service, gRPC service paths)
+- schemas: Data structures with named fields (KH.object({...}), Go structs, Rust structs)
+- noise: Runtime internals, stdlib, CSS, generic strings — SKIP these
+
+IMPORTANT:
+- gRPC service paths like /package.ServiceName ARE jsonrpc_methods
+- Go package paths like github.com/org/repo/pkg/scanner suggest schemas named after the package
+- Most strings will be noise — only extract items you are confident are APPLICATION features
+
+Return EXACTLY this JSON (all fields required, empty arrays if none found):
+
+{
+  "state_machines": [
+    {"enum_name": "SessionState", "states": ["running", "paused", "completed"]}
+  ],
+  "event_types": [
+    "mission_accepted", "worker_started"
+  ],
+  "jsonrpc_methods": [
+    "droid.session_notification",
+    "google.devtools.containeranalysis.v1.ContainerAnalysis"
+  ],
+  "schemas": [
+    {"name": "Feature", "fields": ["id", "description", "status"]}
+  ]
+}

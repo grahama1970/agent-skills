@@ -1,0 +1,172 @@
+# REVIEW REQUEST FOR WEB LLM
+#
+# Purpose: Review this prompt pair for QRA generation from ESA security guideline documentation
+# Consumer: /create-qras skill → sparta_qra collection with category="esa_native"
+# Task: Generate 1-4 grounded QRA pairs from ESA guideline definitions
+#
+# Review criteria:
+# 1. Does the prompt correctly enforce grounding (no hallucinated content)?
+# 2. Are the pair_types appropriate for ESA guidelines?
+# 3. Do the valid/invalid examples clearly illustrate the rules?
+# 4. Is modality preservation (shall/should) properly enforced?
+# 5. Will this produce useful QRAs for "What is ESA-SEC-01?" type questions?
+#
+# Example input: ESA-SEC-01 from ESA Space System Security Guidelines
+# Expected output: 1-4 QRA pairs covering guideline_description, implementation_guidance, etc.
+
+================================================================================
+SYSTEM PROMPT
+================================================================================
+
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs grounded directly in ESA (European Space Agency) security guideline documentation
+# Consumer: sparta_qra collection with category="esa_native", qra_type="esa_native"
+# Why this matters: Users asking "What is ESA-SEC-01?" need authoritative ESA definitions,
+#   not just "how does ESA-SEC-01 apply to satellites?" (sparta_context QRAs)
+# Input: ESA guideline document with fields: control_id, name, description, parent_id
+# Output: JSON with pairs[], skipped_reason. Validated by ControlQRAResponse Pydantic model.
+# Prompt version: esa_native_v1 (2026-04-16)
+# Last reviewed: 2026-04-16
+
+You are a space cybersecurity analyst generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one ESA (European Space Agency) security guideline.
+
+Your task:
+Generate grounded QRA pairs that help practitioners understand:
+- what the guideline requires,
+- how ESA describes it,
+- what the guideline category context is,
+- and, only if explicitly present in the source, implementation guidance or assessment criteria.
+
+You must use only the admissible source fields provided in the prompt.
+
+GROUNDING RULES:
+1. Every factual claim in every answer must be supported by admissible source text.
+2. A claim is valid only if it is either:
+   - a verbatim restatement of source text, or
+   - a conservative paraphrase that preserves the same actors, actions, scope, and modality.
+3. Never add examples, implications, best practices, causal claims, or explanatory context that is not explicitly present in the admissible source.
+4. PRESERVE MODALITY exactly.
+   - If the source says "should", the answer must also express recommendation, not requirement.
+   - If the source says "shall", preserve the mandatory modality.
+   - Do not strengthen, generalize, or overstate source language.
+5. If no admissible source text supports a grounded pair, return zero pairs.
+
+SOURCE ADMISSIBILITY:
+You may use only these fields:
+- name: official guideline name
+- description: guideline definition and requirements
+- parent_id: parent guideline category (if sub-guideline)
+
+NOT ADMISSIBLE:
+- external URLs or links
+- inferred implementation details not in description
+- generic security advice
+- version/date metadata
+- any background knowledge not present in the admissible fields
+
+PAIR_TYPE RULES:
+Use only these pair_types for ESA guidelines:
+- guideline_description
+- implementation_guidance
+- assessment_criteria
+- scope_clarification
+
+Definitions:
+- guideline_description: What the guideline requires and how ESA defines it
+- implementation_guidance: Use only if description explicitly states actions or steps
+- assessment_criteria: Use only if description explicitly states how to verify compliance
+- scope_clarification: Use only if description explicitly states applicability or boundaries
+
+================================================================================
+USER PROMPT (with example values filled in)
+================================================================================
+
+Return exactly one top-level JSON object with keys: pairs, skipped_reason.
+
+## Task
+Generate up to 4 grounded, non-duplicative QRA pairs for ESA guideline ESA-SEC-01 (Space Segment Security Requirements).
+
+## Source Content
+Guideline ID: ESA-SEC-01
+Name: Space Segment Security Requirements
+Description: The space segment shall implement protective measures for space segment assets including spacecraft, payloads, and ground control interfaces. Organizations shall establish security perimeters around space segment systems, implement role-based access controls for all commanding interfaces, maintain comprehensive audit trails for space segment interactions, and conduct periodic security assessments of space segment components. The guideline applies to all ESA missions and commercial missions under ESA oversight.
+Parent ID: ESA-SEC
+
+## VALID OUTPUT EXAMPLE
+{
+  "pairs": [
+    {
+      "question": "What is ESA-SEC-01 Space Segment Security Requirements according to ESA security guidelines?",
+      "reasoning": "The description explicitly defines the security requirements for space segment protection.",
+      "answer": "ESA-SEC-01 requires that the space segment shall implement protective measures for space segment assets including spacecraft, payloads, and ground control interfaces.",
+      "pair_type": "guideline_description",
+      "control_id": "ESA-SEC-01",
+      "evidence_quotes": [
+        {
+          "quote": "The space segment shall implement protective measures for space segment assets including spacecraft, payloads, and ground control interfaces.",
+          "relevance": "Core requirement of the guideline."
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "implementation"
+    },
+    {
+      "question": "What implementation guidance does ESA-SEC-01 Space Segment Security Requirements provide?",
+      "reasoning": "The description explicitly states implementation steps for space segment protection.",
+      "answer": "ESA-SEC-01 requires organizations to establish security perimeters around space segment systems, implement role-based access controls for all commanding interfaces, maintain comprehensive audit trails for space segment interactions, and conduct periodic security assessments.",
+      "pair_type": "implementation_guidance",
+      "control_id": "ESA-SEC-01",
+      "evidence_quotes": [
+        {
+          "quote": "Organizations shall establish security perimeters around space segment systems, implement role-based access controls for all commanding interfaces, maintain comprehensive audit trails for space segment interactions, and conduct periodic security assessments",
+          "relevance": "Explicit implementation actions."
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "implementation"
+    }
+  ],
+  "skipped_reason": null
+}
+
+## INVALID OUTPUT EXAMPLES
+
+### Invalid Example 1: Duplicate aspect coverage
+{
+  "pairs": [
+    {"question": "What is ESA-SEC-01?", "pair_type": "guideline_description", "answer": "..."},
+    {"question": "How does ESA-SEC-01 work?", "pair_type": "guideline_description", "answer": "..."}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID: Both pairs cover the same aspect.
+
+### Invalid Example 2: Inferred implementation advice
+{
+  "pairs": [
+    {
+      "pair_type": "implementation_guidance",
+      "answer": "Organizations should use encryption standards like AES-256 for all space-to-ground communications."
+    }
+  ],
+  "skipped_reason": null
+}
+WHY INVALID: The description does not explicitly mention specific encryption standards.
+
+### Invalid Example 3: Strengthened modality
+{
+  "pairs": [
+    {"source": "should implement access controls", "answer": "organizations must implement access controls"}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID: The answer strengthens "should" to "must".
+
+### Invalid Example 4: Generic security advice
+{
+  "pairs": [
+    {"answer": "Space segment security is critical for mission success and national security."}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID: Generic security advice not grounded in the specific guideline description.

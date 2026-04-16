@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evidence Case Schema</title>
+<style>
+:root { --bg:#141414; --card:#1a1a1a; --border:rgba(255,255,255,0.13); --text:#e0e0e0; --dim:#888; --green:#00ff88; --red:#ff4444; --amber:#ffaa00; --blue:#4a9eff; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'SF Mono','JetBrains Mono','Fira Code',monospace;background:var(--bg);color:var(--text);padding:2rem;max-width:900px;margin:0 auto;line-height:1.5}
+h1{color:#fff;font-size:1.3rem;border-bottom:2px solid var(--blue);padding-bottom:.4rem;margin-bottom:1.5rem}
+.gate{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:1rem 1.2rem;margin-bottom:.75rem;display:grid;grid-template-columns:2.5rem 1fr;gap:.75rem;align-items:start}
+.gate-icon{width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:bold;margin-top:.1rem}
+.pass .gate-icon{border:2px solid var(--green);color:var(--green)}
+.fail .gate-icon{border:2px solid var(--red);color:var(--red)}
+.gate-name{color:var(--blue);font-weight:bold;font-size:.9rem}
+.gate-data{margin-top:.4rem}
+.key{color:var(--blue)}.str{color:var(--green)}.num{color:var(--amber)}.bool-true{color:var(--green)}.bool-false{color:var(--red)}.null{color:var(--dim)}
+.section{color:var(--amber);font-size:.85rem;font-weight:bold;margin:1.5rem 0 .5rem;text-transform:uppercase;letter-spacing:.05em}
+.field{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:.75rem 1rem;margin-bottom:.5rem;font-size:.82rem}
+.field-name{color:var(--blue);font-weight:bold}
+pre{font-size:.78rem;line-height:1.4;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>/create-evidence-case — Output Schema</h1>
+<div id="root"></div>
+<script>
+const schema = {
+  "question": "",
+  "category": "",
+  "gates": [
+    {"gate":"step_1_topic","passed":false,"detail":"","data":{"on_topic":false,"category":"","method":""}},
+    {"gate":"step_2_entities","passed":false,"detail":"","data":{"grounding_ok":false,"resolution_map":{},"all_control_ids":[],"unresolved_terms":[],"warnings":[],"related_pairs":[]}},
+    {"gate":"step_2_recall","passed":false,"detail":"","data":{"qra_count":0,"entity_count":0,"overlap_count":0,"technique_groups":{}}},
+    {"gate":"step_2b_grounding","passed":false,"detail":"","data":{"grounding_ok":false,"fabricated":0,"misspellings":0,"not_in_corpus":0}},
+    {"gate":"step_2c_grounding_typo","passed":false,"detail":"","data":{"warning_terms":[],"warning_categories":[],"clarify":{}}},
+    {"gate":"step_3_technique_bridge","passed":false,"detail":"","data":{"technique_names":[],"overlap":[],"related_pairs_count":0,"shared_tactic":"","shared_context":false,"bridge_found":false}},
+    {"gate":"step_4_semantic_relation","passed":false,"detail":"","data":{"related":false,"answerable":false,"rationale":"","shared_mind":[],"shared_attack_techniques":[],"shared_pillar":"","is_cross_framework":false}},
+    {"gate":"step_4_decompose","passed":true,"detail":"","data":{"single_claim":false,"claims":[]}},
+    {"gate":"step_5_lean4","passed":false,"detail":"","data":{"prediction":"","proof_success":false,"proof_attempted":false,"proof_skipped":false,"gate_blocked":false}},
+    {"gate":"step_5b_plausibility","passed":false,"detail":"","data":{"plausible":false,"checked":false,"reason":""}},
+    {"gate":"step_7_t2_verdict","passed":false,"detail":"","tier":"T2","data":{"verdict":"","confidence":0.0,"reasoning":""}}
+  ],
+  "verdict_state": "",
+  "grade": "",
+  "score": 0.0,
+  "answer": "",
+  "technique_groups": {},
+  "sub_claims": [],
+  "control_ids": [],
+  "decomposition": {"question":"","given_components":[],"then_components":[],"component_queries":{},"component_entity_types":{}},
+  "evidence_items": [{"_key":"","control_id":"","tactical_tags":[],"question":"","answer":"","scores":{"bm25":0.0,"dense":0.0,"graph":0.0}}],
+  "step_timings": [{"step":"","ms":0.0}],
+  "total_ms": 0.0
+};
+
+function colorize(v, indent) {
+  if (v === null) return '<span class="null">null</span>';
+  if (typeof v === 'boolean') return `<span class="${v?'bool-true':'bool-false'}">${v}</span>`;
+  if (typeof v === 'number') return `<span class="num">${v}</span>`;
+  if (typeof v === 'string') return `<span class="str">"${v}"</span>`;
+  if (Array.isArray(v)) {
+    if (v.length === 0) return '<span class="dim">[]</span>';
+    const items = v.map(i => ' '.repeat(indent+2) + colorize(i, indent+2)).join(',\n');
+    return '[\n' + items + '\n' + ' '.repeat(indent) + ']';
+  }
+  if (typeof v === 'object') {
+    const keys = Object.keys(v);
+    if (keys.length === 0) return '<span class="dim">{}</span>';
+    const lines = keys.map(k => ' '.repeat(indent+2) + `<span class="key">"${k}"</span>: ` + colorize(v[k], indent+2));
+    return '{\n' + lines.join(',\n') + '\n' + ' '.repeat(indent) + '}';
+  }
+  return String(v);
+}
+
+let html = '';
+
+// Gates
+html += '<div class="section">Gates (sequential)</div>';
+for (const g of schema.gates) {
+  const cls = g.passed ? 'pass' : 'fail';
+  const icon = g.passed ? 'P' : 'F';
+  html += `<div class="gate ${cls}">`;
+  html += `<div class="gate-icon">${icon}</div>`;
+  html += `<div><div class="gate-name">${g.gate}${g.tier ? ' <span style="color:var(--amber);font-size:.75rem">['+g.tier+']</span>' : ''}</div>`;
+  html += `<div class="gate-data"><pre>${colorize(g.data, 0)}</pre></div>`;
+  html += `</div></div>`;
+}
+
+// Verdict
+html += '<div class="section">Verdict</div>';
+html += `<div class="field"><pre>`;
+html += `<span class="key">"verdict_state"</span>: <span class="str">"${schema.verdict_state}"</span>\n`;
+html += `<span class="key">"grade"</span>:         <span class="str">"${schema.grade}"</span>\n`;
+html += `<span class="key">"score"</span>:         <span class="num">${schema.score}</span>\n`;
+html += `<span class="key">"answer"</span>:        <span class="str">"${schema.answer}"</span>`;
+html += `</pre></div>`;
+
+// Evidence items
+html += '<div class="section">Evidence Items</div>';
+html += `<div class="field"><pre>${colorize(schema.evidence_items, 0)}</pre></div>`;
+
+// Decomposition
+html += '<div class="section">Decomposition</div>';
+html += `<div class="field"><pre>${colorize(schema.decomposition, 0)}</pre></div>`;
+
+// Technique groups + control IDs
+html += '<div class="section">Technique Groups / Control IDs</div>';
+html += `<div class="field"><pre><span class="key">"technique_groups"</span>: ${colorize(schema.technique_groups, 0)}\n<span class="key">"control_ids"</span>:      ${colorize(schema.control_ids, 0)}\n<span class="key">"sub_claims"</span>:      ${colorize(schema.sub_claims, 0)}</pre></div>`;
+
+// Timings
+html += '<div class="section">Timings</div>';
+html += `<div class="field"><pre>${colorize(schema.step_timings, 0)}\n<span class="key">"total_ms"</span>: <span class="num">${schema.total_ms}</span></pre></div>`;
+
+document.getElementById('root').innerHTML = html;
+</script>
+</body>
+</html>

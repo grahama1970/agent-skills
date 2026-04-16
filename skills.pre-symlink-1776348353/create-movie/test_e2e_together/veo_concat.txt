@@ -1,0 +1,3 @@
+file '/home/graham/workspace/experiments/pi-mono/.pi/skills/create-movie/test_e2e_together/assets/veo/ACT1_SC01_SHOT01.mp4'
+file '/home/graham/workspace/experiments/pi-mono/.pi/skills/create-movie/test_e2e_together/assets/veo/ACT1_SC02_SHOT01.mp4'
+file '/home/graham/workspace/experiments/pi-mono/.pi/skills/create-movie/test_e2e_together/assets/veo/ACT1_SC03_SHOT01.mp4'

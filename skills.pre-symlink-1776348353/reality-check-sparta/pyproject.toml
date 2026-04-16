@@ -1,0 +1,11 @@
+[project]
+name = "pi-skill-reality-check-sparta"
+version = "0.1.0"
+description = "Runtime package for the reality-check-sparta skill"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "duckdb",
+    "httpx>=0.24.0",
+    "loguru>=0.7.0,<0.7.3",
+    "typer>=0.9.0",
+]

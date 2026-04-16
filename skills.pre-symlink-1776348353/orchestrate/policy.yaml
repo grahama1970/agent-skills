@@ -1,0 +1,24 @@
+# /orchestrate skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: bypassing runner system, mixing YAML/markdown
+
+name: orchestrate
+slash_command: /orchestrate
+
+required_reads:
+  - .pi/skills/orchestrate/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Bypassing the runner system — agents must use orchestrate run, not call backends directly
+    - shell_contains: "codex exec"
+      reason: "Don't call codex directly. Use orchestrate run with 'with codex' routing."
+    - shell_contains: "claude -p"
+      reason: "Don't call claude -p directly. Use orchestrate run with 'with claude' routing."
+
+    # Writing markdown task files instead of YAML (SKILL.md: Prefer YAML)
+    - pattern: "0\\d_TASKS\\.md"
+      reason: "Prefer YAML task files (0N_TASKS.yaml). Legacy markdown has parsing ambiguity."
+
+    # Executing task steps inline instead of through orchestrate
+    - pattern: "subprocess.*code-runner.*run\\.sh"
+      reason: "Don't call code-runner directly from inline code. Use orchestrate run to dispatch."

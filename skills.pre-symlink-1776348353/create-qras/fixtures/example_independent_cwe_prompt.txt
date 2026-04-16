@@ -1,0 +1,148 @@
+# Independent CWE QRA Prompt Example
+# Copy this into Claude.ai or ChatGPT to test manually
+# Generated: 2026-04-11
+#
+# This shows the COMPLETE prompt with human-readable CWE content
+# (not raw XML/JSON). The CWE fields are extracted and formatted
+# for easy LLM comprehension.
+# ============================================================
+
+You are a cybersecurity compliance expert.
+
+Your task is to generate grounded Question-Reasoning-Answer (QRA) pairs from a security control that are portable and useful without SPARTA-specific context.
+
+Use only the control record below.
+Do not use outside knowledge, even if it seems obvious.
+If the control does not contain enough substantive content, return zero pairs.
+
+GOAL
+
+Generate 3 practical, grounded QRA pairs that would help:
+- Compliance assessors understanding the control
+- Security engineers implementing the control
+- Auditors verifying control effectiveness
+- Risk analysts assessing control coverage
+
+HARD RULES
+
+1. Return 0 pairs if the control has no substantive description.
+2. Do not invent implementation details, threats, or impacts not stated in the control.
+3. Do not use outside knowledge.
+4. The question must explicitly name the control ID (e.g., CWE-119).
+5. The answer must be directly supported by quoted evidence from the control.
+6. The reasoning may connect evidence but may not add new facts.
+7. Prefer abstaining over guessing.
+
+IMPORTANT: EVIDENCE PRIORITY FOR CWE RECORDS
+
+Use CWE evidence in this order (most authoritative first):
+1. description
+2. extended_description
+3. common_consequences (impacts, affected scopes)
+4. modes_of_introduction (when weakness is introduced)
+5. potential_mitigations (recommended fixes)
+6. observed_examples (real-world CVEs)
+7. related_attack_patterns (CAPEC links)
+
+VALID QUESTION TYPES
+
+Use only one of these pair types:
+- implementation_guidance (how to fix/prevent)
+- assessment_criteria (how to test for)
+- scope_clarification (what is/isn't covered)
+- risk_context (why this matters)
+
+Examples of acceptable question forms:
+- "What security impacts can result from CWE-119?"
+- "How should a developer mitigate CWE-119?"
+- "What phases of development introduce CWE-119?"
+- "What is the likelihood of exploitation for CWE-119?"
+
+REJECTION RULES
+
+Reject a pair if:
+- the question can be answered with generic knowledge
+- the answer contains any unsupported claim
+- the question is too vague to be actionable
+- the content is not cybersecurity-related
+
+OUTPUT FORMAT
+
+Output ONLY valid JSON. No markdown. No prose before or after.
+
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "1-2 sentences connecting the evidence without adding new facts",
+      "answer": "1-3 sentences directly answering the question using only supported claims",
+      "source_framework": "CWE",
+      "source_id": "CWE-119",
+      "evidence_quotes": [
+        {
+          "source": "control",
+          "field": "description | common_consequences | potential_mitigations",
+          "quote": "exact span from the control"
+        }
+      ],
+      "pair_type": "implementation_guidance | assessment_criteria | scope_clarification | risk_context",
+      "actionable_for": "compliance_assessment | implementation | audit | risk_analysis",
+      "confidence": "high | medium"
+    }
+  ]
+}
+
+# ============================================================
+# CONTROL RECORD (Human-Readable Format)
+# ============================================================
+
+CONTROL RECORD
+==============
+Framework: CWE
+Control ID: CWE-119
+Title: Improper Restriction of Operations within the Bounds of a Memory Buffer
+
+DESCRIPTION
+-----------
+The product performs operations on a memory buffer, but it reads from or writes to a memory location outside the buffer's intended boundary. This may result in read or write operations on unexpected memory locations that could be linked to other variables, data structures, or internal program data.
+
+LIKELIHOOD OF EXPLOIT
+---------------------
+High
+
+COMMON CONSEQUENCES
+-------------------
+1. Affects: Integrity, Confidentiality, Availability
+   Impacts: Execute Unauthorized Code or Commands, Modify Memory
+   Detail: If the memory accessible by the attacker can be effectively controlled, it may be possible to execute arbitrary code, as with a standard buffer overflow. If the attacker can overwrite a pointer's worth of memory (usually 32 or 64 bits), they can alter the intended control flow by redirecting a function pointer to their own malicious code.
+
+2. Affects: Availability, Confidentiality
+   Impacts: Read Memory, DoS: Crash, Exit, or Restart, DoS: Resource Consumption (CPU), DoS: Resource Consumption (Memory)
+   Detail: Out of bounds memory access will very likely result in the corruption of relevant memory, and perhaps instructions, possibly leading to a crash. Other attacks leading to lack of availability are possible, including putting the program into an infinite loop.
+
+3. Affects: Confidentiality
+   Impacts: Read Memory
+   Detail: In the case of an out-of-bounds read, the attacker may have access to sensitive information. If the sensitive information contains system details, such as the current buffer's position in memory, this knowledge can be used to craft further attacks, possibly with more severe consequences.
+
+MODES OF INTRODUCTION
+---------------------
+- Phase: Implementation
+  Note: Memory buffer operations are typically introduced during the coding phase.
+
+POTENTIAL MITIGATIONS
+---------------------
+1. Phase: Requirements
+   Strategy: Language Selection
+   Action: Use a language that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid. For example, many languages that perform their own memory management, such as Java and Perl, are not subject to buffer overflows. Other languages, such as Ada and C#, typically provide overflow protection, but the protection can be disabled by the programmer.
+
+2. Phase: Architecture and Design
+   Strategy: Libraries or Frameworks
+   Action: Use a vetted library or framework that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid. Examples include the Safe C String Library (SafeStr) by Messier and Viega.
+
+3. Phase: Operation, Build and Compilation
+   Strategy: Environment Hardening
+   Action: Use automatic buffer overflow detection mechanisms that are offered by certain compilers or compiler extensions. Examples include: the Microsoft Visual Studio /GS flag, Fedora/Red Hat FORTIFY_SOURCE GCC flag, StackGuard, and ProPolice.
+
+# ============================================================
+# END OF CONTROL RECORD
+# ============================================================

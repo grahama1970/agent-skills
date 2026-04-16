@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Streamgraph</title>
+<style>
+        body {
+            background: #f8fafc; color: #1e293b;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .canvas-header { padding: 16px 24px 8px; flex-shrink: 0; }
+        .canvas-title { font-size: 24px; font-weight: 700; }
+        .canvas-body {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 8px 24px 24px; overflow: hidden;
+            animation: fade-in 800ms cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        #chart { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div class="canvas-header"><div class="canvas-title">Streamgraph</div></div>
+<div class="canvas-body"><div id="chart"></div></div>
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const keys = ["api", "batch", "voice", "embed"];
+const data = window.__INJECTED_DATA__ || months.map((m, i) => ({
+  month: m,
+  api: 80 + Math.sin(i * 0.5) * 40 + Math.random() * 20,
+  batch: 40 + Math.cos(i * 0.3) * 25 + Math.random() * 15,
+  voice: 20 + Math.sin(i * 0.7) * 15 + Math.random() * 10,
+  embed: 30 + Math.cos(i * 0.4) * 20 + Math.random() * 12
+}));
+
+const container = document.getElementById('chart');
+const rect = container.getBoundingClientRect();
+const width = rect.width || 800;
+const height = rect.height || 500;
+const margin = {top: 20, right: 120, bottom: 40, left: 40};
+
+const svg = d3.select('#chart').append('svg').attr('viewBox', `0 0 ${width} ${height}`);
+const colors = d3.scaleOrdinal().domain(keys).range(["#4F46E5", "#06B6D4", "#F59E0B", "#EF4444"]);
+
+const stack = d3.stack().keys(keys).offset(d3.stackOffsetWiggle).order(d3.stackOrderInsideOut);
+const series = stack(data);
+
+const x = d3.scalePoint().domain(months).range([margin.left, width - margin.right]);
+const y = d3.scaleLinear()
+  .domain([d3.min(series, s => d3.min(s, d => d[0])), d3.max(series, s => d3.max(s, d => d[1]))])
+  .range([height - margin.bottom, margin.top]);
+
+const area = d3.area()
+  .x((d, i) => x(months[i]))
+  .y0(d => y(d[0]))
+  .y1(d => y(d[1]))
+  .curve(d3.curveBasis);
+
+svg.selectAll('path').data(series).join('path')
+  .attr('data-label', d => d.key)
+  .attr('d', area)
+  .attr('fill', d => colors(d.key))
+  .attr('fill-opacity', 0.8);
+
+svg.append('g').attr('transform', `translate(0,${height - margin.bottom})`)
+  .call(d3.axisBottom(x).tickSizeOuter(0))
+  .selectAll('text').attr('font-size', '14px');
+svg.selectAll('.domain, .tick line').attr('stroke', 'currentColor').attr('stroke-opacity', 0.3);
+
+// Legend
+const legend = svg.selectAll('g.legend').data(keys).join('g')
+  .attr('class', 'legend')
+  .attr('transform', (d, i) => `translate(${width - margin.right + 16},${margin.top + i * 24})`);
+legend.append('rect').attr('width', 14).attr('height', 14).attr('rx', 3).attr('fill', d => colors(d)).attr('opacity', 0.8);
+legend.append('text').attr('x', 20).attr('y', 11).attr('font-size', '13px').attr('fill', '#1e293b').text(d => d);
+</script>
+</body>
+</html>

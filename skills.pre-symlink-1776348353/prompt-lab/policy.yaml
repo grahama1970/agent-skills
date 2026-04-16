@@ -1,0 +1,25 @@
+# /prompt-lab skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: hand-rolled prompts, skipping find-minimum
+
+name: prompt-lab
+slash_command: /prompt-lab
+
+required_reads:
+  - .pi/skills/prompt-lab/SKILL.md
+  - .pi/skills/best-practices-prompt/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Hand-crafting LLM prompts in Python strings (Common Mistakes section)
+    - pattern: "SYSTEM_PROMPT\\s*=\\s*[\"']You are a"
+      reason: "Don't hand-craft system prompts in Python strings. Iterate prompts through /prompt-lab with ground truth evaluation."
+    - pattern: "SYSTEM_PROMPT\\s*=\\s*f[\"']"
+      reason: "Don't use f-string system prompts. Use /prompt-lab templates with eval and compare."
+
+    # WRONG: Hardcoding largest model without testing smaller ones (Common Mistakes section)
+    - pattern: "model\\s*=\\s*[\"']gpt-4o[\"']"
+      reason: "Don't default to expensive models. Use /prompt-lab find-minimum to find the smallest accurate model first."
+
+    # WRONG: Disabling self-correction without understanding impact (Common Mistakes section)
+    - pattern: "--no-correction"
+      reason: "Don't disable self-correction without understanding the impact on fixable errors. Use default self-correction and track metrics."

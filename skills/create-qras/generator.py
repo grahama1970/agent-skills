@@ -50,6 +50,7 @@ FRAMEWORK_PATTERNS = {
     "ATT&CK": re.compile(r"^T\d{4}(\.\d{3})?$", re.I),
     "SPARTA": re.compile(r"^SV-[A-Z]{2,4}-\d+$", re.I),
     "NIST": re.compile(r"^[A-Z]{2}-\d+(\(\d+\))?$", re.I),  # AC-17, AC-17(1)
+    "D3FEND": re.compile(r"^D3-[A-Z]+$", re.I),  # D3-AI, D3-MFA
 }
 
 # Controls that need relationship QRAs (have crosswalk chains)
@@ -114,6 +115,8 @@ FRAMEWORK_SOURCE_MAP = _load_framework_source_map()
 PROMPT_LAB_DIR = Path("/home/graham/workspace/experiments/scillm/.skills/prompt-lab/prompts/qra")
 # Local prompts directory (for native mode prompts)
 LOCAL_PROMPTS_DIR = Path(__file__).parent / "prompts"
+# Native prompts subdirectory (clean naming: prompts/native/{framework}_system.txt)
+NATIVE_PROMPTS_DIR = LOCAL_PROMPTS_DIR / "native"
 
 # Framework → category mapping for native QRAs
 FRAMEWORK_TO_CATEGORY = {
@@ -140,13 +143,22 @@ def _load_prompt(prompt_name: str) -> str:
     return prompt_file.read_text()
 
 
-def _load_prompt_pair(prompt_name: str) -> tuple[str, str]:
+def _load_prompt_pair(prompt_name: str, native: bool = False) -> tuple[str, str]:
     """Load system + user prompt pair from local prompts or prompt-lab.
 
     Returns (system_prompt, user_prompt_template).
-    Checks local prompts/ dir first, then falls back to prompt-lab.
+    For native mode, checks prompts/native/ directory with clean naming.
+    Otherwise checks local prompts/ dir first, then falls back to prompt-lab.
     """
-    # Check local prompts directory first (for native mode)
+    # For native prompts, use clean naming: prompts/native/{framework}_system.txt
+    if native:
+        system_file = NATIVE_PROMPTS_DIR / f"{prompt_name}_system.txt"
+        user_file = NATIVE_PROMPTS_DIR / f"{prompt_name}_user.txt"
+        if system_file.exists() and user_file.exists():
+            return system_file.read_text(), user_file.read_text()
+        raise FileNotFoundError(f"Native prompt template not found: {prompt_name} (expected {system_file})")
+
+    # Check local prompts directory first (for non-native mode)
     for prompt_dir in [LOCAL_PROMPTS_DIR, PROMPT_LAB_DIR]:
         system_file = prompt_dir / f"{prompt_name}_system.txt"
         user_file = prompt_dir / f"{prompt_name}_user.txt"
@@ -480,15 +492,32 @@ def _generate_native_qra(
     framework = control.get("source_framework", "")
 
     # Determine which prompt to use based on framework
-    if framework.startswith("ATT_CK") or framework == "ATT&CK":
-        prompt_name = "native_attack"
-    else:
-        # For other frameworks, fall back to generic independent prompt for now
-        prompt_name = "native_attack"  # TODO: Add framework-specific native prompts
+    # New clean naming: prompts/native/{framework}_system.txt
+    FRAMEWORK_TO_PROMPT = {
+        "ATT_CK_Enterprise": "attack",
+        "ATT_CK_Mobile": "attack",
+        "ATT_CK_ICS": "attack",
+        "ATT&CK": "attack",
+        "CWE": "cwe",
+        "CAPEC": "capec",
+        "D3FEND": "d3fend",
+        "NIST": "nist",
+        "SPARTA": "sparta",
+        "ESA": "esa",
+    }
+    prompt_name = FRAMEWORK_TO_PROMPT.get(framework)
+    if not prompt_name:
+        # Try prefix matching for ATT&CK variants
+        if framework.startswith("ATT_CK") or framework.startswith("ATT&CK"):
+            prompt_name = "attack"
+        elif framework.startswith("SV-") or "SPARTA" in framework.upper():
+            prompt_name = "sparta"
+        else:
+            return {"error": f"No native prompt for framework: {framework}", "control_id": control_id}
 
-    # Load system + user prompt pair
+    # Load system + user prompt pair from prompts/native/
     try:
-        system_prompt, user_template = _load_prompt_pair(prompt_name)
+        system_prompt, user_template = _load_prompt_pair(prompt_name, native=True)
     except FileNotFoundError as e:
         return {"error": str(e), "control_id": control_id}
 
@@ -503,12 +532,22 @@ def _generate_native_qra(
             supplementary_content = "(No supplementary URL content available)"
 
     # Build user message with template substitution
+    # Extract additional fields needed by framework-specific prompts
+    parent_id = control.get("parent_id", control.get("parent", ""))
+    family = control.get("family", control.get("control_family", ""))
+    family_name = control.get("family_name", "")  # Explicit family name (for NIST)
+    mind = control.get("mind", control.get("tactic", ""))  # D3FEND taxonomy field
+
     user_prompt = user_template.format(
         framework=framework,
         control_id=control_id,
         control_name=control_name,
         control_details=control_details,
         supplementary_content=supplementary_content,
+        parent_id=parent_id,
+        family=family,
+        family_name=family_name,
+        mind=mind,
     )
 
     # Dump prompt for human review if requested
@@ -1775,6 +1814,21 @@ async def _generate_independent_qra_async(
             control_details=control_details,
             supplementary_content=supplementary or "(No supplementary content available)",
         )
+    elif framework == "D3FEND":
+        # Native D3FEND prompts with system + user messages
+        system_prompt, user_template = _load_prompt_pair("native_d3fend")
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "Unknown")
+        mind_list = control.get("mind", [])
+        mind = ", ".join(mind_list) if isinstance(mind_list, list) else str(mind_list)
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id,
+            mind=mind or "Unknown",
+        )
     else:
         # Generic independent template for NIST/SPARTA etc
         title = control.get("title", control.get("name", "Untitled"))
@@ -1848,6 +1902,8 @@ async def _generate_independent_qra_async(
             qra_type = "attack_native"
         elif framework == "CWE":
             qra_type = "cwe_native"
+        elif framework == "D3FEND":
+            qra_type = "d3fend_native"
         else:
             qra_type = "independent"
 
@@ -1869,6 +1925,7 @@ async def _generate_independent_qra_async(
                 "qra_id": qra_key,
                 "run_id": run_id,
                 "qra_type": qra_type,
+                "category": qra_type,  # e.g., "attack_native", "cwe_native"
                 "source_framework": framework,
                 "source_control_id": control_id,
                 "sparta_linked": False,

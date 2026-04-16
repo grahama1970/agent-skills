@@ -1,0 +1,30 @@
+[package]
+name = "extract-tables-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Rust hotspots for /extract-tables: image processing + geometry"
+
+[lib]
+name = "extract_tables_rs"
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = ["extension-module"]
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+pyo3 = { version = "0.23" }
+ndarray = "0.16"
+# pdf_oxide as path dependency (local workspace)
+# pdf_oxide = { path = "/home/graham/workspace/experiments/pdf_oxide" }
+
+image = "0.25"
+imageproc = "0.26"
+num = "0.4"
+
+# Polars DataFrame support for data integrity validation
+polars = { version = "0.46", default-features = false, features = ["dtype-struct", "lazy"] }
+pyo3-polars = "0.20"
+
+[build-dependencies]
+pyo3-build-config = "0.23"

@@ -1,0 +1,58 @@
+name: critical_incident_response
+description: >
+  UX Scenario 1.1: Deadline Pressure - Critical Incident Response.
+  Brandon Bailey needs to find SPARTA technique T0001 and countermeasures
+  in under 10 seconds during an active security incident.
+  Brandon narrates with military precision - impatient with any friction.
+
+persona: brandon_bailey
+auto_narrate: true
+voice_mode: live  # PersonaPlex for real-time human monitoring
+
+success_criteria:
+  - Task completion in <10 seconds
+  - Zero navigation errors
+  - Clear visual feedback at each step
+
+steps:
+  - narrate: { text: "Active incident. I need T0001 countermeasures now. Let's go.", emotion: "focused" }
+
+  # Invoke overlay
+  - find: "main.py"
+  - focus: "main.py"
+  - wait: 0.3
+  - snap: { output: "01_overlay_ready.png" }
+
+  # Type SPARTA technique query
+  - type: "T0001"
+  - wait: 0.5
+  - snap: { output: "02_search_results.png" }
+
+  # Verify results appeared
+  - verify: { role: "list-item" }
+  - read: { depth: 8 }
+
+  # Navigate to technique
+  - key: "Down"
+  - wait: 0.2
+  - verify: { role: "list-item", state: "focused" }
+  - snap: { output: "03_result_focused.png" }
+
+  # Open detail view
+  - key: "Return"
+  - wait: 0.5
+  - snap: { output: "04_detail_view.png" }
+
+  # Tab to countermeasures
+  - key: "Tab"
+  - wait: 0.2
+  - snap: { output: "05_countermeasures.png" }
+  - narrate: { text: "Got the countermeasures. That was clean.", emotion: "pleased" }
+
+  # Record for after-action review
+  - record: { duration: 3, output: "06_interaction.mp4" }
+
+  # Exit
+  - key: "Escape"
+  - wait: 0.3
+  - snap: { output: "07_back_to_search.png" }

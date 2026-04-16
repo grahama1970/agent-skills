@@ -1,0 +1,133 @@
+# Monitor-Personas Scheduler Configuration
+# Register with: ./run.sh register-nightly
+#
+# This file documents the full nightly pipeline schedule.
+# Jobs are registered via run.sh register-nightly command.
+
+scheduled:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Phase 1: Source Monitoring (2-3 AM)
+  # ─────────────────────────────────────────────────────────────────────────
+
+  persona-check-all:
+    command: "./run.sh check-all --json > ~/.pi/monitor-personas/check-all.json"
+    schedule: "0 2 * * *"  # 2:00 AM daily
+    description: "Check all persona sources (YouTube, RSS, arXiv, Books, Movies, Music, Code)"
+    depends_on: []
+
+  persona-ingest-all:
+    command: "./run.sh ingest --priority HIGH --max-new 50"
+    schedule: "0 3 * * *"  # 3:00 AM daily
+    description: "Ingest new content from HIGH priority sources"
+    depends_on:
+      - persona-check-all
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Phase 2: Content Processing (4-5 AM)
+  # ─────────────────────────────────────────────────────────────────────────
+
+  persona-extract:
+    command: "./run.sh extract --max 100"
+    schedule: "0 4 * * *"  # 4:00 AM daily
+    description: "Extract content to QRAs via /extractor"
+    depends_on:
+      - persona-ingest-all
+
+  persona-classify:
+    command: "./run.sh classify-streams"
+    schedule: "30 4 * * *"  # 4:30 AM daily
+    description: "Classify into Intent vs Persona streams"
+    depends_on:
+      - persona-extract
+
+  persona-learn:
+    command: "./run.sh learn --max 100"
+    schedule: "0 5 * * *"  # 5:00 AM daily
+    description: "Learn to memory with taxonomy tags"
+    depends_on:
+      - persona-classify
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Phase 3: Reflection Loop (5:30-6 AM)
+  # ─────────────────────────────────────────────────────────────────────────
+
+  persona-archive:
+    command: "./run.sh archive --hours 24"
+    schedule: "30 5 * * *"  # 5:30 AM daily
+    description: "Archive sessions to episodic memory"
+    depends_on:
+      - persona-learn
+
+  persona-verify-edges:
+    command: "./run.sh verify-edges"
+    schedule: "45 5 * * *"  # 5:45 AM daily
+    description: "Verify edges with existing knowledge"
+    depends_on:
+      - persona-archive
+
+  persona-reflect:
+    command: "./run.sh reflect --max-gaps 5"
+    schedule: "0 6 * * *"  # 6:00 AM daily
+    description: "Research knowledge gaps via /dogpile"
+    depends_on:
+      - persona-verify-edges
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Phase 4: Training (Weekly)
+  # ─────────────────────────────────────────────────────────────────────────
+
+  persona-train:
+    command: "./run.sh train"
+    schedule: "0 7 * * 0"  # 7:00 AM Sunday only
+    description: "Weekly persona model training via train-persona"
+    depends_on:
+      - persona-reflect
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Pipeline Flow
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#  2:00 AM  ┌─────────────────────────────────────────────────────────────┐
+#           │  CHECK ALL SOURCES                                          │
+#           │  YouTube, RSS, arXiv, Books, Movies, Music, Code           │
+#           └──────────────────────────┬──────────────────────────────────┘
+#                                      ▼
+#  3:00 AM  ┌─────────────────────────────────────────────────────────────┐
+#           │  INGEST NEW CONTENT                                         │
+#           │  Priority: HIGH first, then MEDIUM                          │
+#           └──────────────────────────┬──────────────────────────────────┘
+#                                      ▼
+#  4:00 AM  ┌─────────────────────────────────────────────────────────────┐
+#           │  EXTRACT TO QRAs                                            │
+#           │  Via /extractor skill                                       │
+#           └──────────────────────────┬──────────────────────────────────┘
+#                                      ▼
+#  4:30 AM  ┌─────────────────────────────────────────────────────────────┐
+#           │  CLASSIFY STREAMS                                           │
+#           │  Intent (hidden reasoning) vs Persona (visible reasoning)  │
+#           └──────────────────────────┬──────────────────────────────────┘
+#                                      ▼
+#  5:00 AM  ┌─────────────────────────────────────────────────────────────┐
+#           │  LEARN TO MEMORY                                            │
+#           │  With Federated Taxonomy tags and scope                     │
+#           └──────────────────────────┬──────────────────────────────────┘
+#                                      ▼
+#  5:30 AM  ┌─────────────────────────────────────────────────────────────┐
+#           │  ARCHIVE SESSIONS                                           │
+#           │  To episodic memory for reflection                          │
+#           └──────────────────────────┬──────────────────────────────────┘
+#                                      ▼
+#  5:45 AM  ┌─────────────────────────────────────────────────────────────┐
+#           │  VERIFY EDGES                                               │
+#           │  Check verifies/contradicts/related relationships           │
+#           └──────────────────────────┬──────────────────────────────────┘
+#                                      ▼
+#  6:00 AM  ┌─────────────────────────────────────────────────────────────┐
+#           │  REFLECT ON GAPS                                            │
+#           │  Research via /dogpile, resolve, close loop                 │
+#           └──────────────────────────┬──────────────────────────────────┘
+#                                      ▼
+#  7:00 AM  ┌─────────────────────────────────────────────────────────────┐
+#  SUNDAY   │  TRAIN PERSONA MODELS                                       │
+#  ONLY     │  Export data, generate training pairs, train LoRA          │
+#           └─────────────────────────────────────────────────────────────┘

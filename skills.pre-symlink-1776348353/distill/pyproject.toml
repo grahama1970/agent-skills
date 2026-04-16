@@ -1,0 +1,10 @@
+[project]
+name = "pi-skill-distill"
+version = "0.1.0"
+description = "Runtime package for the distill skill"
+requires-python = ">=3.11,<3.13"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

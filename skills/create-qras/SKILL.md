@@ -201,17 +201,84 @@ Every generated QRA is validated:
 
 QRAs failing gates get `verdict: NEEDS_REVIEW` and should not be used.
 
+## LLM Backend
+
+Uses `/scillm` proxy with `model: "text"`. All models via Chutes API.
+
+| Priority | Model | Timeout | Notes |
+|----------|-------|---------|-------|
+| 1 | DeepSeek-V3.2-TEE | 300s | Primary |
+| 2 | DeepSeek-V3.1-TEE | 300s | First fallback |
+| 3 | DeepSeek-R1-0528-TEE | 300s | Reasoning model |
+| 4 | Kimi-K2.5-TEE | 180s | Fast alternative |
+| 5 | Qwen3-235B-A22B-Thinking | 180s | 100% grounding |
+| 6 | Qwen3.5-397B-A17B-TEE | 300s | Last resort |
+
+### How Fallbacks Work
+
+The scillm proxy manages fallbacks dynamically:
+
+1. **Request routing:** Skill requests `model: "text"` → proxy resolves to primary (V3.2-TEE)
+2. **Failure detection:** If primary returns 429/503/timeout, proxy automatically tries next in chain
+3. **Circuit breaker:** After N consecutive failures, model is temporarily removed from rotation
+4. **Recovery:** Circuit breaker resets after cooldown; model rejoins the chain
+
+**Fallback chain is defined in config, not code.** The proxy reads `router_settings.fallbacks` from `proxy_server_config.yaml` and executes the chain. Skills don't know which model actually served the request — they just get the response.
+
+**Resource allocation:** Models are ordered by:
+- **Availability** — TEE variants have dedicated capacity, non-TEE share pools
+- **Cost** — DeepSeek models are cheapest, Qwen3.5-397B is most expensive
+- **Latency** — Smaller models (Kimi-K2.5) respond faster for simple prompts
+
+The proxy tracks real-time concurrency via `/v1/scillm/concurrency` and adjusts effective limits when 429s occur (adaptive backoff).
+
+### Batching
+
+Chunked processing per `/scillm` SKILL.md patterns:
+- `chunk_size=4` (dynamic via `/v1/scillm/concurrency`)
+- `scillm_metadata` with `batch_id` + `item_id` for automatic resume
+- Per-chunk storage via `store_callback` (crash-safe)
+
+**Config:** `~/workspace/experiments/scillm/local/proxy_server_config.yaml`
+
 ## Prompt Templates
 
-Prompts live in `prompts/` (local) or `/prompt-lab/prompts/qra/` (centralized):
+Native prompts live in `prompts/native/` with clean framework-based naming:
 
-| Template | Mode | Description |
-|----------|------|-------------|
-| `native_attack_system.txt` | native | System prompt for ATT&CK native QRAs |
-| `native_attack_user.txt` | native | User prompt template with v6 rules |
-| `cwe_independent.txt` | native (CWE) | CWE-specific extraction |
-| `relationship_system_prompt_v2.txt` | relationship | Cross-framework relationships |
-| `standalone.txt` | standalone | Document extraction |
+```
+prompts/native/
+├── attack_system.txt    # ATT&CK: threat/technique definitions
+├── attack_user.txt
+├── capec_system.txt     # CAPEC: attack pattern definitions
+├── capec_user.txt
+├── cwe_system.txt       # CWE: weakness definitions
+├── cwe_user.txt
+├── d3fend_system.txt    # D3FEND: defensive technique definitions
+├── d3fend_user.txt
+├── esa_system.txt       # ESA: space security guideline definitions
+├── esa_user.txt
+├── nist_system.txt      # NIST: SP 800-53 control definitions
+├── nist_user.txt
+├── sparta_system.txt    # SPARTA: countermeasure definitions
+└── sparta_user.txt
+```
+
+| Template | Framework | pair_types |
+|----------|-----------|------------|
+| `attack_*` | ATT&CK Enterprise | threat_description, detection_methods, mitigation_guidance, scope_clarification |
+| `capec_*` | CAPEC | attack_description, execution_flow, prerequisites, mitigation_guidance |
+| `cwe_*` | CWE | weakness_description, detection_methods, consequence_description, mitigation_guidance |
+| `d3fend_*` | D3FEND | defense_description, implementation_guidance, taxonomy_context, scope_clarification |
+| `esa_*` | ESA | guideline_description, implementation_guidance, assessment_criteria, scope_clarification |
+| `nist_*` | NIST SP 800-53 | control_description, implementation_guidance, assessment_criteria, scope_clarification |
+| `sparta_*` | SPARTA | countermeasure_description, implementation_guidance, assessment_criteria, scope_clarification |
+
+All prompts follow v2 quality standard with:
+- Rationale header (not sent to LLM)
+- Source admissibility rules
+- Modality preservation (should/shall/may/can)
+- Valid + invalid output examples
+- Maximum 4 pairs, 1 per pair_type
 
 ## Common Mistakes
 

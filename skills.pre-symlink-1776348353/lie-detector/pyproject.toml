@@ -1,0 +1,16 @@
+[project]
+name = "lie-detector"
+version = "1.1.0"
+description = "Deterministic 6-layer process verification for AI self-improvement loops"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "loguru>=0.7.0,<0.7.3",
+    "python-dotenv>=1.0.0",
+    "sentence-transformers>=2.2.0",
+    "setfit>=1.0.0",
+    "numpy>=1.24.0",
+    "datasets>=2.14.0",
+    "scikit-learn",
+]

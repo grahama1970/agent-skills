@@ -1,0 +1,26 @@
+project:
+  name: A single candle flame flickering in a dark room
+  created_at: '2026-02-04T22:08:31.184951'
+  schema_version: HorusShotSpec v0.1
+  renderer: veo
+  model: veo-3.1-generate-preview
+defaults:
+  aspect_ratio: '16:9'
+  duration_s: 8
+  resolution: 1080p
+  negative_prompt: text overlays, watermarks, shaky camera, distorted faces, garbled
+    speech
+identity_packs: []
+shots:
+- id: ACT1_SC01_SHOT01
+  file: shots/ACT1_SC01_SHOT01.yaml
+  sequence_order: 1
+  characters: []
+- id: ACT1_SC02_SHOT01
+  file: shots/ACT1_SC02_SHOT01.yaml
+  sequence_order: 2
+  characters: []
+- id: ACT1_SC03_SHOT01
+  file: shots/ACT1_SC03_SHOT01.yaml
+  sequence_order: 3
+  characters: []

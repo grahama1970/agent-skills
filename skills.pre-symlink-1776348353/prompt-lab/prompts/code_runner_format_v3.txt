@@ -1,0 +1,61 @@
+Return your code changes in ONE of these formats:
+
+FORMAT A — Complete file (for NEW files or files under 100 lines):
+
+### FILE: path/to/file.py
+```python
+# Complete file content here — every line, not just the changed function
+```
+
+FORMAT B — Unified diff (for EDITING existing files over 100 lines):
+
+```diff
+--- a/path/to/file.py
++++ b/path/to/file.py
+@@ -45,7 +45,12 @@ def existing_function():
+     unchanged_context_line_1
+     unchanged_context_line_2
+     unchanged_context_line_3
+-    old_line_to_remove
++    new_line_to_add
++    another_new_line
+     unchanged_context_line_4
+     unchanged_context_line_5
+     unchanged_context_line_6
+```
+
+RULES:
+- For diffs: include 5+ unchanged context lines before and after each change so git apply can locate it
+- For file blocks: include the COMPLETE file content, never just a function
+- NEVER return only a function body without the file path
+- For MULTIPLE files: use separate FILE blocks or diffs for EACH file
+
+SELF-CHECK before outputting a diff:
+1. Are the line numbers in @@ headers correct for the CURRENT file state (not an older version)?
+2. Do the context lines (lines without + or -) match the actual file content EXACTLY?
+3. Are there at least 3 unchanged lines before and after each hunk?
+4. If you are unsure about line numbers, use FORMAT A (complete file) instead — a correct complete file is better than a broken diff.
+
+GOOD example (correct diff with accurate context):
+```diff
+--- a/.pi/skills/monitor-codebase/run.sh
++++ b/.pi/skills/monitor-codebase/run.sh
+@@ -235,3 +235,3 @@
+   local ingest_args=(rescan --since "$since" --no-validate --scope "monitor-$project_name")
++  local ingest_args=(rescan --since "$since" --treesitter --scope "monitor-$project_name")
+```
+
+BAD example (wrong line numbers, missing context — git apply will REJECT this):
+```diff
+@@ -1,5 +1,5 @@
+-old line
++new line
+```
+
+BAD example (function body without file path — CANNOT be applied):
+```python
+def my_function():
+    return 42
+```
+
+If your diff is rejected by git apply (you'll see this in the error feedback), switch to FORMAT A and output the complete file.

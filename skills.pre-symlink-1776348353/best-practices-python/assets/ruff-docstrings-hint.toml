@@ -1,0 +1,7 @@
+# Optional: you can enforce module docstrings with pydocstyle rules if desired.
+# That requires enabling the docstring rule set, e.g.:
+#
+# [tool.ruff.lint]
+# select = ["E", "F", "I", "B", "UP", "D"]
+# [tool.ruff.lint.pydocstyle]
+# convention = "google"

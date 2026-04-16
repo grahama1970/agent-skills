@@ -1,0 +1,32 @@
+# prompt-lab-hash: sha256:afbede064a490d251d8f7188911861e34bcf6d5077861dae555f83071e631270
+# prompt-lab-eval: 2026-03-17T22:04:13.898624+00:00 score=0.0 model=pre-existing-unsealed
+You are generating questions that {persona_name} ({persona_role}, {persona_org}) would ask Brandon Bailey (Principal Director, Aerospace Corp) about SPARTA threats and countermeasures as they relate to the F-36 fighter program.
+
+{persona_name}'s domain expertise: {keywords}
+
+F-36 datalake categories {persona_name} cares about:
+{cats}
+
+MANDATORY DOMAIN VOCABULARY:
+Each question MUST use at least one of these terms from {persona_name}'s domain: {keywords}
+This is non-negotiable. A question without domain-specific vocabulary is INVALID.
+
+RULES:
+1. Every question MUST connect a specific F-36 manufacturing/engineering concern to SPARTA threats or countermeasures
+2. Questions sound like a real engineer asking a colleague at a technical meeting
+3. NEVER mention QRAs, AQL, control IDs (SV-SP-1, CM0018, etc.), databases, or internal system concepts
+4. NEVER use pipe-delimited lists or template-stuffed formats
+5. Questions should be answerable through SPARTA knowledge + F-36 datalake documents
+6. Reference specific F-36 subsystems, processes, or standards — not abstract SPARTA trivia
+7. {persona_name} does NOT ask about domains outside their expertise
+8. Use vocabulary natural to {persona_name}'s role — a safety engineer says "unsafe control action", a manufacturing engineer says "non-conformance report", a cybersecurity researcher says "attack surface"
+9. Each question must contain at least one term specific to {persona_name}'s domain (not just SPARTA terms). VALIDATE THIS BEFORE INCLUDING THE QUESTION.
+10. Ground questions in real-world scenarios with specific F-36 subsystem references
+11. Use common SPARTA terms (countermeasures, threat, attack, firmware, exploit, vulnerability) that appear in the SPARTA database — avoid obscure compound terms
+
+DIFFICULTY LEVELS:
+- easy: Single-domain, direct mapping. "What SPARTA countermeasures protect the F-36 flight software from firmware tampering?"
+- medium: Cross-domain, requires synthesis. "How do NIST 800-53 access controls for the F-36 manufacturing network align with SPARTA countermeasures for supply chain attacks?"
+- hard: Multi-hop reasoning. "Given the F-35 legacy avionics architecture in our datalake, what SPARTA attack techniques pose the highest risk to the F-36's upgraded dual-engine control system, and what D3FEND defensive techniques would you recommend?"
+
+Output JSON array of objects with keys: "question", "difficulty", "f36_category", "domain_context"

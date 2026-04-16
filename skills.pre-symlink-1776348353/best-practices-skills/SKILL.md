@@ -1,0 +1,826 @@
+---
+name: best-practices-skills
+description: >
+  Best practices for designing and structuring agent skills: SKILL.md frontmatter rules,
+  triggers, progressive disclosure, and when to use scripts vs references.
+triggers:
+  - best practices skills
+  - skill structure
+  - skill design
+  - skill frontmatter
+  - skill template
+  - skill checklist
+metadata:
+  short-description: Skill structure and design patterns
+provides:
+  - skill-validation
+  - skill-scaffolding
+  - composition-rules
+  - misuse-guard-template
+composes:
+  - task-monitor
+  - monitor-misuse
+  - memory
+
+taxonomy:
+  - validation
+  - compliance
+  - composition
+  - self-improvement
+---
+
+# Skills Best Practices
+
+Use this skill when creating or reviewing skills under `.pi/skills/`.
+
+## ArangoDB Access Policy (NON-NEGOTIABLE)
+
+- `/memory` is the ONLY skill that accesses ArangoDB directly
+- `/ops-arango` handles admin ops (backups, indexes, migrations)
+- `monitor-memory` has read-only exception for health probes (documented)
+- ALL other skills MUST use `memory/run.sh` subcommands:
+  - `memory recall` — semantic + BM25 search
+  - `memory learn` — store lessons/data
+  - `memory sample` — random document sampling
+  - `memory tag` — post-insert tag stamping
+  - `memory count` — collection statistics
+  - `memory archive-session` — episodic archival
+- NEVER: `from arango import ArangoClient`
+- NEVER: `sys.path.insert(0, MEMORY_PATH)`
+- NEVER: hardcoded passwords or raw `/_api/cursor` calls
+
+## Storage Policy (NON-NEGOTIABLE)
+
+**The root NVMe is for CODE ONLY.** All heavy artifacts MUST live on the 12TB drive
+and be symlinked back. This is enforced by `/skills-broadcast` and `/ops-workstation`.
+
+### What MUST be on `/mnt/storage12tb`
+
+| Category | Examples | Storage Path |
+|----------|----------|--------------|
+| **Model weights** | `.safetensors`, `.gguf`, `.bin`, `.pt` | `/mnt/storage12tb/skills/<skill-name>/models/` |
+| **Training logs** | RVC logs, checkpoints, tensorboard | `/mnt/storage12tb/skills/<skill-name>/logs/` |
+| **Extracted data** | `extracted_runs/`, PDF extractions | `/mnt/storage12tb/skills/<skill-name>/extracted_runs/` |
+| **Generated outputs** | batch results, GRPO outputs | `/mnt/storage12tb/skills/<skill-name>/outputs/` |
+| **Datasets** | training data, WAV files, corpora | `/mnt/storage12tb/skills/<skill-name>/data/` |
+| **Work dirs** | temp processing, intermediate files | `/mnt/storage12tb/skills/<skill-name>/work/` |
+| **Backups** | `.backups/`, snapshots | `/mnt/storage12tb/backups/<project>/` |
+
+### What MUST NEVER be synced by `/skills-broadcast`
+
+These directories are **excluded from rsync** and must not exist as real directories
+in skill folders (only as symlinks to `/mnt/storage12tb/`):
+
+`.venv`, `node_modules`, `__pycache__`, `models`, `rvc`, `outputs`, `logs`, `data`,
+`pods`, `extracted_runs`, `work`, `weights`, `checkpoints`, `artifacts`, `sessions`,
+`papers`, `datasets`, `*.safetensors`, `*.gguf`, `*.bin`, `*.pt`
+
+### How to set up a new heavy artifact directory
+
+```bash
+# 1. Create the storage location on 12TB drive
+mkdir -p /mnt/storage12tb/skills/<skill-name>/models
+
+# 2. Move existing data (if any)
+mv /path/to/skill/models/* /mnt/storage12tb/skills/<skill-name>/models/
+
+# 3. Remove the directory and create symlink
+rmdir /path/to/skill/models
+ln -s /mnt/storage12tb/skills/<skill-name>/models /path/to/skill/models
+```
+
+### Enforcement
+
+- `/skills-broadcast sanity` FAILS if any skill has non-symlinked dirs >100MB
+- `/ops-workstation slim` reports storage policy violations
+- `.gitignore` in every skill should exclude heavy artifact patterns
+
+## Required structure
+
+- A skill is a folder with a required `SKILL.md` at the root.
+- `SKILL.md` must start with YAML frontmatter (no code fences).
+- Frontmatter delimiters must be standalone lines: opening `---` on line 1 and closing `---` on its own line.
+- Frontmatter must include `name` and `description`.
+- The `description` should contain explicit trigger contexts (what users will say).
+- Keep `SKILL.md` concise; move large content into `references/` or `scripts/`.
+- Avoid extra docs (CHANGELOG) inside the skill folder.
+- README.md is allowed for skills that declare `provides:` (composable primitives with human developer audiences). SKILL.md is for agents; README.md is for humans browsing the directory.
+
+## Composition Frontmatter (Valence Shell)
+
+Skills are like chemical elements — they bind to each other through defined interfaces.
+The `provides:` and `composes:` frontmatter fields declare a skill's **valence shell**:
+what it offers to others and what it needs from others.
+
+### Required composition fields
+
+```yaml
+---
+name: my-skill
+description: >
+  What this skill does and trigger phrases.
+triggers:
+  - natural language phrase users will say
+  - another trigger phrase
+provides:
+  - capability-a       # What this skill outputs/offers
+  - capability-b
+composes:
+  - memory             # Skills this delegates to (by name)
+  - scillm
+  - extractor
+---
+```
+
+### Field definitions
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `triggers` | list[str] | **Yes** | Natural-language phrases users will say. Parsed at runtime by `skill-selector` extension for BM25-style matching. Skills without triggers are invisible to implicit routing. |
+| `provides` | list[str] | Yes | Capabilities this skill makes available. Used by `/skill-lab` gap detector. |
+| `composes` | list[str] | Yes | Skills this skill delegates to via subprocess/import. Empty list `[]` if self-contained. Parsed at runtime by `skill-selector` extension for dependency expansion — when a skill is selected, its `composes` deps are automatically included in context. |
+| `taxonomy` | list[str] | Recommended | Federated taxonomy bridge tags for multi-hop discovery via `/memory`. Uses standard vocabulary: `precision`, `resilience`, `fragility`, `corruption`, `loyalty`, `stealth`, plus domain tags. |
+
+### Runtime consumption (skill-selector extension)
+
+The `.pi/extensions/skill-selector.ts` extension reads frontmatter at session start:
+
+- **`triggers`** → Built into an inverted token index. When users type natural language
+  (no `/skill-name` ref), the extension scores the prompt against triggers+descriptions
+  to select relevant skills. **Skills without triggers are invisible to implicit routing.**
+- **`composes`** → Parsed into a dependency map. When a skill is selected (explicitly or
+  via trigger match), all its `composes` dependencies are automatically pulled into context.
+  This replaced a hardcoded static map (Feb 2026) — the extension now reads live frontmatter.
+- **`provides`** → Used by `/skill-lab` for gap detection and capability graph traversal.
+  Not yet consumed by skill-selector (future: reverse-index for "I need X capability" queries).
+
+### Binding affinity rules
+
+1. **Skills MUST declare all skills they delegate to** in `composes:`.
+2. **Skills MUST declare what they output** in `provides:`.
+3. **Self-contained skills** (no external dependencies) use `composes: []`.
+4. **Lab skills** (prompt-lab, gpt-lab, classifier-lab) are **catalysts** — they
+   create new skills without being consumed. They `provide: [skill-creation]`.
+5. **Composite skills** are molecules — stable combinations of existing skills
+   wired together by a thin orchestrator.
+
+### Capability vocabulary (standardized provides values)
+
+| Capability | Skills that provide it |
+|------------|----------------------|
+| `llm-completion` | scillm, codex |
+| `embedding` | embedding |
+| `memory-recall` | memory |
+| `memory-learn` | memory |
+| `web-search` | brave-search, dogpile |
+| `pdf-extraction` | extractor, review-pdf |
+| `security-scan` | hack, security-scan |
+| `skill-creation` | prompt-lab, gpt-lab, classifier-lab |
+| `skill-validation` | skills-ci, best-practices-skills |
+| `competitive-selection` | battle |
+| `hardening` | anvil |
+| `docker-isolation` | battle, hack |
+| `human-interview` | interview |
+| `task-planning` | plan |
+| `task-orchestration` | orchestrate |
+| `taxonomy-tagging` | taxonomy |
+| `progress-tracking` | task-monitor |
+
+New capabilities should be added to `references/capability_vocabulary.yml`.
+
+### Graph Registration (Multi-Hop Discovery)
+
+Skills SHOULD be registered in `/memory` as nodes in the knowledge graph.
+This enables multi-hop traversal — when `/skill-lab` needs a capability,
+it can traverse `composes` edges to find transitive dependencies, just like
+`/memory` traverses `relates_to` edges for knowledge discovery.
+
+```
+skill:extractor ──composes──► skill:memory
+                 ──composes──► skill:scillm
+                 ──provides──► capability:pdf-extraction
+
+skill:learn-datalake ──composes──► skill:extractor
+                      ──composes──► skill:review-pdf
+                      ──composes──► skill:memory
+```
+
+This is analogous to chemical bonding — the graph reveals which elements
+naturally form molecules. `/taxonomy` tags provide the bridge keywords
+that enable cross-domain discovery (a security skill and an extraction skill
+might share `taxonomy:validation` tags).
+
+Registration pattern:
+```python
+from common.memory_client import learn, MemoryScope
+
+# Register skill as a knowledge node
+learn(
+    problem=f"What does {skill_name} provide?",
+    solution=f"Provides: {', '.join(provides)}. Composes: {', '.join(composes)}",
+    scope=MemoryScope.OPERATIONAL,
+    tags=["skill_registry", skill_name] + provides,
+)
+```
+
+### Machine-parseable rules
+
+See `references/rules.yml` for the complete machine-parseable rule set
+that `/skills-ci` and `/skill-lab` validate against.
+See `references/composition_manifest.yml` for the schema `/skill-lab` uses
+when planning new composite skills.
+Run `./sanity.sh` in this skill to enforce the strict frontmatter gate across all skills.
+
+## Design patterns
+
+1. **Progressive disclosure**
+   - Layer 1: Frontmatter (`name`, `description`) for routing.
+   - Layer 2: `SKILL.md` body for the workflow map.
+   - Layer 3: `scripts/`, `references/`, `assets/` for details on demand.
+
+2. **Guardrails vs freedom**
+   - High-variance tasks: instructions only.
+   - Fragile/repetitive tasks: scripts with parameters.
+   - Mixed tasks: decision tree in `SKILL.md` + references/scripts.
+
+3. **Single source of truth**
+   - Put schemas, long examples, and variants in `references/`.
+   - `SKILL.md` should point to references, not duplicate them.
+
+## Checklist (creation/review)
+
+- Frontmatter is valid YAML (no markdown fences).
+- Frontmatter has opening and closing `---` on standalone lines.
+- `name` matches the directory name.
+- `description` contains clear trigger phrases, uses YAML fold syntax (`>`) — **never inline**.
+- **`triggers`** list contains natural-language phrases users will say. **Required** — skills without triggers are invisible to implicit routing via skill-selector.
+- **`provides`** list declares capabilities this skill outputs. **Required.**
+- **`composes`** list declares all skills this delegates to. **Required** (use `[]` if self-contained). Parsed at runtime for automatic dependency inclusion.
+- `run.sh` exists only if the skill needs execution.
+- `sanity.sh` exists if the skill runs non-trivial scripts.
+- **CLI: Typer only** — all Python CLIs use `typer`. NEVER `argparse` or `click`.
+- **No bespoke reimplementations** — if a helper skill exists, the new skill delegates to it.
+- **PyYAML dependency** — any script that parses SKILL.md frontmatter MUST depend on
+  `pyyaml` (not a fallback regex parser). The `>` and `|` YAML block scalars, nested
+  objects, and multi-line strings are only reliably parsed by a real YAML parser.
+
+
+See [PATTERNS.md](references/PATTERNS.md) for anti-patterns, runtime integration patterns, task-monitor, NDJSON streaming, self-correction, quality gates, memory integration, human-in-the-loop, and templates.
+
+## Common Mistakes
+
+### WRONG: Missing triggers in frontmatter (skill is invisible to implicit routing)
+```yaml
+---
+name: my-skill
+description: Does something useful
+provides: [my-capability]
+composes: [memory]
+---
+```
+
+### RIGHT: Include natural-language trigger phrases
+```yaml
+---
+name: my-skill
+description: Does something useful
+triggers:
+  - do the useful thing
+  - run my-skill
+provides: [my-capability]
+composes: [memory]
+---
+```
+
+### WRONG: Accessing ArangoDB directly from a skill
+```python
+from arango import ArangoClient
+client = ArangoClient(hosts="http://127.0.0.1:8529")
+```
+
+### RIGHT: Use /memory subcommands for all data access
+```bash
+.pi/skills/memory/run.sh recall --q "query" --collections lessons
+.pi/skills/memory/run.sh learn --problem "X" --solution "Y"
+```
+
+### WRONG: Reimplementing functionality that an existing skill provides
+```python
+def custom_bm25_search(query, docs):  # /memory already does this
+    ...
+```
+
+### RIGHT: Delegate to existing skills via composes
+```yaml
+composes:
+  - memory  # use /memory recall for search
+```
+
+## Defensive Error Handling (Tiered by Complexity)
+
+**Project agents in 2026 do not thoroughly read SKILL.md files.** Skills that expose HTTP
+endpoints or APIs MUST implement server-side misuse detection with helpful error messages.
+Documentation alone is insufficient — the API itself must teach correct usage.
+
+### Skill Complexity Tiers
+
+| Tier | Type | Examples | Misuse Handling |
+|------|------|----------|-----------------|
+| **1** | One-shot script | `/create-icon`, `/png-svg-converter` | None — fail fast, error is obvious |
+| **2** | CLI with params | `/extractor`, `/embedding` | Typer handles it; add `--help` examples |
+| **3** | Daemon/socket | `/memory`, `/inference` | Basic input validation in handler |
+| **4** | HTTP API | `/scillm`, `/fetcher` | **Full misuse detection required** |
+| **5** | Multi-agent orchestrator | `/orchestrate`, `/battle` | Full detection + state machine guards |
+
+**Rule: If agents call it programmatically (not via slash command), it needs defensive handling.**
+
+For Tier 4-5 skills, use the reusable template: `references/misuse_guard_template.py`
+
+### Principle: The API is the Documentation
+
+When a caller misuses your API, don't return a generic error. Return an error that:
+1. **Explains what went wrong** — specific, not "Bad Request"
+2. **Explains why it's a problem** — the consequence of the misuse
+3. **Shows how to fix it** — include a code example if possible
+4. **References SKILL.md** — for detailed reading (which they won't do, but it's there)
+
+### Required Misuse Detection for HTTP Skills
+
+| Misuse Category | Detection | Response |
+|-----------------|-----------|----------|
+| **Missing required params** | Presence check | 400 + list required params + example |
+| **Wrong param types** | Type check | 400 + expected type + example |
+| **Unknown params** | Schema validation | Warning log (don't reject, be tolerant) |
+| **Batch overload** | Queue depth/concurrency | 429 + chunk size recommendation |
+| **Timeout-prone input** | Size/complexity check | Warning header or 413 + size limits |
+| **Provider mismatch** | Feature/provider compatibility | 400 + correct provider/format hint |
+| **Service not running** | (client-side preflight) | Document in SKILL.md troubleshooting |
+
+### Example: scillm Misuse Detection (Reference Implementation)
+
+`/scillm` implements comprehensive misuse detection — use it as a template:
+
+```python
+# In your validation middleware or endpoint handler:
+
+def validate_request(body: dict, model: str) -> None:
+    """Validate request and return helpful errors."""
+    
+    # 1. Auto-fix common mistakes (tolerant)
+    if isinstance(body.get("messages"), str):
+        logger.warning("Auto-wrapping string messages as list")
+        body["messages"] = [{"role": "user", "content": body["messages"]}]
+    
+    # 2. Strip problematic params with warning (tolerant)
+    if "max_tokens" in body:
+        logger.warning(f"Stripping max_tokens — causes empty output")
+        del body["max_tokens"]
+    
+    # 3. Reject incompatible combinations (strict with guidance)
+    if has_inline_data(body) and not model.startswith("gemini"):
+        raise HTTPException(
+            400,
+            f"inlineData only works with Gemini. You used model='{model}'. "
+            f"For other providers, use image_url format. See SKILL.md."
+        )
+    
+    # 4. Detect resource exhaustion (early warning)
+    queue_depth = get_queue_depth(provider)
+    if queue_depth > 100:
+        raise HTTPException(
+            429,
+            f"BATCH MISUSE: {queue_depth} requests queued. "
+            f"Use chunked processing: process 4 at a time, wait, repeat. "
+            f"Example: for chunk in chunks(items, 4): await gather(*chunk)"
+        )
+```
+
+### Checklist for HTTP/API Skills
+
+- [ ] **Missing/empty required params** → 400 + param name + expected format
+- [ ] **Type mismatches** → Auto-fix if safe, else 400 + correct type
+- [ ] **Unknown model/endpoint** → 400 + list valid options
+- [ ] **Incompatible feature combinations** → 400 + which combos work
+- [ ] **Batch/queue overload** → 429 + chunk size + code example
+- [ ] **Timeout-prone requests** → Warning header or log
+- [ ] **Repeated bad requests** → Temp block (abuse guard) + explain why
+- [ ] **Service not running** → Document preflight check in SKILL.md
+
+### Common Mistakes
+
+### WRONG: Generic error that doesn't help the caller
+```python
+raise HTTPException(400, "Bad Request")
+```
+
+### RIGHT: Error that teaches correct usage
+```python
+raise HTTPException(
+    400,
+    f"Unknown model '{model}'. Available: text, vlm, local-text. "
+    f"Usage: POST /v1/chat/completions with model='text'. "
+    f"This is an HTTP API — call via httpx, not import."
+)
+```
+
+### WRONG: Silently failing on invalid input
+```python
+if not valid:
+    return None  # Caller has no idea what went wrong
+```
+
+### RIGHT: Explicit rejection with guidance
+```python
+if not valid:
+    raise HTTPException(
+        400,
+        f"Invalid format. Expected: {expected_format}. "
+        f"Got: {actual_format}. See SKILL.md examples."
+    )
+```
+
+### WRONG: Letting batch operations timeout silently
+```python
+# 400 requests fire at once, most timeout after 5 minutes
+results = await gather(*[call(x) for x in all_400_items])
+```
+
+### RIGHT: Detect and reject batch abuse early
+```python
+if queue_depth > THRESHOLD:
+    raise HTTPException(429, f"Too many queued ({queue_depth}). Use chunking.")
+```
+
+### WRONG: Hardcoding all valid values (unmaintainable)
+```python
+# BAD: This list becomes stale as collections are added/removed
+VALID_COLLECTIONS = {"sparta_qra", "lessons_v2", "personas", "checkpoints", ...}
+
+def validate(collection):
+    if collection not in VALID_COLLECTIONS:  # ← False negatives for new collections
+        raise HTTPException(400, f"Unknown collection")
+```
+
+### RIGHT: Map only misuse patterns → corrections
+```python
+# GOOD: Only catches specific mistakes agents make, never false negatives
+COLLECTION_CORRECTIONS = {
+    "sparta_qras": "sparta_qra",     # plural → singular
+    "sparta_control": "sparta_controls",  # singular → plural (this one IS plural)
+    "lesons": "lessons_v2",           # typo
+}
+
+def validate(collection):
+    if collection in COLLECTION_CORRECTIONS:
+        correct = COLLECTION_CORRECTIONS[collection]
+        raise HTTPException(400, f"'{collection}' is wrong. Use '{correct}'.")
+    # Unknown collections pass through — actual existence checked by db.has_collection()
+```
+
+## Misuse Guard Architecture (Template, Not Shared)
+
+**Do NOT create a shared misuse guard module imported across skills.** Skills should be
+self-contained and portable. The correct pattern is **copy and adapt** from the template.
+
+### Why NOT a shared import
+
+| Concern | Problem with shared script |
+|---------|---------------------------|
+| **Coupling** | Skills should be self-contained and portable |
+| **Different projects** | Skills may live in separate repos/directories |
+| **Import paths** | `sys.path` hacks are fragile across containers/venvs |
+| **Skill-specific validators** | Each skill has unique misuse patterns |
+| **Versioning** | Change to shared breaks all skills simultaneously |
+
+### Correct pattern: Template + Local Copy
+
+```
+~/.pi/skills/best-practices-skills/references/
+└── misuse_guard_template.py   ← TEMPLATE (copy and adapt)
+
+Each Tier 4-5 skill that needs it:
+├── skill-a/src/.../app/_misuse_guard.py   ← local copy, skill-specific validators
+├── skill-b/src/.../proxy/validation.py    ← inline validation (alternative)
+└── skill-c/.../_misuse_guard.py           ← local copy, different validators
+```
+
+### What the template provides
+
+The template at `references/misuse_guard_template.py` includes:
+
+1. **`MisuseGuard` class** — Copy as-is, configure `skill_name` and thresholds
+2. **Common validators** — Pick what applies to your skill:
+   - `require_non_empty(field, example)` — Required param validation
+   - `auto_wrap_string_as_list(field)` — Tolerant type coercion
+   - `reject_incompatible(condition, message)` — Feature combination guards
+   - `warn_and_strip(field, reason)` — Strip problematic params
+   - `detect_batch_abuse(get_queue_depth, threshold)` — Queue overload detection
+   - `correct_value(field, corrections)` — Map misuse patterns → corrections
+3. **Abuse detection** — Track repeated bad requests, temp-block abusive clients
+4. **Schema validation** — Type checking with helpful error messages
+5. **Misuse event logging** — All errors logged to `/memory` for nightly analysis
+
+### Misuse Event Logging (Cross-Skill Learning)
+
+All misuse events are logged to the `misuse_events` collection in `/memory`. The
+nightly `/monitor-misuse` job analyzes these events across all skills to:
+- Detect new misuse patterns (cluster similar errors)
+- Propose corrections (LLM-generated, human-reviewed)
+- Track which skills need better docs
+
+**Storage location:** `POST /store` with `collection: "misuse_events"`
+
+**Two implementations depending on context:**
+
+| Context | Implementation | Why |
+|---------|---------------|-----|
+| **Inside /memory service** | Direct ArangoDB write | No HTTP round-trip, already have db connection |
+| **Other skills (template)** | httpx POST `/store` to memory socket | Standard API access |
+
+```python
+# Template version (for skills OUTSIDE /memory):
+def log_misuse_event(skill, endpoint, error_type, sent_value, correct_value=None):
+    import httpx
+    transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
+    with httpx.Client(transport=transport, base_url="http://localhost", timeout=2.0) as client:
+        client.post("/store", json={
+            "document": {
+                "_key": hashlib.sha256(f"{skill}:{endpoint}:{error_type}:{sent_value}".encode()).hexdigest()[:16],
+                "skill": skill,
+                "endpoint": endpoint,
+                "error_type": error_type,
+                "sent_value": sent_value,
+                "correct_value": correct_value,
+                "was_known": correct_value is not None,
+                "ts": int(time.time()),
+            },
+            "collection": "misuse_events",
+        })
+
+# /memory version (direct ArangoDB, avoids HTTP):
+def _log_misuse_event(endpoint, error_type, sent_value, correct_value=None):
+    from ...arango_client import get_db
+    db = get_db()
+    coll = db.collection("misuse_events")
+    # ... direct insert/update
+```
+
+**Event schema:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `_key` | str | Hash of skill:endpoint:error_type:sent_value (dedupes) |
+| `skill` | str | Skill name (memory, scillm, fetcher) |
+| `endpoint` | str | Endpoint path (/store, /v1/chat/completions) |
+| `error_type` | str | Category (wrong_collection, missing_param, batch_abuse) |
+| `sent_value` | str | What the caller sent |
+| `correct_value` | str? | What they should have sent (None if unknown) |
+| `was_known` | bool | True if we had a correction pattern |
+| `ts` | int | Unix timestamp |
+| `count` | int | Occurrence count (incremented on duplicates) |
+
+### How to use in a new skill
+
+```python
+# 1. Copy template to your skill
+cp ~/.pi/skills/best-practices-skills/references/misuse_guard_template.py \
+   ./src/my_skill/_misuse_guard.py
+
+# 2. Import and configure
+from ._misuse_guard import MisuseGuard, require_non_empty, reject_incompatible
+
+guard = MisuseGuard(skill_name="my-skill")
+
+# 3. Add skill-specific validators
+guard.add_validator("input", require_non_empty("input", "example text"))
+guard.add_validator("no_conflicting_flags", reject_incompatible(
+    lambda body: body.get("flag_a") and body.get("flag_b"),
+    "flag_a and flag_b are mutually exclusive"
+))
+
+# 4. Define skill-specific schema
+schema = {
+    "input": {"required": True, "type": str, "example": "your input here"},
+    "format": {"required": False, "type": str, "example": "json"},
+}
+
+# 5. Use in endpoint
+@app.post("/v1/my-endpoint")
+async def endpoint(body: dict):
+    body = guard.validate(body, schema=schema)
+    # ... rest of handler
+```
+
+### When to update the template
+
+When you discover a new misuse pattern in any skill:
+
+1. **Fix it locally** in that skill's `_misuse_guard.py`
+2. **Generalize** the validator (make it reusable)
+3. **Add to template** in `best-practices-skills/references/misuse_guard_template.py`
+4. **Document** the pattern in this SKILL.md
+
+This is the **copy-up pattern** — local innovation, then standardize for future skills.
+
+### Automatic Pattern Discovery via /monitor-misuse
+
+Misuse events are logged to the `misuse_events` collection. The `/monitor-misuse`
+skill runs nightly to:
+
+1. **Cluster unknown errors** — group similar misuses across all skills
+2. **Propose corrections** — LLM generates fix suggestions
+3. **Apply to skill files** — approved corrections update the skill's `_misuse_guard.py`
+
+```
+All skills with misuse guards
+         │
+         │ log_misuse_event()
+         ▼
+  misuse_events collection
+         │
+         │ nightly /monitor-misuse analyze
+         ▼
+  misuse_corrections collection
+         │
+         │ human review + /monitor-misuse apply
+         ▼
+  skill/_misuse_guard.py updated
+```
+
+**To enable auto-apply for your skill**, register it in `/monitor-misuse/scripts/skill_registry.py`:
+
+```python
+SKILL_GUARDS = {
+    "memory": SkillMisuseGuard(
+        skill_name="memory",
+        guard_path=Path("/path/to/skill/_misuse_guard.py"),
+        corrections_var="COLLECTION_CORRECTIONS",  # or MODEL_CORRECTIONS, etc.
+    ),
+}
+```
+
+This closes the loop: agents make mistakes → events logged → patterns detected →
+corrections proposed → guards updated → future agents get helpful errors.
+
+### Common Mistakes
+
+### WRONG: Sharing a single misuse guard across skills via import
+```python
+# DON'T DO THIS
+import sys
+sys.path.insert(0, "/home/user/.pi/skills/shared-utils/")
+from shared_misuse_guard import MisuseGuard  # Fragile, not portable
+```
+
+### RIGHT: Copy template and adapt locally
+```python
+# Each skill has its own copy with skill-specific validators
+from ._misuse_guard import MisuseGuard, require_non_empty
+guard = MisuseGuard(skill_name="this-skill")
+```
+
+### WRONG: Creating a pip package just for misuse guard
+```python
+# Overkill for the current skill ecosystem
+from pi_skill_utils import MisuseGuard  # Adds dependency management overhead
+```
+
+### RIGHT: Simple template copy (no dependencies)
+```bash
+# Template is self-contained, just copy it
+cp ~/.pi/skills/best-practices-skills/references/misuse_guard_template.py \
+   ./my_skill/_misuse_guard.py
+```
+
+## Service Usage Audits (Tier 4-5 Infrastructure Skills)
+
+Infrastructure skills that other projects call programmatically (scillm, memory, fetcher, etc.)
+SHOULD provide an **`assess` capability** that audits external code for correct usage.
+
+### Why This Matters
+
+1. **Agents don't read SKILL.md** — they skim or skip to code examples
+2. **Misuse patterns repeat** — same mistakes across many projects
+3. **The service agent is the expert** — knows what breaks and why
+4. **Catch errors before runtime** — don't wait for 5-minute timeout
+
+### The Pattern
+
+Each infrastructure skill documents:
+- **API contracts** — correct usage patterns
+- **Known misuse patterns** — what breaks and why (see Common Mistakes sections)
+- **Machine-readable rules** — for automated checking
+
+Then exposes an `assess` command that checks external code against these patterns.
+
+### Implementation: `./run.sh assess <file>`
+
+```bash
+# scillm assess — checks LLM API usage
+./run.sh assess /path/to/script.py
+# Output:
+# ✅ HTTP API (not import)
+# ✅ Model aliases used (text, vlm)
+# ✅ No max_tokens
+# ✅ Chunked batching (CHUNK_SIZE=4)
+# ⚠️ Missing response_format on JSON call (line 89)
+# ⚠️ No preflight check before batch
+
+# memory assess — checks memory API usage
+./run.sh assess /path/to/script.py
+# Output:
+# ✅ Uses Unix socket transport
+# ✅ Reads data["items"] (not "results")
+# ⚠️ subprocess.run in loop (line 78) — use httpx client
+# ⚠️ /store without tags (line 134) — multi-hop won't find it
+```
+
+### What to Check (by service)
+
+| Service | Misuse Patterns to Detect |
+|---------|--------------------------|
+| **scillm** | Import instead of HTTP; fire-all-at-once batching; max_tokens; missing response_format; no preflight |
+| **memory** | `data["results"]` instead of `items`; TCP instead of Unix socket; subprocess loops; raw AQL; /learn (deprecated) |
+| **fetcher** | Missing timeout; no retry logic; blocking calls in async context |
+| **embedding** | Wrong dimension (384 required); batch size too large; missing normalization |
+
+### Checklist for Infrastructure Skills
+
+- [ ] **Document misuse patterns** in Common Mistakes section of SKILL.md
+- [ ] **Create `assess` subcommand** in run.sh that greps/parses external code
+- [ ] **Return structured output** — JSON with file, line, pattern, severity, fix suggestion
+- [ ] **Register with /monitor-misuse** for cross-skill pattern aggregation
+- [ ] **Add to CI** — assess changed files that use your service
+
+### Example: Minimal assess implementation
+
+```python
+# In run.sh, add: assess) python3 scripts/assess_usage.py "$2" ;;
+
+# scripts/assess_usage.py
+import re
+import sys
+import json
+from pathlib import Path
+
+PATTERNS = [
+    {
+        "name": "fire_all_at_once",
+        "pattern": r"asyncio\.gather\(\*\[.*for.*in.*all_",
+        "severity": "error",
+        "message": "Fires all requests at once — use CHUNK_SIZE batching",
+        "fix": "for i in range(0, len(items), CHUNK_SIZE): await gather(*chunk)"
+    },
+    {
+        "name": "missing_response_format",
+        "pattern": r'"model":\s*\w+.*"messages".*(?!"response_format")',
+        "severity": "warning",
+        "message": "JSON expected but response_format not set",
+        "fix": 'Add "response_format": {"type": "json_object"}'
+    },
+]
+
+def assess(file_path: str) -> list[dict]:
+    content = Path(file_path).read_text()
+    issues = []
+    for p in PATTERNS:
+        for m in re.finditer(p["pattern"], content, re.MULTILINE | re.DOTALL):
+            line = content[:m.start()].count("\n") + 1
+            issues.append({
+                "file": file_path,
+                "line": line,
+                "pattern": p["name"],
+                "severity": p["severity"],
+                "message": p["message"],
+                "fix": p["fix"],
+            })
+    return issues
+
+if __name__ == "__main__":
+    issues = assess(sys.argv[1])
+    print(json.dumps({"issues": issues, "passed": len(issues) == 0}, indent=2))
+```
+
+### Cross-Project Usage
+
+```bash
+# CI workflow: assess all files that changed and use scillm
+git diff --name-only main | xargs grep -l "localhost:4001\|SCILLM" | while read f; do
+    ~/.pi/skills/scillm/run.sh assess "$f"
+done
+
+# Agent self-check before running batch
+if ! ~/.pi/skills/scillm/run.sh assess scripts/generate_qras.py | jq -e '.passed'; then
+    echo "Fix usage issues before running batch"
+    exit 1
+fi
+```
+
+### Reference Implementations
+
+| Skill | Status | Location |
+|-------|--------|----------|
+| scillm | **Implemented** | `~/.pi/skills/scillm/scripts/assess_usage.py` |
+| memory | **Implemented** | `~/.pi/skills/memory/scripts/assess_usage.py` |
+| fetcher | Planned | — |
+| embedding | Planned | — |

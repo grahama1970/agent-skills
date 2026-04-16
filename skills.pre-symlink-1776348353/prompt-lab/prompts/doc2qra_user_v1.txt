@@ -1,0 +1,6 @@
+Extract all grounded knowledge items from this text. Every answer must be supported by the source text.
+
+Text:
+{text}
+
+JSON:

@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>/learn-datalake — Quarantine Review</title>
+<style>
+  :root {
+    --nvis-bg: #080a0c;
+    --nvis-surface: #0f1216;
+    --nvis-surface2: #161b21;
+    --nvis-border: #1e252d;
+    --nvis-green: #00ff88;
+    --nvis-red: #ff4444;
+    --nvis-amber: #ffaa00;
+    --nvis-blue: #44aaff;
+    --nvis-white: #c8c8c8;
+    --nvis-dim: #505050;
+    --nvis-yellow: #ffe600;
+    --nvis-cyan: #00e5ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    background: var(--nvis-bg);
+    color: var(--nvis-white);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--nvis-surface);
+    border-bottom: 1px solid var(--nvis-border);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .skill-badge {
+    background: var(--nvis-amber);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--nvis-white);
+  }
+  .queue-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+  }
+  .stat { display: flex; align-items: center; gap: 4px; }
+  .stat-val { font-weight: 700; }
+  .stat-val.red { color: var(--nvis-red); }
+  .stat-val.amber { color: var(--nvis-amber); }
+  .stat-val.green { color: var(--nvis-green); }
+  .stat-val.blue { color: var(--nvis-blue); }
+
+  /* ── Filter Bar ── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: var(--nvis-surface);
+    border-bottom: 1px solid var(--nvis-border);
+    font-size: 12px;
+  }
+  .filter-group {
+    display: flex;
+    gap: 4px;
+  }
+  .filter-chip {
+    padding: 3px 10px;
+    border-radius: 3px;
+    background: var(--nvis-surface2);
+    border: 1px solid var(--nvis-border);
+    color: var(--nvis-dim);
+    cursor: pointer;
+    font-size: 11px;
+  }
+  .filter-chip.active {
+    border-color: var(--nvis-amber);
+    color: var(--nvis-amber);
+    background: rgba(255,170,0,0.08);
+  }
+  .filter-chip:hover { border-color: var(--nvis-dim); color: var(--nvis-white); }
+  .search-input {
+    flex: 1;
+    background: var(--nvis-surface2);
+    border: 1px solid var(--nvis-border);
+    color: var(--nvis-white);
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 12px;
+    max-width: 280px;
+  }
+  .search-input::placeholder { color: var(--nvis-dim); }
+  .sort-select {
+    background: var(--nvis-surface2);
+    border: 1px solid var(--nvis-border);
+    color: var(--nvis-white);
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 11px;
+  }
+
+  /* ── Main Layout: Queue List + Detail Panel ── */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── Queue List (Left) ── */
+  .queue-list {
+    width: 380px;
+    min-width: 380px;
+    border-right: 1px solid var(--nvis-border);
+    overflow-y: auto;
+    background: var(--nvis-bg);
+  }
+  .queue-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--nvis-border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .queue-item:hover { background: var(--nvis-surface); }
+  .queue-item.selected { background: var(--nvis-surface2); border-left: 3px solid var(--nvis-amber); }
+  .queue-item.selected .qi-filename { color: var(--nvis-amber); }
+  .qi-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .qi-filename {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--nvis-white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+  }
+  .qi-time { font-size: 10px; color: var(--nvis-dim); }
+  .qi-meta { display: flex; gap: 8px; font-size: 11px; color: var(--nvis-dim); margin-bottom: 6px; }
+  .qi-reason {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .reason-low-confidence { background: rgba(255,170,0,0.12); color: var(--nvis-amber); border: 1px solid rgba(255,170,0,0.25); }
+  .reason-extraction-error { background: rgba(255,68,68,0.12); color: var(--nvis-red); border: 1px solid rgba(255,68,68,0.25); }
+  .reason-novel-layout { background: rgba(68,170,255,0.12); color: var(--nvis-blue); border: 1px solid rgba(68,170,255,0.25); }
+  .reason-timeout { background: rgba(80,80,80,0.2); color: var(--nvis-dim); border: 1px solid rgba(80,80,80,0.4); }
+  .qi-scores { display: flex; gap: 6px; margin-top: 6px; }
+  .qi-score {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 2px;
+    background: var(--nvis-surface2);
+    border: 1px solid var(--nvis-border);
+  }
+  .qi-score.fail { color: var(--nvis-red); border-color: rgba(255,68,68,0.3); }
+  .qi-score.warn { color: var(--nvis-amber); border-color: rgba(255,170,0,0.3); }
+  .qi-score.pass { color: var(--nvis-green); border-color: rgba(0,255,136,0.3); }
+
+  /* ── Detail Panel (Right) ── */
+  .detail-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Detail Header */
+  .detail-header {
+    padding: 12px 16px;
+    background: var(--nvis-surface);
+    border-bottom: 1px solid var(--nvis-border);
+  }
+  .dh-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .dh-filename { font-size: 15px; font-weight: 700; }
+  .dh-actions { display: flex; gap: 8px; }
+  .action-btn {
+    padding: 5px 14px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-approve { background: rgba(0,255,136,0.1); border-color: var(--nvis-green); color: var(--nvis-green); }
+  .btn-approve:hover { background: rgba(0,255,136,0.2); }
+  .btn-reject { background: rgba(255,68,68,0.1); border-color: var(--nvis-red); color: var(--nvis-red); }
+  .btn-reject:hover { background: rgba(255,68,68,0.2); }
+  .btn-reextract { background: rgba(68,170,255,0.1); border-color: var(--nvis-blue); color: var(--nvis-blue); }
+  .btn-reextract:hover { background: rgba(68,170,255,0.2); }
+  .btn-interview { background: rgba(255,230,0,0.1); border-color: var(--nvis-yellow); color: var(--nvis-yellow); }
+  .btn-interview:hover { background: rgba(255,230,0,0.2); }
+
+  /* Diagnostic Summary */
+  .diagnostic-summary {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .diag-card {
+    padding: 6px 12px;
+    border-radius: 3px;
+    background: var(--nvis-surface2);
+    border: 1px solid var(--nvis-border);
+    font-size: 11px;
+  }
+  .diag-label { color: var(--nvis-dim); margin-bottom: 2px; }
+  .diag-value { font-weight: 700; font-size: 13px; }
+
+  /* Detail Tabs */
+  .detail-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--nvis-border);
+    background: var(--nvis-surface);
+    padding: 0 16px;
+  }
+  .detail-tab {
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--nvis-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .detail-tab:hover { color: var(--nvis-white); }
+  .detail-tab.active { color: var(--nvis-amber); border-bottom-color: var(--nvis-amber); }
+
+  /* Detail Content */
+  .detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  /* Screenshot Grid */
+  .screenshot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .screenshot-card {
+    background: var(--nvis-surface);
+    border: 1px solid var(--nvis-border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .screenshot-img {
+    width: 100%;
+    height: 180px;
+    background: var(--nvis-surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--nvis-dim);
+    font-size: 11px;
+    position: relative;
+  }
+  .screenshot-img .page-num {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    background: rgba(0,0,0,0.7);
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    color: var(--nvis-white);
+  }
+  .screenshot-overlay {
+    position: absolute;
+    border: 2px dashed;
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  .overlay-section { border-color: var(--nvis-blue); background: rgba(68,170,255,0.05); }
+  .overlay-error { border-color: var(--nvis-red); background: rgba(255,68,68,0.08); animation: pulse-red 2s infinite; }
+  @keyframes pulse-red { 0%,100%{opacity:0.5} 50%{opacity:0.9} }
+  .screenshot-label {
+    padding: 6px 8px;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .screenshot-status {
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .status-ok { background: rgba(0,255,136,0.15); color: var(--nvis-green); }
+  .status-warn { background: rgba(255,170,0,0.15); color: var(--nvis-amber); }
+  .status-error { background: rgba(255,68,68,0.15); color: var(--nvis-red); }
+
+  /* Issue List */
+  .issue-list { margin-top: 12px; }
+  .issue-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--nvis-surface);
+    border: 1px solid var(--nvis-border);
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .issue-severity {
+    width: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .severity-high { background: var(--nvis-red); }
+  .severity-medium { background: var(--nvis-amber); }
+  .severity-low { background: var(--nvis-blue); }
+  .issue-body { flex: 1; }
+  .issue-title { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .issue-desc { font-size: 11px; color: var(--nvis-dim); line-height: 1.4; }
+  .issue-meta { font-size: 10px; color: var(--nvis-dim); margin-top: 4px; }
+  .issue-action {
+    align-self: center;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    background: var(--nvis-surface2);
+    border: 1px solid var(--nvis-border);
+    color: var(--nvis-dim);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .issue-action:hover { color: var(--nvis-white); border-color: var(--nvis-dim); }
+
+  /* Shadow Decision Log */
+  .shadow-log {
+    margin-top: 12px;
+  }
+  .shadow-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    font-size: 11px;
+    border-bottom: 1px solid var(--nvis-border);
+  }
+  .shadow-point { color: var(--nvis-blue); font-weight: 600; min-width: 130px; }
+  .shadow-predicted { color: var(--nvis-dim); min-width: 110px; }
+  .shadow-conf { min-width: 50px; text-align: right; }
+  .conf-low { color: var(--nvis-red); }
+  .conf-mid { color: var(--nvis-amber); }
+  .conf-high { color: var(--nvis-green); }
+  .shadow-override {
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    background: rgba(255,170,0,0.12);
+    color: var(--nvis-amber);
+    cursor: pointer;
+  }
+
+  /* Cascade Feature Vector */
+  .feature-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 8px;
+  }
+  .feature-table th {
+    text-align: left;
+    padding: 4px 8px;
+    background: var(--nvis-surface);
+    color: var(--nvis-dim);
+    border-bottom: 1px solid var(--nvis-border);
+  }
+  .feature-table td {
+    padding: 4px 8px;
+    border-bottom: 1px solid var(--nvis-border);
+  }
+
+  /* Footer */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 16px;
+    background: var(--nvis-surface);
+    border-top: 1px solid var(--nvis-border);
+    font-size: 11px;
+    color: var(--nvis-dim);
+  }
+  .footer kbd {
+    background: var(--nvis-surface2);
+    border: 1px solid var(--nvis-border);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-size: 10px;
+    margin: 0 2px;
+  }
+  .footer-right { display: flex; gap: 12px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--nvis-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--nvis-border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--nvis-dim); }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="header-left">
+    <span class="skill-badge">QUARANTINE</span>
+    <h1>/learn-datalake — Deferred Review Queue</h1>
+  </div>
+  <div class="queue-stats">
+    <div class="stat"><span class="stat-val red">12</span> pending</div>
+    <div class="stat"><span class="stat-val amber">5</span> in review</div>
+    <div class="stat"><span class="stat-val green">847</span> resolved</div>
+    <div class="stat"><span class="stat-val blue">864</span> total</div>
+  </div>
+</div>
+
+<!-- ── Filter Bar ── -->
+<div class="filter-bar">
+  <span style="color:var(--nvis-dim)">Reason:</span>
+  <div class="filter-group">
+    <span class="filter-chip active">All</span>
+    <span class="filter-chip">Low Confidence</span>
+    <span class="filter-chip">Extraction Error</span>
+    <span class="filter-chip">Novel Layout</span>
+    <span class="filter-chip">Timeout</span>
+  </div>
+  <span style="color:var(--nvis-dim); margin-left: 8px;">Domain:</span>
+  <div class="filter-group">
+    <span class="filter-chip active">All</span>
+    <span class="filter-chip">Defense</span>
+    <span class="filter-chip">Engineering</span>
+    <span class="filter-chip">NIST</span>
+    <span class="filter-chip">NASA</span>
+  </div>
+  <input class="search-input" placeholder="Search filename, SHA256..." />
+  <select class="sort-select">
+    <option>Newest first</option>
+    <option>Oldest first</option>
+    <option>Lowest confidence</option>
+    <option>Most issues</option>
+  </select>
+</div>
+
+<!-- ── Main ── -->
+<div class="main">
+
+  <!-- Queue List -->
+  <div class="queue-list">
+    <!-- Item 1: Selected -->
+    <div class="queue-item selected">
+      <div class="qi-top">
+        <span class="qi-filename">NIST_SP_800-53r5_draft.pdf</span>
+        <span class="qi-time">2m ago</span>
+      </div>
+      <div class="qi-meta">
+        <span>284 pages</span>
+        <span>•</span>
+        <span>12.4 MB</span>
+        <span>•</span>
+        <span>nist</span>
+      </div>
+      <span class="qi-reason reason-low-confidence">Low Confidence: profile=0.42</span>
+      <div class="qi-scores">
+        <span class="qi-score fail">sections 0.31</span>
+        <span class="qi-score warn">tables 0.68</span>
+        <span class="qi-score pass">text 0.94</span>
+      </div>
+    </div>
+
+    <!-- Item 2 -->
+    <div class="queue-item">
+      <div class="qi-top">
+        <span class="qi-filename">MIL-STD-810H_Method_501.pdf</span>
+        <span class="qi-time">18m ago</span>
+      </div>
+      <div class="qi-meta">
+        <span>47 pages</span>
+        <span>•</span>
+        <span>3.2 MB</span>
+        <span>•</span>
+        <span>defense</span>
+      </div>
+      <span class="qi-reason reason-extraction-error">Extraction Error: table parse</span>
+      <div class="qi-scores">
+        <span class="qi-score pass">sections 0.88</span>
+        <span class="qi-score fail">tables 0.12</span>
+        <span class="qi-score pass">text 0.91</span>
+      </div>
+    </div>
+
+    <!-- Item 3 -->
+    <div class="queue-item">
+      <div class="qi-top">
+        <span class="qi-filename">NASA-TM-2024-0001234.pdf</span>
+        <span class="qi-time">1h ago</span>
+      </div>
+      <div class="qi-meta">
+        <span>156 pages</span>
+        <span>•</span>
+        <span>45.8 MB</span>
+        <span>•</span>
+        <span>nasa</span>
+      </div>
+      <span class="qi-reason reason-novel-layout">Novel Layout: 3-column</span>
+      <div class="qi-scores">
+        <span class="qi-score warn">sections 0.61</span>
+        <span class="qi-score warn">tables 0.72</span>
+        <span class="qi-score warn">text 0.78</span>
+      </div>
+    </div>
+
+    <!-- Item 4 -->
+    <div class="queue-item">
+      <div class="qi-top">
+        <span class="qi-filename">Boeing_737MAX_FMEA_Rev4.pdf</span>
+        <span class="qi-time">3h ago</span>
+      </div>
+      <div class="qi-meta">
+        <span>892 pages</span>
+        <span>•</span>
+        <span>128 MB</span>
+        <span>•</span>
+        <span>engineering</span>
+      </div>
+      <span class="qi-reason reason-timeout">Timeout: 45s exceeded</span>
+      <div class="qi-scores">
+        <span class="qi-score fail">sections —</span>
+        <span class="qi-score fail">tables —</span>
+        <span class="qi-score warn">text 0.54</span>
+      </div>
+    </div>
+
+    <!-- Item 5 -->
+    <div class="queue-item">
+      <div class="qi-top">
+        <span class="qi-filename">CMMC_Level3_Assessment.pdf</span>
+        <span class="qi-time">5h ago</span>
+      </div>
+      <div class="qi-meta">
+        <span>68 pages</span>
+        <span>•</span>
+        <span>4.1 MB</span>
+        <span>•</span>
+        <span>defense</span>
+      </div>
+      <span class="qi-reason reason-low-confidence">Low Confidence: strategy=0.51</span>
+      <div class="qi-scores">
+        <span class="qi-score pass">sections 0.85</span>
+        <span class="qi-score warn">tables 0.65</span>
+        <span class="qi-score pass">text 0.92</span>
+      </div>
+    </div>
+
+    <!-- Item 6 -->
+    <div class="queue-item">
+      <div class="qi-top">
+        <span class="qi-filename">ISO_27001_2022_annex_scan.pdf</span>
+        <span class="qi-time">8h ago</span>
+      </div>
+      <div class="qi-meta">
+        <span>32 pages</span>
+        <span>•</span>
+        <span>18.7 MB</span>
+        <span>•</span>
+        <span>nist</span>
+      </div>
+      <span class="qi-reason reason-extraction-error">Extraction Error: OCR fallback</span>
+      <div class="qi-scores">
+        <span class="qi-score warn">sections 0.55</span>
+        <span class="qi-score fail">tables 0.22</span>
+        <span class="qi-score fail">text 0.38</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Panel -->
+  <div class="detail-panel">
+    <div class="detail-header">
+      <div class="dh-top">
+        <span class="dh-filename">NIST_SP_800-53r5_draft.pdf</span>
+        <div class="dh-actions">
+          <button class="action-btn btn-approve">✓ Approve</button>
+          <button class="action-btn btn-reextract">↻ Re-extract</button>
+          <button class="action-btn btn-interview">? Interview</button>
+          <button class="action-btn btn-reject">✕ Reject</button>
+        </div>
+      </div>
+      <div class="diagnostic-summary">
+        <div class="diag-card">
+          <div class="diag-label">Confidence</div>
+          <div class="diag-value" style="color:var(--nvis-amber)">0.42</div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-label">Blocks</div>
+          <div class="diag-value">1,247</div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-label">Sections</div>
+          <div class="diag-value" style="color:var(--nvis-red)">18 / 54</div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-label">Tables</div>
+          <div class="diag-value" style="color:var(--nvis-amber)">12</div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-label">Figures</div>
+          <div class="diag-value">3</div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-label">Domain</div>
+          <div class="diag-value" style="color:var(--nvis-blue)">compliance</div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-label">Engine</div>
+          <div class="diag-value">pdf_oxide 0.3.14</div>
+        </div>
+        <div class="diag-card">
+          <div class="diag-label">Time</div>
+          <div class="diag-value">8.2s</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail Tabs -->
+    <div class="detail-tabs">
+      <div class="detail-tab active">Screenshots</div>
+      <div class="detail-tab">Issues (4)</div>
+      <div class="detail-tab">Cascade</div>
+      <div class="detail-tab">Extraction JSON</div>
+      <div class="detail-tab">Shadow Log</div>
+    </div>
+
+    <!-- Detail Content: Screenshots Tab -->
+    <div class="detail-content">
+      <!-- Page Screenshots -->
+      <div class="screenshot-grid">
+        <div class="screenshot-card">
+          <div class="screenshot-img" style="background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);">
+            <span class="page-num">Page 1</span>
+            <div style="text-align:center;padding:20px;">
+              <div style="font-size:13px;color:var(--nvis-white);margin-bottom:8px;">NIST Special Publication 800-53</div>
+              <div style="font-size:11px;color:var(--nvis-dim);">Revision 5 — Draft</div>
+              <div style="font-size:10px;color:var(--nvis-dim);margin-top:12px;">Security and Privacy Controls<br>for Information Systems</div>
+            </div>
+          </div>
+          <div class="screenshot-label">
+            <span>Cover page</span>
+            <span class="screenshot-status status-ok">OK</span>
+          </div>
+        </div>
+
+        <div class="screenshot-card">
+          <div class="screenshot-img" style="background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%); position:relative;">
+            <span class="page-num">Page 12</span>
+            <div style="text-align:left;padding:12px 16px;font-size:10px;line-height:1.6;color:var(--nvis-dim);">
+              <div style="color:var(--nvis-white);font-size:11px;margin-bottom:6px;">AC-2 ACCOUNT MANAGEMENT</div>
+              <div>a. Define and document the types of...</div>
+              <div>b. Assign account managers...</div>
+              <div style="margin-top:6px;color:var(--nvis-white);font-size:11px;">Table AC-2</div>
+              <div style="border:1px solid var(--nvis-border);padding:4px;margin-top:2px;">
+                <div style="display:flex;gap:8px;">
+                  <span style="flex:1;">Control</span><span style="flex:1;">Baseline</span>
+                </div>
+              </div>
+            </div>
+            <div class="screenshot-overlay overlay-error" style="top:70px;left:12px;width:calc(100% - 24px);height:50px;"></div>
+          </div>
+          <div class="screenshot-label">
+            <span>Table parse failure area</span>
+            <span class="screenshot-status status-error">ERROR</span>
+          </div>
+        </div>
+
+        <div class="screenshot-card">
+          <div class="screenshot-img" style="background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);">
+            <span class="page-num">Page 45</span>
+            <div style="text-align:left;padding:12px 16px;font-size:10px;line-height:1.6;color:var(--nvis-dim);">
+              <div style="color:var(--nvis-white);font-size:11px;">AU-6 AUDIT RECORD REVIEW</div>
+              <div style="margin-top:4px;">The organization reviews and analyzes...</div>
+              <div style="margin-top:8px;color:var(--nvis-amber);font-size:9px;">⚠ Section boundary missed here</div>
+            </div>
+            <div class="screenshot-overlay overlay-section" style="top:20px;left:10px;width:calc(100% - 20px);height:24px;"></div>
+          </div>
+          <div class="screenshot-label">
+            <span>Missing section boundary</span>
+            <span class="screenshot-status status-warn">WARN</span>
+          </div>
+        </div>
+
+        <div class="screenshot-card">
+          <div class="screenshot-img" style="background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);">
+            <span class="page-num">Page 198</span>
+            <div style="text-align:left;padding:12px 16px;font-size:10px;line-height:1.6;color:var(--nvis-dim);">
+              <div style="color:var(--nvis-white);font-size:11px;">Appendix J — Privacy Controls</div>
+              <div style="margin-top:4px;">This appendix provides a mapping...</div>
+              <div style="margin-top:8px;border:1px solid var(--nvis-border);padding:6px;font-size:9px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
+                  <span>PM-1</span><span>Low</span><span>✓</span>
+                  <span>PM-2</span><span>Mod</span><span>✓</span>
+                  <span>PM-3</span><span>High</span><span>✓</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="screenshot-label">
+            <span>Appendix table (OK)</span>
+            <span class="screenshot-status status-ok">OK</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Issues Preview -->
+      <h3 style="font-size:13px;margin-bottom:10px;color:var(--nvis-amber);">Detected Issues</h3>
+      <div class="issue-list">
+        <div class="issue-item">
+          <div class="issue-severity severity-high"></div>
+          <div class="issue-body">
+            <div class="issue-title">Section hierarchy incomplete</div>
+            <div class="issue-desc">Only 18 of ~54 expected sections detected. Profile predicted 'compliance' domain with nested control families, but section builder found flat structure. Likely cause: numbered list items (a., b., c.) confused as section headers.</div>
+            <div class="issue-meta">Pages 8–240 • Cascade: profile-detector confidence 0.42</div>
+          </div>
+          <button class="issue-action">Label</button>
+        </div>
+
+        <div class="issue-item">
+          <div class="issue-severity severity-high"></div>
+          <div class="issue-body">
+            <div class="issue-title">Table extraction failure on pages 12, 67, 134</div>
+            <div class="issue-desc">Camelot lattice strategy returned 0 rows for 3 control baseline tables. Tables use merged header cells with rowspan > 3. Fallback to stream strategy produced partial results (68% cell coverage).</div>
+            <div class="issue-meta">3 tables affected • Strategy: lattice→stream fallback</div>
+          </div>
+          <button class="issue-action">Label</button>
+        </div>
+
+        <div class="issue-item">
+          <div class="issue-severity severity-medium"></div>
+          <div class="issue-body">
+            <div class="issue-title">Control ID extraction partial</div>
+            <div class="issue-desc">Framework mapper found 312 control references but expected ~450 based on TOC. Regex patterns may miss supplemental guidance references like "See AC-2(7)" in parenthetical citations.</div>
+            <div class="issue-meta">Pages 1–284 • framework_mapper confidence 0.71</div>
+          </div>
+          <button class="issue-action">Label</button>
+        </div>
+
+        <div class="issue-item">
+          <div class="issue-severity severity-low"></div>
+          <div class="issue-body">
+            <div class="issue-title">Footer/header artifacts in body text</div>
+            <div class="issue-desc">12 blocks contain page number or "NIST SP 800-53r5" header text that was not filtered by boilerplate detection. Likely on pages where header overlaps with content area.</div>
+            <div class="issue-meta">12 blocks • block_classifier boilerplate=false</div>
+          </div>
+          <button class="issue-action">Label</button>
+        </div>
+      </div>
+
+      <!-- Shadow Decision Log Preview -->
+      <h3 style="font-size:13px;margin: 16px 0 10px;color:var(--nvis-cyan);">Cascade Decisions</h3>
+      <div class="shadow-log">
+        <div class="shadow-entry">
+          <span class="shadow-point">profile-detector</span>
+          <span class="shadow-predicted">predicted: compliance</span>
+          <span class="shadow-conf conf-low">0.42</span>
+          <span class="shadow-override">Override →</span>
+        </div>
+        <div class="shadow-entry">
+          <span class="shadow-point">extraction-strategy</span>
+          <span class="shadow-predicted">predicted: native</span>
+          <span class="shadow-conf conf-mid">0.67</span>
+          <span class="shadow-override">Override →</span>
+        </div>
+        <div class="shadow-entry">
+          <span class="shadow-point">table-strategy</span>
+          <span class="shadow-predicted">predicted: lattice</span>
+          <span class="shadow-conf conf-low">0.38</span>
+          <span class="shadow-override">Override →</span>
+        </div>
+        <div class="shadow-entry">
+          <span class="shadow-point">header-verdict</span>
+          <span class="shadow-predicted">predicted: accept</span>
+          <span class="shadow-conf conf-mid">0.55</span>
+          <span class="shadow-override">Override →</span>
+        </div>
+        <div class="shadow-entry">
+          <span class="shadow-point">figure-detector</span>
+          <span class="shadow-predicted">predicted: 3 figures</span>
+          <span class="shadow-conf conf-high">0.91</span>
+          <span style="color:var(--nvis-dim);font-size:10px;">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<div class="footer">
+  <div>
+    <kbd>J</kbd><kbd>K</kbd> navigate queue
+    <kbd>A</kbd> approve
+    <kbd>R</kbd> re-extract
+    <kbd>I</kbd> interview
+    <kbd>X</kbd> reject
+    <kbd>L</kbd> label issue
+    <kbd>Tab</kbd> switch tabs
+  </div>
+  <div class="footer-right">
+    <span>Queue: 12 of 864</span>
+    <span>|</span>
+    <span>Labels today: 23</span>
+    <span>|</span>
+    <span style="color:var(--nvis-green);">↑ 15 /create-classifier</span>
+  </div>
+</div>
+
+</body>
+</html>

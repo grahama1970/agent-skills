@@ -465,10 +465,10 @@ def sanity() -> None:
         import httpx
         transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
         with httpx.Client(transport=transport, base_url="http://localhost", timeout=15.0) as client:
-            resp = client.post("/query", json={"aql": "RETURN LENGTH(sparta_qra)", "bind_vars": {}})
+            # Use /list endpoint instead of raw AQL (all AQL must be in memory project)
+            resp = client.post("/list", json={"collection": "sparta_qra", "limit": 1})
             resp.raise_for_status()
-            count_data = resp.json()
-            qra_count = count_data[0] if isinstance(count_data, list) else count_data.get("count", 0)
+            qra_count = resp.json().get("total", 0)
             checks.append(("Memory", True, f"sparta_qra count={qra_count}"))
     except Exception as e:
         checks.append(("Memory", False, str(e)))
