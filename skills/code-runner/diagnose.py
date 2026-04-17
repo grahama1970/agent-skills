@@ -136,7 +136,10 @@ def call_diagnose(
 
     resp = httpx.post(
         SCILLM_URL,
-        headers={"Authorization": f"Bearer {SCILLM_KEY}"},
+        headers={
+            "Authorization": f"Bearer {SCILLM_KEY}",
+            "X-Caller-Skill": "code-runner:diagnose",
+        },
         json=payload,
         timeout=120.0,
     )
@@ -160,7 +163,10 @@ def call_diagnose(
     }
     retry_resp = httpx.post(
         SCILLM_URL,
-        headers={"Authorization": f"Bearer {SCILLM_KEY}"},
+        headers={
+            "Authorization": f"Bearer {SCILLM_KEY}",
+            "X-Caller-Skill": "code-runner:diagnose",
+        },
         json=retry_payload,
         timeout=120.0,
     )

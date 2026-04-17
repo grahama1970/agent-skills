@@ -378,7 +378,10 @@ async def call_diagnosis_llm(prompt: str) -> dict:
         async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.post(
                 scillm_url,
-                headers={"Authorization": f"Bearer {scillm_key}"},
+                headers={
+                    "Authorization": f"Bearer {scillm_key}",
+                    "X-Caller-Skill": "code-runner:diagnosis",
+                },
                 json={
                     "model": "text",
                     "messages": [{"role": "user", "content": prompt}],
