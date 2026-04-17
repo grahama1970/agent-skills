@@ -813,6 +813,10 @@ LEGACY_BACKEND_NAMES = {
 }
 
 
+# code-runner accepts short backend names and translates them internally
+CODE_RUNNER_BACKENDS = {"codex", "claude", "text", "gemini", "deepseek", "test"}
+
+
 def check_scillm_backend(task: dict, findings: list[Finding]):
     """Check: Verify backend names exist in scillm's model registry."""
     backend = str(task.get("backend", "")).strip()
@@ -823,7 +827,11 @@ def check_scillm_backend(task: dict, findings: list[Finding]):
     if runner == "local":
         return  # local tasks don't use backends
 
-    # Check for legacy names
+    # code-runner handles its own backend translation — accept its native names
+    if runner == "code-runner" and backend in CODE_RUNNER_BACKENDS:
+        return  # Valid for code-runner
+
+    # Check for legacy names (only applies to scillm/other runners)
     if backend in LEGACY_BACKEND_NAMES:
         findings.append(Finding(
             task=f"Task {task['id']}",
