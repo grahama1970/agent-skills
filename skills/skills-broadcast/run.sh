@@ -6,20 +6,22 @@ set -euo pipefail
 # =============================================================================
 # skills-broadcast: Symlink-based skill sharing
 #
-# The canonical source of truth is THIS project's .pi/skills/ directory.
-# All other IDE/project skill directories become symlinks to canonical.
+# CANONICAL SOURCE: ~/workspace/experiments/agent-skills/skills (GitHub repo)
+# All IDE/project skill directories become symlinks pointing TO canonical.
+#
+# To edit skills: edit directly in agent-skills repo, then git commit/push.
+# Changes propagate instantly to all projects via symlinks.
 #
 # This replaces the old rsync-based approach which:
 #   - Duplicated ~300GB of data across targets
 #   - Required complex exclusion lists
 #   - Caused the 2026-02-11 deletion incident via --delete
 #   - Required manual "push" to propagate changes
-#
-# With symlinks, changes are instant everywhere. No sync needed.
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CANONICAL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+# Canonical is the agent-skills GitHub repo
+CANONICAL_DIR="$HOME/workspace/experiments/agent-skills/skills"
 REGISTRY_FILE="$HOME/.agent_skills_targets"
 
 # Validate canonical has enough skills to be trustworthy
@@ -27,16 +29,16 @@ MIN_SKILLS=20
 
 usage() {
     cat <<USAGE
-Usage: ${0##*/} [link|status|info|cleanup|git-sync|register|unregister|targets|push|pull] [--dry-run]
+Usage: ${0##*/} [link|status|info|cleanup|git-commit|register|unregister|targets|push|pull] [--dry-run]
 
-Symlink-based skill sharing. Canonical source: $CANONICAL_DIR
+Symlink-based skill sharing. Canonical source: $CANONICAL_DIR (GitHub repo)
 
 Commands:
   link              Create symlinks at all targets (main operation)
   status            Show all targets and their link state
   info              Alias for status
   cleanup           Delete .pre-symlink-* backup directories to reclaim disk space
-  git-sync          Commit and push canonical skills to agent-skills GitHub repo
+  git-commit        Commit and push changes in canonical agent-skills repo
   register [PATH]   Add a project to the target registry
   unregister [PATH] Remove a project from the target registry
   targets           List registered projects
@@ -44,6 +46,7 @@ Commands:
 Legacy aliases (map to 'link' for backwards compatibility):
   push              Same as 'link'
   pull              Same as 'link'
+  git-sync          Same as 'git-commit' (deprecated name)
 
 Options:
   --dry-run, -n     Preview what would be done
@@ -56,8 +59,12 @@ DRY_RUN=0
 
 if [[ $# -gt 0 ]]; then
     case "$1" in
-        link|status|info|find|cleanup|git-sync|register|unregister|targets)
+        link|status|info|find|cleanup|register|unregister|targets)
             MODE="$1"
+            shift ;;
+        git-commit|git-sync)
+            # git-sync is deprecated name for git-commit
+            MODE="git-commit"
             shift ;;
         push|pull)
             # Backwards compat: push/pull now just create symlinks
@@ -182,153 +189,70 @@ if [[ "$MODE" == "cleanup" ]]; then
     exit 0
 fi
 
-# ── Git Sync to agent-skills repo ────────────────────────────────────────────
+# ── Git Commit in canonical agent-skills repo ────────────────────────────────
 
-if [[ "$MODE" == "git-sync" ]]; then
-    UPSTREAM_DIR="$HOME/workspace/experiments/agent-skills"
-    UPSTREAM_SKILLS="$UPSTREAM_DIR/skills"
+if [[ "$MODE" == "git-commit" ]]; then
+    REPO_DIR="$HOME/workspace/experiments/agent-skills"
 
-    echo "=== Skills Broadcast: Git Sync ==="
+    echo "=== Skills Broadcast: Git Commit ==="
     echo ""
-    echo "Canonical: $CANONICAL_DIR"
-    echo "Target:    $UPSTREAM_DIR (github.com/grahama1970/agent-skills)"
+    echo "Canonical: $CANONICAL_DIR (agent-skills/skills)"
     echo ""
 
     # Validate
-    if [[ ! -d "$UPSTREAM_DIR/.git" ]]; then
-        echo "[ABORT] agent-skills repo not found at $UPSTREAM_DIR" >&2
+    if [[ ! -d "$REPO_DIR/.git" ]]; then
+        echo "[ABORT] agent-skills repo not found at $REPO_DIR" >&2
         exit 1
     fi
 
-    skill_count=$(find -L "$CANONICAL_DIR" -maxdepth 2 -name "SKILL.md" 2>/dev/null | wc -l || true)
+    if [[ ! -d "$CANONICAL_DIR" ]]; then
+        echo "[ABORT] Canonical skills dir not found at $CANONICAL_DIR" >&2
+        exit 1
+    fi
+
+    skill_count=$(find "$CANONICAL_DIR" -maxdepth 2 -name "SKILL.md" 2>/dev/null | wc -l || true)
     if [[ "$skill_count" -lt "$MIN_SKILLS" ]]; then
         echo "[ABORT] Canonical has only $skill_count skills (min: $MIN_SKILLS)" >&2
         exit 1
     fi
 
-    # Track whether git-sync succeeded — only restore symlink on failure
-    GIT_SYNC_OK=0
-    restore_symlink_on_failure() {
-        if [[ "$GIT_SYNC_OK" -eq 0 && -d "$UPSTREAM_SKILLS" && ! -L "$UPSTREAM_SKILLS" ]]; then
-            rm -rf "$UPSTREAM_SKILLS"
-            ln -sfn "$CANONICAL_DIR" "$UPSTREAM_SKILLS"
-            echo "  Symlink restored (git-sync failed): $UPSTREAM_SKILLS -> $CANONICAL_DIR"
-        fi
-    }
-    trap restore_symlink_on_failure EXIT
+    cd "$REPO_DIR"
 
-    # Step 1: Remove symlink (or stale real dir) if present
-    if [[ -L "$UPSTREAM_SKILLS" ]]; then
-        echo "Removing symlink..."
-        rm "$UPSTREAM_SKILLS"
-    elif [[ -d "$UPSTREAM_SKILLS" ]]; then
-        echo "Clearing old skills dir..."
-        rm -rf "$UPSTREAM_SKILLS"
-    fi
-
-    # Clean up any stale backup dirs from prior runs
-    for stale in "$UPSTREAM_DIR"/skills.old-*; do
-        [[ -d "$stale" ]] && rm -rf "$stale"
-    done
-
-    # Step 2: Copy canonical content (cp -a preserves internal symlinks to 12TB)
-    echo "Copying $skill_count skills from canonical..."
-    if [[ $DRY_RUN -eq 1 ]]; then
-        echo "[DRY RUN] Would copy $CANONICAL_DIR -> $UPSTREAM_SKILLS"
-        echo "[DRY RUN] Would commit and push to origin"
-        # Restore symlink for dry-run (no real copy was made)
-        ln -sfn "$CANONICAL_DIR" "$UPSTREAM_SKILLS"
-        GIT_SYNC_OK=1  # not a failure — skip trap
-        exit 0
-    fi
-
-    # Step 2: Whitelist-copy source files only. Never follow symlinks.
-    # This prevents secrets in session logs, Rust build artifacts, .venv,
-    # models, and other heavy/sensitive content from reaching GitHub.
-    mkdir -p "$UPSTREAM_SKILLS"
-    # Directory excludes MUST come before --include='*/' (rsync processes in order)
-    rsync -a --no-links --delete \
-        --exclude='.venv*/' \
-        --exclude='__pycache__/' \
-        --exclude='.ruff_cache/' \
-        --exclude='.pytest_cache/' \
-        --exclude='node_modules/' \
-        --exclude='target/' \
-        --exclude='.git/' \
-        --exclude='worktrees/' \
-        --exclude='designs/' \
-        --exclude='references/' \
-        --exclude='.artifacts/' \
-        --exclude='models/' \
-        --exclude='.system/' \
-        --exclude='structured/' \
-        --exclude='state/' \
-        --exclude='checkpoints/' \
-        --exclude='*.pre-symlink-*' \
-        --include='*/' \
-        --include='*.py' \
-        --include='*.sh' \
-        --include='*.md' \
-        --include='*.yaml' \
-        --include='*.yml' \
-        --include='*.toml' \
-        --include='*.txt' \
-        --include='*.html' \
-        --include='*.css' \
-        --include='*.js' \
-        --include='*.ts' \
-        --include='*.tsx' \
-        --include='*.jsx' \
-        --include='*.rs' \
-        --include='*.go' \
-        --include='*.cfg' \
-        --include='*.ini' \
-        --include='*.conf' \
-        --include='*.svg' \
-        --include='*.png' \
-        --include='Makefile' \
-        --include='Dockerfile' \
-        --include='Dockerfile.*' \
-        --include='docker-compose.yml' \
-        --include='docker-compose.yaml' \
-        --exclude='*' \
-        "$CANONICAL_DIR/" "$UPSTREAM_SKILLS/"
-
-    # Safety: remove any file >50MB that slipped through
-    find "$UPSTREAM_SKILLS" -type f -size +50M -delete 2>/dev/null || true
-    # Safety: remove any .env or secret-bearing files
-    find "$UPSTREAM_SKILLS" -name '.env' -delete 2>/dev/null || true
-    # Clean empty directories left by exclusions
-    find "$UPSTREAM_SKILLS" -type d -empty -delete 2>/dev/null || true
-
-    # Step 4: Commit and push
-    cd "$UPSTREAM_DIR"
-    git add -A
-
-    # Check if there are actual changes
-    if git diff --cached --quiet; then
-        echo ""
+    # Check for changes
+    if git diff --quiet && git diff --cached --quiet; then
         echo "No changes to commit. Agent-skills is up to date."
-        GIT_SYNC_OK=1  # not a failure — skip trap
         cd "$OLDPWD"
         exit 0
     fi
 
-    # Show summary
-    echo ""
+    if [[ $DRY_RUN -eq 1 ]]; then
+        echo "[DRY RUN] Would commit and push changes in $REPO_DIR"
+        echo ""
+        echo "Changes:"
+        git status --short | head -20
+        cd "$OLDPWD"
+        exit 0
+    fi
+
+    # Stage and commit
+    git add -A
+
+    if git diff --cached --quiet; then
+        echo "No staged changes to commit."
+        cd "$OLDPWD"
+        exit 0
+    fi
+
     echo "Changes:"
-    git diff --cached --stat | tail -5
+    git diff --cached --stat | tail -10
     echo ""
 
     timestamp="$(date +%Y-%m-%d)"
-    git commit -m "sync: $skill_count skills from canonical ($timestamp)"
+    git commit -m "update: $skill_count skills ($timestamp)"
     git push origin "$(git branch --show-current)" --force-with-lease
 
     echo ""
     echo "Pushed to github.com/grahama1970/agent-skills"
-
-    # Mark success — trap will NOT restore symlink, keeping real files in working tree
-    GIT_SYNC_OK=1
     cd "$OLDPWD"
     exit 0
 fi
@@ -498,17 +422,16 @@ if [[ "$MODE" == "status" || "$MODE" == "info" || "$MODE" == "find" ]]; then
         echo ""
     done
 
-    # Also check agent-skills repo
-    UPSTREAM="$HOME/workspace/experiments/agent-skills/skills"
-    if [[ -d "$UPSTREAM" ]]; then
-        echo "Legacy upstream: $UPSTREAM"
-        if [[ -L "$UPSTREAM" ]]; then
-            echo "  SYMLINK -> $(readlink "$UPSTREAM")"
-        else
-            count=$(find "$UPSTREAM" -maxdepth 2 -name "SKILL.md" 2>/dev/null | wc -l || true)
-            size=$(du -sh "$UPSTREAM" 2>/dev/null | cut -f1)
-            echo "  DIR ($count skills, $size) — consider making this a symlink too"
-        fi
+    # Show canonical status
+    echo "Canonical: $CANONICAL_DIR"
+    if [[ -d "$CANONICAL_DIR" && ! -L "$CANONICAL_DIR" ]]; then
+        count=$(find "$CANONICAL_DIR" -maxdepth 2 -name "SKILL.md" 2>/dev/null | wc -l || true)
+        size=$(du -sh "$CANONICAL_DIR" 2>/dev/null | cut -f1)
+        echo "  DIR ($count skills, $size) — this is the source of truth"
+    elif [[ -L "$CANONICAL_DIR" ]]; then
+        echo "  ERROR: Canonical should be a real directory, not a symlink!"
+    else
+        echo "  ERROR: Canonical directory not found!"
     fi
     exit 0
 fi
@@ -559,13 +482,7 @@ for proj in "${!PROJECTS[@]}"; do
     echo ""
 done
 
-# Handle the legacy agent-skills upstream repo
-UPSTREAM="$HOME/workspace/experiments/agent-skills/skills"
-if [[ -d "$UPSTREAM" && ! -L "$UPSTREAM" ]]; then
-    echo "Legacy upstream: $UPSTREAM"
-    create_link "$UPSTREAM"
-    echo ""
-fi
+# Note: agent-skills/skills IS the canonical source now. No symlink needed there.
 
 if [[ $DRY_RUN -eq 1 ]]; then
     echo "[DRY RUN] Rerun without --dry-run to apply changes."
