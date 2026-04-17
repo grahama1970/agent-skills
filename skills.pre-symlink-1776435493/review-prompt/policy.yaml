@@ -1,0 +1,23 @@
+# /review-prompt skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns: single-model review, skipping scillm concurrent batch
+
+name: review-prompt
+slash_command: /review-prompt
+
+required_reads:
+  - .pi/skills/review-prompt/SKILL.md
+  - .pi/skills/best-practices-prompt/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Reimplementing prompt review with a single LLM call instead of multi-model
+    - pattern: "review.*prompt.*single|one.*model.*review.*prompt"
+      reason: "Prompt review requires concurrent multi-model review (3 models via /scillm). Single-model review misses cross-model blind spots."
+
+    # WRONG: Asking the LLM if the prompt is good instead of counting findings
+    - pattern: "is.this.prompt.good|rate.this.prompt|score.*prompt.*1.10"
+      reason: "Scoring is deterministic: count findings by severity (critical=3, major=2, minor=1). Do not ask the LLM to rate the prompt."
+
+    # WRONG: Hand-editing prompt templates without multi-model review
+    - pattern: "Edit.*prompts/.*\\.txt|Write.*prompts/.*\\.txt"
+      reason: "Prompt templates must go through /review-prompt multi-model review before manual editing. Run './run.sh review --template <file>' first."

@@ -52,8 +52,10 @@ from structured_execute_helpers import (  # noqa: E402
     _build_system_prompt,
     _compile_skill_task,
     _dependency_graph,
+    _extract_wave,
     _render_state,
     _subagent_backend_name,
+    check_all_preconditions,
     render_report,
 )
 
@@ -842,7 +844,9 @@ async def _execute_plan_async(path: Path, repo_root: Path | None = None, resume:
             for child in reverse.get(tid, []):
                 indegree[child] -= 1
 
-    max_conc = int((plan.get("execution") or {}).get("max_concurrency") or 1)
+    execution = plan.get("execution") or {}
+    max_conc = int(execution.get("max_concurrency") or 1)
+    wave_barrier = bool(execution.get("wave_barrier", False))
     ready = [tid for tid, deg in indegree.items() if deg == 0 and tid not in completed_prior]
     active_by_lane: dict[str, str] = {}
 
@@ -871,7 +875,7 @@ async def _execute_plan_async(path: Path, repo_root: Path | None = None, resume:
     try:
         return await _execute_loop(
             path, session_dir, runtimes, deps, indegree, reverse,
-            completed_prior, max_conc, ready, active_by_lane, aborted, paused,
+            completed_prior, max_conc, wave_barrier, ready, active_by_lane, aborted, paused,
         )
     finally:
         wd_task.cancel()
@@ -885,7 +889,7 @@ async def _execute_loop(
     plan_path: Path, session_dir: Path,
     runtimes: dict[str, TaskRuntime], deps: dict[str, list[str]],
     indegree: dict[str, int], reverse: dict[str, list[str]],
-    completed_prior: set[str], max_conc: int, ready: list[str],
+    completed_prior: set[str], max_conc: int, wave_barrier: bool, ready: list[str],
     active_by_lane: dict[str, str],
     aborted: asyncio.Event, paused: asyncio.Event,
 ) -> int:
@@ -923,11 +927,41 @@ async def _execute_loop(
 
         # ── Schedule ready tasks ──
         scheduled = False
+        # Wave barrier: determine highest completed wave
+        if wave_barrier:
+            completed_waves: set[int] = set()
+            for tid, t in runtimes.items():
+                if t.status == "completed":
+                    completed_waves.add(_extract_wave(t.lane))
+            # Wave N tasks can only run if wave N-1 is fully complete
+            max_ready_wave = max((_extract_wave(runtimes[tid].lane) for tid in ready), default=0)
+
         for task_id in list(ready):
             task = runtimes[task_id]
             if task.status == "skipped":
                 ready.remove(task_id)
                 continue
+            # Wave barrier: block if prior wave not fully complete
+            if wave_barrier:
+                task_wave = _extract_wave(task.lane)
+                if task_wave > 0:
+                    prior_wave = task_wave - 1
+                    prior_wave_tasks = [t for t in runtimes.values() if _extract_wave(t.lane) == prior_wave]
+                    if not all(t.status == "completed" for t in prior_wave_tasks):
+                        continue  # defer until prior wave finishes
+            # Precondition check
+            if task.preconditions:
+                errors = check_all_preconditions(task)
+                if errors:
+                    task.status = "failed"
+                    task.error = f"preconditions failed: {'; '.join(errors)}"
+                    logger.error("Task {} preconditions failed: {}", task_id, errors)
+                    ready.remove(task_id)
+                    # Mark downstream as blocked
+                    for child in reverse.get(task_id, []):
+                        runtimes[child].status = "blocked"
+                        runtimes[child].error = f"blocked by failed parent: {task_id}"
+                    continue
             if task.lane in active_by_lane:
                 continue
             if len(task_map) >= max_conc:

@@ -123,6 +123,50 @@ Backups saved to: `/mnt/storage12tb/backups/arangodb/<timestamp>/`
 | `EMBEDDING_SERVICE_URL` | - | Required for `embeddings --fix` |
 | `DRY_RUN` | `0` | Set to `1` for preview mode |
 
+## Batch Operations & Performance
+
+### Bulk Updates
+
+For large-scale updates (10K+ documents), use batch AQL instead of individual calls:
+
+```python
+# WRONG: 222K individual HTTP requests (3.3/s = 18 hours)
+for qra in qras:
+    http.post('/create-evidence-case', json={'question': qra['question']})
+
+# RIGHT: Batch endpoint with ThreadPoolExecutor (50 req/batch, 32 workers)
+http.post('/create-evidence-case-batch', json={
+    'items': [{'question': q['question'], 'source_id': q.get('source_id') or ''} for q in batch],
+    'max_workers': 32
+})
+```
+
+### Bulk AQL Updates
+
+For direct database updates without HTTP overhead:
+
+```python
+# Single document update
+db.aql.execute('UPDATE {_key: @key} WITH {field: @val} IN collection', bind_vars={...})
+
+# BETTER: Bulk update (100 docs per query)
+aql = '''
+FOR item IN @updates
+  UPDATE {_key: item.key} WITH {field: item.val} IN collection
+  RETURN 1
+'''
+db.aql.execute(aql, bind_vars={'updates': [{'key': k, 'val': v} for k, v in batch]})
+```
+
+### Performance Bottlenecks
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| 3-5 req/s via HTTP | Single-threaded daemon | Use batch endpoint with `max_workers` |
+| AQL taking 10s+ | Full collection scan | Add ArangoSearch View index |
+| Memory spikes | Large result sets | Use cursor pagination with `_key > @last_key` |
+| Slow backfill | Individual updates | Batch 50-100 docs per AQL UPDATE |
+
 ## Scheduling
 
 Add to your project's services.yaml for automated maintenance:

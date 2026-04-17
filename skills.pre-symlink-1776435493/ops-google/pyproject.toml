@@ -1,0 +1,23 @@
+[project]
+name = "ops-google"
+version = "0.1.0"
+description = "Google Gemini API management and budget safety skill"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "google-generativeai>=0.8.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "python-dotenv>=1.0.0",
+    "loguru>=0.7.0,<0.7.3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "manager.py",
+    "util.py",
+    "run.sh",
+    "SKILL.md",
+]

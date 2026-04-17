@@ -1,0 +1,17 @@
+[project]
+name = "music-lab"
+version = "0.1.0"
+description = "Self-improving music creation convergence loop for Horus persona"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "typer>=0.9.0",
+    "loguru>=0.7.0,<0.7.3",
+    "httpx>=0.28.0",
+]
+# NOTE: music-lab has minimal deps. All audio/MIR/LLM work is done
+# via subprocess calls to existing skills. httpx is for WebSocket
+# broadcast to ux-lab server (pipeline progress events).
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+only-include = ["converge.py", "pipeline.py"]

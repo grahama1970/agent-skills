@@ -1,0 +1,8 @@
+Extract ALL cybersecurity entity IDs from this text. Return ONLY valid JSON: {{"entities": [{{"id": "...", "framework": "SPARTA|NIST|ATTACK|CWE|D3FEND|CM"}}]}}
+Rules:
+- SPARTA: SV-XX-N, REC-NNNN, DE-NNNN, EX-NNNN patterns
+- NIST: XX-N or XX-NN format (AC-2, SI-4, AU-6)
+- If an ID looks truncated (e.g. DE-0 instead of DE-0009), set framework to "TRUNCATED" and do NOT include it
+- Only extract IDs explicitly referenced in the text
+
+Text: {text}

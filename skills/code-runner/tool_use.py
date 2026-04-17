@@ -937,6 +937,7 @@ def run_tool_use_loop(
     dod_command: str = "",
     event_emitter: Any = None,
     round_num: int = 0,
+    task_id: str = "",
 ) -> tuple[list[str], list[dict]]:
     """Run the tool-use agent loop. Returns (files_written, messages).
 
@@ -1016,7 +1017,8 @@ def run_tool_use_loop(
         data = None
         max_retries = 3
         # Estimate tokens for context overflow detection
-        approx_tokens = sum(len(m.get("content", "")) // 4 for m in messages)
+        # Note: m.get("content", "") returns None if key exists with None value, so use `or ""`
+        approx_tokens = sum(len(m.get("content") or "") // 4 for m in messages)
 
         for attempt in range(1, max_retries + 1):
             try:
@@ -1063,11 +1065,16 @@ def run_tool_use_loop(
                         }
                     break  # Exit retry loop with mock response
 
+                # Build enhanced caller header: code-runner:{task_id}:{round}
+                # Sanitize task_id to remove any chars that could break HTTP headers
+                safe_task_id = "".join(c for c in task_id if c.isalnum() or c in "-_") if task_id else "unknown"
+                caller_header = f"code-runner:{safe_task_id}:{round_num}"
+
                 resp = httpx.post(
                     SCILLM_URL,
                     headers={
                         "Authorization": f"Bearer {SCILLM_KEY}",
-                        "X-Caller-Skill": "code-runner",  # Required by scillm for cost tracking
+                        "X-Caller-Skill": caller_header,  # Enhanced: code-runner:{task_id}:{round}
                     },
                     json=payload,
                     timeout=180.0,

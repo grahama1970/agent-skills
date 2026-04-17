@@ -1,0 +1,32 @@
+# /code-runner skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: file safety violations, destructive git, skipping DoD
+
+name: code-runner
+slash_command: /code-runner
+
+required_reads:
+  - .pi/skills/code-runner/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Editing protected files (denylist from SKILL.md File Safety section)
+    - pattern: "Edit.*SKILL\\.md|Write.*SKILL\\.md"
+      reason: "SKILL.md is on the denylist. Never edit skill definition files."
+    - pattern: "Edit.*run\\.sh|Write.*run\\.sh"
+      reason: "run.sh is on the denylist. Never edit skill runner scripts."
+    - pattern: "Edit.*sanity\\.sh|Write.*sanity\\.sh"
+      reason: "sanity.sh is on the denylist. Never edit sanity check scripts."
+    - pattern: "Edit.*\\.env|Write.*\\.env"
+      reason: ".env is on the denylist. Never edit environment files."
+
+    # Destructive git operations (SKILL.md: Never git add -A, Never git reset --hard)
+    - shell_contains: "git add -A"
+      reason: "Never git add -A. Only stage specific written files."
+    - shell_contains: "git reset --hard"
+      reason: "Never git reset --hard. Use git checkout on specific files to discard."
+    - shell_contains: "git clean -f"
+      reason: "Destructive git clean. User work must never be touched."
+
+    # Fire-and-forget without reviewing output (Pattern 4 anti-pattern)
+    - pattern: "run\\.sh run.*(?!result\\.json|response\\.txt)"
+      reason: "Always read result.json and response.txt after code-runner run. Never fire-and-forget."

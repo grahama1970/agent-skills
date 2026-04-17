@@ -5,7 +5,7 @@ unset VIRTUAL_ENV
 # Single entry point for ALL Chrome/browser interactions
 #
 # Usage:
-#   surf cdp start [port]     # Start Chrome with CDP
+#   surf cdp start [port] [--headless]  # Start Chrome with CDP
 #   surf cdp stop             # Stop Chrome CDP
 #   surf cdp status           # Check CDP status
 #   surf cdp env              # Output export commands for shells
@@ -58,6 +58,7 @@ find_chrome() {
 
 cdp_start() {
     local port="${1:-$CDP_PORT}"
+    local headless="${2:-}"
 
     # Check if already running
     if curl -s "http://127.0.0.1:${port}/json/version" &>/dev/null; then
@@ -72,7 +73,11 @@ cdp_start() {
         return 1
     }
 
-    echo "Starting Chrome with CDP on port ${port}..."
+    if [[ "$headless" == "headless" ]]; then
+        echo "Starting Chrome (headless) with CDP on port ${port}..."
+    else
+        echo "Starting Chrome with CDP on port ${port}..."
+    fi
 
     # Create profile directory
     mkdir -p "$CHROME_USER_DATA"
@@ -81,25 +86,33 @@ cdp_start() {
     # Extension must be loaded manually via chrome://extensions
     # See SKILL.md "Advanced: surf-cli Extension" section.
 
+    # Build Chrome flags
+    local -a chrome_flags=(
+        --remote-debugging-port="$port"
+        --remote-allow-origins=*
+        --user-data-dir="$CHROME_USER_DATA"
+        --no-first-run
+        --no-default-browser-check
+        --disable-background-networking
+        --disable-client-side-phishing-detection
+        --disable-default-apps
+        --disable-hang-monitor
+        --disable-popup-blocking
+        --disable-prompt-on-repost
+        --disable-sync
+        --disable-translate
+        --metrics-recording-only
+        --safebrowsing-disable-auto-update
+        --window-size=1280,900
+    )
+
+    # Add headless flag if requested
+    if [[ "$headless" == "headless" ]]; then
+        chrome_flags+=(--headless=new)
+    fi
+
     # Start Chrome with CDP flags
-    "$chrome" \
-        --remote-debugging-port="$port" \
-        --remote-allow-origins=* \
-        --user-data-dir="$CHROME_USER_DATA" \
-        --no-first-run \
-        --no-default-browser-check \
-        --disable-background-networking \
-        --disable-client-side-phishing-detection \
-        --disable-default-apps \
-        --disable-hang-monitor \
-        --disable-popup-blocking \
-        --disable-prompt-on-repost \
-        --disable-sync \
-        --disable-translate \
-        --metrics-recording-only \
-        --safebrowsing-disable-auto-update \
-        --window-size=1280,900 \
-        "about:blank" &>/dev/null &
+    "$chrome" "${chrome_flags[@]}" "about:blank" &>/dev/null &
 
     local pid=$!
     echo "$pid" > "$CDP_PID_FILE"
@@ -371,7 +384,19 @@ surf_cli_available() {
 # Handle CDP subcommands
 if [[ "$1" == "cdp" ]]; then
     case "$2" in
-        start)  cdp_start "$3" ;;
+        start)
+            # Parse: surf cdp start [--headless] [port] or [port] [--headless]
+            _port=""
+            _headless=""
+            for arg in "${@:3}"; do
+                if [[ "$arg" == "--headless" ]]; then
+                    _headless="headless"
+                elif [[ "$arg" =~ ^[0-9]+$ ]]; then
+                    _port="$arg"
+                fi
+            done
+            cdp_start "${_port:-$CDP_PORT}" "$_headless"
+            ;;
         stop)   cdp_stop ;;
         status) cdp_status "$3" ;;
         env)    cdp_env "$3" ;;
@@ -413,7 +438,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf text               Get page text content"
     echo ""
     echo "CDP Fallback (when extension not available):"
-    echo "  surf cdp start [port]   Start Chrome with CDP"
+    echo "  surf cdp start [port] [--headless]  Start Chrome with CDP"
     echo "  surf cdp stop           Stop Chrome CDP"
     echo "  surf cdp status         Show CDP status"
     echo ""

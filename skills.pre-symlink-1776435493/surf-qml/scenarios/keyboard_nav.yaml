@@ -1,0 +1,32 @@
+name: keyboard_navigation
+description: >
+  Basic keyboard navigation test for the Horus overlay.
+  Verifies Tab, arrow keys, and Return all work correctly.
+
+steps:
+  - find: "main.py"
+  - focus: "main.py"
+  - wait: 0.5
+  - snap: { output: "01_initial.png" }
+
+  - type: "calculator"
+  - wait: 0.5
+  - snap: { output: "02_search.png" }
+  - verify: { role: "list-item" }
+
+  - key: "Tab"
+  - wait: 0.2
+  - snap: { output: "03_tab.png" }
+
+  - key: "Down"
+  - wait: 0.2
+  - snap: { output: "04_down.png" }
+  - verify: { state: "focused" }
+
+  - key: "Return"
+  - wait: 0.5
+  - snap: { output: "05_return.png" }
+
+  - key: "Escape"
+  - wait: 0.3
+  - snap: { output: "06_escape.png" }

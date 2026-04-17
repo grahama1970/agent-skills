@@ -1,0 +1,13 @@
+[project]
+name = "intent-mapper-skill"
+version = "0.1.0"
+description = "ML-based intent classification and mapping"
+requires-python = ">=3.10,<3.13"
+dependencies = ["unsloth", "transformers", "python-arango", "typer", "rich", "httpx>=0.24", "loguru>=0.7.0,<0.7.3"]
+
+[tool.uv]
+dev-dependencies = ["pytest"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+

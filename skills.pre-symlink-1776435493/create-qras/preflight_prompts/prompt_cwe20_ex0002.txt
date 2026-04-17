@@ -1,0 +1,219 @@
+# Test Case: CWE-20 to EX-0002 (Input Validation → Spacecraft Mobility Exploit)
+# Expected: Input validation weakness mapped to spacecraft mobility exploitation
+
+You are a cybersecurity evidence-grounding analyst.
+
+Your task is to generate grounded Question-Reasoning-Answer (QRA) pairs about CWE weaknesses and their relationship to one target record from another framework.
+
+Allowed target frameworks:
+- SPARTA
+- MITRE_ATT&CK
+- CAPEC
+
+Use only the payload below.
+Do not use outside knowledge, even if it seems obvious.
+If the payload does not contain enough evidence for a grounded pair, return zero pairs.
+
+GOAL
+
+Find all plausible grounded CWE-to-target QRA candidates, rank them, and return only the top 5 strongest non-duplicate pairs that pass every rule below.
+
+A valid QRA pair must use exactly:
+- 1 CWE record
+- 1 target record from SPARTA, MITRE_ATT&CK, or CAPEC
+- optional bridge evidence from crosswalk_chains
+
+A valid pair must be cybersecurity-related and useful for:
+- threat_assessment
+- compliance_mapping
+- audit
+- gap_analysis
+
+HARD RULES
+
+1. Return 0 pairs if there is no CWE record.
+2. Return 0 pairs if there is no target record in SPARTA, MITRE_ATT&CK, or CAPEC.
+3. Do not invent exploit paths, mission impacts, mitigations, attack steps, or control intent.
+4. Do not use outside knowledge.
+5. Use exactly 1 CWE record and exactly 1 target record per pair.
+6. Do not merge multiple target records into one pair.
+7. The question must explicitly name at least one ID such as CWE-287, CAPEC-115, T1078, or SV-AC-2.
+8. The answer must be directly supported by quoted evidence from the payload.
+9. The reasoning may connect quoted evidence, but may not add new facts.
+10. If the bridge is missing or weak, reject the pair.
+11. Reject duplicates and near-duplicates.
+12. Prefer abstaining over guessing.
+
+IMPORTANT EVIDENCE PRIORITY FOR CWE
+
+Use CWE evidence in this order:
+1. description
+2. extended_description
+3. common_consequences
+4. modes_of_introduction
+5. potential_mitigations
+6. observed_examples
+7. related_attack_patterns
+
+VALID CWE QUESTION TYPES
+
+Use only one of these pair types:
+- relationship
+- risk_linkage
+- control_relevance
+- adversary_relevance
+- mitigation_gap
+
+Examples of acceptable question forms:
+- "How does CWE-287 relate to CAPEC-115 based on the supplied evidence?"
+- "Why is CWE-287 relevant to T1078 in this payload?"
+- "What security gap described by CWE-287 is addressed by SV-AC-2?"
+- "How could the weakness in CWE-287 support the behavior described by CAPEC-115?"
+
+REJECTION RULES
+
+Reject a pair if:
+- the question can be answered from the CWE record alone
+- the question can be answered from the target record alone
+- the bridge depends on common knowledge not stated in the payload
+- the pair is only topically similar and not evidentially linked
+- the answer contains any unsupported claim
+- the content is not cybersecurity-related
+
+DISCOVERY AND RANKING PROCEDURE
+
+Step 1: Identify all CWE records with non-empty evidence text.
+Step 2: Identify all target records with framework = SPARTA, MITRE_ATT&CK, or CAPEC.
+Step 3: For each CWE record, test each target record one-by-one.
+Step 4: For each candidate pair, ask:
+  a. Is there explicit bridge evidence in crosswalk_chains or direct textual linkage in the payload?
+  b. Are both records necessary to answer the question?
+  c. Can the answer be written without outside knowledge?
+  d. Would a cybersecurity analyst, auditor, or compliance reviewer find the question useful?
+Step 5: Keep only candidates that pass all four checks.
+Step 6: Rank surviving candidates by:
+  1. grounding strength
+  2. bridge explicitness
+  3. necessity of both records
+  4. usefulness for cybersecurity review
+  5. non-duplication
+Step 7: Return the top 5 candidates.
+Step 8: If none survive, return an empty list with a reason.
+
+OUTPUT FORMAT
+
+Output ONLY valid JSON. No markdown. No prose before or after.
+
+Return one of these two shapes:
+
+{
+  "pairs": [],
+  "reason": "why no grounded CWE QRA pairs could be generated from this payload"
+}
+
+OR
+
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "1-2 sentences connecting the quoted evidence without adding new facts",
+      "answer": "1-3 sentences directly answering the question using only supported claims",
+      "source_framework": "CWE",
+      "source_id": "CWE-XXX",
+      "target_framework": "CAPEC | MITRE_ATT&CK | SPARTA",
+      "target_id": "string",
+      "evidence_quotes": [
+        {
+          "source": "cwe",
+          "id": "CWE-XXX",
+          "quote": "verbatim quote from the payload"
+        },
+        {
+          "source": "target",
+          "id": "target ID",
+          "quote": "verbatim quote from the payload"
+        }
+      ],
+      "bridge_evidence": [
+        {
+          "source": "crosswalk_chains or direct_payload_match",
+          "quote": "verbatim bridge evidence if used"
+        }
+      ],
+      "pair_type": "relationship | risk_linkage | control_relevance | adversary_relevance | mitigation_gap",
+      "actionable_for": "threat_assessment | compliance_mapping | audit | gap_analysis",
+      "confidence": "high | medium"
+    }
+  ]
+}
+
+PAYLOAD
+<evidence_case_payload>
+{
+  "cwe_record": {
+    "control_id": "CWE-20",
+    "description": "The product receives input or data, but it does not validate or incorrectly validates that the input has the properties that are required to process the data safely and correctly.",
+    "extended_description": "Input validation is a frequently-used technique for checking potentially dangerous inputs in order to ensure that the inputs are safe for processing within the code, or when communicating with other components. Input can consist of: raw data - strings, numbers, parameters, file contents, etc. metadata - information about the raw data, such as headers or size Data can be simple or structured. Structured data can be composed of many nested layers, composed of combinations of metadata and raw data, with other simple or structured data. Many properties of raw data or metadata may need to be validated upon entry into the code, such as: specified quantities such as size, length, frequency, price, rate, number of operations, time, etc. implied or derived quantities, such as the actual size of a file instead of a specified size indexes, offsets, or positions into more complex data structures symbolic keys or other elements into hash tables, associative arrays, etc. well-formedness, i.e. syntactic correctness - compliance with expected syntax lexical token correctness - compliance with rules for what is treated as a token specified or derived type - the actual type of the input (or what the input appears to be) consistency - between individual data elements, between raw data and metadata, between references, etc. conformance to domain-specific rules, e.g. business logic equivalence - ensuring that equivalent inputs are treated the same authenticity, ownership, or other attestations about the input, e.g. a cryptographic signature to prove the source of the data Implied or derived properties of data must often be calculated or inferred by the code itself. Errors in deriving properties may be considered a contributing factor to improper input validation."
+  },
+  "target_records": [
+    {
+      "control_id": "EX-0002",
+      "framework": "SPARTA",
+      "description": "Threat actors may leverage the fact that spacecraft orbit through space unlike typical enterprise systems which are stationary. Threat actors can leverage the mobility of spacecraft to their advantage so the malicious code has a trigger based on spacecraft ephemeris to only execute when the spacecraft is within a certain location (within a countries boundary for example) that is often referred to as Geofencing. By using a Geofence an adversary can ensure that malware is only executed when it is needed. The relative or absolute position of the spacecraft could be combined with some form of timing to serve as the trigger for malware execution."
+    }
+  ],
+  "crosswalk_chains": [
+    {
+      "from": "CWE-20",
+      "from_framework": "CWE",
+      "to_framework": "SPARTA",
+      "hops": [
+        {
+          "id": "CWE-20",
+          "name": "Improper Input Validation",
+          "framework": "",
+          "description": "The product receives input or data, but it does not validate or incorrectly validates that the input has the properties that are required to process the data safely and correctly."
+        },
+        {
+          "id": "CAPEC-10",
+          "name": "Buffer Overflow via Environment Variables",
+          "framework": "",
+          "description": "This attack pattern involves causing a buffer overflow through manipulation of environment variables. Once the adversary finds that they can modify an environment variable, they may try to overflow associated buffers. This attack leverages implicit trust often placed in environment variables."
+        },
+        {
+          "id": "T1562.003",
+          "name": "Impair Command History Logging",
+          "framework": "",
+          "description": "Adversaries may impair command history logging to hide commands they run on a compromised system. Various command interpreters keep track of the commands users type in their terminal so that users can retrace what they've done. \n\nOn Linux and macOS, command history is tracked in a file pointed to by the environment variable <code>HISTFILE</code>. When a user logs off a system, this information is flushed to a file in the user's home directory called <code>~/.bash_history</code>. The <code>HISTCONTROL</code> environment variable keeps track of what should be saved by the <code>history</code> command and eventually into the <code>~/.bash_history</code> file when a user logs out. <code>HISTCONTROL</code> does not exist by default on macOS, but can be set by the user and will be respected. The `HISTFILE` environment variable is also used in some ESXi systems.(Citation: Google Cloud Threat Intelligence ESXi VIBs 2022)\n\nAdversaries may clear the history environment variable (<code>unset HISTFILE</code>) or set the command history size to zero (<code>export HISTFILESIZE=0</code>) to prevent logging of commands. Additionally, <code>HISTCONTROL</code> can be configured to ignore commands that start with a space by simply setting it to \"ignorespace\". <code>HISTCONTROL</code> can also be set to ignore duplicate commands by setting it to \"ignoredups\". In some Linux systems, this is set by default to \"ignoreboth\" which covers both of the previous examples. This means that \u201c ls\u201d will not be saved, but \u201cls\u201d would be saved by history. Adversaries can abuse this to operate without leaving traces by simply prepending a space to all of their terminal commands. \n\nOn Windows systems, the <code>PSReadLine</code> module tracks commands used in all PowerShell sessions and writes them to a file (<code>$env:APPDATA\\Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt</code> by default). Adversaries may change where these logs are saved using <code>Set-PSReadLineOption -HistorySavePath {File Path}</code>. This will cause <code>ConsoleHost_history.txt</code> to stop receiving logs. Additionally, it is possible to turn off logging to this file using the PowerShell command <code>Set-PSReadlineOption -HistorySaveStyle SaveNothing</code>.(Citation: Microsoft PowerShell Command History)(Citation: Sophos PowerShell command audit)(Citation: Sophos PowerShell Command History Forensics)\n\nAdversaries may also leverage a [Network Device CLI](https://attack.mitre.org/techniques/T1059/008) on network devices to disable historical command logging (e.g. <code>no logging</code>)."
+        },
+        {
+          "id": "LM-0001",
+          "name": "Hosted Payload",
+          "framework": "",
+          "description": "Threat actors may use the hosted payload within the victim spacecraft in order to gain access to other subsystems. The hosted payload often has a need to gather and send data to the internal subsystems, depending on its purpose. Threat actors may be able to take advantage of this communication in order to laterally move to the other subsystems and have commands be processed."
+        }
+      ]
+    },
+    {
+      "from": "EX-0002",
+      "from_framework": "SPARTA",
+      "to_framework": "CWE",
+      "hops": [
+        {
+          "id": "EX-0002",
+          "name": "Position, Navigation, and Timing (PNT) Geofencing",
+          "framework": "",
+          "description": "Threat actors may leverage the fact that spacecraft orbit through space unlike typical enterprise systems which are stationary. Threat actors can leverage the mobility of spacecraft to their advantage so the malicious code has a trigger based on spacecraft ephemeris to only execute when the spacecraft is within a certain location (within a countries boundary for example) that is often referred to as Geofencing. By using a Geofence an adversary can ensure that malware is only executed when it is needed. The relative or absolute position of the spacecraft could be combined with some form of timing to serve as the trigger for malware execution."
+        },
+        {
+          "id": "CWE-20",
+          "name": "Improper Input Validation",
+          "framework": "",
+          "description": "The product receives input or data, but it does not validate or incorrectly validates that the input has the properties that are required to process the data safely and correctly."
+        }
+      ]
+    }
+  ]
+}
+</evidence_case_payload>

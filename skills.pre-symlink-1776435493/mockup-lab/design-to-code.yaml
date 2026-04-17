@@ -1,0 +1,43 @@
+# Design-to-Code: Agent Workflow
+# This is NOT an /orchestrate file. It's a step-by-step guide for the agent.
+# The agent reads this and executes each step directly.
+#
+# Each step runs as a subagent for context protection.
+
+steps:
+
+  1. Write spec:
+     - Copy docs/spec-template.md, fill in all sections with real data
+     - Save as spec.md in project dir
+
+  2. Generate:
+     - ./run.sh generate --spec spec.md
+     - Note the projectId and screenId from output
+
+  3. Human review:
+     - Give human the Stitch URL
+     - /interview to collect feedback
+     - ./run.sh iterate --feedback "..." until human approves
+
+  4. Explore views:
+     - Create views.json with project navigation views
+     - ./run.sh explore --views views.json
+     - Check manifest.json for errors
+
+  5. Pull:
+     - ./run.sh pull to download approved HTML + screenshots
+
+  6. Code:
+     - Read /best-practices-react
+     - Build React component from the screenshots
+     - Match the design exactly, don't invent
+
+  7. Review:
+     - Screenshot the running component
+     - ./run.sh review --screenshot component.png
+     - If match_score < 90: read differences, fix code, re-review
+     - If match_score >= 90: done
+
+  8. Ship:
+     - /review-design for final audit
+     - Human sign-off via /interview

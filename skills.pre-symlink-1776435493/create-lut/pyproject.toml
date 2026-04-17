@@ -1,0 +1,16 @@
+[project]
+name = "create-lut"
+version = "0.1.0"
+description = "Programmatically generate or bake cinematic 3D LUTs"
+dependencies = [
+    "colour-science",
+    "numpy",
+    "opencv-python",
+    "typer>=0.9.0",
+    "loguru>=0.7.0,<0.7.3",
+    "rich",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

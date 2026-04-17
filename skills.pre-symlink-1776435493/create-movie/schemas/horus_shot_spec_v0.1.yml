@@ -1,0 +1,162 @@
+# HorusShotSpec v0.1 Schema Definition
+# YAML-based shot specification that compiles to Veo API JSON
+# Replaces KSML for renderer-neutral movie generation
+
+version: "0.1"
+
+# Schema metadata
+schema:
+  name: HorusShotSpec
+  description: Shot-level specification for Veo video generation
+  author: Horus
+  created: 2026-02-02
+
+# Field definitions with types and constraints
+fields:
+  # Required fields
+  shot_id:
+    type: string
+    required: true
+    description: Unique identifier for this shot (e.g., "ACT1_SC02_SHOT03")
+    pattern: "^[A-Z0-9_]+$"
+
+  prompt:
+    type: object
+    required: true
+    fields:
+      text:
+        type: string
+        required: true
+        description: Main prompt describing the shot
+        max_length: 4000
+      negative:
+        type: string
+        required: false
+        default: "text overlays, watermarks, shaky camera, distorted faces, garbled speech"
+        description: Negative prompt to avoid unwanted elements
+
+  duration_s:
+    type: integer
+    required: true
+    enum: [4, 8, 16]
+    description: Shot duration in seconds (Veo 3.1 supported values)
+
+  aspect_ratio:
+    type: string
+    required: true
+    enum: ["16:9", "9:16", "1:1"]
+    description: Video aspect ratio
+
+  # Optional fields
+  resolution:
+    type: string
+    required: false
+    default: "1080p"
+    enum: ["720p", "1080p"]
+    description: Output resolution
+
+  references:
+    type: object
+    required: false
+    fields:
+      subject_images:
+        type: array
+        max_items: 6
+        description: Reference images for subject consistency
+        items:
+          type: object
+          fields:
+            path:
+              type: string
+              required: true
+            weight:
+              type: number
+              min: 0.0
+              max: 1.0
+              default: 0.5
+      first_frame:
+        type: string
+        required: false
+        description: Path to first frame reference image
+      last_frame:
+        type: string
+        required: false
+        description: Path to last frame reference image
+
+  controls:
+    type: object
+    required: false
+    fields:
+      seed:
+        type: integer
+        required: false
+        description: Random seed for reproducibility
+      safety:
+        type: string
+        required: false
+        default: "default"
+        enum: ["default", "strict"]
+        description: Content safety filter level
+
+  renderer:
+    type: object
+    required: false
+    fields:
+      name:
+        type: string
+        default: "veo"
+        enum: ["veo", "kling", "runway"]
+      model:
+        type: string
+        default: "veo-3.1-generate-preview"
+        description: Specific model version
+
+  # Metadata for scene organization
+  metadata:
+    type: object
+    required: false
+    fields:
+      scene:
+        type: string
+        description: Scene identifier
+      act:
+        type: string
+        description: Act identifier
+      sequence_order:
+        type: integer
+        description: Order within sequence for assembly
+      notes:
+        type: string
+        description: Production notes
+
+# Example shot specification
+example:
+  shot_id: "ACT1_SC02_SHOT03"
+  prompt:
+    text: >
+      A tense noir interrogation in a dim room. Slow dolly push toward the suspect.
+      Hard side-key lighting, deep shadows. Subtle room tone.
+      Dialogue: "Where were you last night?"
+    negative: "text overlays, watermarks, shaky camera, distorted faces, garbled speech"
+  duration_s: 8
+  aspect_ratio: "16:9"
+  resolution: "1080p"
+  references:
+    subject_images:
+      - path: "./assets/character_detective.png"
+        weight: 0.7
+      - path: "./assets/character_suspect.png"
+        weight: 0.5
+    first_frame: null
+    last_frame: null
+  controls:
+    seed: null
+    safety: "default"
+  renderer:
+    name: "veo"
+    model: "veo-3.1-generate-preview"
+  metadata:
+    scene: "SC02"
+    act: "ACT1"
+    sequence_order: 3
+    notes: "Key interrogation moment - build tension"

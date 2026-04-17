@@ -1,0 +1,26 @@
+# /edge-verifier skill policy — enforced by .claude/hooks/skill_policy.py
+# Agents skip KNN/Hybrid verification and create graph edges directly.
+
+name: edge-verifier
+slash_command: /edge-verifier
+
+required_reads:
+  - .pi/skills/edge-verifier/SKILL.md
+
+forbidden_use:
+  any_of:
+    # Creating lesson_edges directly without verification
+    - pattern: "lesson_edges.*INSERT|INSERT.*lesson_edges"
+      reason: "Don't insert lesson_edges directly. Use edge-verifier/run.sh which runs KNN search + LLM verification first."
+
+    # Skipping KNN recall step
+    - pattern: "graph_memory\\.search|graph_memory\\.insert"
+      reason: "Don't call graph_memory directly. Use edge-verifier/run.sh which orchestrates recall + verify + link."
+
+    # Running batch verification during peak hours (documented Common Mistake)
+    - shell_contains: "edge-verifier/run.sh --batch"
+      reason: "Don't run batch verification interactively. Schedule via /scheduler for off-peak (nightly): cron '0 2 * * *'."
+
+    # Missing .env credentials (documented Common Mistake)
+    - pattern: "edge.verifier.*without.*env|ARANGO_URL.*None"
+      reason: "Ensure .env has ARANGO_URL, ARANGO_DB, and CHUTES_API_KEY before running edge-verifier."

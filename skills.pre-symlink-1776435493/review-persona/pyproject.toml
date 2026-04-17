@@ -1,0 +1,16 @@
+[project]
+name = "review-persona"
+version = "1.0.0"
+description = "Multi-provider AI persona review for character realism and voice casting"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "typer>=0.12.0",
+    "pyyaml>=6.0",
+    "loguru>=0.7.0,<0.7.3",
+]
+
+[project.scripts]
+review-persona = "src.cli:app"
+
+[tool.uv]
+dev-dependencies = []

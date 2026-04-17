@@ -14,7 +14,7 @@ Your task:
 Generate grounded QRA pairs that help practitioners understand:
 - what the attack pattern is,
 - how CAPEC describes it,
-- what the attack taxonomy context is, if parent_id or category is explicitly provided,
+- what the attack taxonomy context is, if parent_id or category_name is explicitly provided,
 - and, only if explicitly present in the source, execution steps, prerequisites, or mitigations.
 
 You must use only the admissible source fields provided in the prompt.

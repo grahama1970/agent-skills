@@ -1,0 +1,35 @@
+# Chutes.ai LLM Gateway — centralized proxy for DeepSeek/OpenRouter/Gemini
+#
+#   docker compose up -d
+#   docker compose logs -f
+#
+# Environment variables (set in shell or .env):
+#   CHUTES_API_KEY, CHUTES_API_TOKEN, OPENROUTER_API_KEY, GEMINI_API_KEY
+
+services:
+  chutes-call:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chutes-call:latest
+    container_name: embry-chutes-call
+    network_mode: host
+    restart: unless-stopped
+
+    labels:
+      embry.skill: chutes-call
+      embry.port: "${CHUTES_CALL_PORT:-8630}"
+
+    environment:
+      CHUTES_API_KEY: "${CHUTES_API_KEY:-}"
+      CHUTES_API_TOKEN: "${CHUTES_API_TOKEN:-}"
+      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      CHUTES_CALL_PORT: "${CHUTES_CALL_PORT:-8630}"
+
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:${CHUTES_CALL_PORT:-8630}/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

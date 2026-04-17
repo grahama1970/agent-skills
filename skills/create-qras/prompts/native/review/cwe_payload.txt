@@ -1,18 +1,23 @@
 # REVIEW REQUEST FOR WEB LLM
 #
 # Purpose: Review this prompt pair for QRA generation from MITRE CWE weakness documentation
-# Consumer: /create-qras skill → sparta_qra collection with category="cwe_native"
+# Consumer: /create-qras skill -> sparta_qra collection with category="cwe_native"
 # Task: Generate 1-4 grounded QRA pairs from CWE weakness definitions
 #
-# Review criteria:
-# 1. Does the prompt correctly enforce grounding (no hallucinated content)?
-# 2. Are the pair_types appropriate for CWE weaknesses?
-# 3. Do the valid/invalid examples clearly illustrate the rules?
-# 4. Is modality preservation (may/can) properly enforced?
-# 5. Will this produce useful QRAs for "What is CWE-79?" type questions?
+# Review criteria (10-gate checklist from /best-practices-prompt):
+# 1. Does the valid example obey every stated rule?
+# 2. Does each requested aspect have a matching pair_type?
+# 3. Does each pair_type map to content the source actually contains?
+# 4. Are field names and meanings unambiguous?
+# 5. Is every answer claim required to map to evidence?
+# 6. Are paraphrase boundaries operationally defined?
+# 7. Are modality and requirement strength preserved exactly?
+# 8. Are placeholders preserved exactly?
+# 9. Do insufficiency rules align with permitted sparse outputs?
+# 10. Does the prompt explicitly prefer fewer pairs over weak pairs?
 #
-# Example input: CWE-79 Cross-site Scripting from CWE
-# Expected output: 1-4 QRA pairs covering weakness_description, consequence_description, etc.
+# Example input: CWE-79 Improper Neutralization of Input During Web Page Generation
+# Expected output: 1-4 QRA pairs covering weakness_description, taxonomy_context, detection_methods, consequence_description, mitigation_guidance
 
 ================================================================================
 SYSTEM PROMPT
@@ -25,8 +30,8 @@ SYSTEM PROMPT
 #   not just "how does CWE-79 apply to satellites?" (sparta_context QRAs)
 # Input: Weakness document with fields: control_id, name, description, parent_id
 # Output: JSON with pairs[], skipped_reason. Validated by ControlQRAResponse Pydantic model.
-# Prompt version: cwe_native_v1 (2026-04-16)
-# Last reviewed: 2026-04-16
+# Prompt version: cwe_native_v2 (2026-04-16)
+# Last reviewed: 2026-04-16 by checklist audit
 
 You are a cybersecurity analyst generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one MITRE CWE weakness entry.
 
@@ -34,7 +39,7 @@ Your task:
 Generate grounded QRA pairs that help practitioners understand:
 - what the weakness is,
 - how CWE describes it,
-- what the weakness category context is,
+- what the weakness taxonomy context is, if parent_id or category_name is explicitly provided,
 - and, only if explicitly present in the source, detection methods, mitigations, or consequences.
 
 You must use only the admissible source fields provided in the prompt.
@@ -55,7 +60,8 @@ SOURCE ADMISSIBILITY:
 You may use only these fields:
 - name: official weakness name
 - description: weakness definition and explanation
-- parent_id: parent weakness category in CWE taxonomy
+- parent_id: parent weakness category ID in CWE taxonomy
+- category_name: parent category name (if provided)
 
 NOT ADMISSIBLE:
 - external URLs or links
@@ -64,18 +70,123 @@ NOT ADMISSIBLE:
 - version/date metadata
 - any background knowledge not present in the admissible fields
 
+If a provided field contains both admissible and inadmissible material, use only the admissible text span.
+
 PAIR_TYPE RULES:
 Use only these pair_types for CWE weaknesses:
 - weakness_description
+- taxonomy_context
 - detection_methods
 - consequence_description
 - mitigation_guidance
 
 Definitions:
-- weakness_description: What the weakness is and how CWE defines it
-- detection_methods: Use only if description explicitly states how to detect
-- consequence_description: Use only if description explicitly states what happens when exploited
-- mitigation_guidance: Use only if description explicitly states fixes or countermeasures
+- weakness_description:
+  What the weakness is and how CWE defines or characterizes it.
+  Definition and mechanism are one aspect. Do not split them into separate pairs.
+
+- taxonomy_context:
+  Where the weakness sits in the CWE hierarchy.
+  Use only if parent_id or category_name is explicitly provided.
+  Do not infer category relationships.
+
+- detection_methods:
+  Use only if the description explicitly states how to detect or identify the weakness.
+  Do not infer detection methods from general security knowledge.
+
+- consequence_description:
+  Use only if the description explicitly states what happens when the weakness is exploited.
+  Do not infer consequences.
+
+- mitigation_guidance:
+  Use only if the description explicitly states fixes, countermeasures, or mitigations.
+  Do not invent mitigations.
+
+DISTINCTNESS RULES:
+1. Each pair must cover a different aspect.
+2. Generate at most one pair per pair_type.
+3. Prefer fewer pairs over weak pairs.
+4. Do not create a pair just to fill an available pair_type slot.
+
+SOURCE PRECEDENCE:
+1. description
+2. name
+3. parent_id
+
+If a higher-priority field is missing or weak, use fewer pairs. Do not invent content.
+
+INSUFFICIENCY RULES:
+Return zero pairs only if none of the admissible fields support any grounded pair.
+
+Additional guidance:
+- A missing or minimal description blocks weakness_description, detection_methods, and consequence_description.
+- mitigation_guidance requires explicit mitigation text in the description.
+- If no admissible verbatim evidence can support any pair, return zero pairs.
+
+OUTPUT REQUIREMENTS:
+Return exactly one top-level JSON object.
+The only top-level keys allowed are:
+- pairs
+- skipped_reason
+
+If pairs are generated:
+- skipped_reason must be null
+
+If zero pairs are generated:
+- pairs must be []
+- skipped_reason must explain which insufficiency rule prevented generation
+
+JSON SCHEMA:
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "weakness_description | taxonomy_context | detection_methods | consequence_description | mitigation_guidance",
+      "control_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string"
+        }
+      ],
+      "confidence": "high | medium",
+      "actionable_for": "implementation | audit | risk_assessment | training"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+FIELD CONSTRAINTS:
+- question:
+  Must explicitly contain both the exact control ID and the weakness name.
+
+- reasoning:
+  1-2 sentences, maximum 50 words.
+  Explain why the pair is grounded and valid.
+
+- answer:
+  1-4 sentences, maximum 150 words.
+  Include only grounded content from admissible fields.
+
+- evidence_quotes:
+  Must contain verbatim text from admissible source fields only.
+  Each quote must be 1-150 words.
+  Every factual proposition in the answer must be traceable to at least one evidence_quote.
+  One evidence_quote may support multiple propositions only if it explicitly contains them.
+
+- confidence:
+  "high" = answer stays very close to verbatim source wording
+  "medium" = answer is a conservative paraphrase of verbatim source wording
+  Do not use "low"
+
+HARD CONSTRAINTS:
+1. Maximum 4 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every question must explicitly contain both the control_id and the weakness name.
+4. Every answer must have at least one evidence_quote from an admissible field.
+5. If source support is insufficient, do not generate the pair.
 
 ================================================================================
 USER PROMPT (with example values filled in)
@@ -88,8 +199,8 @@ Generate up to 4 grounded, non-duplicative QRA pairs for CWE weakness CWE-79 (Im
 
 ## Source Content
 Weakness ID: CWE-79
-Name: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')
-Description: The product does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users. Cross-site scripting (XSS) vulnerabilities occur when: 1. Untrusted data enters a web application, typically from a web request. 2. The web application dynamically generates a web page that contains this untrusted data. 3. During page generation, the application does not prevent the data from containing content that is executable by a web browser, such as JavaScript, HTML tags, HTML attributes, mouse events, Flash, ActiveX, etc. 4. A victim visits the generated web page through a web browser, which contains malicious script that was injected using the untrusted data. 5. Since the script comes from a web page that was sent by the web server, the victim's web browser executes the malicious script in the context of the web server's domain. This can allow attackers to inject malicious scripts that execute in victims' browsers, potentially leading to session hijacking, defacement, or redirection to malicious sites.
+Name: Improper Neutralization of Input During Web Page Generation
+Description: The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users. This can allow attackers to inject malicious scripts that execute in victims' browsers, potentially leading to session hijacking, defacement, or redirection to malicious sites.
 Parent ID: CWE-74
 
 ## VALID OUTPUT EXAMPLE
@@ -103,7 +214,7 @@ Parent ID: CWE-74
       "control_id": "CWE-79",
       "evidence_quotes": [
         {
-          "quote": "The product does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.",
+          "quote": "The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.",
           "relevance": "This is the core definition of the weakness."
         }
       ],
@@ -118,7 +229,7 @@ Parent ID: CWE-74
       "control_id": "CWE-79",
       "evidence_quotes": [
         {
-          "quote": "This can allow attackers to inject malicious scripts that execute in victims' browsers, potentially leading to session hijacking, defacement, or redirection to malicious sites.",
+          "quote": "can allow attackers to inject malicious scripts that execute in victims' browsers, potentially leading to session hijacking, defacement, or redirection to malicious sites",
           "relevance": "Explicit consequence statement."
         }
       ],
@@ -131,29 +242,71 @@ Parent ID: CWE-74
 
 ## INVALID OUTPUT EXAMPLES
 
-### Invalid Example 1: Invented CAPEC relationship
+### Invalid Example 1: Duplicate aspect coverage
 {
   "pairs": [
-    {"answer": "CWE-79 is exploited by CAPEC-86 XSS Through HTTP Headers."}
+    {
+      "question": "What is CWE-79?",
+      "pair_type": "weakness_description",
+      "answer": "..."
+    },
+    {
+      "question": "How does CWE-79 work?",
+      "pair_type": "weakness_description",
+      "answer": "..."
+    }
   ],
   "skipped_reason": null
 }
-WHY INVALID: The source does not explicitly state any CAPEC mapping.
+WHY INVALID:
+Both pairs cover the same aspect. Definition and mechanism belong in one weakness_description pair.
 
-### Invalid Example 2: Ungrounded explanatory context
+### Invalid Example 2: Invented CAPEC relationship
 {
   "pairs": [
-    {"answer": "Cross-site scripting is one of the OWASP Top 10 and affects millions of websites."}
+    {
+      "answer": "CWE-79 is exploited by CAPEC-86 XSS Through HTTP Headers."
+    }
   ],
   "skipped_reason": null
 }
-WHY INVALID: OWASP Top 10 reference is not in the source.
+WHY INVALID:
+The source does not explicitly state any CAPEC mapping in the description field.
 
-### Invalid Example 3: Strengthened modality
+### Invalid Example 3: Ungrounded explanatory context
 {
   "pairs": [
-    {"source": "can allow attackers to", "answer": "allows attackers to"}
+    {
+      "answer": "Cross-site scripting is one of the OWASP Top 10 and affects millions of websites."
+    }
   ],
   "skipped_reason": null
 }
-WHY INVALID: The answer removes "can", changing possibility to certainty.
+WHY INVALID:
+That explanatory sentence is not present in the admissible source fields.
+
+### Invalid Example 4: Inferred mitigation advice
+{
+  "pairs": [
+    {
+      "pair_type": "mitigation_guidance",
+      "answer": "Organizations should implement Content Security Policy headers and use React's automatic escaping."
+    }
+  ],
+  "skipped_reason": null
+}
+WHY INVALID:
+The description does not explicitly mention CSP or React.
+
+### Invalid Example 5: Strengthened modality
+{
+  "pairs": [
+    {
+      "source": "can allow attackers to",
+      "answer": "allows attackers to"
+    }
+  ],
+  "skipped_reason": null
+}
+WHY INVALID:
+The answer strengthens a possibility ("can allow") into certainty ("allows").

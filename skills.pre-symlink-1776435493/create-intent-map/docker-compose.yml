@@ -1,0 +1,70 @@
+version: "3.8"
+
+services:
+  train:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: intent-mapper-train
+    container_name: intent-mapper-train
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - HF_TOKEN=${HF_TOKEN}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    volumes:
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./logs:/workspace/logs
+      - ./scripts:/workspace/scripts
+      - ${HF_CACHE_DIR:-~/.cache/huggingface}:/workspace/.cache/huggingface
+    working_dir: /workspace
+    command: ["--help"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Interactive shell for debugging
+  shell:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: intent-mapper-train
+    container_name: intent-mapper-shell
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - HF_TOKEN=${HF_TOKEN}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+    volumes:
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./logs:/workspace/logs
+      - ./scripts:/workspace/scripts
+      - ${HF_CACHE_DIR:-~/.cache/huggingface}:/workspace/.cache/huggingface
+    working_dir: /workspace
+    entrypoint: /bin/bash
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # TensorBoard for monitoring
+  tensorboard:
+    image: tensorflow/tensorflow:latest
+    container_name: intent-mapper-tensorboard
+    ports:
+      - "6006:6006"
+    volumes:
+      - ./logs:/logs
+    command: tensorboard --logdir=/logs --host=0.0.0.0

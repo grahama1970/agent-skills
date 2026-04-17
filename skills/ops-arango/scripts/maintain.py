@@ -41,14 +41,40 @@ def get_db():
     return client.db(db_name, username=user, password=password)
 
 
-def check_embeddings(db, fix: bool = False, embedding_service: Optional[str] = None) -> dict:
-    """Find documents missing embedding vectors."""
+def check_embeddings(
+    db,
+    fix: bool = False,
+    embedding_service: Optional[str] = None,
+    scope: Optional[str] = None,
+) -> dict:
+    """Find documents missing embedding vectors.
+
+    Args:
+        db: ArangoDB database connection
+        fix: If True, backfill missing embeddings
+        embedding_service: URL of embedding service (required for fix)
+        scope: Filter collections by prefix (e.g., "sparta" for sparta_*)
+    """
     results = {"missing": [], "total": 0, "fixed": 0}
 
-    # Collections that should have embeddings
-    embedding_collections = ["lessons", "episodes"]
+    # Collections that should have embeddings and their text fields
+    # Format: {collection: (text_fields, preview_field)}
+    embedding_collections = {
+        "lessons": (["problem", "solution"], "problem"),
+        "episodes": (["content"], "content"),
+        "sparta_qra": (["question", "answer", "reasoning"], "question"),
+        "sparta_controls": (["name", "description"], "name"),
+        "sparta_url_knowledge": (["text", "topic"], "topic"),
+    }
 
-    for coll_name in embedding_collections:
+    # Filter by scope if specified
+    if scope:
+        embedding_collections = {
+            k: v for k, v in embedding_collections.items()
+            if k.startswith(scope)
+        }
+
+    for coll_name, (text_fields, preview_field) in embedding_collections.items():
         if not db.has_collection(coll_name):
             continue
 
@@ -57,29 +83,44 @@ def check_embeddings(db, fix: bool = False, embedding_service: Optional[str] = N
         # Query for documents without embeddings
         query = """
         FOR doc IN @@collection
-            FILTER doc.embedding == null OR LENGTH(doc.embedding) == 0
-            RETURN {_key: doc._key, title: doc.title, content: doc.content}
+            FILTER doc.embedding == null OR !HAS(doc, "embedding")
+            RETURN doc
         """
         cursor = db.aql.execute(query, bind_vars={"@collection": coll_name})
         missing = list(cursor)
 
         results["total"] += coll.count()
-        results["missing"].extend([{"collection": coll_name, **doc} for doc in missing])
+        for doc in missing:
+            preview = str(doc.get(preview_field, ""))[:50] if preview_field else ""
+            results["missing"].append({
+                "collection": coll_name,
+                "_key": doc["_key"],
+                "preview": preview,
+            })
 
         if fix and missing and embedding_service:
             import httpx
+            http = httpx.Client(timeout=30)
             for doc in missing:
                 try:
-                    text = doc.get("title", "") + " " + doc.get("content", "")
-                    resp = httpx.post(
-                        f"{embedding_service}/embed",
-                        json={"texts": [text]},
-                        timeout=30
-                    )
-                    if resp.ok:
-                        embedding = resp.json()["embeddings"][0]
-                        coll.update({"_key": doc["_key"], "embedding": embedding})
-                        results["fixed"] += 1
+                    # Concatenate all text fields, handling None values
+                    parts = []
+                    for field in text_fields:
+                        val = doc.get(field)
+                        if val:
+                            parts.append(str(val))
+                    text = " ".join(parts)
+                    if not text.strip():
+                        continue
+
+                    # Call embedding service (single text, not batch)
+                    resp = http.post(f"{embedding_service}/embed", json={"text": text})
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        embedding = data.get("embedding") or data.get("embeddings", [[]])[0]
+                        if embedding and len(embedding) == 384:
+                            coll.update({"_key": doc["_key"], "embedding": embedding})
+                            results["fixed"] += 1
                 except Exception as e:
                     print(f"[warn] Failed to fix {coll_name}/{doc['_key']}: {e}", file=sys.stderr)
 
@@ -291,6 +332,7 @@ def check():
 @app.command()
 def embeddings(
     fix: bool = typer.Option(False, help="Fix missing embeddings"),
+    scope: Optional[str] = typer.Option(None, help="Filter collections by prefix (e.g., 'sparta')"),
 ):
     """Check/fix missing embeddings."""
     db = get_db()
@@ -300,8 +342,9 @@ def embeddings(
         print("ERROR: EMBEDDING_SERVICE_URL required for --fix", file=sys.stderr)
         sys.exit(1)
 
-    print("[ops-arango] Checking embeddings...")
-    result = check_embeddings(db, fix=fix, embedding_service=embedding_service)
+    scope_msg = f" (scope: {scope})" if scope else ""
+    print(f"[ops-arango] Checking embeddings{scope_msg}...")
+    result = check_embeddings(db, fix=fix, embedding_service=embedding_service, scope=scope)
 
     if _json_output:
         print(json.dumps(result, indent=2))

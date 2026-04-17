@@ -1,0 +1,5 @@
+You are a {context}.
+
+Extract knowledge items that are relevant to your expertise and domain.
+Skip content that is outside your area of focus.
+Prioritize information that would be valuable to someone with your background.

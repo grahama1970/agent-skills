@@ -1,0 +1,17 @@
+[project]
+name = "project-knowledge"
+version = "0.1.0"
+description = "Shared project knowledge document for human and agent collaboration"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "typer>=0.9.0",
+    "httpx>=0.27.0",
+    "rich>=13.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["project_knowledge"]

@@ -1,0 +1,45 @@
+name: email-spam-detection
+description: 'Classifier tournament for: text classification'
+data_dir: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-classifier/projects/email-spam-detection
+skill: classifier-lab
+scoring:
+  metric_path: $.selected_metrics.macro_f1
+  metric_regex: macro_f1[\:\s=]+([0-9.]+)
+  gate_threshold: 0.9
+  direction: higher_better
+convergence:
+  max_rounds: 4
+  n_strategies: 2
+  plateau_window: 3
+  plateau_epsilon: 0.02
+strategies:
+- name: distilbert-base-uncased
+  modality: text
+  backbones: distilbert-base-uncased
+  epochs: 10
+  lr: 2.0e-05
+  batch_size: 16
+  dropout: 0.1
+  weight_decay: 0.01
+  label_smoothing: 0.0
+  mixup_alpha: 0.0
+  cutmix_alpha: 0.0
+  random_erasing: 0.0
+- name: sentence-transformers-all-MiniLM-L6-v2
+  modality: text
+  backbones: sentence-transformers/all-MiniLM-L6-v2
+  epochs: 10
+  lr: 2.0e-05
+  batch_size: 16
+  dropout: 0.1
+  weight_decay: 0.01
+  label_smoothing: 0.0
+  mixup_alpha: 0.0
+  cutmix_alpha: 0.0
+  random_erasing: 0.0
+variables:
+  data_dir: /home/graham/workspace/experiments/pi-mono/.pi/skills/create-classifier/projects/email-spam-detection
+  modality: text
+  gate_f1: 0.9
+dogpile_on_failure: true
+memory_scope: classifier-lab

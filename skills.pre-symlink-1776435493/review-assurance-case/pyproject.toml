@@ -1,0 +1,21 @@
+[project]
+name = "review-assurance-case"
+version = "1.0.0"
+description = "Multi-provider AI review of assurance cases (GSN/CAE). 47 checks across 7 categories."
+requires-python = ">=3.11,<3.13"
+
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "loguru>=0.7.0,<0.7.3",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+only-include = [
+    "review_assurance_case.py",
+    "config.py",
+    "prompts.py",
+    "memory_integration.py",
+    "providers",
+]

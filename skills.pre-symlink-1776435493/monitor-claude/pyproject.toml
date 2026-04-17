@@ -1,0 +1,14 @@
+[project]
+name = "monitor-claude"
+version = "1.0.0"
+description = "Continuous Claude Code process health watchdog"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "loguru>=0.7.0,<0.7.3",
+    "typer",
+    "python-dotenv",
+    "httpx",
+]
+
+[tool.uv]
+dev-dependencies = []

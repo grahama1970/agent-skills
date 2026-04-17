@@ -786,6 +786,184 @@ def check_execution_routing(task: dict, findings: list[Finding]):
             ))
 
 
+# ─── Preflight Checks (scillm backends, endpoints, tooling) ─────────────────
+
+
+# Known scillm model names (from /scillm SKILL.md)
+SCILLM_MODELS = {
+    # Primary models
+    "text", "text-research", "text-deepseek", "text-kimi", "text-qwen3", "text-qwen3-large",
+    "text-gemini", "text-gemini-oauth", "text-gemini-paid", "text-gemini-3", "text-gemini-3-paid",
+    "text-claude", "text-claude-opus", "text-claude-haiku",
+    "gpt-5.3-codex", "text-glm",
+    "vlm", "vlm-paid", "vlm-claude", "vlm-codex",
+    "local-text", "moonshot-text",
+    # Pattern-based (auto-routed)
+    # claude-*, gpt-*, codex-*, gemini-*, Org/Model, model:tag
+}
+
+# Legacy/deprecated backend names that need updating
+LEGACY_BACKEND_NAMES = {
+    "sonnet": "text-claude",
+    "opus": "text-claude-opus",
+    "haiku": "text-claude-haiku",
+    "codex": "gpt-5.3-codex",
+    "gemini": "text-gemini-oauth",
+    "claude": "text-claude",
+}
+
+
+def check_scillm_backend(task: dict, findings: list[Finding]):
+    """Check: Verify backend names exist in scillm's model registry."""
+    backend = str(task.get("backend", "")).strip()
+    if not backend:
+        return
+
+    runner = str(task.get("runner", "")).strip()
+    if runner == "local":
+        return  # local tasks don't use backends
+
+    # Check for legacy names
+    if backend in LEGACY_BACKEND_NAMES:
+        findings.append(Finding(
+            task=f"Task {task['id']}",
+            check="scillm-backend",
+            grade="FAIL",
+            message=f"Backend `{backend}` is a legacy name — scillm won't recognize it",
+            line=task.get("line", 0),
+            suggestion=f"Use scillm model name: `{LEGACY_BACKEND_NAMES[backend]}`",
+        ))
+        return
+
+    # Check if it's a known model or follows a known pattern
+    if backend in SCILLM_MODELS:
+        return  # Known model
+
+    # Check pattern-based models
+    if (backend.startswith("claude-") or
+        backend.startswith("gpt-") or
+        backend.startswith("codex-") or
+        backend.startswith("gemini-") or
+        "/" in backend or  # Org/Model pattern (Chutes)
+        ":" in backend):   # model:tag pattern (Ollama)
+        return  # Valid pattern
+
+    findings.append(Finding(
+        task=f"Task {task['id']}",
+        check="scillm-backend",
+        grade="WARN",
+        message=f"Backend `{backend}` not in known scillm models — verify it exists",
+        line=task.get("line", 0),
+        suggestion=f"Run `curl -s -H 'Authorization: Bearer sk-dev-proxy-123' http://localhost:4001/v1/models` to check. "
+                   f"Common models: text, text-claude, text-claude-opus, gpt-5.3-codex, text-gemini-oauth",
+    ))
+
+
+def check_endpoint_routes(task: dict, plan_data: dict | None, findings: list[Finding]):
+    """Check: Verify endpoint references exist in the codebase."""
+    body = task.get("body", "") + "\n" + task.get("prompt", "") + "\n" + str(task.get("command", ""))
+    dod = task.get("definition_of_done", {})
+    if isinstance(dod, dict):
+        body += "\n" + dod.get("command", "")
+
+    # Extract endpoint references like /create-evidence-case, /recall, etc.
+    endpoint_refs = re.findall(r'["\']?/([a-z][a-z0-9-]{2,40})["\']?(?:\s|$|[,})\]])', body)
+
+    if not endpoint_refs:
+        return
+
+    # Get repo_root from plan metadata
+    repo_root = None
+    if plan_data:
+        repo_root = plan_data.get("repo_root")
+    if not repo_root:
+        repo_root = str(PROJECT_ROOT)
+
+    repo_path = Path(repo_root)
+    if not repo_path.exists():
+        return
+
+    # Skip common non-endpoint patterns
+    skip_patterns = {"home", "tmp", "dev", "etc", "usr", "var", "mnt", "opt",
+                     "run", "bin", "lib", "api", "v1", "health", "status"}
+
+    for endpoint in endpoint_refs:
+        if endpoint in skip_patterns:
+            continue
+
+        # Search for the route definition in the codebase
+        route_pattern = f'@router.post.*"{endpoint}"|@router.get.*"{endpoint}"|@app.post.*"{endpoint}"'
+
+        # Quick grep in src/
+        src_path = repo_path / "src"
+        if src_path.exists():
+            import subprocess
+            result = subprocess.run(
+                ["grep", "-r", "-l", f"/{endpoint}", str(src_path)],
+                capture_output=True, text=True
+            )
+            if result.returncode != 0:
+                findings.append(Finding(
+                    task=f"Task {task['id']}",
+                    check="endpoint-route",
+                    grade="WARN",
+                    message=f"Endpoint `/{endpoint}` not found in src/ — verify route exists",
+                    line=task.get("line", 0),
+                    suggestion=f"Check the actual route name with `grep -r '@router' src/ | grep -i '{endpoint}'`",
+                ))
+
+
+def check_python_tooling(task: dict, plan_data: dict | None, findings: list[Finding]):
+    """Check: Verify DoD commands use correct Python tooling for the project."""
+    dod = task.get("definition_of_done", {})
+    dod_cmd = dod.get("command", "") if isinstance(dod, dict) else ""
+    task_cmd = str(task.get("command", ""))
+    combined = dod_cmd + "\n" + task_cmd
+
+    if not combined.strip():
+        return
+
+    # Get repo_root to check for pyproject.toml
+    repo_root = None
+    if plan_data:
+        repo_root = plan_data.get("repo_root")
+    if not repo_root:
+        repo_root = str(PROJECT_ROOT)
+
+    repo_path = Path(repo_root)
+    has_pyproject = (repo_path / "pyproject.toml").exists()
+    has_uv_lock = (repo_path / "uv.lock").exists()
+
+    # If project uses uv (has pyproject.toml or uv.lock), check for bare python3 calls
+    if has_pyproject or has_uv_lock:
+        # Look for python3 -c "from module..." without uv run
+        bare_python_import = re.search(
+            r'(?<!uv run )python3?\s+-c\s+["\'](?:from|import)\s+\w+',
+            combined
+        )
+        if bare_python_import:
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="python-tooling",
+                grade="WARN",
+                message="DoD uses `python3 -c` but project has pyproject.toml — may fail to import packages",
+                line=task.get("line", 0),
+                suggestion="Use `uv run python3 -c` to ensure packages are available, or set PYTHONPATH explicitly",
+            ))
+
+        # Check for bare pytest without uv run
+        bare_pytest = re.search(r'(?<!uv run )pytest\s+', combined)
+        if bare_pytest:
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="python-tooling",
+                grade="WARN",
+                message="DoD uses bare `pytest` but project has pyproject.toml — may not find installed packages",
+                line=task.get("line", 0),
+                suggestion="Use `uv run pytest` to ensure the project's virtual environment is activated",
+            ))
+
+
 # ─── Manifest Loader ─────────────────────────────────────────────────────────
 
 
@@ -829,8 +1007,10 @@ def review(
 
     content = path.read_text()
     structured_result = None
+    plan_data = None
     if is_structured_plan(path):
-        structured_result = validate_structured_plan(load_structured_plan(path))
+        plan_data = load_structured_plan(path)
+        structured_result = validate_structured_plan(plan_data)
         tasks, phases = parse_structured_task_file(path)
     else:
         tasks = parse_task_file(content)
@@ -854,6 +1034,10 @@ def review(
         check_design_board(task, result.findings)
         check_png_evidence(task, result.findings)
         check_lab_subagent(task, result.findings)
+        # Preflight checks for scillm, endpoints, and tooling
+        check_scillm_backend(task, result.findings)
+        check_endpoint_routes(task, plan_data, result.findings)
+        check_python_tooling(task, plan_data, result.findings)
 
     if structured_result:
         for issue in structured_result["issues"]:
@@ -955,6 +1139,7 @@ def check(
         check_claims(task, result.findings)
         check_dod(task, result.findings)
         check_execution_routing(task, result.findings)
+        check_scillm_backend(task, result.findings)
 
     if structured_result:
         for issue in structured_result["issues"]:

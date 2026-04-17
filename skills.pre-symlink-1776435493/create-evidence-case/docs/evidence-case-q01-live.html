@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Evidence Case Q01 — SATISFIED</title></head>
+<body style="background:#141414;color:#e0e0e0;font-family:monospace;padding:2rem;font-size:14px;line-height:1.6">
+<pre>{
+  "question": "What SPARTA countermeasures protect the F-36 flight software from firmware tampering during avionics maintenance windows?",
+  "step_1_decomposition": {
+    "given": [
+      "What SPARTA countermeasures"
+    ],
+    "then": [
+      "firmware tampering during avionics maintenance windows"
+    ]
+  },
+  "step_2_recall": {
+    "qra_count": 70,
+    "entity_count": 6,
+    "overlap": 2,
+    "passed": true
+  },
+  "step_3_grounding": {
+    "grounding_ok": true,
+    "fabricated": 0,
+    "not_in_corpus": 0,
+    "passed": true
+  },
+  "step_4_technique_bridge": {
+    "bridge_found": true,
+    "shared_tactic": "",
+    "coherence": "Technique bridge: dominant= (0/70 QRAs, 0% coherence), 29 techniques, entity overlap: SR-9, T0811, explicit controls: F-36",
+    "passed": true
+  },
+  "step_5_semantic": {
+    "answerable": null,
+    "rationale": "Single explicit control or no pairwise comparison needed.",
+    "passed": true
+  },
+  "step_6_lean4": {
+    "proof_success": true,
+    "proof_skipped": false,
+    "gate_blocked": null,
+    "passed": true
+  },
+  "step_7_verdict": {
+    "state": "satisfied",
+    "grade": "A+",
+    "score": 1.0,
+    "gates_passed": 7,
+    "gates_total": 7
+  },
+  "answer": "No evidence provided mentions F-36 flight software or specific countermeasures for firmware tampering during avionics maintenance windows. The evidence discusses spacecraft systems, ground station maintenance, and general firmware protection mechanisms, but does not address the F-36 specifically.",
+  "control_ids": [
+    "CM0028",
+    "CWE-123",
+    "CWE-36",
+    "ESA-T2031",
+    "ESA-T2053.002",
+    "EX-0005",
+    "EXF-0006",
+    "IA-0011",
+    "MA-2(2)",
+    "MA-5"
+  ]
+}</pre>
+</body></html>

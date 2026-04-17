@@ -213,6 +213,8 @@ metadata:
 
 execution:
   max_concurrency: 3       # parallel lanes
+  wave_barrier: false      # if true, wave N must complete before wave N+1 starts
+  scheduling_policy: dependency_only  # or wave_then_dependency
 
 capability_overlap:        # Phase 0 evidence (required)
   - "/memory recall returned: no prior Redis caching solution"
@@ -249,6 +251,16 @@ tasks:
     backend: "codex"            # which LLM
     mode: "iterative"           # iterative/one_shot/review
     depends_on: ["1"]
+    preconditions:              # checked before task dispatch
+      - type: service_reachable
+        url: "http://localhost:6379"
+      - type: path_exists
+        path: "src/"
+    read_context:               # structured: path + optional line range
+      - path: "src/config.py"
+        start_line: 1
+        end_line: 50
+      - "src/types.py"          # simple string also works
     implementation:
       - "Create src/cache.py with get/set/invalidate"
       - "TTL-based expiration using Redis SETEX"
@@ -275,14 +287,17 @@ tasks:
 
 ### Backend (which LLM model)
 
-| Backend | Best For | Cost |
-|---------|----------|------|
-| `sonnet` | Boilerplate, scaffolding, monitoring, calling existing scripts | Low |
-| `opus` | Architecture, novel design, cross-skill composition | High |
-| `codex` | Code review, deep analysis, refactoring | Medium |
-| `gemini` | Long content, large context, visual tasks | Medium |
+| Backend | scillm Model | Best For | Cost |
+|---------|--------------|----------|------|
+| `text-claude` | Claude Sonnet 4.6 (OAuth) | Boilerplate, scaffolding, monitoring | Low |
+| `text-claude-opus` | Claude Opus 4.5 (OAuth) | Architecture, novel design, cross-skill composition | High |
+| `gpt-5.3-codex` | OpenAI Codex (OAuth) | Code review, deep analysis, refactoring | Medium |
+| `text-gemini-oauth` | Gemini via CLI (OAuth) | Long content, large context, visual tasks | Medium |
+| `text` | Chutes DeepSeek (PAYG) | **Batch work** — high concurrency, no OAuth limits | Low |
 
-**Decision heuristic**: "call existing script and check output" → sonnet. "understand 3 systems and wire them together" → opus. "review this code" → codex.
+**Decision heuristic**: "call existing script and check output" → `text-claude`. "understand 3 systems and wire them together" → `text-claude-opus`. "review this code" → `gpt-5.3-codex`. "batch 100 items" → `text`.
+
+**Note:** OAuth models (`text-claude*`, `gpt-5.3-codex`) are NOT for batch — use `text` (Chutes) for high-concurrency batch work.
 
 ### Mode (execution style)
 
@@ -291,6 +306,52 @@ tasks:
 | `iterative` | Multi-turn agent work (coding, design iteration) |
 | `one_shot` | Single LLM inference (classification, extraction) |
 | `review` | Review/assessment tasks |
+
+### Execution (plan-level scheduling)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `max_concurrency` | int | 3 | Max parallel tasks across all lanes |
+| `wave_barrier` | bool | false | If true, all wave N tasks must complete before wave N+1 starts |
+| `scheduling_policy` | string | `dependency_only` | `dependency_only`: run when deps satisfied. `wave_then_dependency`: enforce wave barrier first |
+
+Wave numbers are derived from lane IDs: lane `"0"`, `"0.1"`, `"0.2"` = wave 0; lane `"1"`, `"1.1"` = wave 1.
+
+### Preconditions (per-task)
+
+Checked before task dispatch. Task fails immediately if any precondition fails.
+
+| Type | Required Field | Description |
+|------|----------------|-------------|
+| `path_exists` | `path` | File or directory must exist |
+| `service_reachable` | `url` | HTTP GET must return 2xx |
+| `env_var_set` | `var` | Environment variable must be non-empty |
+| `command_succeeds` | `command` | Shell command must exit 0 |
+
+```yaml
+preconditions:
+  - type: service_reachable
+    url: "http://localhost:6379"
+  - type: path_exists
+    path: "src/config.py"
+  - type: env_var_set
+    var: "DATABASE_URL"
+  - type: command_succeeds
+    command: "docker ps | grep -q postgres"
+```
+
+### Structured read_context
+
+Files the LLM reads for context but does NOT write. Supports line ranges to reduce prompt size.
+
+```yaml
+read_context:
+  - "src/types.py"                    # full file (string)
+  - path: "src/config.py"             # structured: full file
+  - path: "src/large_module.py"       # structured: lines 100-200 only
+    start_line: 100
+    end_line: 200
+```
 
 ## Usage
 

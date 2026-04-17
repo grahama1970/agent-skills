@@ -437,6 +437,15 @@ client.post("/store", json={"document": {"problem": "X", "solution": "Y"}})
 # RIGHT: include tags so /recall can find it via multi-hop
 client.post("/store", json={"document": {"problem": "X", "solution": "Y", "tags": ["Fragility", "extraction"]}})
 
+# WRONG: writing docs to searchable collections without embeddings
+# → Breaks dense lane of hybrid search, causes vector index errors on UPDATE
+db.aql.execute("INSERT {question: @q, answer: @a} INTO sparta_qra", ...)
+# RIGHT: ALWAYS include embedding (384-dim vector)
+embedding = embedding_service.embed(question)
+client.post("/store", json={"document": {"question": q, "answer": a, "embedding": embedding}, "collection": "sparta_qra"})
+# Check for missing embeddings: /ops-arango embeddings --check
+# Fix missing embeddings: /ops-arango embeddings --fix
+
 # WRONG: ignoring should_scan in recall response
 if data["found"]: return data["items"]
 # RIGHT: check should_scan for hybrid recall+codebase search

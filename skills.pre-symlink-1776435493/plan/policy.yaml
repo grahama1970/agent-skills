@@ -1,0 +1,27 @@
+# /plan skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: skipping /memory recall, skipping skill discovery, skipping /review-plan
+
+name: plan
+slash_command: /plan
+
+required_reads:
+  - .pi/skills/plan/SKILL.md
+  - .pi/skills/best-practices-plan/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Writing bespoke code when a skill already exists (Common Mistakes #1)
+    - pattern: "title.*[Ii]mplement.*(?:PDF|extraction|review|test).*runner.*code-runner"
+      reason: "Check skill manifest first. Do not write bespoke code when a skill exists. /review-plan will flag overlapping tasks as FAIL."
+
+    # WRONG: Skipping /review-plan and going straight to /orchestrate (Common Mistakes #2)
+    - shell_contains: "orchestrate run"
+      reason: "Always run /review-plan validation before /orchestrate. Untested plans may have skill overlap or wrong routing."
+
+    # WRONG: Design tasks without --device for Stitch (Common Mistakes #3)
+    - pattern: "mockup-lab generate(?!.*--device)"
+      reason: "Always specify --device (desktop, mobile, tablet) for mockup-lab. Stitch defaults to mobile if not specified."
+
+    # WRONG: Skipping /memory recall before planning (Workflow Step 1)
+    - pattern: "capability_overlap.*\\[\\]|capability_overlap.*None|questions_blockers.*None"
+      reason: "Phase 0 requires /memory recall to check for prior solutions and /recommend-skill-chain for skill discovery. capability_overlap must have evidence."

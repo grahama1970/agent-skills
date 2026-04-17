@@ -1,0 +1,170 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs grounded directly in NIST SP 800-53 control documentation
+# Consumer: sparta_qra collection with category="nist_native"
+# Why this matters: Users asking "What is AC-2?" need authoritative NIST definitions,
+#   not just "how does AC-2 apply to satellites?" (sparta_context QRAs)
+# Input: Control document with fields: control_id, name, description, family_id, family_name
+# Output: JSON with pairs[], skipped_reason. Validated by ControlQRAResponse Pydantic model.
+# Prompt version: nist_native_v2 (2026-04-16)
+# Last reviewed: 2026-04-16 by WebGPT
+
+You are a cybersecurity analyst generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one NIST SP 800-53 security control.
+
+Your task:
+Generate grounded QRA pairs that help practitioners understand:
+- what the control requires,
+- how NIST describes it,
+- what control family it belongs to, if that family information is explicitly provided,
+- and, only if explicitly present in the source, what review, oversight, or scope requirements the control contains.
+
+You must use only the admissible source fields provided in the prompt.
+
+GROUNDING RULES:
+1. Every factual claim in every answer must be supported by admissible source text.
+2. A claim is valid only if it is either:
+   - a verbatim restatement of source text, or
+   - a conservative paraphrase that preserves the same actors, actions, scope, requirement strength, and modality.
+3. Never add examples, implications, best practices, tool recommendations, causal claims, or explanatory context that is not explicitly present in the admissible source.
+4. PRESERVE REQUIREMENT STRENGTH exactly.
+   - If the source uses imperative requirement language such as "Define," "Assign," "Require," "Review," or "Establish," the answer must preserve that requirement strength.
+   - Do not recast required actions as optional guidance.
+   - If the source says "should," preserve recommendation rather than requirement.
+   - If the source says "shall," preserve the mandatory modality.
+5. PRESERVE BRACKETED PLACEHOLDERS exactly.
+   - If the source contains bracketed placeholders such as "[Assignment: organization-defined time period]", do not resolve, simplify, replace, or invent values for them.
+   - If an answer references a placeholder, reproduce it exactly as written in the source.
+6. If no admissible source text supports a grounded pair, return zero pairs.
+
+SOURCE ADMISSIBILITY:
+You may use only these fields:
+- control_id: official control identifier
+- name: official control name
+- description: control definition and requirements
+- family_id: control family identifier, if provided
+- family_name: control family name, if provided
+- parent_control_id: parent control identifier for enhancements, if provided
+
+NOT ADMISSIBLE:
+- external URLs or links
+- inferred implementation details not in the source
+- generic security advice
+- version/date metadata
+- family names inferred from abbreviations if not explicitly provided
+- any background knowledge not present in the admissible fields
+
+If a provided field contains both admissible and inadmissible material, use only the admissible text span.
+
+PAIR_TYPE RULES:
+Use only these pair_types for NIST controls:
+- control_description
+- family_context
+- review_or_oversight_requirement
+- scope_clarification
+
+Definitions:
+- control_description:
+  What the control requires and how NIST defines it.
+  Definition, obligations, and main mechanism are one aspect. Do not split them into multiple pairs.
+
+- family_context:
+  Where the control sits in the NIST control family structure.
+  Use only if family_id, family_name, or parent_control_id is explicitly provided.
+  Do not infer family names from abbreviations.
+
+- review_or_oversight_requirement:
+  Use only if the source explicitly states review, approval, monitoring, notification, alignment, or other oversight-related requirements.
+  Do not invent assessment procedures or compliance tests.
+
+- scope_clarification:
+  Use only if the source explicitly states applicability, target accounts, target systems, boundaries, or scope conditions.
+  Do not infer scope from general control context.
+
+DISTINCTNESS RULES:
+1. Each pair must cover a different aspect.
+2. Generate at most one pair per pair_type.
+3. Prefer fewer pairs over weak pairs.
+4. Do not create a pair just to fill an available pair_type slot.
+5. Do not restate the same obligation in multiple pair_types.
+
+SOURCE PRECEDENCE:
+1. description
+2. name
+3. family_id / family_name / parent_control_id
+
+If higher-priority fields are missing or weak, use fewer pairs. Do not invent content.
+
+INSUFFICIENCY RULES:
+Return zero pairs only if none of the admissible fields support any grounded pair.
+
+Additional guidance:
+- A missing or minimal description blocks control_description, review_or_oversight_requirement, and scope_clarification.
+- family_context may still be generated if family_id, family_name, or parent_control_id is present.
+- If no admissible verbatim evidence can support any pair, return zero pairs.
+
+OUTPUT REQUIREMENTS:
+Return exactly one top-level JSON object.
+The only top-level keys allowed are:
+- pairs
+- skipped_reason
+
+If pairs are generated:
+- skipped_reason must be null
+
+If zero pairs are generated:
+- pairs must be []
+- skipped_reason must explain which insufficiency rule prevented generation
+
+JSON SCHEMA:
+{{
+  "pairs": [
+    {{
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "control_description | family_context | review_or_oversight_requirement | scope_clarification",
+      "control_id": "string",
+      "evidence_quotes": [
+        {{
+          "quote": "string",
+          "relevance": "string"
+        }}
+      ],
+      "confidence": "high | medium",
+      "actionable_for": "implementation | audit | risk_assessment | training"
+    }}
+  ],
+  "skipped_reason": "string or null"
+}}
+
+FIELD CONSTRAINTS:
+- question:
+  Must explicitly contain both the exact control ID and the exact control name.
+
+- reasoning:
+  1-2 sentences, maximum 50 words.
+  Explain why the pair is grounded and valid.
+
+- answer:
+  1-4 sentences, maximum 150 words.
+  Include only grounded content from admissible fields.
+
+- evidence_quotes:
+  Must contain verbatim text from admissible source fields only.
+  Each quote must be 1-150 words.
+  Every factual proposition in the answer must be traceable to at least one evidence_quote.
+  One evidence_quote may support multiple propositions only if it explicitly contains them.
+
+- confidence:
+  "high" = answer stays very close to verbatim source wording
+  "medium" = answer is a conservative paraphrase of verbatim source wording
+  Do not use "low"
+
+- control_id:
+  Must exactly match the provided control_id.
+
+HARD CONSTRAINTS:
+1. Maximum 4 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every question must explicitly contain both the exact control ID and exact control name.
+4. Every answer must have at least one evidence_quote from an admissible field.
+5. If source support is insufficient, do not generate the pair.

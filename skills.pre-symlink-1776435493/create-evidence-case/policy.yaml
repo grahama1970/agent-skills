@@ -1,0 +1,30 @@
+# /create-evidence-case skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: auto-pass verdicts, regex control IDs, skipping entity grounding
+
+name: create-evidence-case
+slash_command: /create-evidence-case
+
+required_reads:
+  - .pi/skills/create-evidence-case/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Regex-parsing control IDs from recall results (Common Mistakes #1)
+    - pattern: "re\\.findall\\(r'\\[A-Z\\].*\\d"
+      reason: "Do not regex-parse control IDs. Read structured fields from recall results: control_ids = [qra['control_id'] for qra in recall_results]."
+
+    # WRONG: Auto-passing verdicts when recall returns results (Common Mistakes #2, WHAT YOU MUST NOT DO #4)
+    - pattern: "if len\\(recall_results\\).*>.*0.*verdict.*=.*SATISFIED|if.*recall.*verdict.*SATISFIED"
+      reason: "Do not auto-pass verdicts. Entities from different components must resolve to the SAME technique. If you cannot tell whether evidence is coherent, say INCONCLUSIVE."
+
+    # WRONG: Using /memory recall without scoping to sparta_qra (Common Mistakes #3)
+    - pattern: "recall --q (?!.*--collections)"
+      reason: "Always scope recall to sparta_qra collection: --collections sparta_qra --k 10. Unscoped recall searches everything."
+
+    # WRONG: Skipping entity extraction / grounding verification (Step 3 is CRITICAL)
+    - pattern: "skip.*entit|no.*entity.*extract|without.*grounding"
+      reason: "Entity extraction and grounding verification is CRITICAL. This is what prevents false positives on adversarial questions."
+
+    # WRONG: Using deterministic if/else for coverage decisions (WHAT YOU MUST NOT DO #5)
+    - pattern: "if.*coverage.*>.*threshold.*verdict|if.*count.*>=.*\\d+.*SATISFIED"
+      reason: "Do not write deterministic if/else for coverage. Language is too variable. The agent must reason about technique coherence."

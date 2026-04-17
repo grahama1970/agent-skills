@@ -1,0 +1,15 @@
+[project]
+name = "match-requirement"
+version = "0.1.0"
+description = "Compare datalake requirements to SPARTA controls via CAE + Lean4"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "httpx>=0.27.0",
+    "loguru>=0.7.0,<0.7.3",
+    "tenacity>=8.2.0",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+]

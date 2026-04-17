@@ -26,6 +26,16 @@ WATCHDOG_POLL_S = 2
 
 
 @dataclass
+class Precondition:
+    """A precondition that must be satisfied before a task can execute."""
+    type: str  # path_exists, service_reachable, env_var_set, command_succeeds
+    path: str = ""
+    url: str = ""
+    var: str = ""
+    command: str = ""
+
+
+@dataclass
 class TaskRuntime:
     task_id: str
     title: str
@@ -49,6 +59,7 @@ class TaskRuntime:
     max_rounds: int = 5
     timeout_seconds: int = 1800  # per-task timeout (default 30min)
     worktree: bool = False  # opt-in git worktree isolation (for parallel file-only tasks)
+    preconditions: list[Precondition] = field(default_factory=list)  # checked before dispatch
     status: str = "queued"
     started_at: float | None = None
     finished_at: float | None = None
@@ -94,6 +105,68 @@ def _as_list(value: Any) -> list[Any]:
     if value is None:
         return []
     return value if isinstance(value, list) else [value]
+
+
+def _extract_wave(lane: str) -> int:
+    """Extract wave number from lane ID. Lane "0", "0.1", "0.2" → wave 0. Lane "1", "1.1" → wave 1."""
+    if not lane:
+        return 0
+    first_part = lane.split(".")[0]
+    try:
+        return int(first_part)
+    except ValueError:
+        return 0
+
+
+def check_precondition(pc: "Precondition", cwd: Path) -> tuple[bool, str]:
+    """Check a single precondition. Returns (passed, error_message)."""
+    import subprocess
+    import httpx
+
+    if pc.type == "path_exists":
+        path = Path(pc.path)
+        if not path.is_absolute():
+            path = cwd / path
+        if path.exists():
+            return True, ""
+        return False, f"path_exists: {path} does not exist"
+
+    elif pc.type == "service_reachable":
+        try:
+            resp = httpx.get(pc.url, timeout=5.0)
+            if resp.status_code < 500:
+                return True, ""
+            return False, f"service_reachable: {pc.url} returned {resp.status_code}"
+        except Exception as e:
+            return False, f"service_reachable: {pc.url} unreachable ({e})"
+
+    elif pc.type == "env_var_set":
+        if os.environ.get(pc.var):
+            return True, ""
+        return False, f"env_var_set: ${pc.var} is not set"
+
+    elif pc.type == "command_succeeds":
+        try:
+            result = subprocess.run(
+                pc.command, shell=True, capture_output=True, timeout=10, cwd=str(cwd)
+            )
+            if result.returncode == 0:
+                return True, ""
+            return False, f"command_succeeds: '{pc.command}' exited {result.returncode}"
+        except Exception as e:
+            return False, f"command_succeeds: '{pc.command}' failed ({e})"
+
+    return False, f"unknown precondition type: {pc.type}"
+
+
+def check_all_preconditions(task: "TaskRuntime") -> list[str]:
+    """Check all preconditions for a task. Returns list of error messages (empty = all passed)."""
+    errors = []
+    for pc in task.preconditions:
+        passed, msg = check_precondition(pc, task.cwd)
+        if not passed:
+            errors.append(f"Task {task.task_id}: {msg}")
+    return errors
 
 
 def _task_prompt(task: dict[str, Any]) -> str:
@@ -240,6 +313,34 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
                 skill_ctx_path.write_text(skill_context)
                 read_ctx.append(str(skill_ctx_path))
 
+        # Parse preconditions
+        raw_preconditions = raw_task.get("preconditions") or []
+        preconditions = []
+        for pc in raw_preconditions:
+            if isinstance(pc, dict):
+                preconditions.append(Precondition(
+                    type=str(pc.get("type") or ""),
+                    path=str(pc.get("path") or ""),
+                    url=str(pc.get("url") or ""),
+                    var=str(pc.get("var") or ""),
+                    command=str(pc.get("command") or ""),
+                ))
+
+        # Normalize read_context: convert structured objects to string paths
+        # {path: "foo.py", start_line: 10, end_line: 20} → "foo.py:10-20"
+        normalized_read_ctx = []
+        for rc in read_ctx:
+            if isinstance(rc, dict):
+                path = rc.get("path", "")
+                start = rc.get("start_line")
+                end = rc.get("end_line")
+                if start and end:
+                    normalized_read_ctx.append(f"{path}:{start}-{end}")
+                else:
+                    normalized_read_ctx.append(path)
+            else:
+                normalized_read_ctx.append(str(rc))
+
         runtimes[task_id] = TaskRuntime(
             task_id=task_id,
             title=str(raw_task.get("title") or "").strip(),
@@ -253,7 +354,7 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             agent=str(raw_task.get("agent") or "").strip(),
             definition_of_done=raw_task.get("definition_of_done") or {},
             allowlist=raw_task.get("allowlist"),
-            read_context=read_ctx,
+            read_context=normalized_read_ctx,
             blind_tests=raw_task.get("blind_tests") or [],
             skills=task_skills,
             skill=task_skill,
@@ -263,6 +364,7 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             max_rounds=int(raw_task.get("max_rounds") or 5),
             timeout_seconds=int(raw_task.get("timeout_seconds") or 1800),
             worktree=bool(raw_task.get("worktree", False)),
+            preconditions=preconditions,
         )
 
     # Gate: code-runner tasks MUST have blind_tests. DoD alone is gameable.

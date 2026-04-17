@@ -277,6 +277,9 @@ def _learn_round_to_memory(task_id: str, entry: dict, session_key: str = "",
             "symbols": symbols[:1000] if symbols else "",
             "dod_passed": entry.get("dod_passed", False),
             "tool_trace_events": entry.get("tool_trace_events", []),
+            # Raw stderr/stdout for debugging (truncated to 2KB each)
+            "stderr": entry.get("stderr", "")[:2000],
+            "stdout": entry.get("stdout", "")[:2000],
         },
     )
 
@@ -381,11 +384,16 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     max_retries = 3
     for attempt in range(1, max_retries + 1):
         try:
+            # Build enhanced caller header: code-runner:{task_id}:{round}
+            # Sanitize task_id to remove any chars that could break HTTP headers
+            safe_task_id = "".join(c for c in task_id if c.isalnum() or c in "-_") if task_id else "unknown"
+            caller_header = f"code-runner:{safe_task_id}:{round_num}"
+
             resp = httpx.post(
                 SCILLM_URL,
                 headers={
                     "Authorization": f"Bearer {SCILLM_KEY}",
-                    "X-Caller-Skill": "code-runner",  # Required by scillm for cost tracking
+                    "X-Caller-Skill": caller_header,  # Enhanced: code-runner:{task_id}:{round}
                 },
                 json=payload,
                 timeout=180.0,
@@ -944,6 +952,7 @@ def run(
                     dod_command=dod_command,
                     event_emitter=emitter,  # LogAct: pass emitter for tool_intent/tool_result events
                     round_num=round_num,    # LogAct: round context for event logging
+                    task_id=task_id,        # Enhanced X-Caller-Skill header tracking
                 )
                 try:
                     written, tool_messages = future.result(timeout=ROUND_TIMEOUT)
@@ -1349,6 +1358,21 @@ def run(
             crash_result_file = output_dir / f"{task_id}.result.json"
             crash_result_file.write_text(crash_result.model_dump_json(indent=2))
             logger.info("Crash result written to {}", crash_result_file)
+            # Store crash in /memory for easy tracing
+            log_invocation(
+                agent="code-runner",
+                session_key=f"cr-{task_id}-{int(time.time())}",
+                round=len(rounds_history) if 'rounds_history' in dir() else 0,
+                outcome="crash",
+                error=crash_msg,
+                model=llm_backend,
+                tags=["code-runner", "crash", f"task:{task_id}", f"error:{type(exc).__name__}"],
+                metadata={
+                    "task_id": task_id,
+                    "traceback": crash_tb,
+                    "dod_passed": False,
+                },
+            )
         except Exception as write_exc:
             logger.error("Failed to write crash result: {}", write_exc)
         raise  # re-raise so exit code is still non-zero

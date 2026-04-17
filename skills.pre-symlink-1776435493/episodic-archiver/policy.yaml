@@ -1,0 +1,30 @@
+# /episodic-archiver skill policy — enforced by .claude/hooks/skill_policy.py
+# Anti-patterns from SKILL.md: raw httpx for LLM, direct collection writes, unregistered sources
+
+name: episodic-archiver
+slash_command: /episodic-archiver
+
+required_reads:
+  - .pi/skills/episodic-archiver/SKILL.md
+
+forbidden_use:
+  any_of:
+    # WRONG: Using raw httpx for LLM calls instead of scillm (Common Mistakes)
+    - pattern: "httpx\\.post.*api\\.chutes\\.ai|httpx\\.post.*api\\.openai\\.com"
+      reason: "Don't use raw httpx for LLM calls. All LLM calls go through scillm (quick_completion, acompletion)."
+    - pattern: "httpx.*chutes.*completion|httpx.*openai.*completion"
+      reason: "All LLM calls must go through scillm, not raw httpx to provider APIs."
+
+    # WRONG: Writing directly to episodic collections bypassing the archiver
+    - pattern: "collection.*agent_conversations.*httpx.*store|POST.*/store.*agent_conversations"
+      reason: "Don't write directly to agent_conversations. Use /episodic-archiver archive command."
+    - pattern: "collection.*unresolved_sessions.*httpx.*store"
+      reason: "Don't write directly to unresolved_sessions. Use /episodic-archiver archive and resolve commands."
+    - pattern: "collection.*session_summaries.*httpx.*store"
+      reason: "Don't write directly to session_summaries. Use /episodic-archiver analyze command."
+
+    # WRONG: Direct ArangoDB access
+    - import: python_arango
+      reason: "Direct ArangoDB import. Episodic archiver uses memory daemon endpoints."
+    - pattern: "db\\.aql\\.execute|aql\\.execute"
+      reason: "Raw AQL. Use episodic-archiver commands which handle storage correctly."

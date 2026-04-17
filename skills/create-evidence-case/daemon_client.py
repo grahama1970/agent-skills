@@ -28,6 +28,7 @@ def assemble_evidence(
     question: str,
     source_id: str | None = None,
     skip_qra_recall: bool = False,
+    context_framework: str | None = None,
 ) -> dict[str, Any]:
     """Call daemon /create-evidence-case for evidence assembly.
 
@@ -36,15 +37,23 @@ def assemble_evidence(
         source_id: Explicit control ID (e.g., "CWE-287") - enables fast path
         skip_qra_recall: If True and source_id provided, skip entity extraction
                          and build evidence directly from known control
+        context_framework: Override detected framework ("SPARTA", "NIST", "CWE", etc.)
+                          If None, auto-detects from resolved entities.
 
-    Returns: {question_text, glossary, crosswalk_chains, prior_qra_evidence, ...}
+    Returns: {context, question_text, glossary, crosswalk_chains, prior_qra_evidence, ...}
+             context.framework = effective framework (detected or specified)
+             context.source = "detected" | "user_specified" | "default"
     """
+    payload = {
+        "question": question,
+        "source_id": source_id or "",
+        "skip_qra_recall": skip_qra_recall,
+    }
+    if context_framework:
+        payload["context_framework"] = context_framework
+
     with _get_client() as client:
-        resp = client.post("/create-evidence-case", json={
-            "question": question,
-            "source_id": source_id or "",
-            "skip_qra_recall": skip_qra_recall,
-        })
+        resp = client.post("/create-evidence-case", json=payload)
         if resp.status_code != 200:
             logger.error("assemble_evidence failed: HTTP {}", resp.status_code)
             return {"error": f"HTTP {resp.status_code}", "question": question}
@@ -62,13 +71,14 @@ def assemble_evidence_fast(source_id: str) -> dict[str, Any]:
 
 
 def assemble_evidence_batch(
-    items: list[tuple[str, str | None]],
+    items: list[tuple[str, str | None, str | None]],
     max_workers: int = 8,
 ) -> list[dict[str, Any]]:
     """Batch evidence assembly using daemon's parallel endpoint.
 
     Args:
-        items: List of (question, source_id) tuples
+        items: List of (question, source_id, context_framework) tuples
+               context_framework can be None to auto-detect
         max_workers: Parallel workers in daemon (default 8)
 
     Returns:
@@ -77,11 +87,20 @@ def assemble_evidence_batch(
     if not items:
         return []
 
+    # Handle both 2-tuple (legacy) and 3-tuple (framework-aware) formats
+    def normalize_item(item):
+        if len(item) == 2:
+            q, sid = item
+            return {"question": q, "source_id": sid or "", "skip_qra_recall": True}
+        else:
+            q, sid, ctx_fw = item
+            result = {"question": q, "source_id": sid or "", "skip_qra_recall": True}
+            if ctx_fw:
+                result["context_framework"] = ctx_fw
+            return result
+
     payload = {
-        "items": [
-            {"question": q, "source_id": sid or "", "skip_qra_recall": True}
-            for q, sid in items
-        ],
+        "items": [normalize_item(item) for item in items],
         "max_workers": max_workers,
     }
 

@@ -1,0 +1,85 @@
+# Tactical Tag Classifier - Federated Taxonomy Tier 1 extraction
+# Multi-label text classifier for tactical action tags
+#
+# Complements bridge_classifier (Tier 0 conceptual) with Tier 1 tactical tags.
+# Together they provide instant taxonomy extraction without LLM calls.
+#
+# Input: Natural language lesson text (problem + solution)
+# Output: Tactical tag labels with confidence scores
+#
+# Example:
+#   Input: "Fixed DuckDB lock contention by migrating to ArangoDB concurrent writes"
+#   Output: {Harden: 0.91, Restore: 0.78, Model: 0.65}
+
+task_name: tactical_classifier
+task_type: text_multilabel  # Multi-label classification
+
+# The 8 Federated Taxonomy tactical tags (Tier 1)
+classes:
+  - Detect     # Monitoring, alerting, anomaly detection, observation
+  - Harden     # Strengthening, patching, configuration, prevention
+  - Model      # Understanding, mapping, analysis, simulation
+  - Isolate    # Segmentation, containment, boundary enforcement
+  - Restore    # Recovery, backup, rollback, remediation
+  - Evade      # Evasion, obfuscation, anti-detection
+  - Exploit    # Leveraging vulnerabilities, attack execution
+  - Persist    # Maintaining access, durability, long-term presence
+
+model:
+  # Match bridge_classifier architecture for consistency
+  name: distilbert-base-uncased
+  pretrained: true
+
+training:
+  batch_size: 32
+  learning_rate: 2e-5
+  epochs: 10
+  max_length: 256
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  early_stopping_patience: 3
+
+# Multi-label specific settings
+multilabel:
+  threshold: 0.5
+  loss: binary_cross_entropy
+  pos_weight_auto: true
+
+# Evaluation thresholds
+eval_thresholds:
+  f1_micro: 0.78
+  f1_macro: 0.73
+  hamming_loss_max: 0.15
+  exact_match_ratio: 0.55
+
+# Inference optimization
+inference:
+  quantize: false
+  onnx_export: true
+  target_latency_ms: 20
+
+# Data sources — mine from existing heuristic extractions + Brandon labels
+data:
+  source: memory_taxonomy_extractions
+  # Use existing bridge_classifier labels as features (stacking)
+  feature_augmentation:
+    bridge_classifier_scores: true
+  augmentation:
+    enabled: true
+    variation_types:
+      - technical
+      - question
+      - statement
+  min_examples_per_class: 150
+
+# Integration
+integration:
+  target_skills:
+    - /taxonomy    # Fast tactical extraction
+  fallback:
+    enabled: true
+    confidence_threshold: 0.55
+  # Stack with bridge_classifier for full Tier 0+1 extraction
+  stacking:
+    combine_with: bridge_classifier
+    output_format: taxonomy_extraction_result

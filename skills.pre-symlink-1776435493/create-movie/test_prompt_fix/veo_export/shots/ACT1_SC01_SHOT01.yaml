@@ -1,0 +1,25 @@
+shot_id: ACT1_SC01_SHOT01
+prompt:
+  text: A single candle flame flickering in a dark room, wide establishing shot, cinematic,
+    neutral exposure balanced lighting. A single candle flame flickering in a dark
+    room. WIDE framing. cinematic lighting
+  negative: text overlays, watermarks, shaky camera, distorted faces, garbled speech
+duration_s: 4
+aspect_ratio: '16:9'
+resolution: 1080p
+references:
+  subject_images: []
+  first_frame: null
+  last_frame: null
+controls:
+  seed: null
+  safety: default
+renderer:
+  name: veo
+  model: veo-3.1-generate-preview
+metadata:
+  scene: SC01
+  act: ACT1
+  sequence_order: 1
+  notes: ''
+  characters: []

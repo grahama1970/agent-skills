@@ -152,7 +152,7 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
         if runner == "scillm":
             return runner, backend or "text", mode or "one_shot"
         if runner == "code-runner":
-            return runner, backend or "codex", mode or "iterative"
+            return runner, backend or "text", mode or "iterative"  # text = Chutes DeepSeek (reliable, no OAuth limits)
         return runner, backend, mode
 
     # Auto-route based on task shape
@@ -167,7 +167,7 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
 
     if has_prompt and has_allowlist and has_dod_assertion:
         # Bounded code task with file scope + verification → code-runner
-        return "code-runner", backend or "codex", mode or "iterative"
+        return "code-runner", backend or "text", mode or "iterative"  # text = Chutes DeepSeek (reliable)
 
     if has_prompt:
         # Text generation, simple edit, classification → scillm one-shot
@@ -851,11 +851,12 @@ def main(
     print(f"  scillm      — one-shot LLM (simple edits, classification, extraction). Has prompt, no allowlist/DoD.")
     print(f"  code-runner — ONLY for complex bounded code tasks with DoD verification. Has prompt + allowlist + DoD assertion.")
     print(f"\n  code-runner is EXPENSIVE. Don't use it for mechanical edits, config changes, or simple text generation.")
-    print(f"\nBackend models:")
-    print(f"  sonnet  — boilerplate, scaffolding, monitoring (low cost)")
-    print(f"  opus    — architecture, novel design, cross-skill composition (high cost)")
-    print(f"  codex   — code review, refactoring (medium cost)")
-    print(f"  gemini  — long content, large context (medium cost)")
+    print(f"\nBackend models (scillm model names):")
+    print(f"  text              — Chutes DeepSeek (default, reliable, no OAuth limits)")
+    print(f"  text-claude       — Claude Sonnet 4.6 (boilerplate, scaffolding)")
+    print(f"  text-claude-opus  — Claude Opus 4.5 (architecture, novel design)")
+    print(f"  gpt-5.3-codex     — OpenAI Codex (code review, refactoring)")
+    print(f"  text-gemini-oauth — Gemini via CLI (long content, large context)")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,282 @@
+# Test Case: CWE-798 to SV-AC-4 (Hardcoded Creds → SPARTA Masquerading)
+# Expected: Hardcoded credentials enable masquerading attack
+
+You are a cybersecurity evidence-grounding analyst.
+
+Your task is to generate grounded Question-Reasoning-Answer (QRA) pairs about CWE weaknesses and their relationship to one target record from another framework.
+
+Allowed target frameworks:
+- SPARTA
+- MITRE_ATT&CK
+- CAPEC
+
+Use only the payload below.
+Do not use outside knowledge, even if it seems obvious.
+If the payload does not contain enough evidence for a grounded pair, return zero pairs.
+
+GOAL
+
+Find all plausible grounded CWE-to-target QRA candidates, rank them, and return only the top 5 strongest non-duplicate pairs that pass every rule below.
+
+A valid QRA pair must use exactly:
+- 1 CWE record
+- 1 target record from SPARTA, MITRE_ATT&CK, or CAPEC
+- optional bridge evidence from crosswalk_chains
+
+A valid pair must be cybersecurity-related and useful for:
+- threat_assessment
+- compliance_mapping
+- audit
+- gap_analysis
+
+HARD RULES
+
+1. Return 0 pairs if there is no CWE record.
+2. Return 0 pairs if there is no target record in SPARTA, MITRE_ATT&CK, or CAPEC.
+3. Do not invent exploit paths, mission impacts, mitigations, attack steps, or control intent.
+4. Do not use outside knowledge.
+5. Use exactly 1 CWE record and exactly 1 target record per pair.
+6. Do not merge multiple target records into one pair.
+7. The question must explicitly name at least one ID such as CWE-287, CAPEC-115, T1078, or SV-AC-2.
+8. The answer must be directly supported by quoted evidence from the payload.
+9. The reasoning may connect quoted evidence, but may not add new facts.
+10. If the bridge is missing or weak, reject the pair.
+11. Reject duplicates and near-duplicates.
+12. Prefer abstaining over guessing.
+
+IMPORTANT EVIDENCE PRIORITY FOR CWE
+
+Use CWE evidence in this order:
+1. description
+2. extended_description
+3. common_consequences
+4. modes_of_introduction
+5. potential_mitigations
+6. observed_examples
+7. related_attack_patterns
+
+VALID CWE QUESTION TYPES
+
+Use only one of these pair types:
+- relationship
+- risk_linkage
+- control_relevance
+- adversary_relevance
+- mitigation_gap
+
+Examples of acceptable question forms:
+- "How does CWE-287 relate to CAPEC-115 based on the supplied evidence?"
+- "Why is CWE-287 relevant to T1078 in this payload?"
+- "What security gap described by CWE-287 is addressed by SV-AC-2?"
+- "How could the weakness in CWE-287 support the behavior described by CAPEC-115?"
+
+REJECTION RULES
+
+Reject a pair if:
+- the question can be answered from the CWE record alone
+- the question can be answered from the target record alone
+- the bridge depends on common knowledge not stated in the payload
+- the pair is only topically similar and not evidentially linked
+- the answer contains any unsupported claim
+- the content is not cybersecurity-related
+
+DISCOVERY AND RANKING PROCEDURE
+
+Step 1: Identify all CWE records with non-empty evidence text.
+Step 2: Identify all target records with framework = SPARTA, MITRE_ATT&CK, or CAPEC.
+Step 3: For each CWE record, test each target record one-by-one.
+Step 4: For each candidate pair, ask:
+  a. Is there explicit bridge evidence in crosswalk_chains or direct textual linkage in the payload?
+  b. Are both records necessary to answer the question?
+  c. Can the answer be written without outside knowledge?
+  d. Would a cybersecurity analyst, auditor, or compliance reviewer find the question useful?
+Step 5: Keep only candidates that pass all four checks.
+Step 6: Rank surviving candidates by:
+  1. grounding strength
+  2. bridge explicitness
+  3. necessity of both records
+  4. usefulness for cybersecurity review
+  5. non-duplication
+Step 7: Return the top 5 candidates.
+Step 8: If none survive, return an empty list with a reason.
+
+OUTPUT FORMAT
+
+Output ONLY valid JSON. No markdown. No prose before or after.
+
+Return one of these two shapes:
+
+{
+  "pairs": [],
+  "reason": "why no grounded CWE QRA pairs could be generated from this payload"
+}
+
+OR
+
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "1-2 sentences connecting the quoted evidence without adding new facts",
+      "answer": "1-3 sentences directly answering the question using only supported claims",
+      "source_framework": "CWE",
+      "source_id": "CWE-XXX",
+      "target_framework": "CAPEC | MITRE_ATT&CK | SPARTA",
+      "target_id": "string",
+      "evidence_quotes": [
+        {
+          "source": "cwe",
+          "id": "CWE-XXX",
+          "quote": "verbatim quote from the payload"
+        },
+        {
+          "source": "target",
+          "id": "target ID",
+          "quote": "verbatim quote from the payload"
+        }
+      ],
+      "bridge_evidence": [
+        {
+          "source": "crosswalk_chains or direct_payload_match",
+          "quote": "verbatim bridge evidence if used"
+        }
+      ],
+      "pair_type": "relationship | risk_linkage | control_relevance | adversary_relevance | mitigation_gap",
+      "actionable_for": "threat_assessment | compliance_mapping | audit | gap_analysis",
+      "confidence": "high | medium"
+    }
+  ]
+}
+
+PAYLOAD
+<evidence_case_payload>
+{
+  "cwe_record": {
+    "control_id": "CWE-798",
+    "description": "The product contains hard-coded credentials, such as a password or cryptographic key.",
+    "extended_description": "There are two main variations: Inbound: the product contains an authentication mechanism that checks the input credentials against a hard-coded set of credentials. In this variant, a default administration account is created, and a simple password is hard-coded into the product and associated with that account. This hard-coded password is the same for each installation of the product, and it usually cannot be changed or disabled by system administrators without manually modifying the program, or otherwise patching the product. It can also be difficult for the administrator to detect. Outbound: the product connects to another system or component, and it contains hard-coded credentials for connecting to that component. This variant applies to front-end systems that authenticate with a back-end service. The back-end service may require a fixed password that can be easily discovered. The programmer may simply hard-code those back-end credentials into the front-end product."
+  },
+  "target_records": [
+    {
+      "control_id": "SV-AC-4",
+      "framework": "SPARTA",
+      "description": "The Program shall establish policy and procedures to prevent individuals (i.e., insiders) from masquerading as individuals with valid access to areas where commanding of the spacecraft is possible."
+    }
+  ],
+  "crosswalk_chains": [
+    {
+      "from": "CWE-798",
+      "from_framework": "CWE",
+      "to_framework": "ATT&CK",
+      "hops": [
+        {
+          "id": "CWE-798",
+          "name": "Use of Hard-coded Credentials",
+          "framework": "",
+          "description": "The product contains hard-coded credentials, such as a password or cryptographic key."
+        },
+        {
+          "id": "CAPEC-191",
+          "name": "Read Sensitive Constants Within an Executable",
+          "framework": "",
+          "description": "\n            <xhtml:p>An adversary engages in activities to discover any sensitive constants present within the compiled code of an executable. These constants may include literal ASCII strings within the file itself, or possibly strings hard-coded into particular routines that can be revealed by code refactoring methods including static and dynamic analysis.</xhtml:p>\n         "
+        },
+        {
+          "id": "T1552.001",
+          "name": "Credentials In Files",
+          "framework": "",
+          "description": "Adversaries may search local file systems and remote file shares for files containing insecurely stored credentials. These can be files created by users to store their own credentials, shared credential stores for a group of individuals, configuration files containing passwords for a system or service, or source code/binary files containing embedded passwords.\n\nIt is possible to extract passwords from backups or saved virtual machines through [OS Credential Dumping](https://attack.mitre.org/techniques/T1003).(Citation: CG 2014) Passwords may also be obtained from Group Policy Preferences stored on the Windows Domain Controller.(Citation: SRD GPP)\n\nIn cloud and/or containerized environments, authenticated user and service account credentials are often stored in local configuration and credential files.(Citation: Unit 42 Hildegard Malware) They may also be found as parameters to deployment commands in container logs.(Citation: Unit 42 Unsecured Docker Daemons) In some cases, these files can be copied and reused on another machine or the contents can be read and then used to authenticate without needing to copy any files.(Citation: Specter Ops - Cloud Credential Storage)"
+        }
+      ]
+    },
+    {
+      "from": "SV-AC-4",
+      "from_framework": "SPARTA",
+      "to_framework": "SPARTA",
+      "relationship": "threat_to_countermeasure",
+      "hops": [
+        {
+          "id": "CM0041",
+          "name": "User Training",
+          "framework": "SPARTA",
+          "description": "Train users to be aware of access or manipulation attempts by a threat actor to reduce the risk of successful spear phishing, social engineering, and other techniques that involve user interaction. Ensure that role-based security-related training is provided to personnel with assigned security roles and responsibilities: (i) before authorizing access to the information system or performing assigned duties; (ii) when required by information system changes; and (iii) at least annually if not otherwise defined."
+        },
+        {
+          "id": "CM0052",
+          "name": "Insider Threat Protection",
+          "framework": "SPARTA",
+          "description": "Establish policy and procedures to prevent individuals (i.e., insiders) from masquerading as individuals with valid access to areas where commanding of the spacecraft is possible. Establish an Insider Threat Program to aid in the prevention of people with authorized access performing malicious activities."
+        },
+        {
+          "id": "CM0054",
+          "name": "Two-Person Rule",
+          "framework": "SPARTA",
+          "description": "Utilize a two-person system to achieve a high level of security for systems with command level access to the spacecraft. Under this rule all access and actions require the presence of two authorized people at all times."
+        },
+        {
+          "id": "CM0002",
+          "name": "COMSEC",
+          "framework": "SPARTA",
+          "description": "A component of cybersecurity to deny unauthorized persons information derived from telecommunications and to ensure the authenticity of such telecommunications. COMSEC includes cryptographic security, transmission security, emissions security, and physical security of COMSEC material. It is imperative to utilize secure communication protocols with strong cryptographic mechanisms to prevent unauthorized disclosure of, and detect changes to, information during transmission. Systems should also maintain the confidentiality and integrity of information during preparation for transmission and during reception. Spacecraft should not employ a mode of operations where cryptography on the TT&C link can be disabled (i.e., crypto-bypass mode). The cryptographic mechanisms should identify and reject wireless transmissions that are deliberate attempts to achieve imitative or manipulative communications deception based on signal parameters."
+        },
+        {
+          "id": "CM0030",
+          "name": "Crypto Key Management",
+          "framework": "SPARTA",
+          "description": "Leverage best practices for crypto key management as defined by organization like NIST or the National Security Agency. Leverage only approved cryptographic algorithms, cryptographic key generation algorithms or key distribution techniques, authentication techniques, or evaluation criteria. Encryption key handling should be performed outside of the onboard software and protected using cryptography. Encryption keys should be restricted so that they cannot be read via any telecommands."
+        },
+        {
+          "id": "CM0031",
+          "name": "Authentication",
+          "framework": "SPARTA",
+          "description": "Authenticate all communication sessions (crosslink and ground stations) for all commands before establishing remote connections using bidirectional authentication that is cryptographically based. Adding authentication on the spacecraft bus and communications on-board the spacecraft is also recommended."
+        },
+        {
+          "id": "CM0021",
+          "name": "Software Digital Signature",
+          "framework": "SPARTA",
+          "description": "Prevent the installation of Flight Software without verification that the component has been digitally signed using a certificate that is recognized and approved by the mission."
+        },
+        {
+          "id": "CM0055",
+          "name": "Secure Command Mode(s)",
+          "framework": "SPARTA",
+          "description": "Provide additional protection modes for commanding the spacecraft. These can be where the spacecraft will restrict command lock based on geographic location of ground stations, special operational modes within the flight software, or even temporal controls where the spacecraft will only accept commands during certain times."
+        },
+        {
+          "id": "CM0005",
+          "name": "Ground-based Countermeasures",
+          "framework": "SPARTA",
+          "description": "This countermeasure is focused on the protection of terrestrial assets like ground networks and development environments/contractor networks, etc. Traditional detection technologies and capabilities would be applicable here. Utilizing resources from NIST CSF to properly secure these environments using identify, protect, detect, recover, and respond is likely warranted. Additionally, NISTIR 8401 may provide resources as well since it was developed to focus on ground-based security for space systems (https://csrc.nist.gov/pubs/ir/8401/final). Furthermore, the MITRE ATT&CK framework provides IT focused TTPs and their mitigations https://attack.mitre.org/mitigations/enterprise/. Several recommended NIST 800-53 Rev5 controls are provided for reference when designing ground systems/networks."
+        },
+        {
+          "id": "CM0035",
+          "name": "Protect Authenticators",
+          "framework": "SPARTA",
+          "description": "Protect authenticator content from unauthorized disclosure and modification."
+        },
+        {
+          "id": "CM0053",
+          "name": "Physical Security Controls",
+          "framework": "SPARTA",
+          "description": "Employ physical security controls (badge with pins, guards, gates, etc.) to prevent unauthorized access to the systems that have the ability to command the spacecraft."
+        }
+      ]
+    },
+    {
+      "from": "CWE-798",
+      "from_framework": "CWE",
+      "to_framework": "SPARTA",
+      "relationship": "co_occurrence",
+      "hops": [
+        {
+          "id": "SV-AC-4",
+          "name": "Masquerading as an authorized entity in order to gain access/Insider Threat",
+          "framework": "SPARTA",
+          "description": "The Program shall establish policy and procedures to prevent individuals (i.e., insiders) from masquerading as individuals with valid access to areas where commanding of the spacecraft is possible."
+        }
+      ]
+    }
+  ]
+}
+</evidence_case_payload>

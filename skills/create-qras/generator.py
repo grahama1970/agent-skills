@@ -44,13 +44,18 @@ except ImportError:
 app = typer.Typer(help="Generate QRA pairs from various sources")
 
 # Framework detection patterns
+# Updated 2026-04-16 to match actual control_id formats in sparta_controls
 FRAMEWORK_PATTERNS = {
     "CWE": re.compile(r"^CWE-\d+$", re.I),
     "CAPEC": re.compile(r"^CAPEC-\d+$", re.I),
-    "ATT&CK": re.compile(r"^T\d{4}(\.\d{3})?$", re.I),
-    "SPARTA": re.compile(r"^SV-[A-Z]{2,4}-\d+$", re.I),
+    # ATT&CK: T=techniques, M=mitigations (skip S=software via control_type filter)
+    "ATT&CK": re.compile(r"^[TM]\d{4}(\.\d{3})?$", re.I),
+    # SPARTA: ST=tactics, XXX-NNNN=techniques (REC,EXE,IAC,etc), CM=countermeasures
+    "SPARTA": re.compile(r"^(ST\d{4}|[A-Z]{2,4}-\d{4}(\.\d{2})?|CM[-]?\w+)$", re.I),
     "NIST": re.compile(r"^[A-Z]{2}-\d+(\(\d+\))?$", re.I),  # AC-17, AC-17(1)
     "D3FEND": re.compile(r"^D3-[A-Z]+$", re.I),  # D3-AI, D3-MFA
+    # ESA space threat techniques
+    "ESA": re.compile(r"^ESA-T\d{4}(\.\d{3})?$", re.I),  # ESA-T1489.001
 }
 
 # Controls that need relationship QRAs (have crosswalk chains)
@@ -108,8 +113,56 @@ def _load_framework_source_map() -> dict[str, str]:
     except Exception:
         return _FALLBACK_FRAMEWORK_MAP.copy()
 
+
+def _load_framework_prompt_map() -> dict[str, str]:
+    """Load canonical framework → prompt branch name from worksheets.yaml.
+
+    For prompt selection, we need to normalize database values like 'ATT_CK_Enterprise'
+    to the branch names used in if/elif checks like 'ATT&CK'.
+
+    Uses the first alias that matches an if/elif branch name, or falls back to canonical.
+    """
+    # Known branch names used in the if/elif prompt selection
+    known_branches = {"CWE", "CAPEC", "ATT&CK", "D3FEND", "NIST", "SPARTA", "ESA"}
+
+    if not WORKSHEETS_YAML.exists():
+        return {}
+
+    try:
+        with open(WORKSHEETS_YAML) as f:
+            config = yaml.safe_load(f)
+
+        registry = config.get("framework_registry", {})
+        if not registry:
+            return {}
+
+        # Build canonical → branch name map
+        prompt_map = {}
+        for canonical, info in registry.items():
+            # Check if canonical itself is a known branch
+            if canonical in known_branches:
+                prompt_map[canonical] = canonical
+                continue
+            # Check aliases for a known branch name
+            for alias in info.get("aliases", []):
+                if alias in known_branches:
+                    prompt_map[canonical] = alias
+                    break
+            else:
+                # No known branch found, use canonical
+                prompt_map[canonical] = canonical
+
+        return prompt_map
+    except Exception:
+        return {}
+
+
 # Load framework source map from worksheets.yaml (or fallback)
 FRAMEWORK_SOURCE_MAP = _load_framework_source_map()
+
+# Load canonical → prompt branch name map from worksheets.yaml
+# Used to normalize 'ATT_CK_Enterprise' → 'ATT&CK' for prompt selection
+FRAMEWORK_PROMPT_MAP = _load_framework_prompt_map()
 
 # Prompt template directory (centralized in prompt-lab)
 PROMPT_LAB_DIR = Path("/home/graham/workspace/experiments/scillm/.skills/prompt-lab/prompts/qra")
@@ -129,7 +182,12 @@ FRAMEWORK_TO_CATEGORY = {
     "ATT&CK": "attack_native",  # For detected framework
     "D3FEND": "d3fend_native",
     "SPARTA": "sparta_native",
+    "ESA": "esa_native",
+    "ESA_Shield": "esa_native",
 }
+
+# FRAMEWORK_PROMPT_MAP is loaded from worksheets.yaml above
+# It maps canonical source_framework → prompt branch name (e.g., ATT_CK_Enterprise → ATT&CK)
 
 # Thin frameworks that need URL enrichment for native QRAs
 THIN_FRAMEWORKS = {"NIST", "ATT_CK_Enterprise", "ATT_CK_Mobile", "ATT_CK_ICS", "CAPEC", "D3FEND", "SPARTA", "ATT&CK"}
@@ -1562,7 +1620,8 @@ def _generate_independent_qra(
     New schema returns 1-6 pairs per control, not exactly 3.
     """
     control_id = control.get("control_id", control.get("_key"))
-    framework = _detect_framework(control_id) or control.get("source_framework", "UNKNOWN")
+    # Prefer document's source_framework field; regex detection is fallback for unknown sources
+    framework = control.get("source_framework") or _detect_framework(control_id) or "UNKNOWN"
 
     # Use CWE-specific template with rich fields, or generic independent template
     if framework == "CWE":
@@ -1788,21 +1847,29 @@ async def _generate_independent_qra_async(
     If expected_total is provided, includes it in metadata for dashboard progress.
     """
     control_id = control.get("control_id", control.get("_key"))
-    framework = _detect_framework(control_id) or control.get("source_framework", "UNKNOWN")
+    # Prefer document's source_framework field; regex detection is fallback for unknown sources
+    raw_framework = control.get("source_framework") or _detect_framework(control_id) or "UNKNOWN"
+    # Normalize to prompt branch names (e.g., ATT_CK_Enterprise → ATT&CK) using worksheets.yaml
+    framework = FRAMEWORK_PROMPT_MAP.get(raw_framework, raw_framework)
 
     # Use framework-specific templates or generic independent template
     system_prompt = ""  # Default: user-only request
 
     if framework == "CWE":
-        prompt_template = _load_prompt("cwe_independent")
-        cwe_record = _format_cwe_record(control)
-        prompt = prompt_template.format(
+        # Native CWE prompts with system + user messages
+        system_prompt, user_template = _load_prompt_pair("cwe", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "")
+        prompt = user_template.format(
             control_id=control_id,
-            cwe_record=cwe_record,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id or "(None)",
         )
     elif framework == "ATT&CK":
         # Native ATT&CK prompts with system + user messages
-        system_prompt, user_template = _load_prompt_pair("native_attack")
+        system_prompt, user_template = _load_prompt_pair("attack", native=True)
         control_name = control.get("question", control.get("title", control.get("name", "Unknown")))
         control_details = control.get("answer", control.get("description", "No description"))
         # For supplementary content, use extended_content if available
@@ -1816,7 +1883,7 @@ async def _generate_independent_qra_async(
         )
     elif framework == "D3FEND":
         # Native D3FEND prompts with system + user messages
-        system_prompt, user_template = _load_prompt_pair("native_d3fend")
+        system_prompt, user_template = _load_prompt_pair("d3fend", native=True)
         control_name = control.get("name", control.get("title", "Unknown"))
         control_details = control.get("description", "No description")
         parent_id = control.get("parent_id", "Unknown")
@@ -1829,8 +1896,62 @@ async def _generate_independent_qra_async(
             parent_id=parent_id,
             mind=mind or "Unknown",
         )
+    elif framework == "CAPEC":
+        # Native CAPEC prompts with system + user messages
+        system_prompt, user_template = _load_prompt_pair("capec", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "")
+        category_name = control.get("category_name", "")
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id or "(None)",
+            category_name=category_name or "(Unknown)",
+        )
+    elif framework == "NIST":
+        # Native NIST prompts with system + user messages
+        system_prompt, user_template = _load_prompt_pair("nist", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        family = control.get("family", control.get("control_family", ""))
+        family_name = control.get("family_name", "")
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            family=family or "(Unknown)",
+            family_name=family_name or "(Unknown)",
+        )
+    elif framework == "SPARTA":
+        # Native SPARTA prompts with system + user messages
+        system_prompt, user_template = _load_prompt_pair("sparta", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "")
+        family = control.get("family", control.get("control_family", ""))
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id or "(None)",
+            family=family or "(Unknown)",
+        )
+    elif framework == "ESA":
+        # Native ESA prompts with system + user messages
+        system_prompt, user_template = _load_prompt_pair("esa", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "")
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id or "(None)",
+        )
     else:
-        # Generic independent template for NIST/SPARTA etc
+        # Generic independent template for unknown frameworks
         title = control.get("title", control.get("name", "Untitled"))
         description = control.get("description", control.get("text", "No description"))
         prompt_template = _load_prompt("independent")
@@ -1897,15 +2018,8 @@ async def _generate_independent_qra_async(
         run_id = f"skill_create_qras_{int(time.time())}"
         qra_docs = []
 
-        # Determine qra_type based on framework
-        if framework == "ATT&CK":
-            qra_type = "attack_native"
-        elif framework == "CWE":
-            qra_type = "cwe_native"
-        elif framework == "D3FEND":
-            qra_type = "d3fend_native"
-        else:
-            qra_type = "independent"
+        # Determine qra_type based on framework using FRAMEWORK_TO_CATEGORY
+        qra_type = FRAMEWORK_TO_CATEGORY.get(framework, f"{framework.lower()}_native")
 
         for idx, pair in enumerate(pairs, start=1):
             qra_key = _generate_qra_key(qra_type, f"{control_id}_p{idx}")
@@ -2475,11 +2589,18 @@ def generate(
                 # For native frameworks: list controls with pagination (API max is 500)
                 # Map user-friendly framework name to stored source_framework value
                 source_framework_filter = FRAMEWORK_SOURCE_MAP.get(framework_upper, framework_upper)
+
+                # SPARTA-specific: only include actionable control types
+                # Exclude indicators (detection patterns) and requirements (free-form text)
+                actionable_types = {"technique", "countermeasure", "tactic"}
+                filter_by_type = framework_upper == "SPARTA"
+
                 controls = []
                 offset = 0
                 page_size = 500
                 while len(controls) < limit:
-                    fetch_limit = min(page_size, limit - len(controls))
+                    # Fetch more than needed if filtering, since some will be excluded
+                    fetch_limit = page_size if filter_by_type else min(page_size, limit - len(controls))
                     resp = memory.post(
                         "/list",
                         json={
@@ -2493,9 +2614,14 @@ def generate(
                     docs = resp.json().get("documents", [])
                     if not docs:
                         break
+                    # Filter by control_type for SPARTA
+                    if filter_by_type:
+                        docs = [d for d in docs if d.get("control_type") in actionable_types]
                     controls.extend(docs)
-                    offset += len(docs)
+                    offset += fetch_limit  # Advance by actual fetch size
                     typer.echo(f"  Fetched {len(controls)} {framework} controls...")
+                # Trim to limit after filtering
+                controls = controls[:limit]
 
                 # Query dynamic concurrency from proxy
                 chunk_size = _get_provider_concurrency("text")

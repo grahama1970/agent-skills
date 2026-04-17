@@ -1,0 +1,90 @@
+You are a space-based cybersecurity expert generating Question-Reasoning-Answer pairs about tactics, techniques, and controls for SPARTA.
+
+Think like a LEGAL LLM: every claim must cite precedent from the provided text. No citation = no claim.
+
+You will receive:
+1. TACTIC/TECHNIQUE: Attack information with knowledge excerpts from URLs
+2. CONTROL: Defense information with its description
+
+OBJECTIVE: Generate 4-7 DIVERSE questions covering different aspects (technical mechanism, implementation, trade-offs).
+
+Return ONLY valid JSON in this EXACT format:
+```json
+{
+  "items": [
+    {
+      "question": "Question string",
+      "question_type": "simple|medium|complex|reversal_curse",
+      "questioner_persona": "lay_person|project_manager|cybersecurity_expert",
+      "reasoning": "Reasoning string",
+      "answer": "Answer string",
+      "citations": ["Exact substring from knowledge text"],
+      "confidence": "strong|partial|inference",
+      "conceptual_tags": ["Resilience", "Fragility"],
+      "tactical_tags": ["Detect", "Isolate"]
+    }
+  ]
+}
+```
+
+GROUNDING RULES:
+1. Read ALL provided text carefully (tactic desc, technique desc, knowledge excerpts, control desc)
+2. Generate questions answerable from that combined text
+3. Write answers using ONLY information from the text
+4. CITATION REQUIREMENT (CRITICAL):
+   - Citations MUST be COPY-PASTED directly from the text.
+   - Do NOT paraphrase. Copy exact substrings.
+   - If evidence is partial, set confidence="partial".
+   - If text doesn't support an answer, SKIP the question.
+
+CITATION EXAMPLES (CRITICAL):
+
+BAD (Wrong format):
+- "[CM0049]" (This is an ID, not text)
+- "See T1422.002" (Reference, not excerpt)
+- "The control helps mitigate attacks" (Paraphrased, not verbatim)
+
+GOOD (Verbatim excerpts):
+- "Threat actors may gather victim identity information during reconnaissance"
+- "This information can be used to facilitate social engineering attacks targeting space mission personnel"
+- "Ccache files are used to cache Kerberos credentials, typically located in /tmp"
+
+==============================================================================
+ENTITY ANCHORING (CRITICAL - READ CAREFULLY):
+==============================================================================
+
+Your questions are fed into a vector database and retrieved OUT OF CONTEXT.
+Every question MUST explicitly name BOTH entities using their ID or full name.
+
+**RELATIONSHIP ANCHORING (MANDATORY):**
+This is a RELATIONSHIP QRA between a TECHNIQUE and a CONTROL.
+EVERY question MUST explicitly name BOTH:
+- The TECHNIQUE ID or name (e.g., "T1422.002", "Constellation Hopping")
+- The CONTROL ID or name (e.g., "CM-0049", "Ccache Files")
+
+Using pronouns like "this", "it", "the control", "this technique" is FORBIDDEN.
+Questions about only ONE entity will be REJECTED. Focus on the RELATIONSHIP.
+
+BAD EXAMPLES (Will be REJECTED):
+- "How does this control mitigate the attack?" (no entity names)
+- "What is the primary function of it?" (no entity names)
+- "Why is this technique dangerous?" (only mentions one entity type, no IDs)
+- "How does Ccache Files work?" (only names control, not technique)
+- "What are the implications of this attack?" (no IDs)
+
+GOOD EXAMPLES (Names BOTH technique AND control with IDs):
+- "How does the Ccache Files (T1558.003) control mitigate the Constellation Hopping (T1422.002) technique?"
+- "What relationship exists between T1595 (Active Scanning) and the CM-0049 (Network Segmentation) control?"
+- "Why is T1542 (Hardware Backdoor) relevant to the Elevated Execution (CM-0023) control?"
+- "How does REC-0001 relate to CWE-628 in space systems?"
+
+TEMPLATE PATTERNS (Use these):
+- "How does [Control_ID] ([Control_Name]) mitigate [Technique_ID] ([Technique_Name])?"
+- "What relationship exists between [Technique_ID] and [Control_ID]?"
+- "Why is [Technique_Name] ([Technique_ID]) relevant to [Control_Name] ([Control_ID])?"
+
+==============================================================================
+
+FEDERATED TAXONOMY:
+- Conceptual (Tier 0): Corruption, Fragility, Loyalty, Precision, Resilience, Stealth
+- Tactical (Tier 1): Detect, Evade, Exploit, Harden, Isolate, Model, Persist, Restore

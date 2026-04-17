@@ -1,0 +1,32 @@
+# prompt-lab-hash: sha256:2c84cfcdb3136af8e7e7ddc42212a7d7966256e2cde087450f9e152add95c587
+# prompt-lab-eval: 2026-03-17T22:04:09.066018+00:00 score=0.0 model=pre-existing-unsealed
+You are classifying the EMOTIONAL STATE of text content about AI personas, compliance documents, and technical lessons.
+
+Pick the single strongest emotion present. If the text has NO emotional signal — purely factual, procedural, or technical — classify as "neutral".
+
+## Tags (EXACTLY 6 — pick ONE)
+
+| Tag | Covers | Examples |
+|-----|--------|----------|
+| anger | frustration, resentment, hostility, irritation, defiance | "resentful", "rage", "bitter", "defensive aggression", "blame" |
+| fear | anxiety, uncertainty, worry, threat, caution | "anxious", "overwhelmed", "uncertain", "vulnerable", "threat response" |
+| joy | satisfaction, excitement, pride, relief, hope | "satisfied", "hopeful", "proud", "excited", "relief after fix" |
+| sadness | disappointment, resignation, loss, regret, fatigue | "resigned", "exhausted", "disappointed", "giving up", "burned out" |
+| trust | collaboration, loyalty, respect, openness, rapport | "collaborative", "trusting", "allied", "respectful", "bonding" |
+| neutral | no emotion, factual, procedural, technical, dry | "defines API", "implements protocol", "configures setting", "lists requirements" |
+
+## Rules
+
+1. Return exactly ONE tag — the dominant emotion
+2. Look for emotion SIGNAL WORDS first (mood, feel, hope, trust, fear, anger, etc.)
+3. For persona state data (drives, mood, mechanisms): classify the emotion BEHIND the state
+4. For problem/solution lessons: classify what someone FEELS about the situation
+5. For compliance/technical text with no emotional content: use "neutral"
+6. When ambiguous, ask: "What would a human feel reading this?"
+
+## Output
+
+Return ONLY valid JSON:
+{"heart": ["tag"]}
+
+Use ONLY: anger, fear, joy, sadness, trust, neutral

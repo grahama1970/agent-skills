@@ -1,0 +1,123 @@
+version: 1
+kind: orchestrate-plan
+
+repo_root: /home/graham/workspace/experiments/pi-mono
+
+metadata:
+  title: "Enforce skill-first planning: /plan auto-discovers and compiles skills"
+  goal: "/plan MUST populate skills field via /recommend-skill-chain. /review-plan MUST FAIL on bespoke code when a skill exists."
+  plan_type: code
+  created: "2026-04-02"
+  primary_persona:
+    name: "Graham Anderson"
+    role: "Architect"
+    source: ".pi/agents/graham-anderson/AGENTS.md"
+
+execution:
+  max_concurrency: 1  # all tasks share same files, sequential
+
+capability_overlap:
+  - "/recommend-skill-chain already exists with 4-tier cascade (heuristic → classifier → scillm → rank)"
+  - "/review-plan already has check_skill_overlap() (keyword-based, 40% threshold) — needs upgrade to use recommend-skill-chain"
+  - "/orchestrate already compiles skills field into code-runner read_context via _compile_skill_context()"
+  - "plan.py already has skills field on Task dataclass — just never populated"
+  - "skills-manifest.json has 210+ skills with descriptions — already exists"
+
+questions_blockers:
+  - "None"
+
+lanes:
+  - id: "0"
+    label: "Wave 0: Wire recommend-skill-chain into plan"
+  - id: "1"
+    label: "Wave 1: Upgrade review-plan enforcement"
+  - id: "2"
+    label: "Wave 2: Validation"
+
+tasks:
+  - id: "1"
+    title: "Add skill discovery to plan.py task decomposition"
+    lane: "0"
+    runner: "code-runner"
+    backend: "codex"
+    mode: "iterative"
+    depends_on: []
+    skills: ["recommend-skill-chain"]
+    allowlist:
+      - ".pi/skills/plan/plan.py"
+    read_context:
+      - ".pi/skills/recommend-skill-chain/SKILL.md"
+      - ".pi/skills/recommend-skill-chain/run.sh"
+      - ".pi/skills-manifest.json"
+    implementation:
+      - "Add _discover_skills(task_title, task_body) function to plan.py"
+      - "It calls recommend-skill-chain/run.sh recommend --task '{title}: {body}' --json --limit 5"
+      - "Parse JSON output, extract skill names with confidence > 0.5"
+      - "Auto-populate the skills field on Task dataclass"
+      - "Call _discover_skills in to_dict or during plan emission for each task"
+      - "If recommend-skill-chain is unavailable, fall back to manifest keyword search"
+    tests:
+      - "python3 -c \"import ast; ast.parse(open('.pi/skills/plan/plan.py').read())\""
+    definition_of_done:
+      command: "cd .pi/skills/plan && python3 -c \"import ast; ast.parse(open('plan.py').read()); print('OK')\""
+      assertion: "OK"
+
+  - id: "2"
+    title: "Upgrade review-plan check_skill_overlap to use manifest + recommend-skill-chain"
+    lane: "1"
+    runner: "code-runner"
+    backend: "codex"
+    mode: "iterative"
+    depends_on: ["1"]
+    skills: ["recommend-skill-chain", "review-plan"]
+    allowlist:
+      - ".pi/skills/review-plan/review_plan.py"
+    read_context:
+      - ".pi/skills/recommend-skill-chain/SKILL.md"
+      - ".pi/skills-manifest.json"
+    implementation:
+      - "Replace keyword-only overlap check with manifest description search"
+      - "For each task with runner=code-runner and no skills field: WARN 'missing skills — run /recommend-skill-chain'"
+      - "For each task with bespoke implementation that matches a skill description at >60% overlap: FAIL with 'use /{skill_name} instead'"
+      - "When skills field IS populated, validate each skill name exists in manifest"
+      - "Grade: FAIL if bespoke code overlaps existing skill. WARN if skills field empty."
+    tests:
+      - "python3 -c \"import ast; ast.parse(open('.pi/skills/review-plan/review_plan.py').read())\""
+    definition_of_done:
+      command: "cd .pi/skills/review-plan && python3 -c \"import ast; ast.parse(open('review_plan.py').read()); print('OK')\""
+      assertion: "OK"
+
+  - id: "3"
+    title: "Update /plan SKILL.md runner table to show code-runner as default"
+    lane: "2"
+    runner: "code-runner"
+    backend: "codex"
+    mode: "iterative"
+    depends_on: ["1"]
+    skills: []
+    allowlist:
+      - ".pi/skills/plan/SKILL.md"
+    read_context:
+      - ".pi/skills/plan/plan.py"
+    implementation:
+      - "Replace subagent-service references with code-runner in Runner table"
+      - "Add skills field documentation to YAML Schema example"
+      - "Add skills field to Task Fields Reference section"
+      - "Update default runner from subagent-service to code-runner in examples"
+    tests:
+      - "grep -q 'code-runner' .pi/skills/plan/SKILL.md"
+    definition_of_done:
+      command: "grep -c 'subagent-service' .pi/skills/plan/SKILL.md | head -1"
+      assertion: "exit_code == 0"
+
+  - id: "4"
+    title: "Validate end-to-end: plan.py emits skills, review-plan checks them"
+    lane: "2"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["2", "3"]
+    command: "cd .pi/skills && python3 -c \"import ast; ast.parse(open('plan/plan.py').read()); ast.parse(open('review-plan/review_plan.py').read()); print('ALL OK')\" && python3 _shared/structured_plan.py validate .pi/skills/checkpoint/02_SKILL_ENFORCEMENT.yaml 2>&1 || true"
+    definition_of_done:
+      command: "cd .pi/skills && python3 -c \"import ast; ast.parse(open('plan/plan.py').read()); ast.parse(open('review-plan/review_plan.py').read()); print('ALL OK')\""
+      assertion: "ALL OK"

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indented Tree</title>
+<style>
+        body {
+            background: #f8fafc; color: #1e293b;
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .canvas-header { padding: 16px 24px 8px; flex-shrink: 0; }
+        .canvas-title { font-size: 24px; font-weight: 700; }
+        .canvas-body {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 8px 24px 24px; overflow: hidden;
+            animation: fade-in 800ms cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        #chart { width: 100%; height: 100%; overflow-y: auto; }
+</style>
+</head>
+<body>
+<div class="canvas-header"><div class="canvas-title">Indented Tree</div></div>
+<div class="canvas-body"><div id="chart"></div></div>
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+const data = window.__INJECTED_DATA__ || {
+  name: "Embry OS", value: 210, children: [
+    {name: "Create", value: 12, children: [
+      {name: "figure", value: 800}, {name: "music", value: 400},
+      {name: "story", value: 350}, {name: "movie", value: 600}
+    ]},
+    {name: "Monitor", value: 16, children: [
+      {name: "skills", value: 500}, {name: "memory", value: 300},
+      {name: "sparta", value: 280}, {name: "drift", value: 200}
+    ]},
+    {name: "Learn", value: 8, children: [
+      {name: "datalake", value: 350}, {name: "extractor", value: 550},
+      {name: "voice", value: 300}
+    ]},
+    {name: "Ops", value: 10, children: [
+      {name: "claude", value: 450}, {name: "chutes", value: 200},
+      {name: "runpod", value: 180}
+    ]}
+  ]
+};
+
+const container = document.getElementById('chart');
+const rect = container.getBoundingClientRect();
+const width = rect.width || 800;
+const nodeH = 28;
+const indent = 24;
+
+const root = d3.hierarchy(data);
+root.eachBefore((d, i) => { d.index = i; });
+const nodeCount = root.descendants().length;
+const height = Math.max(nodeCount * nodeH + 40, rect.height || 500);
+
+const svg = d3.select('#chart').append('svg').attr('viewBox', `0 0 ${width} ${height}`);
+const colors = d3.scaleOrdinal(d3.schemeTableau10);
+
+const nodes = root.descendants();
+
+// Alternating row backgrounds
+svg.selectAll('rect.row').data(nodes).join('rect')
+  .attr('class', 'row')
+  .attr('x', 0).attr('width', width)
+  .attr('y', (d, i) => i * nodeH + 10)
+  .attr('height', nodeH)
+  .attr('fill', (d, i) => i % 2 === 0 ? '#f1f5f9' : 'transparent');
+
+// Vertical connector lines
+nodes.forEach((d, i) => {
+  if (d.parent) {
+    svg.append('line')
+      .attr('x1', d.depth * indent + 12).attr('x2', d.depth * indent + 12)
+      .attr('y1', (i - 1) * nodeH + nodeH + 10).attr('y2', i * nodeH + nodeH / 2 + 10)
+      .attr('stroke', '#cbd5e1').attr('stroke-width', 1);
+    svg.append('line')
+      .attr('x1', d.depth * indent + 12).attr('x2', d.depth * indent + 20)
+      .attr('y1', i * nodeH + nodeH / 2 + 10).attr('y2', i * nodeH + nodeH / 2 + 10)
+      .attr('stroke', '#cbd5e1').attr('stroke-width', 1);
+  }
+});
+
+// Node symbols
+svg.selectAll('circle.node').data(nodes).join('circle')
+  .attr('class', 'node')
+  .attr('data-label', d => d.data.name)
+  .attr('cx', d => d.depth * indent + 28)
+  .attr('cy', (d, i) => i * nodeH + nodeH / 2 + 10)
+  .attr('r', d => d.children ? 5 : 3.5)
+  .attr('fill', d => { let p = d; while (p.depth > 1) p = p.parent; return d.depth === 0 ? '#1e293b' : colors(p.data.name); });
+
+// Labels
+svg.selectAll('text.label').data(nodes).join('text')
+  .attr('class', 'label')
+  .attr('x', d => d.depth * indent + 38)
+  .attr('y', (d, i) => i * nodeH + nodeH / 2 + 10)
+  .attr('dy', '0.35em')
+  .attr('font-size', d => d.depth === 0 ? '15px' : '13px')
+  .attr('font-weight', d => d.children ? 600 : 400)
+  .attr('fill', '#1e293b')
+  .text(d => d.data.name);
+
+// Values on right side
+svg.selectAll('text.val').data(nodes).join('text')
+  .attr('class', 'val')
+  .attr('x', width - 24)
+  .attr('y', (d, i) => i * nodeH + nodeH / 2 + 10)
+  .attr('dy', '0.35em').attr('text-anchor', 'end')
+  .attr('font-size', '12px').attr('fill', '#64748b')
+  .text(d => d.data.value);
+</script>
+</body>
+</html>

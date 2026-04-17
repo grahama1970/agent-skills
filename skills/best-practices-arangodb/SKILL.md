@@ -130,9 +130,23 @@ NEVER brute-force scan all embeddings. BM25 top-100 → cosine rerank to top-k.
 
 NEVER split one server-side operation into two network round-trips.
 
-### 8. MEDIUM: Batch Exact Matches — `arango-batch-lookups`
+### 8. MEDIUM: Batch Operations — `arango-batch-operations`
 
-Use one AQL with `FOR cid IN @cids` instead of N individual queries.
+Use bulk AQL for large-scale operations (10K+ documents):
+
+```aql
+-- BAD: 222K individual UPDATE calls (3.3/s = 18 hours)
+UPDATE {_key: @key} WITH {field: @val} IN collection
+
+-- GOOD: Bulk update (50-100 docs per query)
+FOR item IN @updates
+  UPDATE {_key: item.key} WITH {field: item.val} IN collection
+  RETURN 1
+```
+
+For batch exact matches, use one AQL with `FOR cid IN @cids` instead of N individual queries.
+
+For HTTP endpoints with internal ThreadPoolExecutor, use batch endpoints (e.g., `/create-evidence-case-batch` with `max_workers: 32`).
 
 ### 9. MEDIUM: Identity Analyzer for Exact Matches — `arango-identity-for-exact`
 
@@ -308,6 +322,36 @@ coll.add_index({
 **When to apply:** Any batch update to a collection with a sparse vector index where some docs lack the vector field.
 
 **Real incident (2026-04-14):** Lineage backfill failed on 269 docs without embeddings. Error message was misleading ("vector field not present") even when providing the embedding in the UPDATE — the index validates against the OLD document state.
+
+### 22. CRITICAL: All Searchable Docs Must Have Embeddings — `arango-require-embeddings`
+
+Every document in a searchable collection (sparta_qra, lessons, sparta_url_knowledge) MUST have an `embedding` field with a 384-dimension vector. Docs without embeddings:
+1. Break the dense lane of hybrid search (cosine similarity returns 0)
+2. Trigger sparse vector index bugs on UPDATE operations
+3. Create data quality gaps that degrade recall
+
+```python
+# BAD — writing doc without embedding
+db.aql.execute("INSERT {question: @q, answer: @a} INTO sparta_qra", ...)
+
+# GOOD — always include embedding
+embedding = embedding_service.embed(question)  # 384-dim vector
+db.aql.execute("INSERT {question: @q, answer: @a, embedding: @emb} INTO sparta_qra",
+    bind_vars={"q": question, "a": answer, "emb": embedding})
+```
+
+**Monitoring:**
+```aql
+-- Count docs missing embeddings (should be 0)
+FOR d IN sparta_qra
+  FILTER !HAS(d, "embedding") OR d.embedding == null
+  COLLECT WITH COUNT INTO cnt
+  RETURN cnt
+```
+
+**Backfill script:** Use `/ops-arango embeddings --fix` to populate missing embeddings.
+
+**Real incident (2026-04-16):** 2,937 QRAs missing embeddings discovered during batch update. These were created by a script that skipped the embedding step.
 
 ## Enforcement
 

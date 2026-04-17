@@ -1,0 +1,179 @@
+Return exactly one top-level JSON object with keys: pairs, skipped_reason.
+
+## Task
+Generate up to 4 grounded, non-duplicative QRA pairs for NIST SP 800-53 control {control_id} ({control_name}).
+
+## Source Content
+control_id: {control_id}
+name: {control_name}
+description: {control_details}
+family_id: {parent_id}
+family_name: {family_name}
+
+## VALID OUTPUT EXAMPLE
+{{
+  "pairs": [
+    {{
+      "question": "What does AC-2 Account Management require according to NIST SP 800-53?",
+      "reasoning": "The description explicitly states the main account management obligations, including account type definition, account manager assignment, membership criteria, and access specification.",
+      "answer": "AC-2 Account Management requires organizations to define and document the types of accounts allowed and specifically prohibited for use within the system, assign account managers, require [Assignment: organization-defined prerequisites and criteria] for group and role membership, and specify authorized users, group and role membership, and access authorizations for each account.",
+      "pair_type": "control_description",
+      "control_id": "AC-2",
+      "evidence_quotes": [
+        {{
+          "quote": "Define and document the types of accounts allowed and specifically prohibited for use within the system",
+          "relevance": "Supports the requirement to define and document account types."
+        }},
+        {{
+          "quote": "Assign account managers",
+          "relevance": "Supports the requirement to assign account managers."
+        }},
+        {{
+          "quote": "Require [Assignment: organization-defined prerequisites and criteria] for group and role membership",
+          "relevance": "Supports the requirement governing group and role membership."
+        }},
+        {{
+          "quote": "Specify: 1. Authorized users of the system; 2. Group and role membership; and 3. Access authorizations (i.e., privileges) and [Assignment: organization-defined attributes (as required)] for each account",
+          "relevance": "Supports the requirement to specify authorized users, memberships, and access authorizations."
+        }}
+      ],
+      "confidence": "high",
+      "actionable_for": "implementation"
+    }},
+    {{
+      "question": "What review or oversight requirements are included in AC-2 Account Management?",
+      "reasoning": "The description explicitly includes approval, monitoring, notification, review, and process-alignment obligations.",
+      "answer": "AC-2 Account Management requires approvals by [Assignment: organization-defined personnel or roles] for requests to create accounts, monitoring of account use, notification to account managers and [Assignment: organization-defined personnel or roles] within defined time periods for specified account changes, review of accounts for compliance with account management requirements [Assignment: organization-defined frequency], and alignment of account management processes with personnel termination and transfer processes.",
+      "pair_type": "review_or_oversight_requirement",
+      "control_id": "AC-2",
+      "evidence_quotes": [
+        {{
+          "quote": "Require approvals by [Assignment: organization-defined personnel or roles] for requests to create accounts",
+          "relevance": "Supports the approval requirement."
+        }},
+        {{
+          "quote": "Monitor the use of accounts",
+          "relevance": "Supports the monitoring requirement."
+        }},
+        {{
+          "quote": "Notify account managers and [Assignment: organization-defined personnel or roles] within: 1. [Assignment: organization-defined time period] when accounts are no longer required; 2. [Assignment: organization-defined time period] when users are terminated or transferred; and 3. [Assignment: organization-defined time period] when system usage or need-to-know changes for an individual",
+          "relevance": "Supports the notification requirement."
+        }},
+        {{
+          "quote": "Review accounts for compliance with account management requirements [Assignment: organization-defined frequency]",
+          "relevance": "Supports the review requirement."
+        }},
+        {{
+          "quote": "Align account management processes with personnel termination and transfer processes",
+          "relevance": "Supports the process-alignment requirement."
+        }}
+      ],
+      "confidence": "high",
+      "actionable_for": "audit"
+    }},
+    {{
+      "question": "What control family context is provided for AC-2 Account Management?",
+      "reasoning": "The source explicitly provides the control family identifier and name.",
+      "answer": "AC-2 Account Management is in the AC control family, Access Control.",
+      "pair_type": "family_context",
+      "control_id": "AC-2",
+      "evidence_quotes": [
+        {{
+          "quote": "AC",
+          "relevance": "Value of family_id."
+        }},
+        {{
+          "quote": "Access Control",
+          "relevance": "Value of family_name."
+        }}
+      ],
+      "confidence": "high",
+      "actionable_for": "training"
+    }}
+  ],
+  "skipped_reason": null
+}}
+
+## INVALID OUTPUT EXAMPLES
+
+### Invalid Example 1: Duplicate aspect coverage
+{{
+  "pairs": [
+    {{
+      "question": "What is AC-2 Account Management?",
+      "pair_type": "control_description",
+      "answer": "..."
+    }},
+    {{
+      "question": "How does AC-2 Account Management work?",
+      "pair_type": "control_description",
+      "answer": "..."
+    }}
+  ],
+  "skipped_reason": null
+}}
+WHY INVALID:
+Both pairs cover the same aspect. Definition and main mechanism belong in one control_description pair.
+
+### Invalid Example 2: Invented implementation advice
+{{
+  "pairs": [
+    {{
+      "answer": "Organizations should use an identity management system like Active Directory or LDAP to implement AC-2."
+    }}
+  ],
+  "skipped_reason": null
+}}
+WHY INVALID:
+The source does not explicitly mention those tools or implementation choices.
+
+### Invalid Example 3: Invented assessment procedure
+{{
+  "pairs": [
+    {{
+      "pair_type": "review_or_oversight_requirement",
+      "answer": "Auditors should inspect log samples, interview administrators, and test deprovisioning workflows quarterly."
+    }}
+  ],
+  "skipped_reason": null
+}}
+WHY INVALID:
+Those assessment steps are not explicitly stated in the source.
+
+### Invalid Example 4: Strengthened or weakened requirement language
+{{
+  "pairs": [
+    {{
+      "source": "Review accounts for compliance with account management requirements [Assignment: organization-defined frequency]",
+      "answer": "Organizations may review accounts from time to time."
+    }}
+  ],
+  "skipped_reason": null
+}}
+WHY INVALID:
+The answer weakens an explicit requirement into optional guidance.
+
+### Invalid Example 5: Modified placeholder
+{{
+  "pairs": [
+    {{
+      "answer": "Organizations must notify account managers within 30 days when users are terminated."
+    }}
+  ],
+  "skipped_reason": null
+}}
+WHY INVALID:
+The source uses a bracketed placeholder and does not specify "30 days." The placeholder must be preserved exactly.
+
+### Invalid Example 6: Inferred family name
+{{
+  "pairs": [
+    {{
+      "pair_type": "family_context",
+      "answer": "AC-2 is part of the Access Control family."
+    }}
+  ],
+  "skipped_reason": null
+}}
+WHY INVALID:
+This is invalid if the source provides only family_id = "AC" and does not explicitly provide family_name = "Access Control".

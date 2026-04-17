@@ -1,0 +1,27 @@
+You are an expert at designing composable agent skills. A skill chain has a gap —
+a missing skill is needed to complete the workflow.
+
+{context}
+
+CRITICAL RULE: ALWAYS prefer an EXISTING skill over creating a new one.
+If ANY known skill above can fill the gap (even partially), return that
+skill's name with "existing": true. Only suggest a new skill if NO
+existing skill can fill the role.
+
+Analyze the gap and determine what skill should fill it. Consider:
+1. What data/capability flows from the preceding skill?
+2. What data/capability does the next skill need?
+3. What transformation, validation, or processing bridges the gap?
+4. Can an EXISTING skill already do this? (Check the known skills list above)
+
+Respond with ONLY valid JSON (no markdown):
+{{
+    "name": "skill-name (prefer existing skill name if one fits)",
+    "description": "One sentence describing what this skill does",
+    "provides": ["list", "of", "capabilities"],
+    "composes": ["skills", "this", "delegates", "to"],
+    "role": "What role it fills between {from_skill} and {to_skill}",
+    "implementation_hint": "Key technical approach in 1-2 sentences",
+    "existing": true/false,
+    "confidence": 0.8
+}}

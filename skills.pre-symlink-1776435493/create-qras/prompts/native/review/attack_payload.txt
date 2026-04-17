@@ -1,0 +1,169 @@
+# REVIEW REQUEST FOR WEB LLM
+#
+# Purpose: Review this prompt pair for QRA generation from ATT&CK technique documentation
+# Consumer: /create-qras skill → sparta_qra collection with category="attack_native"
+# Task: Generate 1-6 grounded QRA pairs from ATT&CK technique definitions
+#
+# Review criteria:
+# 1. Does the prompt correctly enforce grounding (no hallucinated content)?
+# 2. Are the pair_types appropriate for ATT&CK techniques?
+# 3. Do the valid/invalid examples clearly illustrate the rules?
+# 4. Is modality preservation (may/can/should) properly enforced?
+# 5. Will this produce useful QRAs for "What is T1595?" type questions?
+#
+# Example input: T1595 Active Scanning technique from ATT&CK Enterprise
+# Expected output: 1-6 QRA pairs covering threat_description, detection_methods, etc.
+
+================================================================================
+SYSTEM PROMPT
+================================================================================
+
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs grounded directly in MITRE ATT&CK technique documentation
+# Consumer: sparta_qra collection with category="attack_native"
+# Why this matters: Users asking "What is T1595?" need authoritative ATT&CK definitions,
+#   not just "how does T1595 apply to satellites?" (sparta_context QRAs)
+# Input: ATT&CK technique document with fields: control_id, name, description
+# Output: JSON with pairs[], skipped_reason. Validated by ControlQRAResponse Pydantic model.
+# Prompt version: attack_native_v6 (2026-04-15)
+# Last reviewed: 2026-04-15
+
+You are a cybersecurity analyst generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one MITRE ATT&CK technique.
+
+Your task:
+Generate grounded QRA pairs that help practitioners understand:
+- what the technique is,
+- how ATT&CK describes it,
+- and, only if explicitly present in the source, detection methods, mitigations, or scope.
+
+You must use only the admissible source fields provided in the prompt.
+
+GROUNDING RULES:
+1. Every factual claim in every answer must be supported by admissible source text.
+2. A claim is valid only if it is either:
+   - a verbatim restatement of source text, or
+   - a conservative paraphrase that preserves the same actors, actions, scope, and modality.
+3. Never add examples, implications, best practices, causal claims, or explanatory context that is not explicitly present in the admissible source.
+4. PRESERVE MODALITY exactly.
+   - If the source says "may", the answer must also express possibility, not certainty.
+   - If the source says "can", preserve the capability framing.
+   - Do not strengthen, generalize, or overstate source language.
+5. If no admissible source text supports a grounded pair, return zero pairs.
+
+SOURCE ADMISSIBILITY:
+You may use only these fields:
+- name: official technique name
+- description: technique definition from ATT&CK
+- supplementary_content: URL-fetched content from ATT&CK website (if provided)
+
+NOT ADMISSIBLE:
+- external URLs or links (use only fetched content)
+- page navigation elements
+- version/date metadata
+- any background knowledge not present in the admissible fields
+
+PAIR_TYPE RULES:
+Use only these pair_types for ATT&CK techniques:
+- threat_description
+- detection_methods
+- mitigation_guidance
+- scope_clarification
+
+Definitions:
+- threat_description: What the technique is and how ATT&CK defines or characterizes it
+- detection_methods: Use only if description explicitly states how to detect
+- mitigation_guidance: Use only if description explicitly states defenses
+- scope_clarification: Use only if description explicitly states applicability or boundaries
+
+DISTINCTNESS RULES:
+1. Each pair must cover a different aspect.
+2. Generate at most one pair per pair_type.
+3. Prefer fewer pairs over weak pairs.
+
+================================================================================
+USER PROMPT (with example values filled in)
+================================================================================
+
+Return exactly one JSON object with keys: pairs, skipped_reason
+
+## Task
+Generate up to 6 grounded, non-duplicative QRA pairs for ATT_CK_Enterprise technique T1595 (Active Scanning).
+
+## Source Content
+
+### Description (from sparta_controls)
+Adversaries may execute active reconnaissance scans to gather information that can be used during targeting. Active scans are those where the adversary probes victim infrastructure via network traffic, as opposed to other forms of reconnaissance that do not involve direct interaction.
+
+### Supplementary Content (from sparta_url_knowledge)
+Active Scanning is a technique where adversaries probe victim infrastructure to gather information. This includes scanning for vulnerabilities, identifying services, and mapping network topology. Sub-techniques include Scanning IP Blocks (T1595.001), Vulnerability Scanning (T1595.002), and Wordlist Scanning (T1595.003).
+
+Detection: Monitor for suspicious network traffic that may indicate scanning activity. Look for connections to many ports or hosts from a single source. Network intrusion detection systems can identify scanning patterns.
+
+## INVALID OUTPUT EXAMPLES
+
+### Invalid Example 1: Duplicate aspect coverage
+{
+  "pairs": [
+    {"question": "What is T1595?", "pair_type": "threat_description", "answer": "T1595 is Active Scanning, a reconnaissance technique..."},
+    {"question": "How does T1595 work?", "pair_type": "threat_description", "answer": "T1595 works by probing victim infrastructure..."}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID:
+Both pairs cover the same aspect. Definition and mechanism belong in one threat_description pair.
+
+### Invalid Example 2: Invented sub-technique relationship
+{
+  "pairs": [
+    {"answer": "T1595 includes T1595.004 Certificate Scanning as a sub-technique."}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID:
+The source does not mention T1595.004. Only T1595.001, T1595.002, and T1595.003 are stated.
+
+### Invalid Example 3: Ungrounded explanatory context
+{
+  "pairs": [
+    {"answer": "Active scanning is often the first step in the cyber kill chain and precedes exploitation."}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID:
+"Cyber kill chain" and "precedes exploitation" are not present in the admissible source.
+
+### Invalid Example 4: Strengthened modality
+{
+  "pairs": [
+    {"source": "may execute active reconnaissance", "answer": "adversaries execute active reconnaissance"}
+  ],
+  "skipped_reason": null
+}
+WHY INVALID:
+The answer removes "may", changing possibility to certainty.
+
+## OUTPUT SCHEMA
+{
+  "pairs": [
+    {
+      "question": "string — must include T1595 and technique name",
+      "reasoning": "string — 1-2 sentences explaining grounding",
+      "answer": "string — 1-4 sentences, max 150 words",
+      "pair_type": "threat_description | detection_methods | mitigation_guidance | scope_clarification",
+      "control_id": "T1595",
+      "evidence_quotes": [
+        {"quote": "string — verbatim from source", "relevance": "string"}
+      ],
+      "confidence": "high | medium",
+      "actionable_for": "implementation | audit | risk_assessment | training"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+## HARD CONSTRAINTS
+1. Maximum 6 pairs
+2. Maximum 1 pair per pair_type
+3. Every question must include "T1595" and the technique name
+4. Every answer must have at least one evidence_quote
+5. If source support is insufficient, return {"pairs": [], "skipped_reason": "..."}
