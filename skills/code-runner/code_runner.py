@@ -930,14 +930,15 @@ def run(
                 "gemini": "text-gemini",
             }.get(cur_backend, "gpt-5.3-codex")
 
-            # Dynamic timeout: P95 from /memory history, or env override
+            # Dynamic timeout: P95 from /memory history per-backend, or env override
             if os.environ.get("CODE_RUNNER_ROUND_TIMEOUT"):
                 ROUND_TIMEOUT = int(os.environ["CODE_RUNNER_ROUND_TIMEOUT"])
             else:
                 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "common"))
                 from estimate_timeout import estimate_skill
-                ROUND_TIMEOUT = estimate_skill("code-runner", units=1)
-                logger.info("  Round timeout: {}s (from /memory P95)", ROUND_TIMEOUT)
+                # Estimate per-backend so claude/codex/text each build their own P95
+                ROUND_TIMEOUT = estimate_skill(f"code-runner-{cur_backend}", units=1)
+                logger.info("  Round timeout: {}s (from /memory P95 for {})", ROUND_TIMEOUT, cur_backend)
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                 future = executor.submit(
                     run_tool_use_loop,
@@ -1293,11 +1294,11 @@ def run(
         logger.info("=== RESULT: {} | score={:.3f} | {} rounds ===",
                      result.status.upper(), best_score, len(rounds_history))
 
-        # Record duration to /memory for timeout estimation flywheel
+        # Record duration to /memory for timeout estimation flywheel (per-backend)
         run_duration = time.monotonic() - run_start_time
         from estimate_timeout import record as record_duration
         record_duration(
-            "code-runner", run_duration,
+            f"code-runner-{llm_backend}", run_duration,
             units=len(rounds_history),
             outcome="success" if result.dod_passed else "failed",
             trigger="orchestrate",

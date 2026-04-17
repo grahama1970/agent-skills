@@ -71,6 +71,13 @@ STATIC_BUDGETS: dict[str, float] = {
     "report": 15,
     # individual skills (total runtime)
     "monitor-codebase": 600,
+    # code-runner per-backend (claude is slower, codex/text are faster)
+    "code-runner-claude": 600,
+    "code-runner-codex": 180,
+    "code-runner-text": 180,
+    "code-runner-gemini": 240,
+    "code-runner-deepseek": 180,
+    "code-runner-test": 60,
     "skills-ci-nightly": 3900,
     "monitor-skill-health": 120,
     "episodic-archiver": 300,
