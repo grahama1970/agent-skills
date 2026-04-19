@@ -18,7 +18,6 @@ from dogpile.formatters import (
     format_codex_section,
     format_perplexity_section,
     format_readarr_section,
-    format_discord_section,
 )
 
 
@@ -287,7 +286,6 @@ def generate_report(
     codex_src_res: str | Dict[str, Any],
     perp_res: Dict[str, Any],
     readarr_res: List[Dict],
-    discord_res: Dict[str, Any],
     github_res: Dict[str, Any],
     github_details: List[Dict],
     github_deep: Dict,
@@ -310,7 +308,6 @@ def generate_report(
     md_lines.extend(format_codex_section(codex_src_res))
     md_lines.extend(format_perplexity_section(perp_res))
     md_lines.extend(format_readarr_section(readarr_res))
-    md_lines.extend(format_discord_section(discord_res))
     md_lines.extend(format_github_section(
         github_res, github_details, github_deep, target_repo, deep_code_res,
         code_explanation=code_explanation,

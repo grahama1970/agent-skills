@@ -159,7 +159,7 @@ def run_stage1_searches(
         "readarr": (search_readarr, [tailored.get("readarr", query)]),
         "wayback": (search_wayback, [query]),
         "codex_knowledge": (search_codex_knowledge, [query]),
-        "discord": (search_discord_messages, [query]),
+        # Discord removed: requires bot tokens + guild config that most users won't have
     }
 
     if with_perplexity:
@@ -411,7 +411,6 @@ def _run_search(
     readarr_res = stage1_results["readarr"]
     wayback_res = stage1_results["wayback"]
     codex_src_res = stage1_results["codex_knowledge"]
-    discord_res = stage1_results["discord"]
 
     # Stage 2: Deep dives
     # 2.1 GitHub Multi-Stage
@@ -460,7 +459,6 @@ def _run_search(
         codex_src_res=codex_src_res,
         perp_res=perp_res,
         readarr_res=readarr_res,
-        discord_res=discord_res,
         github_res=github_res,
         github_details=github_details,
         github_deep=github_deep,
@@ -495,7 +493,6 @@ def _run_search(
                 ("github", github_res), ("arxiv", arxiv_res),
                 ("youtube", youtube_res), ("readarr", readarr_res),
                 ("wayback", wayback_res), ("codex", codex_src_res),
-                ("discord", discord_res),
             ]:
                 if res and not (isinstance(res, dict) and "error" in res):
                     sources_searched.append(name)
