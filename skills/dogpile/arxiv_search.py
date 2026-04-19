@@ -38,7 +38,7 @@ def search_arxiv(query: str) -> Dict[str, Any]:
     """
     log_status(f"Starting ArXiv Search (Stage 1: Abstracts) for '{query}'...", provider="arxiv", status="RUNNING")
     arxiv_dir = SKILLS_DIR / "arxiv"
-    cmd = ["bash", "run.sh", "search", "-q", query, "-n", "10", "--json"]
+    cmd = ["bash", "run.sh", "search", "-q", query, "-n", "10"]
 
     try:
         output = run_command(cmd, cwd=arxiv_dir)
