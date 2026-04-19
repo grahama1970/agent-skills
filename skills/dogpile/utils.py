@@ -82,7 +82,8 @@ def run_command(cmd: List[str], cwd: Optional[Path] = None) -> str:
             capture_output=True,
             text=True,
             check=True,
-            cwd=cwd
+            cwd=cwd,
+            env=os.environ,  # Inherit env vars (BRAVE_API_KEY, etc.)
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError as e:

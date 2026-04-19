@@ -9,10 +9,37 @@ Contains:
 - Optional dependency detection (tenacity, resource registry, discord)
 """
 import json
+import os
 import sys
 import threading
 from pathlib import Path
 from typing import Dict, Any
+
+# Load .env from common locations (for BRAVE_API_KEY, etc.)
+def _load_dotenv():
+    """Load environment variables from .env files."""
+    env_paths = [
+        Path.home() / "workspace/experiments/pi-mono/.env",
+        Path.home() / ".env",
+        Path(__file__).parent / ".env",
+        Path.cwd() / ".env",
+    ]
+    for env_path in env_paths:
+        if env_path.exists():
+            try:
+                with open(env_path) as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            key, _, value = line.partition("=")
+                            key = key.strip()
+                            value = value.strip().strip('"').strip("'")
+                            if key and key not in os.environ:
+                                os.environ[key] = value
+            except Exception:
+                pass
+
+_load_dotenv()
 
 # Core dependencies
 try:
