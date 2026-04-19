@@ -46,6 +46,7 @@ from dogpile.error_tracking import (
     get_error_summary,
     ErrorType,
 )
+from dogpile.error_hints import get_error_hint, summarize_errors_with_hints
 from dogpile.task_monitor_integration import (
     start_search as start_monitor,
     end_search as end_monitor,
@@ -199,8 +200,11 @@ def run_stage1_searches(
                     results[name] = future.result(timeout=5)
                     status[name] = "[green]done[/green]"
                 except Exception as e:
-                    log_status(f"{name} failed: {e}", provider=name, status="ERROR")
-                    results[name] = {"error": str(e)}
+                    error_msg = str(e)
+                    hint_info = get_error_hint(name, error_msg)
+                    hint_suffix = f" → {hint_info['hint']}" if hint_info else ""
+                    log_status(f"{name} failed: {error_msg[:60]}{hint_suffix}", provider=name, status="ERROR")
+                    results[name] = {"error": error_msg, "hint": hint_info["hint"] if hint_info else None}
                     status[name] = f"[red]error[/red]"
                 if live_ctx:
                     live_ctx.update(_build_progress_table())
@@ -214,11 +218,14 @@ def run_stage1_searches(
             if live_ctx:
                 live_ctx.__exit__(None, None, None)
 
-    # Fill in any providers that timed out
+    # Fill in any providers that timed out with helpful hints
     for name in providers:
         if name not in results:
-            log_status(f"{name} timed out after {STAGE1_TIMEOUT}s", provider=name, status="ERROR")
-            results[name] = {"error": f"Timed out after {STAGE1_TIMEOUT}s"}
+            timeout_msg = f"Timed out after {STAGE1_TIMEOUT}s"
+            hint_info = get_error_hint(name, "timeout")
+            hint_suffix = f" → {hint_info['hint']}" if hint_info else ""
+            log_status(f"{name} {timeout_msg}{hint_suffix}", provider=name, status="ERROR")
+            results[name] = {"error": timeout_msg, "hint": hint_info["hint"] if hint_info else None}
 
     return results
 
@@ -263,17 +270,42 @@ def search(
         end_error_session("completed" if search_success else "failed")
         end_monitor(search_success)
 
-        # Print error summary if there were issues
+        # Print error summary with actionable hints
         summary = get_error_summary()
         session = summary.get("current_session")
         if session and session.get("error_count", 0) > 0:
-            console.print("\n[yellow]--- Error Summary ---[/yellow]")
+            console.print("\n[yellow]--- Error Summary (with troubleshooting) ---[/yellow]")
+
+            # Show succeeded providers first (partial success)
+            if session.get("succeeded"):
+                console.print(f"  [green]Succeeded:[/green] {', '.join(session['succeeded'])}")
+
+            # Show failed providers with actionable hints
             if session.get("failed"):
-                console.print(f"  Failed providers: {', '.join(session['failed'])}")
+                console.print(f"  [red]Failed:[/red]")
+                recent_errors = summary.get("recent_errors", [])
+                for provider in session["failed"]:
+                    # Find the most recent error for this provider
+                    provider_errors = [e for e in recent_errors if e.get("provider") == provider]
+                    if provider_errors:
+                        err = provider_errors[-1]
+                        msg = err.get("message", "Unknown error")[:80]
+                        hint_info = get_error_hint(provider, msg)
+                        console.print(f"    [cyan]{provider}:[/cyan] {msg}")
+                        if hint_info:
+                            console.print(f"      → [yellow]{hint_info['hint']}[/yellow]")
+                    else:
+                        console.print(f"    [cyan]{provider}:[/cyan] Failed (check logs)")
+
+            # Show rate limits with recovery hints
             if session.get("rate_limits_hit"):
-                console.print(f"  Rate limits: {session['rate_limits_hit']}")
-            console.print(f"  Total errors: {session.get('error_count', 0)}")
-            console.print("[dim]  See dogpile_errors.json for details[/dim]")
+                console.print(f"  [yellow]Rate limits hit:[/yellow]")
+                for provider, count in session["rate_limits_hit"].items():
+                    hint_info = get_error_hint(provider, "rate limit")
+                    hint_text = hint_info["hint"] if hint_info else "Wait 30-60s before retrying"
+                    console.print(f"    {provider}: {count}x → {hint_text}")
+
+            console.print(f"\n  [dim]Total errors: {session.get('error_count', 0)} | Log: dogpile_errors.json[/dim]")
 
 
 def _run_search(
@@ -352,6 +384,24 @@ def _run_search(
 
     # Flush stage1 execution metadata to memory
     _flush_execution_records("stage1")
+
+    # Show partial success status after Stage 1
+    succeeded = [name for name, res in stage1_results.items()
+                 if not (isinstance(res, dict) and "error" in res)]
+    failed = [name for name, res in stage1_results.items()
+              if isinstance(res, dict) and "error" in res]
+
+    if failed:
+        console.print(f"\n[yellow]Stage 1: {len(succeeded)}/{len(stage1_results)} providers succeeded[/yellow]")
+        for name in failed:
+            res = stage1_results[name]
+            err_msg = res.get("error", "Unknown")[:50]
+            hint = res.get("hint", "")
+            if hint:
+                console.print(f"  [red]{name}:[/red] {err_msg} → [yellow]{hint}[/yellow]")
+            else:
+                console.print(f"  [red]{name}:[/red] {err_msg}")
+        console.print("[dim]Continuing with partial results...[/dim]\n")
 
     brave_res = stage1_results["brave"]
     perp_res = stage1_results.get("perplexity", {"skipped": "opt-in only (use --with-perplexity)"})
