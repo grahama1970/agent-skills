@@ -1,0 +1,9 @@
+{"run_id":"2","event":"run_queued","ts":1776447132.5443335,"round":null,"state_before":null,"state_after":null,"reason_code":null,"payload":{"spec_file":"/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776447067/2.code-runner-spec.json"}}
+{"run_id":"2","event":"preflight_started","ts":1776447132.5446174,"round":null,"state_before":null,"state_after":null,"reason_code":null,"payload":{}}
+{"run_id":"2","event":"run_started","ts":1776447132.6118608,"round":null,"state_before":"queued","state_after":"running","reason_code":null,"payload":{"max_rounds":5,"backend":"codex","cwd":"/home/graham/workspace/experiments/pdf_oxide"}}
+{"run_id":"2","event":"round_started","ts":1776447142.7078848,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"strategy":"direct_fix","backend":"codex","temperature":0.2}}
+{"run_id":"2","event":"zero_write_detected","ts":1776447239.9995935,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"consecutive_count":1}}
+{"run_id":"2","event":"evidence_collected","ts":1776447314.1883812,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"dod_passed":false,"error_count":0,"lint_violations":349}}
+{"run_id":"2","event":"round_scored","ts":1776447314.1888542,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.0,"dod_passed":false,"error_count":0,"files_written":0}}
+{"run_id":"2","event":"round_discarded","ts":1776447314.1953146,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.0,"best_score":0.0}}
+{"run_id":"2","event":"round_started","ts":1776447324.2402089,"round":2,"state_before":null,"state_after":null,"reason_code":null,"payload":{"strategy":"different_approach","backend":"codex","temperature":0.2}}

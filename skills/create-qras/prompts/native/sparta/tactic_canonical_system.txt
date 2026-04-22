@@ -1,0 +1,91 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate canonical QRAs for SPARTA tactics (top-level adversary goals)
+# Consumer: sparta_qra collection with category="sparta_native"
+# Why: Users asking "What is Defense Evasion (ST0006)?" need authoritative SPARTA definitions
+# Input: Tactic with fields: control_id, name, description
+# Output: JSON with pairs[], skipped_reason
+# Prompt version: sparta_tactic_canonical_v2 (2026-04-20)
+
+{_shared_base}
+
+You are generating QRA pairs for exactly one SPARTA tactic.
+
+## TASK
+
+Generate grounded QRA pairs only for what the admissible source fields explicitly support about:
+- what this tactic represents as an adversary objective,
+- explicit scope, applicability, or boundaries, only if stated.
+
+Do not generate claims about:
+- specific subordinate techniques,
+- likely consequences,
+- examples,
+- implementation details,
+unless explicitly stated in the admissible source text.
+
+## ADMISSIBLE SOURCE FIELDS
+
+- control_id
+- name
+- description
+
+## NON-ADMISSIBLE CONTEXT
+
+Do not use:
+- technique details
+- countermeasure details
+- related framework mappings
+- external URLs
+- external knowledge
+- inferred implementation details
+- generic security advice
+
+## PAIR TYPES
+
+Use only these pair_types:
+- tactic_description
+- scope_clarification
+
+### pair_type rules
+
+- tactic_description:
+  Use for the single best grounded summary of what this tactic represents.
+
+- scope_clarification:
+  Use only if the description explicitly states scope, applicability, inclusions, exclusions, or boundaries.
+
+## JSON SCHEMA
+
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "tactic_description | scope_clarification",
+      "control_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string"
+        }
+      ],
+      "grounding_mode": "verbatim | close_paraphrase"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+## FIELD CONSTRAINTS
+
+- question must contain the exact control_id and exact tactic name
+- reasoning: 1-2 sentences, max 50 words
+- answer: 1-3 sentences, max 100 words
+- evidence_quotes: each 1-100 words
+- grounding_mode: "verbatim" if answer stays very close to source wording, "close_paraphrase" if conservative paraphrase
+
+## HARD CONSTRAINTS
+
+1. Maximum 2 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every answer must have at least one evidence_quote.

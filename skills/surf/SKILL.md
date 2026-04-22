@@ -218,6 +218,53 @@ surf snap      # Screenshot
 surf cdp stop
 ```
 
+## Screenshot Analysis with VLM
+
+When sending screenshots to a VLM (Claude Vision, Gemini, GPT-4V), **preprocess with `vlm_image`**:
+
+```python
+from common.vlm_image import prepare_for_vlm, stitch_vertical, smart_crop, upscale, auto_crop
+```
+
+### When to Use Each Function
+
+| Function | When to Use | Example |
+|----------|-------------|---------|
+| `prepare_for_vlm()` | Default for any screenshot → VLM. Applies full pipeline. | General page analysis |
+| `auto_crop()` | Headless Chrome shots with black/dark borders | CDP screenshots |
+| `upscale()` | Small UI elements, dialog boxes, narrow panels < 600px wide | Modal dialogs, tooltips |
+| `sharpen_text()` | Blurry text, low-contrast fonts, anti-aliased small text | Reading fine print |
+| `compress()` | Large PNGs (> 500KB), many screenshots in batch | Cost reduction |
+| `stitch_vertical()` | Multiple related screenshots that VLM needs to see together | Multi-step workflow, scrolling page |
+| `smart_crop()` | Known UI layout, only care about one region | Binary Explorer panes |
+
+### Typical Patterns
+
+```python
+# Pattern 1: General screenshot → VLM (most common)
+processed = prepare_for_vlm(raw_bytes)
+
+# Pattern 2: Small element needs zoom for text readability
+from common.vlm_image import upscale, sharpen_text, to_bytes
+img = Image.open(io.BytesIO(raw_bytes))
+img = upscale(img, min_width=1200)  # Zoom to readable size
+img = sharpen_text(img)
+processed = to_bytes(img)
+
+# Pattern 3: Multi-step flow (login → dashboard → result)
+shots = [step1_bytes, step2_bytes, step3_bytes]
+stitched = stitch_vertical(shots)  # Single image, VLM sees full context
+
+# Pattern 4: Only care about one panel in a complex UI
+cropped = smart_crop(full_page_bytes, region="detail")
+```
+
+### When NOT to Preprocess
+
+- **Already high-quality**: Professional screenshots, marketing images
+- **Analyzing layout/design**: Preprocessing may alter proportions
+- **Pixel-perfect comparison**: Any transform breaks exact matching
+
 ## Troubleshooting
 
 | Problem                    | Solution                                        |

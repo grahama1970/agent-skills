@@ -108,7 +108,8 @@ def search_codex_knowledge(query: str) -> str:
         f"common pitfalls, and state-of-the-art approaches."
     )
 
-    provider_name, result = call_high_reasoning(prompt)
+    # Keep the full fallback chain inside Dogpile's Stage 1 wall-clock budget.
+    provider_name, result = call_high_reasoning(prompt, per_provider_timeout_s=75.0)
 
     if provider_name == "none":
         log_status("Knowledge query failed", provider="llm", status="FAILED")
@@ -149,9 +150,13 @@ Generate OPTIMIZED search queries for each service. Each service has different s
    - Good: "What are the best practices for AI agent memory systems in 2025?"
    - Bad: "AI agent memory 2025"
 
-3. **brave**: Web search. Use documentation-style queries, include "docs", version numbers.
+3. **brave**: Web search. Use documentation-style keyword queries, include "docs" or version numbers where useful.
+   HARD LIMITS: Brave query must be <= 400 characters AND <= 50 words.
+   Do NOT return a full natural-language paragraph for Brave.
    - Good: "LangChain memory module documentation 2025"
+   - Good: "SPARTA control mapping assessor workflow evidence traceability docs"
    - Bad: "memory systems"
+   - Bad: full question sentences with multiple clauses
 
 4. **github**: Code search. Use library names, function names, code patterns.
    - Good: "langchain memory BaseMemory implementation python"
@@ -166,6 +171,7 @@ Generate OPTIMIZED search queries for each service. Each service has different s
    - Bad: "how databases work"
 
 Return JSON with tailored queries for each service. Keep queries concise but specific.
+The Brave query must fit Brave's hard limits and should read like a compressed search engine query, not prose.
 Include current year (2025-2026) where relevant for recent results.
 
 {{"arxiv": "...", "perplexity": "...", "brave": "...", "github": "...", "youtube": "...", "readarr": "..."}}"""

@@ -25,9 +25,12 @@ Manifest interactions support:
 """
 
 import json
+import re
 import time
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
+
+import yaml
 from typing import Optional
 
 import typer
@@ -79,16 +82,51 @@ class TestResults:
 
 # --- Interaction executor ---
 
+_VLM_PREPARE = None
+_VLM_PREPARE_CHECKED = False
+
+
+def _get_vlm_prepare():
+    """Lazy-load VLM image preprocessor (auto-crop + upscale + sharpen)."""
+    global _VLM_PREPARE, _VLM_PREPARE_CHECKED
+    if _VLM_PREPARE_CHECKED:
+        return _VLM_PREPARE
+    _VLM_PREPARE_CHECKED = True
+    try:
+        import sys
+        common_dir = Path(__file__).resolve().parent.parent / "common"
+        if str(common_dir) not in sys.path:
+            sys.path.insert(0, str(common_dir))
+        from vlm_image import prepare_for_vlm  # type: ignore
+        _VLM_PREPARE = prepare_for_vlm
+    except Exception as e:  # noqa: BLE001
+        logger.debug("vlm_image unavailable for per-step preprocessing: {}", e)
+        _VLM_PREPARE = None
+    return _VLM_PREPARE
+
+
+def _capture_step_screenshot(cdp: CDPClient, path: str):
+    """Capture screenshot for each interaction and preprocess for visual clarity."""
+    cdp.screenshot(path)
+    prepare = _get_vlm_prepare()
+    if prepare:
+        raw = Path(path).read_bytes()
+        out = prepare(raw)
+        Path(path).write_bytes(out)
+
+
 def _execute_interaction(
     cdp: CDPClient,
     interaction: dict,
     element_name: str,
     surface_name: str,
     output_dir: Path,
+    step_index: int,
 ) -> InteractionResult:
     action = interaction.get("action", "screenshot")
     description = interaction.get("description", f"{action} on {element_name}")
-    safe_name = f"{element_name}_{action}".replace(" ", "_").replace("/", "_")
+    slug = re.sub(r"[^A-Za-z0-9_.-]+", "_", f"{element_name}_{action}").strip("_") or "interaction"
+    safe_name = f"{step_index:04d}_{slug}"
     wait_ms = interaction.get("wait_ms", 300)
     t0 = time.time()
 
@@ -99,11 +137,8 @@ def _execute_interaction(
 
     try:
         if action == "screenshot":
-            path = str(output_dir / f"{safe_name}.png")
-            cdp.screenshot(path)
-            result.screenshot = path
             result.status = "PASS"
-            result.evidence = f"captured {path}"
+            result.evidence = "screenshot requested"
 
         elif action == "click":
             target = interaction.get("target", "")
@@ -173,6 +208,23 @@ def _execute_interaction(
             result.status = "PASS"
             result.evidence = f"tabbed {count}x, focus path: {focused_qids}"
 
+        elif action == "hover":
+            target = interaction.get("target", "")
+            if not target:
+                result.status = "FAIL"
+                result.evidence = "no target selector specified"
+            else:
+                hover_result = cdp.hover_selector(target)
+                if hover_result.get("ok"):
+                    result.status = "PASS"
+                    tag = hover_result.get("tag", "?")
+                    text = hover_result.get("text", "")[:60]
+                    x, y = hover_result.get("x", 0), hover_result.get("y", 0)
+                    result.evidence = f"hovered <{tag}> {text!r} at ({x:.0f}, {y:.0f})"
+                else:
+                    result.status = "FAIL"
+                    result.evidence = hover_result.get("error", "hover failed")
+
         else:
             result.status = "WARN"
             result.evidence = f"unknown action: {action}"
@@ -186,13 +238,6 @@ def _execute_interaction(
                     result.status = "FAIL"
                     result.evidence += f" | ASSERTION FAILED: {a['check']} — {a['evidence']}"
                     break
-
-        # Screenshot after action
-        if action != "screenshot" and interaction.get("screenshot_after", False):
-            time.sleep(wait_ms / 1000.0)
-            path = str(output_dir / f"{safe_name}.png")
-            cdp.screenshot(path)
-            result.screenshot = path
 
         # Burst capture for animations
         if interaction.get("burst"):
@@ -208,6 +253,22 @@ def _execute_interaction(
     except Exception as e:
         result.status = "FAIL"
         result.evidence = f"exception: {e}"
+    finally:
+        try:
+            if action != "screenshot":
+                time.sleep(wait_ms / 1000.0)
+            path = str(output_dir / f"{safe_name}.png")
+            _capture_step_screenshot(cdp, path)
+            result.screenshot = path
+            if action == "screenshot" and result.evidence == "screenshot requested":
+                result.evidence = f"captured {path}"
+        except Exception as shot_e:  # noqa: BLE001
+            if result.status != "FAIL":
+                result.status = "FAIL"
+            if result.evidence:
+                result.evidence += f" | screenshot failed: {shot_e}"
+            else:
+                result.evidence = f"screenshot failed: {shot_e}"
 
     result.duration_ms = int((time.time() - t0) * 1000)
 
@@ -226,7 +287,11 @@ def _load_manifest(manifest_path: Path) -> dict:
     if not manifest_path.exists():
         logger.error("Manifest not found: {}", manifest_path)
         raise typer.Exit(1)
-    data = json.loads(manifest_path.read_text())
+    text = manifest_path.read_text()
+    if manifest_path.suffix in (".yaml", ".yml"):
+        data = yaml.safe_load(text)
+    else:
+        data = json.loads(text)
     if "surfaces" not in data:
         logger.error("Manifest missing 'surfaces' key")
         raise typer.Exit(1)
@@ -252,10 +317,12 @@ def _run_surface(cdp: CDPClient, surface: dict, base_url: str, output_dir: Path,
         if not found:
             logger.warning("wait_ready {} not found within {}ms", wait_ready, timeout)
 
+    step_index = 0
     for element in surface.get("elements", []):
         element_name = element.get("name", "unnamed")
         for interaction in element.get("interactions", []):
-            r = _execute_interaction(cdp, interaction, element_name, surface_name, surface_dir)
+            step_index += 1
+            r = _execute_interaction(cdp, interaction, element_name, surface_name, surface_dir, step_index)
             results.add(r)
 
     # Per-surface qid compliance scan (deterministic, no LLM)
@@ -422,17 +489,9 @@ def _find_review_design() -> Optional[Path]:
 
 
 def _run_review_design(
-    captures: Path, context: str = "", provider: str = "gemini", persona: str = "",
+    captures: Path, context: str = "", provider: str = "subagent", persona: str = "",
 ) -> Optional[str]:
-    """Call /review-design on captured screenshots. Returns review text or None.
-
-    Args:
-        captures: Directory containing captured screenshots.
-        context: Optional context string for the review.
-        provider: Vision LLM provider.
-        persona: REQUIRED persona agent name (e.g. brandon-bailey, rob-armstrong).
-                 Without a persona, the review is generic and useless.
-    """
+    """Call /review-design with provider fallback. Returns review text or None."""
     import subprocess
 
     if not persona:
@@ -444,43 +503,53 @@ def _run_review_design(
         logger.warning("review-design skill not found, skipping visual review")
         return None
 
-    # Collect all PNGs across surface subdirectories
     screenshots = sorted(captures.rglob("*.png"))
     if not screenshots:
         logger.warning("No screenshots found in {}", captures)
         return None
 
-    # /review-design doesn't recurse — pass the directory with the most PNGs
     screenshot_dirs = {p.parent for p in screenshots}
     screenshots_path = max(screenshot_dirs, key=lambda d: len(list(d.glob("*.png")))) if screenshot_dirs else captures
 
-    cmd = [str(run_sh), "review", "--screenshots", str(screenshots_path),
-           "--provider", provider, "--persona", persona]
-    if context:
-        cmd.extend(["--context", context])
-
+    providers_to_try = [provider] + [p for p in ["subagent", "claude", "openai", "gemini"] if p != provider]
     logger.info("Running /review-design on {} screenshots...", len(screenshots))
-    try:
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=120,
-            env={**__import__("os").environ, "REVIEW_DESIGN_ROUNDS": "1"},
-        )
-        if result.returncode == 0:
-            # Check for output files
-            review_dir = captures / "review_output"
-            if review_dir.exists():
-                finals = sorted(review_dir.glob("*_final.md"))
-                if finals:
-                    return finals[-1].read_text()
-            # Fallback: return stdout if it has content
-            if result.stdout.strip():
-                return result.stdout.strip()
-        else:
-            logger.warning("review-design exited {}: {}", result.returncode, result.stderr[:200] if result.stderr else "no stderr")
-    except subprocess.TimeoutExpired:
-        logger.warning("review-design timed out after 120s")
-    except Exception as e:
-        logger.warning("review-design failed: {}", e)
+
+    for active_provider in providers_to_try:
+        cmd = [
+            str(run_sh), "review", "--screenshots", str(screenshots_path),
+            "--provider", active_provider, "--persona", persona,
+        ]
+        if context:
+            cmd.extend(["--context", context])
+
+        try:
+            logger.info("Trying /review-design provider: {}", active_provider)
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=300,
+                env={**__import__("os").environ, "REVIEW_DESIGN_ROUNDS": "1"},
+            )
+            if result.returncode == 0:
+                review_dirs = [captures / "review_output", run_sh.parent / "review_output"]
+                for review_dir in review_dirs:
+                    if review_dir.exists():
+                        finals = sorted(review_dir.glob("*_final.md"), key=lambda p: p.stat().st_mtime)
+                        if finals:
+                            logger.info("review-design succeeded with {} (file: {})", active_provider, finals[-1])
+                            return finals[-1].read_text()
+                if result.stdout.strip():
+                    logger.info("review-design succeeded with {} (stdout)", active_provider)
+                    return result.stdout.strip()
+                if result.stderr.strip():
+                    logger.info("review-design succeeded with {} (stderr fallback)", active_provider)
+                    return result.stderr.strip()
+            else:
+                err_excerpt = (result.stderr or result.stdout or "").strip()[:600]
+                logger.warning("review-design provider {} failed (exit {}): {}", active_provider, result.returncode, err_excerpt)
+        except subprocess.TimeoutExpired:
+            logger.warning("review-design provider {} timed out after 300s", active_provider)
+        except Exception as e:
+            logger.warning("review-design provider {} failed: {}", active_provider, e)
+
     return None
 
 
@@ -489,7 +558,7 @@ def review(
     captures: Path = typer.Option(..., help="Directory containing captured screenshots"),
     output: Path = typer.Option(Path("./INTERACTION_REPORT.md"), help="Output report path"),
     context: str = typer.Option("", help="Context string for /review-design"),
-    provider: str = typer.Option("gemini", help="Vision AI provider for /review-design"),
+    provider: str = typer.Option("subagent", help="Vision AI provider for /review-design (auto-fallback enabled)"),
     persona: str = typer.Option(..., "--persona", help="Persona agent for /review-design (e.g. brandon-bailey, rob-armstrong). REQUIRED."),
     preprocess: bool = typer.Option(True, help="Preprocess screenshots with vlm_image before review"),
 ):
@@ -625,7 +694,7 @@ def full(
     output_dir: Path = typer.Option(Path("./captures"), help="Output directory"),
     manifest: Optional[Path] = typer.Option(None, help="Existing manifest (skip generate)"),
     context: str = typer.Option("", help="Context string for /review-design"),
-    provider: str = typer.Option("gemini", help="Vision AI provider for /review-design"),
+    provider: str = typer.Option("subagent", help="Vision AI provider for /review-design (auto-fallback enabled)"),
     persona: str = typer.Option(..., "--persona", help="Persona agent for /review-design (e.g. brandon-bailey). REQUIRED."),
     surface: Optional[str] = typer.Option(None, help="Run only this surface (by name)"),
     max_retries: int = typer.Option(1, help="Max attempts per surface on failure"),

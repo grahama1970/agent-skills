@@ -1,0 +1,62 @@
+{
+  "generated_at": 1776446736.6292834,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776446670",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Run baseline extraction and write a visible audit report",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776446670/1.stdout.txt",
+      "error": "",
+      "started_at": 1776446670.8190477,
+      "finished_at": 1776446735.423732,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Fix TOC range handling and tabular extraction regressions in the PDF Lab extractor",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "gpt-5.3-codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776446670/2.response.txt",
+      "error": "/code-runner exit 1: Using CPython 3.12.10\nCreating virtual environment at: /home/graham/workspace/experiments/agent-skills/skills/code-runner/.venv\nDownloading pydantic-core (2.0MiB)\n Downloaded pydantic-core\nInstalled 22 packages in 14ms\n2026-04-17 13:25:36.576 | ERROR    | __main__:run:526 - === PRE-FLIGHT FAILED for 2 (1 issues) ===\n2026-04-17 13:25:36.576 | ERROR    | __main__:run:528 -   [backend] Value error, Unknown backend 'gpt-5.3-codex'. Valid: claude, codex, deepseek, gemini, test, text\n2026-04-17 13:25:",
+      "started_at": 1776446735.4244497,
+      "finished_at": 1776446736.629282,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Re-run the final visible audit and publish the outcome",
+      "lane": "2",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

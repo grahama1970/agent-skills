@@ -59,7 +59,7 @@ miss compliance requirements. This is not optional.
 
 ```
 RUN stage (deterministic — no LLM)
-├── CDP interactions: click, type, key, tab, scroll, wait
+├── CDP interactions: click, hover, type, key, tab, scroll, wait
 ├── DOM assertions: selector, visible, text, value, attribute, aria
 ├── COTS assertions: min_size (C02), font_size (C01), contrast (C03),
 │   title (C14), focus_visible (C06)
@@ -176,6 +176,7 @@ it must appear in a manifest and have assertions against it.
 |--------|-------------|------------|
 | `screenshot` | Capture current state | `description` |
 | `click` | Click a [data-qid] element | `target` (required) |
+| `hover` | Hover over a [data-qid] element (triggers mouseenter/mouseover) | `target` (required) |
 | `type` | Type into a [data-qid] input | `target`, `value` |
 | `wait` | Wait for element to appear | `target`, `timeout_ms` |
 | `scroll` | Scroll page | `direction`, `amount` |

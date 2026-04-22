@@ -26,6 +26,7 @@ from collect import (
     collect_entities,
     collect_lean4_proof,
     collect_recall,
+    get_formalizability_score,
 )
 from scoring import (
     gates_to_grade,
@@ -234,10 +235,23 @@ class EvidenceCaseRunner:
         )
 
         # --- Post-persist: fire lean4 background (doesn't compete with scillm) ---
+        # Only attempt lean4 proof if control passes formalizability threshold
         if _run_lean4:
             import threading
             def _lean4_background(text: str, cids: list[str]):
                 try:
+                    # Check formalizability score before expensive lean4 proof
+                    fcheck = get_formalizability_score(cids)
+                    if not fcheck.get("formalizable"):
+                        logger.info(
+                            "Lean4 skipped: formalizability {} < {} for {}",
+                            fcheck.get("max_score", 0), fcheck.get("threshold", 70), cids[:3]
+                        )
+                        return
+                    logger.info(
+                        "Lean4 attempting: formalizability {} for {}",
+                        fcheck.get("max_score", 0), cids[:3]
+                    )
                     proof = collect_lean4_proof(text)
                     status = "proved" if proof and proof.get("success") else "failed"
                     logger.info("Lean4 background: {} for {}", status, cids[:3])

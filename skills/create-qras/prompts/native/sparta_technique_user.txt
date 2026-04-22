@@ -1,0 +1,28 @@
+Return exactly one top-level JSON object with keys:
+- pairs
+- skipped_reason
+
+Generate up to 5 grounded, non-duplicative QRA pairs for this SPARTA technique within its parent tactic context.
+
+## Current Technique
+
+Control ID: {control_id}
+Name: {control_name}
+Control Type: {control_type}
+Description: {control_description}
+Parent ID: {parent_id}
+
+## Parent Tactic
+
+Parent Tactic ID: {parent_tactic_id}
+Parent Tactic Name: {parent_tactic_name}
+Parent Tactic Description: {parent_tactic_description}
+
+## Reminders
+
+- Use only admissible fields shown above.
+- Technique details must be supported by technique text.
+- Parent tactic provides tactical context only.
+- Preserve modality exactly.
+- Prefer fewer pairs over weak pairs.
+- If source support is insufficient, return zero pairs.

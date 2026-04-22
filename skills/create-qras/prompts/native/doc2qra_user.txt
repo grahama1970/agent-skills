@@ -1,0 +1,24 @@
+Return exactly one top-level JSON object with keys: items, source_quality.
+
+## Task
+
+Extract up to {max_pairs} grounded QRA pairs from this document.
+
+## Source Document
+
+Title: {title}
+URL: {url}
+
+---
+{content}
+---
+
+## REMINDERS
+
+- Use only the document content above as evidence.
+- Preserve modality exactly (should/shall/must/may).
+- Do not silently correct source wording.
+- Prefer fewer high-quality pairs over many weak pairs.
+- If the same sentence defines AND instructs, generate only one pair.
+- If the document is non-authoritative (forum, Q&A, user comments), prefer zero pairs.
+- Return {"items": []} if the document lacks extractable factual content.

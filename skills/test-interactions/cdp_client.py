@@ -180,6 +180,45 @@ class CDPClient:
             "})()"
         )
 
+    def hover_selector(self, selector: str) -> dict:
+        """Hover over an element by dispatching mouseMoved event at its center."""
+        rect = self.get_bounding_rect(selector)
+        if not rect:
+            return {"ok": False, "error": f"selector not found: {selector}"}
+
+        center_x = rect["x"] + rect["width"] / 2
+        center_y = rect["y"] + rect["height"] / 2
+
+        self.evaluate(
+            f"document.querySelector({json.dumps(selector)}).scrollIntoView({{block: 'center'}})"
+        )
+        rect = self.get_bounding_rect(selector)
+        center_x = rect["x"] + rect["width"] / 2
+        center_y = rect["y"] + rect["height"] / 2
+
+        self.send("Input.dispatchMouseEvent", {
+            "type": "mouseMoved",
+            "x": center_x,
+            "y": center_y,
+        })
+
+        self.evaluate(
+            f"(function() {{"
+            f"  var el = document.querySelector({json.dumps(selector)});"
+            f"  if (el) {{"
+            f"    el.dispatchEvent(new MouseEvent('mouseenter', {{bubbles: true, clientX: {center_x}, clientY: {center_y}}}));"
+            f"    el.dispatchEvent(new MouseEvent('mouseover', {{bubbles: true, clientX: {center_x}, clientY: {center_y}}}));"
+            f"  }}"
+            f"}})()"
+        )
+
+        tag = self.evaluate(f"document.querySelector({json.dumps(selector)})?.tagName") or "?"
+        text = self.evaluate(
+            f"(document.querySelector({json.dumps(selector)})?.textContent || '').slice(0, 80)"
+        ) or ""
+
+        return {"ok": True, "tag": tag, "text": text, "x": center_x, "y": center_y}
+
     # --- COTS measurement helpers (deterministic, no LLM) ---
 
     def get_bounding_rect(self, selector: str) -> dict | None:

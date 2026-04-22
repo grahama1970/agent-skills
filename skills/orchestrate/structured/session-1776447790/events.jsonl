@@ -1,0 +1,17 @@
+{"run_id":"2","event":"run_queued","ts":1776447855.5991588,"round":null,"state_before":null,"state_after":null,"reason_code":null,"payload":{"spec_file":"/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776447790/2.code-runner-spec.json"}}
+{"run_id":"2","event":"preflight_started","ts":1776447855.5993814,"round":null,"state_before":null,"state_after":null,"reason_code":null,"payload":{}}
+{"run_id":"2","event":"run_started","ts":1776447855.6725428,"round":null,"state_before":"queued","state_after":"running","reason_code":null,"payload":{"max_rounds":5,"backend":"codex","cwd":"/home/graham/workspace/experiments/pdf_oxide"}}
+{"run_id":"2","event":"round_started","ts":1776447865.762162,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"strategy":"direct_fix","backend":"codex","temperature":0.2}}
+{"run_id":"2","event":"evidence_collected","ts":1776448107.833502,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"dod_passed":false,"error_count":0,"lint_violations":23}}
+{"run_id":"2","event":"round_scored","ts":1776448107.8339696,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"dod_passed":false,"error_count":0,"files_written":2}}
+{"run_id":"2","event":"round_kept","ts":1776448107.853576,"round":1,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"prev_best":0.0}}
+{"run_id":"2","event":"round_started","ts":1776448117.9526227,"round":2,"state_before":null,"state_after":null,"reason_code":null,"payload":{"strategy":"structured_analysis","backend":"codex","temperature":0.2}}
+{"run_id":"2","event":"evidence_collected","ts":1776448264.9523096,"round":2,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"dod_passed":false,"error_count":0,"lint_violations":23}}
+{"run_id":"2","event":"round_scored","ts":1776448264.952621,"round":2,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"dod_passed":false,"error_count":0,"files_written":1}}
+{"run_id":"2","event":"round_discarded","ts":1776448264.9598262,"round":2,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"best_score":0.35}}
+{"run_id":"2","event":"round_started","ts":1776448276.2159758,"round":3,"state_before":null,"state_after":null,"reason_code":null,"payload":{"strategy":"different_approach","backend":"codex","temperature":0.3}}
+{"run_id":"2","event":"evidence_collected","ts":1776448377.78737,"round":3,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"dod_passed":false,"error_count":0,"lint_violations":25}}
+{"run_id":"2","event":"round_scored","ts":1776448377.787733,"round":3,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"dod_passed":false,"error_count":0,"files_written":1}}
+{"run_id":"2","event":"round_discarded","ts":1776448377.7948394,"round":3,"state_before":null,"state_after":null,"reason_code":null,"payload":{"score":0.35,"best_score":0.35}}
+{"run_id":"2","event":"round_started","ts":1776448387.86126,"round":4,"state_before":null,"state_after":null,"reason_code":null,"payload":{"strategy":"simplify","backend":"claude","temperature":0.4}}
+{"run_id":"2","event":"round_timeout","ts":1776448758.047134,"round":4,"state_before":"running","state_after":"timed_out","reason_code":"backend_timeout","payload":{"timeout_seconds":360}}

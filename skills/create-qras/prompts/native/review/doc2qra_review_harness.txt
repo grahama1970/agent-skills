@@ -1,0 +1,266 @@
+================================================================================
+DOC2QRA / URL KNOWLEDGE EXTRACTION REVIEW HARNESS
+================================================================================
+Version: doc2qra_v3 (2026-04-20)
+Purpose: Test cases and validation criteria for external GPT review
+Skill: /create-qras --mode standalone
+
+This file is a REVIEW HARNESS only. It is NOT a production prompt.
+The production prompts are:
+  - doc2qra_system.txt (system prompt)
+  - doc2qra_user.txt (user prompt template)
+
+To review: Copy doc2qra_system.txt + doc2qra_user.txt (with test case substituted)
+to a web GPT and compare output against expected behavior below.
+
+================================================================================
+TEST CASE 1: Authoritative Technical Document
+================================================================================
+
+INPUTS:
+  title: "NIST SP 800-53 Rev 5 - AC-17 Remote Access"
+  url: "https://nvd.nist.gov/800-53/Rev5/control/AC-17"
+  content: |
+    AC-17 REMOTE ACCESS
+    Control: a. Establish and document usage restrictions, configuration/connection
+    requirements, and implementation guidance for each type of remote access allowed; and
+    b. Authorize each type of remote access to the system prior to allowing such connections.
+
+    Discussion: Remote access is access to organizational systems (or processes acting on
+    behalf of users) that communicate through external networks such as the Internet.
+    Types of remote access include dial-up, broadband, and wireless.
+
+EXPECTED BEHAVIOR:
+  - Generate 2-3 pairs
+  - source_quality: "authoritative"
+  - definition: YES - "Remote access is access to organizational systems..."
+  - requirement: YES - "shall establish and document" / "shall authorize"
+  - scope: MAYBE - if "external networks such as the Internet" is explicit enough
+
+VALIDATION:
+  [ ] source_quality = "authoritative" (NIST official documentation)
+  [ ] Modality preserved exactly from "shall" statements
+  [ ] evidence_quotes are verbatim from the control text
+  [ ] No background knowledge about NIST added
+
+================================================================================
+TEST CASE 2: Non-Authoritative Forum Post
+================================================================================
+
+INPUTS:
+  title: "Windows Scheduled Tasks folder location?"
+  url: "https://superuser.com/questions/12345"
+  content: |
+    I have seen references online that state that 'Scheduled Tasks' in Windows
+    are stored in %SystemRoot%\Tasks, which I think usually equates to C:\Windows\Tasks.
+    However, I observe that while that folder exists on my Windows 7 system,
+    Scheduled tasks doesn't use it. My system appears to use C:\Windows\System32\Tasks.
+    How do I discover which folder is used for Scheduled tasks?
+
+EXPECTED BEHAVIOR:
+  - Generate 0 pairs (strongly preferred)
+  - source_quality: "non-authoritative"
+  - This is a user question seeking information, not authoritative documentation
+
+VALIDATION:
+  [ ] Either {"items": []} OR at most 1 pair with medium confidence
+  [ ] source_quality = "non-authoritative"
+  [ ] No threat/attack implications fabricated from benign technical question
+  [ ] If any pair generated, it's purely observational about file paths
+
+================================================================================
+TEST CASE 3: Minimal/Garbled Content
+================================================================================
+
+INPUTS:
+  title: "Document Title"
+  url: "https://example.com/page"
+  content: |
+    Navigation Menu | Home | About | Contact
+    Cookie consent: Accept | Reject
+    Footer: Copyright 2024
+
+EXPECTED BEHAVIOR:
+  - Generate 0 pairs
+  - This is boilerplate/navigation, not factual content
+
+VALIDATION:
+  [ ] {"items": []}
+  [ ] No pairs generated from navigation/boilerplate
+
+================================================================================
+TEST CASE 4: Technical Reference with Threats
+================================================================================
+
+INPUTS:
+  title: "CWE-79: Improper Neutralization of Input During Web Page Generation"
+  url: "https://cwe.mitre.org/data/definitions/79.html"
+  content: |
+    CWE-79: Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')
+
+    Description: The product does not neutralize or incorrectly neutralizes user-controllable
+    input before it is placed in output that is used as a web page that is served to other users.
+
+    Extended Description: Cross-site scripting (XSS) vulnerabilities occur when an application
+    includes untrusted data in a new web page without proper validation or escaping.
+
+    Consequences: Technical Impact: Execute Unauthorized Code or Commands; Read Application Data;
+    Modify Application Data
+
+    Potential Mitigations: Use a vetted library or framework that does not allow this weakness
+    to occur. When generating output, encode/escape it appropriately for the context.
+
+EXPECTED BEHAVIOR:
+  - Generate 3-4 pairs
+  - source_quality: "authoritative"
+  - definition: YES - CWE-79 definition
+  - threat_description: YES - consequences/impact
+  - mitigation: YES - "use a vetted library", "encode/escape"
+
+VALIDATION:
+  [ ] source_quality = "authoritative" (CWE official source)
+  [ ] Question includes "CWE-79" identifier
+  [ ] Consequences preserved as described, not embellished
+  [ ] Mitigations are verbatim from source
+
+================================================================================
+TEST CASE 5: Document with Mixed Admissible/Inadmissible Content
+================================================================================
+
+INPUTS:
+  title: "Satellite Security Overview"
+  url: "https://aerospace.org/satellite-security"
+  content: |
+    Ground station authentication is critical for satellite operations.
+
+    For more details, see NIST SP 800-53 AC-17 and CNSSI 1253.
+
+    Related threats include: T1190 (Exploit Public-Facing Application),
+    T1059 (Command and Scripting Interpreter).
+
+    Best practice: Always encrypt command uplinks using AES-256 or equivalent.
+
+EXPECTED BEHAVIOR:
+  - Generate 1-2 pairs from admissible content only
+  - requirement/mitigation: "encrypt command uplinks" (if source quality permits)
+  - Do NOT generate pairs from "see NIST SP 800-53" (reference, not content)
+  - Do NOT expand T1190/T1059 descriptions from background knowledge
+
+VALIDATION:
+  [ ] No pairs generated from "For more details, see..." references
+  [ ] T1190/T1059 mentioned only if source explains them
+  [ ] "Best practice" preserved with appropriate modality (recommendation, not requirement)
+
+================================================================================
+TEST CASE 6: Document with Irrelevant Content Mixed In
+================================================================================
+
+INPUTS:
+  title: "CWE-89 SQL Injection - Research Paper"
+  url: "https://academic.example.com/paper/12345"
+  content: |
+    CWE-89: Improper Neutralization of Special Elements used in an SQL Command
+
+    Author Biography: Dr. Jane Smith is a 45-year-old professor at MIT who received
+    her PhD in 1998. She has published 200 papers with an h-index of 45.
+
+    Abstract: SQL injection occurs when untrusted data is sent to an interpreter
+    as part of a command or query. The attacker's hostile data can trick the
+    interpreter into executing unintended commands.
+
+    Impact Factor: This paper was published in IEEE S&P with an impact factor of 12.3
+    and has been cited 500 times.
+
+    Mitigation: Use parameterized queries or prepared statements to prevent
+    SQL injection attacks.
+
+    Keywords: security, database, web application
+
+EXPECTED BEHAVIOR:
+  - Generate 2-3 pairs from RELEVANT content only
+  - definition: YES - SQL injection definition from abstract
+  - mitigation: YES - parameterized queries
+  - Do NOT generate pairs about author age, education, h-index
+  - Do NOT generate pairs about impact factor or citation count
+
+VALIDATION:
+  [ ] No pairs about "Dr. Jane Smith is 45 years old"
+  [ ] No pairs about "h-index of 45" or "200 papers"
+  [ ] No pairs about "impact factor of 12.3"
+  [ ] Security-relevant content extracted correctly
+  [ ] Keywords not extracted as standalone pairs
+
+================================================================================
+VALIDATION CHECKLIST (apply to all outputs)
+================================================================================
+
+SOURCE QUALITY:
+[ ] source_quality field present and accurate
+[ ] Authoritative → extract with confidence
+[ ] Non-authoritative → prefer zero pairs
+
+GROUNDING:
+[ ] Every factual claim traces to evidence_quote
+[ ] Evidence_quotes are verbatim from source document
+[ ] No background knowledge about frameworks/standards added
+[ ] No inferences about "what the document probably means"
+
+MODALITY:
+[ ] "shall" -> mandatory preserved
+[ ] "should" -> recommendation preserved
+[ ] "must" -> mandatory preserved
+[ ] "may" -> permissive preserved
+[ ] No strengthening or weakening
+
+PAIR_TYPE RULES:
+[ ] definition used only when source explicitly defines
+[ ] requirement used only when source states obligation
+[ ] threat_description used only when source describes threat
+[ ] mitigation used only when source states countermeasure
+[ ] relationship used only when source explicitly relates concepts
+[ ] scope used only when source states applicability
+
+DISTINCTNESS:
+[ ] Each pair covers genuinely different aspect
+[ ] Same sentence not split into multiple pair_types
+[ ] Consolidate repeated concepts into one pair
+
+RELEVANCE:
+[ ] Only cybersecurity-relevant content extracted
+[ ] No author biographical information (age, education, credentials)
+[ ] No publication metadata (impact factor, citations, h-index)
+[ ] No website boilerplate or navigation
+[ ] No general IT content unrelated to security
+
+INSUFFICIENCY:
+[ ] <50 words substantive content → zero pairs
+[ ] Boilerplate/navigation only → zero pairs
+[ ] Forum/Q&A discussion → zero pairs or very few
+[ ] No cybersecurity content → zero pairs
+[ ] Cannot ground claims → zero pairs
+
+FORMAT:
+[ ] Valid JSON
+[ ] Only "items" and "source_quality" at top level
+[ ] All required fields present in each pair
+[ ] confidence is "high" or "medium" only
+
+================================================================================
+BEHAVIORAL EXPECTATIONS (v3 specific)
+================================================================================
+
+Non-negotiable rule:
+  If the same sentence contains both a definition and a requirement,
+  generate only one pair (choose the dominant aspect).
+
+Source quality awareness:
+  Non-authoritative sources (forums, Q&A, user comments) should result in
+  zero pairs or at most 1-2 pairs with medium confidence.
+
+Reference vs. content:
+  "See NIST SP 800-53 for details" is a reference, not content.
+  Do not generate pairs from references - only from actual content.
+
+================================================================================
+END OF REVIEW HARNESS
+================================================================================

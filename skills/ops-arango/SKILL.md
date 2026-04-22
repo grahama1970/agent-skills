@@ -101,6 +101,31 @@ All commands support `--json` for machine-readable output:
 
 Backups saved to: `/mnt/storage12tb/backups/arangodb/<timestamp>/`
 
+## Restore Guidance
+
+`ops-arango` currently automates dumps and health checks. For restores, use
+`arangorestore` directly and keep progress output enabled.
+
+```bash
+arangorestore \
+  --progress true \
+  --log.level info \
+  --server.endpoint tcp://127.0.0.1:8529 \
+  --server.username root \
+  --server.password "$ARANGO_PASS" \
+  --server.database memory \
+  --input-directory /path/to/dump \
+  --overwrite true
+```
+
+Notes:
+- `--progress` is enabled by default, but pass it explicitly for long restores so
+  operators know progress visibility was intentional.
+- Use `--log.level info` when running through `docker exec`, wrappers, or
+  automation so collection-level progress is easier to recover from logs.
+- If a restore must be resumed, prefer ArangoDB's native restore flow and
+  continue from the same dump rather than switching to bespoke import logic mid-run.
+
 ## Features
 
 - **Explicit Mode**: Set `CONTAINER` env var to use Docker. Default is local binary.

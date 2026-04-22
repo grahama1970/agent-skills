@@ -250,6 +250,458 @@ def get_stats(db) -> dict:
     return stats
 
 
+def sparta_health_check(db) -> dict:
+    """Comprehensive SPARTA data integrity validation.
+
+    Returns a structured report with all checks organized by category.
+    Every finding is backed by a deterministic AQL query.
+    """
+    report = {
+        "status": "healthy",
+        "timestamp": __import__("datetime").datetime.now().isoformat(),
+        "summary": {"passed": 0, "warnings": 0, "failed": 0},
+        "categories": {},
+    }
+
+    def add_check(category: str, name: str, passed: bool, count: int,
+                  expected: str, query_hint: str = "", details: list = None):
+        """Add a check result to the report."""
+        if category not in report["categories"]:
+            report["categories"][category] = {"checks": [], "status": "passed"}
+
+        status = "passed" if passed else ("warning" if count < 100 else "failed")
+        check = {
+            "name": name,
+            "status": status,
+            "count": count,
+            "expected": expected,
+            "query_hint": query_hint,
+        }
+        if details:
+            if isinstance(details, list):
+                check["details"] = details[:10]  # Limit to 10 examples
+            else:
+                check["details"] = details  # dict or other structure
+
+        report["categories"][category]["checks"].append(check)
+        report["summary"]["passed" if passed else ("warnings" if status == "warning" else "failed")] += 1
+
+        if status == "failed":
+            report["categories"][category]["status"] = "failed"
+            report["status"] = "critical"
+        elif status == "warning" and report["categories"][category]["status"] != "failed":
+            report["categories"][category]["status"] = "warning"
+            if report["status"] == "healthy":
+                report["status"] = "warning"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 1. QRA SCHEMA VALIDATION
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_qra"):
+        total_qras = db.collection("sparta_qra").count()
+
+        # Check: QRAs with null/empty question
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.question == null OR LENGTH(d.question) < 5
+                RETURN d._key
+        """)
+        bad = list(cursor)
+        add_check("qra_schema", "question_valid", len(bad) == 0, len(bad),
+                  "0 QRAs with null/empty question",
+                  "FILTER d.question == null OR LENGTH(d.question) < 5", bad)
+
+        # Check: QRAs with null/short reasoning
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.reasoning == null OR LENGTH(TOKENS(d.reasoning, 'text_en')) < 5
+                LIMIT 1000
+                RETURN d._key
+        """)
+        bad = list(cursor)
+        add_check("qra_schema", "reasoning_valid", len(bad) == 0, len(bad),
+                  "0 QRAs with <5 word reasoning",
+                  "FILTER LENGTH(TOKENS(d.reasoning, 'text_en')) < 5", bad)
+
+        # Check: native QRAs with empty evidence_quotes (sparta_context uses evidence_case instead)
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.category != "sparta_context"
+                FILTER !IS_ARRAY(d.evidence_quotes) OR LENGTH(d.evidence_quotes) == 0
+                RETURN d._key
+        """)
+        bad = list(cursor)
+        add_check("qra_schema", "evidence_quotes_present", len(bad) == 0, len(bad),
+                  "0 native QRAs with empty evidence_quotes (sparta_context excluded)",
+                  "FILTER category != 'sparta_context' AND LENGTH(evidence_quotes) == 0", bad)
+
+        # Check: QRAs missing source_control_id AND control_id
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER (d.source_control_id == null OR d.source_control_id == "")
+                   AND (d.control_id == null OR d.control_id == "")
+                RETURN d._key
+        """)
+        bad = list(cursor)
+        add_check("qra_schema", "control_id_present", len(bad) == 0, len(bad),
+                  "0 QRAs missing both source_control_id and control_id",
+                  "FILTER d.source_control_id == null AND d.control_id == null", bad)
+
+        # Check: QRAs with invalid category
+        valid_cats = ["sparta_context", "cwe_native", "capec_native", "attack_native",
+                      "nist_native", "sparta_native", "d3fend_native", "esa_native",
+                      "cve_native", "nasa_native", "iso_native"]
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.category == null OR d.category NOT IN @valid
+                RETURN {key: d._key, cat: d.category}
+        """, bind_vars={"valid": valid_cats})
+        bad = list(cursor)
+        add_check("qra_schema", "category_valid", len(bad) == 0, len(bad),
+                  "0 QRAs with invalid category",
+                  "FILTER d.category NOT IN [valid categories]",
+                  [b["cat"] for b in bad[:10]])
+
+        # Check: QRAs with invalid verdict
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.verdict != null AND d.verdict NOT IN ["SATISFIED", "NEEDS_REVIEW", "REJECTED"]
+                RETURN {key: d._key, verdict: d.verdict}
+        """)
+        bad = list(cursor)
+        add_check("qra_schema", "verdict_valid", len(bad) == 0, len(bad),
+                  "0 QRAs with invalid verdict enum",
+                  "FILTER d.verdict NOT IN ['SATISFIED', 'NEEDS_REVIEW', 'REJECTED']", bad)
+
+        # Check: QRAs with missing/wrong-dim embedding
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.embedding == null OR !IS_ARRAY(d.embedding) OR LENGTH(d.embedding) != 384
+                RETURN d._key
+        """)
+        bad = list(cursor)
+        add_check("qra_schema", "embedding_384dim", len(bad) == 0, len(bad),
+                  "0 QRAs with missing/invalid 384-dim embedding",
+                  "FILTER LENGTH(d.embedding) != 384", bad)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 2. EVIDENCE CASE SCHEMA VALIDATION (for relationship QRAs)
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_qra"):
+        # Check: sparta_context QRAs should have evidence_case
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.category == "sparta_context"
+                FILTER d.evidence_case == null OR !IS_OBJECT(d.evidence_case)
+                RETURN d._key
+        """)
+        bad = list(cursor)
+        add_check("evidence_case", "present_for_context", len(bad) == 0, len(bad),
+                  "0 sparta_context QRAs missing evidence_case object",
+                  "FILTER d.category == 'sparta_context' AND d.evidence_case == null", bad)
+
+        # Check: evidence_case has required fields
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.category == "sparta_context" AND d.evidence_case != null
+                FILTER d.evidence_case.resolved_entities == null
+                    OR d.evidence_case.glossary == null
+                    OR d.evidence_case.crosswalk_chains == null
+                LIMIT 500
+                RETURN d._key
+        """)
+        bad = list(cursor)
+        add_check("evidence_case", "required_fields", len(bad) == 0, len(bad),
+                  "0 evidence_cases missing resolved_entities/glossary/crosswalk_chains",
+                  "FILTER d.evidence_case.resolved_entities == null", bad)
+
+        # Check: evidence_case.crosswalk_chains non-empty
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.category == "sparta_context" AND d.evidence_case != null
+                FILTER !IS_ARRAY(d.evidence_case.crosswalk_chains)
+                    OR LENGTH(d.evidence_case.crosswalk_chains) == 0
+                LIMIT 500
+                RETURN d._key
+        """)
+        bad = list(cursor)
+        add_check("evidence_case", "crosswalk_chains_populated", len(bad) == 0, len(bad),
+                  "0 evidence_cases with empty crosswalk_chains",
+                  "FILTER LENGTH(d.evidence_case.crosswalk_chains) == 0", bad)
+
+        # Check: evidence_case.review_status valid
+        cursor = db.aql.execute("""
+            FOR d IN sparta_qra
+                FILTER d.evidence_case != null AND d.evidence_case.review_status != null
+                FILTER d.evidence_case.review_status NOT IN ["NEEDS_VERIFICATION", "VERIFIED", "REJECTED"]
+                RETURN {key: d._key, status: d.evidence_case.review_status}
+        """)
+        bad = list(cursor)
+        add_check("evidence_case", "review_status_valid", len(bad) == 0, len(bad),
+                  "0 evidence_cases with invalid review_status",
+                  "FILTER d.evidence_case.review_status NOT IN [valid values]", bad)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 3. CONTROL SCHEMA VALIDATION
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_controls"):
+        # Check: controls with empty description
+        cursor = db.aql.execute("""
+            FOR d IN sparta_controls
+                FILTER d.description == null OR LENGTH(d.description) < 10
+                RETURN {id: d.control_id, fw: d.source_framework}
+        """)
+        bad = list(cursor)
+        add_check("control_schema", "description_present", len(bad) == 0, len(bad),
+                  "0 controls with empty/short description",
+                  "FILTER LENGTH(d.description) < 10", bad)
+
+        # Check: controls missing source_framework
+        cursor = db.aql.execute("""
+            FOR d IN sparta_controls
+                FILTER d.source_framework == null OR d.source_framework == ""
+                RETURN d.control_id
+        """)
+        bad = list(cursor)
+        add_check("control_schema", "source_framework_present", len(bad) == 0, len(bad),
+                  "0 controls missing source_framework",
+                  "FILTER d.source_framework == null", bad)
+
+        # Check: duplicate control_ids
+        cursor = db.aql.execute("""
+            FOR d IN sparta_controls
+                COLLECT cid = d.control_id WITH COUNT INTO cnt
+                FILTER cnt > 1
+                RETURN {control_id: cid, count: cnt}
+        """)
+        bad = list(cursor)
+        add_check("control_schema", "unique_control_ids", len(bad) == 0, len(bad),
+                  "0 duplicate control_ids",
+                  "COLLECT ... FILTER cnt > 1", bad)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 4. EDGE/RELATIONSHIP VALIDATION
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_relationships"):
+        # Check: collection is edge type (type 3)
+        coll = db.collection("sparta_relationships")
+        props = coll.properties()
+        is_edge = props.get("type") == 3
+        add_check("edge_integrity", "is_edge_collection", is_edge,
+                  0 if is_edge else 1,
+                  "sparta_relationships is edge collection (type 3)",
+                  f"collection.properties().type = {props.get('type')}",
+                  [{"type": props.get("type"), "edge": props.get("edge")}])
+
+        # Check: edges with null _from/_to (should be 0 for edge collection)
+        cursor = db.aql.execute("""
+            FOR e IN sparta_relationships
+                FILTER e._from == null OR e._to == null
+                RETURN e._key
+        """)
+        bad = list(cursor)
+        add_check("edge_integrity", "no_null_endpoints", len(bad) == 0, len(bad),
+                  "0 edges with null _from or _to",
+                  "FILTER e._from == null OR e._to == null", bad)
+
+        # Check: dangling _from references
+        cursor = db.aql.execute("""
+            FOR e IN sparta_relationships
+                FILTER e._from != null
+                LET doc = DOCUMENT(e._from)
+                FILTER doc == null
+                LIMIT 100
+                RETURN {key: e._key, from: e._from}
+        """)
+        bad = list(cursor)
+        add_check("edge_integrity", "no_dangling_from", len(bad) == 0, len(bad),
+                  "0 edges with dangling _from reference",
+                  "FILTER DOCUMENT(e._from) == null", bad)
+
+        # Check: dangling _to references
+        cursor = db.aql.execute("""
+            FOR e IN sparta_relationships
+                FILTER e._to != null
+                LET doc = DOCUMENT(e._to)
+                FILTER doc == null
+                LIMIT 100
+                RETURN {key: e._key, to: e._to}
+        """)
+        bad = list(cursor)
+        add_check("edge_integrity", "no_dangling_to", len(bad) == 0, len(bad),
+                  "0 edges with dangling _to reference",
+                  "FILTER DOCUMENT(e._to) == null", bad)
+
+        # Check: duplicate edges (same from/to/type)
+        cursor = db.aql.execute("""
+            FOR e IN sparta_relationships
+                COLLECT f = e._from, t = e._to, rt = e.relationship_type WITH COUNT INTO cnt
+                FILTER cnt > 1
+                LIMIT 50
+                RETURN {from: f, to: t, type: rt, count: cnt}
+        """)
+        bad = list(cursor)
+        add_check("edge_integrity", "no_duplicate_edges", len(bad) == 0, len(bad),
+                  "0 duplicate edges (same from/to/type)",
+                  "COLLECT ... FILTER cnt > 1", bad)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 5. CROSS-REFERENCE INTEGRITY
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_qra") and db.has_collection("sparta_controls"):
+        # Check: QRAs referencing non-existent controls
+        cursor = db.aql.execute("""
+            LET control_ids = (FOR c IN sparta_controls RETURN c.control_id)
+            FOR d IN sparta_qra
+                LET cid = d.source_control_id != null ? d.source_control_id : d.control_id
+                FILTER cid != null AND cid NOT IN control_ids
+                // Exclude CVE IDs which are valid but may not be in controls
+                FILTER !STARTS_WITH(cid, "CVE-")
+                LIMIT 100
+                RETURN {key: d._key, control_id: cid}
+        """)
+        bad = list(cursor)
+        add_check("cross_reference", "qra_control_exists", len(bad) == 0, len(bad),
+                  "0 QRAs referencing non-existent controls",
+                  "FILTER source_control_id NOT IN control_ids", bad)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 6. ORPHAN DETECTION
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_controls") and db.has_collection("sparta_qra"):
+        # Check: controls with no QRAs (by framework)
+        cursor = db.aql.execute("""
+            LET qra_control_ids = (
+                FOR d IN sparta_qra
+                    LET cid = d.source_control_id != null ? d.source_control_id : d.control_id
+                    RETURN DISTINCT cid
+            )
+            FOR c IN sparta_controls
+                FILTER c.control_id NOT IN qra_control_ids
+                COLLECT fw = c.source_framework WITH COUNT INTO cnt
+                SORT cnt DESC
+                RETURN {framework: fw, orphan_count: cnt}
+        """)
+        orphans_by_fw = list(cursor)
+        total_orphans = sum(o["orphan_count"] for o in orphans_by_fw)
+        add_check("orphan_detection", "controls_without_qras", True, total_orphans,
+                  "Audit: controls without QRAs by framework",
+                  "FILTER c.control_id NOT IN qra_control_ids", orphans_by_fw)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 7. INDEX & VIEW HEALTH
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_qra"):
+        # Check: vector index exists
+        coll = db.collection("sparta_qra")
+        indexes = coll.indexes()
+        vector_idx = [i for i in indexes if i.get("type") == "vector"]
+        has_vector = len(vector_idx) > 0
+        add_check("index_health", "vector_index_exists", has_vector,
+                  0 if has_vector else 1,
+                  "Vector index exists on sparta_qra",
+                  "collection.indexes() type='vector'",
+                  [{"index": i.get("name"), "fields": i.get("fields")} for i in vector_idx])
+
+        # Check: vector index dimension
+        if vector_idx:
+            params = vector_idx[0].get("params", {})
+            dim = params.get("dimension", 0)
+            correct_dim = dim == 384
+            add_check("index_health", "vector_index_384dim", correct_dim,
+                      0 if correct_dim else 1,
+                      "Vector index dimension is 384",
+                      f"params.dimension = {dim}",
+                      [{"dimension": dim}])
+
+    # Check: ArangoSearch views exist
+    try:
+        views = list(db.views())
+        view_names = [v["name"] for v in views]
+        has_unified = "sparta_unified_view" in view_names or "unified_search_view" in view_names
+        add_check("index_health", "search_view_exists", has_unified,
+                  0 if has_unified else 1,
+                  "ArangoSearch view exists",
+                  "db.views()",
+                  view_names[:5])
+    except Exception:
+        add_check("index_health", "search_view_exists", False, 1,
+                  "ArangoSearch view exists", "db.views() failed", [])
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 8. COVERAGE ANALYSIS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_qra") and db.has_collection("sparta_controls"):
+        # QRA coverage by framework
+        cursor = db.aql.execute("""
+            LET framework_controls = (
+                FOR c IN sparta_controls
+                    COLLECT fw = c.source_framework WITH COUNT INTO cnt
+                    RETURN {framework: fw, controls: cnt}
+            )
+            LET framework_qras = (
+                FOR d IN sparta_qra
+                    LET cid = d.source_control_id != null ? d.source_control_id : d.control_id
+                    COLLECT cat = d.category WITH COUNT INTO cnt
+                    RETURN {category: cat, qras: cnt}
+            )
+            RETURN {controls: framework_controls, qras: framework_qras}
+        """)
+        coverage = list(cursor)[0]
+        add_check("coverage", "framework_coverage", True, 0,
+                  "QRA coverage by framework (audit)",
+                  "COLLECT framework/category",
+                  {"controls": coverage["controls"], "qras": coverage["qras"]})
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 9. URL KNOWLEDGE VALIDATION
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("sparta_url_knowledge"):
+        # Check: URL knowledge with embeddings
+        cursor = db.aql.execute("""
+            LET total = LENGTH(sparta_url_knowledge)
+            LET with_emb = LENGTH(FOR d IN sparta_url_knowledge FILTER d.embedding != null AND LENGTH(d.embedding) == 384 RETURN 1)
+            RETURN {total: total, with_embedding: with_emb}
+        """)
+        result = list(cursor)[0]
+        pct = round(result["with_embedding"] * 100 / result["total"], 1) if result["total"] > 0 else 0
+        add_check("url_knowledge", "embeddings_complete", pct >= 99,
+                  result["total"] - result["with_embedding"],
+                  f"≥99% URL knowledge has embeddings ({pct}%)",
+                  "FILTER LENGTH(d.embedding) == 384",
+                  [{"total": result["total"], "with_embedding": result["with_embedding"], "pct": pct}])
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # 10. LESSONS COLLECTION VALIDATION
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    if db.has_collection("lessons"):
+        # Check: lessons with embeddings
+        cursor = db.aql.execute("""
+            LET total = LENGTH(lessons)
+            LET with_emb = LENGTH(FOR d IN lessons FILTER d.embedding != null AND LENGTH(d.embedding) == 384 RETURN 1)
+            RETURN {total: total, with_embedding: with_emb}
+        """)
+        result = list(cursor)[0]
+        pct = round(result["with_embedding"] * 100 / result["total"], 1) if result["total"] > 0 else 0
+        add_check("lessons", "embeddings_complete", pct >= 99,
+                  result["total"] - result["with_embedding"],
+                  f"≥99% lessons have embeddings ({pct}%)",
+                  "FILTER LENGTH(d.embedding) == 384",
+                  [{"total": result["total"], "with_embedding": result["with_embedding"], "pct": pct}])
+
+    return report
+
+
 app = typer.Typer(help="ArangoDB maintenance")
 
 # Global state for --json flag
@@ -676,6 +1128,115 @@ def url_coverage(
                   f"with_urls={fw['controls_with_urls']:5d}  "
                   f"fetched={fw['fetched_ok']:5d}  "
                   f"coverage={fw['coverage_pct']:.1f}%")
+
+
+def format_health_report_markdown(report: dict) -> str:
+    """Format health check report as markdown."""
+    lines = []
+    lines.append(f"# SPARTA Data Health Report")
+    lines.append(f"")
+    lines.append(f"**Generated:** {report['timestamp']}")
+    lines.append(f"**Overall Status:** {'✅' if report['status'] == 'healthy' else '⚠️' if report['status'] == 'warning' else '❌'} {report['status'].upper()}")
+    lines.append(f"")
+    lines.append(f"## Summary")
+    lines.append(f"")
+    lines.append(f"| Metric | Count |")
+    lines.append(f"|--------|-------|")
+    lines.append(f"| Passed | {report['summary']['passed']} |")
+    lines.append(f"| Warnings | {report['summary']['warnings']} |")
+    lines.append(f"| Failed | {report['summary']['failed']} |")
+    lines.append(f"")
+
+    for cat_name, cat_data in report["categories"].items():
+        status_icon = "✅" if cat_data["status"] == "passed" else "⚠️" if cat_data["status"] == "warning" else "❌"
+        lines.append(f"## {status_icon} {cat_name.replace('_', ' ').title()}")
+        lines.append(f"")
+        lines.append(f"| Check | Status | Count | Expected |")
+        lines.append(f"|-------|--------|-------|----------|")
+
+        for check in cat_data["checks"]:
+            s_icon = "✅" if check["status"] == "passed" else "⚠️" if check["status"] == "warning" else "❌"
+            lines.append(f"| {check['name']} | {s_icon} | {check['count']} | {check['expected']} |")
+
+        lines.append(f"")
+
+        # Show details for failed/warning checks
+        for check in cat_data["checks"]:
+            if check["status"] != "passed" and check.get("details"):
+                lines.append(f"<details>")
+                lines.append(f"<summary><strong>{check['name']}</strong> — {check['count']} issues</summary>")
+                lines.append(f"")
+                lines.append(f"```")
+                lines.append(f"Query hint: {check.get('query_hint', 'N/A')}")
+                lines.append(f"")
+                for d in check["details"][:10]:
+                    lines.append(f"  {d}")
+                if len(check.get("details", [])) > 10:
+                    lines.append(f"  ... and {len(check['details']) - 10} more")
+                lines.append(f"```")
+                lines.append(f"</details>")
+                lines.append(f"")
+
+    return "\n".join(lines)
+
+
+@app.command("health-check")
+def health_check_cmd(
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Save report to file (.json or .md)"),
+    markdown: bool = typer.Option(False, "--markdown", "-m", help="Output as markdown"),
+):
+    """Comprehensive SPARTA data integrity validation.
+
+    Runs 26 deterministic checks across 10 categories:
+    - qra_schema (7): question, reasoning, evidence, control_id, category, verdict, embedding
+    - evidence_case (4): present, required_fields, crosswalk_chains, review_status
+    - control_schema (3): description, source_framework, unique_ids
+    - edge_integrity (4): null endpoints, dangling _from, dangling _to, duplicates
+    - cross_reference (1): QRA→control exists
+    - orphan_detection (1): controls without QRAs
+    - index_health (3): vector index exists, 384-dim, search view exists
+    - coverage (1): QRA coverage by framework
+    - url_knowledge (1): embedding completeness
+    - lessons (1): embedding completeness
+    """
+    db = get_db()
+    print("[ops-arango] Running comprehensive SPARTA health check...")
+    report = sparta_health_check(db)
+
+    if markdown or (output and output.endswith(".md")):
+        formatted = format_health_report_markdown(report)
+        if output:
+            from pathlib import Path
+            Path(output).write_text(formatted)
+            print(f"[ops-arango] Saved markdown report to {output}")
+        else:
+            print(formatted)
+    elif _json_output or (output and output.endswith(".json")):
+        result_json = json.dumps(report, indent=2)
+        if output:
+            from pathlib import Path
+            Path(output).write_text(result_json)
+            print(f"[ops-arango] Saved JSON report to {output}")
+        else:
+            print(result_json)
+    else:
+        # Default: compact terminal output
+        print(f"\n{'='*60}")
+        print(f"SPARTA Data Health: {report['status'].upper()}")
+        print(f"{'='*60}")
+        print(f"Passed: {report['summary']['passed']}  |  Warnings: {report['summary']['warnings']}  |  Failed: {report['summary']['failed']}")
+        print(f"")
+
+        for cat_name, cat_data in report["categories"].items():
+            status_icon = "✓" if cat_data["status"] == "passed" else "!" if cat_data["status"] == "warning" else "✗"
+            print(f"[{status_icon}] {cat_name}")
+            for check in cat_data["checks"]:
+                if check["status"] != "passed":
+                    s_icon = "!" if check["status"] == "warning" else "✗"
+                    print(f"    [{s_icon}] {check['name']}: {check['count']} ({check['expected']})")
+
+        if report["status"] != "healthy":
+            print(f"\nRun with --json or --markdown for full details.")
 
 
 if __name__ == "__main__":

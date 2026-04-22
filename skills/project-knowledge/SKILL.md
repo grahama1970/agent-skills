@@ -3,7 +3,8 @@ name: project-knowledge
 description: >
   Shared project knowledge document that human and agent can both read and update.
   Aggregates state from /project-state, /checkpoint, /memory into a single
-  PROJECT_KNOWLEDGE.md file. Coordinator skill — composes rather than reimplements.
+  PROJECT_KNOWLEDGE.md file, while syncing searchable chunks into /memory.
+  Coordinator skill — composes rather than reimplements.
 triggers:
   - "project knowledge"
   - "what do we know"
@@ -47,11 +48,17 @@ The gap between individual lessons (/memory) and heavy documentation (/create-wa
 | `/create-walkthrough` | File on disk | Heavy (interview + persona) |
 | **`/project-knowledge`** | **Read file directly** | **Incremental section updates** |
 
-This skill maintains a `PROJECT_KNOWLEDGE.md` file that:
-1. Human can read/edit directly
-2. Agent reads at session start
-3. Both can update incrementally
-4. Optionally syncs to /memory for cross-project recall
+This skill maintains two surfaces:
+1. `PROJECT_KNOWLEDGE.md` as the human-readable projection
+2. `/memory` as the agent retrieval surface
+
+The file is for humans. Agents should still be memory-first.
+
+This skill therefore:
+1. Lets humans read/edit the markdown file directly
+2. Lets agents update the same knowledge incrementally
+3. Automatically syncs each updated section into `/memory`
+4. Keeps an aggregate `project_knowledge` document for structured recall
 
 ## Commands
 
@@ -71,7 +78,7 @@ This skill maintains a `PROJECT_KNOWLEDGE.md` file that:
 # Add an open question
 ./run.sh question "Cascade notification when lineage deps change?"
 
-# Sync to /memory (for cross-project recall)
+# Sync to /memory (repair/backfill; updates auto-sync by default)
 ./run.sh sync
 
 # Initialize PROJECT_KNOWLEDGE.md in current directory
@@ -148,19 +155,24 @@ Recommended hooks to keep knowledge fresh:
 
 ## Sync to Memory
 
-`./run.sh sync` learns key sections to /memory:
+Every update command syncs to `/memory` automatically.
+
+`./run.sh sync` is still available for repair/backfill and writes:
 
 ```bash
 # What gets synced:
-# 1. "Current Understanding" → lesson with tag project:{name}
-# 2. Each decision → individual lesson with tag decision:{name}
-# 3. Key files table → lesson with tag architecture:{name}
+# 1. Aggregate structured doc → collection=project_knowledge
+# 2. Each section is chunked into recall-friendly chunk documents
+# 3. Each chunk gets tags: project_knowledge, project:{name}, section:{slug}
 ```
 
 This enables cross-project recall:
 ```bash
 /memory recall "project:memory lineage backfill"
 ```
+
+For agents, this is the authoritative retrieval path. Do not treat the markdown
+file as the only source of truth.
 
 ## Common Mistakes
 
@@ -177,20 +189,27 @@ This enables cross-project recall:
 ./run.sh update "Current Understanding" --append "additional insight"
 
 # WRONG: Skip sync, knowledge stays local
-# RIGHT: Sync after significant updates
+# RIGHT: Updates already sync to /memory
+./run.sh update "Current Understanding" "new insight"
+# Use sync only for repair/backfill
 ./run.sh sync
 ```
 
-## Session Start Pattern
+## Agent Retrieval Pattern
 
-Agent should read PROJECT_KNOWLEDGE.md at session start:
+Humans can read the file directly:
 
 ```python
-# In skill or hook
 knowledge_file = Path.cwd() / "PROJECT_KNOWLEDGE.md"
 if knowledge_file.exists():
-    print(f"Reading project knowledge from {knowledge_file}")
-    # Parse and inject into context
+    print(f"Reading human-facing project knowledge from {knowledge_file}")
 ```
 
-Or configure as a pre-hook that injects into context.
+Agents should recall from `/memory` first:
+
+```bash
+/memory recall "project:{name} current understanding"
+```
+
+Use the file as a readable projection, not as the primary retrieval surface for
+problem solving.

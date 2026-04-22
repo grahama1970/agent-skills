@@ -865,10 +865,16 @@ def _export_jsonl(docs: list):
     EXPORT_DIR.mkdir(parents=True, exist_ok=True)
     jsonl_path = EXPORT_DIR / "train.jsonl"
 
+    # Fields to exclude: embeddings (large), ArangoDB internals
+    EXCLUDE_FIELDS = {"embedding", "_id", "_rev"}
+
     with open(jsonl_path, "w") as f:
         for doc in docs:
-            # Remove ArangoDB internal fields for export
-            export_doc = {k: v for k, v in doc.items() if not k.startswith("_") or k == "_key"}
+            # Remove embeddings and ArangoDB internal fields for smaller export
+            export_doc = {
+                k: v for k, v in doc.items()
+                if k not in EXCLUDE_FIELDS and (not k.startswith("_") or k == "_key")
+            }
             f.write(json.dumps(export_doc, ensure_ascii=False) + "\n")
 
     logger.info(f"Exported {len(docs):,} QRAs to {jsonl_path}")

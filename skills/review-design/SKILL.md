@@ -231,6 +231,45 @@ Runs the 3-step pipeline for N rounds, each round refining findings.
 ### `bundle` - Generate review request
 Creates a markdown file with embedded images (base64) for manual submission to any LLM.
 
+### `bundle-code` - Generate COMPLETE code review bundle for external LLMs
+Creates a comprehensive markdown bundle with ALL code for honest external review.
+**No truncation** - the reviewer sees everything needed to give real feedback.
+
+**Required:** Use `--context` or `--context-file` to explain what you're building and why.
+Without context, the reviewer is guessing.
+
+```bash
+# Full bundle with context (RECOMMENDED)
+./run.sh bundle-code \
+  -f src/components/SpartaExplorer.tsx \
+  -f src/components/EvidenceCaseCard.tsx \
+  -f src/components/MatrixCell.tsx \
+  --css src/styles/nvis.css \
+  --test-results /tmp/results.json \
+  --context "SPARTA Explorer 2026: React UI for CAE evidence visualization.
+    Requirements: COTS C02 (44px touch targets), WCAG 2.1 AA, prefers-reduced-motion.
+    This session fixed: card disappearing on rebuild, focus-visible styles, ghost mode opacity." \
+  --focus "COTS compliance, accessibility, React patterns" \
+  -o REVIEW_BUNDLE.md
+
+# Or use a context file for longer explanations
+./run.sh bundle-code \
+  -f src/**/*.tsx \
+  --css src/**/*.css \
+  --context-file ./REVIEW_CONTEXT.md \
+  -o REVIEW_BUNDLE.md
+
+# Copy directly to clipboard for Gemini web
+./run.sh bundle-code -f src/*.tsx --context "..." --clipboard
+```
+
+Output includes (NO TRUNCATION):
+- Full project context and rationale
+- Complete test results with ALL failures
+- Full source files (every line)
+- Full CSS files
+- Structured review questions asking for specific, actionable feedback
+
 ### `compare` - Side-by-side comparison
 Generates a visual comparison report between current and target design.
 

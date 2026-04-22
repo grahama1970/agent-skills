@@ -10,6 +10,7 @@ Three QRA types:
 import asyncio
 import hashlib
 import json
+import os
 import re
 import sys
 import time
@@ -42,6 +43,8 @@ except ImportError:
     HAS_TWO_STAGE_SCHEMA = False
 
 app = typer.Typer(help="Generate QRA pairs from various sources")
+CREATE_QRAS_MANIFEST_STATE_FILE = Path.home() / ".create_qras_manifest_state.json"
+SCILLM_BATCH_CHUNK_SIZE = 4
 
 # Framework detection patterns
 # Updated 2026-04-16 to match actual control_id formats in sparta_controls
@@ -167,9 +170,30 @@ FRAMEWORK_PROMPT_MAP = _load_framework_prompt_map()
 # Prompt template directory (centralized in prompt-lab)
 PROMPT_LAB_DIR = Path("/home/graham/workspace/experiments/scillm/.skills/prompt-lab/prompts/qra")
 # Local prompts directory (for native mode prompts)
+
+
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    """Atomically persist JSON payloads used for lightweight progress state."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2))
+    os.replace(tmp, path)
 LOCAL_PROMPTS_DIR = Path(__file__).parent / "prompts"
 # Native prompts subdirectory (clean naming: prompts/native/{framework}_system.txt)
 NATIVE_PROMPTS_DIR = LOCAL_PROMPTS_DIR / "native"
+
+
+def _memory_base_url() -> str:
+    """Use the Docker-backed /memory API, not legacy Unix-socket wrappers."""
+    url = (
+        os.getenv("MEMORY_SERVICE_URL")
+        or os.getenv("MEMORY_API_URL")
+        or os.getenv("MEMORY_SERVER_URL")
+        or "http://127.0.0.1:8601"
+    ).rstrip("/")
+    if url.startswith(("unix://", "http+unix://")):
+        return "http://127.0.0.1:8601"
+    return url
 
 # Framework → category mapping for native QRAs
 FRAMEWORK_TO_CATEGORY = {
@@ -184,6 +208,7 @@ FRAMEWORK_TO_CATEGORY = {
     "SPARTA": "sparta_native",
     "ESA": "esa_native",
     "ESA_Shield": "esa_native",
+    "NVD": "cve_native",
 }
 
 # FRAMEWORK_PROMPT_MAP is loaded from worksheets.yaml above
@@ -210,11 +235,16 @@ def _load_prompt_pair(prompt_name: str, native: bool = False) -> tuple[str, str]
     """
     # For native prompts, use clean naming: prompts/native/{framework}_system.txt
     if native:
-        system_file = NATIVE_PROMPTS_DIR / f"{prompt_name}_system.txt"
-        user_file = NATIVE_PROMPTS_DIR / f"{prompt_name}_user.txt"
-        if system_file.exists() and user_file.exists():
-            return system_file.read_text(), user_file.read_text()
-        raise FileNotFoundError(f"Native prompt template not found: {prompt_name} (expected {system_file})")
+        candidate_dirs = [NATIVE_PROMPTS_DIR, NATIVE_PROMPTS_DIR / "sparta"]
+        for prompt_dir in candidate_dirs:
+            system_file = prompt_dir / f"{prompt_name}_system.txt"
+            user_file = prompt_dir / f"{prompt_name}_user.txt"
+            if system_file.exists() and user_file.exists():
+                return system_file.read_text(), user_file.read_text()
+        raise FileNotFoundError(
+            f"Native prompt template not found: {prompt_name} "
+            f"(checked {[str(p) for p in candidate_dirs]})"
+        )
 
     # Check local prompts directory first (for non-native mode)
     for prompt_dir in [LOCAL_PROMPTS_DIR, PROMPT_LAB_DIR]:
@@ -233,9 +263,8 @@ def _load_prompt_pair(prompt_name: str, native: bool = False) -> tuple[str, str]
 
 
 def _get_memory_client() -> httpx.Client:
-    """Get httpx client for memory daemon via Unix socket."""
-    transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
-    return httpx.Client(transport=transport, base_url="http://localhost", timeout=30.0)
+    """Get httpx client for the Docker-backed /memory API."""
+    return httpx.Client(base_url=_memory_base_url(), timeout=30.0)
 
 
 def _get_scillm_client() -> httpx.Client:
@@ -260,6 +289,31 @@ def _get_async_scillm_client() -> httpx.AsyncClient:
         },
         timeout=300.0,  # Chutes can take 200s+ per call under load
     )
+
+
+def _get_async_memory_client() -> httpx.AsyncClient:
+    """Get async httpx client for the Docker-backed /memory API."""
+    return httpx.AsyncClient(base_url=_memory_base_url(), timeout=60.0)
+
+
+async def _create_evidence_case_async(
+    client: httpx.AsyncClient,
+    question: str,
+    source_id: str | None = None,
+) -> dict[str, Any]:
+    """Async: Call /create-evidence-case endpoint for crosswalk chains.
+
+    Called per-result as LLM responses arrive via as_completed pattern.
+    """
+    try:
+        payload = {"question": question}
+        if source_id:
+            payload["source_id"] = source_id
+        resp = await client.post("/create-evidence-case", json=payload)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        return {"error": str(e), "glossary": [], "crosswalk_chains": []}
 
 
 def _get_provider_concurrency(model: str = "text") -> int:
@@ -367,6 +421,319 @@ def _fetch_document(client: httpx.Client, doc_key: str, collection: str) -> dict
         return docs[0] if docs else None
     except Exception:
         return None
+
+
+def _fetch_existing_control_ids(client: httpx.Client, control_ids: list[str]) -> set[str]:
+    """Fetch the subset of control_ids that exist in sparta_controls via /memory."""
+    if not control_ids:
+        return set()
+
+    resp = client.post(
+        "/recall/by-keys",
+        json={
+            "keys": control_ids,
+            "key_field": "control_id",
+            "collection": "sparta_controls",
+            "return_fields": ["control_id"],
+        },
+    )
+    resp.raise_for_status()
+    docs = resp.json().get("documents", [])
+    return {doc.get("control_id") for doc in docs if doc.get("control_id")}
+
+
+def _manifest_control_from_job(job: dict[str, Any]) -> dict[str, Any] | None:
+    """Build a lightweight control document from a manifest row when possible."""
+    identity = job.get("identity", {})
+    source = job.get("source_record") or {}
+
+    control_id = (
+        identity.get("source_control_id")
+        or identity.get("technique_id")
+        or identity.get("countermeasure_id")
+        or identity.get("tactic_id")
+    )
+    if not control_id:
+        return None
+
+    doc = {
+        "control_id": control_id,
+        "source_framework": job.get("source_framework") or _detect_framework(control_id) or "UNKNOWN",
+    }
+    doc.update(source)
+
+    if "technique_name" in source and "name" not in doc:
+        doc["name"] = source["technique_name"]
+    if "countermeasure_name" in source and "name" not in doc:
+        doc["name"] = source["countermeasure_name"]
+    if "tactic_name" in source and "name" not in doc:
+        doc["name"] = source["tactic_name"]
+    if "description" not in doc or not doc.get("description"):
+        doc["description"] = (
+            source.get("technique_description")
+            or source.get("countermeasure_description")
+            or source.get("parent_tactic_description")
+            or ""
+        )
+
+    return doc
+
+
+def _normalized_job_source_id(job: dict[str, Any]) -> str | None:
+    """Return the DB-resolvable source id for a manifest job.
+
+    Some SPARTA countermeasure canonicals still invert fields:
+    - identity.source_control_id contains prose like "Comms Link"
+    - source_record.name contains the real CM code like "CM0029"
+    Prefer the CM code for DB checks and v2 overlap matching.
+    """
+    identity = job.get("identity", {})
+    source = job.get("source_record") or {}
+
+    source_id = identity.get("source_control_id") or identity.get("technique_id")
+    if (
+        job.get("job_type") == "canonical"
+        and source.get("control_type") == "countermeasure"
+        and isinstance(source.get("name"), str)
+        and FRAMEWORK_PATTERNS["SPARTA"].match(source["name"])
+    ):
+        return source["name"]
+    return source_id
+
+
+def _build_sparta_native_prompt(
+    memory: httpx.Client | httpx.AsyncClient | None,
+    control: dict,
+) -> tuple[str, str]:
+    """Build the native SPARTA prompt pair for a control."""
+    control_id = control.get("control_id", control.get("_key", ""))
+    control_type = control.get("control_type", "countermeasure")
+    control_name = control.get("name", control.get("title", "Unknown"))
+    control_description = control.get("description", "No description")
+    parent_id = control.get("parent_id", "")
+
+    if control_type == "tactic":
+        system_prompt, user_template = _load_prompt_pair("tactic_canonical", native=True)
+        user_prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_description=control_description,
+        )
+        return system_prompt, user_prompt
+
+    if control_type == "technique":
+        parent_tactic = _fetch_control(memory, parent_id) if memory and parent_id else None
+        system_prompt, user_template = _load_prompt_pair("technique_canonical", native=True)
+        user_prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_type=control_type,
+            control_description=control_description,
+            parent_id=parent_id or "",
+            parent_tactic_id=(parent_tactic or {}).get("control_id", parent_id or ""),
+            parent_tactic_name=(parent_tactic or {}).get("name", ""),
+            parent_tactic_description=(parent_tactic or {}).get("description", ""),
+        )
+        return system_prompt, user_prompt
+
+    system_prompt, user_template = _load_prompt_pair("countermeasure_canonical", native=True)
+    user_prompt = user_template.format(
+        control_id=control_id,
+        control_name=control_name,
+        control_type=control_type,
+        control_description=control_description,
+    )
+    return system_prompt, user_prompt
+
+
+def _build_manifest_control_lookup(jobs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Index manifest-provided control snapshots for execution fallback."""
+    lookup: dict[str, dict[str, Any]] = {}
+    for job in jobs:
+        doc = _manifest_control_from_job(job)
+        if not doc:
+            continue
+
+        control_id = doc.get("control_id")
+        if control_id and control_id not in lookup:
+            lookup[control_id] = doc
+
+        # Some SPARTA countermeasure canonicals still carry the CM code in `name`
+        # while `source_control_id` is prose. Alias the CM code too.
+        name = doc.get("name")
+        if (
+            doc.get("control_type") == "countermeasure"
+            and isinstance(name, str)
+            and FRAMEWORK_PATTERNS["SPARTA"].match(name)
+        ):
+            lookup.setdefault(name, {**doc, "control_id": name})
+
+    return lookup
+
+
+def _resolve_manifest_control(
+    client: httpx.Client,
+    control_id: str,
+    manifest_lookup: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any] | None:
+    """Resolve manifest snapshot first, then fall back to live /memory."""
+    if manifest_lookup and control_id in manifest_lookup:
+        return manifest_lookup[control_id]
+    return _fetch_control(client, control_id)
+
+
+def _build_inline_relationship_control(
+    control_id: str | None,
+    name: str | None,
+    control_type: str,
+    description: str = "",
+    source_framework: str = "SPARTA",
+) -> dict[str, Any] | None:
+    """Build a minimal control doc from a relationship row when no richer doc exists."""
+    if not control_id or not name:
+        return None
+    return {
+        "control_id": control_id,
+        "name": name,
+        "description": description,
+        "control_type": control_type,
+        "source_framework": source_framework,
+    }
+
+
+def _build_skipped_result(reason: str | None = None, **fields: Any) -> dict[str, Any]:
+    """Normalize zero-pair model outcomes into explicit skips, not hard errors."""
+    payload = dict(fields)
+    payload["skipped"] = True
+    payload["skipped_reason"] = reason or "no_pairs"
+    payload["pair_count"] = 0
+    return payload
+
+
+def _summarize_existing_qras(
+    client: httpx.Client,
+    control_ids: list[str],
+    progress_callback=None,
+) -> tuple[dict[str, dict[str, int]], list[dict[str, str]]]:
+    """Summarize existing QRA totals per source control using filtered /list lookups."""
+    summary: dict[str, dict[str, int]] = {}
+    errors: list[dict[str, str]] = []
+    if not control_ids:
+        return summary, errors
+
+    for field in ("source_control_id", "control_id"):
+        for idx, control_id in enumerate(control_ids, start=1):
+            try:
+                resp = client.post(
+                    "/list",
+                    json={
+                        "collection": "sparta_qra",
+                        "filters": {field: control_id},
+                        "limit": 1,
+                        "return_fields": [field],
+                    },
+                )
+                resp.raise_for_status()
+                total = resp.json().get("total", 0)
+                if total:
+                    field_totals = summary.setdefault(control_id, {})
+                    field_totals[field] = total
+            except Exception as exc:
+                errors.append({
+                    "field": field,
+                    "control_id": control_id,
+                    "error": str(exc),
+                })
+
+            if progress_callback:
+                progress_callback(f"Existing-QRA check {idx}/{len(control_ids)} via {field}")
+
+    return summary, errors
+
+
+def _summarize_existing_v2_jobs(
+    client: httpx.Client,
+    jobs: list[dict],
+    progress_callback=None,
+) -> list[dict[str, Any]]:
+    """Summarize manifest jobs that already exist in the v2 target collections."""
+    existing_jobs: list[dict[str, Any]] = []
+
+    canonical_counts: dict[str, int] = {}
+    relationship_counts: dict[str, int] = {}
+
+    def fetch_all(collection: str, return_fields: list[str]) -> list[dict[str, Any]]:
+        docs: list[dict[str, Any]] = []
+        offset = 0
+        limit = 500
+        while True:
+            resp = client.post(
+                "/list",
+                json={
+                    "collection": collection,
+                    "allow_full_scan": True,
+                    "offset": offset,
+                    "limit": limit,
+                    "return_fields": return_fields,
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            docs.extend(data.get("documents", []))
+            offset += data.get("count", 0)
+            if offset >= data.get("total", 0) or data.get("count", 0) == 0:
+                break
+        return docs
+
+    canonical_docs = fetch_all("sparta_qra_canonical", ["source_control_id"])
+    for idx, doc in enumerate(canonical_docs, start=1):
+        control_id = doc.get("source_control_id")
+        if control_id:
+            canonical_counts[control_id] = canonical_counts.get(control_id, 0) + 1
+        if progress_callback and idx % 100 == 0:
+            progress_callback(f"Target-collection scan canonical {idx}/{len(canonical_docs)}")
+
+    relationship_docs = fetch_all("sparta_qra_relationship", ["source_control_id", "target_control_id"])
+    for idx, doc in enumerate(relationship_docs, start=1):
+        source_id = doc.get("source_control_id")
+        target_id = doc.get("target_control_id")
+        if source_id and target_id:
+            pair_key = f"{source_id}:{target_id}"
+            relationship_counts[pair_key] = relationship_counts.get(pair_key, 0) + 1
+        if progress_callback and idx % 100 == 0:
+            progress_callback(f"Target-collection scan relationship {idx}/{len(relationship_docs)}")
+
+    for job in jobs:
+        identity = job.get("identity", {})
+        if job.get("job_type") == "canonical":
+            source_id = _normalized_job_source_id(job)
+            existing_count = canonical_counts.get(source_id, 0)
+            if existing_count:
+                existing_jobs.append({
+                    "job_id": job.get("job_id"),
+                    "collection": "sparta_qra_canonical",
+                    "existing_count": existing_count,
+                    "source_control_id": source_id,
+                })
+        else:
+            source_id = identity.get("technique_id")
+            target_id = (
+                identity.get("target_control_id")
+                or identity.get("countermeasure_id")
+                or identity.get("tactic_id")
+            )
+            pair_key = f"{source_id}:{target_id}"
+            existing_count = relationship_counts.get(pair_key, 0)
+            if existing_count:
+                existing_jobs.append({
+                    "job_id": job.get("job_id"),
+                    "collection": "sparta_qra_relationship",
+                    "existing_count": existing_count,
+                    "source_control_id": source_id,
+                    "target_control_id": target_id,
+                })
+
+    return existing_jobs
 
 
 def _find_sparta_targets(client: httpx.Client, control_doc: dict) -> list[dict]:
@@ -573,40 +940,43 @@ def _generate_native_qra(
         else:
             return {"error": f"No native prompt for framework: {framework}", "control_id": control_id}
 
-    # Load system + user prompt pair from prompts/native/
     try:
-        system_prompt, user_template = _load_prompt_pair(prompt_name, native=True)
+        if framework == "SPARTA":
+            system_prompt, user_prompt = _build_sparta_native_prompt(memory, control)
+        else:
+            # Load system + user prompt pair from prompts/native/
+            system_prompt, user_template = _load_prompt_pair(prompt_name, native=True)
+
+            # Format control details
+            control_details = _format_control_details_for_native(control)
+
+            # Load supplementary URL content for thin frameworks
+            supplementary_content = ""
+            if framework in THIN_FRAMEWORKS:
+                supplementary_content = _load_url_content_for_control(memory, control_id)
+                if not supplementary_content:
+                    supplementary_content = "(No supplementary URL content available)"
+
+            # Build user message with template substitution
+            # Extract additional fields needed by framework-specific prompts
+            parent_id = control.get("parent_id", control.get("parent", ""))
+            family = control.get("family", control.get("control_family", ""))
+            family_name = control.get("family_name", "")  # Explicit family name (for NIST)
+            mind = control.get("mind", control.get("tactic", ""))  # D3FEND taxonomy field
+
+            user_prompt = user_template.format(
+                framework=framework,
+                control_id=control_id,
+                control_name=control_name,
+                control_details=control_details,
+                supplementary_content=supplementary_content,
+                parent_id=parent_id,
+                family=family,
+                family_name=family_name,
+                mind=mind,
+            )
     except FileNotFoundError as e:
         return {"error": str(e), "control_id": control_id}
-
-    # Format control details
-    control_details = _format_control_details_for_native(control)
-
-    # Load supplementary URL content for thin frameworks
-    supplementary_content = ""
-    if framework in THIN_FRAMEWORKS:
-        supplementary_content = _load_url_content_for_control(memory, control_id)
-        if not supplementary_content:
-            supplementary_content = "(No supplementary URL content available)"
-
-    # Build user message with template substitution
-    # Extract additional fields needed by framework-specific prompts
-    parent_id = control.get("parent_id", control.get("parent", ""))
-    family = control.get("family", control.get("control_family", ""))
-    family_name = control.get("family_name", "")  # Explicit family name (for NIST)
-    mind = control.get("mind", control.get("tactic", ""))  # D3FEND taxonomy field
-
-    user_prompt = user_template.format(
-        framework=framework,
-        control_id=control_id,
-        control_name=control_name,
-        control_details=control_details,
-        supplementary_content=supplementary_content,
-        parent_id=parent_id,
-        family=family,
-        family_name=family_name,
-        mind=mind,
-    )
 
     # Dump prompt for human review if requested
     if dump_prompt:
@@ -675,6 +1045,7 @@ def _generate_native_qra(
                 "evidence_quotes": pair.get("evidence_quotes", []),
                 "confidence": pair.get("confidence", "medium"),
                 "actionable_for": pair.get("actionable_for", "training"),
+                "evidence_case": _build_independent_evidence_case(control),
             }
             qra_docs.append(qra)
 
@@ -1098,14 +1469,14 @@ def _generate_relationship_qra_two_stage(
     diagnosis = gate_result.get("diagnosis", {})
 
     if not eligible_pairs:
-        return [{
-            "error": "no_eligible_pairs",
-            "stage": "gate",
-            "source_id": source_id,
-            "target_id": target_id,
-            "diagnosis": diagnosis,
-            "rejected_pairs": gate_result.get("rejected_pairs", []),
-        }]
+        return [_build_skipped_result(
+            "no_eligible_pairs",
+            stage="gate",
+            source_id=source_id,
+            target_id=target_id,
+            diagnosis=diagnosis,
+            rejected_pairs=gate_result.get("rejected_pairs", []),
+        )]
 
     # Stage B: Generate QRA for each eligible pair
     qras = []
@@ -1253,7 +1624,12 @@ def _generate_relationship_qra(
         # Handle multiple pairs or single pair
         pairs = result.get("pairs", [result] if "question" in result else [])
         if not pairs:
-            return {"error": result.get("reason", "no_pairs"), "source_id": source_id}
+            return _build_skipped_result(
+                result.get("skipped_reason") or result.get("reason") or "no_pairs",
+                source_id=source_id,
+                target_id=target_id,
+                raw_result=result,
+            )
 
         # Take first pair for now (batch mode can iterate)
         qra = pairs[0]
@@ -1304,6 +1680,7 @@ async def _generate_relationship_qra_async(
     source_control: dict,
     target_control: dict,
     evidence: dict,
+    prompt_kind: str | None = None,
     max_pairs: int = 5,
     batch_id: str | None = None,
     expected_total: int | None = None,
@@ -1318,6 +1695,104 @@ async def _generate_relationship_qra_async(
     source_id = source_control.get("control_id", source_control.get("_key"))
     target_id = target_control.get("control_id", target_control.get("_key"))
     source_framework = _detect_framework(source_id) or "UNKNOWN"
+
+    if prompt_kind and prompt_kind.startswith("sparta_"):
+        if prompt_kind == "sparta_tactic_technique_relationship":
+            system_prompt, user_template = _load_prompt_pair("tactic_technique_relationship", native=True)
+            prompt = user_template.format(
+                technique_id=source_id,
+                technique_name=source_control.get("name", ""),
+                technique_description=source_control.get("description", ""),
+                parent_tactic_id=target_id,
+                parent_tactic_name=target_control.get("name", ""),
+                parent_tactic_description=target_control.get("description", ""),
+            )
+        elif prompt_kind == "sparta_technique_countermeasure_relationship":
+            system_prompt, user_template = _load_prompt_pair("technique_countermeasure_relationship", native=True)
+            prompt = user_template.format(
+                technique_id=source_id,
+                technique_name=source_control.get("name", ""),
+                technique_description=source_control.get("description", ""),
+                countermeasure_id=target_id,
+                countermeasure_name=target_control.get("name", ""),
+                countermeasure_description=target_control.get("description", ""),
+                relationship_note=evidence.get("relationship_note", ""),
+            )
+        else:
+            return {"error": f"unsupported_prompt_kind:{prompt_kind}", "source_id": source_id, "target_id": target_id}
+
+        try:
+            request_body = {
+                "model": "text",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                "response_format": {"type": "json_object"},
+            }
+            if batch_id:
+                metadata = {
+                    "batch_id": batch_id,
+                    "item_id": f"{source_id}->{target_id}",
+                }
+                if expected_total is not None:
+                    metadata["expected_total"] = expected_total
+                if chunk_index is not None:
+                    metadata["chunk_index"] = chunk_index
+                if chunk_total is not None:
+                    metadata["chunk_total"] = chunk_total
+                if item_index_in_chunk is not None:
+                    metadata["item_index_in_chunk"] = item_index_in_chunk
+                request_body["scillm_metadata"] = metadata
+
+            resp = await client.post("/v1/chat/completions", json=request_body)
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"]
+            result = json.loads(content)
+
+            pairs = result.get("pairs", [])
+            if not pairs:
+                return _build_skipped_result(
+                    result.get("skipped_reason") or result.get("reason") or "no_pairs",
+                    source_id=source_id,
+                    target_id=target_id,
+                    raw_result=result,
+                )
+
+            qra = pairs[0]
+            qra_key = _generate_qra_key("relationship", source_id, target_id)
+            run_id = f"skill_create_qras_{int(time.time())}"
+            qra["_key"] = qra_key
+            qra["qra_id"] = qra_key
+            qra["run_id"] = run_id
+            qra["qra_type"] = "relationship"
+            qra["prompt_kind"] = prompt_kind
+            qra["source_framework"] = "SPARTA"
+            qra["source_control_id"] = source_id
+            qra["target_framework"] = "SPARTA"
+            qra["target_control_id"] = target_id
+            qra["sparta_linked"] = True
+            qra["evidence_case"] = evidence
+            qra["crosswalk_chain"] = []
+            qra["created_at"] = int(time.time())
+            qra["generator"] = "skill:create-qras"
+
+            source_text = (
+                source_control.get("description", "") + " " +
+                target_control.get("description", "")
+            )
+            grounded, grounding_reason, grounding_score = _verify_qra_grounding(qra, source_text)
+            quality_scores = _score_qra_quality(qra)
+
+            qra["grounding_verified"] = grounded
+            qra["grounding_score"] = grounding_score
+            qra["quality_scores"] = quality_scores
+            qra["verdict"] = "SATISFIED" if grounded and quality_scores["passed"] else "NEEDS_REVIEW"
+            qra["gate_result"] = "gates_passed" if quality_scores["passed"] else grounding_reason
+
+            return qra
+        except Exception as e:
+            return {"error": str(e), "source_id": source_id, "target_id": target_id}
 
     # Select prompt template based on source framework
     if source_framework == "CWE":
@@ -1389,7 +1864,12 @@ async def _generate_relationship_qra_async(
 
         pairs = result.get("pairs", [result] if "question" in result else [])
         if not pairs:
-            return {"error": result.get("reason", "no_pairs"), "source_id": source_id}
+            return _build_skipped_result(
+                result.get("skipped_reason") or result.get("reason") or "no_pairs",
+                source_id=source_id,
+                target_id=target_id,
+                raw_result=result,
+            )
 
         qra = pairs[0]
 
@@ -1431,17 +1911,25 @@ async def _generate_relationship_qra_async(
 
 
 async def _run_batch_relationship_qras(
-    items: list[tuple[dict, dict, dict]],  # [(source_control, target_control, evidence), ...]
+    items: list[tuple[dict, dict, dict, str | None]],  # [(source_control, target_control, evidence, prompt_kind), ...]
     chunk_size: int = 4,
     progress_callback=None,
     batch_id: str | None = None,
+    store_callback=None,  # Called with each QRA as it completes (as_completed pattern)
+    state_callback=None,
 ) -> list[dict]:
-    """Run batch relationship QRA generation with chunked parallel processing.
+    """Run batch relationship QRA generation with as_completed pattern.
 
-    Uses chunked asyncio.gather per scillm SKILL.md pattern for 50+ items.
-    If batch_id is provided, enables automatic resume via scillm_metadata.
+    Uses asyncio.as_completed to process each LLM result immediately:
+    1. Fire chunk_size LLM calls in parallel
+    2. As each completes, call /create-evidence-case to enrich
+    3. Store immediately via store_callback (crash-safe)
+
+    This maximizes throughput since evidence case enrichment runs while
+    other LLM calls are still in flight.
     """
     all_results = []
+    stored_count = 0
     total = len(items)
 
     # Generate batch_id if not provided (enables automatic resume on retry)
@@ -1449,52 +1937,149 @@ async def _run_batch_relationship_qras(
         from datetime import datetime
         batch_id = f"create-qras-relationship-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
-    async with _get_async_scillm_client() as client:
-        for chunk_start in range(0, total, chunk_size):
-            chunk = items[chunk_start:chunk_start + chunk_size]
-            chunk_num = chunk_start // chunk_size + 1
-            total_chunks = (total + chunk_size - 1) // chunk_size
+    async with _get_async_scillm_client() as scillm_client:
+        async with _get_async_memory_client() as memory_client:
+            for chunk_start in range(0, total, chunk_size):
+                chunk = items[chunk_start:chunk_start + chunk_size]
+                chunk_num = chunk_start // chunk_size + 1
+                total_chunks = (total + chunk_size - 1) // chunk_size
 
-            if progress_callback:
-                progress_callback(f"Chunk {chunk_num}/{total_chunks} ({chunk_start+1}-{min(chunk_start+chunk_size, total)}/{total})")
+                if progress_callback:
+                    progress_callback(f"Chunk {chunk_num}/{total_chunks} ({chunk_start+1}-{min(chunk_start+chunk_size, total)}/{total})")
+                if state_callback:
+                    state_callback({
+                        "event": "chunk_start",
+                        "chunk_num": chunk_num,
+                        "total_chunks": total_chunks,
+                        "range_start": chunk_start + 1,
+                        "range_end": min(chunk_start + chunk_size, total),
+                        "total_jobs": total,
+                    })
 
-            # Process chunk with per-item retry (respects chunk_size concurrency)
-            max_retries = 3
+                # Process chunk with per-item retry (respects chunk_size concurrency)
+                max_retries = 3
 
-            async def process_with_retry(orig_idx: int, src: dict, tgt: dict, ev: dict):
-                """Process single item with retries."""
-                last_error = None
-                for attempt in range(max_retries + 1):
-                    if attempt > 0:
-                        await asyncio.sleep(30 * attempt)  # 30s, 60s, 90s backoff
-                    try:
-                        result = await _generate_relationship_qra_async(
-                            client, src, tgt, ev,
-                            batch_id=batch_id,
-                            expected_total=total,
-                            chunk_index=chunk_num,
-                            chunk_total=total_chunks,
-                            item_index_in_chunk=orig_idx + 1,
-                        )
-                        return result  # Success
-                    except Exception as e:
-                        last_error = e
-                        if progress_callback and attempt < max_retries:
-                            progress_callback(f"  Retry {attempt+1}/{max_retries} for {src.get('control_id', src.get('_key'))}")
-                # All retries exhausted
-                return {
-                    "error": f"Failed after {max_retries} retries: {last_error}",
-                    "source_id": src.get("control_id", src.get("_key")),
-                    "target_id": tgt.get("control_id", tgt.get("_key")),
-                }
+                async def process_with_retry(orig_idx: int, src: dict, tgt: dict, ev: dict, pk: str | None):
+                    """Process single item with retries, returns (index, result)."""
+                    last_error = None
+                    for attempt in range(max_retries + 1):
+                        if attempt > 0:
+                            await asyncio.sleep(30 * attempt)  # 30s, 60s, 90s backoff
+                        try:
+                            result = await _generate_relationship_qra_async(
+                                scillm_client, src, tgt, ev,
+                                prompt_kind=pk,
+                                batch_id=batch_id,
+                                expected_total=total,
+                                chunk_index=chunk_num,
+                                chunk_total=total_chunks,
+                                item_index_in_chunk=orig_idx + 1,
+                            )
+                            return (orig_idx, src, tgt, result)  # Success - include context for evidence case
+                        except Exception as e:
+                            last_error = e
+                            if progress_callback and attempt < max_retries:
+                                progress_callback(f"  Retry {attempt+1}/{max_retries} for {src.get('control_id', src.get('_key'))}")
+                    # All retries exhausted
+                    return (orig_idx, src, tgt, {
+                        "error": f"Failed after {max_retries} retries: {last_error}",
+                        "source_id": src.get("control_id", src.get("_key")),
+                        "target_id": tgt.get("control_id", tgt.get("_key")),
+                    })
 
-            # Run chunk in parallel (chunk_size already limits concurrency)
-            chunk_tasks = [process_with_retry(i, src, tgt, ev) for i, (src, tgt, ev) in enumerate(chunk)]
-            chunk_results = await asyncio.gather(*chunk_tasks)
+                # Create tasks for chunk
+                chunk_tasks = [
+                    process_with_retry(i, src, tgt, ev, pk)
+                    for i, (src, tgt, ev, pk) in enumerate(chunk)
+                ]
 
-            # Collect results
-            for result in chunk_results:
-                all_results.append(result)
+                # Process results as they complete (as_completed pattern)
+                chunk_stored = 0
+                for coro in asyncio.as_completed(chunk_tasks):
+                    orig_idx, src, tgt, result = await coro
+
+                    # Skip errors
+                    if isinstance(result, dict) and "error" in result:
+                        all_results.append(result)
+                        if state_callback:
+                            state_callback({
+                                "event": "job_complete",
+                                "source_id": src.get("control_id", src.get("_key")),
+                                "target_id": tgt.get("control_id", tgt.get("_key")),
+                                "ok": False,
+                                "skipped": False,
+                                "qra_count": 0,
+                                "stored_count": 0,
+                                "error": result.get("error"),
+                            })
+                        continue
+
+                    # Enrich with evidence case (runs while other LLM calls in flight)
+                    item_qra_count = 0
+                    item_stored_count = 0
+                    item_skipped = False
+                    if isinstance(result, list):
+                        for qra in result:
+                            if "error" not in qra:
+                                if qra.get("skipped"):
+                                    item_skipped = True
+                                    all_results.append(qra)
+                                    continue
+                                question = qra.get("question", "")
+                                source_id = src.get("control_id", src.get("_key"))
+                                evidence = await _create_evidence_case_async(memory_client, question, source_id)
+                                qra["evidence_case"] = evidence
+                                qra["evidence_case_ts"] = int(time.time())
+
+                            all_results.append(qra)
+                            if qra.get("skipped"):
+                                item_skipped = True
+                            if "error" not in qra and not qra.get("skipped"):
+                                item_qra_count += 1
+
+                            # Store immediately (crash-safe)
+                            if store_callback and "error" not in qra:
+                                if store_callback(qra):
+                                    chunk_stored += 1
+                                    stored_count += 1
+                                    item_stored_count += 1
+                    else:
+                        if result.get("skipped"):
+                            item_skipped = True
+                            all_results.append(result)
+                        elif "error" not in result:
+                            question = result.get("question", "")
+                            source_id = src.get("control_id", src.get("_key"))
+                            evidence = await _create_evidence_case_async(memory_client, question, source_id)
+                            result["evidence_case"] = evidence
+                            result["evidence_case_ts"] = int(time.time())
+                            all_results.append(result)
+                        else:
+                            all_results.append(result)
+
+                        if "error" not in result and not result.get("skipped"):
+                            item_qra_count += 1
+
+                        if store_callback and "error" not in result and not result.get("skipped"):
+                            if store_callback(result):
+                                chunk_stored += 1
+                                stored_count += 1
+                                item_stored_count += 1
+
+                    if state_callback:
+                        state_callback({
+                            "event": "job_complete",
+                            "source_id": src.get("control_id", src.get("_key")),
+                            "target_id": tgt.get("control_id", tgt.get("_key")),
+                            "ok": True,
+                            "skipped": item_skipped and item_qra_count == 0,
+                            "qra_count": item_qra_count,
+                            "stored_count": item_stored_count,
+                            "error": None,
+                        })
+
+                if progress_callback and store_callback:
+                    progress_callback(f"  Stored {chunk_stored} QRAs (total: {stored_count})")
 
     return all_results
 
@@ -1676,7 +2261,11 @@ def _generate_independent_qra(
         pairs = result.get("pairs", [])
         if not pairs:
             # Fallback for old schema or empty response
-            return {"error": result.get("reason", "no_pairs"), "control_id": control_id}
+            return _build_skipped_result(
+                result.get("skipped_reason") or result.get("reason") or "no_pairs",
+                control_id=control_id,
+                raw_result=result,
+            )
 
         # Optionally validate with Pydantic schema for CWE
         if framework == "CWE" and HAS_SCHEMA_VALIDATION:
@@ -1925,19 +2514,7 @@ async def _generate_independent_qra_async(
             family_name=family_name or "(Unknown)",
         )
     elif framework == "SPARTA":
-        # Native SPARTA prompts with system + user messages
-        system_prompt, user_template = _load_prompt_pair("sparta", native=True)
-        control_name = control.get("name", control.get("title", "Unknown"))
-        control_details = control.get("description", "No description")
-        parent_id = control.get("parent_id", "")
-        family = control.get("family", control.get("control_family", ""))
-        prompt = user_template.format(
-            control_id=control_id,
-            control_name=control_name,
-            control_details=control_details,
-            parent_id=parent_id or "(None)",
-            family=family or "(Unknown)",
-        )
+        system_prompt, prompt = _build_sparta_native_prompt(client, control)
     elif framework == "ESA":
         # Native ESA prompts with system + user messages
         system_prompt, user_template = _load_prompt_pair("esa", native=True)
@@ -1949,6 +2526,22 @@ async def _generate_independent_qra_async(
             control_name=control_name,
             control_details=control_details,
             parent_id=parent_id or "(None)",
+        )
+    elif framework == "NVD":
+        # Native CVE/NVD prompts
+        system_prompt, user_template = _load_prompt_pair("cve", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        weaknesses = control.get("weaknesses", control.get("cwe_ids", []))
+        if isinstance(weaknesses, list):
+            weaknesses = json.dumps(weaknesses)
+        vuln_status = control.get("vuln_status", control.get("status", "Unknown"))
+        prompt = user_template.format(
+            cve_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            weaknesses=weaknesses,
+            vuln_status=vuln_status,
         )
     else:
         # Generic independent template for unknown frameworks
@@ -2012,7 +2605,7 @@ async def _generate_independent_qra_async(
         if not pairs:
             # Check both old and new schema field names
             reason = result.get("reason") or result.get("abstain_reason") or "no_pairs"
-            return {"error": reason, "control_id": control_id, "raw_result": result}
+            return _build_skipped_result(reason, control_id=control_id, raw_result=result)
 
         # Convert each pair to storage format
         run_id = f"skill_create_qras_{int(time.time())}"
@@ -2069,13 +2662,18 @@ async def _run_batch_independent_qras(
     chunk_size: int = 4,
     progress_callback=None,
     batch_id: str | None = None,
-    store_callback=None,  # Called with each QRA after chunk completes
+    store_callback=None,  # Called with each QRA as it completes (as_completed pattern)
+    state_callback=None,
 ) -> list[dict]:
-    """Run batch independent QRA generation with chunked parallel processing.
+    """Run batch independent QRA generation with as_completed pattern.
 
-    Uses chunked asyncio.gather per scillm SKILL.md pattern for 50+ items.
-    If batch_id is provided, enables automatic resume via scillm_metadata.
-    If store_callback is provided, stores QRAs immediately after each chunk (crash-safe).
+    Uses asyncio.as_completed to process each LLM result immediately:
+    1. Fire chunk_size LLM calls in parallel
+    2. As each completes, call /create-evidence-case to enrich
+    3. Store immediately via store_callback (crash-safe)
+
+    This maximizes throughput since evidence case enrichment runs while
+    other LLM calls are still in flight.
     """
     all_results = []
     stored_count = 0
@@ -2086,50 +2684,106 @@ async def _run_batch_independent_qras(
         from datetime import datetime
         batch_id = f"create-qras-independent-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
-    async with _get_async_scillm_client() as client:
-        for chunk_start in range(0, total, chunk_size):
-            chunk = controls[chunk_start:chunk_start + chunk_size]
-            chunk_num = chunk_start // chunk_size + 1
-            total_chunks = (total + chunk_size - 1) // chunk_size
+    async with _get_async_scillm_client() as scillm_client:
+        async with _get_async_memory_client() as memory_client:
+            for chunk_start in range(0, total, chunk_size):
+                chunk = controls[chunk_start:chunk_start + chunk_size]
+                chunk_num = chunk_start // chunk_size + 1
+                total_chunks = (total + chunk_size - 1) // chunk_size
 
-            if progress_callback:
-                progress_callback(f"Chunk {chunk_num}/{total_chunks} ({chunk_start+1}-{min(chunk_start+chunk_size, total)}/{total})")
+                if progress_callback:
+                    progress_callback(f"Chunk {chunk_num}/{total_chunks} ({chunk_start+1}-{min(chunk_start+chunk_size, total)}/{total})")
+                if state_callback:
+                    state_callback({
+                        "event": "chunk_start",
+                        "chunk_num": chunk_num,
+                        "total_chunks": total_chunks,
+                        "range_start": chunk_start + 1,
+                        "range_end": min(chunk_start + chunk_size, total),
+                        "total_jobs": total,
+                    })
 
-            # Simple parallel processing - no retry wrapper
-            tasks = [
-                _generate_independent_qra_async(
-                    client, ctrl,
-                    batch_id=batch_id,
-                    expected_total=total,
-                    chunk_index=chunk_num,
-                    chunk_total=total_chunks,
-                    item_index_in_chunk=i + 1,
-                )
-                for i, ctrl in enumerate(chunk)
-            ]
-            chunk_results = await asyncio.gather(*tasks, return_exceptions=True)
+                # Create tasks that return (index, control, result) for context
+                async def process_control(idx: int, ctrl: dict):
+                    try:
+                        result = await _generate_independent_qra_async(
+                            scillm_client, ctrl,
+                            batch_id=batch_id,
+                            expected_total=total,
+                            chunk_index=chunk_num,
+                            chunk_total=total_chunks,
+                            item_index_in_chunk=idx + 1,
+                        )
+                        return (idx, ctrl, result)
+                    except Exception as e:
+                        return (idx, ctrl, {"error": str(e)})
 
-            # Collect and store results immediately (crash-safe)
-            chunk_stored = 0
-            for result in chunk_results:
-                if isinstance(result, Exception):
-                    all_results.append({"error": str(result)})
-                elif isinstance(result, list):
-                    for r in result:
-                        all_results.append(r)
-                        if store_callback and "error" not in r and not r.get("skipped"):
-                            if store_callback(r):
+                tasks = [process_control(i, ctrl) for i, ctrl in enumerate(chunk)]
+
+                # Process results as they complete (as_completed pattern)
+                chunk_stored = 0
+                for coro in asyncio.as_completed(tasks):
+                    idx, ctrl, result = await coro
+
+                    # Handle exceptions
+                    if isinstance(result, Exception):
+                        all_results.append({"error": str(result)})
+                        if state_callback:
+                            state_callback({
+                                "event": "job_complete",
+                                "source_id": ctrl.get("control_id", ctrl.get("_key")),
+                                "ok": False,
+                                "skipped": False,
+                                "qra_count": 0,
+                                "stored_count": 0,
+                                "error": str(result),
+                            })
+                        continue
+
+                    # Process list of QRAs or single QRA
+                    qras_to_process = result if isinstance(result, list) else [result]
+                    item_qra_count = 0
+                    item_stored_count = 0
+                    item_skipped = False
+
+                    for qra in qras_to_process:
+                        if "error" in qra or qra.get("skipped"):
+                            all_results.append(qra)
+                            if qra.get("skipped"):
+                                item_skipped = True
+                            continue
+
+                        # Enrich with evidence case (runs while other LLM calls in flight)
+                        question = qra.get("question", "")
+                        source_id = ctrl.get("control_id", ctrl.get("_key"))
+                        evidence = await _create_evidence_case_async(memory_client, question, source_id)
+                        qra["evidence_case"] = evidence
+                        qra["evidence_case_ts"] = int(time.time())
+
+                        all_results.append(qra)
+                        item_qra_count += 1
+
+                        # Store immediately (crash-safe)
+                        if store_callback:
+                            if store_callback(qra):
                                 chunk_stored += 1
                                 stored_count += 1
-                else:
-                    all_results.append(result)
-                    if store_callback and "error" not in result and not result.get("skipped"):
-                        if store_callback(result):
-                            chunk_stored += 1
-                            stored_count += 1
+                                item_stored_count += 1
 
-            if progress_callback and store_callback:
-                progress_callback(f"  Stored {chunk_stored} QRAs (total: {stored_count})")
+                    if state_callback:
+                        first_error = result.get("error") if isinstance(result, dict) else None
+                        state_callback({
+                            "event": "job_complete",
+                            "source_id": ctrl.get("control_id", ctrl.get("_key")),
+                            "ok": first_error is None,
+                            "skipped": item_skipped and item_qra_count == 0,
+                            "qra_count": item_qra_count,
+                            "stored_count": item_stored_count,
+                            "error": first_error,
+                        })
+
+                if progress_callback and store_callback:
+                    progress_callback(f"  Stored {chunk_stored} QRAs (total: {stored_count})")
 
     return all_results
 
@@ -2154,9 +2808,17 @@ def _build_standalone_evidence_case(doc: dict) -> dict:
 def _generate_standalone_qra(
     scillm: httpx.Client,
     doc: dict,
-    max_pairs: int = 5,
-) -> dict | None:
-    """Generate standalone QRA from URL knowledge document."""
+    max_pairs: int = 6,
+) -> list[dict] | dict | None:
+    """Generate standalone QRA from URL knowledge document.
+
+    Uses doc2qra v3 prompts with:
+    - Cybersecurity domain filtering
+    - Source quality awareness
+    - Relevance filtering (no author bio, citation metrics, etc.)
+
+    Returns list of QRA dicts, or error dict, or None.
+    """
     doc_key = doc.get("_key", "unknown")
     content = doc.get("content", doc.get("text", doc.get("extracted_text", "")))
     title = doc.get("title", doc.get("name", "Untitled"))
@@ -2169,21 +2831,38 @@ def _generate_standalone_qra(
     if len(content) > 8000:
         content = content[:8000] + "..."
 
-    # Load prompt template from prompt-lab
-    prompt_template = _load_prompt("standalone")
-    prompt = prompt_template.format(
-        max_pairs=max_pairs,
-        title=title,
-        url=url,
-        content=content,
-    )
+    # Load system + user prompts from native directory (doc2qra v3)
+    try:
+        system_prompt, user_template = _load_prompt_pair("doc2qra", native=True)
+    except FileNotFoundError:
+        # Fallback to legacy prompt-lab if native prompts not found
+        prompt_template = _load_prompt("standalone")
+        prompt = prompt_template.format(
+            max_pairs=max_pairs,
+            title=title,
+            url=url,
+            content=content,
+        )
+        messages = [{"role": "user", "content": prompt}]
+    else:
+        # Use v3 system + user prompt structure
+        user_prompt = user_template.format(
+            max_pairs=max_pairs,
+            title=title,
+            url=url,
+            content=content,
+        )
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
 
     try:
         resp = scillm.post(
             "/v1/chat/completions",
             json={
                 "model": "text",
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages,
                 "response_format": {"type": "json_object"},
             },
         )
@@ -2191,31 +2870,38 @@ def _generate_standalone_qra(
         response_content = resp.json()["choices"][0]["message"]["content"]
         result = json.loads(response_content)
 
-        # Handle multiple pairs or single pair
-        pairs = result.get("pairs", [result] if "question" in result else [])
-        if not pairs:
+        # Handle v3 format (items) or legacy format (pairs)
+        items = result.get("items", result.get("pairs", []))
+        if not items:
             return {"error": result.get("reason", "no_pairs"), "doc_key": doc_key}
 
-        qra = pairs[0]
+        # Track source quality from response
+        source_quality = result.get("source_quality", "unknown")
 
-        # Add metadata - match existing sparta_qra schema
-        qra_key = _generate_qra_key("standalone", doc_key)
+        # Process all items (not just first one)
+        qras = []
         run_id = f"skill_create_qras_{int(time.time())}"
-        qra["_key"] = qra_key
-        qra["qra_id"] = qra_key  # Required for secondary unique index (run_id, qra_id)
-        qra["run_id"] = run_id
-        qra["qra_type"] = "standalone"
-        qra["source_doc"] = doc_key
-        qra["source_url"] = url
-        qra["source_title"] = title
-        qra["sparta_linked"] = False  # Standalone QRAs are portable by design
-        # Store evidence case - document is the evidence
-        qra["evidence_case"] = _build_standalone_evidence_case(doc)
-        qra["created_at"] = int(time.time())  # Match existing schema field name
-        qra["generator"] = "skill:create-qras"
-        qra["verdict"] = "SATISFIED"
 
-        return qra
+        for i, item in enumerate(items):
+            qra_key = _generate_qra_key("standalone", f"{doc_key}_{i}")
+            item["_key"] = qra_key
+            item["qra_id"] = qra_key
+            item["run_id"] = run_id
+            item["qra_type"] = "standalone"
+            item["source_doc"] = doc_key
+            item["source_url"] = url
+            item["source_title"] = title
+            item["source_quality"] = source_quality
+            item["sparta_linked"] = False
+            item["evidence_case"] = _build_standalone_evidence_case(doc)
+            item["created_at"] = int(time.time())
+            item["generator"] = "skill:create-qras:doc2qra_v3"
+            item["prompt_version"] = "doc2qra_v3"
+            item["verdict"] = "SATISFIED"
+            qras.append(item)
+
+        return qras if len(qras) > 1 else qras[0] if qras else None
+
     except Exception as e:
         return {"error": str(e), "doc_key": doc_key}
 
@@ -2245,9 +2931,24 @@ def _get_embedding(text: str) -> list[float] | None:
     return None
 
 
-def _store_qra(client: httpx.Client, qra: dict) -> bool:
-    """Store QRA to sparta_qra collection with embedding."""
+def _store_qra(client: httpx.Client, qra: dict, collection: str | None = None) -> bool:
+    """Store QRA to v2 collection with embedding.
+
+    v2 architecture:
+    - sparta_qra_canonical: native QRAs (about one control)
+    - sparta_qra_relationship: relationship QRAs (why two controls relate)
+    """
     import sys
+
+    # Determine target collection from qra_type if not specified
+    if collection is None:
+        qra_type = qra.get("qra_type", "")
+        if qra_type in ("relationship", "sparta_context"):
+            collection = "sparta_qra_relationship"
+        else:
+            # native, independent, standalone → canonical
+            collection = "sparta_qra_canonical"
+
     # Generate embedding from question + answer + reasoning
     embed_text = f"{qra.get('question', '')} {qra.get('answer', '')} {qra.get('reasoning', '')}".strip()
     print(f"DEBUG: Getting embedding for {qra.get('_key', 'unknown')} ({len(embed_text)} chars)", file=sys.stderr)
@@ -2260,8 +2961,8 @@ def _store_qra(client: httpx.Client, qra: dict) -> bool:
         print(f"WARNING: No embedding for {qra.get('_key', 'unknown')}", file=sys.stderr)
 
     try:
-        payload = {"document": qra, "collection": "sparta_qra"}
-        print(f"DEBUG: Sending payload with embedding={len(qra.get('embedding', []))} dims, keys={list(qra.keys())}", file=sys.stderr)
+        payload = {"document": qra, "collection": collection}
+        print(f"DEBUG: Storing to {collection}: {qra.get('_key', 'unknown')}", file=sys.stderr)
         resp = client.post("/store", json=payload)
         if resp.status_code != 200:
             print(f"STORAGE FAILED {resp.status_code} for {qra.get('_key', 'unknown')}: {resp.text}", file=sys.stderr)
@@ -2562,15 +3263,15 @@ def generate(
                             "method": f"curated:{framework.lower()}_class_ids"
                         }]
                     }
-                    batch_items.append((ctrl, target_doc, evidence))
+                    batch_items.append((ctrl, target_doc, evidence, None))
 
-                # Query dynamic concurrency from proxy
-                chunk_size = _get_provider_concurrency("text")
+                # Fixed per /scillm and /best-practices-scillm: never exceed 4 concurrent text calls
+                chunk_size = SCILLM_BATCH_CHUNK_SIZE
                 typer.echo(f"Processing {len(batch_items)} items in parallel (chunk_size={chunk_size})...")
 
                 # Dump prompts mode - no LLM calls
                 if dump_prompt_dir:
-                    for ctrl, target_doc, evidence in batch_items:
+                    for ctrl, target_doc, evidence, _prompt_kind in batch_items:
                         qra = _generate_relationship_qra(scillm, ctrl, target_doc, evidence, dump_prompt=dump_prompt_dir)
                         results.append(qra)
                 else:
@@ -2623,8 +3324,8 @@ def generate(
                 # Trim to limit after filtering
                 controls = controls[:limit]
 
-                # Query dynamic concurrency from proxy
-                chunk_size = _get_provider_concurrency("text")
+                # Fixed per /scillm and /best-practices-scillm: never exceed 4 concurrent text calls
+                chunk_size = SCILLM_BATCH_CHUNK_SIZE
                 typer.echo(f"Processing {len(controls)} {framework} controls in parallel (chunk_size={chunk_size})...")
 
                 def progress(msg):
@@ -2737,6 +3438,291 @@ def stats():
 
 
 @app.command()
+def manifest(
+    manifest_path: str = typer.Argument(..., help="Path to execution manifest JSON"),
+    limit: int = typer.Option(0, "--limit", "-l", help="Max jobs to process (0=all)"),
+    prompt_kind: str = typer.Option("", "--prompt-kind", "-p", help="Filter by prompt_kind"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be processed"),
+    skip_review: bool = typer.Option(False, "--skip-review", help="Skip review gate check"),
+):
+    """Execute QRA generation from a pre-built manifest.
+
+    Uses the existing batch functions with proper timeout (300s), as_completed pattern,
+    and evidence case enrichment.
+
+    Example:
+        python generator.py manifest sparta_v2_batch_manifest.json --limit 50
+    """
+    from pathlib import Path as P
+    manifest_file = P(manifest_path)
+    if not manifest_file.exists():
+        typer.echo(f"Manifest not found: {manifest_path}", err=True)
+        raise typer.Exit(1)
+
+    with open(manifest_file) as f:
+        manifest_data = json.load(f)
+
+    # Check review gate
+    review_path = manifest_file.with_name(manifest_file.stem.replace("_manifest", "_review") + ".json")
+    if review_path.exists() and not skip_review:
+        with open(review_path) as f:
+            review = json.load(f)
+        verdict = review.get("verdict", {})
+        status = verdict.get("status", "UNKNOWN")
+        if status == "BLOCKED":
+            typer.echo(f"[BLOCKED] Review verdict: {status}")
+            typer.echo(f"  Reason: {verdict.get('reason', '')}")
+            raise typer.Exit(1)
+        elif status == "CANARY_ONLY":
+            typer.echo(f"[WARNING] Review has {len(review.get('warnings', []))} warnings")
+            typer.echo("  Proceed with staged canaries only until warnings are cleared.")
+        elif status == "FULL_RUN_OK":
+            typer.echo(f"[READY] Review verdict: {status}")
+        else:
+            typer.echo(f"[BLOCKED] Unknown review verdict: {status}", err=True)
+            raise typer.Exit(1)
+    elif not review_path.exists() and not skip_review:
+        typer.echo(f"[BLOCKED] No review file found: {review_path}", err=True)
+        typer.echo("Run './run.sh review <manifest>' first or pass --skip-review explicitly.", err=True)
+        raise typer.Exit(1)
+
+    all_manifest_jobs = manifest_data.get("jobs", [])
+    jobs = all_manifest_jobs
+
+    # Filter by prompt_kind
+    if prompt_kind:
+        jobs = [j for j in jobs if j.get("prompt_kind") == prompt_kind]
+
+    # Apply limit
+    if limit > 0:
+        jobs = jobs[:limit]
+
+    # Group by job type
+    canonical_jobs = [j for j in jobs if j.get("job_type") == "canonical"]
+    relationship_jobs = [j for j in jobs if j.get("job_type") == "relationship"]
+
+    typer.echo(f"\nManifest: {manifest_path}")
+    typer.echo(f"  Total jobs: {len(jobs)}")
+    typer.echo(f"  Canonical: {len(canonical_jobs)}")
+    typer.echo(f"  Relationship: {len(relationship_jobs)}")
+
+    if dry_run:
+        typer.echo("\n[DRY RUN] Would process above jobs using existing batch functions")
+        return
+
+    # Use existing batch functions
+    memory = _get_memory_client()
+    total_qras = 0
+    errors = 0
+    manifest_control_lookup = _build_manifest_control_lookup(all_manifest_jobs)
+    started_at = int(time.time())
+
+    state: dict[str, Any] = {
+        "name": "create-qras-manifest",
+        "status": "running",
+        "manifest_path": str(manifest_file.resolve()),
+        "review_status": (
+            review.get("verdict", {}).get("status", "SKIPPED")
+            if review_path.exists() and not skip_review else "SKIPPED"
+        ),
+        "started_at": started_at,
+        "updated_at": started_at,
+        "phase": "initializing",
+        "prompt_kind_filter": prompt_kind or None,
+        "limit": limit or 0,
+        "total_jobs": len(jobs),
+        "canonical_jobs": len(canonical_jobs),
+        "relationship_jobs": len(relationship_jobs),
+        "completed_jobs": 0,
+        "successful_jobs": 0,
+        "failed_jobs": 0,
+        "skipped_jobs": 0,
+        "stored_qras": 0,
+        "generated_qras": 0,
+        "current_item": "",
+        "last_message": "Manifest loaded",
+        "last_error": None,
+        "chunk_num": None,
+        "total_chunks": None,
+        "range_start": None,
+        "range_end": None,
+        "progress_pct": 0.0,
+    }
+
+    def persist_state() -> None:
+        state["updated_at"] = int(time.time())
+        total_jobs = int(state.get("total_jobs", 0) or 0)
+        completed_jobs = int(state.get("completed_jobs", 0) or 0)
+        state["progress_pct"] = round((completed_jobs / total_jobs * 100.0), 1) if total_jobs else 0.0
+        _write_json_atomic(CREATE_QRAS_MANIFEST_STATE_FILE, state)
+
+    persist_state()
+
+    def progress(msg: str):
+        chunk_match = re.search(r"Chunk (\d+)/(\d+) \((\d+)-(\d+)/(\d+)\)", msg)
+        if chunk_match:
+            state["chunk_num"] = int(chunk_match.group(1))
+            state["total_chunks"] = int(chunk_match.group(2))
+            state["range_start"] = int(chunk_match.group(3))
+            state["range_end"] = int(chunk_match.group(4))
+        state["last_message"] = msg
+        persist_state()
+        typer.echo(f"  {msg}")
+
+    def store_cb(qra: dict) -> bool:
+        return _store_qra(memory, qra)
+
+    def state_event(event: dict[str, Any]) -> None:
+        if event.get("event") == "chunk_start":
+            state["chunk_num"] = event.get("chunk_num")
+            state["total_chunks"] = event.get("total_chunks")
+            state["range_start"] = event.get("range_start")
+            state["range_end"] = event.get("range_end")
+        elif event.get("event") == "job_complete":
+            state["completed_jobs"] = int(state.get("completed_jobs", 0)) + 1
+            state["generated_qras"] = int(state.get("generated_qras", 0)) + int(event.get("qra_count", 0) or 0)
+            state["stored_qras"] = int(state.get("stored_qras", 0)) + int(event.get("stored_count", 0) or 0)
+            if event.get("skipped"):
+                state["skipped_jobs"] = int(state.get("skipped_jobs", 0)) + 1
+            elif event.get("ok"):
+                state["successful_jobs"] = int(state.get("successful_jobs", 0)) + 1
+            else:
+                state["failed_jobs"] = int(state.get("failed_jobs", 0)) + 1
+                state["last_error"] = event.get("error")
+
+            source_id = event.get("source_id") or ""
+            target_id = event.get("target_id") or ""
+            state["current_item"] = f"{source_id} -> {target_id}" if target_id else source_id
+        persist_state()
+
+    try:
+        # Process canonical jobs via _run_batch_independent_qras
+        if canonical_jobs:
+            state["phase"] = "canonical"
+            state["last_message"] = f"Processing {len(canonical_jobs)} canonical jobs"
+            persist_state()
+            typer.echo(f"\nProcessing {len(canonical_jobs)} canonical jobs...")
+            controls = []
+            missing_controls = []
+            for job in canonical_jobs:
+                ctrl_id = job.get("identity", {}).get("source_control_id")
+                if ctrl_id:
+                    ctrl = _resolve_manifest_control(memory, ctrl_id, manifest_control_lookup)
+                    if ctrl:
+                        controls.append(ctrl)
+                    else:
+                        missing_controls.append(ctrl_id)
+
+            if missing_controls:
+                state["skipped_jobs"] = int(state.get("skipped_jobs", 0)) + len(missing_controls)
+                state["completed_jobs"] = int(state.get("completed_jobs", 0)) + len(missing_controls)
+                state["last_message"] = f"Skipped {len(missing_controls)} unresolved canonical jobs"
+                persist_state()
+                typer.echo(f"  Skipped {len(missing_controls)} canonical jobs with unresolved controls")
+
+            if controls:
+                results = asyncio.run(_run_batch_independent_qras(
+                    controls=controls,
+                    chunk_size=SCILLM_BATCH_CHUNK_SIZE,
+                    progress_callback=progress,
+                    store_callback=store_cb,
+                    state_callback=state_event,
+                ))
+                qra_count = sum(1 for r in results if isinstance(r, dict) and "error" not in r and not r.get("skipped"))
+                error_items = [r for r in results if isinstance(r, dict) and "error" in r]
+                err_count = len(error_items)
+                total_qras += qra_count
+                errors += err_count
+                state["last_message"] = f"Canonical complete: {qra_count} QRAs, {err_count} errors"
+                persist_state()
+                typer.echo(f"  Generated {qra_count} QRAs, {err_count} errors")
+                for item in error_items[:5]:
+                    typer.echo(f"    ERROR {item.get('source_id', item.get('control_id', 'unknown'))}: {item.get('error')}")
+
+        # Process relationship jobs via _run_batch_relationship_qras
+        if relationship_jobs:
+            state["phase"] = "relationship"
+            state["last_message"] = f"Processing {len(relationship_jobs)} relationship jobs"
+            persist_state()
+            typer.echo(f"\nProcessing {len(relationship_jobs)} relationship jobs...")
+            items = []
+            missing_relationship_controls = []
+            for job in relationship_jobs:
+                identity = job.get("identity", {})
+                source_record = job.get("source_record") or {}
+                tech_id = identity.get("technique_id")
+                cm_id = identity.get("countermeasure_id")
+                tactic_id = identity.get("tactic_id")
+
+                if tech_id and (cm_id or tactic_id):
+                    other_id = cm_id or tactic_id
+                    tech = _resolve_manifest_control(memory, tech_id, manifest_control_lookup)
+                    other = _resolve_manifest_control(memory, other_id, manifest_control_lookup)
+                    if not tech:
+                        tech = _build_inline_relationship_control(
+                            tech_id,
+                            source_record.get("technique_name"),
+                            "technique",
+                            source_record.get("technique_description", ""),
+                            job.get("source_framework") or "SPARTA",
+                        )
+                    if not other:
+                        other = _build_inline_relationship_control(
+                            other_id,
+                            source_record.get("countermeasure_name") or source_record.get("tactic_name"),
+                            "countermeasure" if cm_id else "tactic",
+                            source_record.get("countermeasure_description") or source_record.get("parent_tactic_description", ""),
+                            job.get("source_framework") or "SPARTA",
+                        )
+                    if tech and other:
+                        items.append((tech, other, {}, job.get("prompt_kind")))
+                    else:
+                        missing_relationship_controls.append(job.get("job_id"))
+
+            if missing_relationship_controls:
+                state["skipped_jobs"] = int(state.get("skipped_jobs", 0)) + len(missing_relationship_controls)
+                state["completed_jobs"] = int(state.get("completed_jobs", 0)) + len(missing_relationship_controls)
+                state["last_message"] = f"Skipped {len(missing_relationship_controls)} unresolved relationship jobs"
+                persist_state()
+                typer.echo(f"  Skipped {len(missing_relationship_controls)} relationship jobs with unresolved controls")
+
+            if items:
+                results = asyncio.run(_run_batch_relationship_qras(
+                    items=items,
+                    chunk_size=SCILLM_BATCH_CHUNK_SIZE,
+                    progress_callback=progress,
+                    store_callback=store_cb,
+                    state_callback=state_event,
+                ))
+                qra_count = sum(1 for r in results if isinstance(r, dict) and "error" not in r and not r.get("skipped"))
+                error_items = [r for r in results if isinstance(r, dict) and "error" in r]
+                err_count = len(error_items)
+                total_qras += qra_count
+                errors += err_count
+                state["last_message"] = f"Relationship complete: {qra_count} QRAs, {err_count} errors"
+                persist_state()
+                typer.echo(f"  Generated {qra_count} QRAs, {err_count} errors")
+                for item in error_items[:5]:
+                    typer.echo(
+                        f"    ERROR {item.get('source_id', 'unknown')} -> {item.get('target_id', 'unknown')}: {item.get('error')}"
+                    )
+
+        state["status"] = "completed"
+        state["phase"] = "done"
+        state["last_message"] = f"Complete: {total_qras} QRAs, {errors} errors"
+        persist_state()
+        typer.echo(f"\n=== Complete ===")
+        typer.echo(f"  Total QRAs: {total_qras}")
+        typer.echo(f"  Total errors: {errors}")
+    except Exception as exc:
+        state["status"] = "failed"
+        state["last_error"] = str(exc)
+        state["last_message"] = f"Failed: {exc}"
+        persist_state()
+        raise
+
+
+@app.command()
 def preflight(
     fixture: str = typer.Option(
         "fixtures/cwe_relationship_ground_truth.json",
@@ -2838,6 +3824,373 @@ def preflight(
         results_file = output_path / "eval_results.json"
         results_file.write_text(json.dumps(results, indent=2))
         typer.echo(f"Results: {results_file}")
+
+
+@app.command()
+def review(
+    manifest_path: str = typer.Argument(..., help="Path to execution manifest JSON"),
+    output: str = typer.Option("", "--output", "-o", help="Output path for review JSON (default: manifest_review.json)"),
+):
+    """Generate a review dossier for a manifest with deterministic checks.
+
+    Computes:
+    - Duplicate job_id / logical key detection
+    - Missing prompt_kind rows
+    - Sentinel/placeholder row counts
+    - Collection reconciliation
+    - Source/target referential integrity
+    - Already-existing QRA skip counts
+    - Prompt hash verification
+    - Final verdict: BLOCKED / CANARY_ONLY / FULL_RUN_OK
+
+    Example:
+        python generator.py review sparta_v2_manifest.json
+        python generator.py review sparta_v2_manifest.json -o review_output.json
+    """
+    from pathlib import Path as P
+    from datetime import datetime
+    import hashlib
+
+    manifest_file = P(manifest_path)
+    if not manifest_file.exists():
+        typer.echo(f"Manifest not found: {manifest_path}", err=True)
+        raise typer.Exit(1)
+
+    with open(manifest_file) as f:
+        manifest_data = json.load(f)
+
+    jobs = manifest_data.get("jobs", [])
+    typer.echo(f"Reviewing manifest: {manifest_path} ({len(jobs)} jobs)")
+
+    # === Deterministic checks ===
+    blocking_issues = []
+    warnings = []
+
+    # 1. Duplicate job_id
+    job_ids = [j.get("job_id") for j in jobs if j.get("job_id")]
+    dup_job_ids = [jid for jid in set(job_ids) if job_ids.count(jid) > 1]
+    if dup_job_ids:
+        blocking_issues.append({
+            "id": "B001",
+            "title": "Duplicate job_id",
+            "detail": f"Found {len(dup_job_ids)} duplicate job_ids: {dup_job_ids[:5]}"
+        })
+
+    # 2. Duplicate logical keys (source+target for relationships)
+    logical_keys = []
+    for j in jobs:
+        identity = j.get("identity", {})
+        if j.get("job_type") == "relationship":
+            key = f"{identity.get('technique_id', '')}:{identity.get('countermeasure_id', identity.get('tactic_id', ''))}"
+        else:
+            key = identity.get("source_control_id", j.get("job_id", ""))
+        logical_keys.append(key)
+    dup_logical = [k for k in set(logical_keys) if logical_keys.count(k) > 1]
+    if dup_logical:
+        blocking_issues.append({
+            "id": "B002",
+            "title": "Duplicate logical keys",
+            "detail": f"Found {len(dup_logical)} duplicates: {dup_logical[:5]}"
+        })
+
+    # 3. Missing prompt_kind
+    missing_prompt_kind = [j.get("job_id") for j in jobs if not j.get("prompt_kind")]
+    if missing_prompt_kind:
+        blocking_issues.append({
+            "id": "B003",
+            "title": "Missing prompt_kind",
+            "detail": f"{len(missing_prompt_kind)} jobs missing prompt_kind: {missing_prompt_kind[:5]}"
+        })
+
+    # 4. Sentinel/placeholder detection
+    sentinel_patterns = ["CM-NA", "Not Identified", "placeholder", "TBD", "N/A", "UNKNOWN"]
+    sentinel_rows = []
+    for j in jobs:
+        identity = j.get("identity", {})
+        identity_str = json.dumps(identity).lower()
+        for pattern in sentinel_patterns:
+            if pattern.lower() in identity_str:
+                sentinel_rows.append({"job_id": j.get("job_id"), "pattern": pattern})
+                break
+    if sentinel_rows:
+        warnings.append({
+            "id": "W001",
+            "title": "Sentinel/placeholder rows detected",
+            "detail": f"{len(sentinel_rows)} rows contain sentinel patterns (will return zero pairs per policy)"
+        })
+
+    # 5. Referential integrity + existing-QRA checks (via /memory HTTPX only)
+    memory = None
+    missing_source = []
+    missing_target = []
+    existing_target_jobs: list[dict[str, Any]] = []
+    legacy_existing_qras: dict[str, dict[str, int]] = {}
+    qra_lookup_errors: list[dict[str, str]] = []
+    source_ids = sorted({
+        _normalized_job_source_id(j)
+        for j in jobs
+        if _normalized_job_source_id(j)
+    })
+    target_ids = sorted({
+        (
+            j.get("identity", {}).get("target_control_id")
+            or j.get("identity", {}).get("countermeasure_id")
+            or j.get("identity", {}).get("tactic_id")
+        )
+        for j in jobs
+        if j.get("job_type") == "relationship"
+        and (
+            j.get("identity", {}).get("target_control_id")
+            or j.get("identity", {}).get("countermeasure_id")
+            or j.get("identity", {}).get("tactic_id")
+        )
+    })
+    try:
+        memory = _get_memory_client()
+    except Exception as e:
+        warnings.append({
+            "id": "W006",
+            "title": "DB connectivity failed",
+            "detail": f"Could not create /memory client: {e}"
+        })
+        memory = None
+
+    if memory is not None:
+        try:
+            resolved_sources = _fetch_existing_control_ids(memory, source_ids)
+            resolved_targets = _fetch_existing_control_ids(memory, target_ids)
+            missing_source = [cid for cid in source_ids if cid not in resolved_sources]
+            missing_target = [cid for cid in target_ids if cid not in resolved_targets]
+            if missing_source:
+                blocking_issues.append({
+                    "id": "B004",
+                    "title": "Missing source controls",
+                    "detail": f"{len(missing_source)} source controls not in DB: {missing_source[:5]}"
+                })
+            if missing_target:
+                warnings.append({
+                    "id": "W002",
+                    "title": "Missing target controls",
+                    "detail": f"{len(missing_target)} target controls not in DB: {missing_target[:5]}"
+                })
+        except Exception as e:
+            warnings.append({
+                "id": "W006",
+                "title": "DB connectivity failed",
+                "detail": f"Could not verify referential integrity: {e}"
+            })
+
+        try:
+            existing_target_jobs = _summarize_existing_v2_jobs(
+                memory,
+                jobs,
+                progress_callback=lambda msg: typer.echo(f"  {msg}"),
+            )
+            if existing_target_jobs:
+                warnings.append({
+                    "id": "W003",
+                    "title": "Already-existing target-collection jobs",
+                    "detail": f"{len(existing_target_jobs)} manifest jobs already exist in v2 target collections"
+                })
+        except Exception as e:
+            warnings.append({
+                "id": "W007",
+                "title": "Target-collection lookup failed",
+                "detail": f"Could not verify existing v2 target jobs: {e}"
+            })
+
+        try:
+            legacy_existing_qras, qra_lookup_errors = _summarize_existing_qras(
+                memory,
+                source_ids,
+                progress_callback=lambda msg: typer.echo(f"  {msg}"),
+            )
+            if legacy_existing_qras:
+                warnings.append({
+                    "id": "W004",
+                    "title": "Legacy sparta_qra overlap",
+                    "detail": f"{len(legacy_existing_qras)} source controls already have legacy sparta_qra docs"
+                })
+            if qra_lookup_errors:
+                warnings.append({
+                    "id": "W005",
+                    "title": "Existing-QRA lookup errors",
+                    "detail": f"{len(qra_lookup_errors)} filtered /list lookups failed during review"
+                })
+        except Exception as e:
+            warnings.append({
+                "id": "W008",
+                "title": "Legacy overlap lookup failed",
+                "detail": f"Could not verify legacy sparta_qra overlap: {e}"
+            })
+
+    # 6. Prompt inventory with hashes
+    prompt_kinds = set(j.get("prompt_kind") for j in jobs if j.get("prompt_kind"))
+    prompt_inventory = []
+    sparta_prompts_dir = Path(__file__).parent / "prompts" / "native" / "sparta"
+    shared_base_file = sparta_prompts_dir / "_shared_base.txt"
+    shared_base_hash = None
+    if shared_base_file.exists():
+        shared_base_hash = hashlib.md5(shared_base_file.read_text().encode()).hexdigest()
+    for pk in prompt_kinds:
+        # Map prompt_kind to file
+        prompt_file_map = {
+            "sparta_technique_canonical": "technique_canonical",
+            "sparta_tactic_canonical": "tactic_canonical",
+            "sparta_countermeasure_canonical": "countermeasure_canonical",
+            "sparta_tactic_technique_relationship": "tactic_technique_relationship",
+            "sparta_technique_countermeasure_relationship": "technique_countermeasure_relationship",
+            "sparta_url_excerpt": "url_excerpt",
+        }
+        file_stem = prompt_file_map.get(pk, pk.replace("sparta_", ""))
+        system_file = sparta_prompts_dir / f"{file_stem}_system.txt"
+        user_file = sparta_prompts_dir / f"{file_stem}_user.txt"
+
+        sys_hash = None
+        user_hash = None
+        pair_types = []
+        version = "unknown"
+
+        if system_file.exists():
+            content = system_file.read_text()
+            sys_hash = hashlib.md5(content.encode()).hexdigest()
+            # Extract version from comment
+            for line in content.split("\n")[:10]:
+                if "Prompt version:" in line:
+                    version = line.split(":")[-1].strip().split()[0]
+                    break
+            # Extract pair_types from JSON schema
+            if '"pair_type":' in content:
+                import re
+                match = re.search(r'"pair_type":\s*"([^"]+)"', content)
+                if match:
+                    pair_types = [p.strip() for p in match.group(1).split("|")]
+
+        if user_file.exists():
+            user_hash = hashlib.md5(user_file.read_text().encode()).hexdigest()
+
+        prompt_inventory.append({
+            "prompt_kind": pk,
+            "version": version,
+            "shared_base_path": str(shared_base_file),
+            "shared_base_hash": shared_base_hash,
+            "system_prompt_path": str(system_file),
+            "system_prompt_hash": sys_hash,
+            "user_prompt_path": str(user_file),
+            "user_prompt_hash": user_hash,
+            "max_pairs": 3,  # From prompts
+            "pair_types": pair_types,
+            "semantic_risks": ["two_sided_evidence_required"] if "relationship" in pk else []
+        })
+
+    # 7. Compute verdict
+    if blocking_issues:
+        verdict_status = "BLOCKED"
+        verdict_reason = f"{len(blocking_issues)} blocking issues must be resolved"
+    elif warnings:
+        verdict_status = "CANARY_ONLY"
+        verdict_reason = f"{len(warnings)} warnings require review before full run"
+    else:
+        verdict_status = "FULL_RUN_OK"
+        verdict_reason = "All checks passed"
+
+    # 8. Build review dossier
+    manifest_hash = hashlib.sha256(json.dumps(manifest_data, sort_keys=True).encode()).hexdigest()[:16]
+
+    review_dossier = {
+        "schema_version": "1.0",
+        "generated_at": datetime.now().isoformat(),
+        "batch_identity": {
+            "batch_name": manifest_data.get("batch_name", manifest_file.stem),
+            "execution_manifest_path": str(manifest_file),
+            "execution_manifest_hash": f"sha256:{manifest_hash}"
+        },
+        "verdict": {
+            "status": verdict_status,
+            "reason": verdict_reason,
+            "blocking_count": len(blocking_issues),
+            "warning_count": len(warnings)
+        },
+        "blocking_issues": blocking_issues,
+        "warnings": warnings,
+        "prompt_inventory": prompt_inventory,
+        "db_sanity": [
+            {
+                "name": "referential_integrity",
+                "status": "fail" if missing_source else ("warn" if missing_target else "pass"),
+                "detail": f"sources_missing={len(missing_source)}, targets_missing={len(missing_target)}",
+            },
+            {
+                "name": "existing_target_collection_jobs",
+                "status": "warn" if existing_target_jobs else "pass",
+                "detail": f"{len(existing_target_jobs)} jobs already exist in v2 collections",
+            },
+            {
+                "name": "legacy_sparta_qra_overlap",
+                "status": "warn" if legacy_existing_qras else "pass",
+                "detail": f"{len(legacy_existing_qras)} source ids already exist in legacy sparta_qra",
+            },
+            {
+                "name": "existing_qra_lookup",
+                "status": "warn" if qra_lookup_errors else "pass",
+                "detail": f"{len(qra_lookup_errors)} lookup errors",
+            },
+        ],
+        "manifest_invariants": [
+            {"name": "duplicate_job_ids", "status": "pass" if not dup_job_ids else "fail", "value": len(dup_job_ids)},
+            {"name": "duplicate_logical_keys", "status": "pass" if not dup_logical else "fail", "value": len(dup_logical)},
+            {"name": "sentinel_rows", "status": "warn" if sentinel_rows else "pass", "value": len(sentinel_rows)},
+            {"name": "missing_prompt_kind", "status": "pass" if not missing_prompt_kind else "fail", "value": len(missing_prompt_kind)},
+        ],
+        "risky_samples": [
+            {"job_id": s["job_id"], "prompt_kind": next((j.get("prompt_kind") for j in jobs if j.get("job_id") == s["job_id"]), "unknown"), "reasons": [f"Contains: {s['pattern']}"]}
+            for s in sentinel_rows[:20]
+        ],
+        "executor": {
+            "path": str(Path(__file__)),
+            "hash": hashlib.md5(Path(__file__).read_bytes()).hexdigest()[:16],
+            "crash_safe": True,
+            "resume_supported": True,
+            "default_concurrency": 4,
+            "write_mode": "chunked",
+            "timeout_seconds": 300,
+            "batch_pattern": "as_completed",
+            "evidence_enrichment": True
+        },
+        "required_actions": []
+    }
+
+    # Populate required_actions
+    if blocking_issues:
+        review_dossier["required_actions"].append("Fix all blocking issues before execution")
+    if sentinel_rows:
+        review_dossier["required_actions"].append(f"Review {len(sentinel_rows)} sentinel rows (will return zero pairs)")
+    if existing_target_jobs:
+        review_dossier["required_actions"].append("Decide: skip or regenerate jobs already present in v2 target collections")
+
+    # Output
+    if output:
+        output_path = P(output)
+    else:
+        output_path = manifest_file.with_name(manifest_file.stem.replace("_manifest", "_review") + ".json")
+
+    with open(output_path, "w") as f:
+        json.dump(review_dossier, f, indent=2)
+
+    # Print summary
+    typer.echo(f"\n{'='*60}")
+    typer.echo(f"Review Dossier: {output_path}")
+    typer.echo(f"{'='*60}")
+    typer.echo(f"Verdict: {verdict_status}")
+    typer.echo(f"Reason: {verdict_reason}")
+    typer.echo(f"Blocking: {len(blocking_issues)} | Warnings: {len(warnings)}")
+    typer.echo(f"Prompts: {len(prompt_inventory)} kinds")
+    typer.echo(f"Sentinels: {len(sentinel_rows)} rows")
+    if review_dossier["required_actions"]:
+        typer.echo(f"\nRequired actions:")
+        for action in review_dossier["required_actions"]:
+            typer.echo(f"  - {action}")
+    typer.echo(f"\nReview saved to: {output_path}")
 
 
 if __name__ == "__main__":

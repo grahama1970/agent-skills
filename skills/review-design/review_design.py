@@ -575,5 +575,178 @@ def bundle(
     print(f"  Size: {len(bundle_content):,} bytes")
 
 
+@app.command("bundle-code")
+def bundle_code(
+    files: list[Path] = typer.Option([], "-f", "--files", help="Source files to include (repeatable)"),
+    css: list[Path] = typer.Option([], "--css", help="CSS/style files to include (repeatable)"),
+    test_results: Optional[Path] = typer.Option(None, "--test-results", help="Test results JSON file"),
+    git_diff: Optional[str] = typer.Option(None, "--git-diff", help="Git ref to diff against (e.g., HEAD~3)"),
+    output: Path = typer.Option(Path("REVIEW_BUNDLE.md"), "-o", "--output", help="Output markdown file"),
+    context: Optional[str] = typer.Option(None, "-c", "--context", help="Project context/rationale for the review"),
+    context_file: Optional[Path] = typer.Option(None, "--context-file", help="File containing project context"),
+    focus: str = typer.Option("", "--focus", help="Specific review focus areas (comma-separated)"),
+    clipboard: bool = typer.Option(False, "--clipboard", help="Copy to clipboard instead of file"),
+):
+    """Generate COMPLETE code review bundle for external LLMs.
+
+    Bundles ALL code from specified files with full context for honest review.
+    No truncation - the reviewer sees everything.
+    """
+    from datetime import datetime
+    import subprocess
+
+    bundle_parts = []
+
+    # === HEADER WITH RATIONALE ===
+    bundle_parts.append("# Design Code Review Bundle\n\n")
+    bundle_parts.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+    bundle_parts.append(f"**Files included:** {len(files) + len(css)}\n")
+
+    # Context/rationale section - REQUIRED for meaningful review
+    bundle_parts.append("\n---\n\n## Context & Rationale\n\n")
+    if context_file and context_file.exists():
+        bundle_parts.append(context_file.read_text())
+        bundle_parts.append("\n")
+    elif context:
+        bundle_parts.append(context)
+        bundle_parts.append("\n")
+    else:
+        bundle_parts.append("**WARNING: No context provided.** Use --context or --context-file to explain:\n")
+        bundle_parts.append("- What this code does\n")
+        bundle_parts.append("- What problem it solves\n")
+        bundle_parts.append("- What constraints apply (COTS, WCAG, etc.)\n")
+        bundle_parts.append("- What specific feedback you need\n\n")
+
+    # Review focus
+    if focus:
+        bundle_parts.append("\n### Review Focus\n")
+        for item in focus.split(","):
+            bundle_parts.append(f"- {item.strip()}\n")
+
+    bundle_parts.append("\n---\n")
+
+    # === TEST RESULTS (if provided) - FULL DETAILS ===
+    if test_results and test_results.exists():
+        try:
+            results = json.loads(test_results.read_text())
+            bundle_parts.append("\n## Test Results\n\n")
+
+            # Summary
+            passed = results.get('passed', results.get('summary', {}).get('pass', 0))
+            failed = results.get('failed', results.get('summary', {}).get('fail', 0))
+            total = results.get('total', results.get('summary', {}).get('total', 0))
+            bundle_parts.append(f"**Summary:** {passed} PASS / {failed} FAIL / {total} total\n\n")
+
+            # ALL failures - not truncated
+            failures = results.get('failures', [])
+            if failures:
+                bundle_parts.append("### Failures (ALL)\n\n")
+                for f in failures:
+                    bundle_parts.append(f"- {f}\n")
+                bundle_parts.append("\n")
+
+            # Individual test details if available
+            interactions = results.get('interactions', [])
+            if interactions:
+                bundle_parts.append("### Test Details\n\n")
+                bundle_parts.append("| Test | Status | Evidence |\n")
+                bundle_parts.append("|------|--------|----------|\n")
+                for test in interactions:
+                    status = test.get('status', 'UNKNOWN')
+                    desc = test.get('description', 'N/A')[:50]
+                    evidence = test.get('evidence', 'N/A')[:60].replace('|', '\\|')
+                    bundle_parts.append(f"| {desc} | {status} | {evidence} |\n")
+                bundle_parts.append("\n")
+
+        except Exception as e:
+            bundle_parts.append(f"\n## Test Results\n\n**Error parsing:** {e}\n\n")
+
+    # === GIT DIFF (if provided) - FULL ===
+    if git_diff:
+        try:
+            result = subprocess.run(
+                ["git", "diff", "--no-color", git_diff],
+                capture_output=True, text=True, timeout=30
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                bundle_parts.append(f"\n## Git Diff (vs {git_diff})\n\n```diff\n")
+                bundle_parts.append(result.stdout)  # FULL diff, no truncation
+                bundle_parts.append("```\n\n")
+        except Exception as e:
+            bundle_parts.append(f"\n## Git Diff\n\n**Error:** {e}\n\n")
+
+    # === SOURCE FILES - COMPLETE, NO TRUNCATION ===
+    bundle_parts.append("\n---\n\n## Source Files\n")
+
+    for file_path in files:
+        if file_path.exists():
+            content = file_path.read_text()
+            lines = len(content.split('\n'))
+            bundle_parts.append(f"\n### {file_path.name} ({lines} lines)\n\n")
+            bundle_parts.append(f"**Path:** `{file_path}`\n\n")
+
+            # Detect language from extension
+            ext = file_path.suffix[1:] if file_path.suffix else ''
+            lang_map = {'tsx': 'tsx', 'ts': 'typescript', 'jsx': 'jsx', 'js': 'javascript', 'py': 'python'}
+            lang = lang_map.get(ext, ext)
+
+            bundle_parts.append(f"```{lang}\n")
+            bundle_parts.append(content)  # FULL content
+            bundle_parts.append("\n```\n")
+        else:
+            bundle_parts.append(f"\n### {file_path.name}\n\n**ERROR:** File not found: `{file_path}`\n\n")
+
+    # === CSS FILES - COMPLETE ===
+    for css_path in css:
+        if css_path.exists():
+            content = css_path.read_text()
+            lines = len(content.split('\n'))
+            bundle_parts.append(f"\n### {css_path.name} ({lines} lines)\n\n")
+            bundle_parts.append(f"**Path:** `{css_path}`\n\n")
+            bundle_parts.append("```css\n")
+            bundle_parts.append(content)  # FULL content
+            bundle_parts.append("\n```\n")
+        else:
+            bundle_parts.append(f"\n### {css_path.name}\n\n**ERROR:** File not found: `{css_path}`\n\n")
+
+    # === REVIEW QUESTIONS ===
+    bundle_parts.append("\n---\n\n## Review Questions\n\n")
+    bundle_parts.append("Please provide specific, actionable feedback on:\n\n")
+    bundle_parts.append("1. **Bugs/Logic Errors** - Any code that won't work as intended?\n")
+    bundle_parts.append("2. **Best Practices** - Violations of React/TypeScript/CSS conventions?\n")
+    bundle_parts.append("3. **Accessibility** - WCAG 2.1 AA compliance issues?\n")
+    bundle_parts.append("4. **Performance** - Unnecessary re-renders, memory leaks, slow paths?\n")
+    bundle_parts.append("5. **Security** - XSS, injection, or data exposure risks?\n")
+    bundle_parts.append("6. **Test Failures** - Root cause analysis of failing tests?\n")
+    bundle_parts.append("\nFor each issue found, specify: file, line number, problem, and suggested fix.\n")
+
+    bundle_content = ''.join(bundle_parts)
+
+    # Calculate stats
+    total_bytes = len(bundle_content)
+    total_lines = bundle_content.count('\n')
+
+    if clipboard:
+        try:
+            try:
+                subprocess.run(["wl-copy"], input=bundle_content.encode(), check=True)
+                print(f"Copied to clipboard (wl-copy)")
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                subprocess.run(["xclip", "-selection", "clipboard"], input=bundle_content.encode(), check=True)
+                print(f"Copied to clipboard (xclip)")
+            print(f"  Size: {total_bytes:,} bytes ({total_lines:,} lines)")
+        except Exception as e:
+            print(f"Clipboard copy failed: {e}")
+            print("Falling back to file output...")
+            output.write_text(bundle_content)
+            print(f"Saved: {output}")
+    else:
+        output.write_text(bundle_content)
+        print(f"Saved: {output}")
+        print(f"  Size: {total_bytes:,} bytes ({total_lines:,} lines)")
+        print(f"  Files: {len(files) + len(css)}")
+        print(f"\nTo copy: cat {output} | wl-copy")
+
+
 if __name__ == "__main__":
     app()

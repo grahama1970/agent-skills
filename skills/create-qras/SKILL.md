@@ -232,14 +232,79 @@ The scillm proxy manages fallbacks dynamically:
 
 The proxy tracks real-time concurrency via `/v1/scillm/concurrency` and adjusts effective limits when 429s occur (adaptive backoff).
 
-### Batching
+### Batching (as_completed pattern)
 
-Chunked processing per `/scillm` SKILL.md patterns:
-- `chunk_size=4` (dynamic via `/v1/scillm/concurrency`)
+Streaming batch processing for maximum throughput:
+
+1. Fire `chunk_size=4` parallel `/scillm` LLM calls
+2. `asyncio.as_completed` processes each result **the moment it returns**
+3. Per-result: call `/create-evidence-case` → enrich QRA with `evidence_case` field
+4. Store immediately via `store_callback` (crash-safe)
+
+**Key advantage:** Evidence enrichment runs while other LLM calls still in flight.
+Not `asyncio.gather` (waits for entire chunk) — `as_completed` (streaming).
+
 - `scillm_metadata` with `batch_id` + `item_id` for automatic resume
-- Per-chunk storage via `store_callback` (crash-safe)
+- Dynamic `chunk_size` via `/v1/scillm/concurrency`
 
 **Config:** `~/workspace/experiments/scillm/local/proxy_server_config.yaml`
+
+## Manifest Execution Workflow
+
+The recommended workflow for batch QRA generation:
+
+```bash
+# 1. Generate review dossier (deterministic checks, prompt inventory, verdict)
+./run.sh review sparta_v2_manifest.json
+
+# 2. Check verdict
+#    BLOCKED     → fix blocking issues first
+#    CANARY_ONLY → proceed with caution, review warnings
+#    FULL_RUN_OK → all checks passed
+
+# 3. Run canary batch (limited, dry-run first)
+./run.sh manifest sparta_v2_manifest.json --limit 10 --dry-run
+./run.sh manifest sparta_v2_manifest.json --limit 10
+
+# 4. Run full batch (after canary validation)
+./run.sh manifest sparta_v2_manifest.json
+```
+
+### Review Dossier Schema
+
+The `review` command generates a JSON dossier with:
+
+| Field | Description |
+|-------|-------------|
+| `verdict.status` | `BLOCKED` / `CANARY_ONLY` / `FULL_RUN_OK` |
+| `blocking_issues` | Must-fix before execution (duplicate keys, missing prompt_kind) |
+| `warnings` | Review before full run (sentinels, existing QRAs) |
+| `prompt_inventory` | Hash-versioned prompts with pair_types |
+| `db_sanity` | Referential integrity, existing QRA counts |
+| `manifest_invariants` | Duplicate job_ids, logical keys, sentinel counts |
+| `risky_samples` | Top 20 jobs needing human review |
+| `executor` | Timeout, concurrency, crash-safe, as_completed pattern |
+
+### Deterministic Checks
+
+| Check | Verdict | Description |
+|-------|---------|-------------|
+| duplicate_job_id | BLOCKED | Same job_id appears multiple times |
+| duplicate_logical_key | BLOCKED | Same source+target pair duplicated |
+| missing_prompt_kind | BLOCKED | Job has no prompt_kind |
+| missing_source_control | BLOCKED | Source control not in DB |
+| sentinel_rows | WARN | Contains CM-NA, placeholder, TBD |
+| existing_qras | WARN | QRAs already exist for control |
+| missing_target_control | WARN | Target control not in DB |
+
+### Executor Guarantees
+
+The `manifest` command uses:
+- **300s timeout** per LLM call
+- **`asyncio.as_completed`** for streaming results
+- **`/create-evidence-case`** enrichment per QRA
+- **Immediate storage** via `store_callback` (crash-safe)
+- **Per-item retry** with exponential backoff (30s, 60s, 90s)
 
 ## Prompt Templates
 

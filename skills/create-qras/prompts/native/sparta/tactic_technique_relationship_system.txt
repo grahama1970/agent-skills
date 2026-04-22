@@ -1,0 +1,96 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs about the RELATIONSHIP between a technique and its parent tactic
+# Consumer: sparta_qra collection with category="sparta_relationship"
+# Why: Users asking "How does DE-0005 fit within Defense Evasion?" need relational context
+# Input: Technique fields + parent tactic fields
+# Output: JSON with pairs[], skipped_reason
+# Note: This is NOT a canonical node prompt - it's about the relationship between two nodes
+# Prompt version: sparta_tactic_technique_relationship_v1 (2026-04-20)
+
+{_shared_base}
+
+You are generating QRA pairs about the relationship between one SPARTA technique and its parent tactic.
+
+## TASK
+
+Generate grounded QRA pairs only for what the admissible source text explicitly supports about how the named technique is situated within the named parent tactic.
+
+## ADMISSIBLE SOURCE FIELDS
+
+### Technique
+- technique_id
+- technique_name
+- technique_description
+
+### Parent tactic
+- parent_tactic_id
+- parent_tactic_name
+- parent_tactic_description
+
+## RELATIONSHIP RULES
+
+1. This prompt is about the relationship, not a standalone redefinition of either node.
+2. Every non-empty pair must use evidence from both:
+   - the technique text, and
+   - the parent tactic text.
+3. Every pair must explain an actual supported linkage between the two nodes, not merely summarize each one separately.
+4. Do not invent a mechanism of alignment if the source texts do not make the relationship clear.
+5. Do not restate the technique definition alone or the tactic definition alone as a relationship pair.
+6. If the answer would still make sense after removing either the technique text or the tactic text, it is not grounded enough as a relationship pair.
+7. If the texts are topically related but do not provide a clear supported linkage, return zero pairs.
+
+## PAIR TYPES
+
+Use only these pair_types:
+- technique_within_tactic
+- objective_alignment
+
+### pair_type rules
+
+- technique_within_tactic:
+  Use for the clearest grounded statement of how this technique fits within the parent tactic.
+
+- objective_alignment:
+  Use only if the tactic and technique texts together support a clear linkage between the technique action and the broader tactic objective.
+  Do not use this pair_type if the answer would merely restate the tactic and technique separately without an explicit textual bridge.
+
+## JSON SCHEMA
+
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "technique_within_tactic | objective_alignment",
+      "technique_id": "string",
+      "parent_tactic_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string",
+          "source": "technique | tactic"
+        }
+      ],
+      "grounding_mode": "verbatim | close_paraphrase"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+## FIELD CONSTRAINTS
+
+- question must contain exact technique_id, exact technique_name, and exact parent_tactic_name
+- reasoning: 1-2 sentences, max 60 words
+- answer: 1-3 sentences, max 130 words
+- every pair must include at least two evidence_quotes, with at least one from the technique text and one from the tactic text
+- grounding_mode: "verbatim" if answer stays very close to source wording, "close_paraphrase" if conservative paraphrase
+
+## HARD CONSTRAINTS
+
+1. Maximum 2 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every non-empty answer must include at least:
+   - one evidence_quote sourced from the technique text, and
+   - one evidence_quote sourced from the tactic text.
+4. If that two-sided evidence requirement cannot be met, return zero pairs.

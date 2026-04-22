@@ -1,0 +1,123 @@
+Return exactly one top-level JSON object with keys: pairs, skipped_reason.
+
+## Task
+Generate up to 4 grounded, non-duplicative QRA pairs for CVE vulnerability {cve_id}.
+
+## Source Content
+CVE ID: {cve_id}
+Name: {control_name}
+Description: {control_details}
+Weaknesses: {weaknesses}
+Status: {vuln_status}
+
+## VALID OUTPUT EXAMPLE
+
+Input CVE:
+  CVE ID: CVE-2025-14905
+  Description: A flaw was found in the 389-ds-base server. A heap buffer overflow vulnerability exists in the `schema_attr_enum_callback` function within the `schema.c` file. This occurs because the code incorrectly calculates the buffer size by summing alias string lengths without accounting for additional formatting characters. When a large number of aliases are processed, this oversight can lead to a heap overflow, potentially allowing a remote attacker to cause a Denial of Service (DoS) or achieve Remote Code Execution (RCE).
+  Weaknesses: ["CWE-122"]
+
+Output:
+{{
+  "pairs": [
+    {{
+      "question": "What is CVE-2025-14905 according to NVD?",
+      "reasoning": "The description explicitly defines the vulnerability and its mechanism.",
+      "answer": "CVE-2025-14905 is a heap buffer overflow vulnerability in the 389-ds-base server. It exists in the `schema_attr_enum_callback` function within the `schema.c` file, where the code incorrectly calculates buffer size by summing alias string lengths without accounting for additional formatting characters.",
+      "pair_type": "vulnerability_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {{
+          "quote": "A heap buffer overflow vulnerability exists in the `schema_attr_enum_callback` function within the `schema.c` file",
+          "relevance": "Core vulnerability definition"
+        }},
+        {{
+          "quote": "the code incorrectly calculates the buffer size by summing alias string lengths without accounting for additional formatting characters",
+          "relevance": "Direct mechanism"
+        }}
+      ],
+      "confidence": "high",
+      "actionable_for": "vulnerability_assessment"
+    }},
+    {{
+      "question": "What impact does CVE-2025-14905 potentially have?",
+      "reasoning": "The description explicitly states the possible consequences and preserves hedged modality.",
+      "answer": "CVE-2025-14905 could potentially allow a remote attacker to cause a Denial of Service (DoS) or achieve Remote Code Execution (RCE).",
+      "pair_type": "impact_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {{
+          "quote": "potentially allowing a remote attacker to cause a Denial of Service (DoS) or achieve Remote Code Execution (RCE)",
+          "relevance": "Explicit impact statement"
+        }}
+      ],
+      "confidence": "high",
+      "actionable_for": "patch_prioritization"
+    }},
+    {{
+      "question": "What CWE classification is assigned to CVE-2025-14905?",
+      "reasoning": "The weaknesses field explicitly provides the CWE ID.",
+      "answer": "CVE-2025-14905 is mapped to CWE-122 in the provided NVD weakness data.",
+      "pair_type": "weakness_context",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {{
+          "quote": "CWE-122",
+          "relevance": "Explicit CWE mapping"
+        }}
+      ],
+      "confidence": "high",
+      "actionable_for": "threat_modeling"
+    }}
+  ],
+  "skipped_reason": null
+}}
+
+## INVALID OUTPUT EXAMPLES
+
+### Invalid Example 1: CWE label expansion not in source
+{{
+  "pairs": [
+    {{
+      "pair_type": "weakness_context",
+      "answer": "CVE-2025-14905 is classified as CWE-122 (Heap-based Buffer Overflow)."
+    }}
+  ]
+}}
+WHY INVALID:
+The source only provides "CWE-122". The label "Heap-based Buffer Overflow" is background knowledge, not present in the admissible fields.
+
+### Invalid Example 2: Strengthened modality
+{{
+  "pairs": [
+    {{
+      "answer": "CVE-2025-14905 allows a remote attacker to cause DoS or RCE."
+    }}
+  ]
+}}
+WHY INVALID:
+The source says "potentially allowing". The answer drops "potentially", strengthening hedged language to certainty.
+
+### Invalid Example 3: Missing CVE ID in question
+{{
+  "pairs": [
+    {{
+      "question": "What is this heap buffer overflow vulnerability?"
+    }}
+  ]
+}}
+WHY INVALID:
+Every question must contain the exact CVE ID.
+
+## VALID SKIP EXAMPLE
+
+Input CVE:
+  CVE ID: CVE-1999-0001
+  Description: (no description available)
+  Weaknesses: []
+
+Output:
+{{
+  "pairs": [],
+  "skipped_reason": "Description is empty and weaknesses array is empty. No admissible source content to ground QRA pairs."
+}}

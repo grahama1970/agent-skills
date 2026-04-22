@@ -572,6 +572,60 @@ def collect_clarify(question: str) -> dict | None:
     return resp.json()
 
 
+# Formalizability threshold for Lean4 proof attempts
+FORMALIZABILITY_THRESHOLD = int(os.getenv("FORMALIZABILITY_THRESHOLD", "70"))
+
+
+def get_formalizability_score(control_ids: list[str], threshold: int = FORMALIZABILITY_THRESHOLD) -> dict:
+    """Check if any control passes the formalizability threshold for Lean4 proofs.
+
+    Uses formalizability_score from sparta_controls (backfilled by step_12d_formalizability_scorer).
+    Controls with score >= threshold are candidates for formal verification.
+
+    Returns:
+        dict with keys:
+            - formalizable: bool - True if any control passes threshold
+            - max_score: int - highest formalizability score found
+            - scores: dict - {control_id: score} for all checked controls
+            - threshold: int - the threshold used
+    """
+    if not control_ids:
+        return {"formalizable": False, "max_score": 0, "scores": {}, "threshold": threshold}
+
+    scores = {}
+    try:
+        from arango import ArangoClient
+        url = os.getenv("ARANGO_URL") or "http://127.0.0.1:8529"
+        user = os.getenv("ARANGO_USER") or "root"
+        pw = os.getenv("ARANGO_PASS") or ""
+        client = ArangoClient(hosts=url)
+        db = client.db("memory", username=user, password=pw)
+
+        for cid in control_ids[:10]:  # Limit to first 10 controls
+            query = """
+            FOR c IN sparta_controls
+            FILTER c.control_id == @cid OR c._key == @cid
+            RETURN {score: c.formalizability_score, signals: c.formalizability_signals}
+            """
+            cursor = db.aql.execute(query, bind_vars={"cid": cid})
+            for doc in cursor:
+                scores[cid] = doc.get("score", 0) or 0
+                break
+            else:
+                scores[cid] = 0  # Not found
+    except Exception as exc:
+        logger.debug("formalizability check failed: {}", exc)
+        return {"formalizable": False, "max_score": 0, "scores": {}, "threshold": threshold, "error": str(exc)}
+
+    max_score = max(scores.values()) if scores else 0
+    return {
+        "formalizable": max_score >= threshold,
+        "max_score": max_score,
+        "scores": scores,
+        "threshold": threshold,
+    }
+
+
 def collect_lean4_provable(question: str, control_ids: list[str]) -> dict | None:
     """Check if a question is Lean4-formalizable via the lean4_provable classifier."""
     text = f"Requirement: {question[:400]}"

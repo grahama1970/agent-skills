@@ -1,0 +1,282 @@
+{
+  "requested_query": "CMMC assessor workflow for cybersecurity posture dashboard, ATT&CK threat matrix curation/update process, and supply chain risk graph triage actions",
+  "effective_query": "CMMC assessor workflow for cybersecurity posture dashboard, ATT&CK threat matrix curation/update process, and supply chain risk graph triage actions",
+  "status": "completed",
+  "updated_at": 1776802583.5380187,
+  "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+  "tailored_queries": {
+    "arxiv": "CMMC assessment framework workflow formalization, ATT&CK matrix dynamic curation algorithms, supply chain risk graph neural network triage",
+    "perplexity": "How to integrate CMMC assessor workflows, automate MITRE ATT&CK matrix updates, and prioritize supply chain risk graph triage actions in cybersecurity dashboards for 2025?",
+    "brave": "CMMC assessor workflow dashboard NIST 800-171 | MITRE ATT&CK matrix curation process 2025 | supply chain risk graph triage actions documentation",
+    "github": "CMMC-Assessment python tool OR ATT&CK Navigator update script OR supply-chain-risk-graph triage function",
+    "youtube": "CMMC assessor dashboard implementation tutorial 2025, ATT&CK matrix update automation, supply chain risk triage visualization",
+    "readarr": "Cybersecurity Maturity Model Certification (CMMC) MITRE ATT&CK Framework Supply Chain Risk Management 2025"
+  },
+  "results": {
+    "stage1": {
+      "wayback": {},
+      "youtube": [
+        {
+          "title": "Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp",
+          "url": "",
+          "id": "",
+          "description": ""
+        }
+      ],
+      "readarr": [],
+      "arxiv": {
+        "meta": {
+          "query": "CMMC assessment framework workflow formalization, ATT&CK matrix dynamic curation algorithms, supply chain risk graph neural network triage",
+          "translated_query": null,
+          "count": 0,
+          "took_ms": 360,
+          "filters": {
+            "categories": null,
+            "since": null,
+            "until": null,
+            "smart": false
+          }
+        },
+        "items": [],
+        "errors": []
+      },
+      "brave": {
+        "query": "CMMC assessor workflow dashboard NIST 800-171 MITRE ATT CK matrix curation process 2025 supply chain risk graph triage actions documentation",
+        "count": 5,
+        "offset": 0,
+        "results": [
+          {
+            "title": "Supply Chain Security: CMMC, NIST 800-171, & NIST 800-161 | Forvis Mazars US",
+            "description": "See how CMMC, NIST 800-171, and NIST 800-161 can help contractors secure supply chains.",
+            "url": "https://www.forvismazars.us/forsights/2025/12/supply-chain-security-cmmc-nist-800-171-nist-800-161"
+          },
+          {
+            "title": "Editable CMMC Policies, Standards & Procedures Templates",
+            "description": "ComplianceForge’s NIST 800-171 / CMMC documentation has been used successfully by multiple companies during DIBCAC assessments to efficiently and effectively generate the necessary artifact documentation to demonstrate compliance with NIST SP 800-171 controls and NIST SP 800-171A control objectives.",
+            "url": "https://complianceforge.com/compliance/cmmc-dfars0252-204-7021"
+          },
+          {
+            "title": "Editable CMMC & NIST 800-171 Policy Templates for Compliance",
+            "description": "ComplianceForge’s NIST 800-171 / CMMC documentation has been used successfully by multiple companies during DIBCAC assessments to efficiently and effectively generate the necessary artifact documentation to demonstrate compliance with NIST SP 800-171 controls and NIST SP 800-171A control objectives.",
+            "url": "https://complianceforge.com/compliance-solutions/cmmc-nist-800-171-templates/"
+          },
+          {
+            "title": "CMMC 2.0 Compliance Templates",
+            "description": "ComplianceForge’s NIST 800-171 / CMMC documentation has been used successfully by multiple companies during DIBCAC assessments to efficiently and effectively generate the necessary artifact documentation to demonstrate compliance with NIST SP 800-171 controls and NIST SP 800-171A control objectives.",
+            "url": "https://complianceforge.com/compliance/cmmc-compliance-dfars-252-204-7021"
+          },
+          {
+            "title": "Supply Chain Risk Management for CMMC | Coalfire Federal",
+            "description": "*Although this practice is the only one in NIST 800-171/CMMC 2.0 to specifically mention supply chain, several practices infer and/or can be mapped to proposed 800-171r3 and/or 800-172 supply chain adjacent practices",
+            "url": "https://coalfirefederal.com/resource/supply-chain-risk-management-for-cmmc/"
+          }
+        ],
+        "query_adjustment": {
+          "original_query": "CMMC assessor workflow dashboard NIST 800-171 | MITRE ATT&CK matrix curation process 2025 | supply chain risk graph triage actions documentation",
+          "normalized": true,
+          "original_chars": 144,
+          "original_words": 21,
+          "final_chars": 140,
+          "final_words": 20,
+          "site_filters_requested": 0,
+          "site_filters_used": 0
+        }
+      },
+      "github": {
+        "repos": [],
+        "count": 0
+      },
+      "codex_knowledge": "### High-Reasoning Technical Overview: Integrated Cybersecurity Operations  \n**Core Components:**  \n1. **CMMC Assessor Workflow Dashboard**  \n2. **ATT&CK Matrix Curation/Update**  \n3. **Supply Chain Risk Graph Triage**  \n\n---\n\n### **1. CMMC Assessor Workflow Dashboard**  \n**Purpose:** Streamline CMMC (Cybersecurity Maturity Model Certification) compliance assessments via automated evidence collection, gap analysis, and real-time posture visualization.  \n**Architectural Patterns:**  \n- **Data Ingestion Layer:**  \n  - **Sources:** SIEM logs, vulnerability scanners (Nessus), CMDBs, GRC tools, endpoint agents.  \n  - **Integration:** REST APIs/SDKs for tool-agnostic data aggregation.  \n- **Processing Engine:**  \n  - **Rules Engine:** Maps evidence to CMMC practices (e.g., NIST 800-171 controls) using declarative rules (YAML/JSON).  \n  - **Automation:** Scripted evidence validation (e.g., PowerShell for AD config checks).  \n- **Visualization Layer:**  \n  - **Dynamic Dashboards:** React-based UI with D3.js for compliance scores, heatmaps (per domain), and trend analytics.  \n  - **Drill-Down:** Click-through from high-level posture to control-level evidence.  \n\n**Pitfalls & Solutions:**  \n- 🚫 **Pitfall:** Fragmented evidence leading to manual reconciliation.  \n  - **Solution:** Automated evidence tagging with blockchain-backed provenance (e.g., Hyperledger).  \n- 🚫 **Pitfall:** Static reporting unable to reflect real-time changes.  \n  - **Solution:** Event-driven architecture (Kafka) triggering reassessments on infrastructure changes.  \n**State-of-the-Art:**  \n- **ML for Anomaly Detection:** Identify control gaps via outlier analysis (e.g., isolated non-compliant assets).  \n- **Infra-as-Code (IaC) Integration:** Terraform/CloudFormation templates auto-validate CMMC requirements pre-deployment.  \n\n---\n\n### **2. ATT&CK Threat Matrix Curation/Update Process**  \n**Purpose:** Maintain an organization-specific ATT&CK matrix by mapping threats to defenses, prioritizing mitigations.  \n**Workflow Architecture:**  \n- **Threat Intelligence Integration:**  \n  - **Feeds:** STIX/TAXII ingestion (e.g., AlienVault OTX, MITRE CTI).  \n  - **Normalization:** Clustering similar IOCs/TTPs using NLP (spaCy) to reduce duplicates.  \n- **Mapping Engine:**  \n  - **Automated TTP Tagging:** SIEM alerts (Splunk, Elastic) mapped to ATT&CK techniques via Sigma rules.  \n  - **Contextual Enrichment:** Link TTPs to organizational assets (e.g., \"Credential Dumping\" → critical servers).  \n- **Curator UI:**  \n  - **Collaborative Editing:** GitOps-style version control for matrix changes (audit trails via GitLab).  \n  - **Impact Scoring:** Risk = (Likelihood × Impact) × Asset Criticality.  \n\n**Pitfalls & Solutions:**  \n- 🚫 **Pitfall:** \"Matrix Sprawl\" from unvetted techniques.  \n  - **Solution:** Confidence scoring (0–100%) for TTPs based on detection fidelity.  \n- 🚫 **Pitfall:** Siloed threat intel delaying updates.  \n  - **Solution:** Automated sync with threat feeds via serverless functions (AWS Lambda).  \n**State-of-the-Art:**  \n- **ML-Driven Triage:** Prioritize TTPs via ensemble models (Random Forest) using threat actor activity and vulnerability data.  \n- **Simulation Integration:** CALDERA/Atomic Red Team tests auto-validate detection coverage.  \n\n---\n\n### **3. Supply Chain Risk Graph Triage**  \n**Purpose:** Visualize vendor/component risks in a dependency graph and automate response actions.  \n**Architecture:**  \n- **Graph Database:**  \n  - **Model:** Neo4j/AWS Neptune nodes (vendors, software, licenses) + edges (dependencies, data flows).  \n  - **Data Sources:** SBOMs (CycloneDX), vendor questionnaires, NVD feeds.  \n- **Risk Scoring Engine:**  \n  - **Algorithm:**  \n    ```  \n    Risk Score = (CVE Severity × Exploitability) + (Vendor Criticality × Dependency Depth)  \n    ```  \n  - **Dynamic Updates:** Webhooks trigger rescoring on new CVEs (e.g., NVD API).  \n- **Triage Actions:**  \n  - **Automated Playbooks:** SOAR platforms (Demisto/XSOAR) for:  \n    - High-risk CVEs → Patch deployment workflows.  \n    - Vendor breaches → Temporary access revocation.  \n\n**Pitfalls & Solutions:**  \n- 🚫 **Pitfall:** \"False Positives\" from incomplete SBOMs.  \n  - **Solution:** ML-based component identification (e.g., Snyk’s binary analysis).  \n- 🚫 **Pitfall:** Delayed response due to manual triage.  \n  - **Solution:** Graph-based anomaly detection (e.g., sudden new dependencies).  \n**State-of-the-Art:**  \n- **AI for Dependency Risk:** Predict vulnerable components via GNNs (Graph Neural Networks).  \n- **Zero-Trust Integration:** Continuous vendor access verification (SPIFFE/SPIRE).  \n\n---\n\n### **Cross-Component Synergies & Pitfalls**  \n**Integration Patterns:**  \n- **Unified Data Lake:** CMMC evidence + ATT&CK mappings + SBOMs stored in Delta Lake for cross-querying.  \n- **Event Correlation:** Supply chain risk alert triggers ATT&CK technique reassessment (e.g., compromised vendor → credential theft focus).  \n\n**Systemic Pitfalls:**  \n- **Data Overload:**  \n  - **Mitigation:** Semantic layer abstraction (Apache Atlas) for unified metadata.  \n- **Tool Fragmentation:**  \n  - **Mitigation:** MLOps pipelines (MLflow) for model consistency across components.  \n\n**State-of-the-Art Ecosystem:**  \n- **Confidential Computing:** Encrypted risk analysis (Intel SGX) for sensitive data.  \n- **Quantum-Resistant Design:** Post-quantum cryptography (NIST PQC finalists) for long-term data protection.  \n\n### **Conclusion**  \nModern cybersecurity operations demand **converged architectures** where:  \n- CMMC dashboards drive compliance-as-code,  \n- ATT&CK matrices evolve via ML-augmented curation,  \n- Supply chain graphs enable predictive triage.  \n**Key Evolution:** Shift from siloed tools to AIOps-driven platforms with explainable AI for auditability."
+    },
+    "stage2": {
+      "stage2_youtube": [],
+      "stage2_arxiv": {
+        "arxiv_details": [],
+        "arxiv_deep": []
+      },
+      "stage2_brave": [],
+      "stage2_github": {
+        "github_details": [],
+        "github_deep": {},
+        "target_repo": null,
+        "deep_code_res": [],
+        "code_explanation": null
+      }
+    }
+  },
+  "events": [
+    {
+      "event": "search_started",
+      "requested_query": "CMMC assessor workflow for cybersecurity posture dashboard, ATT&CK threat matrix curation/update process, and supply chain risk graph triage actions",
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802244.768391
+    },
+    {
+      "event": "tailored_queries_ready",
+      "services": [
+        "arxiv",
+        "brave",
+        "github",
+        "perplexity",
+        "readarr",
+        "youtube"
+      ],
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802505.56338
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage1",
+      "provider": "wayback",
+      "summary": {
+        "ok": true,
+        "has_snapshot": false
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802505.5698528
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage1",
+      "provider": "youtube",
+      "summary": {
+        "ok": true,
+        "result_count": 1
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802505.57843
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage2",
+      "provider": "stage2_youtube",
+      "summary": {
+        "ok": true,
+        "transcripts": 0
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802505.579182
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage1",
+      "provider": "readarr",
+      "summary": {
+        "ok": true,
+        "result_count": 0
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802506.0369208
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage1",
+      "provider": "arxiv",
+      "summary": {
+        "ok": true,
+        "papers": 0
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802506.0885494
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage2",
+      "provider": "stage2_arxiv",
+      "summary": {
+        "ok": true,
+        "paper_details": 0,
+        "deep_extractions": 0
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802506.0898857
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage1",
+      "provider": "brave",
+      "summary": {
+        "ok": true,
+        "result_count": 5,
+        "query": "CMMC assessor workflow dashboard NIST 800-171 MITRE ATT CK matrix curation process 2025 supply chain risk graph triage actions documentation"
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802506.4163547
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage2",
+      "provider": "stage2_brave",
+      "summary": {
+        "ok": true,
+        "deep_extractions": 0
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802506.4176672
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage1",
+      "provider": "github",
+      "summary": {
+        "ok": true,
+        "repos": 0,
+        "issues": 0
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802506.476982
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage2",
+      "provider": "stage2_github",
+      "summary": {
+        "ok": true,
+        "repos_examined": 0,
+        "target_repo": null,
+        "code_matches": 0
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802506.4781704
+    },
+    {
+      "event": "partial_result",
+      "stage": "stage1",
+      "provider": "codex_knowledge",
+      "summary": {
+        "ok": true,
+        "excerpt": "### High-Reasoning Technical Overview: Integrated Cybersecurity Operations  \n**Core Components:**  \n1. **CMMC Assessor Workflow Dashboard**  \n2. **ATT&CK Matrix Curation/Update**  "
+      },
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802578.3994453
+    },
+    {
+      "event": "report_ready",
+      "stage": "report",
+      "provider": "report",
+      "summary": {
+        "ok": true,
+        "chars": 8259,
+        "lines": 138
+      },
+      "html_report_path": null,
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802582.128625
+    },
+    {
+      "event": "search_finished",
+      "status": "completed",
+      "error": null,
+      "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+      "ts": 1776802583.5380163
+    }
+  ],
+  "last_event": {
+    "event": "search_finished",
+    "status": "completed",
+    "error": null,
+    "partial_results_path": "/home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json",
+    "ts": 1776802583.5380163
+  },
+  "final_report": "# Dogpile Report: CMMC assessor workflow for cybersecurity posture dashboard, ATT&CK threat matrix curation/update process, and supply chain risk graph triage actions\n\n## Codex Technical Overview\n### High-Reasoning Technical Overview: Integrated Cybersecurity Operations  \n**Core Components:**  \n1. **CMMC Assessor Workflow Dashboard**  \n2. **ATT&CK Matrix Curation/Update**  \n3. **Supply Chain Risk Graph Triage**  \n\n---\n\n### **1. CMMC Assessor Workflow Dashboard**  \n**Purpose:** Streamline CMMC (Cybersecurity Maturity Model Certification) compliance assessments via automated evidence collection, gap analysis, and real-time posture visualization.  \n**Architectural Patterns:**  \n- **Data Ingestion Layer:**  \n  - **Sources:** SIEM logs, vulnerability scanners (Nessus), CMDBs, GRC tools, endpoint agents.  \n  - **Integration:** REST APIs/SDKs for tool-agnostic data aggregation.  \n- **Processing Engine:**  \n  - **Rules Engine:** Maps evidence to CMMC practices (e.g., NIST 800-171 controls) using declarative rules (YAML/JSON).  \n  - **Automation:** Scripted evidence validation (e.g., PowerShell for AD config checks).  \n- **Visualization Layer:**  \n  - **Dynamic Dashboards:** React-based UI with D3.js for compliance scores, heatmaps (per domain), and trend analytics.  \n  - **Drill-Down:** Click-through from high-level posture to control-level evidence.  \n\n**Pitfalls & Solutions:**  \n- 🚫 **Pitfall:** Fragmented evidence leading to manual reconciliation.  \n  - **Solution:** Automated evidence tagging with blockchain-backed provenance (e.g., Hyperledger).  \n- 🚫 **Pitfall:** Static reporting unable to reflect real-time changes.  \n  - **Solution:** Event-driven architecture (Kafka) triggering reassessments on infrastructure changes.  \n**State-of-the-Art:**  \n- **ML for Anomaly Detection:** Identify control gaps via outlier analysis (e.g., isolated non-compliant assets).  \n- **Infra-as-Code (IaC) Integration:** Terraform/CloudFormation templates auto-validate CMMC requirements pre-deployment.  \n\n---\n\n### **2. ATT&CK Threat Matrix Curation/Update Process**  \n**Purpose:** Maintain an organization-specific ATT&CK matrix by mapping threats to defenses, prioritizing mitigations.  \n**Workflow Architecture:**  \n- **Threat Intelligence Integration:**  \n  - **Feeds:** STIX/TAXII ingestion (e.g., AlienVault OTX, MITRE CTI).  \n  - **Normalization:** Clustering similar IOCs/TTPs using NLP (spaCy) to reduce duplicates.  \n- **Mapping Engine:**  \n  - **Automated TTP Tagging:** SIEM alerts (Splunk, Elastic) mapped to ATT&CK techniques via Sigma rules.  \n  - **Contextual Enrichment:** Link TTPs to organizational assets (e.g., \"Credential Dumping\" → critical servers).  \n- **Curator UI:**  \n  - **Collaborative Editing:** GitOps-style version control for matrix changes (audit trails via GitLab).  \n  - **Impact Scoring:** Risk = (Likelihood × Impact) × Asset Criticality.  \n\n**Pitfalls & Solutions:**  \n- 🚫 **Pitfall:** \"Matrix Sprawl\" from unvetted techniques.  \n  - **Solution:** Confidence scoring (0–100%) for TTPs based on detection fidelity.  \n- 🚫 **Pitfall:** Siloed threat intel delaying updates.  \n  - **Solution:** Automated sync with threat feeds via serverless functions (AWS Lambda).  \n**State-of-the-Art:**  \n- **ML-Driven Triage:** Prioritize TTPs via ensemble models (Random Forest) using threat actor activity and vulnerability data.  \n- **Simulation Integration:** CALDERA/Atomic Red Team tests auto-validate detection coverage.  \n\n---\n\n### **3. Supply Chain Risk Graph Triage**  \n**Purpose:** Visualize vendor/component risks in a dependency graph and automate response actions.  \n**Architecture:**  \n- **Graph Database:**  \n  - **Model:** Neo4j/AWS Neptune nodes (vendors, software, licenses) + edges (dependencies, data flows).  \n  - **Data Sources:** SBOMs (CycloneDX), vendor questionnaires, NVD feeds.  \n- **Risk Scoring Engine:**  \n  - **Algorithm:**  \n    ```  \n    Risk Score = (CVE Severity × Exploitability) + (Vendor Criticality × Dependency Depth)  \n    ```  \n  - **Dynamic Updates:** Webhooks trigger rescoring on new CVEs (e.g., NVD API).  \n- **Triage Actions:**  \n  - **Automated Playbooks:** SOAR platforms (Demisto/XSOAR) for:  \n    - High-risk CVEs → Patch deployment workflows.  \n    - Vendor breaches → Temporary access revocation.  \n\n**Pitfalls & Solutions:**  \n- 🚫 **Pitfall:** \"False Positives\" from incomplete SBOMs.  \n  - **Solution:** ML-based component identification (e.g., Snyk’s binary analysis).  \n- 🚫 **Pitfall:** Delayed response due to manual triage.  \n  - **Solution:** Graph-based anomaly detection (e.g., sudden new dependencies).  \n**State-of-the-Art:**  \n- **AI for Dependency Risk:** Predict vulnerable components via GNNs (Graph Neural Networks).  \n- **Zero-Trust Integration:** Continuous vendor access verification (SPIFFE/SPIRE).  \n\n---\n\n### **Cross-Component Synergies & Pitfalls**  \n**Integration Patterns:**  \n- **Unified Data Lake:** CMMC evidence + ATT&CK mappings + SBOMs stored in Delta Lake for cross-querying.  \n- **Event Correlation:** Supply chain risk alert triggers ATT&CK technique reassessment (e.g., compromised vendor → credential theft focus).  \n\n**Systemic Pitfalls:**  \n- **Data Overload:**  \n  - **Mitigation:** Semantic layer abstraction (Apache Atlas) for unified metadata.  \n- **Tool Fragmentation:**  \n  - **Mitigation:** MLOps pipelines (MLflow) for model consistency across components.  \n\n**State-of-the-Art Ecosystem:**  \n- **Confidential Computing:** Encrypted risk analysis (Intel SGX) for sensitive data.  \n- **Quantum-Resistant Design:** Post-quantum cryptography (NIST PQC finalists) for long-term data protection.  \n\n### **Conclusion**  \nModern cybersecurity operations demand **converged architectures** where:  \n- CMMC dashboards drive compliance-as-code,  \n- ATT&CK matrices evolve via ML-augmented curation,  \n- Supply chain graphs enable predictive triage.  \n**Key Evolution:** Shift from siloed tools to AIOps-driven platforms with explainable AI for auditability.\n\n## AI Research (Perplexity)\nNo answer.\n\n## Books & Usenet (Readarr)\nNo books or Usenet results found.\n\n## GitHub\n### Repositories\nNo repositories found.\n\n### Issues/Discussions\nNo issues found.\n\n## Web Results (Brave)\n- **[Supply Chain Security: CMMC, NIST 800-171, & NIST 800-161 | Forvis Mazars US](https://www.forvismazars.us/forsights/2025/12/supply-chain-security-cmmc-nist-800-171-nist-800-161)**\n  See how CMMC, NIST 800-171, and NIST 800-161 can help contractors secure supply chains.\n- **[Editable CMMC Policies, Standards & Procedures Templates](https://complianceforge.com/compliance/cmmc-dfars0252-204-7021)**\n  ComplianceForge’s NIST 800-171 / CMMC documentation has been used successfully by multiple companies during DIBCAC assessments to efficiently and effectively generate the necessary artifact documentation to demonstrate compliance with NIST SP 800-171 controls and NIST SP 800-171A control objectives.\n- **[Editable CMMC & NIST 800-171 Policy Templates for Compliance](https://complianceforge.com/compliance-solutions/cmmc-nist-800-171-templates/)**\n  ComplianceForge’s NIST 800-171 / CMMC documentation has been used successfully by multiple companies during DIBCAC assessments to efficiently and effectively generate the necessary artifact documentation to demonstrate compliance with NIST SP 800-171 controls and NIST SP 800-171A control objectives.\n- **[CMMC 2.0 Compliance Templates](https://complianceforge.com/compliance/cmmc-compliance-dfars-252-204-7021)**\n  ComplianceForge’s NIST 800-171 / CMMC documentation has been used successfully by multiple companies during DIBCAC assessments to efficiently and effectively generate the necessary artifact documentation to demonstrate compliance with NIST SP 800-171 controls and NIST SP 800-171A control objectives.\n- **[Supply Chain Risk Management for CMMC | Coalfire Federal](https://coalfirefederal.com/resource/supply-chain-risk-management-for-cmmc/)**\n  *Although this practice is the only one in NIST 800-171/CMMC 2.0 to specifically mention supply chain, several practices infer and/or can be mapped to proposed 800-171r3 and/or 800-172 supply chain adjacent practices\n\n## Academic Papers (ArXiv)\n\n## Videos (YouTube)\n> Error searching YouTube: yt-dlp not installed. Run: pip install yt-dlp\n"
+}

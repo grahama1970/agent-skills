@@ -39,7 +39,12 @@ class LLMProvider:
         """Check if this provider is available."""
         raise NotImplementedError
 
-    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+    def call(
+        self,
+        prompt: str,
+        schema: Optional[Path] = None,
+        timeout_s: Optional[float] = None,
+    ) -> Tuple[bool, str]:
         """Call the LLM with a prompt.
 
         Args:
@@ -67,7 +72,12 @@ class CodexProvider(LLMProvider):
         # Also check if codex binary exists
         return shutil.which("codex") is not None
 
-    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+    def call(
+        self,
+        prompt: str,
+        schema: Optional[Path] = None,
+        timeout_s: Optional[float] = None,
+    ) -> Tuple[bool, str]:
         """Call Codex for high-reasoning analysis."""
         log_status(f"Trying {self.name}...", provider=self.name, status="RUNNING")
 
@@ -76,12 +86,13 @@ class CodexProvider(LLMProvider):
         else:
             cmd = ["bash", str(self.script), "reason", prompt]
 
+        timeout = timeout_s or 120
         try:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=timeout,
                 cwd=str(self.script.parent),
                 env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
             )
@@ -126,7 +137,12 @@ class OpenAIProvider(LLMProvider):
         """Check if scillm proxy is reachable."""
         return True  # Always attempt; httpx will fail fast if down
 
-    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+    def call(
+        self,
+        prompt: str,
+        schema: Optional[Path] = None,
+        timeout_s: Optional[float] = None,
+    ) -> Tuple[bool, str]:
         """Call LLM via scillm HTTP proxy."""
         import httpx
 
@@ -138,12 +154,13 @@ class OpenAIProvider(LLMProvider):
             "max_tokens": 4000,
         }
 
+        timeout = timeout_s or 120.0
         try:
             resp = httpx.post(
                 f"{self.SCILLM_URL}/v1/chat/completions",
                 json=payload,
                 headers={"Authorization": "Bearer sk-dev-proxy-123", "x-caller-skill": "dogpile"},
-                timeout=120.0,
+                timeout=timeout,
             )
 
             if resp.status_code == 401:
@@ -195,7 +212,12 @@ class ClaudeProvider(LLMProvider):
         """scillm is always attempted; httpx fails fast if down."""
         return True
 
-    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+    def call(
+        self,
+        prompt: str,
+        schema: Optional[Path] = None,
+        timeout_s: Optional[float] = None,
+    ) -> Tuple[bool, str]:
         """Call Claude via scillm HTTP proxy."""
         import httpx
 
@@ -207,12 +229,13 @@ class ClaudeProvider(LLMProvider):
             "max_tokens": 4000,
         }
 
+        timeout = timeout_s or 180.0
         try:
             resp = httpx.post(
                 f"{self.SCILLM_URL}/v1/chat/completions",
                 json=payload,
                 headers={"Authorization": "Bearer sk-dev-proxy-123", "x-caller-skill": "dogpile"},
-                timeout=180.0,
+                timeout=timeout,
             )
 
             if resp.status_code == 401:
@@ -255,7 +278,12 @@ class _DeprecatedPiProvider(LLMProvider):
     def is_available(self) -> bool:
         return False
 
-    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+    def call(
+        self,
+        prompt: str,
+        schema: Optional[Path] = None,
+        timeout_s: Optional[float] = None,
+    ) -> Tuple[bool, str]:
         return False, "Deprecated: use scillm"
 
 
@@ -268,7 +296,12 @@ class _DeprecatedStub(LLMProvider):
     name = "deprecated"
     def is_available(self) -> bool:
         return False
-    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+    def call(
+        self,
+        prompt: str,
+        schema: Optional[Path] = None,
+        timeout_s: Optional[float] = None,
+    ) -> Tuple[bool, str]:
         return False, "Deprecated: use scillm"
 
 # Legacy aliases — GeminiProvider and AnthropicProvider classes still exist below
@@ -288,7 +321,12 @@ class GeminiProvider(LLMProvider):
         """Check if Gemini API key is available."""
         return bool(self.api_key)
 
-    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+    def call(
+        self,
+        prompt: str,
+        schema: Optional[Path] = None,
+        timeout_s: Optional[float] = None,
+    ) -> Tuple[bool, str]:
         """Call Gemini API."""
         log_status(f"Trying {self.name} ({self.model})...", provider=self.name, status="RUNNING")
 
@@ -317,9 +355,10 @@ class GeminiProvider(LLMProvider):
             except Exception as e:
                 logger.debug("value lookup failed: {}", e)
 
+        timeout = timeout_s or 120
         try:
             if hasattr(httpx, 'Client'):
-                with httpx.Client(timeout=120) as client:
+                with httpx.Client(timeout=timeout) as client:
                     response = client.post(
                         f"{url}?key={self.api_key}",
                         headers=headers,
@@ -330,7 +369,7 @@ class GeminiProvider(LLMProvider):
                     f"{url}?key={self.api_key}",
                     headers=headers,
                     json=payload,
-                    timeout=120,
+                    timeout=timeout,
                 )
 
             if response.status_code == 401 or response.status_code == 403:
@@ -376,7 +415,12 @@ class AnthropicProvider(LLMProvider):
         """Check if Anthropic API key is available."""
         return bool(self.api_key)
 
-    def call(self, prompt: str, schema: Optional[Path] = None) -> Tuple[bool, str]:
+    def call(
+        self,
+        prompt: str,
+        schema: Optional[Path] = None,
+        timeout_s: Optional[float] = None,
+    ) -> Tuple[bool, str]:
         """Call Anthropic API directly."""
         log_status(f"Trying {self.name} ({self.model})...", provider=self.name, status="RUNNING")
 
@@ -394,9 +438,10 @@ class AnthropicProvider(LLMProvider):
             "messages": [{"role": "user", "content": prompt}],
         }
 
+        timeout = timeout_s or 120
         try:
             if hasattr(httpx, 'Client'):
-                with httpx.Client(timeout=120) as client:
+                with httpx.Client(timeout=timeout) as client:
                     response = client.post(
                         "https://api.anthropic.com/v1/messages",
                         headers=headers,
@@ -407,7 +452,7 @@ class AnthropicProvider(LLMProvider):
                     "https://api.anthropic.com/v1/messages",
                     headers=headers,
                     json=payload,
-                    timeout=120,
+                    timeout=timeout,
                 )
 
             if response.status_code == 401:
@@ -479,6 +524,7 @@ def call_with_fallback(
     schema: Optional[Path] = None,
     providers: Optional[List[LLMProvider]] = None,
     skip_rate_limited: bool = True,
+    per_provider_timeout_s: Optional[float] = None,
 ) -> Tuple[str, str]:
     """Call LLM with sequential fallback through providers.
 
@@ -509,7 +555,7 @@ def call_with_fallback(
             log_status(f"Skipping {provider.name} (not available)", provider=provider.name, status="SKIP")
             continue
 
-        success, result = provider.call(prompt, schema)
+        success, result = provider.call(prompt, schema, timeout_s=per_provider_timeout_s)
 
         if success:
             return provider.name, result
@@ -530,14 +576,32 @@ def call_with_fallback(
     return "none", error_summary
 
 
-def call_fast(prompt: str, schema: Optional[Path] = None) -> Tuple[str, str]:
+def call_fast(
+    prompt: str,
+    schema: Optional[Path] = None,
+    per_provider_timeout_s: Optional[float] = None,
+) -> Tuple[str, str]:
     """Call LLM using fast provider chain (for simple tasks)."""
-    return call_with_fallback(prompt, schema, providers=FAST_PROVIDERS)
+    return call_with_fallback(
+        prompt,
+        schema,
+        providers=FAST_PROVIDERS,
+        per_provider_timeout_s=per_provider_timeout_s,
+    )
 
 
-def call_high_reasoning(prompt: str, schema: Optional[Path] = None) -> Tuple[str, str]:
+def call_high_reasoning(
+    prompt: str,
+    schema: Optional[Path] = None,
+    per_provider_timeout_s: Optional[float] = None,
+) -> Tuple[str, str]:
     """Call LLM using high-reasoning provider chain (for synthesis)."""
-    return call_with_fallback(prompt, schema, providers=HIGH_REASONING_PROVIDERS)
+    return call_with_fallback(
+        prompt,
+        schema,
+        providers=HIGH_REASONING_PROVIDERS,
+        per_provider_timeout_s=per_provider_timeout_s,
+    )
 
 
 def get_available_providers() -> List[str]:

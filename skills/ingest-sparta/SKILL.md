@@ -177,6 +177,34 @@ Components at `pi-mono/packages/ux-lab/src/components/sparta/explorer/`.
 | `/qra-review` | Human-in-the-loop QRA accept/reject TUI |
 | `/sparta-stress-test` | End-to-end query pipeline stress test |
 
+## QRA Schema (CRITICAL)
+
+**Canonical field for control ID: `source_control_id`**
+
+| QRA Type | qra_type | source_control_id Example | Notes |
+|----------|----------|---------------------------|-------|
+| Native | `native` | `CAPEC-115`, `T1595`, `CWE-79` | Framework definition QRAs |
+| Relationship | `sparta_context` | Technique ID from relationship | SPARTA-linked QRAs |
+
+**Legacy field:** `control_id` exists in older QRAs. Code queries BOTH fields:
+```python
+cid = qra.get("source_control_id") or qra.get("control_id") or ""
+```
+
+**When querying by framework:**
+```aql
+// Native QRAs (from /create-qras skill)
+FOR q IN sparta_qra
+    FILTER STARTS_WITH(q.source_control_id, "CAPEC-")
+    RETURN q
+
+// BOTH native and legacy
+FOR q IN sparta_qra
+    LET cid = q.source_control_id != null ? q.source_control_id : q.control_id
+    FILTER STARTS_WITH(cid, "CWE-")
+    RETURN q
+```
+
 ## Environment
 
 ```bash

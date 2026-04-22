@@ -1,0 +1,174 @@
+{
+  "generated_at": 1776469384.796752,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776469368",
+  "tasks": [
+    {
+      "id": "0.1",
+      "title": "Extract PostureHUD as sticky component",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776469368/0.1.response.txt",
+      "error": "/code-runner exit 1: 2026-04-17 19:42:49.137 | INFO     | __main__:run:654 - === CODE-RUNNER v2: Extract PostureHUD as sticky component ===\n2026-04-17 19:42:49.137 | INFO     | __main__:run:655 -   Backend: claude\n2026-04-17 19:42:49.138 | INFO     | __main__:run:656 -   DoD: grep -q 'export.*PostureHUD' packages/ux-lab/src/components/sparta/shared/PostureHUD.tsx && grep -q\n2026-04-17 19:42:49.138 | INFO     | __main__:run:657 -   Max rounds: 5\n{\"event\": \"round_start\", \"ts\": 1776469372.1427884, \"task_id\": \"0.1\", \"ro",
+      "started_at": 1776469368.8771377,
+      "finished_at": 1776469384.7967494,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "1.1",
+      "title": "Add fluid typography with clamp()",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776469368/1.1.response.txt",
+      "error": "/code-runner exit 1: 2026-04-17 19:42:49.138 | INFO     | __main__:run:654 - === CODE-RUNNER v2: Add fluid typography with clamp() ===\n2026-04-17 19:42:49.138 | INFO     | __main__:run:655 -   Backend: claude\n2026-04-17 19:42:49.138 | INFO     | __main__:run:656 -   DoD: grep -q 'FLUID' packages/ux-lab/src/components/sparta/common/EmbryStyle.ts\n2026-04-17 19:42:49.138 | INFO     | __main__:run:657 -   Max rounds: 5\n2026-04-17 19:42:49.141 | ERROR    | __main__:run:676 - Another code-runner is already running in /hom",
+      "started_at": 1776469368.8784215,
+      "finished_at": 1776469369.2013202,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "1.2",
+      "title": "Convert Grid to CSS auto-fit minmax",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2.1",
+      "title": "Create TacticAccordion component",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1.2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2.2",
+      "title": "Integrate accordion into ThreatMatrix with breakpoint switch",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "2.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3.1",
+      "title": "Create TechniqueDrawer for mobile detail view",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "2.2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3.2",
+      "title": "Update Grid cells for progressive disclosure",
+      "lane": "3",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4.1",
+      "title": "Add Condensed View toggle to Header",
+      "lane": "4",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3.2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4.2",
+      "title": "Visual verification with /test-interactions",
+      "lane": "4",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4.1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

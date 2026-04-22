@@ -135,9 +135,7 @@ def _memory_cmd(args: list, timeout: int = 60) -> dict:
         return resp.json()
 
 try:
-    sys.path.insert(0, str(Path(__file__).parent.parent / "edge-verifier"),
-    env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
-    )
+    sys.path.insert(0, str(Path(__file__).parent.parent / "edge-verifier"))
     from task_monitor_client import EdgeVerifierTaskClient
     TASK_MONITOR_AVAILABLE = True
 except ImportError:

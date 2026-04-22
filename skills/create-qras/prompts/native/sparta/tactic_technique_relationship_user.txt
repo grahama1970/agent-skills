@@ -1,0 +1,25 @@
+Return exactly one top-level JSON object with keys:
+- pairs
+- skipped_reason
+
+Generate up to 2 grounded, non-duplicative QRA pairs about the relationship between this SPARTA technique and its parent tactic.
+
+## Technique
+
+Technique ID: {technique_id}
+Technique Name: {technique_name}
+Technique Description: {technique_description}
+
+## Parent Tactic
+
+Parent Tactic ID: {parent_tactic_id}
+Parent Tactic Name: {parent_tactic_name}
+Parent Tactic Description: {parent_tactic_description}
+
+## Reminders
+
+- This prompt is about the relationship, not standalone node definitions.
+- Use evidence from both the technique and the tactic.
+- Preserve modality exactly.
+- Prefer fewer pairs over weak pairs.
+- If source support is insufficient, return zero pairs.

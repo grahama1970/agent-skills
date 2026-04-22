@@ -1,0 +1,60 @@
+Total pages: 492
+Total extracted blocks: 8233
+Chrome strings (freq>=147):
+   490x "NIST SP #-#, REV. #                                                             "
+   332x "CHAPTER THREE 
+ 
+ PAGE #"
+
+Defect categories:
+  TEXT_LOST: 3242
+  DUPLICATE_BLOCK: 85
+
+--- TEXT_LOST (first 5) ---
+  page 0: Security and Privacy Controls for 
+Information Systems and Organizations
+  page 1: Security and Privacy Controls for 
+Information Systems and Organizations
+  page 1: INCLUDES UPDATES AS OF 12-10-2020; SEE PAGE XVII
+  page 4: Department of Defense 
+Office of the Director of National 
+Intelligence
+  page 4: Dana Deasy 
+ 
+ 
+ 
+ 
+ 
+Matthew A. Kozma                                          
+
+--- DUPLICATE_BLOCK (first 5) ---
+  page 58: When transferring information between different security domains, decompose
+info
+  page 58: When transferring information between different security domains, implement
+[ As
+  page 58: When transferring information between different security domains, examine the
+in
+  page 60: When transferring information between different security domains, parse incoming
+  page 60: When transferring information between different security domains, sanitize data 
+
+Top 20 worst pages by defect count:
+  page 451: 34 defects — {'TEXT_LOST': 34}
+  page 452: 34 defects — {'TEXT_LOST': 34}
+  page 450: 31 defects — {'TEXT_LOST': 31}
+  page 23: 28 defects — {'TEXT_LOST': 28}
+  page 19: 26 defects — {'TEXT_LOST': 26}
+  page 20: 26 defects — {'TEXT_LOST': 26}
+  page 22: 26 defects — {'TEXT_LOST': 26}
+  page 482: 24 defects — {'TEXT_LOST': 24}
+  page 21: 23 defects — {'TEXT_LOST': 23}
+  page 453: 23 defects — {'TEXT_LOST': 23}
+  page 25: 22 defects — {'TEXT_LOST': 22}
+  page 18: 19 defects — {'TEXT_LOST': 19}
+  page 26: 17 defects — {'TEXT_LOST': 17}
+  page 306: 17 defects — {'TEXT_LOST': 16, 'DUPLICATE_BLOCK': 1}
+  page 4: 16 defects — {'TEXT_LOST': 16}
+  page 467: 16 defects — {'TEXT_LOST': 16}
+  page 24: 15 defects — {'TEXT_LOST': 15}
+  page 460: 15 defects — {'TEXT_LOST': 15}
+  page 89: 14 defects — {'TEXT_LOST': 12, 'DUPLICATE_BLOCK': 2}
+  page 259: 14 defects — {'TEXT_LOST': 14}

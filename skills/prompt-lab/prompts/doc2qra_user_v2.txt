@@ -1,0 +1,12 @@
+Extract grounded QRA pairs from this document. Every answer must be directly supported by the source text with verbatim evidence quotes.
+
+Document source: {source_url}
+Document type: {doc_type}
+
+---
+{text}
+---
+
+Return a JSON object with "items" array. Each item must include question, reasoning, answer, pair_type, evidence_quotes, and confidence. If the document lacks extractable factual content, return {{"items": []}}.
+
+JSON:

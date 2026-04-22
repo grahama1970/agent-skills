@@ -353,6 +353,87 @@ FOR d IN sparta_qra
 
 **Real incident (2026-04-16):** 2,937 QRAs missing embeddings discovered during batch update. These were created by a script that skipped the embedding step.
 
+### 23. HIGH: Use docker run for arangorestore — `arango-docker-run-restore`
+
+When `docker exec` times out (common with busy docker daemons), run arangorestore as a separate container:
+
+```bash
+# Method 1: Connect via container network
+docker run --rm \
+  -v /mnt/storage12tb/backups/arangodb:/backups \
+  --network container:embry-arangodb \
+  arangodb/arangodb:3.12.6 \
+  arangorestore \
+  --progress true \
+  --log.level info \
+  --server.endpoint http+tcp://127.0.0.1:8529 \
+  --server.username root \
+  --server.password "$ARANGO_PASS" \
+  --input-directory /backups/20260415-091703 \
+  --collection sparta_qra \
+  --overwrite true \
+  --threads 16 \
+  --batch-size 1000 \
+  --server.request-timeout 600
+
+# Method 2: HTTP API import (when docker is completely unresponsive)
+gunzip -c backup.data.json.gz > /tmp/docs.json
+# Then batch POST to /_api/document/{collection} with overwriteMode=replace
+```
+
+**When to apply:** `docker exec` times out after 10+ seconds, but ArangoDB HTTP API responds normally.
+
+**Operational rule:** Pass `--progress true` and `--log.level info` explicitly for long restores even though progress is enabled by default. Wrappers and `docker exec` often hide or buffer stdout, so operators need a consistent restore command shape when collecting logs and diagnosing collection-level progress.
+
+**Real incident (2026-04-18):** docker exec timed out during sparta_qra restore. HTTP API worked fine. Used HTTP batch import (500 docs/batch) to restore 233K QRAs in ~25 minutes.
+
+### 24. CRITICAL: RAM-Proportional Memory Limits — `arango-ram-proportional-limits`
+
+ArangoDB's default memory limits scale to available RAM. Using static small values causes TTL operations and large queries to fail with `global query memory limit reached`.
+
+**Defaults (auto-detect based on available RAM):**
+- `--rocksdb.block-cache-size`: 30% of (RAM - 2GB)
+- `--cache.size`: 25% of (RAM - 2GB)
+- `--query.memory-limit`: Per-query limit (default: half of global)
+- `--query.global-memory-limit`: Global limit across all queries
+
+**Formula for manual configuration:**
+```yaml
+# For a system with R GB total RAM:
+# Available = R - 2GB (reserve 2GB for OS)
+# RocksDB = 0.30 * Available
+# Cache = 0.25 * Available
+# Per-query = 0.08 * Available (or higher for large TTL ops)
+# Global = 0 (unlimited) or explicit large value
+```
+
+**Example for 256GB RAM:**
+```yaml
+command:
+  - arangod
+  - --server.endpoint=tcp://0.0.0.0:8529
+  - --server.authentication=true
+  - --vector-index
+  - --rocksdb.block-cache-size=81604378624   # ~76GB (30% of 254GB)
+  - --cache.size=67645734912                 # ~63GB (25% of 254GB)
+  - --query.memory-limit=21474836480         # 20GB per query
+  - --query.global-memory-limit=0            # Unlimited
+```
+
+**Common mistake (2GB block cache on 256GB system):**
+```yaml
+# BAD — 2GB block cache on 256GB system (0.8% utilization)
+--rocksdb.block-cache-size=2147483648
+--cache.size=536870912
+--query.memory-limit=4294967296
+# TTL operations on 200K+ doc collections fail with:
+# "query would use more memory than allowed (global query memory limit reached)"
+```
+
+**When to tune:** Always check docker-compose RAM settings match the host. ArangoDB in Docker doesn't auto-detect host RAM correctly.
+
+**Real incident (2026-04-21):** TTL cleanup on 235K QRA collection crashed ArangoDB. Root cause: 2GB block cache on 256GB system, plus 4GB per-query limit for TTL ops that needed 8GB+.
+
 ## Enforcement
 
 - **PostToolUse hook** `no-regex-silo.sh` fires on every Edit/Write to .py files

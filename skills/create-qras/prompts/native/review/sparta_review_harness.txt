@@ -1,0 +1,216 @@
+================================================================================
+SPARTA PROMPT REVIEW HARNESS
+================================================================================
+Version: sparta_native_v4 (2026-04-20)
+Purpose: Test cases and validation criteria for external GPT review
+
+This file is a REVIEW HARNESS only. It is NOT a production prompt.
+The production prompts are:
+  - sparta_system.txt (system prompt)
+  - sparta_user.txt (user prompt template)
+
+To review: Copy sparta_system.txt + sparta_user.txt (with test case substituted)
+to a web GPT and compare output against expected behavior below.
+
+================================================================================
+TEST CASE 1: Standard description with separable guidance
+================================================================================
+
+INPUTS:
+  control_id: SV-AC-1
+  name: Spacecraft Access Control
+  description: "The organization shall implement role-based access control mechanisms for all spacecraft command and control interfaces. Access logs should be reviewed weekly for anomalous patterns."
+  parent_id: null
+  family: SV-AC
+
+EXPECTED BEHAVIOR:
+  - Generate 2-3 pairs
+  - countermeasure_description: YES - core RBAC requirement
+  - implementation_guidance: YES - "reviewed weekly" is separable operational instruction
+  - family_context: YES - family="SV-AC" is provided
+  - scope_clarification: NO - no explicit scope in description
+
+VALIDATION:
+  [ ] "shall" preserved for RBAC requirement (mandatory)
+  [ ] "should" preserved for log review (recommendation)
+  [ ] implementation_guidance uses the separable "reviewed weekly" clause
+  [ ] family_context says only "belongs to the SV-AC control family"
+  [ ] No DOMAIN CONTEXT information in answers
+
+================================================================================
+TEST CASE 2: Single-sentence definition (no separation)
+================================================================================
+
+INPUTS:
+  control_id: SV-AV-3
+  name: Affect the watchdog timer onboard the satellite which could force satellite into some sort of recovery
+  description: "The Program shall perform in-depth analysis of watchdog timer implementation to achieve high levels of assurance that the implementation will satisfy mission objections and the availability and integrity is protected."
+  parent_id: null
+  family: null
+
+EXPECTED BEHAVIOR:
+  1. Should generate 1 pair in the normal case.
+  2. countermeasure_description: YES
+     - The description explicitly states the core required action: the Program shall perform in-depth analysis of watchdog timer implementation.
+     - This is the main grounded requirement and should be captured as the primary pair.
+  3. family_context: NO
+     - family is null.
+  4. implementation_guidance: Usually NO
+     - The phrase "shall perform in-depth analysis" is the same sentence that defines the core requirement.
+     - Because the only actionable statement is not meaningfully distinct from the main definition, it should remain inside countermeasure_description rather than be split into a second pair.
+  5. scope_clarification: NO
+     - "availability and integrity" are protection goals, not explicit system scope, target assets, or segment boundaries.
+
+RECOMMENDED RESULT:
+  - Prefer exactly 1 countermeasure_description pair.
+  - A second pair should not be generated unless the source includes a clearly separable implementation practice or explicit scope statement, which it does not here.
+
+VALIDATION CRITERIA:
+  [ ] Does the output preserve "shall" modality as mandatory language?
+  [ ] Are evidence_quotes verbatim from the description field?
+  [ ] Does the question include both "SV-AV-3" and the exact countermeasure name?
+  [ ] Is "mission objections" preserved as source wording rather than silently corrected?
+  [ ] Does the output avoid fabricating NIST mappings, threat relationships, implementation details, or explanatory context?
+  [ ] Does the output avoid splitting the same sentence into both countermeasure_description and implementation_guidance?
+
+================================================================================
+TEST CASE 3: Minimal description (insufficiency)
+================================================================================
+
+INPUTS:
+  control_id: SV-IT-1
+  name: Implement Secure Boot
+  description: "Secure boot."
+  parent_id: null
+  family: SV-IT
+
+EXPECTED BEHAVIOR:
+  - Description is too minimal to support countermeasure_description, implementation_guidance, or scope_clarification.
+  - family_context may still be generated if the family field alone supports a grounded statement such as membership in the SV-IT family.
+  - Do not generate countermeasure_description from the name alone unless the name itself is a complete, self-contained control statement that requires no added interpretation.
+
+PREFERRED OUTPUT BEHAVIOR:
+  Either:
+    - One family_context pair only, if your schema and downstream use want family-only outputs retained
+  Or:
+    - {"pairs": [], "skipped_reason": "Description is too minimal to support a grounded countermeasure_description, implementation_guidance, or scope_clarification pair."}
+
+DO NOT USE:
+  - "At most 1 weak pair from the name field" - this introduces a second, less deterministic path.
+
+VALIDATION:
+  [ ] Either {"pairs": [], "skipped_reason": "..."} OR exactly one family_context pair
+  [ ] If family_context generated: says only "belongs to the SV-IT control family"
+  [ ] No expansion of SV-IT acronym
+  [ ] No countermeasure_description generated from name alone
+
+================================================================================
+TEST CASE 4: Rich description with explicit scope
+================================================================================
+
+INPUTS:
+  control_id: SV-MA-2
+  name: Spacecraft Maintenance Authentication
+  description: "The ground segment shall authenticate all maintenance commands before transmission to the spacecraft bus. Authentication mechanisms must use cryptographic verification. This control applies to the link segment communications between mission operations and the space vehicle."
+  parent_id: null
+  family: SV-MA
+
+EXPECTED BEHAVIOR:
+  - Generate 3-4 pairs
+  - countermeasure_description: YES - core authentication requirement
+  - implementation_guidance: YES - "cryptographic verification" is separable operational detail
+  - family_context: YES - family provided
+  - scope_clarification: YES - explicit scope: "ground segment", "link segment", "space vehicle"
+
+VALIDATION:
+  [ ] "shall" and "must" modalities preserved correctly
+  [ ] scope_clarification uses verbatim scope language from description
+  [ ] No DOMAIN CONTEXT segment definitions used (must come from description)
+  [ ] Each pair has distinct evidence_quotes
+
+================================================================================
+TEST CASE 5: Description with inadmissible content
+================================================================================
+
+INPUTS:
+  control_id: SV-AC-5
+  name: Command Authentication
+  description: "Commands shall be authenticated. See NIST SP 800-53 IA-3 for implementation details. Related threats: T1059, T1190."
+  parent_id: null
+  family: null
+
+EXPECTED BEHAVIOR:
+  - Generate 1 pair
+  - countermeasure_description: YES - "Commands shall be authenticated"
+  - implementation_guidance: NO - "See NIST SP 800-53 IA-3" is inadmissible reference
+  - family_context: NO - family is null
+
+VALIDATION:
+  [ ] Only "Commands shall be authenticated" used as evidence
+  [ ] NIST reference NOT quoted or paraphrased
+  [ ] Threat mappings NOT mentioned
+  [ ] Answer does not say "per NIST" or similar
+
+================================================================================
+VALIDATION CHECKLIST (apply to all outputs)
+================================================================================
+
+GROUNDING:
+[ ] Every factual claim traces to evidence_quote
+[ ] Evidence_quotes are verbatim from admissible fields
+[ ] No DOMAIN CONTEXT information in answers
+[ ] No NIST/threat mappings unless explicitly in description
+
+MODALITY:
+[ ] "shall" -> mandatory preserved
+[ ] "should" -> recommendation preserved
+[ ] "must" -> mandatory preserved
+[ ] "may" -> permissive preserved
+[ ] No strengthening or weakening
+
+PAIR_TYPE RULES:
+[ ] Max 1 pair per pair_type
+[ ] countermeasure_description and implementation_guidance NEVER from the same sentence
+[ ] If the same sentence defines AND instructs, generate only countermeasure_description
+[ ] family_context uses fixed template only (no acronym expansion without source)
+[ ] scope_clarification requires explicit target systems or boundaries (protection goals alone do not count)
+
+INSUFFICIENCY:
+[ ] Minimal description (<20 words) -> no name-only pairs unless name is self-contained control statement
+[ ] No pairs -> skipped_reason explains why
+
+FORMAT:
+[ ] Valid JSON
+[ ] Only "pairs" and "skipped_reason" at top level
+[ ] All required fields present in each pair
+[ ] confidence is "high" or "medium" only
+
+================================================================================
+BEHAVIORAL EXPECTATIONS (v4 specific)
+================================================================================
+
+NON-NEGOTIABLE RULE (most important for reducing duplicate pair proliferation):
+  If the only actionable statement is the same sentence that defines the countermeasure,
+  generate only countermeasure_description.
+
+Sparse-description rule:
+  If a single sentence both defines the countermeasure and contains its only action,
+  the safer default is one countermeasure_description pair, not both
+  countermeasure_description and implementation_guidance.
+
+  Example: SV-AV-3 "shall perform in-depth analysis" is BOTH the definition AND the only action.
+  Correct output: 1 countermeasure_description pair.
+  Wrong output: 2 pairs (countermeasure_description + implementation_guidance from same sentence).
+
+Minimal-description rule:
+  If Description is minimal, do not generate countermeasure_description from the name alone
+  unless the name itself is a complete self-contained control statement.
+  family_context may still be generated if family is explicitly provided.
+
+  Example: SV-IT-1 with description "Secure boot." and family "SV-IT".
+  Correct output: 0-1 pairs (family_context only, or zero pairs with skipped_reason).
+  Wrong output: countermeasure_description generated from the name "Implement Secure Boot".
+
+================================================================================
+END OF REVIEW HARNESS
+================================================================================

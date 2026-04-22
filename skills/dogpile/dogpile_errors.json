@@ -1,0 +1,372 @@
+{
+  "last_updated": "2026-04-21T16:16:23.539197",
+  "sessions": [
+    {
+      "session_id": "dogpile_1776597513",
+      "query": "formalizing security requirements in Lean4 or Isabelle, formal methods for compliance frameworks like NIST 800-53, machine-checkable security specifications, crosswalk chain verification",
+      "started_at": "2026-04-19T07:18:33.975884",
+      "status": "completed",
+      "succeeded": [
+        "openai",
+        "brave",
+        "arxiv",
+        "github"
+      ],
+      "failed": [
+        "discord",
+        "codex_knowledge"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-04-19T07:23:23.798810",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        },
+        {
+          "timestamp": "2026-04-19T07:26:23.798882",
+          "provider": "codex_knowledge",
+          "error_type": "timeout",
+          "severity": "error",
+          "message": "codex_knowledge cancelled after timeout",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        },
+        {
+          "timestamp": "2026-04-19T07:28:23.918569",
+          "provider": "codex_knowledge",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "codex_knowledge timed out after 180s",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-19T07:28:30.289610",
+      "error_count": 3
+    },
+    {
+      "session_id": "dogpile_1776601102",
+      "query": "formalizing procedural security requirements hybrid formal methods compliance converting vague requirements machine-checkable specifications partial formalization NIST 800-53",
+      "started_at": "2026-04-19T08:18:22.898365",
+      "status": "completed",
+      "succeeded": [
+        "openai",
+        "brave",
+        "arxiv",
+        "github",
+        "llm"
+      ],
+      "failed": [
+        "discord"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-04-19T08:21:47.185086",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-19T08:23:41.581455",
+      "error_count": 1
+    },
+    {
+      "session_id": "dogpile_1776601840",
+      "query": "compliance officer workflow graph visualization: requirement traceability, evidence chain visualization, control mapping graphs, GRC tool dependency views. What graph visualizations do tools like Drata, Vanta, RegScale, Archer use? What do CMMC assessors and auditors need to see in graph form? Focus on: evidence-to-control tracing, inheritance visualization, gap analysis views, audit trail graphs",
+      "started_at": "2026-04-19T08:30:40.701606",
+      "status": "completed",
+      "succeeded": [
+        "openai",
+        "brave",
+        "arxiv",
+        "github"
+      ],
+      "failed": [
+        "discord",
+        "codex_knowledge"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-04-19T08:34:29.688583",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        },
+        {
+          "timestamp": "2026-04-19T08:37:29.688915",
+          "provider": "codex_knowledge",
+          "error_type": "timeout",
+          "severity": "error",
+          "message": "codex_knowledge cancelled after timeout",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        },
+        {
+          "timestamp": "2026-04-19T08:39:29.906799",
+          "provider": "codex_knowledge",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "codex_knowledge timed out after 180s",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-19T08:41:42.086658",
+      "error_count": 3
+    },
+    {
+      "session_id": "dogpile_1776603515",
+      "query": "test query",
+      "started_at": "2026-04-19T08:58:35.659584",
+      "status": "completed",
+      "succeeded": [
+        "openai",
+        "brave",
+        "arxiv",
+        "github",
+        "llm"
+      ],
+      "failed": [
+        "discord"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-04-19T09:02:58.275734",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-19T09:04:00.461760",
+      "error_count": 1
+    },
+    {
+      "session_id": "dogpile_1776604594",
+      "query": "arangodb python driver",
+      "started_at": "2026-04-19T09:16:34.535023",
+      "status": "failed",
+      "succeeded": [
+        "openai",
+        "arxiv",
+        "readarr",
+        "github",
+        "brave",
+        "llm"
+      ],
+      "failed": [
+        "discord"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-04-19T09:20:07.698962",
+          "provider": "discord",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "Discord error: No Discord guilds configured. Add guild IDs to SECURITY_GUILDS.",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-19T09:20:56.521596",
+      "error_count": 1
+    },
+    {
+      "session_id": "dogpile_1776625215",
+      "query": "systemd user service stuck deactivating docker daemon unresponsive fastapi uvicorn connection backlog recovery",
+      "started_at": "2026-04-19T15:00:15.303149",
+      "status": "failed",
+      "succeeded": [
+        "openai",
+        "arxiv",
+        "readarr",
+        "github",
+        "brave",
+        "llm"
+      ],
+      "failed": [],
+      "errors": [],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-19T15:08:57.455205",
+      "error_count": 0
+    },
+    {
+      "session_id": "dogpile_1776706953",
+      "query": "SPARTA space cybersecurity framework tactics techniques countermeasures hierarchy structure",
+      "started_at": "2026-04-20T13:42:33.216421",
+      "status": "failed",
+      "succeeded": [
+        "openai",
+        "readarr",
+        "brave",
+        "github",
+        "arxiv",
+        "llm"
+      ],
+      "failed": [],
+      "errors": [],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-20T13:48:16.894132",
+      "error_count": 0
+    },
+    {
+      "session_id": "dogpile_1776787980",
+      "query": "What does a cybersecurity compliance assessor (CMMC, FedRAMP, NIST 800-53) actually need to verify when reviewing a security control dataset like SPARTA? How do they validate control mappings, verify QRA quality, and what crosswalk evidence between frameworks (SPARTA NIST CWE ATT&CK) matters? What UI affordances help assessor workflow?",
+      "started_at": "2026-04-21T12:13:00.948969",
+      "status": "completed",
+      "succeeded": [
+        "openai",
+        "brave",
+        "arxiv",
+        "readarr",
+        "github"
+      ],
+      "failed": [
+        "codex_knowledge"
+      ],
+      "errors": [
+        {
+          "timestamp": "2026-04-21T12:19:14.523767",
+          "provider": "codex_knowledge",
+          "error_type": "timeout",
+          "severity": "error",
+          "message": "codex_knowledge cancelled after timeout",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        },
+        {
+          "timestamp": "2026-04-21T12:21:14.767557",
+          "provider": "codex_knowledge",
+          "error_type": "unknown",
+          "severity": "error",
+          "message": "codex_knowledge Timed out after 180s \u2192 Request timed out. Try again or use a more specific query",
+          "details": null,
+          "http_status": null,
+          "retry_after_seconds": null
+        }
+      ],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-21T12:21:20.614475",
+      "error_count": 2
+    },
+    {
+      "session_id": "dogpile_1776790061",
+      "query": "What does a cybersecurity compliance assessor (CMMC, FedRAMP, NIST 800-53) actually need to verify when reviewing a security control dataset like SPARTA?",
+      "started_at": "2026-04-21T12:47:41.104304",
+      "status": "completed",
+      "succeeded": [
+        "arxiv",
+        "readarr",
+        "brave",
+        "github",
+        "youtube"
+      ],
+      "failed": [],
+      "errors": [],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-21T12:50:19.704428",
+      "error_count": 0
+    },
+    {
+      "session_id": "dogpile_1776790012",
+      "query": "What does a cybersecurity compliance assessor (CMMC, FedRAMP, NIST 800-53) actually need to verify when reviewing a security control dataset like SPARTA? How do they validate control mappings, verify QRA quality, and what crosswalk evidence between frameworks (SPARTA NIST CWE ATT&CK) matters? What UI affordances help assessor workflow?",
+      "started_at": "2026-04-21T12:46:52.981765",
+      "status": "completed",
+      "succeeded": [
+        "openai",
+        "brave",
+        "readarr",
+        "github",
+        "youtube",
+        "arxiv"
+      ],
+      "failed": [],
+      "errors": [],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-21T12:52:58.586191",
+      "error_count": 0
+    },
+    {
+      "session_id": "dogpile_1776790507",
+      "query": "What does a cybersecurity compliance assessor (CMMC, FedRAMP, NIST 800-53) actually need to verify when reviewing a security control dataset like SPARTA?",
+      "started_at": "2026-04-21T12:55:07.810226",
+      "status": "completed",
+      "succeeded": [
+        "arxiv",
+        "brave",
+        "readarr",
+        "github",
+        "youtube"
+      ],
+      "failed": [],
+      "errors": [],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-21T12:57:42.711042",
+      "error_count": 0
+    },
+    {
+      "session_id": "dogpile_1776802054",
+      "query": "CMMC assessor workflow requirement conflict resolution evidence traceability threat matrix posture dashboard supply chain cascade",
+      "started_at": "2026-04-21T16:07:34.675720",
+      "status": "completed",
+      "succeeded": [
+        "openai",
+        "arxiv",
+        "readarr",
+        "brave",
+        "github"
+      ],
+      "failed": [],
+      "errors": [],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-21T16:14:57.783474",
+      "error_count": 0
+    },
+    {
+      "session_id": "dogpile_1776802244",
+      "query": "CMMC assessor workflow for cybersecurity posture dashboard, ATT&CK threat matrix curation/update process, and supply chain risk graph triage actions",
+      "started_at": "2026-04-21T16:10:44.767367",
+      "status": "completed",
+      "succeeded": [
+        "openai",
+        "readarr",
+        "arxiv",
+        "brave",
+        "github",
+        "llm"
+      ],
+      "failed": [],
+      "errors": [],
+      "rate_limits_hit": {},
+      "ended_at": "2026-04-21T16:16:23.539041",
+      "error_count": 0
+    }
+  ]
+}

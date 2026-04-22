@@ -138,13 +138,14 @@ def collect_evidence(cwd: str, dod_command: str, dod_assertion: str, lang: str =
                 p for p in clean_env.get("PATH", "").split(os.pathsep)
                 if ".venv" not in p
             )
+            dod_timeout = int(os.environ.get("CODE_RUNNER_DOD_TIMEOUT", "60"))
             proc = subprocess.run(
                 ["bash", "-lc", dod_command],
-                capture_output=True, text=True, timeout=60, cwd=cwd, env=clean_env,
+                capture_output=True, text=True, timeout=dod_timeout, cwd=cwd, env=clean_env,
             )
             stdout, stderr, exit_code = proc.stdout, proc.stderr, proc.returncode
         except subprocess.TimeoutExpired:
-            stdout, stderr, exit_code = "", "DoD command timed out after 60s", 1
+            stdout, stderr, exit_code = "", f"DoD command timed out after {dod_timeout}s", 1
         except Exception as e:
             stdout, stderr, exit_code = "", f"DoD error: {e}", 1
     else:

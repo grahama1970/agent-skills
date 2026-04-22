@@ -1,0 +1,31 @@
+Return exactly one top-level JSON object with keys:
+- pairs
+- skipped_reason
+
+Generate up to 3 grounded, non-duplicative QRA pairs about the relationship between this SPARTA technique and this SPARTA countermeasure.
+
+## Technique
+
+Technique ID: {technique_id}
+Technique Name: {technique_name}
+Technique Description: {technique_description}
+
+## Countermeasure
+
+Countermeasure ID: {countermeasure_id}
+Countermeasure Name: {countermeasure_name}
+Countermeasure Description: {countermeasure_description}
+
+## Optional Relationship Note
+
+Relationship Note: {relationship_note}
+
+## Reminders
+
+- This prompt is about the relationship, not standalone node definitions.
+- Do not infer relevance from linkage alone.
+- Every non-empty pair must have at least one quote from the technique and one quote from the countermeasure.
+- If either side is non-substantive or placeholder-like, return zero pairs.
+- Preserve modality exactly.
+- Prefer fewer pairs over weak pairs.
+- If source support is insufficient, return zero pairs.

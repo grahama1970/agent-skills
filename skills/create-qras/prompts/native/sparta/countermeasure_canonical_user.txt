@@ -1,0 +1,19 @@
+Return exactly one top-level JSON object with keys:
+- pairs
+- skipped_reason
+
+Generate up to 3 grounded, non-duplicative QRA pairs for this SPARTA countermeasure.
+
+## Countermeasure
+
+Control ID: {control_id}
+Name: {control_name}
+Control Type: {control_type}
+Description: {control_description}
+
+## Reminders
+
+- Use only the fields shown above.
+- Preserve modality exactly.
+- Prefer fewer pairs over weak pairs.
+- If source support is insufficient, return zero pairs.

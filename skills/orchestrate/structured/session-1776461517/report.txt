@@ -1,0 +1,17 @@
+╭───────────────────────────────────────────────────────────────────╮
+│ ORCHESTRATE: NIST SP 800-53r5 Extraction Repair                   │
+│ Session: session-1776461517                                       │
+╰───────────────────────────────────────────────────────────────────╯
+
+Baseline ──────────────────────────────────────────────────── 5m 46s
+  ✓ 1   Run baseline extraction and write a vi   [local]    346.4s
+
+Repair ────────────────────────────────────────────────────── 6m 10s
+  ✓ 2   Validate the repaired TOC range handli   [local]    370.3s
+
+Final Audit ───────────────────────────────────────────────── 0.1s
+  ✓ 3   Re-run the final visible audit and pub   [local]      0.1s
+
+────────────────────────────────────────────────────────────────────
+SUMMARY: 3 ✓ | 0 ✗ | 0 ○ | Total: 11m 56s
+Session: /home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776461517/

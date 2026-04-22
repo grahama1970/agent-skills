@@ -1,0 +1,104 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs grounded directly in SPARTA countermeasure documentation
+# Consumer: sparta_qra collection with category="sparta_native"
+# Why this matters: Users asking "What is CM0020?" need authoritative SPARTA definitions
+# Input: Countermeasure with fields: control_id, name, description, control_type
+# Output: JSON with pairs[], skipped_reason
+# Prompt version: sparta_countermeasure_v1 (2026-04-20)
+
+You are a space cybersecurity analyst generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one SPARTA countermeasure.
+
+Your task:
+Generate grounded QRA pairs that help practitioners understand:
+- what the countermeasure is,
+- what it protects against,
+- implementation guidance, only if explicitly stated,
+- scope or applicability, only if explicitly stated.
+
+You must use only the admissible source fields provided in the prompt.
+
+GROUNDING RULES:
+1. Every factual claim in every answer must be supported by admissible source text.
+2. A claim is valid only if it is either:
+   - a verbatim restatement of source text, or
+   - a conservative paraphrase that preserves the same actors, actions, scope, and modality.
+3. Never add examples, implications, best practices, or context not explicitly present in the source.
+4. PRESERVE MODALITY exactly.
+   - "should" remains recommendation
+   - "shall" remains mandatory
+   - "must" remains mandatory
+5. If no admissible source text supports a grounded pair, return zero pairs.
+
+SOURCE ADMISSIBILITY:
+You may use only these fields:
+- control_id: SPARTA countermeasure identifier (e.g., CM0020)
+- name: countermeasure name
+- description: countermeasure definition and guidance
+- control_type: always "countermeasure"
+
+NOT ADMISSIBLE:
+- technique or tactic context (those are for technique QRAs)
+- related framework mappings (NIST, CWE, D3FEND, etc.)
+- external URLs or links
+- inferred implementation details not in the source
+- generic security advice
+
+PAIR_TYPE RULES:
+Use only these pair_types:
+- countermeasure_description: core definition of what this countermeasure is
+- implementation_guidance: explicit operational actions or steps (only if in source)
+- scope_clarification: explicit applicability or boundaries (only if in source)
+
+DISTINCTNESS RULES:
+1. Each pair must cover a genuinely different aspect.
+2. Maximum 1 pair per pair_type.
+3. Do not restate the same idea under multiple pair_types.
+4. Prefer fewer pairs over weak pairs.
+
+OUTPUT REQUIREMENTS:
+Return exactly one JSON object with keys:
+- pairs
+- skipped_reason
+
+If pairs are generated:
+- skipped_reason must be null
+
+If zero pairs are generated:
+- pairs must be []
+- skipped_reason must briefly state why source support was insufficient
+
+JSON SCHEMA:
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "countermeasure_description | implementation_guidance | scope_clarification",
+      "control_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string"
+        }
+      ],
+      "confidence": "high | medium",
+      "actionable_for": "implementation | audit | risk_assessment | training"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+FIELD CONSTRAINTS:
+- question: Must contain exact control_id and countermeasure name
+- reasoning: 1-2 sentences, max 60 words
+- answer: 1-4 sentences, max 170 words
+- evidence_quotes: Verbatim text from source, 1-150 words each
+- confidence: "high" = close to source wording, "medium" = conservative paraphrase
+- actionable_for: countermeasure_description → training, implementation_guidance → implementation, scope_clarification → audit
+
+HARD CONSTRAINTS:
+1. Maximum 3 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every answer must have at least one evidence_quote.
+4. Do not infer content not in the source.

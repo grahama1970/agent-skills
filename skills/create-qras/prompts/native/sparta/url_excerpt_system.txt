@@ -1,0 +1,94 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs from SPARTA documentation URLs (extracted web content)
+# Consumer: sparta_qra collection with category="sparta_native"
+# Why: Some SPARTA knowledge is in prose documentation, not structured controls
+# Input: url_id, topic, text (extracted content)
+# Output: JSON with pairs[], skipped_reason
+# Note: INDEPENDENT - no hierarchy. Topic may NOT be used as evidence.
+# Prompt version: sparta_url_excerpt_v2 (2026-04-20)
+
+{_shared_base}
+
+You are generating QRA pairs from one documentation excerpt.
+
+## TASK
+
+Generate grounded QRA pairs only for what the provided text explicitly supports about:
+- definitions or concepts,
+- requirements or recommendations,
+- technical details or mechanisms,
+- scope, applicability, exclusions, or boundaries.
+
+Use fewer pairs when source support is limited.
+Do not generate a pair merely because a pair_type exists.
+
+## ADMISSIBLE SOURCE FIELDS
+
+- text
+- topic
+- url_id
+
+## TOPIC RULE
+
+- The topic may be used to make a question more readable.
+- The topic must not be treated as evidence.
+- If the text does not support the topic framing, do not use it.
+
+## PAIR TYPES
+
+Use only these pair_types:
+- concept_definition
+- requirement_statement
+- technical_detail
+- scope_clarification
+
+### pair_type rules
+
+- concept_definition:
+  Use for definitions, explanations, or descriptions of key terms or concepts.
+
+- requirement_statement:
+  Use for explicit requirements, recommendations, or mandates.
+
+- technical_detail:
+  Use for specific mechanisms, protocols, configurations, or implementation details.
+
+- scope_clarification:
+  Use for applicability, covered systems, exclusions, or boundaries.
+
+## JSON SCHEMA
+
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "concept_definition | requirement_statement | technical_detail | scope_clarification",
+      "url_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string"
+        }
+      ],
+      "grounding_mode": "verbatim | close_paraphrase"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+## FIELD CONSTRAINTS
+
+- question should ask about a specific aspect covered in the text
+- include the topic only if the text supports that framing
+- reasoning: 1-2 sentences, max 60 words
+- answer: 1-4 sentences, max 150 words
+- evidence_quotes: each 1-150 words
+- grounding_mode: "verbatim" if answer stays very close to source wording, "close_paraphrase" if conservative paraphrase
+
+## HARD CONSTRAINTS
+
+1. Maximum 4 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every answer must have at least one evidence_quote from the provided text.

@@ -9,6 +9,14 @@ case "${1:-help}" in
         shift
         python3 "$SCRIPT_DIR/generator.py" generate "$@"
         ;;
+    manifest)
+        shift
+        python3 "$SCRIPT_DIR/generator.py" manifest "$@"
+        ;;
+    review)
+        shift
+        python3 "$SCRIPT_DIR/generator.py" review "$@"
+        ;;
     list-sources)
         python3 "$SCRIPT_DIR/generator.py" list-sources
         ;;
@@ -21,8 +29,21 @@ case "${1:-help}" in
 
 USAGE:
     ./run.sh generate [OPTIONS]
+    ./run.sh manifest <path> [OPTIONS]
+    ./run.sh review <path> [OPTIONS]
     ./run.sh list-sources
     ./run.sh stats
+
+MANIFEST OPTIONS:
+    <path>               Path to execution manifest JSON
+    --limit N            Max jobs to process (0=all)
+    --prompt-kind NAME   Filter by prompt_kind
+    --dry-run            Show what would be processed
+    --skip-review        Skip review gate check
+
+REVIEW OPTIONS:
+    <path>               Path to execution manifest JSON
+    -o, --output FILE    Output path for review JSON
 
 GENERATE OPTIONS:
     --control ID         Generate QRAs for a specific control (CWE-79, SV-AC-2, AC-17, etc.)

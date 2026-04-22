@@ -18,6 +18,8 @@ Resilience features (based on 2025-2026 best practices):
 """
 import json
 import sys
+import threading
+import time
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FuturesTimeoutError
 from typing import Dict, Any, Optional
@@ -67,7 +69,10 @@ from dogpile.youtube_search import search_youtube, run_stage2_youtube
 from dogpile.wayback import search_wayback
 from dogpile.discord import search_discord_messages
 from dogpile.readarr import search_readarr
+from dogpile.html_report import write_html_report
 from dogpile.synthesis import generate_report
+
+PARTIAL_RESULTS_PATH = _SCRIPT_DIR / "dogpile_partial_results.json"
 
 # Memory integration (graceful degradation)
 try:
@@ -120,12 +125,198 @@ def _timed_stage2(name: str, func, *args, **kwargs):
             ))
 
 
+def _result_ok(result: Any) -> bool:
+    """Return True when a Dogpile result is not an error envelope."""
+    if isinstance(result, str):
+        return not result.startswith("Error:")
+    return not (isinstance(result, dict) and "error" in result)
+
+
+def _summarize_result(name: str, result: Any) -> Dict[str, Any]:
+    """Create a compact summary for incremental progress events."""
+    if not _result_ok(result):
+        if isinstance(result, dict):
+            return {"ok": False, "error": str(result.get("error", "Unknown error"))[:240]}
+        return {"ok": False, "error": str(result)[:240]}
+
+    summary: Dict[str, Any] = {"ok": True}
+    if name == "brave" and isinstance(result, dict):
+        web_results = result.get("web", {}).get("results", []) or result.get("results", [])
+        summary["result_count"] = len(web_results)
+        if result.get("query"):
+            summary["query"] = result["query"]
+    elif name == "github" and isinstance(result, dict):
+        summary["repos"] = len(result.get("repos", []) or [])
+        summary["issues"] = len(result.get("issues", []) or [])
+    elif name == "arxiv" and isinstance(result, dict):
+        summary["papers"] = len(result.get("items", []) or [])
+    elif name in {"youtube", "readarr"} and isinstance(result, list):
+        summary["result_count"] = len(result)
+    elif name == "wayback" and isinstance(result, dict):
+        summary["has_snapshot"] = bool(result.get("closest") or result.get("snapshots"))
+    elif name == "codex_knowledge":
+        text = result if isinstance(result, str) else json.dumps(result, ensure_ascii=False)
+        summary["excerpt"] = text[:180]
+    elif name == "stage2_github" and isinstance(result, dict):
+        summary["repos_examined"] = len(result.get("github_details", []) or [])
+        summary["target_repo"] = result.get("target_repo")
+        github_deep = result.get("github_deep", {}) or {}
+        summary["code_matches"] = len(github_deep.get("code_matches", []) or [])
+    elif name == "stage2_arxiv" and isinstance(result, dict):
+        summary["paper_details"] = len(result.get("arxiv_details", []) or [])
+        summary["deep_extractions"] = len(result.get("arxiv_deep", []) or [])
+    elif name == "stage2_youtube" and isinstance(result, list):
+        summary["transcripts"] = len(result)
+    elif name == "stage2_brave" and isinstance(result, list):
+        summary["deep_extractions"] = len(result)
+    elif name == "report" and isinstance(result, str):
+        summary["chars"] = len(result)
+        summary["lines"] = len(result.splitlines())
+    else:
+        summary["type"] = type(result).__name__
+    return summary
+
+
+class PartialResultsPublisher:
+    """Persist partial Dogpile results and emit machine-readable progress events."""
+
+    def __init__(self, requested_query: str):
+        self.path = PARTIAL_RESULTS_PATH
+        self.state: Dict[str, Any] = {
+            "requested_query": requested_query,
+            "effective_query": requested_query,
+            "status": "starting",
+            "updated_at": time.time(),
+            "partial_results_path": str(self.path),
+            "tailored_queries": {},
+            "results": {
+                "stage1": {},
+                "stage2": {},
+            },
+            "events": [],
+        }
+        self._write()
+        self.emit(
+            {
+                "event": "search_started",
+                "requested_query": requested_query,
+            }
+        )
+
+    def _write(self) -> None:
+        self.state["updated_at"] = time.time()
+        tmp_path = self.path.with_suffix(".tmp")
+        tmp_path.write_text(json.dumps(self.state, indent=2, ensure_ascii=False))
+        tmp_path.replace(self.path)
+
+    def emit(self, event: Dict[str, Any]) -> None:
+        payload = {**event, "partial_results_path": str(self.path), "ts": time.time()}
+        events = self.state.setdefault("events", [])
+        events.append(payload)
+        if len(events) > 50:
+            del events[:-50]
+        self.state["last_event"] = payload
+        self._write()
+        typer.echo(f"[dogpile-event] {json.dumps(payload, ensure_ascii=False)}", err=True)
+
+    def set_effective_query(self, query: str) -> None:
+        self.state["effective_query"] = query
+        self._write()
+
+    def set_tailored_queries(self, tailored: Dict[str, str]) -> None:
+        self.state["tailored_queries"] = tailored
+        self.state["status"] = "running"
+        self._write()
+        self.emit({"event": "tailored_queries_ready", "services": sorted(tailored.keys())})
+
+    def publish_result(self, stage: str, name: str, result: Any) -> None:
+        self.state["results"].setdefault(stage, {})[name] = result
+        self.emit(
+            {
+                "event": "partial_result",
+                "stage": stage,
+                "provider": name,
+                "summary": _summarize_result(name, result),
+            }
+        )
+
+    def publish_report(self, report: str, report_path: Optional[Path] = None) -> None:
+        self.state["final_report"] = report
+        if report_path:
+            self.state["html_report_path"] = str(report_path)
+        self.emit(
+            {
+                "event": "report_ready",
+                "stage": "report",
+                "provider": "report",
+                "summary": _summarize_result("report", report),
+                "html_report_path": str(report_path) if report_path else None,
+            }
+        )
+
+    def complete(self, success: bool, error: Optional[str] = None) -> None:
+        self.state["status"] = "completed" if success else "failed"
+        if error:
+            self.state["error"] = error
+        self.emit(
+            {
+                "event": "search_finished",
+                "status": self.state["status"],
+                "error": error,
+            }
+        )
+
+
+def _run_github_stage2_bundle(
+    github_res: Dict[str, Any],
+    query: str,
+    is_code_related: bool,
+) -> Dict[str, Any]:
+    """Run the full GitHub stage2 pipeline, including code explanation."""
+    github_details, github_deep, target_repo, deep_code_res = _timed_stage2(
+        "github",
+        run_stage2_github,
+        github_res,
+        query,
+        is_code_related,
+        search_codex,
+    )
+    code_explanation = None
+    if is_code_related and github_deep and target_repo:
+        from dogpile.code_explanation import explain_code_results
+        code_explanation = explain_code_results(query, target_repo, github_deep)
+    return {
+        "github_details": github_details,
+        "github_deep": github_deep,
+        "target_repo": target_repo,
+        "deep_code_res": deep_code_res,
+        "code_explanation": code_explanation,
+    }
+
+
+def _run_arxiv_stage2_bundle(arxiv_res: Dict[str, Any], query: str) -> Dict[str, Any]:
+    """Run the ArXiv stage2 pipeline."""
+    arxiv_details, arxiv_deep = _timed_stage2(
+        "arxiv",
+        run_stage2_arxiv,
+        arxiv_res,
+        query,
+        search_codex,
+    )
+    return {
+        "arxiv_details": arxiv_details,
+        "arxiv_deep": arxiv_deep,
+    }
+
+
 def run_stage1_searches(
     tailored: Dict[str, str],
     query: str,
     use_github_skill: bool,
     is_code_related: bool,
     with_perplexity: bool = False,
+    publisher: Optional[PartialResultsPublisher] = None,
+    on_result=None,
 ) -> Dict[str, Any]:
     """Stage 1: Run broad parallel searches across all providers.
 
@@ -206,6 +397,10 @@ def run_stage1_searches(
                     log_status(f"{name} failed: {error_msg[:60]}{hint_suffix}", provider=name, status="ERROR")
                     results[name] = {"error": error_msg, "hint": hint_info["hint"] if hint_info else None}
                     status[name] = f"[red]error[/red]"
+                if publisher:
+                    publisher.publish_result("stage1", name, results[name])
+                if on_result:
+                    on_result(name, results[name])
                 if live_ctx:
                     live_ctx.update(_build_progress_table())
         except FuturesTimeoutError:
@@ -226,6 +421,10 @@ def run_stage1_searches(
             hint_suffix = f" → {hint_info['hint']}" if hint_info else ""
             log_status(f"{name} {timeout_msg}{hint_suffix}", provider=name, status="ERROR")
             results[name] = {"error": timeout_msg, "hint": hint_info["hint"] if hint_info else None}
+            if publisher:
+                publisher.publish_result("stage1", name, results[name])
+            if on_result:
+                on_result(name, results[name])
 
     return results
 
@@ -239,12 +438,16 @@ def search(
     use_github_skill: bool = typer.Option(True, "--github-skill/--no-github-skill", help="Use /github-search skill"),
     auto_preset: bool = typer.Option(False, "--auto-preset", help="Auto-detect preset from query"),
     with_perplexity: bool = typer.Option(False, "--with-perplexity", help="Include Perplexity (paid API, off by default)"),
+    html_report: bool = typer.Option(False, "--html-report", help="Write a self-contained HTML/CSS report"),
+    open_report: bool = typer.Option(False, "--open-report", help="Open the HTML report in your browser"),
+    report_file: Optional[Path] = typer.Option(None, "--report-file", help="Write the HTML report to a specific path"),
 ):
     """Aggregate search results from multiple sources."""
 
     # Initialize error tracking, task-monitor, and execution collector
     session_id = start_error_session(query)
     monitor = start_monitor(query, name=f"dogpile-{session_id[-8:]}")
+    publisher = PartialResultsPublisher(query)
 
     from dogpile.utils import init_execution_collector
     init_execution_collector(session_id)
@@ -260,12 +463,19 @@ def search(
             auto_preset=auto_preset,
             monitor=monitor,
             with_perplexity=with_perplexity,
+            html_report=html_report,
+            open_report=open_report,
+            report_file=report_file,
+            publisher=publisher,
         )
         search_success = True
     except Exception as e:
         console.print(f"[red]Search failed: {e}[/red]")
         log_status(f"Search failed: {e}", provider="dogpile", status="ERROR", error_type="unknown")
+        publisher.complete(False, error=str(e))
     finally:
+        if search_success:
+            publisher.complete(True)
         # End monitoring and log summary
         end_error_session("completed" if search_success else "failed")
         end_monitor(search_success)
@@ -317,6 +527,10 @@ def _run_search(
     auto_preset: bool,
     monitor,
     with_perplexity: bool = False,
+    html_report: bool = False,
+    open_report: bool = False,
+    report_file: Optional[Path] = None,
+    publisher: Optional[PartialResultsPublisher] = None,
 ):
     """Internal search implementation."""
     # Pre-hook: Recall prior research on this topic to avoid redundant API calls
@@ -357,6 +571,8 @@ def _run_search(
 
     # 1. Analyze Query (Ambiguity + Intent)
     query, is_code_related = analyze_query(query, interactive)
+    if publisher:
+        publisher.set_effective_query(query)
 
     console.print(f"[bold blue]Dogpiling on:[/bold blue] {query} (Code Related: {is_code_related})...")
 
@@ -375,12 +591,61 @@ def _run_search(
     if preset_brave_query:
         tailored["brave"] = preset_brave_query
         console.print(f"  [magenta]brave (preset):[/magenta] {preset_brave_query[:80]}...")
+    if publisher:
+        publisher.set_tailored_queries(tailored)
     monitor.complete_stage("tailoring")
+
+    stage2_lock = threading.Lock()
+    stage2_futures = []
+    stage2_results: Dict[str, Any] = {}
+
+    def schedule_stage2(name: str, stage1_result: Any) -> None:
+        stage_map = {
+            "github": ("stage2_github", lambda: _run_github_stage2_bundle(stage1_result, query, is_code_related)),
+            "arxiv": ("stage2_arxiv", lambda: _run_arxiv_stage2_bundle(stage1_result, query)),
+            "youtube": ("stage2_youtube", lambda: _timed_stage2("youtube", run_stage2_youtube, stage1_result)),
+            "brave": ("stage2_brave", lambda: _timed_stage2("brave", run_stage2_brave, stage1_result, query, search_codex)),
+        }
+        if name not in stage_map:
+            return
+
+        monitor_stage, runner = stage_map[name]
+        monitor.start_stage(monitor_stage)
+        future = stage2_executor.submit(runner)
+        stage2_futures.append(future)
+
+        def _store_stage2_result(done_future, provider_name=name, monitor_name=monitor_stage):
+            try:
+                result = done_future.result()
+            except Exception as e:
+                result = {"error": str(e)}
+            with stage2_lock:
+                stage2_results[provider_name] = result
+            if publisher:
+                publisher.publish_result("stage2", monitor_name, result)
+            monitor.complete_stage(monitor_name)
+
+        future.add_done_callback(_store_stage2_result)
 
     # Stage 1: Broad parallel searches
     monitor.start_stage("stage1")
-    stage1_results = run_stage1_searches(tailored, query, use_github_skill, is_code_related, with_perplexity=with_perplexity)
-    monitor.complete_stage("stage1")
+    with ThreadPoolExecutor(max_workers=4) as stage2_executor:
+        stage1_results = run_stage1_searches(
+            tailored,
+            query,
+            use_github_skill,
+            is_code_related,
+            with_perplexity=with_perplexity,
+            publisher=publisher,
+            on_result=schedule_stage2,
+        )
+        monitor.complete_stage("stage1")
+
+        for future in stage2_futures:
+            try:
+                future.result()
+            except Exception:
+                pass
 
     # Flush stage1 execution metadata to memory
     _flush_execution_records("stage1")
@@ -412,38 +677,27 @@ def _run_search(
     wayback_res = stage1_results["wayback"]
     codex_src_res = stage1_results["codex_knowledge"]
 
-    # Stage 2: Deep dives
-    # 2.1 GitHub Multi-Stage
-    monitor.start_stage("stage2_github")
-    github_details, github_deep, target_repo, deep_code_res = _timed_stage2(
-        "github", run_stage2_github, github_res, query, is_code_related, search_codex
-    )
-    monitor.complete_stage("stage2_github")
+    github_stage2 = stage2_results.get("github", {})
+    if not isinstance(github_stage2, dict) or "error" in github_stage2:
+        github_stage2 = {}
+    github_details = github_stage2.get("github_details", [])
+    github_deep = github_stage2.get("github_deep", {})
+    target_repo = github_stage2.get("target_repo")
+    deep_code_res = github_stage2.get("deep_code_res", [])
+    code_explanation = github_stage2.get("code_explanation")
 
-    # Stage 2.5: Code explanation (only for code-related queries with deep results)
-    code_explanation = None
-    if is_code_related and github_deep and target_repo:
-        monitor.start_stage("code_explanation")
-        from dogpile.code_explanation import explain_code_results
-        code_explanation = explain_code_results(query, target_repo, github_deep)
-        monitor.complete_stage("code_explanation")
+    arxiv_stage2 = stage2_results.get("arxiv", {})
+    if not isinstance(arxiv_stage2, dict) or "error" in arxiv_stage2:
+        arxiv_stage2 = {}
+    arxiv_details = arxiv_stage2.get("arxiv_details", [])
+    arxiv_deep = arxiv_stage2.get("arxiv_deep", [])
 
-    # 2.2 ArXiv Multi-Stage
-    monitor.start_stage("stage2_arxiv")
-    arxiv_details, arxiv_deep = _timed_stage2(
-        "arxiv", run_stage2_arxiv, arxiv_res, query, search_codex
-    )
-    monitor.complete_stage("stage2_arxiv")
-
-    # 2.3 YouTube Two-Stage
-    monitor.start_stage("stage2_youtube")
-    youtube_transcripts = _timed_stage2("youtube", run_stage2_youtube, youtube_res)
-    monitor.complete_stage("stage2_youtube")
-
-    # 2.4 Brave Deep Extraction
-    monitor.start_stage("stage2_brave")
-    brave_deep = _timed_stage2("brave", run_stage2_brave, brave_res, query, search_codex)
-    monitor.complete_stage("stage2_brave")
+    youtube_transcripts = stage2_results.get("youtube", [])
+    if not isinstance(youtube_transcripts, list):
+        youtube_transcripts = []
+    brave_deep = stage2_results.get("brave", [])
+    if not isinstance(brave_deep, list):
+        brave_deep = []
 
     # Flush stage2 execution metadata to memory
     _flush_execution_records("stage2")
@@ -474,6 +728,26 @@ def _run_search(
         code_explanation=code_explanation,
     )
     monitor.complete_stage("report")
+
+    report_path = None
+    if html_report or open_report or report_file:
+        report_path = write_html_report(
+            query=query,
+            markdown_report=final_report,
+            brave_res=brave_res,
+            github_res=github_res,
+            arxiv_res=arxiv_res,
+            youtube_res=youtube_res,
+            readarr_res=readarr_res,
+            wayback_res=wayback_res,
+            codex_src_res=codex_src_res,
+            perp_res=perp_res,
+            output_path=report_file,
+            open_in_browser=open_report,
+        )
+        typer.echo(f"[dogpile] HTML report: {report_path}", err=True)
+    if publisher:
+        publisher.publish_report(final_report, report_path=report_path)
 
     # Print the report
     # When piped (non-TTY), output raw markdown for machine parsing.

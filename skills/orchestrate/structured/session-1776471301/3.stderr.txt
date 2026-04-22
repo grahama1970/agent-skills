@@ -1,0 +1,3 @@
+2026-04-17 20:20:52.057 | ERROR    | __main__:run:526 - === PRE-FLIGHT FAILED for 3 (1 issues) ===
+2026-04-17 20:20:52.057 | ERROR    | __main__:run:528 -   [backend] Value error, Unknown backend 'gpt-5.3-codex'. Valid: claude, codex, deepseek, gemini, test, text
+2026-04-17 20:20:52.057 | ERROR    | __main__:run:529 -     FIX: Use one of: codex, claude, text, gemini, deepseek.

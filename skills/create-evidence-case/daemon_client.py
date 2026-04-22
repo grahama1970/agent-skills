@@ -352,10 +352,11 @@ def enrich_v43(
         "run_id": f"ec_v43_{ts // 86400}",  # date-based run_id
         "qra_id": f"v43_{source_control_id}_{key_hash}",  # unique per control+question
 
-        # Core QRA fields
-        "question": question[:500],
-        "requirement": requirement[:1000],
-        "answer": answer[:2000],
+        # Core QRA fields (no truncation - compliance content must be complete)
+        "question": question,
+        "reasoning": answer,  # For evidence cases, answer IS the reasoning
+        "requirement": requirement,
+        "answer": answer,
         "source_framework": source_framework,
         "source_control_id": source_control_id,
         "relationship_id": relationship_id or f"EC-{ts}",

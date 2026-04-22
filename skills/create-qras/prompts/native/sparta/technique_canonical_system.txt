@@ -1,0 +1,113 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate canonical QRAs for SPARTA techniques with parent tactic context
+# Consumer: sparta_qra collection with category="sparta_native"
+# Why: Users asking "What is DE-0005 Disable Telemetry?" need technique definition + tactical context
+# Input: Technique fields + parent tactic fields (12 total admissible fields)
+# Output: JSON with pairs[], skipped_reason
+# Prompt version: sparta_technique_canonical_v2 (2026-04-20)
+
+{_shared_base}
+
+You are generating QRA pairs for exactly one SPARTA technique with limited parent-tactic context.
+
+## TASK
+
+Generate grounded QRA pairs only for what the admissible source fields explicitly support about:
+- what the technique describes,
+- detection methods, only if explicitly stated in technique text,
+- mitigation guidance, only if explicitly stated in technique text.
+
+Parent tactic fields are provided only for light contextual framing inside an answer when needed for clarity.
+Do not generate a standalone relationship-style pair about how the technique fits within the tactic.
+That relationship belongs in the separate tactic-technique relationship prompt.
+
+Use fewer pairs when source support is limited.
+Do not generate a pair merely because a pair_type exists.
+
+## ADMISSIBLE SOURCE FIELDS
+
+### Current technique
+- control_id
+- name
+- description
+- parent_id
+- control_type
+
+### Parent tactic
+- parent_tactic_id
+- parent_tactic_name
+- parent_tactic_description
+
+## HIERARCHY RULES
+
+1. Technique-level claims must be supported directly by technique fields.
+2. Parent tactic fields may be used only for brief contextual framing inside an answer.
+3. Parent tactic text must not be used to invent, strengthen, or complete missing technique details.
+4. Do not generate a standalone pair whose main purpose is to explain the relationship between the technique and the parent tactic.
+5. If an answer would still be valid with all parent-tactic wording removed, it is canonical-safe. If the answer depends on explaining the relationship, omit it here and leave it to the relationship prompt.
+
+## NON-ADMISSIBLE CONTEXT
+
+Do not use:
+- countermeasure mappings
+- related controls from other frameworks
+- external URLs
+- external knowledge
+- metadata
+- review notes
+- examples not present in source text
+
+## PAIR TYPES
+
+Use only these pair_types:
+- technique_description
+- detection_methods
+- mitigation_guidance
+
+### pair_type rules
+
+- technique_description:
+  Use for the single best grounded summary of the technique itself.
+
+- detection_methods:
+  Use only when technique text explicitly states how the technique may be detected or observed.
+
+- mitigation_guidance:
+  Use only when technique text explicitly states mitigations, protections, or defensive actions.
+
+## JSON SCHEMA
+
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "technique_description | detection_methods | mitigation_guidance",
+      "control_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string"
+        }
+      ],
+      "grounding_mode": "verbatim | close_paraphrase"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+## FIELD CONSTRAINTS
+
+- every question must contain exact control_id and exact technique name
+- questions must focus on the technique itself, not the technique-tactic relationship
+- reasoning: 1-2 sentences, max 60 words
+- answer: 1-4 sentences, max 140 words
+- evidence_quotes: each 1-150 words
+- grounding_mode: "verbatim" if answer stays very close to source wording, "close_paraphrase" if conservative paraphrase
+
+## HARD CONSTRAINTS
+
+1. Maximum 3 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every answer must have at least one evidence_quote.

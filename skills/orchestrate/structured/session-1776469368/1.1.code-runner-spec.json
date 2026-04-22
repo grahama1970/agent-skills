@@ -1,0 +1,18 @@
+{
+  "task_id": "1.1",
+  "title": "Add fluid typography with clamp()",
+  "prompt": "Update EmbryStyle.ts to use CSS clamp() for fluid typography.\n\nFile: packages/ux-lab/src/components/sparta/common/EmbryStyle.ts\n\nAdd fluid scale tokens:\n```typescript\nexport const FLUID = {\n  techLabel: 'clamp(0.625rem, 0.8vw + 0.4rem, 0.875rem)',  // 10px \u2192 14px\n  tacticHeader: 'clamp(0.5rem, 0.6vw + 0.3rem, 0.75rem)',  // 8px \u2192 12px\n  cardPadding: 'clamp(6px, 0.8vw, 12px)',\n  gridGap: 'clamp(8px, 1vw, 16px)',\n}\n```",
+  "backend": "claude",
+  "cwd": "/home/graham/workspace/experiments/pi-mono",
+  "output_dir": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776469368",
+  "definition_of_done": {
+    "command": "grep -q 'FLUID' packages/ux-lab/src/components/sparta/common/EmbryStyle.ts",
+    "assertion": "FLUID typography tokens added"
+  },
+  "allowlist": [
+    "packages/ux-lab/src/components/sparta/common/EmbryStyle.ts"
+  ],
+  "read_context": [
+    "/home/graham/workspace/experiments/pi-mono/.code-runner-skills-1.1.md"
+  ]
+}

@@ -145,6 +145,46 @@ Every task in the YAML should map to CALL, EXTEND, or CREATE. If the plan is mos
 CREATE, you haven't looked hard enough. `/review-plan` will flag tasks that overlap
 with existing skills as FAIL.
 
+### Step 4: Compliance Governance (BLOCKING for SPARTA/CAE plans)
+
+Plans that involve CAE (Claims-Arguments-Evidence) trees, SPARTA controls, compliance
+verdicts, or posture assessments MUST enforce "analyst workbench, not truth engine":
+
+**Non-negotiable rules:**
+
+| Requirement | Implementation |
+|-------------|----------------|
+| NEEDS_VERIFICATION default | All CAE claims/verdicts default to NEEDS_VERIFICATION, never auto-PASS |
+| Human review gate | Every posture change requires compliance officer review before status change |
+| No autonomous certification | Agent NEVER writes "certified", "compliant", "approved" without human gate |
+| Retrieval language only | Use "retrieved", "found", "extracted" — never "determined", "verified", "confirmed" |
+
+**In YAML plans, add to metadata:**
+
+```yaml
+metadata:
+  compliance_governance:
+    principle: "Analyst workbench, not truth engine"
+    verdicts: "All default to NEEDS_VERIFICATION"
+    human_gate: "Compliance officer reviews before status change"
+```
+
+**In task prompts, include:**
+
+```
+COMPLIANCE GOVERNANCE: This is an analyst workbench, not a truth engine.
+- All verdicts default to NEEDS_VERIFICATION
+- Human reviews before any status change
+- Use retrieval language ("retrieved", "found"), not judgment language ("verified", "confirmed")
+```
+
+`/review-plan` will FAIL plans that:
+- Auto-approve verdicts without human gates
+- Use "certified", "compliant", "approved" without human review step
+- Missing `compliance_governance` metadata for SPARTA/CAE plans
+
+Reference: `docs/WALKTHROUGH_QRA_COVERAGE_AND_EVIDENCE_CASES.md`
+
 Steps 7-11 happen automatically after writing the YAML. The human only intervenes if
 `/review-plan` FAILs (fix the plan) or if they want to amend the DAG before execution.
 

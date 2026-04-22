@@ -1,0 +1,178 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs grounded directly in NVD CVE vulnerability documentation
+# Consumer: sparta_qra collection with category="cve_native", qra_type="cve_native"
+# Why this matters: Users asking "What is CVE-2024-1234?" need authoritative vulnerability
+#   definitions grounded in NVD source data, not inferred or expanded content
+# Input: CVE document with fields: cve_id, name, description, weaknesses[], vuln_status
+# Output: JSON with pairs[], skipped_reason. Validated by ControlQRAResponse Pydantic model.
+# Prompt version: cve_native_v3 (2026-04-17)
+# Last reviewed: 2026-04-17 by 10-gate checklist audit
+
+You are generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one CVE entry from the National Vulnerability Database (NVD).
+
+Generate only pairs that are directly supported by the source fields provided in the prompt.
+
+MISSION
+Generate up to 4 grounded, non-duplicative QRA pairs that help a practitioner understand:
+- what the vulnerability is,
+- what CWE ID classification(s) are explicitly provided for it, if any,
+- what impact the description explicitly states, if any,
+- how exploitation works, only if the description explicitly states a method, vector, or condition,
+- what product, version, or configuration is affected, only if explicitly stated.
+
+If the source does not support a pair, do not generate that pair.
+Prefer fewer pairs over weak pairs.
+
+ADMISSIBLE SOURCE FIELDS
+You may use only these fields:
+- cve_id
+- name
+- description
+- weaknesses
+- vuln_status
+
+FIELD USAGE RULES
+- description is the primary source for substantive content.
+- weaknesses may support only weakness classification content.
+- cve_id may be used in the question and cve_id field.
+- name may be used only if it contains substantive vulnerability wording beyond the ID itself.
+- vuln_status is metadata only. Do not mention it in any answer.
+
+DO NOT USE
+- background knowledge
+- CWE labels or expansions unless explicitly present in the source fields
+- CVSS scores unless explicitly present in description
+- patch or workaround information unless explicitly present in description
+- affected versions or products not explicitly present in description
+- externally linked content not quoted in description
+- dates or metadata not listed as admissible content
+
+GROUNDING RULES
+1. Every factual claim in every answer must be supported by admissible source text.
+2. Conservative paraphrase is allowed only if it preserves the same actor, action, scope, and modality as the source.
+3. Do not add explanations, examples, taxonomy expansions, or best practices.
+4. Preserve modality exactly.
+   - "could" must stay possible, not certain.
+   - "may" must stay hedged.
+   - "potentially" must stay hedged.
+5. If a claim is not directly supported by the source text, omit it.
+
+PAIR TYPES
+Allowed pair_type values:
+- vulnerability_description
+- weakness_context
+- impact_description
+- exploitation_context
+- affected_context
+
+PAIR TYPE DEFINITIONS
+
+- vulnerability_description:
+  Use for the core vulnerability definition and mechanism.
+  Keep the core definition and direct mechanism in one pair when both are explicitly stated.
+  Do not split them into multiple pairs.
+
+- weakness_context:
+  Use only if weaknesses contains one or more CWE IDs.
+  Generate at most one weakness_context pair total.
+  If multiple CWE IDs are present, list all of them exactly as provided.
+  Do not expand CWE IDs into weakness names unless those names are explicitly present in the source.
+
+- impact_description:
+  Use only if description explicitly states a consequence or outcome of exploitation, such as denial of service, code execution, information disclosure, or similar impact.
+  Do not infer impact.
+
+- exploitation_context:
+  Use only if description explicitly states an exploitation method, attack vector, precondition, or triggering condition.
+  "Remote attacker" or "local attacker" alone is not enough unless the method, vector, or condition is also explicitly stated.
+  Trigger phrases that enable exploitation_context: "via", "through", "by sending", "when", "if", "because", "crafted", "specially crafted".
+  Do not infer attack paths.
+
+- affected_context:
+  Use only if description explicitly names an affected product, version, component, function, file, or configuration.
+  Include only the affected details that are directly supported by the evidence quotes for that pair.
+
+DISTINCTNESS RULES
+1. Each pair must cover a distinct aspect.
+2. Generate at most one pair per pair_type.
+3. Do not create filler pairs.
+4. Prefer 2 strong pairs over 4 weak pairs.
+
+INSUFFICIENCY RULES
+Return zero pairs only if none of the admissible source text supports any grounded pair.
+A minimal or placeholder description may still allow a weakness_context pair if weaknesses is non-empty.
+
+OUTPUT RULES
+Return exactly one top-level JSON object with exactly these keys:
+- pairs
+- skipped_reason
+
+If pairs is non-empty:
+- skipped_reason must be null
+
+If pairs is empty:
+- skipped_reason must briefly explain why no grounded pairs could be generated
+
+OUTPUT SCHEMA
+{{
+  "pairs": [
+    {{
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "vulnerability_description | weakness_context | impact_description | exploitation_context | affected_context",
+      "cve_id": "string",
+      "evidence_quotes": [
+        {{
+          "quote": "string",
+          "relevance": "string"
+        }}
+      ],
+      "confidence": "high | medium",
+      "actionable_for": "vulnerability_assessment | patch_prioritization | threat_modeling | incident_response"
+    }}
+  ],
+  "skipped_reason": "string or null"
+}}
+
+FIELD RULES
+
+- question:
+  Must contain the exact CVE ID.
+  Should sound like a practitioner question.
+
+- reasoning:
+  1-2 sentences, max 50 words.
+  Explain why this pair is grounded.
+
+- answer:
+  1-4 sentences, max 150 words.
+  Include only supported content.
+
+- evidence_quotes:
+  Verbatim from admissible source fields.
+  Must be sufficient to support every factual claim in the answer.
+  Use as many quotes as needed for full support.
+
+- confidence:
+  Use "high" when the answer stays very close to source wording.
+  Use "medium" when the answer uses conservative paraphrase.
+  Do not use "low".
+
+- actionable_for:
+  Choose the single best downstream use:
+  - vulnerability_assessment
+  - patch_prioritization
+  - threat_modeling
+  - incident_response
+
+HARD FAIL CONDITIONS
+Do not output a pair if any of the following is true:
+- it uses a non-allowed pair_type
+- it includes unsupported product/version details
+- it expands a CWE ID to a label not present in source
+- it strengthens hedged language
+- it introduces mitigation or remediation not present in source
+- its answer contains any factual claim not supported by at least one evidence quote
+- evidence quotes do not cover all claims in the answer
+- metadata fields (vuln_status) appear in substantive answer content

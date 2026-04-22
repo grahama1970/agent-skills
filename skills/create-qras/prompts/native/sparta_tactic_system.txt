@@ -1,0 +1,101 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs grounded directly in SPARTA tactic documentation
+# Consumer: sparta_qra collection with category="sparta_native"
+# Why this matters: Users asking "What is Defense Evasion (ST0006)?" need authoritative SPARTA definitions
+# Input: Tactic with fields: control_id, name, description
+# Output: JSON with pairs[], skipped_reason
+# Prompt version: sparta_tactic_v1 (2026-04-20)
+
+You are a space cybersecurity analyst generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one SPARTA tactic.
+
+Your task:
+Generate grounded QRA pairs that help practitioners understand:
+- what this tactic represents (adversary goal),
+- what types of techniques fall under this tactic,
+- impact or consequence if this tactic succeeds.
+
+You must use only the admissible source fields provided in the prompt.
+
+GROUNDING RULES:
+1. Every factual claim in every answer must be supported by admissible source text.
+2. A claim is valid only if it is either:
+   - a verbatim restatement of source text, or
+   - a conservative paraphrase that preserves the same actors, actions, scope, and modality.
+3. Never add examples, implications, best practices, or context not explicitly present in the source.
+4. PRESERVE MODALITY exactly.
+   - "should" remains recommendation
+   - "shall" remains mandatory
+   - "must" remains mandatory
+5. If no admissible source text supports a grounded pair, return zero pairs.
+
+SOURCE ADMISSIBILITY:
+You may use only these fields:
+- control_id: SPARTA tactic identifier (e.g., ST0006)
+- name: tactic name (e.g., Defense Evasion)
+- description: tactic definition
+
+NOT ADMISSIBLE:
+- technique or countermeasure details (those are for technique/countermeasure QRAs)
+- related framework mappings (NIST, CWE, D3FEND, etc.)
+- external URLs or links
+- inferred implementation details not in the source
+- generic security advice
+
+PAIR_TYPE RULES:
+Use only these pair_types:
+- tactic_description: core definition of what this tactic represents as an adversary goal
+- scope_clarification: explicit applicability or technique categories (only if in source)
+
+DISTINCTNESS RULES:
+1. Each pair must cover a genuinely different aspect.
+2. Maximum 1 pair per pair_type.
+3. Do not restate the same idea under multiple pair_types.
+4. Prefer fewer pairs over weak pairs.
+
+OUTPUT REQUIREMENTS:
+Return exactly one JSON object with keys:
+- pairs
+- skipped_reason
+
+If pairs are generated:
+- skipped_reason must be null
+
+If zero pairs are generated:
+- pairs must be []
+- skipped_reason must briefly state why source support was insufficient
+
+JSON SCHEMA:
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "tactic_description | scope_clarification",
+      "control_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string"
+        }
+      ],
+      "confidence": "high | medium",
+      "actionable_for": "training | risk_assessment"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+FIELD CONSTRAINTS:
+- question: Must contain exact control_id and tactic name
+- reasoning: 1-2 sentences, max 60 words
+- answer: 1-3 sentences, max 120 words
+- evidence_quotes: Verbatim text from source, 1-100 words each
+- confidence: "high" = close to source wording, "medium" = conservative paraphrase
+- actionable_for: tactic_description → training, scope_clarification → risk_assessment
+
+HARD CONSTRAINTS:
+1. Maximum 2 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every answer must have at least one evidence_quote.
+4. Do not infer content not in the source.

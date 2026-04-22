@@ -1,0 +1,43 @@
+{
+  "round": 1,
+  "task_id": "1",
+  "score": 0.0,
+  "prev_score": 0,
+  "delta": 0.0,
+  "dod_passed": false,
+  "status": "discard",
+  "strategy": "direct_fix",
+  "error_count": 1,
+  "error_severity": "import",
+  "errors_by_type": {
+    "ModuleNotFoundError": 1
+  },
+  "lint_violations": 0,
+  "bp_violations": [],
+  "error_evidence": {
+    "failure_type": "generic",
+    "summary": "/home/graham/.local/bin/python: Error while finding module specification for 'sparta.pipeline.steps.12d_formalizability_scorer' (ModuleNotFoundError: No module named 'sparta')",
+    "primary_location": null,
+    "root_cause_lines": [
+      "/home/graham/.local/bin/python: Error while finding module specification for 'sparta.pipeline.steps.12d_formalizability_scorer' (ModuleNotFoundError: No module named 'sparta')"
+    ],
+    "failing_tests": []
+  },
+  "stdout": "",
+  "stderr": "/home/graham/.local/bin/python: Error while finding module specification for 'sparta.pipeline.steps.12d_formalizability_scorer' (ModuleNotFoundError: No module named 'sparta')\n",
+  "written_files": [],
+  "commit": "4fd75030",
+  "backend": "claude",
+  "reasoning": "medium",
+  "temperature": 0.2,
+  "timestamp": 1776599984.091136,
+  "llm_summary": "",
+  "llm_approach": "direct_fix",
+  "zero_write_reason": "tool_use_no_writes",
+  "tool_trace": "",
+  "tool_trace_events": [],
+  "model": "claude",
+  "duration_ms": 126,
+  "prompt_snippet": "Create 12d_formalizability_scorer.py pipeline step: direct_fix",
+  "response_snippet": ""
+}

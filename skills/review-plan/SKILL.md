@@ -245,6 +245,26 @@ Scan every task with `runner: "code-runner"`. If the task's `definition_of_done.
 
 **Catches:** Agent writes Express endpoints via code-runner. Code-runner edits `server/index.ts` in a worktree. DoD runs `curl http://localhost:3001/api/posture/frameworks`. The running Express server doesn't see the worktree edits. Curl returns 404. Code-runner retries 5 rounds, fails every time. Hours of LLM tokens burned on an impossible DoD.
 
+### 16. Compliance Governance Enforcement (FAIL grade)
+Scan plan metadata and task descriptions for compliance/evidence-case/CAE keywords: `evidence-case`, `CAE`, `compliance`, `verdict`, `SPARTA`, `traceability`, `grading`, `pass/fail`, `certification`. Any plan involving compliance assessment MUST enforce the **Analyst Workbench Principle**:
+
+**Core Principle:** The system is a **compliance exploration utility and analyst workbench** — NOT a truth engine, certification authority, or autonomous compliance decision-maker.
+
+**Required safeguards:**
+1. **NEEDS_VERIFICATION default**: All CAE claims, verdicts, and grades MUST default to `status: "NEEDS_VERIFICATION"`. No auto-approval.
+2. **Human review gate**: Any task that changes verdict status from NEEDS_VERIFICATION to SATISFIED/NOT_SATISFIED MUST include a human review gate (not LLM-only).
+3. **No autonomous certification**: Plan MUST NOT contain language like "auto-approve", "auto-certify", "autonomous pass/fail", or "LLM determines compliance".
+4. **Retrieval, not judgment**: Tasks should describe "retrieval", "assembly", "exploration", "traceability" — not "determination", "certification", "approval".
+
+**Grading:**
+- **PASS**: Plan enforces NEEDS_VERIFICATION default, includes human review gates, uses retrieval language
+- **WARN**: Plan has compliance tasks but missing explicit human review gate documentation
+- **FAIL**: Plan auto-approves verdicts, issues autonomous compliance decisions, or uses certification language without human gate
+
+**Catches:** Agent builds evidence case pipeline that auto-promotes verdicts from NEEDS_VERIFICATION to SATISFIED based on gate scores — no human ever reviews. Compliance officer discovers system issued "pass" verdicts autonomously. Also catches: CAE tree builder that outputs `status: "SATISFIED"` directly instead of `status: "NEEDS_VERIFICATION"`.
+
+**Reference:** See `docs/WALKTHROUGH_QRA_COVERAGE_AND_EVIDENCE_CASES.md` for the full governance model.
+
 ## Review Output
 
 ```

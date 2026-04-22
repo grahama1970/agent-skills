@@ -1,0 +1,22 @@
+Return exactly one top-level JSON object with keys:
+- pairs
+- skipped_reason
+
+Generate up to 5 grounded, non-duplicative QRA pairs from this documentation excerpt.
+
+## Document
+
+URL ID: {url_id}
+Topic: {topic}
+
+## Content
+
+{text}
+
+## Reminders
+
+- Use only the content shown above.
+- Every claim must be directly supported by the text.
+- Preserve modality exactly.
+- Prefer fewer pairs over weak pairs.
+- If source support is insufficient, return zero pairs.

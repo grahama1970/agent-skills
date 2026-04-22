@@ -1,0 +1,39 @@
+Review the generated SPARTA native QRA output below against the admissible hierarchy fields.
+
+Return exactly one JSON object with keys:
+- overall_verdict
+- summary
+- pair_reviews
+- global_issues
+- recommended_action
+
+## Current Control
+
+Control ID: {control_id}
+Name: {control_name}
+Control Type: {control_type}
+Description: {control_description}
+Parent ID: {parent_id}
+Family: {family}
+
+## Parent Technique
+
+Parent Technique ID: {parent_technique_id}
+Parent Technique Name: {parent_technique_name}
+Parent Technique Description: {parent_technique_description}
+
+## Parent Tactic
+
+Parent Tactic ID: {parent_tactic_id}
+Parent Tactic Name: {parent_tactic_name}
+Parent Tactic Description: {parent_tactic_description}
+
+## Optional Non-Admissible Audit Context
+
+Mind Taxonomy: {mind_taxonomy}
+Related Framework Controls: {related_controls}
+Supplementary Documentation: {supplementary_documentation}
+
+## Candidate Generated Output
+
+{candidate_json}

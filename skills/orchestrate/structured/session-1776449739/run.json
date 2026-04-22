@@ -1,0 +1,9 @@
+{
+  "run_id": "2",
+  "state": "timed_out",
+  "reason_code": "backend_timeout",
+  "current_round": 2,
+  "best_score": 0.35,
+  "started_at": 1776449804.3849425,
+  "updated_at": 1776450408.9909344
+}

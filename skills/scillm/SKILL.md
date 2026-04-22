@@ -77,12 +77,39 @@ After setup, rebuild the proxy: `docker compose -p scillm -f deploy/docker/compo
 
 **Verify auth status:** `curl http://localhost:4001/v1/scillm/auth -H "Authorization: Bearer sk-dev-proxy-123"`
 
+## Quick Health Check
+
+```bash
+# No auth needed — check if proxy is running
+curl -s http://localhost:4001/health | jq .
+# → {"status": "ok", "uptime_seconds": 123.4}
+```
+
 ## How to Call
+
+> **Auth header is REQUIRED.** Without `Authorization: Bearer sk-dev-proxy-123`, you get 401.
+
+```bash
+# Minimal call (works with standard OpenAI SDK)
+curl -s http://localhost:4001/v1/chat/completions \
+  -H "Authorization: Bearer sk-dev-proxy-123" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "text", "messages": [{"role": "user", "content": "Hi"}]}'
+
+# Better: include caller header for debugging
+curl -s http://localhost:4001/v1/chat/completions \
+  -H "Authorization: Bearer sk-dev-proxy-123" \
+  -H "X-Caller-Skill: your-skill-name" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "text", "messages": [{"role": "user", "content": "Hi"}]}'
+```
 
 **POST `http://localhost:4001/v1/chat/completions`** — standard OpenAI format.
 Use httpx, openai SDK, or curl. No pip install. No custom endpoints. No imports.
 
-Auth: `Bearer sk-dev-proxy-123` (dev master key).
+**Headers:**
+- `Authorization: Bearer sk-dev-proxy-123` — **REQUIRED**
+- `X-Caller-Skill: your-skill-name` — optional but recommended (enables per-skill cost tracking and debugging)
 
 The proxy handles provider cascading, retries, JSON validation, VLM auto-routing,
 concurrency limits, budget tracking, and optional Redis caching.
@@ -899,6 +926,11 @@ All LLM calls are logged to the `llm_call_log` collection in ArangoDB (via memor
 
 **No Redis for logging.** Redis is ONLY for optional caching. All persistent logging goes to ArangoDB.
 
+**JSONL Backup** — every call is also appended to `/mnt/storage12tb/scillm-logs/` (or `$SCILLM_LOG_BACKUP_DIR`):
+- **Independent of ArangoDB** — survives database wipes
+- **Append-only** — daily files, monthly directories (`YYYY-MM/calls-YYYY-MM-DD.jsonl`)
+- **Same fields as ArangoDB** — can rebuild `llm_call_log` collection from JSONL if needed
+
 Query logs via memory service:
 ```bash
 curl -X POST http://localhost:8601/query -H "Content-Type: application/json" -d '{
@@ -1149,3 +1181,56 @@ scillm integrates with these skills via the proxy endpoint:
 
 All composable skills call `http://localhost:4001/v1/chat/completions` — no direct
 provider access, no SDK imports, no API keys needed beyond the proxy master key.
+
+## Common Mistakes
+
+### WRONG: Calling without Authorization header
+```bash
+curl http://localhost:4001/v1/chat/completions \
+  -d '{"model": "text", "messages": [...]}'
+# → 401 Unauthorized: Missing Bearer token
+```
+
+### RIGHT: Always include Bearer token
+```bash
+curl http://localhost:4001/v1/chat/completions \
+  -H "Authorization: Bearer sk-dev-proxy-123" \
+  -H "X-Caller-Skill: my-skill" \
+  -d '{"model": "text", "messages": [...]}'
+```
+
+### WRONG: Checking wrong health endpoint
+```bash
+curl http://localhost:4001/v1/scillm/health  # requires auth
+# → 401 Unauthorized
+```
+
+### RIGHT: Use /health for quick liveness check (no auth)
+```bash
+curl http://localhost:4001/health
+# → {"status": "ok", "uptime_seconds": 123.4}
+```
+
+### WRONG: Using OAuth models (Claude/Codex) in batch operations
+```python
+# Risk of account ban from automated high-volume requests
+for prompt in 1000_prompts:
+    call_proxy(model="text-claude", ...)  # DON'T
+```
+
+### RIGHT: Use Chutes/Gemini/DeepSeek models for batch work
+```python
+for prompt in 1000_prompts:
+    call_proxy(model="text", ...)  # Uses Chutes fallback chain
+```
+
+### WRONG: Firing 400+ requests at once (queue timeout)
+```python
+results = await asyncio.gather(*[call_proxy(p) for p in all_400])  # DON'T
+```
+
+### RIGHT: Chunk batches (CHUNK_SIZE=4 for 50+ requests)
+```python
+for chunk in chunks(prompts, 4):
+    results = await asyncio.gather(*[call_proxy(p) for p in chunk])
+```

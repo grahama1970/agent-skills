@@ -296,6 +296,7 @@ def run(
 def evidence_case(
     question: str = typer.Option(..., "--question", "-q", help="Question to build evidence case for"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output markdown path"),
+    json_out: bool = typer.Option(False, "--json", help="Output raw JSON instead of markdown"),
     no_recursive: bool = typer.Option(False, "--no-recursive", help="Disable recursive decomposition"),
     max_depth: int = typer.Option(2, "--max-depth", help="Max recursion depth for decomposition"),
 ) -> None:
@@ -310,10 +311,12 @@ def evidence_case(
 
     Classification: ANSWERABLE | INVALID_IDS | NO_COVERAGE | NEEDS_CLARIFICATION | DECOMPOSE
     """
+    from dataclasses import asdict
     from evidence_case import build_evidence_case
 
-    console.print(f"[bold]Building evidence case...[/bold]")
-    console.print(f"  Question: {question[:100]}...")
+    if not json_out:
+        console.print(f"[bold]Building evidence case...[/bold]")
+        console.print(f"  Question: {question[:100]}...")
 
     try:
         case = build_evidence_case(
@@ -322,8 +325,21 @@ def evidence_case(
             max_depth=max_depth,
         )
     except (RuntimeError, ValueError, FileNotFoundError) as exc:
-        console.print(f"[red]Evidence case failed: {exc}[/red]")
+        if json_out:
+            print(json.dumps({"error": str(exc)}))
+        else:
+            console.print(f"[red]Evidence case failed: {exc}[/red]")
         raise typer.Exit(1)
+
+    if json_out:
+        case.markdown_report = case.to_markdown()
+        # Custom encoder to handle dataclasses
+        def dclass_to_dict(obj):
+            if hasattr(obj, "__dataclass_fields__"):
+                return asdict(obj)
+            return str(obj)
+        print(json.dumps(asdict(case), default=str))
+        return
 
     # Print gate results
     for g in case.gates:

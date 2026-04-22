@@ -1,0 +1,62 @@
+{
+  "generated_at": 1776449317.7478642,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776449100",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Run baseline extraction and write a visible audit report",
+      "lane": "0",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "completed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776449100/1.stdout.txt",
+      "error": "",
+      "started_at": 1776449100.3321624,
+      "finished_at": 1776449166.3518927,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Fix TOC range handling and tabular extraction regressions in the PDF Lab extractor",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "codex",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776449100/2.response.txt",
+      "error": "/code-runner exit 1: 2026-04-17 14:06:06.607 | INFO     | __main__:run:654 - === CODE-RUNNER v2: Fix TOC range handling and tabular extraction regressions in the PDF Lab extractor ===\n2026-04-17 14:06:06.607 | INFO     | __main__:run:655 -   Backend: codex\n2026-04-17 14:06:06.607 | INFO     | __main__:run:656 -   DoD: cd /home/graham/workspace/experiments/pdf_oxide && \\\npython3 -m pytest tests/test_extraction_classif\n2026-04-17 14:06:06.607 | INFO     | __main__:run:657 -   Max rounds: 4\n2026-04-17 14:06:06.631 | IN",
+      "started_at": 1776449166.3523474,
+      "finished_at": 1776449317.747862,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Re-run the final visible audit and publish the outcome",
+      "lane": "2",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

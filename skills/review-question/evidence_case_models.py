@@ -231,6 +231,7 @@ class EvidenceCase:
     avg_grounding: float = 0.0
     lean4_verifiable: bool = False
     query_spec: dict = field(default_factory=dict)
+    markdown_report: Optional[str] = None
     total_time_ms: float = 0.0
 
     def to_markdown(self) -> str:

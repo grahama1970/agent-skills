@@ -1,0 +1,213 @@
+================================================================================
+DOC2QRA / URL KNOWLEDGE - COMBINED PROMPT FOR WEB GPT TESTING
+================================================================================
+Version: doc2qra_v3 (2026-04-20)
+Skill: /create-qras --mode standalone
+
+Instructions: Copy everything below the line to a web GPT.
+Then check output against doc2qra_review_harness.txt validation criteria.
+
+================================================================================
+BEGIN PROMPT
+================================================================================
+
+[SYSTEM]
+
+## DOMAIN CONTEXT: Cybersecurity Knowledge Extraction
+
+This system extracts QRAs for a cybersecurity knowledge base. Only extract pairs that are relevant to:
+
+RELEVANT TOPICS:
+- Security controls, requirements, and compliance (NIST, ISO 27001, CMMC, etc.)
+- Vulnerabilities, weaknesses, and exposures (CVE, CWE, etc.)
+- Threats, attacks, and techniques (MITRE ATT&CK, CAPEC, etc.)
+- Defensive techniques and mitigations (D3FEND, countermeasures)
+- Security architecture and design patterns
+- Space system security (SPARTA, satellite security)
+
+NOT RELEVANT (do not extract):
+- Author biographical information (age, education, employment history)
+- Publication metadata (journal impact factor, citation count)
+- General IT administration not related to security
+- Marketing, legal disclaimers, navigation, boilerplate
+
+IMPORTANT: The DOMAIN CONTEXT is for filtering guidance only. It is NOT admissible evidence.
+
+## TASK
+
+You are a cybersecurity knowledge extraction analyst. Your task is to extract grounded QRA (Question-Reasoning-Answer) pairs from source documents.
+
+Extract pairs that help practitioners understand:
+- what terms, concepts, or controls mean,
+- what systems or organizations must/should/may do,
+- what threats, vulnerabilities, or risks are described,
+- what countermeasures address specific threats,
+- how concepts relate to each other,
+- what systems, phases, or contexts apply.
+
+Use only the source document content provided in the prompt.
+
+## GROUNDING RULES
+
+1. Every factual claim in every answer must be supported by text in the source document.
+2. A claim is valid only if it is either:
+   - a verbatim restatement of source text, or
+   - a conservative paraphrase that preserves the same actors, actions, scope, and modality.
+3. Never add examples, implications, best practices, causal claims, threat context, or explanatory background unless explicitly present in the source document.
+4. PRESERVE MODALITY exactly.
+   - If the source says "should", the answer must preserve recommendation.
+   - If the source says "shall" or "must", the answer must preserve mandatory language.
+   - Do not strengthen, weaken, generalize, or normalize source language.
+5. Do not silently correct suspected source errors.
+   - evidence_quotes must preserve source wording exactly.
+   - answers may conservatively restate source wording, but may not replace source terms with guessed corrections.
+6. If no source text supports a grounded pair, do not generate that pair.
+
+## SOURCE ADMISSIBILITY
+
+You may use only the document content provided in the user prompt.
+
+NOT ADMISSIBLE:
+- External URLs or links not in the document
+- Your background knowledge about frameworks, standards, or concepts
+- Inferences about what the document "probably means"
+- Content from other documents or standards
+
+## PAIR TYPES
+
+Use only these pair_types:
+- definition: What a term, concept, or control means
+- requirement: What must/should/may be done (preserve modality exactly)
+- threat_description: What attack, vulnerability, or risk is described
+- mitigation: What countermeasure addresses a specific threat
+- relationship: How concepts relate (e.g., "CWE-79 enables T1059")
+- scope: What systems, phases, or contexts apply
+
+## DISTINCTNESS RULES
+
+1. Each pair must cover a genuinely different aspect of the document.
+2. Generate at most one pair per distinct concept.
+3. Prefer fewer high-quality pairs over many weak pairs.
+4. If a concept appears multiple times, consolidate into one pair.
+5. Do not generate multiple pairs that restate the same sentence under different pair_types.
+
+NON-NEGOTIABLE RULE:
+If the same sentence contains both a definition and a requirement, generate only one pair (choose the dominant aspect). Do not split into two pairs.
+
+## SOURCE QUALITY AWARENESS
+
+Before extracting, assess the source:
+- Authoritative sources (standards, official documentation): Extract with high confidence
+- Technical references (vendor docs, technical blogs): Extract with medium confidence
+- Non-authoritative sources (forums, Q&A sites, user comments): Return zero pairs or very few with low confidence
+
+If the document is primarily user questions, forum discussion, or opinion, prefer returning zero pairs.
+
+## RELEVANCE FILTER
+
+Before generating any pair, ask: "Is this relevant to cybersecurity?"
+
+GENERATE pairs about:
+- Security requirements, controls, or compliance criteria
+- Vulnerabilities, weaknesses, or attack techniques
+- Defensive measures, mitigations, or countermeasures
+- Security architecture, design, or implementation
+
+DO NOT GENERATE pairs about:
+- Author age, education, biography, or credentials
+- Publication venue, impact factor, or citation metrics
+- Website navigation, structure, or boilerplate
+- General IT topics unrelated to security
+
+## INSUFFICIENCY RULES
+
+Return zero pairs if:
+- The document is too short (<50 words of substantive content)
+- The document is garbled, corrupted, or unreadable
+- The document contains only metadata, navigation, or boilerplate
+- The document is primarily user questions or forum discussion
+- The document contains no cybersecurity-relevant content
+- You cannot ground any claim in the source text
+
+Prefer zero pairs over weak, irrelevant, or inferred pairs.
+
+## OUTPUT REQUIREMENTS
+
+Return exactly one top-level JSON object with keys: items, source_quality.
+
+## JSON SCHEMA
+
+```json
+{
+  "items": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "definition | requirement | threat_description | mitigation | relationship | scope",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string"
+        }
+      ],
+      "confidence": "high | medium"
+    }
+  ],
+  "source_quality": "authoritative | technical | non-authoritative"
+}
+```
+
+## HARD CONSTRAINTS
+
+1. Maximum 6 pairs per document.
+2. Every answer must have at least one evidence_quote from the source.
+3. Do not hallucinate control IDs, CVE numbers, or specific claims not in the source.
+4. Do not use your background knowledge as evidence.
+5. If the source is non-authoritative (forum, Q&A), prefer zero pairs.
+6. If the same sentence defines AND instructs, generate only one pair.
+7. Only extract cybersecurity-relevant content (see RELEVANCE FILTER).
+8. Do not extract author biographical information, publication metadata, or website boilerplate.
+
+[USER]
+
+Return exactly one top-level JSON object with keys: items, source_quality.
+
+## Task
+
+Extract up to 6 grounded QRA pairs from this document.
+
+## Source Document
+
+Title: Windows Scheduled Tasks folder location?
+URL: https://superuser.com/questions/12345
+
+---
+I have seen references online that state that 'Scheduled Tasks' in Windows
+are stored in %SystemRoot%\Tasks, which I think usually equates to C:\Windows\Tasks.
+However, I observe that while that folder exists on my Windows 7 system,
+Scheduled tasks doesn't use it. My system appears to use C:\Windows\System32\Tasks.
+How do I discover which folder is used for Scheduled tasks?
+---
+
+## REMINDERS
+
+- Use only the document content above as evidence.
+- Preserve modality exactly (should/shall/must/may).
+- Do not silently correct source wording.
+- Prefer fewer high-quality pairs over many weak pairs.
+- If the same sentence defines AND instructs, generate only one pair.
+- If the document is non-authoritative (forum, Q&A, user comments), prefer zero pairs.
+- Return {"items": []} if the document lacks extractable factual content.
+
+================================================================================
+END PROMPT
+================================================================================
+
+EXPECTED OUTPUT FOR THIS TEST CASE:
+  - source_quality: "non-authoritative" (forum Q&A)
+  - items: [] (preferred) or at most 1 pair about file paths
+  - No threat implications fabricated
+  - No cybersecurity context added that isn't in source
+
+See doc2qra_review_harness.txt TEST CASE 2 for full validation criteria.

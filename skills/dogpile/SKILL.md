@@ -55,7 +55,7 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 1.  **Query Tailoring**: Uses Codex to generate service-specific queries optimized for each source:
     - **ArXiv**: Academic/technical terms
     - **Perplexity**: Natural language questions
-    - **Brave**: Documentation-style queries
+    - **Brave**: Documentation-style keyword queries that must fit Brave's hard limits (`<=400` chars, `<=50` words)
     - **GitHub**: Code patterns, library names
     - **YouTube**: Tutorial-style phrases
 
@@ -76,6 +76,8 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Exponential backoff with jitter**: Prevents thundering herd on retries (via tenacity)
     - **Rate limit header parsing**: Respects Retry-After, x-ratelimit-*, and IETF RateLimit-* headers
     - **Automatic retry**: Retries rate-limited requests after appropriate backoff
+    - **Brave query budgeting**: Compresses overlong Brave queries before dispatch instead of sending invalid 422 requests
+    - **Incremental result publishing**: Writes structured partial results as providers finish so the caller does not need to wait for the final report
 
 ## GitHub Three-Stage Search
 
@@ -140,6 +142,7 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 | Command | Description |
 |---------|-------------|
 | `./run.sh search "query"` | Run a search |
+| `./run.sh search "query" --html-report --open-report` | Launch a self-contained HTML/CSS report for clearer review |
 | `./run.sh search "query" --preset NAME` | Search with a preset |
 | `./run.sh monitor` | Open the Real-time TUI Monitor |
 | `python cli.py presets` | List available presets |
@@ -156,6 +159,7 @@ Presets use **Brave site: filters** to search curated domains (Exploit-DB, GTFOB
 ```bash
 # General research
 ./run.sh search "AI agent memory systems"
+./run.sh search "AI agent memory systems" --html-report --open-report
 
 # Security research with preset
 ./run.sh search "CVE-2024-1234" --preset vulnerability_research
@@ -197,8 +201,21 @@ python cli.py errors --clear
 |------|----------|
 | `dogpile_errors.json` | Structured error log (last 50 sessions) |
 | `dogpile.log` | Human-readable log (timestamped) |
+| `dogpile_partial_results.json` | Structured partial results updated as each provider/stage completes |
 | `rate_limit_state.json` | Persistent rate limit tracking |
 | `dogpile_state.json` | Real-time status for monitoring |
+
+### Incremental Result Contract
+
+Dogpile now emits machine-readable progress lines to `stderr` as results arrive:
+
+```text
+[dogpile-event] {"event":"partial_result","stage":"stage1","provider":"brave",...}
+```
+
+The latest structured state is also persisted to `dogpile_partial_results.json`.
+Project agents should prefer this file/events stream when they need to start using
+Brave/GitHub/ArXiv results before the full Dogpile report is finished.
 
 ### Rate Limit Tracking
 

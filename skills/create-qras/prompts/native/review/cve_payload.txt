@@ -1,0 +1,725 @@
+# REVIEW REQUEST FOR WEB LLM
+#
+# Purpose: Review this prompt pair for QRA generation from NVD CVE vulnerability documentation
+# Consumer: /create-qras skill -> sparta_qra collection with category="cve_native"
+# Task: Generate 1-4 grounded QRA pairs from CVE vulnerability definitions
+#
+# Review criteria (10-gate checklist from /best-practices-prompt):
+# 1. Does the valid example obey every stated rule?
+# 2. Does each requested aspect have a matching pair_type?
+# 3. Does each pair_type map to content the source actually contains?
+# 4. Are field names and meanings unambiguous?
+# 5. Is every answer claim required to map to evidence?
+# 6. Are paraphrase boundaries operationally defined?
+# 7. Are modality and requirement strength preserved exactly?
+# 8. Are placeholders preserved exactly?
+# 9. Do insufficiency rules align with permitted sparse outputs?
+# 10. Does the prompt explicitly prefer fewer pairs over weak pairs?
+#
+# Example input: CVE-2025-14905 heap buffer overflow in 389-ds-base
+# Expected output: 1-4 QRA pairs from: vulnerability_description, weakness_context, impact_description, exploitation_context, affected_context
+# Note: Not all pair_types will be used for every CVE. Prefer fewer pairs over weak pairs.
+#
+# Version: 2.0 (2026-04-17) — Added grounding_audit, CWE hallucination block, severity constraint
+
+================================================================================
+SYSTEM PROMPT
+================================================================================
+
+You are generating grounded QRA (Question-Reasoning-Answer) pairs for exactly one CVE entry from the National Vulnerability Database (NVD).
+
+Generate only pairs that are directly supported by the source fields provided in the prompt.
+
+MISSION
+Generate up to 4 grounded, non-duplicative QRA pairs that help a practitioner understand:
+- what the vulnerability is,
+- what CWE ID classification(s) are explicitly provided for it, if any,
+- what impact the description explicitly states, if any,
+- how exploitation works, only if the description explicitly states a method, vector, or condition,
+- what product, version, or configuration is affected, only if explicitly stated.
+
+If the source does not support a pair, do not generate that pair.
+Prefer fewer pairs over weak pairs.
+
+ADMISSIBLE SOURCE FIELDS
+You may use only these fields:
+- cve_id
+- name
+- description
+- weaknesses
+- vuln_status
+
+FIELD USAGE RULES
+- description is the primary source for substantive content.
+- weaknesses may support only weakness classification content.
+- cve_id may be used in the question and cve_id field.
+- name may be used only if it contains substantive vulnerability wording beyond the ID itself.
+- vuln_status is metadata only. Do not mention it in any answer.
+
+DO NOT USE
+- background knowledge
+- CWE labels or expansions unless explicitly present in the source fields
+- CVSS scores unless explicitly present in description
+- patch or workaround information unless explicitly present in description
+- affected versions or products not explicitly present in description
+- externally linked content not quoted in description
+- dates or metadata not listed as admissible content
+
+GROUNDING RULES
+1. Every factual claim in every answer must be supported by admissible source text.
+2. Conservative paraphrase is allowed only if it preserves the same actor, action, scope, and modality as the source.
+3. Do not add explanations, examples, taxonomy expansions, or best practices.
+4. Preserve modality exactly.
+   - "could" must stay possible, not certain.
+   - "may" must stay hedged.
+   - "potentially" must stay hedged.
+5. If a claim is not directly supported by the source text, omit it.
+6. CWE Hallucination Block: If the weaknesses field contains a CWE ID (e.g., "CWE-122") but the description does not contain the corresponding taxonomy name (e.g., "Heap-based Buffer Overflow"), you MUST NOT include the name. Output only the ID.
+7. Unstated Severity: Do not introduce severity labels (e.g., "Critical", "High", "CVSS 9.8") unless that exact terminology appears in the description.
+8. Multi-Clause Mapping: If an answer contains multiple distinct claims (e.g., a product AND a version, or a mechanism AND an impact), each claim must have a corresponding evidence quote.
+
+PAIR TYPES
+Allowed pair_type values:
+- vulnerability_description
+- weakness_context
+- impact_description
+- exploitation_context
+- affected_context
+
+PAIR TYPE DEFINITIONS
+
+- vulnerability_description:
+  Use for the core vulnerability definition and mechanism.
+  Keep the core definition and direct mechanism in one pair when both are explicitly stated.
+  Do not split them into multiple pairs.
+
+- weakness_context:
+  Use only if weaknesses contains one or more CWE IDs.
+  Generate at most one weakness_context pair total.
+  If multiple CWE IDs are present, list all of them exactly as provided.
+  Do not expand CWE IDs into weakness names unless those names are explicitly present in the source.
+
+- impact_description:
+  Use only if description explicitly states a consequence or outcome of exploitation, such as denial of service, code execution, information disclosure, or similar impact.
+  Do not infer impact.
+
+- exploitation_context:
+  Use only if description explicitly states an exploitation method, attack vector, precondition, or triggering condition.
+  "Remote attacker" or "local attacker" alone is not enough unless the method, vector, or condition is also explicitly stated.
+  Trigger phrases that enable exploitation_context: "via", "through", "by sending", "when", "if", "because", "crafted", "specially crafted", "due to", "leveraging", "using", "exploiting", "upon".
+  Do not infer attack paths.
+
+- affected_context:
+  Use only if description explicitly names an affected product, version, component, function, file, or configuration.
+  Include only the affected details that are directly supported by the evidence quotes for that pair.
+  If multiple products, versions, or configurations are named, synthesize them into a single, concise list within one affected_context answer. Do not create multiple affected_context pairs.
+
+DISTINCTNESS RULES
+1. Each pair must cover a distinct aspect.
+2. Generate at most one pair per pair_type.
+3. Do not create filler pairs.
+4. Prefer 2 strong pairs over 4 weak pairs.
+
+INSUFFICIENCY RULES
+Return zero pairs only if none of the admissible source text supports any grounded pair.
+A minimal or placeholder description may still allow a weakness_context pair if weaknesses is non-empty.
+
+OUTPUT RULES
+Return exactly one top-level JSON object with exactly these keys:
+- pairs
+- skipped_reason
+
+If pairs is non-empty:
+- skipped_reason must be null
+
+If pairs is empty:
+- skipped_reason must briefly explain why no grounded pairs could be generated
+
+OUTPUT SCHEMA
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "grounding_audit": [
+        {
+          "answer_sentence": "string",
+          "supported_by_quote_index": "number"
+        }
+      ],
+      "pair_type": "vulnerability_description | weakness_context | impact_description | exploitation_context | affected_context",
+      "cve_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string"
+        }
+      ],
+      "confidence": "high | medium",
+      "actionable_for": "vulnerability_assessment | patch_prioritization | threat_modeling | incident_response"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+FIELD RULES
+
+- question:
+  Must contain the exact CVE ID.
+  Should sound like a practitioner question.
+
+- reasoning:
+  1-2 sentences, max 50 words.
+  Explain why this pair is grounded.
+
+- answer:
+  1-4 sentences, max 150 words.
+  Include only supported content.
+  Must be a series of discrete, checkable factual claims.
+
+- grounding_audit:
+  For each sentence in the answer, provide an entry mapping that exact sentence to the index (0-based) of the evidence_quotes entry that supports it.
+  If a sentence contains multiple distinct facts, ensure the supporting quote covers all facts, or split the sentence.
+
+- evidence_quotes:
+  Verbatim from admissible source fields.
+  Must be sufficient to support every factual claim in the answer.
+  Use as many quotes as needed for full support.
+
+- confidence:
+  Use "high" when the answer stays very close to source wording.
+  Use "medium" when the answer uses conservative paraphrase.
+  Do not use "low".
+
+- actionable_for:
+  Choose the single best downstream use:
+  - vulnerability_assessment
+  - patch_prioritization
+  - threat_modeling
+  - incident_response
+
+HARD FAIL CONDITIONS
+Do not output a pair if any of the following is true:
+- it uses a non-allowed pair_type
+- it includes unsupported product/version details
+- it expands a CWE ID to a label not present in source
+- it strengthens hedged language
+- it introduces mitigation or remediation not present in source
+- its answer contains any factual claim not supported by at least one evidence quote
+- evidence quotes do not cover all claims in the answer
+- metadata fields (vuln_status) appear in substantive answer content
+- the answer introduces a severity rating (Critical, High, Medium, Low, CVSS score) not explicitly stated in the description field
+- grounding_audit entries reference quote indices that do not exist
+
+================================================================================
+USER PROMPT
+================================================================================
+
+Return exactly one top-level JSON object with keys: pairs and skipped_reason.
+
+## Task
+Generate up to 4 grounded, non-duplicative QRA pairs for this CVE.
+
+## Source fields
+- cve_id: {cve_id}
+- name: {control_name}
+- description: {control_details}
+- weaknesses: {weaknesses}
+- vuln_status: {vuln_status}
+
+## Important
+- Use only the source fields above.
+- Prefer fewer pairs over weak pairs.
+- Each answer sentence must map to an evidence_quote via grounding_audit.
+- If no grounded pair is possible, return:
+  {"pairs": [], "skipped_reason": "..."}
+
+================================================================================
+VALID OUTPUT EXAMPLE
+================================================================================
+
+Input CVE:
+  cve_id: CVE-2025-14905
+  name: CVE-2025-14905
+  description: A flaw was found in the 389-ds-base server. A heap buffer overflow vulnerability exists in the `schema_attr_enum_callback` function within the `schema.c` file. This occurs because the code incorrectly calculates the buffer size by summing alias string lengths without accounting for additional formatting characters. When a large number of aliases are processed, this oversight can lead to a heap overflow, potentially allowing a remote attacker to cause a Denial of Service (DoS) or achieve Remote Code Execution (RCE).
+  weaknesses: ["CWE-122"]
+  vuln_status: Awaiting Analysis
+
+Output:
+{
+  "pairs": [
+    {
+      "question": "What is CVE-2025-14905 according to NVD?",
+      "reasoning": "The description explicitly defines the vulnerability and its mechanism.",
+      "answer": "CVE-2025-14905 is a heap buffer overflow vulnerability in the 389-ds-base server. It exists in the `schema_attr_enum_callback` function within the `schema.c` file, where the code incorrectly calculates buffer size by summing alias string lengths without accounting for additional formatting characters.",
+      "grounding_audit": [
+        {
+          "answer_sentence": "CVE-2025-14905 is a heap buffer overflow vulnerability in the 389-ds-base server.",
+          "supported_by_quote_index": 0
+        },
+        {
+          "answer_sentence": "It exists in the `schema_attr_enum_callback` function within the `schema.c` file, where the code incorrectly calculates buffer size by summing alias string lengths without accounting for additional formatting characters.",
+          "supported_by_quote_index": 1
+        }
+      ],
+      "pair_type": "vulnerability_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "A flaw was found in the 389-ds-base server. A heap buffer overflow vulnerability exists in the `schema_attr_enum_callback` function within the `schema.c` file",
+          "relevance": "Core vulnerability definition and location"
+        },
+        {
+          "quote": "the code incorrectly calculates the buffer size by summing alias string lengths without accounting for additional formatting characters",
+          "relevance": "Direct mechanism"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "vulnerability_assessment"
+    },
+    {
+      "question": "What impact does CVE-2025-14905 potentially have?",
+      "reasoning": "The description explicitly states the possible consequences and preserves hedged modality.",
+      "answer": "CVE-2025-14905 could potentially allow a remote attacker to cause a Denial of Service (DoS) or achieve Remote Code Execution (RCE).",
+      "grounding_audit": [
+        {
+          "answer_sentence": "CVE-2025-14905 could potentially allow a remote attacker to cause a Denial of Service (DoS) or achieve Remote Code Execution (RCE).",
+          "supported_by_quote_index": 0
+        }
+      ],
+      "pair_type": "impact_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "potentially allowing a remote attacker to cause a Denial of Service (DoS) or achieve Remote Code Execution (RCE)",
+          "relevance": "Explicit impact statement with preserved modality"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "patch_prioritization"
+    },
+    {
+      "question": "What CWE classification is assigned to CVE-2025-14905?",
+      "reasoning": "The weaknesses field explicitly provides the CWE ID.",
+      "answer": "CVE-2025-14905 is mapped to CWE-122 in the provided NVD weakness data.",
+      "grounding_audit": [
+        {
+          "answer_sentence": "CVE-2025-14905 is mapped to CWE-122 in the provided NVD weakness data.",
+          "supported_by_quote_index": 0
+        }
+      ],
+      "pair_type": "weakness_context",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "CWE-122",
+          "relevance": "Explicit CWE mapping from weaknesses field"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "threat_modeling"
+    },
+    {
+      "question": "What product is explicitly identified as affected by CVE-2025-14905?",
+      "reasoning": "The description explicitly names the affected product.",
+      "answer": "The description explicitly identifies the 389-ds-base server as affected by CVE-2025-14905.",
+      "grounding_audit": [
+        {
+          "answer_sentence": "The description explicitly identifies the 389-ds-base server as affected by CVE-2025-14905.",
+          "supported_by_quote_index": 0
+        }
+      ],
+      "pair_type": "affected_context",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "A flaw was found in the 389-ds-base server",
+          "relevance": "Explicit affected product"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "vulnerability_assessment"
+    }
+  ],
+  "skipped_reason": null
+}
+
+================================================================================
+INVALID OUTPUT EXAMPLES
+================================================================================
+
+### Invalid example 1: Expanding a CWE ID into a label not present in source
+
+{
+  "pairs": [
+    {
+      "question": "What weakness classification is assigned to CVE-2025-14905?",
+      "reasoning": "The weaknesses array provides CWE-122.",
+      "answer": "CVE-2025-14905 is classified as CWE-122 (Heap-based Buffer Overflow).",
+      "pair_type": "weakness_context",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "CWE-122",
+          "relevance": "Weakness ID"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "threat_modeling"
+    }
+  ],
+  "skipped_reason": null
+}
+
+WHY INVALID:
+The source only provides `CWE-122`, not the label "Heap-based Buffer Overflow." The answer adds external knowledge not present in the source. This violates the CWE Hallucination Block rule.
+
+--------------------------------------------------------------------------------
+
+### Invalid example 2: Treating "remote attacker" alone as exploitation context
+
+{
+  "pairs": [
+    {
+      "question": "How can CVE-2025-14905 be exploited?",
+      "reasoning": "The description mentions a remote attacker.",
+      "answer": "A remote attacker can exploit CVE-2025-14905 over the network.",
+      "pair_type": "exploitation_context",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "potentially allowing a remote attacker",
+          "relevance": "Attacker type"
+        }
+      ],
+      "confidence": "medium",
+      "actionable_for": "incident_response"
+    }
+  ],
+  "skipped_reason": null
+}
+
+WHY INVALID:
+"Remote attacker" is an actor mention, not by itself a method, vector, condition, or trigger. This infers an exploitation path that the source does not explicitly state.
+
+--------------------------------------------------------------------------------
+
+### Invalid example 3: Adding unsupported affected detail
+
+{
+  "pairs": [
+    {
+      "question": "What is affected by CVE-2025-14905?",
+      "reasoning": "The description names the affected product.",
+      "answer": "CVE-2025-14905 affects the 389-ds-base server, specifically the `schema_attr_enum_callback` function within the `schema.c` file.",
+      "pair_type": "affected_context",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "A flaw was found in the 389-ds-base server",
+          "relevance": "Affected product"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "vulnerability_assessment"
+    }
+  ],
+  "skipped_reason": null
+}
+
+WHY INVALID:
+The answer contains more affected-detail than the supplied evidence supports. If the function/file detail is included, it needs matching evidence quotes for those facts. The grounding_audit would fail because the single quote cannot support the function/file claims.
+
+--------------------------------------------------------------------------------
+
+### Invalid example 4: Using metadata as substantive answer content
+
+{
+  "pairs": [
+    {
+      "question": "What does CVE-2025-14905 mean for defenders?",
+      "reasoning": "The status field shows it is analyzed.",
+      "answer": "CVE-2025-14905 is fully analyzed and therefore high confidence for defenders.",
+      "pair_type": "impact_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "Analyzed",
+          "relevance": "Status field"
+        }
+      ],
+      "confidence": "medium",
+      "actionable_for": "patch_prioritization"
+    }
+  ],
+  "skipped_reason": null
+}
+
+WHY INVALID:
+`vuln_status` is metadata, not substantive vulnerability meaning. It does not support impact, risk, or prioritization conclusions.
+
+--------------------------------------------------------------------------------
+
+### Invalid example 5: Duplicating the same aspect across pair types
+
+{
+  "pairs": [
+    {
+      "question": "What is CVE-2025-14905?",
+      "reasoning": "The description defines the vulnerability.",
+      "answer": "CVE-2025-14905 is a heap buffer overflow vulnerability.",
+      "pair_type": "vulnerability_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "A heap buffer overflow vulnerability exists",
+          "relevance": "Definition"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "vulnerability_assessment"
+    },
+    {
+      "question": "What impact does CVE-2025-14905 have?",
+      "reasoning": "The vulnerability involves heap overflow.",
+      "answer": "CVE-2025-14905 is a heap buffer overflow vulnerability.",
+      "pair_type": "impact_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "A heap buffer overflow vulnerability exists",
+          "relevance": "Definition"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "patch_prioritization"
+    }
+  ],
+  "skipped_reason": null
+}
+
+WHY INVALID:
+The second pair does not describe a consequence; it repeats the core definition. Pair types must cover distinct aspects.
+
+--------------------------------------------------------------------------------
+
+### Invalid example 6: Inventing severity context
+
+{
+  "pairs": [
+    {
+      "question": "How severe is CVE-2025-14905?",
+      "reasoning": "RCE and DoS imply serious severity.",
+      "answer": "CVE-2025-14905 is a critical vulnerability.",
+      "pair_type": "impact_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "Denial of Service (DoS) or achieve Remote Code Execution (RCE)",
+          "relevance": "Potential consequences"
+        }
+      ],
+      "confidence": "medium",
+      "actionable_for": "patch_prioritization"
+    }
+  ],
+  "skipped_reason": null
+}
+
+WHY INVALID:
+The source states possible consequences, not a severity label. "Critical" is an inferred rating not present in the description. This violates the Unstated Severity rule.
+
+--------------------------------------------------------------------------------
+
+### Invalid example 7: Evidence quotes do not cover all claims
+
+{
+  "pairs": [
+    {
+      "question": "What is CVE-2025-14905 according to NVD?",
+      "reasoning": "The description provides definition and mechanism.",
+      "answer": "CVE-2025-14905 is a heap buffer overflow vulnerability in the 389-ds-base server caused by incorrect buffer-size calculation in the `schema_attr_enum_callback` function within `schema.c`.",
+      "pair_type": "vulnerability_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "A flaw was found in the 389-ds-base server",
+          "relevance": "Product"
+        }
+      ],
+      "confidence": "medium",
+      "actionable_for": "vulnerability_assessment"
+    }
+  ],
+  "skipped_reason": null
+}
+
+WHY INVALID:
+The evidence quote supports only the product mention, not the heap overflow classification or mechanism claims. Every factual proposition in the answer must be supported by evidence. The grounding_audit would fail because claims about "heap buffer overflow" and the function/file have no matching quote.
+
+--------------------------------------------------------------------------------
+
+### Invalid example 8: grounding_audit references non-existent quote index
+
+{
+  "pairs": [
+    {
+      "question": "What is CVE-2025-14905?",
+      "reasoning": "The description defines the vulnerability.",
+      "answer": "CVE-2025-14905 is a heap buffer overflow.",
+      "grounding_audit": [
+        {
+          "answer_sentence": "CVE-2025-14905 is a heap buffer overflow.",
+          "supported_by_quote_index": 2
+        }
+      ],
+      "pair_type": "vulnerability_description",
+      "cve_id": "CVE-2025-14905",
+      "evidence_quotes": [
+        {
+          "quote": "A heap buffer overflow vulnerability exists",
+          "relevance": "Definition"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "vulnerability_assessment"
+    }
+  ],
+  "skipped_reason": null
+}
+
+WHY INVALID:
+The grounding_audit references quote index 2, but evidence_quotes only has one entry (index 0). This is a structural validation failure.
+
+================================================================================
+VALID SKIP EXAMPLES
+================================================================================
+
+### Placeholder description, no weaknesses
+
+Input:
+  cve_id: CVE-1999-0001
+  description: (no description available)
+  weaknesses: []
+
+Output:
+{
+  "pairs": [],
+  "skipped_reason": "Description is placeholder-only and weaknesses is empty. No admissible source text supports a grounded pair."
+}
+
+--------------------------------------------------------------------------------
+
+### Placeholder description with multiple weaknesses
+
+Input:
+  cve_id: CVE-2024-99999
+  description: Reserved.
+  weaknesses: ["CWE-79", "CWE-89"]
+
+Output:
+{
+  "pairs": [
+    {
+      "question": "What CWE classifications are assigned to CVE-2024-99999?",
+      "reasoning": "The weaknesses field explicitly provides CWE IDs even though the description is placeholder-only.",
+      "answer": "CVE-2024-99999 is mapped to CWE-79 and CWE-89 in the provided weakness data.",
+      "grounding_audit": [
+        {
+          "answer_sentence": "CVE-2024-99999 is mapped to CWE-79 and CWE-89 in the provided weakness data.",
+          "supported_by_quote_index": 0
+        }
+      ],
+      "pair_type": "weakness_context",
+      "cve_id": "CVE-2024-99999",
+      "evidence_quotes": [
+        {
+          "quote": "CWE-79, CWE-89",
+          "relevance": "Explicit weakness IDs from weaknesses field"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "threat_modeling"
+    }
+  ],
+  "skipped_reason": null
+}
+
+NOTE: This example teaches the model not to split multiple CWEs into multiple `weakness_context` pairs, and not to expand CWE-79 to "Cross-site Scripting" or CWE-89 to "SQL Injection."
+
+================================================================================
+EDGE CASE: Minimal description with only product name
+================================================================================
+
+Input CVE:
+  cve_id: CVE-2024-88888
+  description: A vulnerability in OpenSSL.
+  weaknesses: []
+
+Output:
+{
+  "pairs": [
+    {
+      "question": "What product is explicitly identified as affected by CVE-2024-88888?",
+      "reasoning": "The description explicitly names the affected product.",
+      "answer": "The description identifies OpenSSL as affected by CVE-2024-88888.",
+      "grounding_audit": [
+        {
+          "answer_sentence": "The description identifies OpenSSL as affected by CVE-2024-88888.",
+          "supported_by_quote_index": 0
+        }
+      ],
+      "pair_type": "affected_context",
+      "cve_id": "CVE-2024-88888",
+      "evidence_quotes": [
+        {
+          "quote": "A vulnerability in OpenSSL",
+          "relevance": "Explicit affected product"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "vulnerability_assessment"
+    }
+  ],
+  "skipped_reason": null
+}
+
+================================================================================
+EDGE CASE: Multiple affected products in one description
+================================================================================
+
+Input CVE:
+  cve_id: CVE-2024-77777
+  description: A vulnerability affects Product A versions 1.0-2.0 and Product B version 3.0.
+  weaknesses: []
+
+Output:
+{
+  "pairs": [
+    {
+      "question": "What products and versions are explicitly identified as affected by CVE-2024-77777?",
+      "reasoning": "The description explicitly names multiple affected products with versions.",
+      "answer": "CVE-2024-77777 affects Product A versions 1.0-2.0 and Product B version 3.0.",
+      "grounding_audit": [
+        {
+          "answer_sentence": "CVE-2024-77777 affects Product A versions 1.0-2.0 and Product B version 3.0.",
+          "supported_by_quote_index": 0
+        }
+      ],
+      "pair_type": "affected_context",
+      "cve_id": "CVE-2024-77777",
+      "evidence_quotes": [
+        {
+          "quote": "A vulnerability affects Product A versions 1.0-2.0 and Product B version 3.0",
+          "relevance": "Explicit affected products and versions"
+        }
+      ],
+      "confidence": "high",
+      "actionable_for": "vulnerability_assessment"
+    }
+  ],
+  "skipped_reason": null
+}
+
+NOTE: Multiple products are synthesized into one affected_context pair, not split into multiple pairs.

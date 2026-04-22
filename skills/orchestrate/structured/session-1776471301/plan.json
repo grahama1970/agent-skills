@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "kind": "orchestrate-plan",
+  "repo_root": "/home/graham/workspace/experiments/pdf_oxide",
+  "metadata": {
+    "title": "pdf_oxide extraction round (single iteration)",
+    "goal": "Reduce top defect category on NIST SP 800-53r5 without regressing others",
+    "plan_type": "code",
+    "created": "2026-04-17",
+    "primary_persona": {
+      "name": "Nico Bailon",
+      "role": "QA Engineer",
+      "source": ".pi/agents/nico-bailon/AGENTS.md"
+    }
+  },
+  "execution": {
+    "max_concurrency": 1,
+    "wave_barrier": true,
+    "scheduling_policy": "dependency_only"
+  },
+  "capability_overlap": [
+    "CALL /code-runner for the LLM-driven fix task; local runners for extract/diff/tally.",
+    "EXTEND python/pdf_oxide/extract_for_pdflab.py \u2014 the canonical extractor for PDF Lab UI.",
+    "/tmp/page_diff.py is the deterministic defect scanner (pre-existing)."
+  ],
+  "questions_blockers": [
+    "none"
+  ],
+  "lanes": [
+    {
+      "id": "0",
+      "label": "Measure"
+    },
+    {
+      "id": "1",
+      "label": "Fix"
+    },
+    {
+      "id": "2",
+      "label": "Regression + tally"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Extract NIST SP 800-53r5 with current extractor",
+      "lane": "0",
+      "runner": "local",
+      "depends_on": [],
+      "command": "cd /home/graham/workspace/experiments/pdf_oxide && \\\npython3 -m pdf_oxide.extract_for_pdflab \\\n  /mnt/storage12tb/extractor_corpus/source/standards/NIST_SP_800-53r5.pdf \\\n  -o /tmp/nist_reextraction.json\n",
+      "definition_of_done": {
+        "command": "test -s /tmp/nist_reextraction.json",
+        "assertion": "extraction JSON exists and is non-empty"
+      }
+    },
+    {
+      "id": "2",
+      "title": "Scan all 492 pages for defects",
+      "lane": "0",
+      "runner": "local",
+      "depends_on": [
+        "1"
+      ],
+      "command": "cd /home/graham/workspace/experiments/pdf_oxide && \\\npython3 /tmp/page_diff.py\n",
+      "definition_of_done": {
+        "command": "python3 -c \"import json; d=json.load(open('/tmp/nist_defects.json')); assert 'summary' in d and 'defects' in d; print('defects_scan_ready')\"\n",
+        "assertion": "/tmp/nist_defects.json has summary + defects"
+      }
+    },
+    {
+      "id": "3",
+      "title": "Fix top defect category in extract_for_pdflab.py",
+      "lane": "1",
+      "runner": "code-runner",
+      "backend": "gpt-5.3-codex",
+      "mode": "iterative",
+      "depends_on": [
+        "2"
+      ],
+      "allowlist": [
+        "python/pdf_oxide/extract_for_pdflab.py"
+      ],
+      "read_context": [
+        "/tmp/nist_defects.json",
+        "/tmp/pdf_oxide_rounds.json",
+        "/tmp/page_diff.py"
+      ],
+      "prompt": "/tmp/nist_defects.json lists the current top defect categories. Your job: reduce\nthe LARGEST category using a GENERALIZABLE mechanism fix in\npython/pdf_oxide/extract_for_pdflab.py. Hard rules:\n\n- NO hardcoded PDF-specific strings (no NIST-specific regexes, no literal\n  \"APPENDIX A\" or \"53r5\"). Use position, rotation, frequency, or structural cues.\n- NO \"fix the test\" \u2014 do not edit /tmp/page_diff.py.\n- The fix must not increase ANY other defect category.\n- If the top category is TEXT_LOST, find the mechanism that drops the text\n  (rotated-line filter, table-bbox overlap, chrome filter) and relax or fix it.\n- If the top category is DUPLICATE_BLOCK, add dedup by (bbox, text-prefix) at\n  block emission.\n- Re-read /tmp/nist_defects.json after your change to verify.\n",
+      "definition_of_done": {
+        "command": "cd /home/graham/workspace/experiments/pdf_oxide && \\\npython3 -m pdf_oxide.extract_for_pdflab \\\n  /mnt/storage12tb/extractor_corpus/source/standards/NIST_SP_800-53r5.pdf \\\n  -o /tmp/nist_reextraction.json && \\\npython3 /tmp/page_diff.py > /tmp/nist_post_fix.txt 2>&1 && \\\npython3 /tmp/pdf_oxide_regression_check.py\n",
+        "assertion": "Total defects < prior_round_total AND no category increased"
+      },
+      "blind_tests": [
+        "rotated watermark lines must be blockType=boilerplate, not text",
+        "no emitted block has empty/whitespace text",
+        "extracted block count >= total_pages (at least 1 block per page)"
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Append round outcome to tally",
+      "lane": "2",
+      "runner": "local",
+      "depends_on": [
+        "3"
+      ],
+      "command": "python3 /tmp/update_tally.py\n",
+      "definition_of_done": {
+        "command": "python3 -c \"import json; r=json.load(open('/tmp/pdf_oxide_rounds.json')); assert len(r['rounds']) >= 1; print('tally_ok')\"\n",
+        "assertion": "/tmp/pdf_oxide_rounds.json has at least one round entry"
+      }
+    }
+  ]
+}

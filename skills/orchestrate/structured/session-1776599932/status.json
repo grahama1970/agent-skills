@@ -1,0 +1,159 @@
+{
+  "generated_at": 1776599933.2996452,
+  "failed": false,
+  "session_dir": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776599932",
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create 12d_formalizability_scorer.py pipeline step",
+      "lane": "0",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "failed",
+      "depends_on": [],
+      "output_path": "/home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776599932/1.response.txt",
+      "error": "/code-runner exit 1: 2026-04-19 07:58:53.251 | ERROR    | __main__:run:586 - DoD command has SYNTAX ERROR \u2014 the command itself is broken:\n2026-04-19 07:58:53.251 | ERROR    | __main__:run:587 -   SyntaxError: invalid decimal literal",
+      "started_at": 1776599932.8910525,
+      "finished_at": 1776599933.2996438,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "2",
+      "title": "Run formalizability backfill on all sparta_controls",
+      "lane": "1",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "1"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "3",
+      "title": "Validate score distribution per framework",
+      "lane": "1",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "2"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "4",
+      "title": "Update 13_lean4_verify.py to respect formalizability threshold",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "5",
+      "title": "Update /match-requirement to surface formalizability_score",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "6",
+      "title": "Update /create-evidence-case to check formalizability before lean4",
+      "lane": "2",
+      "runner": "code-runner",
+      "backend": "claude",
+      "mode": "iterative",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "3"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "7",
+      "title": "E2E test: formalizability scoring + evidence case integration",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "4",
+        "5",
+        "6"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    },
+    {
+      "id": "8",
+      "title": "Document formalizability scoring in SPARTA pipeline docs",
+      "lane": "3",
+      "runner": "local",
+      "backend": "",
+      "mode": "",
+      "agent": "",
+      "status": "queued",
+      "depends_on": [
+        "7"
+      ],
+      "output_path": "",
+      "error": "",
+      "started_at": null,
+      "finished_at": null,
+      "subagent_task_id": "",
+      "subagent_port": 0
+    }
+  ]
+}

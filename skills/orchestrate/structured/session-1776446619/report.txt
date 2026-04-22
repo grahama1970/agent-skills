@@ -1,0 +1,19 @@
+╭───────────────────────────────────────────────────────────────────╮
+│ ORCHESTRATE: NIST SP 800-53r5 Extraction Repair                   │
+│ Session: session-1776446619                                       │
+╰───────────────────────────────────────────────────────────────────╯
+
+Baseline ──────────────────────────────────────────────────── FAILED
+  ✗ 1   Run baseline extraction and write a vi   [local]      0.2s
+       └─ Command failed (1): cd /home/graham/workspace/experiments/pd
+
+Repair ────────────────────────────────────────────────────── skipped
+  · 2   Fix TOC range handling and tabular ext   [gpt-5.3-codex]       
+
+Final Audit ───────────────────────────────────────────────── skipped
+  · 3   Re-run the final visible audit and pub   [local]          
+
+────────────────────────────────────────────────────────────────────
+SUMMARY: 0 ✓ | 1 ✗ | 2 ○ | Total: 0.2s
+Session: /home/graham/workspace/experiments/agent-skills/skills/orchestrate/structured/session-1776446619/
+Resume:  orchestrate run <plan.yaml> --resume

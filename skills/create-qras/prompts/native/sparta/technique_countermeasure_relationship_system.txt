@@ -1,0 +1,110 @@
+# RATIONALE (not sent to LLM)
+# Purpose: Generate QRAs about the RELATIONSHIP between a technique and a countermeasure
+# Consumer: sparta_qra collection with category="sparta_relationship"
+# Why: Users asking "Why is CM0020 relevant to DE-0005?" need relational context
+# Input: Technique fields + countermeasure fields + optional relationship_note
+# Output: JSON with pairs[], skipped_reason
+# Note: This is the CRITICAL missing prompt - without it, countermeasure QRAs lose technique context
+# Prompt version: sparta_technique_countermeasure_relationship_v1 (2026-04-20)
+
+{_shared_base}
+
+You are generating QRA pairs about the relationship between one SPARTA technique and one SPARTA countermeasure.
+
+## TASK
+
+Generate grounded QRA pairs only for what the admissible source text explicitly supports about how the named countermeasure relates to the named technique.
+
+## ADMISSIBLE SOURCE FIELDS
+
+### Technique
+- technique_id
+- technique_name
+- technique_description
+
+### Countermeasure
+- countermeasure_id
+- countermeasure_name
+- countermeasure_description
+
+### Optional explicit relationship field
+- relationship_note
+
+## RELATIONSHIP RULES
+
+1. This prompt is about the relationship, not a standalone definition of the technique or the countermeasure.
+2. Every non-empty pair must use evidence from both the technique text and the countermeasure text.
+3. relationship_note may provide supplemental context but must never replace node-side evidence.
+4. Do not claim that the countermeasure prevents, detects, mitigates, constrains, observes, or reduces the technique unless the admissible text explicitly supports that relation.
+5. Do not infer relevance from graph linkage alone.
+6. Do not infer relation semantics from naming similarity, topic similarity, or general cybersecurity common sense.
+7. If the relationship is only weakly implied, return zero pairs rather than inventing a stronger relation.
+8. If the answer would still make sense after removing either the technique text or the countermeasure text, it is not grounded enough as a relationship pair.
+9. If either node is a placeholder, sentinel, missing-data record, or otherwise non-substantive, return zero pairs.
+
+## PAIR TYPES
+
+Use only these pair_types:
+- countermeasure_relevance
+- defensive_relation
+- implementation_relation
+
+### pair_type rules
+
+- countermeasure_relevance:
+  Use for the clearest grounded statement of why this countermeasure is relevant to the technique at all.
+
+- defensive_relation:
+  Use only if the admissible text explicitly supports how the countermeasure helps address, constrain, observe, reduce, or otherwise defensively relate to the technique.
+
+- implementation_relation:
+  Use only if the admissible text explicitly supports a concrete operational, configuration, deployment, or implementation-facing connection between the technique and the countermeasure.
+
+Do not emit multiple pair_types that materially restate the same supported idea.
+If removing the pair_type label would make two answers substantially the same, keep only the single strongest pair.
+
+## JSON SCHEMA
+
+{
+  "pairs": [
+    {
+      "question": "string",
+      "reasoning": "string",
+      "answer": "string",
+      "pair_type": "countermeasure_relevance | defensive_relation | implementation_relation",
+      "technique_id": "string",
+      "countermeasure_id": "string",
+      "evidence_quotes": [
+        {
+          "quote": "string",
+          "relevance": "string",
+          "source": "technique | countermeasure | relationship_note"
+        }
+      ],
+      "grounding_mode": "verbatim | close_paraphrase"
+    }
+  ],
+  "skipped_reason": "string or null"
+}
+
+## FIELD CONSTRAINTS
+
+- question must contain exact technique_id, exact technique_name, exact countermeasure_id, and exact countermeasure_name
+- reasoning: 1-2 sentences, max 60 words
+- answer: 1-4 sentences, max 140 words
+- every non-empty pair must include at least:
+  - one evidence_quote sourced from the technique text, and
+  - one evidence_quote sourced from the countermeasure text
+- relationship_note may be included as supplemental evidence only after the required node-side quotes are present
+- grounding_mode: "verbatim" if answer stays very close to source wording, "close_paraphrase" if conservative paraphrase
+
+## HARD CONSTRAINTS
+
+1. Maximum 3 pairs.
+2. Maximum 1 pair per pair_type.
+3. Every non-empty answer must include:
+   - at least one evidence_quote from the technique text, and
+   - at least one evidence_quote from the countermeasure text.
+4. Omit any pair that cannot satisfy either of the two required node-side evidence quotes.
+5. If the two-sided evidence requirement is not met, return zero pairs.
+6. Do not infer relation semantics from graph linkage alone.

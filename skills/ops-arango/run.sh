@@ -26,13 +26,16 @@ ops-arango: ArangoDB operations and maintenance
 
 Commands:
   dump                   Create database backup with retention
+  restore                Print the recommended native arangorestore command
   check [--json]         Run all health checks
+  health-check [-m|--markdown] [-o FILE]  SPARTA data integrity (26 checks)
   embeddings [--fix]     Find/fix documents missing embeddings
   duplicates [--report]  Detect duplicate lessons
   orphans [--fix]        Find/fix orphaned edges
   integrity              Verify referential integrity
   stats [--json]         Collection statistics
   full [--fix] [--json]  Full maintenance cycle
+  url-coverage [-o FILE] URL content coverage audit
 
 Environment:
   ARANGO_URL       ArangoDB endpoint (default: http://127.0.0.1:8529)
@@ -46,6 +49,7 @@ Environment:
 
 Examples:
   ./run.sh dump
+  ./run.sh restore
   ./run.sh check --json
   ./run.sh embeddings --fix
   ./run.sh full --fix
@@ -64,7 +68,32 @@ case "$CMD" in
     dump|backup)
         exec "$SCRIPT_DIR/scripts/dump.sh" "$@"
         ;;
-    check|embeddings|duplicates|orphans|integrity|stats|full)
+    restore)
+        cat <<EOF
+ops-arango does not automate restores yet.
+
+Use native arangorestore directly and keep progress/logging explicit:
+
+  arangorestore \\
+    --progress true \\
+    --log.level info \\
+    --server.endpoint tcp://127.0.0.1:8529 \\
+    --server.username "\${ARANGO_USER:-root}" \\
+    --server.password "\$ARANGO_PASS" \\
+    --server.database "\${ARANGO_DB:-memory}" \\
+    --input-directory /path/to/dump \\
+    --overwrite true
+
+When docker exec is unreliable on large restores, prefer:
+  docker run --rm --network container:<arangodb-container> -v /path/to/backups:/backups arangodb/arangodb:3.12.6 arangorestore ...
+
+See:
+  skills/ops-arango/SKILL.md
+  skills/best-practices-arangodb/SKILL.md
+EOF
+        exit 2
+        ;;
+    check|health-check|embeddings|duplicates|orphans|integrity|stats|full|url-coverage)
         exec uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/maintain.py" "$CMD" "$@"
         ;;
     -h|--help|help)
