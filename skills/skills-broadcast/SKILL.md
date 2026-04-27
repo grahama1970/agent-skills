@@ -144,15 +144,22 @@ The `git-sync` command pushes canonical skills to the `grahama1970/agent-skills`
 This is a **manual** operation — run it when you want to checkpoint your current skill state.
 
 ```bash
-./run.sh git-sync              # commit and push
-./run.sh git-sync --dry-run    # preview what would change
+./run.sh git-sync --dry-run            # preview inferred single-skill commit
+./run.sh git-sync --skill ask          # commit and push one skill
+./run.sh git-sync --skill ask --skill subagent-runner
+./run.sh git-sync --all                # intentionally commit all changed skills
 ```
 
 How it works:
-1. Temporarily replaces the `agent-skills/skills` symlink with a real copy
-2. Prunes heavy artifacts (models, .venv, media files, >50MB dirs)
-3. Commits with `sync: N skills from canonical (date)` and pushes
-4. Restores the symlink (guaranteed via trap, even on failure)
+1. Refuses to run if unrelated changes are already staged.
+2. Infers a single changed skill, or requires explicit `--skill NAME` / `--all`.
+3. Stages only selected skill paths with runtime artifacts excluded.
+4. Commits with a scoped message and pushes normally; it does not force-push.
+
+This command is intentionally conservative for parallel-agent worktrees. Do not
+use broad staging (`git add -A`) when multiple agents may have uncommitted work.
+It also supports normal Git worktrees where `.git` is a file rather than a
+directory.
 
 ## Heavy Artifact Policy
 

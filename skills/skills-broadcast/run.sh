@@ -29,7 +29,7 @@ MIN_SKILLS=20
 
 usage() {
     cat <<USAGE
-Usage: ${0##*/} [link|status|info|cleanup|git-commit|register|unregister|targets|push|pull] [--dry-run]
+Usage: ${0##*/} [link|status|info|cleanup|git-commit|register|unregister|targets|push|pull] [--skill NAME] [--all] [--message TEXT] [--dry-run]
 
 Symlink-based skill sharing. Canonical source: $CANONICAL_DIR (GitHub repo)
 
@@ -38,7 +38,7 @@ Commands:
   status            Show all targets and their link state
   info              Alias for status
   cleanup           Delete .pre-symlink-* backup directories to reclaim disk space
-  git-commit        Commit and push changes in canonical agent-skills repo
+  git-commit        Commit and push selected skill changes in canonical agent-skills repo
   register [PATH]   Add a project to the target registry
   unregister [PATH] Remove a project from the target registry
   targets           List registered projects
@@ -49,6 +49,9 @@ Legacy aliases (map to 'link' for backwards compatibility):
   git-sync          Same as 'git-commit' (deprecated name)
 
 Options:
+  --skill NAME      Commit one changed skill. May be repeated.
+  --all             Commit all changed skills explicitly.
+  --message, -m     Commit message to use for git-commit/git-sync.
   --dry-run, -n     Preview what would be done
   -h, --help        Show this help
 USAGE
@@ -56,6 +59,9 @@ USAGE
 
 MODE="link"
 DRY_RUN=0
+COMMIT_ALL=0
+COMMIT_MESSAGE=""
+declare -a COMMIT_SKILLS=()
 
 if [[ $# -gt 0 ]]; then
     case "$1" in
@@ -74,12 +80,30 @@ if [[ $# -gt 0 ]]; then
             usage; exit 0 ;;
         --dry-run|-n)
             DRY_RUN=1; shift ;;
+        --all)
+            COMMIT_ALL=1; shift ;;
+        --skill)
+            COMMIT_SKILLS+=("${2:-}")
+            shift 2 ;;
+        --message|-m)
+            COMMIT_MESSAGE="${2:-}"
+            shift 2 ;;
         *) usage; exit 1 ;;
     esac
 fi
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --skill)
+            COMMIT_SKILLS+=("${2:-}")
+            shift 2
+            continue ;;
+        --all)
+            COMMIT_ALL=1 ;;
+        --message|-m)
+            COMMIT_MESSAGE="${2:-}"
+            shift 2
+            continue ;;
         --dry-run|-n) DRY_RUN=1 ;;
         -h|--help) usage; exit 0 ;;
         -*) echo "Unknown option: $1" >&2; usage; exit 1 ;;
@@ -191,6 +215,69 @@ fi
 
 # ── Git Commit in canonical agent-skills repo ────────────────────────────────
 
+is_git_commit_excluded_path() {
+    local path="$1"
+    case "$path" in
+        */.venv/*|*/.ask_artifacts/*|*/__pycache__/*|*/.pytest_cache/*)
+            return 0 ;;
+        *.pyc|*.pyo|*.log)
+            return 0 ;;
+        */ask_task_state.json|*/dogpile_task_state.json|*/dogpile_partial_results.json)
+            return 0 ;;
+    esac
+    return 1
+}
+
+changed_skill_names() {
+    git status --porcelain -- skills | while IFS= read -r line; do
+        local path
+        path="${line:3}"
+        if [[ "$path" == *" -> "* ]]; then
+            printf '%s\n' "${path%% -> *}"
+            printf '%s\n' "${path##* -> }"
+        else
+            printf '%s\n' "$path"
+        fi
+    done | while IFS= read -r path; do
+        [[ -z "$path" ]] && continue
+        is_git_commit_excluded_path "$path" && continue
+        if [[ "$path" =~ ^skills/([^/]+)/ ]]; then
+            printf '%s\n' "${BASH_REMATCH[1]}"
+        fi
+    done | sort -u
+}
+
+validate_skill_name() {
+    local skill="$1"
+    if [[ -z "$skill" || "$skill" == *"/"* || "$skill" == "." || "$skill" == ".." ]]; then
+        echo "[ABORT] Invalid skill name for --skill: '$skill'" >&2
+        exit 1
+    fi
+    if [[ ! -d "skills/$skill" ]]; then
+        echo "[ABORT] Skill directory not found: skills/$skill" >&2
+        exit 1
+    fi
+}
+
+print_git_commit_plan() {
+    local -a stage_paths=("$@")
+    echo "Stage paths:"
+    printf '  %s\n' "${stage_paths[@]}"
+    echo ""
+    echo "Matching changes:"
+    git status --short -- "${stage_paths[@]}" \
+        ':(exclude)**/.venv/**' \
+        ':(exclude)**/.ask_artifacts/**' \
+        ':(exclude)**/__pycache__/**' \
+        ':(exclude)**/.pytest_cache/**' \
+        ':(exclude)**/*.pyc' \
+        ':(exclude)**/*.pyo' \
+        ':(exclude)**/*.log' \
+        ':(exclude)**/ask_task_state.json' \
+        ':(exclude)**/dogpile_task_state.json' \
+        ':(exclude)**/dogpile_partial_results.json'
+}
+
 if [[ "$MODE" == "git-commit" ]]; then
     REPO_DIR="$HOME/workspace/experiments/agent-skills"
 
@@ -200,7 +287,7 @@ if [[ "$MODE" == "git-commit" ]]; then
     echo ""
 
     # Validate
-    if [[ ! -d "$REPO_DIR/.git" ]]; then
+    if [[ ! -e "$REPO_DIR/.git" ]]; then
         echo "[ABORT] agent-skills repo not found at $REPO_DIR" >&2
         exit 1
     fi
@@ -218,24 +305,63 @@ if [[ "$MODE" == "git-commit" ]]; then
 
     cd "$REPO_DIR"
 
-    # Check for changes
-    if git diff --quiet && git diff --cached --quiet; then
+    if ! git diff --cached --quiet; then
+        echo "[ABORT] Refusing to run with pre-staged changes." >&2
+        echo "        Unstage or commit them explicitly before running skills-broadcast git-sync." >&2
+        cd "$OLDPWD"
+        exit 1
+    fi
+
+    mapfile -t changed_skills < <(changed_skill_names)
+    declare -a stage_paths=()
+
+    if [[ $COMMIT_ALL -eq 1 && ${#COMMIT_SKILLS[@]} -gt 0 ]]; then
+        echo "[ABORT] Use either --all or --skill, not both." >&2
+        cd "$OLDPWD"
+        exit 1
+    fi
+
+    if [[ $COMMIT_ALL -eq 1 ]]; then
+        stage_paths=("skills")
+    elif [[ ${#COMMIT_SKILLS[@]} -gt 0 ]]; then
+        for skill in "${COMMIT_SKILLS[@]}"; do
+            validate_skill_name "$skill"
+            stage_paths+=("skills/$skill")
+        done
+    elif [[ ${#changed_skills[@]} -eq 1 ]]; then
+        validate_skill_name "${changed_skills[0]}"
+        stage_paths=("skills/${changed_skills[0]}")
+    elif [[ ${#changed_skills[@]} -eq 0 ]]; then
         echo "No changes to commit. Agent-skills is up to date."
         cd "$OLDPWD"
         exit 0
+    else
+        echo "[ABORT] Multiple changed skills detected; refusing implicit broad commit." >&2
+        printf '        %s\n' "${changed_skills[@]}" >&2
+        echo "        Rerun with repeated --skill NAME flags, or use --all intentionally." >&2
+        cd "$OLDPWD"
+        exit 1
     fi
 
     if [[ $DRY_RUN -eq 1 ]]; then
-        echo "[DRY RUN] Would commit and push changes in $REPO_DIR"
+        echo "[DRY RUN] Would commit and push selected changes in $REPO_DIR"
         echo ""
-        echo "Changes:"
-        git status --short | head -20
+        print_git_commit_plan "${stage_paths[@]}"
         cd "$OLDPWD"
         exit 0
     fi
 
-    # Stage and commit
-    git add -A
+    git add -A -- "${stage_paths[@]}" \
+        ':(exclude)**/.venv/**' \
+        ':(exclude)**/.ask_artifacts/**' \
+        ':(exclude)**/__pycache__/**' \
+        ':(exclude)**/.pytest_cache/**' \
+        ':(exclude)**/*.pyc' \
+        ':(exclude)**/*.pyo' \
+        ':(exclude)**/*.log' \
+        ':(exclude)**/ask_task_state.json' \
+        ':(exclude)**/dogpile_task_state.json' \
+        ':(exclude)**/dogpile_partial_results.json'
 
     if git diff --cached --quiet; then
         echo "No staged changes to commit."
@@ -248,8 +374,15 @@ if [[ "$MODE" == "git-commit" ]]; then
     echo ""
 
     timestamp="$(date +%Y-%m-%d)"
-    git commit -m "update: $skill_count skills ($timestamp)"
-    git push origin "$(git branch --show-current)" --force-with-lease
+    if [[ -z "$COMMIT_MESSAGE" ]]; then
+        if [[ ${#stage_paths[@]} -eq 1 && "${stage_paths[0]}" == skills/* && "${stage_paths[0]}" != "skills" ]]; then
+            COMMIT_MESSAGE="update(${stage_paths[0]#skills/}): sync skill changes ($timestamp)"
+        else
+            COMMIT_MESSAGE="update: selected skills ($timestamp)"
+        fi
+    fi
+    git commit -m "$COMMIT_MESSAGE"
+    git push origin "$(git branch --show-current)"
 
     echo ""
     echo "Pushed to github.com/grahama1970/agent-skills"
