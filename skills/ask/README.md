@@ -1,0 +1,380 @@
+# ask
+
+<p align="center">
+  <img
+    src="docs/assets/ask-banner.png"
+    alt="ask skill banner showing an arcade-style oracle console with Ask and Roundtable controls"
+    width="100%"
+  />
+</p>
+
+> Zero-cognitive-load querying and learning for agent skill environments.
+
+`ask` is the natural-language front door to memory-backed context, persona
+consultation, fresh discovery, and high-reasoning synthesis. It lets a human ask
+normally while the system chooses the right retrieval, freshness, persona, and
+oracle path.
+
+`ask` uses the model surfaces, subscriptions, APIs, and local providers available
+in the current environment: Codex subscription surfaces, OpenAI API access,
+`/scillm` routes, local models, DeepSeek, Gemini, or other configured backends.
+
+```text
+human asks naturally
+    ↓
+/ask resolves intent
+    ↓
+/memory provides durable context
+    ↓
+optional /dogpile discovers fresh external evidence
+    ↓
+optional oracle/subagent path produces high-reasoning synthesis
+    ↓
+artifacts and telemetry persist for later recall
+```
+
+**Core principle:** Memory recall is context, not evidence. Code and design
+claims must still be grounded in inspected files, diffs, tests, or artifacts.
+
+## Quick Start
+
+```bash
+# Query stored knowledge.
+./run.sh ask "What do we know about the auth retry bug?"
+
+# Learn a new project/topic.
+./run.sh learn "architecture of this repository" --scope project --depth standard
+
+# Invoke high-reasoning oracle synthesis.
+./run.sh ask "Should we use subagent-runner or direct scillm for focused reviews?" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --oracle-model gpt-5.5 \
+  --oracle-reasoning high
+
+# Run independent adversarial reviewers.
+./run.sh ask "Review this pull request" \
+  --parallel-review \
+  --parallel-reviewers 3 \
+  --parallel-review-focus correctness,tests,maintainability
+
+# Run first-class deep review with audit artifacts.
+./run.sh ask "deep review this implementation" \
+  --deep-review \
+  --deep-review-target src/ask/ask.py
+
+# Check runtime health through OS mode.
+./run.sh os health "is memory healthy?"
+```
+
+## Modes
+
+| Mode | Purpose | Typical command |
+| --- | --- | --- |
+| Ask | Query stored knowledge | `./run.sh ask "what do we know about X?"` |
+| Learn | Discover and ingest a topic/persona | `./run.sh learn "architecture of this repository" --depth standard` |
+| Auto-learn | Learn if memory has no useful result | `./run.sh ask "question" --auto-learn` |
+| Oracle | Max-available reasoning synthesis | `./run.sh ask "question" --oracle` |
+| Persona | Answer through a stored persona | `./run.sh ask "question" --oracle --oracle-persona Architect` |
+| Roundtable | Sequential persona deliberation | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
+| Parallel review | Independent reviewer fanout | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
+| Deep review | Web-GPT-style review with artifacts | `./run.sh ask "deep review this" --deep-review-target src/ask/ask.py` |
+| Runtime health | Query skill/runtime health | `./run.sh os health "is memory healthy?"` |
+
+## Installation
+
+`ask` is normally installed through an agent skills tree:
+
+```bash
+cd /path/to/workspace
+ls .pi/skills/ask
+```
+
+For direct development from the skills repository:
+
+```bash
+cd /path/to/agent-skills/skills/ask
+./run.sh ask "is memory healthy?"
+```
+
+Expected companion skills:
+
+- `/memory`
+- `/dogpile`
+- `/scillm`
+- `/subagent-runner`
+- `/project-knowledge`
+- monitor/ops skills used by OS mode
+
+## Common Human Chat Prompts
+
+Project agents translate natural `$ask` prompts into the correct CLI route.
+
+```text
+$ask what do we know about the auth retry bug?
+$ask what changed in the API client architecture?
+$ask what are the risks in this implementation?
+$ask run 3 parallel adversarial reviewers on this pull request
+$ask review then roundtable with Architect, Tester, and Maintainer
+$ask deep review this implementation --deep-review-target src/ask/ask.py
+$ask oracle should we use subagent-runner here?
+$ask what tests prove the cache invalidation behavior?
+$ask learn the architecture of this repository
+$ask is memory healthy?
+```
+
+See `docs/HUMAN_CHAT_EXAMPLES.md` for the complete human-facing route catalog.
+
+## Workflows
+
+### Memory-backed question
+
+```bash
+./run.sh ask "What tests prove the cache invalidation behavior?" \
+  --bridges
+```
+
+### Persona oracle
+
+```bash
+./run.sh ask "Critique this reliability plan" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --oracle-persona Architect
+```
+
+### Sequential roundtable
+
+Roundtable is sequential, not parallel chat. `/ask` builds a shared review
+state, gives each persona a protocol role, requires claim-specific reactions,
+then runs a moderator synthesis. Use it when the order of critique matters.
+
+```bash
+./run.sh ask "Should we split the API client package?" \
+  --roundtable \
+  --roundtable-personas "Architect:failure_mode,Tester:evidence_auditor,Maintainer:complexity_minimizer" \
+  --roundtable-rounds 2
+```
+
+### Parallel findings then roundtable debate
+
+```bash
+./run.sh ask "Review this cache invalidation design" \
+  --parallel-review \
+  --roundtable \
+  --roundtable-personas "Architect:failure_mode,Tester:evidence_auditor,Maintainer:complexity_minimizer"
+```
+
+### Preferred model with a one-shot peer model
+
+```bash
+./run.sh ask "What is the strongest objection to this plan?" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --oracle-model gpt-5.5 \
+  --oracle-persona "GPT-5.5 architect" \
+  --oracle-peer "DeepSeek V4 critic" \
+  --oracle-peer-model opencode-go/deepseek-v4-pro \
+  --oracle-iterations 3
+```
+
+## Deep Review
+
+Deep review is an oracle/review lane for comprehensive, Web-GPT-style analysis
+without browser copy-paste. It wraps the high-reasoning oracle path with a
+pass-based review prompt, target resolution, read-only git status checks, and
+machine-checkable artifacts.
+
+Runtime deep review is read-only: it should produce analysis, verdicts,
+artifacts, telemetry, and remediation plans, not patches.
+
+```bash
+./run.sh ask "deep review this implementation" \
+  --deep-review \
+  --deep-review-target src/ask/ask.py \
+  --deep-reviewers 5 \
+  --deep-review-focus boundaries,fail-closed,tests,auditability
+```
+
+Outputs:
+
+```text
+.ask_artifacts/deep-review/<timestamp>/review.md
+.ask_artifacts/deep-review/<timestamp>/review.json
+```
+
+The JSON verifier rejects missing sections, unsafe write evidence, shallow
+summaries, invalid verdicts, and safe verdicts without inspected evidence.
+
+## Command Reference
+
+```bash
+./run.sh ask <question> [options]
+./run.sh learn <topic> [options]
+./run.sh status [options]
+./run.sh nightly [options]
+./run.sh os <learn|ask|health> [options]
+```
+
+Common `ask` options:
+
+| Option | Meaning |
+| --- | --- |
+| `--scope <scope>` | Memory scope to query |
+| `--bridges` | Traverse bridge/taxonomy context |
+| `--auto-learn` | Learn if memory has no useful result |
+| `--oracle` | Use oracle synthesis |
+| `--oracle-persona <name>` | Primary stored persona or role |
+| `--roundtable` | Run protocolized sequential deliberation |
+| `--parallel-review` | Run independent reviewer fanout |
+| `--deep-review` | Emit deep-review markdown and JSON artifacts |
+| `--deep-review-target <target>` | Explicit target: paths, diff, plan, manifest, or artifact |
+| `--dogpile <auto|off|force>` | Freshness policy |
+| `--json` | Machine-readable command output |
+
+See `SKILL.md` for the full option list and agent-facing contract.
+
+## Domain Examples
+
+Domain-specific prompts are supported, but the README keeps onboarding examples
+developer-neutral. Put exhaustive domain examples in `docs/HUMAN_CHAT_EXAMPLES.md`
+and sanity/E2E fixtures.
+
+```text
+$ask what do we know about SPARTA QRA validation?
+$ask Brandon persona about how NIST AC-3 relates to SPARTA countermeasure CM0001
+```
+
+## Configuration
+
+Most users do not need environment overrides. Common variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `ASK_DEFAULT_SCOPE` | Default memory scope |
+| `ASK_ORACLE_MODEL` | Preferred oracle model |
+| `ASK_ORACLE_REASONING` | Preferred oracle reasoning effort; default is `high` |
+| `ASK_ORACLE_BACKEND` | Default oracle backend |
+| `ASK_ORACLE_TIMEOUT` | Oracle call timeout |
+| `ASK_ORACLE_IDLE_TIMEOUT` | Subagent silence timeout |
+| `SCILLM_BASE_URL` | `/scillm` service URL |
+| `SCILLM_API_KEY` | `/scillm` bearer token |
+| `ASK_DEBUG` | Enable debug logging |
+
+See `SKILL.md` for exhaustive environment and runtime details.
+
+## Artifacts and Telemetry
+
+`ask` records execution details into `/memory` so timeout and reliability policy
+can become data-driven over time.
+
+Expected telemetry surfaces:
+
+- `ask_call_log`
+- `ask_subagent_heartbeat`
+- compact roundtable/parallel review summaries
+- artifact paths for generated review outputs
+- durable lessons when a conversation produces reusable knowledge
+
+Do not store full prompts, full reviewer chatter, full code diffs, or full repo
+snippets by default.
+
+Timeout handling is push-style where the runner supports it:
+
+- `/subagent-runner` emits transcript delta and heartbeat events while a Codex
+  session is alive.
+- `/ask` follows `events.jsonl` first and falls back to status polling only when
+  needed.
+- `--oracle-idle-timeout` is treated as silence/stall detection, not normal
+  long-running reasoning failure.
+- `--oracle-timeout` remains the wall-clock cap.
+- Heartbeat snapshots are sparse and stored for future timeout policy; full
+  chatter is not persisted by default.
+
+Semantic validation is part of the E2E contract. Empty answers,
+`No answer could be synthesized`, refusal-style non-answers, wrong persona
+routing, missing roundtable participants, and missing domain grounding must fail
+the relevant E2E case.
+
+## Current Readiness
+
+As of 2026-04-27, `$ask` is usable for the intended interactive workflows:
+
+- Realistic domain sanity/E2E checks passed `3/3` with scoped memory, a stored
+  persona, and a multi-persona roundtable.
+- Targeted regression suite passed `30/30`.
+- Normal oracle reasoning defaults to `high`; deep-review defaults to `xhigh`
+  when no explicit reasoning is supplied.
+- The latest evidence dashboard is generated at
+  `.ask_artifacts/validation-dashboard/20260427T171501Z/index.html`.
+
+Known caveat: repository cleanup and commit staging are still pending; the
+runtime workflow is ready, but the worktree should be reviewed before publishing.
+
+## Development Knowledge
+
+Curated development context lives in `docs/PROJECT_KNOWLEDGE.md`.
+
+```bash
+cd /path/to/skills/ask
+../project-knowledge/run.sh sync --file docs/PROJECT_KNOWLEDGE.md --project ask
+../project-knowledge/run.sh recall --project ask
+```
+
+Agents should still query `/memory` first. Project knowledge is a curated
+current-state projection, not a replacement for inspected code or test output.
+
+## Repository Layout
+
+| Path | Purpose |
+| --- | --- |
+| `SKILL.md` | Full skill contract, triggers, commands, and examples |
+| `README.md` | Developer/GitHub overview |
+| `run.sh` | CLI entrypoint |
+| `src/ask/ask.py` | Main command implementation |
+| `src/ask/deep_review.py` | Deep-review prompt, artifact, and verifier support |
+| `src/ask/ask_routing.py` | Natural prompt routing |
+| `src/ask/ask_oracle.py` | Oracle/subagent synthesis path |
+| `src/ask/ask_results.py` | Result formatting and persistence support |
+| `src/ask/review_protocols/` | Roundtable and adversarial review protocols |
+| `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
+| `docs/PROJECT_KNOWLEDGE.md` | Curated current development state |
+| `sanity.sh` | Deterministic smoke checks |
+
+## Development
+
+Documentation-only changes do not require a build.
+
+For code changes:
+
+```bash
+bash sanity.sh
+```
+
+When tests are added or modified:
+
+```bash
+uv run --project . --group dev python -m pytest -q tests/test_human_chat_examples.py
+uv run --project . --group dev python -m pytest -q tests/test_ask_cli_protocols.py
+uv run --project . --group dev python -m pytest -q tests/test_deep_review_protocol.py
+bash sanity.sh
+```
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| Memory answers look stale | Run `/memory recall` directly and consider `--dogpile auto` |
+| Persona answer sounds generic | Confirm persona profile exists in `/memory` |
+| Oracle call stalls | Check `ask_subagent_heartbeat` and transcript tail |
+| Deep review returns shallow JSON | Verifier should reject it; inspect `review.json` |
+| Date-sensitive answer lacks freshness | Use `--dogpile force` or verify `--dogpile auto` routing |
+
+## Non-goals
+
+- **Not a batch LLM runner.** Use batch-capable lanes for high-volume prompts.
+- **Not `/code-runner`.** Runtime review modes should not patch source files.
+- **Not a patch generator.** Deep review produces analysis, verdicts, and remediation plans.
+- **Not proof by JSON.** Structured output improves auditability, not reasoning depth.
+- **Not evidence by memory alone.** Memory recall guides review; inspected artifacts ground claims.
+- **Not exact ChatGPT Web parity.** Local oracle review uses available Codex/scillm surfaces.

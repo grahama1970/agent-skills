@@ -1,0 +1,107 @@
+"""Deterministic deep-review schema and verifier tests."""
+
+from ask.deep_review import (
+    DEEP_REVIEW_SECTION_NAMES,
+    normalise_review_json,
+    verify_review_json,
+)
+
+
+def _section(status="verified"):
+    return {
+        "status": status,
+        "summary": "Evidence-backed section summary with enough detail to audit.",
+        "evidence_examined": ["src/ask/ask.py"],
+        "findings": [],
+    }
+
+
+def _valid_review_json():
+    return {
+        "verdict": "SAFE_WITH_CONDITIONS",
+        "target_reviewed": "src/ask/ask.py",
+        "files_inspected": ["src/ask/ask.py", "tests/test_ask_cli_protocols.py"],
+        "files_not_inspected_but_relevant": [],
+        "sections": {name: _section() for name in DEEP_REVIEW_SECTION_NAMES},
+        "blocking_issues": [],
+        "significant_risks": [
+            {
+                "severity": "medium",
+                "evidence": "src/ask/ask.py wires CLI routing.",
+                "impact": "Bad routing could invoke a weaker review lane.",
+                "fix": "Keep explicit deep-review flags and routing tests.",
+                "verification": "pytest tests/test_ask_cli_protocols.py",
+            }
+        ],
+        "missing_deterministic_checks": [],
+        "test_gaps": [],
+        "read_only_claim": True,
+        "confidence": "medium",
+    }
+
+
+def test_deep_review_verifier_accepts_evidence_bearing_schema():
+    review_json = normalise_review_json(
+        _valid_review_json(),
+        {"oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"}},
+        {
+            "original_question": "deep review this implementation",
+            "target": {"status": "explicit", "target": "src/ask/ask.py", "requires_target": False},
+            "requested_model": "gpt-5.5",
+            "requested_reasoning": "xhigh",
+            "requested_backend": "subagent-runner",
+            "git_before": [],
+        },
+    )
+    review_json["execution"]["git_after"] = []
+    review_json["execution"]["unexpected_file_changes"] = []
+
+    verification = verify_review_json(review_json)
+
+    assert verification["status"] == "PASS"
+    assert verification["failures"] == []
+
+
+def test_deep_review_verifier_rejects_shallow_safe_schema():
+    shallow = normalise_review_json(
+        {"verdict": "SAFE", "target_reviewed": "src/ask/ask.py", "read_only_claim": True},
+        {"oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"}},
+        {
+            "original_question": "deep review this implementation",
+            "target": {"status": "explicit", "target": "src/ask/ask.py", "requires_target": False},
+            "requested_model": "gpt-5.5",
+            "requested_reasoning": "xhigh",
+            "requested_backend": "subagent-runner",
+            "git_before": [],
+        },
+    )
+    shallow["execution"]["git_after"] = []
+    shallow["execution"]["unexpected_file_changes"] = []
+
+    verification = verify_review_json(shallow)
+
+    assert verification["status"] == "FAIL"
+    assert "safe verdict requires files_inspected evidence" in verification["failures"]
+    assert "target_reconstruction: not assessed" in verification["failures"]
+
+
+def test_deep_review_verifier_rejects_unsafe_writes():
+    review_json = normalise_review_json(
+        _valid_review_json(),
+        {"oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"}},
+        {
+            "original_question": "deep review this implementation",
+            "target": {"status": "explicit", "target": "src/ask/ask.py", "requires_target": False},
+            "requested_model": "gpt-5.5",
+            "requested_reasoning": "xhigh",
+            "requested_backend": "subagent-runner",
+            "git_before": [],
+        },
+    )
+    review_json["execution"]["git_after"] = [" M src/ask/ask.py"]
+    review_json["execution"]["unexpected_file_changes"] = [" M src/ask/ask.py"]
+
+    verification = verify_review_json(review_json)
+
+    assert verification["status"] == "FAIL"
+    assert "unexpected file changes detected" in verification["failures"]

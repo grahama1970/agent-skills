@@ -73,6 +73,32 @@ Ask Options:
   --auto-learn          Auto-discover and learn if no knowledge found
   --collection <coll>   Taxonomy collection for auto-learn (default: behavioral)
   --raw                 Return raw memory results
+  --oracle              Use scillm/Codex for final oracle synthesis
+  --oracle-backend <b>  Oracle backend: auto, scillm, subagent-runner
+  --oracle-model <m>    Oracle synthesis model (default: gpt-5.5)
+  --oracle-reasoning <r> Oracle reasoning effort (default: high; deep-review default: xhigh)
+  --oracle-timeout <s>  Oracle HTTP timeout in seconds (default: 300)
+  --oracle-idle-timeout <s> Subagent silence timeout before stalled recovery
+  --oracle-heartbeat-interval <s> Memory heartbeat write interval
+  --oracle-persona <p>  Primary persona/subagent for oracle synthesis
+  --oracle-peer <p>     Second persona/subagent for oracle deliberation
+  --oracle-persona-model <m> Model for primary persona turns
+  --oracle-peer-model <m> Model for peer persona turns
+  --oracle-iterations <n> Sequential oracle deliberation calls (default: 1)
+  --roundtable         Run sequential protocolized persona deliberation
+  --roundtable-personas <p> Comma-separated persona[:role] participants
+  --roundtable-role-preset <p> Role preset (default: adversarial-review)
+  --roundtable-rounds <n> Number of roundtable rounds (default: 2)
+  --roundtable-persist <summary|full> Persist compact state or full turns
+  --parallel-review    Run independent parallel adversarial reviewers
+  --parallel-reviewers <n> Number of default reviewers (default: 3)
+  --parallel-review-personas <p> Comma-separated reviewer persona[:role] specs
+  --parallel-review-focus <f> Comma-separated reviewer focus labels
+  --deep-review         Run read-only deep review with review.md/review.json artifacts
+  --deep-review-target <target> Explicit target: paths, diff, plan, manifest, or artifact
+  --deep-reviewers <n> Reviewer breadth requested for deep review
+  --deep-review-focus <f> Comma-separated deep-review focus labels
+  --dogpile <auto|off|force> Freshness policy for oracle subagents
   --json                JSON output
   --debug               Enable debug logging
 
@@ -101,6 +127,30 @@ Examples:
   # Ask with bridge traversal
   ./run.sh ask "Why is chronic stress harmful?" --scope behavioral-psych --bridges
 
+  # Ask with GPT oracle synthesis
+  ./run.sh ask "What is the strongest interpretation?" --oracle --oracle-reasoning high
+
+  # Natural persona syntax: resolves the stored persona and uses the focused oracle subagent
+  ./run.sh ask Brandon what is the state of space-based cybersecurity in 2016?
+
+  # Ask with persona ping-pong deliberation
+  ./run.sh ask "What should we do?" --oracle --oracle-persona "architect" --oracle-peer "critic" --oracle-iterations 3
+
+  # Ask with GPT-5.5 conversing with a scillm one-shot model
+  ./run.sh ask "What should we do?" --oracle --oracle-backend subagent-runner --oracle-persona "architect" --oracle-peer "DeepSeek critic" --oracle-peer-model opencode-go/deepseek-v4-pro --oracle-iterations 3
+
+  # Natural N-persona roundtable syntax
+  ./run.sh ask Brandon, Margaret, and Jennifer to debate the relevance of Formal Methods in aerospace projects in 2026
+
+  # Explicit protocolized roundtable
+  ./run.sh ask "Formal Methods in aerospace projects in 2026" --roundtable --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer" --roundtable-rounds 2
+
+  # Independent parallel adversarial reviewers
+  ./run.sh ask "Review this architecture" --parallel-review --parallel-reviewers 3 --parallel-review-focus correctness,tests,maintainability
+
+  # First-class deep review artifacts
+  ./run.sh ask "deep review this implementation" --deep-review --deep-review-target src/ask/ask.py
+
   # Learn from specific YouTube lectures
   ./run.sh learn "behavioral neuroscience" --youtube https://youtube.com/watch?v=NNnIGh9g6fA --scope behavioral-psych
 
@@ -121,19 +171,19 @@ EOF
 case "${1:-help}" in
     learn)
         shift
-        exec uv run --project "$SCRIPT_DIR" python "${SCRIPT_DIR}/learn.py" "$@"
+        exec uv run --project "$SCRIPT_DIR" python -m ask.learn "$@"
         ;;
     ask|query)
         shift
-        exec uv run --project "$SCRIPT_DIR" python "${SCRIPT_DIR}/ask.py" "$@"
+        exec uv run --project "$SCRIPT_DIR" python -m ask.ask "$@"
         ;;
     status)
         shift
-        exec uv run --project "$SCRIPT_DIR" python "${SCRIPT_DIR}/status.py" "$@"
+        exec uv run --project "$SCRIPT_DIR" python -m ask.status "$@"
         ;;
     nightly)
         shift
-        exec uv run --project "$SCRIPT_DIR" python "${SCRIPT_DIR}/nightly.py" "$@"
+        exec uv run --project "$SCRIPT_DIR" python -m ask.nightly "$@"
         ;;
     os)
         shift
@@ -141,13 +191,13 @@ case "${1:-help}" in
         shift 2>/dev/null || true
         case "$subcmd" in
             learn)
-                exec uv run --project "$SCRIPT_DIR" python "${SCRIPT_DIR}/os_learn.py" learn "$@"
+                exec uv run --project "$SCRIPT_DIR" python -m ask.os_learn learn "$@"
                 ;;
             ask)
-                exec uv run --project "$SCRIPT_DIR" python "${SCRIPT_DIR}/os_query.py" ask "$@"
+                exec uv run --project "$SCRIPT_DIR" python -m ask.os_query ask "$@"
                 ;;
             health)
-                exec uv run --project "$SCRIPT_DIR" python "${SCRIPT_DIR}/os_query.py" health "$@"
+                exec uv run --project "$SCRIPT_DIR" python -m ask.os_query health "$@"
                 ;;
             *)
                 echo "Unknown os subcommand: $subcmd"
@@ -158,7 +208,7 @@ case "${1:-help}" in
         ;;
     intent)
         shift
-        exec uv run --project "$SCRIPT_DIR" python "${SCRIPT_DIR}/ask_intent.py" "$@"
+        exec uv run --project "$SCRIPT_DIR" python -m ask.ask_intent "$@"
         ;;
     help|--help|-h)
         show_help

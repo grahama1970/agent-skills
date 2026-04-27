@@ -1,0 +1,63 @@
+"""Deep-review artifact and result metadata tests."""
+
+import json
+
+from ask.deep_review import DEEP_REVIEW_SECTION_NAMES, build_deep_review_request, finalize_deep_review_result
+
+
+def _section():
+    return {
+        "status": "verified",
+        "summary": "Evidence-backed section summary with enough detail to audit.",
+        "evidence_examined": ["src/ask/ask.py"],
+        "findings": [],
+    }
+
+
+def test_deep_review_writes_markdown_and_json_artifacts(tmp_path):
+    review_summary = {
+        "verdict": "SAFE_WITH_CONDITIONS",
+        "target_reviewed": "src/ask/ask.py",
+        "files_inspected": ["src/ask/ask.py"],
+        "files_not_inspected_but_relevant": [],
+        "sections": {name: _section() for name in DEEP_REVIEW_SECTION_NAMES},
+        "blocking_issues": [],
+        "significant_risks": [],
+        "missing_deterministic_checks": [],
+        "test_gaps": [],
+        "read_only_claim": True,
+        "confidence": "medium",
+    }
+    result = {
+        "question": "deep review this implementation",
+        "answer": "Review body.\n\n```json\n" + json.dumps(review_summary) + "\n```",
+        "oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"},
+    }
+    request = build_deep_review_request(
+        question="deep review this implementation",
+        explicit_target="src/ask/ask.py",
+        profile="max_available",
+        reviewers=5,
+        focus="correctness,tests,auditability",
+        fallback_policy="fail_closed",
+        dogpile_mode="auto",
+        output_root=str(tmp_path),
+        model="gpt-5.5",
+        reasoning="xhigh",
+        backend="subagent-runner",
+    )
+
+    review_json = finalize_deep_review_result(result, request)
+
+    assert review_json["verifier"]["status"] == "PASS"
+    assert result["deep_review"]["verdict"] == "SAFE_WITH_CONDITIONS"
+    assert result["deep_review"]["verifier_status"] == "PASS"
+    assert review_json["artifact_paths"]["review_md"].endswith("review.md")
+    assert review_json["artifact_paths"]["review_json"].endswith("review.json")
+    assert list(tmp_path.glob("*"))
+    review_md = tmp_path.joinpath(*review_json["artifact_paths"]["review_md"].split("/")[-2:]).read_text(encoding="utf-8")
+    persisted = json.loads(
+        tmp_path.joinpath(*review_json["artifact_paths"]["review_json"].split("/")[-2:]).read_text(encoding="utf-8")
+    )
+    assert "ask Deep Review" in review_md
+    assert persisted["execution"]["requested_reasoning"] == "xhigh"

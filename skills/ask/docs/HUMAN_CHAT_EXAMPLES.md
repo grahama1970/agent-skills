@@ -1,0 +1,262 @@
+# `$ask` Human Chat Examples
+
+These examples describe how a human can invoke `$ask` from chat. The skill
+accepts natural phrasing, then maps it to memory recall, oracle synthesis,
+persona consultation, roundtable review, parallel review, or deep review.
+
+## Defaults
+
+- Use memory first for ordinary knowledge questions.
+- Use oracle mode for high-value analytical, strategic, ambiguous, or review-heavy questions.
+- Use `gpt-5.5` with `high` reasoning for normal oracle paths, and `xhigh` for deep-review unless unavailable or overridden.
+- Use `subagent-runner` for personas, peers, roundtables, parallel review, and deep review.
+- Treat memory recall as context, not evidence.
+- Use `--scope sparta` for SPARTA, NIST-to-SPARTA, and space-cybersecurity questions.
+- Treat empty answers, refusal-style non-answers, missing personas, or missing domain grounding as failed E2E behavior.
+- Do not use oracle mode for bulk loops, nightly ingestion, or large batches.
+
+## Memory Questions
+
+```text
+$ask what do we know about the release checklist?
+$ask what did we decide about provider fallback behavior?
+$ask show raw memory hits for timeout handling
+$ask is memory healthy?
+```
+
+Expected route:
+
+```bash
+./run.sh ask "what do we know about the release checklist?"
+```
+
+## High-Reasoning Oracle
+
+```text
+$ask What is the state of Python packaging in 2026?
+$ask oracle should we use subagent-runner here?
+$ask oracle with a 10 minute timeout on this architecture decision
+$ask Should subagent-runner replace direct scillm for focused oracle calls?
+```
+
+Expected route:
+
+```bash
+./run.sh ask "Should subagent-runner replace direct scillm for focused oracle calls?" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --oracle-model gpt-5.5 \
+  --oracle-reasoning high
+```
+
+## Persona Oracle
+
+```text
+$ask Brandon what is the best way to review this API boundary?
+$ask Brandon persona about whether this retry design fails closed
+$ask Architect persona about whether this plugin interface is too coupled
+$ask Brandon ask Margaret where are we weak?
+```
+
+Expected route:
+
+```bash
+./run.sh ask "whether this retry design fails closed" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --oracle-persona Brandon \
+  --oracle-model gpt-5.5 \
+  --oracle-reasoning high
+```
+
+Peer prompt:
+
+```bash
+./run.sh ask "where are we weak?" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --oracle-persona Brandon \
+  --oracle-peer Margaret \
+  --oracle-iterations 2
+```
+
+## Cross-Model Oracle
+
+```text
+$ask oracle with GPT-5.5 architect and DeepSeek V4 critic for this design
+$ask Brandon use DeepSeek V4 as a critic on this API boundary
+```
+
+Expected route:
+
+```bash
+./run.sh ask "Review this design" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --oracle-model gpt-5.5 \
+  --oracle-persona "GPT-5.5 architect" \
+  --oracle-peer "DeepSeek V4 critic" \
+  --oracle-peer-model opencode-go/deepseek-v4-pro \
+  --oracle-iterations 3
+```
+
+## Roundtable
+
+```text
+$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: Should this service use retries or queues?
+$ask roundtable with Brandon:failure_mode, Margaret:evidence_auditor, Jennifer:complexity_minimizer on this architecture
+$ask Brandon, Margaret, and Jennifer to debate the relevance of formal methods in large-scale aerospace projects in 2026
+$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: What is the state of cybersecurity in 2026?
+```
+
+Expected route:
+
+```bash
+./run.sh ask "Should this service use retries or queues?" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --roundtable \
+  --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer" \
+  --roundtable-rounds 2
+```
+
+Use `--roundtable-persist full` only when the full transcript matters. The
+default is summary persistence to avoid memory pollution.
+
+Roundtable is a sequential protocol: each persona sees prior claims, reacts
+under a protocol role, and the moderator synthesizes. It is not the same as
+parallel review.
+
+## Parallel Review
+
+```text
+$ask run 3 parallel adversarial reviewers on this implementation
+$ask launch 5 parallel reviewers for correctness, tests, security, maintainability, and UX
+$ask run N parallel reviews on the current diff
+```
+
+Expected route:
+
+```bash
+./run.sh ask "this implementation" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --parallel-review \
+  --parallel-reviewers 3 \
+  --parallel-review-focus correctness,tests,maintainability
+```
+
+## Parallel Review Then Roundtable
+
+```text
+$ask review then roundtable with Brandon, Margaret, Jennifer on this architecture
+$ask run parallel reviewers first, then have Brandon and Margaret debate unresolved issues
+```
+
+Expected route:
+
+```bash
+./run.sh ask "Review this architecture" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --parallel-review \
+  --parallel-reviewers 3 \
+  --roundtable \
+  --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer"
+```
+
+## Deep Review
+
+```text
+$ask deep review this implementation --deep-review-target src/ask/ask.py
+$ask is this safe to proceed? --deep-review-target "current branch vs main"
+$ask comprehensive review of this plan --deep-review-target docs/IMPLEMENTATION_PLAN.md
+```
+
+Expected route:
+
+```bash
+./run.sh ask "deep review this implementation" \
+  --deep-review \
+  --deep-review-target src/ask/ask.py \
+  --deep-reviewers 5 \
+  --deep-review-focus boundaries,fail-closed,tests,auditability \
+  --oracle-backend subagent-runner \
+  --oracle-model gpt-5.5 \
+  --oracle-reasoning xhigh
+```
+
+Deep review emits:
+
+```text
+.ask_artifacts/deep-review/<timestamp>/review.md
+.ask_artifacts/deep-review/<timestamp>/review.json
+```
+
+Deep review is read-only at runtime. It records before/after git status and
+fails verifier checks if unexpected non-artifact file changes appear.
+
+## Domain-Specific Examples
+
+These remain valid when the project has the relevant memory/persona data:
+
+```text
+$ask what do we know about SPARTA QRA validation?
+$ask What is the state of space-based cybersecurity in 2026?
+$ask Brandon what is the state of space-based cybersecurity in 2016?
+$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: What is the state of cybersecurity in 2026?
+$ask Brandon persona about how NIST AC-3 is related to SPARTA countermeasure CM0001
+$ask parallel reviewers on this NIST-to-SPARTA traceability matrix
+$ask oracle whether this evidence case is sufficient for CMMC Level 2 scoping
+```
+
+Expected SPARTA/space-cybersecurity routes:
+
+```bash
+./run.sh ask "What is the state of space-based cybersecurity in 2026?" \
+  --scope sparta \
+  --oracle \
+  --oracle-backend scillm
+
+./run.sh ask Brandon what is the state of space-based cybersecurity in 2016? \
+  --scope sparta
+
+./run.sh ask "What is the state of cybersecurity in 2026?" \
+  --scope sparta \
+  --roundtable \
+  --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer" \
+  --roundtable-rounds 1 \
+  --oracle-backend subagent-runner
+```
+
+## Raw And JSON Output
+
+```text
+$ask show raw memory hits for timeout handling
+$ask give me JSON for persona matches on API design
+```
+
+Expected route:
+
+```bash
+./run.sh ask "timeout handling" --raw
+./run.sh ask "persona matches on API design" --json
+```
+
+Do not combine `--raw` with oracle, roundtable, parallel review, or deep review.
+
+## Wrong And Right
+
+```text
+Wrong: $ask run oracle for these 100 questions
+Right: Use normal memory ask or a batch-capable model lane; reserve oracle for high-value questions.
+
+Wrong: $ask roundtable and persist everything by default
+Right: $ask Brandon and Margaret to roundtable for 2 rounds on <topic>
+
+Wrong: $ask safe to proceed?
+Right: $ask safe to proceed? --deep-review-target "current branch vs main"
+
+Wrong: $ask use DeepSeek somehow
+Right: $ask oracle with GPT-5.5 and DeepSeek V4 using --oracle-peer-model opencode-go/deepseek-v4-pro
+```

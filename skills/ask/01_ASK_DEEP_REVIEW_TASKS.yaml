@@ -1,0 +1,618 @@
+version: 1
+kind: orchestrate-plan
+repo_root: "/home/graham/workspace/experiments/agent-skills/skills/ask"
+
+metadata:
+  repo_root: "/home/graham/workspace/experiments/agent-skills/skills/ask"
+  title: "Add Web-GPT-style deep review lane to /ask"
+  goal: >
+    Make /ask the comprehensive max-reasoning oracle/review surface for topic
+    questions and code/design reviews, avoiding manual browser copy-paste while
+    preserving the distinction that /ask is not a code-runner.
+  plan_type: code
+  created: "2026-04-27"
+  primary_persona:
+    name: "Graham"
+    role: "developer/operator who wants Web GPT Pro depth without copy-paste"
+    source: "Current conversation and /ask skill requirements"
+  non_goals:
+    - "/ask does not edit implementation files during a review unless the human explicitly asks."
+    - "/ask does not become /code-runner; it produces analysis, verdicts, and remediation plans."
+    - "/ask does not replace /review-code for patch generation or deterministic fix loops."
+    - "Deep review does not promise exact ChatGPT Web GPT Pro parity; it provides a local, auditable approximation."
+  approval_state: "APPROVE_WITH_CONDITIONS"
+  required_changes:
+    - "Add deterministic read-only enforcement: prompt contract, runtime/no-write mode where possible, git before/after check, and allowed artifact paths only."
+    - "Emit both human-readable review.md and machine-readable review.json artifacts."
+    - "Use JSON as an auditability and verifier gate, not as the sole review surface or proof of reasoning depth."
+    - "Add pass-based deep-review prompts that define what comprehensive means instead of relying on generic 'be comprehensive' wording."
+    - "Require evidence-bearing JSON fields and distinguish none_found from not_assessed for every required section."
+    - "Treat gpt-5.5/xhigh as a requested profile, not guaranteed capability; record actual model/reasoning and fail or warn on downgrade."
+    - "Reject non-independent, shallow, unsupported reviewer outputs; do not reject reviewer consensus by itself."
+    - "Require explicit deep-review target resolution for vague prompts like 'safe to proceed?'."
+    - "Mark Memory First recall as context only, not evidence."
+    - "Persist hashes, summaries, verdicts, artifact paths, and target IDs by default; do not persist full diffs, full prompts, full reviewer chatter, or repo snippets by default."
+  implementation_vs_runtime:
+    implementation_time: >
+      code-runner may modify src/ask modules, tests, docs, and protocol modules while
+      implementing this plan.
+    runtime: >
+      /ask deep review must not edit implementation files; it is an oracle and
+      review lane, not a patch generator.
+  deep_review_runtime_contract:
+    prompt_contract: "Reviewer and moderator prompts must say do not edit files."
+    runtime_contract: "Use read-only/no-write sandboxing or equivalent runner controls where available."
+    post_run_invariant: >
+      Record git status before and after each deep-review run and fail closed
+      when unexpected non-artifact paths change.
+    allowed_writes:
+      - ".ask_artifacts/**"
+      - "reviews/**"
+      - "existing /ask session logs and telemetry files"
+    forbidden_writes:
+      - "source files"
+      - "tests"
+      - "config"
+      - "docs, unless explicitly running an implementation plan"
+  deep_review_profile:
+    profile: "max_available"
+    preferred_model: "gpt-5.5"
+    preferred_reasoning: "xhigh"
+    fallback_policy: "fail_closed_or_warn"
+    degradation_marker: "DEEP_REVIEW_CAPABILITY_DEGRADED"
+    degradation_required_fields:
+      - actual_model
+      - actual_profile
+      - actual_reasoning
+      - requested_model
+      - requested_reasoning
+  prompt_protocol:
+    principle: "The prompt must force breadth through required passes, evidence-bearing fields, and anti-shallow gates."
+    not_enough:
+      - "be comprehensive"
+      - "think deeply"
+      - "return valid JSON"
+    required_execution_rules:
+      - "This is not a normal Codex /review, not a terse PR review, and not an implementation task."
+      - "Do not edit source files, do not generate patches, and do not optimize for brevity."
+      - "Inspect relevant files, tests, configs, docs, manifests, or explicit artifacts before judging."
+      - "Memory, prior summaries, and user claims may guide the review but are not evidence."
+      - "Missing evidence is a finding, not permission to assume safety."
+      - "Distinguish verified, likely_but_not_verified, not_assessed, and contradicted_by_evidence."
+      - "Every significant issue must include severity, evidence, impact, recommended fix, verification command or test, confidence, and remaining uncertainty."
+    required_review_passes:
+      - "target reconstruction"
+      - "architecture and boundary contracts"
+      - "fail-closed behavior"
+      - "production failure modes"
+      - "evidence and auditability"
+      - "deterministic checks"
+      - "test proof"
+      - "complexity removal"
+      - "security, safety, and data-risk review"
+      - "final synthesis without unsupported new claims"
+    allowed_final_verdicts:
+      - "SAFE"
+      - "SAFE_WITH_CONDITIONS"
+      - "NOT_SAFE"
+      - "INSUFFICIENT_EVIDENCE"
+    shallow_rejection_rules:
+      - "required sections are missing"
+      - "major findings lack evidence, impact, fix, or verification"
+      - "the review says safe without listing inspected evidence"
+      - "empty sections are left unexplained"
+      - "the answer is mostly generic advice"
+      - "the answer only reviews a diff and ignores architecture"
+      - "the answer does not discuss fail-closed behavior"
+      - "the answer does not discuss deterministic checks"
+      - "the answer does not discuss test proof"
+      - "the answer does not distinguish none_found from not_assessed"
+  artifact_schema:
+    human: "review.md"
+    machine: "review.json"
+    codex_exec_support: "Use codex exec --output-schema or equivalent structured-output enforcement when available."
+    json_role: "Machine-checkable gate for coverage, evidence, telemetry, and regression detection."
+    markdown_role: "Human-readable comprehensive memo; JSON must not replace it."
+    section_status_enum:
+      - "issues_found"
+      - "none_found"
+      - "not_assessed"
+    evidence_state_enum:
+      - "verified"
+      - "likely_but_not_verified"
+      - "not_assessed"
+      - "contradicted_by_evidence"
+    required_json_fields:
+      - mode
+      - target
+      - actual_model
+      - actual_reasoning
+      - verdict
+      - verifier_status
+      - required_sections_present
+      - blocking_issues
+      - significant_risks
+      - artifact_paths
+      - git_before
+      - git_after
+      - unexpected_file_changes
+    required_section_fields:
+      - status
+      - summary
+      - evidence_examined
+      - findings
+      - why_no_findings_found
+      - what_remains_unverified
+    required_finding_fields:
+      - severity
+      - claim
+      - evidence
+      - impact
+      - recommended_fix
+      - verification
+      - confidence
+      - evidence_state
+  target_resolution:
+    allowed_targets:
+      - "current branch vs main"
+      - "current uncommitted diff"
+      - "explicitly supplied file or directory paths"
+      - "explicit artifact or manifest path"
+      - "explicit plan file"
+    fail_closed_message: "Need a deep-review target: branch diff, file path, plan path, manifest, or explicit repo scope."
+  memory_policy:
+    first_step: "Always run Memory First recall before bounded context discovery."
+    evidence_rule: "Memory recall is context, not evidence; repo claims must be grounded in inspected files, diffs, tests, or artifacts."
+    default_persistence: "Persist summaries, durable lessons, verdicts, hashes, artifact paths, target IDs, durations, and verifier status."
+    full_persistence_requires_flag: "--deep-review-persist full"
+  architecture_bounds:
+    keep_simple:
+      - "one protocol module"
+      - "one context builder"
+      - "one JSON result schema"
+      - "one markdown renderer"
+      - "one verifier"
+      - "optional subagent fanout"
+    avoid:
+      - "dynamic reviewer marketplace"
+      - "nested protocols"
+      - "hidden memory-driven routing"
+      - "LLM grading its own review without deterministic checks"
+      - "unbounded auto-discovery"
+
+execution:
+  max_concurrency: 3
+  wave_barrier: false
+  scheduling_policy: dependency_only
+
+capability_overlap:
+  - >
+    /memory recall found prior GPT review and post-review protocol lessons:
+    triage findings by severity, update specs from correctness findings, add
+    safeguards from failure-mode findings, simplify from over-engineering
+    findings, and resubmit critical issues for verification.
+  - >
+    Skill discovery found existing review/composition skills:
+    /ask, /codex, /subagent-runner, /scillm, /create-peer-review,
+    /code-review-runner, /review-code, /review-plan, /argue, /anvil,
+    /create-context, and /test-lab.
+  - >
+    Decision matrix: CALL /subagent-runner for real Codex-class reviewer
+    sessions; CALL /scillm for one-shot peer model checks; EXTEND /ask routing,
+    docs, protocol state, and sanity tests; REUSE /test-lab or sanity.sh for
+    blind validation; DO NOT CREATE a new standalone review skill unless /ask
+    cannot remain the front door.
+  - >
+    Anti-silo justification: only CREATE small /ask-local protocol modules and
+    tests because no existing skill currently gives /ask a first-class
+    Web-GPT-style deep-review mode with verifier gating and human chat routing.
+
+questions_blockers: []
+
+lanes:
+  - id: "0"
+    label: "Wave 0: Contract and protocol design"
+  - id: "1.1"
+    label: "Wave 1: Routing implementation"
+  - id: "1.2"
+    label: "Wave 1: Protocol implementation"
+  - id: "1.3"
+    label: "Wave 1: Context implementation"
+  - id: "1.4"
+    label: "Wave 1: Telemetry implementation"
+  - id: "2"
+    label: "Wave 2: Validation and documentation"
+
+tasks:
+  - id: "1"
+    title: "Define /ask deep-review contract"
+    lane: "0"
+    runner: "code-runner"
+    backend: "gpt-5.3-codex"
+    mode: "iterative"
+    depends_on: []
+    skills:
+      - ask
+      - best-practices-skills
+      - test-lab
+    allowlist:
+      - "docs/ASK_DEEP_REVIEW_CONTRACT.md"
+    gate: "Contract explicitly says /ask deep review is a verified read-only oracle/review lane and not /code-runner."
+    read_context:
+      - "SKILL.md"
+      - "docs/HUMAN_CHAT_EXAMPLES.md"
+      - "src/ask/ask.py"
+      - "ask_routing.py"
+      - "ask_oracle.py"
+      - "review_protocols/adversarial_review.py"
+    implementation:
+      - >
+        Write a concise implementation contract for deep review mode: default
+        max reasoning, verified read-only behavior, Web-GPT-style comprehensive
+        output, no patch generation, no runtime code-runner semantics, saved
+        artifacts, degradation reporting, and explicit SAFE / SAFE WITH
+        CONDITIONS / NOT SAFE verdict.
+      - >
+        Define the review schema sections: executive verdict, inferred
+        architecture, boundary contracts, blocking flaws, non-blocking risks,
+        hidden failure modes, missing deterministic checks, test gaps,
+        observability/auditability gaps, complexity to remove, remediation
+        plan, open questions, and final verdict.
+      - >
+        Define the deep-review prompt template as pass-based: target
+        reconstruction, architecture/boundaries, fail-closed behavior,
+        production failure modes, evidence/auditability, deterministic checks,
+        test proof, complexity removal, security/data-risk, and final synthesis.
+      - >
+        Define JSON as a verifier and telemetry surface only. The contract must
+        require both review.md for humans and review.json for automation.
+      - >
+        State the three-layer read-only invariant: prompt contract, runtime
+        read-only/no-write enforcement where available, and git before/after
+        verification that allows only artifact and telemetry paths.
+      - >
+        State that Memory First recall guides context selection but is not
+        evidence for code/design claims unless corroborated by inspected files,
+        diffs, tests, or artifacts.
+    tests:
+      - "grep -q 'deep review' docs/ASK_DEEP_REVIEW_CONTRACT.md"
+      - "grep -q 'not a code-runner' docs/ASK_DEEP_REVIEW_CONTRACT.md"
+      - "grep -q 'Memory recall is context, not evidence' docs/ASK_DEEP_REVIEW_CONTRACT.md"
+      - "grep -q 'not_assessed' docs/ASK_DEEP_REVIEW_CONTRACT.md"
+    blind_tests:
+      - "test-lab/run.sh verify-task ask-deep-review-contract skills/ask --domain skills"
+    definition_of_done:
+      command: "grep -q 'deep review' docs/ASK_DEEP_REVIEW_CONTRACT.md && grep -q 'not a code-runner' docs/ASK_DEEP_REVIEW_CONTRACT.md"
+      assertion: "Contract exists and explicitly states deep review is not a code-runner."
+
+  - id: "2"
+    title: "Add deep-review routing and CLI flags"
+    lane: "1.1"
+    runner: "code-runner"
+    backend: "gpt-5.3-codex"
+    mode: "iterative"
+    depends_on: ["1"]
+    skills:
+      - ask
+      - codex
+      - subagent-runner
+      - scillm
+      - test-lab
+    gate: "Deep-review chat prompts route to max-reasoning oracle mode without changing normal ask behavior."
+    allowlist:
+      - "src/ask/ask.py"
+      - "ask_routing.py"
+      - "run.sh"
+      - "tests/test_human_chat_examples.py"
+      - "tests/test_ask_cli_protocols.py"
+    read_context:
+      - "ask_config.py"
+      - "ask_oracle.py"
+      - "review_protocols/adversarial_review.py"
+      - "SKILL.md"
+    implementation:
+      - >
+        Add first-class deep-review intent routing for chat prompts like
+        "$ask deep review this architecture", "$ask Web GPT style review this
+        diff", "$ask max reasoning review current repo", and "$ask safe to
+        proceed?".
+      - >
+        Add explicit CLI flags such as --deep-review, --deep-reviewers,
+        --deep-review-focus, --deep-review-target, --deep-review-profile,
+        --deep-review-fallback-policy, --deep-review-dogpile, and
+        --deep-review-persist without changing normal ask behavior.
+      - >
+        Ensure inferred deep-review mode requests oracle=True,
+        oracle_backend=subagent-runner, profile=max_available,
+        preferred_model=gpt-5.5, and preferred_reasoning=xhigh unless
+        explicitly overridden; record actual model/profile/reasoning and emit
+        DEEP_REVIEW_CAPABILITY_DEGRADED if the requested profile cannot be
+        honored.
+      - >
+        Resolve vague prompts like "$ask safe to proceed?" to current branch
+        versus main, current uncommitted diff, explicit paths, explicit artifact
+        or manifest, or explicit plan file; fail closed with the configured
+        target-resolution message when no target is available.
+      - >
+        Add routing support for structured-output execution so deep review can
+        pass a JSON Schema to Codex exec or the selected oracle backend when
+        supported; if unsupported, the verifier must still validate emitted
+        review.json deterministically.
+    tests:
+      - "uv run --project . --group dev python -m pytest -q tests/test_human_chat_examples.py tests/test_ask_cli_protocols.py"
+      - "bash sanity.sh"
+    blind_tests:
+      - "test-lab/run.sh verify-task ask-deep-review-routing skills/ask --domain skills"
+    definition_of_done:
+      command: "uv run --project . --group dev python -m pytest -q tests/test_human_chat_examples.py tests/test_ask_cli_protocols.py && bash sanity.sh"
+      assertion: "Documented deep-review prompts route to max-reasoning oracle review mode and existing ask routes still pass."
+
+  - id: "3"
+    title: "Implement deep-review protocol state machine"
+    lane: "1.2"
+    runner: "code-runner"
+    backend: "gpt-5.3-codex"
+    mode: "iterative"
+    depends_on: ["1"]
+    skills:
+      - ask
+      - codex
+      - subagent-runner
+      - scillm
+      - test-lab
+    gate: "Verifier rejects shallow unsupported reviews and final synthesis contains required verdict sections."
+    allowlist:
+      - "ask_oracle.py"
+      - "review_protocols/__init__.py"
+      - "review_protocols/deep_review.py"
+      - "tests/test_deep_review_protocol.py"
+    read_context:
+      - "review_protocols/adversarial_review.py"
+      - "ask_results.py"
+      - "ask_config.py"
+    implementation:
+      - >
+        Add a reusable deep-review protocol module that builds reviewer prompts,
+        verifier prompts, moderator prompts, compact state, and final synthesis
+        prompts.
+      - >
+        Add a reusable JSON Schema for review.json with required section
+        statuses, evidence-bearing finding fields, allowed verdict enums, and
+        explicit none_found versus not_assessed semantics.
+      - >
+        Required reviewer roles: architecture-boundary reviewer,
+        failure-mode reviewer, deterministic-check reviewer, test-proof
+        reviewer, complexity-removal reviewer.
+      - >
+        Add verifier gating that fails shallow output when required sections are
+        empty, when evidence/fix/verification fields are missing, when reviewers
+        restate the same generic concern, when no reviewer identifies
+        uncertainty or a verification gap, when final synthesis introduces
+        unsupported new claims, or when the final verdict is not SAFE, SAFE WITH
+        CONDITIONS, NOT SAFE, or INSUFFICIENT_EVIDENCE.
+      - >
+        Fail valid-but-shallow JSON such as empty blocking_issues without
+        evidence_examined and why_no_findings_found. Empty required sections are
+        acceptable only when status=none_found and supported by inspected
+        evidence; status=not_assessed fails for required sections.
+      - >
+        Do not fail solely because reviewers reach consensus; fail only when
+        consensus lacks independent evidence, distinct risk search, or
+        role-specific contribution.
+      - >
+        Preserve current roundtable and parallel-review behavior.
+    tests:
+      - "uv run --project . --group dev python -m pytest -q tests/test_deep_review_protocol.py tests/test_ask_oracle_protocols.py tests/test_review_protocols.py"
+      - "bash sanity.sh"
+    blind_tests:
+      - "test-lab/run.sh verify-task ask-deep-review-protocol skills/ask --domain skills"
+    definition_of_done:
+      command: "uv run --project . --group dev python -m pytest -q tests/test_deep_review_protocol.py tests/test_ask_oracle_protocols.py tests/test_review_protocols.py && bash sanity.sh"
+      assertion: "Protocol produces required sections, verifier rejects unsupported shallow reviews without rejecting examined consensus, and existing protocols still pass."
+
+  - id: "4"
+    title: "Add read-only context bundle builder"
+    lane: "1.3"
+    runner: "code-runner"
+    backend: "gpt-5.3-codex"
+    mode: "iterative"
+    depends_on: ["1"]
+    skills:
+      - ask
+      - memory
+      - create-context
+      - test-lab
+    gate: "Context bundle is read-only, bounded, Memory First, target-resolved, and saved as an artifact."
+    allowlist:
+      - "ask_deep_review_context.py"
+      - "ask_oracle.py"
+      - "test_deep_review_context.py"
+    read_context:
+      - "src/ask/ask.py"
+      - "skills_exec.py"
+      - "session_writer.py"
+    implementation:
+      - >
+        Build a read-only context bundle for deep reviews containing the
+        question, resolved target description, git status before execution,
+        current git status/diff summary when available, explicitly supplied
+        paths, existing memory recall snippets, artifact allowlist, and
+        verification commands.
+      - >
+        Do not scan the entire repo by default. Require explicit paths or use
+        bounded discovery. Preserve Memory First behavior.
+      - >
+        Treat memory recall as context only. Code/design claims in the final
+        review must cite inspected files, diffs, tests, or saved artifacts as
+        evidence.
+      - >
+        Save bundle metadata to local artifacts and include artifact paths in
+        the /ask result.
+    tests:
+      - "uv run --project . --group dev python -m pytest -q test_deep_review_context.py"
+      - "bash sanity.sh"
+    blind_tests:
+      - "test-lab/run.sh verify-task ask-deep-review-context skills/ask --domain skills"
+    definition_of_done:
+      command: "uv run --project . --group dev python -m pytest -q test_deep_review_context.py && bash sanity.sh"
+      assertion: "Context builder is read-only, bounded, preserves Memory First, and emits deterministic artifacts."
+
+  - id: "5"
+    title: "Persist deep-review telemetry and artifacts"
+    lane: "1.4"
+    runner: "code-runner"
+    backend: "gpt-5.3-codex"
+    mode: "iterative"
+    depends_on: ["2", "3", "4"]
+    skills:
+      - ask
+      - memory
+      - subagent-runner
+      - test-lab
+    gate: "Deep-review telemetry persists summary, JSON artifact, verdict, verifier status, duration, and artifact paths without full chatter by default."
+    allowlist:
+      - "src/ask/ask.py"
+      - "ask_oracle.py"
+      - "ask_results.py"
+      - "test_deep_review_telemetry.py"
+    read_context:
+      - "session_writer.py"
+      - "ask_config.py"
+    implementation:
+      - >
+        Store deep-review run metadata in /memory via memory skill or memory
+        daemon endpoints: prompt, target, reviewers, verifier status, verdict,
+        duration, artifact paths, target IDs, content hashes, model/profile
+        details, git before/after status, unexpected file changes, and
+        shallow-review failures.
+      - >
+        Persist summaries by default and require an explicit full-transcript
+        flag for complete reviewer turns.
+      - >
+        Emit review.md and review.json. The JSON artifact must include mode,
+        target, actual_model, actual_reasoning, verdict, verifier_status,
+        required_sections_present, blocking_issues, significant_risks,
+        artifact_paths, git_before, git_after, and unexpected_file_changes.
+      - >
+        review.json must encode section status as issues_found, none_found, or
+        not_assessed; required sections with not_assessed must fail verifier
+        gating unless the whole verdict is INSUFFICIENT_EVIDENCE.
+      - >
+        Use evidence-bearing nested fields rather than flat counts only:
+        evidence_examined, why_no_findings_found, what_remains_unverified,
+        finding evidence, impact, recommended_fix, verification, confidence,
+        and evidence_state.
+      - >
+        Do not store full code diffs, full prompts, full reviewer chatter, or
+        full repo snippets in memory by default.
+      - >
+        Add timeout and heartbeat fields compatible with existing
+        ask_subagent_heartbeat and ask_call_log telemetry.
+    tests:
+      - "uv run --project . --group dev python -m pytest -q test_deep_review_telemetry.py"
+      - "bash sanity.sh"
+    blind_tests:
+      - "test-lab/run.sh verify-task ask-deep-review-telemetry skills/ask --domain skills"
+    definition_of_done:
+      command: "uv run --project . --group dev python -m pytest -q test_deep_review_telemetry.py && bash sanity.sh"
+      assertion: "Deep-review results include review.md, review.json, verdict, verifier status, telemetry fields, and artifact paths without storing full chatter by default."
+
+  - id: "6"
+    title: "Document human usage and non-goals"
+    lane: "2"
+    runner: "code-runner"
+    backend: "gpt-5.3-codex"
+    mode: "iterative"
+    depends_on: ["2", "3", "4", "5"]
+    skills:
+      - ask
+      - best-practices-skills
+      - test-lab
+    gate: "Docs include deep-review prompts, exact CLI equivalents, non-goals, and sanity coverage requirement."
+    allowlist:
+      - "SKILL.md"
+      - "docs/HUMAN_CHAT_EXAMPLES.md"
+      - "docs/ASK_DEEP_REVIEW_CONTRACT.md"
+    read_context:
+      - "SKILL.md"
+      - "docs/HUMAN_CHAT_EXAMPLES.md"
+      - "docs/ASK_DEEP_REVIEW_CONTRACT.md"
+      - "sanity.sh"
+      - "tests/test_human_chat_examples.py"
+    implementation:
+      - >
+        Update SKILL.md and human examples to include deep-review prompts, exact
+        CLI equivalents, when to use deep review versus normal ask, and when to
+        use /review-code or /code-runner instead.
+      - >
+        State clearly that deep review simulates Web-GPT-style breadth locally
+        but does not guarantee exact ChatGPT Web Pro surface parity.
+      - >
+        Document the implementation-time/runtime distinction: implementation
+        tasks may edit /ask files; runtime /ask deep review must remain
+        read-only except for approved artifacts and telemetry.
+      - >
+        Document explicit target requirements, degraded capability reporting,
+        the default summary-only persistence policy, and the optional
+        --deep-review-persist full mode.
+      - >
+        Document that JSON improves coverage and auditability but does not
+        itself create reasoning depth; depth comes from required review passes,
+        bounded repo evidence, reviewer roles, xhigh/high-verbosity profile,
+        and verifier rejection of shallow-but-valid outputs.
+    tests:
+      - "python - <<'PY'\nfrom pathlib import Path\nassert 'deep review' in Path('SKILL.md').read_text().lower()\nassert 'not a code-runner' in Path('docs/ASK_DEEP_REVIEW_CONTRACT.md').read_text().lower()\nPY"
+      - "bash sanity.sh"
+    blind_tests:
+      - "test-lab/run.sh verify-task ask-deep-review-docs skills/ask --domain skills"
+    definition_of_done:
+      command: "python - <<'PY'\nfrom pathlib import Path\nassert 'deep review' in Path('SKILL.md').read_text().lower()\nassert 'not a code-runner' in Path('docs/ASK_DEEP_REVIEW_CONTRACT.md').read_text().lower()\nPY\nbash sanity.sh"
+      assertion: "Docs explain deep-review usage, CLI equivalents, non-goals, and reliability tests."
+
+  - id: "7"
+    title: "Run real E2E smoke tests"
+    lane: "2"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["6"]
+    gate: "All deterministic deep-review route/protocol/context/telemetry tests pass, ask sanity checks pass, and read-only invariants are verified."
+    command: >
+      uv run --project . --group dev python -m pytest -q
+      tests/test_human_chat_examples.py
+      tests/test_ask_cli_protocols.py
+      tests/test_deep_review_protocol.py
+      test_deep_review_context.py
+      test_deep_review_telemetry.py
+      && bash sanity.sh
+    implementation:
+      - >
+        Run deterministic E2E smoke tests that monkeypatch expensive Codex calls
+        and verify routing/protocol/telemetry behavior.
+      - >
+        Run a deterministic read-only invariant test that captures git status
+        before and after deep-review execution and fails on unexpected
+        non-artifact path changes.
+      - >
+        Validate review.json against the required machine-readable schema and
+        verify review.md exists for the same run.
+      - >
+        Add negative fixtures proving the verifier rejects structurally valid
+        but useless JSON, including empty issue arrays without inspected
+        evidence, generic boilerplate sections, and required sections marked
+        not_assessed.
+      - >
+        Run at least one optional real subagent-runner smoke test only when
+        credentials and timeout budget are available.
+    tests:
+      - "The command exits 0."
+    definition_of_done:
+      command: >
+        uv run --project . --group dev python -m pytest -q
+        tests/test_human_chat_examples.py
+        tests/test_ask_cli_protocols.py
+        tests/test_deep_review_protocol.py
+        test_deep_review_context.py
+        test_deep_review_telemetry.py
+        && bash sanity.sh
+      assertion: "All deterministic deep-review and existing ask sanity tests pass."

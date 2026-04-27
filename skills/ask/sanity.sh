@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sanity checks for /ask skill
-# Tests: imports, memory-agent CLI, basic commands, dependencies
+# Tests: imports, memory skill access, basic commands, dependencies
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,37 +10,21 @@ echo "=== /ask Sanity Checks ==="
 echo ""
 
 FAIL=0
+PYTHON=(uv run --project "$SCRIPT_DIR" python)
 
 # Test 1: Python module imports
 echo "1. Python module imports..."
-if python3 -c "
-import sys
-import importlib.util
-
-# Load ask modules directly from files to avoid path conflicts
-ask_dir = '$SCRIPT_DIR'
-
-def load_module(name, path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-# Load modules from ask directory
-ask_mod = load_module('ask', f'{ask_dir}/ask.py')
-status_mod = load_module('ask_status', f'{ask_dir}/status.py')
-
-# Load split modules
-skills_exec_mod = load_module('skills_exec', f'{ask_dir}/skills_exec.py')
-monitor_mod = load_module('monitor', f'{ask_dir}/monitor.py')
-pipeline_mod = load_module('pipeline', f'{ask_dir}/pipeline.py')
-
-# Verify expected exports exist
+if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -c "
+import ask.ask as ask_mod
+import ask.status as status_mod
+import ask.skills_exec as skills_exec_mod
+import ask.monitor as monitor_mod
+import ask.pipeline as pipeline_mod
 assert hasattr(ask_mod, 'ask')
 assert hasattr(skills_exec_mod, 'run_skill')
 assert hasattr(monitor_mod, 'AskMonitor')
 assert hasattr(status_mod, 'show_status')
+assert hasattr(pipeline_mod, 'learn')
 print('   All modules import OK')
 "; then
     echo "   PASS"
@@ -49,22 +33,21 @@ else
     FAIL=1
 fi
 
-# Test 2: memory-agent CLI availability (fast path)
+# Test 2: memory skill availability
 echo ""
-echo "2. memory-agent CLI (fast path)..."
-MEMORY_CLI="$HOME/.local/bin/memory-agent"
-if [[ -x "$MEMORY_CLI" ]]; then
-    echo "   memory-agent found at $MEMORY_CLI"
+echo "2. memory skill..."
+MEMORY_RUN="${SCRIPT_DIR}/../memory/run.sh"
+if [[ -x "$MEMORY_RUN" ]]; then
+    echo "   memory skill found at $MEMORY_RUN"
     echo "   PASS"
 else
-    echo "   WARN: memory-agent not at $MEMORY_CLI (will use slow run.sh fallback)"
-    # Not a failure, just a warning
+    echo "   WARN: memory skill not at $MEMORY_RUN"
 fi
 
 # Test 3: status command (fast, no external deps needed)
 echo ""
 echo "3. Status command (--json)..."
-if python3 status.py --scope sanity-test --json 2>/dev/null | python3 -c "
+if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.status --scope sanity-test --json 2>/dev/null | "${PYTHON[@]}" -c "
 import sys, json
 data = json.load(sys.stdin)
 print(f'   scope: {data.get(\"scope\", \"?\")}')
@@ -79,18 +62,18 @@ fi
 # Test 4: ask command (help/syntax check)
 echo ""
 echo "4. Ask command (syntax check)..."
-if python3 ask.py --help >/dev/null 2>&1; then
+if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.ask --help >/dev/null 2>&1; then
     echo "   --help works"
     echo "   PASS"
 else
-    echo "   FAIL: ask.py --help failed"
+    echo "   FAIL: ask CLI --help failed"
     FAIL=1
 fi
 
 # Test 5: learn command (help/syntax check)
 echo ""
 echo "5. Learn command (syntax check)..."
-if python3 -m pipeline --help >/dev/null 2>&1 || python3 -c "from pipeline import main; import sys; sys.argv=['pipeline','--help']; main()" 2>/dev/null; then
+if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.pipeline --help >/dev/null 2>&1 || PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -c "from ask.pipeline import main; import sys; sys.argv=['pipeline','--help']; main()" 2>/dev/null; then
     echo "   --help works"
     echo "   PASS"
 else
@@ -101,11 +84,11 @@ fi
 # Test 5b: nightly command (help/syntax check)
 echo ""
 echo "5b. Nightly command (syntax check)..."
-if python3 nightly.py --help >/dev/null 2>&1; then
+if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.nightly --help >/dev/null 2>&1; then
     echo "   --help works"
     echo "   PASS"
 else
-    echo "   FAIL: nightly.py --help failed"
+    echo "   FAIL: nightly CLI --help failed"
     FAIL=1
 fi
 
@@ -149,8 +132,8 @@ fi
 # Test 8: AskMonitor class initialization (tests task-monitor integration)
 echo ""
 echo "8. AskMonitor task-monitor integration..."
-if python3 -c "
-from monitor import AskMonitor
+if "${PYTHON[@]}" -c "
+from ask.monitor import AskMonitor
 m = AskMonitor('sanity-test', 'sanity-test', register=False)
 print(f'   steps: {len(m.STEPS)}')
 print(f'   initial status: {m.step_status[\"memory_check\"]}')
@@ -162,6 +145,22 @@ print(f'   done status: {m.step_status[\"memory_check\"]}')
     echo "   PASS"
 else
     echo "   FAIL: AskMonitor broken"
+    FAIL=1
+fi
+
+# Test 9: human chat examples route as documented
+echo ""
+echo "9. Human chat example routing..."
+if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytest -q \
+    tests/test_deep_review_context.py \
+    tests/test_deep_review_protocol.py \
+    tests/test_deep_review_telemetry.py \
+    tests/test_human_chat_examples.py \
+    tests/test_ask_cli_protocols.py \
+    tests/test_review_protocols.py; then
+    echo "   PASS"
+else
+    echo "   FAIL: human chat example routing broken"
     FAIL=1
 fi
 
