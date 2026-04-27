@@ -50,6 +50,10 @@ curated context. Memory recall is context, not evidence.
 | 2026-04-27 | Default normal oracle reasoning to `high`, not `xhigh`. | `xhigh` is too slow for default chat use; keep it for explicit calls and deep-review gates. |
 | 2026-04-27 | Make semantic E2E validation mandatory. | Empty answers, refusal-style non-answers, missing domain grounding, wrong persona routing, and missing roundtable participants must fail. |
 | 2026-04-27 | Keep domain-specific cybersecurity prompts as sanity/E2E fixtures, not README onboarding content. | README should stay developer/provider-neutral while tests prove the real SPARTA/persona/roundtable path. |
+| 2026-04-27 | Add explicit run ids and standardized artifact directories. | `/ask status --runs` needs stable runtime objects instead of buried logs. |
+| 2026-04-27 | Move reviewer roles into frontmatter specs. | Protocol roles should be inspectable, reusable, and not hidden inside one giant `SKILL.md`. |
+| 2026-04-27 | Store saved review chains as YAML specs. | Deep review and parallel review should be repeatable workflows, not ad hoc prompt branches. |
+| 2026-04-27 | Treat review-and-fix as a separate worktree-isolated lane. | `/ask` deep review remains read-only; implementation writes require explicit isolation. |
 
 ## Open Questions
 
@@ -76,7 +80,13 @@ curated context. Memory recall is context, not evidence.
 | `src/ask/ask_routing.py` | Natural-language route inference |
 | `src/ask/ask_oracle.py` | Oracle and subagent-backed synthesis |
 | `src/ask/deep_review.py` | Deep-review prompt, artifact, and verifier support |
+| `src/ask/run_state.py` | Run ids, standardized artifact directories, status files, events, context policy, needs-attention states |
+| `src/ask/doctor.py` | Preflight diagnostics for memory, dogpile, scillm, subagent-runner, specs, chains, artifacts, and git |
+| `src/ask/reviewer_specs.py` | Frontmatter reviewer specs and dynamic reviewer-angle selection |
+| `src/ask/chain_specs.py` | Saved chain specs for repeatable review workflows |
 | `src/ask/review_protocols/adversarial_review.py` | Existing roundtable/parallel review protocol support |
+| `docs/reviewers/` | Protocol-role specs with model/reasoning/fallback/write/inheritance policy |
+| `docs/chains/` | Saved deep-review and parallel-review chain definitions |
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
 | `docs/ASK_DEEP_REVIEW_CONTRACT.md` | Deep-review runtime and verifier contract |
 | `01_ASK_DEEP_REVIEW_TASKS.yaml` | Current implementation plan for deep review |

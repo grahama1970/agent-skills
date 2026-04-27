@@ -86,7 +86,7 @@ composes:
 
 # ask
 
-Zero cognitive-load learning and querying interface. Six modes:
+Zero cognitive-load learning and querying interface. Runtime modes:
 
 1. **Learn Mode** — Discover, ingest, and extract knowledge about a topic or persona
 2. **Ask Mode** — Query accumulated knowledge with Federated Taxonomy multi-hop traversal
@@ -94,6 +94,8 @@ Zero cognitive-load learning and querying interface. Six modes:
 4. **Nightly Mode** — Scheduled incremental updates to persona knowledge bases
 5. **OS Mode** — Learn about and query embry-os internals, skills, packages, and runtime health
 6. **Deep Review Mode** — High-reasoning, read-only review with `review.md` and `review.json`
+7. **Doctor Mode** — Preflight `/memory`, `/dogpile`, `/scillm`, `/subagent-runner`, reviewer specs, chains, and artifact paths
+8. **Run Status Mode** — Inspect recent `/ask` run ids, artifact directories, verifier status, and needs-attention state
 
 ## Zero Cognitive Load for Project Agents
 
@@ -194,6 +196,12 @@ cd .pi/skills/ask
 # Check learning progress (includes task-monitor state with ETA)
 ./run.sh status --scope behavioral
 
+# Preflight ask dependencies and runtime objects
+./run.sh doctor --json
+
+# Inspect recent ask/oracle/review runs
+./run.sh status --runs --json
+
 # Run nightly persona update
 ./run.sh nightly --scope behavioral
 ```
@@ -246,6 +254,11 @@ Options:
   --deep-review-fallback-policy <fail_closed|warn> Downgrade behavior
   --deep-review-persist <summary|full> Persist compact metadata or full review state
   --deep-review-output-root <dir> Artifact root (default: .ask_artifacts/deep-review)
+  --run-id <id>           Explicit run id for artifact/status correlation
+  --review-context <fresh|fork> Child context policy for oracle/review runs
+  --inherit-memory <yes|no|summary> Memory inheritance policy
+  --inherit-skills <yes|no|selected> Skill inheritance policy
+  --inherit-project-context <yes|no> Project-context inheritance policy
   --dogpile <auto|off|force> Freshness policy for date-sensitive oracle prompts
   --raw                   Return raw memory results (no synthesis)
   --json                  JSON output
@@ -344,6 +357,11 @@ persona = domain/voice/source-of-judgment
 protocol_role = job in the review loop
 ```
 
+Protocol roles are first-class reviewer specs in `docs/reviewers/*.md`.
+Each spec uses YAML frontmatter for model, reasoning, fallback models, tools,
+write policy, inheritance policy, and required output sections. Do not bury new
+reviewer behavior only in this `SKILL.md`; add or update a reviewer spec.
+
 Explicit role assignment:
 
 ```bash
@@ -423,6 +441,18 @@ Deep review writes:
 .ask_artifacts/deep-review/<timestamp>/review.md
 .ask_artifacts/deep-review/<timestamp>/review.json
 ```
+
+Every serious run also has a standard run directory:
+
+```text
+.ask_artifacts/<mode>/<run_id>/request.json
+.ask_artifacts/<mode>/<run_id>/status.json
+.ask_artifacts/<mode>/<run_id>/events.jsonl
+```
+
+Saved review chains live in `docs/chains/*.chain.yaml`. Use them for repeatable
+deep-review and parallel-review orchestration instead of adding more one-off
+prompt branches.
 
 Deep review verifier rules:
 - Reject missing or `not_assessed` required sections.
@@ -628,9 +658,14 @@ the skill automatically:
 
 ```bash
 ./run.sh status [options]
+./run.sh status --runs --json
+./run.sh status --id <run_id>
 
 Options:
   --scope <scope>         Filter by scope
+  --runs                  Show recent /ask runtime runs
+  --last <n>              Number of recent runs (default: 10)
+  --id <run_id>           Show one runtime run
   --json                  JSON output
   --debug                 Enable debug logging
 ```
@@ -640,6 +675,24 @@ Shows:
 - Persona profiles
 - Q-R-A pairs count
 - Last task-monitor state (steps, timing, stats, ETA)
+- Recent run ids, artifact dirs, verifier status, and needs-attention state when `--runs` or `--id` is used
+
+### `doctor` — Runtime Preflight
+
+```bash
+./run.sh doctor [options]
+
+Options:
+  --artifact-root <dir>   Override artifact root for the writable check
+  --json                  JSON output
+```
+
+Checks:
+- `/memory`, `/dogpile`, `/scillm`, `/subagent-runner`, and `/monitor-personas` runner availability
+- artifact directory writability
+- `git status` readability
+- reviewer frontmatter specs
+- saved review-chain specs
 
 ### `nightly` — Scheduled Persona Updates
 

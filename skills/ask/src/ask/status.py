@@ -17,6 +17,8 @@ from pathlib import Path
 
 from loguru import logger as log
 
+from .run_state import get_run, list_runs
+
 app = typer.Typer(help="/ask status - Show learning progress")
 
 SKILL_ROOT = Path(__file__).resolve().parents[2]
@@ -230,10 +232,43 @@ def show_status(scope: str = "ask", as_json: bool = False):
 def main(
     scope: str = typer.Option(os.environ.get("ASK_DEFAULT_SCOPE", "ask"), help="Memory scope to check (default: ask)"),
     as_json: bool = typer.Option(False, "--json", help="JSON output"),
+    runs: bool = typer.Option(False, "--runs", help="Show recent /ask runtime runs"),
+    last: int = typer.Option(10, "--last", help="Number of recent runtime runs"),
+    run_id: str | None = typer.Option(None, "--id", help="Show one runtime run by id"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     if debug:
         log.enable("")
+
+    if runs or run_id:
+        if run_id:
+            payload = get_run(run_id) or {"status": None, "request": None, "error": "run not found"}
+        else:
+            payload = {"runs": list_runs(last=last)}
+        if as_json:
+            print(json.dumps(payload, indent=2, sort_keys=True))
+            return
+        if run_id:
+            status = payload.get("status") or {}
+            if not status:
+                print(f"/ask run not found: {run_id}")
+                return
+            print(f"/ask run {status.get('run_id')}: {status.get('state')}")
+            print(f"  mode: {status.get('mode')}")
+            print(f"  artifact_dir: {status.get('artifact_dir')}")
+            print(f"  verifier_status: {status.get('verifier_status', '')}")
+            print(f"  final_verdict: {status.get('final_verdict', '')}")
+            print(f"  needs_attention: {status.get('needs_attention', '')}")
+            return
+        print("/ask recent runs:")
+        for status in payload["runs"]:
+            print(
+                f"- {status.get('run_id')} "
+                f"[{status.get('mode')}] {status.get('state')} "
+                f"verdict={status.get('final_verdict', '')} "
+                f"attention={status.get('needs_attention', '')}"
+            )
+        return
 
     show_status(scope=scope, as_json=as_json)
 

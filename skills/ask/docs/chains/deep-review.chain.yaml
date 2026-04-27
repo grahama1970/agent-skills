@@ -1,0 +1,59 @@
+name: deep-review
+description: Read-only Web-GPT-style architecture and implementation-risk review.
+context:
+  review_context: fresh
+  inherit_memory: summary
+  inherit_skills: selected
+  inherit_project_context: "no"
+  memory_as_evidence: false
+write_policy: artifacts_only
+artifacts:
+  root: .ask_artifacts/deep-review
+  required:
+    - request.json
+    - context_bundle.md
+    - reviewer_outputs
+    - review.md
+    - review.json
+    - verifier.log
+stages:
+  - name: resolve-target
+    type: deterministic
+    requires:
+      - user_question
+    produces:
+      - target_bundle
+  - name: context-builder
+    type: deterministic
+    requires:
+      - target_bundle
+    produces:
+      - context_bundle.md
+  - name: parallel-reviewers
+    type: parallel_review
+    reviewers:
+      - evidence-auditor
+      - failure-mode
+      - fail-closed
+      - test-proof
+      - complexity-minimizer
+      - security-data-risk
+    requires:
+      - context_bundle.md
+    produces:
+      - reviewer_outputs
+  - name: moderator-synthesis
+    type: moderator
+    requires:
+      - reviewer_outputs
+    produces:
+      - review.md
+      - review.json
+  - name: verifier
+    type: deterministic
+    requires:
+      - review.md
+      - review.json
+    produces:
+      - verifier.log
+      - final_verdict

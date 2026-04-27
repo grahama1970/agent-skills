@@ -10,6 +10,8 @@ import json
 import re
 from typing import Any
 
+from ..reviewer_specs import select_reviewer_angles, spec_to_participant
+
 DATE_SENSITIVE_TERMS = (
     "in 2026",
     "in 2025",
@@ -132,6 +134,13 @@ def default_parallel_participants(
     focus: str | None = None,
     role_preset: str = "adversarial-review",
 ) -> list[dict[str, Any]]:
+    spec_participants = [
+        spec_to_participant(spec, turn_index=index)
+        for index, spec in enumerate(select_reviewer_angles("parallel review", focus=focus, count=count))
+    ]
+    if spec_participants:
+        return spec_participants
+
     role_defs = PROTOCOL_ROLE_PRESETS.get(role_preset, PROTOCOL_ROLE_PRESETS["adversarial-review"])
     focus_items = [item.strip() for item in (focus or "").split(",") if item.strip()]
     participants = []

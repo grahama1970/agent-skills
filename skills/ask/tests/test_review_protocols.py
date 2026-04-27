@@ -62,8 +62,16 @@ def test_parse_participant_specs_separates_persona_from_protocol_role():
 def test_default_parallel_participants_uses_focus_labels():
     participants = default_parallel_participants(3, focus="correctness,tests,maintainability")
 
-    assert [p["persona"] for p in participants] == ["correctness", "tests", "maintainability"]
-    assert participants[0]["protocol_role"] == "failure_mode"
+    assert [p["protocol_role"] for p in participants] == [
+        "failure_mode",
+        "test_proof",
+        "complexity_minimizer",
+    ]
+    assert [p["reviewer_spec"]["name"] for p in participants] == [
+        "failure-mode",
+        "test-proof",
+        "complexity-minimizer",
+    ]
 
 
 def test_parse_protocol_turn_keeps_raw_when_invalid_json():

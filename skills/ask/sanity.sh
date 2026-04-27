@@ -17,6 +17,10 @@ echo "1. Python module imports..."
 if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -c "
 import ask.ask as ask_mod
 import ask.status as status_mod
+import ask.doctor as doctor_mod
+import ask.run_state as run_state_mod
+import ask.reviewer_specs as reviewer_specs_mod
+import ask.chain_specs as chain_specs_mod
 import ask.skills_exec as skills_exec_mod
 import ask.monitor as monitor_mod
 import ask.pipeline as pipeline_mod
@@ -24,6 +28,10 @@ assert hasattr(ask_mod, 'ask')
 assert hasattr(skills_exec_mod, 'run_skill')
 assert hasattr(monitor_mod, 'AskMonitor')
 assert hasattr(status_mod, 'show_status')
+assert hasattr(doctor_mod, 'run_doctor')
+assert hasattr(run_state_mod, 'create_run')
+assert hasattr(reviewer_specs_mod, 'load_reviewer_specs')
+assert hasattr(chain_specs_mod, 'load_chain_specs')
 assert hasattr(pipeline_mod, 'learn')
 print('   All modules import OK')
 "; then
@@ -59,9 +67,32 @@ else
     FAIL=1
 fi
 
-# Test 4: ask command (help/syntax check)
+# Test 4: doctor command validates runtime objects
 echo ""
-echo "4. Ask command (syntax check)..."
+echo "4. Doctor command (--json)..."
+if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.doctor --json >/tmp/ask-doctor-sanity.json 2>/dev/null || [[ -s /tmp/ask-doctor-sanity.json ]]; then
+    if "${PYTHON[@]}" -c "
+import json
+data = json.load(open('/tmp/ask-doctor-sanity.json', encoding='utf-8'))
+checks = {check['name'] for check in data.get('checks', [])}
+assert 'reviewer-specs' in checks
+assert 'chain-specs' in checks
+assert 'artifact-root' in checks
+print(f'   status: {data.get(\"status\")}')
+"; then
+        echo "   PASS"
+    else
+        echo "   FAIL: doctor output malformed"
+        FAIL=1
+    fi
+else
+    echo "   FAIL: doctor command broken"
+    FAIL=1
+fi
+
+# Test 5: ask command (help/syntax check)
+echo ""
+echo "5. Ask command (syntax check)..."
 if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.ask --help >/dev/null 2>&1; then
     echo "   --help works"
     echo "   PASS"
@@ -70,9 +101,9 @@ else
     FAIL=1
 fi
 
-# Test 5: learn command (help/syntax check)
+# Test 6: learn command (help/syntax check)
 echo ""
-echo "5. Learn command (syntax check)..."
+echo "6. Learn command (syntax check)..."
 if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.pipeline --help >/dev/null 2>&1 || PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -c "from ask.pipeline import main; import sys; sys.argv=['pipeline','--help']; main()" 2>/dev/null; then
     echo "   --help works"
     echo "   PASS"
@@ -155,6 +186,7 @@ if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytes
     tests/test_deep_review_context.py \
     tests/test_deep_review_protocol.py \
     tests/test_deep_review_telemetry.py \
+    tests/test_runtime_discipline.py \
     tests/test_human_chat_examples.py \
     tests/test_ask_cli_protocols.py \
     tests/test_review_protocols.py; then

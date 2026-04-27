@@ -1,0 +1,250 @@
+version: 1
+kind: orchestrate-plan
+repo_root: /tmp/agent-skills-ask-oracle-review-workflows-20260427
+
+metadata:
+  title: "Ask Runtime Discipline"
+  goal: "Borrow pi-subagents lifecycle discipline into ask without turning ask into a general subagent runtime."
+  plan_type: code
+  created: "2026-04-27"
+  primary_persona:
+    name: "Graham Anderson"
+    role: "Developer/operator using ask as the human-facing oracle and review surface"
+    source: "User request and ask docs"
+
+execution:
+  max_concurrency: 2
+  wave_barrier: true
+  scheduling_policy: wave_then_dependency
+
+capability_overlap:
+  - "/memory recall found prior ask guidance: ask remains a max-reasoning oracle/review surface, not a code-runner."
+  - "Checked /plan and /review-plan skill contracts; this plan uses YAML tasks, concrete DoD, and sanity.sh as blind validation."
+  - "Existing /ask already provides memory, dogpile, oracle, roundtable, parallel review, and deep-review foundations; this plan EXTENDs ask rather than creating a new runtime."
+  - "Existing /subagent-runner provides child execution; this plan does not reimplement subagent execution."
+  - "Existing /project-knowledge stores curated development state; this plan updates docs only where behavior changes."
+
+questions_blockers:
+  - "None"
+
+lanes:
+  - id: "0"
+    label: "Wave 0: Run identity and artifacts"
+  - id: "1"
+    label: "Wave 1: Health and status"
+  - id: "2"
+    label: "Wave 2: Specs and chains"
+  - id: "3"
+    label: "Wave 3: Context and reviewer policy"
+  - id: "4"
+    label: "Wave 4: Review-and-fix boundaries"
+  - id: "5"
+    label: "Wave 5: Validation and docs"
+
+tasks:
+  - id: "1"
+    title: "Create run_id and standardized artifact helpers"
+    lane: "0"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: []
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "EXTEND existing ask package with a small run_state/artifacts module."
+      - "Provide run_id generation, per-mode artifact directories, request.json, events.jsonl, and status.json helpers."
+      - "Keep writes under .ask_artifacts/<mode>/<run_id>/ only."
+    tests:
+      - "bash sanity.sh"
+    definition_of_done:
+      command: "cd skills/ask && bash sanity.sh"
+      assertion: "Existing ask sanity suite exits 0 after run artifact helpers are importable."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "2"
+    title: "Add ask doctor preflight command"
+    lane: "1"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["1"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "EXTEND run.sh with a doctor command routed to ask.doctor."
+      - "Doctor checks memory, dogpile, scillm, subagent-runner, artifact root, git status readability, reviewer specs, and chain specs."
+      - "Doctor returns text by default and JSON with --json."
+    tests:
+      - "bash sanity.sh"
+      - "./run.sh doctor --json"
+    definition_of_done:
+      command: "cd skills/ask && ./run.sh doctor --json >/tmp/ask-doctor.json && python -m json.tool /tmp/ask-doctor.json >/dev/null && bash sanity.sh"
+      assertion: "Doctor emits valid JSON and sanity.sh exits 0."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "3"
+    title: "Add ask run status command"
+    lane: "1"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["1"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "EXTEND status behavior to show recent ask/oracle/roundtable/deep-review runs."
+      - "Support ./run.sh status --runs, --last N, --id RUN_ID, and --json."
+      - "Report run_id, mode, target, state, last heartbeat/event age, artifacts, verifier status, verdict, and failure reason when available."
+    tests:
+      - "bash sanity.sh"
+      - "./run.sh status --runs --json"
+    gate: "Recent run status JSON includes run_id, mode, state, artifact_dir, verifier_status, final_verdict, and needs_attention fields."
+    definition_of_done:
+      command: "cd skills/ask && ./run.sh status --runs --json >/tmp/ask-runs.json && python -m json.tool /tmp/ask-runs.json >/dev/null && bash sanity.sh"
+      assertion: "Run status emits valid JSON and sanity.sh exits 0."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "4"
+    title: "Move reviewer roles into frontmatter specs"
+    lane: "2"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["1"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "CREATE docs/reviewers/*.md frontmatter specs for failure-mode, evidence-auditor, test-proof, complexity-minimizer, security-data-risk, and fail-closed."
+      - "EXTEND review protocol code with a loader that parses YAML frontmatter and prompt body."
+      - "Keep SKILL.md as routing contract; move detailed reviewer role text into inspectable files."
+    tests:
+      - "bash sanity.sh"
+    gate: "Reviewer role details load from docs/reviewers/*.md frontmatter and SKILL.md remains routing-only for reviewer behavior."
+    definition_of_done:
+      command: "cd skills/ask && bash sanity.sh"
+      assertion: "Reviewer specs load and existing roundtable/parallel-review tests pass."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "5"
+    title: "Add saved review chain specs"
+    lane: "2"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["4"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "CREATE docs/chains/deep-review.chain.yaml and docs/chains/parallel-review.chain.yaml."
+      - "EXTEND ask with chain spec loading and validation helpers."
+      - "Document context-builder, reviewers, verifier, moderator, and artifact-writer stages."
+    tests:
+      - "bash sanity.sh"
+    gate: "deep-review and parallel-review chain specs validate and expose ordered stages with required inputs and produced artifacts."
+    definition_of_done:
+      command: "cd skills/ask && bash sanity.sh"
+      assertion: "Chain specs validate and ask sanity suite exits 0."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "6"
+    title: "Add context inheritance controls"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["1", "4"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "EXTEND oracle/review option model with review_context fresh|fork, inherit_memory yes|no|summary, inherit_skills yes|no|selected, inherit_project_context yes|no."
+      - "Default ordinary ask to memory allowed, oracle to memory summary, parallel-review to fresh context, roundtable to shared state only, and deep-review to target bundle only."
+      - "Surface settings in request.json/status.json without expanding full context into memory."
+    tests:
+      - "bash sanity.sh"
+    gate: "Context policy controls are accepted, validated, and persisted in request/run metadata without expanding full context into memory."
+    definition_of_done:
+      command: "cd skills/ask && bash sanity.sh"
+      assertion: "Context controls are accepted by CLI/help and routing tests pass."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "7"
+    title: "Add dynamic reviewer angle generation"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["4"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "EXTEND parallel-review role selection to choose 3-7 independent angles from target/question/focus labels when explicit personas are absent."
+      - "Always include evidence/auditability, fail-closed or production failure mode, and complexity challenge for review targets."
+      - "Allow per-reviewer model, reasoning, and fallback_models from frontmatter specs."
+    tests:
+      - "bash sanity.sh"
+    gate: "Dynamic reviewer selection is deterministic, spec-backed, and includes evidence/failure/complexity coverage for review targets."
+    definition_of_done:
+      command: "cd skills/ask && bash sanity.sh"
+      assertion: "Dynamic reviewer routing is deterministic in tests and sanity.sh exits 0."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "8"
+    title: "Add needs-attention run states"
+    lane: "4"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["1", "3"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "EXTEND run state model with needs_target, needs_repo_access, needs_model_fallback, needs_memory_health, needs_freshness_confirmation, needs_verifier_fix, stalled_no_heartbeat, and stalled_no_artifact_progress."
+      - "Use these states in doctor/status and deep-review target resolution failure paths."
+    tests:
+      - "bash sanity.sh"
+    gate: "Needs-attention states serialize in status JSON and reject unknown state names."
+    definition_of_done:
+      command: "cd skills/ask && bash sanity.sh"
+      assertion: "Needs-attention states serialize in status JSON and sanity.sh exits 0."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "9"
+    title: "Define review-and-fix worktree boundary"
+    lane: "4"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["1"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "Document and enforce that deep-review remains read-only."
+      - "Add review-and-fix policy helpers that require isolated worktree handoff metadata before any implementation-adjacent lane can run."
+      - "Do not implement a code-runner; only emit handoff metadata and fail closed without explicit implementation lane."
+    tests:
+      - "bash sanity.sh"
+    gate: "review-and-fix policy fails closed without explicit worktree metadata and never changes deep-review write policy."
+    definition_of_done:
+      command: "cd skills/ask && bash sanity.sh"
+      assertion: "Review-and-fix boundary is represented in policy helpers/docs and sanity.sh exits 0."
+    blind_tests:
+      - "skills/ask/sanity.sh"
+
+  - id: "10"
+    title: "Update docs and project knowledge"
+    lane: "5"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on: ["2", "3", "4", "5", "6", "7", "8", "9"]
+    command: "cd skills/ask && bash sanity.sh"
+    implementation:
+      - "Update README, SKILL.md, HUMAN_CHAT_EXAMPLES, and PROJECT_KNOWLEDGE with doctor/status/spec/chain/context behavior."
+      - "Keep README concise; detailed operator contracts live in docs."
+    tests:
+      - "bash sanity.sh"
+    definition_of_done:
+      command: "cd skills/ask && bash sanity.sh"
+      assertion: "Docs align with implemented CLI behavior and sanity.sh exits 0."
+    blind_tests:
+      - "skills/ask/sanity.sh"

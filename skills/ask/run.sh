@@ -47,6 +47,7 @@ Commands:
   learn <topic>     Discover, ingest, and extract knowledge about a topic
   ask <question>    Query accumulated knowledge (with optional auto-learn)
   status            Show learning progress and task-monitor state
+  doctor            Preflight memory, dogpile, scillm, subagent, specs, chains
   nightly           Run scheduled persona update (incremental learning)
   os learn          Crawl and index embry-os internals (skills, packages, config)
   os ask <question> Query OS knowledge from memory (scope=os)
@@ -98,12 +99,20 @@ Ask Options:
   --deep-review-target <target> Explicit target: paths, diff, plan, manifest, or artifact
   --deep-reviewers <n> Reviewer breadth requested for deep review
   --deep-review-focus <f> Comma-separated deep-review focus labels
+  --run-id <id>      Explicit run id for artifact/status correlation
+  --review-context <fresh|fork> Context mode for review/oracle child runs
+  --inherit-memory <yes|no|summary> Memory inheritance policy
+  --inherit-skills <yes|no|selected> Skill inheritance policy
+  --inherit-project-context <yes|no> Project-context inheritance policy
   --dogpile <auto|off|force> Freshness policy for oracle subagents
   --json                JSON output
   --debug               Enable debug logging
 
 Status Options:
   --scope <scope>       Filter by scope
+  --runs                Show recent /ask runtime runs
+  --last <n>            Number of recent runs (default: 10)
+  --id <run_id>         Show one runtime run
   --json                JSON output
   --debug               Enable debug logging
 
@@ -180,6 +189,10 @@ case "${1:-help}" in
     status)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.status "$@"
+        ;;
+    doctor)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.doctor "$@"
         ;;
     nightly)
         shift

@@ -39,6 +39,7 @@ from .ask_routing import (
     _should_auto_oracle_persona,
 )
 from .review_protocols import is_date_sensitive_question
+from .run_state import append_event, build_context_policy, complete_run, create_run
 from .session_writer import SessionWriter
 from .skills_exec import run_skill, parse_memory_output, run_memory_recall
 from .persona_routing import (
@@ -101,6 +102,11 @@ def ask(
     deep_review_fallback_policy: str = "fail_closed",
     deep_review_persist: str = "summary",
     deep_review_output_root: str = ".ask_artifacts/deep-review",
+    run_id: Optional[str] = None,
+    review_context: Optional[str] = None,
+    inherit_memory: Optional[str] = None,
+    inherit_skills: Optional[str] = None,
+    inherit_project_context: Optional[str] = None,
 ) -> dict:
     """Query accumulated knowledge.
 
@@ -146,6 +152,37 @@ def ask(
         dict with answer, sources, bridges.
     """
     started_at = time.time()
+    run_mode = "ask"
+    if deep_review:
+        run_mode = "deep-review"
+    elif roundtable:
+        run_mode = "roundtable"
+    elif parallel_review:
+        run_mode = "parallel-review"
+    elif oracle_model:
+        run_mode = "oracle"
+    context_policy = build_context_policy(
+        run_mode,
+        review_context=review_context,
+        inherit_memory=inherit_memory,
+        inherit_skills=inherit_skills,
+        inherit_project_context=inherit_project_context,
+    )
+    run_record = create_run(
+        run_mode,
+        question=question,
+        target=deep_review_target,
+        run_id=run_id,
+        metadata={
+            "scope": scope,
+            "oracle_backend": oracle_backend,
+            "oracle_model": oracle_model or "",
+            "oracle_reasoning": oracle_reasoning,
+            "dogpile_mode": dogpile_mode,
+            "context_policy": context_policy,
+        },
+    )
+    append_event(run_record["run_id"], run_mode, "context_policy_resolved", data=context_policy)
     session = SessionWriter(scope=scope, persona_id=persona_id)
     session.add_turn("user", question)
 
@@ -157,6 +194,10 @@ def ask(
         "answer": "",
         "auto_learned": False,
         "hybrid_mode": hybrid,
+        "run_id": run_record["run_id"],
+        "artifact_dir": run_record["artifact_dir"],
+        "run_mode": run_mode,
+        "context_policy": context_policy,
     }
     if oracle_model:
         result["oracle"] = {
@@ -376,6 +417,12 @@ def ask(
         parallel_review_role_preset=parallel_review_role_preset,
         deep_review_request=deep_review_request,
     )
+    append_event(
+        run_record["run_id"],
+        run_mode,
+        "synthesis_completed",
+        data={"items": len(result["items"]), "has_answer": bool(result.get("answer"))},
+    )
 
     # Step 4: Learn-back for persona accumulation
     if persona_id and result["items"]:
@@ -404,6 +451,18 @@ def ask(
         oracle_persona=oracle_persona,
         oracle_peer=oracle_peer,
         oracle_iterations=oracle_iterations,
+    )
+    artifact_paths = []
+    if result.get("session_path"):
+        artifact_paths.append(result["session_path"])
+    if result.get("deep_review"):
+        artifact_paths.extend(result["deep_review"].get("artifact_paths", []))
+    complete_run(
+        run_record["run_id"],
+        run_mode,
+        artifact_paths=artifact_paths,
+        final_verdict=result.get("deep_review", {}).get("verdict", ""),
+        verifier_status=result.get("deep_review", {}).get("verifier_status", ""),
     )
 
     return result
@@ -552,6 +611,11 @@ def main(
     deep_review_fallback_policy: str = typer.Option("fail_closed", help="Deep-review downgrade policy: fail_closed or warn"),
     deep_review_persist: str = typer.Option("summary", help="Deep-review persistence: summary or full"),
     deep_review_output_root: str = typer.Option(".ask_artifacts/deep-review", help="Deep-review artifact directory"),
+    run_id: Optional[str] = typer.Option(None, "--run-id", help="Explicit run id for artifact/status correlation"),
+    review_context: Optional[str] = typer.Option(None, "--review-context", help="Child context policy: fresh or fork"),
+    inherit_memory: Optional[str] = typer.Option(None, "--inherit-memory", help="Memory inheritance: yes, no, summary"),
+    inherit_skills: Optional[str] = typer.Option(None, "--inherit-skills", help="Skill inheritance: yes, no, selected"),
+    inherit_project_context: Optional[str] = typer.Option(None, "--inherit-project-context", help="Project context inheritance: yes or no"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     question, inferred_parallel_review, inferred_parallel_reviewers, inferred_parallel_focus = (
@@ -740,18 +804,23 @@ def main(
             parallel_review=parallel_review,
             parallel_reviewers=parallel_reviewers,
             parallel_review_personas=parallel_review_personas,
-        parallel_review_focus=parallel_review_focus,
-        parallel_review_role_preset=parallel_review_role_preset,
-        dogpile_mode=dogpile_mode,
-        deep_review=deep_review,
-        deep_review_target=deep_review_target,
-        deep_review_profile=deep_review_profile,
-        deep_reviewers=deep_reviewers,
-        deep_review_focus=deep_review_focus,
-        deep_review_fallback_policy=deep_review_fallback_policy,
-        deep_review_persist=deep_review_persist,
-        deep_review_output_root=deep_review_output_root,
-    )
+            parallel_review_focus=parallel_review_focus,
+            parallel_review_role_preset=parallel_review_role_preset,
+            dogpile_mode=dogpile_mode,
+            deep_review=deep_review,
+            deep_review_target=deep_review_target,
+            deep_review_profile=deep_review_profile,
+            deep_reviewers=deep_reviewers,
+            deep_review_focus=deep_review_focus,
+            deep_review_fallback_policy=deep_review_fallback_policy,
+            deep_review_persist=deep_review_persist,
+            deep_review_output_root=deep_review_output_root,
+            run_id=run_id,
+            review_context=review_context,
+            inherit_memory=inherit_memory,
+            inherit_skills=inherit_skills,
+            inherit_project_context=inherit_project_context,
+        )
     except Exception as exc:
         _record_ask_telemetry(
             result={

@@ -1,0 +1,41 @@
+name: parallel-review
+description: Independent reviewer fanout followed by moderator synthesis.
+context:
+  review_context: fresh
+  inherit_memory: summary
+  inherit_skills: selected
+  inherit_project_context: "no"
+  memory_as_evidence: false
+write_policy: artifacts_only
+artifacts:
+  root: .ask_artifacts/parallel-review
+  required:
+    - request.json
+    - reviewer_outputs
+    - synthesis.md
+    - verdict.json
+stages:
+  - name: select-reviewers
+    type: deterministic
+    requires:
+      - user_question
+    produces:
+      - reviewer_plan
+  - name: parallel-reviewers
+    type: parallel_review
+    dynamic_angles: true
+    minimum_reviewers:
+      - evidence-auditor
+      - failure-mode
+      - complexity-minimizer
+    requires:
+      - reviewer_plan
+    produces:
+      - reviewer_outputs
+  - name: moderator-synthesis
+    type: moderator
+    requires:
+      - reviewer_outputs
+    produces:
+      - synthesis.md
+      - verdict.json

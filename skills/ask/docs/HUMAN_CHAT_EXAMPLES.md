@@ -22,12 +22,16 @@ $ask what do we know about the release checklist?
 $ask what did we decide about provider fallback behavior?
 $ask show raw memory hits for timeout handling
 $ask is memory healthy?
+$ask doctor
+$ask status for recent runs
 ```
 
 Expected route:
 
 ```bash
 ./run.sh ask "what do we know about the release checklist?"
+./run.sh doctor --json
+./run.sh status --runs --json
 ```
 
 ## High-Reasoning Oracle
@@ -133,6 +137,7 @@ parallel review.
 $ask run 3 parallel adversarial reviewers on this implementation
 $ask launch 5 parallel reviewers for correctness, tests, security, maintainability, and UX
 $ask run N parallel reviews on the current diff
+$ask run parallel reviewers with fresh context and memory summary only
 ```
 
 Expected route:
@@ -143,8 +148,13 @@ Expected route:
   --oracle-backend subagent-runner \
   --parallel-review \
   --parallel-reviewers 3 \
-  --parallel-review-focus correctness,tests,maintainability
+  --parallel-review-focus correctness,tests,maintainability \
+  --review-context fresh \
+  --inherit-memory summary
 ```
+
+If focus labels are not explicit, `/ask` chooses reviewer angles from
+`docs/reviewers/*.md`, always including evidence and failure-mode coverage.
 
 ## Parallel Review Then Roundtable
 
@@ -191,10 +201,17 @@ Deep review emits:
 ```text
 .ask_artifacts/deep-review/<timestamp>/review.md
 .ask_artifacts/deep-review/<timestamp>/review.json
+.ask_artifacts/deep-review/<run_id>/request.json
+.ask_artifacts/deep-review/<run_id>/status.json
+.ask_artifacts/deep-review/<run_id>/events.jsonl
 ```
 
 Deep review is read-only at runtime. It records before/after git status and
 fails verifier checks if unexpected non-artifact file changes appear.
+
+Saved chains for deep review and parallel review live in `docs/chains/`.
+Project agents should prefer those chain specs over inventing new ad hoc review
+protocols.
 
 ## Domain-Specific Examples
 

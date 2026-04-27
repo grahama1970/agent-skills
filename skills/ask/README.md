@@ -79,6 +79,8 @@ claims must still be grounded in inspected files, diffs, tests, or artifacts.
 | Roundtable | Sequential persona deliberation | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
 | Parallel review | Independent reviewer fanout | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
 | Deep review | Web-GPT-style review with artifacts | `./run.sh ask "deep review this" --deep-review-target src/ask/ask.py` |
+| Doctor | Preflight composed dependencies | `./run.sh doctor --json` |
+| Status | Inspect memory status or recent runs | `./run.sh status --runs --json` |
 | Runtime health | Query skill/runtime health | `./run.sh os health "is memory healthy?"` |
 
 ## Installation
@@ -156,6 +158,10 @@ then runs a moderator synthesis. Use it when the order of critique matters.
   --roundtable-rounds 2
 ```
 
+Roundtable participants have two separate layers: the stored persona is the
+domain voice, while the protocol role is the bounded review job loaded from
+`docs/reviewers/*.md`.
+
 ### Parallel findings then roundtable debate
 
 ```bash
@@ -206,11 +212,16 @@ Outputs:
 The JSON verifier rejects missing sections, unsafe write evidence, shallow
 summaries, invalid verdicts, and safe verdicts without inspected evidence.
 
+Saved review workflows live in `docs/chains/*.chain.yaml`. The default
+`deep-review` chain is target resolution → context bundle → parallel reviewers
+→ moderator synthesis → deterministic verifier.
+
 ## Command Reference
 
 ```bash
 ./run.sh ask <question> [options]
 ./run.sh learn <topic> [options]
+./run.sh doctor [options]
 ./run.sh status [options]
 ./run.sh nightly [options]
 ./run.sh os <learn|ask|health> [options]
@@ -229,6 +240,11 @@ Common `ask` options:
 | `--parallel-review` | Run independent reviewer fanout |
 | `--deep-review` | Emit deep-review markdown and JSON artifacts |
 | `--deep-review-target <target>` | Explicit target: paths, diff, plan, manifest, or artifact |
+| `--run-id <id>` | Explicit run id for artifacts and status lookup |
+| `--review-context <fresh|fork>` | Child context policy |
+| `--inherit-memory <yes|no|summary>` | Memory inheritance policy |
+| `--inherit-skills <yes|no|selected>` | Skill inheritance policy |
+| `--inherit-project-context <yes|no>` | Project context inheritance policy |
 | `--dogpile <auto|off|force>` | Freshness policy |
 | `--json` | Machine-readable command output |
 
@@ -274,6 +290,9 @@ Expected telemetry surfaces:
 - `ask_subagent_heartbeat`
 - compact roundtable/parallel review summaries
 - artifact paths for generated review outputs
+- `.ask_artifacts/<mode>/<run_id>/request.json`
+- `.ask_artifacts/<mode>/<run_id>/status.json`
+- `.ask_artifacts/<mode>/<run_id>/events.jsonl`
 - durable lessons when a conversation produces reusable knowledge
 
 Do not store full prompts, full reviewer chatter, full code diffs, or full repo
@@ -336,7 +355,13 @@ current-state projection, not a replacement for inspected code or test output.
 | `src/ask/ask_routing.py` | Natural prompt routing |
 | `src/ask/ask_oracle.py` | Oracle/subagent synthesis path |
 | `src/ask/ask_results.py` | Result formatting and persistence support |
+| `src/ask/run_state.py` | Run ids, artifact directories, events, status, context policy |
+| `src/ask/doctor.py` | Preflight diagnostics for composed dependencies |
+| `src/ask/reviewer_specs.py` | Reviewer-role frontmatter loading and dynamic angle selection |
+| `src/ask/chain_specs.py` | Saved review-chain loading and validation |
 | `src/ask/review_protocols/` | Roundtable and adversarial review protocols |
+| `docs/reviewers/` | Protocol role specs with YAML frontmatter |
+| `docs/chains/` | Saved deep-review and parallel-review workflow specs |
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
 | `docs/PROJECT_KNOWLEDGE.md` | Curated current development state |
 | `sanity.sh` | Deterministic smoke checks |
