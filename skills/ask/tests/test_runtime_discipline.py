@@ -3,6 +3,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from ask.chain_specs import get_chain_spec, load_chain_specs, validate_chain_spec
+from ask.chains_cli import app as chains_app
 from ask.doctor import app as doctor_app, run_doctor
 from ask.reviewer_specs import get_reviewer_spec, select_reviewer_angles
 from ask.run_state import (
@@ -107,3 +108,15 @@ def test_status_cli_lists_runtime_runs(tmp_path: Path, monkeypatch):
 
     assert result.exit_code == 0
     assert "status-run" in result.output
+
+
+def test_chains_cli_lists_and_validates_saved_chains():
+    runner = CliRunner()
+    listed = runner.invoke(chains_app, ["list", "--json"])
+    validated = runner.invoke(chains_app, ["validate", "--json"])
+
+    assert listed.exit_code == 0
+    assert '"deep-review"' in listed.output
+    assert '"parallel-review"' in listed.output
+    assert validated.exit_code == 0
+    assert '"ok": true' in validated.output

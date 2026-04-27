@@ -21,6 +21,7 @@ import ask.doctor as doctor_mod
 import ask.run_state as run_state_mod
 import ask.reviewer_specs as reviewer_specs_mod
 import ask.chain_specs as chain_specs_mod
+import ask.chains_cli as chains_cli_mod
 import ask.skills_exec as skills_exec_mod
 import ask.monitor as monitor_mod
 import ask.pipeline as pipeline_mod
@@ -32,6 +33,7 @@ assert hasattr(doctor_mod, 'run_doctor')
 assert hasattr(run_state_mod, 'create_run')
 assert hasattr(reviewer_specs_mod, 'load_reviewer_specs')
 assert hasattr(chain_specs_mod, 'load_chain_specs')
+assert hasattr(chains_cli_mod, 'app')
 assert hasattr(pipeline_mod, 'learn')
 print('   All modules import OK')
 "; then
@@ -90,9 +92,24 @@ else
     FAIL=1
 fi
 
-# Test 5: ask command (help/syntax check)
+# Test 5: chains command validates saved review workflows
 echo ""
-echo "5. Ask command (syntax check)..."
+echo "5. Chains command (validate --json)..."
+if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.chains_cli validate --json | "${PYTHON[@]}" -c "
+import sys, json
+data = json.load(sys.stdin)
+assert data.get('ok') is True
+print('   chains: valid')
+"; then
+    echo "   PASS"
+else
+    echo "   FAIL: chains command broken"
+    FAIL=1
+fi
+
+# Test 6: ask command (help/syntax check)
+echo ""
+echo "6. Ask command (syntax check)..."
 if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.ask --help >/dev/null 2>&1; then
     echo "   --help works"
     echo "   PASS"
@@ -101,9 +118,9 @@ else
     FAIL=1
 fi
 
-# Test 6: learn command (help/syntax check)
+# Test 7: learn command (help/syntax check)
 echo ""
-echo "6. Learn command (syntax check)..."
+echo "7. Learn command (syntax check)..."
 if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -m ask.pipeline --help >/dev/null 2>&1 || PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -c "from ask.pipeline import main; import sys; sys.argv=['pipeline','--help']; main()" 2>/dev/null; then
     echo "   --help works"
     echo "   PASS"

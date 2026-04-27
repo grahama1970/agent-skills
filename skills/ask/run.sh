@@ -48,6 +48,7 @@ Commands:
   ask <question>    Query accumulated knowledge (with optional auto-learn)
   status            Show learning progress and task-monitor state
   doctor            Preflight memory, dogpile, scillm, subagent, specs, chains
+  chains            Inspect saved review-chain specs
   nightly           Run scheduled persona update (incremental learning)
   os learn          Crawl and index embry-os internals (skills, packages, config)
   os ask <question> Query OS knowledge from memory (scope=os)
@@ -115,6 +116,11 @@ Status Options:
   --id <run_id>         Show one runtime run
   --json                JSON output
   --debug               Enable debug logging
+
+Chains Options:
+  list --json           List saved chains
+  show <name> --json    Show one saved chain
+  validate --json       Validate all saved chains
 
 Nightly Options:
   --scope <scope>       Memory scope to update (default: ask)
@@ -193,6 +199,10 @@ case "${1:-help}" in
     doctor)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.doctor "$@"
+        ;;
+    chains)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.chains_cli "$@"
         ;;
     nightly)
         shift

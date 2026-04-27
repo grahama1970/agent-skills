@@ -96,6 +96,7 @@ Zero cognitive-load learning and querying interface. Runtime modes:
 6. **Deep Review Mode** — High-reasoning, read-only review with `review.md` and `review.json`
 7. **Doctor Mode** — Preflight `/memory`, `/dogpile`, `/scillm`, `/subagent-runner`, reviewer specs, chains, and artifact paths
 8. **Run Status Mode** — Inspect recent `/ask` run ids, artifact directories, verifier status, and needs-attention state
+9. **Chains Mode** — Inspect and validate saved deep-review and parallel-review chain specs
 
 ## Zero Cognitive Load for Project Agents
 
@@ -201,6 +202,9 @@ cd .pi/skills/ask
 
 # Inspect recent ask/oracle/review runs
 ./run.sh status --runs --json
+
+# Inspect saved review workflows
+./run.sh chains list --json
 
 # Run nightly persona update
 ./run.sh nightly --scope behavioral
@@ -693,6 +697,17 @@ Checks:
 - `git status` readability
 - reviewer frontmatter specs
 - saved review-chain specs
+
+### `chains` — Saved Review Workflows
+
+```bash
+./run.sh chains list [--json]
+./run.sh chains show deep-review [--json]
+./run.sh chains validate [--json]
+```
+
+Use this command to inspect the saved `deep-review` and `parallel-review`
+state-machine specs before launching expensive review runs.
 
 ### `nightly` — Scheduled Persona Updates
 

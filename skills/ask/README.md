@@ -80,6 +80,7 @@ claims must still be grounded in inspected files, diffs, tests, or artifacts.
 | Parallel review | Independent reviewer fanout | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
 | Deep review | Web-GPT-style review with artifacts | `./run.sh ask "deep review this" --deep-review-target src/ask/ask.py` |
 | Doctor | Preflight composed dependencies | `./run.sh doctor --json` |
+| Chains | Inspect saved review workflows | `./run.sh chains list --json` |
 | Status | Inspect memory status or recent runs | `./run.sh status --runs --json` |
 | Runtime health | Query skill/runtime health | `./run.sh os health "is memory healthy?"` |
 
@@ -222,6 +223,7 @@ Saved review workflows live in `docs/chains/*.chain.yaml`. The default
 ./run.sh ask <question> [options]
 ./run.sh learn <topic> [options]
 ./run.sh doctor [options]
+./run.sh chains <list|show|validate> [options]
 ./run.sh status [options]
 ./run.sh nightly [options]
 ./run.sh os <learn|ask|health> [options]
