@@ -92,6 +92,28 @@ The verifier rejects:
 - `INSUFFICIENT_EVIDENCE` without listing missing evidence;
 - judge evidence that does not come from advocate outputs.
 
+## Failure Semantics
+
+`/ask argue` must fail closed. A failed advocate or judge `/scillm` call must
+not bubble out as an unstructured exception after losing protocol artifacts.
+
+Required behavior:
+
+- one advocate fails: write both advocate artifacts, mark the failed advocate as
+  `status: failed`, skip the judge, write `judge.json`, `argue.json`, and
+  `verifier.log`, then enter `needs_attention`;
+- judge fails: preserve both advocate artifacts, write `judge.json` with
+  `status: failed`, write `argue.json` and `verifier.log`, then enter
+  `needs_attention`;
+- timeout errors use the same `needs_attention` path and record `error_type`;
+- safe default is always `do_not_trust_verdict`.
+
+The `needs_attention.reason` for backend failures is:
+
+```text
+argue_scillm_call_failed
+```
+
 ## Decision Required
 
 By default, `/ask argue` allows calibrated abstention. A forced binary call

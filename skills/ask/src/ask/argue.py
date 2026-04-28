@@ -233,6 +233,77 @@ def normalize_judge_output(
     }
 
 
+def _failed_advocate_output(side: str, exc: BaseException, elapsed_seconds: float) -> dict[str, Any]:
+    return {
+        "schema_version": ARGUE_SCHEMA_VERSION,
+        "side": side,
+        "status": "failed",
+        "position": "",
+        "strongest_argument": "",
+        "evidence": [],
+        "assumptions": [],
+        "weaknesses": [],
+        "missing_evidence": ["Advocate call failed before returning evidence."],
+        "response_to_opposition": "",
+        "what_would_change_my_mind": [],
+        "confidence": "low",
+        "error_type": type(exc).__name__,
+        "error": str(exc),
+        "elapsed_seconds": round(elapsed_seconds, 3),
+    }
+
+
+def _failed_judge_output(exc: BaseException, elapsed_seconds: float) -> dict[str, Any]:
+    return {
+        "schema_version": ARGUE_SCHEMA_VERSION,
+        "status": "failed",
+        "verdict": "INSUFFICIENT_EVIDENCE",
+        "confidence": "low",
+        "decision_required": False,
+        "tie_breaker": "",
+        "decision_criterion": "",
+        "winning_side": "none",
+        "deciding_factors": [],
+        "strongest_for_argument": "",
+        "strongest_against_argument": "",
+        "strongest_counterargument": "",
+        "why_counterargument_does_or_does_not_win": "",
+        "evidence_used": [],
+        "assumptions": [],
+        "missing_evidence": ["Judge call failed before returning a verdict."],
+        "what_would_change_the_verdict": [],
+        "recommended_next_action": "Inspect argue artifacts and rerun after fixing the /scillm failure.",
+        "uncertainty_disclosure": "No trustworthy verdict was produced because the judge call failed.",
+        "error_type": type(exc).__name__,
+        "error": str(exc),
+        "elapsed_seconds": round(elapsed_seconds, 3),
+    }
+
+
+def _skipped_judge_output(reason: str) -> dict[str, Any]:
+    return {
+        "schema_version": ARGUE_SCHEMA_VERSION,
+        "status": "skipped",
+        "verdict": "INSUFFICIENT_EVIDENCE",
+        "confidence": "low",
+        "decision_required": False,
+        "tie_breaker": "",
+        "decision_criterion": "",
+        "winning_side": "none",
+        "deciding_factors": [],
+        "strongest_for_argument": "",
+        "strongest_against_argument": "",
+        "strongest_counterargument": "",
+        "why_counterargument_does_or_does_not_win": "",
+        "evidence_used": [],
+        "assumptions": [],
+        "missing_evidence": [reason],
+        "what_would_change_the_verdict": [],
+        "recommended_next_action": "Inspect advocate artifacts and rerun after fixing the /scillm failure.",
+        "uncertainty_disclosure": "No judge call was made because the advocate stage did not complete.",
+    }
+
+
 def verify_argue_result(result: dict[str, Any]) -> dict[str, Any]:
     failures: list[str] = []
     judge = result.get("judge", {})
@@ -366,15 +437,29 @@ async def _run_advocate_side(
     if run_state:
         run_state.event("argue_advocate_started", side=side, model=model)
     prompt = build_advocate_prompt(side, question, context_items, current_answer=current_answer)
-    raw_output, model_served = await _scillm_json_call_async(
-        client,
-        model=model,
-        reasoning_effort=reasoning_effort,
-        timeout=timeout,
-        role=f"{side} advocate",
-        prompt=prompt,
-    )
+    try:
+        raw_output, model_served = await _scillm_json_call_async(
+            client,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            timeout=timeout,
+            role=f"{side} advocate",
+            prompt=prompt,
+        )
+    except Exception as exc:
+        advocate = _failed_advocate_output(side, exc, time.time() - started_at)
+        if run_state:
+            run_state.event(
+                "argue_advocate_failed",
+                side=side,
+                error_type=advocate["error_type"],
+                error=advocate["error"],
+                elapsed_seconds=advocate["elapsed_seconds"],
+            )
+        return side, advocate
+
     advocate = normalize_advocate_output(raw_output, side)
+    advocate["status"] = "ok"
     advocate["model"] = model_served
     advocate["elapsed_seconds"] = round(time.time() - started_at, 3)
     if run_state:
@@ -427,6 +512,32 @@ async def _run_argue_async(
                     task.cancel()
             raise
 
+        failed_advocates = [
+            advocate for advocate in advocate_outputs.values()
+            if advocate.get("status") == "failed"
+        ]
+        if failed_advocates:
+            if run_state:
+                run_state.event("argue_judge_skipped", reason="advocate_failure", failed_advocates=len(failed_advocates))
+            return {
+                "for_case": advocate_outputs.get("FOR") or _skipped_judge_output("FOR advocate did not return."),
+                "against_case": advocate_outputs.get("AGAINST") or _skipped_judge_output("AGAINST advocate did not return."),
+                "judge": _skipped_judge_output("One or more advocate calls failed before judge execution."),
+                "judge_prompt": "",
+                "error": {
+                    "stage": "advocate",
+                    "reason": "argue_scillm_call_failed",
+                    "failures": [
+                        {
+                            "side": advocate.get("side"),
+                            "error_type": advocate.get("error_type"),
+                            "error": advocate.get("error"),
+                        }
+                        for advocate in failed_advocates
+                    ],
+                },
+            }
+
         if run_state:
             run_state.event("argue_judge_started", model=model)
         judge_prompt = build_judge_prompt(
@@ -437,14 +548,41 @@ async def _run_argue_async(
             tie_breaker=tie_breaker,
         )
         judge_started = time.time()
-        raw_judge, judge_model = await _scillm_json_call_async(
-            client,
-            model=model,
-            reasoning_effort=reasoning_effort,
-            timeout=timeout,
-            role="sequential judge",
-            prompt=judge_prompt,
-        )
+        try:
+            raw_judge, judge_model = await _scillm_json_call_async(
+                client,
+                model=model,
+                reasoning_effort=reasoning_effort,
+                timeout=timeout,
+                role="sequential judge",
+                prompt=judge_prompt,
+            )
+        except Exception as exc:
+            judge = _failed_judge_output(exc, time.time() - judge_started)
+            if run_state:
+                run_state.event(
+                    "argue_judge_failed",
+                    error_type=judge["error_type"],
+                    error=judge["error"],
+                    elapsed_seconds=judge["elapsed_seconds"],
+                )
+            return {
+                "for_case": advocate_outputs["FOR"],
+                "against_case": advocate_outputs["AGAINST"],
+                "judge": judge,
+                "judge_prompt": judge_prompt,
+                "error": {
+                    "stage": "judge",
+                    "reason": "argue_scillm_call_failed",
+                    "failures": [
+                        {
+                            "role": "sequential judge",
+                            "error_type": judge["error_type"],
+                            "error": judge["error"],
+                        }
+                    ],
+                },
+            }
         judge = normalize_judge_output(raw_judge, decision_required=decision_required, tie_breaker=tie_breaker)
         judge["model"] = judge_model
         judge["elapsed_seconds"] = round(time.time() - judge_started, 3)
@@ -568,7 +706,17 @@ def run_argue(
             "read_only": True,
         },
     }
-    verifier = verify_argue_result(argue_result)
+    protocol_error = protocol_result.get("error")
+    if protocol_error:
+        verifier = {
+            "status": "FAIL",
+            "failures": [
+                f"{protocol_error.get('stage', 'scillm')} call failed: {failure.get('error_type')}: {failure.get('error')}"
+                for failure in protocol_error.get("failures", [])
+            ],
+        }
+    else:
+        verifier = verify_argue_result(argue_result)
     argue_result["verifier"] = verifier
     markdown = render_argue_markdown(argue_result)
 
@@ -603,7 +751,16 @@ def run_argue(
             "artifact_paths": artifacts,
         },
     }
-    if verifier["status"] != "PASS":
+    if protocol_error:
+        response["needs_attention"] = run_state.needs_attention(
+            reason=str(protocol_error.get("reason") or "argue_scillm_call_failed"),
+            question="Argue /scillm call failed before a trustworthy verdict was produced.",
+            safe_default="do_not_trust_verdict",
+            resume_hint=f"Inspect {argue_dir} and rerun with a narrower prompt or different backend.",
+            stage=protocol_error.get("stage", "scillm"),
+            failures=protocol_error.get("failures", []),
+        )
+    elif verifier["status"] != "PASS":
         response["needs_attention"] = run_state.needs_attention(
             reason="argue_verifier_failed",
             question="Argue judge output failed deterministic verifier checks.",

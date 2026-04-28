@@ -229,6 +229,8 @@ if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytes
     tests/test_run_state_protocol.py::test_argue_verifier_rejects_judge_evidence_not_from_advocates \
     tests/test_run_state_protocol.py::test_argue_verifier_allows_advocate_missing_evidence_as_judge_evidence \
     tests/test_run_state_protocol.py::test_cli_ask_dry_run_includes_argue_dag_options \
+    tests/test_run_state_protocol.py::test_cli_argue_advocate_failure_preserves_partial_artifacts \
+    tests/test_run_state_protocol.py::test_cli_argue_judge_failure_preserves_advocate_artifacts \
     tests/test_run_state_protocol.py::test_cli_parallel_review_runs_three_reviewers_then_judge \
     tests/test_run_state_protocol.py::test_cli_parallel_review_writes_code_runner_handoff_when_requested \
     tests/test_run_state_protocol.py::test_parallel_review_verifier_rejects_missing_judge \

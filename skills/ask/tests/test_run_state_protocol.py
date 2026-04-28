@@ -421,6 +421,113 @@ def test_cli_argue_verifier_failure_exits_needs_attention(monkeypatch, tmp_path)
     assert (tmp_path / "argue-fail" / "argue" / "verifier.log").exists()
 
 
+def test_cli_argue_advocate_failure_preserves_partial_artifacts(monkeypatch, tmp_path):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt):
+        if role == "FOR advocate":
+            raise TimeoutError("advocate timed out")
+        if role == "AGAINST advocate":
+            return {
+                "strongest_argument": "The tests do not cover rollback.",
+                "evidence": ["The tests do not cover rollback."],
+                "confidence": "medium",
+            }, model
+        raise AssertionError("judge should not run after advocate failure")
+
+    monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--ask-id",
+            "argue-advocate-timeout",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    argue_dir = tmp_path / "argue-advocate-timeout" / "argue"
+    for_case = json.loads((argue_dir / "for.json").read_text())
+    against_case = json.loads((argue_dir / "against.json").read_text())
+    judge = json.loads((argue_dir / "judge.json").read_text())
+    status = read_status("argue-advocate-timeout", tail_events=30, output_root=tmp_path)
+    events = [event["event"] for event in status["event_tail"]]
+
+    assert payload["needs_attention"]["reason"] == "argue_scillm_call_failed"
+    assert payload["needs_attention"]["stage"] == "advocate"
+    assert for_case["status"] == "failed"
+    assert for_case["error_type"] == "TimeoutError"
+    assert against_case["status"] == "ok"
+    assert judge["status"] == "skipped"
+    assert "argue_advocate_failed" in events
+    assert "argue_judge_skipped" in events
+
+
+def test_cli_argue_judge_failure_preserves_advocate_artifacts(monkeypatch, tmp_path):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt):
+        if role == "FOR advocate":
+            return {
+                "strongest_argument": "The change is small and reversible.",
+                "evidence": ["The change is small and reversible."],
+                "confidence": "medium",
+            }, model
+        if role == "AGAINST advocate":
+            return {
+                "strongest_argument": "The tests do not cover rollback.",
+                "evidence": ["The tests do not cover rollback."],
+                "confidence": "medium",
+            }, model
+        raise RuntimeError("judge backend failed")
+
+    monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--ask-id",
+            "argue-judge-fail",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    argue_dir = tmp_path / "argue-judge-fail" / "argue"
+    for_case = json.loads((argue_dir / "for.json").read_text())
+    against_case = json.loads((argue_dir / "against.json").read_text())
+    judge = json.loads((argue_dir / "judge.json").read_text())
+    status = read_status("argue-judge-fail", tail_events=30, output_root=tmp_path)
+    events = [event["event"] for event in status["event_tail"]]
+
+    assert payload["needs_attention"]["reason"] == "argue_scillm_call_failed"
+    assert payload["needs_attention"]["stage"] == "judge"
+    assert for_case["status"] == "ok"
+    assert against_case["status"] == "ok"
+    assert judge["status"] == "failed"
+    assert judge["error_type"] == "RuntimeError"
+    assert "argue_judge_failed" in events
+
+
 def test_cli_ask_dry_run_includes_argue_dag_options(tmp_path):
     result = CliRunner().invoke(
         ask_module.app,
