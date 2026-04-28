@@ -22,6 +22,7 @@ from .scillm_runtime import (
     extract_scillm_observability,
     fetch_recent_scillm_debug,
     scillm_error_advice,
+    summarize_scillm_observability,
     serialize_source_bundle,
 )
 
@@ -36,6 +37,12 @@ SECRET_PATTERNS = [
     re.compile(r"(?i)(api[_-]?key|token|secret|password|private[_-]?key)(\s*[=:]\s*)([^\s\"']+)"),
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.DOTALL),
 ]
+SCILLM_TRANSIENT_ERRORS = (
+    httpx.ConnectError,
+    httpx.ReadError,
+    httpx.ReadTimeout,
+    httpx.RemoteProtocolError,
+)
 
 
 class ParallelReviewError(RuntimeError):
@@ -105,12 +112,21 @@ class ScillmReviewerAdapter:
                     **requested_metadata,
                     "source_grounding_retry_without_source": True,
                 }
-                response = await client.post(
-                    f"{self.base_url}/v1/chat/completions",
-                    headers=headers,
-                    json=fallback_json,
-                )
-                response.raise_for_status()
+                try:
+                    response = await client.post(
+                        f"{self.base_url}/v1/chat/completions",
+                        headers=headers,
+                        json=fallback_json,
+                    )
+                    response.raise_for_status()
+                except SCILLM_TRANSIENT_ERRORS:
+                    await asyncio.sleep(0.2)
+                    response = await client.post(
+                        f"{self.base_url}/v1/chat/completions",
+                        headers=headers,
+                        json=fallback_json,
+                    )
+                    response.raise_for_status()
                 source_grounding_status = "retry_without_source_after_error"
         response_payload = response.json()
         content = response_payload["choices"][0]["message"]["content"]
@@ -370,6 +386,8 @@ def run_parallel_review(
                 "verifier_status": verifier["status"],
                 "verifier_failures": verifier["failures"],
                 "findings_count": len(verdict["findings"]),
+                "grounding_degraded": verdict.get("grounding_degraded", False),
+                "observability_degraded": verdict.get("observability_degraded", False),
                 "artifact_paths": verdict["artifact_paths"],
                 "runner": runner,
                 "read_only": read_only,
@@ -394,6 +412,8 @@ def run_parallel_review(
             "verifier_status": verifier["status"],
             "verifier_failures": verifier["failures"],
             "findings_count": len(verdict["findings"]),
+            "grounding_degraded": verdict.get("grounding_degraded", False),
+            "observability_degraded": verdict.get("observability_degraded", False),
             "artifact_paths": verdict["artifact_paths"],
             "runner": runner,
             "read_only": read_only,
@@ -788,6 +808,7 @@ def synthesize_parallel_review(
     evidence.extend(str(item) for item in _list_value(judge_output.get("evidence")) if item)
     unexpected_changes = unexpected_git_changes(git_before, git_after)
     verdict = _aggregate_verdict([*reviewer_outputs, judge_output], findings)
+    scillm_summary = summarize_scillm_observability([*reviewer_outputs, judge_output])
     return {
         "schema_version": PARALLEL_REVIEW_SCHEMA_VERSION,
         "mode": "parallel_review",
@@ -811,10 +832,14 @@ def synthesize_parallel_review(
         "evidence": evidence,
         "findings": findings,
         "test_gaps": sorted(set(test_gaps)),
+        "grounding_degraded": scillm_summary["grounding_degraded"],
+        "observability_degraded": scillm_summary["observability_degraded"],
         "execution": {
             "git_before": git_before,
             "git_after": git_after,
             "unexpected_file_changes": unexpected_changes,
+            "grounding_degraded": scillm_summary["grounding_degraded"],
+            "observability_degraded": scillm_summary["observability_degraded"],
         },
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -832,6 +857,11 @@ def verify_parallel_review_bundle(verdict: dict[str, Any]) -> dict[str, Any]:
         failures.append("parallel review must be read-only")
     if verdict.get("execution", {}).get("unexpected_file_changes"):
         failures.append("unexpected file changes detected")
+    scillm_summary = summarize_scillm_observability([
+        *([output for output in verdict.get("reviewers", []) if isinstance(output, dict)] if isinstance(verdict.get("reviewers"), list) else []),
+        verdict.get("judge") if isinstance(verdict.get("judge"), dict) else {},
+    ])
+    failures.extend(scillm_summary["metadata_failures"])
     target_bundle = verdict.get("target_bundle")
     concrete_targets = _concrete_target_names(target_bundle if isinstance(target_bundle, dict) else {})
     if verdict.get("verdict") in SAFE_VERDICTS:
@@ -876,8 +906,15 @@ def verify_parallel_review_bundle(verdict: dict[str, Any]) -> dict[str, Any]:
     if verdict.get("verdict") in {"SAFE", "SAFE_WITH_CONDITIONS"} and not verdict.get("files_inspected"):
         failures.append("safe verdict requires files_inspected")
     if verdict.get("verdict") in SAFE_VERDICTS:
+        if scillm_summary["grounding_degraded"]:
+            failures.append("safe verdict requires successful source grounding")
         _verify_files_inspected_in_target("verdict", verdict.get("files_inspected"), concrete_targets, failures)
-    return {"status": "PASS" if not failures else "FAIL", "failures": failures}
+    return {
+        "status": "PASS" if not failures else "FAIL",
+        "failures": failures,
+        "grounding_degraded": scillm_summary["grounding_degraded"],
+        "observability_degraded": scillm_summary["observability_degraded"],
+    }
 
 
 def render_parallel_review_markdown(verdict: dict[str, Any]) -> str:

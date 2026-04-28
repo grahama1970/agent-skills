@@ -1,6 +1,6 @@
 # Project Knowledge: ask
 
-**Last updated:** 2026-04-28 09:25 by agent
+**Last updated:** 2026-04-28 16:35 by agent
 **Status:** Active development
 
 This file is the human-readable current-state projection for `/ask`
@@ -43,6 +43,26 @@ curated context. Memory recall is context, not evidence.
 - Runtime artifacts can be listed and pruned with `status --runs` and
   `status --prune`.
 - ask README.md now mirrors the structural onboarding shape of pi-subagents: installation, try-first prompts, what happens, modes, workflows, command reference, configuration, artifacts, development knowledge, validation, troubleshooting, and non-goals.
+- `/ask argue` is an explicit three-call `/scillm` DAG: FOR advocate and
+  AGAINST advocate run in parallel, then a sequential judge produces a verdict
+  that the deterministic verifier gates.
+- `/ask` now attaches opaque `scillm_metadata` and source bundle IDs to
+  argue and parallel-review DAG nodes so artifacts can correlate model calls
+  without trusting model-invented IDs.
+- `/ask` now writes source bundle artifacts for argue and parallel-review and
+  records source-grounding fallback/degradation in node artifacts when `/scillm`
+  cannot complete the source-backed path.
+- Mocked/unit tests are regression checks only. User-visible `/scillm`
+  composition paths require opt-in live E2E before they are described as
+  validated.
+- Source-grounding degradation now affects verifier trust: unqualified
+  `FOR`/`AGAINST` argue verdicts and `SAFE`/`SAFE_WITH_CONDITIONS`
+  parallel-review verdicts fail when critical `/scillm` nodes fall back from
+  source grounding.
+- Returned `scillm_metadata` mismatches on core identity fields
+  (`ask_id`, `protocol`, `node_id`, `batch_id`, `item_id`) now fail verifier
+  checks; missing echoes are recorded as observability degradation rather than
+  silently treated as full node correlation.
 
 ## Recent Decisions
 
@@ -61,6 +81,11 @@ curated context. Memory recall is context, not evidence.
 | 2026-04-28 | Add runtime artifacts across the primary `/ask` command family. | Long learning, OS, oracle, and review runs need inspectable state without tailing logs. |
 | 2026-04-28 | Add `needs_attention` as a pause state. | When the request is under-specified, `/ask` should fail closed with a fix hint instead of guessing scope. |
 | 2026-04-28 | Add runtime artifact retention controls. | `.ask_artifacts/runs` needs operator-visible pruning rather than unbounded growth. |
+| 2026-04-28 | Treat `/ask argue` as a real `/scillm` DAG. | Two parallel advocates plus a sequential judge prevents single-prompt fake debate and aligns with `/ask` DAG-lite architecture. |
+| 2026-04-28 | Add `/scillm` metadata and source bundles to DAG nodes. | `/ask` needs portable node correlation, source grounding, and artifact observability without depending on Pi-native child sessions. |
+| 2026-04-28 | Require live `/scillm` E2E for new composition paths before claiming validation. | Mocked sanity checks prove code shape, not that `/ask` actually composes with the runtime service. |
+| 2026-04-28 | Make grounding degradation verifier-visible. | Recording fallback is insufficient if safe/binary verdicts can still pass as fully grounded. |
+| 2026-04-28 | Verify returned `/scillm` metadata identity when present. | Opaque node correlation only works if returned runtime metadata matches the requested DAG node identity. |
 
 ## Open Questions
 
@@ -75,7 +100,8 @@ curated context. Memory recall is context, not evidence.
 - [ ] Which tests should count as real E2E smoke tests versus deterministic
       monkeypatched protocol tests?
       Current answer: realistic E2E must include domain scope, persona routing,
-      and roundtable behavior; deterministic tests remain route/unit coverage.
+      roundtable behavior, and real `/scillm` calls for `/scillm` DAG paths;
+      deterministic tests remain route/unit coverage.
 
 ## Key Files
 
@@ -87,10 +113,15 @@ curated context. Memory recall is context, not evidence.
 | `src/ask/ask_routing.py` | Natural-language route inference |
 | `src/ask/ask_oracle.py` | Oracle and subagent-backed synthesis |
 | `src/ask/deep_review.py` | Deep-review prompt, artifact, and verifier support |
+| `src/ask/argue.py` | Three-call `/scillm` argue DAG, judge verifier, and argue artifacts |
+| `src/ask/parallel_review.py` | `/scillm` reviewer fanout, judge synthesis, verifier, and code-runner handoff artifacts |
+| `src/ask/scillm_runtime.py` | Shared `/scillm` metadata, source bundle, observability, and debug helpers |
 | `src/ask/run_state.py` | Runtime request/status/events protocol, needs-attention states, run listing, pruning |
 | `src/ask/doctor.py` | Fast and live runtime diagnostics |
 | `src/ask/review_protocols/adversarial_review.py` | Existing roundtable/parallel review protocol support |
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
+| `docs/ASK_ARGUE_CONTRACT.md` | Argue DAG, judge admissibility, verifier, and observability contract |
+| `docs/ASK_PARALLEL_REVIEW_CONTRACT.md` | Parallel-review DAG, target bundle, verifier, and code-runner handoff contract |
 | `docs/ASK_DEEP_REVIEW_CONTRACT.md` | Deep-review runtime and verifier contract |
 | `01_ASK_DEEP_REVIEW_TASKS.yaml` | Current implementation plan for deep review |
 | `scripts/live_e2e.py` | Live E2E matrix, including semantic answer validation |
@@ -121,7 +152,7 @@ Allowed final verdicts:
 
 ## Validation State
 
-Latest implementation checks, as of 2026-04-27:
+Latest implementation checks, as of 2026-04-28:
 
 - Deep-review contract doc exists.
 - Deep-review verifier tests exist.
@@ -141,6 +172,18 @@ Latest implementation checks, as of 2026-04-27:
   `src/ask/ask_relevance.py`.
 - Evidence dashboard:
   `.ask_artifacts/validation-dashboard/20260427T171501Z/index.html`.
+- `/ask argue` and `/ask parallel-review` now have deterministic regression
+  coverage for `/scillm` metadata/source payload construction.
+- Deterministic protocol suite after the `/scillm` metadata/source update:
+  `98 passed`; after grounding/metadata verifier hardening: `102 passed`.
+- Skill sanity after the update: `All sanity checks PASSED`; the live checks
+  remain opt-in and skipped by default.
+- Real `/scillm` E2E after the update:
+  `ASK_LIVE_SCILLM_E2E=1 ... test_live_argue_scillm_metadata_and_source_bundle`
+  passed in `113.23s`.
+- Real `/scillm` E2E full live file after the update:
+  `ASK_LIVE_SCILLM_E2E=1 ... tests/test_parallel_review_live_e2e.py`
+  passed `2/2` in `31.67s` after verifier hardening.
 
 ## Timeout and Recovery Policy
 

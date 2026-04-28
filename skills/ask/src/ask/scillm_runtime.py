@@ -112,6 +112,62 @@ def extract_scillm_observability(response_payload: dict[str, Any], requested_met
     }
 
 
+def scillm_grounding_degraded(scillm: dict[str, Any] | None) -> bool:
+    if not isinstance(scillm, dict):
+        return False
+    status = str(scillm.get("source_grounding_status") or "")
+    return status in {"retry_without_source_after_error", "failed_before_response_with_source"} or scillm.get("grounding_passed") is False
+
+
+def scillm_metadata_observability_degraded(scillm: dict[str, Any] | None) -> bool:
+    if not isinstance(scillm, dict):
+        return False
+    requested = scillm.get("metadata_requested")
+    returned = scillm.get("metadata_returned")
+    if not isinstance(requested, dict) or not requested:
+        return False
+    if not isinstance(returned, dict) or not returned:
+        return True
+    return bool(scillm_metadata_mismatch_failures("scillm", scillm))
+
+
+def scillm_metadata_mismatch_failures(label: str, scillm: dict[str, Any] | None) -> list[str]:
+    if not isinstance(scillm, dict):
+        return []
+    requested = scillm.get("metadata_requested")
+    returned = scillm.get("metadata_returned")
+    if not isinstance(requested, dict) or not requested or not isinstance(returned, dict) or not returned:
+        return []
+    failures: list[str] = []
+    for key in ("ask_id", "protocol", "node_id", "batch_id", "item_id"):
+        expected = requested.get(key)
+        actual = returned.get(key)
+        if expected is not None and actual is not None and actual != expected:
+            failures.append(f"{label}: scillm_metadata returned {key} mismatch")
+    return failures
+
+
+def summarize_scillm_observability(nodes: list[dict[str, Any]]) -> dict[str, Any]:
+    grounding_degraded = False
+    observability_degraded = False
+    metadata_failures: list[str] = []
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        label = str(node.get("reviewer") or node.get("side") or node.get("judge") or "node")
+        scillm = node.get("scillm")
+        if scillm_grounding_degraded(scillm):
+            grounding_degraded = True
+        if scillm_metadata_observability_degraded(scillm):
+            observability_degraded = True
+        metadata_failures.extend(scillm_metadata_mismatch_failures(label, scillm))
+    return {
+        "grounding_degraded": grounding_degraded,
+        "observability_degraded": observability_degraded,
+        "metadata_failures": metadata_failures,
+    }
+
+
 def scillm_error_advice(exc: BaseException) -> dict[str, Any]:
     if not isinstance(exc, httpx.HTTPStatusError):
         return {}

@@ -20,6 +20,7 @@ from .scillm_runtime import (
     extract_scillm_observability,
     fetch_recent_scillm_debug,
     scillm_error_advice,
+    summarize_scillm_observability,
     serialize_source_bundle,
 )
 
@@ -35,6 +36,12 @@ ARGUE_TIE_BREAKERS = frozenset({
     "fail-closed",
     "higher-upside",
 })
+SCILLM_TRANSIENT_ERRORS = (
+    httpx.ConnectError,
+    httpx.ReadError,
+    httpx.ReadTimeout,
+    httpx.RemoteProtocolError,
+)
 
 
 def _string_list(value: Any) -> list[str]:
@@ -319,6 +326,7 @@ def verify_argue_result(result: dict[str, Any]) -> dict[str, Any]:
     judge = result.get("judge", {})
     for_case = result.get("for_case", {})
     against_case = result.get("against_case", {})
+    scillm_summary = summarize_scillm_observability([for_case, against_case, judge])
 
     verdict = judge.get("verdict")
     confidence = judge.get("confidence")
@@ -335,8 +343,13 @@ def verify_argue_result(result: dict[str, Any]) -> dict[str, Any]:
         failures.append("empty evidence_used requires INSUFFICIENT_EVIDENCE")
     if confidence == "high" and missing_evidence:
         failures.append("high confidence is not allowed when missing_evidence is non-empty")
+    if confidence == "high" and scillm_summary["grounding_degraded"]:
+        failures.append("high confidence is not allowed when source grounding is degraded")
+    failures.extend(scillm_summary["metadata_failures"])
 
     if verdict in {"FOR", "AGAINST"}:
+        if scillm_summary["grounding_degraded"]:
+            failures.append("FOR/AGAINST verdict requires successful source grounding")
         required_fields = [
             "decision_criterion",
             "strongest_counterargument",
@@ -393,6 +406,8 @@ def verify_argue_result(result: dict[str, Any]) -> dict[str, Any]:
     return {
         "status": "FAIL" if failures else "PASS",
         "failures": failures,
+        "grounding_degraded": scillm_summary["grounding_degraded"],
+        "observability_degraded": scillm_summary["observability_degraded"],
     }
 
 
@@ -459,6 +474,18 @@ async def _scillm_json_call_async(
                 timeout=timeout,
             )
             response.raise_for_status()
+        except SCILLM_TRANSIENT_ERRORS:
+            await asyncio.sleep(0.2)
+            response = await client.post(
+                endpoint,
+                headers=headers,
+                json=fallback_json,
+                timeout=timeout,
+            )
+            try:
+                response.raise_for_status()
+            except Exception as fallback_exc:
+                raise fallback_exc from source_exc
         except Exception as fallback_exc:
             raise fallback_exc from source_exc
         source_grounding_status = "retry_without_source_after_error"
@@ -820,6 +847,15 @@ def run_argue(
             "read_only": True,
         },
     }
+    scillm_summary = summarize_scillm_observability([
+        argue_result["for_case"],
+        argue_result["against_case"],
+        argue_result["judge"],
+    ])
+    argue_result["execution"]["grounding_degraded"] = scillm_summary["grounding_degraded"]
+    argue_result["execution"]["observability_degraded"] = scillm_summary["observability_degraded"]
+    argue_result["grounding_degraded"] = scillm_summary["grounding_degraded"]
+    argue_result["observability_degraded"] = scillm_summary["observability_degraded"]
     protocol_error = protocol_result.get("error")
     if protocol_error:
         verifier = {
@@ -864,6 +900,8 @@ def run_argue(
             "decision_required": decision_required,
             "tie_breaker": tie_breaker or "",
             "verifier_status": verifier["status"],
+            "grounding_degraded": argue_result["grounding_degraded"],
+            "observability_degraded": argue_result["observability_degraded"],
             "artifact_paths": artifacts,
         },
     }

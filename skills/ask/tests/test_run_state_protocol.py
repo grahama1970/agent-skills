@@ -257,6 +257,60 @@ def test_argue_verifier_rejects_high_confidence_with_missing_evidence():
     assert "high confidence is not allowed when missing_evidence is non-empty" in result["failures"]
 
 
+def test_argue_verifier_rejects_for_when_grounding_fell_back():
+    payload = _valid_argue_result(verdict="FOR")
+    payload["judge"]["scillm"] = {
+        "source_grounding_status": "retry_without_source_after_error",
+        "grounding_passed": False,
+        "metadata_requested": {
+            "ask_id": "argue-grounding",
+            "protocol": "argue",
+            "node_id": "judge",
+            "batch_id": "ask-argue-argue-grounding",
+            "item_id": "judge",
+        },
+        "metadata_returned": {
+            "ask_id": "argue-grounding",
+            "protocol": "argue",
+            "node_id": "judge",
+            "batch_id": "ask-argue-argue-grounding",
+            "item_id": "judge",
+        },
+    }
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert result["grounding_degraded"] is True
+    assert any("grounding" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_rejects_scillm_metadata_return_mismatch():
+    payload = _valid_argue_result(verdict="FOR")
+    payload["judge"]["scillm"] = {
+        "source_grounding_status": "requested",
+        "metadata_requested": {
+            "ask_id": "argue-metadata",
+            "protocol": "argue",
+            "node_id": "judge",
+            "batch_id": "ask-argue-argue-metadata",
+            "item_id": "judge",
+        },
+        "metadata_returned": {
+            "ask_id": "argue-metadata",
+            "protocol": "argue",
+            "node_id": "wrong-node",
+            "batch_id": "ask-argue-argue-metadata",
+            "item_id": "judge",
+        },
+    }
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert any("metadata" in failure for failure in result["failures"])
+
+
 def test_argue_verifier_requires_tie_breaker_for_decision_required():
     payload = _valid_argue_result(decision_required=True, tie_breaker="more-reversible")
 
@@ -992,6 +1046,77 @@ def test_parallel_review_verifier_rejects_missing_judge():
 
     assert result["status"] == "FAIL"
     assert "missing judge output" in result["failures"]
+
+
+def _valid_parallel_safe_verdict():
+    metadata = {
+        "ask_id": "parallel-metadata",
+        "protocol": "parallel_review",
+        "node_id": "reviewer-1",
+        "batch_id": "ask-parallel_review-parallel-metadata",
+        "item_id": "reviewer-1",
+    }
+    return {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "target.py",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "target.py", "path": "target.py", "kind": "file"}],
+            "truncated": False,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["target.py"],
+                "evidence": ["target.py is fine"],
+                "findings": [],
+                "read_only_claim": True,
+                "scillm": {
+                    "source_grounding_status": "requested",
+                    "grounding_passed": True,
+                    "metadata_requested": dict(metadata),
+                    "metadata_returned": dict(metadata),
+                },
+            }
+        ],
+        "judge": {
+            "best_reviewer": "Brandon",
+            "hybrid_summary": "Safe.",
+            "scillm": {
+                "source_grounding_status": "requested",
+                "grounding_passed": True,
+                "metadata_requested": {**metadata, "node_id": "judge", "item_id": "judge"},
+                "metadata_returned": {**metadata, "node_id": "judge", "item_id": "judge"},
+            },
+        },
+        "files_inspected": ["target.py"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+
+def test_parallel_review_verifier_rejects_safe_when_grounding_fell_back():
+    verdict = _valid_parallel_safe_verdict()
+    verdict["reviewers"][0]["scillm"]["source_grounding_status"] = "retry_without_source_after_error"
+    verdict["reviewers"][0]["scillm"]["grounding_passed"] = False
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert result["grounding_degraded"] is True
+    assert "safe verdict requires successful source grounding" in result["failures"]
+
+
+def test_parallel_review_verifier_rejects_scillm_metadata_return_mismatch():
+    verdict = _valid_parallel_safe_verdict()
+    verdict["reviewers"][0]["scillm"]["metadata_returned"]["node_id"] = "wrong-reviewer"
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("metadata" in failure for failure in result["failures"])
 
 
 def test_parallel_review_rejects_target_outside_review_root(tmp_path):
