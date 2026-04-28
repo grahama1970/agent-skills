@@ -42,6 +42,8 @@ from .sources import (
 )
 from .dogpile_parse import parse_dogpile_report
 from .extract_store import extract_and_store
+from .dry_run_spec import build_learn_dry_run_spec, print_execution_spec
+from .run_state import AskRunState, make_run_id
 from .session_writer import SessionWriter
 
 
@@ -74,6 +76,7 @@ def learn(
     persona_template: Optional[str] = None,
     persona_bridge: Optional[str] = None,
     persona_id: Optional[str] = None,
+    run_state: Optional[AskRunState] = None,
 ) -> dict:
     """
     Learn about a topic by discovering, ingesting, and extracting knowledge.
@@ -113,9 +116,13 @@ def learn(
     is_persona = detect_persona(topic)
 
     if interactive and depth is None:
+        if run_state:
+            run_state.step_started("interactive_depth")
         print(f"\n  Detected {'persona' if is_persona else 'topic'}: {topic}")
         depth = ask_learning_depth(topic, is_persona=is_persona)
         print(f"  Selected depth: {depth}")
+        if run_state:
+            run_state.step_finished("interactive_depth", depth=depth)
 
     if depth and depth in LEARNING_DEPTHS:
         depth_config = LEARNING_DEPTHS[depth]
@@ -168,6 +175,8 @@ def learn(
     # Step 1: Memory First -- check what we already know
     # =====================================================================
     monitor.start_step("memory_check")
+    if run_state:
+        run_state.step_started("learn_memory_check", scope=scope)
     step_print(1, total_steps, "Checking memory for existing knowledge...")
     log.info("Step 1: Memory recall for topic=%r scope=%r", topic, scope)
 
@@ -190,12 +199,16 @@ def learn(
             print("    No existing knowledge \u2014 starting fresh")
         log.info("Memory recall: %d existing items", len(items))
         monitor.complete_step("memory_check", success=True)
+        if run_state:
+            run_state.step_finished("learn_memory_check", returncode=0, items_count=len(items))
     else:
         log.warning("Memory recall failed: code=%d stderr=%s",
                      recall_result["returncode"], recall_result["stderr"][:100])
         print(f"    Memory unavailable: {recall_result['stderr'][:80]}")
         monitor.log_error("memory_check", recall_result["stderr"][:200])
         monitor.complete_step("memory_check", success=False)
+        if run_state:
+            run_state.step_finished("learn_memory_check", returncode=recall_result["returncode"], error=recall_result["stderr"][:200])
 
     # =====================================================================
     # Step 2: Dogpile Discovery (multi-source deep research)
@@ -205,6 +218,8 @@ def learn(
     dogpile_youtube_urls = []
     dogpile_web_urls = []
     monitor.start_step("dogpile")
+    if run_state:
+        run_state.step_started("learn_discovery", youtube_only=youtube_only)
 
     if not youtube_only:
         step_print(2, total_steps, f"Deep research via /dogpile: \"{topic}\"...")
@@ -351,16 +366,29 @@ def learn(
 
         monitor.update_stats(books_discovered=stats["books_discovered"], feeds_queried=stats["feeds_queried"], arxiv_extracted=stats["arxiv_extracted"])
         monitor.complete_step("dogpile", success=dogpile_success or bool(books_to_process) or bool(feed_items) or bool(stats["arxiv_extracted"]))
+        if run_state:
+            run_state.step_finished(
+                "learn_discovery",
+                dogpile_success=dogpile_success,
+                dogpile_sections=stats["dogpile_sections"],
+                books_discovered=stats["books_discovered"],
+                feeds_queried=stats["feeds_queried"],
+                arxiv_extracted=stats["arxiv_extracted"],
+            )
     else:
         step_print(2, total_steps, "Skipping discovery (--youtube-only)")
         feed_items = []
         monitor.complete_step("dogpile", success=True)
+        if run_state:
+            run_state.step_finished("learn_discovery", skipped=True)
 
     # =====================================================================
     # Step 3: Download Books (ops-nzbgeek/ingest-book) - deep learning only
     # =====================================================================
     downloaded_books = []
     monitor.start_step("download_books")
+    if run_state:
+        run_state.step_started("learn_download_books")
 
     download_books_enabled = (
         (is_persona and max_books > 0)  # Personas always download discovered books
@@ -427,18 +455,24 @@ def learn(
 
         monitor.update_stats(books_downloaded=stats.get("books_downloaded", 0))
         monitor.complete_step("download_books", success=True)
+        if run_state:
+            run_state.step_finished("learn_download_books", books_downloaded=stats.get("books_downloaded", 0))
     else:
         if not download_books_enabled:
             step_print(3, total_steps, "Skipping book download (requires deep mode or persona)")
         else:
             step_print(3, total_steps, "No books to download")
         monitor.complete_step("download_books", success=True)
+        if run_state:
+            run_state.step_finished("learn_download_books", skipped=True)
 
     # =====================================================================
     # Step 4: Ingest YouTube Transcripts
     # =====================================================================
     transcripts = []
     monitor.start_step("ingest_youtube")
+    if run_state:
+        run_state.step_started("learn_ingest_youtube", books_only=books_only)
 
     if not books_only:
         all_youtube_urls = list(youtube_urls or [])
@@ -534,15 +568,21 @@ def learn(
 
         monitor.update_stats(youtube_ingested=stats["youtube_ingested"])
         monitor.complete_step("ingest_youtube", success=True)
+        if run_state:
+            run_state.step_finished("learn_ingest_youtube", youtube_ingested=stats["youtube_ingested"])
     else:
         step_print(4, total_steps, "Skipping YouTube (--books-only)")
         monitor.complete_step("ingest_youtube", success=True)
+        if run_state:
+            run_state.step_finished("learn_ingest_youtube", skipped=True)
 
     # =====================================================================
     # Step 5: Fetch Web Content (blogs, articles)
     # =====================================================================
     web_content = []
     monitor.start_step("fetch_web")
+    if run_state:
+        run_state.step_started("learn_fetch_web")
 
     max_web_pages = 5 if depth == "deep" else 3
     if dogpile_web_urls and not books_only:
@@ -582,9 +622,13 @@ def learn(
 
         monitor.update_stats(web_fetched=stats["web_fetched"])
         monitor.complete_step("fetch_web", success=True)
+        if run_state:
+            run_state.step_finished("learn_fetch_web", web_fetched=stats["web_fetched"])
     else:
         step_print(5, total_steps, "No web URLs to fetch")
         monitor.complete_step("fetch_web", success=True)
+        if run_state:
+            run_state.step_finished("learn_fetch_web", skipped=True)
 
     # =====================================================================
     # Step 5b: Movie Discovery (fictional personas only)
@@ -619,6 +663,8 @@ def learn(
     # =====================================================================
     # Steps 6-7: Extract QRA + Store (delegated to extract_store module)
     # =====================================================================
+    if run_state:
+        run_state.step_started("learn_extract_store", dry_run=dry_run)
     extract_and_store(
         topic=topic,
         scope=scope,
@@ -636,6 +682,8 @@ def learn(
         feed_items=feed_items,
         total_steps=total_steps,
     )
+    if run_state:
+        run_state.step_finished("learn_extract_store", qra_extracted=stats["qra_extracted"], stored=stats["stored"])
 
     # =====================================================================
     # Summary
@@ -685,6 +733,8 @@ def learn(
     session_path = session.write()
     if session_path:
         stats["session_path"] = str(session_path)
+    if run_state:
+        run_state.event("session_written", session_path=stats.get("session_path", ""))
 
     return stats
 
@@ -710,28 +760,66 @@ def main(
     persona_template: Optional[str] = typer.Option(None, "--persona-template", help="Persona template type (expert, fictional, coder, etc.)"),
     persona_bridge: Optional[str] = typer.Option(None, "--persona-bridge", help="Persona's primary bridge attribute for content discovery"),
     persona_id: Optional[str] = typer.Option(None, "--persona-id", help="Persona identifier for session tracking (None for human)"),
+    ask_id: Optional[str] = typer.Option(None, "--ask-id", help="Stable runtime artifact id for this learn call"),
+    run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for runtime artifacts"),
+    overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
+    resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     """/ask learn -- Discover and ingest knowledge about a topic."""
     if debug:
         log.enable("")
 
-    stats = learn(
-        topic=topic,
-        scope=scope,
-        collection=collection,
-        youtube_urls=youtube,
-        books_only=books_only,
-        youtube_only=youtube_only,
-        max_books=max_books,
-        max_videos=max_videos,
-        dry_run=dry_run,
-        depth=depth,
-        interactive=interactive,
-        persona_template=persona_template,
-        persona_bridge=persona_bridge,
-        persona_id=persona_id,
+    request = {
+        "command": "learn",
+        "topic": topic,
+        "scope": scope,
+        "collection": collection,
+        "youtube": youtube or [],
+        "books_only": books_only,
+        "youtube_only": youtube_only,
+        "max_books": max_books,
+        "max_videos": max_videos,
+        "dry_run": dry_run,
+        "depth": depth,
+        "interactive": interactive,
+        "persona_template": persona_template,
+        "persona_bridge": persona_bridge,
+        "persona_id": persona_id,
+    }
+    if dry_run:
+        print_execution_spec(build_learn_dry_run_spec(request))
+        raise typer.Exit(code=0)
+
+    run_state = AskRunState(
+        ask_id or make_run_id(f"learn {topic}"),
+        output_root=run_output_root,
+        overwrite=overwrite_run,
+        resume=resume_run,
     )
+    run_state.write_request(request)
+    try:
+        stats = learn(
+            topic=topic,
+            scope=scope,
+            collection=collection,
+            youtube_urls=youtube,
+            books_only=books_only,
+            youtube_only=youtube_only,
+            max_books=max_books,
+            max_videos=max_videos,
+            dry_run=dry_run,
+            depth=depth,
+            interactive=interactive,
+            persona_template=persona_template,
+            persona_bridge=persona_bridge,
+            persona_id=persona_id,
+            run_state=run_state,
+        )
+    except Exception as exc:
+        run_state.fail(exc)
+        raise
+    run_state.finish(stats, state="completed" if stats.get("stored", 0) > 0 or stats.get("memory_existing", 0) > 0 or dry_run else "no_results")
 
     if not (stats["stored"] > 0 or stats["memory_existing"] > 0):
         raise typer.Exit(code=1)

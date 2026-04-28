@@ -26,7 +26,9 @@ from .ask_config import (
     DEFAULT_ORACLE_TIMEOUT,
     ORACLE_BACKENDS,
 )
+from .chain_specs import apply_chain_options
 from .deep_review import build_deep_review_request, infer_deep_review
+from .dry_run_spec import build_ask_dry_run_spec, print_execution_spec
 from .ask_oracle import _is_meta_item
 from .ask_persona_profiles import _format_persona_suggestion
 from .ask_relevance import _has_relevant_domain_items, _try_evidence_case
@@ -38,8 +40,9 @@ from .ask_routing import (
     _parse_natural_roundtable_query,
     _should_auto_oracle_persona,
 )
+from .reviewer_specs import focus_from_reviewer_specs, load_selected_reviewer_specs
 from .review_protocols import is_date_sensitive_question
-from .run_state import append_event, build_context_policy, complete_run, create_run
+from .run_state import AskRunState, NoopRunState, make_run_id
 from .session_writer import SessionWriter
 from .skills_exec import run_skill, parse_memory_output, run_memory_recall
 from .persona_routing import (
@@ -102,11 +105,7 @@ def ask(
     deep_review_fallback_policy: str = "fail_closed",
     deep_review_persist: str = "summary",
     deep_review_output_root: str = ".ask_artifacts/deep-review",
-    run_id: Optional[str] = None,
-    review_context: Optional[str] = None,
-    inherit_memory: Optional[str] = None,
-    inherit_skills: Optional[str] = None,
-    inherit_project_context: Optional[str] = None,
+    run_state: Optional[AskRunState] = None,
 ) -> dict:
     """Query accumulated knowledge.
 
@@ -152,37 +151,6 @@ def ask(
         dict with answer, sources, bridges.
     """
     started_at = time.time()
-    run_mode = "ask"
-    if deep_review:
-        run_mode = "deep-review"
-    elif roundtable:
-        run_mode = "roundtable"
-    elif parallel_review:
-        run_mode = "parallel-review"
-    elif oracle_model:
-        run_mode = "oracle"
-    context_policy = build_context_policy(
-        run_mode,
-        review_context=review_context,
-        inherit_memory=inherit_memory,
-        inherit_skills=inherit_skills,
-        inherit_project_context=inherit_project_context,
-    )
-    run_record = create_run(
-        run_mode,
-        question=question,
-        target=deep_review_target,
-        run_id=run_id,
-        metadata={
-            "scope": scope,
-            "oracle_backend": oracle_backend,
-            "oracle_model": oracle_model or "",
-            "oracle_reasoning": oracle_reasoning,
-            "dogpile_mode": dogpile_mode,
-            "context_policy": context_policy,
-        },
-    )
-    append_event(run_record["run_id"], run_mode, "context_policy_resolved", data=context_policy)
     session = SessionWriter(scope=scope, persona_id=persona_id)
     session.add_turn("user", question)
 
@@ -194,10 +162,6 @@ def ask(
         "answer": "",
         "auto_learned": False,
         "hybrid_mode": hybrid,
-        "run_id": run_record["run_id"],
-        "artifact_dir": run_record["artifact_dir"],
-        "run_mode": run_mode,
-        "context_policy": context_policy,
     }
     if oracle_model:
         result["oracle"] = {
@@ -237,6 +201,8 @@ def ask(
         result["oracle"]["dogpile_recommended"] = _should_use_dogpile(question, dogpile_mode)
     deep_review_request = None
     if deep_review:
+        if run_state:
+            run_state.step_started("deep_review_request", target=deep_review_target or "")
         deep_review_request = build_deep_review_request(
             question=question,
             explicit_target=deep_review_target,
@@ -255,9 +221,24 @@ def ask(
             "target": deep_review_request["target"],
             "persist": deep_review_persist,
         }
+        if run_state:
+            run_state.step_finished("deep_review_request", target=deep_review_request["target"])
+        if deep_review_request["target"].get("requires_target"):
+            attention = {
+                "reason": "missing_deep_review_target",
+                "question": deep_review_request["target"].get("message", "Deep review requires an explicit target."),
+                "safe_default": "do_not_run_review",
+                "resume_hint": "Run again with --deep-review-target <paths|diff|plan|artifact>.",
+            }
+            if run_state:
+                attention = run_state.needs_attention(**attention)
+            result["needs_attention"] = attention
+            return result
 
     # Step 1: Memory recall (hybrid or standard)
     if hybrid:
+        if run_state:
+            run_state.step_started("hybrid_recall", scope=scope, k=k)
         log.info("Hybrid querying memory: q=%r scope=%r k=%d", question, scope, k)
         hybrid_result = ask_hybrid(question, scope, k, use_bridges=use_bridges)
         result["items"] = hybrid_result["items"]
@@ -268,7 +249,11 @@ def ask(
             "Hybrid recall: %d QRA + %d RAG -> %d items",
             result.get("qra_count", 0), result.get("rag_count", 0), len(result["items"]),
         )
+        if run_state:
+            run_state.step_finished("hybrid_recall", items_count=len(result["items"]))
     else:
+        if run_state:
+            run_state.step_started("memory_recall", scope=scope, k=k)
         log.info("Querying memory: q=%r scope=%r k=%d", question, scope, k)
         recall_result = run_memory_recall(question, scope, k)
 
@@ -276,14 +261,20 @@ def ask(
             items = parse_memory_output(recall_result["stdout"])
             result["items"].extend(items)
             log.info("Direct recall: %d items found", len(items))
+            if run_state:
+                run_state.step_finished("memory_recall", returncode=0, items_count=len(items))
         else:
             log.warning(
                 "Memory recall failed: code=%d, stderr=%s",
                 recall_result["returncode"], recall_result["stderr"][:100],
             )
+            if run_state:
+                run_state.step_finished("memory_recall", returncode=recall_result["returncode"], error=recall_result["stderr"][:200])
 
         # Step 2: Bridge traversal (optional, standard mode only)
         if use_bridges:
+            if run_state:
+                run_state.step_started("bridge_traversal")
             bridges = extract_bridges(question)
             result["bridges_found"] = bridges
             log.info("Bridge traversal: found bridges %s", bridges)
@@ -306,6 +297,8 @@ def ask(
                     log.debug("Bridge %s: %d new items (from %d total)", bridge, added, len(bridge_items))
                 else:
                     log.warning("Bridge recall for %s failed: code=%d", bridge, bridge_result["returncode"])
+            if run_state:
+                run_state.step_finished("bridge_traversal", bridges=bridges, items_count=len(result["items"]))
 
     # Step 2b: Evidence-case fallback for non-trivial queries.
     # Fires when: (a) no results at all, OR (b) only meta/irrelevant results.
@@ -318,6 +311,8 @@ def ask(
     # content about satellites, not pipeline health data.
     is_operational = _is_operational_question(question)
     if (is_operational or not has_domain_answer) and not _is_direct_control_lookup(question):
+        if run_state:
+            run_state.step_started("evidence_case", operational=is_operational, has_domain_answer=has_domain_answer)
         evidence_result = _try_evidence_case(question, scope)
         if evidence_result:
             result["evidence_case"] = evidence_result
@@ -379,12 +374,20 @@ def ask(
                         })
             if evidence_items:
                 result["items"] = evidence_items  # Replace, don't append
+        if run_state:
+            run_state.step_finished("evidence_case", used=bool(evidence_result), items_count=len(result["items"]))
 
     # Step 2c: Auto-learn if still no domain results
     if not domain_items and auto_learn:
+        if run_state:
+            run_state.step_started("auto_learn", collection=collection)
         result = _auto_learn(result, question, scope, collection, k, use_bridges)
+        if run_state:
+            run_state.step_finished("auto_learn", items_count=len(result.get("items", [])), auto_learned=bool(result.get("auto_learned")))
 
     # Step 3: Synthesise answer
+    if run_state:
+        run_state.step_started("synthesis", oracle_enabled=oracle_model is not None, deep_review=deep_review)
     _synthesise(
         result,
         k,
@@ -417,12 +420,15 @@ def ask(
         parallel_review_role_preset=parallel_review_role_preset,
         deep_review_request=deep_review_request,
     )
-    append_event(
-        run_record["run_id"],
-        run_mode,
-        "synthesis_completed",
-        data={"items": len(result["items"]), "has_answer": bool(result.get("answer"))},
-    )
+    if run_state:
+        run_state.step_finished(
+            "synthesis",
+            answer_chars=len(str(result.get("answer", ""))),
+            items_count=len(result.get("items", [])),
+            deep_review_artifacts=result.get("deep_review", {}).get("artifact_paths", {}),
+        )
+        if result.get("deep_review", {}).get("artifact_paths"):
+            run_state.add_artifacts(result["deep_review"]["artifact_paths"])
 
     # Step 4: Learn-back for persona accumulation
     if persona_id and result["items"]:
@@ -438,6 +444,8 @@ def ask(
     session_path = session.write()
     if session_path:
         result["session_path"] = str(session_path)
+    if run_state:
+        run_state.event("session_written", session_path=result.get("session_path", ""))
 
     _record_ask_telemetry(
         result=result,
@@ -451,18 +459,6 @@ def ask(
         oracle_persona=oracle_persona,
         oracle_peer=oracle_peer,
         oracle_iterations=oracle_iterations,
-    )
-    artifact_paths = []
-    if result.get("session_path"):
-        artifact_paths.append(result["session_path"])
-    if result.get("deep_review"):
-        artifact_paths.extend(result["deep_review"].get("artifact_paths", []))
-    complete_run(
-        run_record["run_id"],
-        run_mode,
-        artifact_paths=artifact_paths,
-        final_verdict=result.get("deep_review", {}).get("verdict", ""),
-        verifier_status=result.get("deep_review", {}).get("verifier_status", ""),
     )
 
     return result
@@ -611,11 +607,13 @@ def main(
     deep_review_fallback_policy: str = typer.Option("fail_closed", help="Deep-review downgrade policy: fail_closed or warn"),
     deep_review_persist: str = typer.Option("summary", help="Deep-review persistence: summary or full"),
     deep_review_output_root: str = typer.Option(".ask_artifacts/deep-review", help="Deep-review artifact directory"),
-    run_id: Optional[str] = typer.Option(None, "--run-id", help="Explicit run id for artifact/status correlation"),
-    review_context: Optional[str] = typer.Option(None, "--review-context", help="Child context policy: fresh or fork"),
-    inherit_memory: Optional[str] = typer.Option(None, "--inherit-memory", help="Memory inheritance: yes, no, summary"),
-    inherit_skills: Optional[str] = typer.Option(None, "--inherit-skills", help="Skill inheritance: yes, no, selected"),
-    inherit_project_context: Optional[str] = typer.Option(None, "--inherit-project-context", help="Project context inheritance: yes or no"),
+    chain: Optional[str] = typer.Option(None, "--chain", help="Saved review chain spec name or path"),
+    reviewer_specs: Optional[list[str]] = typer.Option(None, "--reviewer-spec", help="Reviewer spec name or path (repeatable)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview execution spec and risk analysis without mutation"),
+    ask_id: Optional[str] = typer.Option(None, "--ask-id", help="Stable runtime artifact id for this ask call"),
+    run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for ask runtime artifacts"),
+    overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
+    resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     question, inferred_parallel_review, inferred_parallel_reviewers, inferred_parallel_focus = (
@@ -665,6 +663,32 @@ def main(
         oracle = True
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
+
+    if chain:
+        chain_options = apply_chain_options({
+            "deep_review": deep_review,
+            "parallel_review": parallel_review,
+            "parallel_reviewers": parallel_reviewers,
+            "deep_reviewers": deep_reviewers,
+            "deep_review_focus": deep_review_focus,
+            "parallel_review_focus": parallel_review_focus,
+            "oracle_backend": oracle_backend,
+            "oracle_reasoning": oracle_reasoning,
+        }, chain)
+        deep_review = bool(chain_options.get("deep_review", deep_review))
+        parallel_review = bool(chain_options.get("parallel_review", parallel_review))
+        parallel_reviewers = int(chain_options.get("parallel_reviewers", parallel_reviewers))
+        deep_reviewers = int(chain_options.get("deep_reviewers", deep_reviewers))
+        deep_review_focus = chain_options.get("deep_review_focus", deep_review_focus)
+        parallel_review_focus = chain_options.get("parallel_review_focus", parallel_review_focus)
+        oracle_backend = str(chain_options.get("oracle_backend", oracle_backend))
+        oracle_reasoning = chain_options.get("oracle_reasoning", oracle_reasoning)
+
+    loaded_reviewer_specs = load_selected_reviewer_specs(reviewer_specs)
+    reviewer_focus = focus_from_reviewer_specs(loaded_reviewer_specs)
+    if reviewer_focus:
+        deep_review_focus = ",".join(filter(None, [deep_review_focus, reviewer_focus]))
+        parallel_review_focus = ",".join(filter(None, [parallel_review_focus, reviewer_focus]))
 
     if deep_review or infer_deep_review(question):
         deep_review = True
@@ -733,6 +757,11 @@ def main(
             "Deep-review reviewers must be >= 1.",
             param_hint="--deep-reviewers",
         )
+    if overwrite_run and resume_run:
+        raise typer.BadParameter(
+            "Use either --overwrite or --resume, not both.",
+            param_hint="--overwrite",
+        )
     if oracle and oracle_idle_timeout < 30:
         raise typer.BadParameter(
             "Oracle idle timeout must be >= 30 seconds.",
@@ -761,6 +790,51 @@ def main(
             param_hint="--oracle",
         )
 
+    run_id = ask_id or make_run_id(question)
+    request_payload = {
+        "command": "ask",
+        "question": question,
+        "scope": scope,
+        "k": k,
+        "bridges": bridges,
+        "raw": raw,
+        "auto_learn": auto_learn,
+        "collection": collection,
+        "hybrid": hybrid,
+        "consult_personas": consult_personas,
+        "persona_scope": persona_scope,
+        "persona_id": persona_id,
+        "oracle": oracle,
+        "oracle_backend": oracle_backend,
+        "oracle_model": oracle_model if oracle else None,
+        "oracle_reasoning": oracle_reasoning,
+        "oracle_timeout": oracle_timeout,
+        "oracle_idle_timeout": oracle_idle_timeout,
+        "oracle_heartbeat_interval": oracle_heartbeat_interval,
+        "oracle_persona": oracle_persona,
+        "oracle_peer": oracle_peer,
+        "oracle_iterations": oracle_iterations,
+        "roundtable": roundtable,
+        "roundtable_personas": roundtable_personas,
+        "parallel_review": parallel_review,
+        "parallel_reviewers": parallel_reviewers,
+        "parallel_review_personas": parallel_review_personas,
+        "parallel_review_focus": parallel_review_focus,
+        "dogpile_mode": dogpile_mode,
+        "deep_review": deep_review,
+        "deep_review_target": deep_review_target,
+        "deep_review_profile": deep_review_profile,
+        "deep_reviewers": deep_reviewers,
+        "deep_review_focus": deep_review_focus,
+        "deep_review_output_root": deep_review_output_root,
+        "chain": chain,
+        "reviewer_specs": reviewer_specs or [],
+        "suggested_personas_count": 0,
+    }
+    if dry_run:
+        print_execution_spec(build_ask_dry_run_spec(request_payload), as_json=as_json)
+        raise typer.Exit(code=0)
+
     suggested_personas: list[dict] = []
     if consult_personas:
         bridges_for_personas = extract_bridges(question)
@@ -769,6 +843,23 @@ def main(
             bridges=bridges_for_personas,
             scope=persona_scope,
         )
+        request_payload["suggested_personas_count"] = len(suggested_personas)
+
+    require_runtime_artifacts = deep_review or parallel_review
+    try:
+        run_state = AskRunState(run_id, output_root=run_output_root, overwrite=overwrite_run, resume=resume_run)
+        run_state.write_request(request_payload)
+    except (FileExistsError, FileNotFoundError, ValueError) as exc:
+        raise typer.BadParameter(
+            f"{exc}. Use a unique --ask-id, --overwrite, or --resume.",
+            param_hint="--ask-id",
+        ) from exc
+    except OSError as exc:
+        if require_runtime_artifacts:
+            raise
+        typer.echo(f"Warning: Runtime artifacts disabled: {exc}", err=True)
+        run_state = NoopRunState(run_id, reason=str(exc))
+    run_state.event("ask_started")
 
     started_at = time.time()
     try:
@@ -815,11 +906,7 @@ def main(
             deep_review_fallback_policy=deep_review_fallback_policy,
             deep_review_persist=deep_review_persist,
             deep_review_output_root=deep_review_output_root,
-            run_id=run_id,
-            review_context=review_context,
-            inherit_memory=inherit_memory,
-            inherit_skills=inherit_skills,
-            inherit_project_context=inherit_project_context,
+            run_state=run_state,
         )
     except Exception as exc:
         _record_ask_telemetry(
@@ -842,6 +929,7 @@ def main(
             oracle_peer=oracle_peer,
             oracle_iterations=oracle_iterations,
         )
+        run_state.fail(exc)
         raise
 
     if consult_personas:
@@ -850,6 +938,21 @@ def main(
             print(suggestion)
             result["suggested_personas"] = suggested_personas
 
+    result["ask_id"] = run_state.ask_id
+    result["runtime_artifacts"] = run_state.artifacts
+    if result.get("needs_attention"):
+        if as_json:
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            attention = result["needs_attention"]
+            print("\n-- /ask needs attention --")
+            print(f"   Reason: {attention.get('reason', 'unknown')}")
+            print(f"   Question: {attention.get('question', '')}")
+            if attention.get("resume_hint"):
+                print(f"   Resume: {attention['resume_hint']}")
+            print()
+        raise typer.Exit(code=2)
+    run_state.finish(result)
     sys.exit(0 if result["items"] else 1)
 
 

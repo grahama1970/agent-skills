@@ -36,6 +36,8 @@ else:
 
 from .skills_exec import run_skill, parse_json_output
 from .monitor import AskMonitor
+from .dry_run_spec import build_os_learn_dry_run_spec, print_execution_spec
+from .run_state import AskRunState, make_run_id
 from .taxonomy import extract_bridges_from_content
 
 # Paths
@@ -480,6 +482,7 @@ def learn_os(
     depth: str = "standard",
     dry_run: bool = False,
     monitor: Optional[AskMonitor] = None,
+    run_state: Optional[AskRunState] = None,
 ) -> dict:
     """Full OS learning pipeline: crawl → extract → tag → store.
 
@@ -513,30 +516,48 @@ def learn_os(
 
     # Step 1: Crawl skills
     print("   [1/5] Crawling skills...")
+    if run_state:
+        run_state.step_started("os_crawl_skills")
     skills = crawl_skills(max_skills=cfg["max_skills"])
     stats["skills_crawled"] = len(skills)
     print(f"         Found {len(skills)} skills")
+    if run_state:
+        run_state.step_finished("os_crawl_skills", skills_crawled=len(skills))
 
     # Step 2: Crawl packages
     print("   [2/5] Crawling packages...")
+    if run_state:
+        run_state.step_started("os_crawl_packages")
     packages = crawl_packages(max_packages=cfg["max_packages"])
     stats["packages_crawled"] = len(packages)
     print(f"         Found {len(packages)} packages")
+    if run_state:
+        run_state.step_finished("os_crawl_packages", packages_crawled=len(packages))
 
     # Step 3: Crawl config
     print("   [3/5] Crawling configuration...")
+    if run_state:
+        run_state.step_started("os_crawl_config")
     configs = crawl_config()
     stats["configs_crawled"] = len(configs)
     print(f"         Found {len(configs)} config items")
+    if run_state:
+        run_state.step_finished("os_crawl_config", configs_crawled=len(configs))
 
     # Step 4: Build capability graph
     print("   [4/5] Building capability graph...")
+    if run_state:
+        run_state.step_started("os_build_graph")
     graph = build_capability_graph(skills)
     stats["graph_edges"] = len(graph.get("edges", []))
     print(f"         {stats['graph_edges']} composition edges")
+    if run_state:
+        run_state.step_finished("os_build_graph", graph_edges=stats["graph_edges"])
 
     # Step 5: Generate QRAs
     print("   [5/5] Generating QRA triples...")
+    if run_state:
+        run_state.step_started("os_generate_qra")
     qras = generate_os_qra(skills, packages, configs, graph)
 
     # Add domain tags
@@ -563,6 +584,8 @@ def learn_os(
 
     stats["qras_generated"] = len(qras)
     print(f"         {len(qras)} QRA triples generated")
+    if run_state:
+        run_state.step_finished("os_generate_qra", qras_generated=len(qras))
 
     if dry_run:
         # Show sample QRAs
@@ -579,9 +602,13 @@ def learn_os(
 
     # Store to memory
     print("\n   Storing to memory (scope=os)...")
+    if run_state:
+        run_state.step_started("os_store_memory", dry_run=dry_run)
     store_stats = store_qra_to_memory(qras, scope="os", dry_run=dry_run)
     stats["stored"] = store_stats["stored"]
     stats["errors"] = store_stats["errors"]
+    if run_state:
+        run_state.step_finished("os_store_memory", stored=stats["stored"], errors=stats["errors"])
 
     elapsed = time.time() - start
     print(f"\n== OS Learn Complete ({elapsed:.1f}s) ==")
@@ -609,6 +636,10 @@ def cmd_learn(
     depth: str = typer.Option("standard", help="Crawl depth: quick, standard, deep"),
     dry_run: bool = typer.Option(False, help="Preview without storing"),
     as_json: bool = typer.Option(False, "--json", help="JSON output"),
+    ask_id: Optional[str] = typer.Option(None, "--ask-id", help="Stable runtime artifact id for this OS learn call"),
+    run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for runtime artifacts"),
+    overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
+    resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     """Crawl and index embry-os knowledge into memory."""
@@ -620,7 +651,24 @@ def cmd_learn(
         print(f"Invalid depth: {depth}. Use: quick, standard, deep")
         raise SystemExit(1)
 
-    stats = learn_os(depth=depth, dry_run=dry_run)
+    request = {"command": "os learn", "depth": depth, "dry_run": dry_run}
+    if dry_run:
+        print_execution_spec(build_os_learn_dry_run_spec(request), as_json=as_json)
+        raise typer.Exit(code=0)
+
+    run_state = AskRunState(
+        ask_id or make_run_id(f"os learn {depth}"),
+        output_root=run_output_root,
+        overwrite=overwrite_run,
+        resume=resume_run,
+    )
+    run_state.write_request(request)
+    try:
+        stats = learn_os(depth=depth, dry_run=dry_run, run_state=run_state)
+    except Exception as exc:
+        run_state.fail(exc)
+        raise
+    run_state.finish(stats, state="completed" if stats["stored"] > 0 or stats.get("dry_run") else "no_results")
 
     if as_json:
         print(json.dumps(stats, indent=2))

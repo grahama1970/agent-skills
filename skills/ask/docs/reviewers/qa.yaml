@@ -1,0 +1,6 @@
+name: qa
+protocol_role: test_reviewer
+focus:
+  - failure-path-tests
+  - cli-behavior
+  - regression-risk

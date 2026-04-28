@@ -1,296 +1,691 @@
-"""Runtime state and artifact helpers for /ask."""
+"""Runtime artifacts for ask executions."""
 
 from __future__ import annotations
 
 import json
 import os
+import re
+import secrets
+import shutil
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-ASK_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_ARTIFACT_ROOT = ASK_ROOT / ".ask_artifacts"
-
-VALID_REVIEW_CONTEXTS = {"fresh", "fork"}
-VALID_INHERIT_MEMORY = {"yes", "no", "summary"}
-VALID_INHERIT_SKILLS = {"yes", "no", "selected"}
-VALID_INHERIT_PROJECT_CONTEXT = {"yes", "no"}
-
-NEEDS_ATTENTION_STATES = {
-    "needs_target",
-    "needs_repo_access",
-    "needs_model_fallback",
-    "needs_memory_health",
-    "needs_freshness_confirmation",
-    "needs_verifier_fix",
-    "stalled_no_heartbeat",
-    "stalled_no_artifact_progress",
-}
-
-DEFAULT_CONTEXT_POLICIES: dict[str, dict[str, Any]] = {
-    "ask": {
-        "review_context": "fresh",
-        "inherit_memory": "yes",
-        "inherit_skills": "selected",
-        "inherit_project_context": "no",
-        "memory_as_evidence": False,
-    },
-    "oracle": {
-        "review_context": "fresh",
-        "inherit_memory": "summary",
-        "inherit_skills": "selected",
-        "inherit_project_context": "no",
-        "memory_as_evidence": False,
-    },
-    "parallel-review": {
-        "review_context": "fresh",
-        "inherit_memory": "summary",
-        "inherit_skills": "selected",
-        "inherit_project_context": "no",
-        "memory_as_evidence": False,
-    },
-    "roundtable": {
-        "review_context": "fresh",
-        "inherit_memory": "summary",
-        "inherit_skills": "selected",
-        "inherit_project_context": "no",
-        "memory_as_evidence": False,
-    },
-    "deep-review": {
-        "review_context": "fresh",
-        "inherit_memory": "summary",
-        "inherit_skills": "selected",
-        "inherit_project_context": "no",
-        "memory_as_evidence": False,
-    },
-    "review-and-fix": {
-        "review_context": "fork",
-        "inherit_memory": "summary",
-        "inherit_skills": "selected",
-        "inherit_project_context": "yes",
-        "memory_as_evidence": False,
-        "requires_worktree": True,
-    },
-}
+from .runtime_schema import RUNTIME_PROTOCOL_VERSION
 
 
-def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+SKILL_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_RUN_ROOT = SKILL_ROOT / ".ask_artifacts" / "runs"
+DEFAULT_ARTIFACT_ROOT = SKILL_ROOT / ".ask_artifacts"
+RUN_ID_RE = re.compile(r"[^A-Za-z0-9_.-]+")
+TERMINAL_STATES = {"answered", "completed", "no_results", "failed", "cancelled", "needs_attention"}
+RESUMABLE_STATES = {"created", "running"}
+INDEX_FILENAME = "index.jsonl"
 
 
-def new_run_id(mode: str) -> str:
-    safe_mode = "".join(ch if ch.isalnum() else "-" for ch in mode.lower()).strip("-") or "ask"
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return f"{stamp}-{safe_mode}-{os.getpid()}-{int(time.time() * 1000) % 100000:05d}"
+def default_run_root() -> Path:
+    return Path(os.environ.get("ASK_RUN_OUTPUT_DIR", str(DEFAULT_RUN_ROOT))).expanduser()
 
 
-def artifact_root(root: str | Path | None = None) -> Path:
-    path = Path(root) if root else DEFAULT_ARTIFACT_ROOT
-    if not path.is_absolute():
-        path = ASK_ROOT / path
-    return path
+def safe_run_id(value: str) -> str:
+    cleaned = RUN_ID_RE.sub("-", value.strip()).strip("-._")
+    return cleaned or "ask-run"
 
 
-def mode_artifact_dir(mode: str, run_id: str, root: str | Path | None = None) -> Path:
-    return artifact_root(root) / mode / run_id
+def make_run_id(question: str) -> str:
+    import hashlib
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    digest = hashlib.sha256(question.encode("utf-8")).hexdigest()[:8]
+    return f"ask-{stamp}-{digest}-{secrets.token_hex(4)}"
 
 
-def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True, default=str) + "\n")
+    tmp.replace(path)
 
 
-def _read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+def artifact_root(root: Path | str | None = None) -> Path:
+    if root is not None:
+        return Path(root).expanduser()
+    return Path(os.environ.get("ASK_ARTIFACT_ROOT", str(DEFAULT_ARTIFACT_ROOT))).expanduser()
 
 
-def create_run(
-    mode: str,
-    *,
-    question: str = "",
-    target: str | None = None,
-    run_id: str | None = None,
-    metadata: dict[str, Any] | None = None,
-    root: str | Path | None = None,
-) -> dict[str, Any]:
-    resolved_run_id = run_id or new_run_id(mode)
-    run_dir = mode_artifact_dir(mode, resolved_run_id, root=root)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    request = {
-        "run_id": resolved_run_id,
-        "mode": mode,
-        "question": question,
-        "target": target or "",
-        "artifact_dir": str(run_dir),
-        "created_at": utc_now(),
-        "metadata": metadata or {},
-    }
-    status = {
-        "run_id": resolved_run_id,
-        "mode": mode,
-        "state": "running",
-        "started_at": request["created_at"],
-        "updated_at": request["created_at"],
-        "last_heartbeat": request["created_at"],
-        "artifact_dir": str(run_dir),
-        "verifier_status": "",
-        "final_verdict": "",
-        "needs_attention": "",
-        "failure_reason": "",
-        "artifact_paths": [],
-    }
-    _write_json(run_dir / "request.json", request)
-    _write_json(run_dir / "status.json", status)
-    append_event(resolved_run_id, mode, "run_started", root=root, data={"target": target or ""})
-    return {**request, "status": status}
+def new_run_id(mode: str = "ask") -> str:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    return safe_run_id(f"{mode}-{stamp}-{secrets.token_hex(4)}")
+
+
+def mode_artifact_dir(mode: str, run_id: str, root: Path | str | None = None) -> Path:
+    return artifact_root(root) / safe_run_id(mode) / safe_run_id(run_id)
+
+
+def _mode_events_path(run_id: str, mode: str, root: Path | str | None = None) -> Path:
+    return mode_artifact_dir(mode, run_id, root) / "events.jsonl"
 
 
 def append_event(
     run_id: str,
     mode: str,
     event: str,
-    *,
     data: dict[str, Any] | None = None,
-    root: str | Path | None = None,
+    root: Path | str | None = None,
+    **fields: Any,
 ) -> None:
-    run_dir = mode_artifact_dir(mode, run_id, root=root)
-    run_dir.mkdir(parents=True, exist_ok=True)
-    with (run_dir / "events.jsonl").open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps({"time": utc_now(), "event": event, "data": data or {}}, sort_keys=True) + "\n")
+    payload = {
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "run_id": safe_run_id(run_id),
+        "mode": safe_run_id(mode),
+        "event": event,
+        **(data or {}),
+        **fields,
+    }
+    events_path = _mode_events_path(run_id, mode, root)
+    events_path.parent.mkdir(parents=True, exist_ok=True)
+    with events_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True, default=str) + "\n")
 
 
-def write_status(
-    run_id: str,
+def write_status(run_id: str, mode: str, state: str, root: Path | str | None = None, **fields: Any) -> dict[str, Any]:
+    run_dir = mode_artifact_dir(mode, run_id, root)
+    payload = {
+        "run_id": safe_run_id(run_id),
+        "mode": safe_run_id(mode),
+        "state": state,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "artifacts": {
+            "run_dir": str(run_dir),
+            "request": str(run_dir / "request.json"),
+            "status": str(run_dir / "status.json"),
+            "events": str(run_dir / "events.jsonl"),
+        },
+        **fields,
+    }
+    atomic_write_json(run_dir / "status.json", payload)
+    return payload
+
+
+def create_run(
     mode: str,
-    *,
-    root: str | Path | None = None,
-    **updates: Any,
+    question: str = "",
+    run_id: str | None = None,
+    root: Path | str | None = None,
+    context_policy: dict[str, Any] | None = None,
+    **fields: Any,
 ) -> dict[str, Any]:
-    run_dir = mode_artifact_dir(mode, run_id, root=root)
-    status_path = run_dir / "status.json"
-    status = _read_json(status_path) if status_path.exists() else {"run_id": run_id, "mode": mode}
-    status.update(updates)
-    status["updated_at"] = utc_now()
-    if "last_heartbeat" not in updates:
-        status["last_heartbeat"] = status["updated_at"]
-    _write_json(status_path, status)
-    return status
+    actual_run_id = safe_run_id(run_id or new_run_id(mode))
+    actual_mode = safe_run_id(mode)
+    run_dir = mode_artifact_dir(actual_mode, actual_run_id, root)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    request = {
+        "run_id": actual_run_id,
+        "mode": actual_mode,
+        "question": question,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "context_policy": context_policy or build_context_policy(actual_mode),
+        **fields,
+    }
+    atomic_write_json(run_dir / "request.json", request)
+    status = write_status(actual_run_id, actual_mode, "running", root=root, question=question)
+    append_event(actual_run_id, actual_mode, "created", root=root, question=question)
+    return {
+        "run_id": actual_run_id,
+        "mode": actual_mode,
+        "run_dir": str(run_dir),
+        "request_path": str(run_dir / "request.json"),
+        "status_path": str(run_dir / "status.json"),
+        "events_path": str(run_dir / "events.jsonl"),
+        "request": request,
+        "status": status,
+    }
 
 
 def complete_run(
     run_id: str,
     mode: str,
-    *,
     artifact_paths: list[str] | None = None,
-    final_verdict: str = "",
-    verifier_status: str = "",
-    root: str | Path | None = None,
+    root: Path | str | None = None,
+    **fields: Any,
 ) -> dict[str, Any]:
-    append_event(run_id, mode, "run_completed", root=root, data={"final_verdict": final_verdict})
-    return write_status(
+    payload = write_status(
         run_id,
         mode,
+        "completed",
         root=root,
-        state="completed",
-        completed_at=utc_now(),
+        completed_at=datetime.now(timezone.utc).isoformat(),
         artifact_paths=artifact_paths or [],
-        final_verdict=final_verdict,
-        verifier_status=verifier_status,
-        needs_attention="",
+        **fields,
     )
+    append_event(run_id, mode, "completed", root=root, artifact_paths=artifact_paths or [])
+    return payload
 
 
-def fail_run(
-    run_id: str,
-    mode: str,
-    reason: str,
-    *,
-    needs_attention: str = "",
-    root: str | Path | None = None,
-) -> dict[str, Any]:
-    if needs_attention and needs_attention not in NEEDS_ATTENTION_STATES:
-        raise ValueError(f"Unknown needs-attention state: {needs_attention}")
-    append_event(run_id, mode, "run_failed", root=root, data={"reason": reason, "needs_attention": needs_attention})
-    return write_status(
-        run_id,
-        mode,
-        root=root,
-        state="failed",
-        failed_at=utc_now(),
-        failure_reason=reason,
-        needs_attention=needs_attention,
-    )
+def fail_run(run_id: str, mode: str, error: str, root: Path | str | None = None) -> dict[str, Any]:
+    payload = write_status(run_id, mode, "failed", root=root, error=error)
+    append_event(run_id, mode, "failed", root=root, error=error)
+    return payload
 
 
-def _iter_status_files(root: str | Path | None = None) -> list[Path]:
+def _read_mode_run(status_path: Path) -> dict[str, Any] | None:
+    try:
+        status = json.loads(status_path.read_text())
+        request_path = status_path.with_name("request.json")
+        events_path = status_path.with_name("events.jsonl")
+        request = json.loads(request_path.read_text()) if request_path.exists() else {}
+        events = read_event_tail(events_path, 1000)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return {
+        "run_id": status.get("run_id", status_path.parent.name),
+        "mode": status.get("mode", status_path.parent.parent.name),
+        "run_dir": str(status_path.parent),
+        "request": request,
+        "status": status,
+        "events": events,
+    }
+
+
+def get_run(run_id: str, root: Path | str | None = None) -> dict[str, Any] | None:
     base = artifact_root(root)
-    if not base.exists():
-        return []
-    return sorted(base.glob("*/*/status.json"), key=lambda path: path.stat().st_mtime, reverse=True)
-
-
-def list_runs(*, last: int = 10, mode: str | None = None, root: str | Path | None = None) -> list[dict[str, Any]]:
-    runs = []
-    for status_path in _iter_status_files(root):
-        status = _read_json(status_path)
-        if mode and status.get("mode") != mode:
-            continue
-        runs.append(status)
-        if len(runs) >= last:
-            break
-    return runs
-
-
-def get_run(run_id: str, *, root: str | Path | None = None) -> dict[str, Any] | None:
-    for status_path in _iter_status_files(root):
-        status = _read_json(status_path)
-        if status.get("run_id") == run_id:
-            request_path = status_path.parent / "request.json"
-            return {"status": status, "request": _read_json(request_path) if request_path.exists() else {}}
+    safe_id = safe_run_id(run_id)
+    for status_path in sorted(base.glob(f"*/{safe_id}/status.json")):
+        loaded = _read_mode_run(status_path)
+        if loaded:
+            return loaded
     return None
 
 
 def build_context_policy(
     mode: str,
     *,
-    review_context: str | None = None,
-    inherit_memory: str | None = None,
-    inherit_skills: str | None = None,
-    inherit_project_context: str | None = None,
+    review_context: str = "fresh",
+    inherit_memory: str = "summary",
+    inherit_skills: str = "selected",
+    inherit_project_context: str = "no",
+    memory_as_evidence: bool | None = None,
 ) -> dict[str, Any]:
-    policy = dict(DEFAULT_CONTEXT_POLICIES.get(mode, DEFAULT_CONTEXT_POLICIES["ask"]))
-    if review_context is not None:
-        if review_context not in VALID_REVIEW_CONTEXTS:
-            raise ValueError(f"review_context must be one of {sorted(VALID_REVIEW_CONTEXTS)}")
-        policy["review_context"] = review_context
-    if inherit_memory is not None:
-        if inherit_memory not in VALID_INHERIT_MEMORY:
-            raise ValueError(f"inherit_memory must be one of {sorted(VALID_INHERIT_MEMORY)}")
-        policy["inherit_memory"] = inherit_memory
-    if inherit_skills is not None:
-        if inherit_skills not in VALID_INHERIT_SKILLS:
-            raise ValueError(f"inherit_skills must be one of {sorted(VALID_INHERIT_SKILLS)}")
-        policy["inherit_skills"] = inherit_skills
-    if inherit_project_context is not None:
-        if inherit_project_context not in VALID_INHERIT_PROJECT_CONTEXT:
-            raise ValueError(f"inherit_project_context must be one of {sorted(VALID_INHERIT_PROJECT_CONTEXT)}")
-        policy["inherit_project_context"] = inherit_project_context
-    policy["mode"] = mode
-    return policy
+    use_memory_as_evidence = bool(memory_as_evidence) if memory_as_evidence is not None else inherit_memory == "full"
+    return {
+        "mode": mode,
+        "review_context": review_context,
+        "inherit_memory": inherit_memory,
+        "inherit_skills": inherit_skills,
+        "inherit_project_context": inherit_project_context,
+        "memory_as_evidence": use_memory_as_evidence,
+    }
 
 
-def review_and_fix_policy(target: str, *, worktree: str | None = None) -> dict[str, Any]:
+def review_and_fix_policy(target: str, worktree: str | None = None) -> dict[str, Any]:
     if not worktree:
         return {
-            "allowed": False,
             "target": target,
+            "allowed": False,
             "needs_attention": "needs_repo_access",
-            "reason": "review-and-fix lanes require an explicit isolated worktree",
+            "safe_default": "review_only",
+            "resume_hint": "Provide an isolated worktree for review-and-fix.",
         }
     return {
-        "allowed": True,
         "target": target,
         "worktree": worktree,
-        "needs_attention": "",
+        "allowed": True,
         "write_policy": "isolated_worktree_only",
+    }
+
+
+class AskRunState:
+    """Append-only event log plus atomic status/request artifacts for one ask run."""
+
+    def __init__(
+        self,
+        ask_id: str,
+        output_root: Path | str | None = None,
+        *,
+        overwrite: bool = False,
+        resume: bool = False,
+    ) -> None:
+        self.ask_id = safe_run_id(ask_id)
+        self.output_root = Path(output_root).expanduser() if output_root else default_run_root()
+        self.run_dir = self.output_root / self.ask_id
+        self.request_path = self.run_dir / f"{self.ask_id}.request.json"
+        self.status_path = self.run_dir / f"{self.ask_id}.status.json"
+        self.events_path = self.run_dir / f"{self.ask_id}.events.jsonl"
+        self.started_at = datetime.now(timezone.utc).isoformat()
+        self.state = "created"
+        if resume and overwrite:
+            raise ValueError("Use either resume or overwrite, not both")
+        if resume:
+            if not self.run_dir.exists():
+                raise FileNotFoundError(f"Run does not exist for resume: {self.run_dir}")
+            state = self._existing_status_state()
+            if state not in RESUMABLE_STATES:
+                raise FileExistsError(f"Run is not resumable: {self.run_dir} state={state or 'unknown'}")
+        if self.run_dir.exists() and not overwrite and not resume:
+            raise FileExistsError(f"Run already exists: {self.run_dir}")
+        if overwrite and self.run_dir.exists():
+            if self.run_dir.is_symlink():
+                raise FileExistsError(f"Refusing to overwrite symlinked run dir: {self.run_dir}")
+            shutil.rmtree(self.run_dir)
+        self.run_dir.mkdir(parents=True, exist_ok=resume)
+
+    @property
+    def artifacts(self) -> dict[str, str]:
+        return {
+            "request": str(self.request_path),
+            "status": str(self.status_path),
+            "events": str(self.events_path),
+            "run_dir": str(self.run_dir),
+        }
+
+    def write_request(self, payload: dict[str, Any]) -> None:
+        request = {
+            "ask_id": self.ask_id,
+            "created_at": self.started_at,
+            "runtime_protocol_version": RUNTIME_PROTOCOL_VERSION,
+            **payload,
+        }
+        atomic_write_json(self.request_path, request)
+        self.event("request_written")
+        self.update("running", request=request)
+
+    def step_started(self, name: str, **fields: Any) -> None:
+        self.event(f"{name}_started", **fields)
+        self.update("running", current_step=name, **fields)
+
+    def step_finished(self, name: str, **fields: Any) -> None:
+        self.event(f"{name}_finished", **fields)
+        self.update("running", current_step=name, **fields)
+
+    def event(self, event_type: str, **fields: Any) -> None:
+        payload = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "ask_id": self.ask_id,
+            "event": event_type,
+            **fields,
+        }
+        self.events_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.events_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, sort_keys=True, default=str) + "\n")
+
+    def add_artifacts(self, artifacts: dict[str, Any]) -> None:
+        payload = self._read_current_status()
+        merged = dict(payload.get("artifacts", self.artifacts))
+        for key, value in artifacts.items():
+            if value:
+                merged[key] = str(value)
+        payload["artifacts"] = merged
+        payload["updated_at"] = datetime.now(timezone.utc).isoformat()
+        atomic_write_json(self.status_path, payload)
+        self.event("artifacts_registered", artifacts={k: str(v) for k, v in artifacts.items() if v})
+
+    def update(self, state: str, **fields: Any) -> None:
+        self.state = state
+        current = self._read_current_status()
+        artifacts = dict(self.artifacts)
+        artifacts.update(current.get("artifacts", {}))
+        payload = {
+            "ask_id": self.ask_id,
+            "state": state,
+            "started_at": self.started_at,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "runtime_protocol_version": RUNTIME_PROTOCOL_VERSION,
+            "artifacts": artifacts,
+            **fields,
+        }
+        if "needs_attention" in current and "needs_attention" not in payload:
+            payload["needs_attention"] = current["needs_attention"]
+        atomic_write_json(self.status_path, payload)
+        self._append_index(payload)
+
+    def needs_attention(
+        self,
+        *,
+        reason: str,
+        question: str,
+        safe_default: str = "pause",
+        resume_hint: str = "",
+        **fields: Any,
+    ) -> dict[str, Any]:
+        payload = {
+            "reason": reason,
+            "question": question,
+            "safe_default": safe_default,
+            "resume_hint": resume_hint,
+            **fields,
+        }
+        self.event("needs_attention", **payload)
+        self.update("needs_attention", needs_attention=payload)
+        return payload
+
+    def finish(self, result: dict[str, Any], state: str | None = None) -> None:
+        final_state = state or ("answered" if result.get("items") else "no_results")
+        summary = {
+            "question": result.get("question", ""),
+            "scope": result.get("scope", ""),
+            "items_count": len(result.get("items", [])),
+            "auto_learned": bool(result.get("auto_learned")),
+            "oracle_enabled": bool(result.get("oracle")),
+            "deep_review_enabled": bool(result.get("deep_review")),
+            "session_path": result.get("session_path", ""),
+        }
+        self.event("finished", state=final_state, **summary)
+        self.update(final_state, result_summary=summary)
+
+    def fail(self, exc: BaseException) -> None:
+        error = {"type": type(exc).__name__, "message": str(exc)}
+        self.event("failed", error=error)
+        self.update("failed", error=error)
+
+    def _read_current_status(self) -> dict[str, Any]:
+        if not self.status_path.exists():
+            return {
+                "ask_id": self.ask_id,
+                "state": self.state,
+                "started_at": self.started_at,
+                "runtime_protocol_version": RUNTIME_PROTOCOL_VERSION,
+                "artifacts": self.artifacts,
+            }
+        try:
+            return json.loads(self.status_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            return {
+                "ask_id": self.ask_id,
+                "state": self.state,
+                "started_at": self.started_at,
+                "runtime_protocol_version": RUNTIME_PROTOCOL_VERSION,
+                "artifacts": self.artifacts,
+            }
+
+    def _existing_status_state(self) -> str | None:
+        if not self.status_path.exists():
+            return None
+        try:
+            payload = json.loads(self.status_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            return None
+        state = payload.get("state")
+        return str(state) if state else None
+
+    def _append_index(self, status_payload: dict[str, Any]) -> None:
+        entry = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "ask_id": self.ask_id,
+            "state": status_payload.get("state", self.state),
+            "command": status_payload.get("request", {}).get("command", "ask"),
+            "question": status_payload.get("request", {}).get("question", ""),
+            "started_at": status_payload.get("started_at", self.started_at),
+            "updated_at": status_payload.get("updated_at", ""),
+            "status_path": str(self.status_path),
+            "_status_path": str(self.status_path),
+            "run_dir": str(self.run_dir),
+        }
+        index_path = self.output_root / INDEX_FILENAME
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        with index_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, sort_keys=True, default=str) + "\n")
+
+
+class NoopRunState:
+    """Drop-in run-state used when artifact persistence is unavailable."""
+
+    disabled = True
+
+    def __init__(self, ask_id: str, reason: str = "") -> None:
+        self.ask_id = safe_run_id(ask_id)
+        self.reason = reason
+        self.state = "disabled"
+
+    @property
+    def artifacts(self) -> dict[str, str]:
+        return {"runtime_artifacts": "disabled", "reason": self.reason}
+
+    def write_request(self, payload: dict[str, Any]) -> None:
+        return None
+
+    def step_started(self, name: str, **fields: Any) -> None:
+        return None
+
+    def step_finished(self, name: str, **fields: Any) -> None:
+        return None
+
+    def event(self, event_type: str, **fields: Any) -> None:
+        return None
+
+    def add_artifacts(self, artifacts: dict[str, Any]) -> None:
+        return None
+
+    def update(self, state: str, **fields: Any) -> None:
+        self.state = state
+
+    def needs_attention(
+        self,
+        *,
+        reason: str,
+        question: str,
+        safe_default: str = "pause",
+        resume_hint: str = "",
+        **fields: Any,
+    ) -> dict[str, Any]:
+        return {
+            "reason": reason,
+            "question": question,
+            "safe_default": safe_default,
+            "resume_hint": resume_hint,
+            **fields,
+        }
+
+    def finish(self, result: dict[str, Any], state: str | None = None) -> None:
+        self.state = state or ("answered" if result.get("items") else "no_results")
+
+    def fail(self, exc: BaseException) -> None:
+        self.state = "failed"
+
+
+def resolve_run_target(target: str, output_root: Path | str | None = None) -> Path:
+    path = Path(target).expanduser()
+    if path.exists():
+        if path.is_dir():
+            matches = sorted(path.glob("*.status.json"))
+            if matches:
+                return matches[-1]
+        return path
+
+    root = Path(output_root).expanduser() if output_root else default_run_root()
+    run_dir = root / safe_run_id(target)
+    matches = sorted(run_dir.glob("*.status.json"))
+    if matches:
+        return matches[-1]
+    return run_dir / f"{safe_run_id(target)}.status.json"
+
+
+def read_status(target: str, tail_events: int = 0, output_root: Path | str | None = None) -> dict[str, Any]:
+    status_path = resolve_run_target(target, output_root)
+    if not status_path.exists():
+        raise FileNotFoundError(f"Run status not found: {target}")
+    payload = json.loads(status_path.read_text())
+    if tail_events > 0:
+        events_path = Path(payload.get("artifacts", {}).get("events", ""))
+        payload["event_tail"] = read_event_tail(events_path, tail_events)
+    return payload
+
+
+def read_event_tail(events_path: Path, limit: int) -> list[dict[str, Any]]:
+    if not events_path.exists():
+        return []
+    lines = events_path.read_text().splitlines()[-limit:]
+    events = []
+    for line in lines:
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            events.append({"event": "unparseable_event", "raw": line})
+    return events
+
+
+def watch_status(
+    target: str,
+    interval: float = 1.0,
+    tail_events: int = 5,
+    timeout_seconds: float = 300,
+    output_root: Path | str | None = None,
+) -> None:
+    last_state = None
+    deadline = time.time() + timeout_seconds
+    while True:
+        payload = read_status(target, tail_events=tail_events, output_root=output_root)
+        state = payload.get("state", "unknown")
+        if state != last_state:
+            print(json.dumps(payload, indent=2, sort_keys=True, default=str))
+            last_state = state
+        if state in TERMINAL_STATES:
+            return
+        if time.time() >= deadline:
+            raise TimeoutError(f"Timed out watching /ask run '{target}' after {timeout_seconds:g}s")
+        time.sleep(interval)
+
+
+def list_runs(
+    output_root: Path | str | None = None,
+    limit: int = 20,
+    *,
+    root: Path | str | None = None,
+    last: int | None = None,
+    mode: str | None = None,
+) -> list[dict[str, Any]]:
+    if root is not None or last is not None or mode is not None:
+        return _list_mode_runs(root=root, limit=last or limit, mode=mode)
+    run_root = Path(output_root).expanduser() if output_root else default_run_root()
+    if not run_root.exists():
+        return _list_mode_runs(root=None, limit=limit) if output_root is None else []
+    indexed = _list_runs_from_index(run_root, limit=limit)
+    if indexed:
+        runs = indexed[:limit]
+        if output_root is None:
+            runs.extend(_list_mode_runs(root=None, limit=limit))
+            runs.sort(key=lambda item: str(item.get("updated_at") or item.get("ts") or ""), reverse=True)
+        return runs[:limit]
+    statuses: list[dict[str, Any]] = []
+    for status_path in run_root.glob("*/*.status.json"):
+        try:
+            payload = json.loads(status_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        payload["_status_path"] = str(status_path)
+        statuses.append(payload)
+    if output_root is None:
+        statuses.extend(_list_mode_runs(root=None, limit=limit))
+    statuses.sort(key=lambda item: str(item.get("updated_at") or item.get("started_at") or ""), reverse=True)
+    return statuses[:limit]
+
+
+def _list_mode_runs(root: Path | str | None = None, limit: int = 20, mode: str | None = None) -> list[dict[str, Any]]:
+    base = artifact_root(root)
+    if not base.exists():
+        return []
+    pattern = f"{safe_run_id(mode)}/*/status.json" if mode else "*/status.json"
+    status_paths = list(base.glob(pattern)) if mode else list(base.glob("*/*/status.json"))
+    runs: list[dict[str, Any]] = []
+    for status_path in status_paths:
+        loaded = _read_mode_run(status_path)
+        if not loaded:
+            continue
+        status = loaded["status"]
+        runs.append(
+            {
+                "run_id": loaded["run_id"],
+                "mode": loaded["mode"],
+                "state": status.get("state", ""),
+                "updated_at": status.get("updated_at", ""),
+                "run_dir": loaded["run_dir"],
+                "status": status,
+            }
+        )
+    runs.sort(key=lambda item: str(item.get("updated_at", "")), reverse=True)
+    return runs[:limit]
+
+
+def _list_runs_from_index(root: Path, limit: int = 20) -> list[dict[str, Any]]:
+    index_path = root / INDEX_FILENAME
+    if not index_path.exists():
+        return []
+    latest: dict[str, dict[str, Any]] = {}
+    for line in index_path.read_text().splitlines():
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        ask_id = str(entry.get("ask_id", ""))
+        status_path = Path(str(entry.get("status_path", "")))
+        if not ask_id or not status_path.exists():
+            continue
+        latest[ask_id] = entry
+    runs = sorted(latest.values(), key=lambda item: str(item.get("updated_at") or item.get("ts") or ""), reverse=True)
+    return runs[:limit]
+
+
+def _validated_run_status(run_dir: Path) -> dict[str, Any] | None:
+    if run_dir.is_symlink():
+        return None
+    status_path = run_dir / f"{run_dir.name}.status.json"
+    if not status_path.is_file():
+        return None
+    try:
+        payload = json.loads(status_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    if payload.get("runtime_protocol_version") != RUNTIME_PROTOCOL_VERSION:
+        return None
+    if payload.get("ask_id") != run_dir.name:
+        return None
+    artifact_run_dir = payload.get("artifacts", {}).get("run_dir")
+    if not artifact_run_dir:
+        return None
+    try:
+        if Path(artifact_run_dir).expanduser().resolve() != run_dir.resolve():
+            return None
+    except OSError:
+        return None
+    return payload
+
+
+def prune_runs(output_root: Path | str | None = None, older_than_days: int = 14, dry_run: bool = False) -> dict[str, Any]:
+
+    root = Path(output_root).expanduser() if output_root else default_run_root()
+    root = root.resolve()
+    cutoff = time.time() - older_than_days * 24 * 60 * 60
+    removed: list[str] = []
+    kept: list[str] = []
+    if not root.exists():
+        return {"run_root": str(root), "older_than_days": older_than_days, "dry_run": dry_run, "removed": [], "kept": []}
+    for run_dir in sorted(path for path in root.iterdir() if path.is_dir() or path.is_symlink()):
+        try:
+            resolved_parent = run_dir.resolve().parent
+        except OSError:
+            kept.append(str(run_dir))
+            continue
+        if resolved_parent != root:
+            kept.append(str(run_dir))
+            continue
+        if _validated_run_status(run_dir) is None:
+            kept.append(str(run_dir))
+            continue
+        try:
+            mtime = run_dir.stat().st_mtime
+        except OSError:
+            kept.append(str(run_dir))
+            continue
+        if mtime >= cutoff:
+            kept.append(str(run_dir))
+            continue
+        removed.append(str(run_dir))
+        if not dry_run:
+            shutil.rmtree(run_dir)
+    return {
+        "run_root": str(root),
+        "older_than_days": older_than_days,
+        "dry_run": dry_run,
+        "removed": removed,
+        "kept": kept,
     }

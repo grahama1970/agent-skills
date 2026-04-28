@@ -47,8 +47,7 @@ Commands:
   learn <topic>     Discover, ingest, and extract knowledge about a topic
   ask <question>    Query accumulated knowledge (with optional auto-learn)
   status            Show learning progress and task-monitor state
-  doctor            Preflight memory, dogpile, scillm, subagent, specs, chains
-  chains            Inspect saved review-chain specs
+  doctor            Check runtime prerequisites and artifact writability
   nightly           Run scheduled persona update (incremental learning)
   os learn          Crawl and index embry-os internals (skills, packages, config)
   os ask <question> Query OS knowledge from memory (scope=os)
@@ -66,6 +65,10 @@ Learn Options:
   --max-books <n>       Max books to discover (default: 5)
   --max-videos <n>      Max YouTube videos to process (default: 3)
   --dry-run             Preview without storing
+  --ask-id <id>         Stable runtime artifact id for this learn call
+  --run-output-root <dir> Directory for request/status/events artifacts
+  --overwrite           Replace an existing run directory for --ask-id
+  --resume              Resume a non-terminal existing run directory for --ask-id
   --debug               Enable debug logging
 
 Ask Options:
@@ -100,34 +103,47 @@ Ask Options:
   --deep-review-target <target> Explicit target: paths, diff, plan, manifest, or artifact
   --deep-reviewers <n> Reviewer breadth requested for deep review
   --deep-review-focus <f> Comma-separated deep-review focus labels
-  --run-id <id>      Explicit run id for artifact/status correlation
-  --review-context <fresh|fork> Context mode for review/oracle child runs
-  --inherit-memory <yes|no|summary> Memory inheritance policy
-  --inherit-skills <yes|no|selected> Skill inheritance policy
-  --inherit-project-context <yes|no> Project-context inheritance policy
+  --chain <name|path> Saved review chain spec
+  --reviewer-spec <name|path> Reviewer spec (repeatable)
+  --dry-run             Emit execution spec/risk analysis without mutation
   --dogpile <auto|off|force> Freshness policy for oracle subagents
+  --ask-id <id>      Stable runtime artifact id for this ask call
+  --run-output-root <dir> Directory for request/status/events artifacts
+  --overwrite           Replace an existing run directory for --ask-id
+  --resume              Resume a non-terminal existing run directory for --ask-id
   --json                JSON output
   --debug               Enable debug logging
 
 Status Options:
   --scope <scope>       Filter by scope
-  --runs                Show recent /ask runtime runs
-  --last <n>            Number of recent runs (default: 10)
-  --id <run_id>         Show one runtime run
+  --run <id|path>       Show runtime status for an ask id, run dir, or status file
+  --tail-events <n>     Include the last N runtime events with --run
+  --watch               Watch runtime status until terminal
+  --watch-timeout-seconds <s> Maximum seconds to wait with --watch
+  --poll-interval-seconds <s> Polling interval for --watch
+  --runs                List recent runtime runs
+  --limit <n>           Maximum runs to list with --runs
+  --prune               Prune old runtime run directories
+  --older-than-days <n> Age threshold for --prune (default: 14)
+  --dry-run             Preview --prune without deleting
+  --run-output-root <dir> Runtime artifact root for --run ids
   --json                JSON output
   --debug               Enable debug logging
-
-Chains Options:
-  list --json           List saved chains
-  show <name> --json    Show one saved chain
-  validate --json       Validate all saved chains
 
 Nightly Options:
   --scope <scope>       Memory scope to update (default: ask)
   --persona <name>      Update a single persona by name
   --dry-run             Preview without storing
+  --ask-id <id>         Stable runtime artifact id for this nightly call
+  --run-output-root <dir> Directory for request/status/events artifacts
+  --overwrite           Replace an existing run directory for --ask-id
+  --resume              Resume a non-terminal existing run directory for --ask-id
   --json                Output summary as JSON
   --debug               Enable debug logging
+
+Doctor Options:
+  --live                Run live subprocess/service checks
+  --json                JSON output
 
 Examples:
   # Learn about a topic
@@ -200,10 +216,6 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.doctor "$@"
         ;;
-    chains)
-        shift
-        exec uv run --project "$SCRIPT_DIR" python -m ask.chains_cli "$@"
-        ;;
     nightly)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.nightly "$@"
@@ -214,7 +226,7 @@ case "${1:-help}" in
         shift 2>/dev/null || true
         case "$subcmd" in
             learn)
-                exec uv run --project "$SCRIPT_DIR" python -m ask.os_learn learn "$@"
+                exec uv run --project "$SCRIPT_DIR" python -m ask.os_learn "$@"
                 ;;
             ask)
                 exec uv run --project "$SCRIPT_DIR" python -m ask.os_query ask "$@"

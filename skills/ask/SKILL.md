@@ -86,7 +86,7 @@ composes:
 
 # ask
 
-Zero cognitive-load learning and querying interface. Runtime modes:
+Zero cognitive-load learning and querying interface. Six modes:
 
 1. **Learn Mode** — Discover, ingest, and extract knowledge about a topic or persona
 2. **Ask Mode** — Query accumulated knowledge with Federated Taxonomy multi-hop traversal
@@ -94,9 +94,12 @@ Zero cognitive-load learning and querying interface. Runtime modes:
 4. **Nightly Mode** — Scheduled incremental updates to persona knowledge bases
 5. **OS Mode** — Learn about and query embry-os internals, skills, packages, and runtime health
 6. **Deep Review Mode** — High-reasoning, read-only review with `review.md` and `review.json`
-7. **Doctor Mode** — Preflight `/memory`, `/dogpile`, `/scillm`, `/subagent-runner`, reviewer specs, chains, and artifact paths
-8. **Run Status Mode** — Inspect recent `/ask` run ids, artifact directories, verifier status, and needs-attention state
-9. **Chains Mode** — Inspect and validate saved deep-review and parallel-review chain specs
+
+Every `ask` call also writes runtime artifacts so long oracle/review runs are
+inspectable without guessing whether the runner is blocked in retrieval,
+persona routing, oracle synthesis, or artifact verification.
+The same runtime protocol is available for `learn`, `nightly`, `os learn`,
+`os ask`, and `os health`.
 
 ## Zero Cognitive Load for Project Agents
 
@@ -197,15 +200,6 @@ cd .pi/skills/ask
 # Check learning progress (includes task-monitor state with ETA)
 ./run.sh status --scope behavioral
 
-# Preflight ask dependencies and runtime objects
-./run.sh doctor --json
-
-# Inspect recent ask/oracle/review runs
-./run.sh status --runs --json
-
-# Inspect saved review workflows
-./run.sh chains list --json
-
 # Run nightly persona update
 ./run.sh nightly --scope behavioral
 ```
@@ -258,15 +252,94 @@ Options:
   --deep-review-fallback-policy <fail_closed|warn> Downgrade behavior
   --deep-review-persist <summary|full> Persist compact metadata or full review state
   --deep-review-output-root <dir> Artifact root (default: .ask_artifacts/deep-review)
-  --run-id <id>           Explicit run id for artifact/status correlation
-  --review-context <fresh|fork> Child context policy for oracle/review runs
-  --inherit-memory <yes|no|summary> Memory inheritance policy
-  --inherit-skills <yes|no|selected> Skill inheritance policy
-  --inherit-project-context <yes|no> Project-context inheritance policy
+  --chain <name|path>   Saved review chain spec (e.g. deep-review-safety)
+  --reviewer-spec <name|path> Reviewer role/focus spec (repeatable)
   --dogpile <auto|off|force> Freshness policy for date-sensitive oracle prompts
+  --dry-run             Emit execution spec/risk analysis without mutation
+  --ask-id <id>          Stable runtime artifact id for this ask call
+  --run-output-root <dir> Runtime artifact root (default: .ask_artifacts/runs or ASK_RUN_OUTPUT_DIR)
+  --overwrite            Replace an existing run directory for --ask-id
+  --resume               Resume a non-terminal existing run directory for --ask-id
   --raw                   Return raw memory results (no synthesis)
   --json                  JSON output
   --debug                 Enable debug logging
+```
+
+Runtime artifacts:
+
+```text
+.ask_artifacts/runs/<ask_id>/
+  <ask_id>.request.json
+  <ask_id>.status.json
+  <ask_id>.events.jsonl
+.ask_artifacts/runs/index.jsonl
+```
+
+`request.json` captures the normalized routed request before mutation or oracle
+execution. `status.json` is atomically replaced as the run progresses.
+`events.jsonl` is append-only and records lifecycle events such as
+`request_written`, `ask_started`, `memory_recall_started`,
+`memory_recall_finished`, `evidence_case_started`, `synthesis_finished`,
+`finished`, and `failed`.
+
+When a run cannot safely continue, `status.json` uses `state:
+needs_attention` and includes a structured `needs_attention` object with
+`reason`, `question`, `safe_default`, and `resume_hint`. Deep review pauses this
+way when the target is missing instead of guessing repo scope.
+
+Inspect a run:
+
+```bash
+./run.sh status --run <ask_id> --tail-events 25
+./run.sh status --run .ask_artifacts/runs/<ask_id> --json
+./run.sh status --run <ask_id> --watch --watch-timeout-seconds 300
+./run.sh status --runs --limit 10
+./run.sh status --prune --older-than-days 14 --dry-run
+```
+
+Runtime safety:
+- Generated run IDs include timestamp, question digest, and random suffix to avoid same-second collisions.
+- Explicit `--ask-id` reuse is rejected by default so event logs cannot mix separate runs.
+- `--overwrite` is explicit and replaces a prior run directory; `--resume` is explicit and only allowed for non-terminal runs.
+- Plain `/ask` degrades to a no-op runtime state if artifact writes fail; deep review and parallel review fail closed.
+- `status --prune` removes only validated direct-child `ask.runtime.v1` run directories whose `ask_id` and `artifacts.run_dir` match the directory.
+- `status --watch` has a bounded timeout and exits nonzero if the run never reaches a terminal state.
+- Runtime artifacts are validated by doctor against the deterministic request/status/event schema.
+- `status --runs` reads the append-only `index.jsonl` first, then falls back to directory scanning.
+
+Dry-run preview:
+
+```bash
+./run.sh ask "safe to proceed?" --deep-review --dry-run --json
+./run.sh learn "Lisa Feldman Barrett" --dry-run
+./run.sh nightly --dry-run --json
+./run.sh os learn --dry-run --json
+```
+
+Dry-run mode emits `ask.dry_run.v1` execution specs with planned steps, external
+calls, filesystem writes, memory writes, and risk notes. It exits before runtime
+artifacts, memory writes, oracle calls, dogpile calls, or ingestion subprocesses.
+
+Saved review specs:
+
+```bash
+./run.sh ask "review this runtime layer" \
+  --chain deep-review-safety \
+  --reviewer-spec security \
+  --reviewer-spec qa \
+  --deep-review-target src/ask/run_state.py
+```
+
+Built-in specs live under `docs/chains/` and `docs/reviewers/`. Chain specs set
+deterministic workflow options; reviewer specs contribute protocol role/focus
+labels without making the agent infer the review contract.
+
+Preflight the runtime:
+
+```bash
+./run.sh doctor
+./run.sh doctor --json
+./run.sh doctor --live --json
 ```
 
 **Oracle Synthesis:**
@@ -361,11 +434,6 @@ persona = domain/voice/source-of-judgment
 protocol_role = job in the review loop
 ```
 
-Protocol roles are first-class reviewer specs in `docs/reviewers/*.md`.
-Each spec uses YAML frontmatter for model, reasoning, fallback models, tools,
-write policy, inheritance policy, and required output sections. Do not bury new
-reviewer behavior only in this `SKILL.md`; add or update a reviewer spec.
-
 Explicit role assignment:
 
 ```bash
@@ -446,17 +514,8 @@ Deep review writes:
 .ask_artifacts/deep-review/<timestamp>/review.json
 ```
 
-Every serious run also has a standard run directory:
-
-```text
-.ask_artifacts/<mode>/<run_id>/request.json
-.ask_artifacts/<mode>/<run_id>/status.json
-.ask_artifacts/<mode>/<run_id>/events.jsonl
-```
-
-Saved review chains live in `docs/chains/*.chain.yaml`. Use them for repeatable
-deep-review and parallel-review orchestration instead of adding more one-off
-prompt branches.
+When deep review runs under an `--ask-id`, those `review.md` and `review.json`
+paths are also registered in `<ask_id>.status.json` under `artifacts`.
 
 Deep review verifier rules:
 - Reject missing or `not_assessed` required sections.
@@ -639,6 +698,10 @@ Options:
   --max-books <n>         Max books to discover (default: 5)
   --max-videos <n>        Max YouTube videos to process (default: 3)
   --dry-run               Preview what would be ingested without storing
+  --ask-id <id>           Stable runtime artifact id for this learn call
+  --run-output-root <dir> Runtime artifact root (default: .ask_artifacts/runs or ASK_RUN_OUTPUT_DIR)
+  --overwrite             Replace an existing run directory for --ask-id
+  --resume                Resume a non-terminal existing run directory for --ask-id
   --debug                 Enable debug logging
 ```
 
@@ -662,14 +725,20 @@ the skill automatically:
 
 ```bash
 ./run.sh status [options]
-./run.sh status --runs --json
-./run.sh status --id <run_id>
 
 Options:
   --scope <scope>         Filter by scope
-  --runs                  Show recent /ask runtime runs
-  --last <n>              Number of recent runs (default: 10)
-  --id <run_id>           Show one runtime run
+  --run <id|path>         Show runtime status for an ask id, run directory, or status file
+  --tail-events <n>       Include the last N runtime events with --run
+  --watch                 Watch runtime status until terminal
+  --watch-timeout-seconds <n> Maximum seconds to wait with --watch
+  --poll-interval-seconds <n> Polling interval for --watch
+  --runs                  List recent runtime runs
+  --limit <n>             Maximum runs to list with --runs
+  --prune                 Prune old runtime run directories
+  --older-than-days <n>   Age threshold for --prune (default: 14)
+  --dry-run               Preview --prune without deleting
+  --run-output-root <dir> Runtime artifact root for --run ids
   --json                  JSON output
   --debug                 Enable debug logging
 ```
@@ -679,35 +748,6 @@ Shows:
 - Persona profiles
 - Q-R-A pairs count
 - Last task-monitor state (steps, timing, stats, ETA)
-- Recent run ids, artifact dirs, verifier status, and needs-attention state when `--runs` or `--id` is used
-
-### `doctor` — Runtime Preflight
-
-```bash
-./run.sh doctor [options]
-
-Options:
-  --artifact-root <dir>   Override artifact root for the writable check
-  --json                  JSON output
-```
-
-Checks:
-- `/memory`, `/dogpile`, `/scillm`, `/subagent-runner`, and `/monitor-personas` runner availability
-- artifact directory writability
-- `git status` readability
-- reviewer frontmatter specs
-- saved review-chain specs
-
-### `chains` — Saved Review Workflows
-
-```bash
-./run.sh chains list [--json]
-./run.sh chains show deep-review [--json]
-./run.sh chains validate [--json]
-```
-
-Use this command to inspect the saved `deep-review` and `parallel-review`
-state-machine specs before launching expensive review runs.
 
 ### `nightly` — Scheduled Persona Updates
 
@@ -718,6 +758,10 @@ Options:
   --scope <scope>         Memory scope to update (default: ask)
   --persona <name>        Update a single persona by name
   --dry-run               Preview without storing
+  --ask-id <id>           Stable runtime artifact id for this nightly call
+  --run-output-root <dir> Runtime artifact root (default: .ask_artifacts/runs or ASK_RUN_OUTPUT_DIR)
+  --overwrite             Replace an existing run directory for --ask-id
+  --resume                Resume a non-terminal existing run directory for --ask-id
   --json                  Output summary as JSON
   --debug                 Enable debug logging
 ```
@@ -735,14 +779,17 @@ Options:
 # Index OS knowledge (skills, packages, config)
 ./run.sh os learn --depth quick --dry-run
 ./run.sh os learn --depth standard
+./run.sh os learn --depth quick --dry-run --ask-id os-preview
 
 # Query OS knowledge
 ./run.sh os ask "what does the /dogpile skill do?"
 ./run.sh os ask "which skills provide memory?" --json
+./run.sh os ask "which skills provide memory?" --ask-id os-memory-query
 
 # Query runtime health
 ./run.sh os health "is memory healthy?"
 ./run.sh os health "check workstation" --subsystem workstation
+./run.sh os health "is memory healthy?" --ask-id os-memory-health
 
 # Classify query intent
 ./run.sh intent "how does the memory skill work?"
@@ -888,6 +935,7 @@ Query: "How does stress affect decision-making?"
 | `ASK_ORACLE_IDLE_TIMEOUT` | Override subagent silence timeout before `stalled` (default: `300`) |
 | `ASK_ORACLE_HEARTBEAT_INTERVAL` | Override heartbeat write interval seconds (default: `30`) |
 | `ASK_ORACLE_BACKEND` | Override oracle backend (default: `auto`) |
+| `ASK_RUN_OUTPUT_DIR` | Override runtime artifact root for request/status/events files |
 | `ASK_SUBAGENT_RUNNER` | Path to subagent-runner `run.sh` |
 | `ASK_SUBAGENT_OUTPUT_DIR` | Output directory for oracle subagent artifacts |
 | `ASK_MEMORY_RUN` | Path to memory `run.sh` exposed to oracle subagents |

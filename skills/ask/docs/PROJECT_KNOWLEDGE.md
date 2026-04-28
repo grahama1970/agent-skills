@@ -1,6 +1,6 @@
 # Project Knowledge: ask
 
-**Last updated:** 2026-04-27 13:55 by agent
+**Last updated:** 2026-04-28 09:25 by agent
 **Status:** Active development
 
 This file is the human-readable current-state projection for `/ask`
@@ -34,6 +34,14 @@ curated context. Memory recall is context, not evidence.
   from pass-based prompts, bounded evidence, reviewer roles, and verifier gates.
 - Deep review now emits both `review.md` and `review.json` under
   `.ask_artifacts/deep-review/<timestamp>/`.
+- Runtime observability now uses per-run request/status/events artifacts for
+  `ask`, `learn`, `nightly`, `os learn`, `os ask`, and `os health`.
+- Deep-review `review.md` and `review.json` paths are registered back into
+  `<ask_id>.status.json` when an `--ask-id` is used.
+- Runs can pause with `state: needs_attention` instead of guessing, starting
+  with missing deep-review targets.
+- Runtime artifacts can be listed and pruned with `status --runs` and
+  `status --prune`.
 - ask README.md now mirrors the structural onboarding shape of pi-subagents: installation, try-first prompts, what happens, modes, workflows, command reference, configuration, artifacts, development knowledge, validation, troubleshooting, and non-goals.
 
 ## Recent Decisions
@@ -50,10 +58,9 @@ curated context. Memory recall is context, not evidence.
 | 2026-04-27 | Default normal oracle reasoning to `high`, not `xhigh`. | `xhigh` is too slow for default chat use; keep it for explicit calls and deep-review gates. |
 | 2026-04-27 | Make semantic E2E validation mandatory. | Empty answers, refusal-style non-answers, missing domain grounding, wrong persona routing, and missing roundtable participants must fail. |
 | 2026-04-27 | Keep domain-specific cybersecurity prompts as sanity/E2E fixtures, not README onboarding content. | README should stay developer/provider-neutral while tests prove the real SPARTA/persona/roundtable path. |
-| 2026-04-27 | Add explicit run ids and standardized artifact directories. | `/ask status --runs` needs stable runtime objects instead of buried logs. |
-| 2026-04-27 | Move reviewer roles into frontmatter specs. | Protocol roles should be inspectable, reusable, and not hidden inside one giant `SKILL.md`. |
-| 2026-04-27 | Store saved review chains as YAML specs. | Deep review and parallel review should be repeatable workflows, not ad hoc prompt branches. |
-| 2026-04-27 | Treat review-and-fix as a separate worktree-isolated lane. | `/ask` deep review remains read-only; implementation writes require explicit isolation. |
+| 2026-04-28 | Add runtime artifacts across the primary `/ask` command family. | Long learning, OS, oracle, and review runs need inspectable state without tailing logs. |
+| 2026-04-28 | Add `needs_attention` as a pause state. | When the request is under-specified, `/ask` should fail closed with a fix hint instead of guessing scope. |
+| 2026-04-28 | Add runtime artifact retention controls. | `.ask_artifacts/runs` needs operator-visible pruning rather than unbounded growth. |
 
 ## Open Questions
 
@@ -80,13 +87,9 @@ curated context. Memory recall is context, not evidence.
 | `src/ask/ask_routing.py` | Natural-language route inference |
 | `src/ask/ask_oracle.py` | Oracle and subagent-backed synthesis |
 | `src/ask/deep_review.py` | Deep-review prompt, artifact, and verifier support |
-| `src/ask/run_state.py` | Run ids, standardized artifact directories, status files, events, context policy, needs-attention states |
-| `src/ask/doctor.py` | Preflight diagnostics for memory, dogpile, scillm, subagent-runner, specs, chains, artifacts, and git |
-| `src/ask/reviewer_specs.py` | Frontmatter reviewer specs and dynamic reviewer-angle selection |
-| `src/ask/chain_specs.py` | Saved chain specs for repeatable review workflows |
+| `src/ask/run_state.py` | Runtime request/status/events protocol, needs-attention states, run listing, pruning |
+| `src/ask/doctor.py` | Fast and live runtime diagnostics |
 | `src/ask/review_protocols/adversarial_review.py` | Existing roundtable/parallel review protocol support |
-| `docs/reviewers/` | Protocol-role specs with model/reasoning/fallback/write/inheritance policy |
-| `docs/chains/` | Saved deep-review and parallel-review chain definitions |
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
 | `docs/ASK_DEEP_REVIEW_CONTRACT.md` | Deep-review runtime and verifier contract |
 | `01_ASK_DEEP_REVIEW_TASKS.yaml` | Current implementation plan for deep review |
@@ -123,6 +126,9 @@ Latest implementation checks, as of 2026-04-27:
 - Deep-review contract doc exists.
 - Deep-review verifier tests exist.
 - Deep-review context and artifact tests exist.
+- Runtime protocol tests cover request/status/events, recent run listing,
+  pruning, needs-attention, deep-review artifact registration, and command
+  smoke paths.
 - `sanity.sh` includes deep-review tests.
 - Targeted regression suite: `30 passed`.
 - Realistic domain E2E: `3/3` passed using `--scope sparta`, stored Brandon

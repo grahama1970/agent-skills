@@ -36,6 +36,8 @@ from .skills_exec import run_skill, parse_memory_output, parse_json_output
 from .persona import run_memory_recall, detect_persona, LEARNING_DEPTHS
 from .monitor import AskMonitor
 from .pipeline import learn
+from .dry_run_spec import build_nightly_dry_run_spec, print_execution_spec
+from .run_state import AskRunState, make_run_id
 
 # Nightly update configuration
 NIGHTLY_SCOPE = os.environ.get("ASK_NIGHTLY_SCOPE", "ask")
@@ -198,6 +200,7 @@ def nightly_update(
     scope: str = NIGHTLY_SCOPE,
     persona_name: Optional[str] = None,
     dry_run: bool = False,
+    run_state: Optional[AskRunState] = None,
 ) -> dict:
     """Run nightly persona update job.
 
@@ -229,6 +232,8 @@ def nightly_update(
     print()
 
     # Get personas to update
+    if run_state:
+        run_state.step_started("nightly_persona_discovery", scope=scope, single_persona=bool(persona_name))
     if persona_name:
         # Single persona mode
         profile = {
@@ -243,12 +248,18 @@ def nightly_update(
 
     if not profiles:
         print("   No personas found to update")
+        if run_state:
+            run_state.step_finished("nightly_persona_discovery", personas_found=0)
         return summary
 
     summary["personas_checked"] = len(profiles)
+    if run_state:
+        run_state.step_finished("nightly_persona_discovery", personas_found=len(profiles))
     print(f"   Found {len(profiles)} persona(s) to check\n")
 
     # Update each persona
+    if run_state:
+        run_state.step_started("nightly_persona_updates", personas=len(profiles))
     for i, profile in enumerate(profiles):
         name = profile.get("name", "Unknown")
         print(f"   [{i + 1}/{len(profiles)}] Checking {name}...")
@@ -267,6 +278,13 @@ def nightly_update(
             log.error("Error updating persona '%s': %s", name, e)
             summary["errors"].append(f"{name}: {str(e)[:100]}")
             print(f"         Error: {str(e)[:60]}")
+    if run_state:
+        run_state.step_finished(
+            "nightly_persona_updates",
+            personas_updated=summary["personas_updated"],
+            items_stored=summary["items_stored"],
+            errors=len(summary["errors"]),
+        )
 
     # Summary
     elapsed = time.time() - start_time
@@ -298,34 +316,65 @@ def main(
     os_refresh: bool = typer.Option(False, "--os", help="Also refresh OS knowledge"),
     dry_run: bool = typer.Option(False, help="Preview without storing"),
     as_json: bool = typer.Option(False, "--json", help="Output summary as JSON"),
+    ask_id: Optional[str] = typer.Option(None, "--ask-id", help="Stable runtime artifact id for this nightly call"),
+    run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for runtime artifacts"),
+    overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
+    resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     if debug:
         log.enable("")
 
-    summary = nightly_update(
-        scope=scope,
-        persona_name=persona,
-        dry_run=dry_run,
-    )
+    request = {
+        "command": "nightly",
+        "scope": scope,
+        "persona": persona,
+        "os_refresh": os_refresh,
+        "dry_run": dry_run,
+    }
+    if dry_run:
+        print_execution_spec(build_nightly_dry_run_spec(request), as_json=as_json)
+        raise typer.Exit(code=0)
 
-    # OS refresh if requested or scope is "os"
-    if os_refresh or scope == "os":
-        os_stats = nightly_os_refresh(dry_run=dry_run)
-        summary["os_refresh"] = {
-            "skills_crawled": os_stats.get("skills_crawled", 0),
-            "qras_generated": os_stats.get("qras_generated", 0),
-            "stored": os_stats.get("stored", 0),
-        }
+    run_state = AskRunState(
+        ask_id or make_run_id(f"nightly {scope} {persona or ''}"),
+        output_root=run_output_root,
+        overwrite=overwrite_run,
+        resume=resume_run,
+    )
+    run_state.write_request(request)
+    try:
+        summary = nightly_update(
+            scope=scope,
+            persona_name=persona,
+            dry_run=dry_run,
+            run_state=run_state,
+        )
+
+        # OS refresh if requested or scope is "os"
+        if os_refresh or scope == "os":
+            run_state.step_started("nightly_os_refresh", dry_run=dry_run)
+            os_stats = nightly_os_refresh(dry_run=dry_run)
+            summary["os_refresh"] = {
+                "skills_crawled": os_stats.get("skills_crawled", 0),
+                "qras_generated": os_stats.get("qras_generated", 0),
+                "stored": os_stats.get("stored", 0),
+            }
+            run_state.step_finished("nightly_os_refresh", **summary["os_refresh"])
+    except Exception as exc:
+        run_state.fail(exc)
+        raise
 
     if as_json:
         print(json.dumps(summary, indent=2))
 
+    # Exit 0 if any updates made, 1 if nothing
+    any_updates = summary["personas_updated"] > 0 or summary.get("os_refresh", {}).get("stored", 0) > 0
+    run_state.finish(summary, state="completed" if any_updates or dry_run else "no_results")
+
     if dry_run and not summary["errors"]:
         sys.exit(0)
 
-    # Exit 0 if any updates made, 1 if nothing
-    any_updates = summary["personas_updated"] > 0 or summary.get("os_refresh", {}).get("stored", 0) > 0
     sys.exit(0 if any_updates else 1)
 
 

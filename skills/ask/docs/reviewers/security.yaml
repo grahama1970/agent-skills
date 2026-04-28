@@ -1,0 +1,7 @@
+name: security
+protocol_role: security_reviewer
+focus:
+  - data-loss
+  - path-validation
+  - secret-persistence
+  - fail-closed

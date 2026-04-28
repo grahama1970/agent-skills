@@ -14,10 +14,11 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
 from loguru import logger as log
 
-from .run_state import get_run, list_runs
+from .run_state import list_runs, prune_runs, read_status, watch_status
 
 app = typer.Typer(help="/ask status - Show learning progress")
 
@@ -232,42 +233,75 @@ def show_status(scope: str = "ask", as_json: bool = False):
 def main(
     scope: str = typer.Option(os.environ.get("ASK_DEFAULT_SCOPE", "ask"), help="Memory scope to check (default: ask)"),
     as_json: bool = typer.Option(False, "--json", help="JSON output"),
-    runs: bool = typer.Option(False, "--runs", help="Show recent /ask runtime runs"),
-    last: int = typer.Option(10, "--last", help="Number of recent runtime runs"),
-    run_id: str | None = typer.Option(None, "--id", help="Show one runtime run by id"),
+    run: Optional[str] = typer.Option(None, "--run", help="Show runtime status for an ask id, status file, or run directory"),
+    tail_events: int = typer.Option(0, "--tail-events", help="Include the last N runtime events"),
+    watch: bool = typer.Option(False, "--watch", help="Watch runtime status until the run reaches a terminal state"),
+    watch_timeout_seconds: float = typer.Option(300, "--watch-timeout-seconds", help="Maximum seconds to wait with --watch"),
+    poll_interval_seconds: float = typer.Option(1, "--poll-interval-seconds", help="Polling interval for --watch"),
+    runs: bool = typer.Option(False, "--runs", help="List recent runtime runs"),
+    limit: int = typer.Option(20, "--limit", help="Maximum runs to list with --runs"),
+    prune: bool = typer.Option(False, "--prune", help="Prune old runtime run directories"),
+    older_than_days: int = typer.Option(14, "--older-than-days", help="Age threshold for --prune"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Preview --prune without deleting"),
+    run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Runtime artifact root for --run ids"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     if debug:
         log.enable("")
 
-    if runs or run_id:
-        if run_id:
-            payload = get_run(run_id) or {"status": None, "request": None, "error": "run not found"}
-        else:
-            payload = {"runs": list_runs(last=last)}
+    if prune:
+        payload = prune_runs(output_root=run_output_root, older_than_days=older_than_days, dry_run=dry_run)
         if as_json:
-            print(json.dumps(payload, indent=2, sort_keys=True))
+            print(json.dumps(payload, indent=2, default=str))
             return
-        if run_id:
-            status = payload.get("status") or {}
-            if not status:
-                print(f"/ask run not found: {run_id}")
-                return
-            print(f"/ask run {status.get('run_id')}: {status.get('state')}")
-            print(f"  mode: {status.get('mode')}")
-            print(f"  artifact_dir: {status.get('artifact_dir')}")
-            print(f"  verifier_status: {status.get('verifier_status', '')}")
-            print(f"  final_verdict: {status.get('final_verdict', '')}")
-            print(f"  needs_attention: {status.get('needs_attention', '')}")
+        action = "Would remove" if dry_run else "Removed"
+        print(f"/ask runs prune: {action} {len(payload['removed'])} run(s)")
+        for path in payload["removed"]:
+            print(f"  {path}")
+        return
+
+    if runs:
+        payload = {"runs": list_runs(output_root=run_output_root, limit=limit)}
+        if as_json:
+            print(json.dumps(payload, indent=2, default=str))
             return
-        print("/ask recent runs:")
-        for status in payload["runs"]:
+        print("/ask runs:")
+        for run_payload in payload["runs"]:
             print(
-                f"- {status.get('run_id')} "
-                f"[{status.get('mode')}] {status.get('state')} "
-                f"verdict={status.get('final_verdict', '')} "
-                f"attention={status.get('needs_attention', '')}"
+                f"  {run_payload.get('ask_id', 'unknown')} "
+                f"{run_payload.get('state', 'unknown')} "
+                f"{run_payload.get('updated_at', '')}"
             )
+        return
+
+    if run:
+        if watch:
+            try:
+                watch_status(
+                    run,
+                    interval=poll_interval_seconds,
+                    tail_events=max(tail_events, 1),
+                    timeout_seconds=watch_timeout_seconds,
+                    output_root=run_output_root,
+                )
+            except TimeoutError as exc:
+                typer.echo(f"Error: {exc}", err=True)
+                raise typer.Exit(code=2)
+            return
+        payload = read_status(run, tail_events=tail_events, output_root=run_output_root)
+        if as_json:
+            print(json.dumps(payload, indent=2, default=str))
+            return
+        print(f"/ask run status: {payload.get('ask_id', run)}")
+        print(f"  State: {payload.get('state', 'unknown')}")
+        print(f"  Updated: {payload.get('updated_at', '')}")
+        artifacts = payload.get("artifacts", {})
+        if artifacts:
+            print("  Artifacts:")
+            for name, path in artifacts.items():
+                print(f"    {name}: {path}")
+        for event in payload.get("event_tail", []):
+            print(f"  Event: {event.get('event', 'unknown')} {event.get('ts', '')}")
         return
 
     show_status(scope=scope, as_json=as_json)

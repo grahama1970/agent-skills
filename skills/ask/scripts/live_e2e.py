@@ -71,12 +71,13 @@ def build_cases(*, run_dir: Path, fast: bool) -> list[Case]:
         Case("memory direct recall", ["../memory/run.sh", "recall", "--q", "project knowledge overview for ask", "--scope", phase_scope, "--k", "1"], 45),
         Case("scillm warm check", ["../scillm/run.sh", "warm-check", "--json"], 45),
         Case("subagent-runner help", ["../subagent-runner/run.sh", "--help"], 30),
-        Case("ask memory json", ["./run.sh", "ask", "project knowledge overview for ask", "--json"], 60),
+        Case("ask memory json", ["./run.sh", "ask", "project knowledge overview for ask", "--ask-id", "e2e-ask-memory", "--json"], 60),
         Case("ask raw", ["./run.sh", "ask", "project knowledge overview for ask", "--raw"], 60),
         Case("ask status json", ["./run.sh", "status", "--json"], 60),
         Case("ask os static json", ["./run.sh", "os", "ask", "what does the memory skill do?", "--json"], 60),
         Case("ask os health memory", ["./run.sh", "os", "health", "is memory healthy?", "--json"], 90),
-        Case("ask learn dry run", ["./run.sh", "learn", "ask live e2e smoke topic", "--youtube-only", "--max-videos", "0", "--dry-run"], 90),
+        Case("ask learn dry run", ["./run.sh", "learn", "ask live e2e smoke topic", "--youtube-only", "--max-videos", "0", "--dry-run", "--ask-id", "e2e-learn-dry-run"], 90),
+        Case("ask os learn dry run", ["./run.sh", "os", "learn", "--depth", "quick", "--dry-run", "--ask-id", "e2e-os-learn-dry-run"], 90),
         Case("ask nightly dry run", ["./run.sh", "nightly", "--scope", phase_scope, "--dry-run", "--json"], 120),
     ]
     if fast:
@@ -278,6 +279,8 @@ def build_cases(*, run_dir: Path, fast: bool) -> list[Case]:
                     "target,fail-closed,artifacts",
                     "--deep-review-output-root",
                     str(run_dir / "deep-review"),
+                    "--ask-id",
+                    "e2e-deep-review",
                     "--oracle-backend",
                     "subagent-runner",
                     "--oracle-timeout",
@@ -303,6 +306,7 @@ def run_case(case: Case, run_dir: Path) -> dict:
     process = None
     env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
     env["ASK_SUBAGENT_OUTPUT_DIR"] = str(run_dir / "subagents")
+    env["ASK_RUN_OUTPUT_DIR"] = str(run_dir / "runtime-runs")
     try:
         process = subprocess.Popen(
             case.command,
@@ -338,6 +342,13 @@ def run_case(case: Case, run_dir: Path) -> dict:
         validation_error = validate_case_output(case, stdout)
         if validation_error:
             passed = False
+    runtime_status_path = ""
+    ask_id = command_ask_id(case.command)
+    if passed and ask_id:
+        runtime_error, runtime_status_path = validate_runtime_artifacts(case, run_dir, ask_id)
+        if runtime_error:
+            validation_error = runtime_error
+            passed = False
     return {
         "name": case.name,
         "command": case.command,
@@ -348,10 +359,38 @@ def run_case(case: Case, run_dir: Path) -> dict:
         "duration_seconds": round(time.time() - started, 3),
         "stdout_path": str(stdout_path),
         "stderr_path": str(stderr_path),
+        "runtime_status_path": runtime_status_path,
         "stdout_excerpt": excerpt(stdout),
         "stderr_excerpt": excerpt(stderr),
         "validation_error": validation_error,
     }
+
+
+def command_ask_id(command: list[str]) -> str:
+    for index, value in enumerate(command):
+        if value == "--ask-id" and index + 1 < len(command):
+            return command[index + 1]
+    return ""
+
+
+def validate_runtime_artifacts(case: Case, run_dir: Path, ask_id: str) -> tuple[str, str]:
+    status_path = run_dir / "runtime-runs" / ask_id / f"{ask_id}.status.json"
+    if not status_path.exists():
+        return f"missing runtime status: {status_path}", str(status_path)
+    try:
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return f"invalid runtime status JSON: {exc}", str(status_path)
+    artifacts = status.get("artifacts") if isinstance(status.get("artifacts"), dict) else {}
+    for required in ("request", "status", "events"):
+        if not artifacts.get(required):
+            return f"runtime status missing artifact path: {required}", str(status_path)
+    if case.name == "deep review":
+        for required in ("review_md", "review_json"):
+            artifact = artifacts.get(required)
+            if not artifact or not Path(artifact).exists():
+                return f"runtime status missing deep-review artifact: {required}", str(status_path)
+    return "", str(status_path)
 
 
 def cleanup_subagents(run_dir: Path) -> None:
@@ -496,14 +535,15 @@ def render_report(summary: dict) -> str:
         f"- Required failed: `{summary['failed']}`",
         f"- Non-required failed: `{summary['non_required_failed']}`",
         "",
-        "| Case | Status | Return | Seconds | Evidence |",
-        "| --- | --- | ---: | ---: | --- |",
+        "| Case | Status | Return | Seconds | Evidence | Runtime |",
+        "| --- | --- | ---: | ---: | --- | --- |",
     ]
     for result in summary["results"]:
         status = "PASS" if result["passed"] else "FAIL"
         lines.append(
             f"| {result['name']} | {status} | {result['returncode']} | "
-            f"{result['duration_seconds']} | `{Path(result['stdout_path']).name}` / `{Path(result['stderr_path']).name}` |"
+            f"{result['duration_seconds']} | `{Path(result['stdout_path']).name}` / `{Path(result['stderr_path']).name}` | "
+            f"{_runtime_cell(result)} |"
         )
     lines.extend(["", "## Failures", ""])
     failures = [result for result in summary["results"] if not result["passed"]]
@@ -530,6 +570,13 @@ def render_report(summary: dict) -> str:
             ]
         )
     return "\n".join(lines) + "\n"
+
+
+def _runtime_cell(result: dict) -> str:
+    runtime_path = result.get("runtime_status_path") or ""
+    if not runtime_path:
+        return ""
+    return f"`{Path(runtime_path).name}`"
 
 
 if __name__ == "__main__":

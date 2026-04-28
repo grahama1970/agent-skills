@@ -105,6 +105,7 @@ Use the table below to map user requests to the correct command.
 | "Quick one-shot via subagent"     | Read files, `POST /chat` to `/subagent-service` with inline content (see above)    |
 | "Quick review via scillm/Codex"   | `one-shot -f file1.ts -f file2.py --context "..." --persona senior --model gpt-5.3-codex` |
 | "Review with Gemini via scillm"   | `one-shot -f file1.ts --context "..." --persona nico --model text-gemini --focus "security"` |
+| "Bundle for Web GPT review"       | `bundle --context "What changed and why" -R src/file.py -R tests/test_file.py`                 |
 
 > **💡 COST-SAVING TIP**: Always use `--provider github` for Claude models to avoid API charges. The `github` provider includes Claude models at no additional cost beyond your GitHub Copilot subscription.
 
@@ -169,11 +170,85 @@ code_review.py loop \
 
 ### bundle
 
-Bundle request for copy/paste into GitHub Copilot web (if CLI is unavailable).
+Bundle a complete markdown review request for Web GPT or another external reviewer.
+The command writes a markdown file to `/tmp/review-code-request-*.md` by default and copies
+the same content to the clipboard with `xclip` when available.
+
+Default bundle behavior is intentionally selective. It does not dump every changed
+file just because the worktree is dirty. Select the review surface with
+`--review-file` / `-R`; use `--all-changed` only when a broad repository diff is
+the actual review target.
+
+The bundle includes:
+
+- reviewer instructions
+- explicit decision requested, when supplied
+- supplied rationale/context
+- expected contract/invariants, when supplied
+- prior critique to re-check, when supplied
+- review non-goals, when supplied
+- optional existing request file
+- repo branch, remote, and scoped status
+- selected review files and changed files in that selected scope
+- scoped git diff for selected files
+- optional selected file contents, capped per file
+- strict merge-gate output format, unless disabled
 
 ```bash
-code_review.py bundle --file request.md --clipboard
+# Bundle selected files and copy to clipboard with xclip
+code_review.py bundle \
+  --context "Runtime status protocol changes for code-runner" \
+  -R src/runtime.py \
+  -R tests/test_runtime.py
+
+# State the safety contract instead of making the reviewer infer intent
+code_review.py bundle \
+  --title "Targeted Review: /ask Runtime Safety" \
+  --decision "Is the /ask runtime artifact layer safe enough to merge?" \
+  --context "Portable runtime observability for request/status/events artifacts" \
+  --expected-contract "Plain ask degrades if artifacts are unwritable" \
+  --expected-contract "Deep review fails closed if runtime artifacts cannot be written" \
+  --expected-contract "Run IDs are one-run-one-directory; reuse is rejected by default" \
+  --prior-critique "prune_runs may delete unrelated directories" \
+  --prior-critique "status --watch may hang forever" \
+  --non-goal "Do not review generated .ask_artifacts" \
+  -R skills/ask/src/ask/run_state.py \
+  -R skills/ask/src/ask/status.py \
+  -R skills/ask/src/ask/ask.py
+
+# Include an existing review request file
+code_review.py bundle --file request.md --context "Validate this implementation plan" -R src/runtime.py
+
+# Write to a specific markdown file and skip clipboard
+code_review.py bundle --output /tmp/review.md --no-clipboard
+
+# Broad scope is opt-in
+code_review.py bundle --all-changed --file-contents --context "Review the full worktree diff"
 ```
+
+Useful options:
+
+| Option | Description |
+|--------|-------------|
+| `--context` | Inline rationale/context to include |
+| `--context-file` | Markdown/text context file to include |
+| `--decision` | Specific merge/review decision the reviewer should answer |
+| `--expected-contract` | Expected invariant or behavior; repeat for multiple invariants |
+| `--expected-contract-file` | File containing expected invariants/contracts |
+| `--prior-critique` | Prior finding/risk to re-check; repeat for multiple items |
+| `--prior-critique-file` | File containing prior critique to re-check |
+| `--non-goal` | Topic the reviewer should explicitly avoid; repeat for multiple items |
+| `--non-goals-file` | File containing review non-goals |
+| `--no-required-output-format` | Omit the strict merge-gate output schema |
+| `--repo-dir` | Repository to inspect instead of current directory |
+| `--review-file`, `-R` | Specific file in the review scope; repeat for multiple files |
+| `--all-changed` | Explicitly include every changed file instead of selected files |
+| `--output` | Explicit markdown output path |
+| `--output-dir` | Directory for default generated bundle path |
+| `--no-clipboard` | Write the file without copying to `xclip` |
+| `--require-clipboard` | Fail if `xclip` is missing or copy fails |
+| `--no-diff` | Omit git diff |
+| `--file-contents` | Include selected changed file contents |
 
 ### find
 

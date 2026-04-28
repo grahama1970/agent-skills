@@ -28,6 +28,7 @@ else:
     log.add(sys.stderr, level="INFO")
 
 from .skills_exec import run_skill, parse_json_output, parse_memory_output
+from .run_state import AskRunState, make_run_id
 
 SKILLS_DIR = Path(__file__).parent.parent
 
@@ -162,6 +163,7 @@ def ask_os(
     auto_learn: bool = False,
     as_json: bool = False,
     tags: Optional[list[str]] = None,
+    run_state: Optional[AskRunState] = None,
 ) -> dict:
     """Query OS knowledge from memory (scope=os).
 
@@ -184,15 +186,21 @@ def ask_os(
     }
 
     # Recall from memory
+    if run_state:
+        run_state.step_started("os_memory_recall", k=k, tags=tags or [])
     items = recall_os(question, k=k, tags=tags)
     result["items"] = items
+    if run_state:
+        run_state.step_finished("os_memory_recall", items_count=len(items))
 
     # Auto-learn if no results
     if not items and auto_learn:
+        if run_state:
+            run_state.step_started("os_auto_learn")
         log.info("No OS knowledge found — triggering os_learn (quick)")
         print("  No OS knowledge found. Running quick OS learn...")
         from .os_learn import learn_os
-        learn_stats = learn_os(depth="quick")
+        learn_stats = learn_os(depth="quick", run_state=run_state)
         result["auto_learned"] = True
         result["learn_stats"] = learn_stats
 
@@ -202,8 +210,12 @@ def ask_os(
             t.sleep(2)  # Wait for ArangoDB indexing
             items = recall_os(question, k=k, tags=tags)
             result["items"] = items
+        if run_state:
+            run_state.step_finished("os_auto_learn", items_count=len(result["items"]), stored=learn_stats.get("stored", 0))
 
     # Synthesize answer
+    if run_state:
+        run_state.step_started("os_synthesis")
     if result["items"]:
         parts = []
         for item in result["items"][:k]:
@@ -228,6 +240,8 @@ def ask_os(
                 f"No OS knowledge found for \"{question}\". "
                 f"Try: ./run.sh os learn --depth quick"
             )
+    if run_state:
+        run_state.step_finished("os_synthesis", answer_chars=len(result["answer"]), items_count=len(result["items"]))
 
     # Output
     if as_json:
@@ -268,6 +282,7 @@ def ask_os_health(
     question: str,
     subsystem: Optional[str] = None,
     as_json: bool = False,
+    run_state: Optional[AskRunState] = None,
 ) -> dict:
     """Query runtime health of an OS subsystem.
 
@@ -291,8 +306,12 @@ def ask_os_health(
 
     # Detect subsystem if not provided
     if not subsystem:
+        if run_state:
+            run_state.step_started("os_health_detect_subsystem")
         subsystem = detect_subsystem(question)
         result["subsystem"] = subsystem
+        if run_state:
+            run_state.step_finished("os_health_detect_subsystem", subsystem=subsystem or "")
 
     if not subsystem:
         # Can't determine subsystem — provide overview
@@ -310,12 +329,20 @@ def ask_os_health(
 
     # Get runtime health data
     print(f"   Checking {subsystem}...")
+    if run_state:
+        run_state.step_started("os_health_dispatch", subsystem=subsystem)
     health_data = get_health_data(subsystem)
     result["health_data"] = health_data
+    if run_state:
+        run_state.step_finished("os_health_dispatch", subsystem=subsystem, status=health_data.get("status", ""), error=health_data.get("error", ""))
 
     # Get static knowledge about this subsystem
+    if run_state:
+        run_state.step_started("os_health_knowledge_recall", subsystem=subsystem)
     knowledge = recall_os(f"{subsystem} architecture purpose", k=3)
     result["knowledge"] = knowledge
+    if run_state:
+        run_state.step_finished("os_health_knowledge_recall", items_count=len(knowledge))
 
     # Synthesize answer
     parts = []
@@ -373,6 +400,10 @@ def cmd_ask(
     k: int = typer.Option(5, help="Number of results"),
     auto_learn: bool = typer.Option(False, help="Auto-index if no knowledge found"),
     as_json: bool = typer.Option(False, "--json", help="JSON output"),
+    ask_id: Optional[str] = typer.Option(None, "--ask-id", help="Stable runtime artifact id for this OS ask call"),
+    run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for runtime artifacts"),
+    overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
+    resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     """Query OS knowledge from memory."""
@@ -380,7 +411,19 @@ def cmd_ask(
         log.remove()
         log.add(sys.stderr, level="DEBUG")
 
-    result = ask_os(question, k=k, auto_learn=auto_learn, as_json=as_json)
+    run_state = AskRunState(
+        ask_id or make_run_id(f"os ask {question}"),
+        output_root=run_output_root,
+        overwrite=overwrite_run,
+        resume=resume_run,
+    )
+    run_state.write_request({"command": "os ask", "question": question, "k": k, "auto_learn": auto_learn})
+    try:
+        result = ask_os(question, k=k, auto_learn=auto_learn, as_json=as_json, run_state=run_state)
+    except Exception as exc:
+        run_state.fail(exc)
+        raise
+    run_state.finish(result)
     raise SystemExit(0 if result["items"] else 1)
 
 
@@ -389,6 +432,10 @@ def cmd_health(
     question: str = typer.Argument(help="Health question"),
     subsystem: Optional[str] = typer.Option(None, help="Override subsystem detection"),
     as_json: bool = typer.Option(False, "--json", help="JSON output"),
+    ask_id: Optional[str] = typer.Option(None, "--ask-id", help="Stable runtime artifact id for this OS health call"),
+    run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for runtime artifacts"),
+    overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
+    resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     """Query runtime health of an OS subsystem."""
@@ -396,7 +443,19 @@ def cmd_health(
         log.remove()
         log.add(sys.stderr, level="DEBUG")
 
-    result = ask_os_health(question, subsystem=subsystem, as_json=as_json)
+    run_state = AskRunState(
+        ask_id or make_run_id(f"os health {question}"),
+        output_root=run_output_root,
+        overwrite=overwrite_run,
+        resume=resume_run,
+    )
+    run_state.write_request({"command": "os health", "question": question, "subsystem": subsystem})
+    try:
+        result = ask_os_health(question, subsystem=subsystem, as_json=as_json, run_state=run_state)
+    except Exception as exc:
+        run_state.fail(exc)
+        raise
+    run_state.finish(result, state="completed" if "error" not in result.get("health_data", {}) else "failed")
     raise SystemExit(0 if "error" not in result.get("health_data", {}) else 1)
 
 
