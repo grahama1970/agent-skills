@@ -174,26 +174,62 @@ def _safe_changed_file_contents(repo_dir: Path, changed_files: list[str], max_fi
 def _copy_to_clipboard(content: str, require_clipboard: bool) -> None:
     tool = shutil.which("xclip")
     if tool:
-        proc = subprocess.run(
-            [tool, "-selection", "clipboard"],
-            input=content,
-            text=True,
-            capture_output=True,
-        )
-        if proc.returncode == 0:
-            typer.echo("Copied bundle to clipboard with xclip", err=True)
+        try:
+            proc = subprocess.Popen(
+                [tool, "-selection", "clipboard"],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
+                start_new_session=True,
+            )
+            assert proc.stdin is not None
+            proc.stdin.write(content)
+            proc.stdin.close()
+            typer.echo("Copied bundle text to clipboard with xclip", err=True)
             return
-        message = proc.stderr.strip() or "xclip failed"
-        if require_clipboard:
-            typer.echo(f"Error: {message}", err=True)
-            raise typer.Exit(code=1)
-        typer.echo(f"Warning: clipboard copy failed: {message}", err=True)
-        return
+        except Exception as exc:
+            if require_clipboard:
+                typer.echo(f"Error: clipboard copy failed: {exc}", err=True)
+                raise typer.Exit(code=1)
+            typer.echo(f"Warning: clipboard copy failed: {exc}", err=True)
+            return
 
     if require_clipboard:
         typer.echo("Error: xclip not found; install xclip or use --no-clipboard", err=True)
         raise typer.Exit(code=1)
     typer.echo("Warning: xclip not found; wrote markdown file but did not copy clipboard", err=True)
+
+
+def _copy_file_uri_to_clipboard(path: Path, require_clipboard: bool) -> None:
+    tool = shutil.which("xclip")
+    if tool:
+        payload = f"file://{path.resolve()}\r\n"
+        try:
+            proc = subprocess.Popen(
+                [tool, "-selection", "clipboard", "-t", "text/uri-list"],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
+                start_new_session=True,
+            )
+            assert proc.stdin is not None
+            proc.stdin.write(payload)
+            proc.stdin.close()
+            typer.echo(f"Copied bundle file URI to clipboard: {payload.strip()}", err=True)
+            return
+        except Exception as exc:
+            if require_clipboard:
+                typer.echo(f"Error: file clipboard copy failed: {exc}", err=True)
+                raise typer.Exit(code=1)
+            typer.echo(f"Warning: file clipboard copy failed: {exc}", err=True)
+            return
+
+    if require_clipboard:
+        typer.echo("Error: xclip not found; install xclip or use --no-clipboard", err=True)
+        raise typer.Exit(code=1)
+    typer.echo("Warning: xclip not found; wrote markdown file but did not copy file URI", err=True)
 
 
 def _default_output_path(output_dir: Path) -> Path:
@@ -392,6 +428,7 @@ def bundle(
     max_file_chars: int = typer.Option(DEFAULT_MAX_FILE_CHARS, "--max-file-chars", help="Maximum characters per changed file"),
     skip_git_check: bool = typer.Option(False, "--skip-git-check", help="Skip git status verification"),
     clipboard: bool = typer.Option(True, "--clipboard/--no-clipboard", "-c", help="Copy bundle to clipboard with xclip"),
+    clipboard_file: bool = typer.Option(False, "--clipboard-file", help="Copy output file URI to clipboard with text/uri-list for KDE/browser upload flows"),
     require_clipboard: bool = typer.Option(False, "--require-clipboard", help="Fail if xclip copy fails"),
 ) -> None:
     """Create a complete markdown review bundle in /tmp and optionally copy it with xclip.
@@ -411,6 +448,9 @@ def bundle(
 
         # Write to a specific file without clipboard
         code_review.py bundle --output /tmp/review.md --no-clipboard
+
+        # Copy the generated markdown file itself for browser/file-picker paste flows
+        code_review.py bundle --output /tmp/review.md --clipboard-file
 
         # Explicitly include all changed files when that broad scope is intentional
         code_review.py bundle --all-changed --file-contents
@@ -469,7 +509,9 @@ def bundle(
     output_path.write_text(bundle_content)
     typer.echo(f"Wrote review bundle to {output_path}", err=True)
 
-    if clipboard:
+    if clipboard_file:
+        _copy_file_uri_to_clipboard(output_path, require_clipboard)
+    elif clipboard:
         _copy_to_clipboard(bundle_content, require_clipboard)
 
     print(str(output_path))

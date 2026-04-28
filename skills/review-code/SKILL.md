@@ -222,6 +222,9 @@ code_review.py bundle --file request.md --context "Validate this implementation 
 # Write to a specific markdown file and skip clipboard
 code_review.py bundle --output /tmp/review.md --no-clipboard
 
+# Copy the generated markdown file itself using KDE/browser-friendly text/uri-list
+code_review.py bundle --output /tmp/review.md --clipboard-file
+
 # Broad scope is opt-in
 code_review.py bundle --all-changed --file-contents --context "Review the full worktree diff"
 ```
@@ -246,9 +249,27 @@ Useful options:
 | `--output` | Explicit markdown output path |
 | `--output-dir` | Directory for default generated bundle path |
 | `--no-clipboard` | Write the file without copying to `xclip` |
+| `--clipboard-file` | Copy the output file URI using `text/uri-list` for KDE/browser upload flows |
 | `--require-clipboard` | Fail if `xclip` is missing or copy fails |
 | `--no-diff` | Omit git diff |
 | `--file-contents` | Include selected changed file contents |
+
+#### KDE Plasma clipboard file handoff
+
+For Web GPT/browser upload workflows on KDE Plasma/X11, prefer copying the
+generated bundle file URI instead of the full markdown text:
+
+```bash
+code_review.py bundle --output /tmp/review.md --clipboard-file
+```
+
+This uses the same `text/uri-list` clipboard target as `review-design`:
+
+```text
+file:///tmp/review.md
+```
+
+If browser paste still fails, use the file picker with the printed bundle path.
 
 ### find
 
