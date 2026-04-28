@@ -427,6 +427,12 @@ Use oracle mode for single high-value questions, not nightly runs or batch inges
 
 Use both together when you want independent findings first, followed by persona debate over those findings.
 
+The narrow contract for reviewer fanout is documented in
+`docs/ASK_PARALLEL_REVIEW_CONTRACT.md`. The key boundary is that `/ask`
+owns target resolution, read-only reviewer roles, synthesis, verifier gates, and
+artifacts; `/code-runner` owns implementation, and Pi/subagent adapters only
+provide bounded execution mechanics.
+
 Personas and protocol roles are separate:
 
 ```text

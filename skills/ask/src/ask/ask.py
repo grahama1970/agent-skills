@@ -29,6 +29,7 @@ from .ask_config import (
 from .chain_specs import apply_chain_options
 from .deep_review import build_deep_review_request, infer_deep_review
 from .dry_run_spec import build_ask_dry_run_spec, print_execution_spec
+from .parallel_review import MAX_REVIEWERS, run_parallel_review
 from .ask_oracle import _is_meta_item
 from .ask_persona_profiles import _format_persona_suggestion
 from .ask_relevance import _has_relevant_domain_items, _try_evidence_case
@@ -96,6 +97,11 @@ def ask(
     parallel_review_personas: Optional[str] = None,
     parallel_review_focus: Optional[str] = None,
     parallel_review_role_preset: str = "adversarial-review",
+    review_target: Optional[str] = None,
+    parallel_review_runner: str = "scillm",
+    review_dag: str = "hybrid",
+    read_only_review: bool = True,
+    code_runner_handoff: bool = False,
     dogpile_mode: str = "auto",
     deep_review: bool = False,
     deep_review_target: Optional[str] = None,
@@ -144,6 +150,11 @@ def ask(
         parallel_review_personas: Comma-separated reviewer persona[:role] specs.
         parallel_review_focus: Comma-separated focus labels for default reviewers.
         parallel_review_role_preset: Role preset for parallel reviewers.
+        review_target: Explicit parallel-review target: paths, git:diff, artifact, or manifest.
+        parallel_review_runner: Review adapter; currently scillm.
+        review_dag: Review DAG mode: judge-best or hybrid.
+        read_only_review: Keep reviewer calls read-only.
+        code_runner_handoff: Emit /code-runner handoff artifact for actionable findings.
         dogpile_mode: auto, off, or force freshness policy for oracle subagents.
         deep_review: Run Web-GPT-style deep review with JSON/markdown artifacts.
 
@@ -234,6 +245,35 @@ def ask(
                 attention = run_state.needs_attention(**attention)
             result["needs_attention"] = attention
             return result
+
+    if parallel_review and not deep_review:
+        if not review_target:
+            attention = {
+                "reason": "missing_parallel_review_target",
+                "question": "Parallel review requires an explicit --review-target such as git:diff or a path list.",
+                "safe_default": "do_not_run_review",
+                "resume_hint": "Run again with --review-target <git:diff|paths|artifact>.",
+            }
+            if run_state:
+                attention = run_state.needs_attention(**attention)
+            result["needs_attention"] = attention
+            return result
+        parallel_result = run_parallel_review(
+            question=question,
+            target=review_target,
+            reviewers=parallel_reviewers,
+            personas=parallel_review_personas,
+            focus=parallel_review_focus,
+            runner=parallel_review_runner,
+            read_only=read_only_review,
+            model=oracle_model,
+            timeout=oracle_timeout,
+            run_state=run_state,
+            dag_mode=review_dag,
+            code_runner_handoff=code_runner_handoff,
+        )
+        parallel_result["scope"] = scope
+        return parallel_result
 
     # Step 1: Memory recall (hybrid or standard)
     if hybrid:
@@ -598,6 +638,11 @@ def main(
     parallel_review_personas: Optional[str] = typer.Option(None, help="Comma-separated reviewer persona[:protocol_role] specs"),
     parallel_review_focus: Optional[str] = typer.Option(None, help="Comma-separated reviewer focus labels"),
     parallel_review_role_preset: str = typer.Option("adversarial-review", help="Parallel reviewer role preset"),
+    review_target: Optional[str] = typer.Option(None, "--review-target", help="Explicit parallel-review target: git:diff, paths, artifact, or manifest"),
+    parallel_review_runner: str = typer.Option("scillm", "--parallel-review-runner", help="Parallel review runner adapter: scillm"),
+    review_dag: str = typer.Option("hybrid", "--review-dag", help="Review DAG mode: judge-best or hybrid"),
+    read_only_review: bool = typer.Option(True, "--read-only/--allow-edits", help="Keep parallel review read-only"),
+    code_runner_handoff: bool = typer.Option(False, "--code-runner-handoff", help="Emit /code-runner handoff artifact for actionable findings"),
     dogpile_mode: str = typer.Option("auto", "--dogpile", help="Freshness policy: auto, off, or force"),
     deep_review: bool = typer.Option(False, help="Run first-class deep review with markdown and JSON artifacts"),
     deep_review_target: Optional[str] = typer.Option(None, help="Explicit review target: paths, diff, plan, manifest, or artifact"),
@@ -776,6 +821,21 @@ def main(
             "Parallel reviewers must be >= 1.",
             param_hint="--parallel-reviewers",
         )
+    if parallel_review and parallel_reviewers > MAX_REVIEWERS:
+        raise typer.BadParameter(
+            f"Parallel reviewers must be <= {MAX_REVIEWERS}.",
+            param_hint="--parallel-reviewers",
+        )
+    if parallel_review and parallel_review_runner != "scillm":
+        raise typer.BadParameter(
+            "Only the scillm parallel-review runner is implemented.",
+            param_hint="--parallel-review-runner",
+        )
+    if parallel_review and review_dag not in {"judge-best", "hybrid"}:
+        raise typer.BadParameter(
+            "Review DAG must be judge-best or hybrid.",
+            param_hint="--review-dag",
+        )
     if deep_review and deep_reviewers < 1:
         raise typer.BadParameter(
             "Deep-review reviewers must be >= 1.",
@@ -851,6 +911,11 @@ def main(
         "parallel_reviewers": parallel_reviewers,
         "parallel_review_personas": parallel_review_personas,
         "parallel_review_focus": parallel_review_focus,
+        "review_target": review_target,
+        "parallel_review_runner": parallel_review_runner,
+        "review_dag": review_dag,
+        "read_only_review": read_only_review,
+        "code_runner_handoff": code_runner_handoff,
         "dogpile_mode": dogpile_mode,
         "deep_review": deep_review,
         "deep_review_target": deep_review_target,
@@ -929,6 +994,11 @@ def main(
             parallel_review_personas=parallel_review_personas,
             parallel_review_focus=parallel_review_focus,
             parallel_review_role_preset=parallel_review_role_preset,
+            review_target=review_target,
+            parallel_review_runner=parallel_review_runner,
+            review_dag=review_dag,
+            read_only_review=read_only_review,
+            code_runner_handoff=code_runner_handoff,
             dogpile_mode=dogpile_mode,
             deep_review=deep_review,
             deep_review_target=deep_review_target,
@@ -984,6 +1054,11 @@ def main(
                 print(f"   Resume: {attention['resume_hint']}")
             print()
         raise typer.Exit(code=2)
+    if result.get("parallel_review"):
+        if as_json:
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            print(result.get("answer", ""))
     run_state.finish(result)
     sys.exit(0 if result["items"] else 1)
 

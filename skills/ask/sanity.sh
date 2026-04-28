@@ -213,6 +213,41 @@ else
     FAIL=1
 fi
 
+# Test 10: parallel-review DAG CLI sanity (deterministic; no live scillm call)
+echo ""
+echo "10. Parallel-review DAG CLI sanity..."
+if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytest -q \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_missing_target_pauses_with_needs_attention \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_runs_three_reviewers_then_judge \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_writes_code_runner_handoff_when_requested \
+    tests/test_run_state_protocol.py::test_parallel_review_verifier_rejects_missing_judge \
+    tests/test_run_state_protocol.py::test_parse_reviewer_output_normalizes_list_fields \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_verifier_failure_exits_needs_attention \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_rejects_unbounded_fanout \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_rejects_unknown_runner \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_rejects_unknown_dag_mode \
+    tests/test_run_state_protocol.py::test_cli_ask_dry_run_includes_parallel_review_dag_options; then
+    echo "   PASS"
+else
+    echo "   FAIL: parallel-review DAG CLI sanity broken"
+    FAIL=1
+fi
+
+# Test 11: live /scillm parallel-review E2E (opt-in, non-mocked downstream)
+echo ""
+echo "11. Live /scillm parallel-review E2E..."
+if [[ "${ASK_LIVE_SCILLM_E2E:-0}" == "1" ]]; then
+    if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytest -q \
+        tests/test_parallel_review_live_e2e.py::test_live_parallel_review_scillm_composition; then
+        echo "   PASS"
+    else
+        echo "   FAIL: live /scillm parallel-review E2E broken"
+        FAIL=1
+    fi
+else
+    echo "   SKIP: set ASK_LIVE_SCILLM_E2E=1 to call real /scillm"
+fi
+
 echo ""
 echo "======================================="
 if [[ $FAIL -eq 0 ]]; then

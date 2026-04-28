@@ -51,7 +51,13 @@ def build_ask_dry_run_spec(request: dict[str, Any]) -> dict[str, Any]:
         filesystem_writes.append(str(request.get("deep_review_output_root") or ".ask_artifacts/deep-review"))
         risk_notes.append("deep review is integrity-sensitive and requires runtime artifacts during real execution")
     if request.get("parallel_review"):
-        external_calls.append("parallel reviewer fanout")
+        external_calls.append(f"parallel reviewer fanout via {request.get('parallel_review_runner') or 'scillm'}")
+        filesystem_writes.append("parallel_review/target_bundle.md")
+        filesystem_writes.append("parallel_review/reviewer_outputs/*.json")
+        filesystem_writes.append("parallel_review/judge.json")
+        filesystem_writes.append("parallel_review/synthesis.md")
+        filesystem_writes.append("parallel_review/verdict.json")
+        risk_notes.append("parallel review requires an explicit target and remains read-only unless handed off to /code-runner")
     if request.get("dogpile_mode") == "force":
         external_calls.append("dogpile forced freshness search")
     return build_execution_spec(

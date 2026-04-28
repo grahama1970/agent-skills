@@ -12,6 +12,7 @@ import ask.ask as ask_module
 import ask.nightly as nightly_module
 import ask.os_learn as os_learn_module
 import ask.os_query as os_query_module
+import ask.parallel_review as parallel_review_module
 import ask.pipeline as pipeline_module
 import ask.status as status_module
 from ask.doctor import run_doctor
@@ -148,6 +149,365 @@ def test_cli_deep_review_missing_target_pauses_with_needs_attention(tmp_path):
     assert any(event["event"] == "needs_attention" for event in status["event_tail"])
     payload = json.loads(result.stdout)
     assert payload["needs_attention"]["safe_default"] == "do_not_run_review"
+
+
+def test_cli_parallel_review_missing_target_pauses_with_needs_attention(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "this",
+            "--parallel-review",
+            "--ask-id",
+            "missing-parallel-target",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    status = read_status("missing-parallel-target", tail_events=10, output_root=tmp_path)
+    payload = json.loads(result.stdout)
+    assert status["state"] == "needs_attention"
+    assert status["needs_attention"]["reason"] == "missing_parallel_review_target"
+    assert payload["needs_attention"]["safe_default"] == "do_not_run_review"
+
+
+def test_cli_parallel_review_runs_three_reviewers_then_judge(monkeypatch, tmp_path):
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+    calls = []
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            calls.append(reviewer)
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Most specific evidence.",
+                    "hybrid_summary": "The reviewers inspected target.py and found no blocking issues.",
+                    "verdict": "SAFE",
+                    "summary": "Judge synthesis complete.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                    "confidence": "medium",
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected the target.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--parallel-reviewers",
+            "3",
+            "--ask-id",
+            "parallel-dag",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert set(calls[:3]) == {"Brandon", "Margaret", "Jennifer"}
+    assert calls[-1] == "review-judge"
+    status = read_status("parallel-dag", tail_events=20, output_root=tmp_path)
+    artifacts = status["artifacts"]
+    verdict = json.loads((tmp_path / "parallel-dag" / "parallel_review" / "verdict.json").read_text())
+    assert status["state"] == "answered"
+    assert artifacts["judge_json"].endswith("judge.json")
+    assert verdict["best_reviewer"] == "Brandon"
+    assert verdict["verifier"]["status"] == "PASS"
+
+
+def test_cli_parallel_review_writes_code_runner_handoff_when_requested(monkeypatch, tmp_path):
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            finding = {
+                "severity": "medium",
+                "title": "Add regression test",
+                "evidence": "target.py has behavior but no adjacent test in the target bundle.",
+                "impact": "Behavior can regress silently.",
+                "fix": "Add a focused regression test for answer().",
+                "verification": "Run the new test file.",
+            }
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Only reviewer with a complete finding.",
+                    "hybrid_summary": "Add the missing regression test before relying on this behavior.",
+                    "verdict": "SAFE_WITH_CONDITIONS",
+                    "summary": "Judge synthesis complete.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py has answer()"],
+                    "findings": [finding],
+                    "test_gaps": ["answer() lacks a regression test"],
+                    "read_only_claim": True,
+                    "confidence": "medium",
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE_WITH_CONDITIONS",
+                "summary": f"{reviewer} found a test gap.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py has answer()"],
+                "findings": [finding] if reviewer == "Brandon" else [],
+                "test_gaps": ["answer() lacks a regression test"],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--code-runner-handoff",
+            "--ask-id",
+            "parallel-handoff",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    handoff = tmp_path / "parallel-handoff" / "parallel_review" / "code_runner_handoff.md"
+    verdict = json.loads((tmp_path / "parallel-handoff" / "parallel_review" / "verdict.json").read_text())
+    assert handoff.exists()
+    assert "Add regression test" in handoff.read_text()
+    assert verdict["artifact_paths"]["code_runner_handoff"] == str(handoff)
+
+
+def test_parallel_review_verifier_rejects_missing_judge():
+    result = parallel_review_module.verify_parallel_review_bundle(
+        {
+            "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+            "verdict": "SAFE",
+            "target_reviewed": "target.py",
+            "read_only": True,
+            "reviewers": [
+                {
+                    "reviewer": "Brandon",
+                    "verdict": "SAFE",
+                    "summary": "ok",
+                    "evidence": ["target.py"],
+                    "files_inspected": ["target.py"],
+                    "read_only_claim": True,
+                    "findings": [],
+                }
+            ],
+            "files_inspected": ["target.py"],
+            "execution": {"unexpected_file_changes": []},
+        }
+    )
+
+    assert result["status"] == "FAIL"
+    assert "missing judge output" in result["failures"]
+
+
+def test_parse_reviewer_output_normalizes_list_fields():
+    payload = {
+        "reviewer": {
+            "name": "Brandon",
+            "role": "correctness",
+        }
+    }
+    parsed = parallel_review_module.parse_reviewer_output(
+        json.dumps(
+            {
+                "verdict": "safe",
+                "summary": "Inspected the target.",
+                "files_inspected": "target.py",
+                "evidence": "target.py returns 42",
+                "findings": "not a finding object",
+                "test_gaps": {"title": "missing regression test"},
+            }
+        ),
+        payload,
+    )
+
+    assert parsed["verdict"] == "SAFE"
+    assert parsed["files_inspected"] == ["target.py"]
+    assert parsed["evidence"] == ["target.py returns 42"]
+    assert parsed["findings"] == []
+    assert parsed["test_gaps"] == ["{'title': 'missing regression test'}"]
+
+
+def test_cli_parallel_review_verifier_failure_exits_needs_attention(monkeypatch, tmp_path):
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "verdict": "SAFE",
+                    "summary": "Judge response omitted required synthesis fields.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                    "confidence": "medium",
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected the target.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--ask-id",
+            "parallel-verifier-fail",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    status = read_status("parallel-verifier-fail", tail_events=20, output_root=tmp_path)
+    verdict = json.loads((tmp_path / "parallel-verifier-fail" / "parallel_review" / "verdict.json").read_text())
+    assert payload["needs_attention"]["reason"] == "parallel_review_verifier_failed"
+    assert payload["needs_attention"]["safe_default"] == "do_not_trust_review"
+    assert "judge missing best_reviewer" in payload["needs_attention"]["verifier_failures"]
+    assert status["state"] == "needs_attention"
+    assert status["needs_attention"]["reason"] == "parallel_review_verifier_failed"
+    assert verdict["verifier"]["status"] == "FAIL"
+
+
+def test_cli_parallel_review_rejects_unbounded_fanout(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--parallel-reviewers",
+            "50",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Parallel reviewers must be <= 7" in result.output
+
+
+def test_cli_parallel_review_rejects_unknown_runner(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--parallel-review-runner",
+            "codex",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Only the scillm parallel-review" in result.output
+    assert "runner is implemented" in result.output
+
+
+def test_cli_parallel_review_rejects_unknown_dag_mode(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--review-dag",
+            "shell",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Review DAG must be judge-best or hybrid" in result.output
 
 
 def test_doctor_reports_runtime_sections():
@@ -548,6 +908,35 @@ def test_cli_ask_dry_run_includes_context_policy(tmp_path):
     assert policy["inherit_skills"] == "all"
     assert policy["inherit_project_context"] == "summary"
     assert policy["memory_as_evidence"] is True
+
+
+def test_cli_ask_dry_run_includes_parallel_review_dag_options(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "runtime",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--review-dag",
+            "judge-best",
+            "--dry-run",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    options = payload["options"]
+    assert options["review_target"] == "git:diff"
+    assert options["parallel_review_runner"] == "scillm"
+    assert options["review_dag"] == "judge-best"
+    assert "parallel_review/judge.json" in payload["risk_analysis"]["filesystem_writes"]
 
 
 def test_deep_review_context_policy_never_treats_memory_as_evidence(tmp_path):
