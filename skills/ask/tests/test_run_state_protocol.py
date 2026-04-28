@@ -3,6 +3,7 @@
 import json
 import os
 import time
+from datetime import datetime, timezone
 
 import pytest
 from typer.testing import CliRunner
@@ -16,6 +17,15 @@ import ask.status as status_module
 from ask.doctor import run_doctor
 from ask.runtime_schema import validate_run_dir, validate_runtime_tree
 from ask.run_state import AskRunState, make_run_id, list_runs, prune_runs, read_status, watch_status
+
+
+def age_run_status(run: AskRunState, days: int = 30) -> None:
+    old_time = time.time() - days * 24 * 60 * 60
+    payload = json.loads(run.status_path.read_text())
+    payload["updated_at"] = datetime.fromtimestamp(old_time, tz=timezone.utc).isoformat()
+    run.status_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    os.utime(run.status_path, (old_time, old_time))
+    os.utime(run.run_dir, (old_time, old_time))
 
 
 def test_run_state_writes_request_status_and_events(tmp_path):
@@ -184,8 +194,7 @@ def test_prune_runs_removes_old_run_dirs(tmp_path):
     new = AskRunState("new-run", output_root=tmp_path)
     new.write_request({"question": "new"})
     new.finish({"question": "new", "items": []})
-    old_time = time.time() - 30 * 24 * 60 * 60
-    os.utime(old.run_dir, (old_time, old_time))
+    age_run_status(old)
 
     preview = prune_runs(output_root=tmp_path, older_than_days=14, dry_run=True)
     result = prune_runs(output_root=tmp_path, older_than_days=14)
@@ -194,6 +203,34 @@ def test_prune_runs_removes_old_run_dirs(tmp_path):
     assert str(old.run_dir) in result["removed"]
     assert not old.run_dir.exists()
     assert new.run_dir.exists()
+
+
+def test_prune_runs_keeps_old_running_run(tmp_path):
+    run = AskRunState("old-running", output_root=tmp_path)
+    run.write_request({"question": "still running"})
+    run.update("running", current_step="oracle")
+    old_time = time.time() - 30 * 24 * 60 * 60
+    os.utime(run.run_dir, (old_time, old_time))
+
+    result = prune_runs(output_root=tmp_path, older_than_days=14)
+
+    assert run.run_dir.exists()
+    assert str(run.run_dir) in result["kept"]
+    assert str(run.run_dir) not in result["removed"]
+
+
+def test_prune_runs_uses_status_updated_at_not_directory_mtime(tmp_path):
+    run = AskRunState("recent-status-old-dir", output_root=tmp_path)
+    run.write_request({"question": "recent status"})
+    run.finish({"question": "recent status", "items": []})
+    old_time = time.time() - 30 * 24 * 60 * 60
+    os.utime(run.run_dir, (old_time, old_time))
+
+    result = prune_runs(output_root=tmp_path, older_than_days=14)
+
+    assert run.run_dir.exists()
+    assert str(run.run_dir) in result["kept"]
+    assert str(run.run_dir) not in result["removed"]
 
 
 def test_prune_runs_keeps_unrecognized_old_dirs(tmp_path):
@@ -251,8 +288,7 @@ def test_cli_status_prune_dry_run_lists_old_run_dirs(tmp_path):
     old = AskRunState("old-cli-run", output_root=tmp_path)
     old.write_request({"question": "old"})
     old.finish({"question": "old", "items": []})
-    old_time = time.time() - 30 * 24 * 60 * 60
-    os.utime(old.run_dir, (old_time, old_time))
+    age_run_status(old)
 
     result = CliRunner().invoke(
         status_module.app,
@@ -303,6 +339,30 @@ def test_resume_accepts_running_state(tmp_path):
     resumed = AskRunState("running-id", output_root=tmp_path, resume=True)
 
     assert resumed.ask_id == "running-id"
+
+
+def test_resume_does_not_overwrite_original_request(tmp_path):
+    first = AskRunState("resume-id", output_root=tmp_path)
+    first.write_request({"command": "ask", "question": "original", "scope": "ask"})
+    first.update("running", current_step="memory_recall")
+
+    resumed = AskRunState("resume-id", output_root=tmp_path, resume=True)
+    resumed.write_request({"command": "ask", "question": "original", "scope": "ask"})
+
+    request = json.loads(first.request_path.read_text())
+    events = [json.loads(line)["event"] for line in first.events_path.read_text().splitlines()]
+    assert request["question"] == "original"
+    assert "resumed" in events
+
+
+def test_resume_rejects_conflicting_request(tmp_path):
+    first = AskRunState("resume-conflict", output_root=tmp_path)
+    first.write_request({"command": "ask", "question": "original", "scope": "ask"})
+    first.update("running", current_step="memory_recall")
+
+    resumed = AskRunState("resume-conflict", output_root=tmp_path, resume=True)
+    with pytest.raises(ValueError):
+        resumed.write_request({"command": "ask", "question": "changed", "scope": "ask"})
 
 
 def test_make_run_id_same_question_does_not_collide():
@@ -417,6 +477,37 @@ def test_cli_ask_chain_and_reviewer_specs_feed_dry_run_options(tmp_path):
     assert options["deep_review"] is True
     assert options["parallel_review"] is True
     assert "secret-persistence" in options["deep_review_focus"]
+
+
+def test_cli_ask_dry_run_includes_context_policy(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "runtime",
+            "--dry-run",
+            "--review-context",
+            "inherited",
+            "--inherit-memory",
+            "full",
+            "--inherit-skills",
+            "all",
+            "--inherit-project-context",
+            "summary",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    policy = payload["options"]["context_policy"]
+    assert policy["review_context"] == "inherited"
+    assert policy["inherit_memory"] == "full"
+    assert policy["inherit_skills"] == "all"
+    assert policy["inherit_project_context"] == "summary"
+    assert policy["memory_as_evidence"] is True
 
 
 def test_cli_real_non_oracle_ask_smoke_writes_granular_events(monkeypatch, tmp_path):

@@ -254,14 +254,18 @@ class AskRunState:
         self.events_path = self.run_dir / f"{self.ask_id}.events.jsonl"
         self.started_at = datetime.now(timezone.utc).isoformat()
         self.state = "created"
+        self.resume = resume
         if resume and overwrite:
             raise ValueError("Use either resume or overwrite, not both")
         if resume:
             if not self.run_dir.exists():
                 raise FileNotFoundError(f"Run does not exist for resume: {self.run_dir}")
-            state = self._existing_status_state()
+            existing_status = self._existing_status()
+            state = existing_status.get("state")
             if state not in RESUMABLE_STATES:
                 raise FileExistsError(f"Run is not resumable: {self.run_dir} state={state or 'unknown'}")
+            self.started_at = str(existing_status.get("started_at") or self.started_at)
+            self.state = str(state)
         if self.run_dir.exists() and not overwrite and not resume:
             raise FileExistsError(f"Run already exists: {self.run_dir}")
         if overwrite and self.run_dir.exists():
@@ -280,6 +284,19 @@ class AskRunState:
         }
 
     def write_request(self, payload: dict[str, Any]) -> None:
+        if self.resume and self.request_path.exists():
+            existing_request = self._read_existing_request()
+            conflicts = {
+                key: (existing_request.get(key), payload.get(key))
+                for key in ("command", "question", "scope")
+                if existing_request.get(key) != payload.get(key)
+            }
+            if conflicts:
+                raise ValueError(f"Resume request conflicts with existing run request: {conflicts}")
+            current_status = self._read_current_status()
+            self.event("resumed", current_step=current_status.get("current_step", ""))
+            self.update("running", request=existing_request, resumed=True, current_step=current_status.get("current_step", ""))
+            return
         request = {
             "ask_id": self.ask_id,
             "created_at": self.started_at,
@@ -399,14 +416,25 @@ class AskRunState:
             }
 
     def _existing_status_state(self) -> str | None:
+        payload = self._existing_status()
+        state = payload.get("state")
+        return str(state) if state else None
+
+    def _existing_status(self) -> dict[str, Any]:
         if not self.status_path.exists():
-            return None
+            return {}
         try:
             payload = json.loads(self.status_path.read_text())
         except (OSError, json.JSONDecodeError):
-            return None
-        state = payload.get("state")
-        return str(state) if state else None
+            return {}
+        return payload if isinstance(payload, dict) else {}
+
+    def _read_existing_request(self) -> dict[str, Any]:
+        try:
+            payload = json.loads(self.request_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            return {}
+        return payload if isinstance(payload, dict) else {}
 
     def _append_index(self, status_payload: dict[str, Any]) -> None:
         entry = {
@@ -647,11 +675,34 @@ def _validated_run_status(run_dir: Path) -> dict[str, Any] | None:
             return None
     except OSError:
         return None
+    payload["_status_path"] = str(status_path)
     return payload
 
 
-def prune_runs(output_root: Path | str | None = None, older_than_days: int = 14, dry_run: bool = False) -> dict[str, Any]:
+def _parse_status_timestamp(value: Any) -> float | None:
+    if not value:
+        return None
+    try:
+        text = str(value).replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(text)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.timestamp()
+    except (TypeError, ValueError):
+        return None
 
+
+def _run_age_basis(status: dict[str, Any], run_dir: Path) -> float | None:
+    parsed = _parse_status_timestamp(status.get("updated_at"))
+    if parsed is not None:
+        return parsed
+    try:
+        return (run_dir / f"{run_dir.name}.status.json").stat().st_mtime
+    except OSError:
+        return None
+
+
+def prune_runs(output_root: Path | str | None = None, older_than_days: int = 14, dry_run: bool = False) -> dict[str, Any]:
     root = Path(output_root).expanduser() if output_root else default_run_root()
     root = root.resolve()
     cutoff = time.time() - older_than_days * 24 * 60 * 60
@@ -668,15 +719,18 @@ def prune_runs(output_root: Path | str | None = None, older_than_days: int = 14,
         if resolved_parent != root:
             kept.append(str(run_dir))
             continue
-        if _validated_run_status(run_dir) is None:
+        status = _validated_run_status(run_dir)
+        if status is None:
             kept.append(str(run_dir))
             continue
-        try:
-            mtime = run_dir.stat().st_mtime
-        except OSError:
+        if status.get("state") not in TERMINAL_STATES:
             kept.append(str(run_dir))
             continue
-        if mtime >= cutoff:
+        age_basis = _run_age_basis(status, run_dir)
+        if age_basis is None:
+            kept.append(str(run_dir))
+            continue
+        if age_basis >= cutoff:
             kept.append(str(run_dir))
             continue
         removed.append(str(run_dir))

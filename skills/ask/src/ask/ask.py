@@ -42,7 +42,7 @@ from .ask_routing import (
 )
 from .reviewer_specs import focus_from_reviewer_specs, load_selected_reviewer_specs
 from .review_protocols import is_date_sensitive_question
-from .run_state import AskRunState, NoopRunState, make_run_id
+from .run_state import AskRunState, NoopRunState, build_context_policy, make_run_id
 from .session_writer import SessionWriter
 from .skills_exec import run_skill, parse_memory_output, run_memory_recall
 from .persona_routing import (
@@ -607,6 +607,10 @@ def main(
     deep_review_fallback_policy: str = typer.Option("fail_closed", help="Deep-review downgrade policy: fail_closed or warn"),
     deep_review_persist: str = typer.Option("summary", help="Deep-review persistence: summary or full"),
     deep_review_output_root: str = typer.Option(".ask_artifacts/deep-review", help="Deep-review artifact directory"),
+    review_context: str = typer.Option("fresh", "--review-context", help="Context policy: fresh or inherited"),
+    inherit_memory: str = typer.Option("summary", "--inherit-memory", help="Context policy memory inheritance: none, summary, or full"),
+    inherit_skills: str = typer.Option("selected", "--inherit-skills", help="Context policy skill inheritance: none, selected, or all"),
+    inherit_project_context: str = typer.Option("no", "--inherit-project-context", help="Context policy project inheritance: no, summary, or full"),
     chain: Optional[str] = typer.Option(None, "--chain", help="Saved review chain spec name or path"),
     reviewer_specs: Optional[list[str]] = typer.Option(None, "--reviewer-spec", help="Reviewer spec name or path (repeatable)"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview execution spec and risk analysis without mutation"),
@@ -732,6 +736,26 @@ def main(
             "Deep-review persistence must be summary or full.",
             param_hint="--deep-review-persist",
         )
+    if review_context not in {"fresh", "inherited"}:
+        raise typer.BadParameter(
+            "Review context must be fresh or inherited.",
+            param_hint="--review-context",
+        )
+    if inherit_memory not in {"none", "summary", "full"}:
+        raise typer.BadParameter(
+            "Memory inheritance must be none, summary, or full.",
+            param_hint="--inherit-memory",
+        )
+    if inherit_skills not in {"none", "selected", "all"}:
+        raise typer.BadParameter(
+            "Skill inheritance must be none, selected, or all.",
+            param_hint="--inherit-skills",
+        )
+    if inherit_project_context not in {"no", "summary", "full"}:
+        raise typer.BadParameter(
+            "Project context inheritance must be no, summary, or full.",
+            param_hint="--inherit-project-context",
+        )
     if oracle and raw:
         raise typer.BadParameter(
             "Oracle synthesis needs retrieved context. Remove --raw, or run without --oracle.",
@@ -791,6 +815,13 @@ def main(
         )
 
     run_id = ask_id or make_run_id(question)
+    context_policy = build_context_policy(
+        "deep-review" if deep_review else "ask",
+        review_context=review_context,
+        inherit_memory=inherit_memory,
+        inherit_skills=inherit_skills,
+        inherit_project_context=inherit_project_context,
+    )
     request_payload = {
         "command": "ask",
         "question": question,
@@ -827,6 +858,7 @@ def main(
         "deep_reviewers": deep_reviewers,
         "deep_review_focus": deep_review_focus,
         "deep_review_output_root": deep_review_output_root,
+        "context_policy": context_policy,
         "chain": chain,
         "reviewer_specs": reviewer_specs or [],
         "suggested_personas_count": 0,
