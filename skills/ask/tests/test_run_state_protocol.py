@@ -1,5 +1,6 @@
 """Runtime artifact protocol tests for ask."""
 
+import asyncio
 import json
 import os
 import time
@@ -175,6 +176,7 @@ def test_cli_parallel_review_missing_target_pauses_with_needs_attention(tmp_path
 
 
 def test_cli_parallel_review_runs_three_reviewers_then_judge(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
     target = tmp_path / "target.py"
     target.write_text("def answer():\n    return 42\n")
     calls = []
@@ -250,6 +252,7 @@ def test_cli_parallel_review_runs_three_reviewers_then_judge(monkeypatch, tmp_pa
 
 
 def test_cli_parallel_review_writes_code_runner_handoff_when_requested(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
     target = tmp_path / "target.py"
     target.write_text("def answer():\n    return 42\n")
 
@@ -352,6 +355,190 @@ def test_parallel_review_verifier_rejects_missing_judge():
     assert "missing judge output" in result["failures"]
 
 
+def test_parallel_review_rejects_target_outside_review_root(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    secret = tmp_path / "secret.env"
+    secret.write_text("API_KEY=super-secret\n")
+
+    with pytest.raises(parallel_review_module.ParallelReviewError):
+        parallel_review_module.build_target_bundle(str(secret), review_root=root)
+
+
+def test_parallel_review_rejects_symlink_target_outside_review_root(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    secret = tmp_path / "secret.env"
+    secret.write_text("API_KEY=super-secret\n")
+    link = root / "secret.env"
+    link.symlink_to(secret)
+
+    with pytest.raises(parallel_review_module.ParallelReviewError):
+        parallel_review_module.build_target_bundle(str(link), review_root=root)
+
+
+def test_parallel_review_redacts_obvious_secrets(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    target = root / "config.env"
+    target.write_text("API_KEY=super-secret\npassword = hunter2\n")
+
+    bundle = parallel_review_module.build_target_bundle(str(target), review_root=root)
+
+    assert "super-secret" not in bundle["markdown"]
+    assert "hunter2" not in bundle["markdown"]
+    assert "[REDACTED]" in bundle["markdown"]
+
+
+def test_verifier_rejects_safe_verdict_for_unresolved_target():
+    verdict = {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "missing.py",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "missing.py", "kind": "declared"}],
+            "truncated": False,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["missing.py"],
+                "evidence": ["missing.py is fine"],
+                "findings": [],
+                "read_only_claim": True,
+            }
+        ],
+        "judge": {
+            "best_reviewer": "Brandon",
+            "hybrid_summary": "Safe.",
+        },
+        "files_inspected": ["missing.py"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("declared target" in failure for failure in result["failures"])
+
+
+def test_verifier_rejects_safe_verdict_for_directory_only_target():
+    verdict = {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "src",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "src", "kind": "directory"}],
+            "truncated": False,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["src"],
+                "evidence": ["src is fine"],
+                "findings": [],
+                "read_only_claim": True,
+            }
+        ],
+        "judge": {"best_reviewer": "Brandon", "hybrid_summary": "Safe."},
+        "files_inspected": ["src"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("directory target" in failure for failure in result["failures"])
+
+
+def test_verifier_rejects_safe_verdict_for_truncated_target_bundle():
+    verdict = {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "target.py",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "target.py", "path": "target.py", "kind": "file"}],
+            "truncated": True,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["target.py"],
+                "evidence": ["target.py is fine"],
+                "findings": [],
+                "read_only_claim": True,
+            }
+        ],
+        "judge": {"best_reviewer": "Brandon", "hybrid_summary": "Safe."},
+        "files_inspected": ["target.py"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert "safe verdict requires untruncated target_bundle" in result["failures"]
+
+
+def test_verifier_rejects_files_inspected_outside_target_bundle():
+    verdict = {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "target.py",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "target.py", "path": "target.py", "kind": "file"}],
+            "truncated": False,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["other.py"],
+                "evidence": ["other.py is fine"],
+                "findings": [],
+                "read_only_claim": True,
+            }
+        ],
+        "judge": {"best_reviewer": "Brandon", "hybrid_summary": "Safe."},
+        "files_inspected": ["other.py"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("outside target bundle" in failure for failure in result["failures"])
+
+
+def test_judge_best_and_hybrid_produce_distinct_judge_prompts():
+    kwargs = {
+        "question": "review target",
+        "target": "target.py",
+        "reviewers": 3,
+        "personas": "Brandon,Margaret,Jennifer",
+        "focus": None,
+        "runner": "scillm",
+        "read_only": True,
+        "model": "text",
+    }
+    outputs = [{"reviewer": "Brandon", "verdict": "SAFE", "summary": "ok", "evidence": ["target.py"]}]
+    plan_best = parallel_review_module.build_parallel_review_plan(**kwargs, dag_mode="judge-best")
+    plan_hybrid = parallel_review_module.build_parallel_review_plan(**kwargs, dag_mode="hybrid")
+
+    assert parallel_review_module.build_judge_prompt(plan_best, outputs) != parallel_review_module.build_judge_prompt(plan_hybrid, outputs)
+
+
 def test_parse_reviewer_output_normalizes_list_fields():
     payload = {
         "reviewer": {
@@ -381,6 +568,7 @@ def test_parse_reviewer_output_normalizes_list_fields():
 
 
 def test_cli_parallel_review_verifier_failure_exits_needs_attention(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
     target = tmp_path / "target.py"
     target.write_text("def answer():\n    return 42\n")
 
@@ -447,6 +635,217 @@ def test_cli_parallel_review_verifier_failure_exits_needs_attention(monkeypatch,
     assert status["state"] == "needs_attention"
     assert status["needs_attention"]["reason"] == "parallel_review_verifier_failed"
     assert verdict["verifier"]["status"] == "FAIL"
+
+
+def test_parallel_review_events_include_each_reviewer(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Best evidence.",
+                    "hybrid_summary": "All reviewers inspected target.py.",
+                    "verdict": "SAFE",
+                    "summary": "Judge synthesis.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected target.py.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--ask-id",
+            "parallel-events",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    status = read_status("parallel-events", tail_events=80, output_root=tmp_path)
+    events = [event["event"] for event in status["event_tail"]]
+    assert events.count("reviewer_started") == 3
+    assert events.count("reviewer_finished") == 3
+    assert "judge_started" in events
+    assert "judge_finished" in events
+    assert "verifier_started" in events
+    assert "verifier_finished" in events
+
+
+def test_parallel_review_reviewer_calls_overlap(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+    started = {}
+    finished = {}
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Best evidence.",
+                    "hybrid_summary": "All reviewers inspected target.py.",
+                    "verdict": "SAFE",
+                    "summary": "Judge synthesis.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                }
+            started[reviewer] = time.monotonic()
+            await asyncio.sleep(0.05)
+            finished[reviewer] = time.monotonic()
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected target.py.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--ask-id",
+            "parallel-overlap",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert len(started) == 3
+    assert max(started.values()) < min(finished.values())
+
+
+def test_parallel_review_single_reviewer_failure_preserves_artifacts(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            if reviewer == "Margaret":
+                raise RuntimeError("model unavailable")
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Best evidence.",
+                    "hybrid_summary": "One reviewer failed; outputs are incomplete.",
+                    "verdict": "INSUFFICIENT_EVIDENCE",
+                    "summary": "Judge synthesis.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected target.py.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--ask-id",
+            "parallel-reviewer-failure",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    review_dir = tmp_path / "parallel-reviewer-failure" / "parallel_review"
+    verdict = json.loads((review_dir / "verdict.json").read_text())
+    verifier_log = (review_dir / "verifier.log").read_text()
+    status = read_status("parallel-reviewer-failure", tail_events=80, output_root=tmp_path)
+    events = [event["event"] for event in status["event_tail"]]
+    assert (review_dir / "reviewer_outputs").exists()
+    assert verdict["verifier"]["status"] == "FAIL"
+    assert "Margaret: reviewer failed" in verifier_log
+    assert status["state"] == "needs_attention"
+    assert "reviewer_failed" in events
 
 
 def test_cli_parallel_review_rejects_unbounded_fanout(tmp_path):

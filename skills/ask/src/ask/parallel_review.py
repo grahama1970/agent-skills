@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -20,6 +22,11 @@ PARALLEL_REVIEW_SCHEMA_VERSION = "ask.parallel_review.v1"
 MAX_REVIEWERS = 7
 DEFAULT_REVIEWERS = 3
 MAX_TARGET_CHARS = 200_000
+SAFE_VERDICTS = {"SAFE", "SAFE_WITH_CONDITIONS"}
+SECRET_PATTERNS = [
+    re.compile(r"(?i)(api[_-]?key|token|secret|password|private[_-]?key)(\s*[=:]\s*)([^\s\"']+)"),
+    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.DOTALL),
+]
 
 
 class ParallelReviewError(RuntimeError):
@@ -141,6 +148,8 @@ def run_parallel_review(
         raise ParallelReviewError("Parallel review is read-only; use /code-runner handoff for edits")
     if reviewers > MAX_REVIEWERS:
         raise ParallelReviewError(f"Parallel review supports at most {MAX_REVIEWERS} reviewers")
+    if dag_mode not in {"hybrid", "judge-best"}:
+        raise ParallelReviewError("Parallel review DAG must be hybrid or judge-best")
     run_dir = Path(getattr(run_state, "run_dir", ""))
     if not run_dir:
         raise ParallelReviewError("Parallel review requires runtime artifacts")
@@ -172,8 +181,8 @@ def run_parallel_review(
     plan_path = review_dir / "reviewer_plan.json"
     plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
     adapter = ScillmReviewerAdapter(model=model or "text", timeout=timeout)
-    reviewer_outputs = _run_reviewers(adapter, plan, target_bundle["markdown"], timeout)
-    judge_output = _run_judge(adapter, plan, reviewer_outputs, timeout)
+    reviewer_outputs = _run_reviewers(adapter, plan, target_bundle["markdown"], timeout, run_state)
+    judge_output = _run_judge(adapter, plan, reviewer_outputs, timeout, run_state)
     for output in reviewer_outputs:
         output_path = outputs_dir / f"{safe_artifact_name(output.get('reviewer') or output.get('id') or 'reviewer')}.json"
         output_path.write_text(json.dumps(output, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
@@ -185,14 +194,17 @@ def run_parallel_review(
         question=question,
         target=target,
         plan=plan,
+        target_bundle=target_bundle,
         reviewer_outputs=reviewer_outputs,
         judge_output=judge_output,
         git_before=git_before,
         git_after=git_after,
     )
+    run_state.event("verifier_started", step="parallel_review")
     verifier = verify_parallel_review_bundle(verdict)
+    run_state.event("verifier_finished", step="parallel_review", status=verifier["status"], failures=len(verifier["failures"]))
     verdict["verifier"] = verifier
-    if verifier["status"] == "FAIL" and verdict["verdict"] in {"SAFE", "SAFE_WITH_CONDITIONS"}:
+    if verifier["status"] == "FAIL" and verdict["verdict"] in SAFE_VERDICTS:
         verdict["verdict"] = "INSUFFICIENT_EVIDENCE"
     verdict_path = review_dir / "verdict.json"
     synthesis_path = review_dir / "synthesis.md"
@@ -272,6 +284,7 @@ def _run_reviewers(
     plan: dict[str, Any],
     target_bundle: str,
     timeout: float,
+    run_state: Any,
 ) -> list[dict[str, Any]]:
     reviewer_payloads = []
     for reviewer in plan["reviewers"]:
@@ -285,7 +298,7 @@ def _run_reviewers(
                 "required_output_schema": reviewer_output_schema(),
             }
         )
-    return asyncio.run(_run_reviewers_async(adapter, reviewer_payloads, timeout))
+    return asyncio.run(_run_reviewers_async(adapter, reviewer_payloads, timeout, run_state))
 
 
 def _run_judge(
@@ -293,8 +306,9 @@ def _run_judge(
     plan: dict[str, Any],
     reviewer_outputs: list[dict[str, Any]],
     timeout: float,
+    run_state: Any,
 ) -> dict[str, Any]:
-    return asyncio.run(_run_judge_async(adapter, plan, reviewer_outputs, timeout))
+    return asyncio.run(_run_judge_async(adapter, plan, reviewer_outputs, timeout, run_state))
 
 
 async def _run_judge_async(
@@ -302,6 +316,7 @@ async def _run_judge_async(
     plan: dict[str, Any],
     reviewer_outputs: list[dict[str, Any]],
     timeout: float,
+    run_state: Any,
 ) -> dict[str, Any]:
     prompt = build_judge_prompt(plan, reviewer_outputs)
     payload = {
@@ -328,11 +343,35 @@ async def _run_judge_async(
             "read_only_claim": True,
         },
     }
-    output = await asyncio.wait_for(adapter.review(payload), timeout=max(timeout, 1.0))
+    started = time.monotonic()
+    run_state.event("judge_started", step="parallel_review", dag_mode=plan["dag_mode"])
+    try:
+        output = await asyncio.wait_for(adapter.review(payload), timeout=max(timeout, 1.0))
+    except Exception as exc:
+        elapsed_ms = int((time.monotonic() - started) * 1000)
+        run_state.event("judge_failed", step="parallel_review", elapsed_ms=elapsed_ms, error=str(exc))
+        return {
+            "reviewer": "review-judge",
+            "judge": "review-judge",
+            "verdict": "INSUFFICIENT_EVIDENCE",
+            "summary": "Judge call failed.",
+            "hybrid_summary": "",
+            "best_reviewer": "",
+            "best_review_reason": "",
+            "evidence": [],
+            "findings": [],
+            "test_gaps": [],
+            "read_only_claim": True,
+            "status": "failed",
+            "error": str(exc),
+        }
+    elapsed_ms = int((time.monotonic() - started) * 1000)
     output.setdefault("judge", "review-judge")
     output.setdefault("best_reviewer", "")
     output.setdefault("best_review_reason", "")
     output.setdefault("hybrid_summary", output.get("summary", ""))
+    output.setdefault("status", "ok")
+    run_state.event("judge_finished", step="parallel_review", elapsed_ms=elapsed_ms, verdict=output.get("verdict"))
     return output
 
 
@@ -340,24 +379,72 @@ async def _run_reviewers_async(
     adapter: ScillmReviewerAdapter,
     reviewer_payloads: list[dict[str, Any]],
     timeout: float,
+    run_state: Any,
 ) -> list[dict[str, Any]]:
     concurrency = min(3, len(reviewer_payloads))
     semaphore = asyncio.Semaphore(concurrency)
 
     async def run_one(payload: dict[str, Any]) -> dict[str, Any]:
+        reviewer = payload["reviewer"]
+        reviewer_name = str(reviewer.get("name") or reviewer.get("id") or "reviewer")
+        started = time.monotonic()
         async with semaphore:
-            return await adapter.review(payload)
+            run_state.event("reviewer_started", step="parallel_review", reviewer=reviewer_name)
+            try:
+                output = await asyncio.wait_for(adapter.review(payload), timeout=max(timeout, 1.0))
+            except Exception as exc:
+                elapsed_ms = int((time.monotonic() - started) * 1000)
+                run_state.event(
+                    "reviewer_failed",
+                    step="parallel_review",
+                    reviewer=reviewer_name,
+                    elapsed_ms=elapsed_ms,
+                    error=str(exc),
+                )
+                return {
+                    "reviewer": reviewer_name,
+                    "role": reviewer.get("role", "reviewer"),
+                    "verdict": "INSUFFICIENT_EVIDENCE",
+                    "summary": f"Reviewer call failed: {exc}",
+                    "files_inspected": [],
+                    "evidence": [],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                    "confidence": "low",
+                    "status": "failed",
+                    "error": str(exc),
+                    "schema_version": PARALLEL_REVIEW_SCHEMA_VERSION,
+                }
+            elapsed_ms = int((time.monotonic() - started) * 1000)
+            output.setdefault("status", "ok")
+            run_state.event(
+                "reviewer_finished",
+                step="parallel_review",
+                reviewer=reviewer_name,
+                elapsed_ms=elapsed_ms,
+                verdict=output.get("verdict"),
+            )
+            return output
 
     tasks = [asyncio.create_task(run_one(payload)) for payload in reviewer_payloads]
-    outputs: list[dict[str, Any]] = []
-    for task in asyncio.as_completed(tasks, timeout=max(timeout, 1.0) * max(1, len(tasks))):
-        outputs.append(await task)
+    outputs = await asyncio.gather(*tasks)
     outputs.sort(key=lambda item: str(item.get("reviewer") or item.get("id") or ""))
     return outputs
 
 
 def build_judge_prompt(plan: dict[str, Any], reviewer_outputs: list[dict[str, Any]]) -> str:
-    return f"""Judge the parallel reviewer outputs and produce a hybrid review.
+    if plan["dag_mode"] == "judge-best":
+        instruction = (
+            "Pick the single strongest reviewer by evidence quality. Preserve that review's "
+            "evidence-supported verdict and findings; do not create a merged hybrid finding set."
+        )
+    else:
+        instruction = (
+            "Pick the best single reviewer by evidence quality, then create a hybrid summary "
+            "that merges only evidence-supported findings across reviewers."
+        )
+    return f"""Judge the parallel reviewer outputs.
 
 Question:
 {plan["question"]}
@@ -371,19 +458,26 @@ DAG mode:
 Reviewer outputs:
 {json.dumps(reviewer_outputs, indent=2, sort_keys=True, default=str)}
 
-Return JSON only. Pick the best single reviewer by evidence quality, then create a hybrid summary
-that keeps only evidence-supported findings. Do not add claims not present in the reviewer outputs.
+Return JSON only. {instruction} Do not add claims not present in the reviewer outputs.
 """
 
 
-def build_target_bundle(target: str) -> dict[str, Any]:
+def build_target_bundle(target: str, *, review_root: Path | None = None) -> dict[str, Any]:
     target = target.strip()
+    root = (review_root or Path.cwd()).resolve()
     if target == "git:diff":
         diff = _git_diff()
         markdown = f"# /ask Parallel Review Target\n\n## Target\n\n`git:diff`\n\n## Diff\n\n```diff\n{diff or '(empty git diff)'}\n```\n"
         return {
             "kind": "git:diff",
-            "entries": [{"target": target, "kind": "git:diff", "chars": len(diff)}],
+            "entries": [
+                {
+                    "target": target,
+                    "kind": "git:diff",
+                    "chars": len(diff),
+                    "paths": _paths_from_git_diff(diff),
+                }
+            ],
             "markdown": _truncate(markdown),
             "truncated": len(markdown) > MAX_TARGET_CHARS,
         }
@@ -392,11 +486,21 @@ def build_target_bundle(target: str) -> dict[str, Any]:
     for raw_part in [part.strip() for part in target.split(",") if part.strip()]:
         path = Path(raw_part).expanduser()
         if path.is_file():
-            text = path.read_text(encoding="utf-8", errors="replace")
-            entries.append({"target": raw_part, "kind": "file", "chars": len(text)})
+            resolved = path.resolve()
+            if not _is_relative_to(resolved, root):
+                raise ParallelReviewError(f"review target outside allowed root: {raw_part}")
+            text = _redact_secrets(path.read_text(encoding="utf-8", errors="replace"))
+            try:
+                rel_path = str(resolved.relative_to(root))
+            except ValueError:
+                rel_path = str(resolved)
+            entries.append({"target": raw_part, "kind": "file", "path": rel_path, "resolved_path": str(resolved), "chars": len(text)})
             sections.extend([f"## File: `{raw_part}`", "", "```text", text, "```", ""])
         elif path.is_dir():
-            entries.append({"target": raw_part, "kind": "directory", "chars": 0})
+            resolved = path.resolve()
+            if not _is_relative_to(resolved, root):
+                raise ParallelReviewError(f"review target outside allowed root: {raw_part}")
+            entries.append({"target": raw_part, "kind": "directory", "path": str(resolved.relative_to(root)), "chars": 0})
             sections.extend([f"## Directory: `{raw_part}`", "", "Directory target declared; reviewer must treat listing as not inspected.", ""])
         else:
             entries.append({"target": raw_part, "kind": "declared", "chars": 0})
@@ -494,6 +598,7 @@ def synthesize_parallel_review(
     question: str,
     target: str,
     plan: dict[str, Any],
+    target_bundle: dict[str, Any],
     reviewer_outputs: list[dict[str, Any]],
     judge_output: dict[str, Any],
     git_before: list[str],
@@ -526,6 +631,11 @@ def synthesize_parallel_review(
         "runner": plan["runner"],
         "read_only": plan["read_only"],
         "dag_mode": plan["dag_mode"],
+        "target_bundle": {
+            "kind": target_bundle["kind"],
+            "entries": target_bundle["entries"],
+            "truncated": target_bundle["truncated"],
+        },
         "reviewers": reviewer_outputs,
         "judge": judge_output,
         "best_reviewer": judge_output.get("best_reviewer", ""),
@@ -556,6 +666,10 @@ def verify_parallel_review_bundle(verdict: dict[str, Any]) -> dict[str, Any]:
         failures.append("parallel review must be read-only")
     if verdict.get("execution", {}).get("unexpected_file_changes"):
         failures.append("unexpected file changes detected")
+    target_bundle = verdict.get("target_bundle")
+    concrete_targets = _concrete_target_names(target_bundle if isinstance(target_bundle, dict) else {})
+    if verdict.get("verdict") in SAFE_VERDICTS:
+        _verify_safe_target_bundle(target_bundle if isinstance(target_bundle, dict) else {}, failures)
     reviewers = verdict.get("reviewers")
     if not isinstance(reviewers, list) or not reviewers:
         failures.append("missing reviewer outputs")
@@ -565,12 +679,21 @@ def verify_parallel_review_bundle(verdict: dict[str, Any]) -> dict[str, Any]:
             continue
         if output.get("verdict") not in ALLOWED_VERDICTS:
             failures.append(f"{output.get('reviewer', 'reviewer')}: invalid verdict")
+        if output.get("status") == "failed":
+            failures.append(f"{output.get('reviewer', 'reviewer')}: reviewer failed: {output.get('error', '')}")
         if not str(output.get("summary", "")).strip():
             failures.append(f"{output.get('reviewer', 'reviewer')}: missing summary")
         if not output.get("read_only_claim"):
             failures.append(f"{output.get('reviewer', 'reviewer')}: missing read_only_claim")
         if output.get("verdict") in {"SAFE", "SAFE_WITH_CONDITIONS"} and not output.get("evidence"):
             failures.append(f"{output.get('reviewer', 'reviewer')}: safe verdict requires evidence")
+        if output.get("verdict") in SAFE_VERDICTS:
+            _verify_files_inspected_in_target(
+                output.get("reviewer", "reviewer"),
+                output.get("files_inspected"),
+                concrete_targets,
+                failures,
+            )
         for finding in _list_value(output.get("findings")):
             if isinstance(finding, dict):
                 _verify_parallel_finding(output.get("reviewer", "reviewer"), finding, failures)
@@ -578,12 +701,16 @@ def verify_parallel_review_bundle(verdict: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(judge, dict):
         failures.append("missing judge output")
     else:
+        if judge.get("status") == "failed":
+            failures.append(f"judge failed: {judge.get('error', '')}")
         if not str(judge.get("hybrid_summary", "")).strip():
             failures.append("judge missing hybrid_summary")
         if not str(judge.get("best_reviewer", "")).strip():
             failures.append("judge missing best_reviewer")
     if verdict.get("verdict") in {"SAFE", "SAFE_WITH_CONDITIONS"} and not verdict.get("files_inspected"):
         failures.append("safe verdict requires files_inspected")
+    if verdict.get("verdict") in SAFE_VERDICTS:
+        _verify_files_inspected_in_target("verdict", verdict.get("files_inspected"), concrete_targets, failures)
     return {"status": "PASS" if not failures else "FAIL", "failures": failures}
 
 
@@ -719,3 +846,85 @@ def _list_value(value: Any) -> list[Any]:
     if isinstance(value, list):
         return value
     return [value]
+
+
+def _is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _redact_secrets(text: str) -> str:
+    redacted = text
+    for pattern in SECRET_PATTERNS:
+        if pattern.flags & re.DOTALL:
+            redacted = pattern.sub("[REDACTED PRIVATE KEY]", redacted)
+        else:
+            redacted = pattern.sub(r"\1\2[REDACTED]", redacted)
+    return redacted
+
+
+def _paths_from_git_diff(diff: str) -> list[str]:
+    paths: list[str] = []
+    for line in diff.splitlines():
+        if not line.startswith("diff --git "):
+            continue
+        parts = line.split()
+        if len(parts) >= 4:
+            paths.append(parts[3][2:] if parts[3].startswith("b/") else parts[3])
+    return sorted(set(paths))
+
+
+def _concrete_target_names(target_bundle: dict[str, Any]) -> set[str]:
+    names: set[str] = set()
+    for entry in _list_value(target_bundle.get("entries")):
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("kind") == "file":
+            for key in ("target", "path", "resolved_path"):
+                value = str(entry.get(key) or "").strip()
+                if value:
+                    names.add(value)
+                    names.add(Path(value).name)
+        elif entry.get("kind") == "git:diff":
+            names.add("git:diff")
+            for path in _list_value(entry.get("paths")):
+                value = str(path).strip()
+                if value:
+                    names.add(value)
+                    names.add(Path(value).name)
+    return names
+
+
+def _verify_safe_target_bundle(target_bundle: dict[str, Any], failures: list[str]) -> None:
+    entries = [entry for entry in _list_value(target_bundle.get("entries")) if isinstance(entry, dict)]
+    if not target_bundle:
+        failures.append("missing target_bundle metadata")
+        return
+    if target_bundle.get("truncated"):
+        failures.append("safe verdict requires untruncated target_bundle")
+    if not entries:
+        failures.append("safe verdict requires concrete target entries")
+    for entry in entries:
+        if entry.get("kind") in {"declared", "directory"}:
+            failures.append(f"safe verdict cannot rely on {entry.get('kind')} target: {entry.get('target')}")
+
+
+def _verify_files_inspected_in_target(
+    reviewer: str,
+    files_inspected: Any,
+    concrete_targets: set[str],
+    failures: list[str],
+) -> None:
+    inspected = [str(item).strip() for item in _list_value(files_inspected) if str(item).strip()]
+    if not inspected:
+        failures.append(f"{reviewer}: safe verdict requires files_inspected")
+        return
+    if not concrete_targets:
+        failures.append(f"{reviewer}: no concrete target files available for files_inspected")
+        return
+    for item in inspected:
+        if item not in concrete_targets and Path(item).name not in concrete_targets:
+            failures.append(f"{reviewer}: files_inspected outside target bundle: {item}")

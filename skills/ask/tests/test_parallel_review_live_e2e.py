@@ -14,7 +14,8 @@ from ask.run_state import read_status
     os.environ.get("ASK_LIVE_SCILLM_E2E") != "1",
     reason="set ASK_LIVE_SCILLM_E2E=1 to run the real /scillm parallel-review smoke test",
 )
-def test_live_parallel_review_scillm_composition(tmp_path):
+def test_live_parallel_review_scillm_composition(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
     target = tmp_path / "target.py"
     target.write_text("def answer():\n    return 42\n", encoding="utf-8")
 

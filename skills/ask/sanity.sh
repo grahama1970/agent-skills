@@ -221,8 +221,19 @@ if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytes
     tests/test_run_state_protocol.py::test_cli_parallel_review_runs_three_reviewers_then_judge \
     tests/test_run_state_protocol.py::test_cli_parallel_review_writes_code_runner_handoff_when_requested \
     tests/test_run_state_protocol.py::test_parallel_review_verifier_rejects_missing_judge \
+    tests/test_run_state_protocol.py::test_parallel_review_rejects_target_outside_review_root \
+    tests/test_run_state_protocol.py::test_parallel_review_rejects_symlink_target_outside_review_root \
+    tests/test_run_state_protocol.py::test_parallel_review_redacts_obvious_secrets \
+    tests/test_run_state_protocol.py::test_verifier_rejects_safe_verdict_for_unresolved_target \
+    tests/test_run_state_protocol.py::test_verifier_rejects_safe_verdict_for_directory_only_target \
+    tests/test_run_state_protocol.py::test_verifier_rejects_safe_verdict_for_truncated_target_bundle \
+    tests/test_run_state_protocol.py::test_verifier_rejects_files_inspected_outside_target_bundle \
+    tests/test_run_state_protocol.py::test_judge_best_and_hybrid_produce_distinct_judge_prompts \
     tests/test_run_state_protocol.py::test_parse_reviewer_output_normalizes_list_fields \
     tests/test_run_state_protocol.py::test_cli_parallel_review_verifier_failure_exits_needs_attention \
+    tests/test_run_state_protocol.py::test_parallel_review_events_include_each_reviewer \
+    tests/test_run_state_protocol.py::test_parallel_review_reviewer_calls_overlap \
+    tests/test_run_state_protocol.py::test_parallel_review_single_reviewer_failure_preserves_artifacts \
     tests/test_run_state_protocol.py::test_cli_parallel_review_rejects_unbounded_fanout \
     tests/test_run_state_protocol.py::test_cli_parallel_review_rejects_unknown_runner \
     tests/test_run_state_protocol.py::test_cli_parallel_review_rejects_unknown_dag_mode \

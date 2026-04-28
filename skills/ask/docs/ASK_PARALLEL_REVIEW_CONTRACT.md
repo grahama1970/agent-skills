@@ -131,8 +131,24 @@ call 4: judge/synthesis      after calls 1-3 complete
 ```
 
 The reviewer calls use `/scillm`'s documented non-QRA batch pattern:
-`asyncio.create_task` plus `asyncio.as_completed`, bounded to a small concurrency
-limit. The judge call is sequential because it depends on all reviewer outputs.
+bounded `asyncio.create_task` calls gathered after each task converts its own
+failure or timeout into a reviewer artifact. The judge call is sequential
+because it depends on all reviewer outputs.
+
+Implemented DAG modes:
+
+```text
+hybrid:
+  pick the strongest reviewer by evidence quality, then merge only
+  evidence-supported findings across reviewers.
+
+judge-best:
+  pick the strongest reviewer by evidence quality and preserve that review's
+  evidence-supported verdict/findings instead of synthesizing a merged finding set.
+```
+
+All other DAG shapes in this document are roadmap patterns unless explicitly
+marked implemented.
 
 ## Example Prompt Payloads
 
@@ -257,6 +273,8 @@ sequential: judge_best_review -> synthesis -> verifier
 
 ### Pattern B: Target Reconstruction, Then Specialist Reviewers
 
+Status: future allowed pattern, not implemented in this patch.
+
 Use when the target is complex and reviewers should share a neutral target
 summary before specializing.
 
@@ -305,6 +323,8 @@ sequential: judge -> verifier
 
 ### Pattern C: Evidence Audit Gate Before Safety Judgment
 
+Status: future allowed pattern, not implemented in this patch.
+
 Use when review quality depends on whether the supplied evidence is sufficient.
 
 ```text
@@ -332,6 +352,8 @@ sequential: judge_hybrid_synthesis -> verifier
 ```
 
 ### Pattern D: Review, Challenge, Final Judge
+
+Status: future allowed pattern, not implemented in this patch.
 
 Use when the human wants a meaningful hybrid synthesis rather than a vote.
 
