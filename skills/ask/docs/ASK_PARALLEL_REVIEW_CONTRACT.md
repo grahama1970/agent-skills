@@ -23,6 +23,13 @@ The first real adapter is deliberately just `/scillm` composition:
 It must not become an implementation worker DAG, migration runner, or replacement
 for `/code-runner` or Pi-native subagents.
 
+Every `/scillm` node must carry opaque `scillm_metadata` with `ask_id`,
+`protocol`, `node_id`, `node_role`, `batch_id`, `item_id`, `question_hash`,
+`source_bundle_id`, and `artifact_dir`. `/ask` also passes a serialized source
+bundle through `/scillm` `source` so grounding diagnostics and future citation
+checks can attach to reviewer and judge calls without trusting model-generated
+IDs.
+
 ## Command Shape
 
 Targeted review requires an explicit target:

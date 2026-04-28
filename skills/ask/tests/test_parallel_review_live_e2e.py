@@ -71,3 +71,48 @@ def test_live_parallel_review_scillm_composition(monkeypatch, tmp_path):
         assert payload["needs_attention"]["reason"] == "parallel_review_verifier_failed"
         assert status["state"] == "needs_attention"
         assert verifier["status"] == "FAIL"
+
+
+@pytest.mark.skipif(
+    os.environ.get("ASK_LIVE_SCILLM_E2E") != "1",
+    reason="set ASK_LIVE_SCILLM_E2E=1 to run the real /scillm argue smoke test",
+)
+def test_live_argue_scillm_metadata_and_source_bundle(monkeypatch, tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "argue",
+            "whether",
+            "small",
+            "DAG",
+            "nodes",
+            "should",
+            "carry",
+            "opaque",
+            "runtime",
+            "metadata",
+            "--argue",
+            "--oracle-model",
+            "gpt-5.5",
+            "--oracle-timeout",
+            "120",
+            "--ask-id",
+            "live-argue-metadata",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code in {0, 2}
+    payload = json.loads(result.stdout)
+    argue_dir = tmp_path / "runs" / "live-argue-metadata" / "argue"
+    for_case = json.loads((argue_dir / "for.json").read_text(encoding="utf-8"))
+    against_case = json.loads((argue_dir / "against.json").read_text(encoding="utf-8"))
+
+    assert (argue_dir / "source_bundle.json").exists()
+    assert for_case["scillm"]["metadata_requested"]["protocol"] == "argue"
+    assert against_case["scillm"]["metadata_requested"]["node_id"] == "AGAINST"
+    assert for_case["scillm"].get("source_grounding_status") in {"requested", "retry_without_source_after_error"}
+    if result.exit_code == 2:
+        assert payload["needs_attention"]["reason"] != "argue_scillm_call_failed"

@@ -17,6 +17,7 @@ echo "1. Python module imports..."
 if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -c "
 import ask.ask as ask_mod
 import ask.argue as argue_mod
+import ask.scillm_runtime as scillm_runtime_mod
 import ask.status as status_mod
 import ask.doctor as doctor_mod
 import ask.run_state as run_state_mod
@@ -28,6 +29,7 @@ import ask.monitor as monitor_mod
 import ask.pipeline as pipeline_mod
 assert hasattr(ask_mod, 'ask')
 assert hasattr(argue_mod, 'run_argue')
+assert hasattr(scillm_runtime_mod, 'build_scillm_metadata')
 assert hasattr(skills_exec_mod, 'run_skill')
 assert hasattr(monitor_mod, 'AskMonitor')
 assert hasattr(status_mod, 'show_status')
@@ -231,6 +233,7 @@ if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytes
     tests/test_run_state_protocol.py::test_cli_ask_dry_run_includes_argue_dag_options \
     tests/test_run_state_protocol.py::test_cli_argue_advocate_failure_preserves_partial_artifacts \
     tests/test_run_state_protocol.py::test_cli_argue_judge_failure_preserves_advocate_artifacts \
+    tests/test_run_state_protocol.py::test_parallel_review_reviewer_payloads_include_scillm_metadata_and_source \
     tests/test_run_state_protocol.py::test_cli_parallel_review_runs_three_reviewers_then_judge \
     tests/test_run_state_protocol.py::test_cli_parallel_review_writes_code_runner_handoff_when_requested \
     tests/test_run_state_protocol.py::test_parallel_review_verifier_rejects_missing_judge \
@@ -267,7 +270,8 @@ echo ""
 echo "11. Live /scillm parallel-review E2E..."
 if [[ "${ASK_LIVE_SCILLM_E2E:-0}" == "1" ]]; then
     if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytest -q \
-        tests/test_parallel_review_live_e2e.py::test_live_parallel_review_scillm_composition; then
+        tests/test_parallel_review_live_e2e.py::test_live_parallel_review_scillm_composition \
+        tests/test_parallel_review_live_e2e.py::test_live_argue_scillm_metadata_and_source_bundle; then
         echo "   PASS"
     else
         echo "   FAIL: live /scillm parallel-review E2E broken"

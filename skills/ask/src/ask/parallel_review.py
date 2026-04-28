@@ -16,6 +16,14 @@ import httpx
 
 from .deep_review import ALLOWED_VERDICTS, capture_git_status, unexpected_git_changes
 from .reviewer_specs import select_reviewer_angles
+from .scillm_runtime import (
+    build_scillm_metadata,
+    build_source_bundle,
+    extract_scillm_observability,
+    fetch_recent_scillm_debug,
+    scillm_error_advice,
+    serialize_source_bundle,
+)
 
 
 PARALLEL_REVIEW_SCHEMA_VERSION = "ask.parallel_review.v1"
@@ -52,31 +60,64 @@ class ScillmReviewerAdapter:
 
     async def review(self, payload: dict[str, Any]) -> dict[str, Any]:
         prompt = build_reviewer_prompt(payload)
+        requested_metadata = payload.get("scillm_metadata") or {}
+        request_json: dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a read-only code reviewer. Return one JSON object only. "
+                        "Do not claim files were inspected unless the target bundle contains them."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "response_format": {"type": "json_object"},
+            "scillm_metadata": requested_metadata,
+        }
+        if payload.get("source"):
+            request_json["source"] = payload["source"]
+            request_json["grounding_threshold"] = 0.6
+            request_json["grounding_retries"] = 1
+        source_grounding_status = "requested" if payload.get("source") else "not_requested"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "X-Caller-Skill": "ask",
+        }
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(
                 f"{self.base_url}/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "X-Caller-Skill": "ask",
-                },
-                json={
-                    "model": self.model,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are a read-only code reviewer. Return one JSON object only. "
-                                "Do not claim files were inspected unless the target bundle contains them."
-                            ),
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
-                    "response_format": {"type": "json_object"},
-                },
+                headers=headers,
+                json=request_json,
+                timeout=min(self.timeout, 15.0) if payload.get("source") else self.timeout,
             )
-        response.raise_for_status()
-        content = response.json()["choices"][0]["message"]["content"]
-        return parse_reviewer_output(content, payload)
+            try:
+                response.raise_for_status()
+            except Exception:
+                if not payload.get("source"):
+                    raise
+                fallback_json = dict(request_json)
+                fallback_json.pop("source", None)
+                fallback_json.pop("grounding_threshold", None)
+                fallback_json.pop("grounding_retries", None)
+                fallback_json["scillm_metadata"] = {
+                    **requested_metadata,
+                    "source_grounding_retry_without_source": True,
+                }
+                response = await client.post(
+                    f"{self.base_url}/v1/chat/completions",
+                    headers=headers,
+                    json=fallback_json,
+                )
+                response.raise_for_status()
+                source_grounding_status = "retry_without_source_after_error"
+        response_payload = response.json()
+        content = response_payload["choices"][0]["message"]["content"]
+        parsed = parse_reviewer_output(content, payload)
+        parsed["scillm"] = extract_scillm_observability(response_payload, requested_metadata)
+        parsed["scillm"]["source_grounding_status"] = source_grounding_status
+        return parsed
 
 
 def build_parallel_review_plan(
@@ -199,8 +240,15 @@ def run_parallel_review(
     outputs_dir.mkdir(parents=True, exist_ok=True)
     git_before = capture_git_status()
     target_bundle = build_target_bundle(target)
+    source_bundle = build_source_bundle(
+        question=question,
+        target_bundle=target_bundle["markdown"],
+        target_entries=target_bundle["entries"],
+    )
     target_bundle_path = review_dir / "target_bundle.md"
+    source_bundle_path = review_dir / "source_bundle.json"
     target_bundle_path.write_text(target_bundle["markdown"], encoding="utf-8")
+    source_bundle_path.write_text(json.dumps(source_bundle, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
     plan = build_parallel_review_plan(
         question=question,
         target=target,
@@ -218,11 +266,16 @@ def run_parallel_review(
         "entries": target_bundle["entries"],
         "truncated": target_bundle["truncated"],
     }
+    plan["source_bundle"] = {
+        "path": str(source_bundle_path),
+        "source_bundle_id": source_bundle["source_bundle_id"],
+        "source_ids": [source["source_id"] for source in source_bundle["sources"]],
+    }
     plan_path = review_dir / "reviewer_plan.json"
     plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
     adapter = ScillmReviewerAdapter(model=model or "text", timeout=timeout)
-    reviewer_outputs = _run_reviewers(adapter, plan, target_bundle["markdown"], timeout, run_state)
-    judge_output = _run_judge(adapter, plan, reviewer_outputs, timeout, run_state)
+    reviewer_outputs = _run_reviewers(adapter, plan, target_bundle["markdown"], timeout, run_state, source_bundle, review_dir)
+    judge_output = _run_judge(adapter, plan, reviewer_outputs, timeout, run_state, source_bundle, review_dir)
     for output in reviewer_outputs:
         output_path = outputs_dir / f"{safe_artifact_name(output.get('reviewer') or output.get('id') or 'reviewer')}.json"
         output_path.write_text(json.dumps(output, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
@@ -255,6 +308,7 @@ def run_parallel_review(
     synthesis_path.write_text(synthesis, encoding="utf-8")
     verdict["artifact_paths"] = {
         "target_bundle": str(target_bundle_path),
+        "source_bundle": str(source_bundle_path),
         "reviewer_plan": str(plan_path),
         "reviewer_outputs": str(outputs_dir),
         "judge_json": str(judge_path),
@@ -294,6 +348,7 @@ def run_parallel_review(
     verdict_path.write_text(json.dumps(verdict, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
     run_state.add_artifacts(verdict["artifact_paths"])
     if verifier["status"] == "FAIL":
+        scillm_debug = fetch_recent_scillm_debug(caller="ask", limit=1)
         attention = run_state.needs_attention(
             reason="parallel_review_verifier_failed",
             question="Parallel review verifier rejected the generated review artifacts.",
@@ -301,6 +356,7 @@ def run_parallel_review(
             resume_hint=f"Inspect {verifier_path} and rerun with a narrower target or stronger reviewer prompt.",
             verifier_failures=verifier["failures"],
             artifact_paths=verdict["artifact_paths"],
+            scillm_debug=scillm_debug,
         )
         return {
             "question": question,
@@ -353,8 +409,12 @@ def _run_reviewers(
     target_bundle: str,
     timeout: float,
     run_state: Any,
+    source_bundle: dict[str, Any],
+    artifact_dir: Path,
 ) -> list[dict[str, Any]]:
     reviewer_payloads = []
+    ask_id = str(getattr(run_state, "ask_id", "ask-run"))
+    source = serialize_source_bundle(source_bundle)
     for reviewer in plan["reviewers"]:
         reviewer_payloads.append(
             {
@@ -363,6 +423,25 @@ def _run_reviewers(
                 "target": plan["target"],
                 "target_bundle": target_bundle,
                 "reviewer": reviewer,
+                "source": source,
+                "scillm_metadata": build_scillm_metadata(
+                    ask_id=ask_id,
+                    protocol="parallel_review",
+                    node_id=str(reviewer.get("id") or reviewer.get("name") or "reviewer"),
+                    node_role="reviewer",
+                    question=plan["question"],
+                    artifact_dir=artifact_dir,
+                    source_bundle_id=str(source_bundle.get("source_bundle_id", "")),
+                    extra={
+                        "reviewer": reviewer.get("name", ""),
+                        "target": plan["target"],
+                        "target_files": [
+                            entry.get("path") or entry.get("target")
+                            for entry in plan.get("target_bundle", {}).get("entries", [])
+                            if entry.get("kind") == "file"
+                        ],
+                    },
+                ),
                 "required_output_schema": reviewer_output_schema(),
             }
         )
@@ -375,8 +454,10 @@ def _run_judge(
     reviewer_outputs: list[dict[str, Any]],
     timeout: float,
     run_state: Any,
+    source_bundle: dict[str, Any],
+    artifact_dir: Path,
 ) -> dict[str, Any]:
-    return asyncio.run(_run_judge_async(adapter, plan, reviewer_outputs, timeout, run_state))
+    return asyncio.run(_run_judge_async(adapter, plan, reviewer_outputs, timeout, run_state, source_bundle, artifact_dir))
 
 
 async def _run_judge_async(
@@ -385,6 +466,8 @@ async def _run_judge_async(
     reviewer_outputs: list[dict[str, Any]],
     timeout: float,
     run_state: Any,
+    source_bundle: dict[str, Any],
+    artifact_dir: Path,
 ) -> dict[str, Any]:
     prompt = build_judge_prompt(plan, reviewer_outputs)
     payload = {
@@ -399,6 +482,17 @@ async def _run_judge_async(
             "prompt": "Judge reviewer output quality and synthesize the best defensible review.",
         },
         "target_bundle": prompt,
+        "source": serialize_source_bundle(source_bundle),
+        "scillm_metadata": build_scillm_metadata(
+            ask_id=str(getattr(run_state, "ask_id", "ask-run")),
+            protocol="parallel_review",
+            node_id="judge",
+            node_role="judge",
+            question=plan["question"],
+            artifact_dir=artifact_dir,
+            source_bundle_id=str(source_bundle.get("source_bundle_id", "")),
+            extra={"target": plan["target"], "dag_mode": plan["dag_mode"]},
+        ),
         "required_output_schema": {
             "judge": "review-judge",
             "best_reviewer": "name",
@@ -432,6 +526,8 @@ async def _run_judge_async(
             "read_only_claim": True,
             "status": "failed",
             "error": str(exc),
+            "scillm_advice": scillm_error_advice(exc),
+            "scillm": {"metadata_requested": payload.get("scillm_metadata") or {}},
         }
     elapsed_ms = int((time.monotonic() - started) * 1000)
     output.setdefault("judge", "review-judge")
@@ -482,6 +578,8 @@ async def _run_reviewers_async(
                     "confidence": "low",
                     "status": "failed",
                     "error": str(exc),
+                    "scillm_advice": scillm_error_advice(exc),
+                    "scillm": {"metadata_requested": payload.get("scillm_metadata") or {}},
                     "schema_version": PARALLEL_REVIEW_SCHEMA_VERSION,
                 }
             elapsed_ms = int((time.monotonic() - started) * 1000)

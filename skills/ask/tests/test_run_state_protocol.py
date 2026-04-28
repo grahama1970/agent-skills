@@ -292,10 +292,14 @@ def test_cli_argue_runs_two_parallel_advocates_then_judge(monkeypatch, tmp_path)
     active_advocates = 0
     max_active_advocates = 0
     call_order = []
+    metadata_by_role = {}
+    source_by_role = {}
 
-    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt, metadata=None, source=None):
         nonlocal active_advocates, max_active_advocates
         call_order.append(role)
+        metadata_by_role[role] = metadata
+        source_by_role[role] = source
         if "advocate" in role:
             active_advocates += 1
             max_active_advocates = max(max_active_advocates, active_advocates)
@@ -308,7 +312,7 @@ def test_cli_argue_runs_two_parallel_advocates_then_judge(monkeypatch, tmp_path)
                 "evidence": ["The change is small and reversible."],
                 "what_would_change_my_mind": ["Evidence of hidden coupling."],
                 "confidence": "medium",
-            }, model
+            }, model, {"metadata_requested": metadata, "metadata_returned": metadata, "call_id": f"call-{role}"}
         if role == "AGAINST advocate":
             return {
                 "position": "Do not ship without more evidence.",
@@ -317,7 +321,7 @@ def test_cli_argue_runs_two_parallel_advocates_then_judge(monkeypatch, tmp_path)
                 "missing_evidence": ["Rollback behavior evidence."],
                 "what_would_change_my_mind": ["Passing rollback test."],
                 "confidence": "medium",
-            }, model
+            }, model, {"metadata_requested": metadata, "metadata_returned": metadata, "call_id": f"call-{role}"}
         return {
             "verdict": "FOR",
             "confidence": "medium",
@@ -332,7 +336,7 @@ def test_cli_argue_runs_two_parallel_advocates_then_judge(monkeypatch, tmp_path)
             "what_would_change_the_verdict": ["Evidence of hidden coupling."],
             "recommended_next_action": "Ship with rollback monitoring.",
             "uncertainty_disclosure": "This remains uncertain.",
-        }, model
+        }, model, {"metadata_requested": metadata, "metadata_returned": metadata, "call_id": "call-judge"}
 
     monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
     monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
@@ -367,11 +371,19 @@ def test_cli_argue_runs_two_parallel_advocates_then_judge(monkeypatch, tmp_path)
     assert (tmp_path / "argue-dag" / "argue" / "for.json").exists()
     assert (tmp_path / "argue-dag" / "argue" / "against.json").exists()
     assert (tmp_path / "argue-dag" / "argue" / "judge.json").exists()
+    assert (tmp_path / "argue-dag" / "argue" / "source_bundle.json").exists()
     assert artifacts["argue_result"].endswith("argue.json")
+    assert metadata_by_role["FOR advocate"]["protocol"] == "argue"
+    assert metadata_by_role["FOR advocate"]["node_id"] == "FOR"
+    assert metadata_by_role["FOR advocate"]["batch_id"] == "ask-argue-argue-dag"
+    assert metadata_by_role["sequential judge"]["node_id"] == "judge"
+    assert "QUESTION" in source_by_role["FOR advocate"]
+    for_case = json.loads((tmp_path / "argue-dag" / "argue" / "for.json").read_text())
+    assert for_case["scillm"]["metadata_returned"]["item_id"] == "FOR"
 
 
 def test_cli_argue_verifier_failure_exits_needs_attention(monkeypatch, tmp_path):
-    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt, metadata=None, source=None):
         if role == "FOR advocate":
             return {
                 "strongest_argument": "The change is small and reversible.",
@@ -422,7 +434,7 @@ def test_cli_argue_verifier_failure_exits_needs_attention(monkeypatch, tmp_path)
 
 
 def test_cli_argue_advocate_failure_preserves_partial_artifacts(monkeypatch, tmp_path):
-    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt, metadata=None, source=None):
         if role == "FOR advocate":
             raise TimeoutError("advocate timed out")
         if role == "AGAINST advocate":
@@ -474,7 +486,7 @@ def test_cli_argue_advocate_failure_preserves_partial_artifacts(monkeypatch, tmp
 
 
 def test_cli_argue_judge_failure_preserves_advocate_artifacts(monkeypatch, tmp_path):
-    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt, metadata=None, source=None):
         if role == "FOR advocate":
             return {
                 "strongest_argument": "The change is small and reversible.",
@@ -526,6 +538,61 @@ def test_cli_argue_judge_failure_preserves_advocate_artifacts(monkeypatch, tmp_p
     assert judge["status"] == "failed"
     assert judge["error_type"] == "RuntimeError"
     assert "argue_judge_failed" in events
+
+
+def test_parallel_review_reviewer_payloads_include_scillm_metadata_and_source(tmp_path):
+    captured_payloads = []
+
+    class CapturingAdapter:
+        async def review(self, payload):
+            captured_payloads.append(payload)
+            return {
+                "reviewer": payload["reviewer"]["name"],
+                "verdict": "SAFE",
+                "summary": "ok",
+                "files_inspected": [],
+                "evidence": ["TARGET_BUNDLE"],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    run_state = AskRunState("parallel-metadata", output_root=tmp_path)
+    run_state.write_request({"question": "review", "scope": "ask"})
+    plan = parallel_review_module.build_parallel_review_plan(
+        question="review target",
+        target="target.py",
+        reviewers=1,
+        personas="Brandon",
+    )
+    plan["target_bundle"] = {"entries": [{"kind": "file", "path": "target.py"}]}
+    source_bundle = parallel_review_module.build_source_bundle(
+        question="review target",
+        target_bundle="# target",
+        target_entries=plan["target_bundle"]["entries"],
+    )
+
+    outputs = parallel_review_module._run_reviewers(
+        CapturingAdapter(),
+        plan,
+        "# target",
+        5,
+        run_state,
+        source_bundle,
+        tmp_path / "parallel_review",
+    )
+
+    assert outputs[0]["reviewer"] == "Brandon"
+    payload = captured_payloads[0]
+    metadata = payload["scillm_metadata"]
+    assert metadata["ask_id"] == "parallel-metadata"
+    assert metadata["protocol"] == "parallel_review"
+    assert metadata["node_role"] == "reviewer"
+    assert metadata["batch_id"] == "ask-parallel_review-parallel-metadata"
+    assert metadata["item_id"] == "reviewer-1"
+    assert metadata["source_bundle_id"] == source_bundle["source_bundle_id"]
+    assert "TARGET_BUNDLE" in payload["source"]
 
 
 def test_cli_ask_dry_run_includes_argue_dag_options(tmp_path):

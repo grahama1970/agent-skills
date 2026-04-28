@@ -33,6 +33,15 @@ must follow the `/ask` DAG and `/scillm` skill contract:
 - run the FOR and AGAINST calls with `asyncio.create_task` and
   `asyncio.as_completed`;
 - run the judge only after both advocate outputs are available.
+- attach `scillm_metadata` to every node with `ask_id`, `protocol`,
+  `node_id`, `node_role`, `batch_id`, `item_id`, `question_hash`,
+  `source_bundle_id`, and `artifact_dir`;
+- pass a serialized source bundle through `/scillm` `source` so grounding
+  diagnostics are available without exposing fabricated IDs to the model.
+
+`/ask` stores returned `/scillm` observability fields under each node's
+`scillm` object, including call id, returned metadata, grounding status, and
+batch-resume indicators when the proxy supplies them.
 
 ## Verdicts
 

@@ -14,6 +14,14 @@ import httpx
 
 from .ask_config import SCILLM_API_KEY, SCILLM_BASE_URL
 from .run_state import AskRunState, NoopRunState, atomic_write_json
+from .scillm_runtime import (
+    build_scillm_metadata,
+    build_source_bundle,
+    extract_scillm_observability,
+    fetch_recent_scillm_debug,
+    scillm_error_advice,
+    serialize_source_bundle,
+)
 
 
 ARGUE_SCHEMA_VERSION = "ask.argue.v1"
@@ -249,6 +257,7 @@ def _failed_advocate_output(side: str, exc: BaseException, elapsed_seconds: floa
         "confidence": "low",
         "error_type": type(exc).__name__,
         "error": str(exc),
+        "scillm_advice": scillm_error_advice(exc),
         "elapsed_seconds": round(elapsed_seconds, 3),
     }
 
@@ -276,6 +285,7 @@ def _failed_judge_output(exc: BaseException, elapsed_seconds: float) -> dict[str
         "uncertainty_disclosure": "No trustworthy verdict was produced because the judge call failed.",
         "error_type": type(exc).__name__,
         "error": str(exc),
+        "scillm_advice": scillm_error_advice(exc),
         "elapsed_seconds": round(elapsed_seconds, 3),
     }
 
@@ -394,31 +404,87 @@ async def _scillm_json_call_async(
     timeout: float,
     role: str,
     prompt: str,
-) -> tuple[dict[str, Any], str]:
-    response = await client.post(
-        f"{SCILLM_BASE_URL.rstrip('/')}/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {SCILLM_API_KEY}",
-            "X-Caller-Skill": "ask",
-            "Content-Type": "application/json",
-        },
-        json={
-            "model": model,
-            "reasoning_effort": reasoning_effort,
-            "temperature": 0,
-            "response_format": {"type": "json_object"},
-            "messages": [
-                {"role": "system", "content": f"You are the {role} node in /ask argue. Return JSON only."},
-                {"role": "user", "content": prompt},
-            ],
-        },
-        timeout=timeout,
-    )
-    response.raise_for_status()
+    metadata: dict[str, Any] | None = None,
+    source: str | None = None,
+) -> tuple[dict[str, Any], str, dict[str, Any]]:
+    requested_metadata = metadata or {}
+    request_json: dict[str, Any] = {
+        "model": model,
+        "reasoning_effort": reasoning_effort,
+        "temperature": 0,
+        "response_format": {"type": "json_object"},
+        "messages": [
+            {"role": "system", "content": f"You are the {role} node in /ask argue. Return JSON only."},
+            {"role": "user", "content": prompt},
+        ],
+        "scillm_metadata": requested_metadata,
+    }
+    if source:
+        request_json["source"] = source
+        request_json["grounding_threshold"] = 0.6
+        request_json["grounding_retries"] = 1
+    source_grounding_status = "not_requested"
+    if source:
+        source_grounding_status = "requested"
+    headers = {
+        "Authorization": f"Bearer {SCILLM_API_KEY}",
+        "X-Caller-Skill": "ask",
+        "Content-Type": "application/json",
+    }
+    endpoint = f"{SCILLM_BASE_URL.rstrip('/')}/v1/chat/completions"
+    try:
+        response = await client.post(
+            endpoint,
+            headers=headers,
+            json=request_json,
+            timeout=min(timeout, 15.0) if source else timeout,
+        )
+        response.raise_for_status()
+    except Exception as source_exc:
+        if not source:
+            raise
+        fallback_json = dict(request_json)
+        fallback_json.pop("source", None)
+        fallback_json.pop("grounding_threshold", None)
+        fallback_json.pop("grounding_retries", None)
+        fallback_json["scillm_metadata"] = {
+            **requested_metadata,
+            "source_grounding_retry_without_source": True,
+        }
+        try:
+            response = await client.post(
+                endpoint,
+                headers=headers,
+                json=fallback_json,
+                timeout=timeout,
+            )
+            response.raise_for_status()
+        except Exception as fallback_exc:
+            raise fallback_exc from source_exc
+        source_grounding_status = "retry_without_source_after_error"
     payload = response.json()
     content = payload["choices"][0]["message"]["content"]
     model_served = _string_value(payload.get("model")) or model
-    return _parse_json_object(content), model_served
+    observability = extract_scillm_observability(payload, requested_metadata)
+    observability["source_grounding_status"] = source_grounding_status
+    return _parse_json_object(content), model_served, observability
+
+
+def _failed_scillm_observability(metadata: dict[str, Any], source: str | None) -> dict[str, Any]:
+    return {
+        "metadata_requested": metadata,
+        "source_requested": bool(source),
+        "source_grounding_status": "failed_before_response_with_source" if source else "not_requested",
+    }
+
+
+def _unpack_scillm_call_result(result: Any) -> tuple[dict[str, Any], str, dict[str, Any]]:
+    if isinstance(result, tuple) and len(result) == 3:
+        return result
+    if isinstance(result, tuple) and len(result) == 2:
+        raw_output, model_served = result
+        return raw_output, model_served, {}
+    raise ValueError("Unexpected /scillm call result shape")
 
 
 async def _run_advocate_side(
@@ -432,22 +498,27 @@ async def _run_advocate_side(
     reasoning_effort: str,
     timeout: float,
     run_state: AskRunState | NoopRunState | None,
+    source: str | None,
+    metadata: dict[str, Any],
 ) -> tuple[str, dict[str, Any]]:
     started_at = time.time()
     if run_state:
         run_state.event("argue_advocate_started", side=side, model=model)
     prompt = build_advocate_prompt(side, question, context_items, current_answer=current_answer)
     try:
-        raw_output, model_served = await _scillm_json_call_async(
+        raw_output, model_served, scillm_observability = _unpack_scillm_call_result(await _scillm_json_call_async(
             client,
             model=model,
             reasoning_effort=reasoning_effort,
             timeout=timeout,
             role=f"{side} advocate",
             prompt=prompt,
-        )
+            metadata=metadata,
+            source=source,
+        ))
     except Exception as exc:
         advocate = _failed_advocate_output(side, exc, time.time() - started_at)
+        advocate["scillm"] = _failed_scillm_observability(metadata, source)
         if run_state:
             run_state.event(
                 "argue_advocate_failed",
@@ -461,6 +532,7 @@ async def _run_advocate_side(
     advocate = normalize_advocate_output(raw_output, side)
     advocate["status"] = "ok"
     advocate["model"] = model_served
+    advocate["scillm"] = scillm_observability
     advocate["elapsed_seconds"] = round(time.time() - started_at, 3)
     if run_state:
         run_state.event(
@@ -483,7 +555,11 @@ async def _run_argue_async(
     decision_required: bool,
     tie_breaker: str | None,
     run_state: AskRunState | NoopRunState | None,
+    source_bundle: dict[str, Any],
+    artifact_dir: Path,
 ) -> dict[str, Any]:
+    source = serialize_source_bundle(source_bundle)
+    ask_id = str(getattr(run_state, "ask_id", "ask-run")) if run_state else "ask-run"
     async with httpx.AsyncClient() as client:
         tasks = [
             asyncio.create_task(
@@ -497,6 +573,16 @@ async def _run_argue_async(
                     reasoning_effort=reasoning_effort,
                     timeout=timeout,
                     run_state=run_state,
+                    source=source,
+                    metadata=build_scillm_metadata(
+                        ask_id=ask_id,
+                        protocol="argue",
+                        node_id=side,
+                        node_role="advocate",
+                        question=question,
+                        artifact_dir=artifact_dir,
+                        source_bundle_id=str(source_bundle.get("source_bundle_id", "")),
+                    ),
                 )
             )
             for side in ("FOR", "AGAINST")
@@ -549,16 +635,36 @@ async def _run_argue_async(
         )
         judge_started = time.time()
         try:
-            raw_judge, judge_model = await _scillm_json_call_async(
+            raw_judge, judge_model, scillm_observability = _unpack_scillm_call_result(await _scillm_json_call_async(
                 client,
                 model=model,
                 reasoning_effort=reasoning_effort,
                 timeout=timeout,
                 role="sequential judge",
                 prompt=judge_prompt,
-            )
+                metadata=build_scillm_metadata(
+                    ask_id=ask_id,
+                    protocol="argue",
+                    node_id="judge",
+                    node_role="judge",
+                    question=question,
+                    artifact_dir=artifact_dir,
+                    source_bundle_id=str(source_bundle.get("source_bundle_id", "")),
+                ),
+                source=source,
+            ))
         except Exception as exc:
             judge = _failed_judge_output(exc, time.time() - judge_started)
+            judge_metadata = build_scillm_metadata(
+                ask_id=ask_id,
+                protocol="argue",
+                node_id="judge",
+                node_role="judge",
+                question=question,
+                artifact_dir=artifact_dir,
+                source_bundle_id=str(source_bundle.get("source_bundle_id", "")),
+            )
+            judge["scillm"] = _failed_scillm_observability(judge_metadata, source)
             if run_state:
                 run_state.event(
                     "argue_judge_failed",
@@ -585,6 +691,7 @@ async def _run_argue_async(
             }
         judge = normalize_judge_output(raw_judge, decision_required=decision_required, tie_breaker=tie_breaker)
         judge["model"] = judge_model
+        judge["scillm"] = scillm_observability
         judge["elapsed_seconds"] = round(time.time() - judge_started, 3)
         if run_state:
             run_state.event("argue_judge_finished", model=judge_model, elapsed_seconds=judge["elapsed_seconds"])
@@ -674,6 +781,7 @@ def run_argue(
     started_at = time.time()
     argue_dir = run_state.run_dir / "argue" if hasattr(run_state, "run_dir") else Path.cwd() / ".ask_argue"
     argue_dir.mkdir(parents=True, exist_ok=True)
+    source_bundle = build_source_bundle(question=question, context_items=context_items)
     run_state.event("argue_started", model=model, reasoning_effort=reasoning_effort, decision_required=decision_required)
     protocol_result = asyncio.run(
         _run_argue_async(
@@ -686,6 +794,8 @@ def run_argue(
             decision_required=decision_required,
             tie_breaker=tie_breaker,
             run_state=run_state,
+            source_bundle=source_bundle,
+            artifact_dir=argue_dir,
         )
     )
     argue_result = {
@@ -696,6 +806,10 @@ def run_argue(
         "tie_breaker": tie_breaker or "",
         "model": model,
         "reasoning_effort": reasoning_effort,
+        "source_bundle": {
+            "source_bundle_id": source_bundle["source_bundle_id"],
+            "source_ids": [source["source_id"] for source in source_bundle["sources"]],
+        },
         "for_case": protocol_result["for_case"],
         "against_case": protocol_result["against_case"],
         "judge": protocol_result["judge"],
@@ -728,7 +842,9 @@ def run_argue(
         "argue_markdown": str(argue_dir / "argue.md"),
         "argue_verifier": str(argue_dir / "verifier.log"),
         "argue_judge_prompt": str(argue_dir / "judge_prompt.md"),
+        "argue_source_bundle": str(argue_dir / "source_bundle.json"),
     }
+    atomic_write_json(argue_dir / "source_bundle.json", source_bundle)
     atomic_write_json(argue_dir / "for.json", argue_result["for_case"])
     atomic_write_json(argue_dir / "against.json", argue_result["against_case"])
     atomic_write_json(argue_dir / "judge.json", argue_result["judge"])
@@ -752,6 +868,7 @@ def run_argue(
         },
     }
     if protocol_error:
+        scillm_debug = fetch_recent_scillm_debug(caller="ask", limit=1)
         response["needs_attention"] = run_state.needs_attention(
             reason=str(protocol_error.get("reason") or "argue_scillm_call_failed"),
             question="Argue /scillm call failed before a trustworthy verdict was produced.",
@@ -759,6 +876,7 @@ def run_argue(
             resume_hint=f"Inspect {argue_dir} and rerun with a narrower prompt or different backend.",
             stage=protocol_error.get("stage", "scillm"),
             failures=protocol_error.get("failures", []),
+            scillm_debug=scillm_debug,
         )
     elif verifier["status"] != "PASS":
         response["needs_attention"] = run_state.needs_attention(
