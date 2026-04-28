@@ -42,6 +42,7 @@ if _common not in sys.path:
     sys.path.insert(0, _common)
 
 from json_utils import parse_json
+from llm_routing import normalize_scillm_chat_url
 from message_utils import sanitize_messages
 
 # Local modules
@@ -49,8 +50,7 @@ from _error_classifier import classify_api_error, classify_response_error, Failo
 from _tool_call_parser import parse_tool_calls, to_openai_format
 from skill_tools import get_dynamic_tools, execute_skill
 
-
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+SCILLM_URL = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 # Mock response function for testing. When set, bypasses HTTP calls and returns mock responses.

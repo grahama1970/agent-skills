@@ -24,6 +24,22 @@ DATE_SENSITIVE_TERMS = (
     "this year",
 )
 
+ARGUE_JUDGE_RUBRIC = (
+    "evidence_strength",
+    "failure_mode_coverage",
+    "assumption_quality",
+    "target_relevance",
+    "falsifiability",
+    "implementation_cost_or_risk",
+)
+
+ARGUE_VERDICTS = (
+    "FOR",
+    "AGAINST",
+    "NO_CLEAR_WINNER",
+    "INSUFFICIENT_EVIDENCE",
+)
+
 PROTOCOL_ROLE_PRESETS: dict[str, list[dict[str, str]]] = {
     "adversarial-review": [
         {
@@ -77,6 +93,20 @@ PROTOCOL_ROLE_PRESETS: dict[str, list[dict[str, str]]] = {
             "prohibitions": "Do not provide generic critique.",
         },
     ],
+    "argue": [
+        {
+            "role": "for",
+            "label": "FOR Advocate",
+            "scope": "Make the strongest defensible argument for the proposition.",
+            "prohibitions": "Do not ignore material weaknesses. Do not rely on unstated evidence.",
+        },
+        {
+            "role": "against",
+            "label": "AGAINST Advocate",
+            "scope": "Make the strongest defensible argument against the proposition.",
+            "prohibitions": "Do not strawman the FOR side. Do not rely on generic skepticism.",
+        },
+    ],
 }
 
 
@@ -128,18 +158,103 @@ def parse_participant_specs(
     return participants
 
 
+def normalize_argue_personas(raw: str | None) -> str:
+    """Normalize FOR/AGAINST persona specs for argue mode."""
+    if not raw or not raw.strip():
+        return "Affirmative:for,Devil's Advocate:against"
+    chunks = [chunk.strip() for chunk in raw.split(",") if chunk.strip()]
+    if not chunks:
+        return "Affirmative:for,Devil's Advocate:against"
+    if len(chunks) == 1:
+        chunks.append("Devil's Advocate")
+    normalized: list[str] = []
+    for index, chunk in enumerate(chunks[:2]):
+        if ":" in chunk:
+            persona, role = [part.strip() for part in chunk.split(":", 1)]
+            role_key = _normalize_role_key(role)
+            if role_key in {"pro", "positive", "affirmative"}:
+                role_key = "for"
+            elif role_key in {"con", "negative", "devils_advocate", "devil_s_advocate"}:
+                role_key = "against"
+            normalized.append(f"{persona}:{role_key}")
+            continue
+        role_key = "for" if index == 0 else "against"
+        normalized.append(f"{chunk}:{role_key}")
+    return ",".join(normalized)
+
+
+def build_argue_prompt_payload(
+    *,
+    base_prompt: str,
+    persona_specs: str | None = None,
+    rounds: int = 2,
+    persist: str = "summary",
+) -> dict[str, Any]:
+    """Build the full prompt payload used by argue mode for review tests."""
+    normalized_personas = normalize_argue_personas(persona_specs)
+    participants = parse_participant_specs(normalized_personas, role_preset="argue")
+    state: dict[str, Any] = {
+        "claims": [],
+        "critiques": [],
+        "open_issues": [],
+        "turns": [],
+        "parallel_reviews": [],
+        "roundtable_turns": [],
+    }
+    total_rounds = max(1, rounds)
+    total_turns = len(participants) * total_rounds
+    turn_prompts = []
+    for round_index in range(total_rounds):
+        for participant_index, participant in enumerate(participants):
+            turn_number = round_index * len(participants) + participant_index + 1
+            turn_prompts.append(
+                {
+                    "turn_number": turn_number,
+                    "round": round_index + 1,
+                    "persona": participant["persona"],
+                    "protocol_role": participant["protocol_role"],
+                    "prompt": build_roundtable_turn_prompt(
+                        base_prompt=base_prompt,
+                        participant=participant,
+                        state=state,
+                        turn_number=turn_number,
+                        total_turns=total_turns,
+                        mode="argue",
+                    ),
+                }
+            )
+    return {
+        "schema_version": "ask.argue.prompt_payload.v1",
+        "mode": "argue",
+        "base_prompt": base_prompt,
+        "personas": normalized_personas,
+        "rounds": total_rounds,
+        "persist": persist,
+        "judge_rubric": list(ARGUE_JUDGE_RUBRIC),
+        "verdicts": list(ARGUE_VERDICTS),
+        "turn_prompts": turn_prompts,
+        "moderator_prompt": build_moderator_prompt(
+            base_prompt=base_prompt,
+            state=state,
+            mode="roundtable:argue",
+            persist=persist,
+        ),
+    }
+
+
 def default_parallel_participants(
     count: int,
     *,
     focus: str | None = None,
     role_preset: str = "adversarial-review",
 ) -> list[dict[str, Any]]:
-    spec_participants = [
-        spec_to_participant(spec, turn_index=index)
-        for index, spec in enumerate(select_reviewer_angles("parallel review", focus=focus, count=count))
-    ]
-    if spec_participants:
-        return spec_participants
+    if role_preset != "argue":
+        spec_participants = [
+            spec_to_participant(spec, turn_index=index)
+            for index, spec in enumerate(select_reviewer_angles("parallel review", focus=focus, count=count))
+        ]
+        if spec_participants:
+            return spec_participants
 
     role_defs = PROTOCOL_ROLE_PRESETS.get(role_preset, PROTOCOL_ROLE_PRESETS["adversarial-review"])
     focus_items = [item.strip() for item in (focus or "").split(",") if item.strip()]
@@ -172,6 +287,37 @@ def build_roundtable_turn_prompt(
     transcript = summarize_protocol_transcript(state.get("turns", []), max_chars=14000)
     claims = json.dumps(state.get("claims", []), indent=2)
     critiques = json.dumps(state.get("critiques", []), indent=2)
+    if mode == "argue":
+        return (
+            f"{base_prompt}\n\n"
+            "Structured argue protocol:\n"
+            f"- Mode: {mode}\n"
+            f"- Turn: {turn_number}/{total_turns}\n"
+            f"- Persona/domain lens: {participant['persona']}\n"
+            f"- Assigned side: {participant['role_label']} ({participant['protocol_role']})\n"
+            f"- Role scope: {participant['scope']}\n"
+            f"- Role prohibitions: {participant['prohibitions']}\n\n"
+            "Shared state before this turn:\n"
+            f"Claims:\n{claims}\n\n"
+            f"Existing critiques:\n{critiques}\n\n"
+            f"Transcript so far:\n{transcript or '[none]'}\n\n"
+            "Rules:\n"
+            "- Argue only your assigned side, but acknowledge real limits.\n"
+            "- Make claims that a neutral judge can score against the rubric.\n"
+            "- Directly challenge the strongest opposing claim when one exists.\n"
+            "- Separate evidence from inference and assumptions.\n"
+            "- Stay inside your assigned FOR/AGAINST role.\n\n"
+            "Return JSON only with this schema:\n"
+            "{\n"
+            '  "speaker": "persona name",\n'
+            '  "protocol_role": "for|against",\n'
+            '  "claims": [{"id": "C#", "text": "...", "confidence": "high|medium|low", "evidence": "..."}],\n'
+            '  "critiques": [{"target_claim": "C# or quote", "issue_type": "evidence_gap|failure_mode|bad_assumption|irrelevance|unfalsifiable|cost_risk", "severity": "high|medium|low", "critique": "...", "proposed_fix": "..."}],\n'
+            '  "strongest_point": "...",\n'
+            '  "weakest_point": "...",\n'
+            '  "open_issues": ["..."]\n'
+            "}"
+        )
     return (
         f"{base_prompt}\n\n"
         "Structured roundtable protocol:\n"
@@ -242,6 +388,35 @@ def build_moderator_prompt(
     persist: str,
 ) -> str:
     prompt_state = state if persist == "full" else _compact_state_for_prompt(state)
+    if mode == "roundtable:argue":
+        rubric = "\n".join(f"- {item}" for item in ARGUE_JUDGE_RUBRIC)
+        verdicts = " | ".join(ARGUE_VERDICTS)
+        return (
+            f"{base_prompt}\n\n"
+            "You are the neutral gpt-5.5 xhigh judge for a two-sided argue protocol.\n"
+            f"Mode: {mode}\n"
+            f"Persistence policy requested: {persist}\n\n"
+            "Protocol state:\n"
+            f"{json.dumps(prompt_state, indent=2, default=str)[:24000]}\n\n"
+            "Judge rubric:\n"
+            f"{rubric}\n\n"
+            "Synthesis constraints:\n"
+            "- Decide who has the stronger argument under the rubric, not who sounds more confident.\n"
+            "- Use INSUFFICIENT_EVIDENCE when neither side provides enough grounded support.\n"
+            "- Use NO_CLEAR_WINNER when both sides are comparably strong or trade off on different criteria.\n"
+            "- Separate what was proven from what remains an assumption.\n"
+            "- Do not introduce new evidence not present in the prompt, retrieved context, or argument turns.\n\n"
+            "Return Markdown with sections: Verdict, Rubric Scores, Strongest FOR Argument, "
+            "Strongest AGAINST Argument, Decisive Gaps, Project Agent Decision, Confidence.\n"
+            "Also include one fenced json block with this schema:\n"
+            "{\n"
+            f'  "verdict": "{verdicts}",\n'
+            '  "winner": "for|against|none",\n'
+            '  "rubric_scores": {"evidence_strength": {"for": 0, "against": 0, "winner": "for|against|tie"}},\n'
+            '  "decisive_reasons": ["..."],\n'
+            '  "confidence": "high|medium|low"\n'
+            "}"
+        )
     return (
         f"{base_prompt}\n\n"
         "You are the neutral gpt-5.5 xhigh moderator for a structured review protocol.\n"

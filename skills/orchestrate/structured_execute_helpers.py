@@ -18,7 +18,16 @@ from typing import Any
 
 from loguru import logger
 
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[1] / "common"))
+from llm_routing import (  # noqa: E402
+    normalize_backend_alias,
+    normalize_scillm_chat_url,
+    normalize_scillm_model_alias,
+)
+
+SCILLM_URL = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 SKILLS_DIR = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parents[1])))
 STATE_ROOT = Path(os.environ.get("ORCHESTRATE_HOME", str(Path(__file__).resolve().parent)))
@@ -341,12 +350,22 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             else:
                 normalized_read_ctx.append(str(rc))
 
+        raw_backend = str(raw_task.get("backend") or raw_task.get("model") or "").strip()
+        default_backend = os.environ.get("ORCHESTRATE_DEFAULT_BACKEND", "").strip()
+        backend = raw_backend
+        if runner != "local" and not backend and default_backend:
+            backend = default_backend
+        if runner == "code-runner" and backend:
+            backend = normalize_backend_alias(backend)
+        elif runner == "scillm":
+            backend = normalize_scillm_model_alias(backend, default="text")
+
         runtimes[task_id] = TaskRuntime(
             task_id=task_id,
             title=str(raw_task.get("title") or "").strip(),
             lane=str(raw_task.get("lane") or "default").strip() or "default",
             runner=runner,
-            backend=str(raw_task.get("backend") or raw_task.get("model") or "").strip(),
+            backend=backend,
             mode=str(raw_task.get("mode") or "").strip(),
             prompt=_task_prompt(raw_task),
             command=str(raw_task.get("command") or "").strip(),

@@ -175,6 +175,62 @@ def _parse_natural_roundtable_query(question_parts: list[str]) -> tuple[str, str
     return topic, ",".join(personas), True
 
 
+def _parse_natural_argue_query(question_parts: list[str]) -> tuple[str, str | None, bool]:
+    """Parse two-sided argue syntax into topic, FOR/AGAINST personas, inferred flag."""
+    question = _normalize_question_parts(question_parts)
+    if not question:
+        return question, None, False
+
+    explicit_roles = re.match(
+        r"^(?P<for_persona>.+?)\s+argue\s+for\s+and\s+(?P<against_persona>.+?)\s+argue\s+against\s+(?P<topic>.+)$",
+        question,
+        flags=re.IGNORECASE,
+    )
+    if explicit_roles:
+        for_persona = explicit_roles.group("for_persona").strip(" ,:;")
+        against_persona = explicit_roles.group("against_persona").strip(" ,:;")
+        topic = _clean_roundtable_topic(explicit_roles.group("topic"))
+        if (
+            topic
+            and _looks_like_persona_prefix(for_persona)
+            and _looks_like_persona_prefix(against_persona)
+        ):
+            return topic, f"{for_persona}:for,{against_persona}:against", True
+
+    paired_argue = re.match(
+        r"^(?P<names>.+?)\s+(?:argue|argues)\s+(?:about|over|on)\s+(?P<topic>.+)$",
+        question,
+        flags=re.IGNORECASE,
+    )
+    if paired_argue:
+        personas = _parse_persona_list(paired_argue.group("names"))
+        topic = _clean_roundtable_topic(paired_argue.group("topic"))
+        if (
+            len(personas) == 2
+            and topic
+            and all(_looks_like_persona_prefix(persona.split(":", 1)[0].strip()) for persona in personas)
+        ):
+            return topic, f"{personas[0]}:for,{personas[1]}:against", True
+
+    no_persona_patterns = [
+        r"^(?:argue\s+)?for\s+and\s+against\s+(?P<topic>.+)$",
+        r"^(?:show\s+)?both\s+sides\s+(?:of|on)\s+(?P<topic>.+)$",
+        r"^devil'?s\s+advocate:?\s+(?P<topic>.+)$",
+        r"^devil’s\s+advocate:?\s+(?P<topic>.+)$",
+    ]
+    for pattern in no_persona_patterns:
+        match = re.match(pattern, question, flags=re.IGNORECASE)
+        if match:
+            topic = _clean_roundtable_topic(match.group("topic"))
+            if topic:
+                return topic, None, True
+
+    lowered = question.lower()
+    if "for and against" in lowered or "both sides" in lowered or "devil's advocate" in lowered:
+        return question, None, True
+    return question, None, False
+
+
 def _parse_natural_parallel_review_query(question_parts: list[str]) -> tuple[str, bool, int | None, str | None]:
     """Parse human syntax like `run 3 parallel reviewers on this design`.
 

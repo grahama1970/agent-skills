@@ -68,6 +68,11 @@ from _misuse_guard import (
     MisuseError,
 )
 from _debug_dashboard import TraceCollector, generate_dashboard
+from llm_routing import (
+    backend_to_scillm_model,
+    normalize_backend_alias,
+    normalize_scillm_chat_url,
+)
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -81,7 +86,7 @@ def _emit_event(event: str, **fields) -> None:
     payload = {"event": event, "ts": time.time(), **fields}
     print(json.dumps(payload, default=str), file=sys.stderr, flush=True)
 
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+SCILLM_URL = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 SKILLS_DIR = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
@@ -123,38 +128,36 @@ def git_snapshot(cwd: str) -> str:
     return proc.stdout.strip() if proc.returncode == 0 else ""
 
 
-def git_stash_save(cwd: str) -> bool:
-    """Stash uncommitted changes before code-runner starts. Returns True if stashed.
-
-    Only stashes tracked modifications (not untracked files) to avoid conflicts
-    when code-runner commits new files that overlap with stashed untracked files.
-    """
+def git_tracked_changes(cwd: str) -> list[str]:
+    """Return tracked modifications that make in-place code-runner unsafe."""
     proc = subprocess.run(
-        ["git", "stash", "push", "-m", "code-runner-pre-run-stash"],
+        ["git", "status", "--porcelain", "--untracked-files=no"],
         capture_output=True, text=True, cwd=cwd, timeout=GIT_TIMEOUT,
     )
-    stashed = "Saved working directory" in proc.stdout
-    if stashed:
-        logger.info("Stashed pre-existing changes (tracked only)")
-    return stashed
-
-
-def git_stash_pop(cwd: str) -> None:
-    """Restore stashed changes after code-runner finishes.
-
-    Falls back to git stash drop if pop conflicts (e.g., code-runner committed
-    files that overlap with stashed content).
-    """
-    proc = subprocess.run(["git", "stash", "pop"], capture_output=True, text=True, cwd=cwd, timeout=GIT_TIMEOUT)
     if proc.returncode != 0:
-        # Conflict: code-runner committed files that clash with stash
-        if "conflict" in proc.stderr.lower() or "already exists" in proc.stderr.lower():
-            logger.warning("git stash pop conflict — dropping stash (code-runner committed overlapping files)")
-            subprocess.run(["git", "stash", "drop"], capture_output=True, text=True, cwd=cwd, timeout=GIT_TIMEOUT)
-        else:
-            logger.error("git stash pop FAILED — user changes may be trapped in stash: {}", proc.stderr[:300])
-    else:
-        logger.info("Restored stashed changes")
+        logger.warning("git status failed while checking dirty worktree: {}", proc.stderr[:200])
+        return []
+    return [line for line in proc.stdout.splitlines() if line.strip()]
+
+
+def assert_clean_tracked_worktree(cwd: str, output_dir: Path) -> None:
+    """Fail closed on tracked user changes instead of hiding them with git stash."""
+    if os.environ.get("CODE_RUNNER_DIRTY_POLICY", "fail").strip().lower() == "allow":
+        logger.warning("CODE_RUNNER_DIRTY_POLICY=allow — running with tracked user changes present")
+        return
+    dirty = git_tracked_changes(cwd)
+    if not dirty:
+        return
+    preview = "\n".join(f"  {line}" for line in dirty[:20])
+    if len(dirty) > 20:
+        preview += f"\n  ... {len(dirty) - 20} more"
+    raise RuntimeError(
+        "code-runner refuses to run in a dirty tracked worktree because it no longer "
+        "uses git stash. Commit or move existing changes, run in an isolated worktree, "
+        "or set CODE_RUNNER_DIRTY_POLICY=allow if you intentionally accept the risk.\n"
+        f"Tracked changes:\n{preview}\n"
+        f"Artifacts were initialized under: {output_dir}"
+    )
 
 
 def git_commit_round(cwd: str, task_id: str, round_num: int, score: float,
@@ -166,7 +169,7 @@ def git_commit_round(cwd: str, task_id: str, round_num: int, score: float,
     subprocess.run(["git", "add", "--"] + written_files, cwd=cwd, capture_output=True, timeout=GIT_TIMEOUT)
     msg = f"code-runner: {task_id} round {round_num} (score={score:.3f})"
     proc = subprocess.run(
-        ["git", "commit", "-m", msg, "--no-verify"],
+        ["git", "commit", "-m", msg],
         capture_output=True, text=True, cwd=cwd, timeout=GIT_TIMEOUT,
     )
     if proc.returncode != 0:
@@ -347,13 +350,8 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     Temperature increases on repeated failures (LLMLOOP pattern) to break local minima.
     Reasoning escalation (low/medium/high) increases max_tokens and prompt depth.
     """
-    model = {
-        "codex": "gpt-5.3-codex",
-        "claude": "claude-sonnet-4-6",  # Fixed: was text-claude (invalid)
-        "text": "text",
-        "gemini": "text-gemini",
-        "deepseek": "text",
-    }.get(backend, "gpt-5.3-codex")
+    backend = normalize_backend_alias(backend)
+    model = backend_to_scillm_model(backend)
 
     max_tokens = {"low": 4000, "medium": 8000, "high": 16000}.get(reasoning, 4000)
 
@@ -438,7 +436,7 @@ def run(
     debug: bool = typer.Option(False, "--debug", help="Generate debug HTML dashboard"),
 ) -> None:
     """Run task with autoresearch-pattern self-improvement loop."""
-    # Wrap spec read in error handling — crash here = no stash to restore, but produce structured error
+    # Wrap spec read in error handling before any repo mutation can happen.
     try:
         raw_spec = json.loads(Path(spec_file).read_text())
     except (FileNotFoundError, json.JSONDecodeError, PermissionError) as e:
@@ -613,7 +611,32 @@ def run(
     task_id = spec.task_id
     title = spec.title
     prompt = spec.prompt
-    llm_backend = backend or spec.backend
+    try:
+        llm_backend = normalize_backend_alias(backend or spec.backend)
+    except ValueError as exc:
+        preflight_error = PreflightError(
+            field="backend",
+            error=str(exc),
+            fix="Use a canonical backend such as codex, claude, text, gemini, or deepseek; "
+                "Codex model aliases like gpt-5.5 are accepted and normalize to codex.",
+        )
+        result = TaskResult(
+            task_id=spec.task_id,
+            title=spec.title,
+            status="preflight_fail",
+            preflight_errors=[preflight_error],
+        )
+        emitter.emit(
+            EventType.preflight_failed,
+            state_after=RunState.preflight_failed,
+            reason_code=ReasonCode.bad_spec,
+            payload={"errors": [preflight_error.model_dump()]},
+        )
+        (Path(spec.output_dir) / f"{spec.task_id}.result.json").write_text(
+            result.model_dump_json(indent=2)
+        )
+        logger.error("Backend preflight failed: {}", exc)
+        sys.exit(1)
     lang = spec.lang  # Language profile: python, rust, typescript, or empty for auto-detect
     cwd = spec.cwd
     output_dir = Path(spec.output_dir)
@@ -685,13 +708,39 @@ def run(
 
     # Session key links all rounds in /memory for graph traversal
     session_key = f"cr-{task_id}-{int(time.time())}"
-    failure_reason = ""  # populated on timeout, zero-writes, stash conflict
+    failure_reason = ""  # populated on timeout, zero-writes, dirty repo, etc.
     run_start_time = time.monotonic()
 
-    # Git safety: stash pre-existing changes before we start
-    stashed = git_stash_save(cwd) if is_git_repo else False
+    # Git safety: fail closed on pre-existing tracked changes instead of stashing.
+    if is_git_repo:
+        try:
+            assert_clean_tracked_worktree(cwd, output_dir)
+        except RuntimeError as exc:
+            preflight_error = PreflightError(
+                field="cwd",
+                error=str(exc),
+                fix="Commit/move tracked changes or run code-runner in an isolated git worktree.",
+            )
+            result = TaskResult(
+                task_id=spec.task_id,
+                title=spec.title,
+                status="preflight_fail",
+                preflight_errors=[preflight_error],
+            )
+            emitter.emit(
+                EventType.preflight_failed,
+                state_after=RunState.preflight_failed,
+                reason_code=ReasonCode.bad_spec,
+                payload={"errors": [preflight_error.model_dump()]},
+            )
+            output_dir.mkdir(parents=True, exist_ok=True)
+            (output_dir / f"{spec.task_id}.result.json").write_text(
+                result.model_dump_json(indent=2)
+            )
+            logger.error("{}", exc)
+            sys.exit(1)
 
-    # Create output dir AFTER stash — if output_dir is inside cwd, stash would remove it
+    # Create output dir after dirty-worktree preflight so artifacts don't affect git status.
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Git snapshot (autoresearch: remember where we started)
@@ -709,7 +758,7 @@ def run(
         payload={"max_rounds": max_rounds, "backend": llm_backend, "cwd": cwd},
     )
 
-    try:  # try/finally guarantees stash pop + lock release even on crash
+    try:  # try/finally guarantees lock release even on crash
         # Staged context escalation: start with interface maps for read_context,
         # escalate specific files to full content on failure (research-validated pattern)
         escalated_files: set[str] = set()  # read_context files promoted to full content after failure
@@ -925,10 +974,8 @@ def run(
                     recent_rounds=rounds_history)
 
             # 2. Call LLM via tool_use agent loop
-            model_name = {
-                "codex": "gpt-5.3-codex", "claude": "claude-sonnet-4-6",
-                "gemini": "text-gemini",
-            }.get(cur_backend, "gpt-5.3-codex")
+            cur_backend = normalize_backend_alias(cur_backend)
+            model_name = backend_to_scillm_model(cur_backend)
 
             # Dynamic timeout: P95 from /memory history per-backend, or env override
             if os.environ.get("CODE_RUNNER_ROUND_TIMEOUT"):
@@ -1378,9 +1425,6 @@ def run(
             logger.error("Failed to write crash result: {}", write_exc)
         raise  # re-raise so exit code is still non-zero
     finally:
-        # Always restore stashed changes, even on crash
-        if stashed:
-            git_stash_pop(cwd)
         # Release repo lock and remove lock file
         if lock_file:
             try:

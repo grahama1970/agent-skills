@@ -35,6 +35,12 @@ from _misuse_guard import (
     check_dod_missing,
     check_design_decision,
 )
+from models import TaskSpec
+from llm_routing import (
+    backend_to_scillm_model,
+    normalize_backend_alias,
+    normalize_scillm_chat_url,
+)
 
 
 def test_error_classifier():
@@ -231,6 +237,33 @@ def test_misuse_guard():
     print("  PASS: All misuse guard tests")
 
 
+def test_backend_aliases():
+    """Test Codex-era backend/model alias normalization."""
+    print("Testing backend alias normalization...")
+
+    assert normalize_backend_alias("gpt-5.5") == "codex"
+    assert normalize_backend_alias("gpt-5.3-codex") == "codex"
+    assert normalize_backend_alias("claude-sonnet-4-6") == "claude"
+    assert normalize_backend_alias("text-gemini-oauth") == "gemini"
+    assert backend_to_scillm_model("codex") == "gpt-5.5"
+    assert backend_to_scillm_model("gemini") == "text-gemini-oauth"
+    assert normalize_scillm_chat_url("http://localhost:4001") == "http://localhost:4001/v1/chat/completions"
+    assert normalize_scillm_chat_url("http://localhost:4001/v1") == "http://localhost:4001/v1/chat/completions"
+
+    spec = TaskSpec.model_validate({
+        "task_id": "alias-test",
+        "title": "Alias test",
+        "prompt": "Fix the bug in src/main.py where foo returns the wrong value",
+        "backend": "gpt-5.5",
+        "cwd": str(Path.cwd()),
+        "allowlist": ["src/main.py"],
+        "definition_of_done": {"command": "echo OK", "assertion": "OK"},
+    })
+    assert spec.backend == "codex"
+
+    print("  PASS: Backend aliases normalize correctly")
+
+
 def test_tool_use_integration():
     """Test that tool_use.py imports all new modules correctly."""
     print("Testing tool_use.py integration...")
@@ -301,6 +334,7 @@ def main():
         test_error_classifier()
         test_tool_call_parser()
         test_misuse_guard()
+        test_backend_aliases()
         test_tool_use_integration()
 
         print("=" * 60)

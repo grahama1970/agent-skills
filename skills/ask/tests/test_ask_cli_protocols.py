@@ -85,6 +85,46 @@ def test_cli_parallel_review_implies_oracle(monkeypatch):
     assert captured["oracle_reasoning"] == "high"
 
 
+def test_cli_argue_implies_oracle_roundtable_judge_protocol(monkeypatch):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [{"solution": "ok"}], "answer": "ok", "bridges_found": []}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "this",
+            "service",
+            "use",
+            "retries",
+            "or",
+            "queues?",
+            "--argue",
+            "--argue-personas",
+            "Brandon,Margaret",
+            "--argue-rounds",
+            "3",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["argue"] is True
+    assert captured["argue_personas"] == "Brandon:for,Margaret:against"
+    assert captured["argue_rounds"] == 3
+    assert captured["roundtable"] is True
+    assert captured["roundtable_personas"] == "Brandon:for,Margaret:against"
+    assert captured["roundtable_role_preset"] == "argue"
+    assert captured["roundtable_mode"] == "argue"
+    assert captured["roundtable_rounds"] == 3
+    assert captured["oracle_model"] == "gpt-5.5"
+    assert captured["oracle_backend"] == "subagent-runner"
+
+
 def test_cli_deep_review_implies_xhigh_subagent_parallel_review(monkeypatch):
     ask_module = _load_ask_module()
     captured = {}

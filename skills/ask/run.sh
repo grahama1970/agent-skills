@@ -87,6 +87,9 @@ Ask Options:
   --oracle-persona-model <m> Model for primary persona turns
   --oracle-peer-model <m> Model for peer persona turns
   --oracle-iterations <n> Sequential oracle deliberation calls (default: 1)
+  --argue              Run two-sided FOR/AGAINST argument with neutral judge
+  --argue-personas <p> Comma-separated FOR/AGAINST personas (default: generic)
+  --argue-rounds <n>   Number of argument rounds (default: 2)
   --roundtable         Run sequential protocolized persona deliberation
   --roundtable-personas <p> Comma-separated persona[:role] participants
   --roundtable-role-preset <p> Role preset (default: adversarial-review)
@@ -156,6 +159,10 @@ Examples:
 
   # Natural N-persona roundtable syntax
   ./run.sh ask Brandon, Margaret, and Jennifer to debate the relevance of Formal Methods in aerospace projects in 2026
+
+  # Two-sided argue mode with fixed judge rubric
+  ./run.sh ask "Brandon argue for and Margaret argue against using queues"
+  ./run.sh ask "Should this service use retries or queues?" --argue --argue-personas "Brandon,Margaret" --argue-rounds 2
 
   # Explicit protocolized roundtable
   ./run.sh ask "Formal Methods in aerospace projects in 2026" --roundtable --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer" --roundtable-rounds 2

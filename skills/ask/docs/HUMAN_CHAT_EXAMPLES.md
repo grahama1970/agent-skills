@@ -2,7 +2,7 @@
 
 These examples describe how a human can invoke `$ask` from chat. The skill
 accepts natural phrasing, then maps it to memory recall, oracle synthesis,
-persona consultation, roundtable review, parallel review, or deep review.
+persona consultation, two-sided argue mode, roundtable review, parallel review, or deep review.
 
 ## Defaults
 
@@ -10,6 +10,7 @@ persona consultation, roundtable review, parallel review, or deep review.
 - Use oracle mode for high-value analytical, strategic, ambiguous, or review-heavy questions.
 - Use `gpt-5.5` with `high` reasoning for normal oracle paths, and `xhigh` for deep-review unless unavailable or overridden.
 - Use `subagent-runner` for personas, peers, roundtables, parallel review, and deep review.
+- Use `--argue` for bounded FOR/AGAINST arguments with neutral judge synthesis.
 - Treat memory recall as context, not evidence.
 - Use `--scope sparta` for SPARTA, NIST-to-SPARTA, and space-cybersecurity questions.
 - Treat empty answers, refusal-style non-answers, missing personas, or missing domain grounding as failed E2E behavior.
@@ -130,6 +131,30 @@ default is summary persistence to avoid memory pollution.
 Roundtable is a sequential protocol: each persona sees prior claims, reacts
 under a protocol role, and the moderator synthesizes. It is not the same as
 parallel review.
+
+## Argue
+
+```text
+$ask Brandon argue for and Margaret argue against using queues
+$ask devil's advocate: should we enable deep-review by default?
+$ask both sides of making deep-review the default review path
+```
+
+Expected route:
+
+```bash
+./run.sh ask "using queues" \
+  --oracle \
+  --oracle-backend subagent-runner \
+  --argue \
+  --argue-personas "Brandon:for,Margaret:against" \
+  --argue-rounds 2
+```
+
+Argue mode is a bounded two-persona protocol, not a general roundtable. One
+side argues FOR, one argues AGAINST, and the judge returns `FOR`, `AGAINST`,
+`NO_CLEAR_WINNER`, or `INSUFFICIENT_EVIDENCE` using the fixed rubric in
+`docs/prompts_review/ASK_ARGUE_PROMPT_PAYLOAD.md`.
 
 ## Parallel Review
 
@@ -270,6 +295,9 @@ Right: Use normal memory ask or a batch-capable model lane; reserve oracle for h
 
 Wrong: $ask roundtable and persist everything by default
 Right: $ask Brandon and Margaret to roundtable for 2 rounds on <topic>
+
+Wrong: $ask argue until someone wins
+Right: $ask Brandon argue for and Margaret argue against <topic>; accept NO_CLEAR_WINNER when warranted.
 
 Wrong: $ask safe to proceed?
 Right: $ask safe to proceed? --deep-review-target "current branch vs main"

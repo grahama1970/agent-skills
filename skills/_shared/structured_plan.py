@@ -8,7 +8,9 @@ Both this file and plan/plan.py MUST stay aligned with that schema.
 from __future__ import annotations
 
 import json
+import os
 import re
+import sys
 from pathlib import Path
 
 import typer
@@ -18,6 +20,11 @@ try:
     import yaml
 except Exception:  # pragma: no cover
     yaml = None
+
+_common = str(Path(__file__).resolve().parents[1] / "common")
+if _common not in sys.path:
+    sys.path.insert(0, _common)
+from llm_routing import normalize_backend_alias  # noqa: E402
 
 STRUCTURED_EXTS = {".json", ".yaml", ".yml"}
 
@@ -142,12 +149,19 @@ def validate_structured_plan(data: dict[str, Any]) -> dict[str, Any]:
                 "use 'code-runner' (writes files) or 'scillm' (one-shot). "
                 "/orchestrate will auto-migrate at runtime but plans should be updated."
             )
+        default_backend = os.environ.get("ORCHESTRATE_DEFAULT_BACKEND", "").strip()
+        effective_backend = task["backend"] or (default_backend if task["runner"] != "local" else "")
+        if task["runner"] == "code-runner" and effective_backend:
+            try:
+                normalize_backend_alias(effective_backend)
+            except ValueError as exc:
+                issues.append(f"Task {task['id']} has invalid code-runner backend/model: {exc}")
         if task["runner"] == "scillm":
             if task["mode"] != "one_shot":
                 issues.append(f"Task {task['id']} uses scillm but mode is not one_shot")
-            if not task["backend"]:
+            if not effective_backend:
                 issues.append(f"Task {task['id']} uses scillm but has no backend")
-        if not task["backend"] and task["runner"] != "local":
+        if not effective_backend and task["runner"] != "local":
             warnings.append(f"Task {task['id']} missing Model (sonnet/opus/codex/gemini/scillm)")
         if task["runner"] == "local" and task["backend"]:
             warnings.append(f"Task {task['id']} is local but also specifies backend")

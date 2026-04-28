@@ -1,0 +1,507 @@
+version: 1
+kind: orchestrate-plan
+repo_root: /tmp/agent-skills-ask-oracle-review-workflows-20260427
+metadata:
+  title: Ask Portable Parity Protocol
+  goal: Make /ask a portable oracle/review protocol across agent CLIs without cloning Pi-native session internals.
+  plan_type: code
+  created: '2026-04-27'
+  primary_persona:
+    name: Graham Anderson
+    role: Developer/operator using /ask for cross-agent oracle, review, and synthesis workflows
+    source: User parity request and /ask project knowledge
+execution:
+  max_concurrency: 3
+  wave_barrier: true
+  scheduling_policy: wave_then_dependency
+capability_overlap:
+- '/memory recall found existing /ask project knowledge: /ask is the human-facing memory/oracle/review control plane, not
+  a general code-runner.'
+- Existing /ask already has memory recall, dogpile hints, oracle synthesis, roundtable, parallel review, deep-review artifacts,
+  doctor/status, reviewer specs, and saved chain specs; this plan EXTENDs those seams.
+- Existing /subagent-runner owns Pi/Codex-style child execution; this plan creates runner adapter contracts and compilers,
+  not a new native session runtime.
+- Existing /create-context overlaps deterministic context-bundle construction; tasks must reuse that pattern where practical
+  instead of inventing unrelated context assembly.
+- Existing /review-plan and /test-lab cover plan validation and blind checks; final validation tasks explicitly call them.
+- Existing /prompt-lab and prompt review bundles should be used for new prompt payloads; implementation must not bury portable
+  protocol prompts only in inline strings.
+questions_blockers:
+- None
+lanes:
+- id: '0'
+  label: 'Wave 0: Baseline and contracts'
+- id: '1'
+  label: 'Wave 1: Runner and runtime protocol'
+- id: '2'
+  label: 'Wave 2: Specs, chains, and enforcement'
+- id: '3'
+  label: 'Wave 3: Recovery and transparency'
+- id: '4'
+  label: 'Wave 4: Golden tests and docs'
+- id: '5'
+  label: 'Wave 5: Formal validation'
+tasks:
+- id: '1'
+  title: Capture baseline ask health
+  lane: '0'
+  runner: local
+  backend: ''
+  mode: ''
+  agent: general-purpose
+  depends_on: []
+  command: cd skills/ask && bash sanity.sh && ./run.sh doctor --json >/tmp/ask-doctor-baseline.json && ./run.sh status --runs
+    --json >/tmp/ask-status-baseline.json
+  implementation:
+  - CALL existing /ask sanity, doctor, and status paths before changing portable parity code.
+  - Record baseline behavior for health/status JSON so later tasks preserve compatibility.
+  tests:
+  - skills/ask/sanity.sh
+  - skills/ask/run.sh doctor --json
+  - skills/ask/run.sh status --runs --json
+  definition_of_done:
+    command: cd skills/ask && bash sanity.sh && python -m json.tool /tmp/ask-doctor-baseline.json >/dev/null && python -m
+      json.tool /tmp/ask-status-baseline.json >/dev/null
+    assertion: Baseline ask sanity exits 0 and doctor/status emit valid JSON.
+  blind_tests:
+  - skills/ask/sanity.sh
+  gate: Baseline doctor/status/sanity are captured before implementation waves run.
+- id: '2'
+  title: Add runner adapter contract and aliases
+  lane: '1'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '1'
+  read_context:
+  - skills/ask/src/ask/ask_config.py
+  - skills/ask/src/ask/oracle_adapters.py
+  - skills/ask/src/ask/ask_oracle.py
+  - skills/ask/docs/ASK_DEEP_REVIEW_CONTRACT.md
+  allowlist:
+  - skills/ask/src/ask/runner_adapters.py
+  - skills/ask/docs/RUNNER_ADAPTERS.md
+  - skills/ask/tests/test_runner_adapters.py
+  implementation:
+  - CREATE a versioned runner adapter contract for codex-cli, claude-code, gemini-cli, opencode, aider, pi, plain-shell, scillm-api,
+    and openai-api.
+  - Include command templates, capability flags, sandbox/write-policy class, model override support, reasoning override support,
+    stdin/output-file behavior, and degradation notes.
+  - Add model and reasoning alias normalization so chain compilation can target runner-specific syntax without prompt-level
+    guessing.
+  - Fail closed for unknown runners and for plain-shell LLM execution attempts.
+  tests:
+  - tests/test_runner_adapters.py
+  - test-lab/run.sh verify-task ask-portable-parity-runner-adapters skills/ask/src/ask/runner_adapters.py --domain python
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_runner_adapters.py
+    assertion: All configured runners load, aliases normalize deterministically, unknown runners fail closed, and plain-shell
+      refuses LLM execution.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-runner-adapters skills/ask/src/ask/runner_adapters.py --domain python
+  - skills/ask/sanity.sh
+  gate: Runner registry rejects unknown runners and plain-shell live LLM execution while compiling known runner templates.
+  skills:
+  - ask
+  - code-runner
+  - test-lab
+- id: '3'
+  title: Expand doctor and status capability matrix
+  lane: '1'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '2'
+  read_context:
+  - skills/ask/src/ask/doctor.py
+  - skills/ask/src/ask/run_state.py
+  - skills/ask/run.sh
+  - skills/ask/tests/test_ask_cli_protocols.py
+  allowlist:
+  - skills/ask/src/ask/doctor.py
+  - skills/ask/run.sh
+  - skills/ask/tests/test_doctor_status.py
+  implementation:
+  - EXTEND /ask doctor to emit a runner capability matrix using runner_adapters.
+  - Include degraded_features, safe_to_run_deep_review, artifact_root health, reviewer spec health, chain spec health, memory/dogpile/scillm/subagent-runner
+    checks, and current runner identity.
+  - Ensure /ask status can reconstruct recent run state from artifacts only, independent of process ownership.
+  tests:
+  - tests/test_doctor_status.py
+  - ./run.sh doctor --json
+  - ./run.sh status --runs --json
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_doctor_status.py && ./run.sh doctor
+      --json >/tmp/ask-doctor.json && python -m json.tool /tmp/ask-doctor.json >/dev/null
+    assertion: Doctor JSON contains runner, capabilities, degraded_features, safe_to_run_deep_review, and dependency health
+      without breaking status.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-doctor skills/ask/src/ask/doctor.py --domain python
+  - skills/ask/sanity.sh
+  gate: Doctor JSON exposes runner capability matrix and degraded features for current environment.
+  skills:
+  - ask
+  - code-runner
+  - test-lab
+- id: '4'
+  title: Version the .ask runtime protocol
+  lane: '1'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '2'
+  read_context:
+  - skills/ask/src/ask/run_state.py
+  - skills/ask/src/ask/deep_review.py
+  - skills/ask/src/ask/ask.py
+  - skills/ask/docs/ASK_DEEP_REVIEW_CONTRACT.md
+  allowlist:
+  - skills/ask/src/ask/run_state.py
+  - skills/ask/docs/ASK_RUNTIME_PROTOCOL.md
+  - skills/ask/tests/test_runtime_protocol.py
+  implementation:
+  - EXTEND run_state with schema_versioned request.json, runner.json, capability_matrix.json, context_policy.json, events.jsonl,
+    status.json, needs_attention.json, synthesis.md, verdict.json, verifier.log, and reviewer_outputs conventions.
+  - Standardize artifact roots as .ask_artifacts/<mode>/<run_id>/ for ask, oracle, argue, roundtable, parallel-review, and
+    deep-review.
+  - Persist state transitions started, context_built, reviewer_started, reviewer_heartbeat, reviewer_completed, needs_attention,
+    verifier_failed, completed, failed, and cancelled.
+  tests:
+  - tests/test_runtime_protocol.py
+  - ./run.sh status --runs --json
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_runtime_protocol.py
+    assertion: Runtime protocol files are schema-versioned, artifact paths are stable, and status reconstruction works from
+      files only.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-runtime-protocol skills/ask/src/ask/run_state.py --domain python
+  - skills/ask/sanity.sh
+  gate: Every serious run can be reconstructed from versioned artifact files without process ownership.
+  skills:
+  - ask
+  - code-runner
+  - test-lab
+- id: '5'
+  title: Add deterministic context bundle controls
+  lane: '2'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '4'
+  read_context:
+  - skills/ask/src/ask/ask.py
+  - skills/ask/src/ask/deep_review.py
+  - skills/ask/docs/ASK_DEEP_REVIEW_CONTRACT.md
+  - skills/create-context/SKILL.md
+  allowlist:
+  - skills/ask/src/ask/context_bundle.py
+  - skills/ask/src/ask/ask.py
+  - skills/ask/tests/test_context_bundle.py
+  implementation:
+  - EXTEND existing review_context and inheritance options into deterministic fresh, fork, hybrid, and none context bundle
+    builders.
+  - Build context_bundle.md from explicit target, selected memory summary, selected skills, and project rules without relying
+    on the host CLI native context model.
+  - Persist context_policy.json and context_bundle.md under the run artifact directory.
+  - Fail closed when the target is missing or ambiguous instead of silently reviewing the wrong context.
+  tests:
+  - tests/test_context_bundle.py
+  - ./run.sh ask 'deep review this implementation' --deep-review --deep-review-target src/ask/ask.py --json
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_context_bundle.py
+    assertion: fresh/fork/hybrid/none context modes produce deterministic bundles and missing targets fail closed.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-context-bundle skills/ask/src/ask/context_bundle.py --domain python
+  - skills/ask/sanity.sh
+  gate: Context bundles are deterministic and missing or ambiguous targets produce needs_attention or fail-closed status.
+  skills:
+  - ask
+  - create-context
+  - code-runner
+  - test-lab
+- id: '6'
+  title: Harden reviewer schema and registry
+  lane: '2'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '2'
+  read_context:
+  - skills/ask/src/ask/reviewer_specs.py
+  - skills/ask/docs/reviewers/evidence-auditor.md
+  - skills/ask/docs/chains/deep-review.chain.yaml
+  - skills/ask/SKILL.md
+  allowlist:
+  - skills/ask/src/ask/reviewer_specs.py
+  - skills/ask/docs/REVIEWER_SPEC_SCHEMA.md
+  - skills/ask/tests/test_reviewer_specs.py
+  implementation:
+  - EXTEND reviewer spec loading with a public ask.reviewer.v1 schema validator.
+  - Validate model_policy, fallback models, reasoning, tools, write_policy, context_policy, evidence_policy, required_sections,
+    default outputs, and prohibitions.
+  - Add an ask-native role registry for oracle, context-builder, evidence-auditor, fail-closed, test-proof, complexity-minimizer,
+    security-data-risk, moderator, and verifier.
+  - Make memory_as_evidence false by default for reviewer roles.
+  tests:
+  - tests/test_reviewer_specs.py
+  - ./run.sh chains validate --json
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_reviewer_specs.py && ./run.sh
+      chains validate --json >/tmp/ask-chains.json && python -m json.tool /tmp/ask-chains.json >/dev/null
+    assertion: Reviewer specs validate against ask.reviewer.v1 and invalid specs fail with actionable errors.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-reviewer-schema skills/ask/src/ask/reviewer_specs.py --domain python
+  - skills/ask/sanity.sh
+  gate: Reviewer specs validate against ask.reviewer.v1 and memory_as_evidence defaults to false.
+  skills:
+  - ask
+  - code-runner
+  - test-lab
+- id: '7'
+  title: Compile chains into runner plans
+  lane: '2'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '2'
+  - '4'
+  - '6'
+  read_context:
+  - skills/ask/src/ask/chain_specs.py
+  - skills/ask/src/ask/chains_cli.py
+  - skills/ask/docs/chains/deep-review.chain.yaml
+  - skills/ask/docs/chains/parallel-review.chain.yaml
+  allowlist:
+  - skills/ask/src/ask/chain_specs.py
+  - skills/ask/src/ask/chains_cli.py
+  - skills/ask/tests/test_chain_compiler.py
+  implementation:
+  - EXTEND chains CLI with compile <name> --runner <runner> --target <target> --out <path>.
+  - Compile resolve-target, context-builder, parallel-reviewers, moderator-synthesis, verifier, and artifact-writer stages
+    into runner-specific operations.
+  - Emit compiled_plan.json with deterministic commands, runner_invocations, expected artifacts, write_policy, context_policy,
+    and verifier gates.
+  - Plain-shell dry-run compiles but refuses live LLM execution.
+  tests:
+  - tests/test_chain_compiler.py
+  - ./run.sh chains compile deep-review --runner codex-cli --target src/ask/ask.py --out /tmp/compiled_plan.json
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_chain_compiler.py
+    assertion: deep-review and parallel-review chains compile to deterministic runner plans for codex-cli, claude-code, scillm-api,
+      openai-api, and plain-shell dry-run.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-chain-compiler skills/ask/src/ask/chain_specs.py --domain python
+  - skills/ask/sanity.sh
+  gate: Saved chains compile into deterministic runner operations with expected artifacts and verifier gates.
+  skills:
+  - ask
+  - code-runner
+  - test-lab
+- id: '8'
+  title: Enforce write policy and verifier gates
+  lane: '2'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '2'
+  - '4'
+  - '5'
+  read_context:
+  - skills/ask/src/ask/deep_review.py
+  - skills/ask/docs/ASK_DEEP_REVIEW_CONTRACT.md
+  - skills/ask/src/ask/runner_adapters.py
+  - skills/ask/src/ask/run_state.py
+  allowlist:
+  - skills/ask/src/ask/write_policy.py
+  - skills/ask/src/ask/deep_review.py
+  - skills/ask/tests/test_write_policy.py
+  implementation:
+  - 'CREATE runner-classified write-policy enforcement: hard sandbox, soft sandbox, advisory only.'
+  - Record before/after git status, target file hashes, allowed artifact root, and unexpected diffs.
+  - Reject unexpected non-artifact writes for review modes and mark advisory-only runners as degraded in doctor/capability
+    output.
+  - Keep deep-review read-only except artifacts and telemetry.
+  tests:
+  - tests/test_write_policy.py
+  - test-lab/run.sh verify-task ask-portable-parity-write-policy skills/ask/src/ask/write_policy.py --domain python
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_write_policy.py
+    assertion: Unexpected writes fail verifier, artifact writes pass, and enforcement class is reflected in run artifacts.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-write-policy skills/ask/src/ask/write_policy.py --domain python
+  - skills/ask/sanity.sh
+  gate: Unexpected non-artifact writes fail verifier while allowed artifact writes pass.
+  skills:
+  - ask
+  - code-runner
+  - test-lab
+- id: '9'
+  title: Add preview dry-run and needs-attention protocol
+  lane: '3'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '4'
+  - '5'
+  - '7'
+  read_context:
+  - skills/ask/src/ask/ask.py
+  - skills/ask/src/ask/run_state.py
+  - skills/ask/src/ask/chain_specs.py
+  - skills/ask/docs/HUMAN_CHAT_EXAMPLES.md
+  allowlist:
+  - skills/ask/src/ask/ask.py
+  - skills/ask/src/ask/run_state.py
+  - skills/ask/tests/test_preview_needs_attention.py
+  implementation:
+  - EXTEND ask with --preview and --dry-run --json for deep-review, parallel-review, roundtable, and argue workflows.
+  - Preview mode prints mode, target, runner, context policy, memory inheritance, selected skills, write policy, reviewers,
+    verifier, and expected artifacts.
+  - Add file-based needs_attention.json with reason, question, safe_default, resume_command, and corresponding events.jsonl
+    entry.
+  - Use needs_attention for ambiguous target, missing runner capability, failed verifier requiring human decision, and stalled
+    heartbeat.
+  tests:
+  - tests/test_preview_needs_attention.py
+  - ./run.sh ask 'deep review this implementation' --deep-review --deep-review-target src/ask/ask.py --preview
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_preview_needs_attention.py
+    assertion: Preview/dry-run emits no LLM calls, expected artifacts are listed, and needs_attention serializes/resumes safely.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-preview skills/ask/src/ask/ask.py --domain python
+  - skills/ask/sanity.sh
+  gate: Preview and dry-run perform no LLM execution and needs_attention persists resume-safe JSON.
+  skills:
+  - ask
+  - code-runner
+  - test-lab
+- id: '10'
+  title: Add resume retry and explain-run commands
+  lane: '3'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '4'
+  - '7'
+  - '9'
+  read_context:
+  - skills/ask/src/ask/ask.py
+  - skills/ask/src/ask/run_state.py
+  - skills/ask/src/ask/chains_cli.py
+  - skills/ask/run.sh
+  allowlist:
+  - skills/ask/src/ask/resume.py
+  - skills/ask/run.sh
+  - skills/ask/tests/test_resume_explain.py
+  implementation:
+  - CREATE ask resume --run-id <id>, ask resume --run-id <id> --from <stage>, ask retry --run-id <id> --stage <stage>, and
+    ask explain-run --id <run_id>.
+  - Resume from artifacts instead of process ownership; refuse resume when request.json or compiled_plan.json is missing.
+  - Explain routing decisions, target inference, memory policy, dogpile decision, runner, write enforcement, verifier status,
+    and final verdict.
+  - Never rerun completed verifier-passing stages unless retry explicitly names a stage.
+  tests:
+  - tests/test_resume_explain.py
+  - ./run.sh ask explain-run --id <fixture_run_id>
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_resume_explain.py
+    assertion: Resume/retry reconstruct state from artifacts, explain-run is deterministic, and missing artifacts fail closed.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-resume skills/ask/src/ask/resume.py --domain python
+  - skills/ask/sanity.sh
+  gate: Resume/retry/explain-run reconstruct from artifacts and refuse unsafe missing-state resumes.
+  skills:
+  - ask
+  - code-runner
+  - test-lab
+- id: '11'
+  title: Add cross-CLI golden tests and docs
+  lane: '4'
+  runner: code-runner
+  backend: codex
+  mode: iterative
+  agent: general-purpose
+  depends_on:
+  - '3'
+  - '5'
+  - '6'
+  - '7'
+  - '8'
+  - '9'
+  - '10'
+  read_context:
+  - skills/ask/README.md
+  - skills/ask/SKILL.md
+  - skills/ask/docs/HUMAN_CHAT_EXAMPLES.md
+  - skills/ask/docs/ASK_DEEP_REVIEW_CONTRACT.md
+  allowlist:
+  - skills/ask/tests/test_cross_cli_golden.py
+  - skills/ask/docs/ASK_PORTABLE_PARITY_CONTRACT.md
+  - skills/ask/SKILL.md
+  implementation:
+  - CREATE golden tests for codex-cli, claude-code, plain-shell dry-run, missing target fail-closed, unexpected write verifier
+    failure, empty reviewer output failure, SAFE without evidence failure, memory-as-evidence failure, status reconstruction,
+    and resume from failed verifier stage.
+  - Document the portable parity contract, non-goals, runner capability degradation, runtime artifact schema, and reviewer/chain
+    schema expectations.
+  - Keep Pi-native session internals explicitly out of scope.
+  tests:
+  - tests/test_cross_cli_golden.py
+  - bash sanity.sh
+  definition_of_done:
+    command: cd skills/ask && uv run --project . --group dev python -m pytest -q tests/test_cross_cli_golden.py && bash sanity.sh
+    assertion: Cross-CLI golden tests pass and docs describe portable parity without claiming Pi-native runtime parity.
+  blind_tests:
+  - test-lab/run.sh verify-task ask-portable-parity-cross-cli-golden skills/ask/tests/test_cross_cli_golden.py --domain python
+  - skills/ask/sanity.sh
+  gate: Golden tests prove cross-CLI compilation and fail-closed verifier behavior independent of model output.
+  skills:
+  - ask
+  - prompt-lab
+  - code-runner
+  - test-lab
+- id: '12'
+  title: Run formal validation and review-plan
+  lane: '5'
+  runner: local
+  backend: ''
+  mode: ''
+  agent: general-purpose
+  depends_on:
+  - '11'
+  command: cd skills/ask && bash sanity.sh && uv run --project . --group dev python -m pytest -q tests/test_runner_adapters.py
+    tests/test_doctor_status.py tests/test_runtime_protocol.py tests/test_context_bundle.py tests/test_reviewer_specs.py tests/test_chain_compiler.py
+    tests/test_write_policy.py tests/test_preview_needs_attention.py tests/test_resume_explain.py tests/test_cross_cli_golden.py
+  implementation:
+  - CALL deterministic tests after all implementation tasks.
+  - CALL /review-plan on this YAML before /orchestrate execution is approved.
+  - Do not proceed to /orchestrate unless /review-plan passes or the human explicitly waives a finding.
+  tests:
+  - bash sanity.sh
+  - python skills/plan/plan.py --validate skills/ask/03_ASK_PORTABLE_PARITY_TASKS.yaml
+  - skills/review-plan/run.sh review skills/ask/03_ASK_PORTABLE_PARITY_TASKS.yaml
+  definition_of_done:
+    command: cd skills/ask && bash sanity.sh
+    assertion: Ask sanity passes after implementation; plan validation and review-plan are run before orchestration approval.
+  blind_tests:
+  - skills/ask/sanity.sh
+  - skills/review-plan/run.sh review skills/ask/03_ASK_PORTABLE_PARITY_TASKS.yaml
+  gate: Final sanity, pytest targets, plan validation, and review-plan complete before orchestration approval.

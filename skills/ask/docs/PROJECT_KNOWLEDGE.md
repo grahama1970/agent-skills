@@ -1,6 +1,6 @@
 # Project Knowledge: ask
 
-**Last updated:** 2026-04-27 13:55 by agent
+**Last updated:** 2026-04-28 00:00 by agent
 **Status:** Active development
 
 This file is the human-readable current-state projection for `/ask`
@@ -35,6 +35,20 @@ curated context. Memory recall is context, not evidence.
 - Deep review now emits both `review.md` and `review.json` under
   `.ask_artifacts/deep-review/<timestamp>/`.
 - ask README.md now mirrors the structural onboarding shape of pi-subagents: installation, try-first prompts, what happens, modes, workflows, command reference, configuration, artifacts, development knowledge, validation, troubleshooting, and non-goals.
+- `/ask argue` is now a bounded protocol inside `/ask`, not a separate broad
+  parity project: it runs constrained for/against roles, applies a fixed judge
+  rubric, and returns one of `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
+  `INSUFFICIENT_EVIDENCE`.
+- Prompt quality for `/ask argue` is reviewed through a full prompt payload
+  fixture under `docs/prompts_review/`, matching the reviewable-prompt pattern
+  used by skills such as `/create-qras`.
+- The broader portable-parity work is planned but not executed yet. The current
+  plan is `03_ASK_PORTABLE_PARITY_TASKS.yaml`; `/review-plan` returned no
+  FAIL-grade issues, but orchestration is intentionally paused until runner
+  integration is clean.
+- `$orchestrate`, `$code-runner`, and `$scillm` remain the intended execution
+  primitives for appropriate tasks. The required update was compatibility and
+  safety, not bypassing those skills.
 
 ## Recent Decisions
 
@@ -54,6 +68,11 @@ curated context. Memory recall is context, not evidence.
 | 2026-04-27 | Move reviewer roles into frontmatter specs. | Protocol roles should be inspectable, reusable, and not hidden inside one giant `SKILL.md`. |
 | 2026-04-27 | Store saved review chains as YAML specs. | Deep review and parallel review should be repeatable workflows, not ad hoc prompt branches. |
 | 2026-04-27 | Treat review-and-fix as a separate worktree-isolated lane. | `/ask` deep review remains read-only; implementation writes require explicit isolation. |
+| 2026-04-27 | Add bounded `/ask argue` directly before broad portable-parity work. | Arguing for and against a decision is valuable now and fits the existing adversarial review protocol surface. |
+| 2026-04-27 | Use a fixed argue judge rubric by default. | Free-form persona debate is too easy to make shallow; the judge must score evidence strength, failure-mode coverage, assumption quality, target relevance, falsifiability, and implementation cost/risk. |
+| 2026-04-27 | Add full prompt payload coverage for `/ask argue`. | Prompt changes need reviewable fixtures, not only CLI assertions. |
+| 2026-04-27 | Pause broad `/ask` portable-parity orchestration until `$orchestrate`/`$code-runner`/`$scillm` integration is updated. | The first orchestration run exposed stale backend aliases, wrong `/scillm` endpoint assumptions, and unsafe `git stash` behavior. |
+| 2026-04-27 | Keep `$scillm` and `$code-runner` in the `/orchestrate` path. | They remain the right primitives when the task needs LLM inference or bounded iterative code execution; the fix is routing/safety normalization. |
 
 ## Open Questions
 
@@ -69,6 +88,15 @@ curated context. Memory recall is context, not evidence.
       monkeypatched protocol tests?
       Current answer: realistic E2E must include domain scope, persona routing,
       and roundtable behavior; deterministic tests remain route/unit coverage.
+- [x] Should `/ask` include an argue function? Yes: implement it as a bounded
+      adversarial protocol with explicit for/against roles and a fixed judge
+      rubric, not as unconstrained chat.
+- [x] Does `/ask argue` need a prompt review payload? Yes: the prompt payload
+      is now a first-class review artifact under `docs/prompts_review/`.
+- [ ] After the `$orchestrate` compatibility patch, should the broad portable
+      parity plan run from a fresh isolated worktree? Current answer: yes,
+      because `$code-runner` now fails closed on dirty tracked worktrees instead
+      of using `git stash`.
 
 ## Key Files
 
@@ -85,11 +113,13 @@ curated context. Memory recall is context, not evidence.
 | `src/ask/reviewer_specs.py` | Frontmatter reviewer specs and dynamic reviewer-angle selection |
 | `src/ask/chain_specs.py` | Saved chain specs for repeatable review workflows |
 | `src/ask/review_protocols/adversarial_review.py` | Existing roundtable/parallel review protocol support |
+| `docs/prompts_review/ASK_ARGUE_PROMPT_PAYLOAD.md` | Full prompt payload fixture for `/ask argue` prompt review |
 | `docs/reviewers/` | Protocol-role specs with model/reasoning/fallback/write/inheritance policy |
 | `docs/chains/` | Saved deep-review and parallel-review chain definitions |
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
 | `docs/ASK_DEEP_REVIEW_CONTRACT.md` | Deep-review runtime and verifier contract |
 | `01_ASK_DEEP_REVIEW_TASKS.yaml` | Current implementation plan for deep review |
+| `03_ASK_PORTABLE_PARITY_TASKS.yaml` | Planned broad portable-parity implementation, not yet executed |
 | `scripts/live_e2e.py` | Live E2E matrix, including semantic answer validation |
 | `sanity.sh` | Skill-level deterministic sanity checks |
 
@@ -135,6 +165,31 @@ Latest implementation checks, as of 2026-04-27:
   `src/ask/ask_relevance.py`.
 - Evidence dashboard:
   `.ask_artifacts/validation-dashboard/20260427T171501Z/index.html`.
+
+Additional implementation checks, as of 2026-04-27:
+
+- `/ask argue` targeted tests passed:
+  `uv run --project . --group dev python -m pytest -q tests/test_review_protocols.py tests/test_human_chat_examples.py tests/test_ask_cli_protocols.py`
+  reported `28 passed`.
+- `/ask` `sanity.sh` passed after argue integration, including human chat
+  routing coverage.
+- Portable parity plan validation passed via `/plan`, DAG rendering succeeded,
+  and `/review-plan` reported no FAIL-grade issues.
+- `$orchestrate` compatibility updates passed syntax checks,
+  `$code-runner` module tests, `$orchestrate` preflight tests, backend alias
+  validation, and dirty-worktree fail-closed verification.
+
+## Current Handoff State
+
+- `/ask argue` is implemented in the active worktree and validated, but not
+  committed.
+- The portable parity task file exists and is ready to run only after choosing a
+  clean or isolated worktree for `$orchestrate`/`$code-runner`.
+- `$orchestrate` and `$code-runner` were patched to normalize Codex-era aliases,
+  normalize `/scillm` chat URLs, include `X-Caller-Skill`, and fail closed on
+  dirty tracked worktrees rather than using `git stash`.
+- Do not rerun broad `/ask` parity orchestration from a dirty worktree; use a
+  fresh worktree or commit/stage only the intended changes first.
 
 ## Timeout and Recovery Policy
 

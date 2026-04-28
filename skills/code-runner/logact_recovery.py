@@ -20,6 +20,13 @@ from typing import Any, Optional
 import httpx
 from loguru import logger
 
+import sys
+
+_common = str(Path(__file__).resolve().parent.parent / "common")
+if _common not in sys.path:
+    sys.path.insert(0, _common)
+from llm_routing import normalize_scillm_chat_url  # noqa: E402
+
 
 class RecoveryAction(str, Enum):
     """Recovery actions after crash detection."""
@@ -371,7 +378,7 @@ Respond in JSON:
 
 async def call_diagnosis_llm(prompt: str) -> dict:
     """Call /scillm for LLM-based diagnosis."""
-    scillm_url = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+    scillm_url = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
     scillm_key = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
     try:

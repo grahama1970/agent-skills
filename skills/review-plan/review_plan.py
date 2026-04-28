@@ -112,6 +112,13 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
     data = load_structured_plan(path)
     summary = summarize_structured_plan(data)
     tasks: list[dict] = []
+    planned_paths = {
+        str(path_ref)
+        for item in summary["tasks"]
+        for field_name in ("allowlist", "tests", "blind_tests")
+        for path_ref in (item.get(field_name) or [])
+        if isinstance(path_ref, str)
+    }
     for item in summary["tasks"]:
         dod = {
             "command": item.get("definition_of_done", {}).get("command", "")
@@ -154,6 +161,10 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
             "read_context": item.get("read_context") or [],
             "allowlist_optional": item.get("allowlist_optional", False),
             "implementation": impl,
+            "skills": item.get("skills") or [],
+            "depends_on": item.get("dependencies") or [],
+            "definition_of_done": item.get("definition_of_done") or {},
+            "planned_paths": planned_paths,
         })
     return tasks, 0
 
@@ -179,6 +190,10 @@ def check_claims(task: dict, findings: list[Finding]):
         ref = ref.strip().split(":")[0]  # Remove :line_number
         if ref.startswith("~"):
             continue  # Skip home-relative paths
+        if ref.startswith("/tmp/"):
+            continue  # Skip generated temp artifacts
+        if ref in task.get("planned_paths", set()):
+            continue  # Skip files this structured plan declares as future outputs/tests
         if ref.startswith("/") and not ref.startswith("/."):
             full_path = Path(ref)
         else:
@@ -795,7 +810,7 @@ SCILLM_MODELS = {
     "text", "text-research", "text-deepseek", "text-kimi", "text-qwen3", "text-qwen3-large",
     "text-gemini", "text-gemini-oauth", "text-gemini-paid", "text-gemini-3", "text-gemini-3-paid",
     "text-claude", "text-claude-opus", "text-claude-haiku",
-    "gpt-5.3-codex", "text-glm",
+    "gpt-5.5", "gpt-5.3-codex", "text-glm",
     "vlm", "vlm-paid", "vlm-claude", "vlm-codex",
     "local-text", "moonshot-text",
     # Pattern-based (auto-routed)
@@ -807,7 +822,7 @@ LEGACY_BACKEND_NAMES = {
     "sonnet": "text-claude",
     "opus": "text-claude-opus",
     "haiku": "text-claude-haiku",
-    "codex": "gpt-5.3-codex",
+    "codex": "gpt-5.5",
     "gemini": "text-gemini-oauth",
     "claude": "text-claude",
 }
@@ -863,7 +878,7 @@ def check_scillm_backend(task: dict, findings: list[Finding]):
         message=f"Backend `{backend}` not in known scillm models — verify it exists",
         line=task.get("line", 0),
         suggestion=f"Run `curl -s -H 'Authorization: Bearer sk-dev-proxy-123' http://localhost:4001/v1/models` to check. "
-                   f"Common models: text, text-claude, text-claude-opus, gpt-5.3-codex, text-gemini-oauth",
+                   f"Common models: text, text-claude, text-claude-opus, gpt-5.5, text-gemini-oauth",
     ))
 
 

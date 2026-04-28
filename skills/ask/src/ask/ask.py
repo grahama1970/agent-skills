@@ -33,12 +33,13 @@ from .ask_relevance import _has_relevant_domain_items, _try_evidence_case
 from .ask_results import _synthesise
 from .ask_routing import (
     _is_operational_question,
+    _parse_natural_argue_query,
     _parse_natural_persona_query,
     _parse_natural_parallel_review_query,
     _parse_natural_roundtable_query,
     _should_auto_oracle_persona,
 )
-from .review_protocols import is_date_sensitive_question
+from .review_protocols import is_date_sensitive_question, normalize_argue_personas
 from .run_state import append_event, build_context_policy, complete_run, create_run
 from .session_writer import SessionWriter
 from .skills_exec import run_skill, parse_memory_output, run_memory_recall
@@ -82,6 +83,9 @@ def ask(
     oracle_persona_model: Optional[str] = None,
     oracle_peer_model: Optional[str] = None,
     oracle_persona_scope: str = "personas",
+    argue: bool = False,
+    argue_personas: Optional[str] = None,
+    argue_rounds: int = 2,
     roundtable: bool = False,
     roundtable_personas: Optional[str] = None,
     roundtable_role_preset: str = "adversarial-review",
@@ -134,6 +138,9 @@ def ask(
         oracle_persona_model: Optional model for primary persona turns.
         oracle_peer_model: Optional model for peer persona turns.
         oracle_persona_scope: Preferred memory scope for persona profiles.
+        argue: Run two-sided FOR/AGAINST argument with neutral judge rubric.
+        argue_personas: Comma-separated FOR/AGAINST persona specs.
+        argue_rounds: Number of argument rounds.
         roundtable: Run sequential state-machine persona deliberation.
         roundtable_personas: Comma-separated persona[:protocol_role] participants.
         roundtable_role_preset: Role preset for shorthand participant specs.
@@ -152,9 +159,24 @@ def ask(
         dict with answer, sources, bridges.
     """
     started_at = time.time()
+    if argue:
+        roundtable = True
+        argue_personas = normalize_argue_personas(argue_personas)
+        if not roundtable_personas:
+            roundtable_personas = argue_personas
+        else:
+            roundtable_personas = normalize_argue_personas(roundtable_personas)
+        if roundtable_role_preset == "adversarial-review":
+            roundtable_role_preset = "argue"
+        if roundtable_mode == "adversarial":
+            roundtable_mode = "argue"
+        roundtable_rounds = argue_rounds
+
     run_mode = "ask"
     if deep_review:
         run_mode = "deep-review"
+    elif argue:
+        run_mode = "argue"
     elif roundtable:
         run_mode = "roundtable"
     elif parallel_review:
@@ -218,6 +240,20 @@ def ask(
             result["oracle"]["persona_model"] = oracle_persona_model
         if oracle_peer_model:
             result["oracle"]["peer_model"] = oracle_peer_model
+        if argue:
+            result["oracle"]["argue"] = {
+                "personas": argue_personas or roundtable_personas or "",
+                "rounds": argue_rounds,
+                "rubric": [
+                    "evidence_strength",
+                    "failure_mode_coverage",
+                    "assumption_quality",
+                    "target_relevance",
+                    "falsifiability",
+                    "implementation_cost_or_risk",
+                ],
+                "verdicts": ["FOR", "AGAINST", "NO_CLEAR_WINNER", "INSUFFICIENT_EVIDENCE"],
+            }
         if roundtable:
             result["oracle"]["roundtable"] = {
                 "personas": roundtable_personas or "",
@@ -404,6 +440,9 @@ def ask(
         oracle_persona_model=oracle_persona_model,
         oracle_peer_model=oracle_peer_model,
         oracle_persona_scope=oracle_persona_scope,
+        argue=argue,
+        argue_personas=argue_personas,
+        argue_rounds=argue_rounds,
         roundtable=roundtable,
         roundtable_personas=roundtable_personas,
         roundtable_role_preset=roundtable_role_preset,
@@ -591,6 +630,9 @@ def main(
     oracle_persona_model: Optional[str] = typer.Option(None, help="Model for primary persona turns"),
     oracle_peer_model: Optional[str] = typer.Option(None, help="Model for peer persona turns"),
     oracle_iterations: int = typer.Option(1, help="Number of sequential oracle deliberation calls"),
+    argue: bool = typer.Option(False, help="Run a two-sided FOR/AGAINST argument with neutral judge rubric"),
+    argue_personas: Optional[str] = typer.Option(None, help="Comma-separated FOR/AGAINST persona specs"),
+    argue_rounds: int = typer.Option(2, help="Number of argument rounds"),
     roundtable: bool = typer.Option(False, help="Run a sequential protocolized persona roundtable"),
     roundtable_personas: Optional[str] = typer.Option(None, help="Comma-separated persona[:protocol_role] participants"),
     roundtable_role_preset: str = typer.Option("adversarial-review", help="Roundtable role preset"),
@@ -631,8 +673,21 @@ def main(
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
 
-    roundtable_question_parts = [question] if inferred_parallel_review else question_parts
-    question, inferred_roundtable_personas, inferred_roundtable = _parse_natural_roundtable_query(roundtable_question_parts)
+    argue_question_parts = [question] if inferred_parallel_review else question_parts
+    question, inferred_argue_personas, inferred_argue = _parse_natural_argue_query(argue_question_parts)
+    if inferred_argue:
+        argue = True
+        oracle = True
+        if not argue_personas:
+            argue_personas = inferred_argue_personas
+        if oracle_backend == DEFAULT_ORACLE_BACKEND:
+            oracle_backend = "subagent-runner"
+
+    roundtable_question_parts = [question] if (inferred_parallel_review or inferred_argue) else question_parts
+    inferred_roundtable_personas = None
+    inferred_roundtable = False
+    if not inferred_argue:
+        question, inferred_roundtable_personas, inferred_roundtable = _parse_natural_roundtable_query(roundtable_question_parts)
     if inferred_roundtable:
         roundtable = True
         oracle = True
@@ -641,7 +696,7 @@ def main(
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
 
-    persona_question_parts = [question] if (inferred_roundtable or inferred_parallel_review) else question_parts
+    persona_question_parts = [question] if (inferred_argue or inferred_roundtable or inferred_parallel_review) else question_parts
     question, inferred_persona, inferred_peer, inferred_oracle = _parse_natural_persona_query(
         persona_question_parts,
         explicit_persona=oracle_persona,
@@ -663,6 +718,22 @@ def main(
             oracle_backend = "subagent-runner"
     if roundtable or parallel_review:
         oracle = True
+        if oracle_backend == DEFAULT_ORACLE_BACKEND:
+            oracle_backend = "subagent-runner"
+
+    if argue:
+        oracle = True
+        roundtable = True
+        argue_personas = normalize_argue_personas(argue_personas)
+        if not roundtable_personas:
+            roundtable_personas = argue_personas
+        else:
+            roundtable_personas = normalize_argue_personas(roundtable_personas)
+        if roundtable_role_preset == "adversarial-review":
+            roundtable_role_preset = "argue"
+        if roundtable_mode == "adversarial":
+            roundtable_mode = "argue"
+        roundtable_rounds = argue_rounds
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
 
@@ -718,6 +789,11 @@ def main(
             "Oracle iterations must be >= 1.",
             param_hint="--oracle-iterations",
         )
+    if argue and argue_rounds < 1:
+        raise typer.BadParameter(
+            "Argument rounds must be >= 1.",
+            param_hint="--argue-rounds",
+        )
     if roundtable and roundtable_rounds < 1:
         raise typer.BadParameter(
             "Roundtable rounds must be >= 1.",
@@ -748,6 +824,9 @@ def main(
         oracle_peer,
         oracle_persona_model,
         oracle_peer_model,
+        argue,
+        argue_personas,
+        argue_rounds != 2,
         roundtable,
         roundtable_personas,
         parallel_review,
@@ -795,6 +874,9 @@ def main(
             oracle_backend=oracle_backend,
             oracle_persona_model=oracle_persona_model,
             oracle_peer_model=oracle_peer_model,
+            argue=argue,
+            argue_personas=argue_personas,
+            argue_rounds=argue_rounds,
             roundtable=roundtable,
             roundtable_personas=roundtable_personas,
             roundtable_role_preset=roundtable_role_preset,

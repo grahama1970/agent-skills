@@ -7,9 +7,15 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
+import sys
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+_common = str(Path(__file__).resolve().parent.parent / "common")
+if _common not in sys.path:
+    sys.path.insert(0, _common)
+from llm_routing import CANONICAL_BACKENDS, normalize_backend_alias  # noqa: E402
 
 
 # ── Run State Machine ────────────────────────────────────────────────────────
@@ -38,7 +44,7 @@ class ReasonCode(str, Enum):
     # Blocking conditions
     repo_lock_conflict = "repo_lock_conflict"  # Another runner has repo lock
     zero_write = "zero_write"      # Repeated zero-write aborts
-    stash_conflict = "stash_conflict"  # Git stash/restore failed
+    stash_conflict = "stash_conflict"  # Legacy name: dirty repo / stash-era safety failure
 
     # Execution failures
     max_rounds_exhausted = "max_rounds_exhausted"  # Hit round limit
@@ -141,10 +147,12 @@ class TaskSpec(BaseModel):
     @field_validator("backend")
     @classmethod
     def backend_must_be_known(cls, v: str) -> str:
-        known = {"codex", "claude", "text", "gemini", "deepseek", "test"}
-        if v and v not in known:
-            raise ValueError(f"Unknown backend '{v}'. Valid: {', '.join(sorted(known))}")
-        return v
+        try:
+            return normalize_backend_alias(v, allow_empty=True)
+        except ValueError as exc:
+            raise ValueError(
+                f"{exc} Valid canonical backends: {', '.join(sorted(CANONICAL_BACKENDS))}"
+            ) from exc
 
     @field_validator("lang")
     @classmethod
@@ -371,7 +379,7 @@ class TaskResult(BaseModel):
     """Schema for the final result.json output."""
     task_id: str
     title: str = ""
-    status: str  # pass | fail | preflight_fail | timeout | stash_conflict
+    status: str  # pass | fail | preflight_fail | timeout | dirty_worktree
     rounds: int = 0
     best_score: float = 0
     dod_passed: bool = False

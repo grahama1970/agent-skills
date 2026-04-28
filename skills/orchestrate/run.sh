@@ -113,8 +113,29 @@ check_dependencies() {
 # Model routing: `with <model>` support
 # ---------------------------------------------------------------------------
 
-# Valid model names for `with <model>` syntax
-VALID_MODELS="pi claude codex gemini deepseek ptc"
+# Valid model names for `with <model>` syntax. Concrete model aliases normalize
+# through skills/common/llm_routing.py before execution.
+VALID_MODELS="pi claude codex text gemini deepseek ptc gpt-5.5 gpt-5.3-codex claude-sonnet-4-6 text-gemini-oauth"
+
+normalize_model_arg() {
+    local model="$1"
+    case "$model" in
+        pi|ptc)
+            echo "$model"
+            return 0
+            ;;
+    esac
+    PYTHONPATH="$SKILLS_DIR/common" uv run --project "$SCRIPT_DIR" python - "$model" <<'PY'
+import sys
+from llm_routing import normalize_backend_alias
+
+try:
+    print(normalize_backend_alias(sys.argv[1]))
+except ValueError as exc:
+    print(exc, file=sys.stderr)
+    raise SystemExit(1)
+PY
+}
 
 route_to_model() {
     local prompt="$1"
@@ -126,12 +147,23 @@ route_to_model() {
         pi)
             pi -p "$prompt"
             ;;
-        claude|codex|gemini)
+        claude)
             echo "Warning: subagent-service is deprecated. Falling back to scillm for model '$model'." >&2
-            "$SCRIPT_DIR/../scillm/run.sh" complete --model "$model" "$prompt"
+            "$SCRIPT_DIR/../scillm/run.sh" complete --model "claude-sonnet-4-6" "$prompt"
+            ;;
+        codex)
+            echo "Warning: subagent-service is deprecated. Falling back to scillm for model '$model'." >&2
+            "$SCRIPT_DIR/../scillm/run.sh" complete --model "gpt-5.5" "$prompt"
+            ;;
+        gemini)
+            echo "Warning: subagent-service is deprecated. Falling back to scillm for model '$model'." >&2
+            "$SCRIPT_DIR/../scillm/run.sh" complete --model "text-gemini-oauth" "$prompt"
             ;;
         deepseek)
-            "$SCRIPT_DIR/../scillm/run.sh" complete --model "deepseek-ai/DeepSeek-V3" "$prompt"
+            "$SCRIPT_DIR/../scillm/run.sh" complete --model "text" "$prompt"
+            ;;
+        text)
+            "$SCRIPT_DIR/../scillm/run.sh" complete --model "text" "$prompt"
             ;;
         ptc)
             # ptc is not a model backend — it enables parallel execution
@@ -268,19 +300,14 @@ cmd_run() {
         *.json|*.yaml|*.yml) is_structured=true ;;
     esac
 
-    # Validate model name if specified
+    # Validate and normalize model name if specified
     if [[ -n "$cmd_model" ]]; then
-        local valid=false
-        for m in $VALID_MODELS; do
-            if [[ "$m" == "$cmd_model" ]]; then
-                valid=true
-                break
-            fi
-        done
-        if [[ "$valid" == "false" ]]; then
+        local normalized_model
+        if ! normalized_model="$(normalize_model_arg "$cmd_model")"; then
             echo "Error: Unknown model '$cmd_model'. Valid: $VALID_MODELS" >&2
             exit 1
         fi
+        cmd_model="$normalized_model"
         echo "Model override: $cmd_model"
     fi
 
@@ -295,14 +322,15 @@ cmd_run() {
         if [[ "$is_structured" == "true" ]]; then
             local summary_json
             summary_json=$(mktemp)
-            python3 "$SHARED_PLAN_PY" summary "$task_file" > "$summary_json" 2>/dev/null
-            python3 - "$summary_json" <<'PY'
-import json, sys
+            ORCHESTRATE_DEFAULT_BACKEND="${cmd_model:-}" python3 "$SHARED_PLAN_PY" summary "$task_file" > "$summary_json" 2>/dev/null
+            ORCHESTRATE_DEFAULT_BACKEND="${cmd_model:-}" python3 - "$summary_json" <<'PY'
+import json, os, sys
 with open(sys.argv[1]) as f:
     data = json.load(f)
 for task in data.get("tasks", []):
     runner = task.get("runner") or "<unset>"
-    backend = task.get("backend") or "<unset>"
+    default_backend = os.environ.get("ORCHESTRATE_DEFAULT_BACKEND", "")
+    backend = task.get("backend") or (default_backend if runner != "local" else "") or "<unset>"
     lane = task.get("lane") or "<unset>"
     print(f"  Task {task.get('id')}: {task.get('title')} → runner={runner}, backend={backend}, lane={lane}")
 print("")
@@ -374,7 +402,7 @@ PY
             }
         else
             if [[ "$is_structured" == "true" ]]; then
-                if ! python3 "$SHARED_PLAN_PY" validate "$task_file" >/dev/null; then
+                if ! ORCHESTRATE_DEFAULT_BACKEND="${cmd_model:-}" python3 "$SHARED_PLAN_PY" validate "$task_file" >/dev/null; then
                     echo "Error: Structured plan validation failed. Resolve issues before running." >&2
                     exit 1
                 fi
@@ -429,18 +457,13 @@ PY
     fi
 
     if [[ "$is_structured" == "true" ]]; then
-        if [[ -n "$cmd_model" ]]; then
-            echo "Error: command-level 'with <model>' does not override structured task backends." >&2
-            echo "Set runner/backend per task in the structured plan instead." >&2
-            exit 1
-        fi
         if [[ "$background" == "true" ]]; then
             # Background mode: launch executor as detached process, print session info.
             # The project agent reads the first JSON line to get session_dir for intervention.
             echo "Launching orchestration in background..."
             local log_file="${ORCHESTRATE_DIR}/structured/bg-$(date +%s).log"
             mkdir -p "$(dirname "$log_file")"
-            nohup uv run --project "$SCRIPT_DIR" python "$STRUCTURED_EXECUTE_PY" run "$task_file" $resume_flag \
+            ORCHESTRATE_DEFAULT_BACKEND="${cmd_model:-}" nohup uv run --project "$SCRIPT_DIR" python "$STRUCTURED_EXECUTE_PY" run "$task_file" $resume_flag \
                 > "$log_file" 2>&1 &
             local bg_pid=$!
             echo "PID: ${bg_pid}"
@@ -455,7 +478,7 @@ PY
             return 0
         fi
         echo "Executing structured plan with explicit runner dispatch..."
-        uv run --project "$SCRIPT_DIR" python "$STRUCTURED_EXECUTE_PY" run "$task_file" $resume_flag
+        ORCHESTRATE_DEFAULT_BACKEND="${cmd_model:-}" uv run --project "$SCRIPT_DIR" python "$STRUCTURED_EXECUTE_PY" run "$task_file" $resume_flag
         return $?
     fi
 

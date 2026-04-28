@@ -415,6 +415,7 @@ test_structured_plans() {
 {
   "version": 1,
   "kind": "orchestrate-plan",
+  "repo_root": "/tmp",
   "title": "Structured test",
   "capability_overlap": ["ok"],
   "questions_blockers": ["None"],
@@ -436,20 +437,18 @@ test_structured_plans() {
 }
 EOF
 
-    if "$SKILL_DIR/run.sh" run "$temp_struct" with codex --dry-run 2>&1 | grep -q "runner=scillm"; then
+    if "$SKILL_DIR/run.sh" run "$temp_struct" with gpt-5.5 --dry-run 2>&1 | grep -q "runner=scillm"; then
         pass "Structured dry-run reports runner/backend/lane"
     else
         fail "Structured dry-run missing routing details"
     fi
 
-    if ! "$SKILL_DIR/run.sh" run "$temp_struct" with codex >/tmp/orchestrate-structured.out 2>&1; then
-        if grep -q "does not override structured task backends" /tmp/orchestrate-structured.out; then
-            pass "Structured execution rejects command-level fallback overrides"
-        else
-            fail "Structured execution failed without explicit routing error"
-        fi
+    local alias_output
+    alias_output=$("$SKILL_DIR/run.sh" run "$temp_struct" with gpt-5.5 --dry-run 2>&1)
+    if echo "$alias_output" | grep -q "Model override: codex"; then
+        pass "Structured command-level model aliases normalize before execution"
     else
-        fail "Structured execution should reject command-level model override"
+        fail "Structured command-level model alias did not normalize"
     fi
 
     rm -f "$temp_struct" /tmp/orchestrate-structured.out
@@ -470,6 +469,7 @@ test_structured_execution() {
 {
   "version": 1,
   "kind": "orchestrate-plan",
+  "repo_root": "$temp_dir",
   "title": "Structured execution test",
   "capability_overlap": ["ok"],
   "questions_blockers": ["None"],

@@ -116,6 +116,38 @@ def test_documented_roundtable_prompt_maps_to_protocol(monkeypatch):
     assert captured["dogpile_mode"] == "auto"
 
 
+def test_documented_argue_prompt_maps_to_two_sided_judge_protocol(monkeypatch):
+    result, captured = _invoke_chat_prompt(
+        "$ask Brandon argue for and Margaret argue against using queues",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "using queues"
+    assert captured["argue"] is True
+    assert captured["argue_personas"] == "Brandon:for,Margaret:against"
+    assert captured["argue_rounds"] == 2
+    assert captured["roundtable"] is True
+    assert captured["roundtable_personas"] == "Brandon:for,Margaret:against"
+    assert captured["roundtable_role_preset"] == "argue"
+    assert captured["roundtable_mode"] == "argue"
+    assert captured["oracle_backend"] == "subagent-runner"
+
+
+def test_documented_devil_advocate_prompt_maps_to_default_argue_protocol(monkeypatch):
+    result, captured = _invoke_chat_prompt(
+        "$ask devils advocate: should we enable deep-review by default?",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "should we enable deep-review by default?"
+    assert captured["argue"] is True
+    assert captured["argue_personas"] == "Affirmative:for,Devil's Advocate:against"
+    assert captured["roundtable_personas"] == "Affirmative:for,Devil's Advocate:against"
+    assert captured["roundtable_role_preset"] == "argue"
+
+
 def test_documented_role_roundtable_prompt_maps_to_protocol(monkeypatch):
     result, captured = _invoke_chat_prompt(
         "$ask roundtable with Brandon:failure_mode, Margaret:evidence_auditor, Jennifer:complexity_minimizer on this architecture",
@@ -173,6 +205,7 @@ def test_documented_chat_examples_file_keeps_required_categories():
     for required in [
         "$ask what do we know about the release checklist?",
         "$ask Brandon persona about whether this retry design fails closed",
+        "$ask Brandon argue for and Margaret argue against using queues",
         "$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: Should this service use retries or queues?",
         "$ask run 3 parallel adversarial reviewers on this implementation",
         "$ask deep review this implementation --deep-review-target src/ask/ask.py",

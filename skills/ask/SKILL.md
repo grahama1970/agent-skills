@@ -23,6 +23,10 @@ triggers:
   - ask roundtable
   - ask parallel reviewers
   - ask adversarial review
+  - ask argue
+  - ask for and against
+  - ask devil's advocate
+  - ask both sides
   - ask deep review
   - ask safe to proceed
   - ask comprehensive review
@@ -128,6 +132,7 @@ Agent translation rules:
 - Preserve the human's natural topic text; do not over-normalize domain terms.
 - Treat a named persona before the question as `--oracle-persona <name>`.
 - Treat multiple named personas with "debate", "roundtable", or "discuss" as `--roundtable`.
+- Treat "argue", "for and against", "devil's advocate", or "both sides" as `--argue`.
 - Treat "parallel reviewers", "adversarial reviewers", or "N reviewers" as `--parallel-review`.
 - Treat "review then roundtable" as both `--parallel-review` and `--roundtable`.
 - Treat "deep review", "comprehensive review", "safe to proceed", or "production readiness" as `--deep-review`; require or infer a concrete `--deep-review-target`.
@@ -143,6 +148,8 @@ Agent translation rules:
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: What is the state of cybersecurity in 2026?` | SPARTA-scoped sequential persona roundtable |
 | `$ask Brandon what is the best way to review this API boundary?` | Brandon persona oracle subagent |
 | `$ask Brandon persona about whether this retry design fails closed` | Brandon persona oracle over memory/project context |
+| `$ask Brandon argue for and Margaret argue against using queues` | Two-sided FOR/AGAINST argue protocol with neutral judge |
+| `$ask devil's advocate: should we enable deep-review by default?` | Default argue protocol with fixed judge rubric |
 | `$ask Brandon critique this architecture` | Brandon persona critique |
 | `$ask Brandon ask Margaret where are we weak?` | Safe Brandon→Margaret peer deliberation |
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: Should this service use retries or queues?` | Sequential protocolized persona roundtable |
@@ -239,6 +246,9 @@ Options:
   --oracle-persona-model <m> Model for primary persona turns
   --oracle-peer-model <m> Model for peer persona turns
   --oracle-iterations <n> Sequential oracle deliberation calls (default: 1)
+  --argue                Run two-sided FOR/AGAINST argument with neutral judge
+  --argue-personas <p>   Comma-separated FOR/AGAINST personas
+  --argue-rounds <n>     Number of argument rounds (default: 2)
   --roundtable          Run sequential protocolized persona deliberation
   --roundtable-personas <p> Comma-separated persona[:protocol_role] participants
   --roundtable-role-preset <p> Role preset (default: adversarial-review)
@@ -350,6 +360,7 @@ Use oracle mode for single high-value questions, not nightly runs or batch inges
 `/ask` supports two distinct adversarial review protocols:
 
 - `--parallel-review`: independent reviewers inspect the same artifact/question concurrently, then a neutral moderator synthesizes findings.
+- `--argue`: exactly two sides argue FOR and AGAINST, then a neutral judge scores the stronger argument.
 - `--roundtable`: selected personas speak sequentially through a state-machine protocol; each turn must reference prior claims and critiques.
 
 Use both together when you want independent findings first, followed by persona debate over those findings.
@@ -393,6 +404,30 @@ This maps to:
   --oracle-backend subagent-runner \
   --dogpile auto
 ```
+
+Two-sided argue syntax:
+
+```bash
+./run.sh ask "Brandon argue for and Margaret argue against using queues"
+./run.sh ask "devil's advocate: should we enable deep-review by default?"
+./run.sh ask "Should this service use retries or queues?" \
+  --argue \
+  --argue-personas "Brandon,Margaret" \
+  --argue-rounds 2 \
+  --oracle-backend subagent-runner
+```
+
+The argue judge uses this fixed rubric by default:
+
+- `evidence_strength`
+- `failure_mode_coverage`
+- `assumption_quality`
+- `target_relevance`
+- `falsifiability`
+- `implementation_cost_or_risk`
+
+Allowed verdicts are `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, and `INSUFFICIENT_EVIDENCE`.
+The prompt payload review bundle is `docs/prompts_review/ASK_ARGUE_PROMPT_PAYLOAD.md`.
 
 Parallel review:
 

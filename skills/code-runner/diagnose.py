@@ -35,6 +35,7 @@ _common = str(Path(__file__).resolve().parent.parent / "common")
 if _common not in sys.path:
     sys.path.insert(0, _common)
 from json_utils import clean_json_string  # noqa: E402
+from llm_routing import backend_to_scillm_model, normalize_backend_alias, normalize_scillm_chat_url  # noqa: E402
 
 from stderr_parser import ErrorEvidence
 
@@ -62,7 +63,7 @@ class Diagnosis(BaseModel):
 
 # ── Diagnosis Call ─────────────────────────────────────────────────────
 
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+SCILLM_URL = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 _DIAGNOSE_SYSTEM = """You are a code failure diagnostician. You receive error output and source code.
@@ -102,11 +103,8 @@ def call_diagnose(
     reasoning: str = "high",
 ) -> Diagnosis:
     """Call scillm to produce structured diagnosis. No code, just analysis."""
-    model = {
-        "codex": "gpt-5.3-codex",
-        "claude": "claude-sonnet-4-6",
-        "gemini": "text-gemini",
-    }.get(backend, "gpt-5.3-codex")
+    backend = normalize_backend_alias(backend)
+    model = backend_to_scillm_model(backend)
 
     max_tokens = {"low": 2000, "medium": 4000, "high": 8000}.get(reasoning, 4000)
 

@@ -7,13 +7,21 @@ Purpose: Auto-generated module docstring. Review for accuracy.
 Inputs/Outputs/Failures: See functions below.
 """
 
-from ask.ask_routing import _parse_natural_roundtable_query
+from pathlib import Path
+
+from ask.ask_routing import _parse_natural_argue_query, _parse_natural_roundtable_query
 from ask.review_protocols import (
+    ARGUE_JUDGE_RUBRIC,
+    ARGUE_VERDICTS,
+    build_argue_prompt_payload,
     default_parallel_participants,
     is_date_sensitive_question,
+    normalize_argue_personas,
     parse_participant_specs,
     parse_protocol_turn,
 )
+
+ASK_DIR = Path(__file__).resolve().parents[1]
 
 
 def test_parse_natural_roundtable_query():
@@ -45,6 +53,26 @@ def test_parse_natural_roundtable_query():
     assert question == "the relevance of Formal Methods in large scale aerospace projects in 2026"
 
 
+def test_parse_natural_argue_query_with_explicit_for_against():
+    question, personas, inferred = _parse_natural_argue_query(
+        ["Brandon", "argue", "for", "and", "Margaret", "argue", "against", "using", "queues"]
+    )
+
+    assert inferred is True
+    assert personas == "Brandon:for,Margaret:against"
+    assert question == "using queues"
+
+
+def test_parse_natural_argue_query_with_devil_advocate():
+    question, personas, inferred = _parse_natural_argue_query(
+        ["devil's", "advocate:", "should", "we", "enable", "deep-review", "by", "default?"]
+    )
+
+    assert inferred is True
+    assert personas is None
+    assert question == "should we enable deep-review by default?"
+
+
 def test_parse_participant_specs_separates_persona_from_protocol_role():
     participants = parse_participant_specs(
         "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer"
@@ -57,6 +85,45 @@ def test_parse_participant_specs_separates_persona_from_protocol_role():
         "complexity_minimizer",
     ]
     assert participants[0]["role_label"] == "Failure Mode Analyst"
+
+
+def test_normalize_argue_personas_assigns_for_against_roles():
+    assert normalize_argue_personas("Brandon,Margaret") == "Brandon:for,Margaret:against"
+    assert normalize_argue_personas(None) == "Affirmative:for,Devil's Advocate:against"
+
+
+def test_argue_prompt_payload_contains_fixed_judge_contract():
+    payload = build_argue_prompt_payload(
+        base_prompt="Question:\nShould this service use retries or queues?",
+        persona_specs="Brandon,Margaret",
+        rounds=2,
+    )
+
+    assert payload["schema_version"] == "ask.argue.prompt_payload.v1"
+    assert payload["personas"] == "Brandon:for,Margaret:against"
+    assert payload["judge_rubric"] == list(ARGUE_JUDGE_RUBRIC)
+    assert payload["verdicts"] == list(ARGUE_VERDICTS)
+    assert len(payload["turn_prompts"]) == 4
+    assert "Structured argue protocol:" in payload["turn_prompts"][0]["prompt"]
+    assert "Assigned side: FOR Advocate (for)" in payload["turn_prompts"][0]["prompt"]
+    assert "Assigned side: AGAINST Advocate (against)" in payload["turn_prompts"][1]["prompt"]
+    assert "Judge rubric:" in payload["moderator_prompt"]
+    assert '"verdict": "FOR | AGAINST | NO_CLEAR_WINNER | INSUFFICIENT_EVIDENCE"' in payload["moderator_prompt"]
+
+
+def test_argue_prompt_review_bundle_documents_payload_contract():
+    bundle = (ASK_DIR / "docs" / "prompts_review" / "ASK_ARGUE_PROMPT_PAYLOAD.md").read_text()
+
+    for required in [
+        "ask.argue.prompt_payload.v1",
+        "Structured argue protocol:",
+        "evidence_strength",
+        "failure_mode_coverage",
+        "NO_CLEAR_WINNER",
+        "INSUFFICIENT_EVIDENCE",
+        "Project Agent Decision",
+    ]:
+        assert required in bundle
 
 
 def test_default_parallel_participants_uses_focus_labels():

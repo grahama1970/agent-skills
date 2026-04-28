@@ -17,9 +17,8 @@ flowchart TB
     subgraph CR["<b>/code-runner</b> (Bounded Executor)"]
         PREFLIGHT["Pre-flight<br/>Validation"]
         LOCK["Git Lock<br/>(fcntl.flock)"]
-        STASH["Git Stash<br/>Save"]
+        CLEAN["Dirty Worktree<br/>Fail-Closed Check"]
         LOOP["Self-Improvement<br/>Loop"]
-        UNSTASH["Git Stash<br/>Pop"]
     end
 
     subgraph TL["<b>/test-lab</b> (Docker Container)"]
@@ -30,9 +29,9 @@ flowchart TB
     YAML -->|"blind_tests[]<br/>(hidden from agent)"| BLIND_LOOP
     DISPATCH --> PREFLIGHT
     PREFLIGHT -->|"FAIL"| PREFLIGHT_RESULT["result.json<br/>status: preflight_fail<br/>actionable fix advice"]
-    PREFLIGHT -->|"PASS"| LOCK --> STASH --> LOOP
-    LOOP --> UNSTASH
-    UNSTASH -->|"result.json"| BLIND_LOOP
+    PREFLIGHT -->|"PASS"| LOCK --> CLEAN --> LOOP
+    CLEAN -->|"tracked changes"| PREFLIGHT_RESULT
+    LOOP -->|"result.json"| BLIND_LOOP
     BLIND_LOOP -->|"httpx POST"| EVAL
     EVAL -->|"pass/fail + sanitized message<br/>(NO assertion text)"| BLIND_LOOP
     BLIND_LOOP -->|"blind FAIL:<br/>sanitized feedback<br/>injected into prompt"| DISPATCH
@@ -240,8 +239,9 @@ flowchart LR
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Stashed: git stash save
-    Stashed --> Snapshot: git rev-parse HEAD
+    [*] --> CleanCheck: git status --porcelain --untracked-files=no
+    CleanCheck --> PreflightFail: tracked changes exist
+    CleanCheck --> Snapshot: git rev-parse HEAD
 
     Snapshot --> Round1: enter loop
 
@@ -259,7 +259,7 @@ stateDiagram-v2
     RoundN --> Kept
     RoundN --> Discarded
 
-    Done --> Unstashed: git stash pop
+    Done --> [*]: result.json + hunk.md
 
     note right of Committed
         Only written files staged.
@@ -273,18 +273,23 @@ stateDiagram-v2
         poisoning round N+1.
     end note
 
-    note right of Unstashed
+    note right of CleanCheck
+        Dirty tracked worktrees
+        fail closed instead of
+        being hidden by stash.
+    end note
+
+    note right of Done
         try/finally guarantees
-        stash pop even on crash.
         fcntl lock released.
     end note
 ```
 
 **Rationale — why this is safe:**
-- `git stash --include-untracked` before start: user's WIP is saved
+- Dirty tracked worktrees fail closed before execution; callers should use isolated worktrees for concurrent work
 - Only `written_files` are staged/committed: user's other changes are untouched
 - `git checkout` for existing files + `unlink` for new files on discard: prevents artifact leak between rounds
-- `try/finally` wraps the entire loop: stash pop and lock release happen even on crash
+- `try/finally` wraps the loop: the repo lock is released even on crash
 - `fcntl.flock` on `.git/code-runner.lock`: prevents concurrent runs in the same repo
 
 ---

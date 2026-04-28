@@ -118,7 +118,7 @@ Round 2+: Memory-backed system prompt (refreshed each round):
 | `task_id` | Yes | Unique identifier (used in /memory, git commits, logs) |
 | `title` | Yes | Human-readable task description |
 | `prompt` | Yes | Full task instruction for the LLM |
-| `backend` | Yes | LLM backend: `codex`, `text`, `gemini`, `claude` |
+| `backend` | Yes | LLM backend: `codex`, `text`, `gemini`, `claude`, `deepseek`; Codex-era model aliases like `gpt-5.5` normalize to canonical backends |
 | `cwd` | Yes | Working directory (must be a git repo for keep/discard) |
 | `output_dir` | Yes | Where to write logs, rounds, result.json |
 | `allowlist` | No | Files or directories the LLM can write. Supports dir scopes: `"scripts/"` allows any file under scripts/. Default: any file under cwd |
@@ -246,13 +246,13 @@ Override via spec:
 
 ## Git Integration (Autoresearch Pattern)
 
-- **Before run:** `git stash` pre-existing changes
+- **Before run:** fail closed if tracked worktree changes already exist; use an isolated worktree for dirty projects
 - **After each round:** score improved? → `git add -- <written_files>` + `git commit` (KEEP)
 - **Score didn't improve:** `git checkout <best_commit> -- <written_files>` (DISCARD)
-- **After run:** `git stash pop` to restore pre-existing changes
 
 Only written files are staged/reverted. Never `git add -A`. Never `git reset --hard`.
-User work is never touched.
+User work is never hidden with `git stash`. Set `CODE_RUNNER_DIRTY_POLICY=allow`
+only when the caller intentionally accepts dirty-worktree risk.
 
 ## llm_invocations (Unified Agent Turn Logging)
 
@@ -265,7 +265,7 @@ log_invocation(
     round=2,
     outcome="success",  # or "failed"
     score=1.0,
-    model="gpt-5.3-codex",
+    model="gpt-5.5",
     tags=["code-runner", "task:fix-auth", "strategy:structured_analysis", "outcome:pass"],
     metadata={"task_id": "fix-auth", "errors_by_type": {}, "commit": "abc123", ...},
 )

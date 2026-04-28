@@ -23,6 +23,8 @@ from .ask_persona_profiles import (
     _load_oracle_persona_profiles,
 )
 from .review_protocols import (
+    ARGUE_JUDGE_RUBRIC,
+    ARGUE_VERDICTS,
     build_moderator_prompt,
     build_parallel_reviewer_prompt,
     build_roundtable_turn_prompt,
@@ -79,6 +81,9 @@ def _apply_oracle_synthesis(
     persona_model: Optional[str],
     peer_model: Optional[str],
     persona_scope: str,
+    argue: bool = False,
+    argue_personas: Optional[str] = None,
+    argue_rounds: int = 2,
     roundtable: bool = False,
     roundtable_personas: Optional[str] = None,
     roundtable_role_preset: str = "adversarial-review",
@@ -208,6 +213,13 @@ def _apply_oracle_synthesis(
             result["oracle"]["persona_model"] = persona_model
         if peer_model:
             result["oracle"]["peer_model"] = peer_model
+        if argue:
+            result["oracle"]["argue"] = {
+                "personas": argue_personas or roundtable_personas or "",
+                "rounds": argue_rounds,
+                "rubric": list(ARGUE_JUDGE_RUBRIC),
+                "verdicts": list(ARGUE_VERDICTS),
+            }
         result["oracle"]["dogpile_mode"] = freshness_policy.get("dogpile_mode", "auto")
         result["oracle"]["dogpile_recommended"] = freshness_policy.get("dogpile_recommended", False)
         if persona_profiles:
@@ -255,6 +267,13 @@ def _apply_oracle_synthesis(
             result["oracle"]["persona_model"] = persona_model
         if peer_model:
             result["oracle"]["peer_model"] = peer_model
+        if argue:
+            result["oracle"]["argue"] = {
+                "personas": argue_personas or roundtable_personas or "",
+                "rounds": argue_rounds,
+                "rubric": list(ARGUE_JUDGE_RUBRIC),
+                "verdicts": list(ARGUE_VERDICTS),
+            }
         if persona_profiles:
             result["oracle"]["persona_profiles"] = persona_profiles
         result["oracle"]["iterations_requested"] = iterations
