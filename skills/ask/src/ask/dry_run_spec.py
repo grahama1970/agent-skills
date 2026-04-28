@@ -46,6 +46,21 @@ def build_ask_dry_run_spec(request: dict[str, Any]) -> dict[str, Any]:
         memory_writes.append("learned QRA/persona items")
     if request.get("oracle"):
         external_calls.append(f"oracle backend: {request.get('oracle_backend')}")
+    if request.get("argue"):
+        external_calls.extend([
+            "argue FOR advocate via scillm",
+            "argue AGAINST advocate via scillm",
+            "argue sequential judge via scillm",
+        ])
+        filesystem_writes.append("argue/for.json")
+        filesystem_writes.append("argue/against.json")
+        filesystem_writes.append("argue/judge.json")
+        filesystem_writes.append("argue/argue.json")
+        filesystem_writes.append("argue/argue.md")
+        filesystem_writes.append("argue/verifier.log")
+        risk_notes.append("argue runs two parallel read-only advocate calls followed by a sequential judge and deterministic verifier")
+        if request.get("decision_required"):
+            risk_notes.append("decision-required forces FOR/AGAINST but must include a tie-breaker and uncertainty disclosure")
     if request.get("deep_review"):
         external_calls.append("deep-review reviewers")
         filesystem_writes.append(str(request.get("deep_review_output_root") or ".ask_artifacts/deep-review"))

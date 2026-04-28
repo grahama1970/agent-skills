@@ -143,6 +143,19 @@ def test_documented_parallel_review_prompt_maps_to_parallel_review(monkeypatch):
     assert captured["oracle_backend"] == "subagent-runner"
 
 
+def test_documented_argue_prompt_maps_to_scillm_argue(monkeypatch):
+    result, captured = _invoke_chat_prompt(
+        "$ask argue whether we should ship this change",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "we should ship this change"
+    assert captured["argue"] is True
+    assert captured["oracle_model"] == "gpt-5.5"
+    assert captured["oracle_backend"] == "scillm"
+
+
 def test_documented_parallel_focus_prompt_maps_focus_labels(monkeypatch):
     result, captured = _invoke_chat_prompt(
         "$ask launch 5 parallel reviewers for correctness, tests, security, maintainability, and UX",
@@ -175,6 +188,7 @@ def test_documented_chat_examples_file_keeps_required_categories():
         "$ask Brandon persona about whether this retry design fails closed",
         "$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: Should this service use retries or queues?",
         "$ask run 3 parallel adversarial reviewers on this implementation",
+        "$ask argue whether we should ship this change",
         "$ask deep review this implementation --deep-review-target src/ask/ask.py",
         "$ask oracle with a 10 minute timeout on this architecture decision",
         "Wrong: $ask run oracle for these 100 questions",

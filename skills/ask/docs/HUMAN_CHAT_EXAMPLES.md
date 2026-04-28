@@ -2,7 +2,7 @@
 
 These examples describe how a human can invoke `$ask` from chat. The skill
 accepts natural phrasing, then maps it to memory recall, oracle synthesis,
-persona consultation, roundtable review, parallel review, or deep review.
+persona consultation, argue, roundtable review, parallel review, or deep review.
 
 ## Defaults
 
@@ -10,6 +10,7 @@ persona consultation, roundtable review, parallel review, or deep review.
 - Use oracle mode for high-value analytical, strategic, ambiguous, or review-heavy questions.
 - Use `gpt-5.5` with `high` reasoning for normal oracle paths, and `xhigh` for deep-review unless unavailable or overridden.
 - Use `subagent-runner` for personas, peers, roundtables, parallel review, and deep review.
+- Use three `/scillm` calls for argue: two parallel advocates, then one sequential judge.
 - Treat memory recall as context, not evidence.
 - Use `--scope sparta` for SPARTA, NIST-to-SPARTA, and space-cybersecurity questions.
 - Treat empty answers, refusal-style non-answers, missing personas, or missing domain grounding as failed E2E behavior.
@@ -155,6 +156,33 @@ Expected route:
 
 If focus labels are not explicit, `/ask` chooses reviewer angles from
 `docs/reviewers/*.md`, always including evidence and failure-mode coverage.
+
+## Argue
+
+```text
+$ask argue whether we should ship this change
+$ask debate whether retries or queues are safer here
+$ask make the case for and against this implementation plan
+```
+
+Expected route:
+
+```bash
+./run.sh ask "we should ship this change" \
+  --argue
+```
+
+Forced binary decisions must be explicit:
+
+```bash
+./run.sh ask "we should ship this change" \
+  --argue \
+  --decision-required \
+  --tie-breaker more-reversible
+```
+
+Argue returns `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
+`INSUFFICIENT_EVIDENCE`. It does not edit files or invoke `/code-runner`.
 
 ## Parallel Review Then Roundtable
 

@@ -209,6 +209,26 @@ def _parse_natural_parallel_review_query(question_parts: list[str]) -> tuple[str
     return question, False, None, None
 
 
+def _parse_natural_argue_query(question_parts: list[str]) -> tuple[str, bool]:
+    """Parse human syntax like `argue whether we should ship`."""
+    question = _normalize_question_parts(question_parts)
+    if not question:
+        return question, False
+    patterns = [
+        r"^(?:argue|debate)\s+(?:whether|if|that)?\s*(?P<topic>.+)$",
+        r"^make\s+the\s+case\s+for\s+and\s+against\s+(?P<topic>.+)$",
+        r"^give\s+me\s+the\s+case\s+for\s+and\s+against\s+(?P<topic>.+)$",
+    ]
+    for pattern in patterns:
+        match = re.match(pattern, question, flags=re.IGNORECASE)
+        if not match:
+            continue
+        topic = match.group("topic").strip(" ,:;")
+        if topic:
+            return topic, True
+    return question, False
+
+
 def _parse_persona_peer_query(cleaned_parts: list[str], ask_index: int) -> tuple[str, str, str] | None:
     """Parse `Brandon ask Margaret ...` into primary persona, peer, and prompt."""
     persona = " ".join(cleaned_parts[:ask_index])

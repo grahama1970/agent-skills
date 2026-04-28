@@ -27,6 +27,7 @@ from .ask_config import (
     DEFAULT_ORACLE_TIMEOUT,
     ORACLE_BACKENDS,
 )
+from .argue import ARGUE_TIE_BREAKERS, run_argue
 from .chain_specs import apply_chain_options
 from .deep_review import build_deep_review_request, infer_deep_review
 from .dry_run_spec import build_ask_dry_run_spec, print_execution_spec
@@ -37,6 +38,7 @@ from .ask_relevance import _has_relevant_domain_items, _try_evidence_case
 from .ask_results import _synthesise
 from .ask_routing import (
     _is_operational_question,
+    _parse_natural_argue_query,
     _parse_natural_persona_query,
     _parse_natural_parallel_review_query,
     _parse_natural_roundtable_query,
@@ -93,6 +95,9 @@ def ask(
     roundtable_rounds: int = 2,
     roundtable_mode: str = "adversarial",
     roundtable_persist: str = "summary",
+    argue: bool = False,
+    decision_required: bool = False,
+    tie_breaker: Optional[str] = None,
     parallel_review: bool = False,
     parallel_reviewers: int = 3,
     parallel_review_personas: Optional[str] = None,
@@ -152,6 +157,9 @@ def ask(
         roundtable_rounds: Number of sequential roundtable rounds.
         roundtable_mode: Roundtable mode label.
         roundtable_persist: summary or full protocol state in the result.
+        argue: Run two parallel FOR/AGAINST /scillm calls followed by a judge call.
+        decision_required: Force FOR/AGAINST instead of allowing calibrated abstention.
+        tie_breaker: Decision-required tie-breaker policy.
         parallel_review: Run independent parallel adversarial reviewers first.
         parallel_reviewers: Number of default reviewers when no personas are specified.
         parallel_review_personas: Comma-separated reviewer persona[:role] specs.
@@ -209,6 +217,11 @@ def ask(
                 "rounds": roundtable_rounds,
                 "mode": roundtable_mode,
                 "persist": roundtable_persist,
+            }
+        if argue:
+            result["oracle"]["argue"] = {
+                "decision_required": decision_required,
+                "tie_breaker": tie_breaker or "",
             }
         if parallel_review:
             result["oracle"]["parallel_review"] = {
@@ -451,41 +464,55 @@ def ask(
         if run_state:
             run_state.step_finished("auto_learn", items_count=len(result.get("items", [])), auto_learned=bool(result.get("auto_learned")))
 
-    # Step 3: Synthesise answer
+    # Step 3: Synthesise answer or run argue protocol
     if run_state:
-        run_state.step_started("synthesis", oracle_enabled=oracle_model is not None, deep_review=deep_review)
-    _synthesise(
-        result,
-        k,
-        raw,
-        as_json,
-        auto_learn,
-        oracle_model=oracle_model,
-        oracle_reasoning=oracle_reasoning,
-        oracle_timeout=oracle_timeout,
-        oracle_idle_timeout=oracle_idle_timeout,
-        oracle_heartbeat_interval=oracle_heartbeat_interval,
-        oracle_persona=oracle_persona,
-        oracle_consult_personas=oracle_consult_personas,
-        oracle_peer=oracle_peer,
-        oracle_iterations=oracle_iterations,
-        oracle_backend=oracle_backend,
-        oracle_persona_model=oracle_persona_model,
-        oracle_peer_model=oracle_peer_model,
-        oracle_persona_scope=oracle_persona_scope,
-        roundtable=roundtable,
-        roundtable_personas=roundtable_personas,
-        roundtable_role_preset=roundtable_role_preset,
-        roundtable_rounds=roundtable_rounds,
-        roundtable_mode=roundtable_mode,
-        roundtable_persist=roundtable_persist,
-        parallel_review=parallel_review,
-        parallel_reviewers=parallel_reviewers,
-        parallel_review_personas=parallel_review_personas,
-        parallel_review_focus=parallel_review_focus,
-        parallel_review_role_preset=parallel_review_role_preset,
-        deep_review_request=deep_review_request,
-    )
+        run_state.step_started("synthesis", oracle_enabled=oracle_model is not None, deep_review=deep_review, argue=argue)
+    if argue:
+        argue_response = run_argue(
+            question=question,
+            context_items=result["items"],
+            current_answer=result.get("answer", ""),
+            model=oracle_model or DEFAULT_ORACLE_MODEL,
+            reasoning_effort=oracle_reasoning,
+            timeout=oracle_timeout,
+            run_state=run_state or NoopRunState("argue"),
+            decision_required=decision_required,
+            tie_breaker=tie_breaker,
+        )
+        result.update(argue_response)
+    else:
+        _synthesise(
+            result,
+            k,
+            raw,
+            as_json,
+            auto_learn,
+            oracle_model=oracle_model,
+            oracle_reasoning=oracle_reasoning,
+            oracle_timeout=oracle_timeout,
+            oracle_idle_timeout=oracle_idle_timeout,
+            oracle_heartbeat_interval=oracle_heartbeat_interval,
+            oracle_persona=oracle_persona,
+            oracle_consult_personas=oracle_consult_personas,
+            oracle_peer=oracle_peer,
+            oracle_iterations=oracle_iterations,
+            oracle_backend=oracle_backend,
+            oracle_persona_model=oracle_persona_model,
+            oracle_peer_model=oracle_peer_model,
+            oracle_persona_scope=oracle_persona_scope,
+            roundtable=roundtable,
+            roundtable_personas=roundtable_personas,
+            roundtable_role_preset=roundtable_role_preset,
+            roundtable_rounds=roundtable_rounds,
+            roundtable_mode=roundtable_mode,
+            roundtable_persist=roundtable_persist,
+            parallel_review=parallel_review,
+            parallel_reviewers=parallel_reviewers,
+            parallel_review_personas=parallel_review_personas,
+            parallel_review_focus=parallel_review_focus,
+            parallel_review_role_preset=parallel_review_role_preset,
+            deep_review_request=deep_review_request,
+        )
     if run_state:
         run_state.step_finished(
             "synthesis",
@@ -659,6 +686,9 @@ def main(
     roundtable_rounds: int = typer.Option(2, help="Number of roundtable rounds"),
     roundtable_mode: str = typer.Option("adversarial", help="Roundtable mode label"),
     roundtable_persist: str = typer.Option("summary", help="Roundtable persistence: summary or full"),
+    argue: bool = typer.Option(False, "--argue", help="Run two parallel /scillm advocates followed by a judge"),
+    decision_required: bool = typer.Option(False, "--decision-required", help="Force a FOR/AGAINST argue verdict with explicit uncertainty"),
+    tie_breaker: Optional[str] = typer.Option(None, "--tie-breaker", help="Tie-breaker for --decision-required"),
     parallel_review: bool = typer.Option(False, help="Run independent parallel adversarial reviewers"),
     parallel_reviewers: int = typer.Option(3, help="Number of default parallel reviewers"),
     parallel_review_personas: Optional[str] = typer.Option(None, help="Comma-separated reviewer persona[:protocol_role] specs"),
@@ -710,7 +740,15 @@ def main(
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
 
-    roundtable_question_parts = [question] if inferred_parallel_review else question_parts
+    argue_question_parts = [question] if inferred_parallel_review else question_parts
+    question, inferred_argue = _parse_natural_argue_query(argue_question_parts)
+    if inferred_argue:
+        argue = True
+        oracle = True
+        if oracle_backend == DEFAULT_ORACLE_BACKEND:
+            oracle_backend = "scillm"
+
+    roundtable_question_parts = [question] if (inferred_parallel_review or inferred_argue) else question_parts
     question, inferred_roundtable_personas, inferred_roundtable = _parse_natural_roundtable_query(roundtable_question_parts)
     if inferred_roundtable:
         roundtable = True
@@ -720,7 +758,7 @@ def main(
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
 
-    persona_question_parts = [question] if (inferred_roundtable or inferred_parallel_review) else question_parts
+    persona_question_parts = [question] if (inferred_roundtable or inferred_parallel_review or inferred_argue) else question_parts
     question, inferred_persona, inferred_peer, inferred_oracle = _parse_natural_persona_query(
         persona_question_parts,
         explicit_persona=oracle_persona,
@@ -740,9 +778,11 @@ def main(
         consult_personas = True
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
-    if roundtable or parallel_review:
+    if roundtable or parallel_review or argue:
         oracle = True
-        if oracle_backend == DEFAULT_ORACLE_BACKEND:
+        if argue:
+            oracle_backend = "scillm"
+        elif oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
 
     if chain:
@@ -848,6 +888,21 @@ def main(
             "Roundtable rounds must be >= 1.",
             param_hint="--roundtable-rounds",
         )
+    if tie_breaker and not decision_required:
+        raise typer.BadParameter(
+            "--tie-breaker only applies with --decision-required.",
+            param_hint="--tie-breaker",
+        )
+    if decision_required and not tie_breaker:
+        raise typer.BadParameter(
+            "--decision-required requires --tie-breaker.",
+            param_hint="--tie-breaker",
+        )
+    if tie_breaker and tie_breaker not in ARGUE_TIE_BREAKERS:
+        raise typer.BadParameter(
+            f"Tie-breaker must be one of: {', '.join(sorted(ARGUE_TIE_BREAKERS))}.",
+            param_hint="--tie-breaker",
+        )
     if parallel_review and parallel_reviewers < 1:
         raise typer.BadParameter(
             "Parallel reviewers must be >= 1.",
@@ -922,6 +977,7 @@ def main(
         oracle_peer_model,
         roundtable,
         roundtable_personas,
+        argue,
         parallel_review,
         parallel_review_personas,
         oracle_backend != DEFAULT_ORACLE_BACKEND,
@@ -935,7 +991,7 @@ def main(
 
     run_id = ask_id or make_run_id(question)
     context_policy = build_context_policy(
-        "deep-review" if deep_review else "ask",
+        "deep-review" if deep_review else "argue" if argue else "ask",
         review_context=review_context,
         inherit_memory=inherit_memory,
         inherit_skills=inherit_skills,
@@ -966,6 +1022,9 @@ def main(
         "oracle_iterations": oracle_iterations,
         "roundtable": roundtable,
         "roundtable_personas": roundtable_personas,
+        "argue": argue,
+        "decision_required": decision_required,
+        "tie_breaker": tie_breaker,
         "parallel_review": parallel_review,
         "parallel_reviewers": parallel_reviewers,
         "parallel_review_personas": parallel_review_personas,
@@ -1007,7 +1066,7 @@ def main(
         )
         request_payload["suggested_personas_count"] = len(suggested_personas)
 
-    require_runtime_artifacts = deep_review or parallel_review
+    require_runtime_artifacts = deep_review or parallel_review or argue
     try:
         run_state = AskRunState(run_id, output_root=run_output_root, overwrite=overwrite_run, resume=resume_run)
         run_state.write_request(request_payload)
@@ -1054,6 +1113,9 @@ def main(
             roundtable_rounds=roundtable_rounds,
             roundtable_mode=roundtable_mode,
             roundtable_persist=roundtable_persist,
+            argue=argue,
+            decision_required=decision_required,
+            tie_breaker=tie_breaker,
             parallel_review=parallel_review,
             parallel_reviewers=parallel_reviewers,
             parallel_review_personas=parallel_review_personas,
@@ -1125,13 +1187,13 @@ def main(
                 print(f"   Resume: {attention['resume_hint']}")
             print()
         raise typer.Exit(code=2)
-    if result.get("parallel_review"):
+    if result.get("parallel_review") or result.get("argue"):
         if as_json:
             print(json.dumps(result, indent=2, default=str))
         else:
             print(result.get("answer", ""))
     run_state.finish(result)
-    sys.exit(0 if result["items"] else 1)
+    sys.exit(0 if result["items"] or result.get("parallel_review") or result.get("argue") else 1)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ import pytest
 from typer.testing import CliRunner
 
 import ask.ask as ask_module
+import ask.argue as argue_module
 import ask.nightly as nightly_module
 import ask.os_learn as os_learn_module
 import ask.os_query as os_query_module
@@ -173,6 +174,280 @@ def test_cli_parallel_review_missing_target_pauses_with_needs_attention(tmp_path
     assert status["state"] == "needs_attention"
     assert status["needs_attention"]["reason"] == "missing_parallel_review_target"
     assert payload["needs_attention"]["safe_default"] == "do_not_run_review"
+
+
+def _valid_argue_result(verdict="FOR", confidence="medium", decision_required=False, tie_breaker=""):
+    return {
+        "schema_version": argue_module.ARGUE_SCHEMA_VERSION,
+        "question": "Should we ship?",
+        "for_case": {
+            "side": "FOR",
+            "position": "Ship the reversible change.",
+            "strongest_argument": "The change is small and reversible.",
+            "evidence": ["The change is small and reversible."],
+            "assumptions": [],
+            "weaknesses": [],
+            "missing_evidence": [],
+            "response_to_opposition": "Risk is bounded by reversibility.",
+            "what_would_change_my_mind": ["Evidence of hidden coupling."],
+            "confidence": "medium",
+        },
+        "against_case": {
+            "side": "AGAINST",
+            "position": "Do not ship without more evidence.",
+            "strongest_argument": "The tests do not cover rollback.",
+            "evidence": ["The tests do not cover rollback."],
+            "assumptions": [],
+            "weaknesses": [],
+            "missing_evidence": ["Rollback behavior evidence."],
+            "response_to_opposition": "Small changes can still break rollback.",
+            "what_would_change_my_mind": ["Passing rollback test."],
+            "confidence": "medium",
+        },
+        "judge": {
+            "schema_version": argue_module.ARGUE_SCHEMA_VERSION,
+            "verdict": verdict,
+            "confidence": confidence,
+            "decision_required": decision_required,
+            "tie_breaker": tie_breaker,
+            "decision_criterion": "Prefer reversible changes when risk is bounded.",
+            "winning_side": verdict if verdict in {"FOR", "AGAINST"} else "none",
+            "deciding_factors": ["The change is small and reversible."],
+            "strongest_for_argument": "The change is small and reversible.",
+            "strongest_against_argument": "The tests do not cover rollback.",
+            "strongest_counterargument": "The tests do not cover rollback.",
+            "why_counterargument_does_or_does_not_win": "Rollback coverage matters, but reversibility bounds the decision.",
+            "evidence_used": ["The change is small and reversible."],
+            "assumptions": [],
+            "missing_evidence": [],
+            "what_would_change_the_verdict": ["Evidence of hidden coupling."],
+            "recommended_next_action": "Ship with rollback monitoring.",
+            "uncertainty_disclosure": "This remains uncertain.",
+        },
+    }
+
+
+def test_argue_verifier_rejects_for_without_counterargument():
+    payload = _valid_argue_result()
+    payload["judge"]["strongest_counterargument"] = ""
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert any("strongest_counterargument" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_rejects_against_without_evidence_used():
+    payload = _valid_argue_result(verdict="AGAINST")
+    payload["judge"]["evidence_used"] = []
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert "empty evidence_used requires INSUFFICIENT_EVIDENCE" in result["failures"]
+
+
+def test_argue_verifier_rejects_high_confidence_with_missing_evidence():
+    payload = _valid_argue_result(confidence="high")
+    payload["judge"]["missing_evidence"] = ["Production latency data."]
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert "high confidence is not allowed when missing_evidence is non-empty" in result["failures"]
+
+
+def test_argue_verifier_requires_tie_breaker_for_decision_required():
+    payload = _valid_argue_result(decision_required=True, tie_breaker="more-reversible")
+
+    assert argue_module.verify_argue_result(payload)["status"] == "PASS"
+
+    payload["judge"]["uncertainty_disclosure"] = ""
+    result = argue_module.verify_argue_result(payload)
+    assert result["status"] == "FAIL"
+    assert any("uncertainty_disclosure" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_rejects_judge_evidence_not_from_advocates():
+    payload = _valid_argue_result()
+    payload["judge"]["evidence_used"] = ["Private judge-only evidence."]
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert any("not present in advocate outputs" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_allows_advocate_missing_evidence_as_judge_evidence():
+    payload = _valid_argue_result(verdict="NO_CLEAR_WINNER")
+    payload["judge"]["evidence_used"] = ["Rollback behavior evidence."]
+    payload["judge"]["confidence"] = "medium"
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "PASS"
+
+
+def test_cli_argue_runs_two_parallel_advocates_then_judge(monkeypatch, tmp_path):
+    active_advocates = 0
+    max_active_advocates = 0
+    call_order = []
+
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt):
+        nonlocal active_advocates, max_active_advocates
+        call_order.append(role)
+        if "advocate" in role:
+            active_advocates += 1
+            max_active_advocates = max(max_active_advocates, active_advocates)
+            await asyncio.sleep(0.01)
+            active_advocates -= 1
+        if role == "FOR advocate":
+            return {
+                "position": "Ship the reversible change.",
+                "strongest_argument": "The change is small and reversible.",
+                "evidence": ["The change is small and reversible."],
+                "what_would_change_my_mind": ["Evidence of hidden coupling."],
+                "confidence": "medium",
+            }, model
+        if role == "AGAINST advocate":
+            return {
+                "position": "Do not ship without more evidence.",
+                "strongest_argument": "The tests do not cover rollback.",
+                "evidence": ["The tests do not cover rollback."],
+                "missing_evidence": ["Rollback behavior evidence."],
+                "what_would_change_my_mind": ["Passing rollback test."],
+                "confidence": "medium",
+            }, model
+        return {
+            "verdict": "FOR",
+            "confidence": "medium",
+            "decision_criterion": "Prefer reversible changes when risk is bounded.",
+            "winning_side": "FOR",
+            "deciding_factors": ["The change is small and reversible."],
+            "strongest_for_argument": "The change is small and reversible.",
+            "strongest_against_argument": "The tests do not cover rollback.",
+            "strongest_counterargument": "The tests do not cover rollback.",
+            "why_counterargument_does_or_does_not_win": "Rollback coverage matters, but reversibility bounds the decision.",
+            "evidence_used": ["The change is small and reversible."],
+            "what_would_change_the_verdict": ["Evidence of hidden coupling."],
+            "recommended_next_action": "Ship with rollback monitoring.",
+            "uncertainty_disclosure": "This remains uncertain.",
+        }, model
+
+    monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--ask-id",
+            "argue-dag",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    status = read_status("argue-dag", tail_events=30, output_root=tmp_path)
+    artifacts = status["artifacts"]
+    assert payload["argue"]["verdict"] == "FOR"
+    assert payload["argue"]["verifier_status"] == "PASS"
+    assert max_active_advocates == 2
+    assert set(call_order[:2]) == {"FOR advocate", "AGAINST advocate"}
+    assert call_order[-1] == "sequential judge"
+    assert (tmp_path / "argue-dag" / "argue" / "for.json").exists()
+    assert (tmp_path / "argue-dag" / "argue" / "against.json").exists()
+    assert (tmp_path / "argue-dag" / "argue" / "judge.json").exists()
+    assert artifacts["argue_result"].endswith("argue.json")
+
+
+def test_cli_argue_verifier_failure_exits_needs_attention(monkeypatch, tmp_path):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt):
+        if role == "FOR advocate":
+            return {
+                "strongest_argument": "The change is small and reversible.",
+                "evidence": ["The change is small and reversible."],
+                "confidence": "medium",
+            }, model
+        if role == "AGAINST advocate":
+            return {
+                "strongest_argument": "The tests do not cover rollback.",
+                "evidence": ["The tests do not cover rollback."],
+                "confidence": "medium",
+            }, model
+        return {
+            "verdict": "FOR",
+            "confidence": "medium",
+            "decision_criterion": "Prefer reversible changes.",
+            "winning_side": "FOR",
+            "evidence_used": ["The change is small and reversible."],
+            "why_counterargument_does_or_does_not_win": "Not addressed.",
+            "what_would_change_the_verdict": ["Evidence of hidden coupling."],
+        }, model
+
+    monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--ask-id",
+            "argue-fail",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    assert payload["needs_attention"]["reason"] == "argue_verifier_failed"
+    assert (tmp_path / "argue-fail" / "argue" / "verifier.log").exists()
+
+
+def test_cli_ask_dry_run_includes_argue_dag_options(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--decision-required",
+            "--tie-breaker",
+            "more-reversible",
+            "--dry-run",
+            "--json",
+            "--ask-id",
+            "argue-dry",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["options"]["argue"] is True
+    assert "argue FOR advocate via scillm" in payload["risk_analysis"]["external_calls"]
+    assert "argue sequential judge via scillm" in payload["risk_analysis"]["external_calls"]
+    assert "argue/argue.json" in payload["risk_analysis"]["filesystem_writes"]
+    assert not (tmp_path / "argue-dry").exists()
 
 
 def test_cli_parallel_review_runs_three_reviewers_then_judge(monkeypatch, tmp_path):

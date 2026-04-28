@@ -16,6 +16,7 @@ PYTHON=(uv run --project "$SCRIPT_DIR" python)
 echo "1. Python module imports..."
 if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" -c "
 import ask.ask as ask_mod
+import ask.argue as argue_mod
 import ask.status as status_mod
 import ask.doctor as doctor_mod
 import ask.run_state as run_state_mod
@@ -26,6 +27,7 @@ import ask.skills_exec as skills_exec_mod
 import ask.monitor as monitor_mod
 import ask.pipeline as pipeline_mod
 assert hasattr(ask_mod, 'ask')
+assert hasattr(argue_mod, 'run_argue')
 assert hasattr(skills_exec_mod, 'run_skill')
 assert hasattr(monitor_mod, 'AskMonitor')
 assert hasattr(status_mod, 'show_status')
@@ -218,6 +220,15 @@ echo ""
 echo "10. Parallel-review DAG CLI sanity..."
 if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytest -q \
     tests/test_run_state_protocol.py::test_cli_parallel_review_missing_target_pauses_with_needs_attention \
+    tests/test_run_state_protocol.py::test_cli_argue_runs_two_parallel_advocates_then_judge \
+    tests/test_run_state_protocol.py::test_cli_argue_verifier_failure_exits_needs_attention \
+    tests/test_run_state_protocol.py::test_argue_verifier_rejects_for_without_counterargument \
+    tests/test_run_state_protocol.py::test_argue_verifier_rejects_against_without_evidence_used \
+    tests/test_run_state_protocol.py::test_argue_verifier_rejects_high_confidence_with_missing_evidence \
+    tests/test_run_state_protocol.py::test_argue_verifier_requires_tie_breaker_for_decision_required \
+    tests/test_run_state_protocol.py::test_argue_verifier_rejects_judge_evidence_not_from_advocates \
+    tests/test_run_state_protocol.py::test_argue_verifier_allows_advocate_missing_evidence_as_judge_evidence \
+    tests/test_run_state_protocol.py::test_cli_ask_dry_run_includes_argue_dag_options \
     tests/test_run_state_protocol.py::test_cli_parallel_review_runs_three_reviewers_then_judge \
     tests/test_run_state_protocol.py::test_cli_parallel_review_writes_code_runner_handoff_when_requested \
     tests/test_run_state_protocol.py::test_parallel_review_verifier_rejects_missing_judge \

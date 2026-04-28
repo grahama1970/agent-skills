@@ -85,6 +85,36 @@ def test_cli_parallel_review_implies_oracle(monkeypatch):
     assert captured["oracle_reasoning"] == "high"
 
 
+def test_cli_natural_argue_maps_to_scillm_protocol(monkeypatch):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [{"solution": "ok"}], "answer": "ok", "bridges_found": []}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "argue",
+            "whether",
+            "we",
+            "should",
+            "ship",
+            "this",
+            "change",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "we should ship this change"
+    assert captured["argue"] is True
+    assert captured["oracle_model"] == "gpt-5.5"
+    assert captured["oracle_backend"] == "scillm"
+    assert captured["decision_required"] is False
+
+
 def test_cli_deep_review_implies_xhigh_subagent_parallel_review(monkeypatch):
     ask_module = _load_ask_module()
     captured = {}
