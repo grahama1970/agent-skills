@@ -704,7 +704,7 @@ Handoff artifacts:
 
 ```text
 .ask_artifacts/runs/<ask_id>/parallel_review/code_runner_handoff.md
-.ask_artifacts/runs/<ask_id>/parallel_review/code_runner_task.json
+.ask_artifacts/runs/<ask_id>/parallel_review/code_runner_task.json  # only with --apply-fixes or --implement-with code-runner
 ```
 
 The handoff must include:
@@ -716,6 +716,10 @@ The handoff must include:
 - non-goals
 - risk notes
 - explicit statement that `/code-runner` owns implementation
+
+`--code-runner-handoff` alone writes markdown context only. It does not write a
+machine-readable task file. `code_runner_task.json` requires explicit
+implementation intent via `--apply-fixes` or `--implement-with code-runner`.
 
 Task JSON schema:
 
@@ -746,7 +750,11 @@ Task JSON schema:
   "execution": {
     "requested": true,
     "backend": "code-runner",
-    "status": "prepared_not_invoked"
+    "status": "prepared_not_executable"
+  },
+  "code_runner_invocation": {
+    "status": "not_generated",
+    "reason": "Native /code-runner execution schema is not integrated; invoke /code-runner explicitly after human review."
   }
 }
 ```
@@ -754,6 +762,13 @@ Task JSON schema:
 No task is generated unless verifier status is `PASS`, actionable findings
 exist, target files are concrete, allowed files include every target file, DoD
 commands are present, non-goals are present, and risk notes are present.
+DoD commands must come from explicit `--code-runner-dod-command` values; reviewer
+`finding.verification` text remains finding metadata and is not promoted into an
+executable command.
+
+Allowed files are normalized relative to the current repository root. Absolute
+paths outside the repository, parent traversal outside the repository, and
+directories are rejected.
 
 Implementation intent is explicit:
 
@@ -769,8 +784,9 @@ Implementation intent is explicit:
 ```
 
 `--apply-fixes` is an intent marker, not an executor. It prepares
-`code_runner_task.json`; a separate `/code-runner` invocation owns mutation and
-test-driven repair.
+`code_runner_task.json` as an `/ask` handoff schema with
+`execution.status: prepared_not_executable`; a separate `/code-runner`
+invocation owns mutation and test-driven repair.
 
 ## Non-Goals
 

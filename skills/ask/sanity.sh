@@ -235,6 +235,8 @@ if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytes
     tests/test_run_state_protocol.py::test_parallel_review_reviewer_calls_overlap \
     tests/test_run_state_protocol.py::test_parallel_review_single_reviewer_failure_preserves_artifacts \
     tests/test_run_state_protocol.py::test_cli_parallel_review_apply_fixes_prepares_code_runner_task_without_editing \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_apply_fixes_requires_explicit_dod_command \
+    tests/test_run_state_protocol.py::test_cli_parallel_review_allowed_file_rejects_outside_repo \
     tests/test_run_state_protocol.py::test_cli_parallel_review_rejects_unknown_implementation_backend \
     tests/test_run_state_protocol.py::test_cli_code_runner_handoff_requires_parallel_review \
     tests/test_run_state_protocol.py::test_cli_parallel_review_rejects_unbounded_fanout \

@@ -165,6 +165,34 @@ def run_parallel_review(
     run_dir = Path(getattr(run_state, "run_dir", ""))
     if not run_dir:
         raise ParallelReviewError("Parallel review requires runtime artifacts")
+    if implementation_requested and not any(command.strip() for command in (code_runner_dod_commands or [])):
+        attention = run_state.needs_attention(
+            reason="missing_code_runner_dod",
+            question="Explicit implementation intent requires at least one --code-runner-dod-command.",
+            safe_default="do_not_invoke_code_runner",
+            resume_hint="Run again with --code-runner-dod-command <safe validation command>.",
+        )
+        return {
+            "question": question,
+            "scope": "parallel_review",
+            "items": [],
+            "answer": "Parallel review paused before reviewer fanout because implementation intent lacks an explicit DoD command.",
+            "needs_attention": attention,
+            "parallel_review": {
+                "target": target,
+                "verdict": "NEEDS_ATTENTION",
+                "verifier_status": "NOT_RUN",
+                "verifier_failures": ["missing_code_runner_dod"],
+                "findings_count": 0,
+                "artifact_paths": {},
+                "runner": runner,
+                "read_only": read_only,
+                "dag_mode": dag_mode,
+                "implementation_requested": implementation_requested,
+            },
+        }
+    if code_runner_allowed_files:
+        validate_code_runner_allowed_files(code_runner_allowed_files)
     run_state.step_started("parallel_review", target=target, reviewers=reviewers, runner=runner)
     review_dir = run_dir / "parallel_review"
     outputs_dir = review_dir / "reviewer_outputs"
@@ -235,25 +263,32 @@ def run_parallel_review(
         "verifier_log": str(verifier_path),
     }
     if code_runner_handoff and _has_actionable_findings(verdict) and verifier["status"] == "PASS":
-        task = build_code_runner_task(
-            verdict=verdict,
-            ask_id=str(getattr(run_state, "ask_id", "")),
-            allowed_files=code_runner_allowed_files or [],
-            dod_commands=code_runner_dod_commands or [],
-            non_goals=implementation_non_goals or [],
-            risk_notes=risk_notes or [],
-            implementation_requested=implementation_requested,
-        )
+        task = None
+        if implementation_requested:
+            try:
+                task = build_code_runner_task(
+                    verdict=verdict,
+                    ask_id=str(getattr(run_state, "ask_id", "")),
+                    allowed_files=code_runner_allowed_files or [],
+                    dod_commands=code_runner_dod_commands or [],
+                    non_goals=implementation_non_goals or [],
+                    risk_notes=risk_notes or [],
+                    implementation_requested=implementation_requested,
+                )
+            except ParallelReviewError as exc:
+                verifier["status"] = "FAIL"
+                verifier["failures"].append(f"code_runner_task_invalid: {exc}")
+            else:
+                task_path.write_text(json.dumps(task, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
+                verdict["artifact_paths"]["code_runner_task_json"] = str(task_path)
         handoff_path.write_text(render_code_runner_handoff(verdict, task), encoding="utf-8")
-        task_path.write_text(json.dumps(task, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
         verdict["artifact_paths"]["code_runner_handoff"] = str(handoff_path)
-        verdict["artifact_paths"]["code_runner_task_json"] = str(task_path)
         run_state.event(
             "code_runner_handoff_prepared",
             step="parallel_review",
-            task_id=task["task_id"],
+            task_id=task["task_id"] if task else None,
             implementation_requested=implementation_requested,
-            execution_status=task["execution"]["status"],
+            execution_status=task["execution"]["status"] if task else "handoff_markdown_only",
         )
     verifier_path.write_text("\n".join(verifier["failures"] or ["PASS"]) + "\n", encoding="utf-8")
     verdict_path.write_text(json.dumps(verdict, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
@@ -852,7 +887,7 @@ def build_code_runner_task(
 ) -> dict[str, Any]:
     findings = [finding for finding in verdict.get("findings", []) if isinstance(finding, dict)]
     target_files = _task_target_files(verdict)
-    allowed = sorted(set(allowed_files or target_files))
+    allowed = validate_code_runner_allowed_files(allowed_files or target_files)
     commands = _task_dod_commands(findings, dod_commands)
     non_goal_items = non_goals or [
         "Do not edit files outside allowed_files.",
@@ -877,8 +912,12 @@ def build_code_runner_task(
         "execution": {
             "requested": implementation_requested,
             "backend": "code-runner" if implementation_requested else None,
-            "status": "prepared_not_invoked",
-            "reason": "/ask is read-only; /code-runner owns implementation and must be invoked explicitly.",
+            "status": "prepared_not_executable",
+            "reason": "/ask is read-only; this is an /ask handoff schema, not a native executable /code-runner task.",
+        },
+        "code_runner_invocation": {
+            "status": "not_generated",
+            "reason": "Native /code-runner execution schema is not integrated; invoke /code-runner explicitly after human review.",
         },
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -897,6 +936,8 @@ def validate_code_runner_task(task: dict[str, Any]) -> list[str]:
             errors.append(f"missing {field}")
     if not task.get("definition_of_done", {}).get("commands"):
         errors.append("missing definition_of_done.commands")
+    if task.get("execution", {}).get("requested") is not True:
+        errors.append("code-runner task requires explicit implementation intent")
     target_files = set(task.get("target_files") or [])
     allowed_files = set(task.get("allowed_files") or [])
     if target_files and not target_files.issubset(allowed_files):
@@ -985,14 +1026,24 @@ def _task_target_files(verdict: dict[str, Any]) -> list[str]:
 
 def _task_dod_commands(findings: list[dict[str, Any]], explicit_commands: list[str]) -> list[str]:
     commands = [command.strip() for command in explicit_commands if command.strip()]
-    if commands:
-        return sorted(set(commands))
-    inferred = []
-    for finding in findings:
-        verification = str(finding.get("verification", "")).strip()
-        if verification:
-            inferred.append(verification)
-    return sorted(set(inferred))
+    return sorted(set(commands))
+
+
+def validate_code_runner_allowed_files(allowed_files: list[str], repo_root: Path | None = None) -> list[str]:
+    root = (repo_root or Path.cwd()).resolve()
+    normalized: list[str] = []
+    for raw in allowed_files:
+        value = str(raw).strip()
+        if not value:
+            continue
+        path = Path(value).expanduser()
+        resolved = path.resolve() if path.is_absolute() else (root / path).resolve()
+        if not _is_relative_to(resolved, root):
+            raise ParallelReviewError(f"allowed file outside repository: {raw}")
+        if resolved.exists() and resolved.is_dir():
+            raise ParallelReviewError(f"allowed file is a directory: {raw}")
+        normalized.append(str(resolved.relative_to(root)))
+    return sorted(set(normalized))
 
 
 def _task_risk_notes(findings: list[dict[str, Any]]) -> list[str]:

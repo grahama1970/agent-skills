@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -29,7 +30,7 @@ from .ask_config import (
 from .chain_specs import apply_chain_options
 from .deep_review import build_deep_review_request, infer_deep_review
 from .dry_run_spec import build_ask_dry_run_spec, print_execution_spec
-from .parallel_review import MAX_REVIEWERS, run_parallel_review
+from .parallel_review import MAX_REVIEWERS, ParallelReviewError, run_parallel_review, validate_code_runner_allowed_files
 from .ask_oracle import _is_meta_item
 from .ask_persona_profiles import _format_persona_suggestion
 from .ask_relevance import _has_relevant_domain_items, _try_evidence_case
@@ -261,6 +262,17 @@ def ask(
                 "question": "Parallel review requires an explicit --review-target such as git:diff or a path list.",
                 "safe_default": "do_not_run_review",
                 "resume_hint": "Run again with --review-target <git:diff|paths|artifact>.",
+            }
+            if run_state:
+                attention = run_state.needs_attention(**attention)
+            result["needs_attention"] = attention
+            return result
+        if (apply_fixes or implement_with) and not any(command.strip() for command in (code_runner_dod_commands or [])):
+            attention = {
+                "reason": "missing_code_runner_dod",
+                "question": "Explicit implementation intent requires at least one --code-runner-dod-command.",
+                "safe_default": "do_not_invoke_code_runner",
+                "resume_hint": "Run again with --code-runner-dod-command <safe validation command>.",
             }
             if run_state:
                 attention = run_state.needs_attention(**attention)
@@ -878,6 +890,11 @@ def main(
             "Code-runner handoff options require --parallel-review.",
             param_hint="--parallel-review",
         )
+    if code_runner_allowed_files:
+        try:
+            validate_code_runner_allowed_files(code_runner_allowed_files, Path.cwd())
+        except ParallelReviewError as exc:
+            raise typer.BadParameter(str(exc), param_hint="--code-runner-allowed-file") from exc
     if deep_review and deep_reviewers < 1:
         raise typer.BadParameter(
             "Deep-review reviewers must be >= 1.",
