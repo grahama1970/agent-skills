@@ -58,6 +58,10 @@ claims must still be grounded in inspected files, diffs, tests, or artifacts.
   --parallel-reviewers 3 \
   --parallel-review-focus correctness,tests,maintainability
 
+# Argue both sides of a decision with a neutral judge.
+./run.sh ask "argue for and against moving embeddings to Qdrant" \
+  --argue
+
 # Run first-class deep review with audit artifacts.
 ./run.sh ask "deep review this implementation" \
   --deep-review \
@@ -76,6 +80,7 @@ claims must still be grounded in inspected files, diffs, tests, or artifacts.
 | Auto-learn | Learn if memory has no useful result | `./run.sh ask "question" --auto-learn` |
 | Oracle | Max-available reasoning synthesis | `./run.sh ask "question" --oracle` |
 | Persona | Answer through a stored persona | `./run.sh ask "question" --oracle --oracle-persona Architect` |
+| Argue | Two-sided FOR/AGAINST argument with judge rubric | `./run.sh ask "argue both sides of X" --argue` |
 | Roundtable | Sequential persona deliberation | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
 | Parallel review | Independent reviewer fanout | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
 | Deep review | Web-GPT-style review with artifacts | `./run.sh ask "deep review this" --deep-review-target src/ask/ask.py` |
@@ -118,6 +123,8 @@ $ask what do we know about the auth retry bug?
 $ask what changed in the API client architecture?
 $ask what are the risks in this implementation?
 $ask run 3 parallel adversarial reviewers on this pull request
+$ask argue both sides of moving embeddings to Qdrant
+$ask devil's advocate this architecture plan
 $ask review then roundtable with Architect, Tester, and Maintainer
 $ask deep review this implementation --deep-review-target src/ask/ask.py
 $ask oracle should we use subagent-runner here?
@@ -171,6 +178,33 @@ domain voice, while the protocol role is the bounded review job loaded from
   --roundtable \
   --roundtable-personas "Architect:failure_mode,Tester:evidence_auditor,Maintainer:complexity_minimizer"
 ```
+
+### Argue a decision
+
+Argue is a bounded decision protocol, not an open-ended debate. `/ask` assigns
+one persona to the strongest FOR case, one persona to the strongest AGAINST
+case, then asks a neutral judge to apply a fixed rubric:
+
+- evidence strength
+- failure-mode coverage
+- assumption quality
+- target relevance
+- falsifiability
+- implementation cost or risk
+
+```bash
+./run.sh ask "Should this service use retries or queues?" \
+  --argue \
+  --argue-personas "Architect:for,Skeptic:against" \
+  --argue-rounds 2
+```
+
+Allowed judge verdicts are `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, and
+`INSUFFICIENT_EVIDENCE`. The judge JSON is checked by a deterministic gate so
+malformed verdicts, unsupported decisive calls, and incomplete rubric scores do
+not count as valid project-agent decisions. See
+`docs/protocols/ARGUE_CONTRACT.md` and
+`docs/prompts_review/ASK_ARGUE_PROMPT_PAYLOAD.md`.
 
 ### Preferred model with a one-shot peer model
 
@@ -240,6 +274,9 @@ Common `ask` options:
 | `--oracle-persona <name>` | Primary stored persona or role |
 | `--roundtable` | Run protocolized sequential deliberation |
 | `--parallel-review` | Run independent reviewer fanout |
+| `--argue` | Run bounded FOR/AGAINST argument with judge rubric |
+| `--argue-personas <spec>` | Two persona specs, e.g. `Architect:for,Skeptic:against` |
+| `--argue-rounds <n>` | Number of bounded FOR/AGAINST rounds |
 | `--deep-review` | Emit deep-review markdown and JSON artifacts |
 | `--deep-review-target <target>` | Explicit target: paths, diff, plan, manifest, or artifact |
 | `--run-id <id>` | Explicit run id for artifacts and status lookup |
@@ -319,8 +356,12 @@ the relevant E2E case.
 
 ## Current Readiness
 
-As of 2026-04-27, `$ask` is usable for the intended interactive workflows:
+As of 2026-04-28, `$ask` is usable for the intended interactive workflows:
 
+- Bounded `/ask argue` is implemented with natural routing, FOR/AGAINST roles,
+  fixed judge rubric, deterministic verdict gate, and prompt review fixture.
+- The portable parity plan is committed at `03_ASK_PORTABLE_PARITY_TASKS.yaml`
+  and passed `/review-plan` with no WARN or FAIL findings.
 - Realistic domain sanity/E2E checks passed `3/3` with scoped memory, a stored
   persona, and a multi-persona roundtable.
 - Targeted regression suite passed `30/30`.
@@ -329,8 +370,9 @@ As of 2026-04-27, `$ask` is usable for the intended interactive workflows:
 - The latest evidence dashboard is generated at
   `.ask_artifacts/validation-dashboard/20260427T171501Z/index.html`.
 
-Known caveat: repository cleanup and commit staging are still pending; the
-runtime workflow is ready, but the worktree should be reviewed before publishing.
+Known caveat: broad portable parity remains planned, not implemented. Runner
+adapters, versioned runtime schemas, capability-aware doctor/status, service
+abstraction, and Docker profiles are next-phase work.
 
 ## Development Knowledge
 
@@ -362,6 +404,8 @@ current-state projection, not a replacement for inspected code or test output.
 | `src/ask/reviewer_specs.py` | Reviewer-role frontmatter loading and dynamic angle selection |
 | `src/ask/chain_specs.py` | Saved review-chain loading and validation |
 | `src/ask/review_protocols/` | Roundtable and adversarial review protocols |
+| `docs/protocols/ARGUE_CONTRACT.md` | Bounded argue protocol and verdict gate |
+| `docs/prompts_review/ASK_ARGUE_PROMPT_PAYLOAD.md` | Full argue prompt payload fixture |
 | `docs/reviewers/` | Protocol role specs with YAML frontmatter |
 | `docs/chains/` | Saved deep-review and parallel-review workflow specs |
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
@@ -383,6 +427,7 @@ When tests are added or modified:
 ```bash
 uv run --project . --group dev python -m pytest -q tests/test_human_chat_examples.py
 uv run --project . --group dev python -m pytest -q tests/test_ask_cli_protocols.py
+uv run --project . --group dev python -m pytest -q tests/test_review_protocols.py
 uv run --project . --group dev python -m pytest -q tests/test_deep_review_protocol.py
 bash sanity.sh
 ```

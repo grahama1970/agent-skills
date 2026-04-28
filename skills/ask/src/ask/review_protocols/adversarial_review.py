@@ -412,7 +412,7 @@ def build_moderator_prompt(
             "{\n"
             f'  "verdict": "{verdicts}",\n'
             '  "winner": "for|against|none",\n'
-            '  "rubric_scores": {"evidence_strength": {"for": 0, "against": 0, "winner": "for|against|tie"}},\n'
+            '  "rubric_scores": {"<each judge rubric key>": {"for": 0, "against": 0, "winner": "for|against|tie"}},\n'
             '  "decisive_reasons": ["..."],\n'
             '  "confidence": "high|medium|low"\n'
             "}"
@@ -470,6 +470,86 @@ def parse_protocol_turn(content: str) -> dict[str, Any]:
         ],
         "open_issues": ["unparsed turn"],
     }
+
+
+def parse_argue_verdict_payload(content: str) -> dict[str, Any]:
+    """Parse the moderator's fenced or raw argue verdict JSON."""
+    text = content.strip()
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, flags=re.DOTALL | re.IGNORECASE)
+    if fenced:
+        text = fenced.group(1).strip()
+    try:
+        data = json.loads(text)
+        if isinstance(data, dict):
+            return data
+    except json.JSONDecodeError:
+        pass
+    start = text.find("{")
+    end = text.rfind("}")
+    if start >= 0 and end > start:
+        try:
+            data = json.loads(text[start:end + 1])
+            if isinstance(data, dict):
+                return data
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+def validate_argue_verdict_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Validate the deterministic JSON gate for an argue moderator verdict."""
+    errors: list[str] = []
+    verdict = str(payload.get("verdict", "")).strip()
+    winner = str(payload.get("winner", "")).strip()
+    confidence = str(payload.get("confidence", "")).strip()
+    decisive_reasons = payload.get("decisive_reasons")
+    rubric_scores = payload.get("rubric_scores")
+
+    if verdict not in ARGUE_VERDICTS:
+        errors.append("verdict must be one of ARGUE_VERDICTS")
+    if winner not in {"for", "against", "none"}:
+        errors.append("winner must be for, against, or none")
+    if confidence not in {"high", "medium", "low"}:
+        errors.append("confidence must be high, medium, or low")
+    if not isinstance(decisive_reasons, list) or not all(isinstance(item, str) for item in decisive_reasons):
+        errors.append("decisive_reasons must be a list of strings")
+    if verdict in {"FOR", "AGAINST"} and not decisive_reasons:
+        errors.append("FOR/AGAINST verdicts require decisive_reasons")
+
+    expected_winner = {
+        "FOR": "for",
+        "AGAINST": "against",
+        "NO_CLEAR_WINNER": "none",
+        "INSUFFICIENT_EVIDENCE": "none",
+    }.get(verdict)
+    if expected_winner and winner != expected_winner:
+        errors.append(f"{verdict} verdict requires winner={expected_winner}")
+
+    if not isinstance(rubric_scores, dict):
+        errors.append("rubric_scores must be an object")
+        rubric_scores = {}
+
+    for rubric_key in ARGUE_JUDGE_RUBRIC:
+        score = rubric_scores.get(rubric_key) if isinstance(rubric_scores, dict) else None
+        if not isinstance(score, dict):
+            errors.append(f"missing rubric_scores.{rubric_key}")
+            continue
+        for side in ("for", "against"):
+            value = score.get(side)
+            if not isinstance(value, (int, float)) or value < 0 or value > 5:
+                errors.append(f"rubric_scores.{rubric_key}.{side} must be a number from 0 to 5")
+        if score.get("winner") not in {"for", "against", "tie"}:
+            errors.append(f"rubric_scores.{rubric_key}.winner must be for, against, or tie")
+
+    evidence_score = rubric_scores.get("evidence_strength", {}) if isinstance(rubric_scores, dict) else {}
+    if (
+        verdict in {"FOR", "AGAINST"}
+        and isinstance(evidence_score, dict)
+        and evidence_score.get(winner, 0) <= 0
+    ):
+        errors.append("FOR/AGAINST verdict requires positive evidence_strength for the winning side")
+
+    return {"valid": not errors, "errors": errors}
 
 
 def summarize_protocol_transcript(turns: list[dict[str, Any]], max_chars: int = 12000) -> str:

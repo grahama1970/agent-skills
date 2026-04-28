@@ -491,6 +491,59 @@ def scan_for_outdated_docs() -> List[Dict[str, str]]:
     return outdated
 
 
+def _normalize_target(target: Optional[str]) -> Optional[str]:
+    if not target:
+        return None
+    root = Path.cwd().resolve()
+    target_path = (root / target).resolve()
+    if not target_path.exists() or not target_path.is_dir():
+        raise typer.BadParameter(f"target must be an existing directory: {target}")
+    try:
+        relative = target_path.relative_to(root)
+    except ValueError as exc:
+        raise typer.BadParameter(f"target must be inside project root: {target}") from exc
+    return str(relative).rstrip("/")
+
+
+def _path_from_status_line(status_line: str) -> str:
+    path = status_line[3:] if len(status_line) > 3 else status_line
+    if " -> " in path:
+        path = path.split(" -> ", 1)[1]
+    return path.strip()
+
+
+def _is_under_target(path: str, target: Optional[str]) -> bool:
+    if not target:
+        return True
+    normalized = path.removeprefix("./").rstrip("/")
+    return normalized == target or normalized.startswith(f"{target}/")
+
+
+def _filter_findings_to_target(findings: Dict, target: Optional[str]) -> Dict:
+    if not target:
+        return findings
+    return {
+        **findings,
+        "root_strays": [],
+        "uncommitted_changes": [
+            change for change in findings.get("uncommitted_changes", [])
+            if _is_under_target(_path_from_status_line(str(change)), target)
+        ],
+        "untracked_files": [
+            path for path in findings.get("untracked_files", [])
+            if _is_under_target(str(path), target)
+        ],
+        "dead_files": [
+            item for item in findings.get("dead_files", [])
+            if _is_under_target(str(item.get("path", "")), target)
+        ],
+        "outdated_docs": [
+            item for item in findings.get("outdated_docs", [])
+            if _is_under_target(str(item.get("path", "")), target)
+        ],
+    }
+
+
 def generate_cleanup_plan(findings: Dict) -> str:
     plan = []
     plan.append("# Cleanup Plan")
@@ -700,13 +753,17 @@ def main(
     force: bool = typer.Option(False, "--force", help="Skip confirmation prompts for junk/archive (dead files still require confirmation)"),
     output: str = typer.Option("CLEANUP_PLAN.md", "--output", help="Output file for plan"),
     archive_root: Optional[str] = typer.Option(None, "--archive-root", help="Override archive destination path"),
+    target: Optional[str] = typer.Option(None, "--target", "--directory", help="Limit cleanup candidates to a directory inside the project root"),
 ) -> None:
     """Deep codebase assessment and technical debt cleanup."""
     global ARCHIVE_ROOT
     if archive_root:
         ARCHIVE_ROOT = Path(archive_root)
+    normalized_target = _normalize_target(target)
 
     log_info("Starting assessment...")
+    if normalized_target:
+        log_info(f"Scoped target: {normalized_target}")
 
     findings = {
         "root_strays": scan_root_strays(),
@@ -715,6 +772,7 @@ def main(
         "dead_files": scan_for_dead_files(),
         "outdated_docs": scan_for_outdated_docs(),
     }
+    findings = _filter_findings_to_target(findings, normalized_target)
 
     if dry_run:
         print(json.dumps(findings, indent=2, default=str))

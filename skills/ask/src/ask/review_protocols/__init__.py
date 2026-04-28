@@ -12,9 +12,11 @@ from .adversarial_review import (
     default_parallel_participants,
     is_date_sensitive_question,
     normalize_argue_personas,
+    parse_argue_verdict_payload,
     parse_participant_specs,
     parse_protocol_turn,
     summarize_protocol_transcript,
+    validate_argue_verdict_payload,
 )
 
 __all__ = [
@@ -29,7 +31,9 @@ __all__ = [
     "default_parallel_participants",
     "is_date_sensitive_question",
     "normalize_argue_personas",
+    "parse_argue_verdict_payload",
     "parse_participant_specs",
     "parse_protocol_turn",
     "summarize_protocol_transcript",
+    "validate_argue_verdict_payload",
 ]

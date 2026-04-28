@@ -17,8 +17,10 @@ from ask.review_protocols import (
     default_parallel_participants,
     is_date_sensitive_question,
     normalize_argue_personas,
+    parse_argue_verdict_payload,
     parse_participant_specs,
     parse_protocol_turn,
+    validate_argue_verdict_payload,
 )
 
 ASK_DIR = Path(__file__).resolve().parents[1]
@@ -109,6 +111,7 @@ def test_argue_prompt_payload_contains_fixed_judge_contract():
     assert "Assigned side: AGAINST Advocate (against)" in payload["turn_prompts"][1]["prompt"]
     assert "Judge rubric:" in payload["moderator_prompt"]
     assert '"verdict": "FOR | AGAINST | NO_CLEAR_WINNER | INSUFFICIENT_EVIDENCE"' in payload["moderator_prompt"]
+    assert '"rubric_scores": {"<each judge rubric key>"' in payload["moderator_prompt"]
 
 
 def test_argue_prompt_review_bundle_documents_payload_contract():
@@ -124,6 +127,74 @@ def test_argue_prompt_review_bundle_documents_payload_contract():
         "Project Agent Decision",
     ]:
         assert required in bundle
+
+
+def test_parse_argue_verdict_payload_accepts_fenced_json():
+    parsed = parse_argue_verdict_payload(
+        """Verdict follows:
+```json
+{"verdict": "NO_CLEAR_WINNER", "winner": "none", "rubric_scores": {}, "decisive_reasons": [], "confidence": "low"}
+```
+"""
+    )
+
+    assert parsed["verdict"] == "NO_CLEAR_WINNER"
+    assert parsed["winner"] == "none"
+
+
+def test_validate_argue_verdict_payload_accepts_complete_gate():
+    payload = {
+        "verdict": "FOR",
+        "winner": "for",
+        "rubric_scores": {
+            rubric_key: {"for": 4, "against": 2, "winner": "for"}
+            for rubric_key in ARGUE_JUDGE_RUBRIC
+        },
+        "decisive_reasons": ["FOR side cites inspected implementation cost and rollback evidence."],
+        "confidence": "medium",
+    }
+
+    result = validate_argue_verdict_payload(payload)
+
+    assert result == {"valid": True, "errors": []}
+
+
+def test_validate_argue_verdict_payload_rejects_bad_winner_and_missing_rubric():
+    payload = {
+        "verdict": "FOR",
+        "winner": "against",
+        "rubric_scores": {
+            "evidence_strength": {"for": 0, "against": 5, "winner": "against"},
+        },
+        "decisive_reasons": [],
+        "confidence": "certain",
+    }
+
+    result = validate_argue_verdict_payload(payload)
+
+    assert result["valid"] is False
+    assert "FOR verdict requires winner=for" in result["errors"]
+    assert "FOR/AGAINST verdicts require decisive_reasons" in result["errors"]
+    assert "confidence must be high, medium, or low" in result["errors"]
+    assert "missing rubric_scores.failure_mode_coverage" in result["errors"]
+
+
+def test_validate_argue_verdict_payload_rejects_unsupported_decisive_verdict():
+    payload = {
+        "verdict": "AGAINST",
+        "winner": "against",
+        "rubric_scores": {
+            rubric_key: {"for": 0, "against": 0, "winner": "tie"}
+            for rubric_key in ARGUE_JUDGE_RUBRIC
+        },
+        "decisive_reasons": ["AGAINST sounds safer."],
+        "confidence": "low",
+    }
+
+    result = validate_argue_verdict_payload(payload)
+
+    assert result["valid"] is False
+    assert "FOR/AGAINST verdict requires positive evidence_strength for the winning side" in result["errors"]
 
 
 def test_default_parallel_participants_uses_focus_labels():
