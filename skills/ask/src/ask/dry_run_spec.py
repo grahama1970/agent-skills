@@ -57,6 +57,11 @@ def build_ask_dry_run_spec(request: dict[str, Any]) -> dict[str, Any]:
         filesystem_writes.append("parallel_review/judge.json")
         filesystem_writes.append("parallel_review/synthesis.md")
         filesystem_writes.append("parallel_review/verdict.json")
+        if request.get("code_runner_handoff"):
+            filesystem_writes.append("parallel_review/code_runner_handoff.md")
+            filesystem_writes.append("parallel_review/code_runner_task.json")
+        if request.get("implement_with") or request.get("apply_fixes"):
+            risk_notes.append("implementation intent only prepares /code-runner artifacts; /ask does not edit files in dry-run or normal review mode")
         risk_notes.append("parallel review requires an explicit target and remains read-only unless handed off to /code-runner")
     if request.get("dogpile_mode") == "force":
         external_calls.append("dogpile forced freshness search")

@@ -322,10 +322,147 @@ def test_cli_parallel_review_writes_code_runner_handoff_when_requested(monkeypat
 
     assert result.exit_code == 0
     handoff = tmp_path / "parallel-handoff" / "parallel_review" / "code_runner_handoff.md"
+    task_path = tmp_path / "parallel-handoff" / "parallel_review" / "code_runner_task.json"
     verdict = json.loads((tmp_path / "parallel-handoff" / "parallel_review" / "verdict.json").read_text())
+    task = json.loads(task_path.read_text())
     assert handoff.exists()
+    assert task_path.exists()
     assert "Add regression test" in handoff.read_text()
     assert verdict["artifact_paths"]["code_runner_handoff"] == str(handoff)
+    assert verdict["artifact_paths"]["code_runner_task_json"] == str(task_path)
+    assert task["schema_version"] == parallel_review_module.CODE_RUNNER_TASK_SCHEMA_VERSION
+    assert task["source_review_run"] == "parallel-handoff"
+    assert task["target_files"] == ["target.py"]
+    assert task["allowed_files"] == ["target.py"]
+    assert task["execution"]["requested"] is False
+    assert task["execution"]["status"] == "prepared_not_invoked"
+    assert task["post_fix_review"] is True
+
+
+def test_cli_parallel_review_apply_fixes_prepares_code_runner_task_without_editing(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            finding = {
+                "severity": "medium",
+                "title": "Add regression test",
+                "evidence": "target.py has behavior but no adjacent test in the target bundle.",
+                "impact": "Behavior can regress silently.",
+                "fix": "Add a focused regression test for answer().",
+                "verification": "uv run pytest tests/test_target.py",
+            }
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Only reviewer with a complete finding.",
+                    "hybrid_summary": "Add the missing regression test before relying on this behavior.",
+                    "verdict": "SAFE_WITH_CONDITIONS",
+                    "summary": "Judge synthesis complete.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py has answer()"],
+                    "findings": [finding],
+                    "test_gaps": ["answer() lacks a regression test"],
+                    "read_only_claim": True,
+                    "confidence": "medium",
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE_WITH_CONDITIONS",
+                "summary": f"{reviewer} found a test gap.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py has answer()"],
+                "findings": [finding] if reviewer == "Brandon" else [],
+                "test_gaps": ["answer() lacks a regression test"],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "and",
+            "fix",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--apply-fixes",
+            "--code-runner-dod-command",
+            "uv run pytest tests/test_target.py",
+            "--implementation-non-goal",
+            "Do not change public API.",
+            "--implementation-risk-note",
+            "Keep fix scoped to answer().",
+            "--ask-id",
+            "parallel-apply-fixes",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    task_path = tmp_path / "parallel-apply-fixes" / "parallel_review" / "code_runner_task.json"
+    task = json.loads(task_path.read_text())
+    assert payload["parallel_review"]["implementation_requested"] is True
+    assert task["execution"]["requested"] is True
+    assert task["execution"]["backend"] == "code-runner"
+    assert task["execution"]["status"] == "prepared_not_invoked"
+    assert task["definition_of_done"]["commands"] == ["uv run pytest tests/test_target.py"]
+    assert task["non_goals"] == ["Do not change public API."]
+    assert task["risk_notes"] == ["Keep fix scoped to answer()."]
+    assert target.read_text() == "def answer():\n    return 42\n"
+
+
+def test_cli_parallel_review_rejects_unknown_implementation_backend(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--implement-with",
+            "pi-subagents",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Only --implement-with code-runner is" in result.output
+    assert "supported" in result.output
+
+
+def test_cli_code_runner_handoff_requires_parallel_review():
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--apply-fixes",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Code-runner handoff options require" in result.output
+    assert "--parallel-review" in result.output
 
 
 def test_parallel_review_verifier_rejects_missing_judge():

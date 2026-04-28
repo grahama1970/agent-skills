@@ -102,6 +102,12 @@ def ask(
     review_dag: str = "hybrid",
     read_only_review: bool = True,
     code_runner_handoff: bool = False,
+    implement_with: Optional[str] = None,
+    apply_fixes: bool = False,
+    code_runner_allowed_files: Optional[list[str]] = None,
+    code_runner_dod_commands: Optional[list[str]] = None,
+    implementation_non_goals: Optional[list[str]] = None,
+    implementation_risk_notes: Optional[list[str]] = None,
     dogpile_mode: str = "auto",
     deep_review: bool = False,
     deep_review_target: Optional[str] = None,
@@ -155,6 +161,8 @@ def ask(
         review_dag: Review DAG mode: judge-best or hybrid.
         read_only_review: Keep reviewer calls read-only.
         code_runner_handoff: Emit /code-runner handoff artifact for actionable findings.
+        implement_with: Explicit implementation backend request; currently code-runner only.
+        apply_fixes: Alias for explicit code-runner implementation intent.
         dogpile_mode: auto, off, or force freshness policy for oracle subagents.
         deep_review: Run Web-GPT-style deep review with JSON/markdown artifacts.
 
@@ -271,6 +279,12 @@ def ask(
             run_state=run_state,
             dag_mode=review_dag,
             code_runner_handoff=code_runner_handoff,
+            implement_with=implement_with,
+            apply_fixes=apply_fixes,
+            code_runner_allowed_files=code_runner_allowed_files or [],
+            code_runner_dod_commands=code_runner_dod_commands or [],
+            implementation_non_goals=implementation_non_goals or [],
+            risk_notes=implementation_risk_notes or [],
         )
         parallel_result["scope"] = scope
         return parallel_result
@@ -643,6 +657,12 @@ def main(
     review_dag: str = typer.Option("hybrid", "--review-dag", help="Review DAG mode: judge-best or hybrid"),
     read_only_review: bool = typer.Option(True, "--read-only/--allow-edits", help="Keep parallel review read-only"),
     code_runner_handoff: bool = typer.Option(False, "--code-runner-handoff", help="Emit /code-runner handoff artifact for actionable findings"),
+    implement_with: Optional[str] = typer.Option(None, "--implement-with", help="Explicit implementation backend request; currently code-runner only"),
+    apply_fixes: bool = typer.Option(False, "--apply-fixes", help="Explicitly request code-runner implementation intent; /ask prepares artifacts but does not edit"),
+    code_runner_allowed_files: Optional[list[str]] = typer.Option(None, "--code-runner-allowed-file", help="Allowed file for code-runner task (repeatable)"),
+    code_runner_dod_commands: Optional[list[str]] = typer.Option(None, "--code-runner-dod-command", help="Definition-of-done command for code-runner task (repeatable)"),
+    implementation_non_goals: Optional[list[str]] = typer.Option(None, "--implementation-non-goal", help="Non-goal for code-runner task (repeatable)"),
+    implementation_risk_notes: Optional[list[str]] = typer.Option(None, "--implementation-risk-note", help="Risk note for code-runner task (repeatable)"),
     dogpile_mode: str = typer.Option("auto", "--dogpile", help="Freshness policy: auto, off, or force"),
     deep_review: bool = typer.Option(False, help="Run first-class deep review with markdown and JSON artifacts"),
     deep_review_target: Optional[str] = typer.Option(None, help="Explicit review target: paths, diff, plan, manifest, or artifact"),
@@ -836,6 +856,28 @@ def main(
             "Review DAG must be judge-best or hybrid.",
             param_hint="--review-dag",
         )
+    if implement_with and implement_with != "code-runner":
+        raise typer.BadParameter(
+            "Only --implement-with code-runner is supported.",
+            param_hint="--implement-with",
+        )
+    if apply_fixes:
+        implement_with = implement_with or "code-runner"
+    if implement_with:
+        code_runner_handoff = True
+    if any([
+        code_runner_handoff,
+        implement_with,
+        apply_fixes,
+        code_runner_allowed_files,
+        code_runner_dod_commands,
+        implementation_non_goals,
+        implementation_risk_notes,
+    ]) and not parallel_review:
+        raise typer.BadParameter(
+            "Code-runner handoff options require --parallel-review.",
+            param_hint="--parallel-review",
+        )
     if deep_review and deep_reviewers < 1:
         raise typer.BadParameter(
             "Deep-review reviewers must be >= 1.",
@@ -916,6 +958,12 @@ def main(
         "review_dag": review_dag,
         "read_only_review": read_only_review,
         "code_runner_handoff": code_runner_handoff,
+        "implement_with": implement_with,
+        "apply_fixes": apply_fixes,
+        "code_runner_allowed_files": code_runner_allowed_files or [],
+        "code_runner_dod_commands": code_runner_dod_commands or [],
+        "implementation_non_goals": implementation_non_goals or [],
+        "implementation_risk_notes": implementation_risk_notes or [],
         "dogpile_mode": dogpile_mode,
         "deep_review": deep_review,
         "deep_review_target": deep_review_target,
@@ -999,6 +1047,12 @@ def main(
             review_dag=review_dag,
             read_only_review=read_only_review,
             code_runner_handoff=code_runner_handoff,
+            implement_with=implement_with,
+            apply_fixes=apply_fixes,
+            code_runner_allowed_files=code_runner_allowed_files or [],
+            code_runner_dod_commands=code_runner_dod_commands or [],
+            implementation_non_goals=implementation_non_goals or [],
+            implementation_risk_notes=implementation_risk_notes or [],
             dogpile_mode=dogpile_mode,
             deep_review=deep_review,
             deep_review_target=deep_review_target,

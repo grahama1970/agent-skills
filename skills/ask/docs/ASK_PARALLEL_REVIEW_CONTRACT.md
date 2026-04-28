@@ -405,11 +405,14 @@ judge_hybrid_synthesis
 verifier
        ↓
 code_runner_handoff.md
+       ↓
+code_runner_task.json
 ```
 
 This does not run `/code-runner` directly. It writes a bounded handoff artifact
-with target files, findings, tests, non-goals, and risk notes. `/code-runner`
-owns edits and test-driven repair in an isolated implementation lane.
+and a machine-readable task file with target files, allowed files, findings,
+DoD commands, non-goals, and risk notes. `/code-runner` owns edits and
+test-driven repair in an isolated implementation lane.
 
 ## Bad DAG Examples That Must Not Work
 
@@ -564,9 +567,10 @@ Parallel review must satisfy these invariants:
    events are the only writes allowed.
 8. **Verifier gate required.** Final synthesis is not accepted until the verifier
    checks target coverage, evidence, schema, verdict, and read-only status.
-9. **No implementation unless explicit.** Fixes require a separate
-   `/code-runner` handoff or an explicit future `--implement` lane with isolated
-   worktree rules.
+9. **No implementation unless explicit.** `--code-runner-handoff` may prepare
+   artifacts for accepted findings. `--apply-fixes` and
+   `--implement-with code-runner` record explicit implementation intent, but
+   `/ask` still does not edit files or invoke `/code-runner` directly.
 
 ## Runner Adapter Interface
 
@@ -693,25 +697,80 @@ NEEDS_ATTENTION
 
 ## Handoff To /code-runner
 
-Parallel review may produce a fix specification, but it does not apply patches.
+Parallel review may produce a fix specification, but it does not apply patches
+or invoke `/code-runner` directly.
 
-Handoff artifact:
+Handoff artifacts:
 
 ```text
-.ask_artifacts/runs/<ask_id>/code_runner_handoff.md
+.ask_artifacts/runs/<ask_id>/parallel_review/code_runner_handoff.md
+.ask_artifacts/runs/<ask_id>/parallel_review/code_runner_task.json
 ```
 
 The handoff must include:
 
 - selected findings
 - target files
-- expected tests
+- allowed-file allowlist
+- definition-of-done commands
 - non-goals
 - risk notes
 - explicit statement that `/code-runner` owns implementation
 
-No handoff is generated unless the user requests implementation or accepts the
-review findings.
+Task JSON schema:
+
+```json
+{
+  "schema_version": "ask.code_runner_task.v1",
+  "task_id": "ask-fix-<ask_id>",
+  "source_review_run": "<ask_id>",
+  "source_review_protocol": "ask.parallel_review.v1",
+  "target_files": ["skills/ask/src/ask/parallel_review.py"],
+  "allowed_files": ["skills/ask/src/ask/parallel_review.py"],
+  "findings_to_fix": [
+    {
+      "severity": "high",
+      "title": "Finding title",
+      "evidence": "Target-bundle-backed evidence",
+      "impact": "Why this matters",
+      "fix": "Bounded repair instruction",
+      "verification": "Command or concrete verification step"
+    }
+  ],
+  "definition_of_done": {
+    "commands": ["pytest ..."]
+  },
+  "non_goals": ["Do not refactor unrelated review modes."],
+  "risk_notes": ["Keep /ask read-only; /code-runner owns edits."],
+  "post_fix_review": true,
+  "execution": {
+    "requested": true,
+    "backend": "code-runner",
+    "status": "prepared_not_invoked"
+  }
+}
+```
+
+No task is generated unless verifier status is `PASS`, actionable findings
+exist, target files are concrete, allowed files include every target file, DoD
+commands are present, non-goals are present, and risk notes are present.
+
+Implementation intent is explicit:
+
+```bash
+./run.sh ask "review and prepare the fix" \
+  --oracle \
+  --parallel-review \
+  --review-target git:diff \
+  --apply-fixes \
+  --code-runner-dod-command "pytest ..." \
+  --implementation-non-goal "Do not refactor unrelated files." \
+  --implementation-risk-note "Keep normal /ask read-only."
+```
+
+`--apply-fixes` is an intent marker, not an executor. It prepares
+`code_runner_task.json`; a separate `/code-runner` invocation owns mutation and
+test-driven repair.
 
 ## Non-Goals
 

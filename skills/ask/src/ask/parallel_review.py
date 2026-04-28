@@ -19,6 +19,7 @@ from .reviewer_specs import select_reviewer_angles
 
 
 PARALLEL_REVIEW_SCHEMA_VERSION = "ask.parallel_review.v1"
+CODE_RUNNER_TASK_SCHEMA_VERSION = "ask.code_runner_task.v1"
 MAX_REVIEWERS = 7
 DEFAULT_REVIEWERS = 3
 MAX_TARGET_CHARS = 200_000
@@ -141,6 +142,12 @@ def run_parallel_review(
     run_state: Any,
     dag_mode: str = "hybrid",
     code_runner_handoff: bool = False,
+    implement_with: str | None = None,
+    apply_fixes: bool = False,
+    code_runner_allowed_files: list[str] | None = None,
+    code_runner_dod_commands: list[str] | None = None,
+    implementation_non_goals: list[str] | None = None,
+    risk_notes: list[str] | None = None,
 ) -> dict[str, Any]:
     if runner != "scillm":
         raise ParallelReviewError("Only the scillm parallel-review adapter is implemented")
@@ -150,6 +157,11 @@ def run_parallel_review(
         raise ParallelReviewError(f"Parallel review supports at most {MAX_REVIEWERS} reviewers")
     if dag_mode not in {"hybrid", "judge-best"}:
         raise ParallelReviewError("Parallel review DAG must be hybrid or judge-best")
+    implementation_requested = bool(apply_fixes or implement_with)
+    if implement_with and implement_with != "code-runner":
+        raise ParallelReviewError("Only --implement-with code-runner is supported")
+    if implementation_requested:
+        code_runner_handoff = True
     run_dir = Path(getattr(run_state, "run_dir", ""))
     if not run_dir:
         raise ParallelReviewError("Parallel review requires runtime artifacts")
@@ -210,6 +222,7 @@ def run_parallel_review(
     synthesis_path = review_dir / "synthesis.md"
     verifier_path = review_dir / "verifier.log"
     handoff_path = review_dir / "code_runner_handoff.md"
+    task_path = review_dir / "code_runner_task.json"
     synthesis = render_parallel_review_markdown(verdict)
     synthesis_path.write_text(synthesis, encoding="utf-8")
     verdict["artifact_paths"] = {
@@ -221,9 +234,27 @@ def run_parallel_review(
         "verdict_json": str(verdict_path),
         "verifier_log": str(verifier_path),
     }
-    if code_runner_handoff and _has_actionable_findings(verdict):
-        handoff_path.write_text(render_code_runner_handoff(verdict), encoding="utf-8")
+    if code_runner_handoff and _has_actionable_findings(verdict) and verifier["status"] == "PASS":
+        task = build_code_runner_task(
+            verdict=verdict,
+            ask_id=str(getattr(run_state, "ask_id", "")),
+            allowed_files=code_runner_allowed_files or [],
+            dod_commands=code_runner_dod_commands or [],
+            non_goals=implementation_non_goals or [],
+            risk_notes=risk_notes or [],
+            implementation_requested=implementation_requested,
+        )
+        handoff_path.write_text(render_code_runner_handoff(verdict, task), encoding="utf-8")
+        task_path.write_text(json.dumps(task, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
         verdict["artifact_paths"]["code_runner_handoff"] = str(handoff_path)
+        verdict["artifact_paths"]["code_runner_task_json"] = str(task_path)
+        run_state.event(
+            "code_runner_handoff_prepared",
+            step="parallel_review",
+            task_id=task["task_id"],
+            implementation_requested=implementation_requested,
+            execution_status=task["execution"]["status"],
+        )
     verifier_path.write_text("\n".join(verifier["failures"] or ["PASS"]) + "\n", encoding="utf-8")
     verdict_path.write_text(json.dumps(verdict, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
     run_state.add_artifacts(verdict["artifact_paths"])
@@ -252,6 +283,7 @@ def run_parallel_review(
                 "runner": runner,
                 "read_only": read_only,
                 "dag_mode": dag_mode,
+                "implementation_requested": implementation_requested,
             },
         }
     run_state.step_finished(
@@ -275,6 +307,7 @@ def run_parallel_review(
             "runner": runner,
             "read_only": read_only,
             "dag_mode": dag_mode,
+            "implementation_requested": implementation_requested,
         },
     }
 
@@ -756,7 +789,7 @@ def render_parallel_review_markdown(verdict: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def render_code_runner_handoff(verdict: dict[str, Any]) -> str:
+def render_code_runner_handoff(verdict: dict[str, Any], task: dict[str, Any] | None = None) -> str:
     lines = [
         "# /code-runner Handoff",
         "",
@@ -764,10 +797,38 @@ def render_code_runner_handoff(verdict: dict[str, Any]) -> str:
         f"Review verdict: `{verdict['verdict']}`",
         "",
         "Apply fixes in an isolated worktree. Do not rely on memory as evidence.",
-        "",
-        "## Findings",
+        "`/ask` prepared this handoff but did not edit files or invoke `/code-runner`.",
         "",
     ]
+    if task:
+        lines.extend(
+            [
+                "## Task",
+                "",
+                f"- Task ID: `{task['task_id']}`",
+                f"- Task JSON: `code_runner_task.json`",
+                f"- Execution status: `{task['execution']['status']}`",
+                "",
+                "## Allowed Files",
+                "",
+            ]
+        )
+        for path in task["allowed_files"]:
+            lines.append(f"- `{path}`")
+        lines.extend(["", "## Definition Of Done", ""])
+        for command in task["definition_of_done"]["commands"]:
+            lines.append(f"- `{command}`")
+        lines.extend(["", "## Non-Goals", ""])
+        for item in task["non_goals"]:
+            lines.append(f"- {item}")
+        lines.extend(["", "## Risk Notes", ""])
+        for item in task["risk_notes"]:
+            lines.append(f"- {item}")
+        lines.append("")
+    lines.extend([
+        "## Findings",
+        "",
+    ])
     for finding in verdict.get("findings", []):
         lines.extend([
             f"- {finding.get('title', 'Untitled')}",
@@ -777,6 +838,70 @@ def render_code_runner_handoff(verdict: dict[str, Any]) -> str:
             f"  - Verification: {finding.get('verification', '')}",
         ])
     return "\n".join(lines) + "\n"
+
+
+def build_code_runner_task(
+    *,
+    verdict: dict[str, Any],
+    ask_id: str,
+    allowed_files: list[str],
+    dod_commands: list[str],
+    non_goals: list[str],
+    risk_notes: list[str],
+    implementation_requested: bool,
+) -> dict[str, Any]:
+    findings = [finding for finding in verdict.get("findings", []) if isinstance(finding, dict)]
+    target_files = _task_target_files(verdict)
+    allowed = sorted(set(allowed_files or target_files))
+    commands = _task_dod_commands(findings, dod_commands)
+    non_goal_items = non_goals or [
+        "Do not edit files outside allowed_files.",
+        "Do not broaden scope beyond verified review findings.",
+        "Do not treat memory or reviewer speculation as implementation evidence.",
+    ]
+    risk_note_items = risk_notes or _task_risk_notes(findings)
+    task = {
+        "schema_version": CODE_RUNNER_TASK_SCHEMA_VERSION,
+        "task_id": f"ask-fix-{safe_artifact_name(ask_id or verdict.get('generated_at', 'run'))}",
+        "source_review_run": ask_id,
+        "source_review_protocol": PARALLEL_REVIEW_SCHEMA_VERSION,
+        "target_files": target_files,
+        "allowed_files": allowed,
+        "findings_to_fix": findings,
+        "definition_of_done": {
+            "commands": commands,
+        },
+        "non_goals": non_goal_items,
+        "risk_notes": risk_note_items,
+        "post_fix_review": True,
+        "execution": {
+            "requested": implementation_requested,
+            "backend": "code-runner" if implementation_requested else None,
+            "status": "prepared_not_invoked",
+            "reason": "/ask is read-only; /code-runner owns implementation and must be invoked explicitly.",
+        },
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    errors = validate_code_runner_task(task)
+    if errors:
+        raise ParallelReviewError("Cannot prepare /code-runner task: " + "; ".join(errors))
+    return task
+
+
+def validate_code_runner_task(task: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    if task.get("schema_version") != CODE_RUNNER_TASK_SCHEMA_VERSION:
+        errors.append("invalid code-runner task schema_version")
+    for field in ("target_files", "allowed_files", "findings_to_fix", "non_goals", "risk_notes"):
+        if not task.get(field):
+            errors.append(f"missing {field}")
+    if not task.get("definition_of_done", {}).get("commands"):
+        errors.append("missing definition_of_done.commands")
+    target_files = set(task.get("target_files") or [])
+    allowed_files = set(task.get("allowed_files") or [])
+    if target_files and not target_files.issubset(allowed_files):
+        errors.append("allowed_files must include all target_files")
+    return errors
 
 
 def safe_artifact_name(value: str) -> str:
@@ -838,6 +963,48 @@ def _verify_parallel_finding(reviewer: str, finding: dict[str, Any], failures: l
 
 def _has_actionable_findings(verdict: dict[str, Any]) -> bool:
     return any(isinstance(finding, dict) for finding in verdict.get("findings", []))
+
+
+def _task_target_files(verdict: dict[str, Any]) -> list[str]:
+    target_bundle = verdict.get("target_bundle") if isinstance(verdict.get("target_bundle"), dict) else {}
+    files: set[str] = set()
+    for entry in _list_value(target_bundle.get("entries")):
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("kind") == "file":
+            path = str(entry.get("path") or entry.get("target") or "").strip()
+            if path:
+                files.add(path)
+        elif entry.get("kind") == "git:diff":
+            for path in _list_value(entry.get("paths")):
+                value = str(path).strip()
+                if value:
+                    files.add(value)
+    return sorted(files)
+
+
+def _task_dod_commands(findings: list[dict[str, Any]], explicit_commands: list[str]) -> list[str]:
+    commands = [command.strip() for command in explicit_commands if command.strip()]
+    if commands:
+        return sorted(set(commands))
+    inferred = []
+    for finding in findings:
+        verification = str(finding.get("verification", "")).strip()
+        if verification:
+            inferred.append(verification)
+    return sorted(set(inferred))
+
+
+def _task_risk_notes(findings: list[dict[str, Any]]) -> list[str]:
+    notes = [
+        "Implementation must stay within allowed_files.",
+        "Run /ask post-fix review before merge.",
+    ]
+    for finding in findings:
+        impact = str(finding.get("impact", "")).strip()
+        if impact:
+            notes.append(impact)
+    return sorted(set(notes))
 
 
 def _list_value(value: Any) -> list[Any]:
