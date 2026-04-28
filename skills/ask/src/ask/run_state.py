@@ -207,7 +207,10 @@ def build_context_policy(
     inherit_project_context: str = "no",
     memory_as_evidence: bool | None = None,
 ) -> dict[str, Any]:
-    use_memory_as_evidence = bool(memory_as_evidence) if memory_as_evidence is not None else inherit_memory == "full"
+    if mode == "deep-review":
+        use_memory_as_evidence = False
+    else:
+        use_memory_as_evidence = bool(memory_as_evidence) if memory_as_evidence is not None else inherit_memory == "full"
     return {
         "mode": mode,
         "review_context": review_context,
@@ -284,8 +287,12 @@ class AskRunState:
         }
 
     def write_request(self, payload: dict[str, Any]) -> None:
-        if self.resume and self.request_path.exists():
+        if self.resume:
+            if not self.request_path.exists():
+                raise FileNotFoundError(f"Cannot resume run without original request: {self.request_path}")
             existing_request = self._read_existing_request()
+            if not existing_request:
+                raise ValueError(f"Cannot resume run with missing or malformed original request: {self.request_path}")
             conflicts = {
                 key: (existing_request.get(key), payload.get(key))
                 for key in ("command", "question", "scope")

@@ -233,6 +233,22 @@ def test_prune_runs_uses_status_updated_at_not_directory_mtime(tmp_path):
     assert str(run.run_dir) not in result["removed"]
 
 
+def test_prune_runs_falls_back_to_status_file_mtime_for_malformed_updated_at(tmp_path):
+    run = AskRunState("malformed-updated-at", output_root=tmp_path)
+    run.write_request({"question": "old status file"})
+    run.finish({"question": "old status file", "items": []})
+    old_time = time.time() - 30 * 24 * 60 * 60
+    payload = json.loads(run.status_path.read_text())
+    payload["updated_at"] = "not-a-timestamp"
+    run.status_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    os.utime(run.status_path, (old_time, old_time))
+
+    result = prune_runs(output_root=tmp_path, older_than_days=14)
+
+    assert str(run.run_dir) in result["removed"]
+    assert not run.run_dir.exists()
+
+
 def test_prune_runs_keeps_unrecognized_old_dirs(tmp_path):
     unrelated = tmp_path / "unrelated-old-dir"
     unrelated.mkdir()
@@ -363,6 +379,30 @@ def test_resume_rejects_conflicting_request(tmp_path):
     resumed = AskRunState("resume-conflict", output_root=tmp_path, resume=True)
     with pytest.raises(ValueError):
         resumed.write_request({"command": "ask", "question": "changed", "scope": "ask"})
+
+
+def test_resume_rejects_missing_original_request(tmp_path):
+    first = AskRunState("missing-request", output_root=tmp_path)
+    first.write_request({"command": "ask", "question": "original", "scope": "ask"})
+    first.update("running", current_step="memory_recall")
+    first.request_path.unlink()
+
+    resumed = AskRunState("missing-request", output_root=tmp_path, resume=True)
+
+    with pytest.raises(FileNotFoundError):
+        resumed.write_request({"command": "ask", "question": "original", "scope": "ask"})
+
+
+def test_resume_rejects_malformed_original_request(tmp_path):
+    first = AskRunState("malformed-request", output_root=tmp_path)
+    first.write_request({"command": "ask", "question": "original", "scope": "ask"})
+    first.update("running", current_step="memory_recall")
+    first.request_path.write_text("{not-json")
+
+    resumed = AskRunState("malformed-request", output_root=tmp_path, resume=True)
+
+    with pytest.raises(ValueError):
+        resumed.write_request({"command": "ask", "question": "original", "scope": "ask"})
 
 
 def test_make_run_id_same_question_does_not_collide():
@@ -508,6 +548,32 @@ def test_cli_ask_dry_run_includes_context_policy(tmp_path):
     assert policy["inherit_skills"] == "all"
     assert policy["inherit_project_context"] == "summary"
     assert policy["memory_as_evidence"] is True
+
+
+def test_deep_review_context_policy_never_treats_memory_as_evidence(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "runtime",
+            "--deep-review",
+            "--deep-review-target",
+            "skills/ask/src/ask/run_state.py",
+            "--dry-run",
+            "--inherit-memory",
+            "full",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    policy = payload["options"]["context_policy"]
+    assert policy["mode"] == "deep-review"
+    assert policy["inherit_memory"] == "full"
+    assert policy["memory_as_evidence"] is False
 
 
 def test_cli_real_non_oracle_ask_smoke_writes_granular_events(monkeypatch, tmp_path):
