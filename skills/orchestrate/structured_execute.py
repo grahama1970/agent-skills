@@ -169,10 +169,19 @@ async def _run_scillm(task: TaskRuntime, session_dir: Path) -> str:
     async with httpx.AsyncClient(timeout=120.0) as client:
         request_task = asyncio.create_task(client.post(
             SCILLM_URL,
-            headers={"Authorization": f"Bearer {SCILLM_KEY}"},
-            json={"model": task.backend or "text",
-                  "messages": [{"role": "user", "content": task.prompt}],
-                  "max_tokens": 1200},
+            headers={
+                "Authorization": f"Bearer {SCILLM_KEY}",
+                "X-Caller-Skill": f"orchestrate:{task.task_id}",
+            },
+            json={
+                "model": task.backend or "text",
+                "messages": [{"role": "user", "content": task.prompt}],
+                "scillm_metadata": {
+                    "task_id": task.task_id,
+                    "runner": task.runner,
+                    "lane": task.lane,
+                },
+            },
         ), name=f"scillm-{task.task_id}")
         cancel_task = asyncio.create_task(task._cancel_event.wait(), name="cancel-wait")
 

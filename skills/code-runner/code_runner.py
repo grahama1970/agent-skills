@@ -81,7 +81,17 @@ def _emit_event(event: str, **fields) -> None:
     payload = {"event": event, "ts": time.time(), **fields}
     print(json.dumps(payload, default=str), file=sys.stderr, flush=True)
 
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+def _normalize_scillm_chat_url(raw_url: str | None) -> str:
+    """Return the OpenAI-compatible chat-completions URL for scillm."""
+    base_url = (raw_url or "http://localhost:4001").rstrip("/")
+    if base_url.endswith("/v1/chat/completions"):
+        return base_url
+    if base_url.endswith("/v1"):
+        return f"{base_url}/chat/completions"
+    return f"{base_url}/v1/chat/completions"
+
+
+SCILLM_URL = _normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 SKILLS_DIR = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
@@ -345,17 +355,15 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     controls what goes to disk via apply.py's allowlist enforcement.
 
     Temperature increases on repeated failures (LLMLOOP pattern) to break local minima.
-    Reasoning escalation (low/medium/high) increases max_tokens and prompt depth.
+    Reasoning escalation (low/medium/high) adjusts prompt strategy and depth.
     """
     model = {
-        "codex": "gpt-5.3-codex",
+        "codex": "gpt-5.5",
         "claude": "claude-sonnet-4-6",  # Fixed: was text-claude (invalid)
         "text": "text",
         "gemini": "text-gemini",
         "deepseek": "text",
-    }.get(backend, "gpt-5.3-codex")
-
-    max_tokens = {"low": 4000, "medium": 8000, "high": 16000}.get(reasoning, 4000)
+    }.get(backend, "text")
 
     messages: list[dict] = []
     if system_prompt:
@@ -365,7 +373,6 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     payload: dict = {
         "model": model,
         "messages": messages,
-        "max_tokens": max_tokens,
     }
     if not model.startswith("gpt-"):
         payload["temperature"] = min(temperature, 1.0)
@@ -926,9 +933,9 @@ def run(
 
             # 2. Call LLM via tool_use agent loop
             model_name = {
-                "codex": "gpt-5.3-codex", "claude": "claude-sonnet-4-6",
+                "codex": "gpt-5.5", "claude": "claude-sonnet-4-6",
                 "gemini": "text-gemini",
-            }.get(cur_backend, "gpt-5.3-codex")
+            }.get(cur_backend, "text")
 
             # Dynamic timeout: P95 from /memory history per-backend, or env override
             if os.environ.get("CODE_RUNNER_ROUND_TIMEOUT"):
@@ -949,7 +956,6 @@ def run(
                     allowlist=allowlist,
                     read_context=read_context,
                     temperature=temperature,
-                    max_tokens={"low": 4000, "medium": 8000, "high": 16000}.get(cur_reasoning, 4000),
                     dod_command=dod_command,
                     event_emitter=emitter,  # LogAct: pass emitter for tool_intent/tool_result events
                     round_num=round_num,    # LogAct: round context for event logging

@@ -18,7 +18,18 @@ from typing import Any
 
 from loguru import logger
 
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+
+def _normalize_scillm_chat_url(raw_url: str | None) -> str:
+    """Return the OpenAI-compatible chat-completions URL for scillm."""
+    base_url = (raw_url or "http://localhost:4001").rstrip("/")
+    if base_url.endswith("/v1/chat/completions"):
+        return base_url
+    if base_url.endswith("/v1"):
+        return f"{base_url}/chat/completions"
+    return f"{base_url}/v1/chat/completions"
+
+
+SCILLM_URL = _normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 SKILLS_DIR = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parents[1])))
 STATE_ROOT = Path(os.environ.get("ORCHESTRATE_HOME", str(Path(__file__).resolve().parent)))

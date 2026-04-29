@@ -50,7 +50,17 @@ from _tool_call_parser import parse_tool_calls, to_openai_format
 from skill_tools import get_dynamic_tools, execute_skill
 
 
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+def _normalize_scillm_chat_url(raw_url: str | None) -> str:
+    """Return the OpenAI-compatible chat-completions URL for scillm."""
+    base_url = (raw_url or "http://localhost:4001").rstrip("/")
+    if base_url.endswith("/v1/chat/completions"):
+        return base_url
+    if base_url.endswith("/v1"):
+        return f"{base_url}/chat/completions"
+    return f"{base_url}/v1/chat/completions"
+
+
+SCILLM_URL = _normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 # Mock response function for testing. When set, bypasses HTTP calls and returns mock responses.
@@ -933,7 +943,6 @@ def run_tool_use_loop(
     allowlist: list[str] | None = None,
     read_context: list[str] | None = None,
     temperature: float = 0.2,
-    max_tokens: int = 8000,
     dod_command: str = "",
     event_emitter: Any = None,
     round_num: int = 0,
@@ -999,7 +1008,6 @@ def run_tool_use_loop(
         "model": model,
         "tools": all_tools,
         "tool_choice": "auto",
-        "max_tokens": max_tokens,
     }
     if not model.startswith("gpt-"):
         payload_base["temperature"] = min(temperature, 1.0)
