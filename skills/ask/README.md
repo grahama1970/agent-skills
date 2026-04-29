@@ -8,8 +8,7 @@
   />
 </p>
 
-> Ask normal questions. Let the system find the right memory, persona, evidence,
-> or reviewer.
+> **Ask, Argue and Roundtable**
 
 Agents accumulate useful state in many places: run logs, stored lessons, persona
 profiles, source bundles, evidence cases, review artifacts, and fresh research.
@@ -51,37 +50,65 @@ local models, DeepSeek, Gemini, or other configured backends.
 
 ## Quick Start
 
+The basics: just ask.
+
 ```bash
-# Query stored knowledge.
+# Query what your agent already knows.
 ./run.sh ask "What do we know about the auth retry bug?"
 
-# Learn a new project or topic.
+# Teach it something new.
 ./run.sh learn "architecture of this repository" --scope project --depth standard
+```
 
-# Ask for high-reasoning synthesis.
+Those two commands cover most daily use. Everything below is for when you need
+more control.
+
+**Need more reasoning firepower?**
+
+```bash
 ./run.sh ask "Should we use subagent-runner or direct scillm for focused reviews?" \
   --oracle \
   --oracle-backend subagent-runner \
   --oracle-model gpt-5.5 \
   --oracle-reasoning high
+```
 
-# Run independent adversarial reviewers.
+**Want adversarial review?**
+
+```bash
+# Three reviewers, three angles
 ./run.sh ask "Review this pull request" \
   --parallel-review \
   --parallel-reviewers 3 \
   --parallel-review-focus correctness,tests,maintainability
 
-# Run deep review with audit artifacts.
+# Or run a full two-sided argument with a judge
+./run.sh ask "argue whether this retry policy should fail closed" \
+  --argue
+```
+
+**Need a deep, auditable analysis of a specific file?**
+
+```bash
 ./run.sh ask "deep review this implementation" \
   --deep-review \
   --deep-review-target src/ask/ask.py
+```
 
-# Check runtime health through OS mode.
+**Check if the runtime is healthy:**
+
+```bash
 ./run.sh os health "is memory healthy?"
+```
 
-# Serve an auto-updating read-only monitor for a run.
+**Watch a live run in your browser:**
+
+```bash
 ./run.sh status --run <ask_id> --serve --open
 ```
+
+That's the surface. For the full option list, environment variables, and
+agent-facing contract, see `SKILL.md`.
 
 ### Ask through loaded personas
 
@@ -154,6 +181,9 @@ Expected companion skills:
 - `/project-knowledge`
 - monitor/ops skills used by OS mode
 
+If a companion skill is missing, some modes fail closed with `needs_attention`;
+others run with explicit degraded status.
+
 ## Common Human Chat Prompts
 
 Project agents translate natural `$ask` prompts into the correct CLI route.
@@ -209,7 +239,7 @@ Roundtable participants have two separate layers: the stored persona is the
 domain voice, while the protocol role is the bounded review job loaded from
 `docs/reviewers/*.md`.
 
-### Parallel findings then roundtable debate
+### Parallel findings, then roundtable debate
 
 ```bash
 ./run.sh ask "Review this cache invalidation design" \
@@ -232,15 +262,17 @@ deterministic verifier
 argue.md + argue.json + verifier.log
 ```
 
-Use it when the user wants calibrated judgment on a decision without forcing
-fake certainty. The judge may return `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
-`INSUFFICIENT_EVIDENCE`; binary forced decisions require
-`--decision-required` plus an explicit tie-breaker.
+Use this when you need calibrated judgment on a decision without forcing fake
+certainty. The judge may return `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
+`INSUFFICIENT_EVIDENCE`. If you need a binary decision, add
+`--decision-required` and an explicit tie-breaker.
 
 ```bash
+# Let the judge call it honestly.
 ./run.sh ask "argue whether this runtime path should retry without source grounding" \
   --argue
 
+# Force a decision with a tie-breaker.
 ./run.sh ask "argue whether to ship this fallback today" \
   --argue \
   --decision-required \
@@ -253,10 +285,11 @@ times out, `/ask` retries without `source`, records the degradation in node
 artifacts, and still lets the deterministic verifier decide whether the result
 is trustworthy.
 
-Argue, oracle, OS knowledge answers, deep review, and parallel review use the
-`ask.citations.v1` citation contract. Memory citations are valid for knowledge,
-persona, and project-context answers. They are not valid for code/review safety
-claims; safe review verdicts require target/file/diff/artifact citations.
+Argue, oracle, OS knowledge answers, deep review, and parallel review all use
+the `ask.citations.v1` citation contract. Memory citations are valid for
+knowledge, persona, and project-context answers. They are not valid for code or
+review safety claims; safe review verdicts require target/file/diff/artifact
+citations.
 
 ### Preferred model with a one-shot peer model
 
@@ -273,17 +306,13 @@ claims; safe review verdicts require target/file/diff/artifact citations.
 
 ## Deep Review
 
-Deep review is a read-only oracle/review lane for comprehensive analysis without
-browser copy-paste. It wraps the high-reasoning oracle path with:
+Deep review is for comprehensive, Web-GPT-style analysis without browser
+copy-paste. It wraps the high-reasoning oracle path with pass-based review
+prompts, target resolution, read-only git status checks, and machine-checkable
+artifacts.
 
-- pass-based review prompts
-- target resolution
-- read-only git status checks
-- deterministic artifact generation
-- machine-checkable JSON verification
-
-Deep review should produce analysis, verdicts, artifacts, telemetry, and
-remediation plans. It should not patch source files.
+It is intentionally read-only: it produces analysis, verdicts, artifacts,
+telemetry, and remediation plans. It does not patch your code.
 
 ```bash
 ./run.sh ask "deep review this implementation" \
@@ -293,32 +322,19 @@ remediation plans. It should not patch source files.
   --deep-review-focus boundaries,fail-closed,tests,auditability
 ```
 
-Outputs:
+Outputs land here:
 
 ```text
 .ask_artifacts/deep-review/<run_id>/review.md
 .ask_artifacts/deep-review/<run_id>/review.json
 ```
 
-The JSON verifier rejects:
+The JSON verifier rejects missing sections, unsafe write evidence, shallow
+summaries, invalid verdicts, and safe verdicts without inspected evidence.
 
-- missing required sections
-- unsafe write evidence
-- shallow summaries
-- invalid verdicts
-- safe verdicts without inspected evidence
-
-Saved review workflows live in `docs/chains/*.chain.yaml`.
-
-The default `deep-review` chain is:
-
-```text
-target resolution
-  → context bundle
-  → parallel reviewers
-  → moderator synthesis
-  → deterministic verifier
-```
+Saved review workflows live in `docs/chains/*.chain.yaml`. The default
+`deep-review` chain is: target resolution → context bundle → parallel reviewers
+→ moderator synthesis → deterministic verifier.
 
 ## Safety and Evidence
 
@@ -364,20 +380,20 @@ Common `ask` options:
 | `--deep-review` | Emit deep-review markdown and JSON artifacts |
 | `--deep-review-target <target>` | Explicit target: paths, diff, plan, manifest, or artifact |
 | `--run-id <id>` | Explicit run id for artifacts and status lookup |
-| `--review-context <fresh|fork>` | Child context policy |
-| `--inherit-memory <yes|no|summary>` | Memory inheritance policy |
-| `--inherit-skills <yes|no|selected>` | Skill inheritance policy |
-| `--inherit-project-context <yes|no>` | Project context inheritance policy |
-| `--dogpile <auto|off|force>` | Freshness policy |
+| `--review-context <fresh\|fork>` | Child context policy |
+| `--inherit-memory <yes\|no\|summary>` | Memory inheritance policy |
+| `--inherit-skills <yes\|no\|selected>` | Skill inheritance policy |
+| `--inherit-project-context <yes\|no>` | Project context inheritance policy |
+| `--dogpile <auto\|off\|force>` | Freshness policy |
 | `--json` | Machine-readable command output |
 
-See `SKILL.md` for the full option list and agent-facing contract.
+The full contract, triggers, and exhaustive examples live in `SKILL.md`.
 
 ## Domain Examples
 
-Domain-specific prompts are supported, but the README keeps onboarding examples
-developer-neutral. Put exhaustive domain examples in `docs/HUMAN_CHAT_EXAMPLES.md`
-and sanity/E2E fixtures.
+Domain-specific prompts work fine, but the README keeps onboarding examples
+developer-neutral. Exhaustive domain examples and sanity/E2E fixtures live in
+`docs/HUMAN_CHAT_EXAMPLES.md`.
 
 ```text
 $ask what do we know about SPARTA QRA validation?
@@ -386,7 +402,8 @@ $ask Brandon persona about how NIST AC-3 relates to SPARTA countermeasure CM0001
 
 ## Configuration
 
-Most users do not need environment overrides. Common variables:
+Most users never touch environment overrides. If you need to tweak defaults,
+these are the common variables:
 
 | Variable | Purpose |
 | --- | --- |
@@ -400,7 +417,7 @@ Most users do not need environment overrides. Common variables:
 | `SCILLM_API_KEY` | `/scillm` bearer token |
 | `ASK_DEBUG` | Enable debug logging |
 
-See `SKILL.md` for exhaustive environment and runtime details.
+For the exhaustive list, see `SKILL.md`.
 
 ## Artifacts and Telemetry
 
@@ -565,18 +582,23 @@ bash sanity.sh
 
 | Symptom | Check |
 | --- | --- |
-| Memory answers look stale | Run `/memory recall` directly and consider `--dogpile auto` |
-| Persona answer sounds generic | Confirm persona profile exists in `/memory` |
-| Oracle call stalls | Check `ask_subagent_heartbeat` and transcript tail |
-| Pipeline feels opaque | Run `./run.sh status --run <ask_id> --serve --open` |
-| Deep review returns shallow JSON | Verifier should reject it; inspect `review.json` |
-| Date-sensitive answer lacks freshness | Use `--dogpile force` or verify `--dogpile auto` routing |
+| Memory answers feel stale | Memory may not be refreshed. Try `/memory recall` directly, or add `--dogpile auto` for a freshness check. |
+| Persona answer sounds generic | Confirm the persona profile exists in `/memory`; if it was overwritten, relearn or restore the persona. |
+| Oracle call stalls | Check `ask_subagent_heartbeat` and transcript tail to see where it paused. |
+| Pipeline feels opaque | Run `./run.sh status --run <ask_id> --serve --open` to watch it live in your browser. |
+| Deep review returns shallow JSON | The verifier should reject it. Inspect `review.json` to see which gate failed. |
+| Date-sensitive answer lacks freshness | Use `--dogpile force`, or verify that `--dogpile auto` is routing to discovery. |
 
-## Non-goals
+## What we won't pretend to be
 
-- **Not a batch LLM runner.** Use batch-capable lanes for high-volume prompts.
+- **A bulk prompt runner.** If you need to blast through 10,000 prompts, use a
+  batch pipeline. `ask` is for interactive, high-stakes questions.
 - **Not `/code-runner`.** Runtime review modes should not patch source files.
-- **Not a patch generator.** Deep review produces analysis, verdicts, and remediation plans.
-- **Not proof by JSON.** Structured output improves auditability, not reasoning depth.
-- **Not evidence by memory alone.** Memory recall guides review; inspected artifacts ground claims.
-- **Not exact ChatGPT Web parity.** Local oracle review uses available Codex/scillm surfaces.
+- **A patch robot.** Deep review will tell you what's wrong and how to fix it,
+  but it will not edit your files. That boundary matters.
+- **Proof by JSON.** Structured output makes audits easier. It does not make
+  the reasoning smarter. Do not let clean JSON create false confidence.
+- **Evidence by memory alone.** Memory recall guides review; inspected artifacts
+  ground claims. `/ask` enforces that distinction deliberately.
+- **Exact ChatGPT Web parity.** Local oracle review uses the Codex and `/scillm`
+  surfaces you actually have, not a cloud-only feature set.
