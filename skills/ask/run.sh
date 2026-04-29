@@ -119,6 +119,10 @@ Status Options:
   --run <id|path>       Show runtime status for an ask id, run dir, or status file
   --tail-events <n>     Include the last N runtime events with --run
   --watch               Watch runtime status until terminal
+  --serve               Serve a local auto-updating HTML viewer for --run
+  --open                Open the local HTML viewer in a browser with --serve
+  --serve-port <n>      Port for --serve; 0 selects a free port
+  --serve-ttl-seconds <s> Seconds to keep viewer alive after terminal state
   --watch-timeout-seconds <s> Maximum seconds to wait with --watch
   --poll-interval-seconds <s> Polling interval for --watch
   --runs                List recent runtime runs

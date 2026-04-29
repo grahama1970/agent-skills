@@ -18,6 +18,7 @@ from typing import Optional
 
 from loguru import logger as log
 
+from .run_viewer import serve_run_viewer
 from .run_state import list_runs, prune_runs, read_status, watch_status
 
 app = typer.Typer(help="/ask status - Show learning progress")
@@ -236,6 +237,10 @@ def main(
     run: Optional[str] = typer.Option(None, "--run", help="Show runtime status for an ask id, status file, or run directory"),
     tail_events: int = typer.Option(0, "--tail-events", help="Include the last N runtime events"),
     watch: bool = typer.Option(False, "--watch", help="Watch runtime status until the run reaches a terminal state"),
+    serve: bool = typer.Option(False, "--serve", help="Serve a local read-only HTML viewer for --run"),
+    open_browser: bool = typer.Option(False, "--open", help="Open the local HTML viewer in a browser"),
+    serve_port: int = typer.Option(0, "--serve-port", help="Port for --serve; 0 selects a free port"),
+    serve_ttl_seconds: float = typer.Option(30, "--serve-ttl-seconds", help="Seconds to keep --serve alive after terminal state"),
     watch_timeout_seconds: float = typer.Option(300, "--watch-timeout-seconds", help="Maximum seconds to wait with --watch"),
     poll_interval_seconds: float = typer.Option(1, "--poll-interval-seconds", help="Polling interval for --watch"),
     runs: bool = typer.Option(False, "--runs", help="List recent runtime runs"),
@@ -275,6 +280,19 @@ def main(
         return
 
     if run:
+        if serve:
+            try:
+                serve_run_viewer(
+                    run,
+                    output_root=run_output_root,
+                    port=serve_port,
+                    open_browser=open_browser,
+                    terminal_ttl_seconds=serve_ttl_seconds,
+                )
+            except FileNotFoundError as exc:
+                typer.echo(f"Error: {exc}", err=True)
+                raise typer.Exit(code=2)
+            return
         if watch:
             try:
                 watch_status(

@@ -298,9 +298,16 @@ Inspect a run:
 ./run.sh status --run <ask_id> --tail-events 25
 ./run.sh status --run .ask_artifacts/runs/<ask_id> --json
 ./run.sh status --run <ask_id> --watch --watch-timeout-seconds 300
+./run.sh status --run <ask_id> --serve --open
 ./run.sh status --runs --limit 10
 ./run.sh status --prune --older-than-days 14 --dry-run
 ```
+
+`status --run <ask_id> --serve` writes a read-only HTML monitor into the run
+directory and serves it from `127.0.0.1` with a random query token. The viewer
+polls `status.json`, `events.jsonl`, and `request.json` so long-running
+`argue`, `parallel-review`, `deep-review`, and SPARTA evidence-case routes are
+not black boxes. The server auto-shuts down after terminal state plus TTL.
 
 Runtime safety:
 - Generated run IDs include timestamp, question digest, and random suffix to avoid same-second collisions.
@@ -776,6 +783,10 @@ Options:
   --watch                 Watch runtime status until terminal
   --watch-timeout-seconds <n> Maximum seconds to wait with --watch
   --poll-interval-seconds <n> Polling interval for --watch
+  --serve                 Serve a local read-only HTML viewer for --run
+  --open                  Open the local HTML viewer in a browser
+  --serve-port <n>        Port for --serve; 0 selects a free port
+  --serve-ttl-seconds <n> Seconds to keep viewer alive after terminal state
   --runs                  List recent runtime runs
   --limit <n>             Maximum runs to list with --runs
   --prune                 Prune old runtime run directories

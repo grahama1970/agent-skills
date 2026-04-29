@@ -3,6 +3,7 @@
 import json
 import os
 import subprocess
+from pathlib import Path
 
 from loguru import logger as log
 
@@ -52,10 +53,10 @@ def _try_evidence_case(question: str, scope: str) -> dict | None:
     This is the global default behavior when /memory recall returns found=false
     and the question is analytical/reasoning (not a direct control lookup).
     """
-    skills_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    evidence_skill = os.path.join(skills_dir, "create-evidence-case", "run.sh")
+    skills_dir = Path(__file__).resolve().parents[3]
+    evidence_skill = skills_dir / "create-evidence-case" / "run.sh"
 
-    if not os.path.exists(evidence_skill):
+    if not evidence_skill.exists():
         log.debug("create-evidence-case skill not installed — skipping evidence fallback")
         return None
 
@@ -65,7 +66,7 @@ def _try_evidence_case(question: str, scope: str) -> dict | None:
 
     try:
         proc = subprocess.run(
-            [evidence_skill, "create", question, "--quiet", "--json"],
+            [str(evidence_skill), "create", question, "--quiet", "--json"],
             capture_output=True, text=True, timeout=60,
             env={k: v for k, v in os.environ.items() if k != 'VIRTUAL_ENV'},
         )

@@ -479,6 +479,19 @@ def ask(
                 result["items"] = evidence_items  # Replace, don't append
         if run_state:
             run_state.step_finished("evidence_case", used=bool(evidence_result), items_count=len(result["items"]))
+        if not evidence_result:
+            attention = {
+                "reason": "evidence_case_required_but_unavailable",
+                "question": "SPARTA preflight required /create-evidence-case before answering as grounded.",
+                "safe_default": "do_not_answer_as_grounded",
+                "resume_hint": "Install or fix /create-evidence-case, then rerun the same question. Do not downgrade this to ordinary /ask synthesis without an explicit policy change.",
+                "preflight": result.get("preflight", {}),
+                "scope": scope,
+            }
+            if run_state:
+                attention = run_state.needs_attention(**attention)
+            result["needs_attention"] = attention
+            return result
 
     # Step 2c: Auto-learn if still no domain results
     if not domain_items and auto_learn:

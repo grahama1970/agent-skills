@@ -20,6 +20,7 @@ import ask.pipeline as pipeline_module
 import ask.preflight as preflight_module
 import ask.status as status_module
 from ask.doctor import run_doctor
+from ask.run_viewer import viewer_snapshot
 from ask.runtime_schema import validate_run_dir, validate_runtime_tree
 from ask.run_state import AskRunState, make_run_id, list_runs, prune_runs, read_status, watch_status
 
@@ -159,6 +160,64 @@ def test_sparta_preflight_unresolved_cm0001_pauses_needs_attention():
     assert decision["route"] == "needs_attention"
     assert decision["reason"] == "unresolved_or_fabricated_sparta_identifier"
     assert decision["unresolved_entities"][0]["id"] == "CM0001"
+
+
+def test_cli_sparta_evidence_case_required_fails_closed(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        ask_module,
+        "run_sparta_preflight",
+        lambda *args, **kwargs: {
+            "route": "evidence_case",
+            "reason": "grounded_sparta_corpora_signal",
+            "grounded_entities": [{"id": "CM0001", "label": "grounded SPARTA entity"}],
+        },
+    )
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Can",
+            "we",
+            "claim",
+            "CM0001",
+            "coverage?",
+            "--ask-id",
+            "sparta-evidence-required",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    status = read_status("sparta-evidence-required", tail_events=10, output_root=tmp_path)
+    assert payload["needs_attention"]["reason"] == "evidence_case_required_but_unavailable"
+    assert payload["needs_attention"]["safe_default"] == "do_not_answer_as_grounded"
+    assert status["state"] == "needs_attention"
+    assert status["needs_attention"]["reason"] == "evidence_case_required_but_unavailable"
+    assert any(event["event"] == "needs_attention" for event in status["event_tail"])
+
+
+def test_status_run_writes_html_viewer_artifacts(tmp_path):
+    run = AskRunState("viewer-run", output_root=tmp_path)
+    run.write_request({"command": "ask", "question": "what happened?", "scope": "ask"})
+    run.finish({"question": "what happened?", "scope": "ask", "items": [{"solution": "ok"}]})
+
+    snapshot = viewer_snapshot("viewer-run", output_root=tmp_path)
+
+    status = read_status("viewer-run", output_root=tmp_path)
+    run_dir = tmp_path / "viewer-run"
+    assert (run_dir / "index.html").exists()
+    assert (run_dir / "ask-viewer.css").exists()
+    assert (run_dir / "ask-viewer.js").exists()
+    assert (run_dir / "viewer.json").exists()
+    assert snapshot["artifacts"]["index"].endswith("index.html")
+    assert status["artifacts"]["viewer"].endswith("index.html")
 
 
 
