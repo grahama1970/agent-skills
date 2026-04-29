@@ -2,8 +2,18 @@
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
-PI_MONO="$(cd "$SKILL_DIR/../../.." && pwd)"
-SKILLS_DIR="$PI_MONO/.pi/skills"
+DEFAULT_PI_MONO="$(cd "$SKILL_DIR/../../.." && pwd)"
+PI_MONO="$DEFAULT_PI_MONO"
+if [[ -d "$DEFAULT_PI_MONO/.pi/skills" ]]; then
+  SKILLS_DIR="$DEFAULT_PI_MONO/.pi/skills"
+elif [[ -f "$SKILL_DIR/../memory/SKILL.md" ]]; then
+  SKILLS_DIR="$(cd "$SKILL_DIR/.." && pwd)"
+  if [[ -d "$HOME/workspace/experiments/pi-mono" ]]; then
+    PI_MONO="$HOME/workspace/experiments/pi-mono"
+  fi
+else
+  SKILLS_DIR="$DEFAULT_PI_MONO/.pi/skills"
+fi
 INBOX_REGISTRY="${HOME}/.agent-inbox/projects.json"
 
 PASS=0; FAIL=0; WARN=0
@@ -37,7 +47,8 @@ done
 # Check reference-only best-practices skills have SKILL.md
 REF_SKILLS=(
   best-practices-python best-practices-react best-practices-kde
-  best-practices-skills best-practices-streamdeck
+  best-practices-rust best-practices-prompt best-practices-skills
+  best-practices-streamdeck review-prompt
 )
 for skill in "${REF_SKILLS[@]}"; do
   if [[ -f "$SKILLS_DIR/$skill/SKILL.md" ]]; then
@@ -86,6 +97,19 @@ if [[ -x "$SKILL_DIR/run.sh" ]]; then
   check "run.sh is executable" "ok"
 else
   check "run.sh is executable" "fail"
+fi
+
+# Check Fallow-style monitor contract helpers
+if [[ -f "$SKILL_DIR/fallow_contract.py" && -f "$SKILL_DIR/monitor-output-schema.json" ]]; then
+  check "Fallow-style contract files exist" "ok"
+else
+  check "Fallow-style contract files exist" "fail"
+fi
+
+if python3 -m py_compile "$SKILL_DIR/fallow_contract.py" "$SKILL_DIR/quality_checks.py" "$SKILL_DIR/embedding_coverage.py" 2>/dev/null; then
+  check "Python monitor scanners compile" "ok"
+else
+  check "Python monitor scanners compile" "fail"
 fi
 
 echo ""

@@ -4,8 +4,18 @@ unset VIRTUAL_ENV
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
-PI_MONO="$(cd "$SKILL_DIR/../../.." && pwd)"
-SKILLS_DIR="$PI_MONO/.pi/skills"
+DEFAULT_PI_MONO="$(cd "$SKILL_DIR/../../.." && pwd)"
+PI_MONO="$DEFAULT_PI_MONO"
+if [[ -d "$DEFAULT_PI_MONO/.pi/skills" ]]; then
+  SKILLS_DIR="$DEFAULT_PI_MONO/.pi/skills"
+elif [[ -f "$SKILL_DIR/../memory/SKILL.md" ]]; then
+  SKILLS_DIR="$(cd "$SKILL_DIR/.." && pwd)"
+  if [[ -d "$HOME/workspace/experiments/pi-mono" ]]; then
+    PI_MONO="$HOME/workspace/experiments/pi-mono"
+  fi
+else
+  SKILLS_DIR="$DEFAULT_PI_MONO/.pi/skills"
+fi
 ARTIFACTS_DIR="$SKILL_DIR/artifacts"
 INBOX_REGISTRY="${HOME}/.agent-inbox/projects.json"
 TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -228,8 +238,18 @@ detect_best_practices() {
     fi
   done
   for dir in $scan_dirs; do
-    if find "$dir" \( -name '*.tsx' -o -name '*.jsx' \) -not -path '*/node_modules/*' -print -quit 2>/dev/null | grep -q .; then
+    if find "$dir" \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' \) -not -path '*/node_modules/*' -print -quit 2>/dev/null | grep -q .; then
       checks+=("best-practices-react"); break
+    fi
+  done
+  for dir in $scan_dirs; do
+    if find "$dir" \( -name '*.rs' -o -name 'Cargo.toml' \) -not -path '*/target/*' -not -path '*/node_modules/*' -print -quit 2>/dev/null | grep -q .; then
+      checks+=("best-practices-rust"); break
+    fi
+  done
+  for dir in $scan_dirs; do
+    if find "$dir" \( -path '*/prompts/*' -o -name '*prompt*.md' -o -name '*prompt*.txt' \) -not -path '*/node_modules/*' -print -quit 2>/dev/null | grep -q .; then
+      checks+=("best-practices-prompt"); break
     fi
   done
   if [[ -d "$project_path/plasmoids" ]]; then checks+=("best-practices-kde"); fi
@@ -263,53 +283,76 @@ run_best_practices_checks() {
         done < <(scoped_find "$project_path" -path '*/skills/*/SKILL.md' -type f)
         ;;
       best-practices-react)
-        # Full React best-practices scan on TSX/JSX files
-        while IFS= read -r tsx_file; do
-          [[ -z "$tsx_file" ]] && continue
+        # Fast TypeScript/React best-practices scan on TS/JS source files
+        while IFS= read -r source_file; do
+          [[ -z "$source_file" ]] && continue
           local rel_path
-          rel_path=$(python3 -c "import os; print(os.path.relpath('$tsx_file', '$project_path'))" 2>/dev/null)
+          rel_path=$(python3 -c "import os; print(os.path.relpath('$source_file', '$project_path'))" 2>/dev/null)
           local line_count
-          line_count=$(wc -l < "$tsx_file" 2>/dev/null || echo 0)
+          line_count=$(wc -l < "$source_file" 2>/dev/null || echo 0)
 
-          # Large file check (>500 lines for TSX is a code smell)
+          # Large file check (>500 lines for TS/JS is a code smell)
           if [[ "$line_count" -gt 500 ]]; then
-            violations+=("{\"rule\":\"react-large-file\",\"skill\":\"$bp\",\"target\":\"$rel_path\",\"detail\":\"${line_count} lines\"}")
+            violations+=("{\"rule\":\"typescript-large-file\",\"skill\":\"$bp\",\"target\":\"$rel_path\",\"detail\":\"${line_count} lines\"}")
           fi
 
           local content
-          content=$(cat "$tsx_file" 2>/dev/null || true)
+          content=$(cat "$source_file" 2>/dev/null || true)
 
-          # Missing data-testid on interactive elements (buttons, inputs, links)
-          if echo "$content" | grep -qE '<(button|input|a |select|textarea)' && ! echo "$content" | grep -q 'data-testid'; then
-            violations+=("{\"rule\":\"react-missing-testid\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
-          fi
+          case "$source_file" in
+            *.tsx|*.jsx)
+              # Missing data-testid on interactive elements (buttons, inputs, links)
+              if echo "$content" | grep -qE '<(button|input|a |select|textarea)' && ! echo "$content" | grep -q 'data-testid'; then
+                violations+=("{\"rule\":\"react-missing-testid\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
+              fi
 
-          # Missing useRegisterAction for QuerySpec/voice control
-          if echo "$content" | grep -qE '<(button|input|select)' && ! echo "$content" | grep -q 'useRegisterAction'; then
-            violations+=("{\"rule\":\"react-missing-queryspec\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
-          fi
+              # Missing useRegisterAction for QuerySpec/voice control
+              if echo "$content" | grep -qE '<(button|input|select)' && ! echo "$content" | grep -q 'useRegisterAction'; then
+                violations+=("{\"rule\":\"react-missing-queryspec\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
+              fi
 
-          # Missing aria-label on interactive elements
-          if echo "$content" | grep -qE '<(button|img|svg|canvas)' && ! echo "$content" | grep -qE 'aria-label|aria-labelledby|role='; then
-            violations+=("{\"rule\":\"react-missing-aria\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
-          fi
+              # Missing aria-label on interactive elements
+              if echo "$content" | grep -qE '<(button|img|svg|canvas)' && ! echo "$content" | grep -qE 'aria-label|aria-labelledby|role='; then
+                violations+=("{\"rule\":\"react-missing-aria\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
+              fi
+
+              # Hardcoded SVG dimensions (should use viewBox — best-practices-d3 rule)
+              if echo "$content" | grep -qE '<svg.*width="[0-9]' && ! echo "$content" | grep -q 'viewBox'; then
+                violations+=("{\"rule\":\"d3-hardcoded-svg\",\"skill\":\"best-practices-d3\",\"target\":\"$rel_path\"}")
+              fi
+
+              # Mouse events instead of pointer events
+              if echo "$content" | grep -qE 'onMouse(Enter|Leave|Over|Out)'; then
+                violations+=("{\"rule\":\"react-mouse-events\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
+              fi
+              ;;
+          esac
 
           # Barrel file imports (import from index — kills tree shaking)
           if echo "$content" | grep -qE "from ['\"]\.\.?/['\"]|from ['\"]\.\.?/index['\"]"; then
             violations+=("{\"rule\":\"react-barrel-import\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
           fi
 
-          # Hardcoded SVG dimensions (should use viewBox — best-practices-d3 rule)
-          if echo "$content" | grep -qE '<svg.*width="[0-9]' && ! echo "$content" | grep -q 'viewBox'; then
-            violations+=("{\"rule\":\"d3-hardcoded-svg\",\"skill\":\"best-practices-d3\",\"target\":\"$rel_path\"}")
+        done < <(scoped_find "$project_path" \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' \) -type f)
+        ;;
+      best-practices-rust)
+        # Fast Rust best-practices scan; quality_checks.py owns line-level routing.
+        if [[ ! -f "$project_path/Cargo.toml" ]]; then
+          violations+=("{\"rule\":\"rust-missing-cargo-manifest\",\"skill\":\"$bp\",\"target\":\"$project_name\"}")
+        fi
+        while IFS= read -r rust_file; do
+          [[ -z "$rust_file" ]] && continue
+          local rel_path
+          rel_path=$(python3 -c "import os; print(os.path.relpath('$rust_file', '$project_path'))" 2>/dev/null)
+          local line_count
+          line_count=$(wc -l < "$rust_file" 2>/dev/null || echo 0)
+          if [[ "$line_count" -gt 500 ]]; then
+            violations+=("{\"rule\":\"rust-large-file\",\"skill\":\"$bp\",\"target\":\"$rel_path\",\"detail\":\"${line_count} lines\"}")
           fi
-
-          # Mouse events instead of pointer events
-          if echo "$content" | grep -qE 'onMouse(Enter|Leave|Over|Out)'; then
-            violations+=("{\"rule\":\"react-mouse-events\",\"skill\":\"$bp\",\"target\":\"$rel_path\"}")
-          fi
-
-        done < <(scoped_find "$project_path" \( -name '*.tsx' -o -name '*.jsx' \) -type f)
+        done < <(scoped_find "$project_path" -name '*.rs' -type f)
+        ;;
+      best-practices-prompt)
+        # Prompt-specific line-level findings and review-prompt routes are emitted by quality_checks.py.
         ;;
       best-practices-d3)
         # D3 checks via the skill's run.sh check command
@@ -385,6 +428,8 @@ scan_project() {
   echo "[3/10] Running best-practices grep checks..."
   local bp_violations
   bp_violations=$(run_best_practices_checks "$project_path" "$project_name")
+  local bp_file="$ARTIFACTS_DIR/${project_name}_best_practices.json"
+  printf '%s\n' "$bp_violations" > "$bp_file"
 
   # Step 4: quality checks (AST-based — inline prompts, regex classifiers,
   #   handwritten tests, mock-only tests, hardcoded paths, shell AQL, banned imports)
@@ -458,8 +503,23 @@ scan_project() {
   for d in $scan_dirs; do
     ingest_args+=(-c "$d")
   done
-  (run_skill_timed ingest-code "${ingest_args[@]}" 2>/dev/null) || true
+  local ingest_file="$ARTIFACTS_DIR/${project_name}_ingest_code.json"
+  local ingest_raw_file="$ARTIFACTS_DIR/${project_name}_ingest_code.raw"
+  if (run_skill_timed ingest-code "${ingest_args[@]}" > "$ingest_raw_file" 2>/dev/null) && write_json_object_from_output "$ingest_raw_file" "$ingest_file"; then
+    rm -f "$ingest_raw_file"
+  else
+    echo '{"error":"ingest-code timeout or failed"}' > "$ingest_file"
+    rm -f "$ingest_raw_file"
+  fi
   date -u +%Y-%m-%dT%H:%M:%SZ > "$last_run_file"
+
+  # Step 6.1: verify code-symbol Qdrant embedding coverage for expected script files
+  echo "[6.1/10] Verifying code embedding coverage..."
+  local embedding_file="$ARTIFACTS_DIR/${project_name}_embedding_coverage.json"
+  python3 "$SKILL_DIR/embedding_coverage.py" "$project_path" \
+    --project-name "$project_name" \
+    --scope "monitor-$project_name" \
+    --json > "$embedding_file" 2>/dev/null || echo '{"error":"embedding coverage audit failed"}' > "$embedding_file"
 
   # Step 7: skills-ci scan (if project has skills)
   echo "[7/10] Checking for skills-ci targets..."
@@ -485,7 +545,9 @@ scan_project() {
   bp_count=$(python3 -c "import json; print(len(json.loads('$bp_violations')))" 2>/dev/null || echo 0)
   local circular_dep_count
   circular_dep_count=$(python3 -c "import json; print(len(json.load(open('$dep_file')).get('circular_deps', [])))" 2>/dev/null || echo 0)
-  local total_issues=$((qc_total + bp_count + circular_dep_count))
+  local embedding_issue_count
+  embedding_issue_count=$(python3 -c "import json; d=json.load(open('$embedding_file')); print((d.get('missing_files_count', 0) or 0) + (d.get('unsynced_files_count', 0) or 0) if d.get('status') != 'pass' else 0)" 2>/dev/null || echo 0)
+  local total_issues=$((qc_total + bp_count + circular_dep_count + embedding_issue_count))
 
   if [[ "$total_issues" -gt 5 ]]; then
     local top_rules
@@ -507,76 +569,23 @@ print(', '.join(f'{r}({c})' for r, c in top))
 
   # Step 9: aggregate report
   echo "[9/10] Aggregating findings..."
-  python3 -c "
-import json, sys
-
-def safe_load(path):
-    try:
-        text = open(path).read().strip()
-        return json.loads(text) if text else {}
-    except Exception:
-        return {}
-
-ps = safe_load('$ps_file')
-cl = safe_load('$cl_file')
-qc = safe_load('$qc_file')
-sec = safe_load('$sec_file')
-dup = safe_load('$dup_file')
-dep = safe_load('$dep_file')
-cov = safe_load('$coverage_file')
-sci = safe_load('$sci_file')
-bp = json.loads('$bp_violations') if '$bp_violations' != '[]' else []
-
-report = {
-    'project': '$project_name',
-    'path': '$project_path',
-    'timestamp': '$TIMESTAMP',
-    'project_state': ps,
-    'cleanup': cl,
-    'best_practices_violations': bp,
-    'quality_checks': qc,
-    'security_scan': sec,
-    'duplication_scan': dup,
-    'dependency_graph': dep,
-    'coverage_analysis': cov,
-    'skills_ci': sci,
-}
-
-bp_count = len(bp)
-qc_count = qc.get('total_violations', 0)
-secrets_found = len(sec.get('secrets', [])) if isinstance(sec.get('secrets'), list) else int(sec.get('secrets_found', 0) or 0)
-vulnerable_deps = len(sec.get('deps', [])) if isinstance(sec.get('deps'), list) else int(sec.get('vulnerable_deps', 0) or 0)
-sast_findings = len(sec.get('sast', [])) if isinstance(sec.get('sast'), list) else int(sec.get('sast_findings', 0) or 0)
-duplicate_count = int(dup.get('total_duplicates', 0) or 0)
-circular_dep_count = len(dep.get('circular_deps', [])) if isinstance(dep.get('circular_deps'), list) else int(dep.get('circular_dep_count', 0) or 0)
-sci_errors = sci.get('summary', {}).get('error', 0) if isinstance(sci.get('summary'), dict) else 0
-sci_warns = sci.get('summary', {}).get('warn', 0) if isinstance(sci.get('summary'), dict) else 0
-coverage_pct = float(cov.get('coverage_pct', 0.0) or 0.0)
-discord_warnings = []
-if coverage_pct < 30.0:
-    discord_warnings.append(f'Low test coverage: {coverage_pct:.2f}% (<30%)')
-
-report['summary'] = {
-    'total_bp_violations': bp_count,
-    'total_quality_violations': qc_count,
-    'secrets_found': secrets_found,
-    'vulnerable_deps': vulnerable_deps,
-    'sast_findings': sast_findings,
-    'total_security_findings': secrets_found + vulnerable_deps + sast_findings,
-    'duplicate_functions': duplicate_count,
-    'circular_dependencies': circular_dep_count,
-    'coverage_pct': coverage_pct,
-    'skills_ci_errors': sci_errors,
-    'skills_ci_warnings': sci_warns,
-    'total_issues': bp_count + qc_count + secrets_found + vulnerable_deps + sast_findings + duplicate_count + circular_dep_count + sci_errors,
-}
-report['notifications'] = {
-    'discord_warnings': discord_warnings,
-}
-
-json.dump(report, sys.stdout, indent=2)
-print()
-" > "$report_file" 2>/dev/null || echo "{\"error\":\"report aggregation failed\",\"project\":\"$project_name\"}" > "$report_file"
+  python3 "$SKILL_DIR/fallow_contract.py" aggregate \
+    --project-name "$project_name" \
+    --project-path "$project_path" \
+    --timestamp "$TIMESTAMP" \
+    --output "$report_file" \
+    --project-state "$ps_file" \
+    --cleanup "$cl_file" \
+    --best-practices "$bp_file" \
+    --quality-checks "$qc_file" \
+    --security-scan "$sec_file" \
+    --duplication-scan "$dup_file" \
+    --dependency-graph "$dep_file" \
+    --coverage-analysis "$coverage_file" \
+    --ingest-code "$ingest_file" \
+    --embedding-coverage "$embedding_file" \
+    --skills-ci "$sci_file" \
+    2>/dev/null || echo "{\"error\":\"report aggregation failed\",\"project\":\"$project_name\"}" > "$report_file"
 
   # Step 9.5: compare against previous report trend + anomaly detection
   echo "[9.5/10] Comparing trend with previous report..."
@@ -642,13 +651,15 @@ if s.get('total_security_findings'): parts.append(f\"{s['total_security_findings
 if s.get('duplicate_functions'): parts.append(f\"{s['duplicate_functions']} duplicates\")
 if s.get('circular_dependencies'): parts.append(f\"{s['circular_dependencies']} circular deps\")
 parts.append(f\"coverage {s.get('coverage_pct', 0.0):.2f}%\")
+parts.append(f\"embeddings {s.get('embedding_coverage_pct', 100.0):.2f}%\")
+if s.get('embedding_coverage_issues'): parts.append(f\"{s['embedding_coverage_issues']} embedding coverage issues\")
 if s.get('skills_ci_errors'): parts.append(f\"{s['skills_ci_errors']} skills-ci errors\")
 print(', '.join(parts) if parts else 'clean')
 " 2>/dev/null || echo "unknown")
 
   run_skill memory learn \
     -p "monitor-codebase scan of $project_name: $total_issues total issues ($summary_text, $trend_delta)" \
-    -s "Report: $report_file. Quality checks: $qc_total. Best-practices: $bp_count. Security: SAST $sast_findings, deps $vulnerable_deps, secrets $secrets_found ($security_total total). Duplicates: $(python3 -c "import json; print(json.load(open('$report_file')).get('summary',{}).get('duplicate_functions',0))" 2>/dev/null || echo 0). Circular deps: $(python3 -c "import json; print(json.load(open('$report_file')).get('summary',{}).get('circular_dependencies',0))" 2>/dev/null || echo 0). Coverage: $coverage_pct%. Trend: $trend_delta." \
+    -s "Report: $report_file. Quality checks: $qc_total. Best-practices: $bp_count. Security: SAST $sast_findings, deps $vulnerable_deps, secrets $secrets_found ($security_total total). Duplicates: $(python3 -c "import json; print(json.load(open('$report_file')).get('summary',{}).get('duplicate_functions',0))" 2>/dev/null || echo 0). Circular deps: $(python3 -c "import json; print(json.load(open('$report_file')).get('summary',{}).get('circular_dependencies',0))" 2>/dev/null || echo 0). Coverage: $coverage_pct%. Embedding coverage: $(python3 -c "import json; print(json.load(open('$report_file')).get('summary',{}).get('embedding_coverage_pct',100.0))" 2>/dev/null || echo 100.0)%. Trend: $trend_delta." \
     --scope "monitor-codebase" 2>/dev/null || true
 
   echo "Report: $report_file ($total_issues issues: $summary_text, $trend_delta)"
@@ -722,6 +733,124 @@ print(', '.join(parts) if parts else 'clean')
         "monitor-codebase: apply orchestrated fixes for $project_name ($TIMESTAMP)"
     fi
   fi
+}
+
+cmd_audit() {
+  local base_ref=""
+  local output_file=""
+  local project_name=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --base) base_ref="$2"; shift 2 ;;
+      --output) output_file="$2"; shift 2 ;;
+      *) project_name="$1"; shift ;;
+    esac
+  done
+  if [[ -z "$project_name" ]]; then
+    echo "Usage: $0 audit <project> [--base REF] [--output path]" >&2
+    return 1
+  fi
+
+  local project_path
+  project_path=$(resolve_project_path "$project_name")
+  local audit_prefix="$ARTIFACTS_DIR/${project_name}_audit_${TIMESTAMP}"
+  local report_file="${output_file:-${audit_prefix}.json}"
+  local changed_file="${audit_prefix}_changed_files.txt"
+  local scan_dirs
+  scan_dirs=$(get_scan_dirs "$project_path")
+  local python_file_count
+  python_file_count=$(scoped_find "$project_path" -type f -name '*.py' | python3 -c "import sys; print(len({line.strip() for line in sys.stdin if line.strip()}))" 2>/dev/null || echo 0)
+
+  if [[ -n "$base_ref" ]]; then
+    git -C "$project_path" diff --name-only "${base_ref}...HEAD" -- > "$changed_file" 2>/dev/null || \
+      git -C "$project_path" diff --name-only "$base_ref" HEAD -- > "$changed_file" 2>/dev/null || \
+      : > "$changed_file"
+  else
+    local bootstrap_file="$audit_prefix.bootstrap.json"
+    python3 "$SKILL_DIR/fallow_contract.py" audit \
+      --project-name "$project_name" \
+      --project-path "$project_path" \
+      --timestamp "$TIMESTAMP" \
+      --output "$bootstrap_file" \
+      >/dev/null 2>&1 || true
+    base_ref=$(python3 - "$bootstrap_file" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+try:
+    print(json.loads(Path(sys.argv[1]).read_text()).get("base_ref", ""))
+except Exception:
+    print("")
+PY
+)
+    python3 - "$bootstrap_file" "$changed_file" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+bootstrap = Path(sys.argv[1])
+out = Path(sys.argv[2])
+try:
+    data = json.loads(bootstrap.read_text())
+    out.write_text("\n".join(data.get("changed_files", [])) + "\n")
+except Exception:
+    out.write_text("")
+PY
+    rm -f "$bootstrap_file"
+  fi
+
+  echo "=== Auditing: $project_name ($project_path) ==="
+  echo "Changed files: $(python3 -c "from pathlib import Path; print(len([l for l in Path('$changed_file').read_text().splitlines() if l.strip()]))" 2>/dev/null || echo 0)"
+
+  local bp_violations
+  bp_violations=$(run_best_practices_checks "$project_path" "$project_name")
+  local bp_file="${audit_prefix}_best_practices.json"
+  printf '%s\n' "$bp_violations" > "$bp_file"
+
+  local qc_file="${audit_prefix}_quality_checks.json"
+  python3 "$SKILL_DIR/quality_checks.py" "$project_path" --json > "$qc_file" 2>/dev/null || echo '{"error":"quality checks failed"}' > "$qc_file"
+
+  local dup_file="${audit_prefix}_duplicates.json"
+  if [[ "$python_file_count" -gt 10 ]]; then
+    python3 "$SKILL_DIR/duplication_detector.py" $scan_dirs > "$dup_file" 2>/dev/null || echo '{"error":"duplication scan failed"}' > "$dup_file"
+  else
+    printf '{"skipped":"python file count <= 10","python_file_count":%s}\n' "$python_file_count" > "$dup_file"
+  fi
+
+  local dep_file="${audit_prefix}_deps.json"
+  python3 "$SKILL_DIR/dep_graph.py" $scan_dirs > "$dep_file" 2>/dev/null || echo '{"error":"dependency graph scan failed"}' > "$dep_file"
+
+  local coverage_file="${audit_prefix}_coverage.json"
+  python3 "$SKILL_DIR/coverage_tracker.py" $scan_dirs > "$coverage_file" 2>/dev/null || echo '{"error":"coverage analysis failed"}' > "$coverage_file"
+
+  local embedding_file="${audit_prefix}_embedding_coverage.json"
+  python3 "$SKILL_DIR/embedding_coverage.py" "$project_path" \
+    --project-name "$project_name" \
+    --scope "monitor-$project_name" \
+    --json > "$embedding_file" 2>/dev/null || echo '{"error":"embedding coverage audit failed"}' > "$embedding_file"
+
+  local aggregate_status=0
+  python3 "$SKILL_DIR/fallow_contract.py" audit \
+    --project-name "$project_name" \
+    --project-path "$project_path" \
+    --timestamp "$TIMESTAMP" \
+    --output "$report_file" \
+    --base-ref "$base_ref" \
+    --changed-files-file "$changed_file" \
+    --best-practices "$bp_file" \
+    --quality-checks "$qc_file" \
+    --duplication-scan "$dup_file" \
+    --dependency-graph "$dep_file" \
+    --coverage-analysis "$coverage_file" \
+    --embedding-coverage "$embedding_file" || aggregate_status=$?
+
+  local verdict
+  verdict=$(python3 -c "import json; print(json.load(open('$report_file')).get('verdict','warn'))" 2>/dev/null || echo "warn")
+  local finding_count
+  finding_count=$(python3 -c "import json; print(json.load(open('$report_file')).get('summary',{}).get('total_findings',0))" 2>/dev/null || echo 0)
+  echo "Audit report: $report_file ($finding_count findings, verdict=$verdict)"
+  return "$aggregate_status"
 }
 
 light_scan_project() {
@@ -1093,6 +1222,7 @@ cmd_visualize() {
 
 case "${1:-help}" in
   scan)        shift; cmd_scan "$@" ;;
+  audit)       shift; cmd_audit "$@" ;;
   report)      shift; cmd_report "$@" ;;
   estimate)    cmd_estimate ;;
   cache-state) shift; cmd_cache_state "$@" ;;
@@ -1105,6 +1235,7 @@ case "${1:-help}" in
     echo ""
     echo "Commands:"
     echo "  scan <project|--all> [--fix] [--force]  Scan project(s) for violations"
+    echo "  audit <project> [--base REF] [--output path]  Changed-file audit with verdict"
     echo "  report [project]              Show latest findings"
     echo "  estimate                      Estimate runtime for scan --all"
     echo "  cache-state [project...] [--force]  Refresh project-state for changed projects"
