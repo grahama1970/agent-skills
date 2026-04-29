@@ -9,7 +9,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from loguru import logger as log
 
@@ -135,3 +135,24 @@ def run_memory_recall(
             args.extend(["--tags", tag])
 
     return run_skill("memory", args, timeout=timeout)
+
+
+def run_extract_entities(
+    text: str,
+    *,
+    scope: str = "",
+    collection: str = "sparta_controls",
+    limit: int = 500,
+    timeout: int = 20,
+) -> dict[str, Any]:
+    """Run /extract-entities without duplicating extractor logic.
+
+    /ask calls the sibling skill via run.sh so /extract-entities remains the
+    single owner of entity resolution. The current public JSON subcommand accepts
+    question text as a positional argument; scope/collection/limit are retained
+    in the helper signature for callers and future extractor CLI support.
+    """
+    _ = (scope, collection, limit)  # documented extension points for extractor CLI parity
+    result = run_skill("extract-entities", ["extract", text, "--json"], timeout=timeout)
+    result["payload"] = parse_json_output(result.get("stdout", "")) or {"entities": []}
+    return result
