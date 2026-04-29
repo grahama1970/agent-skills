@@ -518,12 +518,17 @@ Protocol rules:
 - Each participant must add a non-trivial disagreement or justify why none exists.
 - Critique and synthesis are separate; the moderator performs final synthesis.
 - Default persistence stores compact state, durable lessons, unresolved issues, and critique summaries.
-- Full transcript/state requires `--roundtable-persist full`.
-- `--dogpile auto` marks date-sensitive prompts such as `in 2026`, `current`, `latest`, or `today` for fresh external discovery by oracle subagents.
-- SPARTA and space-cybersecurity questions should use `--scope sparta` so memory
-  retrieval uses the security corpus instead of `/ask` project notes.
-- Argue verdicts use `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
-  `INSUFFICIENT_EVIDENCE`; `FOR`/`AGAINST` requires evidence, a counterargument,
+- SPARTA and space-cybersecurity questions use the deterministic SPARTA preflight
+  contract in `docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`: preserve the question
+  text, run `/extract-entities` and `/memory` recall first, route grounded
+  SPARTA-corpora matches to `/create-evidence-case`, and continue normal `/ask`
+  routing when no grounded match is found.
+- SPARTA-corpora match signals are only extractor-grounded resolved control IDs,
+  control metadata for SPARTA/CWE/NIST/CAPEC/ATT&CK, related/crosswalk pairs,
+  taxonomy tags, or SPARTA recall items. Unresolved or fabricated SPARTA-looking
+  references require `needs_attention`; never fabricate a control, crosswalk,
+  relationship, or compliance status. All CAE/evidence-case outputs default to
+  `NEEDS_VERIFICATION` and require human review before any status change.
   structured citations, and what would change the verdict. See
   `docs/ASK_ARGUE_CONTRACT.md`.
 

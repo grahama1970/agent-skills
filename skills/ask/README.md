@@ -36,6 +36,11 @@ artifacts and telemetry persist for later recall
 **Core principle:** Memory recall is context, not evidence. Code and design
 claims must still be grounded in inspected files, diffs, tests, or artifacts.
 
+**SPARTA preflight:** For SPARTA, CWE, NIST, CAPEC, ATT&CK, and
+space-cybersecurity control questions, `/ask` first sends the preserved question
+text through `/extract-entities` and `/memory` recall. Grounded SPARTA-corpora
+matches route to `/create-evidence-case`; no match continues normal `/ask`
+routing. See `docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`.
 ## Quick Start
 
 ```bash
