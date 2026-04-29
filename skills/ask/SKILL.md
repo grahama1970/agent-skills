@@ -346,9 +346,10 @@ Saved review specs:
   --deep-review-target src/ask/run_state.py
 ```
 
-Built-in specs live under `docs/chains/` and `docs/reviewers/`. Chain specs set
-deterministic workflow options; reviewer specs contribute protocol role/focus
-labels without making the agent infer the review contract.
+Built-in specs live under `docs/chains/` and `docs/reviewers/`. Historical
+and active implementation/orchestration plans live under `docs/plans/`. Chain
+specs set deterministic workflow options; reviewer specs contribute protocol
+role/focus labels without making the agent infer the review contract.
 
 Preflight the runtime:
 

@@ -303,8 +303,8 @@ tasks:
       - ask
     command: >
       cd /tmp/agent-skills-ask-promote &&
-      uv run --project /tmp/agent-skills-ask-promote/skills/plan python /tmp/agent-skills-ask-promote/skills/plan/plan.py --validate /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml &&
-      /tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json &&
+      uv run --project /tmp/agent-skills-ask-promote/skills/plan python /tmp/agent-skills-ask-promote/skills/plan/plan.py --validate /tmp/agent-skills-ask-promote/skills/ask/docs/plans/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml &&
+      /tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/docs/plans/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json &&
       cd skills/ask &&
       PYTHONPATH=src uv run --project . --group dev pytest -q tests &&
       ./sanity.sh
@@ -314,11 +314,11 @@ tasks:
       - "Run /review-plan and require zero FAIL findings before /orchestrate."
       - "Run the existing /ask tests and sanity harness after implementation."
     tests:
-      - "uv run --project /tmp/agent-skills-ask-promote/skills/plan python /tmp/agent-skills-ask-promote/skills/plan/plan.py --validate /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml"
-      - "/tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json"
+      - "uv run --project /tmp/agent-skills-ask-promote/skills/plan python /tmp/agent-skills-ask-promote/skills/plan/plan.py --validate /tmp/agent-skills-ask-promote/skills/ask/docs/plans/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml"
+      - "/tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/docs/plans/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json"
       - "cd /tmp/agent-skills-ask-promote/skills/ask && PYTHONPATH=src uv run --project . --group dev pytest -q tests && ./sanity.sh"
     blind_tests:
       - "cd /tmp/agent-skills-ask-promote/skills/ask && ./sanity.sh"
     definition_of_done:
-      command: "uv run --project /tmp/agent-skills-ask-promote/skills/plan python /tmp/agent-skills-ask-promote/skills/plan/plan.py --validate /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml && /tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json"
+      command: "uv run --project /tmp/agent-skills-ask-promote/skills/plan python /tmp/agent-skills-ask-promote/skills/plan/plan.py --validate /tmp/agent-skills-ask-promote/skills/ask/docs/plans/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml && /tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/docs/plans/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json"
       assertion: "exit_code == 0"

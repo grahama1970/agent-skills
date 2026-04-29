@@ -144,7 +144,7 @@ curated context. Memory recall is context, not evidence.
 | `docs/ASK_ARGUE_CONTRACT.md` | Argue DAG, judge admissibility, verifier, and observability contract |
 | `docs/ASK_PARALLEL_REVIEW_CONTRACT.md` | Parallel-review DAG, target bundle, verifier, and code-runner handoff contract |
 | `docs/ASK_DEEP_REVIEW_CONTRACT.md` | Deep-review runtime and verifier contract |
-| `01_ASK_DEEP_REVIEW_TASKS.yaml` | Current implementation plan for deep review |
+| `docs/plans/01_ASK_DEEP_REVIEW_TASKS.yaml` | Current implementation plan for deep review |
 | `scripts/live_e2e.py` | Live E2E matrix, including semantic answer validation |
 | `sanity.sh` | Skill-level deterministic sanity checks |
 

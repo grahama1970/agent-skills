@@ -469,6 +469,7 @@ current-state projection, not a replacement for inspected code or test output.
 | `src/ask/review_protocols/` | Roundtable and adversarial review protocols |
 | `docs/reviewers/` | Protocol role specs with YAML frontmatter |
 | `docs/chains/` | Saved deep-review and parallel-review workflow specs |
+| `docs/plans/` | Historical and active implementation/orchestration plans |
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
 | `docs/PROJECT_KNOWLEDGE.md` | Curated current development state |
 | `sanity.sh` | Deterministic smoke checks |
