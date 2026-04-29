@@ -8,16 +8,24 @@
   />
 </p>
 
-> Natural-language querying, learning, and high-reasoning review for agent skill environments.
+> Ask normal questions. Let the system find the right memory, persona, evidence,
+> or reviewer.
 
-`ask` is the human-facing front door for memory-backed context, persona
-consultation, fresh discovery, and oracle-style synthesis. A user can ask
-normally; `/ask` chooses the appropriate memory, freshness, persona, review, or
-oracle path.
+Agents accumulate useful state in many places: run logs, stored lessons, persona
+profiles, source bundles, evidence cases, review artifacts, and fresh research.
+Humans should not have to remember where the answer lives or which backend can
+reason over it.
 
-`ask` uses the model surfaces, subscriptions, APIs, and local providers available
-in the current environment: Codex subscription surfaces, OpenAI API access,
-`/scillm` routes, local models, DeepSeek, Gemini, or other configured backends.
+`ask` exists to make that routing problem disappear. You write the question in
+plain language; `/ask` decides whether to use durable recall, a loaded persona,
+fresh discovery, an oracle model, or a bounded review protocol.
+
+Use it for questions like:
+
+- "What did we decide about this?"
+- "Which persona should critique this plan?"
+- "Is this implementation safe to proceed?"
+- "What evidence backs this claim?"
 
 ```text
 human asks naturally
@@ -36,6 +44,10 @@ artifacts and telemetry persist for later recall
 **Core principle:** Memory recall is context, not evidence. Code and design
 claims must still be grounded in inspected files, diffs, tests, logs, or
 artifacts.
+
+Under the hood, `/ask` uses whatever model surfaces are available in the current
+environment: Codex subscription surfaces, OpenAI API access, `/scillm` routes,
+local models, DeepSeek, Gemini, or other configured backends.
 
 ## Quick Start
 
@@ -71,6 +83,32 @@ artifacts.
 ./run.sh status --run <ask_id> --serve --open
 ```
 
+### Ask through loaded personas
+
+`ask` can route a question through complex personas stored in `/memory`. A
+persona can include profile data, domain expertise, prior lessons, operating
+style, and lore. `/ask` recalls the actual persona profile before answering
+instead of treating the name as a prompt label.
+
+```bash
+# One loaded persona
+./run.sh ask "Critique this reliability plan" \
+  --oracle \
+  --oracle-persona Brandon
+
+# Two voices in sequence
+./run.sh ask "Where is this architecture weak?" \
+  --oracle \
+  --oracle-persona Brandon \
+  --oracle-peer Margaret \
+  --oracle-iterations 2
+
+# A protocolized roundtable
+./run.sh ask "Should we ship this change?" \
+  --roundtable \
+  --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer"
+```
+
 ## When to Use Each Mode
 
 | Mode | Use when you need | Example |
@@ -79,7 +117,7 @@ artifacts.
 | Learn | New durable knowledge | `./run.sh learn "architecture of this repository"` |
 | Auto-learn | Recall first, learn only if memory is weak | `./run.sh ask "question" --auto-learn` |
 | Oracle | Highest-available reasoning synthesis | `./run.sh ask "question" --oracle` |
-| Persona | A stored persona or role voice | `./run.sh ask "question" --oracle --oracle-persona Architect` |
+| Persona | A loaded profile with domain expertise, lessons, and voice | `./run.sh ask "question" --oracle --oracle-persona Architect` |
 | Roundtable | Sequential persona deliberation | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
 | Argue | Two parallel advocates plus sequential judge | `./run.sh ask "argue whether X" --argue` |
 | Parallel review | Independent reviewer fanout | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
