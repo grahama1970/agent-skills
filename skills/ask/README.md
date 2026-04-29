@@ -10,14 +10,15 @@
 
 > **Ask, Argue and Roundtable**
 
-Agents accumulate useful state in many places: run logs, stored lessons, persona
-profiles, source bundles, evidence cases, review artifacts, and fresh research.
-Humans should not have to remember where the answer lives or which backend can
-reason over it.
+Agents accumulate a lot of context over time: run logs, stored lessons, persona
+profiles, source bundles, evidence cases, review artifacts, and whatever fresh
+research happened yesterday. You should not have to remember where any of that
+lives, or which backend is best at reasoning over it.
 
-`ask` exists to make that routing problem disappear. You write the question in
-plain language; `/ask` decides whether to use durable recall, a loaded persona,
-fresh discovery, an oracle model, or a bounded review protocol.
+That is what `ask` is for. You write the question in plain language. `/ask`
+figures out the rest: whether to pull from durable memory, load a persona, kick
+off fresh discovery, hand it to an oracle model, or run a structured review
+protocol.
 
 Use it for questions like:
 
@@ -40,13 +41,13 @@ optional oracle or subagent path produces high-reasoning synthesis
 artifacts and telemetry persist for later recall
 ```
 
-**Core principle:** Memory recall is context, not evidence. Code and design
-claims must still be grounded in inspected files, diffs, tests, logs, or
-artifacts.
+**One core principle:** memory recall is context, not evidence. Code and design
+claims still need to be grounded in inspected files, diffs, tests, logs, or
+artifacts. `/ask` enforces that distinction deliberately.
 
-Under the hood, `/ask` uses whatever model surfaces are available in the current
-environment: Codex subscription surfaces, OpenAI API access, `/scillm` routes,
-local models, DeepSeek, Gemini, or other configured backends.
+Under the hood, `/ask` uses whatever model surfaces are configured in your
+environment: Codex, OpenAI API, `/scillm` routes, local models, DeepSeek,
+Gemini, and other configured backends.
 
 ## Quick Start
 
@@ -107,15 +108,15 @@ more control.
 ./run.sh status --run <ask_id> --serve --open
 ```
 
-That's the surface. For the full option list, environment variables, and
-agent-facing contract, see `SKILL.md`.
+That is the surface. For the full option list, environment variables, and
+agent-facing contract, see [SKILL.md](SKILL.md).
 
-### Ask through loaded personas
+## Asking through a Persona
 
-`ask` can route a question through complex personas stored in `/memory`. A
-persona can include profile data, domain expertise, prior lessons, operating
-style, and lore. `/ask` recalls the actual persona profile before answering
-instead of treating the name as a prompt label.
+`/ask` can route a question through a complex persona stored in `/memory`. A
+persona is not just a name tag: it can include profile data, domain expertise,
+prior lessons, operating style, and lore. `/ask` recalls the actual persona
+profile before answering instead of treating the name as a prompt label.
 
 ```bash
 # One loaded persona
@@ -138,21 +139,21 @@ instead of treating the name as a prompt label.
 
 ## When to Use Each Mode
 
-| Mode | Use when you need | Example |
+| Mode | Reach for it when… | Example |
 | --- | --- | --- |
-| Ask | Stored project or topic knowledge | `./run.sh ask "what do we know about X?"` |
-| Learn | New durable knowledge | `./run.sh learn "architecture of this repository"` |
-| Auto-learn | Recall first, learn only if memory is weak | `./run.sh ask "question" --auto-learn` |
-| Oracle | Highest-available reasoning synthesis | `./run.sh ask "question" --oracle` |
-| Persona | A loaded profile with domain expertise, lessons, and voice | `./run.sh ask "question" --oracle --oracle-persona Architect` |
-| Roundtable | Sequential persona deliberation | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
-| Argue | Two parallel advocates plus sequential judge | `./run.sh ask "argue whether X" --argue` |
-| Parallel review | Independent reviewer fanout | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
-| Deep review | Web-GPT-style review with artifacts | `./run.sh ask "deep review this" --deep-review --deep-review-target src/ask/ask.py` |
-| Doctor | Dependency and runtime preflight | `./run.sh doctor --json` |
-| Chains | Inspect saved review workflows | `./run.sh chains list --json` |
-| Status | Inspect recent runs and memory state | `./run.sh status --runs --json` |
-| OS health | Ask runtime/ops questions | `./run.sh os health "is memory healthy?"` |
+| Ask | You think the answer is already somewhere in memory | `./run.sh ask "what do we know about X?"` |
+| Learn | You want to teach the agent something new and durable | `./run.sh learn "architecture of this repository"` |
+| Auto-learn | You want recall first, and a fresh learn pass only if memory comes up empty | `./run.sh ask "question" --auto-learn` |
+| Oracle | You want the strongest reasoning model available, not just recall | `./run.sh ask "question" --oracle` |
+| Persona | You want a specific stored voice with domain expertise and prior lessons | `./run.sh ask "question" --oracle --oracle-persona Architect` |
+| Roundtable | You want personas to deliberate in sequence with defined review roles | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
+| Argue | You want a real two-sided argument with a judge | `./run.sh ask "argue whether X" --argue` |
+| Parallel review | You want independent reviewers looking at the same thing without influencing each other | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
+| Deep review | You want a thorough, audit-friendly review with artifacts | `./run.sh ask "deep review this" --deep-review --deep-review-target src/ask/ask.py` |
+| Doctor | You want a preflight check on dependencies and runtime | `./run.sh doctor --json` |
+| Chains | You want to inspect saved review workflows | `./run.sh chains list --json` |
+| Status | You want to see recent runs and memory state | `./run.sh status --runs --json` |
+| OS health | You are asking the runtime about itself | `./run.sh os health "is memory healthy?"` |
 
 ## Installation
 
@@ -170,7 +171,7 @@ cd /path/to/agent-skills/skills/ask
 ./run.sh ask "is memory healthy?"
 ```
 
-Expected companion skills:
+**Companion skills `/ask` expects to find:**
 
 - `/memory`
 - `/dogpile`
@@ -181,12 +182,14 @@ Expected companion skills:
 - `/project-knowledge`
 - monitor/ops skills used by OS mode
 
-If a companion skill is missing, some modes fail closed with `needs_attention`;
-others run with explicit degraded status.
+If a companion skill is missing, some modes fail closed with
+`needs_attention`; others continue with an explicit degraded status. Fail
+closed means a required dependency is missing and `/ask` refuses to guess.
 
-## Common Human Chat Prompts
+## Talking to It in Plain English
 
-Project agents translate natural `$ask` prompts into the correct CLI route.
+Project agents translate natural `$ask` prompts into the correct CLI route, so
+most of the time you can just say what you mean:
 
 ```text
 $ask what do we know about the auth retry bug?
@@ -202,7 +205,7 @@ $ask learn the architecture of this repository
 $ask is memory healthy?
 ```
 
-See `docs/HUMAN_CHAT_EXAMPLES.md` for the complete human-facing route catalog.
+Full route catalog: [docs/HUMAN_CHAT_EXAMPLES.md](docs/HUMAN_CHAT_EXAMPLES.md).
 
 ## Workflows
 
@@ -224,9 +227,10 @@ See `docs/HUMAN_CHAT_EXAMPLES.md` for the complete human-facing route catalog.
 
 ### Sequential roundtable
 
-Roundtable is sequential, not parallel chat. `/ask` builds a shared review
+A roundtable is sequential, not parallel chat. `/ask` builds a shared review
 state, gives each persona a protocol role, requires claim-specific reactions,
-then runs a moderator synthesis. Use it when the order of critique matters.
+and runs a moderator synthesis at the end. Use it when the order of critique
+matters.
 
 ```bash
 ./run.sh ask "Should we split the API client package?" \
@@ -235,8 +239,8 @@ then runs a moderator synthesis. Use it when the order of critique matters.
   --roundtable-rounds 2
 ```
 
-Roundtable participants have two separate layers: the stored persona is the
-domain voice, while the protocol role is the bounded review job loaded from
+Roundtable participants have two layers: the stored persona is the domain
+voice; the protocol role is the bounded review job loaded from
 `docs/reviewers/*.md`.
 
 ### Parallel findings, then roundtable debate
@@ -250,7 +254,7 @@ domain voice, while the protocol role is the bounded review job loaded from
 
 ### Adversarial argue
 
-Argue is an explicit `/scillm` DAG, not a single self-debate prompt:
+`--argue` is an explicit `/scillm` DAG, not a single self-debate prompt:
 
 ```text
 FOR advocate /scillm call || AGAINST advocate /scillm call
@@ -262,9 +266,9 @@ deterministic verifier
 argue.md + argue.json + verifier.log
 ```
 
-Use this when you need calibrated judgment on a decision without forcing fake
-certainty. The judge may return `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
-`INSUFFICIENT_EVIDENCE`. If you need a binary decision, add
+Reach for it when you need calibrated judgment on a decision without forcing
+fake certainty. The judge can return `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
+`INSUFFICIENT_EVIDENCE`. If you need a binary answer, add
 `--decision-required` and an explicit tie-breaker.
 
 ```bash
@@ -288,10 +292,9 @@ is trustworthy.
 Argue, oracle, OS knowledge answers, deep review, and parallel review all use
 the `ask.citations.v1` citation contract. Memory citations are valid for
 knowledge, persona, and project-context answers. They are not valid for code or
-review safety claims; safe review verdicts require target/file/diff/artifact
-citations.
+review safety claims; those require target/file/diff/artifact citations.
 
-### Preferred model with a one-shot peer model
+### Preferred model with a one-shot peer
 
 ```bash
 ./run.sh ask "What is the strongest objection to this plan?" \
@@ -306,13 +309,13 @@ citations.
 
 ## Deep Review
 
-Deep review is for comprehensive, Web-GPT-style analysis without browser
-copy-paste. It wraps the high-reasoning oracle path with pass-based review
-prompts, target resolution, read-only git status checks, and machine-checkable
-artifacts.
+Deep review is for the kind of comprehensive, Web-GPT-style analysis you would
+otherwise do by copy-pasting code into a chat window. It wraps the
+high-reasoning oracle path with pass-based review prompts, target resolution,
+read-only git status checks, and machine-checkable artifacts.
 
-It is intentionally read-only: it produces analysis, verdicts, artifacts,
-telemetry, and remediation plans. It does not patch your code.
+It is intentionally read-only. It produces analysis, verdicts, artifacts,
+telemetry, and remediation plans. **It does not patch your code.**
 
 ```bash
 ./run.sh ask "deep review this implementation" \
@@ -330,25 +333,29 @@ Outputs land here:
 ```
 
 The JSON verifier rejects missing sections, unsafe write evidence, shallow
-summaries, invalid verdicts, and safe verdicts without inspected evidence.
+summaries, invalid verdicts, and safe verdicts that arrived without inspected
+evidence.
 
 Saved review workflows live in `docs/chains/*.chain.yaml`. The default
-`deep-review` chain is: target resolution → context bundle → parallel reviewers
-→ moderator synthesis → deterministic verifier.
+`deep-review` chain is:
+
+```text
+target resolution → context bundle → parallel reviewers → moderator synthesis → deterministic verifier
+```
 
 ## Safety and Evidence
 
 For SPARTA, CWE, NIST, CAPEC, ATT&CK, and space-cybersecurity control
 questions, `/ask` first sends the preserved question text through
-`/extract-entities` and `/memory` recall.
+`/extract-entities` and `/memory` recall. Grounded SPARTA-corpora matches route
+to `/create-evidence-case`.
 
-Grounded SPARTA-corpora matches route to `/create-evidence-case`. If that
-required evidence-case route is unavailable or fails, `/ask` pauses with
-`needs_attention` and `safe_default=do_not_answer_as_grounded` instead of
-falling through to ordinary memory/oracle synthesis.
+If that required evidence-case route is unavailable or fails, `/ask` pauses
+with `needs_attention` and `safe_default=do_not_answer_as_grounded` rather than
+falling through to ordinary memory/oracle synthesis. No grounded match
+continues normal `/ask` routing.
 
-No grounded match continues normal `/ask` routing. See
-`docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`.
+Full contract: [docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md](docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md).
 
 ## Command Reference
 
@@ -379,21 +386,21 @@ Common `ask` options:
 | `--review-target <target>` | Explicit target for parallel-review evidence bundles |
 | `--deep-review` | Emit deep-review markdown and JSON artifacts |
 | `--deep-review-target <target>` | Explicit target: paths, diff, plan, manifest, or artifact |
-| `--run-id <id>` | Explicit run id for artifacts and status lookup |
-| `--review-context <fresh\|fork>` | Child context policy |
-| `--inherit-memory <yes\|no\|summary>` | Memory inheritance policy |
-| `--inherit-skills <yes\|no\|selected>` | Skill inheritance policy |
-| `--inherit-project-context <yes\|no>` | Project context inheritance policy |
+| `--ask-id <id>` | Explicit ask id for artifacts and status lookup |
+| `--review-context <fresh\|inherited>` | Child context policy |
+| `--inherit-memory <none\|summary\|full>` | Memory inheritance policy |
+| `--inherit-skills <none\|selected\|all>` | Skill inheritance policy |
+| `--inherit-project-context <no\|summary\|full>` | Project context inheritance policy |
 | `--dogpile <auto\|off\|force>` | Freshness policy |
 | `--json` | Machine-readable command output |
 
-The full contract, triggers, and exhaustive examples live in `SKILL.md`.
+The full contract, triggers, and exhaustive examples live in [SKILL.md](SKILL.md).
 
 ## Domain Examples
 
 Domain-specific prompts work fine, but the README keeps onboarding examples
 developer-neutral. Exhaustive domain examples and sanity/E2E fixtures live in
-`docs/HUMAN_CHAT_EXAMPLES.md`.
+[docs/HUMAN_CHAT_EXAMPLES.md](docs/HUMAN_CHAT_EXAMPLES.md).
 
 ```text
 $ask what do we know about SPARTA QRA validation?
@@ -402,8 +409,8 @@ $ask Brandon persona about how NIST AC-3 relates to SPARTA countermeasure CM0001
 
 ## Configuration
 
-Most users never touch environment overrides. If you need to tweak defaults,
-these are the common variables:
+Most users never touch environment overrides. If you do need to tweak defaults,
+these are the knobs you will reach for most often:
 
 | Variable | Purpose |
 | --- | --- |
@@ -417,70 +424,84 @@ these are the common variables:
 | `SCILLM_API_KEY` | `/scillm` bearer token |
 | `ASK_DEBUG` | Enable debug logging |
 
-For the exhaustive list, see `SKILL.md`.
+Full list: [SKILL.md](SKILL.md).
 
 ## Artifacts and Telemetry
 
-`ask` records execution details into `/memory` so timeout and reliability policy
+`ask` writes execution details into `/memory` so timeout and reliability policy
 can become data-driven over time.
 
-### Runtime surfaces
+### What gets written
 
-Expected telemetry surfaces:
+Standard runtime artifacts:
+
+```text
+.ask_artifacts/runs/<ask_id>/<ask_id>.request.json
+.ask_artifacts/runs/<ask_id>/<ask_id>.status.json
+.ask_artifacts/runs/<ask_id>/<ask_id>.events.jsonl
+.ask_artifacts/runs/index.jsonl
+```
+
+Argue runs additionally write `argue/source_bundle.json`, `argue/for.json`,
+`argue/against.json`, `argue/judge.json`, `argue/argue.json`, and
+`argue/verifier.log`.
+
+Parallel-review runs write `parallel_review/source_bundle.json`, per-reviewer
+outputs, `judge.json`, `verdict.json`, and `verifier.log`.
+
+When you use `status --run <ask_id> --serve`, the local viewer writes
+`index.html`, `ask-viewer.css`, `ask-viewer.js`, and `viewer.json`.
+
+Runtime telemetry surfaces:
 
 - `ask_call_log`
 - `ask_subagent_heartbeat`
 - compact roundtable and parallel-review summaries
 - artifact paths for generated review outputs
-- `.ask_artifacts/<mode>/<run_id>/request.json`
-- `.ask_artifacts/<mode>/<run_id>/status.json`
-- `.ask_artifacts/<mode>/<run_id>/events.jsonl`
-- durable lessons when a conversation produces reusable knowledge
-- `argue/source_bundle.json`, `argue/for.json`, `argue/against.json`,
-  `argue/judge.json`, `argue/argue.json`, `argue/verifier.log`
-- `parallel_review/source_bundle.json`, reviewer outputs, `judge.json`,
-  `verdict.json`, and `verifier.log`
-- `index.html`, `ask-viewer.css`, `ask-viewer.js`, and `viewer.json` when
-  `status --run <ask_id> --serve` is used
+- durable lessons whenever a conversation produces reusable knowledge
 
 ### DAG observability
 
-`/scillm` DAG modes record per-node runtime correlation:
+`/scillm` DAG modes record per-node correlation:
 
 - `scillm_metadata` sent with every advocate, reviewer, and judge node
-- returned `/scillm` call/model/metadata observability when provided
+- returned `/scillm` call/model/metadata observability where available
 - source bundle IDs and source IDs used for grounding/citation checks
 - explicit degradation status when source grounding falls back or fails
-- verifier failures for unqualified `FOR`/`AGAINST` or safe review verdicts
-  when source grounding degrades
-- verifier failures for missing structured citations on verdict-bearing argue,
-  deep-review, and parallel-review outputs
-- chunked source IDs such as `TARGET_BUNDLE.1` for large target bundles so
-  `/scillm` grounding and verifier citations address the same material
-- verifier failures for returned `scillm_metadata` mismatches on core node
-  identity fields
-- structured `needs_attention` diagnostics when reviewer, advocate, or judge
-  calls fail before a trustworthy verdict can be produced
+- chunked source IDs such as `TARGET_BUNDLE.1` for large bundles, so grounding
+  and verifier citations address the same material
+
+### What the verifier rejects
+
+The verifier is intentionally strict. It will fail a run for:
+
+- unqualified `FOR`/`AGAINST` or safe review verdicts when source grounding has
+  degraded
+- missing structured citations on verdict-bearing argue, deep-review, and
+  parallel-review outputs
+- returned `scillm_metadata` mismatches on core node identity fields
+- structured `needs_attention` failures from reviewer, advocate, or judge calls
+  before a trustworthy verdict can be produced
 
 ### Retention
 
-Do not store full prompts, full reviewer chatter, full code diffs, or full repo
-snippets by default.
+By default, `/ask` does not store full prompts, full reviewer chatter, full code
+diffs, or full repo snippets. Heartbeat snapshots are sparse and stored for
+future timeout policy; full chatter is not persisted by default.
 
-Timeout handling is push-style where the runner supports it:
+### Timeout handling
 
-- `/subagent-runner` emits transcript delta and heartbeat events while a Codex
-  session is alive.
-- `/ask` follows `events.jsonl` first and falls back to status polling only when
-  needed.
-- `--oracle-idle-timeout` is treated as silence/stall detection, not normal
-  long-running reasoning failure.
+Timeouts are push-style where the runner supports it. `/subagent-runner` emits
+transcript delta and heartbeat events while a Codex session is alive. `/ask`
+follows `events.jsonl` first and falls back to status polling only when needed.
+
+- `--oracle-idle-timeout` is silence/stall detection, not a normal long-running
+  reasoning failure.
 - `--oracle-timeout` remains the wall-clock cap.
-- Heartbeat snapshots are sparse and stored for future timeout policy; full
-  chatter is not persisted by default.
 
-Semantic validation is part of the E2E contract. These cases must fail the
-relevant E2E check:
+### Semantic validation
+
+These cases are part of the E2E contract and must fail the relevant check:
 
 - empty answers
 - `No answer could be synthesized`
@@ -497,33 +518,26 @@ before being described as validated.
 
 As of 2026-04-29, `$ask` is usable for the intended interactive workflows:
 
-- Realistic domain sanity/E2E checks passed `3/3` with scoped memory, a stored
-  persona, and a multi-persona roundtable.
-- Targeted regression suite passed `30/30`.
-- Deterministic `/ask` protocol suite passed `98/98` after adding argue and
-  parallel-review `/scillm` metadata/source payloads.
-- Deterministic `/ask` protocol suite passed `102/102` after adding verifier
-  gates for source-grounding degradation and returned metadata mismatches.
-- Deterministic `/ask` suite passed `134/134` after promoting runtime parity
-  and adding full structured citation enforcement across ask, oracle, OS,
-  argue, deep-review, and parallel-review surfaces.
-- Opt-in live `/scillm` E2E passed for argue metadata/source bundles and
+- Realistic domain sanity/E2E checks pass with scoped memory, a stored persona,
+  and a multi-persona roundtable.
+- Deterministic `/ask` protocol coverage includes structured citation
+  enforcement across ask, oracle, OS, argue, deep-review, and parallel-review.
+- Opt-in live `/scillm` E2E passes for argue metadata/source bundles and
   parallel-review composition with `ASK_LIVE_SCILLM_E2E=1`.
-- SPARTA evidence-case routing now fails closed when `/create-evidence-case` is
-  required but unavailable, returning `needs_attention` rather than a normal
-  answer.
+- SPARTA evidence-case routing fails closed when `/create-evidence-case` is
+  required but unavailable.
 - Runtime status can be inspected in an auto-updating local HTML viewer with
   `./run.sh status --run <ask_id> --serve --open`.
-- Latest targeted validation after the fail-closed/viewer update: `105 passed`,
-  `sanity.sh` passed, and CDP verified the HTML viewer.
 - Normal oracle reasoning defaults to `high`; deep-review defaults to `xhigh`
   when no explicit reasoning is supplied.
-- The latest evidence dashboard is generated at
-  `.ask_artifacts/validation-dashboard/20260427T171501Z/index.html`.
+
+Latest evidence dashboard:
+`.ask_artifacts/validation-dashboard/20260427T171501Z/index.html`.
 
 ## Development Knowledge
 
-Curated development context lives in `docs/PROJECT_KNOWLEDGE.md`.
+Curated development context lives in
+[docs/PROJECT_KNOWLEDGE.md](docs/PROJECT_KNOWLEDGE.md).
 
 ```bash
 cd /path/to/skills/ask
@@ -580,25 +594,34 @@ bash sanity.sh
 
 ## Troubleshooting
 
-| Symptom | Check |
+| Symptom | Try this |
 | --- | --- |
-| Memory answers feel stale | Memory may not be refreshed. Try `/memory recall` directly, or add `--dogpile auto` for a freshness check. |
-| Persona answer sounds generic | Confirm the persona profile exists in `/memory`; if it was overwritten, relearn or restore the persona. |
+| Memory answers feel stale | Memory may not have refreshed. Try `/memory recall` directly, or add `--dogpile auto` for a freshness check. |
+| Persona answer sounds generic | Confirm the persona profile exists in `/memory`. If it was overwritten, relearn or restore it. |
 | Oracle call stalls | Check `ask_subagent_heartbeat` and transcript tail to see where it paused. |
 | Pipeline feels opaque | Run `./run.sh status --run <ask_id> --serve --open` to watch it live in your browser. |
 | Deep review returns shallow JSON | The verifier should reject it. Inspect `review.json` to see which gate failed. |
 | Date-sensitive answer lacks freshness | Use `--dogpile force`, or verify that `--dogpile auto` is routing to discovery. |
 
-## What we won't pretend to be
+## What ask is not
 
-- **A bulk prompt runner.** If you need to blast through 10,000 prompts, use a
-  batch pipeline. `ask` is for interactive, high-stakes questions.
-- **Not `/code-runner`.** Runtime review modes should not patch source files.
-- **A patch robot.** Deep review will tell you what's wrong and how to fix it,
-  but it will not edit your files. That boundary matters.
-- **Proof by JSON.** Structured output makes audits easier. It does not make
-  the reasoning smarter. Do not let clean JSON create false confidence.
-- **Evidence by memory alone.** Memory recall guides review; inspected artifacts
-  ground claims. `/ask` enforces that distinction deliberately.
-- **Exact ChatGPT Web parity.** Local oracle review uses the Codex and `/scillm`
-  surfaces you actually have, not a cloud-only feature set.
+A few boundaries are worth being explicit about:
+
+- **It is not a bulk prompt runner.** If you need to blast through 10,000
+  prompts, use a batch pipeline. `ask` is for interactive, high-stakes
+  questions.
+- **It is not `/code-runner`.** Runtime review modes do not patch source files.
+- **It is not a patch robot.** Deep review will tell you what is wrong and how
+  to fix it. It will not edit your files. That boundary matters.
+- **It is not proof by JSON.** Structured output makes audits easier. It does
+  not make the reasoning smarter. Do not let clean JSON create false
+  confidence.
+- **It is not evidence by memory alone.** Memory recall guides review;
+  inspected artifacts ground claims. `/ask` enforces that distinction
+  deliberately.
+- **It is not ChatGPT Web parity.** Local oracle review uses the Codex and
+  `/scillm` surfaces you actually have, not a cloud-only feature set.
+
+Start with `./run.sh ask "..."`, add `--oracle` when you want it to reason
+harder, and reach for `--argue`, `--roundtable`, or `--deep-review` when a
+single answer is not enough.

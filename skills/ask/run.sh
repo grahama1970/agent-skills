@@ -48,6 +48,7 @@ Commands:
   ask <question>    Query accumulated knowledge (with optional auto-learn)
   status            Show learning progress and task-monitor state
   doctor            Check runtime prerequisites and artifact writability
+  chains            Inspect saved review workflows
   nightly           Run scheduled persona update (incremental learning)
   os learn          Crawl and index embry-os internals (skills, packages, config)
   os ask <question> Query OS knowledge from memory (scope=os)
@@ -219,6 +220,10 @@ case "${1:-help}" in
     doctor)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.doctor "$@"
+        ;;
+    chains)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.chains_cli "$@"
         ;;
     nightly)
         shift
