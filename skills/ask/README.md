@@ -20,10 +20,10 @@ protocol.
 
 Use it for questions like:
 
-- "What did we decide about this?"
-- "Which persona should critique this plan?"
-- "Is this implementation safe to proceed?"
-- "What evidence backs this claim?"
+- "What did we decide about idempotent token refresh under concurrent auth retries?"
+- "Ask the reliability architect whether the queue fallback fails closed when Redis quorum is lost."
+- "Have the tester and maintainer roundtable the cache invalidation migration risk for cross-region writes."
+- "What file, test, or artifact backs the claim that replayed webhook deliveries cannot double-charge customers?"
 
 ```text
 human asks naturally
