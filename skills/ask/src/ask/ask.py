@@ -44,6 +44,7 @@ from .ask_routing import (
     _parse_natural_roundtable_query,
     _should_auto_oracle_persona,
 )
+from .preflight import EVIDENCE_CASE, NEEDS_ATTENTION, NORMAL_ANSWER, run_sparta_preflight
 from .reviewer_specs import focus_from_reviewer_specs, load_selected_reviewer_specs
 from .review_protocols import is_date_sensitive_question
 from .run_state import AskRunState, NoopRunState, build_context_policy, make_run_id
@@ -231,7 +232,40 @@ def ask(
                 "role_preset": parallel_review_role_preset,
             }
         result["oracle"]["dogpile_mode"] = dogpile_mode
-        result["oracle"]["dogpile_recommended"] = _should_use_dogpile(question, dogpile_mode)
+    preflight = run_sparta_preflight(question, scope, k, run_state=run_state)
+    result["preflight"] = preflight
+    preflight_route = preflight.get("route")
+    if preflight_route == NEEDS_ATTENTION:
+        attention = {
+            "reason": preflight.get("reason", "sparta_preflight_needs_attention"),
+            "question": question,
+            "safe_default": "pause",
+            "resume_hint": "Resolve or verify the SPARTA identifier, then rerun /ask.",
+            "preflight": preflight,
+        }
+        if run_state:
+            attention = run_state.needs_attention(**attention)
+        result["needs_attention"] = attention
+        return result
+    if preflight_route == EVIDENCE_CASE:
+        if run_state:
+            run_state.step_started("evidence_case", source="sparta_preflight")
+        evidence_result = _try_evidence_case(question, scope)
+        result["evidence_case"] = evidence_result
+        result["evidence_case_artifact"] = evidence_result
+        if evidence_result:
+            result["items"] = [{
+                "problem": question,
+                "solution": "Structured evidence was retrieved and assembled by /create-evidence-case.",
+                "via": "evidence_case",
+                "evidence_case_id": evidence_result.get("claim", {}).get("id", ""),
+            }]
+            result["answer"] = "Structured evidence was retrieved and assembled by /create-evidence-case. Review the evidence_case artifact."
+        if run_state:
+            run_state.step_finished("evidence_case", used=bool(evidence_result), items_count=len(result["items"]))
+        return result
+
+    deep_review_request = None
     deep_review_request = None
     if deep_review:
         if run_state:
