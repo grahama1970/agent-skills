@@ -47,6 +47,23 @@ Under the hood, `/ask` uses whatever model surfaces are configured in your
 environment: Codex, OpenAI API, `/scillm` routes, local models, DeepSeek,
 Gemini, and other configured backends.
 
+## Try this first
+
+You do not need to learn flags, install personas, or write a chain file before
+using `ask`. Start with the question you actually have:
+
+```text
+$ask what did we decide about idempotent token refresh under concurrent auth retries?
+$ask ask the reliability architect whether the queue fallback fails closed when Redis quorum is lost
+$ask run 3 parallel reviewers on the cache invalidation migration
+$ask argue whether replayed webhook delivery handling is safe to ship
+$ask deep review src/ask/ask.py
+$ask is memory healthy?
+```
+
+Project agents translate those prompts into the correct CLI route. That is
+enough to start.
+
 ## Quick Start
 
 The basics: just ask.
@@ -118,21 +135,21 @@ profile before answering instead of treating the name as a prompt label.
 
 ```bash
 # One loaded persona
-./run.sh ask "Critique this reliability plan" \
+./run.sh ask "Critique this queue failover plan" \
   --oracle \
-  --oracle-persona Brandon
+  --oracle-persona ReliabilityArchitect
 
 # Two voices in sequence
-./run.sh ask "Where is this architecture weak?" \
+./run.sh ask "Where is this webhook replay design weak?" \
   --oracle \
-  --oracle-persona Brandon \
-  --oracle-peer Margaret \
+  --oracle-persona ReliabilityArchitect \
+  --oracle-peer EvidenceAuditor \
   --oracle-iterations 2
 
 # A protocolized roundtable
-./run.sh ask "Should we ship this change?" \
+./run.sh ask "Should we ship this cache invalidation migration?" \
   --roundtable \
-  --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer"
+  --roundtable-personas "ReliabilityArchitect:failure_mode,EvidenceAuditor:evidence_auditor,Maintainer:complexity_minimizer"
 ```
 
 ## When to Use Each Mode
@@ -204,6 +221,12 @@ $ask is memory healthy?
 ```
 
 Full route catalog: [docs/HUMAN_CHAT_EXAMPLES.md](docs/HUMAN_CHAT_EXAMPLES.md).
+
+> **At this point, you know enough to use `ask`.**
+>
+> The rest of this README is reference material for workflows, contracts,
+> configuration, telemetry, development, and troubleshooting. Skim, search, or
+> skip until you need it.
 
 ## Workflows
 
@@ -402,7 +425,7 @@ developer-neutral. Exhaustive domain examples and sanity/E2E fixtures live in
 
 ```text
 $ask what do we know about SPARTA QRA validation?
-$ask Brandon persona about how NIST AC-3 relates to SPARTA countermeasure CM0001
+$ask ControlMapper persona about how NIST AC-3 relates to SPARTA countermeasure CM0001
 ```
 
 ## Configuration
@@ -511,6 +534,26 @@ These cases are part of the E2E contract and must fail the relevant check:
 Mocked tests are regression coverage, not integration proof. New user-visible
 composition paths through `/scillm` require an opt-in live smoke/E2E check
 before being described as validated.
+
+## Interop with Companion Skills
+
+`ask` is a routing and verification layer. It composes with companion skills
+for durable memory, fresh evidence, model calls, detached sessions, and
+development context.
+
+| Companion | What `ask` uses it for |
+| --- | --- |
+| `/memory` | Durable recall, persona profiles, lessons, scoped context |
+| `/dogpile` | Fresh external evidence when memory is stale or thin |
+| `/extract-entities` | First-pass entity extraction for SPARTA/CWE/NIST routing |
+| `/create-evidence-case` | Required grounding step for SPARTA-class questions |
+| `/scillm` | Model calls, advocate/judge DAG execution, peer checks |
+| `/subagent-runner` | Detached child sessions for oracle and deep-review runs |
+| `/project-knowledge` | Curated current-state projection for development context |
+
+When a required companion route is unavailable, required evidence paths fail
+closed with `needs_attention`. Optional paths either continue without that
+capability or record an explicit degraded status.
 
 ## Current Readiness
 
