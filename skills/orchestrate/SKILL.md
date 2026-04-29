@@ -190,6 +190,21 @@ tasks:
 - **Review-plan**: Auto-runs `/review-plan check` on structured YAML plans (advisory)
 - **Per-task**: `quality-gate.sh` runs after each task (tests, lint, etc.)
 
+## Live Monitor
+
+Every structured run writes a browser monitor into the session directory:
+
+- `monitor.html` — live HTML view of the pipeline
+- `monitor.css` — readable styling for task state, lanes, gates, and payloads
+- `monitor.js` — polls `status.json` and `plan.json` every two seconds
+- `monitor-server.json` — owned localhost URL and PID for the session monitor
+
+The monitor must make the pipeline transparent: show the full plan, DAG/lane
+grouping, dependencies, current status, gate text, definition of done, errors,
+and raw plan/status payloads. It is not a static report. Structured execution
+starts an owned localhost HTTP server for the session and prints `monitor_url`
+in the `session_started` event.
+
 ## Architecture Note: Task Runners
 
 | Runner | Backend | Use Case |

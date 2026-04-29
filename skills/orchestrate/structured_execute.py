@@ -58,6 +58,7 @@ from structured_execute_helpers import (  # noqa: E402
     check_all_preconditions,
     render_report,
 )
+from monitor_server import launch_monitor_server  # noqa: E402
 
 app = typer.Typer(add_completion=False)
 
@@ -218,7 +219,8 @@ async def _wait_for_cancel(task: TaskRuntime) -> None:
 
 async def _execute_task(task: TaskRuntime, session_dir: Path) -> None:
     task.status = "running"
-    task.started_at = time.time()
+    if not task.started_at:
+        task.started_at = time.time()
     try:
         if task.runner == "local":
             await _run_local(task, session_dir)
@@ -834,12 +836,18 @@ async def _execute_plan_async(path: Path, repo_root: Path | None = None, resume:
     session_dir = STATE_ROOT / "structured" / f"session-{int(time.time())}"
     session_dir.mkdir(parents=True, exist_ok=True)
     (session_dir / "plan.json").write_text(json.dumps(plan, indent=2))
+    review_output_file = os.environ.get("ORCHESTRATE_REVIEW_PLAN_OUTPUT_FILE")
+    if review_output_file and Path(review_output_file).exists():
+        (session_dir / "review-plan.txt").write_text(Path(review_output_file).read_text())
+    monitor_url = launch_monitor_server(session_dir)
 
     # Machine-readable session announcement — the project agent reads this to
     # know where to write KILL/ABORT/PAUSE files for intervention.
     # Format: JSON line on stdout, parseable by pi-task.ts or any supervisor.
     print(json.dumps({"event": "session_started", "session_dir": str(session_dir),
                        "status_file": str(session_dir / "status.json"),
+                       "monitor_file": str(session_dir / "monitor.html"),
+                       "monitor_url": monitor_url,
                        "task_count": len(plan.get("tasks", []))}))
 
     runtimes = _build_runtimes(plan, repo_root)
@@ -980,6 +988,9 @@ async def _execute_loop(
                 break
             ready.remove(task_id)
             active_by_lane[task.lane] = task_id
+            task.status = "running"
+            task.started_at = time.time()
+            _render_state(session_dir, runtimes, deps, failed=False)
             atask = asyncio.create_task(_execute_task(task, session_dir), name=f"task-{task_id}")
             task_map[atask] = task_id
             _render_state(session_dir, runtimes, deps, failed=False)
@@ -994,6 +1005,7 @@ async def _execute_loop(
         done, _ = await asyncio.wait(task_map.keys(), timeout=WATCHDOG_POLL_S,
                                      return_when=asyncio.FIRST_COMPLETED)
         if not done:
+            _render_state(session_dir, runtimes, deps, failed=False)
             continue
 
         for atask in done:

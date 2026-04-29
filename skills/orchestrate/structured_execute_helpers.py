@@ -18,6 +18,8 @@ from typing import Any
 
 from loguru import logger
 
+from monitor_renderer import render_monitor_html
+
 
 def _normalize_scillm_chat_url(raw_url: str | None) -> str:
     """Return the OpenAI-compatible chat-completions URL for scillm."""
@@ -408,20 +410,71 @@ def _dependency_graph(plan: dict[str, Any]) -> tuple[dict[str, list[str]], dict[
 
 def _render_state(session_dir: Path, runtimes: dict[str, TaskRuntime],
                   deps: dict[str, list[str]], failed: bool) -> None:
+    plan = _load_session_plan(session_dir)
     payload = {
         "generated_at": time.time(), "failed": failed, "session_dir": str(session_dir),
+        "monitor_html": str(session_dir / "monitor.html"),
+        "monitor_css": str(session_dir / "monitor.css"),
+        "monitor_url": _load_monitor_url(session_dir),
+        "review_plan_output": "review-plan.txt" if (session_dir / "review-plan.txt").exists() else "",
         "tasks": [
             {"id": t.task_id, "title": t.title, "lane": t.lane, "runner": t.runner,
              "backend": t.backend, "mode": t.mode, "agent": t.agent, "status": t.status,
-             "depends_on": deps.get(t.task_id, []),
-             "output_path": str(t.output_path) if t.output_path else "",
-             "error": t.error, "started_at": t.started_at, "finished_at": t.finished_at,
-             "subagent_task_id": t._subagent_task_id or "",
-             "subagent_port": t._subagent_port or 0}
+              "depends_on": deps.get(t.task_id, []),
+              "output_path": str(t.output_path) if t.output_path else "",
+              "review_status": t.review_status,
+              "review_output": t.review_output,
+              "artifacts": _task_artifacts(session_dir, t.task_id),
+              "error": t.error, "started_at": t.started_at, "finished_at": t.finished_at,
+              "subagent_task_id": t._subagent_task_id or "",
+              "subagent_port": t._subagent_port or 0}
             for t in runtimes.values()
         ],
     }
     (session_dir / "status.json").write_text(json.dumps(payload, indent=2))
+    render_monitor_html(session_dir, payload, plan, deps)
+
+
+def _load_session_plan(session_dir: Path) -> dict[str, Any]:
+    plan_file = session_dir / "plan.json"
+    if not plan_file.exists():
+        return {}
+    try:
+        data = json.loads(plan_file.read_text())
+        return data if isinstance(data, dict) else {}
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def _load_monitor_url(session_dir: Path) -> str:
+    metadata_file = session_dir / "monitor-server.json"
+    if not metadata_file.exists():
+        return ""
+    try:
+        data = json.loads(metadata_file.read_text())
+        return str(data.get("url") or "")
+    except (json.JSONDecodeError, OSError):
+        return ""
+
+
+def _task_artifacts(session_dir: Path, task_id: str) -> dict[str, str]:
+    candidates = {
+        "code_runner_spec": session_dir / f"{task_id}.code-runner-spec.json",
+        "response": session_dir / f"{task_id}.response.txt",
+        "stdout": session_dir / f"{task_id}.stdout.txt",
+        "stderr": session_dir / f"{task_id}.stderr.txt",
+        "result": session_dir / f"{task_id}.result.json",
+        "rounds": session_dir / f"{task_id}.rounds.jsonl",
+        "hunk": session_dir / f"{task_id}.hunk.md",
+        "blind_eval": session_dir / f"{task_id}.blind-eval.json",
+        "review_request": session_dir / f"{task_id}.review-request.md",
+        "review_output": session_dir / f"{task_id}.review-output.txt",
+    }
+    return {
+        name: path.name
+        for name, path in candidates.items()
+        if path.exists()
+    }
 
 
 def render_report(
@@ -554,6 +607,7 @@ def render_report(
     lines.append("─" * 68)
     lines.append(f"SUMMARY: {completed} ✓ | {failed} ✗ | {blocked} ○ | Total: {_fmt_duration(total_time)}")
     lines.append(f"Session: {session_dir}/")
+    lines.append(f"Monitor: {session_dir / 'monitor.html'}")
     if failed or blocked:
         lines.append(f"Resume:  orchestrate run <plan.yaml> --resume")
 

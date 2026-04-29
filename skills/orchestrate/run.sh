@@ -386,6 +386,10 @@ PY
                     echo "Running /review-plan..."
                     local review_output review_exit=0
                     review_output=$(python3 "$review_plan_py" check "$task_file" 2>&1) || review_exit=$?
+                    local review_output_file
+                    review_output_file=$(mktemp -t orchestrate-review-plan.XXXXXX.txt)
+                    printf "%s\n" "$review_output" > "$review_output_file"
+                    export ORCHESTRATE_REVIEW_PLAN_OUTPUT_FILE="$review_output_file"
                     # If review-plan itself crashed, block — a broken validator is not a pass
                     if [[ $review_exit -ne 0 ]] && ! echo "$review_output" | grep -qE "(PASS|WARN|FAIL)"; then
                         echo "Error: /review-plan crashed (exit $review_exit):" >&2

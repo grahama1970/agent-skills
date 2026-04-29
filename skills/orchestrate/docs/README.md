@@ -11,6 +11,9 @@ orchestrate run 01_TASKS.md
 # Watch progress in real-time TUI
 .pi/skills/task-monitor/run.sh tui
 
+# Or open the per-session live browser monitor URL printed at startup
+# {"event": "session_started", ..., "monitor_url": "http://127.0.0.1:54321/monitor.html"}
+
 # Schedule nightly runs
 orchestrate schedule 01_TASKS.md --cron "0 2 * * *"
 ```
@@ -130,6 +133,31 @@ The task-monitor provides a real-time Rich TUI showing orchestration progress:
 .pi/skills/task-monitor/run.sh serve --port 8765
 ```
 
+## Live HTML Monitor
+
+Every structured run writes `monitor.html`, `monitor.css`, `monitor.js`, and
+`monitor-server.json` into the session directory printed at startup. It also
+starts an owned localhost HTTP server and prints `monitor_url` in the
+`session_started` event. The browser monitor is live, not a static report:
+`monitor.js` polls `status.json` and `plan.json` every two seconds and
+re-renders the pipeline.
+
+The monitor shows:
+- Full run goal and progress counts
+- Lanes/DAG grouping with every task and dependency
+- Runner/backend, duration, current status, errors, and output links
+- Gate and definition-of-done text for each task
+- Raw plan and status payloads for auditability
+
+For local viewing, open the printed `monitor_url`. If the server was disabled
+with `ORCHESTRATE_MONITOR=0`, serve the directory manually:
+
+```bash
+cd <session-dir>
+python3 -m http.server 8766
+# open http://127.0.0.1:8766/monitor.html
+```
+
 ## Mid-Task Intervention (Factory Droid)
 
 A watchdog thread polls the session directory every 2 seconds for intervention
@@ -194,6 +222,7 @@ orchestrate run plan.yaml --resume
 
 ### State Persistence
 - Progress saved after each task completes to `status.json`
+- Live browser monitor polls `status.json` and `plan.json` every two seconds
 - `*.events.jsonl` files capture full SSE streams per task
 - Safe to kill between tasks (will resume from checkpoint)
 - Cancelled tasks are marked separately from failed tasks

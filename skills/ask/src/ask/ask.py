@@ -192,6 +192,21 @@ def ask(
         "auto_learned": False,
         "hybrid_mode": hybrid,
     }
+    preflight_decision = run_sparta_preflight(question, scope, k, run_state=run_state)
+    result["preflight"] = preflight_decision
+    if preflight_decision.get("route") == NEEDS_ATTENTION:
+        attention_payload = {
+            "reason": preflight_decision.get("reason", "sparta_preflight_needs_attention"),
+            "question": "SPARTA preflight found unresolved or fabricated identifiers that require confirmation before answering.",
+            "safe_default": "pause",
+            "resume_hint": "Verify the unresolved SPARTA identifiers, then ask again with corrected or grounded identifiers.",
+            "preflight": preflight_decision,
+        }
+        if run_state:
+            attention_payload = run_state.needs_attention(**attention_payload)
+        result["needs_attention"] = attention_payload
+        return result
+
     if oracle_model:
         result["oracle"] = {
             "model": oracle_model,
@@ -232,40 +247,8 @@ def ask(
                 "role_preset": parallel_review_role_preset,
             }
         result["oracle"]["dogpile_mode"] = dogpile_mode
-    preflight = run_sparta_preflight(question, scope, k, run_state=run_state)
-    result["preflight"] = preflight
-    preflight_route = preflight.get("route")
-    if preflight_route == NEEDS_ATTENTION:
-        attention = {
-            "reason": preflight.get("reason", "sparta_preflight_needs_attention"),
-            "question": question,
-            "safe_default": "pause",
-            "resume_hint": "Resolve or verify the SPARTA identifier, then rerun /ask.",
-            "preflight": preflight,
-        }
-        if run_state:
-            attention = run_state.needs_attention(**attention)
-        result["needs_attention"] = attention
-        return result
-    if preflight_route == EVIDENCE_CASE:
-        if run_state:
-            run_state.step_started("evidence_case", source="sparta_preflight")
-        evidence_result = _try_evidence_case(question, scope)
-        result["evidence_case"] = evidence_result
-        result["evidence_case_artifact"] = evidence_result
-        if evidence_result:
-            result["items"] = [{
-                "problem": question,
-                "solution": "Structured evidence was retrieved and assembled by /create-evidence-case.",
-                "via": "evidence_case",
-                "evidence_case_id": evidence_result.get("claim", {}).get("id", ""),
-            }]
-            result["answer"] = "Structured evidence was retrieved and assembled by /create-evidence-case. Review the evidence_case artifact."
-        if run_state:
-            run_state.step_finished("evidence_case", used=bool(evidence_result), items_count=len(result["items"]))
-        return result
+        result["oracle"]["dogpile_recommended"] = _should_use_dogpile(question, dogpile_mode)
 
-    deep_review_request = None
     deep_review_request = None
     if deep_review:
         if run_state:
@@ -423,9 +406,16 @@ def ask(
     # cases — BM25 matches on words like "table" or "extraction" return datalake
     # content about satellites, not pipeline health data.
     is_operational = _is_operational_question(question)
-    if (is_operational or not has_domain_answer) and not _is_direct_control_lookup(question):
+    preflight_route = result.get("preflight", {}).get("route")
+    should_build_evidence_case = preflight_route == EVIDENCE_CASE
+    if should_build_evidence_case:
         if run_state:
-            run_state.step_started("evidence_case", operational=is_operational, has_domain_answer=has_domain_answer)
+            run_state.step_started(
+                "evidence_case",
+                operational=is_operational,
+                has_domain_answer=has_domain_answer,
+                preflight_route=preflight_route,
+            )
         evidence_result = _try_evidence_case(question, scope)
         if evidence_result:
             result["evidence_case"] = evidence_result
