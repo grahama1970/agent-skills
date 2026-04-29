@@ -264,6 +264,10 @@ Roundtable participants have two layers: the stored persona is the domain
 voice; the protocol role is the bounded review job loaded from
 `docs/reviewers/*.md`.
 
+Rule of thumb: use `failure_mode` when the question is "how does this break,"
+`evidence_auditor` when the question is "where is the proof," and
+`complexity_minimizer` when the question is "are we overbuilding this."
+
 ### Parallel findings, then roundtable debate
 
 ```bash
@@ -314,6 +318,22 @@ Argue, oracle, OS knowledge answers, deep review, and parallel review all use
 the `ask.citations.v1` citation contract. Memory citations are valid for
 knowledge, persona, and project-context answers. They are not valid for code or
 review safety claims; those require target/file/diff/artifact citations.
+
+Minimal citation objects carry `source_id`, `source_kind`, `quote_or_summary`,
+and `supports`:
+
+```json
+{
+  "evidence_citations": [
+    {
+      "source_id": "TARGET_BUNDLE.1",
+      "source_kind": "file",
+      "quote_or_summary": "Retry fallback returns needs_attention when quorum is unavailable.",
+      "supports": "The queue fallback fails closed instead of silently retrying."
+    }
+  ]
+}
+```
 
 ### Preferred model with a one-shot peer
 
