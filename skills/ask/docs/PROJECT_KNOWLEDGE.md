@@ -71,6 +71,14 @@ curated context. Memory recall is context, not evidence.
   memory-only citations for `SAFE` and `SAFE_WITH_CONDITIONS`.
 - Large target source bundles are chunked into addressable IDs such as
   `TARGET_BUNDLE.1`, avoiding prefix-only `/scillm` grounding.
+- SPARTA evidence-case routing now fails closed: when preflight requires
+  `/create-evidence-case` and that skill is unavailable or fails, `/ask` returns
+  `needs_attention` with `safe_default=do_not_answer_as_grounded` instead of
+  falling through to normal memory/oracle synthesis.
+- Runtime transparency now includes a token-gated, localhost-only HTML viewer:
+  `./run.sh status --run <ask_id> --serve --open` writes `index.html`,
+  `ask-viewer.css`, `ask-viewer.js`, and `viewer.json` into the run directory
+  and polls `request/status/events` so long runs are not black boxes.
 
 ## Recent Decisions
 
@@ -95,6 +103,8 @@ curated context. Memory recall is context, not evidence.
 | 2026-04-28 | Make grounding degradation verifier-visible. | Recording fallback is insufficient if safe/binary verdicts can still pass as fully grounded. |
 | 2026-04-28 | Verify returned `/scillm` metadata identity when present. | Opaque node correlation only works if returned runtime metadata matches the requested DAG node identity. |
 | 2026-04-29 | Enforce structured citations across `/ask`. | Memory can cite knowledge answers, but review safety claims need target/file/diff/artifact evidence. |
+| 2026-04-29 | Make SPARTA evidence-case routing fail closed. | Grounded SPARTA questions must not silently become ordinary answers when `/create-evidence-case` is unavailable or fails. |
+| 2026-04-29 | Add an ephemeral HTML run viewer. | `status --watch` is necessary but not sufficient for human inspection of DAG state, artifacts, verifier failures, and `needs_attention` reasons. |
 
 ## Open Questions
 
@@ -119,6 +129,7 @@ curated context. Memory recall is context, not evidence.
 | `README.md` | GitHub/developer overview for `/ask` |
 | `SKILL.md` | Full skill contract and operational instructions |
 | `src/ask/ask.py` | Main command implementation |
+| `src/ask/ask_relevance.py` | Domain relevance checks and `/create-evidence-case` invocation |
 | `src/ask/ask_routing.py` | Natural-language route inference |
 | `src/ask/ask_oracle.py` | Oracle and subagent-backed synthesis |
 | `src/ask/deep_review.py` | Deep-review prompt, artifact, and verifier support |
@@ -126,6 +137,7 @@ curated context. Memory recall is context, not evidence.
 | `src/ask/parallel_review.py` | `/scillm` reviewer fanout, judge synthesis, verifier, and code-runner handoff artifacts |
 | `src/ask/scillm_runtime.py` | Shared `/scillm` metadata, source bundle, observability, and debug helpers |
 | `src/ask/run_state.py` | Runtime request/status/events protocol, needs-attention states, run listing, pruning |
+| `src/ask/run_viewer.py` | Token-gated local HTML monitor for request/status/events artifacts |
 | `src/ask/doctor.py` | Fast and live runtime diagnostics |
 | `src/ask/review_protocols/adversarial_review.py` | Existing roundtable/parallel review protocol support |
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
@@ -161,7 +173,7 @@ Allowed final verdicts:
 
 ## Validation State
 
-Latest implementation checks, as of 2026-04-28:
+Latest implementation checks, as of 2026-04-29:
 
 - Deep-review contract doc exists.
 - Deep-review verifier tests exist.
@@ -195,6 +207,14 @@ Latest implementation checks, as of 2026-04-28:
 - Real `/scillm` E2E full live file after the update:
   `ASK_LIVE_SCILLM_E2E=1 ... tests/test_parallel_review_live_e2e.py`
   passed `2/2` in `31.67s` after verifier hardening.
+- Fail-closed SPARTA evidence-case and viewer regression checks passed.
+- Targeted suite after the fail-closed/viewer update:
+  `tests/test_human_chat_examples.py tests/test_run_state_protocol.py` passed
+  `105 passed`.
+- Skill sanity after the fail-closed/viewer update:
+  `All sanity checks PASSED`.
+- UI verification for the HTML run viewer completed with CDP and wrote
+  `.codex/ui-verification/ask-run-viewer/latest.json`.
 
 ## Timeout and Recovery Policy
 

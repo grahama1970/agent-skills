@@ -58,6 +58,8 @@ provides:
 composes:
   - memory
   - dogpile
+  - extract-entities
+  - create-evidence-case
   - discover-books
   - ingest-youtube
   - fetcher
@@ -316,6 +318,8 @@ Runtime safety:
 - Plain `/ask` degrades to a no-op runtime state if artifact writes fail; deep review and parallel review fail closed.
 - `status --prune` removes only validated direct-child `ask.runtime.v1` run directories whose `ask_id` and `artifacts.run_dir` match the directory.
 - `status --watch` has a bounded timeout and exits nonzero if the run never reaches a terminal state.
+- `status --serve` is read-only, localhost-bound, token-gated, and intended for
+  human inspection of run artifacts; it must not mutate answers or retry nodes.
 - Runtime artifacts are validated by doctor against the deterministic request/status/event schema.
 - `status --runs` reads the append-only `index.jsonl` first, then falls back to directory scanning.
 
@@ -528,8 +532,10 @@ Protocol rules:
 - SPARTA and space-cybersecurity questions use the deterministic SPARTA preflight
   contract in `docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`: preserve the question
   text, run `/extract-entities` and `/memory` recall first, route grounded
-  SPARTA-corpora matches to `/create-evidence-case`, and continue normal `/ask`
-  routing when no grounded match is found.
+  SPARTA-corpora matches to `/create-evidence-case`, fail closed with
+  `needs_attention` and `safe_default=do_not_answer_as_grounded` when required
+  evidence-case creation is unavailable or fails, and continue normal `/ask`
+  routing only when no grounded match is found.
 - SPARTA-corpora match signals are only extractor-grounded resolved control IDs,
   control metadata for SPARTA/CWE/NIST/CAPEC/ATT&CK, related/crosswalk pairs,
   taxonomy tags, or SPARTA recall items. Unresolved or fabricated SPARTA-looking

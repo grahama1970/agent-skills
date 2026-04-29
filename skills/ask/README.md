@@ -39,8 +39,12 @@ claims must still be grounded in inspected files, diffs, tests, or artifacts.
 **SPARTA preflight:** For SPARTA, CWE, NIST, CAPEC, ATT&CK, and
 space-cybersecurity control questions, `/ask` first sends the preserved question
 text through `/extract-entities` and `/memory` recall. Grounded SPARTA-corpora
-matches route to `/create-evidence-case`; no match continues normal `/ask`
-routing. See `docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`.
+matches route to `/create-evidence-case`; if that required evidence-case route
+is unavailable or fails, `/ask` pauses with `needs_attention` and
+`safe_default=do_not_answer_as_grounded` instead of falling through to ordinary
+memory/oracle synthesis. No grounded match continues normal `/ask` routing. See
+`docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`.
+
 ## Quick Start
 
 ```bash
@@ -74,6 +78,9 @@ routing. See `docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`.
 
 # Check runtime health through OS mode.
 ./run.sh os health "is memory healthy?"
+
+# Serve an auto-updating read-only monitor for a run.
+./run.sh status --run <ask_id> --serve --open
 ```
 
 ## Modes
@@ -114,6 +121,8 @@ Expected companion skills:
 
 - `/memory`
 - `/dogpile`
+- `/extract-entities`
+- `/create-evidence-case`
 - `/scillm`
 - `/subagent-runner`
 - `/project-knowledge`
@@ -372,6 +381,8 @@ Expected telemetry surfaces:
   `argue/judge.json`, `argue/argue.json`, `argue/verifier.log`
 - `parallel_review/source_bundle.json`, reviewer outputs, `judge.json`,
   `verdict.json`, and `verifier.log`
+- `index.html`, `ask-viewer.css`, `ask-viewer.js`, and `viewer.json` when
+  `status --run <ask_id> --serve` is used
 
 Do not store full prompts, full reviewer chatter, full code diffs, or full repo
 snippets by default.
@@ -399,7 +410,7 @@ before being described as validated.
 
 ## Current Readiness
 
-As of 2026-04-28, `$ask` is usable for the intended interactive workflows:
+As of 2026-04-29, `$ask` is usable for the intended interactive workflows:
 
 - Realistic domain sanity/E2E checks passed `3/3` with scoped memory, a stored
   persona, and a multi-persona roundtable.
@@ -413,6 +424,13 @@ As of 2026-04-28, `$ask` is usable for the intended interactive workflows:
   argue, deep-review, and parallel-review surfaces.
 - Opt-in live `/scillm` E2E passed for argue metadata/source bundles and
   parallel-review composition with `ASK_LIVE_SCILLM_E2E=1`.
+- SPARTA evidence-case routing now fails closed when `/create-evidence-case` is
+  required but unavailable, returning `needs_attention` rather than a normal
+  answer.
+- Runtime status can be inspected in an auto-updating local HTML viewer with
+  `./run.sh status --run <ask_id> --serve --open`.
+- Latest targeted validation after the fail-closed/viewer update: `105 passed`,
+  `sanity.sh` passed, and CDP verified the HTML viewer.
 - Normal oracle reasoning defaults to `high`; deep-review defaults to `xhigh`
   when no explicit reasoning is supplied.
 - The latest evidence dashboard is generated at
@@ -444,6 +462,7 @@ current-state projection, not a replacement for inspected code or test output.
 | `src/ask/ask_oracle.py` | Oracle/subagent synthesis path |
 | `src/ask/ask_results.py` | Result formatting and persistence support |
 | `src/ask/run_state.py` | Run ids, artifact directories, events, status, context policy |
+| `src/ask/run_viewer.py` | Token-gated local HTML viewer for runtime artifacts |
 | `src/ask/doctor.py` | Preflight diagnostics for composed dependencies |
 | `src/ask/reviewer_specs.py` | Reviewer-role frontmatter loading and dynamic angle selection |
 | `src/ask/chain_specs.py` | Saved review-chain loading and validation |
@@ -480,6 +499,7 @@ bash sanity.sh
 | Memory answers look stale | Run `/memory recall` directly and consider `--dogpile auto` |
 | Persona answer sounds generic | Confirm persona profile exists in `/memory` |
 | Oracle call stalls | Check `ask_subagent_heartbeat` and transcript tail |
+| Pipeline feels opaque | Run `./run.sh status --run <ask_id> --serve --open` |
 | Deep review returns shallow JSON | Verifier should reject it; inspect `review.json` |
 | Date-sensitive answer lacks freshness | Use `--dogpile force` or verify `--dogpile auto` routing |
 
