@@ -15,7 +15,9 @@ import ask.nightly as nightly_module
 import ask.os_learn as os_learn_module
 import ask.os_query as os_query_module
 import ask.parallel_review as parallel_review_module
+import ask.parallel_review as parallel_review_module
 import ask.pipeline as pipeline_module
+import ask.preflight as preflight_module
 import ask.status as status_module
 from ask.doctor import run_doctor
 from ask.runtime_schema import validate_run_dir, validate_runtime_tree
@@ -114,6 +116,50 @@ def test_run_state_needs_attention_and_artifact_registration_survive_finish(tmp_
     assert status["state"] == "needs_attention"
     assert status["artifacts"]["review_md"].endswith("review.md")
     assert status["needs_attention"]["resume_hint"] == "Run again with --deep-review-target <target>."
+def test_sparta_preflight_routes_grounded_mustard_cm0001_to_evidence_case():
+    decision = preflight_module.decide_sparta_preflight(
+        "How does NIST AC-3 map to the mustard SPARTA countermeasure CM0001?",
+        {
+            "entities": [
+                {
+                    "id": "CM0001",
+                    "label": "mustard access-control countermeasure",
+                    "corpus": "sparta",
+                    "source_corpus": "nist",
+                    "type": "control_crosswalk",
+                    "status": "resolved",
+                }
+            ]
+        },
+        [],
+    )
+
+    assert decision["route"] == "evidence_case"
+    assert decision["reason"] == "grounded_sparta_corpora_signal"
+    assert decision["grounded_entities"][0]["id"] == "CM0001"
+    assert "mustard" in decision["grounded_entities"][0]["label"]
+
+
+def test_sparta_preflight_unresolved_cm0001_pauses_needs_attention():
+    decision = preflight_module.decide_sparta_preflight(
+        "Can we claim the mustard SPARTA CM0001 evidence is compliant?",
+        {
+            "entities": [
+                {
+                    "id": "CM0001",
+                    "label": "mustard SPARTA evidence claim",
+                    "corpus": "sparta",
+                    "status": "unresolved",
+                }
+            ]
+        },
+        [],
+    )
+
+    assert decision["route"] == "needs_attention"
+    assert decision["reason"] == "unresolved_or_fabricated_sparta_identifier"
+    assert decision["unresolved_entities"][0]["id"] == "CM0001"
+
 
 
 def test_cli_ask_writes_runtime_artifacts(monkeypatch, tmp_path):

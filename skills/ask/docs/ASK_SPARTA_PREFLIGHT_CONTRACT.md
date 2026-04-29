@@ -49,6 +49,17 @@ status. If the reference cannot be resolved, the response should name the
 unresolved reference, explain that no grounded SPARTA-corpora match was found,
 and ask for corrected identifiers or source material.
 
+## Regression examples
+
+The documented `sparta_preflight` coverage includes a grounded mustard-color
+`CM0001` example and an unresolved variant:
+
+- A resolved `/extract-entities` result for “NIST AC-3 maps to the mustard SPARTA
+  countermeasure `CM0001`” routes to `/create-evidence-case`.
+- An unresolved or fabricated “mustard SPARTA `CM0001` evidence is compliant”
+  claim routes to `needs_attention` until corrected identifiers or source
+  material are supplied.
+
 ## Compliance governance
 
 All CAE and `/create-evidence-case` outputs default to `NEEDS_VERIFICATION`.

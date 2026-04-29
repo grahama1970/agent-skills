@@ -274,6 +274,27 @@ Expected SPARTA/space-cybersecurity routes:
   --oracle-backend subagent-runner
 ```
 
+## SPARTA Preflight Examples
+
+SPARTA, NIST-to-SPARTA, and space-cybersecurity prompts use the deterministic
+`sparta_preflight` route before answer synthesis. The preflight step must rely on
+structured `/extract-entities` and `/memory` grounding, then either hands grounded
+controls to `/create-evidence-case` or pauses safely.
+
+```text
+$ask --scope sparta how does NIST AC-3 map to the mustard SPARTA countermeasure CM0001?
+$ask --scope sparta can we claim the mustard SPARTA CM0001 evidence package is compliant?
+```
+
+Expected route:
+
+- For a resolved extractor entity such as `CM0001` from the SPARTA corpus, route
+  through `sparta_preflight` to `/create-evidence-case`; the evidence package
+  remains `NEEDS_VERIFICATION`, not a final compliance determination.
+- For an unresolved or fabricated `CM0001`/mustard reference, stop the evidence
+  path with `needs_attention`; do not invent a control, relationship, crosswalk,
+  or compliance status.
+
 ## Raw And JSON Output
 
 ```text

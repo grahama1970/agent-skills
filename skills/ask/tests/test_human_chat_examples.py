@@ -192,5 +192,9 @@ def test_documented_chat_examples_file_keeps_required_categories():
         "$ask deep review this implementation --deep-review-target src/ask/ask.py",
         "$ask oracle with a 10 minute timeout on this architecture decision",
         "Wrong: $ask run oracle for these 100 questions",
+        "sparta_preflight",
+        "mustard",
+        "CM0001",
+        "needs_attention",
     ]:
         assert required in examples
