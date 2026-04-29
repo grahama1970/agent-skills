@@ -35,6 +35,7 @@ from .parallel_review import MAX_REVIEWERS, ParallelReviewError, run_parallel_re
 from .ask_oracle import _is_meta_item
 from .ask_persona_profiles import _format_persona_suggestion
 from .ask_relevance import _has_relevant_domain_items, _try_evidence_case
+from .preflight import EVIDENCE_CASE, NEEDS_ATTENTION, NORMAL_ANSWER, run_sparta_preflight
 from .ask_results import _synthesise
 from .ask_routing import (
     _is_operational_question,
@@ -44,7 +45,6 @@ from .ask_routing import (
     _parse_natural_roundtable_query,
     _should_auto_oracle_persona,
 )
-from .preflight import EVIDENCE_CASE, NEEDS_ATTENTION, NORMAL_ANSWER, run_sparta_preflight
 from .reviewer_specs import focus_from_reviewer_specs, load_selected_reviewer_specs
 from .review_protocols import is_date_sensitive_question
 from .run_state import AskRunState, NoopRunState, build_context_policy, make_run_id
