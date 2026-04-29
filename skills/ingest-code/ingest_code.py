@@ -14,6 +14,8 @@ Usage:
 """
 
 import ast
+import hashlib
+import importlib.util
 import json
 import os
 import random
@@ -25,6 +27,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
+
+import httpx
+
+from code_memory_client import CodeMemoryClient
+from code_symbol_record import CodeSymbolRecord
+from ingest_code_cwe import scan_file_cwe
 
 try:
     import typer
@@ -78,7 +86,6 @@ def load_taxonomy_module():
     ]
     for tp in taxonomy_paths:
         if tp.exists():
-            import importlib.util
             spec = importlib.util.spec_from_file_location("taxonomy", tp)
             module = importlib.util.module_from_spec(spec)
             sys.modules["taxonomy"] = module
@@ -96,17 +103,20 @@ def find_memory_skill() -> Optional[Path]:
 def _learn_http(problem: str, solution: str, scope: str, tags: list[str]) -> bool:
     """Store a lesson in /memory via Unix socket httpx."""
     try:
-        import httpx
         transport = httpx.HTTPTransport(uds=MEMORY_SOCKET_PATH)
         with httpx.Client(transport=transport, base_url="http://localhost", timeout=15.0) as client:
-            resp = client.post("/learn", json={
+            document = {
                 "problem": problem,
                 "solution": solution,
                 "scope": scope,
                 "tags": tags,
                 "code_symbol": True,
-            })
-            return resp.status_code == 200
+            }
+            resp = client.post("/store", json={"document": document})
+            if 200 <= resp.status_code < 300:
+                return True
+            resp = client.post("/learn", json=document)
+            return 200 <= resp.status_code < 300
     except Exception:
         return False
 
@@ -118,8 +128,6 @@ def _learn(memory_script: Path, problem: str, solution: str, scope: str, tags: l
 
 def _recall_http(query: str, k: int = 1) -> dict[str, Any]:
     """Query /memory recall over the Unix socket."""
-    import httpx
-
     transport = httpx.HTTPTransport(uds=MEMORY_SOCKET_PATH)
     with httpx.Client(transport=transport, base_url="http://localhost", timeout=15.0) as client:
         resp = client.post("/recall", json={"q": query, "k": k})
@@ -466,6 +474,20 @@ def _format_import_summary(imports: list[dict]) -> str:
     return ", ".join(part for part in parts if part)
 
 
+def _flatten_import_symbols(imports: list[dict]) -> list[str]:
+    """Flatten import metadata into lexical import symbols."""
+    symbols: list[str] = []
+    for imp in imports:
+        module = imp.get("module", "")
+        if module:
+            symbols.append(module)
+        for name in imp.get("names", []):
+            if module:
+                symbols.append(f"{module}.{name}")
+            symbols.append(name)
+    return sorted(set(symbols))
+
+
 def _extract_symbol_context(filepath: Path) -> dict[str, Any]:
     """Extract per-file context used to enrich treesitter symbols."""
     if filepath.suffix != ".py":
@@ -481,6 +503,234 @@ def _extract_symbol_context(filepath: Path) -> dict[str, Any]:
         "import_summary": _format_import_summary(imports),
         "class_hierarchies": _extract_python_class_hierarchies(filepath),
     }
+
+
+def _git_value(cwd: Path, args: list[str], default: str) -> str:
+    """Return a git value for indexing metadata, falling back when unavailable."""
+    try:
+        result = subprocess.run(
+            ["git", *args],
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            value = result.stdout.strip()
+            if value:
+                return value
+    except Exception:
+        pass
+    return default
+
+
+def _current_branch(codebase_root: Path) -> str:
+    return _git_value(codebase_root, ["rev-parse", "--abbrev-ref", "HEAD"], "unknown")
+
+
+def _current_commit(codebase_root: Path) -> str:
+    return _git_value(codebase_root, ["rev-parse", "HEAD"], "unknown")
+
+
+def _language_for_path(filepath: Path) -> str:
+    mapping = {
+        ".py": "python",
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascript",
+        ".rs": "rust",
+        ".go": "go",
+        ".java": "java",
+        ".c": "c",
+        ".h": "c",
+        ".cpp": "cpp",
+        ".hpp": "cpp",
+        ".rb": "ruby",
+        ".php": "php",
+        ".swift": "swift",
+        ".kt": "kotlin",
+        ".scala": "scala",
+    }
+    return mapping.get(filepath.suffix, filepath.suffix.lstrip(".") or "unknown")
+
+
+def _relative_path(filepath: Path, codebase_root: Path) -> str:
+    try:
+        return filepath.resolve().relative_to(codebase_root.resolve()).as_posix()
+    except ValueError:
+        return filepath.as_posix()
+
+
+def _content_hash(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8", errors="ignore")).hexdigest()
+
+
+def _source_slice(filepath: Path, start_line: int, end_line: int) -> str:
+    if start_line <= 0:
+        return ""
+    try:
+        lines = filepath.read_text(errors="ignore").splitlines()
+    except Exception:
+        return ""
+    if end_line < start_line:
+        end_line = start_line
+    return "\n".join(lines[start_line - 1 : end_line])
+
+
+def _name_from_call(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        base = _name_from_call(node.value)
+        return f"{base}.{node.attr}" if base else node.attr
+    return ""
+
+
+def _find_python_parent_symbol(tree: ast.AST, start_line: int, node: ast.AST) -> Optional[str]:
+    for candidate in ast.walk(tree):
+        if not isinstance(candidate, ast.ClassDef):
+            continue
+        candidate_start = getattr(candidate, "lineno", 0)
+        candidate_end = getattr(candidate, "end_lineno", 0)
+        if candidate_start <= start_line <= candidate_end and candidate is not node:
+            return candidate.name
+    return None
+
+
+def _extract_python_symbol_details(
+    filepath: Path,
+    kind: str,
+    name: str,
+    start_line: int,
+) -> dict[str, Any]:
+    """Extract richer Python symbol details for memory-backed hybrid retrieval."""
+    try:
+        content = filepath.read_text(errors="ignore")
+        tree = ast.parse(content)
+    except (SyntaxError, Exception):
+        return {}
+
+    candidates: list[ast.AST] = []
+    node_types: tuple[type, ...]
+    if kind == "class":
+        node_types = (ast.ClassDef,)
+    else:
+        node_types = (ast.FunctionDef, ast.AsyncFunctionDef)
+
+    for node in ast.walk(tree):
+        if isinstance(node, node_types) and getattr(node, "name", "") == name:
+            candidates.append(node)
+
+    if not candidates:
+        return {}
+
+    node = min(candidates, key=lambda candidate: abs(getattr(candidate, "lineno", 0) - start_line))
+    parameters: list[str] = []
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        parameters = [arg.arg for arg in node.args.args if arg.arg != "self"]
+
+    local_variables: set[str] = set()
+    called_symbols: set[str] = set()
+    string_literals: set[str] = set()
+    for child in ast.walk(node):
+        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store):
+            local_variables.add(child.id)
+        elif isinstance(child, ast.Call):
+            call_name = _name_from_call(child.func)
+            if call_name:
+                called_symbols.add(call_name)
+        elif isinstance(child, ast.Constant) and isinstance(child.value, str):
+            literal = child.value.strip()
+            if 1 < len(literal) <= 120:
+                string_literals.add(literal)
+
+    parent_symbol = _find_python_parent_symbol(tree, getattr(node, "lineno", start_line), node)
+    return {
+        "end_line": getattr(node, "end_lineno", start_line),
+        "docstring": ast.get_docstring(node) or "",
+        "parameters": sorted(parameters),
+        "local_variables": sorted(local_variables),
+        "called_symbols": sorted(called_symbols),
+        "string_literals": sorted(string_literals),
+        "parent_symbol": parent_symbol,
+    }
+
+
+def _build_code_symbol_record(
+    symbol: dict[str, Any],
+    filepath: Path,
+    codebase_root: Path,
+    scope: str,
+    repo: str,
+    branch: str,
+    commit: str,
+    imports: list[dict],
+) -> Optional[CodeSymbolRecord]:
+    raw_kind = symbol.get("kind", "")
+    kind = _normalize_symbol_kind(raw_kind)
+    name = symbol.get("name", "")
+    if not kind or not name:
+        return None
+
+    start_line = int(symbol.get("start_line") or 0)
+    end_line = int(symbol.get("end_line") or start_line)
+    signature = symbol.get("signature", "") or ""
+    docstring = symbol.get("docstring", "") or ""
+    parent_symbol = symbol.get("parent_symbol") or symbol.get("parent") or ""
+    parameters: list[str] = []
+    local_variables: list[str] = []
+    called_symbols: list[str] = []
+    string_literals: list[str] = []
+
+    if filepath.suffix == ".py":
+        details = _extract_python_symbol_details(filepath, kind, name, start_line)
+        end_line = int(details.get("end_line") or end_line)
+        docstring = docstring or details.get("docstring", "")
+        parent_symbol = parent_symbol or details.get("parent_symbol") or ""
+        parameters = list(details.get("parameters", []))
+        local_variables = list(details.get("local_variables", []))
+        called_symbols = list(details.get("called_symbols", []))
+        string_literals = list(details.get("string_literals", []))
+
+    code = _source_slice(filepath, start_line, end_line)
+    qualified_name = ".".join(part for part in [parent_symbol, name] if part)
+    if not qualified_name:
+        qualified_name = name
+
+    rel_path = _relative_path(filepath, codebase_root)
+    tags = _build_symbol_tags(kind, name, filepath.stem)
+    tags.extend([
+        "code_symbol",
+        f"repo:{repo}",
+        f"lang:{_language_for_path(filepath)}",
+        f"path:{rel_path}",
+    ])
+
+    return CodeSymbolRecord(
+        scope=scope,
+        repo=repo,
+        root=str(codebase_root.resolve()),
+        branch=branch,
+        commit=commit,
+        path=rel_path,
+        language=_language_for_path(filepath),
+        symbol_kind=kind,
+        symbol_name=name,
+        qualified_name=qualified_name,
+        start_line=start_line,
+        end_line=end_line,
+        signature=signature,
+        docstring=docstring,
+        code=code,
+        imports=_flatten_import_symbols(imports),
+        parameters=parameters,
+        local_variables=local_variables,
+        called_symbols=called_symbols,
+        string_literals=string_literals,
+        content_hash=_content_hash(code or signature or docstring or name),
+        tags=tags,
+    )
 
 
 def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
@@ -519,10 +769,11 @@ def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]]:
 
 def _store_treesitter_symbols_for_directory(
     directory: Path,
+    codebase_root: Path,
     scope: str,
     verification_samples: Optional[list[dict[str, str]]] = None,
 ) -> int:
-    """Scan one configured directory with the treesitter skill and store symbols."""
+    """Scan one configured directory and upsert structured code symbols to memory."""
     treesitter_script = find_treesitter_skill()
     if not treesitter_script:
         print(f"Treesitter skill not found for {directory}", file=sys.stderr, flush=True)
@@ -563,7 +814,10 @@ def _store_treesitter_symbols_for_directory(
     if not scan_results:
         return 0
 
-    stored = 0
+    repo = codebase_root.resolve().name
+    branch = _current_branch(codebase_root)
+    commit = _current_commit(codebase_root)
+    records: list[CodeSymbolRecord] = []
     for file_entry in scan_results:
         file_path_raw = file_entry.get("path")
         if not file_path_raw:
@@ -571,43 +825,34 @@ def _store_treesitter_symbols_for_directory(
 
         filepath = Path(file_path_raw)
         symbol_context = _extract_symbol_context(filepath)
-        import_summary = symbol_context["import_summary"]
-        class_hierarchies = symbol_context["class_hierarchies"]
 
         for symbol in file_entry.get("symbols", []):
-            raw_kind = symbol.get("kind", "")
-            kind = _normalize_symbol_kind(raw_kind)
-            name = symbol.get("name", "")
-            if not kind or not name:
+            record = _build_code_symbol_record(
+                symbol=symbol,
+                filepath=filepath,
+                codebase_root=codebase_root,
+                scope=scope,
+                repo=repo,
+                branch=branch,
+                commit=commit,
+                imports=symbol_context["imports"],
+            )
+            if record is None:
                 continue
+            records.append(record)
 
-            start_line = symbol.get("start_line", 0)
-            signature = symbol.get("signature", "")
-            docstring = symbol.get("docstring", "")
+    result = CodeMemoryClient().upsert_code_symbols(records)
+    for error in result.errors[:5]:
+        print(f"  [WARN] {error}", file=sys.stderr, flush=True)
 
-            solution_parts = [f"File: {filepath}:{start_line}"]
-            if signature:
-                solution_parts.append(f"Signature: {signature}")
-            if kind == "class":
-                bases = class_hierarchies.get(name, [])
-                hierarchy = ", ".join(bases) if bases else "None"
-                solution_parts.append(f"Class hierarchy: {hierarchy}")
-            if import_summary:
-                solution_parts.append(f"Imports: {import_summary}")
-            if docstring:
-                solution_parts.append(docstring[:800])
+    if verification_samples is not None:
+        for record in records[:result.stored]:
+            verification_samples.append({
+                "name": record.symbol_name,
+                "problem": record.problem,
+            })
 
-            problem = f"What is {name} in {filepath.name}?"
-            tags = _build_symbol_tags(kind, name, filepath.stem)
-            if _learn_http(problem, "\n".join(solution_parts), scope, tags):
-                stored += 1
-                if verification_samples is not None:
-                    verification_samples.append({
-                        "name": name,
-                        "problem": problem,
-                    })
-
-    return stored
+    return result.stored
 
 
 def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
@@ -741,41 +986,12 @@ def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, m
             "rationale": f"import: {edge['module']}",
         })
 
-    # Send in chunks of 100
-    import httpx
-    stored = 0
-    CHUNK = 100
-    for i in range(0, len(batch), CHUNK):
-        chunk = batch[i : i + CHUNK]
-        try:
-            resp = httpx.post(
-                f"{MEMORY_SERVICE_URL}/add-edges",
-                json={"edges": chunk},
-                timeout=60,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                chunk_stored = data.get("stored", 0)
-                stored += chunk_stored
-                if monitor:
-                    monitor.update(len(chunk), item=f"{stored} edges stored")
-                print(f"  Progress: {min(i + CHUNK, len(batch))}/{len(batch)} edges sent, {stored} stored", flush=True)
-            else:
-                print(f"  [WARN] Batch {i//CHUNK}: HTTP {resp.status_code}", flush=True)
-                if monitor:
-                    monitor.update(len(chunk))  # Still advance progress
-        except Exception as exc:
-            print(f"  [WARN] Batch {i//CHUNK}: {exc}", flush=True)
-            if monitor:
-                monitor.update(len(chunk))  # Still advance progress
-    return stored
-
-
-# ---------------------------------------------------------------------------
-# CWE scanning (original functionality)
-# ---------------------------------------------------------------------------
-
-from ingest_code_cwe import scan_file_cwe  # noqa: E402
+    result = CodeMemoryClient().add_edges(batch)
+    if monitor:
+        monitor.update(result.attempted, item=f"{result.stored} edges stored")
+    for error in result.errors[:5]:
+        print(f"  [WARN] {error}", flush=True)
+    return result.stored
 
 
 # ---------------------------------------------------------------------------
@@ -965,6 +1181,8 @@ def scan(
     glob: list[str] = typer.Option([], "-g", "--glob", help="File patterns to scan"),
     cwe_only: bool = typer.Option(False, "--cwe-only", help="Only scan for CWEs (legacy mode)"),
     validate: bool = typer.Option(False, "--validate/--no-validate", help="Run LLM validation on CWEs"),
+    treesitter: bool = typer.Option(False, "--treesitter", help="Run treesitter scan for structured code symbols"),
+    code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Upsert treesitter symbols to memory code_symbols"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be stored without writing"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
     batch_size: int = typer.Option(50, help="Files per batch"),
@@ -1107,6 +1325,24 @@ def scan(
                 edge_monitor._update(final=True)
             print(f"Edges: {edges_stored} stored of {edges_total} found", flush=True)
 
+    # --- Phase 4: Structured code symbol index ---
+    code_symbols_stored = 0
+    if treesitter and code_index and not cwe_only:
+        print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
+        if dry_run:
+            print("  [DRY RUN] treesitter code_symbols upsert skipped", flush=True)
+        else:
+            verification_samples: list[dict[str, str]] = []
+            for scan_root in _extract_configured_scan_roots(path):
+                root_stored = _store_treesitter_symbols_for_directory(
+                    scan_root,
+                    path,
+                    scope,
+                    verification_samples=verification_samples,
+                )
+                code_symbols_stored += root_stored
+                print(f"Code index: {root_stored} symbols stored from {scan_root}", flush=True)
+
     # Output summary
     result = {
         "files_scanned": len(files),
@@ -1118,12 +1354,13 @@ def scan(
         "cwe_summary": cwe_summary,
         "edges_found": edges_total,
         "edges_stored": edges_stored,
+        "code_symbols_stored": code_symbols_stored,
         "dry_run": dry_run,
     }
     print(f"\n{json.dumps(result, indent=2)}")
 
     # --- Write marker file + store ingestion record in /memory ---
-    if not dry_run and knowledge_stored > 0:
+    if not dry_run and (knowledge_stored > 0 or code_symbols_stored > 0):
         marker = {
             "ingested_at": datetime.now().isoformat(),
             "path": str(path.resolve()),
@@ -1132,6 +1369,17 @@ def scan(
             "knowledge_stored": knowledge_stored,
             "cwe_stored": cwe_stored,
             "edges_stored": edges_stored,
+            "code_index": {
+                "enabled": code_symbols_stored > 0,
+                "backend": "memory",
+                "collection": "code_symbols",
+                "treesitter": bool(treesitter),
+                "symbols_stored": code_symbols_stored,
+                "lexical_terms": code_symbols_stored > 0,
+                "line_ranges": code_symbols_stored > 0,
+                "content_hashes": code_symbols_stored > 0,
+                "hybrid_retrieval_capable": code_symbols_stored > 0,
+            },
             "scope": scope,
         }
         marker_path = path / ".ingest-code.json"
@@ -1144,7 +1392,7 @@ def scan(
         # Store ingestion record in /memory for discoverability
         _learn_http(
             problem=f"Has codebase {path.resolve().name} been indexed for semantic search?",
-            solution=f"Yes, indexed on {marker['ingested_at']}. {knowledge_stored} symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
+            solution=f"Yes, indexed on {marker['ingested_at']}. {knowledge_stored} lessons, {code_symbols_stored} code symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
             scope="system",
             tags=["ingest-code", "indexed-codebase", path.resolve().name, str(path.resolve())],
         )
@@ -1155,6 +1403,7 @@ def rescan(
     since: Optional[str] = typer.Option(None, help="Only files modified since (ISO date or '1d', '7d', etc.)"),
     validate: bool = typer.Option(True, "--validate/--no-validate", help="Run LLM validation"),
     treesitter: bool = typer.Option(False, "--treesitter", help="Run treesitter scan for symbol extraction"),
+    code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Upsert treesitter symbols to memory code_symbols"),
     verify_embeddings: bool = typer.Option(False, "--verify-embeddings", help="Spot-check recalled embeddings for stored symbols"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
     codebase: list[str] = typer.Option([], "-c", "--codebase", help="Codebase paths to rescan"),
@@ -1222,12 +1471,13 @@ def rescan(
                         total_cwes += 1
 
         # Treesitter symbol extraction (per codebase, not per file)
-        if treesitter:
+        if treesitter and code_index:
             scan_roots = _extract_configured_scan_roots(path)
             ts_stored = 0
             for scan_root in scan_roots:
                 root_stored = _store_treesitter_symbols_for_directory(
                     scan_root,
+                    path,
                     scope,
                     verification_samples=verifiable_samples,
                 )

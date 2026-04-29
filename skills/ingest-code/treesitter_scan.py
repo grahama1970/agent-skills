@@ -4,28 +4,92 @@ Invokes the treesitter skill (run.sh scan) on directories and stores
 extracted symbols (functions, classes, methods) to memory via Unix socket.
 """
 
+import hashlib
 import json
 import subprocess
 import sys
 from pathlib import Path
 
+from code_memory_client import CodeMemoryClient
+from code_symbol_record import CodeSymbolRecord
 
-def _learn_symbol(problem: str, solution: str, scope: str, tags: list[str]) -> bool:
-    """Store a symbol in /memory via Unix socket httpx."""
+
+def _git_value(cwd: Path, args: list[str], default: str) -> str:
     try:
-        import httpx
-        transport = httpx.HTTPTransport(uds="/run/user/1000/embry/memory.sock")
-        with httpx.Client(transport=transport, base_url="http://localhost", timeout=15.0) as client:
-            resp = client.post("/learn", json={
-                "problem": problem,
-                "solution": solution,
-                "scope": scope,
-                "tags": tags,
-                "code_symbol": True,
-            })
-            return resp.status_code == 200
+        result = subprocess.run(
+            ["git", *args],
+            cwd=str(cwd),
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
     except Exception:
-        return False
+        pass
+    return default
+
+
+def _source_slice(filepath: Path, start_line: int, end_line: int) -> str:
+    if start_line <= 0:
+        return ""
+    try:
+        lines = filepath.read_text(errors="ignore").splitlines()
+    except Exception:
+        return ""
+    if end_line < start_line:
+        end_line = start_line
+    return "\n".join(lines[start_line - 1 : end_line])
+
+
+def _language_for_path(filepath: Path) -> str:
+    return {
+        ".py": "python",
+        ".ts": "typescript",
+        ".tsx": "typescript",
+        ".js": "javascript",
+        ".jsx": "javascript",
+    }.get(filepath.suffix, filepath.suffix.lstrip(".") or "unknown")
+
+
+def _record_from_symbol(sym: dict, file_path: Path, root: Path, scope: str) -> CodeSymbolRecord | None:
+    kind = sym.get("kind", "unknown")
+    name = sym.get("name", "")
+    if kind not in {"function", "class", "method"} or not name:
+        return None
+
+    start_line = int(sym.get("start_line") or 0)
+    end_line = int(sym.get("end_line") or start_line)
+    code = _source_slice(file_path, start_line, end_line)
+    try:
+        rel_path = file_path.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        rel_path = file_path.as_posix()
+
+    repo = root.resolve().name
+    branch = _git_value(root, ["rev-parse", "--abbrev-ref", "HEAD"], "unknown")
+    commit = _git_value(root, ["rev-parse", "HEAD"], "unknown")
+    tags = ["codebase", "symbol", kind, name, file_path.stem, "code_symbol"]
+
+    return CodeSymbolRecord(
+        scope=scope,
+        repo=repo,
+        root=str(root.resolve()),
+        branch=branch,
+        commit=commit,
+        path=rel_path,
+        language=_language_for_path(file_path),
+        symbol_kind=kind,
+        symbol_name=name,
+        qualified_name=name,
+        start_line=start_line,
+        end_line=end_line,
+        signature=sym.get("signature", "") or "",
+        docstring=sym.get("docstring", "") or "",
+        code=code,
+        content_hash=hashlib.sha256((code or name).encode("utf-8")).hexdigest(),
+        tags=tags,
+    )
 
 
 def treesitter_scan_dir(directory: str, scope: str) -> int:
@@ -65,35 +129,18 @@ def treesitter_scan_dir(directory: str, scope: str) -> int:
         print(f"  treesitter returned invalid JSON for {directory}", file=sys.stderr)
         return 0
 
-    stored = 0
+    records: list[CodeSymbolRecord] = []
+    root = Path(directory)
     for file_entry in scan_results:
         file_path = file_entry.get("path", "")
         symbols = file_entry.get("symbols", [])
         if not symbols:
             continue
 
-        file_stem = Path(file_path).stem
+        path_obj = Path(file_path)
         for sym in symbols:
-            kind = sym.get("kind", "unknown")
-            name = sym.get("name", "")
-            signature = sym.get("signature", "")
-            docstring = sym.get("docstring", "")
-            start_line = sym.get("start_line", 0)
+            record = _record_from_symbol(sym, path_obj, root, scope)
+            if record:
+                records.append(record)
 
-            if not name:
-                continue
-
-            problem = f"What is {name} in {Path(file_path).name}?"
-            solution_parts = [f"File: {file_path}:{start_line}"]
-            if signature:
-                solution_parts.append(signature)
-            if docstring:
-                solution_parts.append(docstring[:800])
-            solution = "\n".join(solution_parts)
-
-            tags = ["codebase", "symbol", kind, name, file_stem]
-
-            if _learn_symbol(problem, solution, scope, tags):
-                stored += 1
-
-    return stored
+    return CodeMemoryClient().upsert_code_symbols(records).stored
