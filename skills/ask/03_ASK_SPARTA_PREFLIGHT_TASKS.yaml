@@ -1,0 +1,324 @@
+version: 1
+kind: orchestrate-plan
+repo_root: "/tmp/agent-skills-ask-promote"
+
+metadata:
+  repo_root: "/tmp/agent-skills-ask-promote"
+  title: "Add deterministic SPARTA preflight routing to /ask"
+  goal: >
+    Make /ask run zero-LLM entity extraction and memory recall before expensive
+    synthesis, route resolved SPARTA-corpora questions through
+    /create-evidence-case, and let non-SPARTA questions continue through normal
+    /ask answering.
+  plan_type: code
+  created: "2026-04-29"
+  primary_persona:
+    name: "Brandon Bailey"
+    role: "SPARTA compliance analyst using /ask as the front door"
+    source: "Current conversation and /ask SPARTA routing requirements"
+  compliance_governance:
+    principle: "Analyst workbench, not truth engine"
+    verdicts: "All CAE claims and evidence-case statuses default to NEEDS_VERIFICATION"
+    human_gate: "Compliance officer reviews before any posture or verdict status change"
+    language: "Use retrieval language such as retrieved, found, extracted, assembled"
+  non_goals:
+    - "Do not add a brittle 'relates to' regex gate."
+    - "Do not use an LLM call to decide whether a SPARTA evidence case is required."
+    - "Do not block normal general-knowledge /ask questions when no SPARTA-corpora entity is found."
+    - "Do not auto-promote any CAE claim, compliance posture, or verdict to a satisfied state."
+  required_changes:
+    - >
+      Add a deterministic preflight stage that invokes /extract-entities and
+      /memory recall before any /ask LLM, oracle, Brandon, or persona synthesis.
+    - >
+      Route to /create-evidence-case when /extract-entities resolves SPARTA,
+      CWE, NIST, CAPEC, ATT&CK, or SPARTA taxonomy entities from the SPARTA
+      corpora.
+    - >
+      Continue normal /ask routing when extraction finds no SPARTA-corpora match,
+      for example questions like "Why is mustard yellow-ish in color?"
+    - >
+      Mark unresolved or fabricated SPARTA-looking references as needs_attention
+      instead of answering as if the control exists.
+    - >
+      Emit preflight artifacts and events so the run viewer can show extraction,
+      memory recall, route decision, evidence-case handoff, and normal-answer
+      fallback decisions.
+
+execution:
+  max_concurrency: 2
+  wave_barrier: false
+  scheduling_policy: dependency_only
+
+capability_overlap:
+  - >
+    /memory recall found prior evidence-case restructuring notes: remove regex
+    entity extraction, use memory-backed cross-collection grounding, preserve
+    SPARTA/F36 domain separation, and treat evidence cases as compliance gates.
+  - >
+    skills-manifest scan found existing composable capabilities: /ask,
+    /extract-entities, /memory, /create-evidence-case, /review-plan, /plan,
+    /test-lab, and /scillm.
+  - >
+    Decision matrix: CALL /extract-entities for deterministic entity grounding;
+    CALL /memory recall for context retrieval; CALL /create-evidence-case for
+    SPARTA-corpora evidence assembly; EXTEND /ask routing, status artifacts, and
+    docs; REUSE /test-lab and sanity.sh for blind validation.
+  - >
+    Anti-silo justification: CREATE only the minimal /ask-local preflight glue
+    needed to compose existing skills. No new extractor, evidence-case builder,
+    memory retriever, regex parser, or compliance verdict engine is created.
+
+questions_blockers:
+  - "None"
+
+lanes:
+  - id: "0"
+    label: "Wave 0: Contract"
+  - id: "1.1"
+    label: "Wave 1: Preflight model"
+  - id: "1.2"
+    label: "Wave 1: Route handoff"
+  - id: "2"
+    label: "Wave 2: Regression coverage"
+  - id: "3"
+    label: "Wave 3: Validation"
+
+tasks:
+  - id: "1"
+    title: "Document /ask SPARTA preflight contract"
+    lane: "0"
+    runner: "code-runner"
+    backend: "codex"
+    mode: "iterative"
+    depends_on: []
+    skills:
+      - ask
+      - extract-entities
+      - memory
+      - create-evidence-case
+      - best-practices-plan
+      - test-lab
+    allowlist:
+      - "skills/ask/docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md"
+      - "skills/ask/SKILL.md"
+      - "skills/ask/README.md"
+    gate: "Contract states extraction and memory are preflight gates, /create-evidence-case owns SPARTA evidence assembly, and no relates-to regex is used."
+    read_context:
+      - "skills/ask/SKILL.md"
+      - "skills/ask/README.md"
+      - "skills/ask/docs/HUMAN_CHAT_EXAMPLES.md"
+      - "skills/extract-entities/SKILL.md"
+      - "skills/create-evidence-case/SKILL.md"
+      - "skills/memory/SKILL.md"
+    implementation:
+      - >
+        Write the routing contract: question text enters /extract-entities and
+        /memory recall first; SPARTA-corpora matches route to
+        /create-evidence-case; no match continues normal /ask routing.
+      - >
+        Define SPARTA-corpora match signals as resolved control IDs, control
+        metadata for SPARTA/CWE/NIST/CAPEC/ATT&CK, related pairs, taxonomy tags,
+        or SPARTA recall items from the extractor output.
+      - >
+        Define needs_attention behavior for unresolved or fabricated
+        SPARTA-looking references. The system must not fabricate a control,
+        crosswalk, relationship, or compliance status.
+      - >
+        Add compliance governance language: all CAE/evidence-case outputs default
+        to NEEDS_VERIFICATION and require human review before status changes.
+    tests:
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && ./sanity.sh"
+      - "/tmp/agent-skills-ask-promote/skills/test-lab/run.sh verify-task 03.1 /tmp/agent-skills-ask-promote/skills/ask --domain skills"
+    blind_tests:
+      - "/tmp/agent-skills-ask-promote/skills/test-lab/run.sh verify-task 03.1 /tmp/agent-skills-ask-promote/skills/ask --domain skills"
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && ./sanity.sh"
+    definition_of_done:
+      command: "cd /tmp/agent-skills-ask-promote/skills/ask && ./sanity.sh"
+      assertion: "exit_code == 0"
+
+  - id: "2"
+    title: "Add deterministic preflight decision model"
+    lane: "1.1"
+    runner: "code-runner"
+    backend: "codex"
+    mode: "iterative"
+    depends_on:
+      - "1"
+    skills:
+      - ask
+      - extract-entities
+      - memory
+      - create-evidence-case
+      - test-lab
+    allowlist:
+      - "skills/ask/src/ask/preflight.py"
+      - "skills/ask/src/ask/ask_routing.py"
+      - "skills/ask/src/ask/run_state.py"
+    gate: "Preflight route decision is made from extractor and memory outputs without LLM inference or text regex intent matching."
+    read_context:
+      - "skills/ask/src/ask/ask.py"
+      - "skills/ask/src/ask/ask_routing.py"
+      - "skills/ask/src/ask/run_state.py"
+      - "skills/extract-entities/SKILL.md"
+      - "skills/create-evidence-case/SKILL.md"
+      - "skills/memory/SKILL.md"
+    implementation:
+      - >
+        Add a small preflight decision model that records extractor output,
+        memory recall metadata, matched SPARTA-corpora signals, unresolved terms,
+        route decision, and reason.
+      - >
+        Classify route decisions as evidence_case, normal_answer, or
+        needs_attention. The evidence_case decision requires resolved
+        SPARTA-corpora entities; normal_answer requires no SPARTA-corpora match.
+      - >
+        Ensure "relates to" is not a routing primitive. Relationship wording may
+        appear in user text, but the gate must be entity grounding, not phrase
+        matching.
+      - >
+        Emit run-state events for extract_entities_started,
+        extract_entities_finished, memory_recall_finished, preflight_decision,
+        and needs_attention when applicable.
+    tests:
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && PYTHONPATH=src uv run --project . --group dev pytest -q tests/test_human_chat_examples.py tests/test_run_state_protocol.py"
+      - "/tmp/agent-skills-ask-promote/skills/test-lab/run.sh verify-task 03.2 /tmp/agent-skills-ask-promote/skills/ask --domain skills"
+    blind_tests:
+      - "/tmp/agent-skills-ask-promote/skills/test-lab/run.sh verify-task 03.2 /tmp/agent-skills-ask-promote/skills/ask --domain skills"
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && ./sanity.sh"
+    definition_of_done:
+      command: "cd /tmp/agent-skills-ask-promote/skills/ask && PYTHONPATH=src uv run --project . --group dev pytest -q tests/test_human_chat_examples.py tests/test_run_state_protocol.py && ./sanity.sh"
+      assertion: "exit_code == 0"
+
+  - id: "3"
+    title: "Wire evidence-case and normal-answer handoff"
+    lane: "1.2"
+    runner: "code-runner"
+    backend: "codex"
+    mode: "iterative"
+    depends_on:
+      - "2"
+    skills:
+      - ask
+      - create-evidence-case
+      - memory
+      - test-lab
+    allowlist:
+      - "skills/ask/src/ask/ask.py"
+      - "skills/ask/src/ask/preflight.py"
+      - "skills/ask/src/ask/ask_oracle.py"
+    gate: "Resolved SPARTA-corpora questions invoke /create-evidence-case before domain synthesis; non-SPARTA questions do not."
+    read_context:
+      - "skills/ask/src/ask/ask.py"
+      - "skills/ask/src/ask/ask_oracle.py"
+      - "skills/ask/src/ask/preflight.py"
+      - "skills/ask/src/ask/run_state.py"
+      - "skills/create-evidence-case/SKILL.md"
+      - "skills/memory/SKILL.md"
+    implementation:
+      - >
+        Invoke /extract-entities and /memory recall before the existing /ask
+        answer path. Preserve current normal-answer behavior when preflight
+        returns normal_answer.
+      - >
+        When preflight returns evidence_case, call /create-evidence-case with the
+        original question and extracted entity payload, then pass the assembled
+        evidence-case artifact into the answer synthesis step as context.
+      - >
+        Treat /create-evidence-case output as retrieved/assembled evidence only.
+        Do not label the posture as satisfied, compliant, approved, or final.
+      - >
+        When preflight returns needs_attention, stop before synthesis and emit a
+        clear clarification message with unresolved terms and candidate next
+        actions.
+    tests:
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && PYTHONPATH=src uv run --project . --group dev pytest -q tests/test_human_chat_examples.py tests/test_run_state_protocol.py"
+      - "/tmp/agent-skills-ask-promote/skills/test-lab/run.sh verify-task 03.3 /tmp/agent-skills-ask-promote/skills/ask --domain skills"
+    blind_tests:
+      - "/tmp/agent-skills-ask-promote/skills/test-lab/run.sh verify-task 03.3 /tmp/agent-skills-ask-promote/skills/ask --domain skills"
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && ./sanity.sh"
+    definition_of_done:
+      command: "cd /tmp/agent-skills-ask-promote/skills/ask && PYTHONPATH=src uv run --project . --group dev pytest -q tests/test_human_chat_examples.py tests/test_run_state_protocol.py && ./sanity.sh"
+      assertion: "exit_code == 0"
+
+  - id: "4"
+    title: "Add route examples and regression coverage"
+    lane: "2"
+    runner: "code-runner"
+    backend: "codex"
+    mode: "iterative"
+    depends_on:
+      - "2"
+      - "3"
+    skills:
+      - ask
+      - extract-entities
+      - create-evidence-case
+      - test-lab
+    allowlist:
+      - "skills/ask/tests/test_human_chat_examples.py"
+      - "skills/ask/tests/test_run_state_protocol.py"
+      - "skills/ask/docs/HUMAN_CHAT_EXAMPLES.md"
+    gate: "Regression examples cover SPARTA evidence-case routing, mustard-style normal answering, and unresolved SPARTA-looking terms."
+    read_context:
+      - "skills/ask/src/ask/ask.py"
+      - "skills/ask/src/ask/preflight.py"
+      - "skills/ask/src/ask/ask_routing.py"
+      - "skills/ask/tests/test_human_chat_examples.py"
+      - "skills/ask/tests/test_run_state_protocol.py"
+      - "skills/ask/docs/HUMAN_CHAT_EXAMPLES.md"
+    implementation:
+      - >
+        Add human-chat route examples for SPARTA control/CWE/NIST questions,
+        normal non-SPARTA questions such as mustard color, and fabricated
+        SPARTA-looking identifiers.
+      - >
+        Add deterministic tests that mock extractor and memory outputs at the
+        process boundary while asserting the route decision, emitted events, and
+        handoff payload shape.
+      - >
+        Keep tests focused on routing and artifact protocol. Do not require a
+        live LLM or live compliance status change.
+    tests:
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && PYTHONPATH=src uv run --project . --group dev pytest -q tests/test_human_chat_examples.py tests/test_run_state_protocol.py"
+      - "/tmp/agent-skills-ask-promote/skills/test-lab/run.sh verify-task 03.4 /tmp/agent-skills-ask-promote/skills/ask --domain skills"
+    blind_tests:
+      - "/tmp/agent-skills-ask-promote/skills/test-lab/run.sh verify-task 03.4 /tmp/agent-skills-ask-promote/skills/ask --domain skills"
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && ./sanity.sh"
+    definition_of_done:
+      command: "cd /tmp/agent-skills-ask-promote/skills/ask && PYTHONPATH=src uv run --project . --group dev pytest -q tests/test_human_chat_examples.py tests/test_run_state_protocol.py && ./sanity.sh"
+      assertion: "exit_code == 0"
+
+  - id: "5"
+    title: "Validate plan and full ask sanity"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    depends_on:
+      - "4"
+    skills:
+      - plan
+      - review-plan
+      - ask
+    command: >
+      cd /tmp/agent-skills-ask-promote &&
+      /tmp/agent-skills-ask-promote/skills/plan/run.sh --validate /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml &&
+      /tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json &&
+      cd skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev pytest -q tests &&
+      ./sanity.sh
+    gate: "Plan validates, /review-plan returns zero FAIL findings, ask tests pass, and sanity.sh exits 0."
+    implementation:
+      - "Run /plan validation against the task file."
+      - "Run /review-plan and require zero FAIL findings before /orchestrate."
+      - "Run the existing /ask tests and sanity harness after implementation."
+    tests:
+      - "/tmp/agent-skills-ask-promote/skills/plan/run.sh --validate /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml"
+      - "/tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json"
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && PYTHONPATH=src uv run --project . --group dev pytest -q tests && ./sanity.sh"
+    blind_tests:
+      - "cd /tmp/agent-skills-ask-promote/skills/ask && ./sanity.sh"
+    definition_of_done:
+      command: "/tmp/agent-skills-ask-promote/skills/plan/run.sh --validate /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml && /tmp/agent-skills-ask-promote/skills/review-plan/run.sh review /tmp/agent-skills-ask-promote/skills/ask/03_ASK_SPARTA_PREFLIGHT_TASKS.yaml --json"
+      assertion: "exit_code == 0"

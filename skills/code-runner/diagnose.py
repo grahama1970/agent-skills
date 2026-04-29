@@ -4,7 +4,7 @@ Separates root-cause inference from code generation. Two scillm calls
 instead of one combined "analyze + fix" call.
 
 Architecture (from scratch.md spec):
-  1. DIAGNOSE — separate scillm call at higher effort. Returns structured JSON only.
+  1. DIAGNOSE — separate scillm call at higher effort. Returns structured data only.
   2. VALIDATE — does primary_target.file exist? symbol exist in treesitter?
   3. DEDUP — same diagnosis as prior round? Escalate diagnoser, not fixer.
   4. FIX — lean prompt with only file + diagnosis + one repair intent.
@@ -62,7 +62,17 @@ class Diagnosis(BaseModel):
 
 # ── Diagnosis Call ─────────────────────────────────────────────────────
 
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+def _normalize_scillm_chat_url(api_base: str | None) -> str:
+    """Return the chat-completions endpoint for a scillm base or full URL."""
+    base = (api_base or "http://localhost:4001").rstrip("/")
+    if base.endswith("/v1/chat/completions"):
+        return base
+    if base.endswith("/v1"):
+        return f"{base}/chat/completions"
+    return f"{base}/v1/chat/completions"
+
+
+SCILLM_URL = _normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 _DIAGNOSE_SYSTEM = """You are a code failure diagnostician. You receive error output and source code.
@@ -103,12 +113,10 @@ def call_diagnose(
 ) -> Diagnosis:
     """Call scillm to produce structured diagnosis. No code, just analysis."""
     model = {
-        "codex": "gpt-5.3-codex",
+        "codex": "gpt-5.5",
         "claude": "claude-sonnet-4-6",
         "gemini": "text-gemini",
-    }.get(backend, "gpt-5.3-codex")
-
-    max_tokens = {"low": 2000, "medium": 4000, "high": 8000}.get(reasoning, 4000)
+    }.get(backend, "text")
 
     user_prompt = (
         f"TASK: {task_prompt[:500]}\n\n"
@@ -126,7 +134,6 @@ def call_diagnose(
             {"role": "system", "content": _DIAGNOSE_SYSTEM},
             {"role": "user", "content": user_prompt},
         ],
-        "max_tokens": max_tokens,
         "response_format": {"type": "json_object"},
     }
 
@@ -141,7 +148,7 @@ def call_diagnose(
             "X-Caller-Skill": "code-runner:diagnose",
         },
         json=payload,
-        timeout=120.0,
+        timeout=httpx.Timeout(120.0, connect=5.0),
     )
     resp.raise_for_status()
     raw = resp.json()["choices"][0]["message"]["content"]
@@ -168,7 +175,7 @@ def call_diagnose(
             "X-Caller-Skill": "code-runner:diagnose",
         },
         json=retry_payload,
-        timeout=120.0,
+        timeout=httpx.Timeout(120.0, connect=5.0),
     )
     retry_resp.raise_for_status()
     retry_raw = retry_resp.json()["choices"][0]["message"]["content"]
