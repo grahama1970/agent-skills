@@ -107,8 +107,8 @@ def test_parallel_review_protocol_runs_all_reviewers(monkeypatch):
     )
 
     assert model_served == "gpt-5.5"
-    assert set(calls) == {"correctness", "tests", "maintainability"}
+    assert set(calls) == {"Failure Mode Analyst", "Test Proof Reviewer", "Complexity Minimizer"}
     assert len(turns) == 3
     assert len(state["parallel_reviews"]) == 3
     assert len(state["critiques"]) == 3
-    assert "correctness" in summary
+    assert "Failure Mode Analyst" in summary

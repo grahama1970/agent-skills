@@ -46,12 +46,39 @@ def build_ask_dry_run_spec(request: dict[str, Any]) -> dict[str, Any]:
         memory_writes.append("learned QRA/persona items")
     if request.get("oracle"):
         external_calls.append(f"oracle backend: {request.get('oracle_backend')}")
+    if request.get("argue"):
+        external_calls.extend([
+            "argue FOR advocate via scillm",
+            "argue AGAINST advocate via scillm",
+            "argue sequential judge via scillm",
+        ])
+        filesystem_writes.append("argue/for.json")
+        filesystem_writes.append("argue/against.json")
+        filesystem_writes.append("argue/judge.json")
+        filesystem_writes.append("argue/argue.json")
+        filesystem_writes.append("argue/argue.md")
+        filesystem_writes.append("argue/verifier.log")
+        risk_notes.append("argue runs two parallel read-only advocate calls followed by a sequential judge and deterministic verifier")
+        if request.get("decision_required"):
+            risk_notes.append("decision-required forces FOR/AGAINST but must include a tie-breaker and uncertainty disclosure")
     if request.get("deep_review"):
         external_calls.append("deep-review reviewers")
         filesystem_writes.append(str(request.get("deep_review_output_root") or ".ask_artifacts/deep-review"))
         risk_notes.append("deep review is integrity-sensitive and requires runtime artifacts during real execution")
     if request.get("parallel_review"):
-        external_calls.append("parallel reviewer fanout")
+        external_calls.append(f"parallel reviewer fanout via {request.get('parallel_review_runner') or 'scillm'}")
+        filesystem_writes.append("parallel_review/target_bundle.md")
+        filesystem_writes.append("parallel_review/reviewer_outputs/*.json")
+        filesystem_writes.append("parallel_review/judge.json")
+        filesystem_writes.append("parallel_review/synthesis.md")
+        filesystem_writes.append("parallel_review/verdict.json")
+        if request.get("code_runner_handoff"):
+            filesystem_writes.append("parallel_review/code_runner_handoff.md")
+        if request.get("implement_with") or request.get("apply_fixes"):
+            filesystem_writes.append("parallel_review/code_runner_task.json")
+            risk_notes.append("implementation intent only prepares /code-runner artifacts; /ask does not edit files in dry-run or normal review mode")
+            risk_notes.append("code_runner_task.json requires explicit --code-runner-dod-command and is not a native executable /code-runner spec")
+        risk_notes.append("parallel review requires an explicit target and remains read-only unless handed off to /code-runner")
     if request.get("dogpile_mode") == "force":
         external_calls.append("dogpile forced freshness search")
     return build_execution_spec(

@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .scillm_runtime import CITATION_SCHEMA_VERSION, CODE_REVIEW_CITATION_KINDS, normalize_citations, render_citations_markdown, validate_citations
+
 
 ALLOWED_VERDICTS = {"SAFE", "SAFE_WITH_CONDITIONS", "NOT_SAFE", "INSUFFICIENT_EVIDENCE"}
 ALLOWED_SECTION_STATUSES = {"verified", "issues_found", "none_found", "not_assessed"}
@@ -133,7 +135,9 @@ Required passes:
 9. Review command execution, write permissions, artifact persistence, prompt injection, and memory pollution.
 10. Synthesize a verdict without introducing unsupported new claims.
 
-Every major issue must include severity, evidence, impact, fix, and verification.
+Every major issue must include severity, evidence, evidence_citations, impact, fix, and verification.
+Structured citations are required for review safety claims. Memory may guide context but
+must not be used as code/review safety evidence.
 Final verdict must be SAFE, SAFE_WITH_CONDITIONS, NOT_SAFE, or INSUFFICIENT_EVIDENCE.
 
 Return a comprehensive markdown review. End with one fenced JSON block matching this shape:
@@ -143,16 +147,19 @@ Return a comprehensive markdown review. End with one fenced JSON block matching 
   "target_reviewed": "{_json_escape(resolved_target)}",
   "files_inspected": [],
   "files_not_inspected_but_relevant": [],
+  "evidence_citations": [
+    {{"source_id": "file path, diff id, command id, artifact id, or explicit target id", "source_kind": "file | diff | command_output | runtime_artifact | target_bundle", "quote_or_summary": "quoted or summarized support", "supports": "verdict"}}
+  ],
   "sections": {{
-    "target_reconstruction": {{"status": "verified", "summary": "", "evidence_examined": [], "findings": []}},
-    "architecture_boundaries": {{"status": "issues_found", "summary": "", "evidence_examined": [], "findings": []}},
-    "fail_closed_behavior": {{"status": "issues_found", "summary": "", "evidence_examined": [], "findings": []}},
-    "production_failure_modes": {{"status": "issues_found", "summary": "", "evidence_examined": [], "findings": []}},
-    "evidence_auditability": {{"status": "issues_found", "summary": "", "evidence_examined": [], "findings": []}},
-    "deterministic_checks": {{"status": "issues_found", "summary": "", "evidence_examined": [], "findings": []}},
-    "test_proof": {{"status": "issues_found", "summary": "", "evidence_examined": [], "findings": []}},
-    "complexity_removal": {{"status": "none_found", "summary": "", "evidence_examined": [], "findings": []}},
-    "security_data_risk": {{"status": "issues_found", "summary": "", "evidence_examined": [], "findings": []}}
+    "target_reconstruction": {{"status": "verified", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}},
+    "architecture_boundaries": {{"status": "issues_found", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}},
+    "fail_closed_behavior": {{"status": "issues_found", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}},
+    "production_failure_modes": {{"status": "issues_found", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}},
+    "evidence_auditability": {{"status": "issues_found", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}},
+    "deterministic_checks": {{"status": "issues_found", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}},
+    "test_proof": {{"status": "issues_found", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}},
+    "complexity_removal": {{"status": "none_found", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}},
+    "security_data_risk": {{"status": "issues_found", "summary": "", "evidence_examined": [], "evidence_citations": [], "findings": []}}
   }},
   "blocking_issues": [],
   "significant_risks": [],
@@ -223,11 +230,13 @@ def normalise_review_json(parsed: dict[str, Any], result: dict[str, Any], reques
     return {
         "mode": "deep_review",
         "schema_version": DEEP_REVIEW_SCHEMA_VERSION,
+        "citation_schema_version": CITATION_SCHEMA_VERSION,
         "verdict": verdict,
         "target_reviewed": parsed.get("target_reviewed") or target.get("target") or request["original_question"],
         "target_resolution": target,
         "files_inspected": _list_value(parsed.get("files_inspected")),
         "files_not_inspected_but_relevant": _list_value(parsed.get("files_not_inspected_but_relevant")),
+        "evidence_citations": normalize_citations(parsed.get("evidence_citations"), supports="verdict"),
         "sections": normalized_sections,
         "blocking_issues": _list_value(parsed.get("blocking_issues")),
         "significant_risks": _list_value(parsed.get("significant_risks")),
@@ -261,6 +270,13 @@ def verify_review_json(review_json: dict[str, Any]) -> dict[str, Any]:
         failures.append("unexpected file changes detected")
     if review_json.get("verdict") in {"SAFE", "SAFE_WITH_CONDITIONS"} and not review_json.get("files_inspected"):
         failures.append("safe verdict requires files_inspected evidence")
+    if review_json.get("verdict") in {"SAFE", "SAFE_WITH_CONDITIONS"}:
+        failures.extend(validate_citations(
+            "deep_review evidence_citations",
+            normalize_citations(review_json.get("evidence_citations"), supports="verdict"),
+            allowed_source_kinds=CODE_REVIEW_CITATION_KINDS,
+            require_any=True,
+        ))
     sections = review_json.get("sections", {})
     for name in DEEP_REVIEW_SECTION_NAMES:
         section = sections.get(name)
@@ -274,6 +290,13 @@ def verify_review_json(review_json: dict[str, Any]) -> dict[str, Any]:
             failures.append(f"{name}: not assessed")
         if status == "none_found" and not section.get("evidence_examined"):
             failures.append(f"{name}: none_found requires evidence")
+        if status in {"verified", "issues_found", "none_found"}:
+            failures.extend(validate_citations(
+                f"{name}: evidence_citations",
+                normalize_citations(section.get("evidence_citations"), supports=name),
+                allowed_source_kinds=CODE_REVIEW_CITATION_KINDS,
+                require_any=status != "issues_found" or not section.get("findings"),
+            ))
         if len(str(section.get("summary", "")).strip()) < 20:
             failures.append(f"{name}: summary too shallow")
         for finding in section.get("findings", []):
@@ -297,6 +320,11 @@ def render_review_markdown(result: dict[str, Any], review_json: dict[str, Any], 
         f"- Profile: `{request['profile']}`",
         f"- Requested model: `{request['requested_model']}`",
         f"- Requested reasoning: `{request['requested_reasoning']}`",
+        f"- Citation schema: `{review_json.get('citation_schema_version', CITATION_SCHEMA_VERSION)}`",
+        "",
+        "## Citations",
+        "",
+        render_citations_markdown(review_json.get("evidence_citations", [])),
         "",
         "## Review",
         "",
@@ -345,7 +373,12 @@ def _normalize_section(section: dict[str, Any] | None) -> dict[str, Any]:
         "status": status,
         "summary": str(section.get("summary", "")),
         "evidence_examined": _list_value(section.get("evidence_examined")),
-        "findings": _list_value(section.get("findings")),
+        "evidence_citations": normalize_citations(section.get("evidence_citations"), supports="section"),
+        "findings": [
+            _normalize_finding(finding)
+            for finding in _list_value(section.get("findings"))
+            if isinstance(finding, dict)
+        ],
     }
 
 
@@ -354,6 +387,18 @@ def _verify_finding(prefix: str, finding: dict[str, Any], failures: list[str]) -
     for field in required:
         if not str(finding.get(field, "")).strip():
             failures.append(f"{prefix}: finding missing {field}")
+    failures.extend(validate_citations(
+        f"{prefix}: finding evidence_citations",
+        normalize_citations(finding.get("evidence_citations"), supports="finding"),
+        allowed_source_kinds=CODE_REVIEW_CITATION_KINDS,
+        require_any=True,
+    ))
+
+
+def _normalize_finding(finding: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(finding)
+    normalized["evidence_citations"] = normalize_citations(finding.get("evidence_citations"), supports="finding")
+    return normalized
 
 
 def _list_value(value: Any) -> list[Any]:

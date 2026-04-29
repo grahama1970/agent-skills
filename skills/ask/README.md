@@ -58,6 +58,10 @@ claims must still be grounded in inspected files, diffs, tests, or artifacts.
   --parallel-reviewers 3 \
   --parallel-review-focus correctness,tests,maintainability
 
+# Run a two-sided adversarial decision DAG.
+./run.sh ask "argue whether this retry policy should fail closed" \
+  --argue
+
 # Run first-class deep review with audit artifacts.
 ./run.sh ask "deep review this implementation" \
   --deep-review \
@@ -77,6 +81,7 @@ claims must still be grounded in inspected files, diffs, tests, or artifacts.
 | Oracle | Max-available reasoning synthesis | `./run.sh ask "question" --oracle` |
 | Persona | Answer through a stored persona | `./run.sh ask "question" --oracle --oracle-persona Architect` |
 | Roundtable | Sequential persona deliberation | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
+| Argue | Two parallel advocates plus sequential judge | `./run.sh ask "argue whether X" --argue` |
 | Parallel review | Independent reviewer fanout | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
 | Deep review | Web-GPT-style review with artifacts | `./run.sh ask "deep review this" --deep-review-target src/ask/ask.py` |
 | Doctor | Preflight composed dependencies | `./run.sh doctor --json` |
@@ -118,6 +123,7 @@ $ask what do we know about the auth retry bug?
 $ask what changed in the API client architecture?
 $ask what are the risks in this implementation?
 $ask run 3 parallel adversarial reviewers on this pull request
+$ask argue whether this retry policy should fail closed
 $ask review then roundtable with Architect, Tester, and Maintainer
 $ask deep review this implementation --deep-review-target src/ask/ask.py
 $ask oracle should we use subagent-runner here?
@@ -171,6 +177,46 @@ domain voice, while the protocol role is the bounded review job loaded from
   --roundtable \
   --roundtable-personas "Architect:failure_mode,Tester:evidence_auditor,Maintainer:complexity_minimizer"
 ```
+
+### Adversarial argue
+
+Argue is an explicit `/scillm` DAG, not a single self-debate prompt:
+
+```text
+FOR advocate /scillm call || AGAINST advocate /scillm call
+  ↓
+sequential judge /scillm call
+  ↓
+deterministic verifier
+  ↓
+argue.md + argue.json + verifier.log
+```
+
+Use it when the user wants calibrated judgment on a decision without forcing
+fake certainty. The judge may return `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
+`INSUFFICIENT_EVIDENCE`; binary forced decisions require
+`--decision-required` plus an explicit tie-breaker.
+
+```bash
+./run.sh ask "argue whether this runtime path should retry without source grounding" \
+  --argue
+
+./run.sh ask "argue whether to ship this fallback today" \
+  --argue \
+  --decision-required \
+  --tie-breaker fail-closed
+```
+
+Every argue node carries opaque `scillm_metadata` for correlation and a
+serialized source bundle for grounding. If `/scillm` source grounding fails or
+times out, `/ask` retries without `source`, records the degradation in node
+artifacts, and still lets the deterministic verifier decide whether the result
+is trustworthy.
+
+Argue, oracle, OS knowledge answers, deep review, and parallel review use the
+`ask.citations.v1` citation contract. Memory citations are valid for knowledge,
+persona, and project-context answers. They are not valid for code/review safety
+claims; safe review verdicts require target/file/diff/artifact citations.
 
 ### Preferred model with a one-shot peer model
 
@@ -238,8 +284,12 @@ Common `ask` options:
 | `--auto-learn` | Learn if memory has no useful result |
 | `--oracle` | Use oracle synthesis |
 | `--oracle-persona <name>` | Primary stored persona or role |
+| `--argue` | Run two parallel advocates, a sequential judge, and a verifier |
+| `--decision-required` | Force `--argue` to choose `FOR` or `AGAINST` |
+| `--tie-breaker <policy>` | Tie-breaker for forced argue decisions |
 | `--roundtable` | Run protocolized sequential deliberation |
 | `--parallel-review` | Run independent reviewer fanout |
+| `--review-target <target>` | Explicit target for parallel-review evidence bundles |
 | `--deep-review` | Emit deep-review markdown and JSON artifacts |
 | `--deep-review-target <target>` | Explicit target: paths, diff, plan, manifest, or artifact |
 | `--run-id <id>` | Explicit run id for artifacts and status lookup |
@@ -286,6 +336,23 @@ See `SKILL.md` for exhaustive environment and runtime details.
 `ask` records execution details into `/memory` so timeout and reliability policy
 can become data-driven over time.
 
+`/scillm` DAG modes also record per-node runtime correlation:
+
+- `scillm_metadata` sent with every advocate, reviewer, and judge node
+- returned `/scillm` call/model/metadata observability when provided
+- source bundle IDs and source IDs used for grounding/citation checks
+- explicit degradation status when source grounding falls back or fails
+- verifier failures for unqualified `FOR`/`AGAINST` or safe review verdicts
+  when source grounding degrades
+- verifier failures for missing structured citations on verdict-bearing argue,
+  deep-review, and parallel-review outputs
+- chunked source IDs such as `TARGET_BUNDLE.1` for large target bundles so
+  `/scillm` grounding and verifier citations address the same material
+- verifier failures for returned `scillm_metadata` mismatches on core node
+  identity fields
+- structured `needs_attention` diagnostics when reviewer, advocate, or judge
+  calls fail before a trustworthy verdict can be produced
+
 Expected telemetry surfaces:
 
 - `ask_call_log`
@@ -296,6 +363,10 @@ Expected telemetry surfaces:
 - `.ask_artifacts/<mode>/<run_id>/status.json`
 - `.ask_artifacts/<mode>/<run_id>/events.jsonl`
 - durable lessons when a conversation produces reusable knowledge
+- `argue/source_bundle.json`, `argue/for.json`, `argue/against.json`,
+  `argue/judge.json`, `argue/argue.json`, `argue/verifier.log`
+- `parallel_review/source_bundle.json`, reviewer outputs, `judge.json`,
+  `verdict.json`, and `verifier.log`
 
 Do not store full prompts, full reviewer chatter, full code diffs, or full repo
 snippets by default.
@@ -317,20 +388,30 @@ Semantic validation is part of the E2E contract. Empty answers,
 routing, missing roundtable participants, and missing domain grounding must fail
 the relevant E2E case.
 
+Mocked tests are regression coverage, not integration proof. New user-visible
+composition paths through `/scillm` require an opt-in live smoke/E2E check
+before being described as validated.
+
 ## Current Readiness
 
-As of 2026-04-27, `$ask` is usable for the intended interactive workflows:
+As of 2026-04-28, `$ask` is usable for the intended interactive workflows:
 
 - Realistic domain sanity/E2E checks passed `3/3` with scoped memory, a stored
   persona, and a multi-persona roundtable.
 - Targeted regression suite passed `30/30`.
+- Deterministic `/ask` protocol suite passed `98/98` after adding argue and
+  parallel-review `/scillm` metadata/source payloads.
+- Deterministic `/ask` protocol suite passed `102/102` after adding verifier
+  gates for source-grounding degradation and returned metadata mismatches.
+- Deterministic `/ask` suite passed `134/134` after promoting runtime parity
+  and adding full structured citation enforcement across ask, oracle, OS,
+  argue, deep-review, and parallel-review surfaces.
+- Opt-in live `/scillm` E2E passed for argue metadata/source bundles and
+  parallel-review composition with `ASK_LIVE_SCILLM_E2E=1`.
 - Normal oracle reasoning defaults to `high`; deep-review defaults to `xhigh`
   when no explicit reasoning is supplied.
 - The latest evidence dashboard is generated at
   `.ask_artifacts/validation-dashboard/20260427T171501Z/index.html`.
-
-Known caveat: repository cleanup and commit staging are still pending; the
-runtime workflow is ready, but the worktree should be reviewed before publishing.
 
 ## Development Knowledge
 

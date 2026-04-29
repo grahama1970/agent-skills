@@ -132,6 +132,7 @@ Agent translation rules:
 - Treat a named persona before the question as `--oracle-persona <name>`.
 - Treat multiple named personas with "debate", "roundtable", or "discuss" as `--roundtable`.
 - Treat "parallel reviewers", "adversarial reviewers", or "N reviewers" as `--parallel-review`.
+- Treat "argue whether", "debate whether", or "make the case for and against" as `--argue`.
 - Treat "review then roundtable" as both `--parallel-review` and `--roundtable`.
 - Treat "deep review", "comprehensive review", "safe to proceed", or "production readiness" as `--deep-review`; require or infer a concrete `--deep-review-target`.
 - Treat date-sensitive words (`2026`, `current`, `latest`, `today`, `recent`) as `--dogpile auto`.
@@ -150,6 +151,7 @@ Agent translation rules:
 | `$ask Brandon ask Margaret where are we weak?` | Safe Brandon→Margaret peer deliberation |
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: Should this service use retries or queues?` | Sequential protocolized persona roundtable |
 | `$ask run 3 parallel adversarial reviewers on this implementation` | Independent parallel review plus moderator synthesis |
+| `$ask argue whether we should ship this change` | Two parallel `/scillm` advocates plus sequential judge and verifier |
 | `$ask deep review this implementation --deep-review-target src/ask/ask.py` | Read-only deep review with markdown and JSON artifacts |
 | `$ask review then roundtable with Brandon, Margaret, Jennifer` | Parallel findings first, then sequential persona debate |
 | `$ask oracle should we use subagent-runner here?` | GPT-5.5 high-reasoning oracle |
@@ -239,6 +241,9 @@ Options:
   --roundtable-rounds <n> Number of full participant rounds (default: 2)
   --roundtable-mode <m> Mode label (default: adversarial)
   --roundtable-persist <summary|full> Persist compact protocol state or full turns
+  --argue                Run two parallel /scillm advocates followed by a judge
+  --decision-required    Force FOR/AGAINST with uncertainty disclosure
+  --tie-breaker <policy> Tie-breaker for --decision-required
   --parallel-review     Run independent parallel adversarial reviewers
   --parallel-reviewers <n> Number of default reviewers (default: 3)
   --parallel-review-personas <p> Comma-separated reviewer persona[:protocol_role] specs
@@ -418,14 +423,26 @@ Core tool rules for oracle subagents:
 
 Use oracle mode for single high-value questions, not nightly runs or batch ingestion loops.
 
-**Roundtable and Parallel Review Modes:**
+**Roundtable, Argue, and Parallel Review Modes:**
 
-`/ask` supports two distinct adversarial review protocols:
+`/ask` supports three distinct adversarial review protocols:
 
 - `--parallel-review`: independent reviewers inspect the same artifact/question concurrently, then a neutral moderator synthesizes findings.
+- `--argue`: a FOR advocate and AGAINST advocate run in parallel through `/scillm`; a sequential judge decides or abstains, then a deterministic verifier gates the verdict.
 - `--roundtable`: selected personas speak sequentially through a state-machine protocol; each turn must reference prior claims and critiques.
 
 Use both together when you want independent findings first, followed by persona debate over those findings.
+
+Citation rule: `/ask` uses `ask.citations.v1` across answer surfaces. Memory
+citations support knowledge/persona/project-context answers, but never code or
+review safety claims. Safe review claims must cite target/file/diff/artifact
+sources, and verifier gates reject missing or inadmissible citations.
+
+The narrow contract for reviewer fanout is documented in
+`docs/ASK_PARALLEL_REVIEW_CONTRACT.md`. The key boundary is that `/ask`
+owns target resolution, read-only reviewer roles, synthesis, verifier gates, and
+artifacts; `/code-runner` owns implementation, and Pi/subagent adapters only
+provide bounded execution mechanics.
 
 Personas and protocol roles are separate:
 
@@ -471,6 +488,22 @@ Parallel review:
   --parallel-review-focus correctness,tests,maintainability
 ```
 
+Argue:
+
+```bash
+./run.sh ask "Should we ship this reversible runtime change?" \
+  --argue
+```
+
+Forced binary decision:
+
+```bash
+./run.sh ask "Should we ship this reversible runtime change?" \
+  --argue \
+  --decision-required \
+  --tie-breaker more-reversible
+```
+
 Review then roundtable:
 
 ```bash
@@ -489,6 +522,10 @@ Protocol rules:
 - `--dogpile auto` marks date-sensitive prompts such as `in 2026`, `current`, `latest`, or `today` for fresh external discovery by oracle subagents.
 - SPARTA and space-cybersecurity questions should use `--scope sparta` so memory
   retrieval uses the security corpus instead of `/ask` project notes.
+- Argue verdicts use `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
+  `INSUFFICIENT_EVIDENCE`; `FOR`/`AGAINST` requires evidence, a counterargument,
+  structured citations, and what would change the verdict. See
+  `docs/ASK_ARGUE_CONTRACT.md`.
 
 **Deep Review Mode:**
 
@@ -551,6 +588,7 @@ Runner-backed oracle calls also have heartbeat/recovery telemetry:
 | Focused Codex agent answer | `--oracle --oracle-backend subagent-runner` | Runs a real Codex CLI subagent session |
 | Persona or peer deliberation | `--oracle --oracle-backend auto --oracle-iterations 2+` | `auto` selects `subagent-runner` |
 | N-persona sequential debate | `--roundtable --roundtable-personas ...` | State-machine review protocol with claim anchoring |
+| Two-sided calibrated decision | `--argue` | Two parallel `/scillm` advocates, sequential judge, verifier gate |
 | N independent adversarial reviewers | `--parallel-review --parallel-reviewers N` | Parallel breadth before moderator synthesis |
 | Independent findings then debate | `--parallel-review --roundtable` | Best for high-stakes review |
 | Web-GPT-style deep review | `--deep-review --deep-review-target <target>` | Pass-based review with `review.md` and `review.json` |

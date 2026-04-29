@@ -8,11 +8,21 @@ from ask.deep_review import (
 )
 
 
+def _citation(supports="verdict"):
+    return {
+        "source_id": "src/ask/ask.py",
+        "source_kind": "file",
+        "quote_or_summary": "src/ask/ask.py wires CLI routing.",
+        "supports": supports,
+    }
+
+
 def _section(status="verified"):
     return {
         "status": status,
         "summary": "Evidence-backed section summary with enough detail to audit.",
         "evidence_examined": ["src/ask/ask.py"],
+        "evidence_citations": [_citation("section")],
         "findings": [],
     }
 
@@ -23,12 +33,14 @@ def _valid_review_json():
         "target_reviewed": "src/ask/ask.py",
         "files_inspected": ["src/ask/ask.py", "tests/test_ask_cli_protocols.py"],
         "files_not_inspected_but_relevant": [],
+        "evidence_citations": [_citation("verdict")],
         "sections": {name: _section() for name in DEEP_REVIEW_SECTION_NAMES},
         "blocking_issues": [],
         "significant_risks": [
             {
                 "severity": "medium",
                 "evidence": "src/ask/ask.py wires CLI routing.",
+                "evidence_citations": [_citation("finding")],
                 "impact": "Bad routing could invoke a weaker review lane.",
                 "fix": "Keep explicit deep-review flags and routing tests.",
                 "verification": "pytest tests/test_ask_cli_protocols.py",
@@ -84,6 +96,33 @@ def test_deep_review_verifier_rejects_shallow_safe_schema():
     assert verification["status"] == "FAIL"
     assert "safe verdict requires files_inspected evidence" in verification["failures"]
     assert "target_reconstruction: not assessed" in verification["failures"]
+
+
+def test_deep_review_safe_requires_structured_file_citations():
+    parsed = _valid_review_json()
+    parsed["evidence_citations"] = []
+    for section in parsed["sections"].values():
+        section["evidence_citations"] = []
+
+    review_json = normalise_review_json(
+        parsed,
+        {"oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"}},
+        {
+            "original_question": "deep review this implementation",
+            "target": {"status": "explicit", "target": "src/ask/ask.py", "requires_target": False},
+            "requested_model": "gpt-5.5",
+            "requested_reasoning": "xhigh",
+            "requested_backend": "subagent-runner",
+            "git_before": [],
+        },
+    )
+    review_json["execution"]["git_after"] = []
+    review_json["execution"]["unexpected_file_changes"] = []
+
+    verification = verify_review_json(review_json)
+
+    assert verification["status"] == "FAIL"
+    assert any("structured citation" in failure for failure in verification["failures"])
 
 
 def test_deep_review_verifier_rejects_unsafe_writes():

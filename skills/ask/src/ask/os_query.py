@@ -29,6 +29,7 @@ else:
 
 from .skills_exec import run_skill, parse_json_output, parse_memory_output
 from .run_state import AskRunState, make_run_id
+from .scillm_runtime import CITATION_SCHEMA_VERSION, build_source_bundle, memory_citations_from_items, render_citations_markdown
 
 SKILLS_DIR = Path(__file__).parent.parent
 
@@ -229,6 +230,20 @@ def ask_os(
             if solution:
                 parts.append(solution)
         result["answer"] = "\n\n".join(parts) if parts else "No answer could be synthesized."
+        source_bundle = build_source_bundle(question=question, context_items=result["items"][:k])
+        result["citation_schema_version"] = CITATION_SCHEMA_VERSION
+        result["source_bundle"] = {
+            "source_bundle_id": source_bundle["source_bundle_id"],
+            "citation_schema_version": source_bundle.get("citation_schema_version", CITATION_SCHEMA_VERSION),
+            "source_ids": [source["source_id"] for source in source_bundle["sources"]],
+            "sources": source_bundle["sources"],
+        }
+        result["citations"] = memory_citations_from_items(result["items"], limit=k, supports="os_answer")
+        result["citation_status"] = {
+            "status": "PASS" if result["citations"] else "DEGRADED",
+            "basis": "memory",
+            "rule": "memory citations support OS knowledge answers but not code/review safety claims",
+        }
     else:
         if auto_learn:
             result["answer"] = (
@@ -264,6 +279,11 @@ def ask_os(
                     sol_lines = solution.split("\n")
                     if len(sol_lines) > 4:
                         print(f"     ... ({len(sol_lines) - 4} more lines)")
+                print()
+            if result.get("citations"):
+                print("  Citations:")
+                for line in render_citations_markdown(result.get("citations", [])).splitlines():
+                    print(f"   {line}")
                 print()
         else:
             print("  No OS knowledge found.")
@@ -373,6 +393,28 @@ def ask_os_health(
                 parts.append(f"  {sol[:200]}")
 
     result["answer"] = "\n".join(parts)
+    source_bundle = build_source_bundle(question=question, context_items=knowledge[:3])
+    result["citation_schema_version"] = CITATION_SCHEMA_VERSION
+    result["source_bundle"] = {
+        "source_bundle_id": source_bundle["source_bundle_id"],
+        "citation_schema_version": source_bundle.get("citation_schema_version", CITATION_SCHEMA_VERSION),
+        "source_ids": [source["source_id"] for source in source_bundle["sources"]],
+        "sources": source_bundle["sources"],
+    }
+    result["citations"] = [
+        {
+            "source_id": "RUNTIME.HEALTH",
+            "source_kind": "runtime_health",
+            "quote_or_summary": json.dumps(health_data, sort_keys=True, default=str)[:280],
+            "supports": "runtime_status",
+        },
+        *memory_citations_from_items(knowledge, limit=3, supports="os_health_architecture"),
+    ]
+    result["citation_status"] = {
+        "status": "PASS",
+        "basis": "runtime_health+memory",
+        "rule": "runtime health cites live dispatch output; memory supports architecture context only",
+    }
 
     # Output
     if as_json:
@@ -382,6 +424,10 @@ def ask_os_health(
         print()
         for line in result["answer"].split("\n"):
             print(f"   {line}")
+        if result.get("citations"):
+            print("   Citations:")
+            for line in render_citations_markdown(result.get("citations", [])).splitlines():
+                print(f"   {line}")
         print()
 
     return result

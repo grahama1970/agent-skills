@@ -6,11 +6,21 @@ import json
 from ask.deep_review import DEEP_REVIEW_SECTION_NAMES, build_deep_review_request, finalize_deep_review_result
 
 
+def _citation(supports="verdict"):
+    return {
+        "source_id": "src/ask/ask.py",
+        "source_kind": "file",
+        "quote_or_summary": "src/ask/ask.py wires CLI routing.",
+        "supports": supports,
+    }
+
+
 def _section():
     return {
         "status": "verified",
         "summary": "Evidence-backed section summary with enough detail to audit.",
         "evidence_examined": ["src/ask/ask.py"],
+        "evidence_citations": [_citation("section")],
         "findings": [],
     }
 
@@ -21,6 +31,7 @@ def test_deep_review_writes_markdown_and_json_artifacts(tmp_path):
         "target_reviewed": "src/ask/ask.py",
         "files_inspected": ["src/ask/ask.py"],
         "files_not_inspected_but_relevant": [],
+        "evidence_citations": [_citation("verdict")],
         "sections": {name: _section() for name in DEEP_REVIEW_SECTION_NAMES},
         "blocking_issues": [],
         "significant_risks": [],

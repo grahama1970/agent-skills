@@ -1,5 +1,6 @@
 """Runtime artifact protocol tests for ask."""
 
+import asyncio
 import json
 import os
 import time
@@ -9,9 +10,11 @@ import pytest
 from typer.testing import CliRunner
 
 import ask.ask as ask_module
+import ask.argue as argue_module
 import ask.nightly as nightly_module
 import ask.os_learn as os_learn_module
 import ask.os_query as os_query_module
+import ask.parallel_review as parallel_review_module
 import ask.pipeline as pipeline_module
 import ask.status as status_module
 from ask.doctor import run_doctor
@@ -26,6 +29,24 @@ def age_run_status(run: AskRunState, days: int = 30) -> None:
     run.status_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     os.utime(run.status_path, (old_time, old_time))
     os.utime(run.run_dir, (old_time, old_time))
+
+
+def _question_citation(text: str = "Should we ship?", supports: str = "verdict") -> dict:
+    return {
+        "source_id": "QUESTION",
+        "source_kind": "question",
+        "quote_or_summary": text,
+        "supports": supports,
+    }
+
+
+def _target_citation(text: str = "target.py returns 42", supports: str = "verdict") -> dict:
+    return {
+        "source_id": "TARGET_BUNDLE",
+        "source_kind": "target_bundle",
+        "quote_or_summary": text,
+        "supports": supports,
+    }
 
 
 def test_run_state_writes_request_status_and_events(tmp_path):
@@ -148,6 +169,1634 @@ def test_cli_deep_review_missing_target_pauses_with_needs_attention(tmp_path):
     assert any(event["event"] == "needs_attention" for event in status["event_tail"])
     payload = json.loads(result.stdout)
     assert payload["needs_attention"]["safe_default"] == "do_not_run_review"
+
+
+def test_cli_parallel_review_missing_target_pauses_with_needs_attention(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "this",
+            "--parallel-review",
+            "--ask-id",
+            "missing-parallel-target",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    status = read_status("missing-parallel-target", tail_events=10, output_root=tmp_path)
+    payload = json.loads(result.stdout)
+    assert status["state"] == "needs_attention"
+    assert status["needs_attention"]["reason"] == "missing_parallel_review_target"
+    assert payload["needs_attention"]["safe_default"] == "do_not_run_review"
+
+
+def _valid_argue_result(verdict="FOR", confidence="medium", decision_required=False, tie_breaker=""):
+    return {
+        "schema_version": argue_module.ARGUE_SCHEMA_VERSION,
+        "question": "Should we ship?",
+        "source_bundle": {
+            "sources": [
+                {"source_id": "QUESTION", "kind": "question", "content": "Should we ship?"},
+            ],
+        },
+        "for_case": {
+            "side": "FOR",
+            "position": "Ship the reversible change.",
+            "strongest_argument": "The change is small and reversible.",
+            "evidence": ["The change is small and reversible."],
+            "evidence_citations": [_question_citation("The change is small and reversible.", "advocate_evidence")],
+            "assumptions": [],
+            "weaknesses": [],
+            "missing_evidence": [],
+            "response_to_opposition": "Risk is bounded by reversibility.",
+            "what_would_change_my_mind": ["Evidence of hidden coupling."],
+            "confidence": "medium",
+        },
+        "against_case": {
+            "side": "AGAINST",
+            "position": "Do not ship without more evidence.",
+            "strongest_argument": "The tests do not cover rollback.",
+            "evidence": ["The tests do not cover rollback."],
+            "evidence_citations": [_question_citation("The tests do not cover rollback.", "advocate_evidence")],
+            "assumptions": [],
+            "weaknesses": [],
+            "missing_evidence": ["Rollback behavior evidence."],
+            "response_to_opposition": "Small changes can still break rollback.",
+            "what_would_change_my_mind": ["Passing rollback test."],
+            "confidence": "medium",
+        },
+        "judge": {
+            "schema_version": argue_module.ARGUE_SCHEMA_VERSION,
+            "verdict": verdict,
+            "confidence": confidence,
+            "decision_required": decision_required,
+            "tie_breaker": tie_breaker,
+            "decision_criterion": "Prefer reversible changes when risk is bounded.",
+            "winning_side": verdict if verdict in {"FOR", "AGAINST"} else "none",
+            "deciding_factors": ["The change is small and reversible."],
+            "strongest_for_argument": "The change is small and reversible.",
+            "strongest_against_argument": "The tests do not cover rollback.",
+            "strongest_counterargument": "The tests do not cover rollback.",
+            "why_counterargument_does_or_does_not_win": "Rollback coverage matters, but reversibility bounds the decision.",
+            "evidence_used": ["The change is small and reversible."],
+            "evidence_citations": [_question_citation("The change is small and reversible.", "verdict")],
+            "assumptions": [],
+            "missing_evidence": [],
+            "what_would_change_the_verdict": ["Evidence of hidden coupling."],
+            "recommended_next_action": "Ship with rollback monitoring.",
+            "uncertainty_disclosure": "This remains uncertain.",
+        },
+    }
+
+
+def test_argue_verifier_rejects_for_without_counterargument():
+    payload = _valid_argue_result()
+    payload["judge"]["strongest_counterargument"] = ""
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert any("strongest_counterargument" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_rejects_against_without_evidence_used():
+    payload = _valid_argue_result(verdict="AGAINST")
+    payload["judge"]["evidence_used"] = []
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert "empty evidence_used requires INSUFFICIENT_EVIDENCE" in result["failures"]
+
+
+def test_argue_verifier_rejects_high_confidence_with_missing_evidence():
+    payload = _valid_argue_result(confidence="high")
+    payload["judge"]["missing_evidence"] = ["Production latency data."]
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert "high confidence is not allowed when missing_evidence is non-empty" in result["failures"]
+
+
+def test_argue_verifier_rejects_for_when_grounding_fell_back():
+    payload = _valid_argue_result(verdict="FOR")
+    payload["judge"]["scillm"] = {
+        "source_grounding_status": "retry_without_source_after_error",
+        "grounding_passed": False,
+        "metadata_requested": {
+            "ask_id": "argue-grounding",
+            "protocol": "argue",
+            "node_id": "judge",
+            "batch_id": "ask-argue-argue-grounding",
+            "item_id": "judge",
+        },
+        "metadata_returned": {
+            "ask_id": "argue-grounding",
+            "protocol": "argue",
+            "node_id": "judge",
+            "batch_id": "ask-argue-argue-grounding",
+            "item_id": "judge",
+        },
+    }
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert result["grounding_degraded"] is True
+    assert any("grounding" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_rejects_scillm_metadata_return_mismatch():
+    payload = _valid_argue_result(verdict="FOR")
+    payload["judge"]["scillm"] = {
+        "source_grounding_status": "requested",
+        "metadata_requested": {
+            "ask_id": "argue-metadata",
+            "protocol": "argue",
+            "node_id": "judge",
+            "batch_id": "ask-argue-argue-metadata",
+            "item_id": "judge",
+        },
+        "metadata_returned": {
+            "ask_id": "argue-metadata",
+            "protocol": "argue",
+            "node_id": "wrong-node",
+            "batch_id": "ask-argue-argue-metadata",
+            "item_id": "judge",
+        },
+    }
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert any("metadata" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_requires_tie_breaker_for_decision_required():
+    payload = _valid_argue_result(decision_required=True, tie_breaker="more-reversible")
+
+    assert argue_module.verify_argue_result(payload)["status"] == "PASS"
+
+    payload["judge"]["uncertainty_disclosure"] = ""
+    result = argue_module.verify_argue_result(payload)
+    assert result["status"] == "FAIL"
+    assert any("uncertainty_disclosure" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_rejects_judge_evidence_not_from_advocates():
+    payload = _valid_argue_result()
+    payload["judge"]["evidence_used"] = ["Private judge-only evidence."]
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert any("not present in advocate outputs" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_requires_structured_citations_for_verdict():
+    payload = _valid_argue_result()
+    payload["judge"]["evidence_citations"] = []
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "FAIL"
+    assert any("structured citation" in failure for failure in result["failures"])
+
+
+def test_argue_verifier_allows_advocate_missing_evidence_as_judge_evidence():
+    payload = _valid_argue_result(verdict="NO_CLEAR_WINNER")
+    payload["judge"]["evidence_used"] = ["Rollback behavior evidence."]
+    payload["judge"]["confidence"] = "medium"
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "PASS"
+
+
+def test_cli_argue_runs_two_parallel_advocates_then_judge(monkeypatch, tmp_path):
+    active_advocates = 0
+    max_active_advocates = 0
+    call_order = []
+    metadata_by_role = {}
+    source_by_role = {}
+
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt, metadata=None, source=None):
+        nonlocal active_advocates, max_active_advocates
+        call_order.append(role)
+        metadata_by_role[role] = metadata
+        source_by_role[role] = source
+        if "advocate" in role:
+            active_advocates += 1
+            max_active_advocates = max(max_active_advocates, active_advocates)
+            await asyncio.sleep(0.01)
+            active_advocates -= 1
+        if role == "FOR advocate":
+            return {
+                "position": "Ship the reversible change.",
+                "strongest_argument": "The change is small and reversible.",
+                "evidence": ["The change is small and reversible."],
+                "evidence_citations": [_question_citation("The change is small and reversible.", "advocate_evidence")],
+                "what_would_change_my_mind": ["Evidence of hidden coupling."],
+                "confidence": "medium",
+            }, model, {"metadata_requested": metadata, "metadata_returned": metadata, "call_id": f"call-{role}"}
+        if role == "AGAINST advocate":
+            return {
+                "position": "Do not ship without more evidence.",
+                "strongest_argument": "The tests do not cover rollback.",
+                "evidence": ["The tests do not cover rollback."],
+                "evidence_citations": [_question_citation("The tests do not cover rollback.", "advocate_evidence")],
+                "missing_evidence": ["Rollback behavior evidence."],
+                "what_would_change_my_mind": ["Passing rollback test."],
+                "confidence": "medium",
+            }, model, {"metadata_requested": metadata, "metadata_returned": metadata, "call_id": f"call-{role}"}
+        return {
+            "verdict": "FOR",
+            "confidence": "medium",
+            "decision_criterion": "Prefer reversible changes when risk is bounded.",
+            "winning_side": "FOR",
+            "deciding_factors": ["The change is small and reversible."],
+            "strongest_for_argument": "The change is small and reversible.",
+            "strongest_against_argument": "The tests do not cover rollback.",
+            "strongest_counterargument": "The tests do not cover rollback.",
+            "why_counterargument_does_or_does_not_win": "Rollback coverage matters, but reversibility bounds the decision.",
+            "evidence_used": ["The change is small and reversible."],
+            "evidence_citations": [_question_citation("The change is small and reversible.", "verdict")],
+            "what_would_change_the_verdict": ["Evidence of hidden coupling."],
+            "recommended_next_action": "Ship with rollback monitoring.",
+            "uncertainty_disclosure": "This remains uncertain.",
+        }, model, {"metadata_requested": metadata, "metadata_returned": metadata, "call_id": "call-judge"}
+
+    monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--ask-id",
+            "argue-dag",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    status = read_status("argue-dag", tail_events=30, output_root=tmp_path)
+    artifacts = status["artifacts"]
+    assert payload["argue"]["verdict"] == "FOR"
+    assert payload["argue"]["verifier_status"] == "PASS"
+    assert max_active_advocates == 2
+    assert set(call_order[:2]) == {"FOR advocate", "AGAINST advocate"}
+    assert call_order[-1] == "sequential judge"
+    assert (tmp_path / "argue-dag" / "argue" / "for.json").exists()
+    assert (tmp_path / "argue-dag" / "argue" / "against.json").exists()
+    assert (tmp_path / "argue-dag" / "argue" / "judge.json").exists()
+    assert (tmp_path / "argue-dag" / "argue" / "source_bundle.json").exists()
+    assert artifacts["argue_result"].endswith("argue.json")
+    assert metadata_by_role["FOR advocate"]["protocol"] == "argue"
+    assert metadata_by_role["FOR advocate"]["node_id"] == "FOR"
+    assert metadata_by_role["FOR advocate"]["batch_id"] == "ask-argue-argue-dag"
+    assert metadata_by_role["sequential judge"]["node_id"] == "judge"
+    assert "QUESTION" in source_by_role["FOR advocate"]
+    for_case = json.loads((tmp_path / "argue-dag" / "argue" / "for.json").read_text())
+    assert for_case["scillm"]["metadata_returned"]["item_id"] == "FOR"
+
+
+def test_cli_argue_verifier_failure_exits_needs_attention(monkeypatch, tmp_path):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt, metadata=None, source=None):
+        if role == "FOR advocate":
+            return {
+                "strongest_argument": "The change is small and reversible.",
+                "evidence": ["The change is small and reversible."],
+                "evidence_citations": [_question_citation("The change is small and reversible.", "advocate_evidence")],
+                "confidence": "medium",
+            }, model
+        if role == "AGAINST advocate":
+            return {
+                "strongest_argument": "The tests do not cover rollback.",
+                "evidence": ["The tests do not cover rollback."],
+                "evidence_citations": [_question_citation("The tests do not cover rollback.", "advocate_evidence")],
+                "confidence": "medium",
+            }, model
+        return {
+            "verdict": "FOR",
+            "confidence": "medium",
+            "decision_criterion": "Prefer reversible changes.",
+            "winning_side": "FOR",
+            "evidence_used": ["The change is small and reversible."],
+            "evidence_citations": [_question_citation("The change is small and reversible.", "verdict")],
+            "why_counterargument_does_or_does_not_win": "Not addressed.",
+            "what_would_change_the_verdict": ["Evidence of hidden coupling."],
+        }, model
+
+    monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--ask-id",
+            "argue-fail",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    assert payload["needs_attention"]["reason"] == "argue_verifier_failed"
+    assert (tmp_path / "argue-fail" / "argue" / "verifier.log").exists()
+
+
+def test_cli_argue_advocate_failure_preserves_partial_artifacts(monkeypatch, tmp_path):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt, metadata=None, source=None):
+        if role == "FOR advocate":
+            raise TimeoutError("advocate timed out")
+        if role == "AGAINST advocate":
+            return {
+                "strongest_argument": "The tests do not cover rollback.",
+                "evidence": ["The tests do not cover rollback."],
+                "evidence_citations": [_question_citation("The tests do not cover rollback.", "advocate_evidence")],
+                "confidence": "medium",
+            }, model
+        raise AssertionError("judge should not run after advocate failure")
+
+    monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--ask-id",
+            "argue-advocate-timeout",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    argue_dir = tmp_path / "argue-advocate-timeout" / "argue"
+    for_case = json.loads((argue_dir / "for.json").read_text())
+    against_case = json.loads((argue_dir / "against.json").read_text())
+    judge = json.loads((argue_dir / "judge.json").read_text())
+    status = read_status("argue-advocate-timeout", tail_events=30, output_root=tmp_path)
+    events = [event["event"] for event in status["event_tail"]]
+
+    assert payload["needs_attention"]["reason"] == "argue_scillm_call_failed"
+    assert payload["needs_attention"]["stage"] == "advocate"
+    assert for_case["status"] == "failed"
+    assert for_case["error_type"] == "TimeoutError"
+    assert against_case["status"] == "ok"
+    assert judge["status"] == "skipped"
+    assert "argue_advocate_failed" in events
+    assert "argue_judge_skipped" in events
+
+
+def test_cli_argue_judge_failure_preserves_advocate_artifacts(monkeypatch, tmp_path):
+    async def fake_scillm_json_call_async(client, *, model, reasoning_effort, timeout, role, prompt, metadata=None, source=None):
+        if role == "FOR advocate":
+            return {
+                "strongest_argument": "The change is small and reversible.",
+                "evidence": ["The change is small and reversible."],
+                "evidence_citations": [_question_citation("The change is small and reversible.", "advocate_evidence")],
+                "confidence": "medium",
+            }, model
+        if role == "AGAINST advocate":
+            return {
+                "strongest_argument": "The tests do not cover rollback.",
+                "evidence": ["The tests do not cover rollback."],
+                "evidence_citations": [_question_citation("The tests do not cover rollback.", "advocate_evidence")],
+                "confidence": "medium",
+            }, model
+        raise RuntimeError("judge backend failed")
+
+    monkeypatch.setattr(argue_module, "_scillm_json_call_async", fake_scillm_json_call_async)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "[]", "stderr": ""})
+    monkeypatch.setattr(ask_module, "_try_evidence_case", lambda *args, **kwargs: None)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--ask-id",
+            "argue-judge-fail",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    argue_dir = tmp_path / "argue-judge-fail" / "argue"
+    for_case = json.loads((argue_dir / "for.json").read_text())
+    against_case = json.loads((argue_dir / "against.json").read_text())
+    judge = json.loads((argue_dir / "judge.json").read_text())
+    status = read_status("argue-judge-fail", tail_events=30, output_root=tmp_path)
+    events = [event["event"] for event in status["event_tail"]]
+
+    assert payload["needs_attention"]["reason"] == "argue_scillm_call_failed"
+    assert payload["needs_attention"]["stage"] == "judge"
+    assert for_case["status"] == "ok"
+    assert against_case["status"] == "ok"
+    assert judge["status"] == "failed"
+    assert judge["error_type"] == "RuntimeError"
+    assert "argue_judge_failed" in events
+
+
+def test_parallel_review_reviewer_payloads_include_scillm_metadata_and_source(tmp_path):
+    captured_payloads = []
+
+    class CapturingAdapter:
+        async def review(self, payload):
+            captured_payloads.append(payload)
+            return {
+                "reviewer": payload["reviewer"]["name"],
+                "verdict": "SAFE",
+                "summary": "ok",
+                "files_inspected": [],
+                "evidence": ["TARGET_BUNDLE"],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    run_state = AskRunState("parallel-metadata", output_root=tmp_path)
+    run_state.write_request({"question": "review", "scope": "ask"})
+    plan = parallel_review_module.build_parallel_review_plan(
+        question="review target",
+        target="target.py",
+        reviewers=1,
+        personas="Brandon",
+    )
+    plan["target_bundle"] = {"entries": [{"kind": "file", "path": "target.py"}]}
+    source_bundle = parallel_review_module.build_source_bundle(
+        question="review target",
+        target_bundle="# target",
+        target_entries=plan["target_bundle"]["entries"],
+    )
+
+    outputs = parallel_review_module._run_reviewers(
+        CapturingAdapter(),
+        plan,
+        "# target",
+        5,
+        run_state,
+        source_bundle,
+        tmp_path / "parallel_review",
+    )
+
+    assert outputs[0]["reviewer"] == "Brandon"
+    payload = captured_payloads[0]
+    metadata = payload["scillm_metadata"]
+    assert metadata["ask_id"] == "parallel-metadata"
+    assert metadata["protocol"] == "parallel_review"
+    assert metadata["node_role"] == "reviewer"
+    assert metadata["batch_id"] == "ask-parallel_review-parallel-metadata"
+    assert metadata["item_id"] == "reviewer-1"
+    assert metadata["source_bundle_id"] == source_bundle["source_bundle_id"]
+    assert "TARGET_BUNDLE" in payload["source"]
+
+
+def test_source_bundle_chunks_large_target_bundle():
+    source_bundle = parallel_review_module.build_source_bundle(
+        question="review",
+        target_bundle="a" * 9000,
+        target_entries=[{"kind": "file", "path": "target.py"}],
+    )
+
+    source_ids = [source["source_id"] for source in source_bundle["sources"]]
+
+    assert "TARGET_BUNDLE.1" in source_ids
+    assert "TARGET_BUNDLE.2" in source_ids
+    assert all(len(source["content"]) <= 4000 for source in source_bundle["sources"])
+
+
+def test_cli_ask_dry_run_includes_argue_dag_options(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Should",
+            "we",
+            "ship?",
+            "--argue",
+            "--decision-required",
+            "--tie-breaker",
+            "more-reversible",
+            "--dry-run",
+            "--json",
+            "--ask-id",
+            "argue-dry",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["options"]["argue"] is True
+    assert "argue FOR advocate via scillm" in payload["risk_analysis"]["external_calls"]
+    assert "argue sequential judge via scillm" in payload["risk_analysis"]["external_calls"]
+    assert "argue/argue.json" in payload["risk_analysis"]["filesystem_writes"]
+    assert not (tmp_path / "argue-dry").exists()
+
+
+def test_cli_parallel_review_runs_three_reviewers_then_judge(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+    calls = []
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            calls.append(reviewer)
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Most specific evidence.",
+                    "hybrid_summary": "The reviewers inspected target.py and found no blocking issues.",
+                    "verdict": "SAFE",
+                    "summary": "Judge synthesis complete.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                    "confidence": "medium",
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected the target.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--parallel-reviewers",
+            "3",
+            "--ask-id",
+            "parallel-dag",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert set(calls[:3]) == {"Brandon", "Margaret", "Jennifer"}
+    assert calls[-1] == "review-judge"
+    status = read_status("parallel-dag", tail_events=20, output_root=tmp_path)
+    artifacts = status["artifacts"]
+    verdict = json.loads((tmp_path / "parallel-dag" / "parallel_review" / "verdict.json").read_text())
+    assert status["state"] == "answered"
+    assert artifacts["judge_json"].endswith("judge.json")
+    assert verdict["best_reviewer"] == "Brandon"
+    assert verdict["verifier"]["status"] == "PASS"
+
+
+def test_cli_parallel_review_writes_code_runner_handoff_when_requested(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            finding = {
+                "severity": "medium",
+                "title": "Add regression test",
+                "evidence": "target.py has behavior but no adjacent test in the target bundle.",
+                "evidence_citations": [_target_citation("target.py has behavior but no adjacent test in the target bundle.", "finding")],
+                "impact": "Behavior can regress silently.",
+                "fix": "Add a focused regression test for answer().",
+                "verification": "Run the new test file.",
+            }
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Only reviewer with a complete finding.",
+                    "hybrid_summary": "Add the missing regression test before relying on this behavior.",
+                    "verdict": "SAFE_WITH_CONDITIONS",
+                    "summary": "Judge synthesis complete.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py has answer()"],
+                    "evidence_citations": [_target_citation("target.py has answer()", "verdict")],
+                    "findings": [finding],
+                    "test_gaps": ["answer() lacks a regression test"],
+                    "read_only_claim": True,
+                    "confidence": "medium",
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE_WITH_CONDITIONS",
+                "summary": f"{reviewer} found a test gap.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py has answer()"],
+                "evidence_citations": [_target_citation("target.py has answer()", "verdict")],
+                "findings": [finding] if reviewer == "Brandon" else [],
+                "test_gaps": ["answer() lacks a regression test"],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--code-runner-handoff",
+            "--ask-id",
+            "parallel-handoff",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    handoff = tmp_path / "parallel-handoff" / "parallel_review" / "code_runner_handoff.md"
+    task_path = tmp_path / "parallel-handoff" / "parallel_review" / "code_runner_task.json"
+    verdict = json.loads((tmp_path / "parallel-handoff" / "parallel_review" / "verdict.json").read_text())
+    assert handoff.exists()
+    assert not task_path.exists()
+    assert "Add regression test" in handoff.read_text()
+    assert verdict["artifact_paths"]["code_runner_handoff"] == str(handoff)
+    assert "code_runner_task_json" not in verdict["artifact_paths"]
+
+
+def test_cli_parallel_review_apply_fixes_prepares_code_runner_task_without_editing(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            finding = {
+                "severity": "medium",
+                "title": "Add regression test",
+                "evidence": "target.py has behavior but no adjacent test in the target bundle.",
+                "evidence_citations": [_target_citation("target.py has behavior but no adjacent test in the target bundle.", "finding")],
+                "impact": "Behavior can regress silently.",
+                "fix": "Add a focused regression test for answer().",
+                "verification": "uv run pytest tests/test_target.py",
+            }
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Only reviewer with a complete finding.",
+                    "hybrid_summary": "Add the missing regression test before relying on this behavior.",
+                    "verdict": "SAFE_WITH_CONDITIONS",
+                    "summary": "Judge synthesis complete.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py has answer()"],
+                    "evidence_citations": [_target_citation("target.py has answer()", "verdict")],
+                    "findings": [finding],
+                    "test_gaps": ["answer() lacks a regression test"],
+                    "read_only_claim": True,
+                    "confidence": "medium",
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE_WITH_CONDITIONS",
+                "summary": f"{reviewer} found a test gap.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py has answer()"],
+                "evidence_citations": [_target_citation("target.py has answer()", "verdict")],
+                "findings": [finding] if reviewer == "Brandon" else [],
+                "test_gaps": ["answer() lacks a regression test"],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "and",
+            "fix",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--apply-fixes",
+            "--code-runner-dod-command",
+            "uv run pytest tests/test_target.py",
+            "--implementation-non-goal",
+            "Do not change public API.",
+            "--implementation-risk-note",
+            "Keep fix scoped to answer().",
+            "--ask-id",
+            "parallel-apply-fixes",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    task_path = tmp_path / "parallel-apply-fixes" / "parallel_review" / "code_runner_task.json"
+    task = json.loads(task_path.read_text())
+    assert payload["parallel_review"]["implementation_requested"] is True
+    assert task["execution"]["requested"] is True
+    assert task["execution"]["backend"] == "code-runner"
+    assert task["execution"]["status"] == "prepared_not_executable"
+    assert task["code_runner_invocation"]["status"] == "not_generated"
+    assert task["definition_of_done"]["commands"] == ["uv run pytest tests/test_target.py"]
+    assert task["non_goals"] == ["Do not change public API."]
+    assert task["risk_notes"] == ["Keep fix scoped to answer()."]
+    assert target.read_text() == "def answer():\n    return 42\n"
+
+
+def test_cli_parallel_review_apply_fixes_requires_explicit_dod_command(tmp_path):
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "and",
+            "fix",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--apply-fixes",
+            "--ask-id",
+            "unsafe-inferred-dod",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    assert payload["needs_attention"]["reason"] == "missing_code_runner_dod"
+    task_path = tmp_path / "unsafe-inferred-dod" / "parallel_review" / "code_runner_task.json"
+    assert not task_path.exists()
+
+
+def test_cli_parallel_review_allowed_file_rejects_outside_repo(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+    outside = tmp_path.parent / "outside.py"
+    outside.write_text("secret = True\n")
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "and",
+            "fix",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--apply-fixes",
+            "--code-runner-allowed-file",
+            str(outside),
+            "--code-runner-dod-command",
+            "pytest",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "allowed file outside" in result.output
+    assert "repository" in result.output
+
+
+def test_cli_parallel_review_rejects_unknown_implementation_backend(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--implement-with",
+            "pi-subagents",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Only --implement-with code-runner is" in result.output
+    assert "supported" in result.output
+
+
+def test_cli_code_runner_handoff_requires_parallel_review():
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--apply-fixes",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Code-runner handoff options require" in result.output
+    assert "--parallel-review" in result.output
+
+
+def test_parallel_review_verifier_rejects_missing_judge():
+    result = parallel_review_module.verify_parallel_review_bundle(
+        {
+            "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+            "verdict": "SAFE",
+            "target_reviewed": "target.py",
+            "read_only": True,
+            "reviewers": [
+                {
+                    "reviewer": "Brandon",
+                    "verdict": "SAFE",
+                    "summary": "ok",
+                    "evidence": ["target.py"],
+                    "evidence_citations": [_target_citation("target.py", "verdict")],
+                    "files_inspected": ["target.py"],
+                    "read_only_claim": True,
+                    "findings": [],
+                }
+            ],
+            "files_inspected": ["target.py"],
+            "execution": {"unexpected_file_changes": []},
+        }
+    )
+
+    assert result["status"] == "FAIL"
+    assert "missing judge output" in result["failures"]
+
+
+def _valid_parallel_safe_verdict():
+    metadata = {
+        "ask_id": "parallel-metadata",
+        "protocol": "parallel_review",
+        "node_id": "reviewer-1",
+        "batch_id": "ask-parallel_review-parallel-metadata",
+        "item_id": "reviewer-1",
+    }
+    target_citation = {
+        "source_id": "TARGET_BUNDLE",
+        "source_kind": "target_bundle",
+        "quote_or_summary": "target.py is fine",
+        "supports": "verdict",
+    }
+    return {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "target.py",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "target.py", "path": "target.py", "kind": "file"}],
+            "truncated": False,
+        },
+        "source_bundle": {
+            "sources": [
+                {"source_id": "TARGET_BUNDLE", "kind": "target_bundle", "content": "target.py is fine"},
+            ],
+        },
+        "evidence_citations": [target_citation],
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["target.py"],
+                "evidence": ["target.py is fine"],
+                "evidence_citations": [_target_citation("target.py is fine", "verdict")],
+                "findings": [],
+                "read_only_claim": True,
+                "scillm": {
+                    "source_grounding_status": "requested",
+                    "grounding_passed": True,
+                    "metadata_requested": dict(metadata),
+                    "metadata_returned": dict(metadata),
+                },
+            }
+        ],
+        "judge": {
+            "best_reviewer": "Brandon",
+            "verdict": "SAFE",
+            "hybrid_summary": "Safe.",
+            "evidence_citations": [target_citation],
+            "scillm": {
+                "source_grounding_status": "requested",
+                "grounding_passed": True,
+                "metadata_requested": {**metadata, "node_id": "judge", "item_id": "judge"},
+                "metadata_returned": {**metadata, "node_id": "judge", "item_id": "judge"},
+            },
+        },
+        "files_inspected": ["target.py"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+
+def test_parallel_review_verifier_rejects_safe_when_grounding_fell_back():
+    verdict = _valid_parallel_safe_verdict()
+    verdict["reviewers"][0]["scillm"]["source_grounding_status"] = "retry_without_source_after_error"
+    verdict["reviewers"][0]["scillm"]["grounding_passed"] = False
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert result["grounding_degraded"] is True
+    assert "safe verdict requires successful source grounding" in result["failures"]
+
+
+def test_parallel_review_verifier_rejects_scillm_metadata_return_mismatch():
+    verdict = _valid_parallel_safe_verdict()
+    verdict["reviewers"][0]["scillm"]["metadata_returned"]["node_id"] = "wrong-reviewer"
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("metadata" in failure for failure in result["failures"])
+
+
+def test_parallel_review_safe_requires_structured_target_citation():
+    verdict = _valid_parallel_safe_verdict()
+    verdict["evidence_citations"] = []
+    verdict["reviewers"][0]["evidence_citations"] = []
+    verdict["judge"]["evidence_citations"] = []
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("structured citation" in failure for failure in result["failures"])
+
+
+def test_parallel_review_safe_rejects_memory_only_citation():
+    verdict = _valid_parallel_safe_verdict()
+    memory_citation = {
+        "source_id": "MEMORY.1",
+        "source_kind": "memory",
+        "quote_or_summary": "Memory says it is safe.",
+        "supports": "verdict",
+    }
+    verdict["source_bundle"]["sources"].append({"source_id": "MEMORY.1", "kind": "memory", "content": "Memory says it is safe."})
+    verdict["evidence_citations"] = [memory_citation]
+    verdict["reviewers"][0]["evidence_citations"] = [memory_citation]
+    verdict["judge"]["evidence_citations"] = [memory_citation]
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("inadmissible source_kind memory" in failure for failure in result["failures"])
+
+
+def test_parallel_review_rejects_target_outside_review_root(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    secret = tmp_path / "secret.env"
+    secret.write_text("API_KEY=super-secret\n")
+
+    with pytest.raises(parallel_review_module.ParallelReviewError):
+        parallel_review_module.build_target_bundle(str(secret), review_root=root)
+
+
+def test_parallel_review_rejects_symlink_target_outside_review_root(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    secret = tmp_path / "secret.env"
+    secret.write_text("API_KEY=super-secret\n")
+    link = root / "secret.env"
+    link.symlink_to(secret)
+
+    with pytest.raises(parallel_review_module.ParallelReviewError):
+        parallel_review_module.build_target_bundle(str(link), review_root=root)
+
+
+def test_parallel_review_redacts_obvious_secrets(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    target = root / "config.env"
+    target.write_text("API_KEY=super-secret\npassword = hunter2\n")
+
+    bundle = parallel_review_module.build_target_bundle(str(target), review_root=root)
+
+    assert "super-secret" not in bundle["markdown"]
+    assert "hunter2" not in bundle["markdown"]
+    assert "[REDACTED]" in bundle["markdown"]
+
+
+def test_verifier_rejects_safe_verdict_for_unresolved_target():
+    verdict = {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "missing.py",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "missing.py", "kind": "declared"}],
+            "truncated": False,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["missing.py"],
+                "evidence": ["missing.py is fine"],
+                "evidence_citations": [_target_citation("missing.py is fine", "verdict")],
+                "findings": [],
+                "read_only_claim": True,
+            }
+        ],
+        "judge": {
+            "best_reviewer": "Brandon",
+            "hybrid_summary": "Safe.",
+        },
+        "files_inspected": ["missing.py"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("declared target" in failure for failure in result["failures"])
+
+
+def test_verifier_rejects_safe_verdict_for_directory_only_target():
+    verdict = {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "src",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "src", "kind": "directory"}],
+            "truncated": False,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["src"],
+                "evidence": ["src is fine"],
+                "evidence_citations": [_target_citation("src is fine", "verdict")],
+                "findings": [],
+                "read_only_claim": True,
+            }
+        ],
+        "judge": {"best_reviewer": "Brandon", "hybrid_summary": "Safe."},
+        "files_inspected": ["src"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("directory target" in failure for failure in result["failures"])
+
+
+def test_verifier_rejects_safe_verdict_for_truncated_target_bundle():
+    verdict = {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "target.py",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "target.py", "path": "target.py", "kind": "file"}],
+            "truncated": True,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["target.py"],
+                "evidence": ["target.py is fine"],
+                "evidence_citations": [_target_citation("target.py is fine", "verdict")],
+                "findings": [],
+                "read_only_claim": True,
+            }
+        ],
+        "judge": {"best_reviewer": "Brandon", "hybrid_summary": "Safe."},
+        "files_inspected": ["target.py"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert "safe verdict requires untruncated target_bundle" in result["failures"]
+
+
+def test_verifier_rejects_files_inspected_outside_target_bundle():
+    verdict = {
+        "schema_version": parallel_review_module.PARALLEL_REVIEW_SCHEMA_VERSION,
+        "verdict": "SAFE",
+        "target_reviewed": "target.py",
+        "read_only": True,
+        "target_bundle": {
+            "entries": [{"target": "target.py", "path": "target.py", "kind": "file"}],
+            "truncated": False,
+        },
+        "reviewers": [
+            {
+                "reviewer": "Brandon",
+                "verdict": "SAFE",
+                "summary": "Looks fine.",
+                "files_inspected": ["other.py"],
+                "evidence": ["other.py is fine"],
+                "evidence_citations": [_target_citation("other.py is fine", "verdict")],
+                "findings": [],
+                "read_only_claim": True,
+            }
+        ],
+        "judge": {"best_reviewer": "Brandon", "hybrid_summary": "Safe."},
+        "files_inspected": ["other.py"],
+        "execution": {"unexpected_file_changes": []},
+    }
+
+    result = parallel_review_module.verify_parallel_review_bundle(verdict)
+
+    assert result["status"] == "FAIL"
+    assert any("outside target bundle" in failure for failure in result["failures"])
+
+
+def test_judge_best_and_hybrid_produce_distinct_judge_prompts():
+    kwargs = {
+        "question": "review target",
+        "target": "target.py",
+        "reviewers": 3,
+        "personas": "Brandon,Margaret,Jennifer",
+        "focus": None,
+        "runner": "scillm",
+        "read_only": True,
+        "model": "text",
+    }
+    outputs = [{"reviewer": "Brandon", "verdict": "SAFE", "summary": "ok", "evidence": ["target.py"]}]
+    plan_best = parallel_review_module.build_parallel_review_plan(**kwargs, dag_mode="judge-best")
+    plan_hybrid = parallel_review_module.build_parallel_review_plan(**kwargs, dag_mode="hybrid")
+
+    assert parallel_review_module.build_judge_prompt(plan_best, outputs) != parallel_review_module.build_judge_prompt(plan_hybrid, outputs)
+
+
+def test_parse_reviewer_output_normalizes_list_fields():
+    payload = {
+        "reviewer": {
+            "name": "Brandon",
+            "role": "correctness",
+        }
+    }
+    parsed = parallel_review_module.parse_reviewer_output(
+        json.dumps(
+            {
+                "verdict": "safe",
+                "summary": "Inspected the target.",
+                "files_inspected": "target.py",
+                "evidence": "target.py returns 42",
+                "findings": "not a finding object",
+                "test_gaps": {"title": "missing regression test"},
+            }
+        ),
+        payload,
+    )
+
+    assert parsed["verdict"] == "SAFE"
+    assert parsed["files_inspected"] == ["target.py"]
+    assert parsed["evidence"] == ["target.py returns 42"]
+    assert parsed["findings"] == []
+    assert parsed["test_gaps"] == ["{'title': 'missing regression test'}"]
+
+
+def test_cli_parallel_review_verifier_failure_exits_needs_attention(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "verdict": "SAFE",
+                    "summary": "Judge response omitted required synthesis fields.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                    "confidence": "medium",
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected the target.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+                "confidence": "medium",
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--ask-id",
+            "parallel-verifier-fail",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    status = read_status("parallel-verifier-fail", tail_events=20, output_root=tmp_path)
+    verdict = json.loads((tmp_path / "parallel-verifier-fail" / "parallel_review" / "verdict.json").read_text())
+    assert payload["needs_attention"]["reason"] == "parallel_review_verifier_failed"
+    assert payload["needs_attention"]["safe_default"] == "do_not_trust_review"
+    assert "judge missing best_reviewer" in payload["needs_attention"]["verifier_failures"]
+    assert status["state"] == "needs_attention"
+    assert status["needs_attention"]["reason"] == "parallel_review_verifier_failed"
+    assert verdict["verifier"]["status"] == "FAIL"
+
+
+def test_parallel_review_events_include_each_reviewer(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Best evidence.",
+                    "hybrid_summary": "All reviewers inspected target.py.",
+                    "verdict": "SAFE",
+                    "summary": "Judge synthesis.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected target.py.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--ask-id",
+            "parallel-events",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    status = read_status("parallel-events", tail_events=80, output_root=tmp_path)
+    events = [event["event"] for event in status["event_tail"]]
+    assert events.count("reviewer_started") == 3
+    assert events.count("reviewer_finished") == 3
+    assert "judge_started" in events
+    assert "judge_finished" in events
+    assert "verifier_started" in events
+    assert "verifier_finished" in events
+
+
+def test_parallel_review_reviewer_calls_overlap(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+    started = {}
+    finished = {}
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Best evidence.",
+                    "hybrid_summary": "All reviewers inspected target.py.",
+                    "verdict": "SAFE",
+                    "summary": "Judge synthesis.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                }
+            started[reviewer] = time.monotonic()
+            await asyncio.sleep(0.05)
+            finished[reviewer] = time.monotonic()
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected target.py.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--ask-id",
+            "parallel-overlap",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert len(started) == 3
+    assert max(started.values()) < min(finished.values())
+
+
+def test_parallel_review_single_reviewer_failure_preserves_artifacts(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "target.py"
+    target.write_text("def answer():\n    return 42\n")
+
+    class FakeScillmReviewerAdapter:
+        def __init__(self, **kwargs):
+            pass
+
+        async def review(self, payload):
+            reviewer = payload["reviewer"]["name"]
+            if reviewer == "Margaret":
+                raise RuntimeError("model unavailable")
+            if reviewer == "review-judge":
+                return {
+                    "reviewer": "review-judge",
+                    "judge": "review-judge",
+                    "best_reviewer": "Brandon",
+                    "best_review_reason": "Best evidence.",
+                    "hybrid_summary": "One reviewer failed; outputs are incomplete.",
+                    "verdict": "INSUFFICIENT_EVIDENCE",
+                    "summary": "Judge synthesis.",
+                    "files_inspected": [str(target)],
+                    "evidence": ["target.py returns 42"],
+                    "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                    "findings": [],
+                    "test_gaps": [],
+                    "read_only_claim": True,
+                }
+            return {
+                "reviewer": reviewer,
+                "verdict": "SAFE",
+                "summary": f"{reviewer} inspected target.py.",
+                "files_inspected": [str(target)],
+                "evidence": ["target.py returns 42"],
+                "evidence_citations": [_target_citation("target.py returns 42", "verdict")],
+                "findings": [],
+                "test_gaps": [],
+                "read_only_claim": True,
+            }
+
+    monkeypatch.setattr(parallel_review_module, "ScillmReviewerAdapter", FakeScillmReviewerAdapter)
+    monkeypatch.setattr(ask_module.SessionWriter, "write", lambda self: None)
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **kwargs: None)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            str(target),
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--ask-id",
+            "parallel-reviewer-failure",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    review_dir = tmp_path / "parallel-reviewer-failure" / "parallel_review"
+    verdict = json.loads((review_dir / "verdict.json").read_text())
+    verifier_log = (review_dir / "verifier.log").read_text()
+    status = read_status("parallel-reviewer-failure", tail_events=80, output_root=tmp_path)
+    events = [event["event"] for event in status["event_tail"]]
+    assert (review_dir / "reviewer_outputs").exists()
+    assert verdict["verifier"]["status"] == "FAIL"
+    assert "Margaret: reviewer failed" in verifier_log
+    assert status["state"] == "needs_attention"
+    assert "reviewer_failed" in events
+
+
+def test_cli_parallel_review_rejects_unbounded_fanout(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--parallel-reviewers",
+            "50",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Parallel reviewers must be <= 7" in result.output
+
+
+def test_cli_parallel_review_rejects_unknown_runner(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--parallel-review-runner",
+            "codex",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Only the scillm parallel-review" in result.output
+    assert "runner is implemented" in result.output
+
+
+def test_cli_parallel_review_rejects_unknown_dag_mode(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "target",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--review-dag",
+            "shell",
+            "--run-output-root",
+            str(tmp_path),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Review DAG must be judge-best or hybrid" in result.output
 
 
 def test_doctor_reports_runtime_sections():
@@ -548,6 +2197,35 @@ def test_cli_ask_dry_run_includes_context_policy(tmp_path):
     assert policy["inherit_skills"] == "all"
     assert policy["inherit_project_context"] == "summary"
     assert policy["memory_as_evidence"] is True
+
+
+def test_cli_ask_dry_run_includes_parallel_review_dag_options(tmp_path):
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "review",
+            "runtime",
+            "--parallel-review",
+            "--review-target",
+            "git:diff",
+            "--parallel-review-personas",
+            "Brandon,Margaret,Jennifer",
+            "--review-dag",
+            "judge-best",
+            "--dry-run",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    options = payload["options"]
+    assert options["review_target"] == "git:diff"
+    assert options["parallel_review_runner"] == "scillm"
+    assert options["review_dag"] == "judge-best"
+    assert "parallel_review/judge.json" in payload["risk_analysis"]["filesystem_writes"]
 
 
 def test_deep_review_context_policy_never_treats_memory_as_evidence(tmp_path):

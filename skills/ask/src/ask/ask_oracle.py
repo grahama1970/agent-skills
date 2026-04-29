@@ -1,6 +1,7 @@
 """Oracle synthesis and subagent orchestration for the ask skill."""
 
 import json
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
@@ -31,6 +32,15 @@ from .review_protocols import (
     parse_protocol_turn,
 )
 from .skills_exec import parse_memory_output, run_memory_recall
+from .scillm_runtime import (
+    CITATION_SCHEMA_VERSION,
+    build_source_bundle,
+    memory_citations_from_items,
+    normalize_citations,
+)
+
+
+INLINE_CITATION_RE = re.compile(r"\[(MEMORY\.\d+|QUESTION|DOGPILE\.\d+|FETCHER\.\d+)\]")
 
 def _is_meta_item(item: dict) -> bool:
     """Detect system meta-knowledge (routing rules, skill descriptions).
@@ -94,6 +104,7 @@ def _apply_oracle_synthesis(
     """Use an oracle backend for final high-reasoning synthesis."""
     question = result["question"]
     ranked_items = _rank_items(result["items"]) if result["items"] else []
+    source_bundle = build_source_bundle(question=question, context_items=ranked_items[:k])
     context = _format_oracle_context(ranked_items[:k])
     fallback_answer = result.get("answer", "")
     persona_profiles = _load_oracle_persona_profiles(
@@ -130,6 +141,10 @@ def _apply_oracle_synthesis(
         "Current non-oracle synthesis:\n"
         f"{fallback_answer or '[none]'}\n\n"
         "Answer the question directly. Use the retrieved memory context when it is relevant. "
+        "Cite supported claims inline with source IDs like [MEMORY.1]. "
+        "Memory citations count for knowledge/persona/project-context answers, but not for "
+        "code or review safety claims. For current external facts, say fresh sources are needed "
+        "unless dogpile/fetcher evidence is present. "
         "If the context is weak or incomplete, say that explicitly and separate supported facts "
         "from your inference. Keep the answer concise and technically precise."
     )
@@ -234,6 +249,24 @@ def _apply_oracle_synthesis(
             )
         if len(turns) > 1:
             result["oracle"]["deliberation"] = turns
+        result["citation_schema_version"] = CITATION_SCHEMA_VERSION
+        result["source_bundle"] = {
+            "source_bundle_id": source_bundle["source_bundle_id"],
+            "citation_schema_version": source_bundle.get("citation_schema_version", CITATION_SCHEMA_VERSION),
+            "source_ids": [source["source_id"] for source in source_bundle["sources"]],
+            "sources": source_bundle["sources"],
+        }
+        result["citations"] = _citations_from_inline_ids(content, ranked_items[:k])
+        if not result["citations"]:
+            result["citations"] = memory_citations_from_items(ranked_items, limit=k, supports="oracle_answer")
+            citation_status = "DEGRADED" if result["citations"] else "MISSING"
+        else:
+            citation_status = "PASS"
+        result["citation_status"] = {
+            "status": citation_status,
+            "basis": "memory",
+            "rule": "memory citations support knowledge answers but not code/review safety claims",
+        }
         log.info("Oracle synthesis complete: model=%s reasoning=%s", model, reasoning_effort)
     except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
         result["oracle"] = {
@@ -704,7 +737,7 @@ def _format_oracle_context(items: list[dict], max_chars: int = 24000) -> str:
         source = str(item.get("source", item.get("_source", ""))).strip()
         bridge = str(item.get("via_bridge", "")).strip()
         section = (
-            f"[{index}]\n"
+            f"[MEMORY.{index}]\n"
             f"Problem: {problem}\n"
             f"Source: {source or 'unknown'}\n"
             f"Bridge: {bridge or 'none'}\n"
@@ -720,6 +753,33 @@ def _format_oracle_context(items: list[dict], max_chars: int = 24000) -> str:
         if remaining <= 0:
             break
     return "\n\n".join(sections)
+
+
+def _citations_from_inline_ids(content: str, items: list[dict]) -> list[dict[str, str]]:
+    citations: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for source_id in INLINE_CITATION_RE.findall(content or ""):
+        if source_id in seen:
+            continue
+        seen.add(source_id)
+        if source_id.startswith("MEMORY."):
+            index = int(source_id.split(".", 1)[1]) - 1
+            item = items[index] if 0 <= index < len(items) else {}
+            text = str(item.get("solution") or item.get("answer") or item.get("text") or item.get("problem") or "").strip()
+            citations.append({
+                "source_id": source_id,
+                "source_kind": "memory",
+                "quote_or_summary": text[:280],
+                "supports": "oracle_answer",
+            })
+        elif source_id == "QUESTION":
+            citations.append({
+                "source_id": "QUESTION",
+                "source_kind": "question",
+                "quote_or_summary": "User question",
+                "supports": "oracle_answer",
+            })
+    return normalize_citations(citations, supports="oracle_answer")
 
 
 def _format_oracle_persona_context(
