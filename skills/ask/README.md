@@ -8,11 +8,11 @@
   />
 </p>
 
-> Zero-cognitive-load querying and learning for agent skill environments.
+> Natural-language querying, learning, and high-reasoning review for agent skill environments.
 
-`ask` is the natural-language front door to memory-backed context, persona
-consultation, fresh discovery, and high-reasoning synthesis. It lets a human ask
-normally while the system chooses the right retrieval, freshness, persona, and
+`ask` is the human-facing front door for memory-backed context, persona
+consultation, fresh discovery, and oracle-style synthesis. A user can ask
+normally; `/ask` chooses the appropriate memory, freshness, persona, review, or
 oracle path.
 
 `ask` uses the model surfaces, subscriptions, APIs, and local providers available
@@ -28,22 +28,14 @@ human asks naturally
     ↓
 optional /dogpile discovers fresh external evidence
     ↓
-optional oracle/subagent path produces high-reasoning synthesis
+optional oracle or subagent path produces high-reasoning synthesis
     ↓
 artifacts and telemetry persist for later recall
 ```
 
 **Core principle:** Memory recall is context, not evidence. Code and design
-claims must still be grounded in inspected files, diffs, tests, or artifacts.
-
-**SPARTA preflight:** For SPARTA, CWE, NIST, CAPEC, ATT&CK, and
-space-cybersecurity control questions, `/ask` first sends the preserved question
-text through `/extract-entities` and `/memory` recall. Grounded SPARTA-corpora
-matches route to `/create-evidence-case`; if that required evidence-case route
-is unavailable or fails, `/ask` pauses with `needs_attention` and
-`safe_default=do_not_answer_as_grounded` instead of falling through to ordinary
-memory/oracle synthesis. No grounded match continues normal `/ask` routing. See
-`docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`.
+claims must still be grounded in inspected files, diffs, tests, logs, or
+artifacts.
 
 ## Quick Start
 
@@ -51,10 +43,10 @@ memory/oracle synthesis. No grounded match continues normal `/ask` routing. See
 # Query stored knowledge.
 ./run.sh ask "What do we know about the auth retry bug?"
 
-# Learn a new project/topic.
+# Learn a new project or topic.
 ./run.sh learn "architecture of this repository" --scope project --depth standard
 
-# Invoke high-reasoning oracle synthesis.
+# Ask for high-reasoning synthesis.
 ./run.sh ask "Should we use subagent-runner or direct scillm for focused reviews?" \
   --oracle \
   --oracle-backend subagent-runner \
@@ -67,11 +59,7 @@ memory/oracle synthesis. No grounded match continues normal `/ask` routing. See
   --parallel-reviewers 3 \
   --parallel-review-focus correctness,tests,maintainability
 
-# Run a two-sided adversarial decision DAG.
-./run.sh ask "argue whether this retry policy should fail closed" \
-  --argue
-
-# Run first-class deep review with audit artifacts.
+# Run deep review with audit artifacts.
 ./run.sh ask "deep review this implementation" \
   --deep-review \
   --deep-review-target src/ask/ask.py
@@ -83,23 +71,23 @@ memory/oracle synthesis. No grounded match continues normal `/ask` routing. See
 ./run.sh status --run <ask_id> --serve --open
 ```
 
-## Modes
+## When to Use Each Mode
 
-| Mode | Purpose | Typical command |
+| Mode | Use when you need | Example |
 | --- | --- | --- |
-| Ask | Query stored knowledge | `./run.sh ask "what do we know about X?"` |
-| Learn | Discover and ingest a topic/persona | `./run.sh learn "architecture of this repository" --depth standard` |
-| Auto-learn | Learn if memory has no useful result | `./run.sh ask "question" --auto-learn` |
-| Oracle | Max-available reasoning synthesis | `./run.sh ask "question" --oracle` |
-| Persona | Answer through a stored persona | `./run.sh ask "question" --oracle --oracle-persona Architect` |
+| Ask | Stored project or topic knowledge | `./run.sh ask "what do we know about X?"` |
+| Learn | New durable knowledge | `./run.sh learn "architecture of this repository"` |
+| Auto-learn | Recall first, learn only if memory is weak | `./run.sh ask "question" --auto-learn` |
+| Oracle | Highest-available reasoning synthesis | `./run.sh ask "question" --oracle` |
+| Persona | A stored persona or role voice | `./run.sh ask "question" --oracle --oracle-persona Architect` |
 | Roundtable | Sequential persona deliberation | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
 | Argue | Two parallel advocates plus sequential judge | `./run.sh ask "argue whether X" --argue` |
 | Parallel review | Independent reviewer fanout | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
-| Deep review | Web-GPT-style review with artifacts | `./run.sh ask "deep review this" --deep-review-target src/ask/ask.py` |
-| Doctor | Preflight composed dependencies | `./run.sh doctor --json` |
+| Deep review | Web-GPT-style review with artifacts | `./run.sh ask "deep review this" --deep-review --deep-review-target src/ask/ask.py` |
+| Doctor | Dependency and runtime preflight | `./run.sh doctor --json` |
 | Chains | Inspect saved review workflows | `./run.sh chains list --json` |
-| Status | Inspect memory status or recent runs | `./run.sh status --runs --json` |
-| Runtime health | Query skill/runtime health | `./run.sh os health "is memory healthy?"` |
+| Status | Inspect recent runs and memory state | `./run.sh status --runs --json` |
+| OS health | Ask runtime/ops questions | `./run.sh os health "is memory healthy?"` |
 
 ## Installation
 
@@ -247,13 +235,17 @@ claims; safe review verdicts require target/file/diff/artifact citations.
 
 ## Deep Review
 
-Deep review is an oracle/review lane for comprehensive, Web-GPT-style analysis
-without browser copy-paste. It wraps the high-reasoning oracle path with a
-pass-based review prompt, target resolution, read-only git status checks, and
-machine-checkable artifacts.
+Deep review is a read-only oracle/review lane for comprehensive analysis without
+browser copy-paste. It wraps the high-reasoning oracle path with:
 
-Runtime deep review is read-only: it should produce analysis, verdicts,
-artifacts, telemetry, and remediation plans, not patches.
+- pass-based review prompts
+- target resolution
+- read-only git status checks
+- deterministic artifact generation
+- machine-checkable JSON verification
+
+Deep review should produce analysis, verdicts, artifacts, telemetry, and
+remediation plans. It should not patch source files.
 
 ```bash
 ./run.sh ask "deep review this implementation" \
@@ -266,16 +258,43 @@ artifacts, telemetry, and remediation plans, not patches.
 Outputs:
 
 ```text
-.ask_artifacts/deep-review/<timestamp>/review.md
-.ask_artifacts/deep-review/<timestamp>/review.json
+.ask_artifacts/deep-review/<run_id>/review.md
+.ask_artifacts/deep-review/<run_id>/review.json
 ```
 
-The JSON verifier rejects missing sections, unsafe write evidence, shallow
-summaries, invalid verdicts, and safe verdicts without inspected evidence.
+The JSON verifier rejects:
 
-Saved review workflows live in `docs/chains/*.chain.yaml`. The default
-`deep-review` chain is target resolution → context bundle → parallel reviewers
-→ moderator synthesis → deterministic verifier.
+- missing required sections
+- unsafe write evidence
+- shallow summaries
+- invalid verdicts
+- safe verdicts without inspected evidence
+
+Saved review workflows live in `docs/chains/*.chain.yaml`.
+
+The default `deep-review` chain is:
+
+```text
+target resolution
+  → context bundle
+  → parallel reviewers
+  → moderator synthesis
+  → deterministic verifier
+```
+
+## Safety and Evidence
+
+For SPARTA, CWE, NIST, CAPEC, ATT&CK, and space-cybersecurity control
+questions, `/ask` first sends the preserved question text through
+`/extract-entities` and `/memory` recall.
+
+Grounded SPARTA-corpora matches route to `/create-evidence-case`. If that
+required evidence-case route is unavailable or fails, `/ask` pauses with
+`needs_attention` and `safe_default=do_not_answer_as_grounded` instead of
+falling through to ordinary memory/oracle synthesis.
+
+No grounded match continues normal `/ask` routing. See
+`docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`.
 
 ## Command Reference
 
@@ -350,7 +369,28 @@ See `SKILL.md` for exhaustive environment and runtime details.
 `ask` records execution details into `/memory` so timeout and reliability policy
 can become data-driven over time.
 
-`/scillm` DAG modes also record per-node runtime correlation:
+### Runtime surfaces
+
+Expected telemetry surfaces:
+
+- `ask_call_log`
+- `ask_subagent_heartbeat`
+- compact roundtable and parallel-review summaries
+- artifact paths for generated review outputs
+- `.ask_artifacts/<mode>/<run_id>/request.json`
+- `.ask_artifacts/<mode>/<run_id>/status.json`
+- `.ask_artifacts/<mode>/<run_id>/events.jsonl`
+- durable lessons when a conversation produces reusable knowledge
+- `argue/source_bundle.json`, `argue/for.json`, `argue/against.json`,
+  `argue/judge.json`, `argue/argue.json`, `argue/verifier.log`
+- `parallel_review/source_bundle.json`, reviewer outputs, `judge.json`,
+  `verdict.json`, and `verifier.log`
+- `index.html`, `ask-viewer.css`, `ask-viewer.js`, and `viewer.json` when
+  `status --run <ask_id> --serve` is used
+
+### DAG observability
+
+`/scillm` DAG modes record per-node runtime correlation:
 
 - `scillm_metadata` sent with every advocate, reviewer, and judge node
 - returned `/scillm` call/model/metadata observability when provided
@@ -367,22 +407,7 @@ can become data-driven over time.
 - structured `needs_attention` diagnostics when reviewer, advocate, or judge
   calls fail before a trustworthy verdict can be produced
 
-Expected telemetry surfaces:
-
-- `ask_call_log`
-- `ask_subagent_heartbeat`
-- compact roundtable/parallel review summaries
-- artifact paths for generated review outputs
-- `.ask_artifacts/<mode>/<run_id>/request.json`
-- `.ask_artifacts/<mode>/<run_id>/status.json`
-- `.ask_artifacts/<mode>/<run_id>/events.jsonl`
-- durable lessons when a conversation produces reusable knowledge
-- `argue/source_bundle.json`, `argue/for.json`, `argue/against.json`,
-  `argue/judge.json`, `argue/argue.json`, `argue/verifier.log`
-- `parallel_review/source_bundle.json`, reviewer outputs, `judge.json`,
-  `verdict.json`, and `verifier.log`
-- `index.html`, `ask-viewer.css`, `ask-viewer.js`, and `viewer.json` when
-  `status --run <ask_id> --serve` is used
+### Retention
 
 Do not store full prompts, full reviewer chatter, full code diffs, or full repo
 snippets by default.
@@ -399,10 +424,15 @@ Timeout handling is push-style where the runner supports it:
 - Heartbeat snapshots are sparse and stored for future timeout policy; full
   chatter is not persisted by default.
 
-Semantic validation is part of the E2E contract. Empty answers,
-`No answer could be synthesized`, refusal-style non-answers, wrong persona
-routing, missing roundtable participants, and missing domain grounding must fail
-the relevant E2E case.
+Semantic validation is part of the E2E contract. These cases must fail the
+relevant E2E check:
+
+- empty answers
+- `No answer could be synthesized`
+- refusal-style non-answers
+- wrong persona routing
+- missing roundtable participants
+- missing domain grounding
 
 Mocked tests are regression coverage, not integration proof. New user-visible
 composition paths through `/scillm` require an opt-in live smoke/E2E check
@@ -442,7 +472,7 @@ Curated development context lives in `docs/PROJECT_KNOWLEDGE.md`.
 
 ```bash
 cd /path/to/skills/ask
-../project-knowledge/run.sh sync --file docs/PROJECT_KNOWLEDGE.md --project ask
+PROJECT_KNOWLEDGE_CWD=docs ../project-knowledge/run.sh sync
 ../project-knowledge/run.sh recall --project ask
 ```
 
