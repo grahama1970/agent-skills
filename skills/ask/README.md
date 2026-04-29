@@ -1,4 +1,4 @@
-# ask
+# ask — Ask, Argue and Roundtable
 
 <p align="center">
   <img
@@ -7,8 +7,6 @@
     width="100%"
   />
 </p>
-
-> **Ask, Argue and Roundtable**
 
 Agents accumulate a lot of context over time: run logs, stored lessons, persona
 profiles, source bundles, evidence cases, review artifacts, and whatever fresh
