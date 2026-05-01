@@ -223,6 +223,8 @@ def _apply_oracle_synthesis(
             result["oracle"]["persona_model"] = persona_model
         if peer_model:
             result["oracle"]["peer_model"] = peer_model
+        if freshness_policy.get("model_alias"):
+            result["oracle"]["model_alias"] = freshness_policy["model_alias"]
         result["oracle"]["dogpile_mode"] = freshness_policy.get("dogpile_mode", "auto")
         result["oracle"]["dogpile_recommended"] = freshness_policy.get("dogpile_recommended", False)
         if persona_profiles:
@@ -288,6 +290,8 @@ def _apply_oracle_synthesis(
             result["oracle"]["persona_model"] = persona_model
         if peer_model:
             result["oracle"]["peer_model"] = peer_model
+        if freshness_policy.get("model_alias"):
+            result["oracle"]["model_alias"] = freshness_policy["model_alias"]
         if persona_profiles:
             result["oracle"]["persona_profiles"] = persona_profiles
         result["oracle"]["iterations_requested"] = iterations

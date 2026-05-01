@@ -137,6 +137,7 @@ Agent translation rules:
 - Treat "argue whether", "debate whether", or "make the case for and against" as `--argue`.
 - Treat "review then roundtable" as both `--parallel-review` and `--roundtable`.
 - Treat "deep review", "comprehensive review", "safe to proceed", or "production readiness" as `--deep-review`; require or infer a concrete `--deep-review-target`.
+- Treat leading model shorthand such as `$ask oc kimi ...`, `$ask opencode qwen ...`, `$ask chutes kimi ...`, `$ask oc-kimi ...`, or `$ask chutes-kimi ...` as `--oracle --oracle-backend scillm` with the resolved provider model.
 - Treat date-sensitive words (`2026`, `current`, `latest`, `today`, `recent`) as `--dogpile auto`.
 - Default high-value analytical questions to `--oracle --oracle-model gpt-5.5 --oracle-reasoning high`.
 
@@ -145,6 +146,10 @@ Agent translation rules:
 | `$ask what do we know about the release checklist?` | Memory-backed ask synthesis |
 | `$ask What is the state of Python packaging in 2026?` | Oracle with auto persona selection and `--dogpile auto` |
 | `$ask What is the state of space-based cybersecurity in 2026?` | SPARTA-scoped oracle: `--scope sparta --oracle` |
+| `$ask oc kimi explain this design tradeoff` | scillm OpenCode Go oracle using live model discovery, currently `opencode-go/kimi-k2.6` |
+| `$ask oc-qwen compare these options` | Hyphenated OpenCode Go shorthand, currently `opencode-go/qwen3.6-plus` |
+| `$ask chutes kimi explain this design tradeoff` | scillm Chutes oracle using configured alias `text-kimi` |
+| `$ask chutes-kimi explain this design tradeoff` | Hyphenated Chutes shorthand using configured alias `text-kimi` |
 | `$ask Brandon what is the state of space-based cybersecurity in 2016?` | Brandon persona oracle over `--scope sparta` |
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: What is the state of cybersecurity in 2026?` | SPARTA-scoped sequential persona roundtable |
 | `$ask Brandon what is the best way to review this API boundary?` | Brandon persona oracle subagent |

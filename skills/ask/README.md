@@ -45,7 +45,9 @@ artifacts. `/ask` enforces that distinction deliberately.
 
 Under the hood, `/ask` uses whatever model surfaces are configured in your
 environment: Codex, OpenAI API, `/scillm` routes, local models, DeepSeek,
-Gemini, and other configured backends.
+Gemini, Chutes, OpenCode Go, and other configured backends. Human chat can use
+provider-family shorthand such as `$ask oc kimi ...` or `$ask chutes-kimi ...`
+when the model choice matters.
 
 ## Try this first
 
@@ -58,6 +60,8 @@ $ask ask the reliability architect whether the queue fallback fails closed when 
 $ask run 3 parallel reviewers on the cache invalidation migration
 $ask argue whether replayed webhook delivery handling is safe to ship
 $ask deep review src/ask/ask.py
+$ask oc kimi explain the tradeoff in this patch
+$ask chutes-kimi summarize the risk in this plan
 $ask is memory healthy?
 ```
 
@@ -215,6 +219,10 @@ $ask argue whether this retry policy should fail closed
 $ask review then roundtable with Architect, Tester, and Maintainer
 $ask deep review this implementation --deep-review-target src/ask/ask.py
 $ask oracle should we use subagent-runner here?
+$ask oc kimi explain this design tradeoff
+$ask oc-qwen compare these options
+$ask chutes kimi summarize this plan
+$ask chutes-kimi summarize this plan
 $ask what tests prove the cache invalidation behavior?
 $ask learn the architecture of this repository
 $ask is memory healthy?
@@ -347,6 +355,28 @@ and `supports`:
   --oracle-peer-model opencode-go/deepseek-v4-pro \
   --oracle-iterations 3
 ```
+
+### Provider/model shorthand
+
+For direct scillm oracle calls, put the provider/model family before the
+question:
+
+```text
+$ask oc kimi explain this design tradeoff
+$ask oc-qwen compare these options
+$ask chutes kimi summarize this plan
+$ask chutes-kimi summarize this plan
+```
+
+`oc` and `opencode` query scillm's live OpenCode Go model discovery endpoint,
+then select the best supported configured model for the requested family. As of
+the current live check, Kimi resolves to `opencode-go/kimi-k2.6` and Qwen
+resolves to `opencode-go/qwen3.6-plus`. `chutes` uses scillm configured aliases
+such as `text-kimi`.
+
+Successful oracle answers count as answered runs even when memory returns zero
+items, and runtime artifacts preserve the resolved `oracle_model_alias` so the
+route is auditable.
 
 ## Deep Review
 
@@ -577,7 +607,7 @@ capability or record an explicit degraded status.
 
 ## Current Readiness
 
-As of 2026-04-29, `$ask` is usable for the intended interactive workflows:
+As of 2026-05-01, `$ask` is usable for the intended interactive workflows:
 
 - Realistic domain sanity/E2E checks pass with scoped memory, a stored persona,
   and a multi-persona roundtable.
@@ -585,6 +615,10 @@ As of 2026-04-29, `$ask` is usable for the intended interactive workflows:
   enforcement across ask, oracle, OS, argue, deep-review, and parallel-review.
 - Opt-in live `/scillm` E2E passes for argue metadata/source bundles and
   parallel-review composition with `ASK_LIVE_SCILLM_E2E=1`.
+- Live `$ask` E2E passes for OpenCode Go and Chutes model shorthand:
+  `$ask oc kimi`, `$ask oc-qwen`, `$ask chutes kimi`, and `$ask chutes-kimi`
+  all reach scillm, return oracle answers, preserve alias metadata, and mark
+  runtime status as `answered`.
 - SPARTA evidence-case routing fails closed when `/create-evidence-case` is
   required but unavailable.
 - Runtime status can be inspected in an auto-updating local HTML viewer with

@@ -54,6 +54,30 @@ Expected route:
   --oracle-reasoning high
 ```
 
+## Provider/Model Shorthand
+
+```text
+$ask oc kimi explain this design tradeoff
+$ask oc-qwen compare these options
+$ask chutes kimi explain this design tradeoff
+$ask chutes-kimi explain this design tradeoff
+```
+
+Expected route:
+
+```bash
+./run.sh ask "explain this design tradeoff" \
+  --oracle \
+  --oracle-backend scillm \
+  --oracle-model opencode-go/kimi-k2.6
+```
+
+`oc` and `opencode` use the live scillm OpenCode Go discovery endpoint and
+choose the best currently supported model for the requested family, such as
+Kimi, DeepSeek, GLM, MiMo/Mini, MiniMax, or Qwen. `chutes` uses scillm's
+configured Chutes aliases, such as `text-kimi`, while still accepting exact
+catalog-style model IDs when scillm supports them.
+
 ## Persona Oracle
 
 ```text

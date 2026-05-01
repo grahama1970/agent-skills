@@ -6,9 +6,14 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 import ask.ask as ask_module
+import ask.model_aliases as aliases
 
 
 ASK_DIR = Path(__file__).resolve().parents[1]
+OPENCODE_MODELS = [
+    {"id": "opencode-go/kimi-k2.6", "supported": True, "key_configured": True},
+    {"id": "opencode-go/qwen3.6-plus", "supported": True, "key_configured": True},
+]
 
 
 def _load_ask_module():
@@ -59,6 +64,61 @@ def test_documented_broad_current_prompt_uses_auto_persona_oracle(monkeypatch):
     assert captured["oracle_backend"] == "subagent-runner"
     assert captured["oracle_consult_personas"] == []
     assert captured["dogpile_mode"] == "auto"
+
+
+def test_documented_spaced_opencode_model_shorthand_uses_latest_live_model(monkeypatch):
+    monkeypatch.setattr(aliases, "fetch_opencode_go_models", lambda *_args, **_kwargs: OPENCODE_MODELS)
+
+    result, captured = _invoke_chat_prompt(
+        "$ask oc kimi explain this design tradeoff",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "explain this design tradeoff"
+    assert captured["oracle_model"] == "opencode-go/kimi-k2.6"
+    assert captured["oracle_backend"] == "scillm"
+    assert captured["oracle_model_alias"]["provider_hint"] == "opencode"
+    assert captured["oracle_model_alias"]["source"] == "live-opencode-go-models"
+
+
+def test_documented_hyphenated_opencode_model_shorthand_uses_latest_live_model(monkeypatch):
+    monkeypatch.setattr(aliases, "fetch_opencode_go_models", lambda *_args, **_kwargs: OPENCODE_MODELS)
+
+    result, captured = _invoke_chat_prompt(
+        "$ask oc-qwen compare these options",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "compare these options"
+    assert captured["oracle_model"] == "opencode-go/qwen3.6-plus"
+    assert captured["oracle_backend"] == "scillm"
+
+
+def test_documented_chutes_model_shorthand_uses_configured_alias(monkeypatch):
+    result, captured = _invoke_chat_prompt(
+        "$ask chutes kimi explain this design tradeoff",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "explain this design tradeoff"
+    assert captured["oracle_model"] == "text-kimi"
+    assert captured["oracle_backend"] == "scillm"
+    assert captured["oracle_model_alias"]["provider_hint"] == "chutes"
+
+
+def test_documented_hyphenated_chutes_model_shorthand_uses_configured_alias(monkeypatch):
+    result, captured = _invoke_chat_prompt(
+        "$ask chutes-kimi explain this design tradeoff",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "explain this design tradeoff"
+    assert captured["oracle_model"] == "text-kimi"
+    assert captured["oracle_backend"] == "scillm"
 
 
 def test_documented_persona_prompt_maps_to_subagent_oracle(monkeypatch):
@@ -191,6 +251,10 @@ def test_documented_chat_examples_file_keeps_required_categories():
         "$ask argue whether we should ship this change",
         "$ask deep review this implementation --deep-review-target src/ask/ask.py",
         "$ask oracle with a 10 minute timeout on this architecture decision",
+        "$ask oc kimi explain this design tradeoff",
+        "$ask oc-qwen compare these options",
+        "$ask chutes kimi explain this design tradeoff",
+        "$ask chutes-kimi explain this design tradeoff",
         "Wrong: $ask run oracle for these 100 questions",
         "sparta_preflight",
         "mustard",

@@ -384,13 +384,19 @@ class AskRunState:
         return payload
 
     def finish(self, result: dict[str, Any], state: str | None = None) -> None:
-        final_state = state or ("answered" if result.get("items") else "no_results")
+        oracle = result.get("oracle") or {}
+        has_oracle_answer = bool(oracle) and bool(str(result.get("answer", "")).strip()) and not oracle.get("error")
+        final_state = state or ("answered" if result.get("items") or has_oracle_answer else "no_results")
         summary = {
             "question": result.get("question", ""),
             "scope": result.get("scope", ""),
             "items_count": len(result.get("items", [])),
             "auto_learned": bool(result.get("auto_learned")),
             "oracle_enabled": bool(result.get("oracle")),
+            "oracle_model": oracle.get("model", ""),
+            "oracle_model_served": oracle.get("model_served", ""),
+            "oracle_model_alias": oracle.get("model_alias"),
+            "answer_chars": len(str(result.get("answer", ""))),
             "deep_review_enabled": bool(result.get("deep_review")),
             "session_path": result.get("session_path", ""),
         }
@@ -512,7 +518,9 @@ class NoopRunState:
         }
 
     def finish(self, result: dict[str, Any], state: str | None = None) -> None:
-        self.state = state or ("answered" if result.get("items") else "no_results")
+        oracle = result.get("oracle") or {}
+        has_oracle_answer = bool(oracle) and bool(str(result.get("answer", "")).strip()) and not oracle.get("error")
+        self.state = state or ("answered" if result.get("items") or has_oracle_answer else "no_results")
 
     def fail(self, exc: BaseException) -> None:
         self.state = "failed"

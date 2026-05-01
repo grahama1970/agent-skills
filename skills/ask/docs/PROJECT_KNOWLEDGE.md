@@ -1,6 +1,6 @@
 # Project Knowledge: ask
 
-**Last updated:** 2026-04-29 by agent
+**Last updated:** 2026-05-01 09:41 by agent
 **Status:** Active development
 
 This file is the human-readable current-state projection for `/ask`
@@ -79,6 +79,12 @@ curated context. Memory recall is context, not evidence.
   `./run.sh status --run <ask_id> --serve --open` writes `index.html`,
   `ask-viewer.css`, `ask-viewer.js`, and `viewer.json` into the run directory
   and polls `request/status/events` so long runs are not black boxes.
+- Release `config doctor --profile release` now performs read-only live probes
+  for ArangoDB, Qdrant/vector-store/embedder, memory, and scillm. It still never
+  starts containers, but it can now claim `release_ready` when those probes pass.
+- The argue verifier rejects high-confidence judge verdicts when
+  `missing_evidence` is non-empty.
+- /ask now supports leading provider-family shorthand for direct scillm oracle calls: `$ask oc kimi ...`, `$ask oc-qwen ...`, `$ask chutes kimi ...`, and `$ask chutes-kimi ...`. OpenCode Go shorthand queries scillm live model discovery before selecting the preferred configured family model; Chutes shorthand uses configured scillm aliases such as `text-kimi`.
 
 ## Recent Decisions
 
@@ -105,6 +111,8 @@ curated context. Memory recall is context, not evidence.
 | 2026-04-29 | Enforce structured citations across `/ask`. | Memory can cite knowledge answers, but review safety claims need target/file/diff/artifact evidence. |
 | 2026-04-29 | Make SPARTA evidence-case routing fail closed. | Grounded SPARTA questions must not silently become ordinary answers when `/create-evidence-case` is unavailable or fails. |
 | 2026-04-29 | Add an ephemeral HTML run viewer. | `status --watch` is necessary but not sufficient for human inspection of DAG state, artifacts, verifier failures, and `needs_attention` reasons. |
+| 2026-05-01 | Make release config doctor verify readiness with read-only probes. | Release readiness should be evidence-based in one command, without starting containers or relying on a separate live doctor transcript. |
+| 2026-05-01 | Treat provider-family shorthand as a first-class $ask oracle route | The model shorthand is user-facing routing policy, uses live OpenCode Go discovery where available, and must preserve resolved alias metadata in output and runtime artifacts. |
 
 ## Open Questions
 
@@ -215,6 +223,16 @@ Latest implementation checks, as of 2026-04-29:
   `All sanity checks PASSED`.
 - UI verification for the HTML run viewer completed with CDP and wrote
   `.codex/ui-verification/ask-run-viewer/latest.json`.
+- Release readiness fix validation:
+  - `./run.sh config doctor --profile release --json` passed with
+    `release_ready=true`, `services_reachable=true`, and
+    `databases_bootstrapped=true`.
+  - `./run.sh doctor --live --profile release --json` passed with
+    `error_count=0` and `warning_count=0`.
+  - `./sanity.sh` passed.
+  - `ASK_LIVE_SCILLM_E2E=1 ./sanity.sh` passed, including live
+    `tests/test_parallel_review_live_e2e.py` at `2 passed in 97.49s`.
+- Provider/model shorthand live E2E completed on 2026-05-01: non-dry-run `$ask oc kimi`, `$ask oc-qwen`, `$ask chutes kimi`, and `$ask chutes-kimi` all exited 0, returned oracle answers through scillm, preserved `oracle.model_alias`, and wrote runtime status `answered`. The E2E pass also fixed two regressions: oracle answers with zero memory items now exit successfully, and runtime summaries now include oracle alias/model metadata. Focused regression suite after the fix: `32 passed`.
 
 ## Timeout and Recovery Policy
 

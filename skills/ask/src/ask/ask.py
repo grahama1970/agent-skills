@@ -26,6 +26,8 @@ from .ask_config import (
     DEFAULT_ORACLE_REASONING,
     DEFAULT_ORACLE_TIMEOUT,
     ORACLE_BACKENDS,
+    SCILLM_API_KEY,
+    SCILLM_BASE_URL,
 )
 from .argue import ARGUE_TIE_BREAKERS, run_argue
 from .chain_specs import apply_chain_options
@@ -57,6 +59,7 @@ from .persona_routing import (
     suggest_persona_consultation,
 )
 from .hybrid import ask_hybrid, learn_back
+from .model_aliases import ModelAliasRoute, resolve_model_alias_route
 
 app = typer.Typer(help="/ask ask - Query accumulated knowledge")
 
@@ -89,6 +92,7 @@ def ask(
     oracle_backend: str = DEFAULT_ORACLE_BACKEND,
     oracle_persona_model: Optional[str] = None,
     oracle_peer_model: Optional[str] = None,
+    oracle_model_alias: Optional[dict] = None,
     oracle_persona_scope: str = "personas",
     roundtable: bool = False,
     roundtable_personas: Optional[str] = None,
@@ -151,6 +155,7 @@ def ask(
         oracle_backend: Oracle execution backend: auto, scillm, or subagent-runner.
         oracle_persona_model: Optional model for primary persona turns.
         oracle_peer_model: Optional model for peer persona turns.
+        oracle_model_alias: Resolved provider-family shorthand metadata.
         oracle_persona_scope: Preferred memory scope for persona profiles.
         roundtable: Run sequential state-machine persona deliberation.
         roundtable_personas: Comma-separated persona[:protocol_role] participants.
@@ -226,6 +231,8 @@ def ask(
             result["oracle"]["persona_model"] = oracle_persona_model
         if oracle_peer_model:
             result["oracle"]["peer_model"] = oracle_peer_model
+        if oracle_model_alias:
+            result["oracle"]["model_alias"] = oracle_model_alias
         if roundtable:
             result["oracle"]["roundtable"] = {
                 "personas": roundtable_personas or "",
@@ -764,6 +771,22 @@ def main(
     resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
+    missing_persona_attention: dict | None = None
+    model_alias_route: ModelAliasRoute | None = None
+    try:
+        model_alias_route = resolve_model_alias_route(
+            question_parts,
+            scillm_base_url=SCILLM_BASE_URL,
+            scillm_api_key=SCILLM_API_KEY,
+        )
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc), param_hint="question") from exc
+    if model_alias_route:
+        question_parts = model_alias_route.question_parts
+        oracle = True
+        oracle_backend = model_alias_route.oracle_backend
+        oracle_model = model_alias_route.resolved_model
+
     question, inferred_parallel_review, inferred_parallel_reviewers, inferred_parallel_focus = (
         _parse_natural_parallel_review_query(question_parts)
     )
@@ -1050,6 +1073,7 @@ def main(
         "oracle": oracle,
         "oracle_backend": oracle_backend,
         "oracle_model": oracle_model if oracle else None,
+        "oracle_model_alias": model_alias_route.as_dict() if model_alias_route else None,
         "oracle_reasoning": oracle_reasoning,
         "oracle_timeout": oracle_timeout,
         "oracle_idle_timeout": oracle_idle_timeout,
@@ -1144,6 +1168,7 @@ def main(
             oracle_backend=oracle_backend,
             oracle_persona_model=oracle_persona_model,
             oracle_peer_model=oracle_peer_model,
+            oracle_model_alias=model_alias_route.as_dict() if model_alias_route else None,
             roundtable=roundtable,
             roundtable_personas=roundtable_personas,
             roundtable_role_preset=roundtable_role_preset,
@@ -1230,7 +1255,9 @@ def main(
         else:
             print(result.get("answer", ""))
     run_state.finish(result)
-    sys.exit(0 if result["items"] or result.get("parallel_review") or result.get("argue") else 1)
+    oracle = result.get("oracle", {})
+    has_oracle_answer = bool(oracle) and bool(str(result.get("answer", "")).strip()) and not oracle.get("error")
+    sys.exit(0 if result["items"] or result.get("parallel_review") or result.get("argue") or has_oracle_answer else 1)
 
 
 if __name__ == "__main__":
