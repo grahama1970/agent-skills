@@ -21,8 +21,8 @@ research = []  # Uses /dogpile and /context7 skills
 [project.scripts]
 plan = "plan:main"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.0.0",
 ]

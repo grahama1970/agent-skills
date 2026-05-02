@@ -21,6 +21,7 @@ metadata:
 provides:
   - task-planning
 composes:
+  - governance
   - memory
   - assess
   - task-monitor
@@ -43,25 +44,27 @@ taxonomy:
 
 Create YAML task files that `/orchestrate` executes directly. No markdown intermediate.
 
-**Before writing any plan, read `/best-practices-plan`** — it has the rules this skill enforces.
+**Before writing any plan, run `/governance` and read `/best-practices-plan`** - governance proves task understanding before planning starts, and best-practices-plan has the rules this skill enforces.
 
 ## Workflow
 
-The full pipeline is: `/plan` → `/review-plan` → `/orchestrate`. The agent runs all three
-when the user says `/plan`. The user only needs to say `/plan` once.
+The full pipeline is: `/governance` -> `/plan` -> `/review-plan` -> `/orchestrate`.
+The agent runs all four when the user says `/plan`. The user only needs to say
+`/plan` once.
 
 ```
-1. /memory recall     — Check if this problem was already solved
-2. SKILL DISCOVERY    — Find existing skills that do what's needed (BLOCKING)
-3. /assess            — Read the target codebase
-4. Identify persona   — WHO uses this? Name them.
-5. Decompose          — Break into tasks with runner/backend/mode
-6. Output YAML        — Write 0N_TASKS.yaml
-7. plan.py --dag      — Show execution DAG to human for approval
-8. plan.py --validate — Schema validation
-9. /review-plan       — Full validation (claims, routing, blind tests, overlap)
-10. If PASS → ask human: "Plan ready. Run /orchestrate?"
-11. If human approves → /orchestrate run 0N_TASKS.yaml
+1. /governance        - Prove understanding before planning (BLOCKING)
+2. /memory recall     - Check if this problem was already solved
+3. SKILL DISCOVERY    - Find existing skills that do what's needed (BLOCKING)
+4. /assess            - Read the target codebase
+5. Identify persona   - WHO uses this? Name them.
+6. Decompose          - Break into tasks with runner/backend/mode
+7. Output YAML        - Write 0N_TASKS.yaml
+8. plan.py --dag      - Show execution DAG to human for approval
+9. plan.py --validate - Schema validation
+10. /review-plan      - Full validation (claims, routing, blind tests, overlap)
+11. If PASS -> ask human: "Plan ready. Run /orchestrate?"
+12. If human approves -> /orchestrate run 0N_TASKS.yaml
 ```
 
 ### Step 2: Runner Selection (which tasks get /code-runner)
@@ -399,6 +402,9 @@ read_context:
 # Emit YAML template
 plan.py
 
+# Start planning guidance for a new goal; requires matching /governance PASS
+plan.py "Add Redis caching to API"
+
 # Validate existing plan
 plan.py --validate 01_TASKS.yaml
 
@@ -422,10 +428,22 @@ plan.py --remove-task 01_TASKS.yaml:3
 
 ```
 
+Use `skills/plan/run.sh` as the supported entrypoint. It pins the uv environment
+to `/mnt/storage12tb/skills/plan/.venv` and refuses repo-local `PLAN_UV_ENV`
+values.
+
+Direct goal planning is gated in `plan.py`, not only in `run.sh`, but direct
+`uv run --project skills/plan ...` is unsupported unless
+`UV_PROJECT_ENVIRONMENT` is exported before uv starts. `plan.py` cannot move a
+repo-local `.venv` after uv has already created it.
+
+Use `PLAN_SKIP_GOVERNANCE=1` or `--skip-governance` only for developer
+maintenance and tests.
+
 ## Pipeline Position
 
 ```
-/plan → /review-plan → /orchestrate
+/governance -> /plan -> /review-plan -> /orchestrate
 ```
 
 For design plans, the execution pipeline inside `/orchestrate` is:
@@ -443,6 +461,7 @@ For design plans, the execution pipeline inside `/orchestrate` is:
 
 | Skill | Role |
 |-------|------|
+| `/governance` | Deterministic pre-plan understanding gate |
 | `/best-practices-plan` | Rules this skill MUST follow (read first) |
 | `/review-plan` | Validates the YAML before `/orchestrate` runs it |
 | `/orchestrate` | Executes the YAML with per-task dispatch |

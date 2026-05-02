@@ -1,0 +1,4 @@
+interface:
+  display_name: "Governance"
+  short_description: "Gate planning with understanding proof"
+  default_prompt: "Use $governance to prove task understanding before planning."

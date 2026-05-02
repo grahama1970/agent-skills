@@ -643,6 +643,33 @@ def print_validation_report(result: dict[str, Any], filepath: Path) -> None:
 # interviews.py provides the question definitions for programmatic use.
 # from interviews import run_pre_plan_interview, run_post_plan_interview
 
+
+def require_governance_pass(goal: str) -> None:
+    """Require a fresh /governance PASS before emitting new-goal planning guidance."""
+    if os.environ.get("PLAN_SKIP_GOVERNANCE") == "1":
+        return
+
+    governance_runner = SKILLS_DIR / "governance" / "run.sh"
+    if not governance_runner.is_file():
+        print(f"Error: /governance runner is required before /plan but was not found at {governance_runner}", file=sys.stderr)
+        raise typer.Exit(2)
+
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    result = subprocess.run(
+        [str(governance_runner), "status", "--task", goal, "--require-pass"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        env=env,
+    )
+    if result.stdout:
+        print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, end="", file=sys.stderr)
+    if result.returncode != 0:
+        raise typer.Exit(result.returncode)
+
+
 app = typer.Typer(help="Create orchestration-ready YAML task files")
 
 
@@ -660,6 +687,7 @@ def main(
     output: str = typer.Option(None, "-o", "--output", help="Output file (default: stdout)"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
     output_format: str = typer.Option("yaml", "--format", help="Output format: json or yaml"),
+    skip_governance: bool = typer.Option(False, "--skip-governance", help="Developer-only escape hatch for new-goal planning."),
 ) -> None:
     """Create orchestration-ready YAML task files."""
     if generate_tests:
@@ -841,6 +869,9 @@ def main(
     # NOTE: The /interview gates are SKILL.md instructions, not embedded here.
     # The agent reads SKILL.md and calls /interview before writing YAML.
     # plan.py is a CLI utility — it doesn't drive the conversation.
+    if not skip_governance:
+        require_governance_pass(goal)
+
     plan_type = detect_plan_type(goal)
     print(f"Goal: {goal}")
     print(f"Detected plan type: {plan_type}")
