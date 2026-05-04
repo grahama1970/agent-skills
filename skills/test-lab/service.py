@@ -13,7 +13,6 @@ from __future__ import annotations
 import os
 import re
 import subprocess
-import textwrap
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -69,12 +68,12 @@ def _sanitize(text: str) -> str:
 def _run_python_assertion(assertion: str, target_dir: str, _cwd: str = "") -> BlindCheckResult:
     """Run a single Python assertion against the target directory."""
     # Wrap the assertion in a test script that adds target_dir to sys.path
-    test_code = textwrap.dedent(f"""\
-        import sys
-        sys.path.insert(0, {target_dir!r})
-        {assertion}
-        print("BLIND_PASS")
-    """)
+    test_code = "\n".join([
+        "import sys",
+        f"sys.path.insert(0, {target_dir!r})",
+        assertion.strip(),
+        'print("BLIND_PASS")',
+    ])
     try:
         proc = subprocess.run(
             ["python3", "-c", test_code],

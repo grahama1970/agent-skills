@@ -412,7 +412,7 @@ PY
                             exit 1
                         fi
                         echo "Warning: ORCHESTRATE_SKIP_REVIEW=1 — proceeding despite FAIL findings." >&2
-                    elif echo "$review_output" | grep -q "WARN"; then
+                    elif echo "$review_output" | grep -qE '^\s*-?\s*\*?\*?WARN\*?\*?:|\[WARN\]'; then
                         echo "Warning: /review-plan found issues. Run 'review-plan review $task_file --suggest-fixes' for details." >&2
                     fi
                 fi

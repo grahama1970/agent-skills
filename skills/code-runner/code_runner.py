@@ -15,7 +15,6 @@ The subagent CAN follow this because every step is a subprocess call.
 """
 from __future__ import annotations
 
-import concurrent.futures
 import fcntl
 import random
 import json
@@ -30,7 +29,7 @@ import typer
 from loguru import logger
 from trace_compress import compress_tool_trace, trace_events_to_dict
 
-# common/ modules (llm_invocations, estimate_timeout, json_utils)
+# common/ modules may be present but are not required by the minimal runner.
 _skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
 _common = str(_skills_dir / "common")
 if _common not in sys.path:
@@ -39,29 +38,30 @@ if _common not in sys.path:
 from evidence import (
     classify_errors,
     collect_evidence,
-    extract_symbols,
     get_strategy,
     build_fix_prompt,
 )
 from event_emitter import EventEmitter
 from models import EventType, ReasonCode, RunState
-from llm_invocations import log_invocation  # noqa: E402
-from diagnose import (
-    call_diagnose,
-    validate_diagnosis,
-    check_stagnation,
-    check_fix_consistency,
-    _treesitter_symbols,
-    build_fix_from_diagnosis,
-    Diagnosis,
-    DiagnosisRejected,
-)
 from apply import (
     build_file_context,
     generate_hunk_review,
 )
-from tool_use import run_tool_use_loop
+from tool_use import _stream_chat_completion, run_tool_use_loop
 from models import TaskSpec, TaskResult, PreflightError
+from worktree_runtime import (
+    WorktreeInfo,
+    WorktreeRuntimeError,
+    changed_path_statuses,
+    changed_paths,
+    create_disposable_worktree,
+    dirty_paths_for_allowlist,
+    export_allowlist_patch,
+    remove_disposable_worktree,
+    remove_untracked_paths,
+    paths_within_allowlist,
+    restore_patch_base_tree,
+)
 from _misuse_guard import (
     validate_task_spec,
     format_misuse_errors,
@@ -120,6 +120,519 @@ def _preflight_fix_advice(field: str, msg: str) -> str:
         if field.startswith(prefix):
             return advice
     return f"Fix the '{field}' field: {msg}"
+
+
+def _json_default(value):
+    if isinstance(value, Path):
+        return str(value)
+    return str(value)
+
+
+def _atomic_write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(payload, indent=2, default=_json_default) + "\n")
+    tmp.replace(path)
+
+
+def _task_summary_for_correction(raw_spec: dict) -> dict:
+    """Return a bounded task summary safe to send to scillm for plan feedback."""
+    dod = raw_spec.get("definition_of_done") or {}
+    return {
+        "task_id": raw_spec.get("task_id", "unknown"),
+        "title": raw_spec.get("title", ""),
+        "runner": raw_spec.get("runner", "code-runner"),
+        "backend": raw_spec.get("backend", ""),
+        "cwd": raw_spec.get("cwd", ""),
+        "prompt_excerpt": str(raw_spec.get("prompt", ""))[:1000],
+        "allowlist": raw_spec.get("allowlist"),
+        "read_context": raw_spec.get("read_context", []),
+        "definition_of_done": {
+            "command": str(dod.get("command", ""))[:1000],
+            "assertion": str(dod.get("assertion", ""))[:500],
+        },
+        "has_blind_tests": bool(raw_spec.get("blind_tests")),
+        "service_under_test": raw_spec.get("service_under_test"),
+        "external_service": raw_spec.get("external_service"),
+    }
+
+
+def _preflight_error_dicts(preflight_errors: list[PreflightError]) -> list[dict]:
+    return [error.model_dump() for error in preflight_errors]
+
+
+def _warning_dicts(misuse_warnings: list) -> list[dict]:
+    return [
+        {
+            "field": getattr(warning, "field", ""),
+            "message": getattr(warning, "message", ""),
+            "suggestion": getattr(warning, "suggestion", ""),
+        }
+        for warning in misuse_warnings
+    ]
+
+
+def _infer_course_action(raw_spec: dict, preflight_errors: list[PreflightError]) -> tuple[str, str]:
+    fields = {error.field for error in preflight_errors}
+    error_text = " ".join(f"{error.field} {error.error}" for error in preflight_errors).lower()
+    has_prompt = bool(str(raw_spec.get("prompt", "")).strip())
+    has_command = bool(raw_spec.get("command") or (raw_spec.get("definition_of_done") or {}).get("command"))
+
+    if "service_under_test" in fields or "live endpoint" in error_text:
+        return "split_task", "scillm"
+    if not has_prompt and has_command:
+        return "use_local", "local"
+    if "allowlist" in fields and not raw_spec.get("allowlist"):
+        return "reroute_or_amend", "scillm"
+    if "definition_of_done" in fields or "definition_of_done.command" in fields:
+        return "amend_code_runner_contract", "code-runner"
+    return "reroute_or_amend", "scillm"
+
+
+def _deterministic_course_correction(
+    raw_spec: dict,
+    preflight_errors: list[PreflightError],
+    misuse_warnings: list,
+    source: str,
+    scillm_error: str = "",
+) -> dict:
+    action, runner = _infer_course_action(raw_spec, preflight_errors)
+    missing_fields = sorted({error.field for error in preflight_errors})
+    corrections = {error.field: error.fix for error in preflight_errors if error.fix}
+    split_tasks = []
+    dod_command = str((raw_spec.get("definition_of_done") or {}).get("command", "") or raw_spec.get("command", ""))
+
+    if action == "split_task":
+        split_tasks = [
+            {
+                "runner": "code-runner",
+                "purpose": "bounded implementation only",
+                "required_additions": [
+                    "prompt",
+                    "allowlist",
+                    "definition_of_done.command",
+                    "definition_of_done.assertion",
+                    "blind_tests",
+                ],
+            },
+            {
+                "runner": "local",
+                "purpose": "restart/verify the live service from the main working directory",
+                "command": dod_command,
+            },
+        ]
+
+    return {
+        "status": "blocked",
+        "error_type": "incomplete_code_runner_contract",
+        "source": source,
+        "missing_fields": missing_fields,
+        "recommended_action": action,
+        "course_correction": {
+            "message": "Code-runner preflight blocked this task before the LLM loop because the task contract is incomplete or misrouted.",
+            "runner_recommendation": runner,
+            "rationale": "Plan owns YAML amendment. Code-runner reports a course correction and does not silently mutate or execute an unsafe task.",
+            "plan_patch": corrections,
+            "split_tasks": split_tasks,
+            "next_validation": [
+                "Amend the plan YAML in /plan.",
+                "Run plan.py --validate on the amended plan.",
+                "Review the generated task spec before retrying.",
+            ],
+        },
+        "preflight_errors": _preflight_error_dicts(preflight_errors),
+        "preflight_warnings": _warning_dicts(misuse_warnings),
+        "scillm": {
+            "used": False,
+            "error": scillm_error,
+        },
+    }
+
+
+def _build_course_correction(
+    raw_spec: dict,
+    preflight_errors: list[PreflightError],
+    misuse_warnings: list,
+    source: str,
+) -> dict:
+    return _deterministic_course_correction(raw_spec, preflight_errors, misuse_warnings, source)
+
+
+def _write_course_correction(output_dir: Path, task_id: str, course_correction: dict) -> Path:
+    correction_file = output_dir / f"{task_id}.course_correction.json"
+    _atomic_write_json(correction_file, course_correction)
+    return correction_file
+
+
+def _git_status_porcelain(cwd: str) -> list[str]:
+    proc = subprocess.run(
+        ["git", "status", "--porcelain=v1"],
+        capture_output=True,
+        text=True,
+        cwd=cwd,
+        timeout=GIT_TIMEOUT,
+    )
+    if proc.returncode != 0 or not proc.stdout.strip():
+        return []
+    return [line for line in proc.stdout.splitlines() if line.strip()]
+
+
+def _source_status_changed(source_cwd: str, baseline: list[str]) -> list[str]:
+    """Return current source status when it differs from the run baseline."""
+
+    current = _git_status_porcelain(source_cwd)
+    return current if current != baseline else []
+
+
+def _dirty_overlaps_allowlist(dirty_entries: list[str], allowlist: list[str] | None) -> bool:
+    if not dirty_entries:
+        return False
+    if not allowlist:
+        return True
+    allowed = [item.rstrip("/") for item in allowlist]
+    for entry in dirty_entries:
+        path = entry[3:] if len(entry) > 3 else entry
+        path = path.strip()
+        if any(path == item or path.startswith(f"{item}/") for item in allowed):
+            return True
+    return False
+
+
+def _write_request_artifact(output_dir: Path, task_id: str, raw_spec: dict, spec_file: str) -> Path:
+    request_file = output_dir / f"{task_id}.request.json"
+    payload = {
+        "task_id": task_id,
+        "spec_file": str(Path(spec_file).resolve()),
+        "captured_at": time.time(),
+        "raw_spec": raw_spec,
+        "status_protocol_version": "code-runner.status.v1",
+    }
+    _atomic_write_json(request_file, payload)
+    return request_file
+
+
+def _default_escalation_chain(backend: str) -> list[list[str]]:
+    return [[backend, "high"]]
+
+
+def _backend_model_name(backend: str) -> str:
+    model_by_backend = {
+        "codex": "gpt-5.5",
+        "claude": "claude-sonnet-4-6",
+        "gemini": "text-gemini",
+        "text": "text",
+        "deepseek": "deepseek-ai/DeepSeek-V3",
+        "test": "test",
+    }
+    if backend not in model_by_backend:
+        raise ValueError(f"Unsupported code-runner backend: {backend}")
+    return model_by_backend[backend]
+
+
+def _git_apply_patch(cwd: str, patch_file: Path) -> None:
+    if not patch_file.exists() or not patch_file.read_text():
+        return
+    subprocess.run(
+        ["git", "apply", "--whitespace=nowarn", str(patch_file)],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=GIT_TIMEOUT,
+        check=True,
+    )
+
+
+def _git_rev_parse_head(cwd: str) -> str:
+    proc = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=GIT_TIMEOUT,
+        check=True,
+    )
+    return proc.stdout.strip()
+
+
+def _git_staged_paths(cwd: str) -> list[str]:
+    proc = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=GIT_TIMEOUT,
+        check=True,
+    )
+    return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+
+
+def _restore_source_allowlist(cwd: str, allowlist: list[str]) -> None:
+    if not allowlist:
+        return
+    subprocess.run(
+        ["git", "restore", "--staged", "--worktree", "--", *allowlist],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=GIT_TIMEOUT,
+        check=False,
+    )
+    subprocess.run(
+        ["git", "clean", "-fd", "--", *allowlist],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=GIT_TIMEOUT,
+        check=False,
+    )
+
+
+def _cleanup_new_untracked_non_allowlist(cwd: str, baseline_status: list[str], allowlist: list[str]) -> list[str]:
+    baseline_entries = set(baseline_status)
+    new_untracked: list[str] = []
+    for entry in _git_status_porcelain(cwd):
+        if not entry.startswith("?? ") or entry in baseline_entries:
+            continue
+        path = entry[3:].strip()
+        allowed, _ = paths_within_allowlist([path.rstrip("/")], allowlist)
+        if not allowed:
+            new_untracked.append(path)
+    if new_untracked:
+        subprocess.run(
+            ["git", "clean", "-fd", "--", *new_untracked],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=GIT_TIMEOUT,
+            check=False,
+        )
+    return new_untracked
+
+
+def _commit_source_allowlist(cwd: str, allowlist: list[str], task_id: str, title: str) -> str:
+    if not allowlist:
+        raise RuntimeError("cannot commit source changes without an allowlist")
+    subprocess.run(
+        ["git", "add", "--", *allowlist],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=GIT_TIMEOUT,
+        check=True,
+    )
+    staged = _git_staged_paths(cwd)
+    staged_ok, staged_violations = paths_within_allowlist(staged, allowlist)
+    if not staged_ok:
+        raise RuntimeError(
+            "commit_on_success would include staged paths outside allowlist: "
+            + ", ".join(staged_violations[:20])
+        )
+    if not staged:
+        raise RuntimeError("commit_on_success requested but no allowlisted changes are staged")
+    message_title = " ".join((title or task_id).split())[:120]
+    subprocess.run(
+        ["git", "commit", "-m", f"code-runner: {task_id} - {message_title}"],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=GIT_TIMEOUT,
+        check=True,
+    )
+    return _git_rev_parse_head(cwd)
+
+
+def _finalize_source_apply(
+    *,
+    source_cwd: str,
+    patch_artifact: Path,
+    allowlist: list[str],
+    dod_command: str,
+    dod_assertion: str,
+    lang: str,
+    task_id: str,
+    title: str,
+    commit_on_success: bool,
+    rollback_on_failure: bool,
+) -> dict:
+    state = {
+        "source_patch_applied": False,
+        "source_commit": "",
+        "source_dod_passed": False,
+        "source_rollback_applied": False,
+        "source_apply_error": "",
+    }
+    if not patch_artifact.exists() or not patch_artifact.read_text().strip():
+        state["source_apply_error"] = "apply_to_source requested but patch artifact is missing or empty"
+        return state
+    baseline_status = _git_status_porcelain(source_cwd)
+    dirty_overlap = dirty_paths_for_allowlist(source_cwd, allowlist)
+    if dirty_overlap:
+        state["source_apply_error"] = (
+            "source has dirty paths overlapping allowlist before apply: "
+            + ", ".join(dirty_overlap[:20])
+        )
+        return state
+    try:
+        _emit_event("source_apply_started", task_id=task_id, patch_artifact=str(patch_artifact))
+        _git_apply_patch(source_cwd, patch_artifact)
+        state["source_patch_applied"] = True
+        source_evidence = collect_evidence(source_cwd, dod_command, dod_assertion, lang)
+        cleaned = _cleanup_new_untracked_non_allowlist(source_cwd, baseline_status, allowlist)
+        if cleaned:
+            logger.warning("Removed source DoD byproducts outside allowlist: {}", cleaned)
+        state["source_dod_passed"] = bool(source_evidence.get("dod_passed"))
+        if not state["source_dod_passed"]:
+            state["source_apply_error"] = (
+                "source DoD failed after applying patch: "
+                + str(source_evidence.get("stdout") or source_evidence.get("stderr") or "")[:1000]
+            )
+            raise RuntimeError(state["source_apply_error"])
+        if commit_on_success:
+            state["source_commit"] = _commit_source_allowlist(source_cwd, allowlist, task_id, title)
+        _emit_event(
+            "source_apply_complete",
+            task_id=task_id,
+            source_commit=state["source_commit"],
+            source_dod_passed=state["source_dod_passed"],
+        )
+    except Exception as exc:
+        if not state["source_apply_error"]:
+            state["source_apply_error"] = f"{type(exc).__name__}: {exc}"
+        if rollback_on_failure:
+            _restore_source_allowlist(source_cwd, allowlist)
+            state["source_rollback_applied"] = True
+        _emit_event(
+            "source_apply_failed",
+            task_id=task_id,
+            error=state["source_apply_error"],
+            rollback_applied=state["source_rollback_applied"],
+        )
+    return state
+
+
+def _restore_round_state(
+    cwd: str,
+    base_commit: str,
+    written_files: list[str],
+    best_patch: Path | None,
+    worktree_info: WorktreeInfo | None = None,
+) -> None:
+    if worktree_info is not None:
+        restore_patch_base_tree(worktree_info)
+    else:
+        git_revert_to(cwd, base_commit, written_files)
+    if best_patch is not None:
+        _git_apply_patch(cwd, best_patch)
+
+
+def _risk_report(raw_spec: dict, spec_file: str) -> dict:
+    task_id = raw_spec.get("task_id", "unknown")
+    output_dir = Path(raw_spec.get("output_dir", "/tmp/code-runner"))
+    report: dict = {
+        "task_id": task_id,
+        "spec_file": str(Path(spec_file).resolve()),
+        "valid": False,
+        "danger_flags": [],
+        "warnings": [],
+    }
+
+    misuse_errors, misuse_warnings = validate_task_spec(raw_spec, task_id)
+    report["misuse_errors"] = [err.__dict__ for err in misuse_errors]
+    report["misuse_warnings"] = [warn.__dict__ for warn in misuse_warnings]
+    for err in misuse_errors:
+        report["danger_flags"].append(f"misuse:{err.error_type}:{err.field}")
+
+    try:
+        spec = TaskSpec.model_validate(raw_spec)
+    except Exception as exc:
+        report["validation_error"] = str(exc)
+        report["danger_flags"].append("spec_validation_failed")
+        return report
+
+    backend = raw_spec.get("backend") or spec.backend
+    cwd = spec.cwd
+    allowlist = spec.allowlist or []
+    dod = spec.definition_of_done
+    git_dir_proc = subprocess.run(
+        ["git", "rev-parse", "--git-dir"],
+        capture_output=True,
+        text=True,
+        cwd=cwd,
+        timeout=GIT_TIMEOUT,
+    )
+    is_git_repo = git_dir_proc.returncode == 0
+    dirty_entries = _git_status_porcelain(cwd) if is_git_repo else []
+
+    if not is_git_repo:
+        report["danger_flags"].append("cwd_is_not_git_repo")
+    if dirty_entries:
+        report["danger_flags"].append("dirty_worktree")
+    if spec.has_weak_dod:
+        report["danger_flags"].append("weak_dod")
+    if "grep" in dod.command and dod.assertion:
+        report["danger_flags"].append("dod_may_be_string_existence_check")
+    if allowlist and not any(("test" in item.lower() or "spec" in item.lower()) for item in allowlist):
+        report["warnings"].append("allowlist_missing_obvious_test_file")
+
+    report.update({
+        "valid": not misuse_errors,
+        "title": spec.title,
+        "cwd": cwd,
+        "git_state": "dirty" if dirty_entries else ("clean" if is_git_repo else "not_git"),
+        "dirty_entries": dirty_entries,
+        "dirty_worktree_policy": spec.dirty_worktree_policy,
+        "output_dir": str(output_dir),
+        "artifacts": {
+            "request": str(output_dir / f"{spec.task_id}.request.json"),
+            "status": str(output_dir / f"{spec.task_id}.status.json"),
+            "events": str(output_dir / f"{spec.task_id}.events.jsonl"),
+            "rounds": str(output_dir / f"{spec.task_id}.rounds.jsonl"),
+            "result": str(output_dir / f"{spec.task_id}.result.json"),
+            "response": str(output_dir / f"{spec.task_id}.response.txt"),
+            "hunk": str(output_dir / f"{spec.task_id}.hunk.md"),
+            "verifier_log": str(output_dir / f"{spec.task_id}.verifier.log"),
+        },
+        "allowlist": allowlist,
+        "read_context": spec.read_context,
+        "definition_of_done": {
+            "command": dod.command,
+            "assertion": dod.assertion,
+        },
+        "backend": backend,
+        "composition_mode": "minimal",
+        "context_mode": "project",
+        "tool_profile": "safe_fix",
+    })
+    return report
+
+
+def _print_risk_report(report: dict) -> None:
+    dod = report.get("definition_of_done", {})
+    print(f"Task: {report.get('task_id', '?')}")
+    if report.get("title"):
+        print(f"Title: {report['title']}")
+    print(f"CWD: {report.get('cwd', '?')}")
+    print(f"Git state: {report.get('git_state', 'unknown')}")
+    print(f"Dirty policy: {report.get('dirty_worktree_policy', 'isolated_worktree')}")
+    print("Writable allowlist:")
+    for item in report.get("allowlist") or ["<unrestricted: requires allowlist_optional>"]:
+        print(f"  - {item}")
+    print("Read-only context:")
+    for item in report.get("read_context") or ["<none>"]:
+        print(f"  - {item}")
+    print("DoD:")
+    print(f"  command: {dod.get('command', '(none)')}")
+    print(f"  assertion: {dod.get('assertion', '(none)')}")
+    print(f"Backend: {report.get('backend', '?')}")
+    print(f"Composition mode: {report.get('composition_mode', 'minimal')}")
+    print(f"Output dir: {report.get('output_dir', '?')}")
+    print("Danger flags:")
+    for flag in report.get("danger_flags") or ["<none>"]:
+        print(f"  - {flag}")
+    if report.get("warnings"):
+        print("Warnings:")
+        for warning in report["warnings"]:
+            print(f"  - {warning}")
 
 
 # ── Git Integration (autoresearch pattern) ───────────────────────────
@@ -229,121 +742,16 @@ def git_revert_to(cwd: str, commit_hash: str, written_files: list[str]) -> None:
 # ── Experiment Log ───────────────────────────────────────────────────
 
 
-def log_round(output_dir: Path, task_id: str, entry: dict,
-              session_key: str = "", symbols: str = "",
-              learn_to_memory: bool = True, scope: str = "") -> None:
-    """Append round result to local experiment log + optionally /memory."""
+def log_round(output_dir: Path, task_id: str, entry: dict, session_key: str = "") -> None:
+    """Append round result to the local experiment log only."""
     # Local log (always — full history for debugging)
     log_file = output_dir / f"{task_id}.rounds.jsonl"
     with log_file.open("a") as f:
         f.write(json.dumps(entry) + "\n")
 
-    # /memory learn (only for kept rounds + terminal — avoids polluting recall with noise)
-    if learn_to_memory:
-        _learn_round_to_memory(task_id, entry, session_key=session_key, symbols=symbols, scope=scope)
-
-
-def _learn_round_to_memory(task_id: str, entry: dict, session_key: str = "",
-                           symbols: str = "", scope: str = "") -> None:
-    """Store round to ArangoDB llm_invocations via unified logger.
-
-    session_key links all rounds for one code-runner invocation.
-    symbols contains /treesitter output for the modified files.
-    """
-    # Build output: include tool trace text so it's BM25-searchable at top level
-    output_text = entry.get("response_snippet", "")
-    if entry.get("tool_trace"):
-        output_text = f"{output_text}\n\nTOOL TRACE:\n{entry['tool_trace']}"
-
-    log_invocation(
-        agent="code-runner",
-        session_key=session_key,
-        round=entry.get("round", 1),
-        role="assistant",
-        turn_index=entry.get("round", 1),
-        input=entry.get("prompt_snippet", ""),
-        output=output_text,
-        outcome="success" if entry.get("dod_passed") else "failed",
-        duration_ms=entry.get("duration_ms", 0),
-        model=entry.get("model", ""),
-        score=entry.get("score"),
-        error=entry.get("error_severity"),
-        tags=[
-            "code-runner", "self-improvement",
-            f"task:{task_id}",
-            f"strategy:{entry.get('strategy', '')}",
-            f"severity:{entry.get('error_severity', '')}",
-            f"outcome:{'pass' if entry.get('dod_passed') else 'fail'}",
-        ],
-        parent_session="",
-        scope=scope,
-        metadata={
-            "task_id": task_id,
-            "status": entry.get("status", ""),
-            "errors_by_type": entry.get("errors_by_type", {}),
-            "lint_violations": entry.get("lint_violations", 0),
-            "bp_violations": entry.get("bp_violations", []),
-            "commit": entry.get("commit", ""),
-            "symbols": symbols[:1000] if symbols else "",
-            "dod_passed": entry.get("dod_passed", False),
-            "tool_trace_events": entry.get("tool_trace_events", []),
-            # Raw stderr/stdout for debugging (truncated to 2KB each)
-            "stderr": entry.get("stderr", "")[:2000],
-            "stdout": entry.get("stdout", "")[:2000],
-        },
-    )
-
 
 
 # ── Dogpile Research (last resort before escalate) ───────────────────
-
-
-def _dogpile_research(rounds_history: list[dict], cwd: str) -> str:
-    """Search for solutions to persistent errors via /dogpile skill.
-
-    Called when strategy reaches 'escalate' — all fix approaches exhausted.
-    Extracts the dominant error from history and searches web/GitHub/arXiv.
-    Returns research text to inject into one final fix attempt, or empty string.
-    """
-    skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
-    dogpile_skill = skills_dir / "dogpile" / "run.sh"
-    if not dogpile_skill.exists():
-        return ""
-
-    # Build search query from the most recent error
-    last = rounds_history[-1] if rounds_history else {}
-    stderr = last.get("stderr", "")
-    severity = last.get("error_severity", "unknown")
-    errors = last.get("errors_by_type", {})
-
-    # Extract the most specific error line from stderr
-    error_lines = [l for l in stderr.splitlines() if any(e in l for e in errors)]
-    query = error_lines[0][:200] if error_lines else f"{severity} error: {stderr[:150]}"
-
-    try:
-        proc = subprocess.run(
-            ["bash", str(dogpile_skill), "search", "--query", query, "--max-results", "3", "--json"],
-            capture_output=True, text=True, timeout=30,
-            cwd=cwd,
-            env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
-        )
-        if proc.returncode == 0 and proc.stdout.strip():
-            data = json.loads(proc.stdout)
-            results = data.get("results", [])
-            if results:
-                summaries = []
-                for r in results[:3]:
-                    title = r.get("title", "")[:100]
-                    snippet = r.get("snippet", r.get("summary", ""))[:300]
-                    source = r.get("source", r.get("url", ""))[:100]
-                    summaries.append(f"  [{source}] {title}\n    {snippet}")
-                return "\n".join(summaries)
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, Exception):
-        pass
-    return ""
-
-
-# ── LLM Backend Routing ──────────────────────────────────────────────
 
 
 def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
@@ -373,6 +781,7 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     payload: dict = {
         "model": model,
         "messages": messages,
+        "reasoning_effort": reasoning,
     }
     if not model.startswith("gpt-"):
         payload["temperature"] = min(temperature, 1.0)
@@ -396,25 +805,19 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
             safe_task_id = "".join(c for c in task_id if c.isalnum() or c in "-_") if task_id else "unknown"
             caller_header = f"code-runner:{safe_task_id}:{round_num}"
 
-            resp = httpx.post(
-                SCILLM_URL,
+            data = _stream_chat_completion(
+                payload,
                 headers={
                     "Authorization": f"Bearer {SCILLM_KEY}",
-                    "X-Caller-Skill": caller_header,  # Enhanced: code-runner:{task_id}:{round}
+                    "X-Caller-Skill": caller_header,
                 },
-                json=payload,
-                timeout=180.0,
+                event_emitter=None,
+                round_num=round_num,
+                idle_timeout=float(os.environ.get("CODE_RUNNER_IDLE_TIMEOUT", "90")),
+                hard_wall_timeout=float(os.environ.get("CODE_RUNNER_ROUND_TIMEOUT", "180")),
             )
-            if resp.status_code in (500, 502, 503, 429) and attempt < max_retries:
-                base = min(0.5 * (2 ** attempt), 32.0)
-                wait = base + random.random() * 0.25 * base
-                logger.warning("/scillm {} (attempt {}/{}) — retrying in {:.1f}s",
-                               resp.status_code, attempt, max_retries, wait)
-                time.sleep(wait)
-                continue
-            resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"]
-        except httpx.TimeoutException:
+            return data["choices"][0]["message"].get("content", "")
+        except (httpx.TimeoutException, TimeoutError):
             if attempt < max_retries:
                 base = min(0.5 * (2 ** attempt), 32.0)
                 wait = base + random.random() * 0.25 * base
@@ -430,8 +833,45 @@ def _call_llm(prompt: str, backend: str, cwd: str, temperature: float = 0.2,
     return "ERROR: /scillm exhausted retries"
 
 
-# ── Memory-Backed Prompt Assembly (extracted to prompt_assembly.py) ─────
-from prompt_assembly import build_system_prompt as _build_system_prompt
+# ── Minimal Prompt Assembly ───────────────────────────────────────────
+
+
+def _build_system_prompt(
+    task_id: str,
+    session_key: str,
+    original_request: str,
+    round_num: int,
+    dod_desc: str = "",
+    allowlist: list[str] | None = None,
+    recent_rounds: list[dict] | None = None,
+    skills_used: list[str] | None = None,
+) -> str:
+    """Build the self-contained runner prompt without optional composition."""
+
+    recent = recent_rounds or []
+    history = []
+    for item in recent[-2:]:
+        history.append(
+            {
+                "round": item.get("round"),
+                "score": item.get("score"),
+                "dod_passed": item.get("dod_passed"),
+                "error_severity": item.get("error_severity"),
+                "stderr": str(item.get("stderr", ""))[:1200],
+                "stdout": str(item.get("stdout", ""))[:1200],
+            }
+        )
+    return (
+        "You are code-runner, a bounded code editing agent.\n"
+        "Operate only through the provided tools. Edit only allowlisted paths. "
+        "Do not modify the source repository directly; you are inside a disposable worktree.\n\n"
+        f"Task id: {task_id}\n"
+        f"Round: {round_num}\n"
+        f"Original request:\n{original_request}\n\n"
+        f"Definition of done:\n{dod_desc or '(none)'}\n\n"
+        f"Writable allowlist:\n{json.dumps(allowlist or [])}\n\n"
+        f"Recent evidence:\n{json.dumps(history, indent=2)}\n"
+    )
 
 
 # ── Main Loop (autoresearch pattern) ─────────────────────────────────
@@ -578,6 +1018,159 @@ def run(
         (output_dir / f"{spec.task_id}.result.json").write_text(result.model_dump_json(indent=2))
         sys.exit(1)
 
+    # Extract validated fields
+    task_id = spec.task_id
+    title = spec.title
+    prompt = spec.prompt
+    llm_backend = backend or spec.backend
+    lang = spec.lang  # Language profile: python, rust, typescript, or empty for auto-detect
+    cwd = spec.cwd
+    output_dir = Path(spec.output_dir)
+    dod_command = spec.definition_of_done.command
+    dod_assertion = spec.definition_of_done.assertion
+    allowlist = spec.allowlist
+    read_context = spec.read_context
+    skills_used = spec.skills_used
+    task_timeout_seconds = spec.timeout_seconds
+    apply_to_source = spec.apply_to_source
+    commit_on_success = spec.commit_on_success
+    rollback_on_failure = spec.rollback_on_failure
+    source_cwd = cwd
+    source_status_baseline = _git_status_porcelain(source_cwd)
+    previous_source_guard = os.environ.get("CODE_RUNNER_SOURCE_CWD")
+    execution_mode = "isolated_worktree"
+    worktree_info: WorktreeInfo | None = None
+    worktree_path_for_result = ""
+    worktree_removed = False
+    patch_artifact = output_dir / f"{task_id}.patch"
+
+    # Bug fix: spec max_rounds should override CLI default (5)
+    # CLI --max-rounds only wins if explicitly passed (typer sets default=5)
+    if spec.max_rounds != 5 and max_rounds == 5:
+        max_rounds = spec.max_rounds
+
+    # ── Preflight warnings (not hard failures, but logged for project agent) ──
+
+    # Design decision detection — code-runner is an executor, not an architect
+    if spec.is_design_decision:
+        logger.error("PRE-FLIGHT WARNING: Prompt asks code-runner to make a DESIGN DECISION")
+        logger.error("  Code-runner is a bounded executor. Architecture choices belong in /plan.")
+        logger.error("  FIX: Choose the approach in /plan, then tell code-runner 'implement X using Y'.")
+
+    # Unseen dependencies (empirical: 3+ unseen deps = ~50% fail rate on text backend)
+    if spec.unseen_dep_count >= 3:
+        logger.error("PRE-FLIGHT WARNING: {} modules referenced but not in allowlist or read_context: {}",
+                     spec.unseen_dep_count, spec.unseen_deps)
+        logger.error("  FIX: Add them to read_context so code-runner can extract interface maps.")
+
+    # One backend per run. Health probing and provider fallback are intentionally
+    # outside the core runner so deterministic preflight never makes a model call.
+    escalation_chain: list[list[str]] = _default_escalation_chain(llm_backend)
+    escalation_idx = 0
+
+    logger.info("=== CODE-RUNNER v2: {} ===", title)
+    logger.info("  Backend: {}", llm_backend)
+    logger.info("  DoD: {}", dod_command[:100] if dod_command else "(none)")
+    logger.info("  Max rounds: {}", max_rounds)
+
+    dirty_policy = "isolated_worktree"
+    if not allowlist:
+            preflight_error = PreflightError(
+                field="allowlist",
+                error="isolated_worktree mode requires a non-empty allowlist.",
+                fix="Provide the exact file paths code-runner may modify.",
+            )
+            result = TaskResult(
+                task_id=task_id,
+                title=title,
+                status="preflight_fail",
+                preflight_errors=[preflight_error],
+                error=preflight_error.error,
+                execution_mode="isolated_worktree",
+            )
+            (output_dir / f"{task_id}.result.json").write_text(result.model_dump_json(indent=2))
+            sys.exit(1)
+    try:
+        dirty_overlap = dirty_paths_for_allowlist(source_cwd, allowlist)
+    except WorktreeRuntimeError as exc:
+        preflight_error = PreflightError(
+            field="dirty_worktree_policy",
+            error=f"Could not inspect source worktree dirty paths: {exc}",
+            fix="Run from a valid git repository and provide allowlist paths inside that repository.",
+        )
+        result = TaskResult(
+            task_id=task_id,
+            title=title,
+            status="preflight_fail",
+            preflight_errors=[preflight_error],
+            error=preflight_error.error,
+            execution_mode="isolated_worktree",
+        )
+        (output_dir / f"{task_id}.result.json").write_text(result.model_dump_json(indent=2))
+        sys.exit(1)
+    if dirty_overlap:
+        preflight_error = PreflightError(
+            field="dirty_worktree_policy",
+            error="Source worktree has uncommitted changes overlapping the code-runner allowlist.",
+            fix=(
+                "Commit, move, or explicitly review these paths before delegating: "
+                + ", ".join(dirty_overlap[:20])
+            ),
+        )
+        result = TaskResult(
+            task_id=task_id,
+            title=title,
+            status="preflight_fail",
+            preflight_errors=[preflight_error],
+            error=preflight_error.error,
+            execution_mode="isolated_worktree",
+        )
+        emitter.emit(
+            EventType.dirty_worktree_detected,
+            state_after=RunState.preflight_failed,
+            reason_code=ReasonCode.dirty_worktree,
+            payload={"dirty_paths": dirty_overlap},
+        )
+        (output_dir / f"{task_id}.result.json").write_text(result.model_dump_json(indent=2))
+        sys.exit(1)
+    try:
+        worktree_info = create_disposable_worktree(source_cwd, task_id=task_id)
+    except WorktreeRuntimeError as exc:
+        preflight_error = PreflightError(
+            field="dirty_worktree_policy",
+            error=f"Could not create disposable worktree: {exc}",
+            fix="Run from a valid git repository with a commit checked out and working git worktree support.",
+        )
+        result = TaskResult(
+            task_id=task_id,
+            title=title,
+            status="preflight_fail",
+            preflight_errors=[preflight_error],
+            error=preflight_error.error,
+            execution_mode="isolated_worktree",
+        )
+        (output_dir / f"{task_id}.result.json").write_text(result.model_dump_json(indent=2))
+        sys.exit(1)
+    cwd = str(worktree_info.path)
+    worktree_path_for_result = cwd
+    os.environ["CODE_RUNNER_SOURCE_CWD"] = str(Path(source_cwd).resolve())
+    logger.info("  Worktree: {}", cwd)
+
+    # Validate git repo — keep/discard pattern requires git
+    git_dir_proc = subprocess.run(
+        ["git", "rev-parse", "--git-dir"], capture_output=True, text=True, cwd=cwd, timeout=GIT_TIMEOUT,
+    )
+    is_git_repo = git_dir_proc.returncode == 0
+    git_dir = Path(cwd) / git_dir_proc.stdout.strip() if is_git_repo else None
+    if not is_git_repo:
+        logger.warning("cwd is NOT a git repo — keep/discard disabled, no hunk review")
+    dirty_entries = _git_status_porcelain(cwd) if is_git_repo else []
+    if dirty_entries:
+        emitter.emit(
+            EventType.dirty_worktree_detected,
+            payload={"policy": dirty_policy, "entries": dirty_entries},
+        )
+
     # ── DoD dry-run: verify the command is syntactically valid and runnable ──
     # Runs the DoD against the CURRENT cwd (before any LLM changes).
     # Expected to fail (code isn't fixed yet) but should NOT crash with syntax errors.
@@ -586,7 +1179,7 @@ def run(
         try:
             dod_check = subprocess.run(
                 ["bash", "-lc", dod_cmd],
-                capture_output=True, text=True, timeout=15, cwd=spec.cwd,
+                capture_output=True, text=True, timeout=15, cwd=cwd,
             )
             # If it crashes with bash/python syntax error (not assertion failure), warn
             if dod_check.returncode != 0 and "SyntaxError" in dod_check.stderr:
@@ -610,6 +1203,10 @@ def run(
                     payload={"error": "DoD command has Python SyntaxError"},
                 )
                 (output_dir / f"{spec.task_id}.result.json").write_text(result.model_dump_json(indent=2))
+                if worktree_info is not None:
+                    remove_disposable_worktree(worktree_info)
+                    worktree_removed = True
+                    worktree_info = None
                 sys.exit(1)
         except subprocess.TimeoutExpired:
             logger.warning("DoD dry-run timed out (15s) — proceeding anyway")
@@ -688,24 +1285,28 @@ def run(
                 payload={"cwd": cwd},
             )
             lock_file.close()
+            if worktree_info is not None:
+                remove_disposable_worktree(worktree_info)
+                worktree_removed = True
+                worktree_info = None
             sys.exit(1)
 
-    # Session key links all rounds in /memory for graph traversal
+    # Session key links local artifacts for one invocation.
     session_key = f"cr-{task_id}-{int(time.time())}"
     failure_reason = ""  # populated on timeout, zero-writes, stash conflict
     run_start_time = time.monotonic()
 
-    # Git safety: stash pre-existing changes before we start
-    stashed = git_stash_save(cwd) if is_git_repo else False
+    stashed = False
 
     # Create output dir AFTER stash — if output_dir is inside cwd, stash would remove it
     output_dir.mkdir(parents=True, exist_ok=True)
+    verifier_log = output_dir / f"{task_id}.verifier.log"
+    verifier_log.write_text(f"task_id={task_id}\nbackend={llm_backend}\ndod_command={dod_command}\n")
 
     # Git snapshot (autoresearch: remember where we started)
     snapshot = git_snapshot(cwd)
 
     rounds_history: list[dict] = []
-    prior_diagnoses: list[Diagnosis] = []
     best_score = 0.0
     best_commit = snapshot
 
@@ -718,7 +1319,7 @@ def run(
 
     try:  # try/finally guarantees stash pop + lock release even on crash
         # Staged context escalation: start with interface maps for read_context,
-        # escalate specific files to full content on failure (research-validated pattern)
+        # then promote specific files to full content after failure.
         escalated_files: set[str] = set()  # read_context files promoted to full content after failure
         file_context = build_file_context(allowlist, cwd, read_context, escalated_files)
 
@@ -726,12 +1327,10 @@ def run(
         current_prompt = prompt + "\n\n" + file_context
         final_response = ""
         temperature = 0.2  # Dynamic: increments by 0.1 on repeated same-error (LLMLOOP pattern)
-        dogpile_done = False  # only search once per run
-        dogpile_context = ""  # research results injected into prompt
         grounding_reminder = ""  # source grounding reminder for next round (if LLM didn't reference actual error)
         last_error_ev = None  # ErrorEvidence from previous round for grounding verification
 
-        # Memory-backed system prompt: fixed context (recalled once, doesn't grow)
+        # Self-contained system prompt: fixed context plus local round history.
         # Original request + DoD are embedded as immutable anchors to prevent drift
         dod_desc = f"Command: {dod_command}\nAssertion: {dod_assertion}" if dod_command else ""
         system_prompt = _build_system_prompt(
@@ -762,16 +1361,8 @@ def run(
                 temperature = min(temperature + 0.1, 1.0)
                 escalation_idx = min(escalation_idx + 1, len(escalation_chain) - 1)
 
-                # Dogpile early: if stuck (same error or stagnant score), research before wasting rounds
-                if not dogpile_done and len(rounds_history) >= 2 and (same_error_repeating or score_stagnant):
-                    research = _dogpile_research(rounds_history, cwd)
-                    if research:
-                        dogpile_context = f"\n\n--- Research from /dogpile ---\n{research}\n"
-                        logger.info("  /dogpile found research for repeated {} error", rounds_history[-1].get("error_severity"))
-                    dogpile_done = True  # only search once per run
-
             cur_backend, cur_reasoning = escalation_chain[escalation_idx]
-            round_start_time = time.time()  # Track round duration for memory logging
+            round_start_time = time.time()
             _emit_event("round_start", task_id=task_id, round=round_num,
                         max_rounds=max_rounds, strategy=strategy,
                         backend=cur_backend, reasoning=cur_reasoning,
@@ -792,7 +1383,7 @@ def run(
 
             if strategy == "escalate":
                 # Dogpile already ran on first repeated error (round 3+).
-                # If we're here, either dogpile had no results or research didn't help.
+                # If we're here, previous bounded strategies did not pass DoD.
                 last = rounds_history[-1] if rounds_history else {}
                 diagnosis = {
                     "escalation": "all strategies exhausted",
@@ -800,7 +1391,7 @@ def run(
                     "persistent_error": last.get("error_severity", "unknown"),
                     "error_evidence": last.get("error_evidence"),
                     "strategies_tried": [r.get("strategy") for r in rounds_history],
-                    "dogpile_searched": dogpile_done,
+                    "external_research_used": False,
                     "best_score": best_score,
                     "recommendation": "Task needs project agent intervention or decomposition into smaller subtasks.",
                 }
@@ -826,99 +1417,19 @@ def run(
 
                 file_context = build_file_context(allowlist, cwd, read_context, escalated_files)
 
-                # Snapshot treesitter symbols BEFORE LLM writes (for consistency Check 4)
-                pre_fix_symbols: dict[str, set[str]] = {}
-                if allowlist and round_num > 1:
-                    for af in allowlist[:5]:
-                        abs_af = Path(cwd) / af if not Path(af).is_absolute() else Path(af)
-                        if abs_af.exists() and abs_af.is_file():
-                            pre_fix_symbols[af] = _treesitter_symbols(abs_af)
-
-                # ── DIAGNOSE/FIX SPLIT (two scillm calls instead of one) ──
-                # Call 1: DIAGNOSE — structured root-cause inference, no code
-                from stderr_parser import condense_stderr, verify_fix_grounding, grounding_reminder_prompt
+                from stderr_parser import condense_stderr, grounding_reminder_prompt, verify_fix_grounding
                 error_ev_obj = condense_stderr(
                     evidence.get("stderr", ""), evidence.get("stdout", ""),
                 )
                 last_error_ev = error_ev_obj  # Store for grounding verification after LLM response
-                file_symbols = extract_symbols(evidence.get("written_files", []), cwd)
-
-                diag_backend, diag_reasoning = cur_backend, "high"  # diagnoser always high effort
-                _emit_event("diagnose_start", task_id=task_id, round=round_num,
-                            backend=diag_backend)
-
-                try:
-                    diagnosis = call_diagnose(
-                        error_evidence=error_ev_obj,
-                        stderr=evidence.get("stderr", ""),
-                        stdout=evidence.get("stdout", ""),
-                        file_content=file_context,
-                        symbols=file_symbols,
-                        task_prompt=prompt,
-                        backend=diag_backend,
-                        reasoning=diag_reasoning,
-                    )
-                    logger.info("  DIAGNOSIS: {} in {}::{} (confidence={:.2f})",
-                                diagnosis.failure_kind,
-                                diagnosis.primary_target.file,
-                                diagnosis.primary_target.symbol,
-                                diagnosis.confidence)
-                    logger.info("  ROOT CAUSE: {}", diagnosis.root_cause)
-                    logger.info("  REPAIR INTENT: {}", diagnosis.repair_intent)
-
-                    # Save diagnosis to disk for audit
-                    diag_path = output_dir / "logs" / f"round_{round_num}_diagnosis.json"
-                    diag_path.parent.mkdir(exist_ok=True)
-                    diag_path.write_text(diagnosis.model_dump_json(indent=2))
-
-                    # HARD GATE: validate diagnosis against reality
-                    validation = validate_diagnosis(
-                        diagnosis, cwd, symbols=file_symbols,
-                        stderr=evidence.get("stderr", ""),
-                        stdout=evidence.get("stdout", ""),
-                    )
-                    if validation.hard_failures:
-                        for f in validation.hard_failures:
-                            logger.error("  DIAGNOSIS REJECTED: {}", f)
-                        raise DiagnosisRejected(validation.hard_failures)
-                    if validation.warnings:
-                        for w in validation.warnings:
-                            logger.warning("  DIAGNOSIS WARNING: {}", w)
-
-                    # Check stagnation: understanding stuck vs implementation stuck
-                    prior_scores = [r.get("score", 0) for r in rounds_history]
-                    stagnation = check_stagnation(diagnosis, prior_diagnoses, prior_scores)
-
-                    if stagnation.stagnation_type == "understanding":
-                        # Escalate diagnoser, not fixer
-                        logger.warning("  STAGNATION: understanding stuck — {}", stagnation.reason)
-                        escalation_idx = min(escalation_idx + 1, len(escalation_chain) - 1)
-                    elif stagnation.stagnation_type == "implementation":
-                        logger.warning("  STAGNATION: implementation stuck — {}", stagnation.reason)
-
-                    prior_diagnoses.append(diagnosis)
-
-                    # Call 2: FIX — lean prompt constrained by diagnosis
-                    prior_trace = rounds_history[-1].get("tool_trace", "") if rounds_history else ""
-                    current_prompt = build_fix_from_diagnosis(
-                        diagnosis, file_context, allowlist=allowlist,
-                        prior_tool_trace=prior_trace,
-                    )
-
-                except DiagnosisRejected as exc:
-                    logger.warning("  Diagnosis REJECTED ({}), falling back to combined prompt", exc.reasons)
-                    _emit_event("diagnosis_rejected", task_id=task_id, round=round_num,
-                                reasons=exc.reasons)
-                    current_prompt = build_fix_prompt(evidence, rounds_history, strategy, prompt, file_context, allowlist=allowlist)
-                except (httpx.HTTPStatusError, httpx.RequestError, httpx.TimeoutException) as exc:
-                    logger.warning("  Diagnosis call failed ({}), falling back to combined prompt", exc)
-                    current_prompt = build_fix_prompt(evidence, rounds_history, strategy, prompt, file_context, allowlist=allowlist)
-                except (ValueError, KeyError) as exc:
-                    logger.warning("  Diagnosis parse failed ({}), falling back to combined prompt", exc)
-                    current_prompt = build_fix_prompt(evidence, rounds_history, strategy, prompt, file_context, allowlist=allowlist)
-
-                if dogpile_context:
-                    current_prompt += dogpile_context
+                current_prompt = build_fix_prompt(
+                    evidence,
+                    rounds_history,
+                    strategy,
+                    prompt,
+                    file_context,
+                    allowlist=allowlist,
+                )
 
                 # Add grounding reminder if previous fix didn't reference actual error
                 if grounding_reminder:
@@ -932,23 +1443,15 @@ def run(
                     recent_rounds=rounds_history)
 
             # 2. Call LLM via tool_use agent loop
-            model_name = {
-                "codex": "gpt-5.5", "claude": "claude-sonnet-4-6",
-                "gemini": "text-gemini",
-            }.get(cur_backend, "text")
+            model_name = _backend_model_name(cur_backend)
 
-            # Dynamic timeout: P95 from /memory history per-backend, or env override
             if os.environ.get("CODE_RUNNER_ROUND_TIMEOUT"):
                 ROUND_TIMEOUT = int(os.environ["CODE_RUNNER_ROUND_TIMEOUT"])
             else:
-                sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "common"))
-                from estimate_timeout import estimate_skill
-                # Estimate per-backend so claude/codex/text each build their own P95
-                ROUND_TIMEOUT = estimate_skill(f"code-runner-{cur_backend}", units=1)
-                logger.info("  Round timeout: {}s (from /memory P95 for {})", ROUND_TIMEOUT, cur_backend)
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(
-                    run_tool_use_loop,
+                ROUND_TIMEOUT = min(max(task_timeout_seconds, 60), 600)
+                logger.info("  Round timeout: {}s", ROUND_TIMEOUT)
+            try:
+                written, tool_messages = run_tool_use_loop(
                     system_prompt=system_prompt,
                     user_prompt=current_prompt,
                     model=model_name,
@@ -956,31 +1459,62 @@ def run(
                     allowlist=allowlist,
                     read_context=read_context,
                     temperature=temperature,
+                    reasoning=cur_reasoning,
+                    max_tokens=min(
+                        {"low": 4000, "medium": 8000, "high": 16000}.get(cur_reasoning, 4000),
+                        int(os.environ.get(
+                            "CODE_RUNNER_TOOL_MAX_TOKENS",
+                            os.environ.get("CODE_RUNNER_MAX_TOKENS", "2048"),
+                        )),
+                    ),
                     dod_command=dod_command,
-                    event_emitter=emitter,  # LogAct: pass emitter for tool_intent/tool_result events
-                    round_num=round_num,    # LogAct: round context for event logging
-                    task_id=task_id,        # Enhanced X-Caller-Skill header tracking
+                    event_emitter=emitter,
+                    round_num=round_num,
+                    task_id=task_id,
+                    idle_timeout=float(os.environ.get("CODE_RUNNER_IDLE_TIMEOUT", "90")),
+                    hard_wall_timeout=float(ROUND_TIMEOUT),
                 )
-                try:
-                    written, tool_messages = future.result(timeout=ROUND_TIMEOUT)
-                except concurrent.futures.TimeoutError:
-                    _emit_event("round_timeout", task_id=task_id, round=round_num,
-                                timeout_seconds=ROUND_TIMEOUT)
-                    emitter.emit(
-                        EventType.round_timeout,
-                        round=round_num,
-                        state_after=RunState.timed_out,
-                        reason_code=ReasonCode.backend_timeout,
-                        payload={"timeout_seconds": ROUND_TIMEOUT},
-                    )
-                    logger.error("  ROUND TIMEOUT: tool_use loop exceeded {}s", ROUND_TIMEOUT)
-                    failure_reason = (f"Round {round_num} timed out after {ROUND_TIMEOUT}s. "
-                                      f"Set CODE_RUNNER_ROUND_TIMEOUT={ROUND_TIMEOUT * 2} or increase timeout_seconds in task spec.")
-                    written, tool_messages = [], []
+            except TimeoutError as exc:
+                _emit_event("round_timeout", task_id=task_id, round=round_num,
+                            timeout_seconds=ROUND_TIMEOUT, error=str(exc))
+                emitter.emit(
+                    EventType.round_timeout,
+                    round=round_num,
+                    state_after=RunState.timed_out,
+                    reason_code=ReasonCode.backend_timeout,
+                    payload={"timeout_seconds": ROUND_TIMEOUT, "error": str(exc)},
+                )
+                logger.error("  ROUND TIMEOUT: {}", exc)
+                failure_reason = (f"Round {round_num} timed out after {ROUND_TIMEOUT}s. "
+                                  "The SSE transport did not produce progress before its idle or wall-clock budget.")
+                written, tool_messages = [], []
 
             # Compress tool trace for inter-round context persistence
             trace_events, trace_text = compress_tool_trace(tool_messages)
             trace_events_json = trace_events_to_dict(trace_events)
+
+            source_status_after_tools = _source_status_changed(source_cwd, source_status_baseline)
+            if source_status_after_tools:
+                failure_reason = (
+                    "Source repository changed during isolated code-runner execution. "
+                    "This usually means a tool command wrote outside the disposable worktree."
+                )
+                emitter.emit(
+                    EventType.run_blocked,
+                    round=round_num,
+                    state_after=RunState.blocked,
+                    reason_code=ReasonCode.dirty_worktree,
+                    payload={"source_status": source_status_after_tools},
+                )
+                logger.error("  SOURCE MUTATION DETECTED: {}", source_status_after_tools)
+                _restore_round_state(
+                    cwd,
+                    snapshot,
+                    written,
+                    patch_artifact if patch_artifact.exists() else None,
+                    worktree_info=worktree_info,
+                )
+                break
 
             # Extract final text response (last assistant message without tool_calls)
             response = ""
@@ -1045,26 +1579,6 @@ def run(
                 logger.info("  Applied {} files: {}", len(written), written)
                 consecutive_zero_writes = 0
 
-                # Fix-to-diagnosis consistency check (round 2+ only, when diagnosis exists)
-                if prior_diagnoses and round_num > 1:
-                    last_diag = prior_diagnoses[-1]
-                    # pre_fix_symbols captured before LLM call at top of round
-                    consistency = check_fix_consistency(
-                        last_diag, written, allowlist,
-                        cwd=cwd,
-                        pre_fix_symbols=pre_fix_symbols if 'pre_fix_symbols' in dir() else None,
-                    )
-                    if not consistency.consistent:
-                        for v in consistency.violations:
-                            logger.error("  FIX DRIFT: {}", v)
-                        _emit_event("fix_drift", task_id=task_id, round=round_num,
-                                    violations=consistency.violations)
-                        # Revert drifted fix — don't let it pollute scoring
-                        if is_git_repo:
-                            git_revert_to(cwd, best_commit, written)
-                        logger.warning("  Reverted drifted fix — diagnosis targets {}, fix edited {}",
-                                       last_diag.primary_target.file, written)
-                        written = []  # force zero-write path
             else:
                 consecutive_zero_writes += 1
                 emitter.emit(
@@ -1088,6 +1602,58 @@ def run(
                                       f"Backend '{llm_backend}' may not be executing tool calls. "
                                       f"Try backend 'codex' or check scillm health.")
                     break
+
+            actual_changed_paths: list[str] = []
+            if is_git_repo and execution_mode == "isolated_worktree" and worktree_info is not None:
+                changed_entries = changed_path_statuses(worktree_info)
+                actual_changed_paths = sorted({path for _status, path in changed_entries})
+                allowlist_ok, allowlist_violations = paths_within_allowlist(actual_changed_paths, allowlist)
+                if not allowlist_ok:
+                    untracked_violations = [
+                        path for status, path in changed_entries
+                        if status == "??" and path in allowlist_violations
+                    ]
+                    if untracked_violations:
+                        logger.warning(
+                            "  Removing untracked non-allowlist byproducts from disposable worktree: {}",
+                            untracked_violations,
+                        )
+                        remove_untracked_paths(worktree_info, untracked_violations)
+                        changed_entries = changed_path_statuses(worktree_info)
+                        actual_changed_paths = sorted({path for _status, path in changed_entries})
+                        allowlist_ok, allowlist_violations = paths_within_allowlist(
+                            actual_changed_paths,
+                            allowlist,
+                        )
+                if not allowlist_ok:
+                    failure_reason = (
+                        "Non-allowlist changes detected in isolated worktree: "
+                        + ", ".join(allowlist_violations)
+                    )
+                    emitter.emit(
+                        EventType.run_blocked,
+                        round=round_num,
+                        state_after=RunState.blocked,
+                        reason_code=ReasonCode.bad_spec,
+                        payload={
+                            "changed_paths": actual_changed_paths,
+                            "allowlist_violations": allowlist_violations,
+                        },
+                    )
+                    _restore_round_state(
+                        cwd,
+                        snapshot,
+                        written,
+                        patch_artifact if patch_artifact.exists() else None,
+                        worktree_info=worktree_info,
+                    )
+                    break
+                if actual_changed_paths and not written:
+                    logger.warning(
+                        "  Detected filesystem changes not reported by tool loop: {}",
+                        actual_changed_paths,
+                    )
+                    written = actual_changed_paths
 
             # 3. T0 deterministic evidence collection (NOW evaluates changed files)
             evidence_raw = collect_evidence(cwd, dod_command, dod_assertion, lang=lang)
@@ -1137,6 +1703,15 @@ def run(
             log_dir.mkdir(exist_ok=True)
             (log_dir / f"round_{round_num}_stdout.txt").write_text(evidence_raw.get("stdout_full", evidence_raw["stdout"]))
             (log_dir / f"round_{round_num}_stderr.txt").write_text(evidence_raw.get("stderr_full", evidence_raw["stderr"]))
+            with verifier_log.open("a") as verifier:
+                verifier.write(f"\n=== round {round_num} ===\n")
+                verifier.write(f"score={score:.4f}\n")
+                verifier.write(f"dod_passed={evidence_raw['dod_passed']}\n")
+                verifier.write("stdout:\n")
+                verifier.write(evidence_raw.get("stdout_full", evidence_raw["stdout"]))
+                verifier.write("\nstderr:\n")
+                verifier.write(evidence_raw.get("stderr_full", evidence_raw["stderr"]))
+                verifier.write("\n")
 
             # Condense stderr into structured evidence for logging
             from stderr_parser import condense_stderr
@@ -1156,19 +1731,35 @@ def run(
             EPSILON = 0.01
             prev_best = best_score
             if score > best_score + EPSILON:
-                commit = git_commit_round(cwd, task_id, round_num, score, written) if is_git_repo else ""
-                if is_git_repo and not commit:
-                    # Git commit failed — revert files to maintain filesystem/score consistency
-                    git_revert_to(cwd, best_commit, written)
-                    status = "discard"
-                    logger.warning("  DISCARD (score improved but git commit failed — reverted files)")
-                else:
+                if execution_mode == "isolated_worktree":
+                    if is_git_repo and actual_changed_paths:
+                        export_allowlist_patch(worktree_info, allowlist, patch_artifact)  # type: ignore[arg-type]
                     best_score = score
-                    best_commit = commit or best_commit
+                    best_commit = snapshot
                     status = "keep"
-                    logger.info("  KEEP (score {:.3f} > previous {:.3f})", score, prev_best)
+                    logger.info("  KEEP (score {:.3f} > previous {:.3f}; exported patch, no commit)", score, prev_best)
+                else:
+                    commit = git_commit_round(cwd, task_id, round_num, score, written) if is_git_repo else ""
+                    if is_git_repo and not commit:
+                        # Git commit failed — revert files to maintain filesystem/score consistency
+                        git_revert_to(cwd, best_commit, written)
+                        status = "discard"
+                        logger.warning("  DISCARD (score improved but git commit failed — reverted files)")
+                    else:
+                        best_score = score
+                        best_commit = commit or best_commit
+                        status = "keep"
+                        logger.info("  KEEP (score {:.3f} > previous {:.3f})", score, prev_best)
             else:
-                if is_git_repo:
+                if is_git_repo and execution_mode == "isolated_worktree":
+                    _restore_round_state(
+                        cwd,
+                        snapshot,
+                        written,
+                        patch_artifact if patch_artifact.exists() else None,
+                        worktree_info=worktree_info,
+                    )
+                elif is_git_repo:
                     git_revert_to(cwd, best_commit, written)
                 status = "discard"
                 logger.info("  DISCARD (score {:.3f} <= best {:.3f})", score, best_score)
@@ -1223,10 +1814,9 @@ def run(
                 "llm_approach": (llm_metadata or {}).get("approach", ""),
                 # Zero-write diagnosis (only present when LLM wrote nothing)
                 "zero_write_reason": evidence_raw.get("_zero_write_reason", ""),
-                # Tool call trace (compressed text for prompt, structured for /memory)
+                # Tool call trace (compressed text for prompt and local artifacts)
                 "tool_trace": trace_text,
                 "tool_trace_events": trace_events_json,
-                # Memory logging fields (expected by _learn_round_to_memory)
                 "model": cur_backend,
                 "duration_ms": int((time.time() - round_start_time) * 1000),
                 "prompt_snippet": f"{title}: {strategy}",
@@ -1238,12 +1828,7 @@ def run(
             (log_dir / f"round_{round_num}_context.json").write_text(
                 json.dumps(round_entry, indent=2, default=str))
 
-            file_symbols = extract_symbols(written, cwd) if written else ""
-            # Learn ALL rounds to /memory — failures are training signal for what NOT to do.
-            # Tags distinguish outcome:pass vs outcome:fail for recall filtering.
-            log_round(output_dir, task_id, round_entry,
-                      session_key=session_key, symbols=file_symbols,
-                      learn_to_memory=True, scope=Path(cwd).name)
+            log_round(output_dir, task_id, round_entry, session_key=session_key)
 
             # 6. Check if DoD passed
             if evidence_raw["dod_passed"]:
@@ -1262,21 +1847,57 @@ def run(
         response_file.write_text(final_response)
 
         status = "pass" if rounds_history and rounds_history[-1]["dod_passed"] else "fail"
+        source_apply_state = {
+            "source_patch_applied": False,
+            "source_commit": "",
+            "source_dod_passed": False,
+            "source_rollback_applied": False,
+            "source_apply_error": "",
+        }
         if not rounds_history:
             failure_reason = failure_reason or "No rounds completed. Check git state and scillm connectivity."
         elif not failure_reason and status == "fail":
             last = rounds_history[-1]
             failure_reason = (f"DoD failed after {len(rounds_history)} rounds. "
                               f"Best score: {best_score:.3f}. Last strategy: {last.get('strategy', '?')}.")
+        if status == "pass" and apply_to_source:
+            source_apply_state = _finalize_source_apply(
+                source_cwd=source_cwd,
+                patch_artifact=patch_artifact,
+                allowlist=allowlist or [],
+                dod_command=dod_command,
+                dod_assertion=dod_assertion,
+                lang=lang,
+                task_id=task_id,
+                title=title,
+                commit_on_success=commit_on_success,
+                rollback_on_failure=rollback_on_failure,
+            )
+            if not source_apply_state["source_patch_applied"] or not source_apply_state["source_dod_passed"]:
+                status = "fail"
+                failure_reason = source_apply_state["source_apply_error"] or "source apply failed"
+            elif commit_on_success and not source_apply_state["source_commit"]:
+                status = "fail"
+                failure_reason = "commit_on_success requested but no source commit was created"
         result = TaskResult(
             task_id=task_id, title=title,
             status=status,
             rounds=len(rounds_history), best_score=best_score,
-            dod_passed=rounds_history[-1]["dod_passed"] if rounds_history else False,
+            dod_passed=(rounds_history[-1]["dod_passed"] if rounds_history else False) and status == "pass",
             backend=llm_backend,
             best_commit=best_commit[:8] if best_commit else "",
             error=failure_reason,
             round_details=rounds_history,
+            execution_mode=execution_mode,
+            patch_artifact=str(patch_artifact) if patch_artifact.exists() else "",
+            worktree_path=worktree_path_for_result,
+            worktree_removed=False,
+            apply_to_source=apply_to_source,
+            source_patch_applied=source_apply_state["source_patch_applied"],
+            source_commit=source_apply_state["source_commit"],
+            source_dod_passed=source_apply_state["source_dod_passed"],
+            source_rollback_applied=source_apply_state["source_rollback_applied"],
+            source_apply_error=source_apply_state["source_apply_error"],
         )
         result_file = output_dir / f"{task_id}.result.json"
         result_file.write_text(result.model_dump_json(indent=2))
@@ -1300,19 +1921,22 @@ def run(
         logger.info("=== RESULT: {} | score={:.3f} | {} rounds ===",
                      result.status.upper(), best_score, len(rounds_history))
 
-        # Record duration to /memory for timeout estimation flywheel (per-backend)
-        run_duration = time.monotonic() - run_start_time
-        from estimate_timeout import record as record_duration
-        record_duration(
-            f"code-runner-{llm_backend}", run_duration,
-            units=len(rounds_history),
-            outcome="success" if result.dod_passed else "failed",
-            trigger="orchestrate",
-            metadata={"task_id": task_id, "backend": llm_backend,
-                      "best_score": best_score, "rounds": len(rounds_history)},
-        )
-
-        if is_git_repo:
+        if execution_mode == "isolated_worktree":
+            hunk_file = output_dir / f"{task_id}.hunk.md"
+            patch_text = patch_artifact.read_text() if patch_artifact.exists() else ""
+            hunk_file.write_text(
+                f"# Code-Runner Review: {task_id}\n\n"
+                f"**Task:** {title}\n"
+                f"**Mode:** isolated_worktree\n"
+                f"**DoD passed:** {result.dod_passed}\n"
+                f"**Patch artifact:** {patch_artifact if patch_artifact.exists() else '(none)'}\n\n"
+                "## Allowlist-Scoped Patch\n\n"
+                "```diff\n"
+                f"{patch_text}"
+                "\n```\n"
+            )
+            logger.info("Review with: hunk patch {}", hunk_file)
+        elif is_git_repo:
             generate_hunk_review(output_dir, task_id, cwd, rounds_history, snapshot)
 
         # Generate debug dashboard if --debug was passed
@@ -1365,25 +1989,27 @@ def run(
             crash_result_file = output_dir / f"{task_id}.result.json"
             crash_result_file.write_text(crash_result.model_dump_json(indent=2))
             logger.info("Crash result written to {}", crash_result_file)
-            # Store crash in /memory for easy tracing
-            log_invocation(
-                agent="code-runner",
-                session_key=f"cr-{task_id}-{int(time.time())}",
-                round=len(rounds_history) if 'rounds_history' in dir() else 0,
-                outcome="crash",
-                error=crash_msg,
-                model=llm_backend,
-                tags=["code-runner", "crash", f"task:{task_id}", f"error:{type(exc).__name__}"],
-                metadata={
-                    "task_id": task_id,
-                    "traceback": crash_tb,
-                    "dod_passed": False,
-                },
-            )
         except Exception as write_exc:
             logger.error("Failed to write crash result: {}", write_exc)
         raise  # re-raise so exit code is still non-zero
     finally:
+        if previous_source_guard is None:
+            os.environ.pop("CODE_RUNNER_SOURCE_CWD", None)
+        else:
+            os.environ["CODE_RUNNER_SOURCE_CWD"] = previous_source_guard
+        if worktree_info is not None:
+            try:
+                remove_disposable_worktree(worktree_info)
+                worktree_removed = True
+                result_path = output_dir / f"{task_id}.result.json"
+                if result_path.exists():
+                    result_data = json.loads(result_path.read_text())
+                    result_data["worktree_removed"] = True
+                    result_data["worktree_path"] = worktree_path_for_result
+                    result_data["patch_artifact"] = str(patch_artifact) if patch_artifact.exists() else ""
+                    result_path.write_text(json.dumps(result_data, indent=2))
+            finally:
+                worktree_info = None
         # Always restore stashed changes, even on crash
         if stashed:
             git_stash_pop(cwd)
@@ -1397,6 +2023,120 @@ def run(
                     lock_path.unlink()
             except Exception:
                 pass  # best-effort cleanup
+
+
+def _find_status_file(target: str) -> Path:
+    candidate = Path(target)
+    if candidate.is_file():
+        return candidate
+    if candidate.is_dir():
+        status_files = sorted(candidate.glob("*.status.json"), key=lambda path: path.stat().st_mtime, reverse=True)
+        if status_files:
+            return status_files[0]
+        legacy = candidate / "run.json"
+        if legacy.exists():
+            return legacy
+    search_roots = [Path.cwd(), Path("/tmp/code-runner")]
+    for root in search_roots:
+        direct = root / f"{target}.status.json"
+        if direct.exists():
+            return direct
+        if root.exists():
+            matches = sorted(root.glob(f"**/{target}.status.json"), key=lambda path: path.stat().st_mtime, reverse=True)
+            if matches:
+                return matches[0]
+    raise typer.BadParameter(f"Could not find status for {target}")
+
+
+def _tail_events(events_file: Path, count: int) -> list[dict]:
+    if count <= 0 or not events_file.exists():
+        return []
+    lines = events_file.read_text().splitlines()[-count:]
+    events = []
+    for line in lines:
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            events.append({"raw": line})
+    return events
+
+
+@app.command()
+def doctor(json_output: bool = typer.Option(False, "--json", help="Print machine-readable diagnostics")) -> None:
+    """Report environment readiness for code-runner."""
+    checks = {
+        "git": shutil.which("git") is not None,
+        "bash": shutil.which("bash") is not None,
+        "uv": shutil.which("uv") is not None,
+        "scillm_url": SCILLM_URL,
+        "scillm_key_present": bool(SCILLM_KEY),
+        "skills_dir": str(SKILLS_DIR),
+        "cwd": os.getcwd(),
+        "cwd_is_git_repo": subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            capture_output=True,
+            cwd=os.getcwd(),
+            timeout=GIT_TIMEOUT,
+        ).returncode == 0,
+        "tmp_output_writable": os.access("/tmp", os.W_OK),
+        "status_protocol_version": "code-runner.status.v1",
+    }
+    checks["ok"] = bool(checks["git"] and checks["bash"] and checks["uv"] and checks["tmp_output_writable"])
+    if json_output:
+        print(json.dumps(checks, indent=2, default=_json_default))
+        return
+    for key, value in checks.items():
+        print(f"{key}: {value}")
+
+
+@app.command()
+def status(
+    target: str = typer.Argument(..., help="Output directory, status file, or task_id"),
+    tail_events: int = typer.Option(0, "--tail-events", help="Print the last N events"),
+    json_output: bool = typer.Option(False, "--json", help="Print machine-readable status"),
+) -> None:
+    """Summarize a code-runner run from status/events artifacts."""
+    status_file = _find_status_file(target)
+    payload = json.loads(status_file.read_text())
+    events_file = Path(payload.get("artifacts", {}).get("events") or status_file.with_name(status_file.name.replace(".status.json", ".events.jsonl")))
+    events = _tail_events(events_file, tail_events)
+    if json_output:
+        enriched = dict(payload)
+        if events:
+            enriched["events_tail"] = events
+        print(json.dumps(enriched, indent=2, default=_json_default))
+        return
+    print(f"task_id: {payload.get('task_id') or payload.get('run_id')}")
+    print(f"state: {payload.get('state')}")
+    print(f"reason_code: {payload.get('reason_code')}")
+    print(f"current_round: {payload.get('current_round')}")
+    print(f"best_score: {payload.get('best_score')}")
+    print(f"status_file: {status_file}")
+    print(f"events_file: {events_file}")
+    for event in events:
+        print(json.dumps(event, default=_json_default))
+
+
+@app.command()
+def watch(
+    target: str = typer.Argument(..., help="Output directory, status file, or task_id"),
+    interval: float = typer.Option(2.0, "--interval", help="Polling interval in seconds"),
+    tail_events: int = typer.Option(5, "--tail-events", help="Print the last N events on each refresh"),
+) -> None:
+    """Watch status until the run reaches a terminal state."""
+    while True:
+        status_file = _find_status_file(target)
+        payload = json.loads(status_file.read_text())
+        print(
+            f"{time.strftime('%H:%M:%S')} state={payload.get('state')} "
+            f"round={payload.get('current_round')} best={payload.get('best_score')}"
+        )
+        events_file = Path(payload.get("artifacts", {}).get("events") or status_file.with_name(status_file.name.replace(".status.json", ".events.jsonl")))
+        for event in _tail_events(events_file, tail_events):
+            print(f"  {event.get('event', event.get('raw'))}")
+        if str(payload.get("state")) in TERMINAL_STATES:
+            return
+        time.sleep(interval)
 
 
 @app.command(name="dry-run")

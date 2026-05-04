@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -73,6 +73,7 @@ class EventType(str, Enum):
     diagnosis_rejected = "diagnosis_rejected"
     tool_use_started = "tool_use_started"
     tool_use_complete = "tool_use_complete"
+    backend_stream_event = "backend_stream_event"
     evidence_collected = "evidence_collected"
     round_scored = "round_scored"
     round_kept = "round_kept"
@@ -126,10 +127,26 @@ class TaskSpec(BaseModel):
     read_context: list[str] = Field(default_factory=list, description="Files the LLM should READ for context but NOT write. Injected into prompt alongside allowlist files.")
     skills_used: list[str] = Field(default_factory=list, description="Skill names whose SKILL.md is deterministically injected into the LLM prompt. Trust boundary: code reads docs, not the LLM.")
     allowlist_optional: bool = Field(False, description="Set true to allow unrestricted writes")
+    dirty_worktree_policy: Literal["isolated_worktree"] = Field(
+        "isolated_worktree",
+        description="Code-runner always writes in a disposable worktree.",
+    )
     # NOTE: blind_tests deliberately NOT in this model. Information barrier:
     # only /orchestrate handles blind_tests, code-runner never parses them.
     max_rounds: int = Field(5, ge=1, le=20)
-    escalation_chain: list[list[str]] | None = Field(None, description="Override: [[backend, reasoning], ...]")
+    timeout_seconds: int = Field(1800, ge=60, le=7200)
+    apply_to_source: bool = Field(
+        False,
+        description="Explicit opt-in complete-task mode: apply the passing allowlist patch to the source repo.",
+    )
+    commit_on_success: bool = Field(
+        False,
+        description="When apply_to_source is true, commit allowlisted source changes after source DoD passes.",
+    )
+    rollback_on_failure: bool = Field(
+        True,
+        description="When source apply or source DoD fails, restore allowlisted source paths.",
+    )
 
     @field_validator("cwd")
     @classmethod
@@ -163,6 +180,31 @@ class TaskSpec(BaseModel):
                 "Set allowlist_optional: true to allow unrestricted writes."
             )
         return self
+
+    @model_validator(mode="after")
+    def validate_source_apply_options(self) -> "TaskSpec":
+        if self.commit_on_success and not self.apply_to_source:
+            raise ValueError("commit_on_success requires apply_to_source: true")
+        return self
+
+    @model_validator(mode="before")
+    @classmethod
+    def reject_removed_runner_features(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        removed_fields = []
+        if data.get("predecessor_patches"):
+            removed_fields.append("predecessor_patches")
+        if data.get("escalation_chain"):
+            removed_fields.append("escalation_chain")
+        if removed_fields:
+            raise ValueError(
+                "Unsupported code-runner field(s): "
+                + ", ".join(removed_fields)
+                + ". Code-runner v0 self-contained mode accepts one task, one backend, "
+                "one disposable worktree, and one allowlist-scoped patch."
+            )
+        return data
 
     @model_validator(mode="after")
     def warn_missing_read_context(self) -> "TaskSpec":
@@ -380,3 +422,14 @@ class TaskResult(BaseModel):
     error: str = ""  # actionable error message for calling agent
     round_details: list[dict[str, Any]] = Field(default_factory=list)
     preflight_errors: list[PreflightError] = Field(default_factory=list)
+    course_correction: dict[str, Any] = Field(default_factory=dict)
+    execution_mode: str = ""
+    patch_artifact: str = ""
+    worktree_path: str = ""
+    worktree_removed: bool = False
+    apply_to_source: bool = False
+    source_patch_applied: bool = False
+    source_commit: str = ""
+    source_dod_passed: bool = False
+    source_rollback_applied: bool = False
+    source_apply_error: str = ""

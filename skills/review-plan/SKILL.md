@@ -245,6 +245,27 @@ Scan every task with `runner: "code-runner"`. If the task's `definition_of_done.
 
 **Catches:** Agent writes Express endpoints via code-runner. Code-runner edits `server/index.ts` in a worktree. DoD runs `curl http://localhost:3001/api/posture/frameworks`. The running Express server doesn't see the worktree edits. Curl returns 404. Code-runner retries 5 rounds, fails every time. Hours of LLM tokens burned on an impossible DoD.
 
+### 15b. Code-Runner Complete-Task Mode (FAIL grade)
+
+If a `code-runner` task sets `apply_to_source: true`, the plan MUST also set:
+
+```yaml
+commit_on_success: true
+rollback_on_failure: true
+```
+
+This is the reliable source-mutation contract:
+
+1. `/code-runner` proves the change in an isolated worktree.
+2. `/code-runner` applies the allowlist patch to source.
+3. `/code-runner` reruns the DoD in source.
+4. `/code-runner` commits only allowlisted paths.
+5. `/orchestrate` runs blind tests against the committed source state.
+6. `/orchestrate` reverts the source commit if blind tests fail and rollback is enabled.
+
+`commit_on_success: true` without `apply_to_source: true` is invalid.
+`apply_to_source: true` without rollback is invalid.
+
 ### 16. Compliance Governance Enforcement (FAIL grade)
 Scan plan metadata and task descriptions for compliance/evidence-case/CAE keywords: `evidence-case`, `CAE`, `compliance`, `verdict`, `SPARTA`, `traceability`, `grading`, `pass/fail`, `certification`. Any plan involving compliance assessment MUST enforce the **Analyst Workbench Principle**:
 

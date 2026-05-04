@@ -469,3 +469,17 @@ cat /tmp/output/task-id.response.txt # READ the actual code before accepting
 "command": "python -c 'from module import function; result = function(test_input); assert result == expected'"
 # → LLM must write code that actually works
 ```
+
+
+### Complete-Task Acceptance Standard
+
+Complete-task mode is considered reliable only after repeated real runs show:
+
+- isolated worktree DoD passes before source mutation,
+- source dirty paths overlapping `allowlist` fail closed before apply,
+- source patch applies only after isolated success,
+- source DoD passes after apply,
+- source commit is created when `commit_on_success` is true,
+- failed source apply or source DoD restores allowlisted paths,
+- source working tree is clean after source DoD, blind checks, and review byproduct cleanup,
+- `result.json` records `source_commit`, `source_dod_passed`, and rollback state.

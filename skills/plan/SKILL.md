@@ -88,6 +88,21 @@ are simpler than that.
 - Dependencies are known and listed in `read_context`
 - **The DoD command does NOT require a live server** (code-runner uses git worktree isolation — the running dev server serves from the main working directory, not the worktree)
 
+**Do NOT use code-runner for:**
+- setup/bootstrap/deployment orchestration
+- Docker Compose validation
+- config/docs/changelog edits
+- pure test/lint/build gates
+- already-implemented work where the DoD already passes
+- broad architecture/design decisions
+
+For those, use `local` for deterministic commands or `scillm` for one-shot edits.
+
+**Concurrency rule:** if multiple code-runner tasks share one `cwd`, set
+`execution.max_concurrency: 1` unless they run in isolated worktrees or are
+patch-only tasks with disjoint allowlists. If any task uses
+`apply_to_source: true`, `/orchestrate` serializes tasks sharing that `cwd`.
+
 **NEVER use code-runner when the DoD calls a live HTTP endpoint** (e.g. `curl http://localhost:3001/...`).
 Code-runner edits files in an isolated worktree. The dev server doesn't see those edits.
 The DoD `curl` will always hit the OLD code and fail. Use `scillm` (one-shot edit to the
@@ -110,6 +125,47 @@ working directory) + a separate `local` task to restart the server and verify wi
 - `read_context` — files the LLM should read for interface context (NOT write)
 - `definition_of_done` — runnable verification command with assertions
 - `blind_tests` — hidden assertions in `/test-lab` (required for code-runner, enforced by /review-plan)
+- `apply_to_source` — explicit complete-task opt-in; default false
+- `commit_on_success` — required true when `apply_to_source` is true
+- `rollback_on_failure` — required true when `apply_to_source` is true
+
+If any of these are missing, the plan is wrong. Route the task to `local`/`scillm`,
+or split the plan into: one implementation task and one separate local verification task.
+
+For a source-mutating code task, prefer complete-task mode:
+
+```yaml
+apply_to_source: true
+commit_on_success: true
+rollback_on_failure: true
+```
+
+The plan must still provide `blind_tests`. `/orchestrate` runs those tests after
+the source commit and reverts that commit if hidden checks fail.
+
+### Step 2b: Code-runner course corrections
+
+If `/orchestrate` dispatches a task to `/code-runner` and preflight returns
+`status: preflight_fail` with `course_correction`, `/plan` owns the amendment.
+Do not ask code-runner to continue and do not let it silently mutate YAML.
+
+Use the correction this way:
+
+1. Read `{task_id}.course_correction.json` or `result.json.course_correction`.
+2. Apply the recommended reroute/amend/split to the plan YAML.
+3. Re-run `plan.py --validate`.
+4. Re-run `/review-plan`.
+5. Resume `/orchestrate` only after validation passes.
+
+Valid outcomes:
+
+| `recommended_action` | Plan response |
+|----------------------|---------------|
+| `use_local` | Change task to deterministic `local` command |
+| `use_scillm` | Change task to one-shot `scillm` prompt |
+| `amend_code_runner_contract` | Keep `code-runner`, but add missing prompt/allowlist/DoD/blind tests |
+| `split_task` | Split implementation from live verification |
+| `reroute_or_amend` | Choose the smallest safe route based on the correction rationale |
 
 ### Step 3: Skill Discovery (BLOCKING — do NOT skip)
 

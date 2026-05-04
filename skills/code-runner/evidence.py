@@ -195,6 +195,15 @@ def collect_evidence(cwd: str, dod_command: str, dod_assertion: str, lang: str =
     elif re.match(r'^exit_code\s*==\s*(\d+)$', dod_assertion.strip()):
         expected = int(re.match(r'^exit_code\s*==\s*(\d+)$', dod_assertion.strip()).group(1))
         dod_passed = exit_code == expected
+    elif dod_assertion.strip().startswith("contains:"):
+        expected = dod_assertion.split(":", 1)[1]
+        dod_passed = exit_code == 0 and expected.lower() in combined.lower()
+    elif dod_assertion.strip().startswith("stdout_regex:"):
+        pattern = dod_assertion.split(":", 1)[1]
+        dod_passed = exit_code == 0 and re.search(pattern, stdout, re.MULTILINE) is not None
+    elif dod_assertion.strip().startswith("stderr_regex:"):
+        pattern = dod_assertion.split(":", 1)[1]
+        dod_passed = exit_code == 0 and re.search(pattern, stderr, re.MULTILINE) is not None
     elif dod_assertion.strip().startswith("json_has_keys:"):
         # Structured: "json_has_keys: key1, key2, key3"
         keys = [k.strip() for k in dod_assertion.split(":", 1)[1].split(",")]

@@ -30,6 +30,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 import httpx
 from loguru import logger
@@ -45,22 +46,23 @@ from json_utils import parse_json
 from message_utils import sanitize_messages
 
 # Local modules
-from _error_classifier import classify_api_error, classify_response_error, FailoverReason
+from _error_classifier import classify_api_error
 from _tool_call_parser import parse_tool_calls, to_openai_format
-from skill_tools import get_dynamic_tools, execute_skill
 
 
-def _normalize_scillm_chat_url(raw_url: str | None) -> str:
-    """Return the OpenAI-compatible chat-completions URL for scillm."""
-    base_url = (raw_url or "http://localhost:4001").rstrip("/")
-    if base_url.endswith("/v1/chat/completions"):
-        return base_url
-    if base_url.endswith("/v1"):
-        return f"{base_url}/chat/completions"
-    return f"{base_url}/v1/chat/completions"
+def normalize_scillm_chat_url(raw_url: str | None) -> str:
+    """Return the concrete OpenAI-compatible chat completions endpoint."""
+    url = (raw_url or "http://localhost:4001/v1/chat/completions").strip().rstrip("/")
+    parsed = urlparse(url)
+    path = parsed.path.rstrip("/")
+    if path in ("", "/"):
+        return f"{url}/v1/chat/completions"
+    if path == "/v1":
+        return f"{url}/chat/completions"
+    return url
 
 
-SCILLM_URL = _normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
+SCILLM_URL = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 # Mock response function for testing. When set, bypasses HTTP calls and returns mock responses.
@@ -68,16 +70,251 @@ SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 _mock_response_fn: Optional[callable] = None
 
 # Valid tool names for this agent
-VALID_TOOLS = {"write_file", "edit_file", "read_file", "run_command", "lookup_docs", "search_code", "get_symbols", "research"}
+VALID_TOOLS = {"write_file", "edit_file", "read_file", "run_command", "search_code"}
 
-# Research rate limiting: track if research was already used this session
-_research_used = False
 
 # Paths that should NEVER be written by an LLM
 DENYLIST = {".git", ".gitignore", ".env", "SKILL.md", "run.sh", "sanity.sh", "pyproject.toml", "package.json"}
 
 # Max iterations to prevent runaway tool loops
 MAX_TOOL_ITERATIONS = 20
+
+
+def _emit_backend_stream_event(
+    event_emitter: Any,
+    *,
+    round_num: int,
+    event: str,
+    payload: dict[str, Any] | None = None,
+) -> None:
+    if event_emitter is None:
+        return
+    try:
+        from models import EventType
+        event_emitter.emit(
+            EventType.backend_stream_event,
+            round=round_num,
+            payload={"event": event, **(payload or {})},
+        )
+    except Exception as exc:
+        logger.debug("failed to emit backend stream event {}: {}", event, exc)
+
+
+def _merge_stream_delta(message: dict[str, Any], delta: dict[str, Any]) -> None:
+    if delta.get("role"):
+        message["role"] = delta["role"]
+    if delta.get("content"):
+        message["content"] = message.get("content", "") + delta["content"]
+    if delta.get("reasoning"):
+        message["reasoning"] = message.get("reasoning", "") + str(delta["reasoning"])
+    if delta.get("reasoning_content"):
+        message["reasoning_content"] = message.get("reasoning_content", "") + str(delta["reasoning_content"])
+
+    for tool_delta in delta.get("tool_calls") or []:
+        raw_index = tool_delta.get("index")
+        index = int(raw_index) if raw_index is not None else -1
+        tool_calls = message.setdefault("_tool_calls_by_index", {})
+        fn_delta = tool_delta.get("function") or {}
+        if raw_index is None and not fn_delta.get("name"):
+            named_indices = [
+                existing_index
+                for existing_index, existing_call in tool_calls.items()
+                if existing_call.get("function", {}).get("name")
+            ]
+            if len(named_indices) == 1:
+                index = named_indices[0]
+            elif len(named_indices) > 1:
+                index = max(named_indices)
+        if raw_index is None and fn_delta.get("name"):
+            index = max(tool_calls.keys(), default=-1) + 1
+        if raw_index is not None and index not in tool_calls and not fn_delta.get("name"):
+            named_indices = [
+                existing_index
+                for existing_index, existing_call in tool_calls.items()
+                if existing_call.get("function", {}).get("name")
+            ]
+            if len(named_indices) == 1:
+                index = named_indices[0]
+            elif len(named_indices) > 1:
+                index = max(named_indices)
+        if raw_index is not None and index not in tool_calls and fn_delta.get("name"):
+            unnamed_indices = [
+                existing_index
+                for existing_index, existing_call in tool_calls.items()
+                if not existing_call.get("function", {}).get("name")
+            ]
+            if len(unnamed_indices) == 1:
+                index = unnamed_indices[0]
+            elif len(unnamed_indices) > 1:
+                raise ValueError("ambiguous tool-call stream: name arrived on a new index with multiple unnamed calls pending")
+        current = tool_calls.setdefault(
+            index,
+            {"id": "", "type": "function", "function": {"name": "", "arguments": ""}},
+        )
+        if tool_delta.get("id"):
+            current["id"] += tool_delta["id"]
+        if tool_delta.get("type"):
+            current["type"] = tool_delta["type"]
+        if fn_delta.get("name"):
+            current["function"]["name"] += fn_delta["name"]
+        if fn_delta.get("arguments"):
+            current["function"]["arguments"] += fn_delta["arguments"]
+
+
+def _finalize_stream_message(message: dict[str, Any]) -> dict[str, Any]:
+    tool_calls_by_index = message.pop("_tool_calls_by_index", {})
+    if tool_calls_by_index:
+        incomplete = [
+            index
+            for index, tool_call in tool_calls_by_index.items()
+            if not tool_call.get("function", {}).get("name")
+        ]
+        if incomplete:
+            raise ValueError(f"incomplete tool-call stream: missing function name for indices {incomplete}")
+        message["tool_calls"] = [
+            {**tool_call, "id": tool_call.get("id") or f"call_{index}"}
+            for index, tool_call in sorted(tool_calls_by_index.items())
+        ]
+    message.setdefault("role", "assistant")
+    message.setdefault("content", "")
+    return message
+
+
+def _stream_chat_completion(
+    payload: dict[str, Any],
+    *,
+    headers: dict[str, str],
+    event_emitter: Any,
+    round_num: int,
+    idle_timeout: float,
+    hard_wall_timeout: float,
+) -> dict[str, Any]:
+    """Call /scillm with SSE and return one OpenAI-compatible chat response.
+
+    Liveness is event-based: heartbeat comments, progress data, token deltas, and
+    tool-call deltas all reset the read timeout. The caller still gets a hard
+    wall-clock budget to prevent unbounded provider hangs.
+    """
+    stream_payload = {
+        **payload,
+        "stream": True,
+        "stream_heartbeat_s": int(os.environ.get("CODE_RUNNER_STREAM_HEARTBEAT_S", "15")),
+        "stream_progress_events": True,
+        "timeout": hard_wall_timeout,
+    }
+    timeout = httpx.Timeout(
+        connect=10.0,
+        read=max(float(idle_timeout), 1.0),
+        write=30.0,
+        pool=30.0,
+    )
+    started = time.monotonic()
+    finish_reason = ""
+    message: dict[str, Any] = {"role": "assistant", "content": ""}
+    chunks = 0
+    saw_done = False
+    saw_model_delta = False
+
+    _emit_backend_stream_event(
+        event_emitter,
+        round_num=round_num,
+        event="stream_started",
+        payload={"idle_timeout": idle_timeout, "hard_wall_timeout": hard_wall_timeout},
+    )
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            with client.stream("POST", SCILLM_URL, headers=headers, json=stream_payload) as response:
+                if response.status_code >= 400:
+                    body = response.read().decode(errors="replace")
+                    raise httpx.HTTPStatusError(
+                        f"/scillm stream returned HTTP {response.status_code}: {body[:500]}",
+                        request=response.request,
+                        response=response,
+                    )
+
+                for line in response.iter_lines():
+                    elapsed = time.monotonic() - started
+                    if elapsed > hard_wall_timeout:
+                        raise TimeoutError(
+                            f"/scillm stream exceeded hard_wall_timeout={hard_wall_timeout:.1f}s"
+                        )
+                    if not line:
+                        continue
+                    if line.startswith(":"):
+                        _emit_backend_stream_event(
+                            event_emitter,
+                            round_num=round_num,
+                            event="heartbeat",
+                            payload={"elapsed_seconds": round(elapsed, 3)},
+                        )
+                        continue
+                    if not line.startswith("data:"):
+                        _emit_backend_stream_event(
+                            event_emitter,
+                            round_num=round_num,
+                            event="sse_line",
+                            payload={"line": line[:200]},
+                        )
+                        continue
+
+                    data_text = line[5:].strip()
+                    if data_text == "[DONE]":
+                        saw_done = True
+                        break
+                    if os.environ.get("CODE_RUNNER_DEBUG_SSE") == "1":
+                        logger.debug("  SSE chunk: {}", data_text[:1000])
+                    try:
+                        event = json.loads(data_text)
+                    except json.JSONDecodeError:
+                        _emit_backend_stream_event(
+                            event_emitter,
+                            round_num=round_num,
+                            event="invalid_json_chunk",
+                            payload={"chunk": data_text[:200]},
+                        )
+                        continue
+
+                    if event.get("event") and not event.get("choices"):
+                        _emit_backend_stream_event(
+                            event_emitter,
+                            round_num=round_num,
+                            event=str(event.get("event")),
+                            payload={k: v for k, v in event.items() if k != "event"},
+                        )
+                        continue
+
+                    choices = event.get("choices") or []
+                    if not choices:
+                        continue
+                    choice = choices[0]
+                    delta = choice.get("delta") or {}
+                    if delta.get("content") or delta.get("reasoning") or delta.get("reasoning_content") or delta.get("tool_calls"):
+                        saw_model_delta = True
+                    _merge_stream_delta(message, delta)
+                    chunks += 1
+                    if choice.get("finish_reason"):
+                        finish_reason = choice["finish_reason"]
+    except httpx.ReadTimeout as exc:
+        raise TimeoutError(f"/scillm stream idle_timeout={idle_timeout:.1f}s elapsed with no SSE event") from exc
+
+    message = _finalize_stream_message(message)
+    has_response_payload = bool(
+        message.get("content")
+        or message.get("tool_calls")
+        or message.get("reasoning")
+        or message.get("reasoning_content")
+    )
+    if not (saw_done or finish_reason):
+        raise TimeoutError("/scillm stream ended without terminal [DONE] or finish_reason")
+    if not saw_model_delta or not has_response_payload:
+        raise TimeoutError("/scillm stream ended without assistant content, reasoning, or tool calls")
+    _emit_backend_stream_event(
+        event_emitter,
+        round_num=round_num,
+        event="stream_complete",
+        payload={"chunks": chunks, "finish_reason": finish_reason or "stop"},
+    )
+    return {"choices": [{"message": message, "finish_reason": finish_reason or "stop"}]}
 
 # Destructive command patterns for run_command blocking (Hermes-inspired)
 # Each tuple is (compiled_regex, error_message)
@@ -148,9 +385,6 @@ def _tool_result(
     if extra:
         result.update(extra)
     return json.dumps(result)
-
-TREESITTER_RUN = Path(__file__).resolve().parent.parent / "treesitter" / "run.sh"
-
 
 def _retry_delay(attempt: int, max_delay: float = 32.0) -> float:
     """Exponential backoff with jitter. Prevents thundering herd."""
@@ -231,56 +465,13 @@ def _check_file_stale(path: Path) -> str | None:
             f"(hash {old_hash}→{current_hash}). Re-read before editing.")
 
 
-# ── Repo Map (tree-sitter symbols for context) ─────────────────────
+# ── Repo Map ───────────────────────────────────────────────────────
 
 
 def build_repo_map(files: list[str], cwd: str) -> str:
-    """Build a repo map of symbols from tree-sitter, like Aider's repomap.
+    """Repo maps are disabled in the minimal runner."""
 
-    Gives the LLM a table of contents — function names, class names, signatures —
-    so it knows what exists before editing. No need to read_file every file.
-    """
-    if not TREESITTER_RUN.exists():
-        return ""
-
-    sections = []
-    for rel_path in files:
-        target = Path(cwd) / rel_path
-        if not target.exists():
-            continue
-        try:
-            clean_env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
-            clean_env["PATH"] = os.pathsep.join(
-                p for p in clean_env.get("PATH", "").split(os.pathsep)
-                if ".venv" not in p
-            )
-            # Call treesitter via uvx directly — local install may be broken
-            proc = subprocess.run(
-                ["uvx", "--from", "git+https://github.com/grahama1970/treesitter-tools.git",
-                 "treesitter-tools", "symbols", str(target)],
-                capture_output=True, text=True, timeout=15,
-                env=clean_env,
-            )
-            if proc.returncode != 0:
-                continue
-            symbols = json.loads(proc.stdout)
-            if not symbols:
-                continue
-            lines = [f"\n{rel_path}:"]
-            for sym in symbols:
-                sig = sym.get("signature", "")
-                if sig:
-                    lines.append(f"  {sig}")
-                else:
-                    lines.append(f"  {sym.get('kind', '?')} {sym.get('name', '?')} (line {sym.get('start_line', '?')})")
-            sections.append("\n".join(lines))
-        except (subprocess.TimeoutExpired, json.JSONDecodeError, Exception):
-            continue
-
-    if not sections:
-        return ""
-
-    return "## Repo Map (symbols in scope)\n" + "\n".join(sections) + "\n"
+    return ""
 
 
 # ── Tool Definitions (OpenAI format — scillm translates per backend) ─
@@ -350,21 +541,6 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "lookup_docs",
-            "description": "Look up documentation for a library/package. Use when you need API reference, usage examples, or function signatures for external dependencies.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "library": {"type": "string", "description": "Library/package name (e.g. 'httpx', 'pandas', 'lodash')"},
-                    "query": {"type": "string", "description": "What to look up (e.g. 'async client timeout', 'DataFrame merge')"},
-                },
-                "required": ["library", "query"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
             "name": "search_code",
             "description": "Search codebase for patterns using ripgrep. Use to find usages, implementations, or related code. Returns file:line matches.",
             "parameters": {
@@ -377,35 +553,8 @@ TOOLS = [
             },
         },
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_symbols",
-            "description": "Extract code symbols (functions, classes, methods) from a file using tree-sitter. Use to understand code structure before editing.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "path": {"type": "string", "description": "File path relative to working directory"},
-                },
-                "required": ["path"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "research",
-            "description": "Deep research via /dogpile. Use ONLY when stuck on unfamiliar APIs or error messages. Rate limited: once per task. Returns multi-source synthesis.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query": {"type": "string", "description": "Research question (e.g. 'httpx AsyncClient connection pooling', 'Python asyncio.gather exception handling')"},
-                },
-                "required": ["query"],
-            },
-        },
-    },
 ]
+TOOLS = [tool for tool in TOOLS if tool["function"]["name"] in VALID_TOOLS]
 
 
 # ── Tool Execution ──────────────────────────────────────────────────
@@ -613,6 +762,20 @@ def execute_tool(
                 retryable=False, command=command[:100],
             )
 
+        source_cwd = os.environ.get("CODE_RUNNER_SOURCE_CWD", "")
+        if source_cwd and source_cwd in command:
+            return _tool_result(
+                ok=False,
+                tool="run_command",
+                error_type="SOURCE_ESCAPE",
+                error_message=(
+                    "Command references the source repository path. "
+                    "Commands must operate inside the disposable worktree."
+                ),
+                retryable=False,
+                command=command[:100],
+            )
+
         # Strip .venv from PATH
         clean_env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
         clean_env["PATH"] = os.pathsep.join(
@@ -649,58 +812,6 @@ def execute_tool(
                 command=command[:100],
             )
 
-    elif name == "lookup_docs":
-        library = arguments.get("library", "")
-        query = arguments.get("query", "")
-        if not library or not query:
-            return _tool_result(
-                ok=False, tool="lookup_docs",
-                error_type="MISSING_ARGS",
-                error_message="Both 'library' and 'query' are required.",
-            )
-        # Call /context7 skill
-        skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
-        context7_run = skills_dir / "context7" / "run.sh"
-        if not context7_run.exists():
-            return _tool_result(
-                ok=False, tool="lookup_docs",
-                error_type="SKILL_NOT_FOUND",
-                error_message="context7 skill not available.",
-            )
-        try:
-            proc = subprocess.run(
-                [str(context7_run), "search", library, query],
-                capture_output=True, text=True, timeout=30, cwd=cwd,
-            )
-            output = proc.stdout[:3000] if proc.stdout else ""
-            if proc.returncode != 0:
-                return _tool_result(
-                    ok=False, tool="lookup_docs",
-                    error_type="SKILL_ERROR",
-                    error_message=proc.stderr[:500] if proc.stderr else "context7 failed",
-                    library=library, query=query,
-                )
-            logger.info("  tool: lookup_docs {} '{}'", library, query[:50])
-            return _tool_result(
-                ok=True, tool="lookup_docs",
-                library=library, query=query,
-                content=output if output else "No documentation found.",
-            )
-        except subprocess.TimeoutExpired:
-            return _tool_result(
-                ok=False, tool="lookup_docs",
-                error_type="TIMEOUT",
-                error_message="Documentation lookup timed out after 30 seconds.",
-                library=library, query=query,
-            )
-        except Exception as e:
-            return _tool_result(
-                ok=False, tool="lookup_docs",
-                error_type="EXECUTION",
-                error_message=str(e),
-                library=library, query=query,
-            )
-
     elif name == "search_code":
         pattern = arguments.get("pattern", "")
         glob_filter = arguments.get("glob", "")
@@ -711,55 +822,8 @@ def execute_tool(
                 error_message="'pattern' is required.",
             )
 
-        # Check if codebase is indexed (semantic search available)
-        marker_path = Path(cwd) / ".ingest-code.json"
-        semantic_results = None
         source = "ripgrep"
 
-        if marker_path.exists():
-            # Try semantic search via /memory first
-            try:
-                memory_socket = Path("/run/user/1000/embry/memory.sock")
-                if memory_socket.exists():
-                    import httpx
-                    transport = httpx.HTTPTransport(uds=str(memory_socket))
-                    with httpx.Client(transport=transport, base_url="http://localhost", timeout=10.0) as client:
-                        # Query with codebase tag for scoped results
-                        marker = json.loads(marker_path.read_text())
-                        codebase_stem = marker.get("stem", Path(cwd).name)
-                        resp = client.post("/recall", json={
-                            "q": pattern,
-                            "k": 10,
-                            "tags": ["codebase", codebase_stem],
-                        })
-                        if resp.status_code == 200:
-                            data = resp.json()
-                            items = data.get("items", [])
-                            if items and data.get("confidence", 0) > 0.3:
-                                # Format semantic results
-                                lines = []
-                                for item in items[:10]:
-                                    problem = item.get("problem", "")
-                                    solution = item.get("solution", "")[:200]
-                                    score = item.get("score", 0)
-                                    lines.append(f"[{score:.2f}] {problem}\n  {solution}")
-                                semantic_results = "\n\n".join(lines)
-                                source = "memory"
-                                logger.info("  tool: search_code '{}' → {} semantic matches", pattern[:40], len(items))
-            except Exception as e:
-                logger.debug("  semantic search failed, falling back to ripgrep: {}", e)
-
-        # If semantic search found results, return them
-        if semantic_results:
-            return _tool_result(
-                ok=True, tool="search_code",
-                pattern=pattern, glob=glob_filter or None,
-                source=source,
-                match_count=len(semantic_results.split("\n\n")),
-                content=f"[Semantic search - codebase indexed]\n\n{semantic_results}",
-            )
-
-        # Fall back to ripgrep for pattern matching
         cmd = ["rg", "--line-number", "--no-heading", "--max-count=50", pattern]
         if glob_filter:
             cmd.extend(["--glob", glob_filter])
@@ -799,130 +863,6 @@ def execute_tool(
                 pattern=pattern,
             )
 
-    elif name == "get_symbols":
-        path = arguments.get("path", "")
-        if not path:
-            return _tool_result(
-                ok=False, tool="get_symbols",
-                error_type="MISSING_ARGS",
-                error_message="'path' is required.",
-            )
-        clean = path.lstrip("/")
-        target = Path(cwd) / clean
-        if not target.exists():
-            return _tool_result(
-                ok=False, tool="get_symbols", path=clean,
-                error_type="NOT_FOUND",
-                error_message="File does not exist.",
-            )
-        # Call /treesitter skill
-        skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
-        treesitter_run = skills_dir / "treesitter" / "run.sh"
-        if not treesitter_run.exists():
-            return _tool_result(
-                ok=False, tool="get_symbols",
-                error_type="SKILL_NOT_FOUND",
-                error_message="treesitter skill not available.",
-            )
-        try:
-            proc = subprocess.run(
-                [str(treesitter_run), "symbols", str(target), "--json"],
-                capture_output=True, text=True, timeout=15, cwd=cwd,
-            )
-            if proc.returncode != 0:
-                return _tool_result(
-                    ok=False, tool="get_symbols", path=clean,
-                    error_type="SKILL_ERROR",
-                    error_message=proc.stderr[:500] if proc.stderr else "treesitter failed",
-                )
-            output = proc.stdout[:5000] if proc.stdout else "[]"
-            # Parse JSON to count symbols
-            try:
-                symbols = json.loads(output)
-                symbol_count = len(symbols) if isinstance(symbols, list) else 0
-            except Exception:
-                symbol_count = 0
-            logger.info("  tool: get_symbols {} → {} symbols", clean, symbol_count)
-            return _tool_result(
-                ok=True, tool="get_symbols", path=clean,
-                symbol_count=symbol_count,
-                content=output,
-            )
-        except subprocess.TimeoutExpired:
-            return _tool_result(
-                ok=False, tool="get_symbols", path=clean,
-                error_type="TIMEOUT",
-                error_message="Symbol extraction timed out after 15 seconds.",
-            )
-        except Exception as e:
-            return _tool_result(
-                ok=False, tool="get_symbols", path=clean,
-                error_type="EXECUTION",
-                error_message=str(e),
-            )
-
-    elif name == "research":
-        global _research_used
-        query = arguments.get("query", "")
-        if not query:
-            return _tool_result(
-                ok=False, tool="research",
-                error_type="MISSING_ARGS",
-                error_message="'query' is required.",
-            )
-        # Rate limit: once per task
-        if _research_used:
-            return _tool_result(
-                ok=False, tool="research",
-                error_type="RATE_LIMITED",
-                error_message="Research already used this task. Use search_code or lookup_docs instead.",
-                query=query,
-            )
-        _research_used = True
-        # Call /dogpile skill
-        skills_dir = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parent.parent)))
-        dogpile_run = skills_dir / "dogpile" / "run.sh"
-        if not dogpile_run.exists():
-            _research_used = False  # Reset on skill not found
-            return _tool_result(
-                ok=False, tool="research",
-                error_type="SKILL_NOT_FOUND",
-                error_message="dogpile skill not available.",
-            )
-        try:
-            proc = subprocess.run(
-                [str(dogpile_run), "search", query, "--preset", "general"],
-                capture_output=True, text=True, timeout=60, cwd=cwd,
-            )
-            output = proc.stdout[:2500] if proc.stdout else ""
-            if proc.returncode != 0:
-                return _tool_result(
-                    ok=False, tool="research",
-                    error_type="SKILL_ERROR",
-                    error_message=proc.stderr[:500] if proc.stderr else "dogpile failed",
-                    query=query,
-                )
-            logger.info("  tool: research '{}' (rate limit consumed)", query[:50])
-            return _tool_result(
-                ok=True, tool="research",
-                query=query,
-                content=output if output else "No research results.",
-            )
-        except subprocess.TimeoutExpired:
-            return _tool_result(
-                ok=False, tool="research",
-                error_type="TIMEOUT",
-                error_message="Research timed out after 60 seconds.",
-                query=query,
-            )
-        except Exception as e:
-            return _tool_result(
-                ok=False, tool="research",
-                error_type="EXECUTION",
-                error_message=str(e),
-                query=query,
-            )
-
     # Unknown tool — should not happen if VALID_TOOLS is checked first
     return _tool_result(
         ok=False, tool=name,
@@ -943,10 +883,14 @@ def run_tool_use_loop(
     allowlist: list[str] | None = None,
     read_context: list[str] | None = None,
     temperature: float = 0.2,
+    reasoning: str = "low",
+    max_tokens: int = 8000,
     dod_command: str = "",
     event_emitter: Any = None,
     round_num: int = 0,
     task_id: str = "",
+    idle_timeout: float = 90.0,
+    hard_wall_timeout: float = 600.0,
 ) -> tuple[list[str], list[dict]]:
     """Run the tool-use agent loop. Returns (files_written, messages).
 
@@ -999,16 +943,14 @@ def run_tool_use_loop(
     ]
     files_written: list[str] = []
 
-    # Dynamic skill injection: match skills by task keywords and add as callable tools
-    skill_tools, skill_name_map = get_dynamic_tools(user_prompt)
-    all_tools = TOOLS + skill_tools
-    valid_tools_extended = VALID_TOOLS | set(skill_name_map.keys())
-
     payload_base: dict = {
         "model": model,
-        "tools": all_tools,
+        "tools": TOOLS,
         "tool_choice": "auto",
+        "reasoning_effort": reasoning,
     }
+    # scillm rejects max_tokens by policy. Keep the argument for callers that
+    # still pass a budget, but do not forward it to the proxy.
     if not model.startswith("gpt-"):
         payload_base["temperature"] = min(temperature, 1.0)
 
@@ -1037,8 +979,9 @@ def run_tool_use_loop(
                                  approx_tokens)
 
                 # Test mode: use mock response function if set
-                if _mock_response_fn is not None:
-                    mock_content = _mock_response_fn(payload)
+                env_mock_response = os.environ.get("CODE_RUNNER_MOCK_RESPONSE")
+                if _mock_response_fn is not None or env_mock_response is not None:
+                    mock_content = _mock_response_fn(payload) if _mock_response_fn is not None else env_mock_response
                     # Parse "### FILE:" format to extract file writes
                     import re as mock_re
                     file_matches = list(mock_re.finditer(r'### FILE: (\S+)\n```\w*\n(.*?)```', mock_content, mock_re.DOTALL))
@@ -1078,45 +1021,18 @@ def run_tool_use_loop(
                 safe_task_id = "".join(c for c in task_id if c.isalnum() or c in "-_") if task_id else "unknown"
                 caller_header = f"code-runner:{safe_task_id}:{round_num}"
 
-                resp = httpx.post(
-                    SCILLM_URL,
-                    headers={
-                        "Authorization": f"Bearer {SCILLM_KEY}",
-                        "X-Caller-Skill": caller_header,  # Enhanced: code-runner:{task_id}:{round}
-                    },
-                    json=payload,
-                    timeout=180.0,
+                headers = {
+                    "Authorization": f"Bearer {SCILLM_KEY}",
+                    "X-Caller-Skill": caller_header,
+                }
+                data = _stream_chat_completion(
+                    payload,
+                    headers=headers,
+                    event_emitter=event_emitter,
+                    round_num=round_num,
+                    idle_timeout=idle_timeout,
+                    hard_wall_timeout=hard_wall_timeout,
                 )
-
-                # Use error classifier for non-2xx responses
-                if resp.status_code >= 400:
-                    try:
-                        body = resp.json()
-                    except Exception:
-                        body = None
-                    classified = classify_response_error(resp.status_code, body, approx_tokens)
-                    logger.warning("/scillm {} → {} (attempt {}/{})",
-                                   resp.status_code, classified.reason.value, attempt, max_retries)
-
-                    # Context overflow: abort with clear message (no retry will help)
-                    if classified.should_compress:
-                        logger.error("  Context overflow detected — task too large for model context")
-                        break
-
-                    # Non-retryable errors: abort immediately
-                    if not classified.retryable:
-                        logger.error("  Non-retryable error: {} — {}", classified.reason.value, classified.message[:200])
-                        break
-
-                    # Retryable: backoff and retry
-                    if attempt < max_retries:
-                        wait = _retry_delay(attempt)
-                        time.sleep(wait)
-                        continue
-                    break
-
-                resp.raise_for_status()
-                data = resp.json()
                 break
 
             except httpx.TimeoutException as e:
@@ -1196,11 +1112,11 @@ def run_tool_use_loop(
             tc_id = tc.get("id", f"call_{hashlib.sha256(fn_args_raw.encode()).hexdigest()[:8]}")
 
             # 1. Unknown tool check (before parsing args)
-            if fn_name not in valid_tools_extended:
+            if fn_name not in VALID_TOOLS:
                 result = _tool_result(
                     ok=False, tool=fn_name,
                     error_type="UNKNOWN_TOOL",
-                    error_message=f"Unknown tool '{fn_name}'. Available: {', '.join(sorted(valid_tools_extended))}",
+                    error_message=f"Unknown tool '{fn_name}'. Available: {', '.join(sorted(VALID_TOOLS))}",
                     retryable=False,
                 )
                 messages.append({"role": "tool", "tool_call_id": tc_id, "content": result})
@@ -1235,15 +1151,8 @@ def run_tool_use_loop(
                 continue
             seen_calls.add(call_hash)
 
-            # 4. Execute tool (or skill if skill_ prefixed)
-            if fn_name.startswith("skill_") and fn_name in skill_name_map:
-                skill_name = skill_name_map[fn_name]
-                skill_args = fn_args.get("args", "")
-                logger.info("  Calling skill /{} with args: {}", skill_name, skill_args[:100])
-                skill_result = execute_skill(skill_name, skill_args, cwd)
-                result = json.dumps(skill_result)
-            else:
-                result = execute_tool(fn_name, fn_args, cwd, allowlist)
+            # 4. Execute bounded tool
+            result = execute_tool(fn_name, fn_args, cwd, allowlist)
 
             # 5. Track written files (parse JSON result to check success)
             if fn_name in ("write_file", "edit_file"):

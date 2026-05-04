@@ -111,6 +111,7 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
     """Extract tasks from structured YAML/JSON plan files."""
     data = load_structured_plan(path)
     summary = summarize_structured_plan(data)
+    repo_root = str(data.get("repo_root") or PROJECT_ROOT)
     tasks: list[dict] = []
     for item in summary["tasks"]:
         dod = {
@@ -154,6 +155,9 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
             "read_context": item.get("read_context") or [],
             "allowlist_optional": item.get("allowlist_optional", False),
             "implementation": impl,
+            "skills": item.get("skills") or [],
+            "depends_on": item.get("dependencies") or [],
+            "repo_root": repo_root,
         })
     return tasks, 0
 
@@ -174,19 +178,11 @@ def check_claims(task: dict, findings: list[Finding]):
     # Also catch paths in **bold** or plain text
     file_refs += re.findall(r"(?:^|\s)((?:\.?/)?(?:[\w.-]+/)+[\w.-]+\.(?:py|ts|js|rs|go|sh|json|toml|yaml|yml|md))\b", body)
 
-    for ref in file_refs:
-        # Clean up the reference
-        ref = ref.strip().split(":")[0]  # Remove :line_number
-        if ref.startswith("~"):
-            continue  # Skip home-relative paths
-        if ref.startswith("/") and not ref.startswith("/."):
-            full_path = Path(ref)
-        else:
-            full_path = PROJECT_ROOT / ref
-
-        if not full_path.exists() and not any(
-            PROJECT_ROOT.glob(f"**/{Path(ref).name}")
-        ):
+    for ref in unique_refs:
+        normalized_ref = Path(ref).as_posix().lstrip("./")
+        if normalized_ref in planned_outputs:
+            continue
+        if not _reference_exists(ref, task.get("repo_root")):
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="claim",
@@ -675,10 +671,10 @@ def check_execution_routing(task: dict, findings: list[Finding]):
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="routing",
-                grade="WARN",
-                message="code-runner task missing backend — defaults to sonnet",
+                grade="FAIL",
+                message="code-runner task missing backend — defaults to codex",
                 line=task["line"],
-                suggestion="Set `backend:` explicitly (sonnet for boilerplate, opus for complex).",
+                suggestion="Set `backend: codex` for the GPT-5.5 High default, or explicitly justify another healthy backend.",
             ))
         impl = task.get("implementation") or []
         if not impl and not body.strip():
@@ -694,13 +690,12 @@ def check_execution_routing(task: dict, findings: list[Finding]):
         depends = task.get("depends_on") or []
         read_ctx = task.get("read_context") or []
         allowlist = task.get("allowlist") or []
-        if len(depends) >= 3 and not read_ctx:
+        if not read_ctx:
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="routing",
-                grade="WARN",
-                message=f"code-runner task depends on {len(depends)} tasks but has no read_context. "
-                        f"Empirical data: ~50% fail rate on text backend without read_context for 3+ deps.",
+                grade="FAIL",
+                message="code-runner task has no read_context. Interface context must be separated from writable allowlist.",
                 line=task["line"],
                 suggestion="Add `read_context:` listing the dependency files the LLM should read for interface context. "
                            "Code-runner extracts interface maps (signatures + types) from these files.",
@@ -710,7 +705,7 @@ def check_execution_routing(task: dict, findings: list[Finding]):
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="routing",
-                grade="WARN",
+                grade="FAIL",
                 message="code-runner task has no allowlist — LLM can write to any file",
                 line=task["line"],
                 suggestion="Add `allowlist:` with specific files to edit, or set `allowlist_optional: true`.",
@@ -724,7 +719,7 @@ def check_execution_routing(task: dict, findings: list[Finding]):
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="routing",
-                grade="WARN",
+                grade="FAIL",
                 message="code-runner without allowlist or DoD assertion — use scillm for simple edits",
                 line=task["line"],
                 suggestion="code-runner is expensive (worktree, git cycle, multi-round). "
@@ -734,11 +729,20 @@ def check_execution_routing(task: dict, findings: list[Finding]):
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="routing",
-                grade="WARN",
+                grade="FAIL",
                 message="code-runner DoD has no assertion and doesn't run tests — LLM may game it",
                 line=task["line"],
                 suggestion="Add `assertion:` or include assert statements in the DoD command. "
                            "Consider adding `blind_tests:` for adversarial verification.",
+            ))
+        if dod_assert and not _is_machine_checkable_assertion(str(dod_assert)):
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="routing",
+                grade="FAIL",
+                message="code-runner DoD assertion is free-form prose, not machine-checkable",
+                line=task["line"],
+                suggestion="Use one of: `exit_code == 0`, `stdout_regex:...`, `stderr_regex:...`, `contains:...`, `json_path:...`, or `json_equals:...`.",
             ))
         # Blind tests enforcement — code-runner tasks MUST have blind_tests for adversarial verification
         blind_tests = task.get("blind_tests") or task.get("tests") or []
@@ -752,18 +756,57 @@ def check_execution_routing(task: dict, findings: list[Finding]):
                 suggestion="Add `blind_tests:` with assertions the implementing agent cannot see. "
                            "Use `/test-lab verify-task` or `sanity.sh` for truly blind verification.",
             ))
-        # External API detection — DoD should use mocks, real API calls go in blind_tests
-        import re as _re
-        if dod_cmd and _re.search(r'https?://|curl\s|requests\.get|httpx\.\w+|urllib', dod_cmd):
+        dirty_policy = str(task.get("dirty_worktree_policy") or "isolated_worktree").strip()
+        unsafe_justification = str(task.get("unsafe_direct_justification") or "").strip()
+        apply_to_source = bool(task.get("apply_to_source", False))
+        commit_on_success = bool(task.get("commit_on_success", False))
+        rollback_on_failure = bool(task.get("rollback_on_failure", True))
+        if commit_on_success and not apply_to_source:
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="source_apply",
+                grade="FAIL",
+                message="commit_on_success requires apply_to_source",
+                line=task["line"],
+                suggestion="Set `apply_to_source: true` or remove `commit_on_success`.",
+            ))
+        if apply_to_source and not commit_on_success:
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="source_apply",
+                grade="FAIL",
+                message="complete-task mode must commit successful source changes",
+                line=task["line"],
+                suggestion="Set `commit_on_success: true` so the project agent can revert by commit.",
+            ))
+        if apply_to_source and not rollback_on_failure:
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="source_apply",
+                grade="FAIL",
+                message="complete-task mode must roll back failed source apply or source DoD",
+                line=task["line"],
+                suggestion="Set `rollback_on_failure: true`.",
+            ))
+        if dirty_policy not in CODE_RUNNER_SAFE_POLICIES and not unsafe_justification:
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="routing",
-                grade="WARN",
-                message="code-runner DoD calls an external URL/API — flaky and non-deterministic",
+                grade="FAIL",
+                message="code-runner task does not use isolated_worktree safe mode",
                 line=task["line"],
-                suggestion="Use mock-based DoD for code-runner (test against fake responses). "
-                           "Move the real API integration test to `blind_tests:` which runs in "
-                           "/test-lab Docker with network access.",
+                suggestion="Set `dirty_worktree_policy: isolated_worktree`. Unsafe direct modes require explicit `unsafe_direct_justification`.",
+            ))
+        # External/live API detection — allowed only when the task declares service mode.
+        has_service_mode = bool(task.get("service_under_test") or task.get("external_service"))
+        if dod_cmd and re.search(r'https?://|curl\s|wget\s|requests\.get|httpx\.\w+|urllib', dod_cmd) and not has_service_mode:
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="routing",
+                grade="FAIL",
+                message="code-runner DoD calls a live URL/API without service_under_test or external_service",
+                line=task["line"],
+                suggestion="Declare owned `service_under_test`, mark `external_service` provisional with a separate local verifier, or move live verification out of code-runner.",
             ))
     elif runner == "local":
         if backend:
@@ -813,8 +856,17 @@ LEGACY_BACKEND_NAMES = {
 }
 
 
-# code-runner accepts short backend names and translates them internally
+# code-runner accepts short backend names and translates them internally.
 CODE_RUNNER_BACKENDS = {"codex", "claude", "text", "gemini", "deepseek", "test"}
+CODE_RUNNER_SAFE_POLICIES = {"isolated_worktree"}
+MACHINE_CHECKABLE_ASSERTION = re.compile(
+    r"^\s*(exit_code\s*(==|!=)\s*\d+|stdout_regex:.+|stderr_regex:.+|contains:.+|json_path:.+|json_equals:.+)\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _is_machine_checkable_assertion(assertion: str) -> bool:
+    return bool(MACHINE_CHECKABLE_ASSERTION.match(assertion or ""))
 
 
 def check_scillm_backend(task: dict, findings: list[Finding]):
@@ -989,6 +1041,74 @@ def load_manifest() -> dict | None:
         except Exception:
             pass
     return None
+
+
+def _build_file_indexes() -> tuple[set[str], set[str]]:
+    """Build exact-path and basename indexes for fast claim checks."""
+    global _file_index_cache, _basename_index_cache
+    if _file_index_cache is not None and _basename_index_cache is not None:
+        return _file_index_cache, _basename_index_cache
+
+    exact_paths: set[str] = set()
+    basenames: set[str] = set()
+
+    try:
+        result = subprocess.run(
+            ["rg", "--files", str(PROJECT_ROOT)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.splitlines():
+                rel = os.path.relpath(line, PROJECT_ROOT)
+                rel_posix = Path(rel).as_posix()
+                exact_paths.add(rel_posix)
+                basenames.add(Path(rel_posix).name)
+        else:
+            raise RuntimeError("rg --files failed")
+    except Exception:
+        skip_dirs = {
+            ".git",
+            "node_modules",
+            ".venv",
+            "__pycache__",
+            ".mypy_cache",
+            ".pytest_cache",
+        }
+        for current_root, dirnames, filenames in os.walk(PROJECT_ROOT):
+            current_path = Path(current_root)
+            rel_parts = current_path.relative_to(PROJECT_ROOT).parts if current_path != PROJECT_ROOT else ()
+            dirnames[:] = [
+                dirname
+                for dirname in dirnames
+                if dirname not in skip_dirs and not (rel_parts == (".pi",) and dirname == ".worktrees")
+            ]
+            for filename in filenames:
+                rel_path = (current_path / filename).relative_to(PROJECT_ROOT).as_posix()
+                exact_paths.add(rel_path)
+                basenames.add(filename)
+
+    _file_index_cache = exact_paths
+    _basename_index_cache = basenames
+    return exact_paths, basenames
+
+
+def _reference_exists(ref: str, repo_root: str | None = None) -> bool:
+    """Return True if the referenced path already exists in the repo."""
+    if ref.startswith("~"):
+        return True
+
+    if ref.startswith("/") and not ref.startswith("/."):
+        return Path(ref).exists()
+
+    root = Path(repo_root) if repo_root else PROJECT_ROOT
+    normalized = Path(ref).as_posix().lstrip("./")
+    if (root / normalized).exists():
+        return True
+
+    exact_paths, basenames = _build_file_indexes()
+    return normalized in exact_paths or Path(normalized).name in basenames
 
 
 # ─── Check 9 & 10: Design Board + PNG Evidence (see ux_checks.py) ────────────

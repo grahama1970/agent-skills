@@ -28,6 +28,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -318,50 +319,248 @@ async def _cleanup_worktree(task_cwd: Path, worktree_dir: Path, branch: str) -> 
         pass
 
 
-async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
-    """Delegate to /code-runner with worktree isolation + blind eval retry loop.
+async def _patch_touches_only_allowlist(patch_file: Path, allowlist: list[str] | None) -> tuple[bool, list[str]]:
+    """Return whether a unified diff only touches allowlisted paths."""
+    if not patch_file.exists() or not patch_file.read_text().strip():
+        return False, []
+    allowed = [item.rstrip("/") for item in (allowlist or [])]
+    touched: list[str] = []
+    proc = subprocess.run(
+        ["git", "apply", "--numstat", str(patch_file)],
+        text=True,
+        capture_output=True,
+        timeout=30,
+    )
+    if proc.returncode == 0:
+        for line in proc.stdout.splitlines():
+            parts = line.split("\t")
+            if len(parts) >= 3 and parts[2]:
+                touched.append(parts[2])
+    else:
+        for line in patch_file.read_text().splitlines():
+            if line.startswith("+++ b/") or line.startswith("--- a/"):
+                touched.append(line[6:])
+    if not touched:
+        return False, []
+    touched = sorted(set(touched))
+    if not allowed:
+        return False, touched
+    for path in touched:
+        if not any(path == item or path.startswith(f"{item}/") for item in allowed):
+            return False, touched
+    return True, touched
 
-    Each code-runner task runs in its own git worktree, enabling parallel execution
-    across tasks targeting the same repo. Changes merge back on success.
+
+async def _create_patch_review_worktree(
+    source_cwd: Path,
+    task_id: str,
+    patch_file: Path,
+    predecessor_patches: list[str] | None = None,
+) -> Path:
+    """Create a disposable review worktree with predecessor patches and current patch applied."""
+    import tempfile
+    review_dir = Path(tempfile.mkdtemp(prefix=f"orchestrate-cr-review-{task_id}-", dir="/tmp"))
+    proc = await asyncio.create_subprocess_exec(
+        "git", "worktree", "add", "--detach", str(review_dir), "HEAD",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        cwd=str(source_cwd),
+    )
+    _, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        raise RuntimeError(f"git worktree add for patch review failed: {stderr.decode(errors='replace')[:500]}")
+    for patch in [Path(item) for item in (predecessor_patches or [])] + [patch_file]:
+        proc = await asyncio.create_subprocess_exec(
+            "git", "apply", "--whitespace=nowarn", str(patch),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=str(review_dir),
+        )
+        _, stderr = await proc.communicate()
+        if proc.returncode != 0:
+            await _cleanup_patch_review_worktree(source_cwd, review_dir)
+            raise RuntimeError(
+                f"code-runner patch_artifact does not apply cleanly ({patch}): "
+                f"{stderr.decode(errors='replace')[:500]}"
+            )
+    return review_dir
+
+
+async def _cleanup_patch_review_worktree(source_cwd: Path, review_dir: Path | None) -> None:
+    if not review_dir:
+        return
+    import shutil
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "git", "worktree", "remove", "--force", str(review_dir),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=str(source_cwd),
+        )
+        await proc.communicate()
+    except Exception:
+        pass
+    shutil.rmtree(review_dir, ignore_errors=True)
+
+
+def _dependency_patch_stack(
+    task_id: str,
+    deps: dict[str, list[str]],
+    runtimes: dict[str, TaskRuntime],
+) -> list[str]:
+    """Return completed code-runner patch artifacts needed by a dependent task."""
+    ordered: list[str] = []
+    seen_tasks: set[str] = set()
+    seen_patches: set[str] = set()
+
+    def visit(current_id: str) -> None:
+        for dep_id in deps.get(current_id, []):
+            if dep_id in seen_tasks:
+                continue
+            seen_tasks.add(dep_id)
+            visit(dep_id)
+            dep = runtimes.get(dep_id)
+            if not dep or dep.runner != "code-runner" or dep.status != "completed":
+                continue
+            if dep.apply_to_source:
+                continue
+            patch = dep.patch_artifact
+            if patch and patch not in seen_patches:
+                ordered.append(patch)
+                seen_patches.add(patch)
+
+    visit(task_id)
+    return ordered
+
+
+def _dependency_patch_block_reason(task: TaskRuntime) -> str:
+    """Return a fail-closed reason when a runner cannot consume patch stacks."""
+
+    if task.dependency_patch_artifacts and task.runner != "code-runner":
+        return (
+            f"runner '{task.runner}' cannot consume code-runner dependency patch artifacts; "
+            "split this task behind a code-runner consumer or materialize patch-stack support"
+        )
+    return ""
+
+
+def _allowlists_overlap(left: list[str] | None, right: list[str] | None) -> bool:
+    left_items = [item.rstrip("/") for item in (left or [])]
+    right_items = [item.rstrip("/") for item in (right or [])]
+    if not left_items or not right_items:
+        return True
+    for left_item in left_items:
+        for right_item in right_items:
+            if (
+                left_item == right_item
+                or left_item.startswith(f"{right_item}/")
+                or right_item.startswith(f"{left_item}/")
+            ):
+                return True
+    return False
+
+
+def _code_runner_conflicts(active: TaskRuntime, candidate: TaskRuntime) -> bool:
+    if active.runner != "code-runner" or candidate.runner != "code-runner":
+        return False
+    if active.cwd != candidate.cwd:
+        return False
+    if active.apply_to_source or candidate.apply_to_source:
+        return True
+    return _allowlists_overlap(active.allowlist, candidate.allowlist)
+
+
+def _git_status_porcelain(cwd: Path) -> list[str]:
+    proc = subprocess.run(
+        ["git", "status", "--porcelain=v1"],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    return [line for line in proc.stdout.splitlines() if line.strip()] if proc.returncode == 0 else []
+
+
+def _cleanup_new_untracked_non_allowlist(cwd: Path, baseline_status: list[str], allowlist: list[str] | None) -> list[str]:
+    baseline = set(baseline_status)
+    allowlist_items = [item.rstrip("/") for item in (allowlist or [])]
+    cleaned: list[str] = []
+    for entry in _git_status_porcelain(cwd):
+        if not entry.startswith("?? ") or entry in baseline:
+            continue
+        path = entry[3:].strip()
+        normalized = path.rstrip("/")
+        if allowlist_items and any(normalized == item or normalized.startswith(f"{item}/") for item in allowlist_items):
+            continue
+        cleaned.append(path)
+    if cleaned:
+        subprocess.run(
+            ["git", "clean", "-fd", "--", *cleaned],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+    return cleaned
+
+
+async def _revert_source_commit(source_cwd: Path, commit_sha: str, task: TaskRuntime) -> None:
+    if not commit_sha:
+        return
+    proc = await asyncio.create_subprocess_exec(
+        "git", "revert", "--no-edit", commit_sha,
+        cwd=str(source_cwd),
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"failed to revert source commit {commit_sha[:12]} for task {task.task_id}: "
+            f"{(stdout or b'').decode(errors='replace')}{(stderr or b'').decode(errors='replace')}"
+        )
+
+
+async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
+    """Delegate to /code-runner and consume its patch artifact.
+
+    /orchestrate never edits, merges, or applies code-runner output to the
+    source worktree. Code-runner itself creates one disposable /tmp worktree and
+    returns one allowlist-scoped patch artifact. Orchestrate validates that patch
+    in a second disposable review worktree for blind tests and T2 review.
     """
     code_runner = SKILLS_DIR / "code-runner" / "run.sh"
     if not code_runner.exists():
         raise RuntimeError(f"/code-runner skill not found at {code_runner}")
 
-    # Worktree isolation — off by default. Set CR_WORKTREE=1 to enable.
-    # Worktrees break projects needing built bindings (Rust/maturin, C extensions).
-    original_cwd = task.cwd
-    worktree_dir: Path | None = None
-    worktree_branch = ""
-    use_worktree = os.environ.get("CR_WORKTREE", "0") == "1"
-    if use_worktree:
-        try:
-            worktree_dir, worktree_branch = await _setup_worktree(original_cwd, task.task_id)
-            work_cwd = worktree_dir
-        except Exception as exc:
-            logger.warning("Worktree setup failed ({}), running in-place", exc)
-            work_cwd = original_cwd
-    else:
-        work_cwd = original_cwd
-
-    # Clean env: strip .venv paths so DoD/commands use system Python
+    source_cwd = task.cwd
     clean_env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
     clean_env["PATH"] = os.pathsep.join(
         p for p in clean_env.get("PATH", "").split(os.pathsep)
         if ".venv" not in p
     )
-    # Forward per-round timeout to code-runner (uses max of this and static floor)
     if "CODE_RUNNER_ROUND_TIMEOUT" not in clean_env and task.timeout_seconds:
-        per_round = min(task.timeout_seconds // task.max_rounds, 600)
+        per_round = min(task.timeout_seconds // max(task.max_rounds, 1), 600)
         clean_env["CODE_RUNNER_ROUND_TIMEOUT"] = str(max(per_round, 180))
+
+    requested_policy = task.dirty_worktree_policy or "isolated_worktree"
+    if requested_policy != "isolated_worktree" and clean_env.get("ORCHESTRATE_ALLOW_UNSAFE_CODE_RUNNER_DIRECT") != "1":
+        task.review_status = "fail"
+        task.error = "code-runner tasks must use dirty_worktree_policy=isolated_worktree"
+        return
 
     max_blind_attempts = 3
     accumulated_feedback: list[str] = []
     blind_passed = False
+    review_cwd_for_t2: Path | None = None
+    source_cleanup_baseline: list[str] | None = None
 
     try:
         for attempt in range(1, max_blind_attempts + 1):
             attempt_tag = f"a{attempt}" if attempt > 1 else ""
+            attempt_task_id = f"{task.task_id}{attempt_tag}"
 
             blind_feedback_prompt = ""
             if accumulated_feedback:
@@ -373,12 +572,13 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
                 )
 
             spec: dict = {
-                "task_id": f"{task.task_id}{attempt_tag}",
+                "task_id": attempt_task_id,
                 "title": task.title,
                 "prompt": task.prompt + blind_feedback_prompt,
-                "backend": task.backend or "codex",
-                "cwd": str(work_cwd),
+                "backend": _code_runner_backend_name(task.backend),
+                "cwd": str(source_cwd),
                 "output_dir": str(session_dir),
+                "dirty_worktree_policy": "isolated_worktree",
             }
             if task.definition_of_done:
                 spec["definition_of_done"] = task.definition_of_done
@@ -390,8 +590,14 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
                 spec["max_rounds"] = task.max_rounds
             if task.lang:
                 spec["lang"] = task.lang
+            if task.apply_to_source:
+                spec["apply_to_source"] = True
+                spec["commit_on_success"] = task.commit_on_success
+                spec["rollback_on_failure"] = task.rollback_on_failure
+            if task.dependency_patch_artifacts:
+                spec["predecessor_patches"] = task.dependency_patch_artifacts
 
-            spec_file = session_dir / f"{task.task_id}{attempt_tag}.code-runner-spec.json"
+            spec_file = session_dir / f"{attempt_task_id}.code-runner-spec.json"
             spec_file.write_text(json.dumps(spec, indent=2))
 
             proc = await asyncio.create_subprocess_exec(
@@ -399,12 +605,10 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
                 f"--max-rounds={task.max_rounds}",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(work_cwd),
+                cwd=str(source_cwd),
                 env=clean_env,
             )
 
-            # Stream stderr line-by-line so project agent sees live progress.
-            # stdout is collected in full (it's the LLM response text).
             async def _stream_stderr(proc_stderr, task_id: str, lines: list[str]):
                 async for raw_line in proc_stderr:
                     line = raw_line.decode(errors="replace").rstrip()
@@ -413,9 +617,7 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
                         logger.info("[cr:{}] {}", task_id, line)
 
             stderr_lines: list[str] = []
-            stream_task = asyncio.create_task(
-                _stream_stderr(proc.stderr, task.task_id, stderr_lines))
-
+            stream_task = asyncio.create_task(_stream_stderr(proc.stderr, task.task_id, stderr_lines))
             try:
                 stdout = await asyncio.wait_for(proc.stdout.read(), timeout=task.timeout_seconds)
                 await proc.wait()
@@ -434,46 +636,124 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
 
             stdout_text = stdout.decode(errors="replace")
             stderr_text = "\n".join(stderr_lines)
-
-            output_path = session_dir / f"{task.task_id}{attempt_tag}.response.txt"
+            output_path = session_dir / f"{attempt_task_id}.response.txt"
             output_path.write_text(stdout_text)
             task.output_path = output_path
-
             if stderr_text.strip():
-                (session_dir / f"{task.task_id}{attempt_tag}.stderr.txt").write_text(stderr_text)
+                (session_dir / f"{attempt_task_id}.stderr.txt").write_text(stderr_text)
 
-            # Check returncode FIRST — if code-runner crashed, result.json won't exist
             if proc.returncode != 0:
                 task.review_status = "fail"
                 task.error = f"/code-runner exit {proc.returncode}: {stderr_text[:500]}"
                 logger.error("code-runner failed for {}: {}", task.task_id, task.error[:200])
                 break
 
-            result_file = session_dir / f"{task.task_id}{attempt_tag}.result.json"
-            if result_file.exists():
-                try:
-                    result = json.loads(result_file.read_text())
-                    task.review_status = "pass" if result.get("dod_passed") else "fail"
-                    task.review_output = (
-                        f"attempt={attempt}/{max_blind_attempts} "
-                        f"score={result.get('best_score', 0):.3f} "
-                        f"rounds={result.get('rounds', 0)} "
-                        f"dod={'PASS' if result.get('dod_passed') else 'FAIL'}"
-                    )
-                except (json.JSONDecodeError, KeyError) as exc:
-                    task.review_status = "fail"
-                    task.error = f"result.json parse error: {exc}"
-                    break
-            else:
+            result_file = session_dir / f"{attempt_task_id}.result.json"
+            if not result_file.exists():
                 task.review_status = "fail"
                 task.error = f"result.json missing. stderr: {stderr_text[:300]}"
                 break
 
-            if not task.blind_tests or task.review_status != "pass":
+            try:
+                result = json.loads(result_file.read_text())
+            except (json.JSONDecodeError, KeyError) as exc:
+                task.review_status = "fail"
+                task.error = f"result.json parse error: {exc}"
                 break
 
-            blind_result = await _run_blind_eval(task, session_dir, attempt_tag)
+            task.review_status = "pass" if result.get("dod_passed") else "fail"
+            task.review_output = (
+                f"attempt={attempt}/{max_blind_attempts} "
+                f"score={result.get('best_score', 0):.3f} "
+                f"rounds={result.get('rounds', 0)} "
+                f"dod={'PASS' if result.get('dod_passed') else 'FAIL'}"
+            )
+            if task.review_status != "pass":
+                break
 
+            patch_artifact_raw = str(result.get("patch_artifact") or "")
+            patch_artifact = Path(patch_artifact_raw) if patch_artifact_raw else Path()
+            task.patch_artifact = str(patch_artifact) if patch_artifact_raw else ""
+            task.source_commit = str(result.get("source_commit") or "")
+
+            if task.apply_to_source:
+                if not result.get("source_patch_applied") or not result.get("source_dod_passed"):
+                    task.review_status = "fail"
+                    task.error = f"code-runner source apply failed: {result.get('source_apply_error') or 'unknown'}"
+                    break
+                if task.commit_on_success and not task.source_commit:
+                    task.review_status = "fail"
+                    task.error = "code-runner commit_on_success did not produce source_commit"
+                    break
+                task.review_output += (
+                    f"\npatch_artifact={patch_artifact}\n"
+                    f"source_commit={task.source_commit}\n"
+                    "source worktree was updated by code-runner complete-task mode"
+                )
+                source_cleanup_baseline = _git_status_porcelain(source_cwd)
+                if task.blind_tests:
+                    blind_result = await _run_blind_eval(task, session_dir, attempt_tag, target_dir=source_cwd)
+                    cleaned = _cleanup_new_untracked_non_allowlist(
+                        source_cwd,
+                        source_cleanup_baseline,
+                        task.allowlist,
+                    )
+                    if cleaned:
+                        task.review_output += f"\ncleaned_source_byproducts={', '.join(cleaned)}"
+                    if blind_result is None:
+                        task.review_status = "fail"
+                        task.error = "blind eval FAILED: test-lab unreachable but blind_tests declared"
+                        task.review_output += "\n--- blind eval: FAILED (test-lab unreachable) ---"
+                        if task.rollback_on_failure and task.source_commit:
+                            await _revert_source_commit(source_cwd, task.source_commit, task)
+                        break
+                    if blind_result.get("status") == "pass":
+                        blind_passed = True
+                        break
+                    if task.rollback_on_failure and task.source_commit:
+                        await _revert_source_commit(source_cwd, task.source_commit, task)
+                    new_failures = [
+                        f"  - Check failed: {c['message']}"
+                        for c in blind_result.get("checks", []) if not c["passed"]
+                    ]
+                    accumulated_feedback.extend(new_failures)
+                    if len(accumulated_feedback) > 20:
+                        accumulated_feedback = accumulated_feedback[-20:]
+                    if attempt >= max_blind_attempts:
+                        task.review_status = "fail"
+                        task.error = f"blind eval exhausted after {max_blind_attempts} attempts"
+                        task.review_output += (
+                            f"\n--- blind eval: EXHAUSTED ({max_blind_attempts} attempts) ---\n"
+                            + "\n".join(new_failures)
+                        )
+                    continue
+                break
+
+            patch_ok, touched_files = await _patch_touches_only_allowlist(patch_artifact, task.allowlist)
+            if not patch_ok:
+                task.review_status = "fail"
+                task.error = f"code-runner patch_artifact missing, empty, or outside allowlist: {patch_artifact_raw}"
+                break
+
+            await _cleanup_patch_review_worktree(source_cwd, review_cwd_for_t2)
+            review_cwd_for_t2 = await _create_patch_review_worktree(
+                source_cwd,
+                task.task_id,
+                patch_artifact,
+                predecessor_patches=task.dependency_patch_artifacts,
+            )
+            task.review_output += (
+                f"\npatch_artifact={patch_artifact}\n"
+                f"dependency_patch_artifacts={len(task.dependency_patch_artifacts)}\n"
+                f"review_worktree={review_cwd_for_t2}\n"
+                f"touched_files={', '.join(touched_files)}\n"
+                "source worktree was not modified; project-agent review/apply is required"
+            )
+
+            if not task.blind_tests:
+                break
+
+            blind_result = await _run_blind_eval(task, session_dir, attempt_tag, target_dir=review_cwd_for_t2)
             if blind_result is None:
                 logger.warning(
                     "Blind eval unavailable for {} — skipping hidden checks",
@@ -482,7 +762,6 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
                 task.review_output += "\n--- blind eval: SKIPPED (test-lab unreachable) ---"
                 blind_passed = True
                 break
-
             if blind_result.get("status") == "pass":
                 blind_passed = True
                 break
@@ -494,11 +773,9 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
             accumulated_feedback.extend(new_failures)
             if len(accumulated_feedback) > 20:
                 accumulated_feedback = accumulated_feedback[-20:]
-
             logger.warning("Blind eval FAILED for {} attempt {}/{} ({}/{})",
                            task.task_id, attempt, max_blind_attempts,
                            blind_result.get("failed", 0), blind_result.get("total", 0))
-
             if attempt >= max_blind_attempts:
                 task.review_status = "fail"
                 task.error = f"blind eval exhausted after {max_blind_attempts} attempts"
@@ -507,25 +784,26 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
                     + "\n".join(new_failures)
                 )
 
-        # Merge worktree back on success
-        if worktree_dir and task.review_status == "pass":
-            merged = await _merge_worktree(original_cwd, worktree_branch, task.task_id)
-            if not merged:
-                task.review_status = "fail"
-                task.error = "merge conflict merging worktree back to main branch"
-
+        if task.review_status == "pass" and (blind_passed or not task.blind_tests):
+            await _review_code_runner_output(task, session_dir, review_cwd=review_cwd_for_t2)
+            if task.apply_to_source and source_cleanup_baseline is not None:
+                cleaned = _cleanup_new_untracked_non_allowlist(
+                    source_cwd,
+                    source_cleanup_baseline,
+                    task.allowlist,
+                )
+                if cleaned:
+                    task.review_output += f"\ncleaned_source_byproducts_after_t2={', '.join(cleaned)}"
     finally:
-        # Always clean up worktree
-        if worktree_dir:
-            await _cleanup_worktree(original_cwd, worktree_dir, worktree_branch)
-
-    # T2 review only if DoD passed and blind eval passed, was unavailable, or was absent.
-    if task.review_status == "pass" and (blind_passed or not task.blind_tests):
-        await _review_code_runner_output(task, session_dir)
+        await _cleanup_patch_review_worktree(source_cwd, review_cwd_for_t2)
 
 
-async def _run_blind_eval(task: TaskRuntime, session_dir: Path,
-                          attempt_tag: str = "") -> dict | None:
+async def _run_blind_eval(
+    task: TaskRuntime,
+    session_dir: Path,
+    attempt_tag: str = "",
+    target_dir: Path | None = None,
+) -> dict | None:
     """Call test-lab Docker service with blind tests. Returns result dict or None.
 
     The information barrier: code-runner never sees blind_tests.
@@ -542,7 +820,7 @@ async def _run_blind_eval(task: TaskRuntime, session_dir: Path,
                 f"{test_lab_url.rstrip('/')}/evaluate",
                 json={
                     "task_id": task.task_id,
-                    "target_dir": str(task.cwd),
+                    "target_dir": str(target_dir or task.cwd),
                     "blind_tests": task.blind_tests,
                 },
             )
@@ -565,7 +843,10 @@ async def _run_blind_eval(task: TaskRuntime, session_dir: Path,
             eval_file.write_text(json.dumps(safe_result, indent=2))
             return result
     except httpx.ConnectError:
-        logger.warning("test-lab not reachable at {} — blind eval unavailable", test_lab_url)
+        if os.environ.get("ORCHESTRATE_ALLOW_LOCAL_BLIND_TESTS") == "1":
+            logger.warning("test-lab not reachable at {} — running explicit dev-only local blind_tests", test_lab_url)
+            return await _run_local_blind_tests(task, session_dir, attempt_tag, target_dir or task.cwd)
+        logger.warning("test-lab not reachable at {} — blind eval fails closed", test_lab_url)
         return None
     except Exception as e:
         # Non-connection errors (HTTP 500, parse failure) → return failure, not None
@@ -574,7 +855,56 @@ async def _run_blind_eval(task: TaskRuntime, session_dir: Path,
                 "checks": [{"passed": False, "message": f"blind eval error: {e}"}]}
 
 
-async def _review_code_runner_output(task: TaskRuntime, session_dir: Path) -> None:
+async def _run_local_blind_tests(
+    task: TaskRuntime,
+    session_dir: Path,
+    attempt_tag: str,
+    target_dir: Path,
+) -> dict:
+    """Run blind_tests as local shell checks in the patched review worktree.
+
+    This preserves the information barrier: tests live only in /orchestrate and
+    are never included in the code-runner spec or prompt.
+    """
+    checks: list[dict[str, Any]] = []
+    for index, raw_check in enumerate(task.blind_tests, start=1):
+        if isinstance(raw_check, dict):
+            command = str(raw_check.get("command") or "").strip()
+            assertion = str(raw_check.get("assertion") or "").strip()
+        else:
+            command = str(raw_check).strip()
+            assertion = ""
+        if not command:
+            checks.append({"passed": False, "message": f"blind test {index} has no command"})
+            continue
+        proc = await asyncio.create_subprocess_exec(
+            "bash", "-lc", command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=str(target_dir),
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=180)
+        output = stdout.decode(errors="replace") + stderr.decode(errors="replace")
+        passed = proc.returncode == 0 and (not assertion or assertion in output)
+        checks.append({
+            "passed": passed,
+            "message": f"blind test {index}: {'PASS' if passed else 'FAIL'}",
+            "exit_code": proc.returncode,
+        })
+        (session_dir / f"{task.task_id}{attempt_tag}.blind-{index}.log").write_text(output)
+    failed = sum(1 for check in checks if not check["passed"])
+    result = {
+        "status": "pass" if failed == 0 else "fail",
+        "passed": len(checks) - failed,
+        "failed": failed,
+        "total": len(checks),
+        "checks": checks,
+    }
+    (session_dir / f"{task.task_id}{attempt_tag}.blind-eval.json").write_text(json.dumps(result, indent=2))
+    return result
+
+
+async def _review_code_runner_output(task: TaskRuntime, session_dir: Path, review_cwd: Path | None = None) -> None:
     """T2 gate: invoke /code-review-runner on code-runner's changes (best-effort).
 
     Builds a review spec from the task, runs T0 validators + LLM review,
@@ -598,22 +928,12 @@ async def _review_code_runner_output(task: TaskRuntime, session_dir: Path) -> No
             result_data = json.loads(result_file.read_text())
             for rd in result_data.get("round_details", []):
                 changed_files.extend(rd.get("written_files", []))
+            patch_artifact = Path(str(result_data.get("patch_artifact") or ""))
+            if patch_artifact.exists():
+                _, patch_files = await _patch_touches_only_allowlist(patch_artifact, task.allowlist)
+                changed_files.extend(patch_files)
             changed_files = list(set(changed_files))
         except (json.JSONDecodeError, KeyError):
-            pass
-
-    # Fallback: get changed files from git diff
-    if not changed_files:
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                "git", "diff", "--name-only", "HEAD~1",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=str(task.cwd),
-            )
-            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=10)
-            changed_files = [f.strip() for f in stdout.decode().splitlines() if f.strip()]
-        except Exception:
             pass
 
     if not changed_files:
@@ -625,7 +945,7 @@ async def _review_code_runner_output(task: TaskRuntime, session_dir: Path) -> No
         spec = {
             "task_id": task.task_id,
             "files": changed_files[:20],  # Cap at 20 files
-            "cwd": str(task.cwd),
+            "cwd": str(review_cwd or task.cwd),
             "context": f"Code-runner output for task: {task.title}",
             "dod_command": task.definition_of_done.get("command", "") if isinstance(task.definition_of_done, dict) else "",
             "backend": "codex",
@@ -640,7 +960,7 @@ async def _review_code_runner_output(task: TaskRuntime, session_dir: Path) -> No
                 "bash", str(review_runner), "review", str(spec_file),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(task.cwd),
+                cwd=str(review_cwd or task.cwd),
             )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=180)
             review_text = stdout.decode(errors="replace")
@@ -699,10 +1019,10 @@ async def _review_code_runner_output(task: TaskRuntime, session_dir: Path) -> No
             proc = await asyncio.create_subprocess_exec(
                 "bash", str(review_code), "quick-review",
                 "--file", str(request_file),
-                "--add-dir", str(task.cwd),
+                "--add-dir", str(review_cwd or task.cwd),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=str(task.cwd),
+                cwd=str(review_cwd or task.cwd),
             )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
             review_text = stdout.decode(errors="replace")
@@ -984,13 +1304,67 @@ async def _execute_loop(
                     continue
             if task.lane in active_by_lane:
                 continue
+            if task.runner == "code-runner" and any(
+                _code_runner_conflicts(runtimes[active_id], task) for active_id in task_map.values()
+            ):
+                # Complete-task mode mutates source, so serialize tasks sharing a cwd.
+                # Patch-only tasks may run concurrently when their allowlists are disjoint.
+                continue
             if len(task_map) >= max_conc:
                 break
             ready.remove(task_id)
+            task.dependency_patch_artifacts = _dependency_patch_stack(task_id, deps, runtimes)
+            dependency_patch_block_reason = _dependency_patch_block_reason(task)
+            if dependency_patch_block_reason:
+                task.status = "failed"
+                task.phase = "failed"
+                task.failure_code = "DEPENDENCY_FAILED"
+                task.error = dependency_patch_block_reason
+                logger.error("Task {} cannot run: {}", task_id, dependency_patch_block_reason)
+                _record_task_event(
+                    session_dir,
+                    task,
+                    "task.dependency_patch_stack_unsupported",
+                    dependency_patch_block_reason,
+                    {"dependency_patch_artifacts": task.dependency_patch_artifacts},
+                    severity="error",
+                    failure_code="DEPENDENCY_FAILED",
+                )
+
+                def _mark_patch_stack_blocked(parent_id: str) -> None:
+                    for child_id in reverse.get(parent_id, []):
+                        child = runtimes[child_id]
+                        if child.status in ("queued", "pending"):
+                            child.status = "blocked"
+                            child.phase = "blocked"
+                            child.failure_code = "DEPENDENCY_FAILED"
+                            child.error = f"blocked by failed parent: {parent_id}"
+                            _record_task_event(
+                                session_dir,
+                                child,
+                                "task.blocked",
+                                child.error,
+                                severity="warning",
+                                failure_code="DEPENDENCY_FAILED",
+                            )
+                            _mark_patch_stack_blocked(child_id)
+
+                _mark_patch_stack_blocked(task_id)
+                _render_state(session_dir, runtimes, deps, failed=True)
+                scheduled = True
+                continue
+
             active_by_lane[task.lane] = task_id
             task.status = "running"
             task.started_at = time.time()
-            _render_state(session_dir, runtimes, deps, failed=False)
+            task.phase = "dispatched"
+            _record_task_event(
+                session_dir,
+                task,
+                "task.dispatched",
+                "task dispatched to runner",
+                {"dependency_patch_artifacts": task.dependency_patch_artifacts},
+            )
             atask = asyncio.create_task(_execute_task(task, session_dir), name=f"task-{task_id}")
             task_map[atask] = task_id
             _render_state(session_dir, runtimes, deps, failed=False)

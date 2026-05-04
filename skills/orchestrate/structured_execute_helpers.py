@@ -64,6 +64,7 @@ class TaskRuntime:
     allowlist: list[str] | None = None
     read_context: list[str] = field(default_factory=list)
     blind_tests: list[str] = field(default_factory=list)
+    dependency_patch_artifacts: list[str] = field(default_factory=list)
     skills: list[str] = field(default_factory=list)  # skill names for context compilation
     skill: str = ""  # skill name for runner=skill (e.g., "assess")
     skill_command: str = ""  # skill subcommand (e.g., "run", "search")
@@ -71,6 +72,10 @@ class TaskRuntime:
     lang: str = ""  # Language profile: python, rust, typescript. Empty = auto-detect.
     max_rounds: int = 5
     timeout_seconds: int = 1800  # per-task timeout (default 30min)
+    apply_to_source: bool = False
+    commit_on_success: bool = False
+    rollback_on_failure: bool = True
+    source_commit: str = ""
     worktree: bool = False  # opt-in git worktree isolation (for parallel file-only tasks)
     preconditions: list[Precondition] = field(default_factory=list)  # checked before dispatch
     status: str = "queued"
@@ -80,6 +85,12 @@ class TaskRuntime:
     error: str = ""
     review_status: str = ""  # pass/warn/fail
     review_output: str = ""
+    patch_artifact: str = ""
+    phase: str = "queued"
+    failure_code: str = ""
+    last_event_at: float | None = None
+    events: list[dict[str, Any]] = field(default_factory=list)
+    control_notes: list[str] = field(default_factory=list)
     _subagent_port: int = 0
     _subagent_task_id: str = ""
     _cancel_event: asyncio.Event = field(default_factory=asyncio.Event)
@@ -376,6 +387,9 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             lang=str(raw_task.get("lang") or "").strip(),
             max_rounds=int(raw_task.get("max_rounds") or 5),
             timeout_seconds=int(raw_task.get("timeout_seconds") or 1800),
+            apply_to_source=bool(raw_task.get("apply_to_source", False)),
+            commit_on_success=bool(raw_task.get("commit_on_success", False)),
+            rollback_on_failure=bool(raw_task.get("rollback_on_failure", True)),
             worktree=bool(raw_task.get("worktree", False)),
             preconditions=preconditions,
         )

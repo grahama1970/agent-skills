@@ -17,6 +17,7 @@ from __future__ import annotations
 import os
 
 import json
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -165,9 +166,9 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
         # Pure shell command — local
         return "local", "", ""
 
-    if has_prompt and has_allowlist and has_dod_assertion:
-        # Bounded code task with file scope + verification → code-runner
-        return "code-runner", backend or "text", mode or "iterative"  # text = Chutes DeepSeek (reliable)
+    if has_prompt and has_allowlist and has_dod_command and has_dod_assertion and has_blind_tests and not dod_uses_live_endpoint:
+        # Bounded code task with file scope + verification + hidden tests → code-runner
+        return "code-runner", backend or "codex", mode or "iterative"
 
     if has_prompt:
         # Text generation, simple edit, classification → scillm one-shot
@@ -178,6 +179,151 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
         return "local", "", ""
 
     return "scillm", backend or "text", mode or "one_shot"
+
+
+_LIVE_DOD_MARKERS = (
+    "curl ",
+    "wget ",
+    "http://localhost",
+    "https://localhost",
+    "http://127.0.0.1",
+    "https://127.0.0.1",
+    "playwright",
+    "browser",
+    "cdp",
+)
+
+
+def _dod_uses_live_endpoint(command: str) -> bool:
+    command_lower = command.lower()
+    return any(marker in command_lower for marker in _LIVE_DOD_MARKERS)
+
+
+_CODE_RUNNER_SAFE_POLICIES = {"isolated_worktree"}
+_MACHINE_CHECKABLE_ASSERTION = re.compile(
+    r"^\s*(exit_code\s*(==|!=)\s*\d+|stdout_regex:.+|stderr_regex:.+|contains:.+|json_path:.+|json_equals:.+)\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _is_machine_checkable_assertion(assertion: str) -> bool:
+    return bool(_MACHINE_CHECKABLE_ASSERTION.match(assertion or ""))
+
+
+_CODE_RUNNER_LOW_VALUE_TERMS = (
+    "docs",
+    "documentation",
+    "readme",
+    "config",
+    "yaml",
+    "compose",
+    "docker compose",
+    "setup",
+    "bootstrap",
+    "validation",
+    "verify",
+    "test gate",
+    "lint",
+    "format",
+    "report",
+)
+
+
+def _task_text(task: dict[str, Any]) -> str:
+    parts: list[str] = [
+        str(task.get("title") or ""),
+        str(task.get("prompt") or ""),
+        str(task.get("context_boundary") or ""),
+    ]
+    for key in ("implementation", "tests", "blind_tests"):
+        value = task.get(key)
+        if isinstance(value, list):
+            parts.extend(str(item) for item in value)
+    return "\n".join(parts).lower()
+
+
+def _audit_code_runner_routing(data: dict[str, Any]) -> tuple[list[str], list[str]]:
+    """Return blocking issues/warnings for tasks routed to code-runner.
+
+    /plan is responsible for runner selection. These checks intentionally make
+    code-runner the conservative choice: use it only for bounded iterative code
+    edits that need context isolation, not deterministic validation or setup.
+    """
+    issues: list[str] = []
+    warnings: list[str] = []
+    tasks = data.get("tasks") or []
+    if not isinstance(tasks, list):
+        return issues, warnings
+
+    for task in tasks:
+        if not isinstance(task, dict):
+            continue
+        runner = str(task.get("runner") or "").strip()
+        if runner != "code-runner":
+            continue
+
+        task_id = str(task.get("id") or "?")
+        title = str(task.get("title") or "")
+        dod = task.get("definition_of_done") or {}
+        dod_command = str(dod.get("command") or "") if isinstance(dod, dict) else ""
+        dod_assertion = str(dod.get("assertion") or "") if isinstance(dod, dict) else ""
+        prompt = str(task.get("prompt") or "")
+        allowlist = task.get("allowlist") or []
+        read_context = task.get("read_context") or []
+        blind_tests = task.get("blind_tests") or []
+        max_rounds = int(task.get("max_rounds") or 5)
+        has_live_service_mode = bool(task.get("service_under_test") or task.get("external_service"))
+        dirty_policy = str(task.get("dirty_worktree_policy") or "isolated_worktree").strip()
+        unsafe_justification = str(task.get("unsafe_direct_justification") or "").strip()
+        apply_to_source = bool(task.get("apply_to_source", False))
+        commit_on_success = bool(task.get("commit_on_success", False))
+        rollback_on_failure = bool(task.get("rollback_on_failure", True))
+
+        prefix = f"Task {task_id} ({title}):"
+        if task.get("command") and not prompt:
+            issues.append(f"{prefix} command-only work must be runner=local, not code-runner.")
+        if not prompt or len(prompt.strip()) < 20:
+            issues.append(f"{prefix} code-runner requires a concrete prompt describing the bounded code change.")
+        if not allowlist:
+            issues.append(f"{prefix} code-runner requires allowlist for write-scope/context isolation.")
+        if not dod_command:
+            issues.append(f"{prefix} code-runner requires definition_of_done.command.")
+        if not dod_assertion:
+            issues.append(f"{prefix} code-runner requires definition_of_done.assertion; use 'exit_code == 0' for silent commands.")
+        elif not _is_machine_checkable_assertion(dod_assertion):
+            issues.append(
+                f"{prefix} code-runner definition_of_done.assertion must be machine-checkable "
+                "(exit_code == N, stdout_regex:..., stderr_regex:..., contains:..., json_path:..., json_equals:...)."
+            )
+        if not blind_tests:
+            issues.append(f"{prefix} code-runner requires blind_tests so /orchestrate has an information barrier.")
+        if dirty_policy not in _CODE_RUNNER_SAFE_POLICIES and not unsafe_justification:
+            issues.append(
+                f"{prefix} code-runner dirty_worktree_policy must be isolated_worktree unless unsafe_direct_justification is explicit."
+            )
+        if commit_on_success and not apply_to_source:
+            issues.append(f"{prefix} commit_on_success requires apply_to_source=true.")
+        if apply_to_source and not commit_on_success:
+            issues.append(f"{prefix} complete-task mode requires commit_on_success=true for reliable revert.")
+        if apply_to_source and not rollback_on_failure:
+            issues.append(f"{prefix} complete-task mode requires rollback_on_failure=true.")
+        if _dod_uses_live_endpoint(dod_command) and not has_live_service_mode:
+            issues.append(
+                f"{prefix} live endpoint/browser DoD must declare service_under_test or external_service; "
+                "otherwise route edits to scillm and verify with a separate local task."
+            )
+        if max_rounds <= 1:
+            warnings.append(f"{prefix} max_rounds <= 1; use scillm/local unless iteration is actually needed.")
+        if not read_context:
+            issues.append(f"{prefix} code-runner requires read_context so interface context is separated from writable allowlist.")
+        text = _task_text(task)
+        if any(term in text for term in _CODE_RUNNER_LOW_VALUE_TERMS):
+            warnings.append(
+                f"{prefix} appears to be setup/config/docs/validation work; prefer local for deterministic gates "
+                "or scillm for one-shot edits unless this is a bounded failing code loop."
+            )
+
+    return issues, warnings
 
 
 @dataclass
@@ -389,6 +535,12 @@ def add_task_to_plan(filepath: Path, task: Task) -> dict[str, Any]:
 
     # Validate
     result = validate_structured_plan(data)
+    routing_issues, routing_warnings = _audit_code_runner_routing(data)
+    if routing_issues:
+        result["valid"] = False
+        result.setdefault("issues", []).extend(routing_issues)
+    if routing_warnings:
+        result.setdefault("warnings", []).extend(routing_warnings)
 
     # Write back
     filepath.write_text(yaml.safe_dump(data, sort_keys=False, default_flow_style=False))
@@ -595,6 +747,12 @@ def validate_plan(filepath: Path) -> dict[str, Any]:
         data = markdown_to_structured(filepath)
 
     result = validate_structured_plan(data)
+    routing_issues, routing_warnings = _audit_code_runner_routing(data)
+    if routing_issues:
+        result["valid"] = False
+        result.setdefault("issues", []).extend(routing_issues)
+    if routing_warnings:
+        result.setdefault("warnings", []).extend(routing_warnings)
 
     # Add plan_type to result
     plan_type = (data.get("metadata") or {}).get("plan_type") or "code"
@@ -880,8 +1038,12 @@ def main(
     print(f"\nRunner routing (auto-routed if runner field is empty):")
     print(f"  local       — shell commands (setup, tests, scripts). Has command, no prompt.")
     print(f"  scillm      — one-shot LLM (simple edits, classification, extraction). Has prompt, no allowlist/DoD.")
-    print(f"  code-runner — ONLY for complex bounded code tasks with DoD verification. Has prompt + allowlist + DoD assertion.")
-    print(f"\n  code-runner is EXPENSIVE. Don't use it for mechanical edits, config changes, or simple text generation.")
+    print(f"  code-runner — ONLY for bounded iterative code edits needing isolation and self-improvement.")
+    print(f"                Requires prompt + allowlist + DoD command/assertion + blind_tests.")
+    print(f"\n  code-runner is EXPENSIVE. Don't use it for mechanical edits, config/docs/setup, or already-passing gates.")
+    print(f"  If DoD calls localhost/curl/browser, declare service_under_test or use scillm + local verification.")
+    print(f"  Complete-task mode is explicit opt-in: apply_to_source=true, commit_on_success=true, rollback_on_failure=true.")
+    print(f"  Orchestrate serializes complete-task code-runner jobs sharing a cwd; patch-only jobs may run concurrently with disjoint allowlists.")
     print(f"\nBackend models (scillm model names):")
     print(f"  text              — Chutes DeepSeek (default, reliable, no OAuth limits)")
     print(f"  text-claude       — Claude Sonnet 4.6 (boilerplate, scaffolding)")

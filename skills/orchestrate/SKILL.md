@@ -209,7 +209,7 @@ in the `session_started` event.
 
 | Runner | Backend | Use Case |
 |--------|---------|----------|
-| `code-runner` | /scillm | Iterative code tasks with DoD verification (default) |
+| `code-runner` | /scillm | Iterative, context-protected code tasks with allowlist + blind-test verification; returns a patch artifact by default or completes source changes when explicit source-apply fields are set |
 | `scillm` | /scillm | One-shot LLM inference (classification, extraction) |
 | `local` | shell | Deterministic commands (setup, tests, scripts) |
 
@@ -219,4 +219,30 @@ All sibling skill references use `SKILLS_DIR` env var with fallback to `$SCRIPT_
 - `SKILLS_DIR` — override for non-standard skill locations
 - `_shared/structured_plan.py` — YAML loader/validator
 - `review-plan/review_plan.py` — domain validation
-- `code-runner/run.sh` — self-improvement loop executor
+- `code-runner/run.sh` — self-improvement loop executor; runs in `isolated_worktree`; default mode leaves source unchanged, complete-task mode requires `apply_to_source: true`, `commit_on_success: true`, and `rollback_on_failure: true`
+
+## Code-Runner Source Apply
+
+For tasks that should complete the assigned source change, set all three fields:
+
+```yaml
+apply_to_source: true
+commit_on_success: true
+rollback_on_failure: true
+```
+
+`/orchestrate` passes these fields to `/code-runner`, records `source_commit`,
+runs blind tests against the source repo after the commit, and reverts the source
+commit if blind tests fail and rollback is enabled. It also removes new
+non-allowlist byproducts created by source DoD, blind checks, or T2 review.
+Tasks sharing one `cwd` are serialized when either task uses source apply.
+Patch-only tasks can run concurrently when their allowlists are disjoint.
+
+Reliability acceptance for this path requires real `/review-plan -> /orchestrate
+-> /code-runner -> /scillm` runs that prove:
+
+- source DoD rollback on failed source verification,
+- source commit revert on failed blind tests,
+- multi-round code-runner recovery,
+- source-apply serialization for shared `cwd`,
+- clean source status after successful and failed tasks.
