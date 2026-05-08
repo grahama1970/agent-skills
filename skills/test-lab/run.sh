@@ -4,6 +4,7 @@ unset VIRTUAL_ENV
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CALLER_CWD="$(pwd)"
 cd "$SKILL_DIR"
 
 # Ensure venv
@@ -44,12 +45,18 @@ case "$CMD" in
         exec "$PYTHON" -m test_lab generate "$@"
         ;;
     run)
+        if [[ $# -ge 1 && "${1:-}" != /* ]]; then
+            set -- "$(realpath -m "$CALLER_CWD/$1")" "${@:2}"
+        fi
         exec "$PYTHON" -m test_lab run "$@"
         ;;
     report)
         exec "$PYTHON" -m test_lab report "$@"
         ;;
     verify-task)
+        if [[ $# -ge 2 && "${2:-}" != /* ]]; then
+            set -- "$1" "$(realpath -m "$CALLER_CWD/$2")" "${@:3}"
+        fi
         exec "$PYTHON" -m test_lab verify-task "$@"
         ;;
     serve)

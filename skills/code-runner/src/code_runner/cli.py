@@ -94,8 +94,8 @@ def round_prompt(spec: TaskSpec, previous: dict[str, Any] | None, context: str) 
     """Build the user prompt for a round."""
 
     instruction = (
-        "The DoD is currently failing. You must make at least one allowlisted "
-        "write with write_file or edit_file unless the DoD already passes. "
+        "This is an implementation task. You must make at least one allowlisted "
+        "write with write_file or edit_file, then verify the DoD. "
         "Do not answer with prose only.\n"
     )
     if previous is None:
@@ -147,6 +147,9 @@ def source_apply(spec: TaskSpec, patch: Path) -> dict[str, Any]:
     if not spec.apply_to_source:
         return state
     try:
+        if not patch.read_text().strip():
+            state["source_apply_error"] = "empty patch; no allowlisted changes produced"
+            return state
         dirty = dirty_paths_for_allowlist(spec.cwd, spec.allowlist)
         if dirty:
             state["source_apply_error"] = f"dirty source paths overlap allowlist: {', '.join(dirty)}"
@@ -220,63 +223,69 @@ def run_task(spec: TaskSpec, raw: dict[str, Any], spec_file: str, backend_overri
         )
         artifacts.verifier.write_text(json.dumps(evidence.to_dict(), indent=2) + "\n")
         previous = evidence.to_dict()
-        if evidence.passed:
-            status_text = "pass"
-            best_score = evidence.score
-            rounds.append(RoundDetail(round=0, status="pass", dod_passed=True, score=evidence.score).model_dump())
-        else:
-            context = file_context(work.path, spec.allowlist + spec.read_context)
-            for round_num in range(1, max_rounds + 1):
-                written, messages = run_backend_tool_loop(
-                    system_prompt(spec),
-                    round_prompt(spec, previous, context),
-                    backend,
-                    str(work.path),
-                    spec.allowlist,
-                    spec.read_context,
-                    spec.task_id,
-                    round_num,
-                )
-                assistant_text = ""
-                for message in reversed(messages):
-                    if message.get("role") == "assistant":
-                        assistant_text = str(message.get("content") or "")[:1000]
-                        break
-                artifacts.response.write_text(json.dumps(messages[-8:], indent=2, default=json_default))
+        best_score = evidence.score
+        context = file_context(work.path, spec.allowlist + spec.read_context)
+        for round_num in range(1, max_rounds + 1):
+            written, messages = run_backend_tool_loop(
+                system_prompt(spec),
+                round_prompt(spec, previous, context),
+                backend,
+                str(work.path),
+                spec.allowlist,
+                spec.read_context,
+                spec.task_id,
+                round_num,
+            )
+            assistant_text = ""
+            for message in reversed(messages):
+                if message.get("role") == "assistant":
+                    assistant_text = str(message.get("content") or "")[:1000]
+                    break
+            artifacts.response.write_text(json.dumps(messages[-8:], indent=2, default=json_default))
+            paths = [path for path in changed_paths(work.path) if not is_ignored_byproduct(path)]
+            allowed, violations = all_allowed(paths, spec.allowlist)
+            if violations:
+                restore_allowlist(work.path, violations)
                 paths = [path for path in changed_paths(work.path) if not is_ignored_byproduct(path)]
                 allowed, violations = all_allowed(paths, spec.allowlist)
-                if violations:
-                    restore_allowlist(work.path, violations)
-                    paths = [path for path in changed_paths(work.path) if not is_ignored_byproduct(path)]
-                    allowed, violations = all_allowed(paths, spec.allowlist)
-                evidence = run_dod(
-                    work.path,
-                    spec.definition_of_done.command.replace(str(source_root), str(work.path)),
-                    spec.definition_of_done.assertion,
-                    timeout=min(spec.timeout_seconds, 600),
-                )
-                previous = evidence.to_dict()
-                best_score = max(best_score, evidence.score)
-                detail = RoundDetail(
-                    round=round_num,
-                    status="pass" if allowed and evidence.passed else "fail",
-                    dod_passed=evidence.passed,
-                    score=evidence.score,
-                    written_files=written,
-                    changed_paths=paths,
-                    error="" if allowed else f"allowlist violations: {', '.join(violations)}",
-                ).model_dump()
-                detail["assistant_response_snippet"] = assistant_text
-                detail["exit_code"] = evidence.exit_code
-                detail["stdout_tail"] = evidence.stdout[-3000:]
-                detail["stderr_tail"] = evidence.stderr[-3000:]
-                rounds.append(detail)
-                append_event(artifacts.rounds, "round", **detail)
-                artifacts.verifier.write_text(json.dumps(evidence.to_dict(), indent=2) + "\n")
-                if allowed and evidence.passed:
-                    status_text = "pass"
-                    break
-            if status_text != "pass":
+            evidence = run_dod(
+                work.path,
+                spec.definition_of_done.command.replace(str(source_root), str(work.path)),
+                spec.definition_of_done.assertion,
+                timeout=min(spec.timeout_seconds, 600),
+            )
+            previous = evidence.to_dict()
+            best_score = max(best_score, evidence.score)
+            round_error = ""
+            if not allowed:
+                round_error = f"allowlist violations: {', '.join(violations)}"
+            elif evidence.passed and not paths:
+                round_error = "no allowlisted changes produced"
+            detail = RoundDetail(
+                round=round_num,
+                status="pass" if allowed and evidence.passed and paths else "fail",
+                dod_passed=evidence.passed,
+                score=evidence.score,
+                written_files=written,
+                changed_paths=paths,
+                error=round_error,
+            ).model_dump()
+            detail["assistant_response_snippet"] = assistant_text
+            detail["exit_code"] = evidence.exit_code
+            detail["stdout_tail"] = evidence.stdout[-3000:]
+            detail["stderr_tail"] = evidence.stderr[-3000:]
+            rounds.append(detail)
+            append_event(artifacts.rounds, "round", **detail)
+            artifacts.verifier.write_text(json.dumps(evidence.to_dict(), indent=2) + "\n")
+            if allowed and evidence.passed and paths:
+                status_text = "pass"
+                break
+            restore_allowlist(work.path, spec.allowlist)
+            context = file_context(work.path, spec.allowlist + spec.read_context)
+        if status_text != "pass":
+            if any(detail.get("error") == "no allowlisted changes produced" for detail in rounds):
+                error = "no allowlisted changes produced"
+            else:
                 error = "definition_of_done did not pass"
         export_patch(work.path, spec.allowlist, artifacts.patch)
         artifacts.hunk.write_text("# code-runner patch\n\n```diff\n" + artifacts.patch.read_text(errors="replace") + "\n```\n")

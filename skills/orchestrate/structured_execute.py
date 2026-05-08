@@ -1345,8 +1345,25 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
                 (session_dir / f"{attempt_task_id}.stderr.txt").write_text(stderr_text)
 
             if proc.returncode != 0:
+                result_error = ""
+                result_file = session_dir / f"{attempt_task_id}.result.json"
+                if result_file.exists():
+                    try:
+                        failed_result = json.loads(result_file.read_text())
+                        result_error = str(failed_result.get("error") or "")
+                        task.review_output = (
+                            f"attempt={attempt}/{max_blind_attempts} "
+                            f"score={failed_result.get('best_score', 0):.3f} "
+                            f"rounds={failed_result.get('rounds', 0)} "
+                            f"dod={'PASS' if failed_result.get('dod_passed') else 'FAIL'}"
+                        )
+                        if result_error == "no allowlisted changes produced":
+                            task.failure_code = task.failure_code or "NO_PATCH_PRODUCED"
+                    except (json.JSONDecodeError, OSError):
+                        result_error = ""
                 task.review_status = "fail"
-                task.error = f"/code-runner exit {proc.returncode}: {stderr_text[:500]}"
+                detail = result_error or stderr_text[:500]
+                task.error = f"/code-runner exit {proc.returncode}: {detail}"
                 logger.error("code-runner failed for {}: {}", task.task_id, task.error[:200])
                 break
 
