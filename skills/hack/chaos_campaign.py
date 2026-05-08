@@ -1,4 +1,4 @@
-"""Docker-contained uncommon-combination hardening campaigns."""
+"""Compatibility entrypoint for evolve-campaign generation-zero exploration."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ class StrategySeedContext:
 
 
 def create_chaos_campaign_command() -> Callable[..., None]:
-    """Create the Typer command for overnight uncommon-combination campaigns."""
+    """Create the hidden compatibility command for broad evolve exploration."""
 
     def chaos_campaign(
         target_url: str = typer.Argument(..., help="Authorized local/private target base URL"),
@@ -96,8 +96,13 @@ def create_chaos_campaign_command() -> Callable[..., None]:
             help="Allow non-loopback/non-private targets. Requires explicit authorization.",
         ),
     ) -> None:
-        """Run a long, bounded, randomized hardening search inside Docker."""
+        """Run generation-zero broad exploration for the evolve lifecycle."""
 
+        console.print(
+            "[yellow]chaos-campaign is a compatibility entrypoint for evolve-campaign "
+            "generation-zero exploration; the three top-level /hack modes are "
+            "session-audit, evolve-campaign, and battle.[/yellow]"
+        )
         campaign = run_chaos_campaign(
             target_url=target_url,
             output_root=Path(output_root),
@@ -128,17 +133,17 @@ def run_chaos_campaign(
     scanner_findings: Path | None = None,
     allow_nonlocal: bool,
 ) -> Path:
-    """Materialize and run a Docker-contained chaos campaign."""
+    """Materialize and run broad exploration for the evolve lifecycle."""
 
     if not shutil.which("docker"):
-        raise RuntimeError("Docker is required for /hack chaos-campaign")
+        raise RuntimeError("Docker is required for /hack evolve generation-zero exploration")
     if duration_minutes <= 0:
         raise ValueError("duration_minutes must be positive")
     if max_attempts <= 0:
         raise ValueError("max_attempts must be positive")
     if not allow_nonlocal and not is_local_or_private_target(target_url):
         raise ValueError(
-            "chaos-campaign only targets loopback/private hosts by default; pass "
+            "evolve generation-zero exploration only targets loopback/private hosts by default; pass "
             "--allow-nonlocal only for explicitly authorized nonlocal systems"
         )
 
@@ -165,7 +170,7 @@ def run_chaos_campaign(
                 "docker_image": docker_image,
                 "safety_boundary": "Docker-contained probes against authorized target only",
                 "mutation_axes": build_strategy_catalog(),
-                "next_evolve_seed_guidance": "Use scored chaos attempts as adaptive/evolve generation-zero evidence; prune false positives, mutate promising parents, and reseed Dogpile from retained anomalies.",
+                "next_evolve_seed_guidance": "Use scored generation-zero attempts as adaptive/evolve evidence; prune false positives, mutate promising parents, and reseed Dogpile from retained anomalies.",
                 "last_plan_path": str(last_plan) if last_plan else None,
                 "dogpile_report_path": str(dogpile_report) if dogpile_report else None,
                 "scanner_findings_path": str(scanner_findings) if scanner_findings else None,
@@ -296,10 +301,10 @@ def build_dogpile_research_prompt(context: StrategySeedContext) -> str:
     """Build a best-practices-prompt-compliant dogpile query for campaign seeding."""
 
     return f"""# Purpose
-Find hardening tactics that can seed an overnight `/hack chaos-campaign` against one authorized OpenClaw gateway instance.
+Find hardening tactics that can seed `/hack evolve-campaign` generation-zero broad exploration against one authorized OpenClaw gateway instance.
 
 # Consumer
-The consumer is `/hack chaos-campaign`, which will convert the research into randomized Docker-contained probe strategy combinations.
+The consumer is `/hack evolve-campaign`; the legacy `chaos-campaign` entrypoint only runs its broad generation-zero exploration phase.
 
 # Why This Matters
 The campaign intentionally tries many unlikely high-level and low-level combinations. One anomaly in thousands of attempts should be promoted into a focused proof probe and a blue-team patch task.
@@ -354,11 +359,11 @@ def build_loop_contract(context: StrategySeedContext) -> dict[str, object]:
     """Return the report→dogpile→campaign→promotion loop contract."""
 
     return {
-        "purpose": "overnight uncommon-combination hardening loop",
+        "purpose": "evolve-campaign generation-zero uncommon-combination exploration loop",
         "lifecycle_stage": "generation_zero_broad_exploration",
         "parent_lifecycle": "adaptive_evolve_campaign",
         "scoring_classes": ["dead_end", "false_positive", "partial_signal", "promising_parent", "proof_candidate", "blocked"],
-        "rule": "chaos-campaign is a broad exploration entrypoint into the same adaptive/evolve lifecycle, not a separate semantic concept",
+        "rule": "chaos-campaign is a compatibility entrypoint into evolve-campaign generation zero, not a third top-level /hack mode",
         "target_url": context.target_url,
         "phases": [
             {
@@ -732,7 +737,7 @@ def build_chaos_probe_script() -> str:
             "attempts": attempts,
             "anomalies": anomalies,
             "duration_seconds": round(time.time() - started, 2),
-            "next_step": "Use scored chaos attempts as adaptive/evolve seed evidence, then promote repeatable proof candidates into focused probes and blue-team patch tasks.",
+            "next_step": "Use scored generation-zero attempts as adaptive/evolve seed evidence, then promote repeatable proof candidates into focused probes and blue-team patch tasks.",
         }
         (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
         print(json.dumps(summary, indent=2))

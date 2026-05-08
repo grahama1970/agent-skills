@@ -119,21 +119,19 @@ The skill automatically correlates **DAST** (Nuclei/Nmap) findings with **SAST**
 # Opt into bounded exploit proof probes for remediation after scans
 ./run.sh session-audit https://github.com/SasanLabs/VulnerableApp.git --probe-exploits
 
-# Overnight uncommon-combination campaign seeded by prior findings and dogpile
-./run.sh chaos-campaign http://127.0.0.1:18789 \
+# Evolutionary greybox hardening campaign using feedback-guided strategy mutation
+./run.sh evolve-campaign http://127.0.0.1:18789 \
   --last-plan session-*/reports/HACK_REPORT.md \
   --scanner-findings session-*/reports/semgrep.json \
   --dogpile-report openclaw-hardening-dogpile.md \
-  --duration-minutes 480 \
-  --max-attempts 10000
-
-# Evolutionary greybox hardening campaign using feedback-guided strategy mutation
-./run.sh evolve-campaign http://127.0.0.1:18789 \
   --duration-minutes 60 \
   --max-generations 4 \
   --max-attempts 1000 \
   --population-size 16 \
   --seed 1234
+
+# Advanced red/blue hardening arena
+./run.sh battle /path/to/codebase --rounds 100
 ```
 
 `session-audit` is the end-to-end `$hack` workflow. It creates
@@ -165,8 +163,13 @@ probes in Docker, and every successful proof must produce a hardening task or
 patch plan. Raw proof and replay details stay in artifacts; `HACK_REPORT.md`
 leads with the executive remediation result and artifact paths.
 
-`chaos-campaign` is the overnight hardening mode. It is not blind fuzzing.
-Each iteration follows this loop:
+`evolve-campaign` is the adaptive exploit-discovery and hardening mode. Its
+first population is the former `chaos-campaign` idea: broad uncommon
+combinations that are expected to mostly fail. Those failures are useful
+negative evidence for scoring, pruning, mutation, Dogpile reseeding, and the
+next campaign plan.
+
+The evolve lifecycle follows this loop:
 
 1. Report findings, crashes, auth anomalies, SAST leads, DAST leads, and proof
    artifacts from the previous plan.
@@ -182,11 +185,26 @@ Each iteration follows this loop:
 6. Repeat by feeding promoted anomalies into the next `/dogpile` query and
    campaign seed.
 
-Artifacts are written under `chaos-campaign-*`: `strategies.seed.json`,
-`dogpile-hardening-research-prompt.md`, `loop-contract.json`,
-`attempts.jsonl`, `anomalies.jsonl`, and `summary.json`. Thousands of failed
-attempts are normal; one deterministic anomaly is enough to drive the next
-focused proof and patch cycle.
+The hidden `chaos-campaign` CLI remains only as a compatibility entrypoint for
+generation-zero broad exploration. It is not a third top-level `/hack` mode.
+The three top-level `/hack` modes are:
+
+1. `session-audit` — scanner/proof/report workflow for an authorized repo or
+   target.
+2. `evolve-campaign` — broad uncommon-combination exploration plus scoring,
+   pruning, mutation, reproducibility gates, Dogpile reseeding, proof
+   promotion, and patch/hardening hypotheses.
+3. `battle` — advanced red/blue live hardening arena delegated to sibling
+   `/battle`, where red attacks a running repo/system and blue patches or
+   hardens under scoring.
+
+Evolution artifacts are written under `evolve-campaign-*`: `preflight.json`,
+`baseline.json`, `auth-sessions.json`, `strategies.seed.json`,
+`loop-contract.json`, `attempts.jsonl`, `anomalies.jsonl`,
+`generation-*.json`, `promotion-tasks/`, `summary.json`,
+`HACK_EVOLVE_REPORT.md`, `next-dogpile-seed.json`, and Docker execution logs
+for live runs. Thousands of failed attempts are normal; one deterministic
+anomaly is enough to drive the next focused proof and patch cycle.
 
 The Docker contents are plan-driven. By default `$hack` writes
 `scanner/plan.json` with the base image, apt packages, pip packages, Nuclei
@@ -206,10 +224,8 @@ self-improvement loop should produce a revised plan that changes
 `scanner/plan.json` and therefore changes the generated Dockerfile before the
 next attempt.
 
-`evolve-campaign` is the evolutionary greybox mode for `$hack`. It uses the
-same Docker-contained safety boundary as `chaos-campaign`, but replaces blind
-random sampling with a feedback loop inspired by the arXiv greybox fuzzing
-papers:
+`evolve-campaign` uses the Docker-contained safety boundary and a feedback loop
+inspired by the arXiv greybox fuzzing papers:
 
 1. Build a route/payload/header genome from prior reports, dogpile synthesis,
    scanner findings, and built-in hardening genes.
@@ -222,11 +238,23 @@ papers:
 5. Promote deterministic anomalies into focused proof-probe objectives and
    blue-team patch hypotheses.
 
-Artifacts are written under `evolve-campaign-*`: `strategies.seed.json`,
-`loop-contract.json`, `attempts.jsonl`, `anomalies.jsonl`,
-`generation-*.json`, `promotion-tasks/`, `summary.json`, and Docker execution
-logs for live runs. Use `--dry-run` to write deterministic synthetic artifacts
-without sending network probes.
+Use `--dry-run` to write deterministic synthetic artifacts without sending
+network probes.
+
+`battle` is `/hack`'s advanced third mode. It delegates execution to the sibling
+`/battle` skill rather than duplicating the red/blue game loop. Use it when the
+goal is an adversarial live hardening arena, not a normal repo-to-report audit:
+
+```bash
+./run.sh battle /path/to/codebase --rounds 100
+./run.sh battle /path/to/codebase --overnight
+./run.sh battle --docker-image nginx:latest --rounds 100
+```
+
+Battle artifacts are owned by `/battle`: red and blue team memory directories,
+round episodes, checkpoints, scores, and battle reports. `/hack` treats battle
+as the third top-level mode because red uses `/hack`-style attack/proof
+capabilities while blue records patches, broken defenses, and hardening lessons.
 
 ### Isolated Hardening Proof Execution
 

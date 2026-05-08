@@ -216,6 +216,8 @@ def baseline_genes() -> tuple[StrategyGene, ...]:
 
 
 def build_initial_genome(seed_evidence: SeedEvidence, seed_payload: dict[str, Any] | None = None) -> StrategyGenome:
+    """Build generation zero, including chaos-style uncommon combinations."""
+
     genes = genes_from_seed_payload(seed_payload) if seed_payload else baseline_genes()
     return StrategyGenome(generation=0, genes=genes, evidence=seed_evidence)
 
@@ -1548,6 +1550,9 @@ def _write_campaign_contract(
                 "seed_source": "validated_seed" if seed_payload else "built_in_dev_fallback",
                 "seed_validation": seed_validation_result,
                 "safety_boundary": "Docker-contained probes against authorized local/private targets only",
+                "lifecycle_stage": "generation_zero_broad_exploration_then_feedback_guided_evolution",
+                "mode_contract": "evolve-campaign owns chaos-style broad exploration, scoring, mutation, reproducibility gating, promotion, and Dogpile reseeding",
+                "compatibility_entrypoint": "chaos-campaign remains a hidden/backward-compatible broad-exploration entrypoint, not a third top-level /hack mode",
                 "research_insights": [
                     "Control-flow distance maps to route sensitivity and target proximity.",
                     "Value-flow influence maps to payloads that affect tools, sessions, paths, providers, and auth decisions.",
@@ -1565,6 +1570,8 @@ def _write_campaign_contract(
         json.dumps(
             {
                 "loop": "preflight -> baseline/auth fixtures -> genome -> attempt -> score -> real-signal gate -> reproducibility gate -> select -> mutate -> promote/retain -> report view -> next Dogpile seed",
+                "top_level_hack_mode": "evolve-campaign",
+                "generation_zero": "chaos-style broad uncommon-combination exploration is the first population inside evolve-campaign",
                 "safety": "authorized hardening only; raw probe evidence stays in artifacts",
                 "artifacts": [
                     "preflight.json",

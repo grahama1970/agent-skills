@@ -14,10 +14,13 @@ Use project-agent vocabulary directly, but define every artifact visually.
 
 ## Core Message
 
-`/hack` is not one generic scanner. Its main spine is evidence → exploit attempts → proof/patch report, with three starting paths:
+`/hack` is not one generic scanner. Its main spine is evidence → exploit attempts → proof/patch report, with three top-level modes:
 
 1. `session-audit` creates an end-to-end scanner/proof/report session and can feed adaptive/evolve.
-2. adaptive/evolve campaign runs evolutionary exploit search. `chaos-campaign` currently represents broad exploration/reseed; long-term model is to fold it into adaptive/evolve as Stage 1 or treat the separate CLI as an entrypoint into the same lifecycle.
+2. `evolve-campaign` runs evolutionary exploit search. The old `chaos-campaign`
+   concept is merged into evolve as generation-zero broad uncommon-combination
+   exploration. If the legacy CLI entrypoint exists, treat it as compatibility
+   for that stage, not a separate lane.
 3. `battle` is an advanced red/blue hardening arena where red tries to break the running repo/system and blue tries to patch or harden it in time.
 
 Most exploit combinations fail. Those failures are useful evidence: they prune
@@ -42,26 +45,26 @@ Sources used:
 - `skills/hack/docs/HACK_WORKFLOW_WEB_GPT_REVIEW_BUNDLE.md`
 - `PROJECT_KNOWLEDGE.md`
 - human clarification on 2026-05-08:
-  - show three explicit lanes;
+  - show three explicit modes: `session-audit`, `evolve-campaign`, and `battle`;
   - reader is project agent / Codex;
   - include actual examples;
   - use artifact-derived ledger views unless first-class ledgers exist;
   - explain HTML/app-shell fallback false positives.
-  - merge `chaos-campaign` and `evolve-campaign` conceptually while keeping
-    their current CLI roles clear;
+  - merge `chaos-campaign` into `evolve-campaign` as generation zero;
   - include `battle` as the third lane;
   - show preflight, auth/session fixtures, baseline capture, reproducibility,
     and patch verification before final reporting.
 
 ## Truth Labels
 
-- `implemented`: `session-audit`, `chaos-campaign`, `evolve-campaign`, `battle`,
+- `implemented`: `session-audit`, `evolve-campaign`, `battle`,
   Docker execution, scanner session artifacts, `attempts.jsonl`,
   `anomalies.jsonl`, `generation-*.json`, `promotion-tasks/`, `summary.json`,
   seed validation gate, project knowledge sync, and battle red/blue memory.
 - `artifact-derived`: exploit ledger view, hardening ledger view.
-- `known gap`: broad unauthenticated-200 classification can over-promote HTML
-  fallback responses unless filtered; stricter gate is represented as required.
+- `compatibility`: `chaos-campaign` may remain as a CLI entrypoint for
+  generation-zero broad exploration, but it is not a top-level mode in the
+  infographic.
 - `contract`: common preflight, auth/session fixture setup, baseline behavior
   capture, reproducibility gate, and patch verification must be shown even when
   represented as required evidence rather than a single first-class artifact.
@@ -77,9 +80,9 @@ Sources used:
    project knowledge, scanner findings, Dogpile reports.
 5. Auth/session and baseline band: route baseline, response shape baseline,
    auth expectation, frontend fallback behavior.
-6. Starting-path band: `session-audit` alone, `session-audit` feeding adaptive/evolve, adaptive/evolve directly with enough evidence, and advanced `battle`.
+6. Mode band: `session-audit`, `evolve-campaign`, and advanced `battle`.
 7. Lane A: `session-audit` scanner/proof session.
-8. Lane B: adaptive/evolve campaign with chaos exploration, scoring, mutation,
+8. Mode B: `evolve-campaign` with generation-zero broad exploration, scoring, mutation,
    Dogpile reseed, and validated seed mode.
 9. Advanced branch: `battle` red/blue live hardening arena.
 10. Promotion/filter gate: real API/security signal and reproducibility gate.
@@ -109,7 +112,7 @@ Sources used:
 | 2 | Target behavior | Prepare lane-specific auth/session states and capture route/response/auth/fallback baseline | fixture/baseline evidence or required contract label | Expected behavior known? | Choose starting path | Keep as required evidence gap |
 | 3A | Repo URL | `session-audit` builds scanner session and launches target | `session-*`, `scanner/plan.json`, `reports/semgrep.json`, `reports/target-launch-plan.json` | `--probe-exploits` enabled? | Generate bounded proof probe | Report scan-only result |
 | 4A | Supported finding | `/code-runner` generates proof code; `/hack` executes in Docker | `attack-workspace/`, `attacks/proof.command-injection.json` | Proof succeeded and reproducible? | Report and hardening task | `probe-skip.log` or failure artifact |
-| 3B | Prior reports/findings | Adaptive/evolve starts with chaos exploration and creates uncommon combinations | `strategies.seed.json`, `dogpile-hardening-research-prompt.md`, `attempts.jsonl` | Local/private target and seed valid enough? | Run Docker probes | Stop unsafe or stale seed |
+| 3B | Prior reports/findings | `evolve-campaign` starts with generation-zero broad exploration and creates uncommon combinations | `strategies.seed.json`, `dogpile-hardening-research-prompt.md`, `attempts.jsonl` | Local/private target and seed valid enough? | Run Docker probes | Stop unsafe or stale seed |
 | 4B | Campaign population | Score, classify, select parents, prune, mutate, reweight, Dogpile reseed | `anomalies.jsonl`, `generation-*.json`, `promotion-tasks/`, Docker logs | Real-signal and repro gates pass? | Proof objective or patch hypothesis | Retain false positives as negative evidence |
 | 3C | Running repo/system | `battle` launches red/blue live arena in Docker/digital twin | `battle_red_<battle_id>/`, `battle_blue_<battle_id>/`, `round_*.json` | Round objective and isolation valid? | Red attacks and blue patches | Human review or blocked battle |
 | 4C | Red/blue round evidence | Score exploit proof, patch success, fake/broken defenses, response time, preserved functionality | battle report, checkpoint state, memory post-hook | Winner/learning clear? | Recommendations and future strategy memory | Retain failed attacks/defenses |
@@ -126,7 +129,7 @@ Sources used:
 - `attack-workspace/CONTEXT.md`: bounded proof-generation context.
 - `code-runner/probe-command-injection.task.json`: proof-generation task.
 - `attacks/proof.command-injection.json`: Docker-executed proof evidence.
-- `chaos-campaign-*`: randomized campaign directory.
+- `chaos-campaign-*`: legacy compatibility directory for generation-zero broad exploration if that entrypoint is used.
 - `dogpile-hardening-research-prompt.md`: next Dogpile research prompt.
 - `strategies.seed.json`: campaign seed/genome metadata.
 - `loop-contract.json`: campaign loop contract.
@@ -150,7 +153,6 @@ Include these visible command examples:
 
 ```bash
 ./run.sh session-audit https://github.com/SasanLabs/VulnerableApp.git --probe-exploits
-./run.sh chaos-campaign http://127.0.0.1:18789 --last-plan session-*/reports/HACK_REPORT.md --scanner-findings session-*/reports/semgrep.json --dogpile-report openclaw-hardening-dogpile.md
 ./run.sh validate-seed prompts/review/evolution_seed_research_payload.json --verify-paths --result-output /tmp/seed-validation.json
 ./run.sh evolve-campaign http://127.0.0.1:18789 --seed-json prompts/review/evolution_seed_research_payload.json --seed-validation /tmp/seed-validation.json
 ./run.sh battle /path/to/codebase --rounds 100
@@ -176,8 +178,8 @@ Reject the infographic if it:
 - omits the HTML fallback false-positive gate;
 - claims exploit/hardening ledgers are implemented files;
 - fails to show failed attempts as useful learning evidence;
-- treats `chaos-campaign` and `evolve-campaign` as unrelated concepts instead
-  of current CLI roles / entrypoints inside one adaptive lifecycle;
+- treats `chaos-campaign` as a separate top-level lane instead of generation-zero
+  broad exploration inside `evolve-campaign`;
 - omits `battle` as the legitimate but secondary advanced red/blue branch;
 - cannot be rendered locally as HTML/CSS.
 

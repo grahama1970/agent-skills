@@ -478,7 +478,7 @@ class SessionAuditPlanTests(unittest.TestCase):
         self.assertIn("classification", build_chaos_probe_script())
         self.assertIn("score_attempt", build_chaos_probe_script())
 
-    def test_chaos_campaign_loop_contract_is_generation_zero_evolve_stage(self) -> None:
+    def test_chaos_campaign_loop_contract_is_evolve_compatibility_stage(self) -> None:
         contract = build_loop_contract(
             StrategySeedContext(
                 target_url="http://127.0.0.1:18789",
@@ -490,6 +490,7 @@ class SessionAuditPlanTests(unittest.TestCase):
 
         self.assertEqual(contract["lifecycle_stage"], "generation_zero_broad_exploration")
         self.assertEqual(contract["parent_lifecycle"], "adaptive_evolve_campaign")
+        self.assertIn("not a third top-level /hack mode", contract["rule"])
         self.assertIn("proof_candidate", contract["scoring_classes"])
 
     def test_chaos_campaign_target_guard_defaults_to_local_private(self) -> None:
