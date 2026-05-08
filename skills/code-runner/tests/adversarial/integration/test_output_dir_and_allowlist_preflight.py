@@ -6,7 +6,7 @@ import pytest
 
 from code_runner.spec import TaskSpec
 from ..helpers.assertions import assert_result_failed
-from ..helpers.git_repo import make_minimal_python_repo
+from ..helpers.git_repo import make_minimal_python_repo, write
 from ..helpers.monkeypatch_scillm import FakeScillm, final_message
 from ..helpers.runner import make_spec, run_spec
 from ..helpers.source_snapshot import assert_source_snapshot_unchanged, snapshot_source
@@ -47,3 +47,20 @@ def test_bad_allowlist_paths_rejected_before_runtime(tmp_path: Path, bad_allowli
 
     with pytest.raises(Exception):
         TaskSpec.model_validate(spec)
+
+
+def test_non_git_cwd_fails_before_backend_rounds(tmp_path: Path, monkeypatch) -> None:
+    repo = tmp_path / "not-a-git-repo"
+    repo.mkdir()
+    write(repo, "src/app.py", "def add_one(x):\n    return x\n")
+    before = (repo / "src/app.py").read_text()
+    task_id = "non-git-cwd-preflight"
+
+    FakeScillm([final_message("should not be called")]).install(monkeypatch)
+    result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=tmp_path / "out"))
+
+    assert_result_failed(result)
+    assert result["status"] in {"preflight_fail", "fail"}
+    assert result["rounds"] == 0
+    assert "git" in result["error"].lower()
+    assert (repo / "src/app.py").read_text() == before

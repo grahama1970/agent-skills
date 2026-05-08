@@ -55,6 +55,20 @@ def test_invalid_allowlist_entries_are_rejected(allowlist: list[str], tmp_path: 
         TaskSpec.model_validate(spec)
 
 
+@pytest.mark.parametrize("missing_field", ["allowlist", "definition_of_done"])
+def test_required_task_fields_are_rejected(missing_field: str, tmp_path: Path) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    spec = make_spec(
+        task_id=f"reject-missing-{missing_field.replace('_', '-')}",
+        repo=repo,
+        output_dir=tmp_path / "out",
+    )
+    spec.pop(missing_field)
+
+    with pytest.raises(Exception):
+        TaskSpec.model_validate(spec)
+
+
 def test_output_dir_inside_source_is_rejected_by_schema_or_preflight(tmp_path: Path) -> None:
     repo = make_minimal_python_repo(tmp_path)
     spec = make_spec(

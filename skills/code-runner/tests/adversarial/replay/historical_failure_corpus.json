@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "purpose": "Versioned coverage map for stored code-runner live failures. Each entry must map to deterministic replay, property, preflight, or orchestration-boundary coverage; live model replays alone do not count.",
+  "entries": [
+    {
+      "name": "04_preflight_vague-preflight_fail-definition_of_done-is-REQUIRED-d65959907e",
+      "status": "preflight_fail",
+      "failure_class": "missing_required_definition_of_done",
+      "deterministic_coverage": ["spec_schema_required_fields"]
+    },
+    {
+      "name": "05_preflight_allowlist-preflight_fail-allowlist-is-REQUIRED-for--0b78cc92f3",
+      "status": "preflight_fail",
+      "failure_class": "missing_required_allowlist",
+      "deterministic_coverage": ["spec_schema_required_fields"]
+    },
+    {
+      "name": "07_denylist-preflight_fail-isolated_worktree-mode-requires-a-non-803d4ac7c8",
+      "status": "preflight_fail",
+      "failure_class": "empty_allowlist_rejected",
+      "deterministic_coverage": ["bad_allowlist_preflight"]
+    },
+    {
+      "name": "09_non_git-preflight_fail-Could-not-inspect-source-worktree-dirt-203c5e484e",
+      "status": "preflight_fail",
+      "failure_class": "non_git_cwd_rejected",
+      "deterministic_coverage": ["non_git_cwd_preflight"]
+    },
+    {
+      "name": "09_non_git-preflight_fail-Could-not-inspect-source-worktree-dirt-9c2d8fc3b6",
+      "status": "preflight_fail",
+      "failure_class": "non_git_cwd_rejected",
+      "deterministic_coverage": ["non_git_cwd_preflight"]
+    },
+    {
+      "name": "orchestrate-task-0.1-source-dod-worktree-restore-crash",
+      "status": "crash",
+      "failure_class": "source_apply_patch_failure_rolls_back",
+      "deterministic_coverage": ["source_apply_failure_rolls_back", "rollback_matrix"]
+    },
+    {
+      "name": "session-1777725477-1-preflight_fail",
+      "status": "preflight_fail",
+      "failure_class": "dirty_source_baseline_rejected_before_runner",
+      "deterministic_coverage": ["orchestrate_untracked_baseline_preflight", "dirty_allowlist_fail_closed"]
+    },
+    {
+      "name": "session-1777725515-1-fail",
+      "status": "fail",
+      "failure_class": "no_tool_writes_no_patch",
+      "deterministic_coverage": ["no_patch_produced", "false_green_monolith"]
+    },
+    {
+      "name": "session-1777726389-2-fail",
+      "status": "fail",
+      "failure_class": "no_tool_writes_no_patch",
+      "deterministic_coverage": ["no_patch_produced", "false_green_monolith"]
+    },
+    {
+      "name": "session-1777732593-T1-fail",
+      "status": "fail",
+      "failure_class": "visible_dod_failed_after_rounds",
+      "deterministic_coverage": ["dod_failure_source_invariance"]
+    },
+    {
+      "name": "session-1777733122-T2-fail",
+      "status": "fail",
+      "failure_class": "visible_dod_failed_after_rounds",
+      "deterministic_coverage": ["dod_failure_source_invariance"]
+    },
+    {
+      "name": "session-1777733635-T3-preflight_fail",
+      "status": "preflight_fail",
+      "failure_class": "dirty_allowlist_rejected",
+      "deterministic_coverage": ["dirty_allowlist_fail_closed"]
+    },
+    {
+      "name": "session-1777734091-T4-fail",
+      "status": "fail",
+      "failure_class": "visible_dod_failed_after_rounds",
+      "deterministic_coverage": ["dod_failure_source_invariance"]
+    },
+    {
+      "name": "session-1777734845-T5-fail",
+      "status": "fail",
+      "failure_class": "visible_dod_failed_after_rounds",
+      "deterministic_coverage": ["dod_failure_source_invariance"]
+    },
+    {
+      "name": "session-1777735425-1-fail",
+      "status": "fail",
+      "failure_class": "visible_dod_failed_after_rounds",
+      "deterministic_coverage": ["dod_failure_source_invariance"]
+    },
+    {
+      "name": "session-1777736124-3-fail",
+      "status": "fail",
+      "failure_class": "visible_dod_failed_after_rounds",
+      "deterministic_coverage": ["dod_failure_source_invariance"]
+    },
+    {
+      "name": "session-1777738916-2-preflight_fail",
+      "status": "preflight_fail",
+      "failure_class": "dirty_allowlist_rejected",
+      "deterministic_coverage": ["dirty_allowlist_fail_closed"]
+    },
+    {
+      "name": "session-1777741119-2-fail",
+      "status": "fail",
+      "failure_class": "visible_dod_failed_after_rounds",
+      "deterministic_coverage": ["dod_failure_source_invariance"]
+    },
+    {
+      "name": "session-1777807988-1.1-preflight_fail",
+      "status": "preflight_fail",
+      "failure_class": "direct_runner_policy_rejected",
+      "deterministic_coverage": ["orchestrate_runner_policy_gate"]
+    },
+    {
+      "name": "session-1777808348-1.1-preflight_fail",
+      "status": "preflight_fail",
+      "failure_class": "backend_health_preflight",
+      "deterministic_coverage": ["backend_transport_failure"]
+    },
+    {
+      "name": "session-1777988212-1.1-fail",
+      "status": "fail",
+      "failure_class": "source_mutation_blocked",
+      "deterministic_coverage": ["source_mutation_blocking"]
+    },
+    {
+      "name": "session-1777990041-1.1-crash",
+      "status": "crash",
+      "failure_class": "source_apply_patch_failure_rolls_back",
+      "deterministic_coverage": ["source_apply_failure_rolls_back", "rollback_matrix"]
+    },
+    {
+      "name": "session-1777995349-1.1-preflight_fail",
+      "status": "preflight_fail",
+      "failure_class": "dirty_allowlist_rejected",
+      "deterministic_coverage": ["dirty_allowlist_fail_closed", "orchestrate_untracked_baseline_preflight"]
+    },
+    {
+      "name": "session-1778072397-0.1-crash",
+      "status": "crash",
+      "failure_class": "source_apply_patch_failure_rolls_back",
+      "deterministic_coverage": ["source_apply_failure_rolls_back", "rollback_matrix"]
+    }
+  ]
+}

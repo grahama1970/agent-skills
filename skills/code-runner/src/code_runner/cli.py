@@ -188,7 +188,26 @@ def run_task(spec: TaskSpec, raw: dict[str, Any], spec_file: str, backend_overri
     """Run one task through isolated worktree and optional source apply."""
 
     artifacts = RunArtifacts(spec.output_dir, spec.task_id)
-    source_root = repo_root(spec.cwd)
+    try:
+        source_root = repo_root(spec.cwd)
+    except Exception as exc:
+        error = str(exc)
+        write_json(artifacts.request, {"spec_file": spec_file, "raw_spec": raw})
+        artifacts.write_status("preflight_fail", error=error)
+        result = TaskResult(
+            task_id=spec.task_id,
+            title=spec.title,
+            status="preflight_fail",
+            dod_passed=False,
+            backend=backend_override or spec.backend,
+            rounds=0,
+            best_score=0,
+            error=error,
+            source_unchanged=True,
+        )
+        write_json(artifacts.result, result.model_dump())
+        append_event(artifacts.events, "preflight_failed", task_id=spec.task_id, error=error)
+        return result
     source_head_before = head(source_root)
     source_status_before = status(source_root)
     backend = backend_override or spec.backend
