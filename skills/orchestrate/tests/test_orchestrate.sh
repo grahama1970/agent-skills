@@ -614,6 +614,23 @@ test_full_pipeline_mock_e2e() {
 }
 
 # ============================================================================
+# Test: external-project adoption canary
+# ============================================================================
+test_external_project_adoption_smoke() {
+    echo ""
+    echo "=== External Project Adoption Smoke Tests ==="
+
+    if "$SCRIPT_DIR/run_external_project_adoption_smoke.sh" >/tmp/external-project-adoption-smoke.out 2>&1; then
+        pass "external project adoption smoke fails fast then succeeds after baseline commit"
+    else
+        cat /tmp/external-project-adoption-smoke.out >&2 || true
+        fail "external project adoption smoke failed"
+    fi
+
+    rm -f /tmp/external-project-adoption-smoke.out
+}
+
+# ============================================================================
 # Main
 # ============================================================================
 main() {
@@ -651,6 +668,7 @@ main() {
             ;;
         full-pipeline)
             test_full_pipeline_mock_e2e
+            test_external_project_adoption_smoke
             ;;
         all)
             test_script_availability
@@ -667,6 +685,7 @@ main() {
             test_scillm_contract_compliance
             test_code_runner_mock_e2e
             test_full_pipeline_mock_e2e
+            test_external_project_adoption_smoke
             ;;
         *)
             echo "Unknown filter: $filter" >&2
