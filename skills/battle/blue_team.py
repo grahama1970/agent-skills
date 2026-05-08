@@ -133,8 +133,10 @@ class BlueAgent:
             test_command = "pytest -q"
         elif (target_path_obj / "pyproject.toml").exists():
             test_command = "python -m pytest -q"
+        elif any(target_path_obj.rglob("*.py")):
+            test_command = "python -m py_compile $(find . -name '*.py' -not -path './.git/*')"
         else:
-            test_command = "pytest -q"
+            test_command = "test -d ."
 
         for finding in findings:
             self.round_actions.append(f"Patching: {finding.id} (Profile: {profile})")

@@ -46,3 +46,8 @@ state/
 fetch_cache/
 checkpoints/
 worktrees/
+skills/battle/battles/
+skills/battle/patch-runs/
+skills/battle/reports/battle_*.md
+skills/battle/reports/battle_*_viz/
+skills/battle/uv.lock

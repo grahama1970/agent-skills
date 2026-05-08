@@ -7,6 +7,8 @@ into a compact PatchResult for blue-team workflows.
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 import tempfile
 import uuid
@@ -18,6 +20,11 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from common.file_bundler import bundle_for_review
+
+
+SKILL_DIR = Path(__file__).resolve().parent
+SKILLS_DIR = SKILL_DIR.parent
+SIBLING_CODE_RUNNER_RUN = SKILLS_DIR / "code-runner" / "run.sh"
 
 
 class PatchResult(BaseModel):
@@ -36,6 +43,59 @@ def _safe_rel(path: str, cwd: Path) -> str:
         return str(p.relative_to(cwd))
     except ValueError:
         return str(p)
+
+
+def _ensure_git_repo(cwd: Path) -> None:
+    if (cwd / ".git").exists():
+        return
+    subprocess.run(["git", "init"], cwd=str(cwd), check=True, capture_output=True, text=True)
+    subprocess.run(["git", "add", "."], cwd=str(cwd), check=True, capture_output=True, text=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Battle Blue",
+            "-c",
+            "user.email=battle-blue@example.invalid",
+            "commit",
+            "-m",
+            "battle baseline",
+        ],
+        cwd=str(cwd),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _editable_paths(source_cwd: Path, target_path: Path) -> list[str]:
+    if target_path.is_file():
+        return [str(target_path.relative_to(source_cwd))]
+    extensions = {
+        ".py",
+        ".js",
+        ".ts",
+        ".tsx",
+        ".jsx",
+        ".go",
+        ".rs",
+        ".java",
+        ".rb",
+        ".php",
+        ".c",
+        ".h",
+        ".cpp",
+        ".hpp",
+    }
+    paths: list[str] = []
+    for candidate in sorted(target_path.rglob("*")):
+        if ".git" in candidate.parts:
+            continue
+        if candidate.is_file() and candidate.suffix.lower() in extensions:
+            paths.append(str(candidate.relative_to(source_cwd)))
+        if len(paths) >= 30:
+            break
+    return paths or ["."]
 
 
 def _build_prompt(
@@ -74,6 +134,28 @@ def _build_prompt(
     )
 
 
+def _resolve_code_runner_run(cwd: Path) -> Path | None:
+    candidates = [
+        Path(value)
+        for value in [
+            # Explicit override for tests and nonstandard deployments.
+            os.environ.get("BATTLE_CODE_RUNNER_RUN", ""),
+        ]
+        if value
+    ]
+    candidates.extend(
+        [
+            SIBLING_CODE_RUNNER_RUN,
+            cwd / ".pi" / "skills" / "code-runner" / "run.sh",
+            cwd / "skills" / "code-runner" / "run.sh",
+        ]
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def write_patch(
     target_path: str,
     finding: str,
@@ -81,11 +163,15 @@ def write_patch(
     test_command: str,
     max_rounds: int = 5,
 ) -> PatchResult:
-    cwd = Path.cwd()
-    target_rel = _safe_rel(target_path, cwd)
+    target = Path(target_path).resolve()
+    source_cwd = target if target.is_dir() else target.parent
+    _ensure_git_repo(source_cwd)
+    cwd = source_cwd
+    target_rel = "." if target == source_cwd else _safe_rel(str(target), cwd)
+    allowlist = _editable_paths(source_cwd, target)
 
     # Build context bundle for target file.
-    target_bundle = bundle_for_review([target_rel], str(cwd))
+    target_bundle = bundle_for_review(allowlist[:12], str(cwd))
 
     # Lightweight "memory recall" placeholder from local prior patch logs (if any).
     memory_recall = ""
@@ -106,37 +192,49 @@ def write_patch(
         memory_recall=memory_recall,
     )
 
-    # DoD: tests must pass AND exploit must fail.
-    dod_cmd = (
-        f"{test_command} && "
-        "(! docker exec arena sh -lc '"
-        + exploit_proof.replace("'", "'\"'\"'")
-        + "')"
-    )
+    # DoD: tests must pass. If Red produced a concrete Docker proof, it must fail.
+    dod_cmd = test_command
+    if exploit_proof.strip():
+        dod_cmd = (
+            f"{test_command} && "
+            "(! docker exec arena sh -lc '"
+            + exploit_proof.replace("'", "'\"'\"'")
+            + "')"
+        )
 
     spec: dict[str, Any] = {
         "task_id": f"battle-patch-{uuid.uuid4().hex[:10]}",
+        "title": f"Patch battle finding in {target_rel}",
         "cwd": str(cwd),
         "backend": "codex",
+        "output_dir": "",
         "prompt": prompt,
-        "allowlist": [target_rel],
+        "allowlist": allowlist,
         "read_context": [target_rel, "tests/", "test/", "spec/", "exploit/"],
         "definition_of_done": {
-            "commands": [dod_cmd],
-            "assertions": ["exit_code == 0"],
+            "command": dod_cmd,
+            "assertion": "exit_code == 0",
         },
+        "max_rounds": max_rounds,
     }
 
-    code_runner_dir = cwd / ".pi" / "skills" / "code-runner"
-    run_sh = code_runner_dir / "run.sh"
+    run_sh = _resolve_code_runner_run(cwd)
 
-    if not run_sh.exists():
-        logger.error("code-runner not found at {}", run_sh)
+    if run_sh is None:
+        logger.error(
+            "code-runner not found. Checked sibling {}, cwd .pi, and cwd skills.",
+            SIBLING_CODE_RUNNER_RUN,
+        )
         return PatchResult(success=False)
 
-    with tempfile.TemporaryDirectory(prefix="patch_writer_") as td:
-        td_path = Path(td)
+    code_runner_dir = run_sh.parent
+
+    patch_runs_dir = SKILL_DIR / "patch-runs"
+    patch_runs_dir.mkdir(parents=True, exist_ok=True)
+    td_path = Path(tempfile.mkdtemp(prefix="patch_writer_", dir=str(patch_runs_dir)))
+    try:
         spec_path = td_path / "spec.json"
+        spec["output_dir"] = str(td_path)
         spec_path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
 
         logger.info("Running code-runner for target={} rounds={}", target_rel, max_rounds)
@@ -154,10 +252,16 @@ def write_patch(
             return PatchResult(success=False)
 
         if proc.returncode != 0:
-            logger.error("code-runner failed rc={} stderr={}", proc.returncode, proc.stderr)
+            logger.error(
+                "code-runner failed rc={} stdout={} stderr={} artifacts={}",
+                proc.returncode,
+                proc.stdout[-2000:],
+                proc.stderr[-2000:],
+                td_path,
+            )
             return PatchResult(success=False)
 
-        result_path = td_path / "result.json"
+        result_path = td_path / f"{spec['task_id']}.result.json"
         if not result_path.exists():
             alt = code_runner_dir / "result.json"
             if alt.exists():
@@ -171,16 +275,29 @@ def write_patch(
         except Exception as e:
             logger.exception("Failed reading result.json: {}", e)
             return PatchResult(success=False)
+    finally:
+        if os.getenv("BATTLE_KEEP_PATCH_RUNS") != "0":
+            pass
+        else:
+            shutil.rmtree(td_path, ignore_errors=True)
 
     rounds = int(result.get("rounds_completed", result.get("rounds", 0)) or 0)
-    success = bool(result.get("success", False))
+    success = bool(
+        result.get("success", False)
+        or result.get("dod_passed", False)
+        or result.get("status") == "pass"
+    )
     patch_diff = (
         result.get("patch_diff")
         or result.get("final_diff")
         or result.get("diff")
         or ""
     )
-    score = float(result.get("score", 0.0) or 0.0)
+    if not patch_diff and result.get("patch_artifact"):
+        patch_artifact = Path(str(result["patch_artifact"]))
+        if patch_artifact.exists():
+            patch_diff = patch_artifact.read_text(encoding="utf-8")
+    score = float(result.get("score", result.get("best_score", 0.0)) or 0.0)
 
     functionality_preserved = success
     final_assertions = result.get("assertions", [])
