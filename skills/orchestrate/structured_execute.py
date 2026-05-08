@@ -1069,6 +1069,130 @@ def _git_status_porcelain(cwd: Path) -> list[str]:
     return [line for line in proc.stdout.splitlines() if line.strip()] if proc.returncode == 0 else []
 
 
+def _task_path_values(values: list[Any] | None) -> list[str]:
+    paths: list[str] = []
+    for item in values or []:
+        if isinstance(item, str):
+            value = item
+        elif isinstance(item, dict):
+            value = str(item.get("path") or "")
+        else:
+            value = ""
+        value = value.strip()
+        if value:
+            paths.append(value)
+    return paths
+
+
+def _invalid_repo_relative_paths(paths: list[str]) -> list[str]:
+    invalid: list[str] = []
+    for path in paths:
+        candidate = Path(path)
+        if candidate.is_absolute() or ".." in candidate.parts:
+            invalid.append(path)
+    return sorted(set(invalid))
+
+
+def _repo_path_for_baseline(path: str) -> str:
+    match = re.match(r"^(.+):\d+(?:-\d+)?$", path)
+    return match.group(1) if match else path
+
+
+def _git_tracked_paths(cwd: Path, paths: list[str]) -> tuple[set[str], str]:
+    if not paths:
+        return set(), ""
+    proc = subprocess.run(
+        ["git", "ls-files", "--", *paths],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return set(), proc.stderr.strip() or proc.stdout.strip() or "git ls-files failed"
+    return set(proc.stdout.splitlines()), ""
+
+
+def _path_has_tracked_entry(tracked_paths: set[str], path: str) -> bool:
+    normalized = path.rstrip("/")
+    return normalized in tracked_paths or any(item.startswith(f"{normalized}/") for item in tracked_paths)
+
+
+def _code_runner_baseline_preflight(task: TaskRuntime, session_dir: Path) -> bool:
+    """Fail fast when isolated worktrees cannot see required source files."""
+
+    allowlist_paths = [_repo_path_for_baseline(path) for path in _task_path_values(task.allowlist)]
+    read_context_paths = [_repo_path_for_baseline(path) for path in _task_path_values(task.read_context)]
+    repo_read_context_paths = [path for path in read_context_paths if not Path(path).is_absolute()]
+    all_paths = sorted(set(allowlist_paths + repo_read_context_paths))
+    invalid_paths = _invalid_repo_relative_paths(allowlist_paths + repo_read_context_paths)
+    tracked_paths, git_error = _git_tracked_paths(task.cwd, [p for p in all_paths if p not in invalid_paths])
+
+    untracked_existing_allowlist: list[str] = []
+    for path in allowlist_paths:
+        if path in invalid_paths:
+            continue
+        if (task.cwd / path).exists() and not _path_has_tracked_entry(tracked_paths, path):
+            untracked_existing_allowlist.append(path)
+
+    missing_read_context: list[str] = []
+    untracked_read_context: list[str] = []
+    for path in repo_read_context_paths:
+        if path in invalid_paths:
+            continue
+        exists = (task.cwd / path).exists()
+        tracked = _path_has_tracked_entry(tracked_paths, path)
+        if exists and not tracked:
+            untracked_read_context.append(path)
+        elif not exists and not tracked:
+            missing_read_context.append(path)
+
+    if not (invalid_paths or untracked_existing_allowlist or untracked_read_context or missing_read_context):
+        return True
+
+    failure_code = "CODE_RUNNER_UNTRACKED_BASELINE_REQUIRED"
+    guidance = (
+        "code-runner uses an isolated git worktree created from HEAD. Existing target files must be committed "
+        "before /orchestrate dispatches code-runner; otherwise the worker cannot see or modify them. "
+        "Stage and commit only the intended baseline files, then rerun the plan."
+    )
+    payload = {
+        "task_id": task.task_id,
+        "title": task.title,
+        "failure_code": failure_code,
+        "cwd": str(task.cwd),
+        "invalid_paths": invalid_paths,
+        "git_error": git_error,
+        "untracked_existing_allowlist": sorted(set(untracked_existing_allowlist)),
+        "untracked_read_context": sorted(set(untracked_read_context)),
+        "missing_read_context": sorted(set(missing_read_context)),
+        "guidance": guidance,
+        "recommended_next_step": (
+            "Create a narrow baseline commit containing only required existing allowlist/read_context files, "
+            "or remove those paths from the task contract if they are not required."
+        ),
+    }
+    artifact_path = session_dir / f"{task.task_id}.baseline-preflight.json"
+    artifact_path.write_text(json.dumps(payload, indent=2))
+    task.review_status = "fail"
+    task.failure_code = failure_code
+    task.error = (
+        "code-runner baseline preflight failed: isolated worktrees cannot access untracked or missing "
+        f"required paths; see {artifact_path}"
+    )
+    _record_task_event(
+        session_dir,
+        task,
+        "task.code_runner_baseline_preflight_failed",
+        task.error,
+        {"baseline_preflight_path": str(artifact_path), **payload},
+        severity="error",
+        failure_code=failure_code,
+    )
+    return False
+
+
 def _cleanup_new_untracked_non_allowlist(cwd: Path, baseline_status: list[str], allowlist: list[str] | None) -> list[str]:
     baseline = set(baseline_status)
     allowlist_items = [item.rstrip("/") for item in (allowlist or [])]
@@ -1136,6 +1260,8 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
     if requested_policy != "isolated_worktree" and clean_env.get("ORCHESTRATE_ALLOW_UNSAFE_CODE_RUNNER_DIRECT") != "1":
         task.review_status = "fail"
         task.error = "code-runner tasks must use dirty_worktree_policy=isolated_worktree"
+        return
+    if not _code_runner_baseline_preflight(task, session_dir):
         return
 
     max_blind_attempts = 3

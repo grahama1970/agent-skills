@@ -56,6 +56,18 @@ def install_failing_code_runner(tmp_path: Path, module) -> Path:
     return skills_dir
 
 
+def init_git_repo(repo: Path) -> None:
+    repo.mkdir(parents=True, exist_ok=True)
+    run(["git", "init"], repo)
+    run(["git", "config", "user.email", "test@example.invalid"], repo)
+    run(["git", "config", "user.name", "Test"], repo)
+
+
+def commit_paths(repo: Path, paths: list[str], message: str) -> None:
+    run(["git", "add", *paths], repo)
+    run(["git", "commit", "-m", message], repo)
+
+
 def test_memory_and_dogpile_context_are_bounded_prompt_guidance(monkeypatch, tmp_path: Path) -> None:
     helpers = load_module("structured_execute_helpers_under_test", ORCH_DIR / "structured_execute_helpers.py")
 
@@ -239,6 +251,118 @@ def test_code_runner_spec_rejects_invalid_definition_of_done(tmp_path: Path) -> 
         assert "definition_of_done.assertion must be non-empty" in str(exc)
     else:
         raise AssertionError("expected empty DoD assertion to fail")
+
+
+def test_code_runner_baseline_preflight_blocks_untracked_existing_allowlist(tmp_path: Path) -> None:
+    module = load_module("structured_execute_baseline_untracked", ORCH_DIR / "structured_execute.py")
+    install_failing_code_runner(tmp_path, module)
+
+    repo = tmp_path / "repo"
+    init_git_repo(repo)
+    (repo / "README.md").write_text("baseline\n")
+    commit_paths(repo, ["README.md"], "init")
+    target = repo / "skills" / "hack" / "evolutionary_campaign.py"
+    target.parent.mkdir(parents=True)
+    target.write_text("print('untracked baseline')\n")
+
+    task = module.TaskRuntime(
+        task_id="task-baseline",
+        title="Needs tracked baseline",
+        lane="0",
+        runner="code-runner",
+        backend="codex",
+        mode="",
+        prompt="Edit the hack runtime.",
+        command="",
+        cwd=repo,
+        definition_of_done={"command": "python -m pytest -q", "assertion": "passed"},
+        allowlist=["skills/hack/evolutionary_campaign.py"],
+        read_context=["skills/hack/evolutionary_campaign.py"],
+    )
+    session_dir = tmp_path / "session"
+    session_dir.mkdir()
+
+    asyncio.run(module._run_code_runner(task, session_dir))
+
+    artifact = session_dir / "task-baseline.baseline-preflight.json"
+    assert task.review_status == "fail"
+    assert task.failure_code == "CODE_RUNNER_UNTRACKED_BASELINE_REQUIRED"
+    assert "baseline preflight failed" in task.error
+    assert artifact.exists()
+    payload = json.loads(artifact.read_text())
+    assert payload["untracked_existing_allowlist"] == ["skills/hack/evolutionary_campaign.py"]
+    assert payload["untracked_read_context"] == ["skills/hack/evolutionary_campaign.py"]
+    assert "isolated git worktree" in payload["guidance"]
+    assert not (session_dir / "task-baseline.code-runner-spec.json").exists()
+
+
+def test_code_runner_baseline_preflight_allows_new_missing_allowlist_path(tmp_path: Path) -> None:
+    module = load_module("structured_execute_baseline_new_file", ORCH_DIR / "structured_execute.py")
+    install_failing_code_runner(tmp_path, module)
+
+    repo = tmp_path / "repo"
+    init_git_repo(repo)
+    (repo / "README.md").write_text("baseline\n")
+    commit_paths(repo, ["README.md"], "init")
+
+    task = module.TaskRuntime(
+        task_id="task-new-file",
+        title="Create allowlisted file",
+        lane="0",
+        runner="code-runner",
+        backend="codex",
+        mode="",
+        prompt="Create src/new_file.py.",
+        command="",
+        cwd=repo,
+        definition_of_done={"command": "python -m pytest -q", "assertion": "passed"},
+        allowlist=["src/new_file.py"],
+    )
+    session_dir = tmp_path / "session"
+    session_dir.mkdir()
+
+    asyncio.run(module._run_code_runner(task, session_dir))
+
+    assert (session_dir / "task-new-file.code-runner-spec.json").exists()
+    assert not (session_dir / "task-new-file.baseline-preflight.json").exists()
+    assert task.failure_code != "CODE_RUNNER_UNTRACKED_BASELINE_REQUIRED"
+
+
+def test_code_runner_baseline_preflight_blocks_missing_read_context(tmp_path: Path) -> None:
+    module = load_module("structured_execute_baseline_missing_context", ORCH_DIR / "structured_execute.py")
+    install_failing_code_runner(tmp_path, module)
+
+    repo = tmp_path / "repo"
+    init_git_repo(repo)
+    (repo / "README.md").write_text("baseline\n")
+    commit_paths(repo, ["README.md"], "init")
+
+    task = module.TaskRuntime(
+        task_id="task-missing-context",
+        title="Missing read context",
+        lane="0",
+        runner="code-runner",
+        backend="codex",
+        mode="",
+        prompt="Use the context file.",
+        command="",
+        cwd=repo,
+        definition_of_done={"command": "python -m pytest -q", "assertion": "passed"},
+        allowlist=["src/new_file.py"],
+        read_context=["src/missing_context.py"],
+    )
+    session_dir = tmp_path / "session"
+    session_dir.mkdir()
+
+    asyncio.run(module._run_code_runner(task, session_dir))
+
+    artifact = session_dir / "task-missing-context.baseline-preflight.json"
+    assert task.review_status == "fail"
+    assert task.failure_code == "CODE_RUNNER_UNTRACKED_BASELINE_REQUIRED"
+    assert artifact.exists()
+    payload = json.loads(artifact.read_text())
+    assert payload["missing_read_context"] == ["src/missing_context.py"]
+    assert not (session_dir / "task-missing-context.code-runner-spec.json").exists()
 
 
 def test_actual_code_runner_spec_file_excludes_retrieval_and_blind_fields(monkeypatch, tmp_path: Path) -> None:
@@ -559,6 +683,11 @@ def test_visible_dod_failure_can_opt_into_memory_dogpile_research_retry(monkeypa
     monkeypatch.setenv("ORCHESTRATE_MAX_RESEARCH_RETRIES", "1")
     monkeypatch.delenv("ORCHESTRATE_ALLOW_SOURCE_APPLY", raising=False)
 
+    repo = tmp_path / "repo"
+    init_git_repo(repo)
+    (repo / "README.md").write_text("baseline context\n")
+    commit_paths(repo, ["README.md"], "init")
+
     skills_dir = tmp_path / "skills"
     code_runner_dir = skills_dir / "code-runner"
     code_runner_dir.mkdir(parents=True)
@@ -618,7 +747,7 @@ def test_visible_dod_failure_can_opt_into_memory_dogpile_research_retry(monkeypa
             }
         ]
     }
-    runtime = helpers._build_runtimes(plan, tmp_path)["task-6"]
+    runtime = helpers._build_runtimes(plan, repo)["task-6"]
     runtime.timeout_seconds = 30
 
     session_dir = tmp_path / "session"
