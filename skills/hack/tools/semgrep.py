@@ -45,6 +45,7 @@ def audit_command(
         recall: Whether to query memory for prior audit knowledge
     """
     from hack.utils import start_task_session, end_task_session, add_task_accomplishment
+    target_path = Path(target).resolve()
     
     console.print(f"[bold red]Starting security audit for:[/bold red] {target_path}")
     console.print(f"[dim]Profile: {profile}[/dim]")
@@ -79,7 +80,12 @@ def audit_command(
         for sev in profile_cfg["semgrep_severity"]:
             severity_flags.extend(["--severity", sev])
             
-        cmd = ["semgrep", "scan", "--config", "auto"] + severity_flags + [scan_target]
+        cmd = [
+            "semgrep",
+            "scan",
+            "--config",
+            "/opt/hack-rules/offline-security.yml",
+        ] + severity_flags + [scan_target]
 
         try:
             result = run_in_docker(cmd, target_path=str(mount_path), network="none")

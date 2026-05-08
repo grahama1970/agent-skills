@@ -52,6 +52,9 @@ from hack.commands import (
     create_remediate_command,
     create_update_exploits_command,
 )
+from hack.session_audit import create_session_audit_command
+from hack.chaos_campaign import create_chaos_campaign_command
+from hack.evolutionary_campaign import create_evolve_campaign_command, create_validate_seed_command
 
 from rich.console import Console
 
@@ -109,6 +112,10 @@ app.command(name="remember")(create_remember_command())
 app.command(name="recall")(create_recall_command())
 app.command(name="remediate")(create_remediate_command())
 app.command(name="update-exploits")(create_update_exploits_command())
+app.command(name="session-audit")(create_session_audit_command())
+app.command(name="chaos-campaign")(create_chaos_campaign_command())
+app.command(name="evolve-campaign")(create_evolve_campaign_command())
+app.command(name="validate-seed")(create_validate_seed_command())
 
 
 @app.command()

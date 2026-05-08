@@ -9,6 +9,7 @@ LABEL description="Isolated security scanning environment"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nmap \
     netcat-openbsd \
+    unzip \
     iputils-ping \
     curl \
     wget \
@@ -25,9 +26,20 @@ RUN pip install --no-cache-dir \
     rich \
     typer
 
+ARG NUCLEI_VERSION=3.4.10
+
+RUN set -eux; \
+    wget -O /tmp/nuclei.zip "https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/nuclei_${NUCLEI_VERSION}_linux_amd64.zip"; \
+    unzip -p /tmp/nuclei.zip nuclei > /usr/local/bin/nuclei; \
+    chmod +x /usr/local/bin/nuclei; \
+    rm -f /tmp/nuclei.zip; \
+    nuclei -version
+
+COPY offline-security.yml /opt/hack-rules/offline-security.yml
+
 # Note: Running as root inside container for nmap privileged scans
 # Container isolation provides security boundary
 WORKDIR /scan
 
 # Default command shows available tools
-CMD ["bash", "-c", "echo 'Security Scanner Ready. Tools: nmap, semgrep, bandit, pip-audit, safety'"]
+CMD ["bash", "-c", "echo 'Security Scanner Ready. Tools: nmap, semgrep, bandit, pip-audit, safety, nuclei'"]
