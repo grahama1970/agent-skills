@@ -595,6 +595,14 @@ class EvolutionaryCampaignTests(unittest.TestCase):
         self.assertFalse(result["valid"])
         self.assertTrue(any("artifact_paths[0] path does not exist" in error for error in result["errors"]))
 
+    def test_live_probe_promotion_task_includes_verification_contract(self) -> None:
+        script = build_evolutionary_probe_script()
+
+        self.assertIn('"patch_status": "proposed"', script)
+        self.assertIn('"verification_contract"', script)
+        self.assertIn("/plan -> /review-plan -> /orchestrate -> /code-runner", script)
+        self.assertIn("hack_docker_proof_rerun_artifact", script)
+
 
 if __name__ == "__main__":
     unittest.main()

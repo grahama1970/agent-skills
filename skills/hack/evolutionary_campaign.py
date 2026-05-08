@@ -1747,7 +1747,20 @@ def build_evolutionary_probe_script() -> str:
                 if reason:
                     anomalies += 1
                     anomalies_path.open("a").write(json.dumps(record, sort_keys=True) + "\n")
-                    task = {"task_id": f"promote-{gene['gene_id']}-{attempts}", "anomaly_evidence_path": str(attempts_path), "objective": f"Reproduce and minimize `{reason}`.", "blue_team_patch_hypothesis": "Tighten central auth/rate/normalization/error-handling gate for affected route family.", "suggested_runner": "code-runner"}
+                    task = {
+                        "task_id": f"promote-{gene['gene_id']}-{attempts}",
+                        "anomaly_evidence_path": str(attempts_path),
+                        "objective": f"Reproduce and minimize `{reason}` from evolutionary campaign artifacts.",
+                        "blue_team_patch_hypothesis": "Add or tighten central auth/rate/normalization/error-handling gate for the affected route family.",
+                        "suggested_runner": "code-runner",
+                        "patch_status": "proposed",
+                        "verification_contract": {
+                            "implementation_path": "/plan -> /review-plan -> /orchestrate -> /code-runner",
+                            "hack_role": "rerun Docker proof and record verification evidence; do not apply patches directly",
+                            "required_patch_status_values": ["proposed", "implementation_requested", "implemented_unverified", "verified", "deferred", "rejected"],
+                            "verified_requires": ["patch_applied_by_downstream", "tests_run", "hack_docker_proof_rerun_artifact"],
+                        },
+                    }
                     (promo / f"{task['task_id']}.json").write_text(json.dumps(task, indent=2) + "\n")
                     stop = "gate_passed"
                 attempts += 1
