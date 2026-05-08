@@ -1158,6 +1158,115 @@ def dry_run_executor(gene: StrategyGene, attempt: int) -> dict[str, Any]:
     return {"status": status, "headers": headers, "elapsed_ms": 10 + attempt, "body": body}
 
 
+def _status_from_seed_validation(seed_validation_result: dict[str, Any] | None) -> dict[str, Any]:
+    """Normalize seed validation evidence for preflight without re-reading files."""
+
+    if not isinstance(seed_validation_result, dict):
+        return {
+            "status": "blocked_human_review_required",
+            "truth_label": "contract_evidence",
+            "source_label": "missing_seed_validation_artifact",
+            "valid": False,
+            "reason": "validated seed artifact is required unless an explicit development fallback is recorded",
+        }
+    normalized = dict(seed_validation_result)
+    if normalized.get("valid") is True:
+        status = "passed"
+        truth_label = "implemented_evidence"
+        source_label = "seed_validation_artifact"
+    elif normalized.get("mode") == "built_in_dev_fallback":
+        status = "human_review_required"
+        truth_label = "intended_contract"
+        source_label = "explicit_allow_builtin_seed_flag"
+    else:
+        status = "blocked_human_review_required"
+        truth_label = "contract_evidence"
+        source_label = "seed_validation_artifact"
+    normalized.update(
+        {
+            "status": status,
+            "truth_label": truth_label,
+            "source_label": source_label,
+            "missing_fields_are_success": False,
+        }
+    )
+    return normalized
+
+
+def build_common_preflight_checks(
+    config: EvolutionConfig,
+    *,
+    dry_run: bool,
+    docker_image: str,
+    seed_validation_result: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Build pure, deterministic common preflight evidence for adaptive/evolve.
+
+    This helper intentionally does not perform live network reachability checks
+    or Docker probing; callers that execute Docker record that runtime evidence
+    separately in the normal campaign logs.
+    """
+
+    local_or_private = is_local_or_private_target(config.target_url)
+    authorized = local_or_private or config.allow_nonlocal
+    artifact_exists = config.artifact_dir.exists() and config.artifact_dir.is_dir()
+    seed_status = _status_from_seed_validation(seed_validation_result)
+    blocking: list[str] = []
+    if not authorized:
+        blocking.append("target_not_local_private_and_allow_nonlocal_false")
+    if not artifact_exists:
+        blocking.append("artifact_root_missing")
+    if seed_status["status"] == "blocked_human_review_required":
+        blocking.append("seed_validation_not_passed")
+
+    return {
+        "authorized_target": {
+            "required": True,
+            "status": "authorized" if authorized else "human_review_required",
+            "truth_label": "implemented_evidence" if authorized else "contract_evidence",
+            "source_label": "local_private_guard_or_explicit_allow_nonlocal",
+        },
+        "local_private_target_guard": {
+            "local_or_private_target": local_or_private,
+            "allow_nonlocal": config.allow_nonlocal,
+            "enforced": not config.allow_nonlocal,
+            "status": "pass" if local_or_private else "explicitly_bypassed" if config.allow_nonlocal else "blocked_human_review_required",
+            "truth_label": "implemented_evidence",
+            "source_label": "hack.chaos_campaign.is_local_or_private_target",
+        },
+        "artifact_root": {
+            "path": str(config.artifact_dir),
+            "exists": artifact_exists,
+            "status": "ready" if artifact_exists else "blocked_human_review_required",
+            "truth_label": "implemented_evidence",
+            "source_label": "filesystem_path_check_no_network",
+        },
+        "docker_requirement_intent": {
+            "image": docker_image,
+            "required_for_live_run": not dry_run,
+            "intent": "not_executed_for_dry_run" if dry_run else "required_before_live_probe_execution",
+            "live_check_performed_by_pure_helper": False,
+            "status": "contract_only_dry_run" if dry_run else "required_checked_by_cli_before_contract_write",
+            "truth_label": "contract_evidence" if dry_run else "implemented_evidence",
+            "source_label": "evolve_campaign_cli_options",
+        },
+        "seed_validation": seed_status,
+        "target_reachability": {
+            "state": "not_checked_by_pure_helper",
+            "live_network_call_performed": False,
+            "status": "human_review_required" if not dry_run else "contract_not_evidence",
+            "truth_label": "contract_evidence",
+            "source_label": "pure_preflight_contract",
+            "required_before_interpreting_live_anomalies": True,
+        },
+        "contract_decision": {
+            "status": "blocked_human_review_required" if blocking else "ready_with_recorded_contract_gaps",
+            "blocking_reasons": blocking,
+            "missing_fields_are_success": False,
+        },
+    }
+
+
 def build_preflight_artifact(
     config: EvolutionConfig,
     *,
@@ -1165,45 +1274,159 @@ def build_preflight_artifact(
     docker_image: str,
     seed_validation_result: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    scope_authorized = config.allow_nonlocal or is_local_or_private_target(config.target_url)
-    docker_status = "not_required_for_dry_run" if dry_run else "required"
+    checks = build_common_preflight_checks(
+        config,
+        dry_run=dry_run,
+        docker_image=docker_image,
+        seed_validation_result=seed_validation_result,
+    )
     return {
         "schema": "hack.evolve.preflight.v1",
         "target_url": config.target_url,
+        "truth_label": "implemented_evidence_and_contract",
+        "source_label": "build_common_preflight_checks",
+        "common_preflight": checks,
+        # Backward-compatible top-level views used by existing report readers.
         "scope": {
-            "authorized_target_required": True,
-            "local_or_private_target": is_local_or_private_target(config.target_url),
-            "allow_nonlocal": config.allow_nonlocal,
-            "status": "pass" if scope_authorized else "human_review_required",
+            "authorized_target_required": checks["authorized_target"]["required"],
+            "local_or_private_target": checks["local_private_target_guard"]["local_or_private_target"],
+            "allow_nonlocal": checks["local_private_target_guard"]["allow_nonlocal"],
+            "status": "pass" if checks["authorized_target"]["status"] == "authorized" else "human_review_required",
+            "truth_label": checks["authorized_target"]["truth_label"],
+            "source_label": checks["authorized_target"]["source_label"],
         },
-        "artifact_root": {
-            "path": str(config.artifact_dir),
-            "status": "created" if config.artifact_dir.exists() else "missing",
-        },
-        "docker": {
-            "image": docker_image,
-            "status": docker_status,
-            "truth_label": "implemented_runtime_check" if not dry_run else "dry_run_contract",
-        },
-        "seed_validation": seed_validation_result or {"status": "missing", "truth_label": "blocked_or_dev_fallback"},
-        "target_reachability": {
-            "status": "not_checked_in_pure_preflight",
-            "truth_label": "contract",
-        },
+        "artifact_root": checks["artifact_root"],
+        "docker": checks["docker_requirement_intent"],
+        "seed_validation": checks["seed_validation"],
+        "target_reachability": checks["target_reachability"],
+        "contract_decision": checks["contract_decision"],
     }
 
 
-def build_baseline_artifact(config: EvolutionConfig, genome: StrategyGenome) -> dict[str, Any]:
+def _lane_id_for_gene(gene: StrategyGene) -> str:
+    if gene.source.startswith("validated_seed:"):
+        lane = gene.source.split(":", 1)[1]
+        if lane in LANE_IDS:
+            return lane
+    if gene.transport == "websocket-handshake" or gene.path.startswith("/hooks/"):
+        return "websocket_control"
+    if gene.path.startswith("/sessions/"):
+        return "stateful_workflow"
+    if gene.path.startswith("/tools/"):
+        return "child_process_tool"
+    if gene.path.startswith("/v1/chat") or gene.body_variant in {"malformed-json", "json-tool", "json-command-tokens"}:
+        return "parser_dependency"
+    if gene.path.startswith("/v1/") or "bearer" in gene.header_variant:
+        return "auth_session" if "bearer" in gene.header_variant else "api_protocol"
+    if ".." in gene.path or "%2e" in gene.path.lower() or "media" in gene.path or gene.path.endswith(".json"):
+        return "filesystem_path"
+    return "api_protocol"
+
+
+def _expected_content_type(gene: StrategyGene) -> str:
+    if gene.transport == "websocket-handshake":
+        return "websocket-upgrade-or-http-error"
+    if gene.path.startswith("/v1/") or gene.path.startswith("/tools/") or gene.path.endswith(".json"):
+        return "application/json"
+    if gene.path == "/api/diagnostics/prometheus":
+        return "text/plain"
+    if gene.path in {"/healthz", "/readyz"}:
+        return "text/plain-or-empty"
+    return "route-specific"
+
+
+def _auth_state_names_for_gene(gene: StrategyGene, lane_id: str) -> tuple[str, ...]:
+    names = ["unauthenticated", "stale_invalid_auth"]
+    if lane_id in {"api_protocol", "stateful_workflow", "auth_session", "child_process_tool", "parser_dependency", "websocket_control"}:
+        names.append("normal_user")
+    if gene.method in {"DELETE", "PUT", "PATCH"} or "kill" in gene.path or lane_id == "auth_session":
+        names.append("privileged_user")
+    return tuple(dict.fromkeys(names))
+
+
+def build_lane_baseline_contract(
+    lane_id: str,
+    genes: Iterable[StrategyGene],
+    auth_sessions: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build a lane-specific baseline contract without live requests."""
+
+    lane_genes = sorted(list(genes), key=lambda gene: (gene.path, gene.method, gene.gene_id))
+    state_rows = auth_sessions.get("states", []) if isinstance(auth_sessions, dict) else []
+    state_status = {str(row.get("name")): str(row.get("status", "unknown")) for row in state_rows if isinstance(row, dict)}
+    routes: list[dict[str, Any]] = []
+    blocked: list[str] = []
+    if not lane_genes:
+        blocked.append("no_seeded_route_or_behavior_contract_for_lane")
+    for gene in lane_genes:
+        auth_states = [
+            {
+                "name": name,
+                "status": state_status.get(name, "blocked_human_review_required"),
+                "missing_state_is_success": False,
+            }
+            for name in _auth_state_names_for_gene(gene, lane_id)
+        ]
+        if any(state["status"] in {"blocked_human_review_required", "unknown"} for state in auth_states):
+            blocked.append(f"auth_session_contract_gap:{gene.path}")
+        routes.append(
+            {
+                "gene_id": gene.gene_id,
+                "method": gene.method,
+                "path": gene.path,
+                "transport": gene.transport,
+                "route_behavior": "baseline_contract_not_live_evidence",
+                "expected_content_type": _expected_content_type(gene),
+                "expected_response_shape": _expected_response_shape(gene),
+                "auth_session_states": auth_states,
+                "frontend_app_shell_fallback_detection": {
+                    "enabled": True,
+                    "truth_label": "implemented_evidence",
+                    "source_label": "_is_spa_shell_fallback",
+                    "markers": ["text/html", "<!doctype html", "<html", "<title>openclaw control</title>"],
+                    "classification": "negative_filter_not_api_security_evidence",
+                },
+                "truth_label": "contract_evidence",
+                "source_label": gene.source,
+            }
+        )
+    return {
+        "lane_id": lane_id,
+        "status": "blocked_human_review_required" if blocked else "ready_with_contract_evidence",
+        "blocking_reasons": sorted(set(blocked)),
+        "routes": routes,
+        "missing_contract_fields_are_success": False,
+        "truth_label": "contract_evidence",
+        "source_label": "build_lane_baseline_contract",
+    }
+
+
+def build_baseline_artifact(config: EvolutionConfig, genome: StrategyGenome, auth_sessions: dict[str, Any] | None = None) -> dict[str, Any]:
+    auth_sessions = auth_sessions or build_auth_sessions_artifact()
     routes = sorted({gene.path for gene in genome.genes})
+    genes_by_lane = {lane_id: [gene for gene in genome.genes if _lane_id_for_gene(gene) == lane_id] for lane_id in LANE_IDS}
+    lane_contracts = [build_lane_baseline_contract(lane_id, genes_by_lane[lane_id], auth_sessions) for lane_id in LANE_IDS]
+    blocking = sorted({reason for lane in lane_contracts for reason in lane["blocking_reasons"]})
     return {
         "schema": "hack.evolve.baseline.v1",
         "target_url": config.target_url,
         "truth_label": "contract_plus_seeded_routes",
+        "source_label": "build_baseline_artifact",
+        "contract_decision": {
+            "status": "blocked_human_review_required" if blocking else "ready_with_contract_evidence",
+            "blocking_reasons": blocking,
+            "missing_fields_are_success": False,
+        },
+        "lane_baselines": lane_contracts,
         "route_behavior": [
             {
                 "path": path,
+                "expected_content_type": _expected_content_type(next(gene for gene in genome.genes if gene.path == path)),
                 "expected_response_shape": _expected_response_shape(next(gene for gene in genome.genes if gene.path == path)),
+                "auth_session_states": sorted({name for gene in genome.genes if gene.path == path for name in _auth_state_names_for_gene(gene, _lane_id_for_gene(gene))}),
+                "frontend_app_shell_fallback_detection": "enabled_negative_filter",
                 "missing_route_may_return_app_shell": True,
+                "truth_label": "contract_evidence",
             }
             for path in routes
         ],
@@ -1215,22 +1438,108 @@ def build_baseline_artifact(config: EvolutionConfig, genome: StrategyGenome) -> 
     }
 
 
+_AUTH_STATE_ORDER = {
+    "unauthenticated": 0,
+    "stale_invalid_auth": 1,
+    "invalid_or_stale_auth": 1,
+    "normal_user": 2,
+    "privileged_user": 3,
+}
+_ALLOWED_TRUTH_LABELS = {"implemented_evidence", "contract_evidence", "intended_contract", "artifact_derived"}
+
+
+def _fixture_state_name(fixture: dict[str, Any]) -> str:
+    raw = str(fixture.get("name") or fixture.get("state") or fixture.get("role") or "seed_fixture").strip().lower()
+    normalized = re.sub(r"[^a-z0-9]+", "_", raw).strip("_")
+    if normalized in {"invalid_or_stale_auth", "stale", "invalid", "stale_auth", "invalid_auth"}:
+        return "stale_invalid_auth"
+    if normalized in {"user", "normal", "normal_user"}:
+        return "normal_user"
+    if normalized in {"admin", "privileged", "privileged_user"}:
+        return "privileged_user"
+    if normalized in {"anonymous", "anon", "unauthenticated"}:
+        return "unauthenticated"
+    return normalized or "seed_fixture"
+
+
+def _redacted_seed_fixture(fixture: dict[str, Any]) -> dict[str, Any]:
+    name = _fixture_state_name(fixture)
+    truth_label = str(fixture.get("truth_label") or "contract_evidence")
+    if truth_label not in _ALLOWED_TRUTH_LABELS:
+        truth_label = "contract_evidence"
+    material_ref = fixture.get("material_ref") or fixture.get("fixture_ref") or fixture.get("source") or "seed_payload"
+    return {
+        "name": name,
+        "provided": True,
+        "status": "fixture_contract_provided",
+        "truth_label": truth_label,
+        "source_label": "seed_payload.auth_session_fixtures",
+        "material_ref": str(material_ref),
+        "credential_value_recorded": False,
+        "credential_source": "external_fixture_reference_not_generated_by_hack",
+    }
+
+
 def build_auth_sessions_artifact(seed_payload: dict[str, Any] | None = None) -> dict[str, Any]:
-    provided_states: list[dict[str, Any]] = []
+    provided_fixtures: list[dict[str, Any]] = []
     if isinstance(seed_payload, dict):
         fixtures = seed_payload.get("auth_session_fixtures")
         if isinstance(fixtures, list):
-            provided_states = [item for item in fixtures if isinstance(item, dict)]
-    default_states = [
-        {"name": "unauthenticated", "truth_label": "implemented", "credential_source": "none"},
-        {"name": "invalid_or_stale_auth", "truth_label": "implemented", "credential_source": "synthetic-invalid"},
-        {"name": "normal_user", "truth_label": "contract", "credential_source": "operator_or_fixture_required"},
-        {"name": "privileged_user", "truth_label": "contract", "credential_source": "operator_or_fixture_required"},
+            provided_fixtures = [_redacted_seed_fixture(item) for item in fixtures if isinstance(item, dict)]
+    by_name = {fixture["name"]: fixture for fixture in provided_fixtures}
+
+    states = [
+        {
+            "name": "unauthenticated",
+            "provided": True,
+            "status": "implemented_no_credentials",
+            "truth_label": "implemented_evidence",
+            "source_label": "built_in_negative_control",
+            "credential_source": "none",
+            "credential_value_recorded": False,
+        },
+        {
+            "name": "stale_invalid_auth",
+            "provided": True,
+            "status": "implemented_negative_control",
+            "truth_label": "implemented_evidence",
+            "source_label": "built_in_invalid_auth_negative_control",
+            "credential_source": "generated_invalid_marker_not_a_credential_source",
+            "credential_value_recorded": False,
+        },
     ]
+    for name in ("normal_user", "privileged_user"):
+        if name in by_name:
+            states.append({**by_name[name], "status": "fixture_contract_provided"})
+        else:
+            states.append(
+                {
+                    "name": name,
+                    "provided": False,
+                    "status": "blocked_human_review_required",
+                    "truth_label": "contract_evidence",
+                    "source_label": "operator_or_seed_fixture_required",
+                    "credential_source": "not_provided_by_hack",
+                    "credential_value_recorded": False,
+                }
+            )
+    for fixture in provided_fixtures:
+        if fixture["name"] not in {"unauthenticated", "stale_invalid_auth", "normal_user", "privileged_user"}:
+            states.append(fixture)
+    states = sorted(states, key=lambda row: (_AUTH_STATE_ORDER.get(row["name"], 100), row["name"], row.get("material_ref", "")))
+    blocking = [row["name"] for row in states if row["status"] == "blocked_human_review_required"]
     return {
         "schema": "hack.evolve.auth-sessions.v1",
-        "states": provided_states or default_states,
-        "rule": "auth expectations are explicit genes and fixture contracts; missing credentials never imply success",
+        "truth_label": "implemented_evidence_and_contract",
+        "source_label": "build_auth_sessions_artifact",
+        "states": states,
+        "seed_fixtures": sorted(provided_fixtures, key=lambda row: (row["name"], row.get("material_ref", ""))),
+        "contract_decision": {
+            "status": "human_review_required" if blocking else "ready_with_fixture_contracts",
+            "blocking_states": blocking,
+            "missing_fields_are_success": False,
+        },
+        "rule": "auth/session setup is a contract artifact, not a fake credential source; missing credentials never imply success",
     }
 
 
