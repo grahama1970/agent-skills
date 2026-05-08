@@ -514,6 +514,8 @@ def infer_compose_port(compose_path: Path, *, fallback: str) -> str:
     """Infer the host HTTP port from a Docker compose file."""
 
     text = compose_path.read_text(errors="replace")
+    if fallback != "80" and re.fullmatch(r"[1-9][0-9]{1,4}", fallback):
+        return fallback
     host_port_matches = re.findall(r'["\']?\$?\{?[A-Z0-9_:-]*?([1-9][0-9]{1,4})\}?:(18[0-9]{3}|[1-9][0-9]{3,4})["\']?', text)
     for host_port, container_port in host_port_matches:
         if container_port == "18789" or host_port == "18789":
@@ -593,7 +595,7 @@ def materialize_target_compose_env(
     workspace_dir = target_state / "workspace"
     for directory in (home_dir, config_dir, workspace_dir):
         directory.mkdir(parents=True, exist_ok=True)
-    seed_openclaw_hardening_config(config_dir, workspace_dir)
+    seed_openclaw_hardening_config(config_dir, workspace_dir, gateway_port=launch_plan.port)
 
     env = {
         key: value
@@ -606,6 +608,7 @@ def materialize_target_compose_env(
             "OPENCLAW_CONFIG_DIR": str(config_dir),
             "OPENCLAW_WORKSPACE_DIR": str(workspace_dir),
             "OPENCLAW_GATEWAY_PORT": launch_plan.port,
+            "OPENCLAW_BRIDGE_PORT": str(int(launch_plan.port) + 1) if launch_plan.port.isdigit() else "18790",
             "OPENCLAW_GATEWAY_HOST": "127.0.0.1",
             "OPENCLAW_GATEWAY_BIND": "lan",
             "OPENCLAW_HACK_HARDENING_VALIDATION": "1",
@@ -623,6 +626,7 @@ def write_target_compose_env_report(paths: SessionPaths, env: dict[str, str]) ->
         "OPENCLAW_CONFIG_DIR",
         "OPENCLAW_WORKSPACE_DIR",
         "OPENCLAW_GATEWAY_PORT",
+        "OPENCLAW_BRIDGE_PORT",
         "OPENCLAW_GATEWAY_HOST",
         "OPENCLAW_GATEWAY_BIND",
         "OPENCLAW_HACK_HARDENING_VALIDATION",
@@ -636,7 +640,7 @@ def write_target_compose_env_report(paths: SessionPaths, env: dict[str, str]) ->
     )
 
 
-def seed_openclaw_hardening_config(config_dir: Path, workspace_dir: Path) -> None:
+def seed_openclaw_hardening_config(config_dir: Path, workspace_dir: Path, *, gateway_port: str = "18789") -> None:
     """Seed minimal OpenClaw local config so Docker hardening sessions can boot."""
 
     config_path = config_dir / "openclaw.json"
@@ -645,7 +649,7 @@ def seed_openclaw_hardening_config(config_dir: Path, workspace_dir: Path) -> Non
     payload = {
         "gateway": {
             "mode": "local",
-            "port": 18789,
+            "port": int(gateway_port) if gateway_port.isdigit() else 18789,
         },
         "agents": {
             "defaults": {

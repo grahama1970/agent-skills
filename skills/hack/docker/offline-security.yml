@@ -1,0 +1,104 @@
+rules:
+  - id: java-runtime-exec
+    languages:
+      - java
+    severity: ERROR
+    message: "Command execution sink detected. Validate authorization, input control, and sandboxing."
+    pattern-either:
+      - pattern: Runtime.getRuntime().exec(...)
+      - pattern: new ProcessBuilder(...)
+
+  - id: java-weak-md5
+    languages:
+      - java
+    severity: WARNING
+    message: "MD5 hashing detected. Avoid weak digests for security-sensitive data."
+    pattern: MessageDigest.getInstance("MD5")
+
+  - id: java-weak-sha1
+    languages:
+      - java
+    severity: WARNING
+    message: "SHA-1 hashing detected. Avoid weak digests for security-sensitive data."
+    pattern: MessageDigest.getInstance("SHA-1")
+
+  - id: java-raw-sql-query
+    languages:
+      - java
+    severity: ERROR
+    message: "Raw SQL execution sink detected. Check whether user-controlled input can reach this query."
+    pattern-either:
+      - pattern: $ST.executeQuery(...)
+      - pattern: $ST.executeUpdate(...)
+      - pattern: $ST.execute(...)
+
+  - id: java-file-path-sink
+    languages:
+      - java
+    severity: WARNING
+    message: "File path construction sink detected. Check for path traversal and unsafe file access."
+    pattern-either:
+      - pattern: new File(...)
+      - pattern: Paths.get(...)
+      - pattern: FileSystems.getDefault().getPath(...)
+
+  - id: js-child-process-exec
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: "Node child_process execution sink detected. Validate authorization, argument construction, PATH control, and sandboxing."
+    pattern-either:
+      - pattern: exec(...)
+      - pattern: execSync(...)
+      - pattern: spawn(...)
+      - pattern: spawnSync(...)
+      - pattern: execFile(...)
+      - pattern: execFileSync(...)
+      - pattern: child_process.exec(...)
+      - pattern: child_process.execSync(...)
+      - pattern: child_process.spawn(...)
+      - pattern: child_process.spawnSync(...)
+      - pattern: child_process.execFile(...)
+      - pattern: child_process.execFileSync(...)
+
+  - id: js-weak-md5
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: "MD5 hashing detected. Avoid weak digests for security-sensitive identifiers, cache keys, and auth material."
+    pattern: createHash("md5")
+
+  - id: js-weak-sha1
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: "SHA-1 hashing detected. Avoid weak digests for security-sensitive identifiers, cache keys, and auth material."
+    pattern: createHash("sha1")
+
+  - id: js-file-path-sink
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: "File path construction sink detected. Check for traversal, symlink, and workspace escape risks."
+    pattern-either:
+      - pattern: path.join(...)
+      - pattern: path.resolve(...)
+      - pattern: fs.readFile(...)
+      - pattern: fs.writeFile(...)
+      - pattern: fs.rm(...)
+      - pattern: fs.cp(...)
+
+  - id: js-sql-template-query
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: "Template SQL query sink detected. Check whether user-controlled input can reach this query."
+    pattern-either:
+      - pattern: $DB.query(`...`)
+      - pattern: $DB.exec(`...`)
+      - pattern: $DB.prepare(`...`)

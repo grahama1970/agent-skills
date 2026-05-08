@@ -416,6 +416,21 @@ class SessionAuditPlanTests(unittest.TestCase):
 
         self.assertEqual(port, "18789")
 
+    def test_compose_port_inference_allows_explicit_parallel_host_port(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            compose = Path(tmp) / "docker-compose.yml"
+            compose.write_text(
+                "services:\n"
+                "  openclaw-gateway:\n"
+                "    ports:\n"
+                "      - \"${OPENCLAW_GATEWAY_PORT:-18789}:18789\"\n"
+                "      - \"${OPENCLAW_BRIDGE_PORT:-18790}:18790\"\n"
+            )
+
+            port = infer_compose_port(compose, fallback="18891")
+
+        self.assertEqual(port, "18891")
+
     def test_target_compose_env_isolates_openclaw_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -450,6 +465,7 @@ class SessionAuditPlanTests(unittest.TestCase):
             )
             report = json.loads((paths.reports_dir / "target-compose-env.json").read_text())
             self.assertEqual(env["OPENCLAW_GATEWAY_PORT"], "18789")
+            self.assertEqual(env["OPENCLAW_BRIDGE_PORT"], "18790")
             self.assertTrue(env["HOME"].startswith(str(root / "target-state")))
             self.assertTrue(env["OPENCLAW_CONFIG_DIR"].startswith(str(root / "target-state")))
             self.assertTrue(env["OPENCLAW_WORKSPACE_DIR"].startswith(str(root / "target-state")))
@@ -465,6 +481,42 @@ class SessionAuditPlanTests(unittest.TestCase):
                 report["environment"]["OPENCLAW_CONFIG_DIR"],
                 str(root / "target-state" / "config"),
             )
+
+    def test_target_compose_env_uses_requested_openclaw_port(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = SessionPaths(
+                session_dir=root,
+                scanner_dir=root / "scanner",
+                target_dir=root / "target",
+                repo_dir=root / "target" / "repo",
+                reports_dir=root / "reports",
+                logs_dir=root / "logs",
+                templates_dir=root / "nuclei-templates",
+            )
+            for directory in (
+                paths.session_dir,
+                paths.scanner_dir,
+                paths.target_dir,
+                paths.repo_dir,
+                paths.reports_dir,
+                paths.logs_dir,
+                paths.templates_dir,
+            ):
+                directory.mkdir(parents=True, exist_ok=True)
+            launch_plan = resolve_target_launch_plan(
+                paths=paths,
+                requested_compose_file="missing.yml",
+                requested_target_url="http://127.0.0.1",
+                requested_port="18891",
+            )
+
+            env = materialize_target_compose_env(paths=paths, launch_plan=launch_plan)
+            seeded_config = json.loads((root / "target-state" / "config" / "openclaw.json").read_text())
+
+        self.assertEqual(env["OPENCLAW_GATEWAY_PORT"], "18891")
+        self.assertEqual(env["OPENCLAW_BRIDGE_PORT"], "18892")
+        self.assertEqual(seeded_config["gateway"]["port"], 18891)
 
     def test_chaos_campaign_catalog_combines_uncommon_axes(self) -> None:
         catalog = build_strategy_catalog()
