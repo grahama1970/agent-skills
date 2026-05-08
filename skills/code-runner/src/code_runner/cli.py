@@ -184,6 +184,59 @@ def source_apply(spec: TaskSpec, patch: Path) -> dict[str, Any]:
     return state
 
 
+def finish_result(
+    spec: TaskSpec,
+    artifacts: RunArtifacts,
+    backend: str,
+    rounds: list[dict[str, Any]],
+    best_score: float,
+    error: str,
+    status_text: str,
+    work: Any,
+    source_head_before: str,
+    source_status_before: list[str],
+    source_state: dict[str, Any],
+) -> TaskResult:
+    """Remove the disposable worktree and write the final result artifact."""
+
+    worktree_removed = False
+    if work is not None:
+        worktree_removed = remove(work)
+    source_head_after = head(work.repo if work is not None else spec.cwd)
+    source_status_after = status(work.repo if work is not None else spec.cwd)
+    source_unchanged = (
+        source_head_before == source_head_after
+        and source_status_before == source_status_after
+    )
+    if spec.apply_to_source and status_text == "pass":
+        source_unchanged = source_status_after == []
+    result = TaskResult(
+        task_id=spec.task_id,
+        title=spec.title,
+        status=status_text,
+        dod_passed=status_text == "pass",
+        backend=backend,
+        rounds=len(rounds),
+        best_score=best_score,
+        error=error,
+        patch_artifact=str(artifacts.patch),
+        worktree_path=str(work.path) if work is not None else "",
+        worktree_removed=worktree_removed,
+        source_head_before=source_head_before,
+        source_head_after=source_head_after,
+        source_status_before=source_status_before,
+        source_status_after=source_status_after,
+        source_unchanged=source_unchanged,
+        round_details=rounds,
+        apply_to_source=spec.apply_to_source,
+        **source_state,
+    )
+    write_json(artifacts.result, result.model_dump())
+    artifacts.write_status(status_text, error=error)
+    append_event(artifacts.events, "run_finished", task_id=spec.task_id, status=status_text, error=error)
+    return result
+
+
 def run_task(spec: TaskSpec, raw: dict[str, Any], spec_file: str, backend_override: str = "", max_rounds_override: int = 0) -> TaskResult:
     """Run one task through isolated worktree and optional source apply."""
 
@@ -241,6 +294,38 @@ def run_task(spec: TaskSpec, raw: dict[str, Any], spec_file: str, backend_overri
             timeout=min(spec.timeout_seconds, 600),
         )
         artifacts.verifier.write_text(json.dumps(evidence.to_dict(), indent=2) + "\n")
+        if evidence.passed:
+            export_patch(work.path, spec.allowlist, artifacts.patch)
+            artifacts.hunk.write_text("# code-runner patch\n\n```diff\n" + artifacts.patch.read_text(errors="replace") + "\n```\n")
+            status_text = "pass"
+            best_score = evidence.score
+            source_state = {
+                "source_patch_applied": False,
+                "source_dod_passed": bool(spec.apply_to_source),
+                "source_commit": "",
+                "source_rollback_applied": False,
+                "source_apply_error": "",
+            }
+            append_event(
+                artifacts.events,
+                "already_satisfied",
+                task_id=spec.task_id,
+                dod_passed=True,
+                source_dod_passed=bool(spec.apply_to_source),
+            )
+            return finish_result(
+                spec,
+                artifacts,
+                backend,
+                rounds,
+                best_score,
+                error,
+                status_text,
+                work,
+                source_head_before,
+                source_status_before,
+                source_state,
+            )
         previous = evidence.to_dict()
         best_score = evidence.score
         context = file_context(work.path, spec.allowlist + spec.read_context)

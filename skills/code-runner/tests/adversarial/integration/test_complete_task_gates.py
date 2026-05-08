@@ -73,7 +73,7 @@ def test_complete_task_apply_not_started_when_isolated_dod_fails(tmp_path: Path,
     assert_source_snapshot_unchanged(repo, before)
 
 
-def test_complete_task_still_runs_backend_when_initial_dod_passes(tmp_path: Path, monkeypatch) -> None:
+def test_complete_task_skips_backend_when_initial_dod_already_passes(tmp_path: Path, monkeypatch) -> None:
     repo = make_minimal_python_repo(tmp_path)
     write(repo, "src/app.py", "def add_one(x):\n    return x + 1\n")
     git(repo, "add", "src/app.py")
@@ -105,16 +105,16 @@ def test_complete_task_still_runs_backend_when_initial_dod_passes(tmp_path: Path
     )
 
     assert result["status"] == "pass"
-    assert result["source_patch_applied"] is True
+    assert result["source_patch_applied"] is False
     assert result["source_dod_passed"] is True
-    assert result["source_commit"]
-    assert result["rounds"] == 1
-    assert result["round_details"][0]["changed_paths"] == ["src/app.py"]
-    assert fake.requests[0]["round_num"] == 1
-    assert "implemented by code-runner" in (repo / "src/app.py").read_text()
+    assert result["source_commit"] == ""
+    assert result["rounds"] == 0
+    assert result["round_details"] == []
+    assert fake.requests == []
+    assert "implemented by code-runner" not in (repo / "src/app.py").read_text()
 
 
-def test_initial_dod_pass_without_patch_fails_complete_task(tmp_path: Path, monkeypatch) -> None:
+def test_initial_dod_pass_without_patch_is_idempotent_complete_task_pass(tmp_path: Path, monkeypatch) -> None:
     repo = make_minimal_python_repo(tmp_path)
     write(repo, "src/app.py", "def add_one(x):\n    return x + 1\n")
     git(repo, "add", "src/app.py")
@@ -136,11 +136,12 @@ def test_initial_dod_pass_without_patch_fails_complete_task(tmp_path: Path, monk
         )
     )
 
-    assert_result_failed(result)
-    assert result["error"] == "no allowlisted changes produced"
+    assert result["status"] == "pass"
+    assert result["error"] == ""
     assert result["source_patch_applied"] is False
     assert result["source_commit"] == ""
-    assert result["round_details"][0]["error"] == "no allowlisted changes produced"
+    assert result["source_dod_passed"] is True
+    assert result["round_details"] == []
     assert_source_snapshot_unchanged(repo, before)
 
 

@@ -1424,19 +1424,34 @@ async def _run_code_runner(task: TaskRuntime, session_dir: Path) -> None:
             task.source_commit = str(result.get("source_commit") or "")
 
             if task.apply_to_source:
-                if not result.get("source_patch_applied") or not result.get("source_dod_passed"):
+                already_satisfied = (
+                    result.get("status") == "pass"
+                    and result.get("source_dod_passed")
+                    and not result.get("source_patch_applied")
+                    and not result.get("source_apply_error")
+                    and int(result.get("rounds") or 0) == 0
+                )
+                if not already_satisfied and (
+                    not result.get("source_patch_applied") or not result.get("source_dod_passed")
+                ):
                     task.review_status = "fail"
                     task.error = f"code-runner source apply failed: {result.get('source_apply_error') or 'unknown'}"
                     break
-                if task.commit_on_success and not task.source_commit:
+                if task.commit_on_success and not task.source_commit and not already_satisfied:
                     task.review_status = "fail"
                     task.error = "code-runner commit_on_success did not produce source_commit"
                     break
-                task.review_output += (
-                    f"\npatch_artifact={patch_artifact}\n"
-                    f"source_commit={task.source_commit}\n"
-                    "source worktree was updated by code-runner complete-task mode"
-                )
+                if already_satisfied:
+                    task.review_output += (
+                        f"\npatch_artifact={patch_artifact}\n"
+                        "source already satisfied visible DoD; no source patch or commit was needed"
+                    )
+                else:
+                    task.review_output += (
+                        f"\npatch_artifact={patch_artifact}\n"
+                        f"source_commit={task.source_commit}\n"
+                        "source worktree was updated by code-runner complete-task mode"
+                    )
                 source_cleanup_baseline = _git_status_porcelain(source_cwd)
                 if task.blind_tests:
                     blind_result = await _run_blind_eval(task, session_dir, attempt_tag, target_dir=source_cwd)
@@ -1559,6 +1574,8 @@ async def _run_blind_eval(
     HTTP errors and malformed responses raise to caller.
     """
     test_lab_url = os.environ.get("TEST_LAB_URL", "http://127.0.0.1:8787")
+    if os.environ.get("ORCHESTRATE_USE_TEST_LAB_SERVICE") != "1":
+        return await _run_local_blind_tests(task, session_dir, attempt_tag, target_dir or task.cwd)
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.post(
