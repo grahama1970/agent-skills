@@ -1,0 +1,9 @@
+{
+  "task_id": "dirty_allowlist_fail_closed",
+  "status": "fail",
+  "dod_passed": false,
+  "source_unchanged": true,
+  "source_patch_applied": false,
+  "source_rollback_applied": false,
+  "worktree_removed": true
+}

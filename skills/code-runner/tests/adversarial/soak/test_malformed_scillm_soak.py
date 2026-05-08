@@ -1,0 +1,35 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from ..helpers.assertions import assert_no_residual_code_runner_worktree, assert_result_failed, read_json
+from ..helpers.git_repo import make_minimal_python_repo
+from ..helpers.http_scillm import FakeScillmHTTPServer, ScillmResponse
+from ..helpers.runner import make_spec, run_spec
+from ..helpers.source_snapshot import assert_source_snapshot_unchanged, snapshot_source
+
+
+pytestmark = pytest.mark.soak
+
+
+def test_50_fake_scillm_http_failures_preserve_source_and_finalize_artifacts(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    before = snapshot_source(repo)
+
+    for index in range(50):
+        task_id = f"soak-scillm-http-400-{index:03d}"
+        output_dir = tmp_path / "out" / task_id
+        response = ScillmResponse(status=400, body='{"error":"bad request"}', content_type="application/json")
+        with FakeScillmHTTPServer([response]) as server:
+            monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+
+            result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=output_dir, extra={"max_rounds": 1}))
+
+        assert_result_failed(result)
+        assert "scillm HTTP 400" in result["error"]
+        assert read_json(output_dir / f"{task_id}.result.json")["task_id"] == task_id
+        assert read_json(output_dir / f"{task_id}.status.json")["task_id"] == task_id
+        assert_no_residual_code_runner_worktree(repo, task_id)
+        assert_source_snapshot_unchanged(repo, before)

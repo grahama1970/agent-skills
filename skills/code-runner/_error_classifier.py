@@ -105,8 +105,13 @@ _CONTEXT_OVERFLOW_PATTERNS = [
     "exceeds the limit",
     "context window",
     "prompt is too long",
-    "max_tokens",
     "maximum number of tokens",
+]
+
+_SCILLM_POLICY_PATTERNS = [
+    "scillm_policy_violation",
+    "max_tokens is not allowed through scillm",
+    "remove \"max_tokens\"",
 ]
 
 _MODEL_NOT_FOUND_PATTERNS = [
@@ -191,6 +196,8 @@ def classify_api_error(
         return _result(FailoverReason.rate_limit)
 
     if status_code == 400:
+        if any(p in error_msg for p in _SCILLM_POLICY_PATTERNS):
+            return _result(FailoverReason.format_error, retryable=False)
         # Check for context overflow in 400
         if any(p in error_msg for p in _CONTEXT_OVERFLOW_PATTERNS):
             return _result(FailoverReason.context_overflow)

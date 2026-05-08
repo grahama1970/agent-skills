@@ -137,86 +137,41 @@ def _default_parent_for(task_id: str) -> Path:
     return (DEFAULT_WORKTREE_ROOT / _safe_slug(task_id)).resolve()
 
 
-def restore_patch_base_tree(info: WorktreeInfo) -> None:
-    """Restore the disposable worktree to its original checkout baseline."""
+def _canonical_patch_path(repo: Path, worktree: Path, value: str | Path) -> Path:
+    """Resolve a predecessor patch path without allowing repository escapes.
 
-    _run_git(["checkout", "--", "."], info.path, timeout=60)
-    _run_git(["clean", "-fd"], info.path, timeout=60)
+    Patch paths are interpreted as repository paths.  Absolute paths are allowed
+    only when they canonicalize under the source repository root or under the
+    disposable worktree root.  This permits callers to pass either source-repo or
+    worktree-local patch files while still rejecting ``..`` and symlink escapes.
+    """
 
+    raw = Path(value).expanduser()
+    if raw.is_absolute():
+        errors: list[str] = []
+        for root in (repo, worktree):
+            try:
+                return _resolve_under_repo(root, raw, kind="patch file", must_exist=True)
+            except WorktreeRuntimeError as exc:
+                errors.append(str(exc))
+                if "escapes repository root" not in str(exc) and "does not exist" not in str(exc):
+                    raise
+        if any("escapes repository root" in error for error in errors):
+            raise WorktreeRuntimeError(f"patch file escapes repository root: {value}")
+        raise WorktreeRuntimeError(f"patch file does not exist: {value}")
 
-def changed_path_statuses(info: WorktreeInfo) -> list[tuple[str, str]]:
-    """Return git porcelain status and path pairs in the disposable worktree."""
-
-    proc = _run_git(["status", "--porcelain=v1", "-z", "--untracked-files=all"], info.path, timeout=60)
-    entries: list[tuple[str, str]] = []
-    records = [record for record in proc.stdout.split("\0") if record]
-    index = 0
-    while index < len(records):
-        record = records[index]
-        status = record[:2]
-        path = record[3:] if len(record) > 3 else ""
-        if status.startswith("R") or status.endswith("R"):
-            index += 1
-            if index < len(records):
-                path = records[index]
-        if path:
-            entries.append((status, path))
-        index += 1
-    return sorted(set(entries), key=lambda item: item[1])
-
-
-def changed_paths(info: WorktreeInfo) -> list[str]:
-    """Return all changed paths in the disposable worktree."""
-
-    return sorted({path for _status, path in changed_path_statuses(info)})
+    repo_candidate = repo.expanduser().resolve() / raw
+    if repo_candidate.exists():
+        return _resolve_under_repo(repo, raw, kind="patch file", must_exist=True)
+    return _resolve_under_repo(worktree, raw, kind="patch file", must_exist=True)
 
 
-def remove_untracked_paths(info: WorktreeInfo, paths: Iterable[str]) -> None:
-    """Remove selected untracked paths from the disposable worktree."""
+def apply_predecessor_patches(info: WorktreeInfo, patch_files: Iterable[str | Path] | None) -> None:
+    """Apply zero or more predecessor patch files before the runner loop starts."""
 
-    selected = sorted({path for path in paths if path and not Path(path).is_absolute() and ".." not in Path(path).parts})
-    if selected:
-        _run_git(["clean", "-fd", "--", *selected], info.path, timeout=60)
-
-
-def paths_within_allowlist(paths: Iterable[str], allowlist_paths: Iterable[str | Path]) -> tuple[bool, list[str]]:
-    """Return whether changed paths are fully covered by the allowlist."""
-
-    allowed = [str(path).rstrip("/") for path in allowlist_paths]
-    violations: list[str] = []
-    for path in paths:
-        if not any(path == item or path.startswith(f"{item}/") for item in allowed):
-            violations.append(path)
-    return not violations, violations
-
-
-def dirty_paths_for_allowlist(cwd: str | Path, allowlist_paths: Iterable[str | Path]) -> list[str]:
-    """Return source worktree dirty paths that overlap the write allowlist."""
-
-    root = repo_root(cwd)
-    rel_paths = [_relative_repo_path(root, path, kind="allowlist path") for path in allowlist_paths]
-    if not rel_paths:
-        return []
-    proc = _run_git(
-        ["status", "--porcelain=v1", "-z", "--untracked-files=all", "--", *rel_paths],
-        root,
-        timeout=60,
-    )
-    dirty: list[str] = []
-    records = [record for record in proc.stdout.split("\0") if record]
-    index = 0
-    while index < len(records):
-        record = records[index]
-        status = record[:2]
-        path = record[3:] if len(record) > 3 else ""
-        if status.startswith("R") or status.endswith("R"):
-            index += 1
-            if index < len(records):
-                path = records[index]
-        if path:
-            dirty.append(path)
-        index += 1
-    return dirty
+    for patch_file in patch_files or []:
+        patch = _canonical_patch_path(info.repo_root, info.path, patch_file)
+        _run_git(["apply", "--whitespace=nowarn", str(patch)], info.path, timeout=60)
 
 
 def export_allowlist_patch(
@@ -236,9 +191,6 @@ def export_allowlist_patch(
         raise WorktreeRuntimeError("cannot export allowlist patch with an empty allowlist")
     destination = Path(output_patch).expanduser().resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
-    existing_rel_paths = [path for path in rel_paths if (info.path / path).exists()]
-    if existing_rel_paths:
-        _run_git(["add", "-N", "--", *existing_rel_paths], info.path, timeout=60)
     proc = _run_git(["diff", "--", *rel_paths], info.path, timeout=60)
     destination.write_text(proc.stdout)
     return destination
@@ -250,6 +202,7 @@ def create_disposable_worktree(
     task_id: str = "code-runner",
     base_ref: str = "HEAD",
     parent_dir: str | Path | None = None,
+    predecessor_patches: Iterable[str | Path] | None = None,
 ) -> WorktreeInfo:
     """Create an isolated git worktree on a new temporary branch.
 
@@ -268,6 +221,7 @@ def create_disposable_worktree(
     try:
         _run_git(["worktree", "add", "-b", branch, str(path), base_ref], root, timeout=60)
         info = WorktreeInfo(path=path, branch=branch, base_ref=base_ref, repo_root=root)
+        apply_predecessor_patches(info, predecessor_patches)
     except Exception:
         if path.exists():
             shutil.rmtree(path, ignore_errors=True)
@@ -352,6 +306,7 @@ class DisposableWorktreeRuntime:
         task_id: str = "code-runner",
         base_ref: str = "HEAD",
         parent_dir: str | Path | None = None,
+        predecessor_patches: Iterable[str | Path] | None = None,
         allowlist_paths: Iterable[str | Path] | None = None,
         export_patch_path: str | Path | None = None,
     ) -> None:
@@ -359,6 +314,7 @@ class DisposableWorktreeRuntime:
         self.task_id = task_id
         self.base_ref = base_ref
         self.parent_dir = Path(parent_dir) if parent_dir is not None else None
+        self.predecessor_patches = list(predecessor_patches or [])
         self.allowlist_paths = list(allowlist_paths or [])
         self.export_patch_path = Path(export_patch_path) if export_patch_path is not None else None
         self.info: WorktreeInfo | None = None
@@ -382,6 +338,7 @@ class DisposableWorktreeRuntime:
             task_id=self.task_id,
             base_ref=self.base_ref,
             parent_dir=self.parent_dir,
+            predecessor_patches=self.predecessor_patches,
         )
         return self
 
@@ -421,6 +378,7 @@ def disposable_worktree(
     task_id: str = "code-runner",
     base_ref: str = "HEAD",
     parent_dir: str | Path | None = None,
+    predecessor_patches: Iterable[str | Path] | None = None,
     allowlist_paths: Iterable[str | Path] | None = None,
     export_patch_path: str | Path | None = None,
 ) -> DisposableWorktreeRuntime:
@@ -431,6 +389,7 @@ def disposable_worktree(
         task_id=task_id,
         base_ref=base_ref,
         parent_dir=parent_dir,
+        predecessor_patches=predecessor_patches,
         allowlist_paths=allowlist_paths,
         export_patch_path=export_patch_path,
     )

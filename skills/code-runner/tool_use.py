@@ -947,7 +947,6 @@ def run_tool_use_loop(
         "model": model,
         "tools": TOOLS,
         "tool_choice": "auto",
-        "reasoning_effort": reasoning,
     }
     # scillm rejects max_tokens by policy. Keep the argument for callers that
     # still pass a budget, but do not forward it to the proxy.

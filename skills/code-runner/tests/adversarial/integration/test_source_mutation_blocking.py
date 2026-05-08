@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from ..helpers.assertions import assert_no_residual_code_runner_worktree, assert_result_failed
+from ..helpers.git_repo import make_minimal_python_repo
+from ..helpers.monkeypatch_scillm import FakeScillm, final_message, tool_call
+from ..helpers.runner import make_spec, run_spec
+from ..helpers.source_snapshot import assert_source_snapshot_unchanged, snapshot_source
+
+
+def test_run_command_cannot_mutate_source_via_CODE_RUNNER_SOURCE_CWD(tmp_path: Path, monkeypatch) -> None:
+    """
+    A model must not be able to mutate source by using the env var as an indirect path.
+
+    The current implementation only rewrites the literal source path in the command string.
+    This test forces detection/blocking of shell-expanded or Python-read source paths.
+    """
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "source-env-mutation-blocked"
+    output_dir = tmp_path / "out" / task_id
+    before = snapshot_source(repo)
+
+    FakeScillm(
+        [
+            tool_call(
+                "run_command",
+                {
+                    "command": "python - <<'PY'\n"
+                    "import os\n"
+                    "from pathlib import Path\n"
+                    "source = Path(os.environ['CODE_RUNNER_SOURCE_CWD'])\n"
+                    "(source / 'src/app.py').write_text('def add_one(x):\\n    return 999\\n')\n"
+                    "PY"
+                },
+            ),
+            final_message("attempted source mutation"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=output_dir))
+
+    assert_result_failed(result)
+    assert_source_snapshot_unchanged(repo, before)
+    assert_no_residual_code_runner_worktree(repo, task_id)

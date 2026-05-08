@@ -85,7 +85,10 @@ run_in_twin() {
 
 # State directory for session persistence
 STATE_DIR="${ORCHESTRATE_STATE_DIR:-.orchestrate}"
-ORCHESTRATE_DIR="${ORCHESTRATE_HOME:-$SCRIPT_DIR}"
+ARTIFACT_ROOT="${AGENT_SKILLS_ARTIFACT_ROOT:-/mnt/storage12tb/artifacts/agent-skills}"
+ORCHESTRATE_DIR="${ORCHESTRATE_HOME:-$ARTIFACT_ROOT/orchestrate}"
+export ORCHESTRATE_HOME="$ORCHESTRATE_DIR"
+mkdir -p "$ORCHESTRATE_DIR/structured"
 SCHEDULER_HOME="${SCHEDULER_HOME:-$HOME/.pi/scheduler}"
 SCHEDULER_JOBS_FILE="$SCHEDULER_HOME/jobs.json"
 
@@ -116,6 +119,82 @@ check_dependencies() {
 # Valid model names for `with <model>` syntax
 VALID_MODELS="pi claude codex gemini deepseek ptc"
 
+scillm_model_for_route() {
+    local model="$1"
+    case "$model" in
+        claude)
+            echo "text-claude"
+            ;;
+        codex)
+            echo "gpt-5.5"
+            ;;
+        gemini)
+            echo "text-gemini-oauth"
+            ;;
+        deepseek)
+            echo "deepseek-ai/DeepSeek-V3"
+            ;;
+        *)
+            echo "$model"
+            ;;
+    esac
+}
+
+route_to_scillm() {
+    local prompt="$1"
+    local model="$2"
+
+    SCILLM_ROUTE_PROMPT="$prompt" \
+    SCILLM_ROUTE_MODEL="$(scillm_model_for_route "$model")" \
+    SCILLM_ROUTE_URL="${SCILLM_API_BASE:-http://localhost:4001/v1/chat/completions}" \
+    SCILLM_ROUTE_KEY="${SCILLM_PROXY_KEY:-sk-dev-proxy-123}" \
+    python3 - <<'PY'
+import os
+import sys
+
+import httpx
+
+
+def normalize_scillm_chat_url(raw_url: str) -> str:
+    url = raw_url.strip().rstrip("/")
+    if url.endswith("/v1/chat/completions"):
+        return url
+    if url.endswith("/v1"):
+        return f"{url}/chat/completions"
+    return f"{url}/v1/chat/completions"
+
+
+model = os.environ["SCILLM_ROUTE_MODEL"]
+body = {
+    "model": model,
+    "messages": [{"role": "user", "content": os.environ["SCILLM_ROUTE_PROMPT"]}],
+    "scillm_metadata": {
+        "caller": "orchestrate",
+        "route": "legacy-markdown-fallback",
+    },
+}
+if model.startswith(("gpt-", "codex-")):
+    body["reasoning_effort"] = "high"
+
+try:
+    response = httpx.post(
+        normalize_scillm_chat_url(os.environ["SCILLM_ROUTE_URL"]),
+        headers={
+            "Authorization": f"Bearer {os.environ['SCILLM_ROUTE_KEY']}",
+            "X-Caller-Skill": "orchestrate",
+        },
+        json=body,
+        timeout=120.0,
+    )
+    response.raise_for_status()
+except httpx.HTTPStatusError as exc:
+    print(exc.response.text, file=sys.stderr)
+    raise SystemExit(1)
+
+print(response.json()["choices"][0]["message"]["content"])
+PY
+}
+
 route_to_model() {
     local prompt="$1"
     local model="$2"
@@ -126,12 +205,8 @@ route_to_model() {
         pi)
             pi -p "$prompt"
             ;;
-        claude|codex|gemini)
-            echo "Warning: subagent-service is deprecated. Falling back to scillm for model '$model'." >&2
-            "$SCRIPT_DIR/../scillm/run.sh" complete --model "$model" "$prompt"
-            ;;
-        deepseek)
-            "$SCRIPT_DIR/../scillm/run.sh" complete --model "deepseek-ai/DeepSeek-V3" "$prompt"
+        claude|codex|gemini|deepseek)
+            route_to_scillm "$prompt" "$model"
             ;;
         ptc)
             # ptc is not a model backend — it enables parallel execution
@@ -162,6 +237,68 @@ resolve_model() {
     fi
 }
 
+prepare_structured_plan() {
+    local source_plan="$1"
+    local cmd_model="$2"
+
+    if [[ -z "$cmd_model" || "$cmd_model" == "ptc" ]]; then
+        echo "$source_plan"
+        return 0
+    fi
+
+    if [[ "$cmd_model" == "pi" ]]; then
+        echo "Error: structured plans do not support command-level 'with pi'." >&2
+        echo "Set per-task backends, or use codex/claude/gemini/deepseek as the structured default." >&2
+        return 1
+    fi
+
+    mkdir -p "$ORCHESTRATE_DIR/structured"
+    local prepared_plan
+    prepared_plan=$(mktemp "$ORCHESTRATE_DIR/structured/override-XXXXXX.yaml")
+
+    ORCHESTRATE_SOURCE_PLAN="$source_plan" \
+    ORCHESTRATE_PREPARED_PLAN="$prepared_plan" \
+    ORCHESTRATE_CMD_MODEL="$cmd_model" \
+    ORCHESTRATE_SHARED_PLAN="$SHARED_PLAN_PY" \
+    python3 - <<'PY'
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(os.environ["ORCHESTRATE_SHARED_PLAN"]).resolve().parent))
+from structured_plan import load_structured_plan  # type: ignore
+import yaml
+
+source_path = Path(os.environ["ORCHESTRATE_SOURCE_PLAN"])
+prepared_path = Path(os.environ["ORCHESTRATE_PREPARED_PLAN"])
+cmd_model = os.environ["ORCHESTRATE_CMD_MODEL"]
+
+scillm_defaults = {
+    "claude": "text-claude",
+    "codex": "gpt-5.5",
+    "gemini": "text-gemini-oauth",
+    "deepseek": "deepseek-ai/DeepSeek-V3",
+}
+
+data = load_structured_plan(source_path)
+for task in data.get("tasks") or []:
+    if not isinstance(task, dict):
+        continue
+    runner = str(task.get("runner") or "").strip()
+    existing_backend = str(task.get("backend") or task.get("model") or "").strip()
+    if existing_backend or runner in {"", "local", "skill"}:
+        continue
+    if runner == "scillm":
+        task["backend"] = scillm_defaults.get(cmd_model, cmd_model)
+    else:
+        task["backend"] = cmd_model
+
+prepared_path.write_text(yaml.safe_dump(data, sort_keys=False))
+PY
+
+    echo "$prepared_plan"
+}
+
 show_help() {
     cat <<'EOF'
 Orchestrate - Task execution with quality gates
@@ -180,6 +317,9 @@ Model routing:
   orchestrate run tasks.md with codex        Use codex for all LLM steps
   orchestrate run tasks.md with gemini       Use Gemini via scillm
   orchestrate run tasks.md with deepseek     Use DeepSeek via scillm
+
+  Structured YAML plans keep explicit task backends; command-level `with <model>`
+  only fills missing backends on non-local tasks.
 
   Per-step override in task files:
     - skill: /assess with codex
@@ -284,6 +424,11 @@ cmd_run() {
         echo "Model override: $cmd_model"
     fi
 
+    local execution_task_file="$task_file"
+    if [[ "$is_structured" == "true" ]]; then
+        execution_task_file=$(prepare_structured_plan "$task_file" "$cmd_model") || exit 1
+    fi
+
     # Dry-run: show routing plan and exit
     if [[ "$dry_run" == "true" ]]; then
         echo "=== Routing Plan (dry-run) ==="
@@ -295,7 +440,7 @@ cmd_run() {
         if [[ "$is_structured" == "true" ]]; then
             local summary_json
             summary_json=$(mktemp)
-            python3 "$SHARED_PLAN_PY" summary "$task_file" > "$summary_json" 2>/dev/null
+            python3 "$SHARED_PLAN_PY" summary "$execution_task_file" > "$summary_json" 2>/dev/null
             python3 - "$summary_json" <<'PY'
 import json, sys
 with open(sys.argv[1]) as f:
@@ -368,13 +513,13 @@ PY
     if [[ -x "$SCRIPT_DIR/preflight.sh" ]]; then
         echo "Running preflight check..."
         if [[ -n "$TWIN_ID" ]]; then
-            docker exec "$TWIN_ID" bash -c "cd /workspace && $(cat "$SCRIPT_DIR/preflight.sh")" "$task_file" || {
+            docker exec "$TWIN_ID" bash -c "cd /workspace && $(cat "$SCRIPT_DIR/preflight.sh")" "$execution_task_file" || {
                 echo "Error: Preflight check failed inside Digital Twin." >&2
                 exit 1
             }
         else
             if [[ "$is_structured" == "true" ]]; then
-                if ! python3 "$SHARED_PLAN_PY" validate "$task_file" >/dev/null; then
+                if ! python3 "$SHARED_PLAN_PY" validate "$execution_task_file" >/dev/null; then
                     echo "Error: Structured plan validation failed. Resolve issues before running." >&2
                     exit 1
                 fi
@@ -385,11 +530,7 @@ PY
                 if [[ -f "$review_plan_py" ]]; then
                     echo "Running /review-plan..."
                     local review_output review_exit=0
-                    review_output=$(python3 "$review_plan_py" check "$task_file" 2>&1) || review_exit=$?
-                    local review_output_file
-                    review_output_file=$(mktemp -t orchestrate-review-plan.XXXXXX.txt)
-                    printf "%s\n" "$review_output" > "$review_output_file"
-                    export ORCHESTRATE_REVIEW_PLAN_OUTPUT_FILE="$review_output_file"
+                    review_output=$(python3 "$review_plan_py" check "$execution_task_file" 2>&1) || review_exit=$?
                     # If review-plan itself crashed, block — a broken validator is not a pass
                     if [[ $review_exit -ne 0 ]] && ! echo "$review_output" | grep -qE "(PASS|WARN|FAIL)"; then
                         echo "Error: /review-plan crashed (exit $review_exit):" >&2
@@ -407,7 +548,7 @@ PY
                         echo "BLOCKED: /review-plan found $fail_count FAIL-grade issues:" >&2
                         echo "$review_output" | grep -E '^\s*-?\s*\*?\*?(FAIL|adversarial-test)\*?\*?:|\[FAIL\]' >&2
                         echo "" >&2
-                        echo "Fix the plan, then re-run. Use: review-plan review $task_file --suggest-fixes" >&2
+                        echo "Fix the plan, then re-run. Use: review-plan review $execution_task_file --suggest-fixes" >&2
                         if [[ "${ORCHESTRATE_SKIP_REVIEW:-0}" != "1" ]]; then
                             exit 1
                         fi
@@ -433,18 +574,18 @@ PY
     fi
 
     if [[ "$is_structured" == "true" ]]; then
-        if [[ -n "$cmd_model" ]]; then
-            echo "Error: command-level 'with <model>' does not override structured task backends." >&2
-            echo "Set runner/backend per task in the structured plan instead." >&2
-            exit 1
-        fi
         if [[ "$background" == "true" ]]; then
+            if [[ "${ORCHESTRATE_ALLOW_BACKGROUND:-0}" != "1" ]]; then
+                echo "Error: --background is disabled in stabilization mode." >&2
+                echo "Run foreground, or set ORCHESTRATE_ALLOW_BACKGROUND=1 to opt into detached execution." >&2
+                exit 1
+            fi
             # Background mode: launch executor as detached process, print session info.
             # The project agent reads the first JSON line to get session_dir for intervention.
             echo "Launching orchestration in background..."
             local log_file="${ORCHESTRATE_DIR}/structured/bg-$(date +%s).log"
             mkdir -p "$(dirname "$log_file")"
-            nohup uv run --project "$SCRIPT_DIR" python "$STRUCTURED_EXECUTE_PY" run "$task_file" $resume_flag \
+            nohup uv run --project "$SCRIPT_DIR" python "$STRUCTURED_EXECUTE_PY" run "$execution_task_file" $resume_flag \
                 > "$log_file" 2>&1 &
             local bg_pid=$!
             echo "PID: ${bg_pid}"
@@ -459,7 +600,7 @@ PY
             return 0
         fi
         echo "Executing structured plan with explicit runner dispatch..."
-        uv run --project "$SCRIPT_DIR" python "$STRUCTURED_EXECUTE_PY" run "$task_file" $resume_flag
+        uv run --project "$SCRIPT_DIR" python "$STRUCTURED_EXECUTE_PY" run "$execution_task_file" $resume_flag
         return $?
     fi
 

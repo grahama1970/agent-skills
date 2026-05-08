@@ -12,3 +12,8 @@ dependencies = [
     "rich>=13.0",
     "json-repair>=0.59.1",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "soak: long-running soak and parallel stress tests",
+]

@@ -1,0 +1,182 @@
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from code_runner.scillm import run_tool_loop, stream_chat
+from ..helpers.http_scillm import (
+    FakeScillmHTTPServer,
+    ScillmResponse,
+    assistant_stop,
+    content_delta,
+    done,
+    empty_delta,
+    tool_delta,
+)
+
+
+def _payload() -> dict:
+    return {
+        "model": "test",
+        "messages": [{"role": "user", "content": "fix it"}],
+        "tools": [],
+        "tool_choice": "required",
+        "reasoning_effort": "high",
+    }
+
+
+def test_stream_chat_sends_required_headers_and_supported_request_shape(monkeypatch) -> None:
+    with FakeScillmHTTPServer([assistant_stop("fixed")]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+        monkeypatch.setenv("SCILLM_PROXY_KEY", "test-proxy-key")
+        monkeypatch.setenv("CODE_RUNNER_BACKEND_TIMEOUT", "7")
+        monkeypatch.setenv("CODE_RUNNER_STREAM_HEARTBEAT_S", "2")
+
+        result = stream_chat(_payload(), "task-a", 3)
+
+    assert result["choices"][0]["message"]["content"] == "fixed"
+    assert len(server.requests) == 1
+    request = server.requests[0]
+    assert request.path == "/v1/chat/completions"
+    assert request.headers["authorization"] == "Bearer test-proxy-key"
+    assert request.headers["x-caller-skill"] == "code-runner:task-a:3"
+    assert request.body is not None
+    assert request.body["model"] == "test"
+    assert request.body["messages"] == [{"role": "user", "content": "fix it"}]
+    assert request.body["tool_choice"] == "required"
+    assert request.body["reasoning_effort"] == "high"
+    assert request.body["stream"] is True
+    assert request.body["stream_progress_events"] is True
+    assert request.body["stream_heartbeat_s"] == 2
+    assert request.body["timeout"] == 7.0
+
+
+def test_stream_chat_accepts_full_chat_completion_endpoint(monkeypatch) -> None:
+    with FakeScillmHTTPServer([assistant_stop("ok")]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", f"{server.base_url}/v1/chat/completions")
+
+        stream_chat(_payload(), "full-url", 1)
+
+    assert server.requests[0].path == "/v1/chat/completions"
+
+
+def test_stream_chat_http_400_raises_diagnostic_error(monkeypatch) -> None:
+    response = ScillmResponse(status=400, body='{"error":"missing X-Caller-Skill"}', content_type="application/json")
+    with FakeScillmHTTPServer([response]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+
+        with pytest.raises(RuntimeError, match="scillm HTTP 400"):
+            stream_chat(_payload(), "http-400", 1)
+
+
+def test_stream_chat_missing_done_or_finish_reason_fails_safely(monkeypatch) -> None:
+    response = ScillmResponse(lines=[content_delta("partial")])
+    with FakeScillmHTTPServer([response]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+
+        with pytest.raises(TimeoutError, match="without terminal event"):
+            stream_chat(_payload(), "missing-done", 1)
+
+
+def test_stream_chat_empty_delta_fails_safely(monkeypatch) -> None:
+    response = ScillmResponse(lines=[empty_delta(finish_reason="stop"), done()])
+    with FakeScillmHTTPServer([response]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+
+        with pytest.raises(TimeoutError, match="without assistant delta"):
+            stream_chat(_payload(), "empty-delta", 1)
+
+
+def test_stream_chat_malformed_json_fails_deterministically(monkeypatch) -> None:
+    response = ScillmResponse(lines=["data: {not-json", done()])
+    with FakeScillmHTTPServer([response]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+
+        with pytest.raises(json.JSONDecodeError):
+            stream_chat(_payload(), "malformed-json", 1)
+
+
+def test_stream_chat_fragmented_tool_call_arguments_are_reassembled(monkeypatch) -> None:
+    response = ScillmResponse(
+        lines=[
+            tool_delta(call_id="call-1", name="write_file", arguments='{"path": "src/app.py", '),
+            tool_delta(arguments='"content": "def add_one(x):\\n    return x + 1\\n"}', finish_reason="tool_calls"),
+            done(),
+        ]
+    )
+    with FakeScillmHTTPServer([response]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+
+        result = stream_chat(_payload(), "fragmented-tool", 1)
+
+    message = result["choices"][0]["message"]
+    assert message["content"] == ""
+    assert message["tool_calls"] == [
+        {
+            "id": "call-1",
+            "type": "function",
+            "function": {
+                "name": "write_file",
+                "arguments": '{"path": "src/app.py", "content": "def add_one(x):\\n    return x + 1\\n"}',
+            },
+        }
+    ]
+
+
+def test_run_tool_loop_malformed_tool_call_arguments_do_not_crash(monkeypatch, tmp_path) -> None:
+    response = ScillmResponse(
+        lines=[
+            tool_delta(call_id="bad-args", name="write_file", arguments='["not an object"]', finish_reason="tool_calls"),
+            done(),
+        ]
+    )
+    with FakeScillmHTTPServer([response, assistant_stop("done")]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+
+        written, messages = run_tool_loop(
+            "system",
+            "user",
+            "test",
+            str(tmp_path),
+            ["src/app.py"],
+            ["README.md"],
+            "invalid-args",
+            1,
+        )
+
+    assert written == []
+    tool_errors = [message for message in messages if message.get("role") == "tool"]
+    assert len(tool_errors) == 1
+    assert json.loads(tool_errors[0]["content"])["error_type"] == "INVALID_ARGS"
+    assert len(server.requests) == 2
+
+
+def test_run_tool_loop_unknown_tool_result_is_captured_without_crashing(monkeypatch, tmp_path) -> None:
+    response = ScillmResponse(
+        lines=[
+            tool_delta(call_id="unknown-tool", name="delete_file", arguments='{"path": "src/app.py"}', finish_reason="tool_calls"),
+            done(),
+        ]
+    )
+    with FakeScillmHTTPServer([response, assistant_stop("done")]) as server:
+        monkeypatch.setenv("SCILLM_API_BASE", server.base_url)
+
+        written, messages = run_tool_loop(
+            "system",
+            "user",
+            "test",
+            str(tmp_path),
+            ["src/app.py"],
+            ["README.md"],
+            "unknown-tool",
+            1,
+        )
+
+    assert written == []
+    tool_results = [message for message in messages if message.get("role") == "tool"]
+    assert len(tool_results) == 1
+    parsed = json.loads(tool_results[0]["content"])
+    assert parsed["ok"] is False
+    assert parsed["error_type"] == "UNKNOWN_TOOL"
+    assert len(server.requests) == 2

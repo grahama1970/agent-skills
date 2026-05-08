@@ -9,7 +9,9 @@ Inputs/Outputs/Failures: See functions below.
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -67,6 +69,210 @@ def main() -> None:
     source_text = "\n".join(f.message for f in source_failures)
     assert "must commit successful source changes" in source_text
     assert "must roll back failed source apply" in source_text
+
+    tests_are_not_blind_task = {
+        **task,
+        "definition_of_done": {"command": "pytest -q", "assertion": "exit_code == 0"},
+        "read_context": ["src/a.py"],
+        "dirty_worktree_policy": "isolated_worktree",
+        "tests": ["pytest -q tests/test_a.py"],
+        "blind_tests": [],
+    }
+    test_findings = []
+    module.check_execution_routing(tests_are_not_blind_task, test_findings)
+    test_text = "\n".join(f.message for f in test_findings if f.grade == "FAIL")
+    assert "no blind_tests" in test_text
+
+    live_dod_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "definition_of_done": {
+            "command": "curl -fsS http://localhost:3000/api/health",
+            "assertion": "exit_code == 0",
+        },
+        "service_under_test": "local dev server",
+    }
+    live_findings = []
+    module.check_execution_routing(live_dod_task, live_findings)
+    live_text = "\n".join(f.message for f in live_findings if f.grade == "FAIL")
+    assert "isolated worktree" in live_text
+
+    forbidden_field_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "hidden_tests": [{"command": "pytest tests/hidden.py"}],
+        "backend_racing": ["codex", "claude"],
+        "tools": ["memory_search"],
+    }
+    forbidden_findings = []
+    module.check_execution_routing(forbidden_field_task, forbidden_findings)
+    forbidden_text = "\n".join(f.message for f in forbidden_findings if f.grade == "FAIL")
+    assert "orchestration-only fields" in forbidden_text
+    assert "hidden_tests" in forbidden_text
+    assert "backend_racing" in forbidden_text
+    assert "tools" in forbidden_text
+
+    forbidden_capability_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "skills": ["memory"],
+        "memory": {"enabled": True},
+        "memory_query": "find prior failures",
+        "memory_context": "Allowed only as prompt-only orchestrate context.",
+        "dogpile_context": "Allowed only as prompt-only orchestrate context.",
+        "web_context": "Allowed only as prompt-only orchestrate context.",
+    }
+    capability_findings = []
+    module.check_execution_routing(forbidden_capability_task, capability_findings)
+    capability_text = "\n".join(f.message for f in capability_findings if f.grade == "FAIL")
+    assert "orchestration-only fields" in capability_text
+    assert "skills" in capability_text
+    assert "memory" in capability_text
+    assert "memory_query" in capability_text
+    assert "memory_context" not in capability_text
+    assert "dogpile_context" not in capability_text
+    assert "web_context" not in capability_text
+
+    native_adapter_backend_task = {
+        **tests_are_not_blind_task,
+        "backend": "codex-exec",
+        "blind_tests": [{"command": "pytest -q"}],
+    }
+    native_backend_findings = []
+    module.check_scillm_backend(native_adapter_backend_task, native_backend_findings)
+    assert [finding for finding in native_backend_findings if finding.grade == "FAIL"] == []
+
+    live_public_test_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "tests": ["npx playwright test tests/ui.spec.ts --project chromium"],
+    }
+    live_public_findings = []
+    module.check_execution_routing(live_public_test_task, live_public_findings)
+    live_public_text = "\n".join(f.message for f in live_public_findings if f.grade == "FAIL")
+    assert "isolated worktree" in live_public_text
+
+    browser_dod_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "definition_of_done": {
+            "command": "npm exec cypress run -- --spec tests/ui.cy.ts",
+            "assertion": "exit_code == 0",
+        },
+    }
+    browser_dod_findings = []
+    module.check_execution_routing(browser_dod_task, browser_dod_findings)
+    browser_dod_text = "\n".join(f.message for f in browser_dod_findings if f.grade == "FAIL")
+    assert "isolated worktree" in browser_dod_text
+
+    opaque_dod_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "definition_of_done": {"command": "npm run ci", "assertion": "exit_code == 0"},
+    }
+    opaque_dod_findings = []
+    module.check_execution_routing(opaque_dod_task, opaque_dod_findings)
+    opaque_dod_text = "\n".join(f.message for f in opaque_dod_findings if f.grade == "FAIL")
+    assert "opaque shell indirection" in opaque_dod_text
+
+    opaque_public_test_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "tests": ["scripts/check.sh"],
+    }
+    opaque_public_findings = []
+    module.check_execution_routing(opaque_public_test_task, opaque_public_findings)
+    opaque_public_text = "\n".join(f.message for f in opaque_public_findings if f.grade == "FAIL")
+    assert "opaque shell indirection" in opaque_public_text
+
+    with tempfile.TemporaryDirectory() as tmp:
+        plan_path = Path(tmp) / "plan.json"
+        plan_path.write_text(json.dumps({
+            "version": 1,
+            "kind": "orchestrate-plan",
+            "repo_root": str(ROOT),
+            "metadata": {"title": "review-plan code-runner contract"},
+            "capability_overlap": ["This test exercises the review-plan code-runner contract."],
+            "questions_blockers": ["None"],
+            "lanes": [{"id": "0", "label": "Test"}],
+            "tasks": [
+                {
+                    "id": "1",
+                    "title": "structured bad code-runner",
+                    "runner": "code-runner",
+                    "backend": "codex",
+                    "mode": "iterative",
+                    "prompt": "Change src/a.py so answer returns 42.",
+                    "allowlist": ["src/a.py"],
+                    "read_context": ["src/a.py"],
+                    "dirty_worktree_policy": "isolated_worktree",
+                    "definition_of_done": {
+                        "command": "curl -fsS http://localhost:3000/api/health",
+                        "assertion": "exit_code == 0",
+                    },
+                    "tests": ["pytest -q tests/test_a.py"],
+                    "hidden_tests": [{"command": "pytest tests/hidden.py"}],
+                    "apply_to_source": True,
+                    "commit_on_success": False,
+                    "rollback_on_failure": False,
+                }
+            ],
+        }))
+        parsed_tasks, _ = module.parse_structured_task_file(plan_path)
+        structured_findings = []
+        module.check_execution_routing(parsed_tasks[0], structured_findings)
+        structured_text = "\n".join(f.message for f in structured_findings if f.grade == "FAIL")
+        assert "no blind_tests" in structured_text
+        assert "isolated worktree" in structured_text
+        assert "hidden_tests" in structured_text
+        assert "must commit successful source changes" in structured_text
+        assert "must roll back failed source apply" in structured_text
+
+    with tempfile.TemporaryDirectory() as tmp:
+        duplicate_path = Path(tmp) / "duplicate-plan.json"
+        duplicate_path.write_text(json.dumps({
+            "version": 1,
+            "kind": "orchestrate-plan",
+            "repo_root": str(ROOT),
+            "metadata": {"title": "duplicate id contract"},
+            "capability_overlap": ["This test exercises duplicate id handling."],
+            "questions_blockers": ["None"],
+            "lanes": [{"id": "0", "label": "Test"}],
+            "tasks": [
+                {
+                    "id": "1",
+                    "title": "first duplicate",
+                    "runner": "code-runner",
+                    "backend": "codex",
+                    "mode": "iterative",
+                    "prompt": "Change src/a.py so answer returns 42.",
+                    "allowlist": ["src/a.py"],
+                    "read_context": ["src/a.py"],
+                    "dirty_worktree_policy": "isolated_worktree",
+                    "definition_of_done": {"command": "pytest -q", "assertion": "exit_code == 0"},
+                    "blind_tests": [{"command": "pytest -q"}],
+                },
+                {
+                    "id": "1",
+                    "title": "second duplicate",
+                    "runner": "code-runner",
+                    "backend": "codex",
+                    "mode": "iterative",
+                    "prompt": "Change src/b.py so answer returns 42.",
+                    "allowlist": ["src/b.py"],
+                    "read_context": ["src/b.py"],
+                    "dirty_worktree_policy": "isolated_worktree",
+                    "definition_of_done": {"command": "pytest -q", "assertion": "exit_code == 0"},
+                    "blind_tests": [{"command": "pytest -q"}],
+                    "hidden_tests": [{"command": "pytest tests/hidden.py"}],
+                },
+            ],
+        }))
+        duplicate_tasks, _ = module.parse_structured_task_file(duplicate_path)
+        duplicate_findings = []
+        module.check_execution_routing(duplicate_tasks[0], duplicate_findings)
+        duplicate_text = "\n".join(f.message for f in duplicate_findings if f.grade == "FAIL")
+        assert "duplicate structured task id" in duplicate_text
     print("REVIEW_PLAN_CONTRACT_OK")
 
 

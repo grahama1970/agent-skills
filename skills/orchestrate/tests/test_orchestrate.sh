@@ -7,6 +7,7 @@
 #   ./tests/test_orchestrate.sh           Run all tests
 #   ./tests/test_orchestrate.sh parsing   Run only parsing tests
 #   ./tests/test_orchestrate.sh parallel  Run only parallel tests
+#   ./tests/test_orchestrate.sh full-pipeline  Run plan/review/orchestrate/code-runner E2E only
 #
 set -eo pipefail
 
@@ -60,6 +61,27 @@ test_script_availability() {
     else
         fail "preflight.sh missing or not executable"
     fi
+}
+
+# ============================================================================
+# Test: portable readiness command
+# ============================================================================
+test_pipeline_readiness_command() {
+    echo ""
+    echo "=== Pipeline Readiness Command Tests ==="
+
+    if env -u VIRTUAL_ENV python "$SKILL_DIR/pipeline_readiness.py" --profile quick --json >/tmp/orchestrate-pipeline-readiness.json 2>&1; then
+        if grep -q '"status":' /tmp/orchestrate-pipeline-readiness.json && grep -q 'plan-review-orchestrate-pipeline' /tmp/orchestrate-pipeline-readiness.json; then
+            pass "pipeline_readiness.py quick JSON reports pipeline gates"
+        else
+            cat /tmp/orchestrate-pipeline-readiness.json >&2 || true
+            fail "pipeline_readiness.py quick JSON missing expected readiness markers"
+        fi
+    else
+        cat /tmp/orchestrate-pipeline-readiness.json >&2 || true
+        fail "pipeline_readiness.py quick JSON failed"
+    fi
+    rm -f /tmp/orchestrate-pipeline-readiness.json
 }
 
 # ============================================================================
@@ -411,10 +433,13 @@ test_structured_plans() {
 
     local temp_struct
     temp_struct=$(mktemp --suffix=.json)
-    cat > "$temp_struct" << 'EOF'
+    local temp_root
+    temp_root=$(dirname "$temp_struct")
+    cat > "$temp_struct" << EOF
 {
   "version": 1,
   "kind": "orchestrate-plan",
+  "repo_root": "$temp_root",
   "title": "Structured test",
   "capability_overlap": ["ok"],
   "questions_blockers": ["None"],
@@ -443,13 +468,13 @@ EOF
     fi
 
     if ! "$SKILL_DIR/run.sh" run "$temp_struct" with codex >/tmp/orchestrate-structured.out 2>&1; then
-        if grep -q "does not override structured task backends" /tmp/orchestrate-structured.out; then
-            pass "Structured execution rejects command-level fallback overrides"
+        if grep -q "Stabilization mode allows only" /tmp/orchestrate-structured.out; then
+            pass "Structured execution blocks non-core scillm runner by default"
         else
             fail "Structured execution failed without explicit routing error"
         fi
     else
-        fail "Structured execution should reject command-level model override"
+        fail "Structured execution should block direct scillm runner by default"
     fi
 
     rm -f "$temp_struct" /tmp/orchestrate-structured.out
@@ -470,6 +495,7 @@ test_structured_execution() {
 {
   "version": 1,
   "kind": "orchestrate-plan",
+  "repo_root": "$temp_dir",
   "title": "Structured execution test",
   "capability_overlap": ["ok"],
   "questions_blockers": ["None"],
@@ -519,6 +545,75 @@ EOF
 }
 
 # ============================================================================
+# Test: scillm contract compliance
+# ============================================================================
+test_scillm_contract_compliance() {
+    echo ""
+    echo "=== scillm Contract Compliance Tests ==="
+
+    local assess_output
+    assess_output=$("$SKILL_DIR/../scillm/run.sh" assess "$SKILL_DIR/structured_execute.py" --json 2>&1) || true
+    if echo "$assess_output" | grep -q '"errors": 0'; then
+        pass "structured_execute.py passes scillm usage assessment"
+    else
+        echo "$assess_output" >&2
+        fail "structured_execute.py violates scillm usage assessment"
+    fi
+
+    if grep -q 'X-Caller-Skill": "orchestrate"' "$SKILL_DIR/structured_execute.py"; then
+        pass "structured_execute.py sets X-Caller-Skill"
+    else
+        fail "structured_execute.py missing X-Caller-Skill"
+    fi
+
+    if grep -q 'reasoning_effort.*high' "$SKILL_DIR/structured_execute.py"; then
+        pass "structured_execute.py forwards high reasoning for Codex"
+    else
+        fail "structured_execute.py missing Codex reasoning_effort"
+    fi
+
+    if ! grep -q '../scillm/run.sh" complete' "$SKILL_DIR/run.sh"; then
+        pass "run.sh does not call removed scillm complete command"
+    else
+        fail "run.sh still calls removed scillm complete command"
+    fi
+}
+
+# ============================================================================
+# Test: real /orchestrate -> /code-runner entrypoint with deterministic backend
+# ============================================================================
+test_code_runner_mock_e2e() {
+    echo ""
+    echo "=== Code-Runner Mock E2E Tests ==="
+
+    if "$SCRIPT_DIR/run_orchestrate_code_runner_mock_e2e.sh" >/tmp/orchestrate-code-runner-mock-e2e.out 2>&1; then
+        pass "real orchestrate -> code-runner mock E2E preserves patch-only boundary"
+    else
+        cat /tmp/orchestrate-code-runner-mock-e2e.out >&2 || true
+        fail "real orchestrate -> code-runner mock E2E failed"
+    fi
+
+    rm -f /tmp/orchestrate-code-runner-mock-e2e.out
+}
+
+# ============================================================================
+# Test: full plan -> review-plan -> orchestrate -> code-runner pipeline
+# ============================================================================
+test_full_pipeline_mock_e2e() {
+    echo ""
+    echo "=== Full Pipeline Mock E2E Tests ==="
+
+    if "$SCRIPT_DIR/run_plan_review_orchestrate_code_runner_mock_e2e.sh" >/tmp/plan-review-orchestrate-code-runner-mock-e2e.out 2>&1; then
+        pass "plan -> review-plan -> orchestrate -> code-runner mock E2E gates and executes correctly"
+    else
+        cat /tmp/plan-review-orchestrate-code-runner-mock-e2e.out >&2 || true
+        fail "plan -> review-plan -> orchestrate -> code-runner mock E2E failed"
+    fi
+
+    rm -f /tmp/plan-review-orchestrate-code-runner-mock-e2e.out
+}
+
+# ============================================================================
 # Main
 # ============================================================================
 main() {
@@ -542,6 +637,7 @@ main() {
             test_questions_variations
             test_structured_plans
             test_structured_execution
+            test_scillm_contract_compliance
             ;;
         quality)
             test_quality_gate_detection
@@ -553,8 +649,12 @@ main() {
             test_parser_edge_cases
             test_questions_variations
             ;;
+        full-pipeline)
+            test_full_pipeline_mock_e2e
+            ;;
         all)
             test_script_availability
+            test_pipeline_readiness_command
             test_help_command
             test_preflight_validation
             test_quality_gate_detection
@@ -564,10 +664,13 @@ main() {
             test_questions_variations
             test_structured_plans
             test_structured_execution
+            test_scillm_contract_compliance
+            test_code_runner_mock_e2e
+            test_full_pipeline_mock_e2e
             ;;
         *)
             echo "Unknown filter: $filter" >&2
-            echo "Usage: $0 [all|parsing|parallel|preflight|quality|scheduler|edge]" >&2
+            echo "Usage: $0 [all|parsing|parallel|preflight|quality|scheduler|edge|full-pipeline]" >&2
             exit 1
             ;;
     esac

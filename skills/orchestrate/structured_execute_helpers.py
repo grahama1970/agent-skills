@@ -11,31 +11,84 @@ import asyncio
 import json
 import os
 import re
+import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from loguru import logger
 
 from monitor_renderer import render_monitor_html
+from structured_execute_context import retrieval_context_block, retrieval_context_payload
+
+def normalize_scillm_chat_url(raw_url: str | None) -> str:
+    """Return the concrete OpenAI-compatible chat completions endpoint."""
+    url = (raw_url or "http://localhost:4001/v1/chat/completions").strip().rstrip("/")
+    parsed = urlparse(url)
+    path = parsed.path.rstrip("/")
+    if path in ("", "/"):
+        return f"{url}/v1/chat/completions"
+    if path == "/v1":
+        return f"{url}/chat/completions"
+    return url
 
 
-def _normalize_scillm_chat_url(raw_url: str | None) -> str:
-    """Return the OpenAI-compatible chat-completions URL for scillm."""
-    base_url = (raw_url or "http://localhost:4001").rstrip("/")
-    if base_url.endswith("/v1/chat/completions"):
-        return base_url
-    if base_url.endswith("/v1"):
-        return f"{base_url}/chat/completions"
-    return f"{base_url}/v1/chat/completions"
-
-
-SCILLM_URL = _normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
+SCILLM_URL = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 SKILLS_DIR = Path(os.environ.get("SKILLS_DIR", str(Path(__file__).resolve().parents[1])))
-STATE_ROOT = Path(os.environ.get("ORCHESTRATE_HOME", str(Path(__file__).resolve().parent)))
+DEFAULT_ARTIFACT_ROOT = Path(
+    os.environ.get("AGENT_SKILLS_ARTIFACT_ROOT", "/mnt/storage12tb/artifacts/agent-skills")
+)
+STATE_ROOT = Path(os.environ.get("ORCHESTRATE_HOME", str(DEFAULT_ARTIFACT_ROOT / "orchestrate")))
 WATCHDOG_POLL_S = 2
+
+TASK_VIEWER_STATES = {
+    "queued",
+    "running",
+    "passed",
+    "failed",
+    "blocked",
+    "stale",
+    "paused",
+    "skipped",
+    "retrying",
+}
+
+FAILURE_CODES = {
+    "REVIEW_PLAN_FAILED",
+    "PREFLIGHT_FAILED",
+    "WORKTREE_DIRTY",
+    "DEPENDENCY_FAILED",
+    "DOD_FAILED",
+    "BLIND_TEST_FAILED",
+    "QUALITY_GATE_FAILED",
+    "LIVE_SERVER_MISMATCH",
+    "RUNNER_TIMEOUT",
+    "RUNNER_CRASHED",
+    "CANCELLED",
+    "MANUAL_INTERVENTION_REQUIRED",
+}
+
+STATUS_NORMALIZATION = {
+    "completed": "passed",
+    "cancelled": "failed",
+    "pending": "queued",
+}
+
+ARTIFACT_KIND_BY_SUFFIX = {
+    ".blind-eval.json": "blind_eval",
+    ".code-runner-spec.json": "code_runner_spec",
+    ".hunk.md": "diff",
+    ".result.json": "result",
+    ".response.txt": "response",
+    ".review-output.txt": "review",
+    ".review-request.md": "review_request",
+    ".review-spec.json": "review_spec",
+    ".stderr.txt": "stderr",
+    ".stdout.txt": "stdout",
+}
 
 
 @dataclass
@@ -71,10 +124,12 @@ class TaskRuntime:
     skill_args: list[str] = field(default_factory=list)  # additional CLI args
     lang: str = ""  # Language profile: python, rust, typescript. Empty = auto-detect.
     max_rounds: int = 5
+    dirty_worktree_policy: str = "isolated_worktree"
     timeout_seconds: int = 1800  # per-task timeout (default 30min)
     apply_to_source: bool = False
     commit_on_success: bool = False
     rollback_on_failure: bool = True
+    retrieval_context: dict[str, Any] = field(default_factory=dict)
     source_commit: str = ""
     worktree: bool = False  # opt-in git worktree isolation (for parallel file-only tasks)
     preconditions: list[Precondition] = field(default_factory=list)  # checked before dispatch
@@ -196,22 +251,29 @@ def check_all_preconditions(task: "TaskRuntime") -> list[str]:
 def _task_prompt(task: dict[str, Any]) -> str:
     explicit = str(task.get("prompt") or "").strip()
     if explicit:
-        return explicit
-    impl = [str(item).strip() for item in _as_list(task.get("implementation")) if str(item).strip()]
-    if not impl:
-        return ""
-    parts = [f"Task: {task.get('title', '')}", "", "Implementation:"]
-    parts.extend(f"- {item}" for item in impl)
-    dod = task.get("definition_of_done") or {}
-    if isinstance(dod, dict) and (dod.get("command") or dod.get("assertion")):
-        parts.extend(["", "Definition of Done:",
-                       f"- Command: {dod.get('command', '')}",
-                       f"- Assertion: {dod.get('assertion', '')}"])
-    tests = [str(item).strip() for item in _as_list(task.get("tests")) if str(item).strip()]
-    if tests:
-        parts.extend(["", "Tests:"])
-        parts.extend(f"- {item}" for item in tests)
-    return "\n".join(parts).strip()
+        base = explicit
+    else:
+        impl = [str(item).strip() for item in _as_list(task.get("implementation")) if str(item).strip()]
+        if not impl:
+            base = ""
+        else:
+            parts = [f"Task: {task.get('title', '')}", "", "Implementation:"]
+            parts.extend(f"- {item}" for item in impl)
+            dod = task.get("definition_of_done") or {}
+            if isinstance(dod, dict) and (dod.get("command") or dod.get("assertion")):
+                parts.extend(["", "Definition of Done:",
+                               f"- Command: {dod.get('command', '')}",
+                               f"- Assertion: {dod.get('assertion', '')}"])
+            tests = [str(item).strip() for item in _as_list(task.get("tests")) if str(item).strip()]
+            if tests:
+                parts.extend(["", "Tests:"])
+                parts.extend(f"- {item}" for item in tests)
+            base = "\n".join(parts).strip()
+
+    retrieval_context = retrieval_context_block(task)
+    if base and retrieval_context:
+        return f"{base}\n\n{retrieval_context}"
+    return base
 
 
 def _compile_skill_context(skill_names: list[str]) -> str:
@@ -240,11 +302,23 @@ def _compile_skill_context(skill_names: list[str]) -> str:
                 if line.strip() == "---":
                     content_start = i + 1
                     break
-        # Take first 80 lines of content (API surface, not full docs)
-        content_lines = lines[content_start:content_start + 80]
+        # Keep this intentionally small: code-runner already receives explicit
+        # read_context/allowlist files, and oversized skill imports can overflow
+        # the local scillm context before any tool call is made.
+        max_lines = int(os.environ.get("ORCHESTRATE_SKILL_CONTEXT_LINES", "25"))
+        content_lines = lines[content_start:content_start + max_lines]
         sections.append(f"### SKILL: /{name}\n" + "\n".join(content_lines) + "\n")
 
     return "\n".join(sections)
+
+
+def _write_compiled_skill_context(task_id: str, skill_context: str) -> Path:
+    """Write compiled skill context outside the repo so preflight stays clean."""
+    context_dir = Path(tempfile.gettempdir()) / "orchestrate-code-runner-context"
+    context_dir.mkdir(parents=True, exist_ok=True)
+    context_path = context_dir / f"{task_id}-{os.getpid()}-{int(time.time() * 1000)}.md"
+    context_path.write_text(skill_context)
+    return context_path
 
 
 def _compile_skill_task(skill_name: str, skill_command: str, skill_args: list[str]) -> str:
@@ -281,6 +355,7 @@ def _compile_skill_task(skill_name: str, skill_command: str, skill_args: list[st
 
 def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRuntime]:
     runtimes: dict[str, TaskRuntime] = {}
+    force_patch_only = os.environ.get("ORCHESTRATE_FORCE_PATCH_ONLY") == "1"
     for raw_task in _as_list(plan.get("tasks")):
         if not isinstance(raw_task, dict):
             continue
@@ -332,9 +407,9 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
         if task_skills and runner == "code-runner":
             skill_context = _compile_skill_context(task_skills)
             if skill_context:
-                # Write compiled context to a temp file so code-runner reads it
-                skill_ctx_path = cwd / f".code-runner-skills-{task_id}.md"
-                skill_ctx_path.write_text(skill_context)
+                # Write compiled context to an execution artifact so code-runner
+                # can read it without dirtying the target repo before preflight.
+                skill_ctx_path = _write_compiled_skill_context(task_id, skill_context)
                 read_ctx.append(str(skill_ctx_path))
 
         # Parse preconditions
@@ -365,6 +440,22 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             else:
                 normalized_read_ctx.append(str(rc))
 
+        raw_apply_to_source = bool(raw_task.get("apply_to_source", False))
+        raw_commit_on_success = bool(raw_task.get("commit_on_success", False))
+        raw_rollback_on_failure = bool(raw_task.get("rollback_on_failure", True))
+        if raw_apply_to_source and force_patch_only:
+            logger.warning(
+                "Task {} requested complete-task source apply; ORCHESTRATE_FORCE_PATCH_ONLY=1 is forcing patch-only.",
+                task_id,
+            )
+
+        prompt = _task_prompt(raw_task)
+        if runner == "code-runner" and not prompt:
+            raise ValueError(
+                f"Task {task_id} uses runner=code-runner but has no prompt or implementation. "
+                "Retrieved context can guide a task; it cannot be the task."
+            )
+
         runtimes[task_id] = TaskRuntime(
             task_id=task_id,
             title=str(raw_task.get("title") or "").strip(),
@@ -372,7 +463,7 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             runner=runner,
             backend=str(raw_task.get("backend") or raw_task.get("model") or "").strip(),
             mode=str(raw_task.get("mode") or "").strip(),
-            prompt=_task_prompt(raw_task),
+            prompt=prompt,
             command=str(raw_task.get("command") or "").strip(),
             cwd=cwd,
             agent=str(raw_task.get("agent") or "").strip(),
@@ -386,10 +477,12 @@ def _build_runtimes(plan: dict[str, Any], repo_root: Path) -> dict[str, TaskRunt
             skill_args=[str(a) for a in task_skill_args],
             lang=str(raw_task.get("lang") or "").strip(),
             max_rounds=int(raw_task.get("max_rounds") or 5),
+            dirty_worktree_policy=str(raw_task.get("dirty_worktree_policy") or "isolated_worktree").strip(),
             timeout_seconds=int(raw_task.get("timeout_seconds") or 1800),
-            apply_to_source=bool(raw_task.get("apply_to_source", False)),
-            commit_on_success=bool(raw_task.get("commit_on_success", False)),
-            rollback_on_failure=bool(raw_task.get("rollback_on_failure", True)),
+            apply_to_source=raw_apply_to_source and not force_patch_only,
+            commit_on_success=raw_commit_on_success if not force_patch_only else False,
+            rollback_on_failure=raw_rollback_on_failure if not force_patch_only else True,
+            retrieval_context=retrieval_context_payload(task_id, raw_task),
             worktree=bool(raw_task.get("worktree", False)),
             preconditions=preconditions,
         )
@@ -422,30 +515,147 @@ def _dependency_graph(plan: dict[str, Any]) -> tuple[dict[str, list[str]], dict[
     return deps, indegree
 
 
+def normalize_task_status(status: str) -> str:
+    normalized = STATUS_NORMALIZATION.get(status, status)
+    if normalized in TASK_VIEWER_STATES:
+        return normalized
+    return "failed" if status else "queued"
+
+
+def infer_failure_code(task: TaskRuntime) -> str:
+    if task.failure_code:
+        return task.failure_code
+    if task.status == "blocked":
+        return "DEPENDENCY_FAILED"
+    if task.status == "cancelled":
+        return "CANCELLED"
+    if task.status == "failed" and task.preconditions:
+        return "PREFLIGHT_FAILED"
+    if task.status == "failed" and task.runner == "code-runner":
+        if task.blind_tests and "blind" in task.error.lower():
+            return "BLIND_TEST_FAILED"
+        return "DOD_FAILED"
+    if task.status == "failed":
+        return "RUNNER_CRASHED"
+    return ""
+
+
+def _artifact_kind(path: Path) -> str:
+    name = path.name
+    for suffix, kind in ARTIFACT_KIND_BY_SUFFIX.items():
+        if name.endswith(suffix):
+            return kind
+    if name == "report.txt":
+        return "report"
+    if name == "plan.json":
+        return "plan"
+    if name == "INTERVENTION.md":
+        return "controls"
+    return "artifact"
+
+
+def _task_artifacts(session_dir: Path, task: TaskRuntime) -> list[dict[str, Any]]:
+    artifact_paths: list[Path] = []
+    for path in sorted(session_dir.glob(f"{task.task_id}.*")):
+        if path.is_file():
+            artifact_paths.append(path)
+    if task.output_path and task.output_path.exists():
+        artifact_paths.append(task.output_path)
+
+    seen: set[Path] = set()
+    artifacts: list[dict[str, Any]] = []
+    for path in artifact_paths:
+        resolved = path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        try:
+            rel = resolved.relative_to(session_dir.resolve())
+        except ValueError:
+            rel = Path(resolved.name)
+        artifacts.append(
+            {
+                "name": path.name,
+                "path": rel.as_posix(),
+                "kind": _artifact_kind(path),
+                "size_bytes": path.stat().st_size,
+                "modified_at": path.stat().st_mtime,
+            }
+        )
+    return artifacts
+
+
+def _session_artifacts(session_dir: Path) -> list[dict[str, Any]]:
+    artifacts: list[dict[str, Any]] = []
+    for name in ("plan.json", "report.txt", "INTERVENTION.md", "events.jsonl"):
+        path = session_dir / name
+        if path.exists():
+            artifacts.append(
+                {
+                    "name": path.name,
+                    "path": path.name,
+                    "kind": _artifact_kind(path),
+                    "size_bytes": path.stat().st_size,
+                    "modified_at": path.stat().st_mtime,
+                }
+            )
+    return artifacts
+
+
 def _render_state(session_dir: Path, runtimes: dict[str, TaskRuntime],
                   deps: dict[str, list[str]], failed: bool) -> None:
-    plan = _load_session_plan(session_dir)
+    generated_at = time.time()
+    task_payloads = []
+    for t in runtimes.values():
+        normalized_status = normalize_task_status(t.status)
+        failure_code = infer_failure_code(t)
+        task_payloads.append(
+            {
+                "id": t.task_id,
+                "title": t.title,
+                "lane": t.lane,
+                "runner": t.runner,
+                "backend": t.backend,
+                "mode": t.mode,
+                "agent": t.agent,
+                "status": normalized_status,
+                "raw_status": t.status,
+                "phase": t.phase or normalized_status,
+                "failure_code": failure_code,
+                "depends_on": deps.get(t.task_id, []),
+                "command": t.command,
+                "cwd": str(t.cwd),
+                "output_path": str(t.output_path) if t.output_path else "",
+                "error": t.error,
+                "review_status": t.review_status,
+                "review_output": t.review_output,
+                "started_at": t.started_at,
+                "finished_at": t.finished_at,
+                "last_event_at": t.last_event_at,
+                "subagent_task_id": t._subagent_task_id or "",
+                "subagent_port": t._subagent_port or 0,
+                "artifacts": _task_artifacts(session_dir, t.task_id),
+                "events": t.events[-20:],
+                "control_notes": t.control_notes[-5:],
+            }
+        )
     payload = {
-        "generated_at": time.time(), "failed": failed, "session_dir": str(session_dir),
-        "monitor_html": str(session_dir / "monitor.html"),
-        "monitor_css": str(session_dir / "monitor.css"),
-        "monitor_url": _load_monitor_url(session_dir),
-        "review_plan_output": "review-plan.txt" if (session_dir / "review-plan.txt").exists() else "",
-        "tasks": [
-            {"id": t.task_id, "title": t.title, "lane": t.lane, "runner": t.runner,
-             "backend": t.backend, "mode": t.mode, "agent": t.agent, "status": t.status,
-              "depends_on": deps.get(t.task_id, []),
-              "output_path": str(t.output_path) if t.output_path else "",
-              "review_status": t.review_status,
-              "review_output": t.review_output,
-              "artifacts": _task_artifacts(session_dir, t.task_id),
-              "error": t.error, "started_at": t.started_at, "finished_at": t.finished_at,
-              "subagent_task_id": t._subagent_task_id or "",
-              "subagent_port": t._subagent_port or 0}
-            for t in runtimes.values()
-        ],
+        "schema_version": "task-viewer.v1",
+        "generated_at": generated_at,
+        "failed": failed,
+        "session_id": session_dir.name,
+        "session_dir": str(session_dir),
+        "state_model": sorted(TASK_VIEWER_STATES),
+        "failure_codes": sorted(FAILURE_CODES),
+        "counts": {
+            state: sum(1 for t in task_payloads if t["status"] == state)
+            for state in sorted(TASK_VIEWER_STATES)
+        },
+        "tasks": task_payloads,
+        "artifacts": _session_artifacts(session_dir),
     }
     (session_dir / "status.json").write_text(json.dumps(payload, indent=2))
+    plan = _load_session_plan(session_dir)
     render_monitor_html(session_dir, payload, plan, deps)
 
 

@@ -1,0 +1,20 @@
+{
+  "task_id": "restore_wrong_cwd",
+  "title": "Restore wrong cwd replay",
+  "prompt": "Attempt an outside-allowlist edit and fail closed.",
+  "backend": "test",
+  "cwd": "__fixture_source_repo__",
+  "output_dir": "__fixture_output_dir__",
+  "allowlist": ["src/app.py"],
+  "definition_of_done": {
+    "command": "python - <<'PY'\nprint('NO_PASS')\nraise SystemExit(1)\nPY",
+    "assertion": "contains:DOD_OK"
+  },
+  "read_context": ["src/app.py", "README.md"],
+  "max_rounds": 1,
+  "timeout_seconds": 60,
+  "dirty_worktree_policy": "isolated_worktree",
+  "apply_to_source": false,
+  "commit_on_success": false,
+  "rollback_on_failure": true
+}

@@ -54,6 +54,15 @@ def test_error_classifier():
     assert result.reason == FailoverReason.context_overflow
     assert result.should_compress is True
 
+    # Test 2b: scillm policy violations are request-format bugs, not context overflow.
+    result = classify_response_error(
+        400,
+        {"error": {"message": "max_tokens is not allowed through scillm. Remove \"max_tokens\"."}},
+    )
+    assert result.reason == FailoverReason.format_error
+    assert result.retryable is False
+    assert result.should_compress is False
+
     # Test 3: Billing (402 without transient signal)
     result = classify_response_error(402, {"error": {"message": "insufficient credits"}})
     assert result.reason == FailoverReason.billing

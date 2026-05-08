@@ -55,6 +55,15 @@ def _run_orchestrate(plan_file: str, cwd: str, timeout: int = 180) -> subprocess
     )
 
 
+def _http_healthy(url: str) -> bool:
+    try:
+        import httpx
+        resp = httpx.get(url, timeout=3.0)
+        return resp.status_code == 200
+    except Exception:
+        return False
+
+
 def _write_plan(path: Path, plan: dict) -> Path:
     """Write a YAML plan file."""
     import yaml
@@ -207,15 +216,11 @@ def test_single_code_runner_task() -> None:
     """One code-runner task: fix a simple bug. This is the core pipeline path."""
     print("\n── Test 4: Single code-runner task ──")
 
-    # Check scillm is reachable
-    try:
-        import httpx
-        resp = httpx.get("http://localhost:4001/health", timeout=3.0)
-        if resp.status_code != 200:
-            _skip("code-runner task", "scillm not healthy")
-            return
-    except Exception:
+    if not _http_healthy("http://localhost:4001/health"):
         _skip("code-runner task", "scillm unreachable at localhost:4001")
+        return
+    if not _http_healthy("http://127.0.0.1:8787/healthz"):
+        _skip("code-runner task", "test-lab unreachable at localhost:8787")
         return
 
     with tempfile.TemporaryDirectory(prefix="pipeline-sanity-") as td:
@@ -241,6 +246,9 @@ def test_single_code_runner_task() -> None:
                 "timeout_seconds": 120,
                 "prompt": "Fix math_utils.py: multiply returns wrong result. It adds instead of multiplying.",
                 "allowlist": ["math_utils.py"],
+                "blind_tests": [
+                    "from math_utils import multiply; assert multiply(5, 6) == 30",
+                ],
                 "definition_of_done": {
                     "command": 'python3 -c "from math_utils import multiply; assert multiply(3, 4) == 12; print(\'PASS\')"',
                     "assertion": "PASS",
@@ -472,6 +480,7 @@ def test_auto_migration() -> None:
                 "depends_on": [],
                 "implementation": ["do something"],
                 "allowlist": ["file.py"],
+                "blind_tests": ["assert True"],
                 "definition_of_done": {"command": "echo ok", "assertion": "ok"},
             }],
         }
@@ -483,12 +492,71 @@ def test_auto_migration() -> None:
         _result("auto-migration", False, str(e))
 
 
-# ── Test 10: Code-runner dry-run ──────────────────────────────────
+# ── Test 10: Structured `with codex` dry-run ──────────────────────
+
+
+def test_structured_with_codex_dry_run() -> None:
+    """Structured plans should accept command-level codex defaults without clobbering explicit backends."""
+    print("\n── Test 10: Structured with codex dry-run ──")
+    with tempfile.TemporaryDirectory(prefix="pipeline-sanity-") as td:
+        td_path = Path(td)
+        _init_git_repo(td_path)
+
+        plan = _base_plan(
+            td,
+            "Structured codex default",
+            tasks=[
+                {
+                    "id": "1",
+                    "title": "Needs codex default",
+                    "lane": "0",
+                    "runner": "code-runner",
+                    "mode": "iterative",
+                    "depends_on": [],
+                    "implementation": ["Fix the target file."],
+                    "allowlist": ["target.py"],
+                    "blind_tests": ["hidden verification"],
+                    "definition_of_done": {"command": "echo ok", "assertion": "ok"},
+                },
+                {
+                    "id": "2",
+                    "title": "Keep explicit backend",
+                    "lane": "0",
+                    "runner": "scillm",
+                    "backend": "text-gemini-oauth",
+                    "mode": "one_shot",
+                    "depends_on": [],
+                    "prompt": "Summarize the change.",
+                    "definition_of_done": {"command": "echo ok", "assertion": "ok"},
+                },
+            ],
+        )
+        plan_file = _write_plan(td_path, plan)
+
+        proc = _run(
+            ["bash", str(ORCHESTRATE_DIR / "run.sh"), "run", str(plan_file), "with", "codex", "--dry-run"],
+            cwd=td,
+        )
+        combined = proc.stdout + proc.stderr
+        _result("structured codex dry-run exits", proc.returncode == 0, combined[:200])
+        _result(
+            "missing backend defaults to codex",
+            "Task 1: Needs codex default → runner=code-runner, backend=codex" in combined,
+            combined[:400],
+        )
+        _result(
+            "explicit backend preserved",
+            "Task 2: Keep explicit backend → runner=scillm, backend=text-gemini-oauth" in combined,
+            combined[:400],
+        )
+
+
+# ── Test 11: Code-runner dry-run ──────────────────────────────────
 
 
 def test_code_runner_dry_run() -> None:
     """Code-runner dry-run should work without calling LLM."""
-    print("\n── Test 10: Code-runner dry-run ──")
+    print("\n── Test 11: Code-runner dry-run ──")
     with tempfile.TemporaryDirectory(prefix="pipeline-sanity-") as td:
         spec = {
             "task_id": "dry-run-test",
@@ -511,12 +579,12 @@ def test_code_runner_dry_run() -> None:
         _result("dry-run works", proc.returncode == 0, proc.stdout.strip()[:100])
 
 
-# ── Test 11: Prompt assembly ──────────────────────────────────────
+# ── Test 12: Prompt assembly ──────────────────────────────────────
 
 
 def test_prompt_assembly() -> None:
     """System prompt fills all placeholders."""
-    print("\n── Test 11: Prompt assembly ──")
+    print("\n── Test 12: Prompt assembly ──")
     sys.path.insert(0, str(CODE_RUNNER_DIR))
 
     try:
@@ -536,39 +604,26 @@ def test_prompt_assembly() -> None:
         _result("prompt assembly", False, str(e))
 
 
-# ── Test 12: v2 hybrid format parsing ─────────────────────────────
+# ── Test 13: apply_file_blocks ────────────────────────────────────
 
 
-def test_v2_format_parsing() -> None:
-    """apply.py parses v2 hybrid format correctly."""
-    print("\n── Test 12: v2 format parsing ──")
+def test_apply_file_blocks() -> None:
+    """apply.py writes allowlisted file blocks with the current tool-use format."""
+    print("\n── Test 13: apply_file_blocks ──")
     sys.path.insert(0, str(CODE_RUNNER_DIR))
 
     try:
-        from apply import parse_v2_response
+        from apply import apply_file_blocks
 
-        response = (
-            '{"summary":"Fixed bug","approach":"direct_fix","files_changed":["a.py"]}\n'
-            "---\n"
-            "### FILE: a.py\n"
-            "```diff\n"
-            "--- a/a.py\n"
-            "+++ b/a.py\n"
-            "@@ -1 +1 @@\n"
-            "-x = 1\n"
-            "+x = 2\n"
-            "```\n"
-            "```python\n"
-            "x = 2\n"
-            "```\n"
-        )
-
-        metadata, blocks = parse_v2_response(response)
-        _result("JSON metadata parsed", metadata is not None and metadata.get("summary") == "Fixed bug")
-        _result("file block found", len(blocks) == 1 and blocks[0]["path"] == "a.py")
-        _result("has both diff+content", blocks[0]["diff"] is not None and blocks[0]["content"] is not None)
+        with tempfile.TemporaryDirectory(prefix="pipeline-sanity-") as td:
+            td_path = Path(td)
+            target = td_path / "a.py"
+            target.write_text("x = 1\n")
+            written = apply_file_blocks([("a.py", "x = 2\n")], td, ["a.py"])
+            _result("allowlisted file written", written == ["a.py"], str(written))
+            _result("content updated", target.read_text() == "x = 2\n", target.read_text().strip())
     except Exception as e:
-        _result("v2 parsing", False, str(e))
+        _result("apply_file_blocks", False, str(e))
 
 
 # ── Main ──────────────────────────────────────────────────────────
@@ -588,9 +643,10 @@ def main() -> None:
     test_failing_dod()
     test_timeout()
     test_auto_migration()
+    test_structured_with_codex_dry_run()
     test_code_runner_dry_run()
     test_prompt_assembly()
-    test_v2_format_parsing()
+    test_apply_file_blocks()
 
     print("\n" + "=" * 60)
     total = PASS_COUNT + FAIL_COUNT + SKIP_COUNT

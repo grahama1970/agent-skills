@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+import pytest
+
+from code_runner.scillm import parse_tool_args
+from ..helpers.assertions import assert_no_residual_code_runner_worktree, assert_result_failed
+from ..helpers.git_repo import make_minimal_python_repo
+from ..helpers.monkeypatch_scillm import FakeScillm, final_message, tool_call
+from ..helpers.runner import make_spec, run_spec
+from ..helpers.source_snapshot import assert_source_snapshot_unchanged, snapshot_source
+
+
+def test_parse_tool_args_rejects_non_object() -> None:
+    with pytest.raises(ValueError):
+        parse_tool_args('["not", "an", "object"]')
+
+
+def test_unknown_tool_fails_deterministically_without_source_mutation(tmp_path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "unknown-tool-denied"
+    output_dir = tmp_path / "out" / task_id
+    before = snapshot_source(repo)
+
+    FakeScillm(
+        [
+            tool_call("delete_file", {"path": "src/app.py"}),
+            final_message("attempted unknown tool"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=output_dir))
+
+    assert_result_failed(result)
+    assert_source_snapshot_unchanged(repo, before)
+    assert_no_residual_code_runner_worktree(repo, task_id)
+
+
+def test_scillm_http_400_like_error_cleans_worktree_and_writes_result(tmp_path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "scillm-http-400-cleanup"
+    output_dir = tmp_path / "out" / task_id
+    before = snapshot_source(repo)
+
+    FakeScillm(error=RuntimeError("scillm HTTP 400: missing required header")).install(monkeypatch)
+
+    result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=output_dir))
+
+    assert_result_failed(result)
+    assert "scillm HTTP 400" in result["error"]
+    assert_source_snapshot_unchanged(repo, before)
+    assert_no_residual_code_runner_worktree(repo, task_id)

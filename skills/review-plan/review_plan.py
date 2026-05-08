@@ -2,6 +2,7 @@
 import json
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -112,8 +113,21 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
     data = load_structured_plan(path)
     summary = summarize_structured_plan(data)
     repo_root = str(data.get("repo_root") or PROJECT_ROOT)
+    raw_tasks = [
+        task for task in (data.get("tasks") or [])
+        if isinstance(task, dict)
+    ]
+    raw_by_id: dict[str, dict] = {}
+    duplicate_ids: set[str] = set()
+    for task in raw_tasks:
+        task_id = str(task.get("id") or "")
+        if task_id in raw_by_id:
+            duplicate_ids.add(task_id)
+            continue
+        raw_by_id[task_id] = task
     tasks: list[dict] = []
     for item in summary["tasks"]:
+        raw_item = raw_by_id.get(str(item.get("id") or ""), {})
         dod = {
             "command": item.get("definition_of_done", {}).get("command", "")
             if isinstance(item.get("definition_of_done"), dict)
@@ -136,12 +150,13 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
         ]
         body_parts.extend(str(x) for x in impl)
         body_parts.extend(str(x) for x in tests)
-        tasks.append({
+        task = {
             "id": item.get("id", ""),
             "title": item.get("title", ""),
             "line": 1,
             "body": "\n".join(body_parts),
             "dod": json.dumps(dod),
+            "definition_of_done": dod,
             "gate": item.get("gate", ""),
             "runner": item.get("runner", ""),
             "backend": item.get("backend", ""),
@@ -158,7 +173,27 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
             "skills": item.get("skills") or [],
             "depends_on": item.get("dependencies") or [],
             "repo_root": repo_root,
-        })
+            "dirty_worktree_policy": raw_item.get("dirty_worktree_policy") or "",
+            "apply_to_source": raw_item.get("apply_to_source", False),
+            "commit_on_success": raw_item.get("commit_on_success", False),
+            "rollback_on_failure": raw_item.get("rollback_on_failure", True),
+            "service_under_test": raw_item.get("service_under_test"),
+            "external_service": raw_item.get("external_service"),
+            "hidden_tests": raw_item.get("hidden_tests"),
+            "backend_racing": raw_item.get("backend_racing"),
+            "planner": raw_item.get("planner"),
+            "reviewer": raw_item.get("reviewer"),
+            "tools": raw_item.get("tools"),
+            "tool_surface": raw_item.get("tool_surface"),
+            "predecessor_patches": raw_item.get("predecessor_patches"),
+            "memory": raw_item.get("memory"),
+            "memory_query": raw_item.get("memory_query"),
+            "memory_context": raw_item.get("memory_context"),
+            "dogpile_context": raw_item.get("dogpile_context"),
+            "web_context": raw_item.get("web_context"),
+            "duplicate_task_id": str(item.get("id") or "") in duplicate_ids,
+        }
+        tasks.append(task)
     return tasks, 0
 
 
@@ -172,11 +207,17 @@ def count_phases(content: str) -> int:
 def check_claims(task: dict, findings: list[Finding]):
     """Check 1: Verify file paths and references exist in the codebase."""
     body = task["body"]
+    planned_outputs = {
+        Path(str(path)).as_posix().lstrip("./")
+        for path in (task.get("allowlist") or [])
+        if str(path).strip()
+    }
 
     # Extract file paths from backticks and markdown
     file_refs = re.findall(r"`([^`]*(?:\.(?:py|ts|js|rs|go|sh|json|toml|yaml|yml|md))\b[^`]*)`", body)
     # Also catch paths in **bold** or plain text
     file_refs += re.findall(r"(?:^|\s)((?:\.?/)?(?:[\w.-]+/)+[\w.-]+\.(?:py|ts|js|rs|go|sh|json|toml|yaml|yml|md))\b", body)
+    unique_refs = list(dict.fromkeys(ref.strip().split(":")[0] for ref in file_refs if ref.strip()))
 
     for ref in unique_refs:
         normalized_ref = Path(ref).as_posix().lstrip("./")
@@ -612,6 +653,16 @@ def check_execution_routing(task: dict, findings: list[Finding]):
         ))
         return
 
+    if task.get("duplicate_task_id"):
+        findings.append(Finding(
+            task=f"Task {task['id']}",
+            check="structured-schema",
+            grade="FAIL",
+            message=f"duplicate structured task id `{task['id']}` makes raw field preservation ambiguous",
+            line=task["line"],
+            suggestion="Give every task a unique id before /review-plan or /orchestrate consumes the plan.",
+        ))
+
     if runner == "scillm":
         if mode and mode != "one_shot":
             findings.append(Finding(
@@ -658,6 +709,26 @@ def check_execution_routing(task: dict, findings: list[Finding]):
     elif runner == "code-runner":
         # code-runner: Switchboard deterministic executor + /code-runner skill.
         # Requires backend (LLM for fix proposals) and implementation steps.
+        forbidden_fields = sorted(
+            field for field in CODE_RUNNER_FORBIDDEN_PLAN_FIELDS
+            if _has_value(task.get(field))
+        )
+        if forbidden_fields:
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="code-runner-boundary",
+                grade="FAIL",
+                message=(
+                    "code-runner task contains orchestration-only fields that must not be part of "
+                    f"the runner contract: {', '.join(forbidden_fields)}"
+                ),
+                line=task["line"],
+                suggestion=(
+                    "Keep hidden/blind evaluation, backend racing, planners, reviewers, tools, "
+                    "memory/dogpile capability calls, skill execution, and predecessor patch orchestration "
+                    "outside /code-runner."
+                ),
+            ))
         if mode and mode not in {"iterative", "one_shot"}:
             findings.append(Finding(
                 task=f"Task {task['id']}",
@@ -744,8 +815,9 @@ def check_execution_routing(task: dict, findings: list[Finding]):
                 line=task["line"],
                 suggestion="Use one of: `exit_code == 0`, `stdout_regex:...`, `stderr_regex:...`, `contains:...`, `json_path:...`, or `json_equals:...`.",
             ))
-        # Blind tests enforcement — code-runner tasks MUST have blind_tests for adversarial verification
-        blind_tests = task.get("blind_tests") or task.get("tests") or []
+        # Blind tests enforcement — code-runner tasks MUST have blind_tests for adversarial verification.
+        # `tests` can document public checks, but it is not the hidden /orchestrate information barrier.
+        blind_tests = task.get("blind_tests") or []
         if not blind_tests:
             findings.append(Finding(
                 task=f"Task {task['id']}",
@@ -797,16 +869,38 @@ def check_execution_routing(task: dict, findings: list[Finding]):
                 line=task["line"],
                 suggestion="Set `dirty_worktree_policy: isolated_worktree`. Unsafe direct modes require explicit `unsafe_direct_justification`.",
             ))
-        # External/live API detection — allowed only when the task declares service mode.
-        has_service_mode = bool(task.get("service_under_test") or task.get("external_service"))
-        if dod_cmd and re.search(r'https?://|curl\s|wget\s|requests\.get|httpx\.\w+|urllib', dod_cmd) and not has_service_mode:
+        # External/live API detection: code-runner edits a disposable worktree.
+        # Live servers serve the source tree, so endpoint DoD/tests are impossible here.
+        live_surface = _code_runner_live_surface(task, dod_cmd)
+        if re.search(
+            r'https?://|curl\s|wget\s|requests\.get|httpx\.\w+|urllib|'
+            r'playwright|puppeteer|cypress|webdriver|chromium|selenium|storybook|test-runner|cdp|browser|\be2e\b',
+            live_surface,
+            re.I,
+        ):
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="routing",
                 grade="FAIL",
-                message="code-runner DoD calls a live URL/API without service_under_test or external_service",
+                message="code-runner DoD or tests call a live URL/API/browser, but code-runner runs in an isolated worktree",
                 line=task["line"],
-                suggestion="Declare owned `service_under_test`, mark `external_service` provisional with a separate local verifier, or move live verification out of code-runner.",
+                suggestion=(
+                    "Use runner=scillm for the source-tree edit plus a separate runner=local task for curl/browser verification, "
+                    "or replace the DoD with a file/process-local check that runs inside the code-runner worktree."
+                ),
+            ))
+        if OPAQUE_CODE_RUNNER_COMMAND.search(_code_runner_opaque_surface(task, dod_cmd)):
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="routing",
+                grade="FAIL",
+                message="code-runner DoD or tests use opaque shell indirection that may hide live/browser/network checks",
+                line=task["line"],
+                suggestion=(
+                    "Use an explicit file/process-local command, for example "
+                    "`python -m pytest tests/test_file.py -q`, or route make/npm/scripts checks "
+                    "to a separate runner=local verification task."
+                ),
             ))
     elif runner == "local":
         if backend:
@@ -857,16 +951,71 @@ LEGACY_BACKEND_NAMES = {
 
 
 # code-runner accepts short backend names and translates them internally.
-CODE_RUNNER_BACKENDS = {"codex", "claude", "text", "gemini", "deepseek", "test"}
+CODE_RUNNER_BACKENDS = {
+    "codex",
+    "claude",
+    "text",
+    "gemini",
+    "deepseek",
+    "test",
+    "native-fake",
+    "codex-exec",
+    "claude-code",
+    "gemini-cli",
+    "opencode",
+}
 CODE_RUNNER_SAFE_POLICIES = {"isolated_worktree"}
+CODE_RUNNER_FORBIDDEN_PLAN_FIELDS = {
+    "backend_racing",
+    "hidden_tests",
+    "memory",
+    "memory_query",
+    "planner",
+    "predecessor_patches",
+    "reviewer",
+    "skills",
+    "tool_surface",
+    "tools",
+}
 MACHINE_CHECKABLE_ASSERTION = re.compile(
     r"^\s*(exit_code\s*(==|!=)\s*\d+|stdout_regex:.+|stderr_regex:.+|contains:.+|json_path:.+|json_equals:.+)\s*$",
     re.IGNORECASE | re.DOTALL,
+)
+OPAQUE_CODE_RUNNER_COMMAND = re.compile(
+    r"(^|\s)(npm|pnpm|yarn|bun)\s+(run|test|exec)\b|"
+    r"(^|\s)make(\s|$)|"
+    r"(^|\s)(bash|sh|python|python3|uv\s+run\s+python)\s+(scripts|tools)/|"
+    r"(^|\s)(\./)?(scripts|tools)/[^\s;|&]+",
+    re.IGNORECASE,
 )
 
 
 def _is_machine_checkable_assertion(assertion: str) -> bool:
     return bool(MACHINE_CHECKABLE_ASSERTION.match(assertion or ""))
+
+
+def _has_value(value: object) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (list, tuple, set, dict)):
+        return bool(value)
+    return bool(str(value).strip())
+
+
+def _code_runner_live_surface(task: dict, dod_cmd: str) -> str:
+    parts = [dod_cmd]
+    for item in task.get("tests") or []:
+        if isinstance(item, dict):
+            parts.append(str(item.get("command") or item))
+        else:
+            parts.append(str(item))
+    return "\n".join(parts)
+
+
+def _code_runner_opaque_surface(task: dict, dod_cmd: str) -> str:
+    return _code_runner_live_surface(task, dod_cmd)
 
 
 def check_scillm_backend(task: dict, findings: list[Finding]):
@@ -957,7 +1106,6 @@ def check_endpoint_routes(task: dict, plan_data: dict | None, findings: list[Fin
         # Quick grep in src/
         src_path = repo_path / "src"
         if src_path.exists():
-            import subprocess
             result = subprocess.run(
                 ["grep", "-r", "-l", f"/{endpoint}", str(src_path)],
                 capture_output=True, text=True
@@ -1028,6 +1176,8 @@ def check_python_tooling(task: dict, plan_data: dict | None, findings: list[Find
 
 
 _manifest_cache: dict | None = None
+_file_index_cache: set[str] | None = None
+_basename_index_cache: set[str] | None = None
 
 
 def load_manifest() -> dict | None:

@@ -1,0 +1,2 @@
+{"role":"assistant","tool_calls":[{"id":"call-1","type":"function","function":{"name":"write_file","arguments":"{\"path\":\"docs/outside.md\",\"content\":\"outside allowlist\\n\"}"}}]}
+{"role":"assistant","content":"attempted outside write"}

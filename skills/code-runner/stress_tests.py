@@ -36,6 +36,16 @@ FAIL_COUNT = 0
 ERRORS: list[str] = []
 
 
+def _artifact_dir() -> Path:
+    override = os.environ.get("CODE_RUNNER_ARTIFACTS_DIR")
+    if override:
+        return Path(override)
+    artifact_root = Path(
+        os.environ.get("AGENT_SKILLS_ARTIFACT_ROOT", "/mnt/storage12tb/artifacts/agent-skills")
+    )
+    return artifact_root / "code-runner"
+
+
 def _setup_repo(tmp: Path, files: dict[str, str] | None = None) -> Path:
     """Create a temp git repo with optional initial files."""
     repo = tmp / "repo"
@@ -541,7 +551,9 @@ if __name__ == "__main__":
     _print_table(results)
 
     # Write JSON report for CI/monitoring
-    report_file = SCRIPT_DIR / "stress_test_report.json"
+    artifact_dir = _artifact_dir()
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    report_file = artifact_dir / "stress_test_report.json"
     report_file.write_text(json.dumps({
         "timestamp": __import__("time").time(),
         "passed": PASS_COUNT, "failed": FAIL_COUNT,

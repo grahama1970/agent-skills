@@ -34,6 +34,7 @@ class ReasonCode(str, Enum):
     bad_spec = "bad_spec"          # TaskSpec validation failed
     bad_dod = "bad_dod"            # DoD command/assertion invalid
     missing_files = "missing_files"  # Allowlist files don't exist
+    dirty_worktree = "dirty_worktree"  # Working tree has pre-existing changes
 
     # Blocking conditions
     repo_lock_conflict = "repo_lock_conflict"  # Another runner has repo lock
@@ -65,6 +66,8 @@ class EventType(str, Enum):
     run_crashed = "run_crashed"
     run_failed = "run_failed"
     run_passed = "run_passed"
+    request_written = "request_written"
+    dirty_worktree_detected = "dirty_worktree_detected"
 
     # Round lifecycle
     round_started = "round_started"

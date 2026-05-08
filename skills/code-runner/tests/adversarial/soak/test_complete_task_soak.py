@@ -1,0 +1,103 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from ..helpers.assertions import assert_no_residual_code_runner_worktree, assert_result_failed, assert_result_passed, committed_paths, read_json
+from ..helpers.git_repo import git, make_minimal_python_repo, write
+from ..helpers.monkeypatch_scillm import FakeScillm, final_message, tool_call
+from ..helpers.runner import make_spec, run_spec
+
+
+pytestmark = pytest.mark.soak
+
+
+SOURCE_FAILS_DOD = """python - <<'PY'
+import os
+from pathlib import Path
+source = Path(os.environ["CODE_RUNNER_SOURCE_CWD"]).resolve()
+cwd = Path.cwd().resolve()
+ns = {}
+exec(Path("src/app.py").read_text(), ns)
+assert ns["add_one"](1) == 2
+if cwd == source:
+    raise SystemExit("source DoD intentionally fails")
+print("DOD_OK")
+PY"""
+
+
+def test_50_complete_task_apply_rollback_runs_preserve_unrelated_user_work(tmp_path: Path, monkeypatch) -> None:
+    for index in range(50):
+        repo = make_minimal_python_repo(tmp_path / f"rollback-{index:03d}")
+        write(repo, "docs/user-notes.md", "tracked docs\n")
+        git(repo, "add", "docs/user-notes.md")
+        git(repo, "commit", "-m", "add docs")
+        write(repo, "docs/user-notes.md", "dirty tracked docs\n")
+        write(repo, "scratch.txt", "untracked user work\n")
+        write(repo, ".env.local", "ignored user secret\n")
+        task_id = f"soak-complete-rollback-{index:03d}"
+        output_dir = tmp_path / "out" / task_id
+        FakeScillm(
+            [
+                tool_call("write_file", {"path": "src/app.py", "content": "def add_one(x):\n    return x + 1\n"}),
+                final_message("fixed"),
+            ]
+        ).install(monkeypatch)
+
+        result = run_spec(
+            make_spec(
+                task_id=task_id,
+                repo=repo,
+                output_dir=output_dir,
+                apply_to_source=True,
+                rollback_on_failure=True,
+                dod_command=SOURCE_FAILS_DOD,
+            )
+        )
+
+        assert_result_failed(result)
+        assert result["source_patch_applied"] is True
+        assert result["source_rollback_applied"] is True
+        assert (repo / "src/app.py").read_text() == "def add_one(x):\n    return x\n"
+        assert (repo / "docs/user-notes.md").read_text() == "dirty tracked docs\n"
+        assert (repo / "scratch.txt").read_text() == "untracked user work\n"
+        assert (repo / ".env.local").read_text() == "ignored user secret\n"
+        assert read_json(output_dir / f"{task_id}.result.json")["task_id"] == task_id
+        assert_no_residual_code_runner_worktree(repo, task_id)
+
+
+def test_25_complete_task_commit_runs_do_not_stage_dirty_nonallowlisted_files(tmp_path: Path, monkeypatch) -> None:
+    for index in range(25):
+        repo = make_minimal_python_repo(tmp_path / f"commit-{index:03d}")
+        write(repo, "docs/user-notes.md", "tracked docs\n")
+        git(repo, "add", "docs/user-notes.md")
+        git(repo, "commit", "-m", "add docs")
+        before_head = git(repo, "rev-parse", "HEAD").stdout.strip()
+        write(repo, "docs/user-notes.md", "dirty nonallowlisted user work\n")
+        task_id = f"soak-complete-commit-{index:03d}"
+        output_dir = tmp_path / "out" / task_id
+        FakeScillm(
+            [
+                tool_call("write_file", {"path": "src/app.py", "content": "def add_one(x):\n    return x + 1\n"}),
+                final_message("fixed"),
+            ]
+        ).install(monkeypatch)
+
+        result = run_spec(
+            make_spec(
+                task_id=task_id,
+                repo=repo,
+                output_dir=output_dir,
+                apply_to_source=True,
+                commit_on_success=True,
+            )
+        )
+
+        assert_result_passed(result)
+        assert git(repo, "rev-parse", "HEAD").stdout.strip() != before_head
+        assert committed_paths(repo, "HEAD") == {"src/app.py"}
+        assert (repo / "docs/user-notes.md").read_text() == "dirty nonallowlisted user work\n"
+        assert "docs/user-notes.md" in git(repo, "status", "--porcelain=v1", "--untracked-files=all").stdout
+        assert read_json(output_dir / f"{task_id}.status.json")["task_id"] == task_id
+        assert_no_residual_code_runner_worktree(repo, task_id)

@@ -99,7 +99,7 @@ Round 1 tries the obvious fix. If the same error repeats, the LLM is stuck in a 
 
 **Rationale — why escalation chain (backend + reasoning):**
 
-Different models have different blind spots (Warp SWE-bench finding, 75.8%). If codex at medium reasoning can't solve it after 2 rounds, escalating to codex at high reasoning (2x max_tokens) or switching to claude gives a fresh perspective. The chain is: `codex:medium → codex:high → claude:high`.
+Different models have different blind spots (Warp SWE-bench finding, 75.8%). If codex at medium reasoning can't solve it after 2 rounds, escalating to codex at high reasoning (more deliberate reasoning, without forwarding max_tokens to scillm) or switching to claude gives a fresh perspective. The chain is: `codex:medium → codex:high → claude:high`.
 
 ---
 

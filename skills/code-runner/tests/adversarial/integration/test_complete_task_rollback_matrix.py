@@ -1,0 +1,291 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from ..helpers.assertions import assert_result_failed, assert_result_passed, committed_paths
+from ..helpers.git_repo import git, make_minimal_python_repo, write
+from ..helpers.monkeypatch_scillm import FakeScillm, final_message, tool_call
+from ..helpers.runner import make_spec, run_spec
+from ..helpers.source_snapshot import snapshot_source
+
+
+def _source_fails_after(predicate: str) -> str:
+    return (
+        "python - <<'PY'\n"
+        "import os\n"
+        "from pathlib import Path\n"
+        "source = Path(os.environ['CODE_RUNNER_SOURCE_CWD']).resolve()\n"
+        "cwd = Path.cwd().resolve()\n"
+        f"{predicate}\n"
+        "if cwd == source:\n"
+        "    raise SystemExit('source DoD intentionally fails')\n"
+        "print('DOD_OK')\n"
+        "PY"
+    )
+
+
+def _command_call(command: str) -> dict:
+    return tool_call("run_command", {"command": command})
+
+
+def test_rollback_removes_new_allowlisted_file(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "rollback-new-file"
+    before = snapshot_source(repo)
+    FakeScillm(
+        [
+            tool_call("write_file", {"path": "src/new_feature.py", "content": "VALUE = 1\n"}),
+            final_message("created file"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id=task_id,
+            repo=repo,
+            output_dir=tmp_path / "out" / task_id,
+            allowlist=["src/new_feature.py"],
+            apply_to_source=True,
+            dod_command=_source_fails_after("assert Path('src/new_feature.py').read_text() == 'VALUE = 1\\n'"),
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_failed(result)
+    assert result["source_rollback_applied"] is True
+    assert not (repo / "src/new_feature.py").exists()
+    assert git(repo, "rev-parse", "HEAD").stdout.strip() == before.head
+
+
+def test_rollback_restores_deleted_allowlisted_file(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "rollback-deleted-file"
+    before_content = (repo / "src/app.py").read_text()
+    before = snapshot_source(repo)
+    FakeScillm(
+        [
+            _command_call("python - <<'PY'\nfrom pathlib import Path\nPath('src/app.py').unlink()\nPY"),
+            final_message("deleted file"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id=task_id,
+            repo=repo,
+            output_dir=tmp_path / "out" / task_id,
+            allowlist=["src/app.py"],
+            apply_to_source=True,
+            dod_command=_source_fails_after("assert not Path('src/app.py').exists()"),
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_failed(result)
+    assert result["source_rollback_applied"] is True
+    assert (repo / "src/app.py").read_text() == before_content
+    assert git(repo, "rev-parse", "HEAD").stdout.strip() == before.head
+
+
+def test_rollback_restores_renamed_allowlisted_file(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "rollback-renamed-file"
+    before_content = (repo / "src/app.py").read_text()
+    FakeScillm(
+        [
+            _command_call("python - <<'PY'\nfrom pathlib import Path\nPath('src/app.py').rename('src/renamed.py')\nPY"),
+            final_message("renamed file"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id=task_id,
+            repo=repo,
+            output_dir=tmp_path / "out" / task_id,
+            allowlist=["src/app.py", "src/renamed.py"],
+            apply_to_source=True,
+            dod_command=_source_fails_after("assert Path('src/renamed.py').exists() and not Path('src/app.py').exists()"),
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_failed(result)
+    assert result["source_rollback_applied"] is True
+    assert (repo / "src/app.py").read_text() == before_content
+    assert not (repo / "src/renamed.py").exists()
+
+
+def test_rollback_restores_binary_allowlisted_file(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    binary = repo / "assets/data.bin"
+    binary.parent.mkdir()
+    binary.write_bytes(b"original-binary")
+    git(repo, "add", "assets/data.bin")
+    git(repo, "commit", "-m", "add binary")
+    FakeScillm(
+        [
+            _command_call("python - <<'PY'\nfrom pathlib import Path\nPath('assets/data.bin').write_bytes(b'changed-binary')\nPY"),
+            final_message("changed binary"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id="rollback-binary-file",
+            repo=repo,
+            output_dir=tmp_path / "out" / "rollback-binary-file",
+            allowlist=["assets/data.bin"],
+            apply_to_source=True,
+            dod_command=_source_fails_after("assert Path('assets/data.bin').read_bytes() == b'changed-binary'"),
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_failed(result)
+    assert result["source_rollback_applied"] is True
+    assert binary.read_bytes() == b"original-binary"
+
+
+def test_rollback_restores_mode_only_allowlisted_change(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    script = write(repo, "scripts/tool.sh", "#!/usr/bin/env bash\necho ok\n")
+    git(repo, "add", "scripts/tool.sh")
+    git(repo, "commit", "-m", "add script")
+    before_mode = script.stat().st_mode & 0o777
+    FakeScillm([_command_call("chmod +x scripts/tool.sh"), final_message("mode changed")]).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id="rollback-mode-only",
+            repo=repo,
+            output_dir=tmp_path / "out" / "rollback-mode-only",
+            allowlist=["scripts/tool.sh"],
+            apply_to_source=True,
+            dod_command=_source_fails_after("assert os.access('scripts/tool.sh', os.X_OK)"),
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_failed(result)
+    assert result["source_rollback_applied"] is True
+    assert (script.stat().st_mode & 0o777) == before_mode
+
+
+def test_rollback_preserves_untracked_and_ignored_nonallowlisted_files(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    write(repo, "scratch.txt", "untracked user work\n")
+    write(repo, ".env.local", "ignored user secret\n")
+    FakeScillm(
+        [
+            tool_call("write_file", {"path": "src/app.py", "content": "def add_one(x):\n    return x + 1\n"}),
+            final_message("fixed"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id="rollback-preserve-untracked-ignored",
+            repo=repo,
+            output_dir=tmp_path / "out" / "rollback-preserve-untracked-ignored",
+            apply_to_source=True,
+            dod_command=_source_fails_after("ns = {}; exec(Path('src/app.py').read_text(), ns); assert ns['add_one'](1) == 2"),
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_failed(result)
+    assert result["source_rollback_applied"] is True
+    assert (repo / "scratch.txt").read_text() == "untracked user work\n"
+    assert (repo / ".env.local").read_text() == "ignored user secret\n"
+
+
+def test_commit_on_success_commits_new_allowlisted_file_only(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    write(repo, "docs/user-notes.md", "tracked docs\n")
+    git(repo, "add", "docs/user-notes.md")
+    git(repo, "commit", "-m", "add docs")
+    write(repo, "docs/user-notes.md", "dirty docs should remain dirty\n")
+    FakeScillm([tool_call("write_file", {"path": "src/new_feature.py", "content": "VALUE = 1\n"}), final_message("created")]).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id="commit-new-file-only",
+            repo=repo,
+            output_dir=tmp_path / "out" / "commit-new-file-only",
+            allowlist=["src/new_feature.py"],
+            apply_to_source=True,
+            commit_on_success=True,
+            dod_command="test -f src/new_feature.py && echo DOD_OK",
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_passed(result)
+    assert committed_paths(repo, "HEAD") == {"src/new_feature.py"}
+    assert (repo / "docs/user-notes.md").read_text() == "dirty docs should remain dirty\n"
+
+
+def test_commit_on_success_commits_deleted_allowlisted_file_only(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    write(repo, "docs/user-notes.md", "tracked docs\n")
+    git(repo, "add", "docs/user-notes.md")
+    git(repo, "commit", "-m", "add docs")
+    write(repo, "docs/user-notes.md", "dirty docs should remain dirty\n")
+    FakeScillm(
+        [
+            _command_call("python - <<'PY'\nfrom pathlib import Path\nPath('src/app.py').unlink()\nPY"),
+            final_message("deleted"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id="commit-deleted-file-only",
+            repo=repo,
+            output_dir=tmp_path / "out" / "commit-deleted-file-only",
+            allowlist=["src/app.py"],
+            apply_to_source=True,
+            commit_on_success=True,
+            dod_command="test ! -e src/app.py && echo DOD_OK",
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_passed(result)
+    assert committed_paths(repo, "HEAD") == {"src/app.py"}
+    assert not (repo / "src/app.py").exists()
+    assert (repo / "docs/user-notes.md").read_text() == "dirty docs should remain dirty\n"
+
+
+def test_commit_on_success_commits_renamed_allowlisted_file_only(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    write(repo, "docs/user-notes.md", "tracked docs\n")
+    git(repo, "add", "docs/user-notes.md")
+    git(repo, "commit", "-m", "add docs")
+    write(repo, "docs/user-notes.md", "dirty docs should remain dirty\n")
+    FakeScillm(
+        [
+            _command_call("python - <<'PY'\nfrom pathlib import Path\nPath('src/app.py').rename('src/renamed.py')\nPY"),
+            final_message("renamed"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id="commit-renamed-file-only",
+            repo=repo,
+            output_dir=tmp_path / "out" / "commit-renamed-file-only",
+            allowlist=["src/app.py", "src/renamed.py"],
+            apply_to_source=True,
+            commit_on_success=True,
+            dod_command="test -f src/renamed.py && test ! -e src/app.py && echo DOD_OK",
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_passed(result)
+    assert committed_paths(repo, "HEAD") == {"src/renamed.py"}
+    assert not (repo / "src/app.py").exists()
+    assert (repo / "src/renamed.py").exists()
+    assert (repo / "docs/user-notes.md").read_text() == "dirty docs should remain dirty\n"

@@ -1,0 +1,121 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from ..helpers.patch_oracle import touched_paths_from_patch_or_hunk
+
+
+def _write(tmp_path: Path, text: str, name: str = "case.patch") -> Path:
+    path = tmp_path / name
+    path.write_text(text)
+    return path
+
+
+def test_patch_oracle_reads_contract_hunk_markdown(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "# code-runner patch\n\n```diff\n"
+        "diff --git a/src/app.py b/src/app.py\n"
+        "--- a/src/app.py\n"
+        "+++ b/src/app.py\n"
+        "@@ -1 +1 @@\n"
+        "-old\n"
+        "+new\n"
+        "```\n",
+        "case.hunk.md",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"src/app.py"}
+
+
+def test_patch_oracle_tracks_new_file(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "diff --git a/docs/new.md b/docs/new.md\n"
+        "new file mode 100644\n"
+        "--- /dev/null\n"
+        "+++ b/docs/new.md\n",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"docs/new.md"}
+
+
+def test_patch_oracle_tracks_deleted_file(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "diff --git a/docs/old.md b/docs/old.md\n"
+        "deleted file mode 100644\n"
+        "--- a/docs/old.md\n"
+        "+++ /dev/null\n",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"docs/old.md"}
+
+
+def test_patch_oracle_tracks_renamed_paths(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "diff --git a/src/old.py b/src/new.py\n"
+        "similarity index 88%\n"
+        "rename from src/old.py\n"
+        "rename to src/new.py\n",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"src/old.py", "src/new.py"}
+
+
+def test_patch_oracle_tracks_paths_with_spaces(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "diff --git a/src/file with spaces.py b/src/file with spaces.py\n"
+        "--- a/src/file with spaces.py\n"
+        "+++ b/src/file with spaces.py\n",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"src/file with spaces.py"}
+
+
+def test_patch_oracle_tracks_unicode_paths(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "diff --git a/docs/cafe-ß.md b/docs/cafe-ß.md\n"
+        "--- a/docs/cafe-ß.md\n"
+        "+++ b/docs/cafe-ß.md\n",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"docs/cafe-ß.md"}
+
+
+def test_patch_oracle_keeps_src_and_src_evil_distinct(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "diff --git a/src/app.py b/src/app.py\n"
+        "--- a/src/app.py\n"
+        "+++ b/src/app.py\n"
+        "diff --git a/src_evil/app.py b/src_evil/app.py\n"
+        "--- a/src_evil/app.py\n"
+        "+++ b/src_evil/app.py\n",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"src/app.py", "src_evil/app.py"}
+
+
+def test_patch_oracle_tracks_mode_only_changes(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "diff --git a/scripts/tool.sh b/scripts/tool.sh\n"
+        "old mode 100644\n"
+        "new mode 100755\n",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"scripts/tool.sh"}
+
+
+def test_patch_oracle_tracks_binary_changes(tmp_path: Path) -> None:
+    path = _write(
+        tmp_path,
+        "diff --git a/assets/data.bin b/assets/data.bin\n"
+        "Binary files a/assets/data.bin and b/assets/data.bin differ\n",
+    )
+
+    assert touched_paths_from_patch_or_hunk(path) == {"assets/data.bin"}

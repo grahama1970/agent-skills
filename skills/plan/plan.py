@@ -11,6 +11,8 @@ Key principles:
 - Stop when testable: decompose until each task has a concrete test
 - Definition of Done per node: exact pass criteria, expected artifacts
 - Every task declares runner, backend, mode — no guessing at execution time
+- Conservative runner routing: code-runner only for bounded iterative code edits
+  that need context isolation and a failing/verifiable DoD loop
 """
 
 from __future__ import annotations
@@ -134,13 +136,14 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
 
     Returns (runner, backend, mode). Only fills in empty fields.
 
-    Routing heuristic:
+    Conservative routing heuristic:
       - Has command, no prompt → local (shell command)
       - Has prompt, no allowlist, no DoD with assertion → scillm (one-shot text)
-      - Has prompt + allowlist + DoD → code-runner (bounded code task with verification)
+      - Has prompt + allowlist + DoD command/assertion + blind tests + no live endpoint
+        → code-runner (bounded iterative code task with context isolation)
 
     code-runner is EXPENSIVE (worktree, git cycle, multi-round LLM, T0 scoring).
-    Only use it when the task genuinely needs iteration and verification.
+    Only use it when the task genuinely needs iteration, verification, and isolation.
     """
     runner = task.runner
     backend = task.backend
@@ -160,7 +163,10 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
     has_command = bool(task.command)
     has_prompt = bool(task.prompt or task.implementation)
     has_allowlist = bool(task.allowlist)
+    has_dod_command = bool(task.definition_of_done.command) if task.definition_of_done else False
     has_dod_assertion = bool(task.definition_of_done.assertion) if task.definition_of_done else False
+    has_blind_tests = bool(task.blind_tests)
+    dod_uses_live_endpoint = _dod_uses_live_endpoint(task.definition_of_done.command if task.definition_of_done else "")
 
     if has_command and not has_prompt:
         # Pure shell command — local
@@ -184,19 +190,56 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
 _LIVE_DOD_MARKERS = (
     "curl ",
     "wget ",
+    "http://",
+    "https://",
     "http://localhost",
     "https://localhost",
     "http://127.0.0.1",
     "https://127.0.0.1",
     "playwright",
+    "puppeteer",
+    "cypress",
+    "webdriver",
+    "chromium",
+    "selenium",
+    "storybook",
+    "test-runner",
     "browser",
     "cdp",
+    "e2e",
+)
+_LIVE_SURFACE_RE = re.compile(
+    r"https?://|curl\s|wget\s|requests\.get|httpx\.\w+|urllib|"
+    r"playwright|puppeteer|cypress|webdriver|chromium|selenium|storybook|test-runner|browser|cdp|\be2e\b",
+    re.IGNORECASE,
+)
+_OPAQUE_CODE_RUNNER_COMMAND_RE = re.compile(
+    r"(^|\s)(npm|pnpm|yarn|bun)\s+(run|test|exec)\b|"
+    r"(^|\s)make(\s|$)|"
+    r"(^|\s)(bash|sh|python|python3|uv\s+run\s+python)\s+(scripts|tools)/|"
+    r"(^|\s)(\./)?(scripts|tools)/[^\s;|&]+",
+    re.IGNORECASE,
 )
 
 
 def _dod_uses_live_endpoint(command: str) -> bool:
     command_lower = command.lower()
-    return any(marker in command_lower for marker in _LIVE_DOD_MARKERS)
+    return any(marker in command_lower for marker in _LIVE_DOD_MARKERS) or bool(_LIVE_SURFACE_RE.search(command))
+
+
+def _dod_uses_opaque_command(command: str) -> bool:
+    return bool(_OPAQUE_CODE_RUNNER_COMMAND_RE.search(command or ""))
+
+
+def _code_runner_live_surface(task: dict[str, Any], dod_command: str) -> str:
+    """Return text that must not contain live endpoint checks for code-runner."""
+    parts = [dod_command]
+    for item in task.get("tests") or []:
+        if isinstance(item, dict):
+            parts.append(str(item.get("command") or item))
+        else:
+            parts.append(str(item))
+    return "\n".join(parts)
 
 
 _CODE_RUNNER_SAFE_POLICIES = {"isolated_worktree"}
@@ -272,7 +315,6 @@ def _audit_code_runner_routing(data: dict[str, Any]) -> tuple[list[str], list[st
         read_context = task.get("read_context") or []
         blind_tests = task.get("blind_tests") or []
         max_rounds = int(task.get("max_rounds") or 5)
-        has_live_service_mode = bool(task.get("service_under_test") or task.get("external_service"))
         dirty_policy = str(task.get("dirty_worktree_policy") or "isolated_worktree").strip()
         unsafe_justification = str(task.get("unsafe_direct_justification") or "").strip()
         apply_to_source = bool(task.get("apply_to_source", False))
@@ -307,10 +349,17 @@ def _audit_code_runner_routing(data: dict[str, Any]) -> tuple[list[str], list[st
             issues.append(f"{prefix} complete-task mode requires commit_on_success=true for reliable revert.")
         if apply_to_source and not rollback_on_failure:
             issues.append(f"{prefix} complete-task mode requires rollback_on_failure=true.")
-        if _dod_uses_live_endpoint(dod_command) and not has_live_service_mode:
+        if _dod_uses_live_endpoint(_code_runner_live_surface(task, dod_command)):
             issues.append(
-                f"{prefix} live endpoint/browser DoD must declare service_under_test or external_service; "
-                "otherwise route edits to scillm and verify with a separate local task."
+                f"{prefix} code-runner cannot use live endpoint/browser DoD or tests. "
+                "Code-runner edits an isolated worktree, while live servers serve the source tree. "
+                "Use scillm for the edit plus a separate local verification task, or use a file/process-local DoD."
+            )
+        if _dod_uses_opaque_command(_code_runner_live_surface(task, dod_command)):
+            issues.append(
+                f"{prefix} code-runner DoD/tests use an opaque shell indirection command. "
+                "Use an explicit file/process-local command such as `python -m pytest tests/test_file.py -q`, "
+                "or route the opaque script/make/npm check to a separate runner=local verification task."
             )
         if max_rounds <= 1:
             warnings.append(f"{prefix} max_rounds <= 1; use scillm/local unless iteration is actually needed.")
@@ -1005,17 +1054,17 @@ def main(
                 ),
                 Task(
                     id="2",
-                    title="<Implementation task>",
+                    title="<One-shot implementation task>",
                     lane="1",
-                    runner="code-runner",
-                    backend="codex",
-                    mode="iterative",
+                    runner="scillm",
+                    backend="text",
+                    mode="one_shot",
                     depends_on=["1"],
+                    prompt="<specific mechanical edit or generation request>",
                     implementation=["Step 1", "Step 2"],
-                    tests=["tests/test_feature.py::test_behavior"],
                     definition_of_done=DefinitionOfDone(
-                        command="uv run pytest tests/ -q",
-                        assertion="All tests pass",
+                        command="<verification command>",
+                        assertion="<what success looks like>",
                     ),
                 ),
             ],
@@ -1041,7 +1090,7 @@ def main(
     print(f"  code-runner — ONLY for bounded iterative code edits needing isolation and self-improvement.")
     print(f"                Requires prompt + allowlist + DoD command/assertion + blind_tests.")
     print(f"\n  code-runner is EXPENSIVE. Don't use it for mechanical edits, config/docs/setup, or already-passing gates.")
-    print(f"  If DoD calls localhost/curl/browser, declare service_under_test or use scillm + local verification.")
+    print(f"  If DoD calls localhost/curl/browser, do NOT use code-runner; use scillm + local verification.")
     print(f"  Complete-task mode is explicit opt-in: apply_to_source=true, commit_on_success=true, rollback_on_failure=true.")
     print(f"  Orchestrate serializes complete-task code-runner jobs sharing a cwd; patch-only jobs may run concurrently with disjoint allowlists.")
     print(f"\nBackend models (scillm model names):")

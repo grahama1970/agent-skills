@@ -101,6 +101,101 @@ def main() -> None:
     assert not bad_source_apply["valid"]
     assert "commit_on_success=true" in "\n".join(bad_source_apply["issues"])
 
+    bad_live_dod = validate(module, base_plan({
+        "id": "1",
+        "title": "bad live DoD",
+        "runner": "code-runner",
+        "backend": "codex",
+        "mode": "iterative",
+        "prompt": "Change src/server.py so the endpoint returns the new response.",
+        "allowlist": ["src/server.py"],
+        "read_context": ["src/server.py"],
+        "dirty_worktree_policy": "isolated_worktree",
+        "definition_of_done": {
+            "command": "curl -fsS http://localhost:3000/api/health",
+            "assertion": "exit_code == 0",
+        },
+        "tests": ["curl -fsS http://localhost:3000/api/health"],
+        "blind_tests": [{"command": "python -m pytest tests/test_server.py -q"}],
+        "service_under_test": "local dev server",
+    }))
+    assert not bad_live_dod["valid"]
+    assert "isolated worktree" in "\n".join(bad_live_dod["issues"])
+
+    bad_browser_dod = validate(module, base_plan({
+        "id": "1",
+        "title": "bad browser DoD",
+        "runner": "code-runner",
+        "backend": "codex",
+        "mode": "iterative",
+        "prompt": "Change src/page.py so the browser view renders the new content.",
+        "allowlist": ["src/page.py"],
+        "read_context": ["src/page.py"],
+        "dirty_worktree_policy": "isolated_worktree",
+        "definition_of_done": {
+            "command": "npx playwright test tests/ui.spec.ts --project chromium",
+            "assertion": "exit_code == 0",
+        },
+        "blind_tests": [{"command": "python -m pytest tests/test_page.py -q"}],
+    }))
+    assert not bad_browser_dod["valid"]
+    assert "isolated worktree" in "\n".join(bad_browser_dod["issues"])
+
+    bad_cypress_dod = validate(module, base_plan({
+        "id": "1",
+        "title": "bad Cypress DoD",
+        "runner": "code-runner",
+        "backend": "codex",
+        "mode": "iterative",
+        "prompt": "Change src/page.py so the browser view renders the new content.",
+        "allowlist": ["src/page.py"],
+        "read_context": ["src/page.py"],
+        "dirty_worktree_policy": "isolated_worktree",
+        "definition_of_done": {
+            "command": "npm exec cypress run -- --spec tests/ui.cy.ts",
+            "assertion": "exit_code == 0",
+        },
+        "blind_tests": [{"command": "python -m pytest tests/test_page.py -q"}],
+    }))
+    assert not bad_cypress_dod["valid"]
+    assert "isolated worktree" in "\n".join(bad_cypress_dod["issues"])
+
+    bad_opaque_dod = validate(module, base_plan({
+        "id": "1",
+        "title": "bad opaque DoD",
+        "runner": "code-runner",
+        "backend": "codex",
+        "mode": "iterative",
+        "prompt": "Change src/a.py so answer returns 42.",
+        "allowlist": ["src/a.py"],
+        "read_context": ["src/a.py"],
+        "dirty_worktree_policy": "isolated_worktree",
+        "definition_of_done": {
+            "command": "npm run ci",
+            "assertion": "exit_code == 0",
+        },
+        "blind_tests": [{"command": "python -m pytest tests/test_a.py -q"}],
+    }))
+    assert not bad_opaque_dod["valid"]
+    assert "opaque shell indirection" in "\n".join(bad_opaque_dod["issues"])
+
+    bad_opaque_public_test = validate(module, base_plan({
+        "id": "1",
+        "title": "bad opaque public test",
+        "runner": "code-runner",
+        "backend": "codex",
+        "mode": "iterative",
+        "prompt": "Change src/a.py so answer returns 42.",
+        "allowlist": ["src/a.py"],
+        "read_context": ["src/a.py"],
+        "dirty_worktree_policy": "isolated_worktree",
+        "definition_of_done": {"command": "python -m pytest tests/test_a.py -q", "assertion": "exit_code == 0"},
+        "tests": ["make test"],
+        "blind_tests": [{"command": "python -m pytest tests/test_a.py -q"}],
+    }))
+    assert not bad_opaque_public_test["valid"]
+    assert "opaque shell indirection" in "\n".join(bad_opaque_public_test["issues"])
+
     good_source_apply = validate(module, base_plan({
         "id": "1",
         "title": "good source apply",

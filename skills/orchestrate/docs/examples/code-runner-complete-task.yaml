@@ -1,0 +1,36 @@
+version: 1
+kind: orchestrate-plan
+metadata:
+  title: "Complete-task code-runner example"
+  goal: "Apply a bounded source change only after isolated and source DoD pass."
+repo_root: "/absolute/path/to/project"
+execution:
+  max_concurrency: 1
+lanes:
+  - id: "0"
+    label: "Implementation"
+tasks:
+  - id: "fix-widget-rendering"
+    title: "Fix widget rendering edge case"
+    runner: "code-runner"
+    backend: "codex"
+    mode: "iterative"
+    cwd: "/absolute/path/to/project"
+    prompt: "Fix the widget rendering edge case without changing public API behavior."
+    allowlist:
+      - "src/widgets/render.py"
+      - "tests/test_widget_render.py"
+    read_context:
+      - "src/widgets/model.py"
+      - "src/widgets/render.py"
+      - "tests/test_widget_render.py"
+    dirty_worktree_policy: "isolated_worktree"
+    definition_of_done:
+      command: "python -m pytest tests/test_widget_render.py -q"
+      assertion: "exit_code == 0"
+    blind_tests:
+      - command: "python -m pytest tests/test_widget_render_hidden.py -q"
+    apply_to_source: true
+    commit_on_success: true
+    rollback_on_failure: true
+    max_rounds: 5

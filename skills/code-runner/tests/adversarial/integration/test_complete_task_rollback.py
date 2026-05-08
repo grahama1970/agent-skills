@@ -1,0 +1,78 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from ..helpers.assertions import assert_result_failed
+from ..helpers.git_repo import git, make_minimal_python_repo, write
+from ..helpers.monkeypatch_scillm import FakeScillm, final_message, tool_call
+from ..helpers.runner import make_spec, run_spec
+from ..helpers.source_snapshot import snapshot_source
+
+
+SOURCE_FAILS_DOD_COMMAND = """python - <<'PY'
+import os
+from pathlib import Path
+
+source = Path(os.environ["CODE_RUNNER_SOURCE_CWD"]).resolve()
+cwd = Path.cwd().resolve()
+
+ns = {}
+exec(Path("src/app.py").read_text(), ns)
+assert ns["add_one"](1) == 2
+
+if cwd == source:
+    raise SystemExit("source DoD intentionally fails")
+print("DOD_OK")
+PY"""
+
+
+def test_complete_task_source_dod_failure_rolls_back_allowlisted_paths_only(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "source-dod-failure-rolls-back"
+    output_dir = tmp_path / "out" / task_id
+
+    write(repo, "docs/user-notes.md", "tracked docs\n")
+    git(repo, "add", "docs/user-notes.md")
+    git(repo, "commit", "-m", "add docs")
+    write(repo, "docs/user-notes.md", "dirty user docs should survive\n")
+
+    before = snapshot_source(repo)
+
+    FakeScillm(
+        [
+            tool_call(
+                "write_file",
+                {
+                    "path": "src/app.py",
+                    "content": "def add_one(x):\n    return x + 1\n",
+                },
+            ),
+            final_message("fixed isolated worktree"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(
+        make_spec(
+            task_id=task_id,
+            repo=repo,
+            output_dir=output_dir,
+            apply_to_source=True,
+            rollback_on_failure=True,
+            dod_command=SOURCE_FAILS_DOD_COMMAND,
+            dod_assertion="contains:DOD_OK",
+        )
+    )
+
+    assert_result_failed(result)
+    assert result["source_patch_applied"] is True
+    assert result["source_dod_passed"] is False
+    assert result["source_rollback_applied"] is True
+
+    # Allowlisted file should be restored to the pre-apply version.
+    assert (repo / "src/app.py").read_text() == "def add_one(x):\n    return x\n"
+
+    # Non-allowlisted dirty user work must survive rollback.
+    assert (repo / "docs/user-notes.md").read_text() == "dirty user docs should survive\n"
+
+    # HEAD should not advance on failed source DoD.
+    assert git(repo, "rev-parse", "HEAD").stdout.strip() == before.head

@@ -6,13 +6,14 @@ Writes append-only events that can be:
 3. Used by _debug_dashboard.py for visualization
 
 Usage:
-    emitter = EventEmitter(output_dir, run_id)
+    emitter = EventEmitter(output_dir, task_id)
     emitter.emit(EventType.run_started, state_after=RunState.running)
     emitter.emit(EventType.round_scored, round=1, payload={"score": 0.85})
 """
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -39,11 +40,14 @@ VALID_TRANSITIONS: dict[RunState, set[RunState]] = {
 class EventEmitter:
     """Append-only event emitter for code-runner execution."""
 
-    def __init__(self, output_dir: str | Path, run_id: str):
+    def __init__(self, output_dir: str | Path, task_id: str):
         self.output_dir = Path(output_dir)
-        self.run_id = run_id
-        self.events_file = self.output_dir / "events.jsonl"
-        self.run_file = self.output_dir / "run.json"
+        self.run_id = task_id
+        self.task_id = task_id
+        self.events_file = self.output_dir / f"{task_id}.events.jsonl"
+        self.status_file = self.output_dir / f"{task_id}.status.json"
+        self.legacy_events_file = self.output_dir / "events.jsonl"
+        self.legacy_run_file = self.output_dir / "run.json"
         self._current_state = RunState.queued
         self._current_round = 0
         self._best_score = 0.0
@@ -103,29 +107,45 @@ class EventEmitter:
             payload=payload or {},
         )
 
-        # Append to events.jsonl
+        # Append to task-scoped events.jsonl. Keep legacy events.jsonl for older dashboards.
         try:
+            event_text = event_record.model_dump_json() + "\n"
             with self.events_file.open("a") as f:
-                f.write(event_record.model_dump_json() + "\n")
+                f.write(event_text)
+            with self.legacy_events_file.open("a") as f:
+                f.write(event_text)
         except IOError as e:
             logger.warning("Failed to write event: {}", e)
 
-        # Update run.json snapshot
+        # Update status snapshots
         self._write_run_snapshot()
 
     def _write_run_snapshot(self) -> None:
-        """Write current run state to run.json."""
+        """Write current run state to task-scoped status.json and legacy run.json."""
         snapshot = {
             "run_id": self.run_id,
+            "task_id": self.task_id,
             "state": self._current_state.value,
             "reason_code": self._reason_code.value if self._reason_code else None,
             "current_round": self._current_round,
             "best_score": self._best_score,
             "started_at": self._started_at,
             "updated_at": time.time(),
+            "artifacts": {
+                "request": str(self.output_dir / f"{self.task_id}.request.json"),
+                "status": str(self.status_file),
+                "events": str(self.events_file),
+                "rounds": str(self.output_dir / f"{self.task_id}.rounds.jsonl"),
+                "result": str(self.output_dir / f"{self.task_id}.result.json"),
+                "response": str(self.output_dir / f"{self.task_id}.response.txt"),
+                "hunk": str(self.output_dir / f"{self.task_id}.hunk.md"),
+                "verifier_log": str(self.output_dir / f"{self.task_id}.verifier.log"),
+            },
         }
         try:
-            self.run_file.write_text(json.dumps(snapshot, indent=2))
+            text = json.dumps(snapshot, indent=2) + "\n"
+            _atomic_write(self.status_file, text)
+            _atomic_write(self.legacy_run_file, text)
         except IOError as e:
             logger.warning("Failed to write run snapshot: {}", e)
 
@@ -142,3 +162,9 @@ class EventEmitter:
     @property
     def current_round(self) -> int:
         return self._current_round
+
+
+def _atomic_write(path: Path, text: str) -> None:
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(text)
+    tmp.replace(path)

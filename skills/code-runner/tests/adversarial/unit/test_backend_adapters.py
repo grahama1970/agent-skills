@@ -1,0 +1,82 @@
+from __future__ import annotations
+
+import json
+
+import pytest
+
+from code_runner.adapters import run_backend_tool_loop, supported_backends
+from code_runner.spec import TaskSpec
+
+
+def test_native_fake_adapter_writes_only_through_bounded_tools(monkeypatch, tmp_path) -> None:
+    target = tmp_path / "src" / "app.py"
+    target.parent.mkdir()
+    target.write_text("def answer():\n    return 0\n")
+    monkeypatch.setenv(
+        "CODE_RUNNER_NATIVE_FAKE_RESPONSE",
+        "### FILE: src/app.py\n```python\ndef answer():\n    return 42\n```\n",
+    )
+
+    written, messages = run_backend_tool_loop(
+        "system",
+        "user",
+        "native-fake",
+        str(tmp_path),
+        ["src/app.py"],
+        [],
+        "adapter-test",
+        1,
+    )
+
+    assert written == ["src/app.py"]
+    assert target.read_text() == "def answer():\n    return 42\n"
+    tool_results = [json.loads(message["content"]) for message in messages if message.get("role") == "tool"]
+    assert tool_results == [{"ok": True, "path": "src/app.py"}]
+
+
+def test_native_fake_adapter_cannot_write_outside_allowlist(monkeypatch, tmp_path) -> None:
+    allowed = tmp_path / "src" / "app.py"
+    secret = tmp_path / "src" / "secret.py"
+    allowed.parent.mkdir()
+    allowed.write_text("def answer():\n    return 0\n")
+    monkeypatch.setenv(
+        "CODE_RUNNER_NATIVE_FAKE_RESPONSE",
+        "### FILE: src/secret.py\n```python\nSECRET = True\n```\n",
+    )
+
+    written, messages = run_backend_tool_loop(
+        "system",
+        "user",
+        "native-fake",
+        str(tmp_path),
+        ["src/app.py"],
+        [],
+        "adapter-test",
+        1,
+    )
+
+    assert written == []
+    assert not secret.exists()
+    tool_results = [json.loads(message["content"]) for message in messages if message.get("role") == "tool"]
+    assert tool_results == [{"ok": False, "error_type": "PERMISSION", "error": "write not allowed: src/secret.py"}]
+
+
+def test_native_fake_backend_is_validated() -> None:
+    assert "native-fake" in supported_backends()
+    spec = TaskSpec.model_validate({
+        "task_id": "adapter-test",
+        "title": "adapter test",
+        "prompt": "Change only the allowlisted file using the native fake adapter.",
+        "backend": "native-fake",
+        "cwd": ".",
+        "output_dir": "/tmp/code-runner-adapter-test",
+        "allowlist": ["src/app.py"],
+        "definition_of_done": {"command": "true", "assertion": "exit_code == 0"},
+    })
+    assert spec.backend == "native-fake"
+
+
+def test_unknown_adapter_backend_fails_closed(tmp_path) -> None:
+    with pytest.raises(RuntimeError, match="unsupported code-runner adapter backend"):
+        run_backend_tool_loop("system", "user", "unknown-native", str(tmp_path), [], [], "adapter-test", 1)
+

@@ -7,19 +7,12 @@ triggers:
   - code runner
   - deterministic code execution
   - run and fix code
-  - autoresearch for code
-description: Deterministic self-improvement loop for code tasks. LLM proposes code → apply to disk → T0 deterministic scoring (errors, lint, DoD) → git commit/revert (autoresearch pattern) → /scillm structured fix with full trajectory + /memory recall + /treesitter symbols → strategy escalation. Loops until DoD passes or max rounds exhausted. Project agent reviews final output.
+description: Minimal deterministic code runner for bounded implementation tasks. Runs one LLM backend through /scillm inside a disposable git worktree, enforces a write allowlist, runs a deterministic definition of done, and returns an allowlist-scoped patch artifact for project-agent review.
 provides:
   - code-execution
-  - self-improvement
+  - bounded-code-fix
 composes:
   - scillm
-  - memory
-  - treesitter
-  - thunderdome
-  - review-code
-  - orchestrate
-  - prompt-lab
 taxonomy:
   - execution
   - quality
@@ -29,449 +22,194 @@ taxonomy:
 
 # Code Runner
 
-Deterministic self-improvement loop for code authoring tasks. Same pattern as
-`/classifier-lab` (backbone training) and Karpathy's autoresearch (LLM training)
-but for code quality.
+`/code-runner` is intentionally minimal. It is a bounded worker, not an orchestrator, planner, reviewer, memory system, symbol indexer, or backend race harness.
+
+Core flow:
 
 ```
-LLM proposes → apply to disk → T0 score → improved? git commit : git revert
-  → /scillm fix with trajectory + /memory + /treesitter → repeat
+task-spec.json
+  → deterministic preflight
+  → disposable git worktree
+  → /scillm SSE tool-use loop
+  → deterministic DoD command
+  → keep best allowlist-scoped patch
+  → result artifacts for project-agent review
 ```
 
-## Why This Exists
+## Non-Goals Disabled for v1
 
-Subagents (claude -p, codex) have ~35% success rate on code tasks. They propose
-code but don't verify it runs. Code-runner adds the verification loop + the
-autoresearch keep/discard pattern + cross-session memory.
+These are explicitly out of the core runner until the minimal path is reliable:
 
-Three-layer quality gate:
-1. **T0 (deterministic)**: Does the code run? Does DoD pass? Lint clean? Best-practices?
-2. **T1.5 (/scillm)**: Given the evidence + trajectory + past fixes, propose a structured fix
-3. **T2 (project agent)**: Is the approach correct? Accept or reject the final output
+- `/memory` recall or logging
+- `/treesitter` symbol extraction
+- `/thunderdome` backend racing
+- `/orchestrate` plan dispatch
+- `/prompt-lab` template assembly
+- `/review-code` auto-review
+- backend fallback chains
+- predecessor patch chaining
+- live-service ownership
 
-## The Self-Improvement Loop
+Future versions may add these as outer layers. They must not be required for the basic runner to pass.
 
-```
-Round 1: /scillm proposes code (system prompt = v2 template from /prompt-lab)
-  → parse v2 hybrid format: JSON metadata + diff + complete file per ### FILE: block
-  → try diff first (cheap), fall back to complete file (safe)
-  → atomic write to disk (temp → validate → rename)
-  → T0 evidence: run DoD, classify errors (regex), ruff lint, best-practices
-  → composite score (0.0-1.0, DoD-dominant)
-  → score > best + ε? → git commit written files (KEEP) : git checkout (DISCARD)
-  → log to llm_invocations collection (ALL rounds — failures are training signal)
-  → DoD passed? → DONE, send to project agent for review
+## Task Contract
 
-Round 2+: Memory-backed system prompt (refreshed each round):
-  → original request as IMMUTABLE anchor (prevents drift)
-  → DoD + allowlist + last 2 rounds (local history)
-  → /memory recall similar solved problems (cross-session)
-  → /memory recall by error type (what worked for this error before)
-  → /treesitter symbols from modified files
-  → strategy escalation instruction (structured_analysis, different_approach, simplify)
-  → proposes fix → apply → score → keep/discard → repeat
-```
-
-## Usage
-
-```bash
-# Run a task spec
-./run.sh run task-spec.json
-
-# Custom max rounds
-./run.sh run task-spec.json --max-rounds 5
-
-# Specific backend
-./run.sh run task-spec.json --backend codex
-
-# Dry run — show what would execute
-./run.sh dry-run task-spec.json
-
-# Review changes with hunk (or git diff fallback)
-./run.sh review                        # latest working tree diff
-./run.sh review output/task-id.hunk.md  # specific review file
-```
-
-## Task Spec Format
-
-```json
-{
-  "task_id": "fix-auth",
-  "title": "Fix authentication bug in login handler",
-  "prompt": "Read src/auth.py and fix the TypeError on line 45...",
-  "backend": "codex",
-  "cwd": "/home/graham/workspace/project",
-  "output_dir": "/tmp/code-runner-output",
-  "allowlist": ["src/auth.py", "tests/test_auth.py"],
-  "definition_of_done": {
-    "command": "cd /home/graham/workspace/project && python -m pytest tests/test_auth.py -q",
-    "assertion": "passed"
-  },
-  "max_rounds": 5
-}
-```
-
-### Spec Fields
+Required fields:
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `task_id` | Yes | Unique identifier (used in /memory, git commits, logs) |
-| `title` | Yes | Human-readable task description |
-| `prompt` | Yes | Full task instruction for the LLM |
-| `backend` | Yes | LLM backend: `codex`, `text`, `gemini`, `claude` |
-| `cwd` | Yes | Working directory (must be a git repo for keep/discard) |
-| `output_dir` | Yes | Where to write logs, rounds, result.json |
-| `allowlist` | No | Files or directories the LLM can write. Supports dir scopes: `"scripts/"` allows any file under scripts/. Default: any file under cwd |
-| `definition_of_done.command` | Yes | Shell command to verify correctness |
-| `definition_of_done.assertion` | No | Substring that must appear in output, or `exit_code == N` |
-| `max_rounds` | No | Max self-improvement rounds (default: 5) |
-| `read_context` | No | Files for interface-map context (read-only, not editable) |
-| `blind_tests` | No | Hidden tests for /orchestrate blind eval (code-runner never sees these) |
-| `timeout_seconds` | No | Per-task timeout in seconds (default: 1800) |
+| `task_id` | Yes | Unique local artifact identifier |
+| `title` | Yes | Human-readable task title |
+| `prompt` | Yes | Concrete implementation instruction |
+| `backend` | Yes | One backend for this run, usually `codex` |
+| `cwd` | Yes | Source git repository |
+| `output_dir` | Yes | Artifact directory |
+| `allowlist` | Yes | Only these paths may be written |
+| `definition_of_done.command` | Yes | Deterministic verification command |
+| `definition_of_done.assertion` | Yes | Expected output substring or `exit_code == N` |
+| `max_rounds` | No | Default: `5` |
+| `read_context` | No | Extra read-only files included in prompt context |
+| `dirty_worktree_policy` | No | Only `isolated_worktree` is supported |
+| `apply_to_source` | No | Explicit opt-in complete-task mode; default `false` |
+| `commit_on_success` | No | If `apply_to_source` is true, commit allowlisted source changes after source DoD passes |
+| `rollback_on_failure` | No | If source apply or source DoD fails, restore allowlisted source paths; default `true` |
 
-**Round timeout:** Each LLM round has a per-round timeout from `common/estimate_timeout.py`. Uses `max(historical_P95, 180s)` with 1.2x buffer — minimum 216s per round. Override with `CODE_RUNNER_ROUND_TIMEOUT` env var (seconds).
-| `escalation_chain` | No | Backend escalation: `[["codex","medium"],["codex","high"],["claude","high"]]` |
-
-## Output
-
-```
-{output_dir}/
-  {task_id}.response.txt      — final LLM response (for project agent review)
-  {task_id}.round_1.txt       — round 1 LLM response
-  {task_id}.round_2.txt       — round 2 LLM response (if needed)
-  {task_id}.rounds.jsonl      — experiment log (all rounds, local)
-  {task_id}.result.json       — final result summary
-  {task_id}.hunk.md           — hunk-compatible diff review with trajectory annotations
-```
-
-### Hunk Review
-
-After each run, code-runner generates a `{task_id}.hunk.md` with the git diff
-and a trajectory table (rounds, scores, strategies). View it with:
-
-```bash
-hunk patch output/task-id.hunk.md   # TUI diff viewer with annotations
-# or
-./run.sh review output/task-id.hunk.md
-```
-
-Requires `hunkdiff` (`npm i -g hunkdiff`). Falls back to `cat` if not installed.
-
-### result.json
+Example:
 
 ```json
 {
   "task_id": "fix-auth",
   "title": "Fix authentication bug",
-  "status": "pass",
-  "rounds": 2,
-  "best_score": 1.0,
-  "dod_passed": true,
+  "prompt": "Fix the TypeError in src/auth.py without changing public API behavior.",
   "backend": "codex",
-  "best_commit": "a1b2c3d4",
-  "round_details": [
-    {"round": 1, "score": 0.45, "strategy": "direct_fix", "status": "keep", "error_severity": "contract"},
-    {"round": 2, "score": 1.00, "strategy": "structured_analysis", "status": "keep", "dod_passed": true}
-  ]
+  "cwd": "/home/graham/workspace/project",
+  "output_dir": "/tmp/code-runner-output",
+  "allowlist": ["src/auth.py", "tests/test_auth.py"],
+  "definition_of_done": {
+    "command": "python -m pytest tests/test_auth.py -q",
+    "assertion": "passed"
+  },
+  "dirty_worktree_policy": "isolated_worktree",
+  "max_rounds": 5,
+  "apply_to_source": false
 }
 ```
+
+## Usage
+
+```bash
+./run.sh dry-run task-spec.json --explain-risk
+./run.sh run task-spec.json
+./run.sh status /tmp/code-runner-output --tail-events 25
+./run.sh watch /tmp/code-runner-output
+./run.sh doctor --json
+```
+
+By default, the project agent must inspect `result.json`, `response.txt`, and the patch artifact before applying changes to the source repo.
+
+Complete-task mode is explicit opt-in:
+
+```json
+{
+  "apply_to_source": true,
+  "commit_on_success": true,
+  "rollback_on_failure": true
+}
+```
+
+In complete-task mode, `/code-runner` still proves the change in a disposable
+worktree first. Only after the isolated DoD passes does it apply the allowlist
+patch to the source repo, run the same DoD in source, commit only allowlisted
+paths, and report `source_commit`. If source apply or source DoD fails, it
+restores allowlisted source paths when `rollback_on_failure` is true.
+
+## Safety Model
+
+- Creates a disposable git worktree from the source repo.
+- Sets `CODE_RUNNER_SOURCE_CWD` so tool commands that reference the source repo are blocked.
+- Enforces the write allowlist in file tools and patch export.
+- Blocks destructive shell command patterns.
+- Fails if the source repo status changes during a run.
+- Removes the disposable worktree after the run.
+- Default mode never commits or stages source-repo files.
+- Complete-task mode is opt-in and fails before apply if dirty source paths overlap the allowlist.
+- Complete-task commits stage only allowlisted paths and fail if unrelated staged paths would be included.
+
+## Tool Surface
+
+The LLM may call only these tools:
+
+| Tool | Purpose |
+|------|---------|
+| `read_file` | Read bounded file content |
+| `edit_file` | Replace a line range after reading |
+| `write_file` | Create or rewrite an allowlisted file |
+| `run_command` | Run bounded verification commands in the worktree |
+| `search_code` | Ripgrep search inside the worktree |
+
+No dynamic skills are exposed as tools.
 
 ## Scoring
 
-Composite score (0.0 = broken, 1.0 = perfect). **DoD is dominant.**
+DoD is dominant:
 
-| DoD Result | Base | Formula |
-|------------|------|---------|
-| **PASSED** | 0.50 | + 0.25×(1 - errors/10) + 0.15×(1 - lint/20) + 0.10×(no BP violations) |
-| **FAILED** | 0.00 | 0.30×(1 - errors/10) + 0.15×(1 - lint/20) + 0.05×(no BP) — **capped at 0.49** |
+- Passing DoD can score up to `1.0`.
+- Failing DoD is capped below `0.5`.
+- Improved rounds are kept in the disposable worktree.
+- Regressed rounds are discarded back to the best patch state.
 
-Keep/discard uses epsilon threshold (0.01) to avoid churn.
-
-## Strategy Escalation
-
-| Round | Strategy | Instruction |
-|-------|----------|-------------|
-| 1 | `direct_fix` | Send error, ask for specific fix |
-| 2 | `structured_analysis` | Classify error type, analyze systematically |
-| 3 | `different_approach` | Previous approach failed — try fundamentally different |
-| 4 | `simplify` | Minimum viable, remove all complexity |
-| 5 | `escalate` | Write full diagnosis for project agent |
-
-**Escalation accelerates on repeat errors:** if the same error severity appears
-in consecutive rounds, strategy jumps ahead (e.g., round 2 with repeat import
-error → skip to `different_approach`).
-
-## Source Grounding Verification
-
-On round 2+, code-runner verifies that the LLM's fix actually references the
-error it's supposed to fix. This catches hallucinated fixes that don't address
-the actual problem.
-
-**Grounding terms extracted from stderr:**
-- File names (e.g., `cache.py`)
-- Error type keywords (e.g., `TypeError`, `ImportError`)
-- Quoted identifiers from error messages
-- Line numbers
-
-**Grounding score:** 0.0–1.0 based on how many terms the response references.
-If score < 0.5, a reminder is appended to the next round's prompt:
+## Output
 
 ```
-IMPORTANT: Your fix must address the ACTUAL error shown above.
-The error is in cache.py at line 42.
-Reference these specific terms: TypeError, get_value
-The actual error message is: TypeError: 'NoneType' object is not subscriptable
+{output_dir}/
+  {task_id}.request.json
+  {task_id}.status.json
+  {task_id}.events.jsonl
+  {task_id}.rounds.jsonl
+  {task_id}.response.txt
+  {task_id}.result.json
+  {task_id}.hunk.md
+  {task_id}.verifier.log
 ```
 
-Emits `grounding_low` event when triggered. Grounding score is tracked in
-`llm_metadata` and round details.
+When complete-task mode is enabled, `{task_id}.result.json` also includes:
 
-### Escalation Chain (backend + reasoning)
+- `apply_to_source`
+- `source_patch_applied`
+- `source_dod_passed`
+- `source_commit`
+- `source_rollback_applied`
+- `source_apply_error`
 
-When the same error severity repeats, code-runner also escalates the LLM:
+## Valid Task Shape
 
-```
-Step 0: backend:medium   (default — e.g., codex at medium reasoning)
-Step 1: backend:high     (same backend, more reasoning effort + 2x max_tokens)
-Step 2: claude:high      (switch to Claude Opus as last resort)
-```
+Good tasks are small and executable:
 
-- **Dynamic temperature:** increments by 0.1 on each repeated error (breaks local minima)
-- **Pre-write lint gate:** Python files are `compile()`-checked before writing to disk
-
-Override via spec:
-```json
-"escalation_chain": [["codex", "medium"], ["codex", "high"], ["claude", "high"]]
+```text
+Implement the documented behavior in src/parser.py.
+Only edit src/parser.py and tests/test_parser.py.
+Run python -m pytest tests/test_parser.py -q and require "passed".
 ```
 
-## Git Integration (Autoresearch Pattern)
+Bad tasks are architectural, vague, or unverifiable:
 
-- **Before run:** `git stash` pre-existing changes
-- **After each round:** score improved? → `git add -- <written_files>` + `git commit` (KEEP)
-- **Score didn't improve:** `git checkout <best_commit> -- <written_files>` (DISCARD)
-- **After run:** `git stash pop` to restore pre-existing changes
-
-Only written files are staged/reverted. Never `git add -A`. Never `git reset --hard`.
-User work is never touched.
-
-## llm_invocations (Unified Agent Turn Logging)
-
-**ALL rounds** are stored to ArangoDB `llm_invocations` collection via `common/llm_invocations.log_invocation()`:
-
-```python
-log_invocation(
-    agent="code-runner",
-    session_key="cr-fix-auth-1774789000",
-    round=2,
-    outcome="success",  # or "failed"
-    score=1.0,
-    model="gpt-5.3-codex",
-    tags=["code-runner", "task:fix-auth", "strategy:structured_analysis", "outcome:pass"],
-    metadata={"task_id": "fix-auth", "errors_by_type": {}, "commit": "abc123", ...},
-)
+```text
+Improve the architecture.
+Make the UI better.
+Fix whatever is wrong.
+Pass by checking that a string exists in a file.
 ```
 
-Write-only via memory daemon `/store` endpoint. No bespoke AQL — querying uses `/memory recall`.
+## Acceptance Standard
 
-**Requires:** `SKILLS_DIR` env var (set by `run.sh`) or `common/` as sibling of skill directory. The module is imported at startup via `sys.path` from `$SKILLS_DIR/common/llm_invocations.py`.
+Patch-only mode is considered reliable only after repeated real runs show:
 
-**session_key** links all rounds for one invocation. Enables:
-- `/recommend-skill-chain` traversal across related sessions
-- `/memory recall` finding what worked for similar error types
-- `/episodic-archiver` linking code-runner sessions to conversations
-
-**Recall** on each round queries `/memory` twice:
-1. By task description — "have I solved this problem before?"
-2. By error type — "have I seen this error severity before?"
-
-Both filter for `outcome:pass` at recall time. Failed rounds ARE stored
-(with `outcome:fail` tag) but filtered out during recall.
-
-## /treesitter Integration (Deterministic Code Context)
-
-Before building each fix prompt, `/treesitter` extracts symbols from modified files:
-
-```
-src/auth.py:
-  function: login(user: str, password: str) → bool
-  function: validate(token: str) → dict
-  class: AuthHandler
-  import: httpx, json, from loguru import logger
-```
-
-This gives the /scillm fix call deterministic context — no hallucinated function
-signatures. Stored in llm_invocations metadata so recalled fixes include the code structure.
-
-## File Safety
-
-- **Denylist:** `.git`, `.gitignore`, `.env`, `SKILL.md`, `run.sh`, `sanity.sh`, `pyproject.toml`, `package.json`
-- **Allowlist:** If `allowlist` is in task spec, ONLY those files can be written (default-deny)
-- **Path boundary:** `relative_to()` check prevents traversal outside cwd
-- **Atomic writes:** temp file → validate → rename. On any failure, all temp files rolled back
-
-## Tool-Use Agent
-
-The LLM operates via tool calls, not output parsing. Available tools:
-
-| Tool | Purpose | Limits |
-|------|---------|--------|
-| `write_file` | Create new file or full rewrite | Allowlist enforced, Python syntax-checked, max 100 lines for existing files |
-| `edit_file` | Surgical line-range replacement | Staleness check, truncation guard |
-| `read_file` | Read file contents | 500 line cap, numbered output |
-| `run_command` | Execute shell command | 30s timeout, destructive patterns blocked |
-| `lookup_docs` | Library documentation via /context7 | 30s timeout |
-| `search_code` | Smart search: semantic if indexed, ripgrep fallback | 15s timeout, 50 match cap |
-| `get_symbols` | AST symbols via /treesitter | 15s timeout |
-| `research` | Deep research via /dogpile | **Once per task** (rate limited), 60s timeout |
-
-### Tool Usage Guidelines
-
-**File operations** (`write_file`, `edit_file`, `read_file`):
-- Always `read_file` before `edit_file` — staleness detection rejects edits to files changed since last read
-- Use `edit_file` for surgical changes to large files (>100 lines)
-- Python files are `compile()`-checked before writing
-
-**Search tools** (`search_code`, `get_symbols`):
-- `search_code` is smart: checks for `.ingest-code.json` marker first
-  - If indexed: queries `/memory` for semantic search (BM25 + cosine)
-  - If not indexed: falls back to ripgrep pattern matching
-  - Response includes `source: "memory"` or `source: "ripgrep"` to indicate which was used
-- `get_symbols` extracts function/class signatures — use before editing unfamiliar files
-
-**Research tools** (`lookup_docs`, `research`):
-- `lookup_docs` for API reference (free, fast)
-- `research` for complex questions (expensive, rate-limited to once per task)
-
-See [PATTERNS.md](references/PATTERNS.md) for composition patterns with /orchestrate, /thunderdome, /classifier-lab, and subagent usage.
-
----
-
-# In plan YAML:
-tasks:
-  - id: "3"
-    title: "Fix auth bug"
-    runner: "code-runner"
-    backend: "codex"
-    definition_of_done:
-      command: "pytest tests/test_auth.py -q"
-      assertion: "passed"
-```
-
-`/orchestrate` writes the task spec JSON and calls `./run.sh run spec.json`.
-Code-runner loops until DoD passes. Project agent reviews `response.txt`.
-
-### Pattern 2: /thunderdome → /code-runner (Competing Approaches)
-
-Multiple backends race on the same task in isolated git worktrees. Best score wins.
-Same pattern as `/classifier-lab` racing multiple backbones via `/switchboard`.
-
-```bash
-# /thunderdome spawns 3 competing /code-runner instances:
-/thunderdome battle \
-  --task "fix auth bug" \
-  --dod "pytest tests/test_auth.py -q" \
-  --contestants "codex,text,gemini" \
-  --max-rounds 3
-```
-
-Each contestant:
-- Gets its own git worktree (isolated, can't interfere)
-- Runs `/code-runner` with the same task spec + DoD
-- Self-improvement loop runs independently
-- First to pass DoD wins, OR highest score after max rounds
-- Winner's worktree merged back to main
-
-This is the autoresearch pattern at the META level:
-- **autoresearch** = one agent, many experiments, keep/discard per experiment
-- **code-runner** = one backend, many rounds, keep/discard per round
-- **thunderdome + code-runner** = many backends, each running many rounds, keep/discard per backend
-
-```
-/thunderdome
-  ├─ worktree-A: /code-runner backend=codex
-  │   ├─ Round 1: score=0.3 (KEEP)
-  │   ├─ Round 2: score=0.7 (KEEP)
-  │   └─ Round 3: score=1.0 (KEEP, DoD PASS) ← WINNER
-  │
-  ├─ worktree-B: /code-runner backend=text
-  │   ├─ Round 1: score=0.4 (KEEP)
-  │   ├─ Round 2: score=0.4 (DISCARD)
-  │   └─ Round 3: score=0.6 (KEEP)
-  │
-  └─ worktree-C: /code-runner backend=gemini
-      ├─ Round 1: score=0.2 (KEEP)
-      └─ Round 2: score=0.0 (DISCARD, crash)
-```
-
-### Pattern 3: /plan → /orchestrate → /code-runner (Full Stack)
-
-The standard pipeline for code projects:
-
-```
-/plan creates YAML with:
-  - Task 1 (runner: local): install deps
-  - Task 2 (runner: code-runner): write training pipeline code
-  - Task 3 (runner: local): run training
-  - Task 4 (runner: code-runner): fix any broken pipeline code
-  - Task 5 (runner: local): verify all outputs
-
-/orchestrate dispatches each task to its runner (async DAG scheduler).
-/code-runner handles code authoring with self-improvement loop.
-Local tasks handle deterministic shell commands.
-All code-runner rounds store to llm_invocations for cross-session learning.
-```
-
-### Pattern 4: /code-runner as subagent (Bounded Worker)
-
-A project agent delegates a bounded code task to /code-runner as a subagent.
-The subagent runs the deterministic loop, the project agent reviews the output.
-
-```python
-# Project agent calls /code-runner for a specific fix
-spec = {
-    "task_id": "fix-empty-classes",
-    "title": "Fix concurrent_run.py to resolve HF dataset label names",
-    "prompt": "Read concurrent_run.py. The _write_ux_project function writes classCount: 0...",
-    "backend": "text",
-    "cwd": "/home/graham/workspace/experiments/pi-mono",
-    "allowlist": [".pi/skills/classifier-lab/scripts/concurrent_run.py"],
-    "definition_of_done": {
-        "command": "python3 -c \"...assert data['classCount'] == 4...\"",
-        "assertion": "OK"
-    }
-}
-# Subagent runs the loop, project agent reviews response.txt
-```
-
-# WRONG: Fire and forget
-./run.sh run spec.json
-# Agent moves on without reading response.txt or result.json
-# → This is how Codex wrote empty classes arrays (plan 12 incident)
-
-# RIGHT: Run and review
-./run.sh run spec.json
-cat /tmp/output/task-id.result.json  # Check score, rounds, dod_passed
-cat /tmp/output/task-id.response.txt # READ the actual code before accepting
-
-# WRONG: Use /code-runner for design decisions
-# "Decide whether to use REST or GraphQL and implement it"
-# → Code-runner is a subagent. It runs and debugs. It doesn't architect.
-
-# RIGHT: Use /code-runner for bounded implementation
-# "Implement the REST endpoint for /api/users as specified in the plan"
-# → Clear scope, clear DoD, clear file allowlist.
-
-# WRONG: DoD that checks string existence
-"command": "grep 'function_name' file.py"
-# → LLM adds a comment with the function name and passes
-
-# RIGHT: DoD that runs the code and checks output
-"command": "python -c 'from module import function; result = function(test_input); assert result == expected'"
-# → LLM must write code that actually works
-```
-
-
-### Complete-Task Acceptance Standard
+- source `HEAD` unchanged,
+- source working tree unchanged except pre-existing user changes,
+- disposable worktree removed,
+- patch artifact scoped to `allowlist`,
+- DoD result recorded in `result.json`,
+- project agent can apply/reject the patch explicitly.
 
 Complete-task mode is considered reliable only after repeated real runs show:
 

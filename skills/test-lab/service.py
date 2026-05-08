@@ -33,7 +33,10 @@ class BlindEvalRequest(BaseModel):
 class BlindCheckResult(BaseModel):
     index: int  # opaque test number — assertion text NEVER returned to preserve information barrier
     passed: bool
-    message: str  # sanitized failure message (no paths, no source)
+    message: str = ""  # legacy sanitized failure message; consumers should prefer public_hint
+    category: str = "hidden_check"
+    public_hint: str = "Hidden check failed."
+    raw_message_artifact: str = ""  # test-lab-only pointer; never source or assertion text
 
 
 class BlindEvalResponse(BaseModel):
@@ -65,6 +68,10 @@ def _sanitize(text: str) -> str:
     return "\n".join(lines[-6:])[:500]
 
 
+def _hint(message: str, fallback: str) -> str:
+    return fallback
+
+
 def _run_python_assertion(assertion: str, target_dir: str, _cwd: str = "") -> BlindCheckResult:
     """Run a single Python assertion against the target directory."""
     # Wrap the assertion in a test script that adds target_dir to sys.path
@@ -81,17 +88,31 @@ def _run_python_assertion(assertion: str, target_dir: str, _cwd: str = "") -> Bl
             cwd=target_dir,
         )
         if proc.returncode == 0 and "BLIND_PASS" in proc.stdout:
-            return BlindCheckResult(index=-1, passed=True, message="passed")
+            return BlindCheckResult(index=-1, passed=True, message="passed", public_hint="Hidden check passed.")
         else:
             combined = (proc.stdout or "") + "\n" + (proc.stderr or "")
             return BlindCheckResult(
                 index=-1, passed=False,
                 message=_sanitize(combined) or "assertion failed",
+                category="behavior_mismatch",
+                public_hint=_hint(combined, "Hidden Python assertion failed."),
             )
     except subprocess.TimeoutExpired:
-        return BlindCheckResult(index=-1, passed=False, message="timed out (30s)")
+        return BlindCheckResult(
+            index=-1,
+            passed=False,
+            message="timed out (30s)",
+            category="timeout",
+            public_hint="Hidden check timed out.",
+        )
     except Exception as e:
-        return BlindCheckResult(index=-1, passed=False, message=_sanitize(str(e)))
+        return BlindCheckResult(
+            index=-1,
+            passed=False,
+            message=_sanitize(str(e)),
+            category="harness_error",
+            public_hint=_hint(str(e), "Hidden check could not run."),
+        )
 
 
 def _run_shell_assertion(assertion: str, target_dir: str) -> BlindCheckResult:
@@ -106,17 +127,31 @@ def _run_shell_assertion(assertion: str, target_dir: str) -> BlindCheckResult:
             cwd=cwd,
         )
         if proc.returncode == 0:
-            return BlindCheckResult(index=-1, passed=True, message="passed")
+            return BlindCheckResult(index=-1, passed=True, message="passed", public_hint="Hidden check passed.")
         else:
             combined = (proc.stdout or "") + "\n" + (proc.stderr or "")
             return BlindCheckResult(
                 index=-1, passed=False,
                 message=_sanitize(combined) or "command failed",
+                category="behavior_mismatch",
+                public_hint=_hint(combined, "Hidden shell check failed."),
             )
     except subprocess.TimeoutExpired:
-        return BlindCheckResult(index=-1, passed=False, message="timed out (30s)")
+        return BlindCheckResult(
+            index=-1,
+            passed=False,
+            message="timed out (30s)",
+            category="timeout",
+            public_hint="Hidden check timed out.",
+        )
     except Exception as e:
-        return BlindCheckResult(index=-1, passed=False, message=_sanitize(str(e)))
+        return BlindCheckResult(
+            index=-1,
+            passed=False,
+            message=_sanitize(str(e)),
+            category="harness_error",
+            public_hint=_hint(str(e), "Hidden check could not run."),
+        )
 
 
 @app.get("/healthz")
@@ -136,6 +171,7 @@ def evaluate(req: BlindEvalRequest) -> BlindEvalResponse:
         else:
             result = _run_python_assertion(assertion, req.target_dir)
         result.index = idx
+        result.raw_message_artifact = f"test-lab://{req.task_id}/blind-check/{idx}"
         checks.append(result)
         # Log without assertion text — only index and pass/fail (barrier discipline)
         logger.info("  test[{}] {}: {}", idx, "PASS" if result.passed else "FAIL", result.message[:80])

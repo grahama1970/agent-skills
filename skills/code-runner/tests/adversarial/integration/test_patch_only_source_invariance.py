@@ -1,0 +1,114 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+from ..helpers.assertions import (
+    assert_no_residual_code_runner_worktree,
+    assert_patch_applies_to_clean_review_worktree,
+    assert_result_failed,
+    assert_result_passed,
+    assert_runtime_artifacts,
+    hunk_path,
+    patch_path,
+)
+from ..helpers.git_repo import create_ignored_file, git, make_minimal_python_repo, write
+from ..helpers.monkeypatch_scillm import FakeScillm, final_message, tool_call
+from ..helpers.patch_oracle import assert_patch_touches_only
+from ..helpers.runner import make_spec, run_spec
+from ..helpers.source_snapshot import assert_source_snapshot_unchanged, snapshot_source
+
+
+def test_patch_only_success_source_snapshot_unchanged(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "patch-only-success"
+    output_dir = tmp_path / "out" / task_id
+    before = snapshot_source(repo)
+
+    FakeScillm(
+        [
+            tool_call(
+                "write_file",
+                {
+                    "path": "src/app.py",
+                    "content": "def add_one(x):\n    return x + 1\n",
+                },
+            ),
+            final_message("fixed"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=output_dir))
+
+    assert_result_passed(result)
+    assert_runtime_artifacts(output_dir, task_id)
+    assert_source_snapshot_unchanged(repo, before)
+    assert_no_residual_code_runner_worktree(repo, task_id)
+    assert_patch_touches_only(hunk_path(output_dir, task_id), {"src/app.py"})
+    assert_patch_applies_to_clean_review_worktree(repo, patch_path(output_dir, task_id), tmp_path)
+
+
+def test_patch_only_failure_source_snapshot_unchanged(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "patch-only-failure"
+    output_dir = tmp_path / "out" / task_id
+    before = snapshot_source(repo)
+
+    FakeScillm([final_message("I refuse to edit.")]).install(monkeypatch)
+
+    result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=output_dir))
+
+    assert_result_failed(result)
+    assert_runtime_artifacts(output_dir, task_id)
+    assert_source_snapshot_unchanged(repo, before)
+    assert_no_residual_code_runner_worktree(repo, task_id)
+
+
+def test_patch_only_preserves_dirty_untracked_and_ignored_source_files(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "patch-only-preserves-user-work"
+    output_dir = tmp_path / "out" / task_id
+
+    write(repo, "docs/user-notes.md", "tracked docs\n")
+    git(repo, "add", "docs/user-notes.md")
+    git(repo, "commit", "-m", "add docs")
+
+    write(repo, "docs/user-notes.md", "dirty tracked docs\n")
+    write(repo, "scratch.txt", "untracked user work\n")
+    create_ignored_file(repo)
+
+    before = snapshot_source(repo)
+
+    FakeScillm(
+        [
+            tool_call(
+                "write_file",
+                {
+                    "path": "src/app.py",
+                    "content": "def add_one(x):\n    return x + 1\n",
+                },
+            ),
+            final_message("fixed"),
+        ]
+    ).install(monkeypatch)
+
+    result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=output_dir))
+
+    assert_result_passed(result)
+    assert_source_snapshot_unchanged(repo, before)
+    assert_no_residual_code_runner_worktree(repo, task_id)
+
+
+def test_patch_only_runtime_failure_removes_worktree_and_writes_diagnostic_result(tmp_path: Path, monkeypatch) -> None:
+    repo = make_minimal_python_repo(tmp_path)
+    task_id = "runtime-failure-cleans-worktree"
+    output_dir = tmp_path / "out" / task_id
+    before = snapshot_source(repo)
+
+    FakeScillm(error=RuntimeError("scillm HTTP 400: unsupported request shape")).install(monkeypatch)
+
+    result = run_spec(make_spec(task_id=task_id, repo=repo, output_dir=output_dir))
+
+    assert_result_failed(result)
+    assert "scillm HTTP 400" in result["error"]
+    assert_source_snapshot_unchanged(repo, before)
+    assert_no_residual_code_runner_worktree(repo, task_id)

@@ -38,10 +38,11 @@ fi
 # 4. Structured plan validation
 echo "4. Testing structured plan review..."
 STRUCTURED_FILE=$(mktemp --suffix=.json)
-cat > "$STRUCTURED_FILE" << 'EOF'
+cat > "$STRUCTURED_FILE" << EOF
 {
   "version": 1,
   "kind": "orchestrate-plan",
+  "repo_root": "$PROJECT_ROOT",
   "title": "Structured review test",
   "capability_overlap": ["ok"],
   "questions_blockers": ["None"],
@@ -56,7 +57,7 @@ cat > "$STRUCTURED_FILE" << 'EOF'
       "lane": "backend",
       "prompt": "Reply with exactly: ok",
       "tests": ["test-lab/run.sh verify-task t1 . --domain python"],
-      "definition_of_done": {"command": "true", "assertion": "passes"}
+      "definition_of_done": {"command": "true", "assertion": "exit_code == 0"}
     }
   ]
 }

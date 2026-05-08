@@ -79,13 +79,16 @@ are simpler than that.
 |--------|-------------|------------------|---------|
 | `local` | Shell command, no LLM needed | Has `command`, no `prompt` | `pytest`, `npm install`, `ruff check --fix` |
 | `scillm` | One-shot LLM call, simple edit | Has `prompt`, no `allowlist`+DoD assertion | Add a field, rename variable, generate docstring, classify |
-| `code-runner` | Complex bounded code task with verification | Has `prompt` + `allowlist` + DoD `assertion` | Fix multi-file bug, implement feature with test suite |
+| `code-runner` | Complex bounded code task with verification, iteration, and context isolation | Has `prompt` + `allowlist` + DoD command/assertion + `blind_tests` | Fix multi-file bug, implement feature with test suite |
 
-**Use code-runner ONLY when ALL of these are true:**
+**Default away from code-runner. Use it ONLY when ALL of these are true:**
 - The task writes/edits 1-3 specific files (use `allowlist`)
 - There's a runnable DoD command with a verifiable assertion
+- The DoD is expected to fail before the code change; already-passing gates are `local`
 - The fix may need multiple attempts (not a mechanical edit)
+- The task benefits from context isolation: only the allowlisted files should be writable
 - Dependencies are known and listed in `read_context`
+- Hidden/blind checks are listed in `blind_tests` for the orchestrate information barrier
 - **The DoD command does NOT require a live server** (code-runner uses git worktree isolation — the running dev server serves from the main working directory, not the worktree)
 
 **Do NOT use code-runner for:**
@@ -269,7 +272,7 @@ Auto-detected from goal text. All types use the same YAML schema.
 
 | Type | Detected When | Pattern |
 |------|---------------|---------|
-| **code** | No UI keywords | `local` for setup, `code-runner` for implementation |
+| **code** | No UI keywords | `local` for setup/verification, `scillm` for one-shot edits, `code-runner` only for bounded iterative implementation |
 | **design** | views, components, TSX, dashboard, UI, React | `/mockup-lab` (Stitch) → `/ux-lab` (code) → `/mockup-lab review` (VLM verify) → `/test-interactions` |
 | **hybrid** | Both UI and code keywords | Stitch pipeline for UI views, code tasks in later waves |
 
@@ -382,7 +385,7 @@ tasks:
 | `local` | Has `command`, no `prompt` | `command` |
 | `skill` | Has `skill` field set | `skill` (+ optional `skill_command`, `skill_args`) |
 | `scillm` | Has `prompt`, no `allowlist` + DoD assertion | `prompt` (backend/mode auto-filled) |
-| `code-runner` | Has `prompt` + `allowlist` + DoD assertion | `prompt`, `allowlist`, `definition_of_done.assertion` |
+| `code-runner` | Has `prompt` + `allowlist` + DoD command/assertion + `blind_tests` and genuinely needs iteration/isolation | `prompt`, `allowlist`, `definition_of_done.command`, `definition_of_done.assertion`, `blind_tests`, `read_context` |
 
 ### Backend (which LLM model)
 

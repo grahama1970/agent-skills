@@ -1,0 +1,20 @@
+{
+  "task_id": "patch_numstat_wrong_cwd",
+  "title": "Patch numstat wrong cwd replay",
+  "prompt": "Export the patch from the disposable worktree.",
+  "backend": "test",
+  "cwd": "__fixture_source_repo__",
+  "output_dir": "__fixture_output_dir__",
+  "allowlist": ["src/app.py"],
+  "definition_of_done": {
+    "command": "python - <<'PY'\nfrom pathlib import Path\nns = {}\nexec(Path('src/app.py').read_text(), ns)\nassert ns['add_one'](1) == 2\nprint('DOD_OK')\nPY",
+    "assertion": "contains:DOD_OK"
+  },
+  "read_context": ["src/app.py", "README.md"],
+  "max_rounds": 1,
+  "timeout_seconds": 60,
+  "dirty_worktree_policy": "isolated_worktree",
+  "apply_to_source": false,
+  "commit_on_success": false,
+  "rollback_on_failure": true
+}

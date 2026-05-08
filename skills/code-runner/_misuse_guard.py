@@ -10,7 +10,7 @@ Adapted from best-practices-skills/references/misuse_guard_template.py
 Common misuse patterns:
 - Wrong backend names (gpt, openai, anthropic → codex, claude, text)
 - Grep-based DoD assertions (gameable by LLM)
-- Missing allowlist on large prompts
+- Missing prompt, allowlist, DoD command, or live-service ownership contract
 - Design decision prompts (architecture belongs in /plan)
 - Weak/empty prompts with no file references
 """
@@ -122,6 +122,29 @@ DESIGN_DECISION_PATTERNS: list[re.Pattern] = [
     re.compile(r"\b(what\s+architecture|design\s+the\s+system|plan\s+the)\b", re.I),
 ]
 
+LIVE_DOD_PATTERNS: list[re.Pattern] = [
+    re.compile(r"\bcurl\b", re.I),
+    re.compile(r"\bwget\b", re.I),
+    re.compile(r"https?://(?:localhost|127\.0\.0\.1)", re.I),
+    re.compile(r"\b(playwright|browser|cdp)\b", re.I),
+]
+
+PROTECTED_ALLOWLIST_PREFIXES: tuple[str, ...] = (
+    ".codex/",
+    ".pi/.worktrees/",
+    "packages/ux-lab/public/pdf-lab-evidence/",
+    "packages/ux-lab/public/pdf-lab-nist-preset-scan/",
+)
+
+PROTECTED_ALLOWLIST_EXACT: set[str] = {
+    ".batch_state.json",
+    ".code-runner-skills",
+    ".codex",
+    ".pi/.worktrees",
+    "packages/ux-lab/public/pdf-lab-evidence",
+    "packages/ux-lab/public/pdf-lab-nist-preset-scan",
+}
+
 
 # ============================================================================
 # Validation Functions
@@ -192,6 +215,20 @@ def check_design_decision(prompt: str) -> MisuseError | None:
     return None
 
 
+def check_missing_prompt(prompt: str | None) -> MisuseError | None:
+    """Require task instructions before code-runner starts an LLM loop."""
+    if not prompt or len(prompt.strip()) < 20:
+        return MisuseError(
+            field="prompt",
+            error_type="missing_prompt",
+            message="prompt is REQUIRED and must explain the bounded code change. "
+                    "Code-runner cannot infer the target behavior from title, allowlist, or DoD alone.",
+            sent_value=prompt or "(missing)",
+            correct_value="Read <file>. Fix <specific failing behavior>. Preserve <constraints>. Verify with <DoD>.",
+        )
+    return None
+
+
 def check_weak_prompt(prompt: str, allowlist: list[str] | None) -> MisuseWarning | None:
     """Check if prompt is too vague."""
     # Very short prompt
@@ -225,6 +262,55 @@ def check_missing_allowlist(prompt: str, allowlist: list[str] | None, allowlist_
     return None
 
 
+def check_allowlist_required(allowlist: list[str] | None, allowlist_optional: bool) -> MisuseError | None:
+    """Require explicit write scope unless caller opts into unrestricted writes."""
+    if allowlist is None and not allowlist_optional:
+        return MisuseError(
+            field="allowlist",
+            error_type="missing_allowlist",
+            message="allowlist is REQUIRED for context isolation. Code-runner uses git keep/discard; "
+                    "without an explicit write scope it cannot protect unrelated work.",
+            sent_value="(missing)",
+            correct_value='["src/module.py", "tests/test_module.py"] or set allowlist_optional: true with justification',
+        )
+    if allowlist is not None and len(allowlist) == 0 and not allowlist_optional:
+        return MisuseError(
+            field="allowlist",
+            error_type="empty_allowlist",
+            message="allowlist is empty. Provide the exact files/directories code-runner may write, "
+                    "or use local/scillm if no writes are required.",
+            sent_value="[]",
+            correct_value='["src/module.py", "tests/test_module.py"]',
+        )
+    return None
+
+
+def _normalize_allowlist_path(path: str) -> str:
+    return path.strip().replace("\\", "/").lstrip("./").rstrip("/")
+
+
+def check_protected_allowlist(allowlist: list[str] | None) -> MisuseError | None:
+    """Block generated artifact paths from code-runner write scopes."""
+    if not allowlist:
+        return None
+    for raw_path in allowlist:
+        path = _normalize_allowlist_path(str(raw_path))
+        if (
+            path in PROTECTED_ALLOWLIST_EXACT
+            or any(path.startswith(prefix.rstrip("/")) for prefix in PROTECTED_ALLOWLIST_PREFIXES)
+            or path.endswith("_task_state.json")
+        ):
+            return MisuseError(
+                field="allowlist",
+                error_type="protected_artifact_allowlist",
+                message="allowlist includes generated orchestration/artifact output. "
+                        "Code-runner stages kept writes, so artifact paths can dirty or flood the worktree.",
+                sent_value=str(raw_path),
+                correct_value="Route artifact generation to local/scillm, or allowlist only the source files that produce the artifacts.",
+            )
+    return None
+
+
 def check_dod_missing(dod: dict | None) -> MisuseError | None:
     """Check if definition_of_done is missing or empty."""
     if not dod:
@@ -248,6 +334,41 @@ def check_dod_missing(dod: dict | None) -> MisuseError | None:
         )
 
     return None
+
+
+def check_dod_assertion_missing(dod: dict | None) -> MisuseWarning | None:
+    """Warn when DoD has no explicit success assertion."""
+    if not dod:
+        return None
+    assertion = str(dod.get("assertion", "") or "").strip()
+    command = str(dod.get("command", "") or "").strip()
+    if assertion:
+        return None
+    return MisuseWarning(
+        field="definition_of_done.assertion",
+        message="definition_of_done.assertion is empty. Code-runner can use exit code, but the caller "
+                "has not stated the observable success condition.",
+        suggestion="Add assertion: 'exit_code == 0' for silent commands, or a concrete output substring such as '3 passed'.",
+    )
+
+
+def check_live_service_contract(spec: dict[str, Any]) -> MisuseError | None:
+    """Require owned_service/external_service metadata for live endpoint DoDs."""
+    dod = spec.get("definition_of_done") or {}
+    command = str(dod.get("command", "") or "")
+    if not any(pattern.search(command) for pattern in LIVE_DOD_PATTERNS):
+        return None
+    if spec.get("service_under_test") or spec.get("external_service"):
+        return None
+    return MisuseError(
+        field="service_under_test",
+        error_type="missing_live_service_contract",
+        message="DoD appears to hit a live endpoint/browser target, but the spec does not declare "
+                "service_under_test or external_service. Code-runner cannot know whether the running "
+                "service reflects its isolated worktree edits.",
+        sent_value=command[:300],
+        correct_value="Add service_under_test for an owned fresh service, or external_service plus a separate project-agent/local verification gate.",
+    )
 
 
 def validate_task_spec(spec: dict[str, Any], task_id: str = "unknown") -> tuple[list[MisuseError], list[MisuseWarning]]:
@@ -274,14 +395,28 @@ def validate_task_spec(spec: dict[str, Any], task_id: str = "unknown") -> tuple[
         errors.append(dod_err)
         log_misuse_event(dod_err.error_type, dod_err.sent_value, dod_err.correct_value, task_id)
     elif dod:
+        assertion_warning = check_dod_assertion_missing(dod)
+        if assertion_warning:
+            warnings.append(assertion_warning)
+            log_misuse_event("missing_dod_assertion", dod.get("command", "")[:200], assertion_warning.suggestion, task_id)
+
         gameable = check_dod_gameable(dod.get("command", ""), dod.get("assertion"))
         if gameable:
             warnings.append(gameable)
             log_misuse_event("gameable_dod", dod.get("command", "")[:200], gameable.suggestion, task_id)
 
+    live_service_err = check_live_service_contract(spec)
+    if live_service_err:
+        errors.append(live_service_err)
+        log_misuse_event(live_service_err.error_type, live_service_err.sent_value, live_service_err.correct_value, task_id)
+
     # Prompt checks
     prompt = spec.get("prompt", "")
-    if prompt:
+    prompt_err = check_missing_prompt(prompt)
+    if prompt_err:
+        errors.append(prompt_err)
+        log_misuse_event(prompt_err.error_type, prompt_err.sent_value, prompt_err.correct_value, task_id)
+    else:
         design_err = check_design_decision(prompt)
         if design_err:
             errors.append(design_err)
@@ -292,7 +427,22 @@ def validate_task_spec(spec: dict[str, Any], task_id: str = "unknown") -> tuple[
             warnings.append(weak)
             log_misuse_event("weak_prompt", prompt[:200], weak.suggestion, task_id)
 
-    # Allowlist check
+    # Allowlist checks
+    allowlist_err = check_allowlist_required(spec.get("allowlist"), spec.get("allowlist_optional", False))
+    if allowlist_err:
+        errors.append(allowlist_err)
+        log_misuse_event(allowlist_err.error_type, allowlist_err.sent_value, allowlist_err.correct_value, task_id)
+
+    protected_allowlist_err = check_protected_allowlist(spec.get("allowlist"))
+    if protected_allowlist_err:
+        errors.append(protected_allowlist_err)
+        log_misuse_event(
+            protected_allowlist_err.error_type,
+            protected_allowlist_err.sent_value,
+            protected_allowlist_err.correct_value,
+            task_id,
+        )
+
     allowlist_warn = check_missing_allowlist(
         prompt,
         spec.get("allowlist"),
@@ -309,12 +459,14 @@ def format_misuse_errors(errors: list[MisuseError], warnings: list[MisuseWarning
     lines = []
 
     if errors:
-        lines.append("=== TASK SPEC MISUSE DETECTED ===")
+        lines.append("=== CODE-RUNNER TASK CONTRACT INCOMPLETE ===")
+        lines.append("Code-runner only runs bounded iterative code edits with explicit context isolation.")
+        lines.append("Fix the calling plan/spec fields below, or route this task to local/scillm instead.")
         lines.append("")
         for err in errors:
             lines.append(f"[{err.field}] {err.message}")
             if err.correct_value:
-                lines.append(f"  CORRECT: {err.correct_value}")
+                lines.append(f"  CHANGE TO: {err.correct_value}")
             lines.append("")
 
     if warnings:
@@ -326,6 +478,12 @@ def format_misuse_errors(errors: list[MisuseError], warnings: list[MisuseWarning
             lines.append("")
 
     if errors or warnings:
+        lines.append("Required code-runner contract:")
+        lines.append("  - prompt: specific bounded code change")
+        lines.append("  - allowlist: exact writable files/directories, unless allowlist_optional is justified")
+        lines.append("  - definition_of_done.command: executable verification")
+        lines.append("  - definition_of_done.assertion: success condition, or explicit exit_code assertion")
+        lines.append("  - live DoDs: service_under_test or external_service")
         lines.append("See SKILL.md for full documentation: .pi/skills/code-runner/SKILL.md")
 
     return "\n".join(lines)

@@ -23,6 +23,7 @@ import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlparse
 
 import sys
 
@@ -62,17 +63,19 @@ class Diagnosis(BaseModel):
 
 # ── Diagnosis Call ─────────────────────────────────────────────────────
 
-def _normalize_scillm_chat_url(api_base: str | None) -> str:
-    """Return the chat-completions endpoint for a scillm base or full URL."""
-    base = (api_base or "http://localhost:4001").rstrip("/")
-    if base.endswith("/v1/chat/completions"):
-        return base
-    if base.endswith("/v1"):
-        return f"{base}/chat/completions"
-    return f"{base}/v1/chat/completions"
+def normalize_scillm_chat_url(raw_url: str | None) -> str:
+    """Return the concrete OpenAI-compatible chat completions endpoint."""
+    url = (raw_url or "http://localhost:4001/v1/chat/completions").strip().rstrip("/")
+    parsed = urlparse(url)
+    path = parsed.path.rstrip("/")
+    if path in ("", "/"):
+        return f"{url}/v1/chat/completions"
+    if path == "/v1":
+        return f"{url}/chat/completions"
+    return url
 
 
-SCILLM_URL = _normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
+SCILLM_URL = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
 SCILLM_KEY = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
 _DIAGNOSE_SYSTEM = """You are a code failure diagnostician. You receive error output and source code.
@@ -116,7 +119,7 @@ def call_diagnose(
         "codex": "gpt-5.5",
         "claude": "claude-sonnet-4-6",
         "gemini": "text-gemini",
-    }.get(backend, "text")
+    }.get(backend, "gpt-5.5")
 
     user_prompt = (
         f"TASK: {task_prompt[:500]}\n\n"

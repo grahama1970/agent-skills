@@ -1,0 +1,7 @@
+{
+  "task_id": "patch_numstat_wrong_cwd",
+  "status": "pass",
+  "dod_passed": true,
+  "source_unchanged": true,
+  "worktree_removed": true
+}

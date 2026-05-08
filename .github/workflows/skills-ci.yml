@@ -3,12 +3,151 @@ name: Skills CI
 on:
   push:
     branches: [main]
-    paths: ['skills/**']
+    paths: ['skills/**', '.github/workflows/skills-ci.yml']
   pull_request:
     branches: [main]
-    paths: ['skills/**']
+    paths: ['skills/**', '.github/workflows/skills-ci.yml']
+  schedule:
+    - cron: '17 8 * * *'
+  workflow_dispatch:
 
 jobs:
+  plan-review-orchestrate-pipeline:
+    name: Plan/review/orchestrate pipeline gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run plan contract tests
+        working-directory: skills/plan
+        run: |
+          env -u VIRTUAL_ENV ./sanity.sh
+          env -u VIRTUAL_ENV uv run --project . python tests/test_code_runner_contract_validation.py
+
+      - name: Run review-plan contract tests
+        working-directory: skills/review-plan
+        run: |
+          env -u VIRTUAL_ENV ./sanity.sh
+          env -u VIRTUAL_ENV uv run --project . python tests/test_code_runner_contract_fail_closed.py
+
+      - name: Run orchestrate pipeline tests
+        working-directory: skills/orchestrate
+        run: |
+          set +e
+          env -u VIRTUAL_ENV uv run --project . --with pytest python -m pytest -q tests/test_code_runner_context_boundary.py
+          status_1=$?
+          env -u VIRTUAL_ENV bash tests/test_orchestrate.sh
+          status_2=$?
+          git worktree list --porcelain > /tmp/orchestrate-pipeline-worktrees.txt || true
+          find /tmp \( -name 'status.json' -o -name '*.result.json' -o -name '*.events.jsonl' -o -name '*.spec.json' -o -name '*.log' \) -print > /tmp/orchestrate-pipeline-artifacts.txt || true
+          tar -czf /tmp/orchestrate-pipeline-diagnostics.tgz -T /tmp/orchestrate-pipeline-artifacts.txt || true
+          if [[ "$status_1" != "0" || "$status_2" != "0" ]]; then
+            exit 1
+          fi
+
+      - name: Upload pipeline diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-review-orchestrate-pipeline-diagnostics
+          path: |
+            /tmp/orchestrate-pipeline-worktrees.txt
+            /tmp/orchestrate-pipeline-artifacts.txt
+            /tmp/orchestrate-pipeline-diagnostics.tgz
+
+  plan-review-orchestrate-complete-task-soak:
+    name: Plan/review/orchestrate complete-task soak
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run complete-task source commit/revert E2E
+        working-directory: skills/orchestrate
+        run: |
+          set +e
+          env -u VIRTUAL_ENV bash tests/run_plan_review_orchestrate_code_runner_mock_e2e.sh
+          status=$?
+          git worktree list --porcelain > /tmp/complete-task-soak-worktrees.txt || true
+          find /tmp \( -name 'status.json' -o -name '*.result.json' -o -name '*.events.jsonl' -o -name '*.spec.json' -o -name '*.log' \) -print > /tmp/complete-task-soak-artifacts.txt || true
+          tar -czf /tmp/complete-task-soak-diagnostics.tgz -T /tmp/complete-task-soak-artifacts.txt || true
+          exit $status
+
+      - name: Upload complete-task diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-review-orchestrate-complete-task-diagnostics
+          path: |
+            /tmp/complete-task-soak-worktrees.txt
+            /tmp/complete-task-soak-artifacts.txt
+            /tmp/complete-task-soak-diagnostics.tgz
+
+  orchestrate-live-scillm-smoke:
+    name: Orchestrate live scillm smoke
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run live scillm smoke
+        working-directory: skills/orchestrate
+        run: |
+          env -u VIRTUAL_ENV bash tests/run_orchestrate_scillm_live_smoke.sh
+
+  code-runner-adversarial:
+    name: Code-runner adversarial gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run code-runner adversarial tests
+        working-directory: skills/code-runner
+        run: |
+          env -u VIRTUAL_ENV PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$PWD/src" uv run --project . python -m compileall -q src tests/adversarial
+          env -u VIRTUAL_ENV PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$PWD/src" uv run --project . --with pytest python -m pytest -q tests/adversarial -m "not soak"
+
+  code-runner-soak:
+    name: Code-runner soak gate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run code-runner soak tests
+        working-directory: skills/code-runner
+        run: |
+          set +e
+          env -u VIRTUAL_ENV PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$PWD/src" uv run --project . --with pytest python -m pytest -q tests/adversarial -m soak
+          status=$?
+          git worktree list --porcelain > /tmp/code-runner-worktrees.txt || true
+          find /tmp -path '*soak-*' \( -name '*.result.json' -o -name '*.status.json' -o -name '*.events.jsonl' -o -name '*.verifier.log' \) -print > /tmp/code-runner-soak-artifacts.txt || true
+          exit $status
+
+      - name: Upload soak diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-runner-soak-diagnostics
+          path: |
+            /tmp/code-runner-worktrees.txt
+            /tmp/code-runner-soak-artifacts.txt
+
   lint-skills:
     name: Lint skill structure
     runs-on: ubuntu-latest

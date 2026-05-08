@@ -16,9 +16,22 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 import httpx
 from loguru import logger
+
+
+def normalize_scillm_chat_url(raw_url: str | None) -> str:
+    """Return the concrete OpenAI-compatible chat completions endpoint."""
+    url = (raw_url or "http://localhost:4001/v1/chat/completions").strip().rstrip("/")
+    parsed = urlparse(url)
+    path = parsed.path.rstrip("/")
+    if path in ("", "/"):
+        return f"{url}/v1/chat/completions"
+    if path == "/v1":
+        return f"{url}/chat/completions"
+    return url
 
 
 class RecoveryAction(str, Enum):
@@ -371,7 +384,7 @@ Respond in JSON:
 
 async def call_diagnosis_llm(prompt: str) -> dict:
     """Call /scillm for LLM-based diagnosis."""
-    scillm_url = os.environ.get("SCILLM_API_BASE", "http://localhost:4001/v1/chat/completions")
+    scillm_url = normalize_scillm_chat_url(os.environ.get("SCILLM_API_BASE"))
     scillm_key = os.environ.get("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
 
     try:

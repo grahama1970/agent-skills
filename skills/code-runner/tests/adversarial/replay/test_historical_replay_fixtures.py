@@ -1,0 +1,61 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+
+REPLAY_ROOT = Path(__file__).resolve().parent
+REPLAY_CASES = [
+    "dirty_allowlist_fail_closed",
+    "dod_ran_from_source",
+    "restore_wrong_cwd",
+    "patch_numstat_wrong_cwd",
+    "scillm_http_400",
+    "false_green_monolith",
+]
+REQUIRED_FILES = [
+    "README.md",
+    "spec.json",
+    "fake_scillm_transcript.jsonl",
+    "expected_result_subset.json",
+    "expected_source_snapshot.json",
+]
+
+
+@pytest.mark.parametrize("case_name", REPLAY_CASES)
+def test_historical_replay_fixture_has_required_contract_files(case_name: str) -> None:
+    case_dir = REPLAY_ROOT / case_name
+
+    for name in REQUIRED_FILES:
+        assert (case_dir / name).exists(), f"missing replay fixture file: {case_dir / name}"
+
+
+@pytest.mark.parametrize("case_name", REPLAY_CASES)
+def test_historical_replay_fixture_spec_is_bounded_code_runner_contract(case_name: str) -> None:
+    spec = json.loads((REPLAY_ROOT / case_name / "spec.json").read_text())
+
+    assert spec["task_id"] == case_name
+    assert spec["backend"] == "test"
+    assert spec["dirty_worktree_policy"] == "isolated_worktree"
+    assert spec["allowlist"]
+    assert "hidden_tests" not in spec
+    assert "skills" not in spec
+    assert "memory" not in spec
+    assert "planner" not in spec
+    assert "reviewer" not in spec
+    assert "backend_racing" not in spec
+    assert "definition_of_done" in spec
+
+
+@pytest.mark.parametrize("case_name", REPLAY_CASES)
+def test_historical_replay_fixture_expected_result_is_fail_closed_or_pass_evidence(case_name: str) -> None:
+    expected = json.loads((REPLAY_ROOT / case_name / "expected_result_subset.json").read_text())
+
+    assert expected["task_id"] == case_name
+    assert expected["status"] in {"fail", "preflight_fail", "pass"}
+    assert isinstance(expected["source_unchanged"], bool)
+    if expected["status"] != "pass":
+        assert expected["dod_passed"] is False
+    assert expected["worktree_removed"] is True

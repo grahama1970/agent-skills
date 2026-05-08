@@ -1,28 +1,28 @@
 # Orchestrate Skill
 
-Cross-agent task orchestration with scheduling, monitoring, and quality gates. Works with Pi, Claude Code, Antigravity, and Codex.
+`/orchestrate` exists for work that is too stateful, risky, or multi-step to hand to a single agent prompt. It turns a plan into an inspectable execution session: tasks have dependencies, runners, evidence, artifacts, pause points, and quality gates.
+
+Use it when you need to see why work started, what produced each result, where a failure came from, and what a human operator can safely change before execution continues. It works with Pi, Claude Code, Antigravity, and Codex.
 
 ## Quick Start
 
 ```bash
-# Run a task file
+# Execute a dependency-aware task file
 orchestrate run 01_TASKS.md
 
-# Watch progress in real-time TUI
+# Inspect live progress in the terminal dashboard
 .pi/skills/task-monitor/run.sh tui
 
-# Or open the per-session live browser monitor URL printed at startup
-# {"event": "session_started", ..., "monitor_url": "http://127.0.0.1:54321/monitor.html"}
-
-# Schedule nightly runs
+# Hand recurring work to the scheduler
 orchestrate schedule 01_TASKS.md --cron "0 2 * * *"
 ```
 
 ## Use Cases
 
 ### 1. Multi-Step Feature Implementation
+Use a task file when the order of operations matters and later work depends on earlier evidence.
+
 ```bash
-# Create task file with dependent tasks
 cat > 01_TASKS.md << 'EOF'
 # Task List: Add User Authentication
 
@@ -57,18 +57,17 @@ orchestrate run 01_TASKS.md
 ```
 
 ### 2. Overnight Batch Processing
+For maintenance work that can run unattended, register the plan with the scheduler and inspect the job registry afterward.
+
 ```bash
-# Schedule a large refactoring task to run overnight
 orchestrate schedule refactor_tasks.md --cron "0 1 * * *"
 
-# Check what's scheduled
 cat ~/.pi/scheduler/jobs.json | jq
 ```
 
 ### 3. Continuous Quality Improvement
 ```bash
-# Run tasks with quality gates - retries until tests pass
-# Task file with retry-until-pass mode:
+# Quality-gated repair keeps rerunning until the gate passes or MaxRetries is hit.
 - [ ] **Task 1**: Fix flaky test
   - Mode: retry-until-pass
   - Gate: ./run_tests.sh
@@ -76,8 +75,9 @@ cat ~/.pi/scheduler/jobs.json | jq
 ```
 
 ### 4. Research + Implementation Flow
+Split discovery from editing when the first pass should gather options and the second pass should apply one choice.
+
 ```bash
-# First task explores, later tasks implement
 - [ ] **Task 1**: Research authentication patterns
   - Agent: explore
   - Parallel: 0
@@ -100,13 +100,11 @@ cat ~/.pi/scheduler/jobs.json | jq
 
 ## Monitoring with Task-Monitor TUI
 
-The task-monitor provides a real-time Rich TUI showing orchestration progress:
+Task-monitor provides two operator surfaces: a Rich TUI for terminal supervision and an HTTP API for browser dashboards or remote agents.
 
 ```bash
-# Start the TUI
 .pi/skills/task-monitor/run.sh tui
 
-# Filter to specific tasks
 .pi/skills/task-monitor/run.sh tui --filter orchestrate
 ```
 
@@ -133,36 +131,31 @@ The task-monitor provides a real-time Rich TUI showing orchestration progress:
 .pi/skills/task-monitor/run.sh serve --port 8765
 ```
 
-## Live HTML Monitor
+The HTTP monitor exposes normalized task-viewer data for live consoles and control surfaces:
 
-Every structured run writes `monitor.html`, `monitor.css`, `monitor.js`, and
-`monitor-server.json` into the session directory printed at startup. It also
-starts an owned localhost HTTP server and prints `monitor_url` in the
-`session_started` event. The browser monitor is live, not a static report:
-`monitor.js` polls `status.json` and `plan.json` every two seconds and
-re-renders the pipeline.
+- `GET /orchestrate/sessions` lists recent structured execution sessions.
+- `GET /orchestrate/sessions/{session_id}` returns `status.json` with normalized states: `queued`, `running`, `passed`, `failed`, `blocked`, `stale`, `paused`, `skipped`, `retrying`.
+- `GET /orchestrate/sessions/{session_id}/events/stream` streams append-only JSONL events over SSE.
+- `GET /orchestrate/sessions/{session_id}/artifacts/{artifact_path}` serves logs, diffs, review files, and reports without exposing arbitrary local paths.
+- `POST /orchestrate/sessions/{session_id}/control` writes guarded intervention files.
 
-The monitor shows:
-- Full run goal and progress counts
-- Lanes/DAG grouping with every task and dependency
-- Runner/backend, duration, current status, errors, and output links
-- Gate and definition-of-done text for each task
-- Raw plan and status payloads for auditability
+## Human Review Roundtable
 
-For local viewing, open the printed `monitor_url`. If the server was disabled
-with `ORCHESTRATE_MONITOR=0`, serve the directory manually:
+For design, policy, architecture, or ambiguous tradeoff decisions, an `/orchestrate` plan can include a review step that calls `/argue` or `/roundtable`. Treat this as an optional judgment layer, not as deterministic proof that the implementation is correct.
 
-```bash
-cd <session-dir>
-python3 -m http.server 8766
-# open http://127.0.0.1:8766/monitor.html
-```
+Complex personas such as Brandon, Margaret, and Jennifer can be loaded to stress-test a plan from security, quality, operational, or stakeholder perspectives before implementation continues. Use this when the next step depends on critique, alignment, or a decision record rather than another `code-runner` round.
+
+Roundtable output should be persisted as an artifact. If the review gates execution, summarize the decision into task status so the monitor can show why the session paused, changed direction, or proceeded.
+
+Keep the distinction clear:
+
+- `/review-plan` validates structure, dependencies, safety, and execution readiness.
+- `/argue` tests a decision with bounded for/against positions and a judge rubric.
+- `/roundtable` runs a stateful multi-persona review where each participant can react to prior claims before moderator synthesis.
 
 ## Mid-Task Intervention (Factory Droid)
 
-A watchdog thread polls the session directory every 2 seconds for intervention
-files. These work **during** active subagent execution — you don't have to wait
-for a task to finish.
+A watchdog polls the session directory every 2 seconds for intervention files. These controls work during active runner execution, so an operator can pause, cancel, annotate, or redirect work before the whole plan finishes.
 
 ### Intervention Files
 
@@ -174,42 +167,44 @@ Create these files in the session directory (printed at orchestration start):
 | `KILL_<task_id>` | Kill specific subagent mid-stream | <2s |
 | `ABORT` | Kill ALL running tasks, stop plan | <2s |
 | `SKIP_<task_id>` | Skip a queued task (on next unpause) | Next pause cycle |
+| `COURSE_CORRECT_<task_id>.md` | Add operator guidance to task state | <2s |
+| `PAUSE_TASK_<task_id>` | Request task pause at next safe point | <2s |
+| `RERUN_<task_id>` | Record rerun request while paused | <2s |
 
 The session directory also contains `INTERVENTION.md` with all task IDs for
 easy reference.
 
 ### Pause a Running Orchestration
+Locate the active session, create `PAUSE`, then remove it once the operator notes or skip files are ready.
+
 ```bash
-# Find the session directory
 ls ~/.pi/skills/orchestrate/structured/
 
-# Pause — the watchdog detects this in <2s
 touch ~/.pi/skills/orchestrate/structured/session-1234567890/PAUSE
 
-# Edit the plan YAML while paused, add SKIP files, then:
 rm ~/.pi/skills/orchestrate/structured/session-1234567890/PAUSE
 ```
 
 ### Kill a Specific Subagent Mid-Stream
+Use a task-specific kill file when one runner is unhealthy but the rest of the session should remain inspectable.
+
 ```bash
-# Kill task T3 while it's running (subagent process is killed immediately)
 touch ~/.pi/skills/orchestrate/structured/session-1234567890/KILL_T3
 
-# The watchdog sends POST /tasks/{id}/cancel to the subagent-service
-# container, which kills the CLI subprocess. The SSE stream gets a
-# "cancelled" done event. The orchestrator marks T3 as cancelled and
-# continues with remaining tasks.
+# The watchdog cancels the active process and records a CANCELLED event.
 ```
 
 ### Abort Everything
+Abort is the session-level stop. It cancels running work and prevents queued dependents from starting.
+
 ```bash
-# Nuclear option — kills all running tasks and stops the plan
 touch ~/.pi/skills/orchestrate/structured/session-1234567890/ABORT
 ```
 
 ### Programmatic Intervention (Project Agent)
+Agents can write the same files directly when an outer supervisor needs to intervene.
+
 ```python
-# The project agent can write intervention files directly:
 session_dir = Path("~/.pi/skills/orchestrate/structured/session-1234567890")
 (session_dir / "KILL_T3").touch()  # Kill one task
 (session_dir / "ABORT").touch()    # Kill everything
@@ -221,11 +216,11 @@ orchestrate run plan.yaml --resume
 ```
 
 ### State Persistence
-- Progress saved after each task completes to `status.json`
-- Live browser monitor polls `status.json` and `plan.json` every two seconds
-- `*.events.jsonl` files capture full SSE streams per task
+- Progress is saved to `status.json` after scheduling, state changes, task completion, and intervention handling.
+- `events.jsonl` is append-only session provenance for task lifecycle, control, and failure events.
+- Task artifacts (`*.stdout.txt`, `*.stderr.txt`, `*.result.json`, `*.hunk.md`, review outputs) are referenced from `status.json`.
 - Safe to kill between tasks (will resume from checkpoint)
-- Cancelled tasks are marked separately from failed tasks
+- Cancelled tasks render as `failed` with failure code `CANCELLED` for the task-viewer contract.
 
 ## Handling Questions/Blockers
 
@@ -268,17 +263,15 @@ If a task discovers it needs clarification:
 ## Scheduling Recurring Tasks
 
 ### Schedule Commands
+Use explicit cron expressions for recurring plans. Keep the schedule small enough that failures remain easy to attribute.
+
 ```bash
-# Schedule nightly at 2am
 orchestrate schedule tasks.md --cron "0 2 * * *"
 
-# Schedule every 15 minutes
 orchestrate schedule quick_check.md --cron "*/15 * * * *"
 
-# Schedule weekdays at 9am
 orchestrate schedule daily_tasks.md --cron "0 9 * * 1-5"
 
-# Remove from schedule
 orchestrate unschedule tasks.md
 ```
 
@@ -300,14 +293,13 @@ Examples:
 ```
 
 ### View Scheduled Jobs
+The scheduler, raw job registry, and task-monitor TUI all expose the same recurring-work state from different angles.
+
 ```bash
-# Via scheduler skill
 .pi/skills/scheduler/run.sh list
 
-# Or directly
 cat ~/.pi/scheduler/jobs.json | jq
 
-# Via task-monitor TUI (shows "Upcoming Schedule" panel)
 .pi/skills/task-monitor/run.sh tui
 ```
 
@@ -390,38 +382,35 @@ Group 2: Task 4 runs after both complete
 Edit task file, change `## Questions/Blockers` section to `None` or remove questions.
 
 ### Task stuck / not progressing
+Start with the orchestrate session view, then inspect task-monitor and the emitted artifacts.
+
 ```bash
-# Check status
 orchestrate status
 
-# Check task-monitor
 .pi/skills/task-monitor/run.sh tui
 
-# Check logs in output directory (shown at end of run)
 ls -la /tmp/pi-orchestrate-*/
 ```
 
 ### Scheduled job not running
+Verify the service, confirm the job is enabled, then trigger the same job manually to isolate scheduler versus plan failures.
+
 ```bash
-# Check scheduler is running
 .pi/skills/scheduler/run.sh status
 
-# Check job is enabled
 cat ~/.pi/scheduler/jobs.json | jq '.["orchestrate:tasks"].enabled'
 
-# Manually trigger
 .pi/skills/scheduler/run.sh run orchestrate:tasks
 ```
 
 ### Resume fails
+Inspect the saved state before deleting anything. Remove a state file only when it is clearly corrupted and the run can restart safely.
+
 ```bash
-# List all state files
 ls -la .orchestrate/
 
-# Check state file contents
 cat .orchestrate/<session-id>.state.json | jq
 
-# Delete corrupted state to start fresh
 rm .orchestrate/<session-id>.state.json
 ```
 

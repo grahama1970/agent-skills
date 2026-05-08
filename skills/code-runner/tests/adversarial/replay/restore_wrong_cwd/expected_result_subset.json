@@ -1,0 +1,7 @@
+{
+  "task_id": "restore_wrong_cwd",
+  "status": "fail",
+  "dod_passed": false,
+  "source_unchanged": true,
+  "worktree_removed": true
+}

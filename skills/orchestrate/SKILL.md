@@ -1,10 +1,9 @@
 ---
 name: orchestrate
 description: >
-  Async DAG task executor with quality gates. Dispatches plan YAML tasks to code-runner
-  (iterative code), scillm (one-shot LLM), or local (shell commands). Features: blind eval
-  with information barrier, per-task timeout, T2 code review gate, pause/resume/cancel
-  via file-based intervention. Use when user says "run these tasks", "execute the plan",
+  Stabilized async task executor. Dispatches plan YAML tasks to local shell commands
+  or code-runner patch runs by default, with broader runners and brittle gates behind
+  explicit opt-in flags. Use when user says "run these tasks", "execute the plan",
   "orchestrate this".
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, AskUserQuestion
 triggers:
@@ -46,7 +45,11 @@ taxonomy:
 
 # Orchestrate
 
-Task execution engine with quality gates, preflight checks, and multi-backend support.
+Task execution engine with preflight checks and explicit runner dispatch. The default
+mode is conservative but usable: foreground execution, serial tasks, YAML plans,
+`local` and `code-runner` runners only, and optional advisory services. For
+source-mutating code-runner tasks, a valid complete-task contract lands a source
+commit after isolated worktree DoD and source DoD pass.
 
 ## Usage
 
@@ -85,6 +88,9 @@ orchestrate run tasks.md with gemini     # All LLM steps use Gemini
 orchestrate run tasks.md with deepseek   # All LLM steps use DeepSeek
 ```
 
+For structured YAML plans, command-level `with <model>` fills missing backends on
+non-local tasks. Explicit task-level `backend:` values still win.
+
 ### Per-step routing (in task files)
 
 ```markdown
@@ -109,34 +115,48 @@ orchestrate run tasks.md with deepseek   # All LLM steps use DeepSeek
 | Model | Backend | Command |
 |-------|---------|---------|
 | `pi` | Pi CLI | `pi --tool orchestrate` (full features) |
-| `claude` | Claude Code CLI | `claude -p` |
-| `codex` | OpenAI Codex CLI | `codex exec --full-auto` |
-| `gemini` | Google Gemini via scillm | `scillm --model gemini-2.5-pro` |
-| `deepseek` | DeepSeek via scillm | `scillm --model deepseek-v3` |
+| `claude` | Claude via scillm | `scillm --model text-claude` |
+| `codex` | Codex via scillm | `scillm --model gpt-5.5` with high reasoning |
+| `gemini` | Google Gemini via scillm | `scillm --model text-gemini-oauth` |
+| `deepseek` | DeepSeek via scillm | `scillm --model deepseek-ai/DeepSeek-V3` |
 | `ptc` | Parallel Task Compiler | Enables parallel execution + auto-detected backend |
 
 Override with `ORCHESTRATE_BACKEND=pi|claude|codex` or use `with <model>` syntax.
 
-## Parallel Execution (PTC)
+## Stabilization Mode Defaults
 
-Independent tasks (no dependency edges) are automatically grouped into execution levels
-and run in parallel via `Promise.allSettled()`. Enabled by default.
+Until `/orchestrate` and `/code-runner` are reliable, V1 defaults remove brittle
+surface area:
+
+| Feature | Default | Opt-in |
+|---------|---------|--------|
+| Runners | `local`, `code-runner` only | `ORCHESTRATE_ALLOW_NON_CORE_RUNNERS=1` |
+| Deprecated `subagent-service` | blocked | `ORCHESTRATE_ALLOW_LEGACY_RUNNERS=1` |
+| Source apply / commits | allowed only by explicit task contract | `ORCHESTRATE_FORCE_PATCH_ONLY=1` |
+| `/test-lab` blind eval | advisory optional | `ORCHESTRATE_REQUIRE_TEST_LAB=1` |
+| T2 review | skipped with warning event | `ORCHESTRATE_ENABLE_T2_REVIEW=1` |
+| Patch chaining | disabled | `ORCHESTRATE_ENABLE_PATCH_CHAINING=1` |
+| Skill context injection | disabled | `ORCHESTRATE_ENABLE_SKILL_CONTEXT=1` |
+| Parallel tasks | forced `max_concurrency=1` | `ORCHESTRATE_ALLOW_PARALLEL=1` |
+| Background mode | blocked | `ORCHESTRATE_ALLOW_BACKGROUND=1` |
+| Human `/interview` escalation | artifact-only, non-blocking | `ORCHESTRATE_ENABLE_INTERVIEW_ESCALATION=1` |
+
+Stabilized plans should use structured YAML, foreground execution, and one
+`code-runner` task at a time. Treat skipped optional services as visible warnings,
+not proof that the run is fully validated.
+
+## Parallel Execution (Opt-in)
+
+Independent tasks can be grouped into execution levels, but this is disabled by
+default during stabilization. Set `ORCHESTRATE_ALLOW_PARALLEL=1` before using
+`execution.max_concurrency > 1`.
 
 ```bash
-# Explicitly enable parallel execution
-orchestrate run tasks.md with ptc
-
-# Disable parallel execution
-orchestrate({ taskFile: "tasks.md", parallel: false })
+ORCHESTRATE_ALLOW_PARALLEL=1 orchestrate run tasks.yaml
 ```
 
-The PTC compiler uses Kahn's algorithm to build a DAG from task dependencies,
-groups tasks with zero in-degree into levels, and executes each level in parallel.
-Tasks with `Parallel: N` metadata are grouped by their parallel number.
-
-State is saved at level boundaries (not per-task) during parallel execution.
-`continueOnError` works with `Promise.allSettled` — all parallel tasks finish
-even if one fails.
+The DAG executor uses task dependencies to determine readiness, but the stable
+default still runs one task at a time.
 
 ## Task File Format
 
@@ -152,7 +172,7 @@ metadata:
   title: "Feature Name"
   goal: "one-line summary"
 execution:
-  max_concurrency: 3
+  max_concurrency: 1
 lanes:
   - id: "0"
     label: "Setup"
@@ -160,7 +180,7 @@ tasks:
   - id: "1"
     title: "Task description"
     lane: "0"
-    runner: "code-runner"  # or "local" or "scillm"
+    runner: "code-runner"  # stable default also allows "local"
     backend: "codex"
     mode: "iterative"
     depends_on: []
@@ -209,8 +229,8 @@ in the `session_started` event.
 
 | Runner | Backend | Use Case |
 |--------|---------|----------|
-| `code-runner` | /scillm | Iterative, context-protected code tasks with allowlist + blind-test verification; returns a patch artifact by default or completes source changes when explicit source-apply fields are set |
-| `scillm` | /scillm | One-shot LLM inference (classification, extraction) |
+| `code-runner` | /scillm | Iterative, context-protected code tasks with allowlist + DoD verification; returns a patch artifact by default |
+| `scillm` | /scillm | One-shot LLM inference; disabled by default during stabilization |
 | `local` | shell | Deterministic commands (setup, tests, scripts) |
 
 ## Path Resolution
@@ -219,11 +239,15 @@ All sibling skill references use `SKILLS_DIR` env var with fallback to `$SCRIPT_
 - `SKILLS_DIR` — override for non-standard skill locations
 - `_shared/structured_plan.py` — YAML loader/validator
 - `review-plan/review_plan.py` — domain validation
-- `code-runner/run.sh` — self-improvement loop executor; runs in `isolated_worktree`; default mode leaves source unchanged, complete-task mode requires `apply_to_source: true`, `commit_on_success: true`, and `rollback_on_failure: true`
+- `code-runner/run.sh` — self-improvement loop executor; runs in `isolated_worktree`; review-only mode leaves source unchanged, complete-task mode requires `apply_to_source: true`, `commit_on_success: true`, and `rollback_on_failure: true`
 
 ## Code-Runner Source Apply
 
-For tasks that should complete the assigned source change, set all three fields:
+By default, `/orchestrate` forwards a valid complete-task code-runner contract so
+successful DoD runs produce a real source commit. Patch-only remains available by
+omitting source-apply fields or by setting `ORCHESTRATE_FORCE_PATCH_ONLY=1`.
+
+To opt into source mutation for a task, set all three fields:
 
 ```yaml
 apply_to_source: true
@@ -232,17 +256,38 @@ rollback_on_failure: true
 ```
 
 `/orchestrate` passes these fields to `/code-runner`, records `source_commit`,
-runs blind tests against the source repo after the commit, and reverts the source
-commit if blind tests fail and rollback is enabled. It also removes new
-non-allowlist byproducts created by source DoD, blind checks, or T2 review.
-Tasks sharing one `cwd` are serialized when either task uses source apply.
-Patch-only tasks can run concurrently when their allowlists are disjoint.
+and can run blind tests against the source repo after the commit. If blind/review
+fails and rollback is enabled, `/orchestrate` reverts `source_commit`. `/test-lab`
+remains advisory unless `ORCHESTRATE_REQUIRE_TEST_LAB=1`.
 
-Reliability acceptance for this path requires real `/review-plan -> /orchestrate
--> /code-runner -> /scillm` runs that prove:
+Reliability acceptance for this usable path requires real
+`/review-plan -> /orchestrate -> /code-runner -> /scillm` runs that prove:
 
 - source DoD rollback on failed source verification,
 - source commit revert on failed blind tests,
 - multi-round code-runner recovery,
 - source-apply serialization for shared `cwd`,
 - clean source status after successful and failed tasks.
+
+## Human Escalation
+
+Human notification belongs in `/orchestrate`, not `/code-runner`. When a
+`code-runner` task exhausts its automated retry budget, `/orchestrate` fails
+closed by default:
+
+- writes `{task_id}.failure-bundle.json`
+- writes `{task_id}.interview-request.json`
+- marks downstream dependents blocked
+- exits nonzero
+
+The failure bundle records task identity, failure code, attempt count, visible
+DoD, stdout/stderr tails, patch/result artifact paths, source commit and rollback
+status, blocked downstream task IDs, and a recommended human question.
+
+Blocking `/interview` invocation is opt-in for local/operator workflows:
+
+```bash
+ORCHESTRATE_ENABLE_INTERVIEW_ESCALATION=1 orchestrate run tasks.yaml
+```
+
+CI always remains artifact-only even if the env flag is set.

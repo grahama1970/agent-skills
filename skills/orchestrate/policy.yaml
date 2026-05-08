@@ -11,9 +11,9 @@ forbidden_use:
   any_of:
     # Bypassing the runner system — agents must use orchestrate run, not call backends directly
     - shell_contains: "codex exec"
-      reason: "Don't call codex directly. Use orchestrate run with 'with codex' routing."
+      reason: "Don't call codex directly. Use orchestrate run with 'with codex'; orchestrate routes Codex through /scillm or /code-runner."
     - shell_contains: "claude -p"
-      reason: "Don't call claude -p directly. Use orchestrate run with 'with claude' routing."
+      reason: "Don't call claude -p directly. Use orchestrate run with 'with claude'; orchestrate routes Claude through /scillm or /code-runner."
 
     # Writing markdown task files instead of YAML (SKILL.md: Prefer YAML)
     - pattern: "0\\d_TASKS\\.md"

@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from code_runner.tools import safe_path
+from code_runner.worktree import path_allowed
+
+
+def test_allowlist_prefix_is_segment_aware() -> None:
+    assert path_allowed("src/app.py", ["src"]) is True
+    assert path_allowed("src_evil/app.py", ["src"]) is False
+
+
+def test_safe_path_rejects_parent_traversal(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+
+    with pytest.raises(ValueError):
+        safe_path(root, "../escape.txt")
+
+
+def test_safe_path_rejects_absolute_path(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    root.mkdir()
+
+    with pytest.raises(ValueError):
+        safe_path(root, "/tmp/escape.txt")
+
+
+def test_safe_path_rejects_symlink_prefix_escape(tmp_path: Path) -> None:
+    """
+    Catch string-prefix containment bugs.
+
+    /tmp/x/repo_evil starts with /tmp/x/repo as a string, but it is not inside
+    /tmp/x/repo as a path.
+    """
+    root = tmp_path / "repo"
+    root.mkdir()
+
+    external = tmp_path / "repo_evil"
+    external.mkdir()
+    sentinel = external / "sentinel.txt"
+    sentinel.write_text("secret\n")
+
+    (root / "src").mkdir()
+    (root / "src" / "link.txt").symlink_to(sentinel)
+
+    with pytest.raises(ValueError):
+        safe_path(root, "src/link.txt")
