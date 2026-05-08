@@ -1106,11 +1106,11 @@ def run_generation_loop(
                     (promotion_dir / f"{promotion.task_id}.json").write_text(json.dumps(asdict(promotion), indent=2) + "\n")
             total_attempts += 1
             if total_anomalies >= config.anomaly_gate:
-                stop_reason = "gate_passed"
+                stop_reason = "finding_detected"
         selected = select_parent_genes(genome, generation_attempts, max(1, config.population_size // 2))
         summary = build_generation_summary(generation, generation_attempts, selected)
         (config.artifact_dir / f"generation-{generation:03d}.json").write_text(json.dumps(asdict(summary), indent=2) + "\n")
-        if stop_reason in {"gate_passed", "max_attempts", "duration"}:
+        if stop_reason in {"finding_detected", "max_attempts", "duration"}:
             break
         mutated = tuple(mutate_gene(gene, config.seed + generation * 10_000 + idx) for idx, gene in enumerate(selected))
         genome = StrategyGenome(generation=generation + 1, genes=tuple(selected) + mutated, evidence=seed_evidence)
@@ -1120,9 +1120,14 @@ def run_generation_loop(
         "seed": config.seed,
         "attempts": total_attempts,
         "anomalies": total_anomalies,
+        "promotion_tasks": len(list(promotion_dir.glob("*.json"))),
         "duration_seconds": round(time.time() - started, 2),
         "stop_reason": stop_reason,
-        "next_step": "Promote anomalies into focused proof probes and blue-team patch tasks.",
+        "run_status": "completed_with_findings" if total_anomalies else "completed_no_findings",
+        "security_outcome": "findings_require_proof_or_patch_followup" if total_anomalies else "no_findings_in_attempt_budget",
+        "proof_status": "not_proven",
+        "pass": False,
+        "next_step": "Treat findings as unresolved hardening work: reproduce, minimize, patch, and rerun /hack proof verification.",
     }
     (config.artifact_dir / "summary.json").write_text(json.dumps(final_summary, indent=2) + "\n")
     write_adaptive_report_view(config.artifact_dir)
@@ -1570,9 +1575,12 @@ def write_adaptive_report_view(campaign_dir: Path) -> Path:
         "",
         "This is an artifact-derived report view, not a first-class exploit ledger.",
         "",
-        "## Working Exploits",
-        f"- Confirmed promotion tasks: `{len(promotions)}`",
-        "- Proof artifacts: see `promotion-tasks/*.json` and Docker logs when present.",
+        "## Findings / Proof Status",
+        f"- Run status: `{summary.get('run_status', 'unknown')}`",
+        f"- Security outcome: `{summary.get('security_outcome', 'unknown')}`",
+        f"- Proof status: `{summary.get('proof_status', 'not_proven')}`",
+        f"- Promotion tasks requiring follow-up: `{len(promotions)}`",
+        "- Working exploit proof is not confirmed by a promotion task alone.",
         "",
         "## Affected Surface",
         f"- Target: `{summary.get('target', 'unknown')}`",
@@ -2071,13 +2079,26 @@ def build_evolutionary_probe_script() -> str:
                         },
                     }
                     (promo / f"{task['task_id']}.json").write_text(json.dumps(task, indent=2) + "\n")
-                    stop = "gate_passed"
+                    stop = "finding_detected"
                 attempts += 1
             selected = sorted(generation_records, key=lambda r: (-r["score"], r["attempt"]))[:max(1, POPULATION_SIZE // 2)]
             (OUT / f"generation-{generation:03d}.json").write_text(json.dumps({"generation": generation, "attempts": len(generation_records), "anomalies": sum(1 for r in generation_records if r["anomaly"]), "best_score": max([r["score"] for r in generation_records] or [0]), "selected_gene_ids": [r["gene"]["gene_id"] for r in selected]}, indent=2) + "\n")
-            if stop in ["gate_passed", "max_attempts", "duration"]: break
+            if stop in ["finding_detected", "max_attempts", "duration"]: break
             population = [r["gene"] for r in selected] + [mutate_gene(r["gene"], generation, i) for i, r in enumerate(selected)]
-        summary = {"target": TARGET, "seed": SEED, "attempts": attempts, "anomalies": anomalies, "duration_seconds": round(time.time()-started, 2), "stop_reason": stop, "next_step": "Promote anomalies into focused proof probes and blue-team patch tasks."}
+        summary = {
+            "target": TARGET,
+            "seed": SEED,
+            "attempts": attempts,
+            "anomalies": anomalies,
+            "promotion_tasks": len(list(promo.glob("*.json"))),
+            "duration_seconds": round(time.time()-started, 2),
+            "stop_reason": stop,
+            "run_status": "completed_with_findings" if anomalies else "completed_no_findings",
+            "security_outcome": "findings_require_proof_or_patch_followup" if anomalies else "no_findings_in_attempt_budget",
+            "proof_status": "not_proven",
+            "pass": False,
+            "next_step": "Treat findings as unresolved hardening work: reproduce, minimize, patch, and rerun /hack proof verification.",
+        }
         (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
         print(json.dumps(summary, indent=2))
         raise SystemExit(2 if anomalies else 0)

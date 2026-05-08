@@ -281,6 +281,8 @@ class EvolutionaryCampaignTests(unittest.TestCase):
             self.assertTrue((artifact_dir / "HACK_EVOLVE_REPORT.md").exists())
             self.assertTrue((artifact_dir / "next-dogpile-seed.json").exists())
             self.assertEqual(summary["attempts"], 4)
+            self.assertIn(summary["run_status"], {"completed_with_findings", "completed_no_findings"})
+            self.assertFalse(summary["pass"])
 
     def test_unreproduced_anomaly_is_retained_not_promoted(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -298,9 +300,14 @@ class EvolutionaryCampaignTests(unittest.TestCase):
             def executor(_gene, _attempt):
                 return {"status": 200, "headers": {"Content-Type": "application/json"}, "body": '{"object":"list"}'}
 
-            run_generation_loop(config, SeedEvidence(), executor, seed_payload={"seedStrategySet": {"lane_seed_strategies": [{"lane_id": "api_protocol", "enabled": True, "starting_genes": [{"gene_id": gene.gene_id}]}]}})
+            summary = run_generation_loop(config, SeedEvidence(), executor, seed_payload={"seedStrategySet": {"lane_seed_strategies": [{"lane_id": "api_protocol", "enabled": True, "starting_genes": [{"gene_id": gene.gene_id}]}]}})
 
             anomalies = (artifact_dir / "anomalies.jsonl").read_text()
+
+        self.assertEqual(summary["stop_reason"], "finding_detected")
+        self.assertEqual(summary["run_status"], "completed_with_findings")
+        self.assertEqual(summary["security_outcome"], "findings_require_proof_or_patch_followup")
+        self.assertFalse(summary["pass"])
 
         self.assertIn('"gate_decision": "retain"', anomalies)
         self.assertFalse(any((artifact_dir / "promotion-tasks").glob("*.json")))
@@ -325,7 +332,7 @@ class EvolutionaryCampaignTests(unittest.TestCase):
                     "reproduced": True,
                 }
 
-            run_generation_loop(
+            summary = run_generation_loop(
                 config,
                 SeedEvidence(),
                 executor,
@@ -345,6 +352,10 @@ class EvolutionaryCampaignTests(unittest.TestCase):
             promotion = json.loads(promotions[0].read_text())
 
         self.assertTrue(is_reproducible_result({"reproduced": True}))
+        self.assertEqual(summary["stop_reason"], "finding_detected")
+        self.assertEqual(summary["run_status"], "completed_with_findings")
+        self.assertEqual(summary["proof_status"], "not_proven")
+        self.assertFalse(summary["pass"])
         self.assertEqual(promotion["patch_status"], "proposed")
         self.assertIn("/plan -> /review-plan -> /orchestrate -> /code-runner", promotion["verification_contract"]["implementation_path"])
 
@@ -602,6 +613,16 @@ class EvolutionaryCampaignTests(unittest.TestCase):
         self.assertIn('"verification_contract"', script)
         self.assertIn("/plan -> /review-plan -> /orchestrate -> /code-runner", script)
         self.assertIn("hack_docker_proof_rerun_artifact", script)
+
+    def test_live_probe_summary_marks_findings_not_pass(self) -> None:
+        script = build_evolutionary_probe_script()
+
+        self.assertIn('"stop_reason": stop', script)
+        self.assertIn('"run_status": "completed_with_findings" if anomalies else "completed_no_findings"', script)
+        self.assertIn('"security_outcome": "findings_require_proof_or_patch_followup" if anomalies else "no_findings_in_attempt_budget"', script)
+        self.assertIn('"proof_status": "not_proven"', script)
+        self.assertIn('"pass": False', script)
+        self.assertNotIn('stop = "gate_passed"', script)
 
 
 if __name__ == "__main__":
