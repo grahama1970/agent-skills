@@ -196,6 +196,29 @@ def main() -> None:
     assert not bad_opaque_public_test["valid"]
     assert "opaque shell indirection" in "\n".join(bad_opaque_public_test["issues"])
 
+    good_opaque_with_contract = validate(module, base_plan({
+        "id": "1",
+        "title": "good audited opaque DoD",
+        "runner": "code-runner",
+        "backend": "codex",
+        "mode": "iterative",
+        "prompt": "Change src/a.py so answer returns 42.",
+        "allowlist": ["src/a.py"],
+        "read_context": ["src/a.py"],
+        "dirty_worktree_policy": "isolated_worktree",
+        "definition_of_done": {
+            "command": "make test",
+            "assertion": "exit_code == 0",
+        },
+        "blind_tests": [{"command": "python -m pytest tests/test_a.py -q"}],
+        "dod_scope": "worktree_local",
+        "requires_network": False,
+        "requires_live_server": False,
+        "browser_required": False,
+        "opaque_command_reviewed": True,
+    }))
+    assert good_opaque_with_contract["valid"], good_opaque_with_contract
+
     good_source_apply = validate(module, base_plan({
         "id": "1",
         "title": "good source apply",

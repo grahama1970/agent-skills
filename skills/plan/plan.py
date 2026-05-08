@@ -231,6 +231,17 @@ def _dod_uses_opaque_command(command: str) -> bool:
     return bool(_OPAQUE_CODE_RUNNER_COMMAND_RE.search(command or ""))
 
 
+def _declares_worktree_local_dod_contract(task: dict[str, Any]) -> bool:
+    """Return whether an opaque DoD command has an explicit local-only contract."""
+    return (
+        str(task.get("dod_scope") or "").strip() == "worktree_local"
+        and task.get("requires_network") is False
+        and task.get("requires_live_server") is False
+        and task.get("browser_required") is False
+        and task.get("opaque_command_reviewed") is True
+    )
+
+
 def _code_runner_live_surface(task: dict[str, Any], dod_command: str) -> str:
     """Return text that must not contain live endpoint checks for code-runner."""
     parts = [dod_command]
@@ -355,11 +366,16 @@ def _audit_code_runner_routing(data: dict[str, Any]) -> tuple[list[str], list[st
                 "Code-runner edits an isolated worktree, while live servers serve the source tree. "
                 "Use scillm for the edit plus a separate local verification task, or use a file/process-local DoD."
             )
-        if _dod_uses_opaque_command(_code_runner_live_surface(task, dod_command)):
+        if (
+            _dod_uses_opaque_command(_code_runner_live_surface(task, dod_command))
+            and not _declares_worktree_local_dod_contract(task)
+        ):
             issues.append(
                 f"{prefix} code-runner DoD/tests use an opaque shell indirection command. "
                 "Use an explicit file/process-local command such as `python -m pytest tests/test_file.py -q`, "
-                "or route the opaque script/make/npm check to a separate runner=local verification task."
+                "route the opaque script/make/npm check to a separate runner=local verification task, "
+                "or declare dod_scope=worktree_local, requires_network=false, requires_live_server=false, "
+                "browser_required=false, and opaque_command_reviewed=true."
             )
         if max_rounds <= 1:
             warnings.append(f"{prefix} max_rounds <= 1; use scillm/local unless iteration is actually needed.")

@@ -191,6 +191,11 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
             "memory_context": raw_item.get("memory_context"),
             "dogpile_context": raw_item.get("dogpile_context"),
             "web_context": raw_item.get("web_context"),
+            "dod_scope": raw_item.get("dod_scope"),
+            "requires_network": raw_item.get("requires_network"),
+            "requires_live_server": raw_item.get("requires_live_server"),
+            "browser_required": raw_item.get("browser_required"),
+            "opaque_command_reviewed": raw_item.get("opaque_command_reviewed"),
             "duplicate_task_id": str(item.get("id") or "") in duplicate_ids,
         }
         tasks.append(task)
@@ -889,7 +894,10 @@ def check_execution_routing(task: dict, findings: list[Finding]):
                     "or replace the DoD with a file/process-local check that runs inside the code-runner worktree."
                 ),
             ))
-        if OPAQUE_CODE_RUNNER_COMMAND.search(_code_runner_opaque_surface(task, dod_cmd)):
+        if (
+            OPAQUE_CODE_RUNNER_COMMAND.search(_code_runner_opaque_surface(task, dod_cmd))
+            and not _declares_worktree_local_dod_contract(task)
+        ):
             findings.append(Finding(
                 task=f"Task {task['id']}",
                 check="routing",
@@ -899,7 +907,10 @@ def check_execution_routing(task: dict, findings: list[Finding]):
                 suggestion=(
                     "Use an explicit file/process-local command, for example "
                     "`python -m pytest tests/test_file.py -q`, or route make/npm/scripts checks "
-                    "to a separate runner=local verification task."
+                    "to a separate runner=local verification task. If the opaque command has been audited, "
+                    "declare `dod_scope: worktree_local`, `requires_network: false`, "
+                    "`requires_live_server: false`, `browser_required: false`, and "
+                    "`opaque_command_reviewed: true`."
                 ),
             ))
     elif runner == "local":
@@ -1002,6 +1013,16 @@ def _has_value(value: object) -> bool:
     if isinstance(value, (list, tuple, set, dict)):
         return bool(value)
     return bool(str(value).strip())
+
+
+def _declares_worktree_local_dod_contract(task: dict) -> bool:
+    return (
+        str(task.get("dod_scope") or "").strip() == "worktree_local"
+        and task.get("requires_network") is False
+        and task.get("requires_live_server") is False
+        and task.get("browser_required") is False
+        and task.get("opaque_command_reviewed") is True
+    )
 
 
 def _code_runner_live_surface(task: dict, dod_cmd: str) -> str:

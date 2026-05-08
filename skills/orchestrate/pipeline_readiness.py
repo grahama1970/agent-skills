@@ -27,6 +27,7 @@ REQUIRED_PATHS = [
     "skills/orchestrate/structured_execute.py",
     "skills/orchestrate/tests/test_orchestrate.sh",
     "skills/orchestrate/tests/run_plan_review_orchestrate_code_runner_mock_e2e.sh",
+    "skills/orchestrate/tests/run_external_project_adoption_smoke.sh",
     "skills/code-runner/run.sh",
     "skills/code-runner/src/code_runner",
 ]
@@ -35,6 +36,7 @@ CI_JOB_MARKERS = [
     "plan-review-orchestrate-pipeline",
     "plan-review-orchestrate-complete-task-soak",
     "orchestrate-live-scillm-smoke",
+    "external-project-adoption-smoke",
     "code-runner-adversarial",
     "code-runner-soak",
 ]
@@ -158,11 +160,18 @@ def check_ci_workflow(root: Path) -> list[Check]:
     return checks
 
 
-def run_gates(root: Path, include_code_runner: bool) -> list[Check]:
+def run_gates(root: Path, include_code_runner: bool, include_adoption_smoke: bool) -> list[Check]:
     checks: list[Check] = []
     for gate in GATE_COMMANDS:
         rc, out = run_command(gate["command"], root / gate["cwd"], timeout=600)
         checks.append(Check(f"gate:{gate['name']}", "PASS" if rc == 0 else "FAIL", out.strip()))
+    if include_adoption_smoke:
+        rc, out = run_command(
+            ["bash", "tests/run_external_project_adoption_smoke.sh"],
+            root / "skills/orchestrate",
+            timeout=600,
+        )
+        checks.append(Check("gate:external_project_adoption_smoke", "PASS" if rc == 0 else "FAIL", out.strip()))
     if include_code_runner:
         rc, out = run_command(
             [
@@ -207,6 +216,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo-root", type=Path, default=ROOT)
     parser.add_argument("--profile", choices=("quick", "gates"), default="quick")
     parser.add_argument("--include-code-runner", action="store_true")
+    parser.add_argument("--include-adoption-smoke", action="store_true")
     parser.add_argument("--require-clean", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args(argv)
@@ -218,7 +228,7 @@ def main(argv: list[str] | None = None) -> int:
     checks.extend(check_git(root, args.require_clean))
     checks.extend(check_ci_workflow(root))
     if args.profile == "gates":
-        checks.extend(run_gates(root, args.include_code_runner))
+        checks.extend(run_gates(root, args.include_code_runner, args.include_adoption_smoke))
 
     result = {
         "status": summarize(checks),

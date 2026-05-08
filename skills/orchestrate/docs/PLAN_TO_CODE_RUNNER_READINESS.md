@@ -38,6 +38,12 @@ To include the heavier `/code-runner` adversarial non-soak gate:
 python skills/orchestrate/pipeline_readiness.py --profile gates --include-code-runner
 ```
 
+To prove adoption from an external temporary project repo:
+
+```bash
+python skills/orchestrate/pipeline_readiness.py --profile gates --include-adoption-smoke
+```
+
 Use JSON output for automation:
 
 ```bash
@@ -129,4 +135,8 @@ dod_scope: worktree_local
 requires_network: false
 requires_live_server: false
 browser_required: false
+opaque_command_reviewed: true
 ```
+
+As of the adoption gate, that metadata is required for opaque `make`, `npm`, or
+`scripts/*` DoD commands to pass `/plan` and `/review-plan`.

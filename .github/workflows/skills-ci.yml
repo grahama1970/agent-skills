@@ -104,6 +104,37 @@ jobs:
         run: |
           env -u VIRTUAL_ENV bash tests/run_orchestrate_scillm_live_smoke.sh
 
+  external-project-adoption-smoke:
+    name: External project adoption smoke
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run external project adoption smoke
+        working-directory: skills/orchestrate
+        run: |
+          set +e
+          env -u VIRTUAL_ENV bash tests/run_external_project_adoption_smoke.sh
+          status=$?
+          git worktree list --porcelain > /tmp/external-adoption-worktrees.txt || true
+          find /tmp \( -name 'status.json' -o -name '*.result.json' -o -name '*.events.jsonl' -o -name '*.spec.json' -o -name '*.log' \) -print > /tmp/external-adoption-artifacts.txt || true
+          tar -czf /tmp/external-adoption-diagnostics.tgz -T /tmp/external-adoption-artifacts.txt || true
+          exit $status
+
+      - name: Upload adoption diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-project-adoption-diagnostics
+          path: |
+            /tmp/external-adoption-worktrees.txt
+            /tmp/external-adoption-artifacts.txt
+            /tmp/external-adoption-diagnostics.tgz
+
   code-runner-adversarial:
     name: Code-runner adversarial gate
     runs-on: ubuntu-latest

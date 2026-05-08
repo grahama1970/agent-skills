@@ -185,6 +185,23 @@ def main() -> None:
     opaque_public_text = "\n".join(f.message for f in opaque_public_findings if f.grade == "FAIL")
     assert "opaque shell indirection" in opaque_public_text
 
+    opaque_with_contract_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "definition_of_done": {"command": "make test", "assertion": "exit_code == 0"},
+        "dod_scope": "worktree_local",
+        "requires_network": False,
+        "requires_live_server": False,
+        "browser_required": False,
+        "opaque_command_reviewed": True,
+    }
+    opaque_with_contract_findings = []
+    module.check_execution_routing(opaque_with_contract_task, opaque_with_contract_findings)
+    opaque_with_contract_text = "\n".join(
+        f.message for f in opaque_with_contract_findings if f.grade == "FAIL"
+    )
+    assert "opaque shell indirection" not in opaque_with_contract_text
+
     with tempfile.TemporaryDirectory() as tmp:
         plan_path = Path(tmp) / "plan.json"
         plan_path.write_text(json.dumps({
