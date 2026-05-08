@@ -13,6 +13,7 @@ provides:
   - bounded-code-fix
 composes:
   - scillm
+  - project-knowledge
 taxonomy:
   - execution
   - quality
@@ -22,7 +23,16 @@ taxonomy:
 
 # Code Runner
 
-`/code-runner` is intentionally minimal. It is a bounded worker, not an orchestrator, planner, reviewer, memory system, symbol indexer, or backend race harness.
+> REBUILT 2026-05-06. The legacy monolithic runner is archived at
+> `.archive/legacy-2026-05-06/code_runner.py`. The replacement runtime lives in
+> `src/code_runner/` and is gated by the historical live E2E suite documented in
+> `REWRITE_REQUIREMENTS.md`.
+
+`/code-runner` is intentionally minimal. It is a bounded worker, not an
+orchestrator, planner, reviewer, memory system, symbol indexer, or backend race
+harness. `/project-knowledge` is composed as an outer tracking surface for
+stability decisions and feature reintegration status; it is not exposed as a
+tool inside the code-runner loop.
 
 Core flow:
 
@@ -40,7 +50,8 @@ task-spec.json
 
 These are explicitly out of the core runner until the minimal path is reliable:
 
-- `/memory` recall or logging
+- `/memory` recall or logging inside the runner loop
+- `/project-knowledge` writes inside the runner loop
 - `/treesitter` symbol extraction
 - `/thunderdome` backend racing
 - `/orchestrate` plan dispatch
@@ -51,6 +62,20 @@ These are explicitly out of the core runner until the minimal path is reliable:
 - live-service ownership
 
 Future versions may add these as outer layers. They must not be required for the basic runner to pass.
+
+## Project Knowledge Tracking
+
+Use `PROJECT_KNOWLEDGE.md` in this skill directory to track:
+
+- stability evidence for the narrow patch-only path,
+- brittle features currently disabled,
+- explicit criteria for re-integrating each feature,
+- dated decisions that should be synced through `/project-knowledge` when memory is healthy.
+
+The project agent or `/orchestrate` may update project knowledge before or after
+a run. The code-runner process itself must not write project knowledge during
+execution; doing so would mix patch execution with coordination state and make
+the minimal runner harder to trust.
 
 ## Task Contract
 
@@ -221,3 +246,7 @@ Complete-task mode is considered reliable only after repeated real runs show:
 - failed source apply or source DoD restores allowlisted paths,
 - source working tree is clean after source DoD, blind checks, and review byproduct cleanup,
 - `result.json` records `source_commit`, `source_dod_passed`, and rollback state.
+
+After material stability changes or feature reintegration tests, update
+`PROJECT_KNOWLEDGE.md` and sync it through `/project-knowledge` when `/memory` is
+available.
