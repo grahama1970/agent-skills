@@ -110,6 +110,91 @@ uv run --project .pi/skills/embedding python .pi/skills/embedding/backfill_multi
 uv run --project .pi/skills/embedding python .pi/skills/embedding/backfill_multimodal.py verify
 ```
 
+## Qdrant Semantic Backfill Contract
+
+For migrated `$memory` semantic retrieval, Qdrant owns vectors and ArangoDB owns
+documents, BM25 views, graph edges, and Qdrant pointer metadata.
+
+**Do not write vector arrays back into ArangoDB** during Qdrant backfills. Arango
+updates should contain metadata only:
+
+```json
+{
+  "_key": "abc123",
+  "qdrant_collection": "memory_chunks_mm_jina_v4_1024",
+  "qdrant_point_id": "uuid-v5-point-id",
+  "embedding_model": "jina-embeddings-v4",
+  "embedding_version": "v4",
+  "text_hash": "sha1-of-source-text",
+  "semantic_sync_state": "synced"
+}
+```
+
+Backfill implementation requirements:
+
+1. Build a local page of Arango docs/texts, usually 512+ docs.
+2. Embed with GPU-safe microbatches (`SEMANTIC_SYNC_BATCH_SIZE`), not one document at a time.
+3. Accumulate returned vectors locally into a Qdrant point batch.
+4. Bulk upsert the point batch to Qdrant.
+5. Bulk update Arango metadata only after Qdrant upsert succeeds.
+6. If Arango metadata update fails, delete the just-created Qdrant point IDs before retrying.
+7. Compute `text_hash` from the canonical full source text used by coverage checks, not from a truncated embedding payload.
+8. Use stale-vector resync when the canonical text contract or selected source fields change.
+
+Recommended safe settings for `embry-embedding-mm` when `Qwen3-VL` or Jina v4
+OOMs on long text:
+
+```bash
+export SEMANTIC_MODEL_MAX_CHARS=1024
+export SEMANTIC_SYNC_BATCH_SIZE=4
+export SEMANTIC_EMBED_TIMEOUT_SEC=60
+export QDRANT_TIMEOUT_SEC=60
+```
+
+Example memory-owned Qdrant backfill:
+
+```bash
+cd /home/graham/workspace/experiments/memory
+export MEMORY_ARANGO_PORT=8531
+export SEMANTIC_VECTOR_BACKEND=qdrant
+export QDRANT_URL=http://127.0.0.1:6333
+export QDRANT_SEMANTIC_COLLECTION=memory_chunks_mm_jina_v4_1024
+export QDRANT_SEMANTIC_VECTOR_NAME=text_mm
+export SEMANTIC_MODEL_MAX_CHARS=1024
+export SEMANTIC_SYNC_BATCH_SIZE=4
+uv run --all-extras python scripts/migrate_arango_embeddings_to_qdrant.py \
+  --collection sparta_url_knowledge \
+  --batch-size 512 \
+  --embed-batch-size 4
+```
+
+When reconciling an existing Qdrant collection after text-field or hash-contract
+changes, run a stale resync instead of assuming existing point counts prove
+coverage:
+
+```bash
+uv run --all-extras python scripts/migrate_arango_embeddings_to_qdrant.py \
+  --collection sparta_url_knowledge \
+  --batch-size 512 \
+  --embed-batch-size 16 \
+  --resync-stale
+```
+
+Validation:
+
+```bash
+uv run --all-extras python scripts/validation/source_embedding_coverage.py --no-manifest
+```
+
+Common Qdrant backfill mistakes:
+
+- **Wrong:** embed one doc, upsert one Qdrant point, update one Arango doc in a tight loop.
+- **Right:** embed microbatches, accumulate a local point batch, bulk upsert Qdrant, then bulk update Arango metadata.
+- **Wrong:** store `embedding`, `embedding_visual`, or `embedding_2` in Arango after Qdrant migration.
+- **Right:** store only Qdrant pointer metadata in Arango and keep vectors in Qdrant.
+- **Wrong:** treat Qdrant point count as sufficient if Arango `text_hash` is stale.
+- **Right:** verify `missing_vectors == 0`, `stale_vectors == 0`, and `arango_embedding_docs == 0`.
+
 ## Configuration
 
 | Variable                        | Default                     | Description                          |
