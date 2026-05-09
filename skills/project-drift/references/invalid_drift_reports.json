@@ -1,0 +1,66 @@
+[
+  {
+    "name": "standalone_assistant_conclusion",
+    "why_invalid": "A candidate cites only assistant_conclusion evidence and no paired command or human_statement observation.",
+    "report": {
+      "verdict": "warn",
+      "severity": "medium",
+      "summary": "Invalid because the only evidence is an assistant conclusion.",
+      "candidates": [
+        {
+          "id": "drift-invalid-001",
+          "kind": "workflow_drift",
+          "affected_section": "Current Understanding",
+          "current_project_knowledge_claim": "project_drift produces review candidates and never updates PROJECT_KNOWLEDGE.md directly.",
+          "new_evidence": "Assistant concluded the workflow changed.",
+          "why_it_matters": "This does not pass the evidence gate.",
+          "recommended_action": "review_update",
+          "suggested_project_knowledge_update": "Do not use this update.",
+          "confidence": "low",
+          "evidence": [
+            {
+              "type": "transcript_excerpt",
+              "value": "/tmp/example.jsonl:8 Assistant concluded the workflow changed."
+            }
+          ]
+        }
+      ],
+      "ignored": {
+        "routine_successful_tool_calls": 0,
+        "reason": "No routine calls."
+      }
+    }
+  },
+  {
+    "name": "invented_kind",
+    "why_invalid": "The candidate uses kind=status_change, which is outside the closed vocabulary.",
+    "report": {
+      "verdict": "warn",
+      "severity": "medium",
+      "summary": "Invalid because kind is not in the schema.",
+      "candidates": [
+        {
+          "id": "drift-invalid-002",
+          "kind": "status_change",
+          "affected_section": "Current Understanding",
+          "current_project_knowledge_claim": "project_drift produces review candidates and never updates PROJECT_KNOWLEDGE.md directly.",
+          "new_evidence": "A status changed.",
+          "why_it_matters": "Closed vocabulary violation.",
+          "recommended_action": "review_update",
+          "suggested_project_knowledge_update": "Do not use this update.",
+          "confidence": "low",
+          "evidence": [
+            {
+              "type": "human_statement",
+              "value": "/tmp/example.jsonl:1 A status changed."
+            }
+          ]
+        }
+      ],
+      "ignored": {
+        "routine_successful_tool_calls": 0,
+        "reason": "No routine calls."
+      }
+    }
+  }
+]

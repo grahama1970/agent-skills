@@ -1,0 +1,209 @@
+{
+  "$defs": {
+    "Confidence": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Confidence",
+      "type": "string"
+    },
+    "DriftCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DriftKind"
+        },
+        "affected_section": {
+          "minLength": 1,
+          "title": "Affected Section",
+          "type": "string"
+        },
+        "current_project_knowledge_claim": {
+          "minLength": 1,
+          "title": "Current Project Knowledge Claim",
+          "type": "string"
+        },
+        "new_evidence": {
+          "minLength": 1,
+          "title": "New Evidence",
+          "type": "string"
+        },
+        "why_it_matters": {
+          "minLength": 1,
+          "title": "Why It Matters",
+          "type": "string"
+        },
+        "recommended_action": {
+          "$ref": "#/$defs/RecommendedAction"
+        },
+        "suggested_project_knowledge_update": {
+          "minLength": 0,
+          "title": "Suggested Project Knowledge Update",
+          "type": "string"
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "affected_section",
+        "current_project_knowledge_claim",
+        "new_evidence",
+        "why_it_matters",
+        "recommended_action",
+        "suggested_project_knowledge_update",
+        "confidence",
+        "evidence"
+      ],
+      "title": "DriftCandidate",
+      "type": "object"
+    },
+    "DriftKind": {
+      "enum": [
+        "contradiction",
+        "stale_status",
+        "workflow_drift",
+        "contract_drift",
+        "resolved_open_question",
+        "new_blocking_question",
+        "missing_high_impact_knowledge"
+      ],
+      "title": "DriftKind",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/EvidenceType"
+        },
+        "value": {
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "EvidenceType": {
+      "enum": [
+        "transcript_excerpt",
+        "tool_call",
+        "command",
+        "artifact",
+        "file",
+        "verifier",
+        "commit",
+        "human_statement"
+      ],
+      "title": "EvidenceType",
+      "type": "string"
+    },
+    "IgnoredSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "routine_successful_tool_calls": {
+          "minimum": 0,
+          "title": "Routine Successful Tool Calls",
+          "type": "integer"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "routine_successful_tool_calls",
+        "reason"
+      ],
+      "title": "IgnoredSummary",
+      "type": "object"
+    },
+    "RecommendedAction": {
+      "enum": [
+        "no_action",
+        "review_update",
+        "review_decision",
+        "review_open_question",
+        "block_until_reviewed"
+      ],
+      "title": "RecommendedAction",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "Verdict": {
+      "enum": [
+        "no_action",
+        "info",
+        "warn",
+        "block"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "verdict": {
+      "$ref": "#/$defs/Verdict"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/DriftCandidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "ignored": {
+      "$ref": "#/$defs/IgnoredSummary"
+    }
+  },
+  "required": [
+    "verdict",
+    "severity",
+    "summary",
+    "candidates",
+    "ignored"
+  ],
+  "title": "ProjectDriftReport",
+  "type": "object"
+}

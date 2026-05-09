@@ -1,0 +1,26 @@
+{
+  "verdict": "warn",
+  "severity": "medium",
+  "summary": "Recent discussion resolves an existing open question about project_drift blocking behavior. This should be reviewed as a project_knowledge update candidate, not treated as an execution block.",
+  "candidates": [
+    {
+      "id": "drift-001",
+      "kind": "resolved_open_question",
+      "affected_section": "Open Questions",
+      "current_project_knowledge_claim": "Should project_drift block only on contradiction/stale workflow, or also on resolved open questions?",
+      "new_evidence": "The session clarified that project_drift should primarily block only on contradiction, stale workflow/status, contract drift, verifier mismatch, or dangerous reliance on wrong project_knowledge. Resolved open questions should usually produce review candidates, not block.",
+      "why_it_matters": "Future agents need a clear severity policy so project_drift does not over-block routine sessions.",
+      "recommended_action": "review_update",
+      "suggested_project_knowledge_update": "project_drift should block only for contradiction, stale workflow/status, contract drift, verifier mismatch, or dangerous reliance on wrong project_knowledge. Resolved open questions should create review candidates unless they directly affect current execution.",
+      "confidence": "high",
+      "evidence": [
+        {"type": "human_statement", "value": "User clarified project_drift should focus on contradictions rather than additions."},
+        {"type": "transcript_excerpt", "value": "Assistant concluded project_drift should produce review candidates and never update PROJECT_KNOWLEDGE.md directly."}
+      ]
+    }
+  ],
+  "ignored": {
+    "routine_successful_tool_calls": 2,
+    "reason": "Routine read/list commands do not affect durable project knowledge."
+  }
+}

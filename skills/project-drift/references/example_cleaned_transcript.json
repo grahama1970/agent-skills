@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "entry_count": 8,
+  "observation_count": 3,
+  "routine_successful_tool_calls": 2,
+  "parse_errors": 0,
+  "since": "2026-05-09T09:00:00Z",
+  "transcript_paths": ["/tmp/example.jsonl"],
+  "observations": [
+    {
+      "id": "obs-example-001",
+      "kind": "human_statement",
+      "timestamp": "2026-05-09T10:00:00Z",
+      "summary": "User clarified that project_drift should mainly detect contradictions, not hunt for additions.",
+      "source": {"path": "/tmp/example.jsonl", "line_number": 1},
+      "evidence_strength": "weak",
+      "routine": false
+    },
+    {
+      "id": "obs-example-002",
+      "kind": "command",
+      "timestamp": "2026-05-09T10:04:00Z",
+      "tool_name": "Bash",
+      "success": true,
+      "command": "./run.sh validate-report drift_report.json",
+      "files": ["drift_report.json"],
+      "summary": "Tool Bash; command=./run.sh validate-report drift_report.json; success=True; files=drift_report.json",
+      "output_excerpt": "Valid drift report: verdict=warn severity=medium candidates=1",
+      "source": {"path": "/tmp/example.jsonl", "line_number": 6},
+      "evidence_strength": "strong",
+      "routine": false
+    },
+    {
+      "id": "obs-example-003",
+      "kind": "assistant_conclusion",
+      "timestamp": "2026-05-09T10:05:00Z",
+      "summary": "Assistant concluded project_drift should produce review candidates and never update PROJECT_KNOWLEDGE.md directly.",
+      "source": {"path": "/tmp/example.jsonl", "line_number": 8},
+      "evidence_strength": "weak",
+      "routine": false
+    }
+  ]
+}

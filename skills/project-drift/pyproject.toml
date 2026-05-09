@@ -1,0 +1,17 @@
+[project]
+name = "project-drift"
+version = "0.1.0"
+description = "Conservative project knowledge drift auditor skill"
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.9",
+    "pydantic>=2",
+    "httpx>=0.24",
+]
+
+[project.scripts]
+project-drift = "project_drift.__main__:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["project_drift*"]

@@ -1,0 +1,631 @@
+# REVIEW REQUEST FOR WEB LLM
+#
+# Purpose: Review the project-drift prompt contract for best-practices-prompt compliance and runtime fit.
+# Consumer: project_drift.scan --execute -> ProjectDriftReport Pydantic model -> human/agent review -> optional /project-knowledge update.
+# Task: Determine whether the prompt only emits evidence-backed project knowledge drift candidates and rejects routine transcript noise.
+#
+# Review criteria:
+# 1. Does the prompt define exact candidate gates using cleaned_transcript field paths?
+# 2. Are closed vocabularies complete and consistent with ProjectDriftReport?
+# 3. Does the valid example obey every rule and schema field?
+# 4. Do invalid examples cover false positives and schema violations?
+# 5. Is the prompt strict enough to avoid session summarization and automatic memory/project-knowledge writes?
+# 6. Can the consumer validate the response with project_drift.schema.ProjectDriftReport?
+#
+# Example input: references/example_PROJECT_KNOWLEDGE.md + references/example_cleaned_transcript.json
+# Expected output: references/example_drift_report.json
+# Validator: ./run.sh validate-report references/example_drift_report.json
+
+================================================================================
+SYSTEM PROMPT
+================================================================================
+
+You are project_drift, a project-knowledge drift auditor.
+
+Task: Return a ProjectDriftReport JSON object that lists only drift candidates proven by the supplied project_knowledge claim lines and cleaned session evidence.
+
+Input fields:
+- Project knowledge claim lines use this shape: `N. section=<section> type=<claim_type> claim=<claim_text>`.
+- Cleaned evidence JSON uses these fields:
+  - `observations[].kind`: one of `human_statement`, `assistant_conclusion`, `command`, `tool_call`.
+  - `observations[].summary`: compact text for the observation.
+  - `observations[].evidence_strength`: one of `strong`, `medium`, `weak`, `unknown`.
+  - `observations[].success`: boolean or null for tool/command observations.
+  - `observations[].command`: shell command string or null.
+  - `observations[].files`: array of path strings.
+  - `observations[].output_excerpt`: command/tool output excerpt.
+  - `observations[].source.path`: transcript path.
+  - `observations[].source.line_number`: transcript line number.
+  - `routine_successful_tool_calls`: count of routine read/list/search calls omitted from `observations`.
+
+Candidate gate:
+Create a candidate only when all four checks pass:
+1. One project_knowledge claim line is contradicted, stale, resolved, or missing a fact that changes the next command, final answer, hook decision, schema choice, path choice, or workflow choice.
+2. At least one observation supports the change with one of these evidence forms:
+   - `kind=command` with `success=true` and `evidence_strength=strong`
+   - `kind=command` with `success=true`, `evidence_strength=medium`, and a matching file path in `files`
+   - `kind=human_statement` that states a durable decision or correction
+   - `kind=assistant_conclusion` only when paired with a command or human_statement observation
+3. The candidate names the affected section and quotes or paraphrases the current claim text.
+4. The candidate explains the exact future behavior that changes.
+
+Reject these cases:
+- A file read, grep, glob, ls, cat, find, sed, or awk command with no verifier result, file write, commit, schema/path change, or human decision.
+- A successful command that only proves the agent inspected files.
+- A standalone assistant conclusion with no paired command or human statement.
+- A new note that does not change a command, final answer, hook decision, schema choice, path choice, or workflow choice.
+- A commit-log summary when the transcript evidence does not include the command, artifact, file path, or human statement supporting the change.
+- A claim about memory or PROJECT_KNOWLEDGE.md contents when the supplied project_knowledge claim lines do not contain the affected claim.
+
+Closed vocabulary for `verdict`:
+- `no_action`: zero candidates pass the candidate gate.
+- `info`: one or more candidates pass the gate, and none affect the current or next execution step.
+- `warn`: one or more candidates pass the gate, and future agents may repeat a stale workflow/path/schema/status after this turn.
+- `block`: one or more candidates pass the gate, and the current final answer, next command, hook decision, schema choice, path choice, or workflow choice would rely on the stale or contradicted claim.
+
+Closed vocabulary for `severity`:
+- `none`: use only with `verdict=no_action`.
+- `low`: candidate should be reviewed during normal knowledge maintenance.
+- `medium`: stale knowledge can cause repeated wasted work or wrong workflow selection.
+- `high`: stale knowledge can cause false-green status, wrong persistence behavior, broken hook behavior, data loss, security/compliance error, or repeated execution against a known-bad contract.
+
+Closed vocabulary for `kind`:
+- `contradiction`: a claim says X and evidence shows not-X.
+- `stale_status`: a claim records a status that evidence changes, such as broken -> fixed or fixed -> broken.
+- `workflow_drift`: a claim names workflow A and evidence proves workflow B replaced it.
+- `contract_drift`: a path, schema, artifact, command, hook, validator, or gate contract changed.
+- `resolved_open_question`: an open question now has evidence-backed resolution.
+- `new_blocking_question`: evidence exposes a blocker that should be added as an open question.
+- `missing_high_impact_knowledge`: no supplied claim contains a fact that would change the next command, final answer, hook decision, schema choice, path choice, or workflow choice.
+
+Closed vocabulary for `recommended_action`:
+- `no_action`: use only when `candidates=[]`.
+- `review_update`: review a candidate edit to an existing project_knowledge section.
+- `review_decision`: review a durable decision before writing it to project_knowledge.
+- `review_open_question`: add or resolve an open question through project_knowledge.
+- `block_until_reviewed`: stop current execution until a human/agent reviews the stale or contradicted claim.
+
+Evidence field rules:
+- Each candidate must include at least one `evidence[]` item.
+- `evidence[].type` must be one of `transcript_excerpt`, `tool_call`, `command`, `artifact`, `file`, `verifier`, `commit`, `human_statement`.
+- `evidence[].value` must include either `source.path:line_number`, a command string, a file path, or a quoted observation summary.
+
+Valid example input:
+Project knowledge claim lines:
+1. section=Open Questions type=open_question claim=Should project_drift block on resolved open questions?
+
+Cleaned evidence JSON:
+{
+  "routine_successful_tool_calls": 2,
+  "observations": [
+    {
+      "kind": "human_statement",
+      "summary": "project_drift should create review candidates for resolved open questions, not block the turn.",
+      "evidence_strength": "weak",
+      "source": {"path": "/tmp/example.jsonl", "line_number": 1}
+    },
+    {
+      "kind": "command",
+      "success": true,
+      "command": "./run.sh validate-report drift_report.json",
+      "files": ["drift_report.json"],
+      "output_excerpt": "Valid drift report: verdict=warn severity=medium candidates=1",
+      "evidence_strength": "strong",
+      "source": {"path": "/tmp/example.jsonl", "line_number": 6}
+    }
+  ]
+}
+
+Valid example output:
+{
+  "verdict": "warn",
+  "severity": "medium",
+  "summary": "One open question has evidence-backed resolution and should be reviewed as a project_knowledge update candidate.",
+  "candidates": [
+    {
+      "id": "drift-001",
+      "kind": "resolved_open_question",
+      "affected_section": "Open Questions",
+      "current_project_knowledge_claim": "Should project_drift block on resolved open questions?",
+      "new_evidence": "The human statement says resolved open questions should create review candidates, and validate-report passed for a warn report with one candidate.",
+      "why_it_matters": "Future Stop-hook policy changes if resolved open questions warn instead of block.",
+      "recommended_action": "review_update",
+      "suggested_project_knowledge_update": "Resolved open questions should create review candidates unless they affect the current final answer, next command, hook decision, schema choice, path choice, or workflow choice.",
+      "confidence": "high",
+      "evidence": [
+        {"type": "human_statement", "value": "/tmp/example.jsonl:1 project_drift should create review candidates for resolved open questions, not block the turn."},
+        {"type": "verifier", "value": "/tmp/example.jsonl:6 ./run.sh validate-report drift_report.json -> Valid drift report: verdict=warn severity=medium candidates=1"}
+      ]
+    }
+  ],
+  "ignored": {
+    "routine_successful_tool_calls": 2,
+    "reason": "Routine read/list/search observations were omitted because they do not prove a project_knowledge claim changed."
+  }
+}
+
+Invalid output examples:
+- Invalid: candidate cites only `assistant_conclusion` and no command or human_statement. Reason: standalone assistant conclusions are rejected.
+- Invalid: candidate uses `kind="status_change"`. Reason: `kind` must use the closed vocabulary.
+- Invalid: candidate proposes a new note that does not change a command, final answer, hook decision, schema choice, path choice, or workflow choice. Reason: additions without execution impact are rejected.
+- Invalid: `verdict="block"` for a candidate that does not affect the current final answer, next command, hook decision, schema choice, path choice, or workflow choice. Reason: block is reserved for current/next execution reliance.
+
+Current project_knowledge claim lines:
+Project: project-drift-example
+PROJECT_KNOWLEDGE path: /home/graham/workspace/experiments/agent-skills/skills/project-drift/references/example_PROJECT_KNOWLEDGE.md
+Last project_knowledge update: 2026-05-09 09:00 by agent
+
+Current project_knowledge claims:
+1. section=Current Understanding type=bullet claim=project_drift produces review candidates and never updates PROJECT_KNOWLEDGE.md directly.
+2. section=Open Questions type=open_question claim=Should project_drift block only on contradiction/stale workflow, or also on resolved open questions?
+
+Output format:
+Return ONLY one JSON object matching the ProjectDriftReport schema. Do not include markdown, comments, code fences, or text outside the JSON object.
+
+================================================================================
+USER PROMPT (with example values filled in)
+================================================================================
+
+Assess project drift for this cleaned session evidence.
+
+Window:
+- source: cleaned_transcript
+- project: project-drift-example
+- since: 2026-05-09T09:00:00Z
+- trigger: review-prompt-fixture
+
+Cleaned evidence JSON:
+{
+  "schema_version": 1,
+  "entry_count": 8,
+  "observation_count": 3,
+  "routine_successful_tool_calls": 2,
+  "parse_errors": 0,
+  "since": "2026-05-09T09:00:00Z",
+  "transcript_paths": [
+    "/tmp/example.jsonl"
+  ],
+  "observations": [
+    {
+      "id": "obs-example-001",
+      "kind": "human_statement",
+      "timestamp": "2026-05-09T10:00:00Z",
+      "summary": "User clarified that project_drift should mainly detect contradictions, not hunt for additions.",
+      "source": {
+        "path": "/tmp/example.jsonl",
+        "line_number": 1
+      },
+      "evidence_strength": "weak",
+      "routine": false
+    },
+    {
+      "id": "obs-example-002",
+      "kind": "command",
+      "timestamp": "2026-05-09T10:04:00Z",
+      "tool_name": "Bash",
+      "success": true,
+      "command": "./run.sh validate-report drift_report.json",
+      "files": [
+        "drift_report.json"
+      ],
+      "summary": "Tool Bash; command=./run.sh validate-report drift_report.json; success=True; files=drift_report.json",
+      "output_excerpt": "Valid drift report: verdict=warn severity=medium candidates=1",
+      "source": {
+        "path": "/tmp/example.jsonl",
+        "line_number": 6
+      },
+      "evidence_strength": "strong",
+      "routine": false
+    },
+    {
+      "id": "obs-example-003",
+      "kind": "assistant_conclusion",
+      "timestamp": "2026-05-09T10:05:00Z",
+      "summary": "Assistant concluded project_drift should produce review candidates and never update PROJECT_KNOWLEDGE.md directly.",
+      "source": {
+        "path": "/tmp/example.jsonl",
+        "line_number": 8
+      },
+      "evidence_strength": "weak",
+      "routine": false
+    }
+  ]
+}
+
+Return JSON only. The JSON must match the provided response_format schema. Do not include markdown or commentary.
+
+
+================================================================================
+RESPONSE FORMAT JSON SCHEMA
+================================================================================
+
+{
+  "$defs": {
+    "Confidence": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Confidence",
+      "type": "string"
+    },
+    "DriftCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DriftKind"
+        },
+        "affected_section": {
+          "minLength": 1,
+          "title": "Affected Section",
+          "type": "string"
+        },
+        "current_project_knowledge_claim": {
+          "minLength": 1,
+          "title": "Current Project Knowledge Claim",
+          "type": "string"
+        },
+        "new_evidence": {
+          "minLength": 1,
+          "title": "New Evidence",
+          "type": "string"
+        },
+        "why_it_matters": {
+          "minLength": 1,
+          "title": "Why It Matters",
+          "type": "string"
+        },
+        "recommended_action": {
+          "$ref": "#/$defs/RecommendedAction"
+        },
+        "suggested_project_knowledge_update": {
+          "minLength": 0,
+          "title": "Suggested Project Knowledge Update",
+          "type": "string"
+        },
+        "confidence": {
+          "$ref": "#/$defs/Confidence"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "affected_section",
+        "current_project_knowledge_claim",
+        "new_evidence",
+        "why_it_matters",
+        "recommended_action",
+        "suggested_project_knowledge_update",
+        "confidence",
+        "evidence"
+      ],
+      "title": "DriftCandidate",
+      "type": "object"
+    },
+    "DriftKind": {
+      "enum": [
+        "contradiction",
+        "stale_status",
+        "workflow_drift",
+        "contract_drift",
+        "resolved_open_question",
+        "new_blocking_question",
+        "missing_high_impact_knowledge"
+      ],
+      "title": "DriftKind",
+      "type": "string"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/EvidenceType"
+        },
+        "value": {
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "value"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "EvidenceType": {
+      "enum": [
+        "transcript_excerpt",
+        "tool_call",
+        "command",
+        "artifact",
+        "file",
+        "verifier",
+        "commit",
+        "human_statement"
+      ],
+      "title": "EvidenceType",
+      "type": "string"
+    },
+    "IgnoredSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "routine_successful_tool_calls": {
+          "minimum": 0,
+          "title": "Routine Successful Tool Calls",
+          "type": "integer"
+        },
+        "reason": {
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "routine_successful_tool_calls",
+        "reason"
+      ],
+      "title": "IgnoredSummary",
+      "type": "object"
+    },
+    "RecommendedAction": {
+      "enum": [
+        "no_action",
+        "review_update",
+        "review_decision",
+        "review_open_question",
+        "block_until_reviewed"
+      ],
+      "title": "RecommendedAction",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "Verdict": {
+      "enum": [
+        "no_action",
+        "info",
+        "warn",
+        "block"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "verdict": {
+      "$ref": "#/$defs/Verdict"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    },
+    "summary": {
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/DriftCandidate"
+      },
+      "title": "Candidates",
+      "type": "array"
+    },
+    "ignored": {
+      "$ref": "#/$defs/IgnoredSummary"
+    }
+  },
+  "required": [
+    "verdict",
+    "severity",
+    "summary",
+    "candidates",
+    "ignored"
+  ],
+  "title": "ProjectDriftReport",
+  "type": "object"
+}
+
+================================================================================
+INPUT FIXTURE: references/example_PROJECT_KNOWLEDGE.md
+================================================================================
+
+# Project Knowledge: project-drift-example
+
+**Last updated:** 2026-05-09 09:00 by agent
+**Status:** Active development
+
+## Current Understanding
+
+- project_drift produces review candidates and never updates PROJECT_KNOWLEDGE.md directly.
+
+## Open Questions
+
+- [ ] Should project_drift block only on contradiction/stale workflow, or also on resolved open questions?
+
+================================================================================
+INPUT FIXTURE: references/example_cleaned_transcript.json
+================================================================================
+
+{
+  "schema_version": 1,
+  "entry_count": 8,
+  "observation_count": 3,
+  "routine_successful_tool_calls": 2,
+  "parse_errors": 0,
+  "since": "2026-05-09T09:00:00Z",
+  "transcript_paths": ["/tmp/example.jsonl"],
+  "observations": [
+    {
+      "id": "obs-example-001",
+      "kind": "human_statement",
+      "timestamp": "2026-05-09T10:00:00Z",
+      "summary": "User clarified that project_drift should mainly detect contradictions, not hunt for additions.",
+      "source": {"path": "/tmp/example.jsonl", "line_number": 1},
+      "evidence_strength": "weak",
+      "routine": false
+    },
+    {
+      "id": "obs-example-002",
+      "kind": "command",
+      "timestamp": "2026-05-09T10:04:00Z",
+      "tool_name": "Bash",
+      "success": true,
+      "command": "./run.sh validate-report drift_report.json",
+      "files": ["drift_report.json"],
+      "summary": "Tool Bash; command=./run.sh validate-report drift_report.json; success=True; files=drift_report.json",
+      "output_excerpt": "Valid drift report: verdict=warn severity=medium candidates=1",
+      "source": {"path": "/tmp/example.jsonl", "line_number": 6},
+      "evidence_strength": "strong",
+      "routine": false
+    },
+    {
+      "id": "obs-example-003",
+      "kind": "assistant_conclusion",
+      "timestamp": "2026-05-09T10:05:00Z",
+      "summary": "Assistant concluded project_drift should produce review candidates and never update PROJECT_KNOWLEDGE.md directly.",
+      "source": {"path": "/tmp/example.jsonl", "line_number": 8},
+      "evidence_strength": "weak",
+      "routine": false
+    }
+  ]
+}
+
+================================================================================
+EXPECTED VALID OUTPUT: references/example_drift_report.json
+================================================================================
+
+{
+  "verdict": "warn",
+  "severity": "medium",
+  "summary": "Recent discussion resolves an existing open question about project_drift blocking behavior. This should be reviewed as a project_knowledge update candidate, not treated as an execution block.",
+  "candidates": [
+    {
+      "id": "drift-001",
+      "kind": "resolved_open_question",
+      "affected_section": "Open Questions",
+      "current_project_knowledge_claim": "Should project_drift block only on contradiction/stale workflow, or also on resolved open questions?",
+      "new_evidence": "The session clarified that project_drift should primarily block only on contradiction, stale workflow/status, contract drift, verifier mismatch, or dangerous reliance on wrong project_knowledge. Resolved open questions should usually produce review candidates, not block.",
+      "why_it_matters": "Future agents need a clear severity policy so project_drift does not over-block routine sessions.",
+      "recommended_action": "review_update",
+      "suggested_project_knowledge_update": "project_drift should block only for contradiction, stale workflow/status, contract drift, verifier mismatch, or dangerous reliance on wrong project_knowledge. Resolved open questions should create review candidates unless they directly affect current execution.",
+      "confidence": "high",
+      "evidence": [
+        {"type": "human_statement", "value": "User clarified project_drift should focus on contradictions rather than additions."},
+        {"type": "transcript_excerpt", "value": "Assistant concluded project_drift should produce review candidates and never update PROJECT_KNOWLEDGE.md directly."}
+      ]
+    }
+  ],
+  "ignored": {
+    "routine_successful_tool_calls": 2,
+    "reason": "Routine read/list commands do not affect durable project knowledge."
+  }
+}
+
+================================================================================
+INVALID OUTPUT EXAMPLES: references/invalid_drift_reports.json
+================================================================================
+
+[
+  {
+    "name": "standalone_assistant_conclusion",
+    "why_invalid": "A candidate cites only assistant_conclusion evidence and no paired command or human_statement observation.",
+    "report": {
+      "verdict": "warn",
+      "severity": "medium",
+      "summary": "Invalid because the only evidence is an assistant conclusion.",
+      "candidates": [
+        {
+          "id": "drift-invalid-001",
+          "kind": "workflow_drift",
+          "affected_section": "Current Understanding",
+          "current_project_knowledge_claim": "project_drift produces review candidates and never updates PROJECT_KNOWLEDGE.md directly.",
+          "new_evidence": "Assistant concluded the workflow changed.",
+          "why_it_matters": "This does not pass the evidence gate.",
+          "recommended_action": "review_update",
+          "suggested_project_knowledge_update": "Do not use this update.",
+          "confidence": "low",
+          "evidence": [
+            {
+              "type": "transcript_excerpt",
+              "value": "/tmp/example.jsonl:8 Assistant concluded the workflow changed."
+            }
+          ]
+        }
+      ],
+      "ignored": {
+        "routine_successful_tool_calls": 0,
+        "reason": "No routine calls."
+      }
+    }
+  },
+  {
+    "name": "invented_kind",
+    "why_invalid": "The candidate uses kind=status_change, which is outside the closed vocabulary.",
+    "report": {
+      "verdict": "warn",
+      "severity": "medium",
+      "summary": "Invalid because kind is not in the schema.",
+      "candidates": [
+        {
+          "id": "drift-invalid-002",
+          "kind": "status_change",
+          "affected_section": "Current Understanding",
+          "current_project_knowledge_claim": "project_drift produces review candidates and never updates PROJECT_KNOWLEDGE.md directly.",
+          "new_evidence": "A status changed.",
+          "why_it_matters": "Closed vocabulary violation.",
+          "recommended_action": "review_update",
+          "suggested_project_knowledge_update": "Do not use this update.",
+          "confidence": "low",
+          "evidence": [
+            {
+              "type": "human_statement",
+              "value": "/tmp/example.jsonl:1 A status changed."
+            }
+          ]
+        }
+      ],
+      "ignored": {
+        "routine_successful_tool_calls": 0,
+        "reason": "No routine calls."
+      }
+    }
+  }
+]
+
+================================================================================
+CONSUMER AND VALIDATOR
+================================================================================
+
+Consumer code:
+- project_drift/prompt.py builds this OpenAI-compatible payload from prompts/drift_auditor.txt.
+- project_drift/llm.py parses the model response JSON.
+- project_drift/schema.py validates it with ProjectDriftReport.
+- project_drift/__main__.py writes drift_report.json only after ProjectDriftReport.model_validate succeeds.
+
+Deterministic checks:
+- ./run.sh validate-report references/example_drift_report.json
+- ./sanity.sh
