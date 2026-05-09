@@ -54,7 +54,11 @@ metadata:
 
 provides:
   - create-figure
-composes: [create-gsn-diagram]
+composes:
+  - extract-entities
+  - memory
+  - analytics
+  - create-gsn-diagram
 ---
 
 # create-figure
@@ -62,6 +66,27 @@ composes: [create-gsn-diagram]
 Generate publication-quality figures from code analysis data for academic papers.
 
 ## Quick Start for Agents
+
+**First gate: extract intent and data references.** Before choosing a rendering
+backend, run `/extract-entities` on the user request. Treat its output as the
+structured front door for:
+
+- figure type and interface command mentions (`$create-figure`, D3, Graphviz, chart, table)
+- controls, taxonomy tags, project/domain terms, and unresolved terms
+- dataset/source references, file-like paths, Hugging Face dataset names, and prompt-supplied data cues
+
+Then resolve data in this order:
+
+1. Prompt-supplied data or attached artifacts.
+2. Project files or run artifacts named by the user.
+3. `/memory recall --q "<figure request>" --brief` for project context, prior examples, and provenance.
+4. `/analytics describe <file>` for JSONL/JSON/CSV or Hugging Face dataset exports.
+5. Clarify if required data is still missing.
+
+Do **not** silently invent chart data. Synthetic data is allowed only when the
+user explicitly asks for `sample`, `demo`, `example`, `mock`, or `fictional`
+data. Otherwise return a clarification request that names the exact missing
+fields.
 
 **Don't get overwhelmed by 50+ commands!** Use domain navigation:
 
@@ -108,6 +133,59 @@ Multi-backend design for maximum compatibility:
 | **plotly** | Interactive Sankey, sunburst, treemap | PDF, PNG, HTML |
 | **pydeps** | Python module dependencies | via Graphviz |
 | **pyreverse** | UML class diagrams | via Graphviz |
+
+## Data Resolution Contract
+
+`/create-figure` behaves like `/create-evidence-case`: it can synthesize a
+visual artifact from grounded inputs, but it must not fabricate the underlying
+data. A renderable chart requires a resolved data source or explicit permission
+to use sample data.
+
+### Required flow
+
+1. **Extract:** Run `/extract-entities` on the full user request to identify
+   controls, terms, commands, figure type, dataset references, file references,
+   and unresolved terms.
+2. **Recall:** Query `/memory recall --brief` for project context and prior
+   lessons. Memory may supply provenance, prior examples, or known dataset
+   locations, but it does not authorize fabrication.
+3. **Discover:** If a file or dataset is available, run `/analytics describe`
+   before choosing the chart. For Hugging Face datasets, load using server-side
+   `HF_TOKEN` from `.env`; never echo tokens to logs, artifacts, or prompts.
+4. **Recommend:** Use analytics recommendations or `create-figure recommend`
+   to select the chart type/backend.
+5. **Render:** Generate durable artifacts (`.svg`, `.png`, `.pdf`, `.html`,
+   `.json`, or `.d3.json`) and record the source path/dataset/config/split.
+6. **Clarify:** If data is missing, ask for the minimum required structure.
+
+### Clarification examples
+
+For a D3 family tree, required data is:
+
+```json
+{
+  "nodes": [{"id": "alice", "label": "Alice"}],
+  "links": [{"source": "alice", "target": "bob", "relationship": "parent"}]
+}
+```
+
+If the user asks “show me a D3 graph of a family tree” without nodes/links, ask
+for people and relationships or ask whether sample data is acceptable. If the
+user asks for “a sample family tree,” render immediately with synthetic sample
+data and mark the artifact as sample-derived.
+
+For dataset charts, required data is:
+
+```json
+{
+  "source": "file path, artifact path, or Hugging Face dataset id",
+  "split": "train/test/validation or explicit subset",
+  "columns": "optional requested columns or target variables"
+}
+```
+
+If the dataset is unknown or private access fails, clarify with the dataset id,
+config, split, or file path needed.
 
 ## Common Commands
 
@@ -227,6 +305,16 @@ npm install -g @mermaid-js/mermaid-cli
 ## Common Mistakes
 
 ```bash
+# WRONG: Render a graph with invented real-world data
+./run.sh force-graph --output family.d3.json
+# → User did not provide people/relationships and did not request sample data
+# RIGHT: Run extract-entities + memory recall, then clarify missing nodes/links
+
+# WRONG: Skip analytics on unknown tabular data
+./run.sh metrics --input hf_export.json --type bar
+# → Unknown schema; likely wrong chart or wrong columns
+# RIGHT: Run analytics describe first, then render the recommended chart
+
 # WRONG: Use generic 'metrics' for ML evaluation data
 ./run.sh metrics --input results.json
 # → Bar chart for data that needs a confusion matrix
