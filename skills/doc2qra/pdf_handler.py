@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .config import COMPLEXITY_THRESHOLDS
+from .html_handler import extract_html_text, looks_like_html
 from .utils import log
 from loguru import logger
 
@@ -405,9 +406,15 @@ def read_file(path: str, mode: str = "fast", show_preflight: bool = False) -> st
             log("Using fast mode (pymupdf4llm)", style="bold green")
             return extract_pdf_text(p)
 
+    raw = p.read_text(encoding="utf-8", errors="ignore")
+    if p.suffix.lower() in {".html", ".htm", ".xhtml"} or looks_like_html(raw):
+        text = extract_html_text(raw, source_title=p.stem)
+        if text.strip():
+            log(f"HTML extracted ({len(text):,} chars)", style="bold cyan")
+            return text
+
     # Detect YouTube transcript JSON (any extension) and extract clean text
     # Mirrors /extractor's JSONProvider logic for transcript detection
-    raw = p.read_text(encoding="utf-8", errors="ignore")
     if raw.lstrip().startswith("{"):
         try:
             data = json.loads(raw)

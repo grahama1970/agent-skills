@@ -97,8 +97,8 @@ When called with `--from-extractor`, doc2qra consumes pre-extracted structured J
 
 **Internal integrations:**
 - **taxonomy** (Python import): Extracts bridge tags from summary + per-QRA keywords. Stamps `taxonomy_tags` on ArangoDB docs for multi-hop graph traversal.
-- **memory** (subprocess): Stores QRAs via `memory-agent learn`, triggers embedding + edge proposal.
-- **scillm** (Python import): LLM inference for summaries and QRA generation.
+- **memory** (HTTP daemon): Stores QRAs via `/upsert`; indexing is handled server-side.
+- **scillm** (HTTP proxy): LLM inference for summaries and QRA generation through `POST http://localhost:4001/v1/chat/completions`. Do not import `scillm` as a Python package; include `Authorization: Bearer sk-dev-proxy-123` and `X-Caller-Skill: doc2qra`.
 
 ## Parameters
 
@@ -156,6 +156,9 @@ When using `--json`, output includes:
 | `DOC2QRA_CONCURRENCY` | 6 | Parallel LLM requests |
 | `DOC2QRA_GROUNDING_THRESH` | 0.6 | Grounding similarity threshold |
 | `DOC2QRA_NO_GROUNDING` | - | Set to 1 to skip validation |
+| `DOC2QRA_NO_LLM` | - | Set to 1 to force heuristic summary and QRA extraction |
+
+Legacy `DISTILL_*` names are still accepted as fallbacks for compatibility, but new callers should use `DOC2QRA_*`.
 
 ## Migration from distill/qra/doc-to-qra
 
@@ -277,6 +280,8 @@ for scope in hasard_lee kim_campbell dan_hampton christian_brose; do
   ./run.sh --file "/path/to/${scope}_transcript.md" --scope "$scope"
 done
 ```
+
+Inside a single `doc2qra` process, section-level LLM calls use bounded async requests and consume results as they complete. Do not replace this with unbounded `asyncio.gather`; current `/scillm` guidance requires `asyncio.create_task` plus `asyncio.as_completed` or the server-side batch pool for large QRA workloads.
 
 **WRONG: backgrounded parallel (self-DoS)**
 

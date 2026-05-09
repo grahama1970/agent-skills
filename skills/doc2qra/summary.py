@@ -79,6 +79,7 @@ async def generate_summary_async(
                 f"{SCILLM_API_BASE}/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {SCILLM_PROXY_KEY}",
+                    "X-Caller-Skill": "doc2qra",
                     "Content-Type": "application/json",
                 },
                 json={

@@ -20,7 +20,6 @@ import json
 import os
 import subprocess
 import sys
-import time
 from pathlib import Path
 from typing import Any, Dict, List
 from urllib.parse import urlparse
@@ -47,6 +46,7 @@ from .qra_generator import (
     extract_qra_batch,
     extract_qra_llm,
     generate_summary,
+    _heuristic_summary,
     _fallback_heuristic_extraction,
 )
 from .grounding import validate_and_filter_qras
@@ -79,19 +79,8 @@ def _infer_collection(scope: str, source: str) -> str:
 
 
 def _trigger_edge_proposal(scope: str) -> None:
-    """Trigger embedding generation and edge proposal for new content."""
-    try:
-        since = str(int(time.time()) - 300)
-        subprocess.run(
-            ["memory-agent", "embed", "--scope", scope, "--updated-since", since],
-            capture_output=True, timeout=120,
-        )
-        subprocess.run(
-            ["memory-agent", "propose", "--scope", scope, "--updated-since", since],
-            capture_output=True, timeout=120,
-        )
-    except Exception as e:
-        logger.debug("doc2qra memory propose failed: {}", e)
+    """Compatibility hook; `/upsert` handles memory indexing server-side."""
+    logger.debug("doc2qra stored records through memory daemon for scope {}", scope)
 
 
 def distill(
@@ -186,7 +175,10 @@ def distill(
     summary = ""
     if not sections_only:
         log("Generating document summary...", style="bold blue")
-        summary = generate_summary(content, context=context)
+        if no_llm or os.getenv("DOC2QRA_NO_LLM") or os.getenv("DISTILL_NO_LLM"):
+            summary = _heuristic_summary(content)
+        else:
+            summary = generate_summary(content, context=context)
         if summary:
             log(f"Summary generated: {len(summary)} chars", style="green")
 
@@ -324,7 +316,7 @@ def distill(
     # Extract Q&A from each section
     all_qa: List[Dict[str, Any]] = []
 
-    if no_llm or os.getenv("DISTILL_NO_LLM"):
+    if no_llm or os.getenv("DOC2QRA_NO_LLM") or os.getenv("DISTILL_NO_LLM"):
         # Heuristic mode - sequential
         log("Extracting QRA using heuristic method")
         for idx, (section_title, section_content) in enumerate(iter_with_progress(sections, desc="Extracting QRA")):
@@ -495,7 +487,7 @@ def main(
     summary_only: bool = typer.Option(False, "--summary-only", help="Only generate document summary (no Q&A)"),
     # Expert flags (hidden in argparse, now exposed with defaults from env vars)
     context_file: str = typer.Option(None, "--context-file", hidden=True),
-    mode: str = typer.Option(os.getenv("DISTILL_PDF_MODE", "fast"), "--mode", hidden=True, help="PDF mode: fast, accurate, auto"),
+    mode: str = typer.Option(os.getenv("DOC2QRA_PDF_MODE", os.getenv("DISTILL_PDF_MODE", "fast")), "--mode", hidden=True, help="PDF mode: fast, accurate, auto"),
     preflight: bool = typer.Option(False, "--preflight", hidden=True),
     max_section_chars: int = typer.Option(DEFAULT_MAX_SECTION_CHARS, "--max-section-chars", hidden=True),
     no_llm: bool = typer.Option(False, "--no-llm", hidden=True),
@@ -503,13 +495,13 @@ def main(
     treesitter: bool = typer.Option(False, "--treesitter", hidden=True),
     batch: bool = typer.Option(True, "--batch/--no-batch", hidden=True),
     concurrency: int = typer.Option(
-        int(os.getenv("DISTILL_CONCURRENCY", str(DEFAULT_CONCURRENCY))), "--concurrency", hidden=True
+        int(os.getenv("DOC2QRA_CONCURRENCY", os.getenv("DISTILL_CONCURRENCY", str(DEFAULT_CONCURRENCY)))), "--concurrency", hidden=True
     ),
     validate_grounding: bool = typer.Option(
-        not os.getenv("DISTILL_NO_GROUNDING"), "--validate-grounding/--no-validate-grounding", hidden=True
+        not (os.getenv("DOC2QRA_NO_GROUNDING") or os.getenv("DISTILL_NO_GROUNDING")), "--validate-grounding/--no-validate-grounding", hidden=True
     ),
     grounding_threshold: float = typer.Option(
-        float(os.getenv("DISTILL_GROUNDING_THRESH", str(DEFAULT_GROUNDING_THRESHOLD))),
+        float(os.getenv("DOC2QRA_GROUNDING_THRESH", os.getenv("DISTILL_GROUNDING_THRESH", str(DEFAULT_GROUNDING_THRESHOLD)))),
         "--grounding-threshold", hidden=True,
     ),
 ) -> None:

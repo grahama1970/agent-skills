@@ -7,6 +7,7 @@ using httpx calls to scillm proxy at localhost:4001.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 from typing import Any, Callable, Dict, List, Tuple
@@ -118,6 +119,7 @@ async def _extract_section(
                 f"{SCILLM_API_BASE}/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {SCILLM_PROXY_KEY}",
+                    "X-Caller-Skill": "doc2qra",
                     "Content-Type": "application/json",
                     "x-expect-json": "true",  # Enable JSON repair
                 },
@@ -144,6 +146,85 @@ async def _extract_section(
 # =============================================================================
 # Batch Extraction (httpx + asyncio)
 # =============================================================================
+
+
+async def _extract_sections_via_pool(
+    sections: List[Tuple[str, str]],
+    source: str,
+    system_prompt: str,
+    timeout: int,
+) -> Tuple[List[Dict[str, Any]], List[int]]:
+    """Extract QRAs through scillm's server-side QRA pool.
+
+    Returns `(qras, failed_indices)`. Raises only for request-level failures so
+    the caller can fall back to direct bounded section calls.
+    """
+    batch_key = hashlib.sha256(
+        json.dumps(
+            {
+                "source": source,
+                "sections": [(title, content[:200]) for title, content in sections],
+            },
+            sort_keys=True,
+        ).encode("utf-8")
+    ).hexdigest()[:16]
+    batch_id = f"doc2qra-{batch_key}"
+    items = []
+    id_to_section: Dict[str, Tuple[int, str]] = {}
+    for idx, (section_title, section_content) in enumerate(sections):
+        item_id = f"section-{idx:04d}"
+        id_to_section[item_id] = (idx, section_title)
+        items.append({
+            "id": item_id,
+            "prompt": (
+                f"{system_prompt}\n\n"
+                f"Source: {source}\n"
+                f"Section title: {section_title}\n\n"
+                f"{QRA_PROMPT.format(text=section_content[:3000])}"
+            ),
+        })
+
+    async with httpx.AsyncClient(timeout=max(timeout, 900)) as client:
+        resp = await client.post(
+            f"{SCILLM_API_BASE}/v1/scillm/batch/completions",
+            headers={
+                "Authorization": f"Bearer {SCILLM_PROXY_KEY}",
+                "X-Caller-Skill": "doc2qra",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model_pool": "qra-deepseek-pool",
+                "batch_id": batch_id,
+                "temperature": 0.1,
+                "items": items,
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+    all_qa: List[Dict[str, Any]] = []
+    failed_indices = set(range(len(sections)))
+    first_error = ""
+    for result in data.get("results", []):
+        item_id = result.get("item_id") or result.get("id")
+        if item_id not in id_to_section:
+            continue
+        idx, section_title = id_to_section[item_id]
+        if not result.get("ok"):
+            first_error = first_error or str(result.get("error") or "unknown error")
+            continue
+        content = result.get("content", "")
+        qa_items = parse_qra_response(content, idx, section_title, source, clean_json_string)
+        if qa_items:
+            failed_indices.discard(idx)
+            all_qa.extend(qa_items)
+            log(f"Pool section {idx} -> {len(qa_items)} QRAs", style="green")
+        else:
+            first_error = first_error or f"empty or unparsable content for section {idx}"
+
+    if not all_qa and first_error:
+        log(f"Server-side QRA pool produced 0 successes; first failure: {first_error}", style="red")
+    return all_qa, sorted(failed_indices)
 
 
 async def extract_qra_batch(
@@ -180,23 +261,33 @@ async def extract_qra_batch(
 
     log(f"Batch: {len(sections)} sections, concurrency={concurrency}, timeout={timeout}s")
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
-        tasks = [
-            _extract_section(client, semaphore, idx, title, content, source, system_prompt)
-            for idx, (title, content) in enumerate(sections)
-        ]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+    try:
+        pooled_qa, failed_indices = await _extract_sections_via_pool(sections, source, system_prompt, timeout)
+        if pooled_qa:
+            all_qa.extend(pooled_qa)
+            log(f"Server-side QRA pool extracted {len(pooled_qa)} QRAs", style="green")
+    except Exception as e:
+        log(f"Server-side QRA pool failed, falling back to direct section calls: {e}", style="yellow")
+        failed_indices = list(range(len(sections)))
 
-        for result in results:
-            if isinstance(result, Exception):
-                log(f"Batch task exception: {result}", style="red")
-                continue
-            idx, qa_items, success = result
-            if success:
-                all_qa.extend(qa_items)
-                log(f"Section {idx} -> {len(qa_items)} QRAs", style="green")
-            else:
-                failed_indices.append(idx)
+    if not all_qa:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            tasks = [
+                asyncio.create_task(_extract_section(client, semaphore, idx, title, content, source, system_prompt))
+                for idx, (title, content) in enumerate(sections)
+            ]
+            failed_indices = []
+            for task in asyncio.as_completed(tasks):
+                try:
+                    idx, qa_items, success = await task
+                except Exception as e:
+                    log(f"Batch task exception: {e}", style="red")
+                    continue
+                if success:
+                    all_qa.extend(qa_items)
+                    log(f"Section {idx} -> {len(qa_items)} QRAs", style="green")
+                else:
+                    failed_indices.append(idx)
 
     # Heuristic fallback for failures
     if failed_indices:
