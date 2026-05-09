@@ -17,6 +17,7 @@ provides:
   - skill-scaffolding
   - composition-rules
   - misuse-guard-template
+  - project-state-readiness-pattern
 composes:
   - task-monitor
   - monitor-misuse
@@ -247,6 +248,165 @@ Run `./sanity.sh` in this skill to enforce the strict frontmatter gate across al
    - Put schemas, long examples, and variants in `references/`.
    - `SKILL.md` should point to references, not duplicate them.
 
+4. **Project state transparency**
+   - Every complex or multi-service skill SHOULD expose a state-at-a-glance/readiness report.
+   - The report is a hallucination guard: it must say `NOT_TESTED`, `NOT_ESTABLISHED`,
+     `NEEDS_ATTENTION`, or `BLOCKED` when evidence is missing.
+   - Do not summarize skipped routes as success. Skipped required release checks are
+     release blockers; skipped non-required checks are coverage gaps.
+
+## Project State / Readiness Report Standard
+
+Skills that orchestrate other skills, external services, Docker stacks, or long-running
+agent workflows SHOULD provide a machine-readable project state report and a human HTML
+view. The goal is to make current project state inspectable at a glance and prevent
+agents from hallucinating readiness that was not proven.
+
+### Required report concepts
+
+| Concept | Requirement |
+|---------|-------------|
+| Overall readiness | One of `READY`, `USABLE_WITH_GAPS`, `NOT_READY`, `NOT_ESTABLISHED` |
+| Profile | Explicit profile such as `smoke`, `core-live`, or `release` |
+| User attention | Missing config, credentials, review gates, or ambiguous decisions |
+| Feature readiness | One row per user-facing feature, not only one row per command |
+| Claim coverage | README/SKILL claims mapped to cases and evidence |
+| Project knowledge | Skill-specific current-state document maintained by `/project-knowledge` |
+| Execution status | Did the command run? |
+| Assertion status | Did the expected checks pass? |
+| Feature readiness | Is the user-facing feature usable? |
+| Coverage gaps | Untested claims and skipped cases, separate from bugs |
+| Artifact validation | Existence, schema, and status registration checks |
+| Liveness | Event-tail/SSE/progress liveness, not only subprocess timeout |
+
+### Required files
+
+```text
+<skill-artifacts>/readiness/<run-id>/
+  report.json      # source of truth, schema-versioned
+  index.html       # human view over report.json
+  report.md        # optional text handoff
+```
+
+`index.html` is a view, not the source of truth. Other tools should consume
+`report.json`.
+
+### Recommended JSON shape
+
+```json
+{
+  "schema": "skill.readiness_report.v1",
+  "profile": "release",
+  "overall_readiness": "not_ready",
+  "release_readiness": "not_ready",
+  "needs_attention": [
+    {
+      "reason": "missing_config",
+      "safe_default": "do_not_claim_release_ready",
+      "resume_hint": "./run.sh config init"
+    }
+  ],
+  "features": [
+    {
+      "id": "argue",
+      "readiness": "partial",
+      "required_cases": 2,
+      "passed_cases": 1,
+      "coverage_gaps": ["No evidence-backed successful verdict case"]
+    }
+  ],
+  "cases": [
+    {
+      "id": "argue-insufficient-evidence-fail-closed",
+      "feature": "argue",
+      "case_type": "negative-control",
+      "execution_status": "pass",
+      "assertion_status": "pass",
+      "readiness_contribution": "safe_failure_only"
+    }
+  ]
+}
+```
+
+### Profiles
+
+| Profile | Purpose | Release implication |
+|---------|---------|---------------------|
+| `smoke` | Fast local sanity checks | Never establishes release readiness |
+| `core-live` | Main interactive live paths | Can show usable-with-gaps only |
+| `release` | Full user-facing readiness | No skipped required checks allowed |
+| `feature:<name>` | Focused debug profile | Establishes only that feature |
+
+Reports may run smaller profiles, but the top banner must still state release
+readiness honestly. For example: `Release readiness: NOT_ESTABLISHED because
+SPARTA and deployment checks were not run`.
+
+### Configuration and human clarification
+
+Complex skills SHOULD include a config layer:
+
+```text
+<skill>.config.yml.example   # documented defaults, no secrets
+<skill>.config.yml           # local non-secret config, gitignored when appropriate
+.env                         # secrets only
+```
+
+Required commands:
+
+```bash
+./run.sh config doctor --json      # non-interactive, CI-safe
+./run.sh config init               # interactive; may call /interview
+```
+
+`config doctor` MUST NOT prompt. It returns `needs_attention` with a
+`safe_default` and `resume_hint` when config is missing. `config init` MAY use
+`/interview` to collect missing values from the human.
+
+### Skill-specific project knowledge
+
+Complex skills SHOULD maintain a skill-specific project knowledge document:
+
+```text
+docs/PROJECT_KNOWLEDGE.md
+```
+
+This document is the curated current-state projection for the skill: recent
+architecture decisions, known gaps, active readiness blockers, companion skill
+assumptions, deployment notes, and validation evidence. It prevents agents from
+reconstructing project state from stale README text, stale memory snippets, or
+optimistic inference.
+
+Required practices:
+
+- Sync it with `/project-knowledge` after durable readiness or architecture changes.
+- Treat it as current-state context, not proof. Reports still require cases,
+  artifacts, and logs.
+- Include it in claim coverage: README/SKILL claims should not contradict
+  `docs/PROJECT_KNOWLEDGE.md`.
+- If it is missing for a complex skill, readiness reports should mark project
+  state as `NOT_ESTABLISHED` or `NEEDS_ATTENTION`.
+
+### Docker and deployment readiness
+
+If a skill claims to be usable by other developers, release readiness SHOULD
+include Docker deployment:
+
+- Provide a `docker-compose.yml` or documented compose include.
+- Include relevant companion services, not only the skill container.
+- Mount host credentials explicitly and report missing credentials as
+  `needs_attention`.
+- Keep heavy data, model weights, logs, and generated outputs on `/mnt/storage12tb`
+  or developer-configured external volumes.
+- Prefer health checks and `config doctor` gates over optimistic startup logs.
+
+### Anti-hallucination rules
+
+- Never mark a feature `READY` because its command merely exited zero.
+- Never turn a skipped expensive case into a bug unless it was required for the selected profile.
+- Never claim compliance, safety, deployment, or release readiness without a case and artifact trail.
+- Use retrieval language: `found`, `observed`, `executed`, `not established`.
+- Surface missing human decisions as `needs_attention`, not inferred defaults.
+
 ## Checklist (creation/review)
 
 - Frontmatter is valid YAML (no markdown fences).
@@ -258,6 +418,11 @@ Run `./sanity.sh` in this skill to enforce the strict frontmatter gate across al
 - **`composes`** list declares all skills this delegates to. **Required** (use `[]` if self-contained). Parsed at runtime for automatic dependency inclusion.
 - `run.sh` exists only if the skill needs execution.
 - `sanity.sh` exists if the skill runs non-trivial scripts.
+- `sanity.sh` for non-trivial skills MUST include behavioral acceptance gates,
+  not only import/CLI smoke checks: at least one positive-control fixture, one
+  negative-control/noise fixture, safety-boundary assertions for forbidden side
+  effects, and concrete artifact/schema assertions for the skill's claimed
+  outputs.
 - **CLI: Typer only** — all Python CLIs use `typer`. NEVER `argparse` or `click`.
 - **No bespoke reimplementations** — if a helper skill exists, the new skill delegates to it.
 - **PyYAML dependency** — any script that parses SKILL.md frontmatter MUST depend on
