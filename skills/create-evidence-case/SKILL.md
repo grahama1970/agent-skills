@@ -172,7 +172,7 @@ with **character spans** for UI inline highlighting. This is populated by the
         # Core extracted data (from /extract-entities)
         "question_text": str,           # First 500 chars of question
         "control_ids": list[str],       # ["IA-0006", "CWE-287"]
-        "glossary": [                   # Resolved control metadata
+        "glossary": [                   # Snapshot copied from /extract-entities.glossary
             {
                 "id": "IA-0006",
                 "name": "Authentication Mechanisms",
@@ -277,10 +277,17 @@ function QuestionWithHighlights({ question, spans }) {
 | Field | When Populated | Use |
 |-------|----------------|-----|
 | `evidence_case.spans` | Backfill (pre-computed) | UI highlighting |
-| `evidence_case.glossary` | Backfill | Cached control metadata |
+| `evidence_case.glossary` | Backfill | Cached `/extract-entities.glossary` metadata |
 | `cae_tree` (in endpoint response) | Query-time | Full CAE tree with traceability |
+| `entity_context` (in endpoint response) | Query-time | Compact `/extract-entities` agent view with authoritative `proof_packet.assertions`, `nodes`, and candidate-only boundaries |
 
 The cached `evidence_case` enables fast rendering without query-time entity extraction.
+Glossary semantics are owned by `/extract-entities`; `/create-evidence-case`
+copies that glossary into the evidence case and must not independently infer
+control names, definitions, or unsupported parenthetical terms.
+Runtime extraction proof is preserved in `entity_context`; agents should use
+`entity_context.proof_packet.assertions` for grounding decisions and keep
+legacy glossary fields for compatibility, prompts, and UI display.
 The `cae_tree` (requested via `include_cae_tree=True`) provides full CAE analysis
 with traceability strength and validation gates.
 
@@ -381,23 +388,55 @@ Extract entities and check grounding from the FULL question. In batch mode, `col
 .claude/skills/extract-entities/run.sh extract --json "<full question>"
 ```
 
-The result includes an `agent_view()` with these key fields:
+The default JSON result is the compact project-agent view. Use `--verbose` only
+when debugging legacy fields such as `resolved_entities`, `glossary`, and
+`entity_nodes`. `/create-evidence-case` internally requests the legacy view for
+old compatibility paths, but preserves the compact proof packet as
+`entity_context`.
+
+The result includes these key fields:
 
 ```json
 {
-  "headline": "2 controls resolved; 1 fabricated ID(s)",
+  "view": "agent",
   "grounding_ok": false,
-  "controls": [
-    {"control_id": "SV-AC-2", "name": "...", "confidence": 1.0, "match_type": "exact", "qra_count": 44}
-  ],
-  "warnings": [
-    {"term": "X23-MUSTARD", "category": "fabricated_id", "confidence": 0.0, "detail": "No match in corpus..."},
-    {"term": "decoherence", "category": "not_in_corpus", "confidence": 0.0, "detail": "Term not found..."}
-  ]
+  "agent_decision": {
+    "safe_to_answer": false,
+    "needs_clarification": true,
+    "primary_entity_id": "CM0029",
+    "grounding_source": "proof_packet.assertions"
+  },
+  "proof_packet": {
+    "authoritative": true,
+    "llm_used": false,
+    "assertions": [
+      {
+        "rule_id": "SPARTA_CONTROL_ID_EXACT_MATCH",
+        "subject": "CM0029",
+        "predicate": "resolves_to",
+        "object": "sparta_controls/ctrl__CM0029",
+        "status": "passed"
+      },
+      {
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "subject": "unsupported:wrong_link",
+        "predicate": "does_not_describe_control",
+        "object": "CM0029",
+        "status": "failed"
+      }
+    ]
+  },
+  "nodes": {
+    "anchors": [],
+    "validated_context": [],
+    "suppressed": [],
+    "unsupported": []
+  }
 }
 ```
 
-**Read `grounding_ok` first.** If `false`, check `warnings`:
+**Read `grounding_ok` first.** If `false`, check failed
+`proof_packet.assertions` and `nodes.unsupported`:
 
 | Warning category | Meaning | Your action |
 |-----------------|---------|-------------|
@@ -656,6 +695,7 @@ reject_candidate_qra("EC-9670e932", reason="Answer conflates HW and SW supply ch
 /create-evidence-case SATISFIED
   → quarantine_as_candidate_qra()
     → sparta_qra_candidates collection
+    → optional /ask --cae-gap-review over the frozen QRA/evidence_case snapshot
     → /interview review form generated
       → Human reviews in browser/TUI
         → APPROVED → promote_candidate_qra() → sparta_qra
@@ -669,6 +709,13 @@ reject_candidate_qra("EC-9670e932", reason="Answer conflates HW and SW supply ch
       → REAL GAP → /dogpile research task
       → FALSE GAP → adjust technique bridge thresholds
 ```
+
+`/ask --cae-gap-review` is a downstream review layer, not the evidence-case
+builder. Use it when a candidate QRA or existing QRA needs a bounded
+Brandon/Margaret/Jennifer + judge review before human promotion, edit,
+rejection, or deferral. `/create-evidence-case` remains responsible for
+assembling the QRA, resolved controls, crosswalk chains, proof/SACM references
+when present, and the cached `evidence_case` snapshot.
 
 ## Graph Model
 

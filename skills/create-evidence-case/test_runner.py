@@ -7,7 +7,8 @@ from types import SimpleNamespace
 
 import runner
 import collect
-from runner import EvidenceCaseRunner
+import gate
+from runner import EvidenceCaseRunner, build_evidence_case_response, canonical_evidence_case_state
 from candidate_qra import EvidenceCaseStore2
 from collect import (
     EntityExtractionFailure,
@@ -28,6 +29,142 @@ def _fake_case_result(verdict_state: str, gates: list[dict], answer: str = "ok")
         "gates_passed": sum(1 for g in gates if g.get("passed")),
         "gates_total": len(gates),
     }
+
+
+def test_canonical_evidence_case_state_mapping():
+    assert canonical_evidence_case_state("satisfied") == "ANSWERABLE"
+    assert canonical_evidence_case_state("inconclusive") == "INSUFFICIENT_EVIDENCE"
+    assert canonical_evidence_case_state("not_satisfied") == "OUT_OF_SCOPE"
+
+
+def test_gate_fails_non_question_surface_before_evidence_lookup():
+    rule, verdict, blocking = gate.classify(
+        [{"type": "control_id", "text": "CAPEC-649", "status": "valid"}],
+        question="Decision Surface\nCAPEC-649\n000a5d68cbd446e5",
+    )
+
+    assert rule == "RULE_0B_FAIL_NON_QUESTION_SURFACE"
+    assert verdict == "NONSENSICAL"
+    assert "Decision Surface" in blocking
+    assert "CAPEC-649" in blocking
+
+
+def test_gate_allows_valid_capec_question_surface():
+    rule, verdict, blocking = gate.classify(
+        [{"type": "control_id", "text": "CAPEC-649", "status": "valid"}],
+        question="How does CAPEC-649 describe decision-surface risk for spacecraft command paths?",
+    )
+
+    assert rule == "RULE_3_ANSWERABLE"
+    assert verdict == "ANSWERABLE"
+    assert blocking == []
+
+
+def test_runner_fails_dangling_payload_referent_before_entity_extraction(monkeypatch):
+    def fail_collect_entities(_question: str):
+        raise AssertionError("surface gate should run before entity extraction")
+
+    monkeypatch.setattr(runner, "collect_entities", fail_collect_entities)
+
+    result = EvidenceCaseRunner(gates_only=True).run(
+        "Why is CAPEC-649 relevant to T1036.006 in this payload?"
+    )
+
+    assert result["verdict"]["state"] == "ambiguous_entity"
+    assert result["answer"] == "CLARIFY: What do you mean by 'this payload'?"
+    assert result["qra_quality"]["issue_code"] == "ambiguous_referent"
+    assert result["qra_quality"]["ambiguous_referents"] == ["this payload"]
+    assert result["qra_quality"]["safe_action"] == "ask_memory_clarify"
+    assert result["gate_trace"][0]["gate"] == "question_surface"
+    assert result["gate_trace"][0]["passed"] is False
+
+
+def test_build_evidence_case_response_projects_answer_contract():
+    result = {
+        "verdict": {"state": "satisfied"},
+        "answer": "CM0012 and CM0014 are related under IA-0001.",
+        "evidence_items": [
+            {
+                "evidence_id": "ev_primary",
+                "evidence_class": "primary_control",
+                "provenance": "imported",
+                "review_status": "approved",
+                "primary_source_ids": ["sparta_controls/CM0012"],
+            },
+            {
+                "_key": "qra_1",
+                "question": "How does CM0012 relate?",
+                "answer": "It supports the same technique context.",
+                "review_status": "approved",
+                "primary_source_ids": ["sparta_controls/CM0014"],
+            },
+        ],
+    }
+
+    response = build_evidence_case_response(
+        result,
+        identity={"technique_id": "IA-0001", "control_a_id": "CM0012", "control_b_id": "CM0014"},
+        mode="production",
+    )
+
+    assert response["action"] == "ANSWER"
+    assert response["verdict_state"] == "ANSWERABLE"
+    assert response["identity"]["control_a_id"] == "CM0012"
+    assert response["answer"] == result["answer"]
+    assert response["used_evidence_ids"] == ["ev_primary", "qra_1"]
+    assert response["used_qra_ids"] == ["qra_1"]
+    assert response["related_qra_ids"] == []
+    assert response["mode"] == "production"
+    assert response["evidence_snapshot_hash"].startswith("sha256:")
+    assert response["supporting_evidence"][0]["primary_source_ids"] == ["sparta_controls/CM0012"]
+    assert response["source_verdict_state"] == "satisfied"
+
+
+def test_build_evidence_case_response_hash_binds_supporting_evidence_payload():
+    base = {
+        "verdict": {"state": "satisfied"},
+        "answer": "Accepted answer.",
+        "evidence_items": [
+            {
+                "evidence_id": "ev_primary",
+                "evidence_class": "primary_control",
+                "provenance": "imported",
+                "review_status": "approved",
+                "primary_source_ids": ["sparta_controls/CM0012"],
+            }
+        ],
+    }
+    changed = {
+        **base,
+        "evidence_items": [
+            {
+                "evidence_id": "ev_primary",
+                "evidence_class": "primary_control",
+                "provenance": "curated",
+                "review_status": "approved",
+                "primary_source_ids": ["sparta_controls/CM0012"],
+            }
+        ],
+    }
+
+    response_a = build_evidence_case_response(base, identity={"technique_id": "IA-0001"})
+    response_b = build_evidence_case_response(changed, identity={"technique_id": "IA-0001"})
+
+    assert response_a["evidence_snapshot_hash"] != response_b["evidence_snapshot_hash"]
+
+
+def test_build_evidence_case_response_projects_non_answer_as_clarify():
+    result = {
+        "verdict": {"state": "inconclusive"},
+        "answer": "Insufficient evidence.",
+        "evidence_items": [],
+    }
+
+    response = build_evidence_case_response(result, identity={"technique_id": "IA-0001"}, mode="analyst")
+
+    assert response["action"] == "CLARIFY"
+    assert response["verdict_state"] == "INSUFFICIENT_EVIDENCE"
+    assert response["used_evidence_ids"] == []
 
 
 def _patch_happy_path(monkeypatch, *, provability: dict | None, proof: dict | None):

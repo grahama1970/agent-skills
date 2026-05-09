@@ -420,6 +420,72 @@ def generate_gap_review_questions(
     return interview_file
 
 
+def build_gap_review_candidate(
+    *,
+    question: str,
+    case_result: dict,
+    clarify_result: dict | None = None,
+) -> dict[str, Any]:
+    """Build an advisory CAE gap-review request without mutating a QRA.
+
+    This is the handoff shape for /ask cae-gap-review, /monitor-sparta, and
+    Sparta Chat. It intentionally does not repair, approve, or persist a QRA.
+    Proposed QRA corrections remain recommendations until a fresh
+    /create-evidence-case run grounds them.
+    """
+    gate_trace = list(case_result.get("gate_trace") or [])
+    verdict = case_result.get("verdict") if isinstance(case_result.get("verdict"), dict) else {}
+    evidence_case = case_result.get("evidence_case") if isinstance(case_result.get("evidence_case"), dict) else {}
+    missing_spans: list[Any] = []
+    for step in gate_trace:
+        if not isinstance(step, dict):
+            continue
+        if step.get("passed") is False:
+            missing_spans.append({
+                "gate": step.get("gate", ""),
+                "detail": step.get("detail", ""),
+                "blocking_entities": step.get("blocking_entities", []),
+            })
+    if clarify_result:
+        missing_spans.append({
+            "gate": "clarify",
+            "detail": "Clarification output was produced for the failed evidence case.",
+            "clarify_result": clarify_result,
+        })
+    return {
+        "kind": "cae_gap_review_candidate",
+        "advisory_only": True,
+        "question": question,
+        "evidence_case_id": (
+            evidence_case.get("case_id")
+            or evidence_case.get("id")
+            or case_result.get("case_id")
+            or case_result.get("id")
+        ),
+        "evidence_case_version": (
+            evidence_case.get("version")
+            or case_result.get("evidence_case_version")
+            or case_result.get("version")
+        ),
+        "source_evidence_case_hash": (
+            evidence_case.get("hash")
+            or case_result.get("evidence_case_hash")
+            or case_result.get("case_hash")
+        ),
+        "verdict_state": verdict.get("state") or case_result.get("verdict_state") or case_result.get("verdict"),
+        "final_status": "NEEDS_VERIFICATION",
+        "gate_trace": gate_trace,
+        "entities": case_result.get("entities") or case_result.get("control_ids") or [],
+        "missing_spans": missing_spans,
+        "source_artifacts": case_result.get("source_artifacts") or case_result.get("evidence") or [],
+        "qra_correction_recommendation": {
+            "status": "not_proposed",
+            "requires_new_evidence_case": True,
+        },
+        "mutation_policy": "no_qra_mutation",
+    }
+
+
 def promote_candidate_qra(candidate_id: str, edited_answer: str | None = None) -> dict:
     """Promote an approved candidate QRA to sparta_qra collection."""
     candidate_file = CANDIDATE_STORAGE / f"{candidate_id}.json"

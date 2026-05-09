@@ -28,6 +28,7 @@ from collect import (
     collect_recall,
     get_formalizability_score,
 )
+from gate import classify as classify_question_surface
 from scoring import (
     gates_to_grade,
     gates_to_score,
@@ -54,10 +55,62 @@ class EvidenceCaseRunner:
         self.store = EvidenceCaseStore2()
         self.gates_only = gates_only
 
-    def run(self, claim_text: str, category: str = "auto") -> dict[str, Any]:
+    def run(
+        self,
+        claim_text: str,
+        category: str = "auto",
+        force_strategies: int = 0,
+        show_progress: bool = True,
+    ) -> dict[str, Any]:
         """Run the 4-call pipeline."""
         t0 = time.monotonic()
         steps: list[dict] = []
+
+        # Deterministic standalone-QRA surface gate. This runs before entity
+        # extraction or recall so an unresolved referent such as "this payload"
+        # cannot be accidentally redeemed by a generic CAPEC↔ATT&CK source match.
+        surface_rule, surface_verdict, surface_blocking = classify_question_surface([], claim_text)
+        if surface_verdict != "ANSWERABLE":
+            is_ambiguous_referent = surface_rule == "RULE_0_FAIL_AMBIGUOUS_REFERENT"
+            ambiguous_prompt = (
+                f"What do you mean by '{surface_blocking[0]}'?"
+                if is_ambiguous_referent and surface_blocking
+                else "Could you rephrase the question as a standalone QRA?"
+            )
+            steps.append({
+                "gate": "question_surface",
+                "passed": False,
+                "detail": f"{surface_rule}: {', '.join(surface_blocking)}",
+                "blocking_entities": surface_blocking,
+                "data": {
+                    "rule": surface_rule,
+                    "verdict": surface_verdict,
+                    "blocking_entities": surface_blocking,
+                },
+            })
+            return self._verdict_result(
+                claim_text,
+                category,
+                "ambiguous_entity" if is_ambiguous_referent else "not_satisfied" if surface_verdict == "NONSENSICAL" else "inconclusive",
+                steps,
+                answer=f"CLARIFY: {ambiguous_prompt}" if is_ambiguous_referent else (
+                    "NOT_SATISFIED: QRA question is not standalone; "
+                    f"unresolved referent(s): {', '.join(surface_blocking)}."
+                ),
+                control_ids=[],
+                grade="F",
+                score=0.0,
+                elapsed=time.monotonic() - t0,
+                qra_quality={
+                    "status": "failed",
+                    "issue_code": "ambiguous_referent" if is_ambiguous_referent else "non_question_surface",
+                    "issue_label": "Ambiguous referent" if is_ambiguous_referent else "Non-question surface",
+                    "ambiguous_referents": surface_blocking if is_ambiguous_referent else [],
+                    "disposition": "adversarial",
+                    "safe_action": "ask_memory_clarify",
+                    "clarifying_question": ambiguous_prompt,
+                },
+            )
 
         # --- Step 1: /extract-entities ---
         try:
@@ -211,7 +264,7 @@ class EvidenceCaseRunner:
         else:
             answer = self._scillm_render(
                 claim_text, verdict_state, resolved, unresolved,
-                external, qra_items, steps,
+                external, entities.get("glossary", []), qra_items, steps,
             )
 
         n_passed = sum(1 for s in steps if s.get("passed"))
@@ -406,6 +459,7 @@ EVIDENCE_CASE:
         resolved: list[dict],
         unresolved: list[dict],
         external: list[dict] | None,
+        extraction_glossary: list[dict] | None,
         qra_items: list[dict],
         steps: list[dict],
     ) -> str:
@@ -415,7 +469,7 @@ EVIDENCE_CASE:
         retry with correction feedback up to MAX_RENDER_RETRIES times.
         """
         evidence_case = self._build_evidence_case(
-            question, verdict_state, resolved, unresolved, external, qra_items, steps,
+            question, verdict_state, resolved, unresolved, external, extraction_glossary, qra_items, steps,
         )
         valid_ids = {e["citation_id"] for e in evidence_case.get("prior_qra_evidence", [])}
         valid_ids |= {e["id"] for e in evidence_case.get("glossary", [])}
@@ -527,21 +581,28 @@ EVIDENCE_CASE:
         resolved: list[dict],
         unresolved: list[dict],
         external: list[dict] | None,
+        extraction_glossary: list[dict] | None,
         qra_items: list[dict],
         steps: list[dict],
     ) -> dict:
         """Build the EVIDENCE_CASE JSON for the renderer prompt."""
         review_status = "passed" if verdict_state == "satisfied" else "failed"
 
-        # Glossary: every entity the pipeline knows about (resolved + unresolved)
-        glossary = []
-        for e in resolved:
-            glossary.append({
-                "id": e.get("canonical_id", "?"),
-                "name": e.get("canonical_name", e.get("name", "")),
-                "framework": e.get("framework", ""),
-                "type": e.get("entity_type", ""),
-            })
+        # Glossary ownership belongs to /extract-entities. Keep the legacy
+        # resolved-entity projection only as a compatibility fallback.
+        glossary = [
+            dict(entry)
+            for entry in (extraction_glossary or [])
+            if isinstance(entry, dict)
+        ]
+        if not glossary:
+            for e in resolved:
+                glossary.append({
+                    "id": e.get("canonical_id", "?"),
+                    "name": e.get("canonical_name", e.get("name", "")),
+                    "framework": e.get("framework", ""),
+                    "type": e.get("entity_type", ""),
+                })
 
         # Entity resolution: per-entity status
         entity_resolution = []
@@ -648,6 +709,7 @@ EVIDENCE_CASE:
         elapsed: float = 0.0,
         qra_items: list[dict] | None = None,
         entities: dict | None = None,
+        qra_quality: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Build result dict and persist. Store failure is non-fatal."""
         try:
@@ -673,6 +735,8 @@ EVIDENCE_CASE:
                 "gates_total": len(steps),
             }
         result["entities"] = entities
+        if qra_quality is not None:
+            result["qra_quality"] = qra_quality
         result["evidence_items"] = qra_items or []
         result["total_ms"] = round(elapsed * 1000, 1)
         return result

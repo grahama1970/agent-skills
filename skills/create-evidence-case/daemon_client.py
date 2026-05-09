@@ -112,13 +112,70 @@ def assemble_evidence_batch(
         return resp.json().get("results", [])
 
 
+def _normalize_extract_entities_legacy(result: dict[str, Any]) -> dict[str, Any]:
+    """Rebuild legacy conveniences from daemon `/extract-entities` output."""
+    if not isinstance(result, dict):
+        return {}
+    resolved = result.get("resolved_entities") or []
+    domain_terms = result.get("domain_terms") or []
+    control_ids = [
+        ent.get("canonical_id")
+        for ent in resolved
+        if isinstance(ent, dict) and ent.get("canonical_id")
+    ]
+    result["all_control_ids"] = control_ids
+    result["control_ids"] = control_ids
+    if not result.get("control_metadata"):
+        result["control_metadata"] = [
+            {
+                "control_id": ent.get("canonical_id", ""),
+                "name": ent.get("canonical_name", ""),
+                "framework": ent.get("framework", ""),
+                "type": ent.get("entity_type", ""),
+                "taxonomy": [],
+                "chain_path": (ent.get("crosswalk_path") or {}).get("ids", []),
+            }
+            for ent in resolved
+            if isinstance(ent, dict)
+        ]
+    if not result.get("spans") and not result.get("entities"):
+        spans = []
+        for ent in resolved:
+            if not isinstance(ent, dict):
+                continue
+            spans.append({
+                "text": ent.get("mention", ""),
+                "span": ent.get("span", []),
+                "type": "control_id",
+                "status": "grounded",
+                "control_id": ent.get("canonical_id", ""),
+                "name": ent.get("canonical_name", ""),
+                "framework": ent.get("framework", ""),
+                "grounded_to_framework": True,
+                "relevant_to_query": True,
+            })
+        for term in domain_terms:
+            if not isinstance(term, dict):
+                continue
+            spans.append({
+                "text": term.get("text", ""),
+                "span": term.get("span", []),
+                "type": term.get("kind", "domain_term"),
+                "status": "extracted",
+                "grounded_to_framework": False,
+                "relevant_to_query": True,
+            })
+        result["spans"] = spans
+    return result
+
+
 def extract_entities(text: str) -> dict[str, Any]:
     """Call daemon /extract-entities."""
     with _get_client() as client:
-        resp = client.post("/extract-entities", json={"text": text})
+        resp = client.post("/extract-entities", json={"text": text, "view": "legacy"})
         if resp.status_code != 200:
             return {"error": f"HTTP {resp.status_code}"}
-        return resp.json()
+        return _normalize_extract_entities_legacy(resp.json())
 
 
 def recall(

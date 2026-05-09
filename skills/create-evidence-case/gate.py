@@ -6,15 +6,56 @@ The verdict logic is CODE, not LLM. This is the fix.
 from __future__ import annotations
 
 import json
+import re
+import sys
+from pathlib import Path
 from typing import Any
 
+_SKILLS_ROOT = Path(__file__).resolve().parents[1]
+if str(_SKILLS_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SKILLS_ROOT))
 
-def classify(spans: list[dict]) -> tuple[str, str, list[str]]:
+from common.qra_question_surface import detect_non_question_surface
+
+
+AMBIGUOUS_REFERENT_RE = re.compile(
+    r"\b(?:this|that|these|those|above|following|provided|given)\s+"
+    r"(?:payload|technique|control|weakness|attack|pattern|countermeasure|relationship|"
+    r"document|excerpt|source|context|requirement|case|system|component|vendor)\b",
+    re.IGNORECASE,
+)
+
+
+def detect_ambiguous_referents(question: str | None) -> list[str]:
+    """Return dangling referent phrases that make a QRA non-standalone."""
+    if not question:
+        return []
+    return sorted({match.group(0) for match in AMBIGUOUS_REFERENT_RE.finditer(question)})
+
+
+def classify(spans: list[dict], question: str | None = None) -> tuple[str, str, list[str]]:
     """Deterministic gate - NO LLM.
     
     Returns: (rule, verdict, blocking_entities)
     """
     blocking = []
+
+    # Rule 0B: fail fast for title/control-ID/hash fragments rendered as questions.
+    question_surface = detect_non_question_surface(question)
+    if not question_surface.ok:
+        return (
+            "RULE_0B_FAIL_NON_QUESTION_SURFACE",
+            "NONSENSICAL",
+            question_surface.blocking_entities or [question or ""],
+        )
+
+    # Rule 0: fail closed for dangling referents such as "this payload".
+    # QRAs must be standalone. A source match can prove CAPEC-649 ↔ T1036.006
+    # in general, but cannot prove relevance to an unnamed payload/artifact.
+    # The evidence case is not answerable, but the safe agent action is clarify.
+    ambiguous_referents = detect_ambiguous_referents(question)
+    if ambiguous_referents:
+        return "RULE_0_FAIL_AMBIGUOUS_REFERENT", "CLARIFY", ambiguous_referents
     
     # Rule 1: CLARIFY for bad control IDs
     for span in spans:
@@ -165,6 +206,16 @@ SPARTA DOMAIN
 
 DECISION RULES
 Apply these rules in exact order. First match wins.
+
+RULE_0B_FAIL_NON_QUESTION_SURFACE
+Return verdict "NONSENSICAL" if the question is only a title, heading, control ID, or opaque
+key/hash fragment, such as "Decision Surface", "CAPEC-649", or "000a5d68cbd446e5".
+These fragments are metadata, not answerable questions. Do not perform evidence lookup for them.
+
+RULE_0_CLARIFY_AMBIGUOUS_REFERENT
+Return verdict "CLARIFY" if the question contains a dangling referent such as "this payload",
+"this technique", "the above source", or "the provided context" without naming the concrete
+payload, source, control, technique, or artifact in the question itself.
 
 RULE_1_CLARIFY
 Return verdict "CLARIFY" if any span with type="control_id" has status in {invalid, unknown, misspelled, fabricated}.

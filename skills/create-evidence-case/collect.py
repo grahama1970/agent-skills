@@ -179,6 +179,151 @@ def _filter_meta_items(items: list[dict]) -> list[dict]:
     return filtered
 
 
+def _span_from_resolved_entity(entity: dict[str, Any]) -> dict[str, Any]:
+    """Convert a resolved extractor entity into the legacy span shape."""
+    span = entity.get("span") or []
+    text = entity.get("mention") or entity.get("canonical_id") or ""
+    return {
+        "text": text,
+        "span": span if isinstance(span, list) else [],
+        "type": "control_id" if entity.get("canonical_id") else entity.get("entity_type", "entity"),
+        "status": "grounded",
+        "control_id": entity.get("canonical_id", ""),
+        "name": entity.get("canonical_name", ""),
+        "framework": entity.get("framework", ""),
+        "grounded_to_framework": True,
+        "relevant_to_query": True,
+    }
+
+
+def _span_from_domain_term(term: dict[str, Any]) -> dict[str, Any]:
+    """Convert a domain term into the legacy span shape."""
+    span = term.get("span") or []
+    text = term.get("text") or term.get("mention") or ""
+    return {
+        "text": text,
+        "span": span if isinstance(span, list) else [],
+        "type": term.get("kind", "domain_term"),
+        "status": "extracted",
+        "grounded_to_framework": False,
+        "relevant_to_query": True,
+    }
+
+
+def _control_metadata_from_resolved_entity(entity: dict[str, Any]) -> dict[str, Any]:
+    """Convert a resolved extractor entity into create-evidence-case metadata."""
+    cp = entity.get("crosswalk_path") or {}
+    path_ids = cp.get("ids") or []
+    taxonomy: list[dict[str, Any]] = []
+    for i in range(len(path_ids) - 1):
+        taxonomy.append({"from": path_ids[i], "to": path_ids[i + 1], "framework": ""})
+    if cp.get("terminal_framework") == "SPARTA" and cp.get("terminal_id"):
+        source_id = path_ids[-2] if len(path_ids) > 1 else entity.get("canonical_id", "")
+        taxonomy.append({
+            "from": source_id,
+            "to": cp["terminal_id"],
+            "framework": "SPARTA",
+        })
+    return {
+        "control_id": entity.get("canonical_id", ""),
+        "name": entity.get("canonical_name", ""),
+        "framework": entity.get("framework", ""),
+        "type": entity.get("entity_type", ""),
+        "taxonomy": taxonomy,
+        "chain_path": path_ids,
+        "chain_stop": None if cp.get("exists") else cp.get("from_framework"),
+    }
+
+
+def _normalize_extract_entities_legacy(result: dict[str, Any]) -> dict[str, Any]:
+    """Add legacy convenience fields expected by older evidence-case code.
+
+    `/extract-entities` now has compact agent output by default. The evidence
+    skill asks for `view=legacy`, but the daemon legacy response may still omit
+    older CLI-enriched conveniences. Rebuild those fields from resolved entities
+    so downstream gates read one stable shape.
+    """
+    if not isinstance(result, dict):
+        return {}
+
+    resolved = result.get("resolved_entities") or []
+    unresolved = result.get("unresolved_entities") or []
+    external = result.get("external_entities") or []
+    domain_terms = result.get("domain_terms") or []
+
+    control_ids = [
+        ent.get("canonical_id")
+        for ent in resolved
+        if isinstance(ent, dict) and ent.get("canonical_id")
+    ]
+    result["all_control_ids"] = control_ids
+    result["control_ids"] = control_ids
+
+    if not result.get("control_metadata"):
+        result["control_metadata"] = [
+            _control_metadata_from_resolved_entity(ent)
+            for ent in resolved
+            if isinstance(ent, dict)
+        ]
+
+    if not result.get("spans") and not result.get("entities"):
+        result["spans"] = (
+            [_span_from_resolved_entity(ent) for ent in resolved if isinstance(ent, dict)]
+            + [_span_from_domain_term(term) for term in domain_terms if isinstance(term, dict)]
+        )
+
+    warnings = []
+    for item in unresolved:
+        if isinstance(item, dict):
+            warnings.append({
+                "term": item.get("mention", ""),
+                "category": item.get("reason", "fabricated_id"),
+                "detail": item.get("detail", ""),
+            })
+    for item in external:
+        if isinstance(item, dict):
+            warnings.append({
+                "term": item.get("mention", ""),
+                "category": "not_in_corpus",
+                "detail": f"WordNet: {item.get('wordnet_category', 'unknown')}",
+            })
+    result["warnings"] = warnings
+
+    resolution_map: dict[str, dict[str, Any]] = {}
+    for ent in resolved:
+        if not isinstance(ent, dict):
+            continue
+        cid = ent.get("canonical_id")
+        if cid:
+            resolution_map[cid] = {
+                "exists": True,
+                "match_type": "exact",
+                "control_id": cid,
+                "name": ent.get("canonical_name", ""),
+            }
+    for item in unresolved:
+        if isinstance(item, dict):
+            mention = item.get("mention", "")
+            if mention:
+                resolution_map[mention] = {"exists": False, "reason": item.get("reason", "")}
+    result["resolution_map"] = resolution_map
+
+    result.setdefault("headline", f"{len(resolved)} resolved")
+    result.setdefault("related_pairs", [])
+    result.setdefault("phrases", [
+        term.get("text", "")
+        for term in domain_terms
+        if isinstance(term, dict) and term.get("text")
+    ])
+    result.setdefault("unresolved_terms", [
+        {"term": item.get("mention", ""), "type": item.get("reason", "")}
+        for item in unresolved
+        if isinstance(item, dict)
+    ])
+    result["method"] = "daemon_http"
+    return result
+
+
 def _shadow_assistant(task: str, data: dict) -> None:
     """Fire-and-forget /assistant shadow call for training label collection."""
     try:
@@ -378,7 +523,7 @@ def collect_entities(question: str) -> dict | None:
     try:
         resp = client.post(
             "/extract-entities",
-            json={"text": question[:500]},
+            json={"text": question[:500], "view": "legacy"},
         )
         resp.raise_for_status()
         result = resp.json()
@@ -392,63 +537,7 @@ def collect_entities(question: str) -> dict | None:
             f"Entity extraction failed: {result}"
         )
 
-    # Backward-compat fields for runner.py consumers that haven't migrated yet
-    resolved = result.get("resolved_entities", [])
-    unresolved = result.get("unresolved_entities", [])
-    external = result.get("external_entities", [])
-
-    result["all_control_ids"] = [e["canonical_id"] for e in resolved]
-    result["control_ids"] = result["all_control_ids"]
-
-    # Build control_metadata from resolved_entities (for concept intersection)
-    result["control_metadata"] = []
-    for ent in resolved:
-        cp = ent.get("crosswalk_path", {})
-        # Rebuild taxonomy edges from crosswalk path for collect_concept_intersection
-        taxonomy = []
-        path_ids = cp.get("ids", [])
-        for i in range(len(path_ids) - 1):
-            taxonomy.append({"from": path_ids[i], "to": path_ids[i + 1], "framework": ""})
-        if cp.get("terminal_framework") == "SPARTA" and cp.get("terminal_id"):
-            taxonomy.append({"from": path_ids[-2] if len(path_ids) > 1 else ent["canonical_id"],
-                             "to": cp["terminal_id"], "framework": "SPARTA"})
-        result["control_metadata"].append({
-            "control_id": ent["canonical_id"],
-            "name": ent.get("canonical_name", ""),
-            "framework": ent.get("framework", ""),
-            "type": ent.get("entity_type", ""),
-            "taxonomy": taxonomy,
-            "chain_path": path_ids,
-            "chain_stop": None if cp.get("exists") else cp.get("from_framework"),
-        })
-
-    # Build warnings from unresolved + external for grounding gate
-    warnings = []
-    for u in unresolved:
-        warnings.append({"term": u["mention"], "category": u.get("reason", "fabricated_id"),
-                         "detail": u.get("detail", "")})
-    for e in external:
-        warnings.append({"term": e["mention"], "category": "not_in_corpus",
-                         "detail": f"WordNet: {e.get('wordnet_category', 'unknown')}"})
-    result["warnings"] = warnings
-
-    # Build resolution_map for plausibility.py
-    resolution_map: dict[str, dict] = {}
-    for ent in resolved:
-        resolution_map[ent["canonical_id"]] = {"exists": True, "match_type": "exact",
-                                                "control_id": ent["canonical_id"],
-                                                "name": ent.get("canonical_name", "")}
-    for u in unresolved:
-        resolution_map[u["mention"]] = {"exists": False, "reason": u.get("reason", "")}
-    result["resolution_map"] = resolution_map
-
-    result.setdefault("headline", f"{len(resolved)} resolved")
-    result.setdefault("related_pairs", [])
-    result.setdefault("phrases", [dt["text"] for dt in result.get("domain_terms", [])])
-    result.setdefault("unresolved_terms", [{"term": u["mention"], "type": u.get("reason", "")}
-                                            for u in unresolved])
-    result["method"] = "daemon_http"
-    return result
+    return _normalize_extract_entities_legacy(result)
 
 
 def collect_concept_intersection(
@@ -503,9 +592,9 @@ def collect_concept_intersection(
     concept_entities: list[dict] = []
     for concept in concept_names[:3]:
         try:
-            resp = client.post("/extract-entities", json={"text": concept})
+            resp = client.post("/extract-entities", json={"text": concept, "view": "legacy"})
             resp.raise_for_status()
-            result = resp.json()
+            result = _normalize_extract_entities_legacy(resp.json())
             for cm in result.get("control_metadata", []):
                 for edge in cm.get("taxonomy", []):
                     if edge.get("framework") == "SPARTA":
@@ -1077,8 +1166,8 @@ def collect_grounding_gate_context(question: str, k: int = 10) -> dict[str, Any]
     # Step 1: Extract entities with spans (via daemon, not import)
     try:
         client = _get_memory_http()
-        resp = client.post("/extract-entities", json={"text": question[:500]})
-        entities = resp.json() if resp.status_code == 200 else {}
+        resp = client.post("/extract-entities", json={"text": question[:500], "view": "legacy"})
+        entities = _normalize_extract_entities_legacy(resp.json()) if resp.status_code == 200 else {}
     except Exception as exc:
         logger.warning("Entity extraction via daemon failed: {}", exc)
         entities = {}
