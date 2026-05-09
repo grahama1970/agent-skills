@@ -1,0 +1,3 @@
+display_name: Clipboard File
+short_description: Copy files to the desktop clipboard as pasteable file-manager items.
+default_prompt: Copy the specified file to the clipboard as a file-manager paste item and verify the clipboard target.
