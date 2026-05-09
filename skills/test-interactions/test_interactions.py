@@ -25,8 +25,10 @@ Manifest interactions support:
 """
 
 import json
+import os
 import re
 import time
+import base64
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
@@ -122,6 +124,7 @@ def _execute_interaction(
     surface_name: str,
     output_dir: Path,
     step_index: int,
+    url_guard: str = "",
 ) -> InteractionResult:
     action = interaction.get("action", "screenshot")
     description = interaction.get("description", f"{action} on {element_name}")
@@ -250,6 +253,13 @@ def _execute_interaction(
                 if i < frames:
                     time.sleep(interval / 1000.0)
 
+        if url_guard:
+            current_url = cdp.current_url()
+            if not current_url.startswith(url_guard):
+                result.status = "FAIL"
+                drift = f"URL drifted outside test target: {current_url!r} does not start with {url_guard!r}"
+                result.evidence = f"{result.evidence} | {drift}" if result.evidence else drift
+
     except Exception as e:
         result.status = "FAIL"
         result.evidence = f"exception: {e}"
@@ -306,6 +316,7 @@ def _run_surface(cdp: CDPClient, surface: dict, base_url: str, output_dir: Path,
     surface_dir.mkdir(parents=True, exist_ok=True)
 
     nav_url = f"{base_url.rstrip('/')}{path}" if base_url else path
+    url_guard = surface.get("url_guard") or base_url
     logger.info("Surface: {} ({})", surface_name, nav_url)
 
     cdp.navigate(nav_url, wait_ms=2000)
@@ -322,7 +333,7 @@ def _run_surface(cdp: CDPClient, surface: dict, base_url: str, output_dir: Path,
         element_name = element.get("name", "unnamed")
         for interaction in element.get("interactions", []):
             step_index += 1
-            r = _execute_interaction(cdp, interaction, element_name, surface_name, surface_dir, step_index)
+            r = _execute_interaction(cdp, interaction, element_name, surface_name, surface_dir, step_index, url_guard)
             results.add(r)
 
     # Per-surface qid compliance scan (deterministic, no LLM)
@@ -434,7 +445,7 @@ def generate(
 def _preprocess_screenshots(captures_dir: Path):
     """Preprocess all PNGs with vlm_image: auto-crop, sharpen, upscale.
 
-    Modifies files in-place. Skips if vlm_image is not available.
+    Writes separate VLM copies. Human proof screenshots must remain untouched.
     """
     import sys
     common_dir = Path(__file__).resolve().parent.parent / "common"
@@ -449,7 +460,11 @@ def _preprocess_screenshots(captures_dir: Path):
         logger.warning("Failed to import vlm_image (missing Pillow?), skipping preprocessing")
         return
 
-    screenshots = sorted(captures_dir.rglob("*.png"))
+    vlm_dir = captures_dir / "vlm_preprocessed"
+    screenshots = sorted(
+        p for p in captures_dir.rglob("*.png")
+        if "vlm_preprocessed" not in p.parts
+    )
     if not screenshots:
         return
 
@@ -459,7 +474,9 @@ def _preprocess_screenshots(captures_dir: Path):
             continue  # burst frames get stitched below
         raw = png.read_bytes()
         out = prepare_for_vlm(raw)
-        png.write_bytes(out)
+        target = vlm_dir / png.relative_to(captures_dir)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(out)
         processed += 1
 
     # Stitch burst frames into single filmstrip per element
@@ -468,12 +485,13 @@ def _preprocess_screenshots(captures_dir: Path):
         if len(frames) > 1:
             frame_bytes = [f.read_bytes() for f in frames]
             stitched = stitch_vertical(frame_bytes)
-            filmstrip_path = burst_dir.parent / f"{burst_dir.parent.name}_filmstrip.png"
+            filmstrip_path = vlm_dir / burst_dir.parent.relative_to(captures_dir) / f"{burst_dir.parent.name}_filmstrip.png"
+            filmstrip_path.parent.mkdir(parents=True, exist_ok=True)
             filmstrip_path.write_bytes(stitched)
             processed += 1
 
     if processed:
-        logger.info("Preprocessed {} screenshots with vlm_image", processed)
+        logger.info("Preprocessed {} screenshots with vlm_image into {}", processed, vlm_dir)
 
 
 def _find_review_design() -> Optional[Path]:
@@ -508,49 +526,226 @@ def _run_review_design(
         logger.warning("No screenshots found in {}", captures)
         return None
 
-    screenshot_dirs = {p.parent for p in screenshots}
-    screenshots_path = max(screenshot_dirs, key=lambda d: len(list(d.glob("*.png")))) if screenshot_dirs else captures
+    review_set_dir = captures / "semantic_review_selection"
+    review_set_dir.mkdir(parents=True, exist_ok=True)
+    for old_png in review_set_dir.glob("*.png"):
+        old_png.unlink()
+    for old_json in review_set_dir.glob("*.json"):
+        old_json.unlink()
+    failure_path = captures / "review-design-failure.json"
+    if failure_path.exists():
+        failure_path.unlink()
+    selected_screenshots = _selected_visual_review_screenshots(captures, limit=6)
+    selection_manifest = []
+    for index, (label, screenshot) in enumerate(selected_screenshots, start=1):
+        safe_label = re.sub(r"[^A-Za-z0-9_.-]+", "_", label).strip("_").lower()
+        target = review_set_dir / f"{index:02d}_{safe_label}_{screenshot.parent.name}_{screenshot.name}"
+        if not target.exists():
+            target.write_bytes(screenshot.read_bytes())
+        selection_manifest.append({
+            "index": index,
+            "label": label,
+            "source": str(screenshot),
+            "review_copy": str(target),
+        })
+    (review_set_dir / "selection_manifest.json").write_text(json.dumps(selection_manifest, indent=2))
+    screenshots_path = review_set_dir
 
-    providers_to_try = [provider] + [p for p in ["subagent", "claude", "openai", "gemini"] if p != provider]
-    logger.info("Running /review-design on {} screenshots...", len(screenshots))
+    fallback_env = os.environ.get("TEST_INTERACTIONS_REVIEW_PROVIDER_FALLBACKS", "")
+    fallback_providers = [p.strip() for p in fallback_env.split(",") if p.strip()]
+    providers_to_try = [provider] + [p for p in fallback_providers if p != provider]
+    timeout_s = int(os.environ.get("TEST_INTERACTIONS_REVIEW_DESIGN_TIMEOUT_SEC", "600"))
+    logger.info(
+        "Running /review-design on {} selected screenshots from {} total...",
+        len(selected_screenshots), len(screenshots),
+    )
 
     for active_provider in providers_to_try:
         cmd = [
             str(run_sh), "review", "--screenshots", str(screenshots_path),
             "--provider", active_provider, "--persona", persona,
+            "--rounds", "1",
         ]
         if context:
-            cmd.extend(["--context", context])
+            cmd.extend(["--code-context", context])
 
         try:
             logger.info("Trying /review-design provider: {}", active_provider)
+            started_at = time.time()
             result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=300,
-                env={**__import__("os").environ, "REVIEW_DESIGN_ROUNDS": "1"},
+                cmd, capture_output=True, text=True, timeout=timeout_s,
+                env={
+                    **os.environ,
+                    "REVIEW_DESIGN_ROUNDS": "1",
+                    "REVIEW_DESIGN_SCILLM_TIMEOUT_SEC": str(max(30, timeout_s - 10)),
+                    "REVIEW_DESIGN_SCILLM_MODEL": os.environ.get(
+                        "TEST_INTERACTIONS_REVIEW_DESIGN_MODEL",
+                        "vlm",
+                    ),
+                },
             )
             if result.returncode == 0:
-                review_dirs = [captures / "review_output", run_sh.parent / "review_output"]
+                review_dirs = [
+                    captures / "review_output",
+                    Path("/home/graham/workspace/experiments/embry-os/docs/review-output") / screenshots_path.name,
+                    run_sh.parent / "review_output",
+                ]
                 for review_dir in review_dirs:
                     if review_dir.exists():
-                        finals = sorted(review_dir.glob("*_final.md"), key=lambda p: p.stat().st_mtime)
+                        finals = sorted(
+                            (
+                                p for p in review_dir.glob("*_final.md")
+                                if p.stat().st_mtime >= started_at - 1
+                            ),
+                            key=lambda p: p.stat().st_mtime,
+                        )
                         if finals:
                             logger.info("review-design succeeded with {} (file: {})", active_provider, finals[-1])
-                            return finals[-1].read_text()
+                            if failure_path.exists():
+                                failure_path.unlink()
+                            return (
+                                f"### Primary review-design Semantic Review ({active_provider})\n\n"
+                                f"Reviewed {len(selected_screenshots)} purpose-labeled screenshots:\n"
+                                + "\n".join(
+                                    f"- `{item['review_copy']}` — {item['label']}"
+                                    for item in selection_manifest
+                                )
+                                + "\n\n"
+                                + finals[-1].read_text()
+                            )
                 if result.stdout.strip():
                     logger.info("review-design succeeded with {} (stdout)", active_provider)
-                    return result.stdout.strip()
+                    if failure_path.exists():
+                        failure_path.unlink()
+                    return (
+                        f"### Primary review-design Semantic Review ({active_provider})\n\n"
+                        + result.stdout.strip()
+                    )
                 if result.stderr.strip():
                     logger.info("review-design succeeded with {} (stderr fallback)", active_provider)
-                    return result.stderr.strip()
+                    if failure_path.exists():
+                        failure_path.unlink()
+                    return (
+                        f"### Primary review-design Semantic Review ({active_provider})\n\n"
+                        + result.stderr.strip()
+                    )
             else:
                 err_excerpt = (result.stderr or result.stdout or "").strip()[:600]
                 logger.warning("review-design provider {} failed (exit {}): {}", active_provider, result.returncode, err_excerpt)
-        except subprocess.TimeoutExpired:
-            logger.warning("review-design provider {} timed out after 300s", active_provider)
+        except subprocess.TimeoutExpired as e:
+            failure = {
+                "stage": "review-design",
+                "provider": active_provider,
+                "timeout_s": timeout_s,
+                "screenshots_total": len(screenshots),
+                "screenshots_selected": [str(p) for p in selected_screenshots],
+                "stdout": (e.stdout or "")[-2000:] if isinstance(e.stdout, str) else "",
+                "stderr": (e.stderr or "")[-2000:] if isinstance(e.stderr, str) else "",
+            }
+            failure_path.write_text(json.dumps(failure, indent=2))
+            logger.warning(
+                "review-design provider {} timed out after {}s; wrote {}",
+                active_provider, timeout_s, failure_path,
+            )
         except Exception as e:
             logger.warning("review-design provider {} failed: {}", active_provider, e)
 
     return None
+
+
+def _selected_visual_review_screenshots(captures: Path, limit: int = 6) -> list[tuple[str, Path]]:
+    """Pick interaction screenshots that prove content wells and artifact pane transitions."""
+    results_file = captures / "results.json"
+    if not results_file.exists():
+        return [(path.name, path) for path in sorted(captures.rglob("*.png"))[:limit]]
+    try:
+        data = json.loads(results_file.read_text())
+    except Exception:
+        return [(path.name, path) for path in sorted(captures.rglob("*.png"))[:limit]]
+
+    priority_terms = [
+        ("table inline and right-pane artifact match", "open cat-family table in artifact pane"),
+        ("D3 inline and right-pane artifact match", "open family-tree graph in artifact pane"),
+        ("evidence-case inline and right-pane artifact match", "open evidence-case artifact pane"),
+        ("missing-input clarification artifact", "open missing-input clarification artifact"),
+        ("stale artifact prevention after direct answer", "capture post-artifact direct answer state"),
+        ("artifact pane collapsed after command", "click collapse run details"),
+    ]
+    selected: list[tuple[str, Path]] = []
+    selected_paths: set[Path] = set()
+    for label, term in priority_terms:
+        for item in data.get("interactions", []):
+            haystack = f"{item.get('description', '')} {item.get('evidence', '')}".lower()
+            screenshot = item.get("screenshot")
+            if term in haystack and screenshot:
+                path = Path(screenshot)
+                if path.exists() and path not in selected_paths:
+                    selected.append((label, path))
+                    selected_paths.add(path)
+                    break
+    for path in sorted(captures.rglob("*.png")):
+        if len(selected) >= limit:
+            break
+        if path not in selected_paths and "vlm_preprocessed" not in path.parts and "semantic_review_selection" not in path.parts:
+            selected.append((path.name, path))
+            selected_paths.add(path)
+    return selected[:limit]
+
+
+def _run_scillm_visual_review(captures: Path, context: str = "", persona: str = "") -> Optional[str]:
+    """Fallback semantic screenshot review through scillm's VLM route."""
+    import httpx
+
+    screenshots = _selected_visual_review_screenshots(captures)
+    if not screenshots:
+        logger.warning("No screenshots available for scillm visual review")
+        return None
+    model = os.environ.get("TEST_INTERACTIONS_VISUAL_REVIEW_MODEL", "vlm")
+
+    content: list[dict] = [
+        {
+            "type": "text",
+            "text": (
+                f"You are {persona or 'a practical UI QA reviewer'} reviewing agent-operator screenshots. "
+                "Do a semantic visual review, not a DOM assertion summary. Verify whether the screenshots prove: "
+                "inline content wells render tables/D3/evidence/clarification, expand clicks open the right artifact pane, "
+                "the pane can collapse/reopen, and stale artifacts do not leak into direct answers. "
+                "Call out mismatches between the visible prompt, visible artifact, and right-pane content. "
+                f"Context: {context or 'agent-operator browser bank'}"
+            ),
+        }
+    ]
+    for label, screenshot in screenshots:
+        encoded = base64.b64encode(screenshot.read_bytes()).decode("ascii")
+        content.append({"type": "text", "text": f"Screenshot: {label} — {screenshot.name}"})
+        content.append({"type": "image_url", "image_url": {"url": f"data:image/png;base64,{encoded}"}})
+
+    try:
+        response = httpx.post(
+            "http://localhost:4001/v1/chat/completions",
+            headers={
+                "Authorization": "Bearer sk-dev-proxy-123",
+                "X-Caller-Skill": "test-interactions",
+            },
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": content}],
+                "timeout": 90,
+            },
+            timeout=90.0,
+        )
+        response.raise_for_status()
+        text = response.json()["choices"][0]["message"]["content"]
+    except Exception as exc:
+        logger.warning("scillm visual review failed: {}", exc)
+        return None
+    return (
+        f"### Fallback Semantic Screenshot Review via scillm VLM ({model})\n\n"
+        f"Reviewed {len(screenshots)} selected screenshots:\n"
+        + "\n".join(f"- `{path}` — {label}" for label, path in screenshots)
+        + "\n\n"
+        + text
+    )
 
 
 @app.command()
@@ -622,9 +817,11 @@ def review(
 
     # Run /review-design visual audit — batched LLM call at the end
     visual_review = _run_review_design(captures, context, provider, persona)
+    if not visual_review:
+        visual_review = _run_scillm_visual_review(captures, context, persona)
     if visual_review:
         lines.extend(["", "## Visual Design Review", ""])
-        lines.append(f"*Generated by /review-design — AI vision audit with persona: {persona}*")
+        lines.append(f"*Generated by semantic screenshot review — persona: {persona}*")
         lines.append("")
         lines.append(visual_review)
     else:
@@ -673,16 +870,19 @@ def _persona_summary(data: dict, visual_review: Optional[str], persona: str) -> 
     try:
         resp = _httpx.post(
             "http://localhost:4001/v1/chat/completions",
-            headers={"Authorization": "Bearer sk-dev-proxy-123"},
-            json={"model": "sonnet", "messages": [{"role": "user", "content": prompt}], "max_tokens": 512},
-            timeout=30.0,
+            headers={
+                "Authorization": "Bearer sk-dev-proxy-123",
+                "X-Caller-Skill": "test-interactions",
+            },
+            json={"model": "text", "messages": [{"role": "user", "content": prompt}], "timeout": 45},
+            timeout=45.0,
         )
         if resp.status_code == 200:
             content = resp.json()["choices"][0]["message"]["content"]
             logger.info("Persona summary generated ({} chars)", len(content))
             return content
         else:
-            logger.warning("scillm returned {}", resp.status_code)
+            logger.warning("scillm returned {}: {}", resp.status_code, resp.text[:500])
     except Exception as e:
         logger.warning("Persona summary failed: {}", e)
     return None

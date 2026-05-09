@@ -4,11 +4,16 @@ Single persistent connection, no subprocess overhead.
 """
 
 import base64
+import atexit
 import json
 import os
+import shutil
+import socket
 import subprocess
+import tempfile
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 try:
     import websocket as _ws
@@ -16,29 +21,122 @@ except ImportError:
     subprocess.check_call(["uv", "pip", "install", "websocket-client", "-q"])
     import websocket as _ws
 
-CDP_PORT = int(os.environ.get("CDP_PORT", "9222"))
+DEFAULT_CDP_PORT = int(os.environ.get("CDP_PORT", "9222"))
 
 
 class CDPClient:
     """CDP WebSocket client — one connection for the entire test run."""
 
     def __init__(self, port: int = None):
-        self.port = port or CDP_PORT
+        self.attach_existing = os.environ.get("TEST_INTERACTIONS_ATTACH_EXISTING") == "1"
+        self.port = port or (DEFAULT_CDP_PORT if self.attach_existing or "CDP_PORT" in os.environ else self._free_port())
         self.ws = None
         self.msg_id = 0
+        self.target_id = None
+        self.browser_process = None
+        self.user_data_dir = None
+        self.owns_browser = False
 
-    def connect(self):
-        tabs = json.loads(
-            subprocess.check_output(
-                ["curl", "-s", f"http://127.0.0.1:{self.port}/json/list"],
+    def _free_port(self) -> int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind(("127.0.0.1", 0))
+            return int(sock.getsockname()[1])
+
+    def _browser_binary(self) -> str | None:
+        for name in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "chrome"):
+            path = shutil.which(name)
+            if path:
+                return path
+        return None
+
+    def _json_get(self, path: str) -> dict | list:
+        raw = subprocess.check_output(
+            ["curl", "-s", f"http://127.0.0.1:{self.port}{path}"],
+            timeout=5,
+        )
+        return json.loads(raw)
+
+    def _endpoint_ready(self) -> bool:
+        try:
+            self._json_get("/json/version")
+            return True
+        except (subprocess.SubprocessError, json.JSONDecodeError, OSError):
+            return False
+
+    def _ensure_browser(self):
+        if self.attach_existing:
+            return
+        if self._endpoint_ready():
+            return
+
+        binary = self._browser_binary()
+        if not binary:
+            raise ConnectionError(
+                "No Chrome/Chromium binary found. Install Chrome/Chromium or set "
+                "TEST_INTERACTIONS_ATTACH_EXISTING=1 to attach to an existing CDP browser."
+            )
+
+        self.user_data_dir = tempfile.mkdtemp(prefix="test-interactions-cdp-")
+        args = [
+            binary,
+            f"--remote-debugging-port={self.port}",
+            "--remote-allow-origins=*",
+            f"--user-data-dir={self.user_data_dir}",
+            "--headless=new",
+            "--disable-gpu",
+            "--disable-extensions",
+            "--disable-background-networking",
+            "--disable-dev-shm-usage",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--window-size=1600,1000",
+            "about:blank",
+        ]
+        self.browser_process = subprocess.Popen(
+            args,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        self.owns_browser = True
+        atexit.register(self._cleanup_browser)
+
+        deadline = time.time() + 10
+        while time.time() < deadline:
+            if self._endpoint_ready():
+                return
+            time.sleep(0.2)
+        raise ConnectionError(f"Dedicated Chrome CDP endpoint did not start on port {self.port}")
+
+    def _new_page(self) -> dict | None:
+        try:
+            raw = subprocess.check_output(
+                ["curl", "-s", "-X", "PUT", f"http://127.0.0.1:{self.port}/json/new?{quote('about:blank', safe='')}"],
                 timeout=5,
             )
-        )
+            page = json.loads(raw)
+            if page.get("type") == "page" and page.get("webSocketDebuggerUrl"):
+                return page
+        except (subprocess.SubprocessError, json.JSONDecodeError, OSError):
+            return None
+        return None
+
+    def connect(self):
+        self._ensure_browser()
+        tabs = self._json_get("/json/list")
         pages = [t for t in tabs if t.get("type") == "page"]
-        if not pages:
-            raise ConnectionError(f"No browser page found on CDP port {self.port}")
-        ws_url = pages[0]["webSocketDebuggerUrl"]
-        self.ws = _ws.create_connection(ws_url, timeout=30)
+        page = None
+        if self.target_id:
+            page = next((p for p in pages if p.get("id") == self.target_id), None)
+        if page is None:
+            page = self._new_page()
+        if page is None:
+            if not pages:
+                raise ConnectionError(f"No browser page found on CDP port {self.port}")
+            page = pages[0]
+            self.target_id = page.get("id")
+        else:
+            self.target_id = page.get("id")
+        self.ws = _ws.create_connection(page["webSocketDebuggerUrl"], timeout=30)
 
     def reconnect(self):
         self.close()
@@ -74,7 +172,9 @@ class CDPClient:
         self.send("Page.enable")
         self.send("Page.navigate", {"url": url})
         time.sleep(wait_ms / 1000.0)
-        self.reconnect()
+
+    def current_url(self) -> str:
+        return self.evaluate("window.location.href") or ""
 
     def screenshot(self, output_path: str) -> str:
         result = self.send("Page.captureScreenshot", {"format": "png"})
@@ -305,3 +405,19 @@ class CDPClient:
             except (OSError, ConnectionError):
                 pass
             self.ws = None
+        self._cleanup_browser()
+
+    def _cleanup_browser(self):
+        if self.browser_process:
+            try:
+                self.browser_process.terminate()
+                self.browser_process.wait(timeout=5)
+            except (OSError, subprocess.SubprocessError):
+                try:
+                    self.browser_process.kill()
+                except OSError:
+                    pass
+            self.browser_process = None
+        if self.user_data_dir:
+            shutil.rmtree(self.user_data_dir, ignore_errors=True)
+            self.user_data_dir = None
