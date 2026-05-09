@@ -10,7 +10,7 @@ echo "=== Plan Skill Sanity Check ==="
 
 # Check Python availability
 if command -v uv &> /dev/null; then
-    EXEC=(uv run python)
+    EXEC=(uv run --project "$SCRIPT_DIR" python)
     echo "[OK] uv available"
 elif command -v python3 &> /dev/null; then
     EXEC=(python3)

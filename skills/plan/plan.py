@@ -19,7 +19,6 @@ from __future__ import annotations
 import os
 
 import json
-import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -32,19 +31,23 @@ import yaml
 from loguru import logger
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
+sys.path.append(str(Path(__file__).resolve().parent / "src"))
 from _shared.structured_plan import (  # type: ignore
     dump_structured,
     is_structured_plan,
     load_structured_plan,
     markdown_to_structured,
     render_markdown_from_structured,
-    summarize_structured_plan,
     validate_structured_plan,
 )
 
 SKILLS_DIR = Path(__file__).parent.parent
 
 from design_pipeline import detect_plan_type  # noqa: E402
+from plan_skill.code_runner_contract import audit_code_runner_routing, dod_uses_live_endpoint  # noqa: E402
+from plan_skill.dag import visualize_dag, visualize_mermaid  # noqa: E402
+from plan_skill.goal_closure import assess_plan_result, execute_goal_closure  # noqa: E402
+from plan_skill.mutations import add_task_to_plan, remove_task_from_plan  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -166,13 +169,13 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
     has_dod_command = bool(task.definition_of_done.command) if task.definition_of_done else False
     has_dod_assertion = bool(task.definition_of_done.assertion) if task.definition_of_done else False
     has_blind_tests = bool(task.blind_tests)
-    dod_uses_live_endpoint = _dod_uses_live_endpoint(task.definition_of_done.command if task.definition_of_done else "")
+    uses_live_endpoint = dod_uses_live_endpoint(task.definition_of_done.command if task.definition_of_done else "")
 
     if has_command and not has_prompt:
         # Pure shell command — local
         return "local", "", ""
 
-    if has_prompt and has_allowlist and has_dod_command and has_dod_assertion and has_blind_tests and not dod_uses_live_endpoint:
+    if has_prompt and has_allowlist and has_dod_command and has_dod_assertion and has_blind_tests and not uses_live_endpoint:
         # Bounded code task with file scope + verification + hidden tests → code-runner
         return "code-runner", backend or "codex", mode or "iterative"
 
@@ -185,210 +188,6 @@ def suggest_runner(task: Task) -> tuple[str, str, str]:
         return "local", "", ""
 
     return "scillm", backend or "text", mode or "one_shot"
-
-
-_LIVE_DOD_MARKERS = (
-    "curl ",
-    "wget ",
-    "http://",
-    "https://",
-    "http://localhost",
-    "https://localhost",
-    "http://127.0.0.1",
-    "https://127.0.0.1",
-    "playwright",
-    "puppeteer",
-    "cypress",
-    "webdriver",
-    "chromium",
-    "selenium",
-    "storybook",
-    "test-runner",
-    "browser",
-    "cdp",
-    "e2e",
-)
-_LIVE_SURFACE_RE = re.compile(
-    r"https?://|curl\s|wget\s|requests\.get|httpx\.\w+|urllib|"
-    r"playwright|puppeteer|cypress|webdriver|chromium|selenium|storybook|test-runner|browser|cdp|\be2e\b",
-    re.IGNORECASE,
-)
-_OPAQUE_CODE_RUNNER_COMMAND_RE = re.compile(
-    r"(^|\s)(npm|pnpm|yarn|bun)\s+(run|test|exec)\b|"
-    r"(^|\s)make(\s|$)|"
-    r"(^|\s)(bash|sh|python|python3|uv\s+run\s+python)\s+(scripts|tools)/|"
-    r"(^|\s)(\./)?(scripts|tools)/[^\s;|&]+",
-    re.IGNORECASE,
-)
-
-
-def _dod_uses_live_endpoint(command: str) -> bool:
-    command_lower = command.lower()
-    return any(marker in command_lower for marker in _LIVE_DOD_MARKERS) or bool(_LIVE_SURFACE_RE.search(command))
-
-
-def _dod_uses_opaque_command(command: str) -> bool:
-    return bool(_OPAQUE_CODE_RUNNER_COMMAND_RE.search(command or ""))
-
-
-def _declares_worktree_local_dod_contract(task: dict[str, Any]) -> bool:
-    """Return whether an opaque DoD command has an explicit local-only contract."""
-    return (
-        str(task.get("dod_scope") or "").strip() == "worktree_local"
-        and task.get("requires_network") is False
-        and task.get("requires_live_server") is False
-        and task.get("browser_required") is False
-        and task.get("opaque_command_reviewed") is True
-    )
-
-
-def _code_runner_live_surface(task: dict[str, Any], dod_command: str) -> str:
-    """Return text that must not contain live endpoint checks for code-runner."""
-    parts = [dod_command]
-    for item in task.get("tests") or []:
-        if isinstance(item, dict):
-            parts.append(str(item.get("command") or item))
-        else:
-            parts.append(str(item))
-    return "\n".join(parts)
-
-
-_CODE_RUNNER_SAFE_POLICIES = {"isolated_worktree"}
-_MACHINE_CHECKABLE_ASSERTION = re.compile(
-    r"^\s*(exit_code\s*(==|!=)\s*\d+|stdout_regex:.+|stderr_regex:.+|contains:.+|json_path:.+|json_equals:.+)\s*$",
-    re.IGNORECASE | re.DOTALL,
-)
-
-
-def _is_machine_checkable_assertion(assertion: str) -> bool:
-    return bool(_MACHINE_CHECKABLE_ASSERTION.match(assertion or ""))
-
-
-_CODE_RUNNER_LOW_VALUE_TERMS = (
-    "docs",
-    "documentation",
-    "readme",
-    "config",
-    "yaml",
-    "compose",
-    "docker compose",
-    "setup",
-    "bootstrap",
-    "validation",
-    "verify",
-    "test gate",
-    "lint",
-    "format",
-    "report",
-)
-
-
-def _task_text(task: dict[str, Any]) -> str:
-    parts: list[str] = [
-        str(task.get("title") or ""),
-        str(task.get("prompt") or ""),
-        str(task.get("context_boundary") or ""),
-    ]
-    for key in ("implementation", "tests", "blind_tests"):
-        value = task.get(key)
-        if isinstance(value, list):
-            parts.extend(str(item) for item in value)
-    return "\n".join(parts).lower()
-
-
-def _audit_code_runner_routing(data: dict[str, Any]) -> tuple[list[str], list[str]]:
-    """Return blocking issues/warnings for tasks routed to code-runner.
-
-    /plan is responsible for runner selection. These checks intentionally make
-    code-runner the conservative choice: use it only for bounded iterative code
-    edits that need context isolation, not deterministic validation or setup.
-    """
-    issues: list[str] = []
-    warnings: list[str] = []
-    tasks = data.get("tasks") or []
-    if not isinstance(tasks, list):
-        return issues, warnings
-
-    for task in tasks:
-        if not isinstance(task, dict):
-            continue
-        runner = str(task.get("runner") or "").strip()
-        if runner != "code-runner":
-            continue
-
-        task_id = str(task.get("id") or "?")
-        title = str(task.get("title") or "")
-        dod = task.get("definition_of_done") or {}
-        dod_command = str(dod.get("command") or "") if isinstance(dod, dict) else ""
-        dod_assertion = str(dod.get("assertion") or "") if isinstance(dod, dict) else ""
-        prompt = str(task.get("prompt") or "")
-        allowlist = task.get("allowlist") or []
-        read_context = task.get("read_context") or []
-        blind_tests = task.get("blind_tests") or []
-        max_rounds = int(task.get("max_rounds") or 5)
-        dirty_policy = str(task.get("dirty_worktree_policy") or "isolated_worktree").strip()
-        unsafe_justification = str(task.get("unsafe_direct_justification") or "").strip()
-        apply_to_source = bool(task.get("apply_to_source", False))
-        commit_on_success = bool(task.get("commit_on_success", False))
-        rollback_on_failure = bool(task.get("rollback_on_failure", True))
-
-        prefix = f"Task {task_id} ({title}):"
-        if task.get("command") and not prompt:
-            issues.append(f"{prefix} command-only work must be runner=local, not code-runner.")
-        if not prompt or len(prompt.strip()) < 20:
-            issues.append(f"{prefix} code-runner requires a concrete prompt describing the bounded code change.")
-        if not allowlist:
-            issues.append(f"{prefix} code-runner requires allowlist for write-scope/context isolation.")
-        if not dod_command:
-            issues.append(f"{prefix} code-runner requires definition_of_done.command.")
-        if not dod_assertion:
-            issues.append(f"{prefix} code-runner requires definition_of_done.assertion; use 'exit_code == 0' for silent commands.")
-        elif not _is_machine_checkable_assertion(dod_assertion):
-            issues.append(
-                f"{prefix} code-runner definition_of_done.assertion must be machine-checkable "
-                "(exit_code == N, stdout_regex:..., stderr_regex:..., contains:..., json_path:..., json_equals:...)."
-            )
-        if not blind_tests:
-            issues.append(f"{prefix} code-runner requires blind_tests so /orchestrate has an information barrier.")
-        if dirty_policy not in _CODE_RUNNER_SAFE_POLICIES and not unsafe_justification:
-            issues.append(
-                f"{prefix} code-runner dirty_worktree_policy must be isolated_worktree unless unsafe_direct_justification is explicit."
-            )
-        if commit_on_success and not apply_to_source:
-            issues.append(f"{prefix} commit_on_success requires apply_to_source=true.")
-        if apply_to_source and not commit_on_success:
-            issues.append(f"{prefix} complete-task mode requires commit_on_success=true for reliable revert.")
-        if apply_to_source and not rollback_on_failure:
-            issues.append(f"{prefix} complete-task mode requires rollback_on_failure=true.")
-        if _dod_uses_live_endpoint(_code_runner_live_surface(task, dod_command)):
-            issues.append(
-                f"{prefix} code-runner cannot use live endpoint/browser DoD or tests. "
-                "Code-runner edits an isolated worktree, while live servers serve the source tree. "
-                "Use scillm for the edit plus a separate local verification task, or use a file/process-local DoD."
-            )
-        if (
-            _dod_uses_opaque_command(_code_runner_live_surface(task, dod_command))
-            and not _declares_worktree_local_dod_contract(task)
-        ):
-            issues.append(
-                f"{prefix} code-runner DoD/tests use an opaque shell indirection command. "
-                "Use an explicit file/process-local command such as `python -m pytest tests/test_file.py -q`, "
-                "route the opaque script/make/npm check to a separate runner=local verification task, "
-                "or declare dod_scope=worktree_local, requires_network=false, requires_live_server=false, "
-                "browser_required=false, and opaque_command_reviewed=true."
-            )
-        if max_rounds <= 1:
-            warnings.append(f"{prefix} max_rounds <= 1; use scillm/local unless iteration is actually needed.")
-        if not read_context:
-            issues.append(f"{prefix} code-runner requires read_context so interface context is separated from writable allowlist.")
-        text = _task_text(task)
-        if any(term in text for term in _CODE_RUNNER_LOW_VALUE_TERMS):
-            warnings.append(
-                f"{prefix} appears to be setup/config/docs/validation work; prefer local for deterministic gates "
-                "or scillm for one-shot edits unless this is a bounded failing code loop."
-            )
-
-    return issues, warnings
 
 
 @dataclass
@@ -564,237 +363,16 @@ def generate_hidden_tests(task_file_path: Path) -> bool:
         return False
 
 
-def add_task_to_plan(filepath: Path, task: Task) -> dict[str, Any]:
-    """Add a task to an existing YAML plan file.
-
-    - Auto-assigns next ID if task.id is empty
-    - Adds lane to lanes list if new
-    - Validates after adding
-    - Writes back to the same file
-    """
-    data = load_structured_plan(filepath)
-
-    existing_tasks = data.get("tasks") or []
-    existing_ids = {str(t.get("id", "")) for t in existing_tasks if isinstance(t, dict)}
-
-    # Auto-assign ID
-    if not task.id or task.id in existing_ids:
-        max_int = 0
-        for tid in existing_ids:
-            try:
-                max_int = max(max_int, int(tid.split(".")[-1]))
-            except ValueError:
-                pass
-        task.id = str(max_int + 1)
-
-    # Append task
-    existing_tasks.append(task.to_dict())
-    data["tasks"] = existing_tasks
-
-    # Ensure lane exists
-    lanes = data.get("lanes") or []
-    lane_ids = {str(l.get("id", "")) for l in lanes if isinstance(l, dict)}
-    if task.lane and task.lane not in lane_ids:
-        lanes.append({"id": task.lane, "label": f"Wave {task.lane}"})
-        data["lanes"] = lanes
-
-    # Validate
+def validate_structured_with_routing(data: dict[str, Any]) -> dict[str, Any]:
+    """Validate structured plan schema plus /code-runner routing constraints."""
     result = validate_structured_plan(data)
-    routing_issues, routing_warnings = _audit_code_runner_routing(data)
+    routing_issues, routing_warnings = audit_code_runner_routing(data)
     if routing_issues:
         result["valid"] = False
         result.setdefault("issues", []).extend(routing_issues)
     if routing_warnings:
         result.setdefault("warnings", []).extend(routing_warnings)
-
-    # Write back
-    filepath.write_text(yaml.safe_dump(data, sort_keys=False, default_flow_style=False))
-    logger.info("Added task {} to {}", task.id, filepath)
-
-    return {"task_id": task.id, "valid": result["valid"], "issues": result["issues"], "warnings": result["warnings"]}
-
-
-def remove_task_from_plan(filepath: Path, task_id: str) -> dict[str, Any]:
-    """Remove a task from an existing YAML plan and clean up dangling deps."""
-    data = load_structured_plan(filepath)
-
-    tasks = data.get("tasks") or []
-    before = len(tasks)
-    tasks = [t for t in tasks if str(t.get("id", "")) != task_id]
-    if len(tasks) == before:
-        return {"removed": False, "error": f"Task {task_id} not found"}
-
-    # Remove dangling depends_on references
-    for t in tasks:
-        deps = t.get("depends_on") or []
-        t["depends_on"] = [d for d in deps if str(d) != task_id]
-
-    data["tasks"] = tasks
-    result = validate_structured_plan(data)
-    filepath.write_text(yaml.safe_dump(data, sort_keys=False, default_flow_style=False))
-    logger.info("Removed task {} from {}", task_id, filepath)
-
-    return {"removed": True, "valid": result["valid"], "issues": result["issues"]}
-
-
-def _load_dag(filepath: Path) -> tuple[dict[str, Any], list[dict], dict[str, dict], dict[str, list[str]], list[list[str]], list[str]]:
-    """Load a plan and compute DAG structure. Returns (summary, tasks, task_map, children, waves, orphans)."""
-    if is_structured_plan(filepath):
-        data = load_structured_plan(filepath)
-    else:
-        data = markdown_to_structured(filepath)
-
-    summary = summarize_structured_plan(data)
-    tasks = summary.get("tasks", [])
-
-    task_map = {t["id"]: t for t in tasks}
-    indegree: dict[str, int] = {}
-    children: dict[str, list[str]] = {t["id"]: [] for t in tasks}
-    for t in tasks:
-        deps = [d for d in (t.get("dependencies") or []) if d in task_map]
-        indegree[t["id"]] = len(deps)
-        for d in deps:
-            children[d].append(t["id"])
-
-    # Kahn's algorithm
-    waves: list[list[str]] = []
-    remaining = dict(indegree)
-    executed: set[str] = set()
-    while True:
-        ready = [tid for tid, deg in remaining.items() if deg == 0 and tid not in executed]
-        if not ready:
-            break
-        waves.append(sorted(ready))
-        for tid in ready:
-            executed.add(tid)
-            del remaining[tid]
-            for child in children.get(tid, []):
-                if child in remaining:
-                    remaining[child] -= 1
-
-    orphans = [tid for tid in indegree if tid not in executed]
-    return summary, tasks, task_map, children, waves, orphans
-
-
-def visualize_dag(filepath: Path) -> None:
-    """Print the execution DAG showing waves, parallelism, and task routing."""
-    summary, tasks, task_map, children, waves, orphans = _load_dag(filepath)
-    execution = summary.get("execution", {})
-    max_conc = execution.get("max_concurrency", 1)
-
-    if not tasks:
-        print("No tasks found.")
-        return
-
-    title = summary.get("title") or filepath.stem
-    goal = summary.get("goal") or ""
-    print(f"DAG: {title}")
-    if goal:
-        print(f"Goal: {goal}")
-    print(f"Tasks: {len(tasks)}  Waves: {len(waves)}  Max concurrency: {max_conc}")
-    print()
-
-    for i, wave in enumerate(waves):
-        parallel = len(wave) > 1
-        wave_label = f"Wave {i}" + (" (parallel)" if parallel else "")
-        print(f"── {wave_label} {'─' * (50 - len(wave_label))}")
-        for tid in wave:
-            t = task_map[tid]
-            runner = t.get("runner") or "?"
-            backend = t.get("backend") or ""
-            lane = t.get("lane") or ""
-            deps = t.get("dependencies") or []
-            title_str = t.get("title") or ""
-            icon = {"local": "sh", "scillm": "llm", "code-runner": "cr"}.get(runner, "?")
-            dep_str = f" ← [{', '.join(deps)}]" if deps else ""
-            model_str = f" ({backend})" if backend else ""
-            lane_str = f" L{lane}" if lane else ""
-            print(f"  [{icon}] Task {tid}: {title_str[:45]}{model_str}{lane_str}{dep_str}")
-        print()
-
-    if orphans:
-        print(f"⚠ CYCLE DETECTED — these tasks can never execute: {', '.join(orphans)}")
-        print()
-
-    print("── Edges ──────────────────────────────────────────────")
-    has_edges = False
-    for t in tasks:
-        deps = [d for d in (t.get("dependencies") or []) if d in task_map]
-        if deps:
-            has_edges = True
-            for d in deps:
-                print(f"  {d} → {t['id']}")
-    if not has_edges:
-        print("  (no dependencies — all tasks are independent)")
-    print()
-
-    lanes_used: dict[str, list[str]] = {}
-    for t in tasks:
-        lane = t.get("lane") or "default"
-        lanes_used.setdefault(lane, []).append(t["id"])
-    if len(lanes_used) > 1:
-        print("── Lanes (1 Docker container each) ─────────────────────")
-        for lane_id in sorted(lanes_used):
-            task_ids = lanes_used[lane_id]
-            print(f"  Lane {lane_id}: {' → '.join(task_ids)} (sequential within lane)")
-        print()
-
-
-def visualize_mermaid(filepath: Path) -> None:
-    """Print the execution DAG as a Mermaid flowchart."""
-    summary, tasks, task_map, children, waves, orphans = _load_dag(filepath)
-
-    if not tasks:
-        print("No tasks found.")
-        return
-
-    title = summary.get("title") or filepath.stem
-    lines = [f"---", f"title: {title}", f"---", "flowchart TD"]
-
-    # Style classes for runner types
-    lines.append("    classDef sh fill:#2d4a3e,stroke:#4ade80,color:#fff")
-    lines.append("    classDef llm fill:#4a2d4a,stroke:#c084fc,color:#fff")
-    lines.append("    classDef agent fill:#2d3a4a,stroke:#60a5fa,color:#fff")
-    lines.append("")
-
-    # Group tasks into subgraphs by wave
-    for i, wave in enumerate(waves):
-        parallel = len(wave) > 1
-        label = f"Wave {i}" + (" ∥" if parallel else "")
-        lines.append(f"    subgraph W{i}[\"{label}\"]")
-        for tid in wave:
-            t = task_map[tid]
-            runner = t.get("runner") or "?"
-            backend = t.get("backend") or ""
-            title_str = (t.get("title") or "")[:40]
-            # Sanitize for Mermaid (no quotes or special chars in node labels)
-            safe_title = title_str.replace('"', "'").replace("(", "").replace(")", "")
-            model_tag = f" [{backend}]" if backend else ""
-            # Node ID must be alphanumeric — replace dots with underscores
-            node_id = f"T{tid.replace('.', '_')}"
-            lines.append(f"        {node_id}[\"{tid}: {safe_title}{model_tag}\"]")
-        lines.append("    end")
-        lines.append("")
-
-    # Edges
-    for t in tasks:
-        deps = [d for d in (t.get("dependencies") or []) if d in task_map]
-        for d in deps:
-            src = f"T{d.replace('.', '_')}"
-            dst = f"T{t['id'].replace('.', '_')}"
-            lines.append(f"    {src} --> {dst}")
-
-    lines.append("")
-
-    # Apply classes
-    for t in tasks:
-        runner = t.get("runner") or ""
-        cls = {"local": "sh", "scillm": "llm", "code-runner": "cr"}.get(runner)
-        if cls:
-            node_id = f"T{t['id'].replace('.', '_')}"
-            lines.append(f"    class {node_id} {cls}")
-
-    print("\n".join(lines))
+    return result
 
 
 def validate_plan(filepath: Path) -> dict[str, Any]:
@@ -811,13 +389,7 @@ def validate_plan(filepath: Path) -> dict[str, Any]:
     else:
         data = markdown_to_structured(filepath)
 
-    result = validate_structured_plan(data)
-    routing_issues, routing_warnings = _audit_code_runner_routing(data)
-    if routing_issues:
-        result["valid"] = False
-        result.setdefault("issues", []).extend(routing_issues)
-    if routing_warnings:
-        result.setdefault("warnings", []).extend(routing_warnings)
+    result = validate_structured_with_routing(data)
 
     # Add plan_type to result
     plan_type = (data.get("metadata") or {}).get("plan_type") or "code"
@@ -907,6 +479,10 @@ def main(
     generate_tests: str = typer.Option(None, "--generate-tests", help="Generate blind evaluation tests for a plan"),
     convert: str = typer.Option(None, "--convert", help="Convert markdown task file to YAML"),
     render: str = typer.Option(None, "--render", help="Render structured plan as markdown (for human review)"),
+    assess_result: str = typer.Option(None, "--assess-result", help="Assess goal closure for a completed /orchestrate session. Requires --session."),
+    session: str = typer.Option(None, "--session", help="/orchestrate session directory for --assess-result."),
+    execute_closure: str = typer.Option(None, "--execute-closure", help="Run validate -> review-plan -> orchestrate -> deterministic goal closure loop for a plan."),
+    max_replans: int = typer.Option(0, "--max-replans", help="Maximum automatic follow-up plan iterations for --execute-closure."),
     output: str = typer.Option(None, "-o", "--output", help="Output file (default: stdout)"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
     output_format: str = typer.Option("yaml", "--format", help="Output format: json or yaml"),
@@ -920,6 +496,60 @@ def main(
             raise typer.Exit(1)
         ok = generate_hidden_tests(filepath)
         raise typer.Exit(0 if ok else 1)
+
+    if assess_result:
+        filepath = Path(assess_result)
+        if not filepath.exists():
+            logger.error("Plan file not found: {}", filepath)
+            raise typer.Exit(1)
+        if not session:
+            logger.error("--assess-result requires --session")
+            raise typer.Exit(1)
+        session_dir = Path(session)
+        if not session_dir.exists():
+            logger.error("Session directory not found: {}", session_dir)
+            raise typer.Exit(1)
+        result = assess_plan_result(filepath, session_dir, Path(output) if output else None)
+        if json_output or output:
+            if not output:
+                print(json.dumps(result, indent=2))
+        else:
+            print(f"Outcome: {result['outcome']}")
+            print(f"Recommended action: {result['recommended_action']}")
+            print(f"Passed: {result['counts']['passed']}  Failed: {result['counts']['failed']}  Blocked: {result['counts']['blocked']}")
+            if result["missing_evidence"]:
+                print("Missing evidence:")
+                for item in result["missing_evidence"]:
+                    print(f"  - {item}")
+        raise typer.Exit(0 if result["outcome"] == "goal_achieved" else 1)
+
+    if execute_closure:
+        filepath = Path(execute_closure)
+        if not filepath.exists():
+            logger.error("Plan file not found: {}", filepath)
+            raise typer.Exit(1)
+        if max_replans < 0:
+            logger.error("--max-replans must be >= 0")
+            raise typer.Exit(1)
+        result = execute_goal_closure(
+            filepath,
+            validate_plan,
+            max_replans=max_replans,
+            output=Path(output) if output else None,
+        )
+        if json_output or output:
+            if not output:
+                print(json.dumps(result, indent=2))
+        else:
+            print(f"Outcome: {result['outcome']}")
+            print(f"Recommended action: {result['recommended_action']}")
+            if result.get("interview_request"):
+                print(f"Interview request: {result['interview_request']}")
+            if result.get("history"):
+                print("History:")
+                for item in result["history"]:
+                    print(f"  - iteration {item['iteration']}: {item['outcome']} ({item['session_dir']})")
+        raise typer.Exit(0 if result["outcome"] == "goal_achieved" else 1)
 
     if dag:
         filepath = Path(dag)
@@ -968,7 +598,7 @@ def main(
                 assertion=fields.get("dod_assertion", ""),
             ),
         )
-        result = add_task_to_plan(filepath, new_task)
+        result = add_task_to_plan(filepath, new_task.to_dict(), validate_structured_with_routing)
         if json_output:
             print(json.dumps(result, indent=2))
         else:
@@ -988,7 +618,7 @@ def main(
         if not filepath.exists():
             logger.error("Plan file not found: {}", filepath)
             raise typer.Exit(1)
-        result = remove_task_from_plan(filepath, task_id)
+        result = remove_task_from_plan(filepath, task_id, validate_structured_with_routing)
         if json_output:
             print(json.dumps(result, indent=2))
         else:

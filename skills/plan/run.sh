@@ -50,6 +50,8 @@ Usage:
   plan.sh --mermaid FILE           # DAG as Mermaid flowchart
   plan.sh --add-task FILE "fields" # Add task to existing plan
   plan.sh --remove-task FILE:ID    # Remove task from plan
+  plan.sh --assess-result FILE --session DIR
+  plan.sh --execute-closure FILE --max-replans N
 
 Examples:
   plan.sh "Add Redis caching to API"

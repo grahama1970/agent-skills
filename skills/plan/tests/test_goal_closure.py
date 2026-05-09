@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+"""Goal-closure tests for the /plan skill."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import sys
+import tempfile
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[3]
+PLAN_SRC = ROOT / "skills" / "plan" / "src"
+sys.path.insert(0, str(PLAN_SRC))
+
+
+def load_goal_closure():
+    module_path = PLAN_SRC / "plan_skill" / "goal_closure.py"
+    spec = importlib.util.spec_from_file_location("goal_closure_under_test", module_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def write_plan(path: Path, task_ids: list[str]) -> None:
+    plan = {
+        "version": 1,
+        "kind": "orchestrate-plan",
+        "metadata": {"title": "closure", "goal": "prove goal closure"},
+        "repo_root": str(ROOT),
+        "capability_overlap": ["No overlapping skill handles this unit test."],
+        "lanes": [{"id": "0", "label": "Test"}],
+        "tasks": [
+            {
+                "id": task_id,
+                "title": f"Task {task_id}",
+                "runner": "local",
+                "command": "true",
+                "definition_of_done": {"command": "true", "assertion": "exit_code == 0"},
+            }
+            for task_id in task_ids
+        ],
+    }
+    path.write_text(yaml.safe_dump(plan))
+
+
+def write_session(session_dir: Path, tasks: list[dict]) -> None:
+    session_dir.mkdir()
+    (session_dir / "status.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "task-viewer.v1",
+                "session_id": session_dir.name,
+                "session_dir": str(session_dir),
+                "tasks": tasks,
+            }
+        )
+    )
+    (session_dir / "report.txt").write_text("SUMMARY")
+
+
+def main() -> None:
+    goal_closure = load_goal_closure()
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        plan_path = root / "plan.yaml"
+        write_plan(plan_path, ["1", "2"])
+
+        passed_session = root / "passed-session"
+        write_session(
+            passed_session,
+            [
+                {"id": "1", "status": "passed"},
+                {"id": "2", "status": "completed"},
+            ],
+        )
+        passed = goal_closure.assess_plan_result(plan_path, passed_session)
+        assert passed["outcome"] == "goal_achieved", passed
+        assert passed["recommended_action"] == "none", passed
+
+        failed_session = root / "failed-session"
+        write_session(
+            failed_session,
+            [
+                {"id": "1", "status": "passed"},
+                {"id": "2", "status": "failed", "failure_code": "DOD_FAILED"},
+            ],
+        )
+        failed = goal_closure.assess_plan_result(plan_path, failed_session)
+        assert failed["outcome"] == "partially_achieved", failed
+        assert failed["recommended_action"] == "create_followup_plan", failed
+
+        missing_session = root / "missing-session"
+        missing_session.mkdir()
+        missing = goal_closure.assess_plan_result(plan_path, missing_session)
+        assert missing["outcome"] == "insufficient_evidence", missing
+        assert missing["recommended_action"] == "ask_human", missing
+
+        interview_path = goal_closure.write_interview_request(plan_path, missing)
+        request = json.loads(interview_path.read_text())
+        assert request["questions"][0]["options"][0]["label"].startswith("revise_existing_plan")
+
+    print("PLAN_GOAL_CLOSURE_OK")
+
+
+if __name__ == "__main__":
+    main()
+

@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>/plan Goal-Closure Workflow</title>
+  <style>
+    :root {
+      --ink: #122033;
+      --muted: #526174;
+      --paper: #f6f8fb;
+      --panel: #ffffff;
+      --line: #c4cfdd;
+      --plan: #146dcc;
+      --review: #315da8;
+      --orch: #d26800;
+      --runner: #704bc2;
+      --success: #23864b;
+      --fail: #c43b45;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      width: 1440px;
+      min-height: 2000px;
+      overflow: hidden;
+      background: #e3eaf3;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .poster {
+      position: relative;
+      width: 1440px;
+      height: 2000px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, var(--paper) 100%);
+    }
+
+    .connectors {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    header {
+      position: absolute;
+      left: 52px;
+      top: 40px;
+      right: 52px;
+      height: 104px;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      gap: 28px;
+      align-items: flex-start;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 44px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 9px;
+      max-width: 850px;
+      color: var(--muted);
+      font-size: 21px;
+      line-height: 1.28;
+      font-weight: 680;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px 15px;
+      width: 360px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.94);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 720;
+    }
+
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .swatch {
+      width: 15px;
+      height: 15px;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+
+    .c-plan { background: var(--plan); }
+    .c-review { background: var(--review); }
+    .c-orch { background: var(--orch); }
+    .c-runner { background: var(--runner); }
+    .c-success { background: var(--success); }
+    .c-fail { background: var(--fail); }
+
+    .band {
+      position: absolute;
+      left: 52px;
+      right: 52px;
+      z-index: 2;
+      border: 2px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.78);
+      padding: 26px 28px 24px;
+    }
+
+    .band h2 {
+      margin: 0 0 18px;
+      font-size: 27px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .band.plan { border-color: rgba(20,109,204,0.62); }
+    .band.orch { border-color: rgba(210,104,0,0.65); }
+    .band.runner { border-color: rgba(112,75,194,0.65); }
+    .band.finish { border-color: rgba(196,59,69,0.62); }
+
+    .band.plan h2 { color: var(--plan); }
+    .band.orch h2 { color: var(--orch); }
+    .band.runner h2 { color: var(--runner); }
+    .band.finish h2 { color: var(--fail); }
+
+    .intent { top: 166px; height: 245px; }
+    .loop { top: 445px; height: 440px; }
+    .orchestrate { top: 920px; height: 300px; }
+    .coderunner { top: 1255px; height: 285px; }
+    .final { top: 1575px; height: 210px; }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .intent-grid { grid-template-columns: 1fr 1.2fr 1fr; }
+    .loop-grid { grid-template-columns: 1fr 1fr 1fr 180px 130px; align-items: center; }
+    .orch-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .runner-grid { grid-template-columns: 1fr 1fr 1fr 1fr 1fr; }
+    .outcome-grid { grid-template-columns: repeat(5, 1fr); }
+
+    .card {
+      min-height: 126px;
+      border: 2px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel);
+      padding: 16px 17px;
+      box-shadow: 0 9px 22px rgba(18,32,51,0.06);
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.34;
+    }
+
+    .card.plan { border-color: var(--plan); background: #eef7ff; }
+    .card.review { border-color: var(--review); background: #f0f5ff; }
+    .card.orch { border-color: var(--orch); background: #fff4e8; }
+    .card.runner { border-color: var(--runner); background: #f5f0ff; }
+    .card.success { border-color: var(--success); background: #edf9f1; }
+    .card.fail { border-color: var(--fail); background: #fff0f1; }
+
+    .artifact {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 8px;
+      border: 1px solid rgba(18,32,51,0.13);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.8);
+      color: #27394f;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.14;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 64px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      margin-bottom: 9px;
+      background: #122033;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .intent-note {
+      min-height: 126px;
+      display: grid;
+      align-content: center;
+      border: 2px dashed rgba(20,109,204,0.55);
+      border-radius: 11px;
+      background: rgba(255,255,255,0.76);
+      padding: 18px 20px;
+      color: #26364d;
+      font-size: 18px;
+      line-height: 1.34;
+      font-weight: 780;
+    }
+
+    .decision {
+      width: 142px;
+      height: 142px;
+      margin: 0 auto;
+      display: grid;
+      place-items: center;
+      transform: rotate(45deg);
+      background: #fff;
+      border: 3px solid var(--plan);
+      box-shadow: 0 9px 22px rgba(18,32,51,0.06);
+    }
+
+    .decision span {
+      width: 110px;
+      transform: rotate(-45deg);
+      text-align: center;
+      font-size: 17px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .closure-row {
+      display: grid;
+      grid-template-columns: 410px 1fr;
+      gap: 18px;
+      margin-top: 20px;
+      align-items: stretch;
+    }
+
+    .closure-note {
+      border: 2px dashed rgba(20,109,204,0.55);
+      border-radius: 11px;
+      background: rgba(255,255,255,0.82);
+      padding: 16px 18px;
+      color: #26364d;
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 720;
+    }
+
+    .mini {
+      min-height: 118px;
+      padding: 15px;
+    }
+
+    .mini h3 { font-size: 18px; }
+    .mini p { font-size: 14px; }
+
+    .takeaway {
+      position: absolute;
+      left: 52px;
+      right: 52px;
+      top: 1842px;
+      z-index: 2;
+      padding: 10px 24px;
+      border: 3px solid #20364f;
+      border-radius: 14px;
+      background: #fff;
+      text-align: center;
+      font-size: 18px;
+      line-height: 1.24;
+      font-weight: 900;
+    }
+  </style>
+</head>
+<body>
+  <main class="poster" aria-label="/plan goal closure workflow infographic">
+    <svg class="connectors" viewBox="0 0 1440 2000" aria-hidden="true">
+      <defs>
+        <marker id="arrow-plan" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#146dcc"></path>
+        </marker>
+        <marker id="arrow-review" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#315da8"></path>
+        </marker>
+        <marker id="arrow-orch" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#d26800"></path>
+        </marker>
+        <marker id="arrow-runner" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#704bc2"></path>
+        </marker>
+        <marker id="arrow-success" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#23864b"></path>
+        </marker>
+        <marker id="arrow-fail" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#c43b45"></path>
+        </marker>
+      </defs>
+
+      <path d="M381 292 C455 292 484 522 554 522" fill="none" stroke="#146dcc" stroke-width="3.5" marker-end="url(#arrow-plan)"></path>
+      <path d="M1060 292 C995 292 956 522 884 522" fill="none" stroke="#146dcc" stroke-width="3.5" marker-end="url(#arrow-plan)"></path>
+
+      <path d="M344 626 H431" fill="none" stroke="#146dcc" stroke-width="3.5" marker-end="url(#arrow-plan)"></path>
+      <path d="M628 626 H715" fill="none" stroke="#315da8" stroke-width="3.5" marker-end="url(#arrow-review)"></path>
+      <path d="M912 626 H990" fill="none" stroke="#d26800" stroke-width="3.5" marker-end="url(#arrow-orch)"></path>
+      <path d="M1172 626 H1260" fill="none" stroke="#23864b" stroke-width="3.5" marker-end="url(#arrow-success)"></path>
+      <path d="M1074 724 C1030 782 896 802 768 802" fill="none" stroke="#146dcc" stroke-width="3.5" marker-end="url(#arrow-plan)"></path>
+      <path d="M744 818 C744 862 744 898 744 924" fill="none" stroke="#d26800" stroke-width="3.5" marker-end="url(#arrow-orch)"></path>
+      <path d="M1135 724 C1140 930 1145 1458 1145 1576" fill="none" stroke="#c43b45" stroke-width="3.5" stroke-dasharray="12 8" marker-end="url(#arrow-fail)"></path>
+
+      <path d="M364 1082 H407" fill="none" stroke="#d26800" stroke-width="3.5" marker-end="url(#arrow-orch)"></path>
+      <path d="M691 1082 H734" fill="none" stroke="#d26800" stroke-width="3.5" marker-end="url(#arrow-orch)"></path>
+      <path d="M1018 1082 H1061" fill="none" stroke="#c43b45" stroke-width="3.5" marker-end="url(#arrow-fail)"></path>
+
+      <path d="M308 1410 H337" fill="none" stroke="#704bc2" stroke-width="3.5" marker-end="url(#arrow-runner)"></path>
+      <path d="M578 1410 H607" fill="none" stroke="#704bc2" stroke-width="3.5" marker-end="url(#arrow-runner)"></path>
+      <path d="M848 1410 H877" fill="none" stroke="#704bc2" stroke-width="3.5" marker-end="url(#arrow-runner)"></path>
+      <path d="M1118 1410 H1147" fill="none" stroke="#23864b" stroke-width="3.5" marker-end="url(#arrow-success)"></path>
+      <path d="M1236 1352 C1285 1274 1252 1200 1196 1158" fill="none" stroke="#704bc2" stroke-width="3.5" stroke-dasharray="10 8" marker-end="url(#arrow-runner)"></path>
+    </svg>
+
+    <header>
+      <div>
+        <h1>/plan Goal-Closure Workflow</h1>
+        <div class="subtitle">A deterministic outer loop for plans, with `/orchestrate` and `/code-runner` kept inside their own boundaries.</div>
+      </div>
+      <div class="legend" aria-label="Legend">
+        <span><i class="swatch c-plan"></i>/plan control</span>
+        <span><i class="swatch c-review"></i>/review-plan gate</span>
+        <span><i class="swatch c-orch"></i>/orchestrate run</span>
+        <span><i class="swatch c-runner"></i>/code-runner</span>
+        <span><i class="swatch c-success"></i>closed/success</span>
+        <span><i class="swatch c-fail"></i>blocked/human</span>
+      </div>
+    </header>
+
+    <section class="band plan intent">
+      <h2>1. Intent gate: planning is not execution</h2>
+      <div class="grid intent-grid">
+        <div class="card plan">
+          <span class="tag">default</span>
+          <h3>Plan-only request</h3>
+          <p>Create YAML, validate, review, then ask before execution.</p>
+          <span class="artifact">0N_TASKS.yaml</span>
+        </div>
+        <div class="intent-note">The first decision is intent. `/plan` must not silently turn a normal planning request into a task-execution loop.</div>
+        <div class="card plan">
+          <span class="tag">explicit</span>
+          <h3>Goal-closure request</h3>
+          <p>Only "run until done", "iterate until complete", or `--execute-closure` enters the loop.</p>
+          <span class="artifact">--execute-closure --max-replans N</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="band plan loop">
+      <h2>2. `/plan` owns closure and replanning decisions</h2>
+      <div class="grid loop-grid">
+        <div class="card plan">
+          <h3>Validate</h3>
+          <p>Schema, runner routing, code-runner contract, source-apply shape.</p>
+          <span class="artifact">plan.py --validate</span>
+        </div>
+        <div class="card review">
+          <h3>Review</h3>
+          <p>Claims, skill overlap, blind tests, DoD, forbidden fields.</p>
+          <span class="artifact">/review-plan review</span>
+        </div>
+        <div class="card orch">
+          <h3>Run one session</h3>
+          <p>`/plan` calls `/orchestrate` and waits for the session directory.</p>
+          <span class="artifact">session_started</span>
+        </div>
+        <div class="decision"><span>goal achieved?</span></div>
+        <div class="card success mini">
+          <h3>Stop</h3>
+          <p>Closed.</p>
+        </div>
+      </div>
+      <div class="closure-row">
+        <div class="card plan">
+          <h3>Assess evidence</h3>
+          <p>Read orchestrate artifacts and emit exactly one closed outcome plus next action.</p>
+          <span class="artifact">&lt;plan&gt;.goal-closure.json</span>
+        </div>
+        <div class="closure-note">Closed outcomes: `goal_achieved`, `partially_achieved`, `blocked`, `wrong_plan`, `insufficient_evidence`.<br>Closed actions: `none`, `create_followup_plan`, `revise_existing_plan`, `ask_human`.</div>
+      </div>
+    </section>
+
+    <section class="band orch orchestrate">
+      <h2>3. `/orchestrate` runs inside `/plan` and writes proof</h2>
+      <div class="grid orch-grid">
+        <div class="card orch mini">
+          <h3>Dispatch</h3>
+          <p>Execute the approved DAG with local, scillm, and code-runner workers.</p>
+          <span class="artifact">status.json</span>
+        </div>
+        <div class="card orch mini">
+          <h3>Evidence stream</h3>
+          <p>Session artifacts become the input to `/plan` closure assessment.</p>
+          <span class="artifact">report.txt · events.jsonl</span>
+        </div>
+        <div class="card orch mini">
+          <h3>Failure policy</h3>
+          <p>Retries, rollback, and downstream blocking are handled here.</p>
+          <span class="artifact">failure-bundle.json</span>
+        </div>
+        <div class="card fail mini">
+          <h3>Human escalation</h3>
+          <p>Artifact-first by default. Blocking `/interview` is opt-in.</p>
+          <span class="artifact">interview-request.json</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="band runner coderunner">
+      <h2>4. `/code-runner` is bounded inside `/orchestrate`</h2>
+      <div class="grid runner-grid">
+        <div class="card runner mini">
+          <h3>Fixed spec</h3>
+          <p>No planning, memory, web tools, or backend racing.</p>
+          <span class="artifact">code-runner-spec.json</span>
+        </div>
+        <div class="card runner mini">
+          <h3>Worktree</h3>
+          <p>Disposable isolated workspace before source apply.</p>
+          <span class="artifact">isolated_worktree</span>
+        </div>
+        <div class="card runner mini">
+          <h3>Repair rounds</h3>
+          <p>Limited tools, bounded attempts, visible DoD.</p>
+          <span class="artifact">rounds.jsonl</span>
+        </div>
+        <div class="card runner mini">
+          <h3>DoD gate</h3>
+          <p>File/process-local command verifies the patch.</p>
+          <span class="artifact">verifier.log</span>
+        </div>
+        <div class="card success mini">
+          <h3>Result</h3>
+          <p>Patch artifact or explicit source commit.</p>
+          <span class="artifact">result.json</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="band finish final">
+      <h2>5. `/plan` stops, replans, or asks a human</h2>
+      <div class="grid outcome-grid">
+        <div class="card success mini">
+          <h3>goal_achieved</h3>
+          <p>Stop. Do not keep looping.</p>
+        </div>
+        <div class="card plan mini">
+          <h3>partially_achieved</h3>
+          <p>Create a bounded follow-up stub.</p>
+          <span class="artifact">followup-N.yaml</span>
+        </div>
+        <div class="card fail mini">
+          <h3>blocked</h3>
+          <p>Ask a human. Do not widen authority.</p>
+        </div>
+        <div class="card fail mini">
+          <h3>wrong_plan</h3>
+          <p>Revise before rerun.</p>
+        </div>
+        <div class="card fail mini">
+          <h3>insufficient_evidence</h3>
+          <p>Missing proof is not success.</p>
+          <span class="artifact">interview-request.json</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="takeaway">Invariant: `/plan` supervises closure only by explicit request; `/orchestrate` produces evidence; `/code-runner` never replans or interviews.</div>
+  </main>
+</body>
+</html>

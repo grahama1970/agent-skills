@@ -3,8 +3,9 @@ name: plan
 description: >
   Create orchestration-ready YAML task files (0N_TASKS.yaml) for /orchestrate.
   Decomposes goals into tasks with explicit runner, backend, mode, and lane fields.
-  Supports code-only, design-only, and hybrid plans. Use when user says "plan this",
-  "create task file", "break this down into tasks".
+  Supports code-only, design-only, hybrid plans, and explicit opt-in goal-closure
+  execution loops. Use when user says "plan this", "create task file", "break
+  this down into tasks", or "run the plan until the goal is closed".
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, AskUserQuestion
 triggers:
   - plan this
@@ -16,6 +17,10 @@ triggers:
   - task breakdown
   - decompose this
   - let's plan
+  - run plan until done
+  - execute plan with goal closure
+  - plan and iterate until complete
+  - assess whether the plan goal was achieved
 metadata:
   short-description: Create orchestration-ready YAML task files
 provides:
@@ -31,6 +36,10 @@ composes:
   - orchestrate
 read_before_use:
   - plan.py
+  - src/plan_skill/code_runner_contract.py
+  - src/plan_skill/dag.py
+  - src/plan_skill/goal_closure.py
+  - src/plan_skill/mutations.py
   - design_pipeline.py
   - interviews.py
 taxonomy:
@@ -65,7 +74,58 @@ The agent runs all four when the user says `/plan`. The user only needs to say
 10. /review-plan      - Full validation (claims, routing, blind tests, overlap)
 11. If PASS -> ask human: "Plan ready. Run /orchestrate?"
 12. If human approves -> /orchestrate run 0N_TASKS.yaml
+13. Optional, only when explicitly requested: run deterministic goal closure.
 ```
+
+### Optional Goal-Closure Loop
+
+Normal `/plan` remains plan-first: it writes and validates YAML, then asks before
+execution. Do not run the closure loop unless the user explicitly asks for
+"execute until done", "run with goal closure", "iterate until complete", or
+equivalent wording.
+
+When requested, `/plan` becomes the deterministic outer loop:
+
+```text
+/plan --execute-closure 0N_TASKS.yaml --max-replans N
+  -> plan.py --validate
+  -> /review-plan review
+  -> /orchestrate run
+  -> /plan --assess-result using the orchestrate session
+  -> stop on goal_achieved, or write follow-up/interview artifacts
+```
+
+Closed outcomes:
+
+```text
+goal_achieved
+partially_achieved
+blocked
+wrong_plan
+insufficient_evidence
+```
+
+Closed recommended actions:
+
+```text
+none
+create_followup_plan
+revise_existing_plan
+ask_human
+```
+
+`/plan` decides whether to create a follow-up/amended plan or ask the human:
+
+| Closure result | Plan response |
+|---|---|
+| `goal_achieved` | Stop successfully |
+| `partially_achieved` with failed tasks | Create a follow-up plan stub for remaining work |
+| `blocked` | Write an `/interview` request artifact |
+| `wrong_plan` | Stop before execution and write an `/interview` request artifact |
+| `insufficient_evidence` | Write an `/interview` request artifact |
+
+`/orchestrate` remains the execution engine and evidence producer. It does not
+own replanning. `/code-runner` remains a bounded worker inside `/orchestrate`.
 
 ### Step 2: Runner Selection (which tasks get /code-runner)
 
@@ -484,6 +544,12 @@ plan.py --add-task 01_TASKS.yaml "title=Run integration tests|runner=local|lane=
 
 # Remove a task (cleans up dangling deps)
 plan.py --remove-task 01_TASKS.yaml:3
+
+# Assess whether a completed /orchestrate session achieved the plan goal
+plan.py --assess-result 01_TASKS.yaml --session /path/to/orchestrate/session --json
+
+# Explicit opt-in execution loop: validate, review, orchestrate, assess, optionally replan
+plan.py --execute-closure 01_TASKS.yaml --max-replans 2 --json
 
 ```
 
