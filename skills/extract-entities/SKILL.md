@@ -22,13 +22,35 @@ provides:
 composes:
   - memory
   - taxonomy
+  - analytics
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
 # /extract-entities
 
-Extract control IDs, domain phrases, control metadata, relationship edges, and taxonomy tags from any question text. The extraction result defines the shape of the evidence tree before any gates or LLM calls run.
+Extract control IDs, domain phrases, control metadata, relationship edges, interface commands, dataset/source mentions, and taxonomy tags from any question text. The extraction result defines the shape of the request before routing, gates, or LLM calls run.
+
+## Always-On Request Gate
+
+Run `/extract-entities` on every user request in chat and project-agent systems.
+It is deterministic and cheap, so it should run before routing to `$ask`,
+`$create-figure`, `$create-evidence-case`, `$analytics`, or project-specific
+subagents.
+
+The result should be persisted with the run as `entity_context.json` so failures
+are debuggable. Downstream skills must read this structured context instead of
+regex-parsing the prompt again.
+
+For figure/data requests, extraction should identify:
+
+- skill and interface commands (`$create-figure`, `$analytics`, D3, graph, chart)
+- dataset names, Hugging Face dataset ids, splits/configs, file-like paths, and artifact references
+- requested variables, labels, controls, domain terms, unresolved terms, and explicit sample/demo permission
+
+For evidence requests, extraction should identify:
+
+- controls, standards, framework IDs, domain terms, relationships, and unresolved/fabricated-looking terms
 
 ## Architecture (NO REGEX, NO LLM)
 
@@ -114,6 +136,12 @@ The extraction flow is purely deterministic:
 - NO manual tokenization — Flashtext runs on raw text, spaCy handles NLP
 - Vocabulary comes from ArangoDB via /memory, not hardcoded lists
 - Protected terms (from Flashtext/RapidFuzz) are excluded before spaCy runs
+- If ArangoDB misses an exact SPARTA control ID, control name, category, or
+  alias, `/extract-entities` may perform a bounded lookup against the local
+  authoritative `SPARTA-Data.xlsx` workbook. This is a stale-corpus fallback:
+  returned entities must carry `source: "sparta_source_workbook_fallback"` or
+  workbook provenance fields, and monitor/backfill should repair `$memory` so
+  the normal ArangoDB path succeeds next time.
 
 ## Usage
 
@@ -126,6 +154,15 @@ The extraction flow is purely deterministic:
 
 # JSON output for piping
 ./run.sh extract --json "Tell me about Control SV-CF-1 as it relates to D3FEND"
+
+# Compact project-agent output is the default JSON view
+./run.sh extract --json "What is SPARTA countermeasure CM0029 (Comms Link)?"
+
+# Full diagnostic output for debugging old fields, glossary, and entity nodes
+./run.sh extract --json --verbose "What is SPARTA countermeasure CM0029 (Comms Link)?"
+
+# Explicit compatibility mode for legacy consumers
+./run.sh extract --json --view legacy "What is SPARTA countermeasure CM0029 (Comms Link)?"
 
 # Resolve entities from free text (NLP mode, default)
 ./run.sh resolve "radar spoofing impacts sensor fusion"
@@ -203,6 +240,92 @@ Falls back to `q`-based search with exact name/label match if the filter returns
   "control_metadata": [
     {"control_id": "SV-AC-2", "name": "Access Control", "framework": "SPARTA", "domain": "..."}
   ],
+  "glossary": [
+    {
+      "id": "SV-AC-2",
+      "control_id": "SV-AC-2",
+      "name": "Access Control",
+      "mention": "SV-AC-2",
+      "framework": "SPARTA",
+      "type": "countermeasure",
+      "description": "...",
+      "definition": "...",
+      "aliases": [],
+      "span": [42, 49],
+      "grounded": true,
+      "exists": true,
+      "source": "sparta_controls"
+    },
+    {
+      "id": "descriptor:cm0029_comms_link",
+      "mention": "Comms Link",
+      "name": "Comms Link",
+      "control_id": "CM0029",
+      "type": "control_descriptor",
+      "span": [38, 48],
+      "grounded": true,
+      "exists": true,
+      "source": "sparta_controls_parenthetical_guard",
+      "descriptor_kind": "control_category",
+      "canonical_name": "TRANSEC",
+      "category": "Comms Link"
+    }
+  ],
+  "entity_nodes": [
+    {
+      "id": "SV-AC-2",
+      "node_kind": "control",
+      "status": "grounded",
+      "proof_role": "entity_anchor",
+      "extracted": {
+        "text": "SV-AC-2",
+        "span": [42, 49],
+        "source": "sparta_controls",
+        "kind": "control_id"
+      },
+      "metadata": {
+        "control_id": "SV-AC-2",
+        "name": "Access Control",
+        "exists": true
+      }
+    },
+    {
+      "id": "descriptor:cm0029_comms_link",
+      "node_kind": "control_descriptor",
+      "status": "grounded",
+      "proof_role": "validated_context",
+      "extracted": {
+        "text": "Comms Link",
+        "span": [38, 48],
+        "source": "sparta_controls_parenthetical_guard",
+        "kind": "control_descriptor"
+      },
+      "metadata": {
+        "name": "Comms Link",
+        "exists": true,
+        "control_id": "CM0029",
+        "descriptor_kind": "control_category",
+        "canonical_name": "TRANSEC",
+        "category": "Comms Link"
+      }
+    },
+    {
+      "id": "domain:satellite_uplink",
+      "node_kind": "domain_term",
+      "status": "extracted",
+      "proof_role": "query_context",
+      "extracted": {
+        "text": "satellite uplink",
+        "span": [32, 48],
+        "source": "extract_entities_domain_terms",
+        "kind": "domain_term"
+      },
+      "metadata": {
+        "name": "satellite uplink",
+        "exists": true
+      }
+    }
+  ],
   "related_pairs": [
     {"source": "SV-AC-2", "target": "SV-CF-1", "method": "mitigates"}
   ],
@@ -222,14 +345,62 @@ Falls back to `q`-based search with exact name/label match if the filter returns
 
 ### Grounding Evidence Fields (v4.3)
 
+- **Default JSON view (`view: "agent"`)**: Compact, project-agent-safe response containing `proof_packet.assertions`, `nodes`, `candidate_nodes`, `counts`, and `agent_contract`. It intentionally omits duplicate legacy fields such as `resolved_entities`, `glossary`, and `entity_nodes`.
+- **Verbose view (`--verbose` / `view: "verbose"`)**: Full diagnostic output. Includes legacy fields plus the compact `agent` view for debugging, regression tests, and human review.
+- **Legacy view (`--view legacy`)**: Backward-compatible field shape for consumers that still read `resolved_entities`, `control_metadata`, `glossary`, `entity_nodes`, or `domain_terms`.
 - **`unresolved_terms`**: Terms from the question that look like entity references but didn't resolve against `sparta_controls`. Each entry has `term`, `type` (id_like, phrase, text_fragment), and optionally `closest_match`/`distance` for fuzzy near-misses.
 - **`resolution_map`**: Per-candidate term resolution status. Shows what resolved (`exists: true` with control_id, name, qra_count) and what didn't (`exists: false` with reason). The agent reads this to decide if the question's premise is grounded or fabricated.
+- **`proof_packet`**: The authoritative deterministic proof object. It contains `generated_by: "deterministic_extractor"`, `llm_used: false`, `authoritative: true`, and machine-checkable `assertions`. Project agents must use `proof_packet.assertions` for grounding decisions, not prose.
+- **`display_summary`**: Optional human-facing prose generated from a deterministic template. It must always be marked `authoritative: false` and `proof_role: "explanation_only"`. Never use it for gates.
+- **`agent_contract`**: Explicit machine instructions for downstream agents. Current contract: use `proof_packet.assertions` for grounding; ignore `display_summary`, `candidate_nodes`, `guess_nodes`, and `rationale.summary` for grounding; LLM-generated fields are never authoritative.
+- **`glossary`**: Compatibility glossary of grounded and unsupported entities, including canonical `sparta_controls` metadata, spans, aliases, and rejection reasons. Downstream skills should prefer `proof_packet` for proof and use glossary for display/snapshotting.
+- **`entity_nodes`**: Every extracted node, including grounded controls, validated descriptors, unsupported noun phrases, unresolved terms, and domain/aerospace terms. `proof_role` distinguishes `entity_anchor`, `validated_context`, `query_context`, and `none`.
+- **`candidate_nodes`**: Candidate-only related controls/QRAs for suggestions, related results, and did-you-mean affordances. They must include `proof_role: "none"` and `not_usable_for` entries covering grounding, proof, approval, answer authority, and evidence gates.
+- **`suppressed_nodes`**: Terms intentionally removed from active context because a larger extracted node already covers them. Example: `domain:link` is suppressed when covered by grounded descriptor `Comms Link`.
+
+Example proof packet fragment:
+
+```json
+{
+  "proof_packet": {
+    "generated_by": "deterministic_extractor",
+    "llm_used": false,
+    "authoritative": true,
+    "assertions": [
+      {
+        "id": "assert:cm0029_control_id_resolved",
+        "rule_id": "SPARTA_CONTROL_ID_EXACT_MATCH",
+        "subject": "CM0029",
+        "predicate": "resolves_to",
+        "object": "sparta_controls/ctrl__CM0029",
+        "status": "passed"
+      },
+      {
+        "id": "assert:descriptor_cm0029_comms_link_descriptor_validated",
+        "rule_id": "PARENTHETICAL_DESCRIPTOR_MATCHES_CONTROL_CATEGORY_OR_ALIAS",
+        "subject": "descriptor:cm0029_comms_link",
+        "predicate": "describes_control",
+        "object": "CM0029",
+        "status": "passed"
+      }
+    ]
+  },
+  "display_summary": {
+    "generated_by": "deterministic_template",
+    "llm_used": false,
+    "authoritative": false,
+    "proof_role": "explanation_only",
+    "text": "CM0029 is grounded as the primary extraction anchor."
+  }
+}
 ```
 
 ## Composability
 
 Used by:
 - `/create-evidence-case` — Gate 2 calls this to define the tree shape
+- `/create-figure` — first gate extracts figure intent, commands, dataset/source references, and missing render data
+- `/analytics` — uses extracted source/file/dataset cues before schema discovery
 - Conversation pipeline — entity gate before Brandon answers
 - `/sparta-stress-test` — validates entity extraction accuracy
 - `/review-question` — checks if question entities are answerable
