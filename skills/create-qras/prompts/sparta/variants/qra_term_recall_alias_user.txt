@@ -1,0 +1,56 @@
+Generate draft term-recall aliases from the following canonical QRA input.
+
+Return JSON only.
+
+LOCKED VALUES TO COPY EXACTLY:
+
+parent_qra_id:
+{canonical_qra_id}
+
+canonical_answer_hash:
+{canonical_answer_hash}
+
+inherited_evidence_case_id:
+{evidence_case_id}
+
+inherited_answer:
+{canonical_answer}
+
+INPUT JSON:
+
+{
+  "canonical_qra": {
+    "id": "{canonical_qra_id}",
+    "question": "{canonical_question}",
+    "reasoning": "{canonical_reasoning}",
+    "answer": "{canonical_answer}",
+    "qra_type": "{qra_type}",
+    "source_framework": "{source_framework}",
+    "source_control_id": "{source_control_id}",
+    "target_framework": "{target_framework}",
+    "target_control_id": "{target_control_id}",
+    "evidence_case": {
+      "case_id": "{evidence_case_id}",
+      "verdict_state": "{evidence_case_verdict_state}",
+      "answer_hash": "{canonical_answer_hash}",
+      "entities": {entities_json}
+    },
+    "review_status": "{review_status}",
+    "human_reviewed": {human_reviewed_json}
+  },
+  "requested_alias_plan": {
+    "categories": {alias_categories_json}
+  }
+}
+
+Required behavior:
+
+- If the parent is not human-reviewed and blessed/approved, return no aliases with skipped_reason "parent_not_human_blessed".
+- If the parent is not qra_type "canonical", return no aliases with skipped_reason "parent_not_human_blessed".
+- If requested_alias_plan is supplied, return exactly the requested category/count distribution.
+- If the exact requested category/count distribution cannot be generated from admissible terms, return no aliases with skipped_reason "no_safe_aliases".
+- Every generated alias must copy inherited_answer, parent_qra_id, canonical_answer_hash, and inherited_evidence_case_id exactly.
+- Every generated alias must have review_state "draft_recall_alias".
+- Every generated alias must have returns "parent_qra".
+- No generated alias may add new facts, new entities, new IDs, new relationships, approval claims, evidence claims, or answer drift.
+- Do not include any keys outside the required schema.

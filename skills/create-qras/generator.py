@@ -8,6 +8,7 @@ Three QRA types:
 - independent: NIST/MITRE controls without technique mapping (direct extraction)
 """
 import asyncio
+import datetime as _dt
 import hashlib
 import json
 import os
@@ -59,6 +60,7 @@ FRAMEWORK_PATTERNS = {
     "D3FEND": re.compile(r"^D3-[A-Z]+$", re.I),  # D3-AI, D3-MFA
     # ESA space threat techniques
     "ESA": re.compile(r"^ESA-T\d{4}(\.\d{3})?$", re.I),  # ESA-T1489.001
+    "NVD": re.compile(r"^CVE-\d{4}-\d+$", re.I),
 }
 
 # Controls that need relationship QRAs (have crosswalk chains)
@@ -2931,6 +2933,51 @@ def _get_embedding(text: str) -> list[float] | None:
     return None
 
 
+def _json_safe_copy(value: Any, *, _seen: set[int] | None = None) -> Any:
+    """Return a plain JSON-serializable copy, breaking cycles deterministically."""
+    if _seen is None:
+        _seen = set()
+
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+
+    value_id = id(value)
+    if value_id in _seen:
+        return "[Circular]"
+
+    if isinstance(value, dict):
+        _seen.add(value_id)
+        try:
+            return {str(key): _json_safe_copy(item, _seen=_seen) for key, item in value.items()}
+        finally:
+            _seen.remove(value_id)
+
+    if isinstance(value, (list, tuple, set, frozenset)):
+        _seen.add(value_id)
+        try:
+            return [_json_safe_copy(item, _seen=_seen) for item in value]
+        finally:
+            _seen.remove(value_id)
+
+    if isinstance(value, (_dt.datetime, _dt.date)):
+        return value.isoformat()
+
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+
+    if hasattr(value, "model_dump"):
+        try:
+            return _json_safe_copy(value.model_dump(), _seen=_seen)
+        except Exception:
+            pass
+
+    try:
+        json.dumps(value)
+        return value
+    except Exception:
+        return str(value)
+
+
 def _store_qra(client: httpx.Client, qra: dict, collection: str | None = None) -> bool:
     """Store QRA to v2 collection with embedding.
 
@@ -2949,19 +2996,19 @@ def _store_qra(client: httpx.Client, qra: dict, collection: str | None = None) -
             # native, independent, standalone → canonical
             collection = "sparta_qra_canonical"
 
-    # Generate embedding from question + answer + reasoning
-    embed_text = f"{qra.get('question', '')} {qra.get('answer', '')} {qra.get('reasoning', '')}".strip()
+    qra_doc = _json_safe_copy(qra)
+    embed_text = f"{qra_doc.get('question', '')} {qra_doc.get('answer', '')} {qra_doc.get('reasoning', '')}".strip()
     print(f"DEBUG: Getting embedding for {qra.get('_key', 'unknown')} ({len(embed_text)} chars)", file=sys.stderr)
     embedding = _get_embedding(embed_text)
     print(f"DEBUG: Got embedding: {len(embedding) if embedding else None}", file=sys.stderr)
     if embedding:
-        qra["embedding"] = embedding
-        print(f"DEBUG: Added embedding to qra, now has {len(qra.get('embedding', []))} dims", file=sys.stderr)
+        qra_doc["embedding"] = embedding
+        print(f"DEBUG: Added embedding to qra, now has {len(qra_doc.get('embedding', []))} dims", file=sys.stderr)
     else:
         print(f"WARNING: No embedding for {qra.get('_key', 'unknown')}", file=sys.stderr)
 
     try:
-        payload = {"document": qra, "collection": collection}
+        payload = {"document": qra_doc, "collection": collection}
         print(f"DEBUG: Storing to {collection}: {qra.get('_key', 'unknown')}", file=sys.stderr)
         resp = client.post("/store", json=payload)
         if resp.status_code != 200:
@@ -3359,13 +3406,13 @@ def generate(
         raise typer.Exit(1)
 
     # Store results (skip if already stored per-chunk via store_callback)
-    if store and not dry_run:
+    if store and not dry_run and not dump_prompt_dir:
         # Framework batches store per-chunk, others store here
         already_stored = any(r.get("_stored") for r in results)
         if not already_stored:
             stored = 0
             for qra in results:
-                if "error" not in qra and not qra.get("skipped"):
+                if "error" not in qra and not qra.get("skipped") and not qra.get("prompt_dumped"):
                     if _store_qra(memory, qra):
                         stored += 1
             typer.echo(f"Stored {stored}/{len(results)} QRAs")

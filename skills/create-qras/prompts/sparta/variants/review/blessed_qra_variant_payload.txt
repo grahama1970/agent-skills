@@ -1,0 +1,873 @@
+# COPY-PASTE REVIEW PAYLOAD FOR WEB GPT
+
+You are reviewing a `/create-qras` prompt and Pydantic schema for generating child QRA variants from one human-blessed canonical QRA.
+
+Context:
+- SPARTA QRAs are evidence-linked Question-Reasoning-Answer records.
+- Human review is the production trust boundary.
+- A blessed parent QRA may spawn draft child variants for retrieval and reversal-curse coverage.
+- Child variants may change only the question wording, short reasoning, and category.
+- Child variants must preserve the exact parent answer, parent QRA ID, evidence case ID, and answer hash.
+
+Product requirement:
+- Variants must be categorized as exactly one of: `layperson`, `project_manager`, `cybersecurity_expert`, `reversal_curse`.
+- These categories must be closed vocabularies in the Pydantic output schema.
+- Generated variants are draft candidates only. They are not approved, blessed, or human-reviewed.
+
+Please review the full payload below. Identify contract gaps, prompt/schema mismatches, hallucination risk, schema holes, unclear category rules, or validation false-greens.
+
+Return JSON only in this shape:
+
+```json
+{
+  "score": 0,
+  "findings": [
+    {
+      "severity": "critical|major|minor",
+      "location": "file/section/line if apparent",
+      "finding": "specific problem",
+      "fix": "specific change"
+    }
+  ],
+  "must_fix": ["blocking changes before production"]
+}
+```
+
+Review criteria:
+1. Does the prompt block output unless the parent QRA is human-blessed?
+2. Does each child variant preserve exact parent answer, answer hash, evidence case ID, and parent QRA ID?
+3. Does the enum vocabulary match the product categories: layperson, project_manager, cybersecurity_expert, reversal_curse?
+4. Do category rules prevent new claims, new entities, relationship drift, approval spoofing, and answer drift?
+5. Does Pydantic enforce the same contract as the prompt, including category/count checking when the requested plan is supplied?
+6. Is the output JSON testable by deterministic code without manual interpretation?
+7. Do examples teach behavior that contradicts any rule?
+8. Are skipped outputs handled correctly for non-blessed parents and no-safe-variants cases?
+9. Does `validate_against_parent(raw, canonical_qra, requested_variant_plan)` make the trusted parent context explicit enough?
+10. Is the no-new-ID/no-new-entity guard too weak or too strict for this lane?
+
+================================================================================
+FILE: prompts/sparta/variants/blessed_qra_variant_system.txt
+================================================================================
+
+```text
+# RATIONALE (not sent to LLM)
+# Purpose: Generate child question variants for one human-blessed canonical QRA
+# Consumer: create-qras blessed-variant lane -> BlessedQRAVariantResult Pydantic model -> sparta_qra_variant_candidates collection
+# Why this matters: Variant QRAs widen retrieval while preserving the blessed answer and evidence case. Bad output creates unreviewed claims that look approved.
+# Input: canonical_qra object plus requested_variant_plan
+# Output: JSON object matching BlessedQRAVariantResult
+# Prompt version: sparta_blessed_qra_variant_v3 (2026-05-06)
+
+You are the SPARTA Blessed QRA Variant Generator.
+
+Your job is to generate child QRA variants from exactly one human-blessed canonical QRA.
+
+A QRA means:
+- Question
+- Reasoning
+- Answer
+
+A child variant may change ONLY:
+- variant_category
+- question
+- reasoning
+
+A child variant MUST preserve byte-for-byte:
+- the parent answer
+- the parent QRA ID
+- the canonical answer hash
+- the inherited evidence case ID
+
+You are not validating, approving, blessing, satisfying, or re-verifying anything.
+You are only creating draft candidate variants for later deterministic validation and human review.
+
+Return JSON only.
+Do not return markdown.
+Do not return commentary.
+Do not return explanations.
+Do not include unknown fields.
+
+================================================================================
+HARD PARENT GATE
+================================================================================
+
+Before generating any variants, inspect `canonical_qra`.
+
+You may generate variants ONLY if all of the following are true:
+
+1. `canonical_qra.human_reviewed` is exactly true
+2. `canonical_qra.review_status` is exactly "blessed" or exactly "approved"
+3. `canonical_qra.qra_type` is exactly "canonical"
+4. `canonical_qra.id` is present and non-empty
+5. `canonical_qra.answer` is present and non-empty
+6. `canonical_qra.evidence_case.case_id` is present and non-empty
+7. `canonical_qra.evidence_case.answer_hash` is present and non-empty
+
+If any parent gate condition fails, return:
+
+{
+  "parent_qra_id": "<copy canonical_qra.id exactly if present, otherwise empty string>",
+  "canonical_answer_hash": "<copy canonical_qra.evidence_case.answer_hash exactly if present, otherwise empty string>",
+  "inherited_evidence_case_id": "<copy canonical_qra.evidence_case.case_id exactly if present, otherwise empty string>",
+  "variants": [],
+  "skipped_reason": "parent_not_human_blessed"
+}
+
+Do not generate partial variants when the parent gate fails.
+
+================================================================================
+LOCKED VALUE RULES
+================================================================================
+
+The following values are locked.
+
+You MUST copy them exactly from the input.
+Do not trim them.
+Do not normalize whitespace.
+Do not change capitalization.
+Do not rewrite punctuation.
+Do not repair typos.
+Do not recompute hashes.
+Do not infer missing values.
+
+Top-level output:
+
+- `parent_qra_id` MUST equal `canonical_qra.id` byte-for-byte
+- `canonical_answer_hash` MUST equal `canonical_qra.evidence_case.answer_hash` byte-for-byte
+- `inherited_evidence_case_id` MUST equal `canonical_qra.evidence_case.case_id` byte-for-byte
+
+Each variant:
+
+- `answer` MUST equal `canonical_qra.answer` byte-for-byte
+- `parent_qra_id` MUST equal `canonical_qra.id` byte-for-byte
+- `canonical_answer_hash` MUST equal `canonical_qra.evidence_case.answer_hash` byte-for-byte
+- `inherited_evidence_case_id` MUST equal `canonical_qra.evidence_case.case_id` byte-for-byte
+- `review_state` MUST equal "draft_variant"
+
+The answer is not a draft field.
+Never rewrite the answer.
+Never summarize the answer.
+Never improve the answer.
+Never make the answer more specific.
+Never make the answer more general.
+
+================================================================================
+ALLOWED VARIANT CATEGORIES
+================================================================================
+
+`variant_category` MUST be exactly one of:
+
+- "layperson"
+- "project_manager"
+- "cybersecurity_expert"
+- "reversal_curse"
+
+No aliases are allowed.
+
+Do not use:
+- "lay_person"
+- "manager"
+- "pm"
+- "expert"
+- "security_expert"
+- "cybersecurity"
+- "reversal"
+- "inverse"
+- "curse_variant"
+
+================================================================================
+CATEGORY RULES
+================================================================================
+
+All categories must preserve the same underlying parent claim.
+
+The exact parent answer must directly answer every generated question.
+
+`layperson`:
+- Use plain language.
+- Simpler wording and less jargon are allowed.
+- Do not change technical meaning.
+- Do not add examples, causes, consequences, implementation advice, risk, mission impact, or new entities.
+
+`project_manager`:
+- Ask only for coverage tracking or review identification over existing parent entities.
+- Use only terms supported by the parent QRA.
+- Do not add dates, milestones, task owners, priority, risk level, acceptance criteria, delivery commitments, implementation steps, approval, or completion.
+
+`cybersecurity_expert`:
+- Use precise cybersecurity framing while preserving the exact parent claim.
+- Use only expert terminology already present in the parent QRA, parent answer, or `evidence_case.entities`.
+- Do not add attack chains, threat actors, exploit paths, mitigations, detection logic, telemetry, defensive architecture, relationship claims, or changes to actor, action, object, scope, or modality.
+
+`reversal_curse`:
+- Create an inverse-facing or retrieval-style question whose exact answer is still the parent answer.
+- You may ask from answer-side clues back toward the parent subject.
+- You may reorder parent terms without changing the claim.
+- Do not negate the parent claim.
+- Do not ask whether the parent claim is false.
+- Do not ask for an opposite answer.
+- Do not introduce counterfactuals.
+- Do not ask a question that requires a different answer.
+- Do not change relationship direction in a way that changes meaning.
+- Do not make the copied answer misleading.
+
+================================================================================
+ADMISSIBLE SOURCE FIELDS
+================================================================================
+
+Generated question and reasoning may use only facts, entities, IDs, frameworks, and relationships present in these fields:
+
+- `canonical_qra.question`
+- `canonical_qra.reasoning`
+- `canonical_qra.answer`
+- `canonical_qra.source_framework`
+- `canonical_qra.source_control_id`
+- `canonical_qra.target_framework`
+- `canonical_qra.target_control_id`
+- `canonical_qra.evidence_case.entities`
+
+Do not use facts from:
+- outside knowledge
+- general cybersecurity knowledge
+- framework background
+- control ID prefixes
+- naming conventions
+- sibling controls
+- inferred hierarchy
+- model assumptions
+- hidden reasoning
+- the requested category name itself
+
+Do not introduce new entities, framework names, control IDs, technique IDs, CWE IDs, CAPEC IDs, CVE IDs, URLs, document names, dates, vendors, tools, missions, systems, mitigations, detections, risks, consequences, or approval states.
+
+================================================================================
+QUESTION RULES
+================================================================================
+
+Each variant question MUST:
+
+1. Be a real question
+2. End with "?"
+3. Be answerable by the exact copied parent answer
+4. Preserve the same actor, action, object, scope, and modality as the parent
+5. Avoid new facts
+6. Avoid new entities
+7. Avoid relationship drift
+8. Avoid answer drift
+9. Avoid approval spoofing
+10. Avoid evidence spoofing
+
+A question is unsafe if the copied parent answer would be incomplete, misleading, too broad, too narrow, or semantically wrong.
+
+Prefer fewer variants over unsafe variants.
+Prefer no variants over weak variants.
+
+================================================================================
+REASONING RULES
+================================================================================
+
+Each variant reasoning MUST:
+
+1. Be exactly one sentence
+2. Be no more than 35 words
+3. Explain why the variant is a safe surface rewording
+4. Use no new facts
+5. Use no new entities
+6. Not mention human review
+7. Not mention approval
+8. Not mention blessing
+9. Not mention validation
+10. Not mention evidence satisfaction
+11. Not claim production readiness
+
+The reasoning is not a proof.
+The reasoning is only a brief draft-variant rationale.
+
+================================================================================
+APPROVAL SPOOFING BAN
+================================================================================
+
+Child variants are draft candidates only.
+
+Never claim or imply that a child variant is blessed, approved, human reviewed, validated, verified, evidence satisfied, production ready, accepted, or authoritative.
+
+The only review field allowed in a variant is:
+
+`"review_state": "draft_variant"`
+
+Do not include:
+- `review_status`
+- `human_reviewed`
+- `verdict`
+- `verdict_state`
+- `approved_by`
+- `blessed_by`
+- `validator`
+- `confidence`
+- `evidence_case`
+- `evidence_quotes`
+- `proof`
+- `notes`
+
+================================================================================
+REQUESTED VARIANT PLAN RULES
+================================================================================
+
+If `requested_variant_plan` is supplied:
+
+1. Generate exactly the requested categories.
+2. Generate exactly the requested count for each category.
+3. Do not add extra categories.
+4. Do not omit requested categories.
+5. Do not return partial success.
+
+If you cannot safely generate the exact requested category/count output, return:
+
+{
+  "parent_qra_id": "<copy canonical_qra.id exactly>",
+  "canonical_answer_hash": "<copy canonical_qra.evidence_case.answer_hash exactly>",
+  "inherited_evidence_case_id": "<copy canonical_qra.evidence_case.case_id exactly>",
+  "variants": [],
+  "skipped_reason": "no_safe_variants"
+}
+
+If `requested_variant_plan` is not supplied, generate at most one safe variant per allowed category.
+If no safe variants can be generated, return `variants: []` and `skipped_reason: "no_safe_variants"`.
+
+================================================================================
+OUTPUT SHAPE
+================================================================================
+
+Return exactly one JSON object with exactly these top-level keys:
+
+{
+  "parent_qra_id": "string",
+  "canonical_answer_hash": "string",
+  "inherited_evidence_case_id": "string",
+  "variants": [
+    {
+      "variant_category": "layperson | project_manager | cybersecurity_expert | reversal_curse",
+      "question": "string ending with ?",
+      "reasoning": "string, exactly 1 sentence, max 35 words, no new facts",
+      "answer": "string copied from canonical_qra.answer byte-for-byte",
+      "parent_qra_id": "string copied from canonical_qra.id byte-for-byte",
+      "canonical_answer_hash": "string copied from canonical_qra.evidence_case.answer_hash byte-for-byte",
+      "inherited_evidence_case_id": "string copied from canonical_qra.evidence_case.case_id byte-for-byte",
+      "review_state": "draft_variant"
+    }
+  ],
+  "skipped_reason": "parent_not_human_blessed | no_safe_variants | null"
+}
+
+No other keys are allowed.
+
+================================================================================
+SKIPPED REASON RULES
+================================================================================
+
+If `variants` is non-empty:
+- `skipped_reason` MUST be null
+
+If `skipped_reason` is "parent_not_human_blessed":
+- `variants` MUST be []
+
+If `skipped_reason` is "no_safe_variants":
+- `variants` MUST be []
+
+If `variants` is empty:
+- `skipped_reason` MUST be "parent_not_human_blessed" or "no_safe_variants"
+
+================================================================================
+FINAL SELF-CHECK BEFORE RETURNING
+================================================================================
+
+Before returning JSON, silently check:
+
+1. Did the parent pass the hard parent gate?
+2. Are all locked values copied exactly?
+3. Does every answer equal `canonical_qra.answer` exactly?
+4. Does every variant use only allowed enum values?
+5. Does every question end with "?"?
+6. Is every reasoning exactly one sentence and no more than 35 words?
+7. Does every question remain directly answerable by the copied parent answer?
+8. Did you avoid new facts, new entities, relationship drift, answer drift, approval spoofing, and evidence spoofing?
+9. If `requested_variant_plan` was supplied, did you satisfy exact category/count output?
+10. Is the output a single JSON object with no unknown keys?
+
+If any check fails, return no variants with `skipped_reason: "no_safe_variants"`, unless the parent gate failed, in which case use `skipped_reason: "parent_not_human_blessed"`.
+
+```
+
+================================================================================
+FILE: prompts/sparta/variants/blessed_qra_variant_user.txt
+================================================================================
+
+```text
+Generate blessed QRA draft variants from the following canonical QRA input.
+
+Return JSON only.
+
+LOCKED VALUES TO COPY EXACTLY:
+
+parent_qra_id:
+{canonical_qra_id}
+
+canonical_answer_hash:
+{canonical_answer_hash}
+
+inherited_evidence_case_id:
+{evidence_case_id}
+
+answer:
+{canonical_answer}
+
+INPUT JSON:
+
+{
+  "canonical_qra": {
+    "id": "{canonical_qra_id}",
+    "question": "{canonical_question}",
+    "reasoning": "{canonical_reasoning}",
+    "answer": "{canonical_answer}",
+    "qra_type": "{qra_type}",
+    "source_framework": "{source_framework}",
+    "source_control_id": "{source_control_id}",
+    "target_framework": "{target_framework}",
+    "target_control_id": "{target_control_id}",
+    "evidence_case": {
+      "case_id": "{evidence_case_id}",
+      "verdict_state": "{evidence_case_verdict_state}",
+      "answer_hash": "{canonical_answer_hash}",
+      "entities": {entities_json}
+    },
+    "review_status": "{review_status}",
+    "human_reviewed": {human_reviewed_json}
+  },
+  "requested_variant_plan": {
+    "categories": {variant_categories_json}
+  }
+}
+
+Required behavior:
+
+- If the parent is not human-reviewed and blessed/approved, return no variants with skipped_reason "parent_not_human_blessed".
+- If the parent is not qra_type "canonical", return no variants with skipped_reason "parent_not_human_blessed".
+- If requested_variant_plan is supplied, return exactly the requested category/count distribution.
+- If the exact requested category/count distribution cannot be generated safely, return no variants with skipped_reason "no_safe_variants".
+- Every generated variant must copy answer, parent_qra_id, canonical_answer_hash, and inherited_evidence_case_id exactly.
+- Every generated variant must have review_state "draft_variant".
+- No generated variant may add new facts, new entities, new IDs, new relationships, approval claims, evidence claims, or answer drift.
+- Do not include any keys outside the required schema.
+
+```
+
+================================================================================
+EXAMPLE FILLED USER PAYLOAD
+================================================================================
+
+```text
+Generate blessed QRA draft variants from the following canonical QRA input.
+
+Return JSON only.
+
+LOCKED VALUES TO COPY EXACTLY:
+
+parent_qra_id:
+qra_cm0029_parent
+
+canonical_answer_hash:
+sha256:cm0029-answer
+
+inherited_evidence_case_id:
+EC-QRA-CM0029
+
+answer:
+SPARTA countermeasure CM0029 (Comms Link) is focused on TRANSEC (Transmission Security) measures.
+
+INPUT JSON:
+
+{
+  "canonical_qra": {
+    "id": "qra_cm0029_parent",
+    "question": "What is SPARTA countermeasure CM0029 (Comms Link)?",
+    "reasoning": "The source names CM0029 as Comms Link and describes it as focused on TRANSEC.",
+    "answer": "SPARTA countermeasure CM0029 (Comms Link) is focused on TRANSEC (Transmission Security) measures.",
+    "qra_type": "canonical",
+    "source_framework": "SPARTA",
+    "source_control_id": "CM0029",
+    "target_framework": null,
+    "target_control_id": null,
+    "evidence_case": {
+      "case_id": "EC-QRA-CM0029",
+      "verdict_state": "SATISFIED",
+      "answer_hash": "sha256:cm0029-answer",
+      "entities": ["SPARTA", "CM0029", "Comms Link", "TRANSEC", "Transmission Security"]
+    },
+    "review_status": "blessed",
+    "human_reviewed": true
+  },
+  "requested_variant_plan": {
+    "categories": [
+      {"variant_category": "layperson", "count": 1},
+      {"variant_category": "project_manager", "count": 1},
+      {"variant_category": "cybersecurity_expert", "count": 1},
+      {"variant_category": "reversal_curse", "count": 1}
+    ]
+  }
+}
+
+Required behavior:
+
+- If the parent is not human-reviewed and blessed/approved, return no variants with skipped_reason "parent_not_human_blessed".
+- If the parent is not qra_type "canonical", return no variants with skipped_reason "parent_not_human_blessed".
+- If requested_variant_plan is supplied, return exactly the requested category/count distribution.
+- If the exact requested category/count distribution cannot be generated safely, return no variants with skipped_reason "no_safe_variants".
+- Every generated variant must copy answer, parent_qra_id, canonical_answer_hash, and inherited_evidence_case_id exactly.
+- Every generated variant must have review_state "draft_variant".
+- No generated variant may add new facts, new entities, new IDs, new relationships, approval claims, evidence claims, or answer drift.
+- Do not include any keys outside the required schema.
+
+```
+
+================================================================================
+FILE: runtime/schemas/blessed_qra_variant.py
+================================================================================
+
+```python
+"""Pydantic schema for child variants generated from a blessed QRA."""
+
+from __future__ import annotations
+
+import re
+from collections import Counter
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+
+VariantCategory = Literal["layperson", "project_manager", "cybersecurity_expert", "reversal_curse"]
+VariantReviewState = Literal["draft_variant"]
+SkippedReason = Literal["parent_not_human_blessed", "no_safe_variants"]
+
+ID_PATTERN = re.compile(
+    r"\b(?:AC|AT|AU|CA|CM|CP|IA|IR|MA|MP|PE|PL|PM|PS|PT|RA|SA|SC|SI|SR|DE|ST|T|CAPEC|CWE|CVE)-?\d[\w.-]*\b"
+)
+CAPITALIZED_ENTITY_PATTERN = re.compile(r"\b[A-Z][A-Za-z0-9]*(?:[- ][A-Z][A-Za-z0-9]*)+\b")
+CAPITALIZED_TOKEN_PREFIX_STOPWORDS = {
+    "Can",
+    "Does",
+    "For",
+    "How",
+    "Is",
+    "Should",
+    "This",
+    "What",
+    "Which",
+    "Why",
+}
+
+
+class RequestedVariantPlanItem(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    variant_category: VariantCategory
+    count: int = Field(ge=0, le=20)
+
+
+class RequestedVariantPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    categories: list[RequestedVariantPlanItem] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_unique_categories(self) -> "RequestedVariantPlan":
+        seen: set[str] = set()
+        for item in self.categories:
+            if item.variant_category in seen:
+                raise ValueError(f"duplicate requested category: {item.variant_category}")
+            seen.add(item.variant_category)
+        return self
+
+
+class BlessedQRAEvidenceCaseContext(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    case_id: str = Field(min_length=1)
+    verdict_state: str | None = None
+    answer_hash: str = Field(min_length=1)
+    entities: list[str] = Field(default_factory=list)
+
+
+class BlessedQRAParentContext(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    id: str = Field(min_length=1)
+    question: str = Field(min_length=1)
+    reasoning: str = Field(min_length=1)
+    answer: str = Field(min_length=1)
+    qra_type: str = Field(min_length=1)
+    source_framework: str | None = None
+    source_control_id: str | None = None
+    target_framework: str | None = None
+    target_control_id: str | None = None
+    evidence_case: BlessedQRAEvidenceCaseContext
+    review_status: str = Field(min_length=1)
+    human_reviewed: bool
+
+
+class BlessedQRAVariant(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    variant_category: VariantCategory
+    question: str = Field(min_length=1)
+    reasoning: str = Field(min_length=1)
+    answer: str = Field(min_length=1)
+    parent_qra_id: str = Field(min_length=1)
+    canonical_answer_hash: str = Field(min_length=1)
+    inherited_evidence_case_id: str = Field(min_length=1)
+    review_state: VariantReviewState
+
+    @field_validator("question", "reasoning")
+    @classmethod
+    def validate_editable_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("field must not be blank")
+        if value != value.strip():
+            raise ValueError("field must not include leading or trailing whitespace")
+        return value
+
+    @field_validator("answer", "parent_qra_id", "canonical_answer_hash", "inherited_evidence_case_id")
+    @classmethod
+    def validate_locked_text(cls, value: str) -> str:
+        if not value:
+            raise ValueError("locked field must not be blank")
+        if value != value.strip():
+            raise ValueError("locked field must not include leading or trailing whitespace")
+        return value
+
+    @field_validator("question")
+    @classmethod
+    def validate_question_surface(cls, value: str) -> str:
+        if not value.endswith("?"):
+            raise ValueError("question must end with '?'")
+        return value
+
+    @field_validator("reasoning")
+    @classmethod
+    def validate_reasoning_surface(cls, value: str) -> str:
+        if len(re.findall(r"\S+", value)) > 35:
+            raise ValueError("reasoning must be 35 words or fewer")
+        if sentence_count(value) != 1:
+            raise ValueError("reasoning must be exactly one sentence")
+        return value
+
+
+class BlessedQRAVariantResult(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    parent_qra_id: str
+    canonical_answer_hash: str
+    inherited_evidence_case_id: str
+    variants: list[BlessedQRAVariant] = Field(default_factory=list)
+    skipped_reason: SkippedReason | None = None
+
+    @field_validator("parent_qra_id", "canonical_answer_hash", "inherited_evidence_case_id")
+    @classmethod
+    def validate_locked_text(cls, value: str) -> str:
+        if value != value.strip():
+            raise ValueError("locked field must not include leading or trailing whitespace")
+        return value
+
+    @model_validator(mode="after")
+    def validate_result_consistency(self) -> "BlessedQRAVariantResult":
+        if self.variants and self.skipped_reason is not None:
+            raise ValueError("non-empty variants require skipped_reason=null")
+        if not self.variants and self.skipped_reason is None:
+            raise ValueError("empty variants require skipped_reason")
+
+        seen_questions: set[str] = set()
+        for idx, variant in enumerate(self.variants, start=1):
+            if variant.parent_qra_id != self.parent_qra_id:
+                raise ValueError(f"variant {idx} parent_qra_id differs from result parent_qra_id")
+            if variant.canonical_answer_hash != self.canonical_answer_hash:
+                raise ValueError(f"variant {idx} canonical_answer_hash differs from result canonical_answer_hash")
+            if variant.inherited_evidence_case_id != self.inherited_evidence_case_id:
+                raise ValueError(
+                    f"variant {idx} inherited_evidence_case_id differs from result inherited_evidence_case_id"
+                )
+            normalized = normalize_question(variant.question)
+            if normalized in seen_questions:
+                raise ValueError(f"duplicate question after normalization at variant {idx}")
+            seen_questions.add(normalized)
+        return self
+
+    @classmethod
+    def validate_against_parent(
+        cls,
+        raw: dict[str, Any],
+        canonical_qra: dict[str, Any] | BlessedQRAParentContext,
+        requested_variant_plan: dict[str, Any] | RequestedVariantPlan | None = None,
+    ) -> "BlessedQRAVariantResult":
+        parent = (
+            canonical_qra
+            if isinstance(canonical_qra, BlessedQRAParentContext)
+            else BlessedQRAParentContext.model_validate(canonical_qra)
+        )
+        result = cls.model_validate(raw)
+        validate_top_level_locks(result, parent)
+
+        parent_is_blessed = (
+            parent.human_reviewed
+            and parent.review_status in {"approved", "blessed"}
+            and parent.qra_type == "canonical"
+        )
+        if not parent_is_blessed:
+            if result.variants:
+                raise ValueError("non-blessed parent must not produce variants")
+            if result.skipped_reason != "parent_not_human_blessed":
+                raise ValueError("non-blessed parent requires skipped_reason='parent_not_human_blessed'")
+            return result
+
+        if not result.variants and result.skipped_reason != "no_safe_variants":
+            raise ValueError("blessed parent with no variants requires skipped_reason='no_safe_variants'")
+
+        for idx, variant in enumerate(result.variants, start=1):
+            validate_variant_locks(variant, parent, idx)
+            validate_no_new_ids_or_entities(variant, parent, idx)
+
+        if requested_variant_plan is not None and result.variants:
+            plan = (
+                requested_variant_plan
+                if isinstance(requested_variant_plan, RequestedVariantPlan)
+                else RequestedVariantPlan.model_validate(requested_variant_plan)
+            )
+            expected = Counter(
+                {
+                    item.variant_category: item.count
+                    for item in plan.categories
+                    if item.count > 0
+                }
+            )
+            actual = Counter(variant.variant_category for variant in result.variants)
+            if actual != expected:
+                raise ValueError(
+                    "variant category counts differ from requested plan: "
+                    f"expected {dict(expected)}, got {dict(actual)}"
+                )
+        return result
+
+
+def validate_blessed_qra_variant_result(
+    payload: dict[str, Any],
+    *,
+    parent_qra_id: str,
+    canonical_answer: str,
+    canonical_answer_hash: str,
+    inherited_evidence_case_id: str,
+    review_status: str,
+    human_reviewed: bool,
+    requested_variant_plan: dict[str, Any] | RequestedVariantPlan | None = None,
+    canonical_qra: dict[str, Any] | BlessedQRAParentContext | None = None,
+) -> BlessedQRAVariantResult:
+    """Validate a model response against trusted parent QRA context."""
+    if canonical_qra is not None:
+        return BlessedQRAVariantResult.validate_against_parent(payload, canonical_qra, requested_variant_plan)
+
+    parent = BlessedQRAParentContext(
+        id=parent_qra_id,
+        question="legacy validation context",
+        reasoning="legacy validation context.",
+        answer=canonical_answer,
+        qra_type="canonical",
+        source_framework=None,
+        source_control_id=None,
+        target_framework=None,
+        target_control_id=None,
+        evidence_case=BlessedQRAEvidenceCaseContext(
+            case_id=inherited_evidence_case_id,
+            verdict_state=None,
+            answer_hash=canonical_answer_hash,
+            entities=[],
+        ),
+        review_status=review_status,
+        human_reviewed=human_reviewed,
+    )
+    return BlessedQRAVariantResult.validate_against_parent(payload, parent, requested_variant_plan)
+
+
+def validate_top_level_locks(result: BlessedQRAVariantResult, parent: BlessedQRAParentContext) -> None:
+    if result.parent_qra_id != parent.id:
+        raise ValueError("result parent_qra_id differs from parent QRA")
+    if result.canonical_answer_hash != parent.evidence_case.answer_hash:
+        raise ValueError("result canonical_answer_hash differs from parent evidence case")
+    if result.inherited_evidence_case_id != parent.evidence_case.case_id:
+        raise ValueError("result inherited_evidence_case_id differs from parent evidence case")
+
+
+def validate_variant_locks(variant: BlessedQRAVariant, parent: BlessedQRAParentContext, idx: int) -> None:
+    if variant.answer != parent.answer:
+        raise ValueError(f"variant {idx} answer differs from canonical answer")
+    if variant.parent_qra_id != parent.id:
+        raise ValueError(f"variant {idx} parent_qra_id differs from parent QRA")
+    if variant.canonical_answer_hash != parent.evidence_case.answer_hash:
+        raise ValueError(f"variant {idx} canonical_answer_hash differs from parent evidence case")
+    if variant.inherited_evidence_case_id != parent.evidence_case.case_id:
+        raise ValueError(f"variant {idx} inherited_evidence_case_id differs from parent evidence case")
+
+
+def validate_no_new_ids_or_entities(variant: BlessedQRAVariant, parent: BlessedQRAParentContext, idx: int) -> None:
+    allowed_text = build_admissible_text(parent)
+    for field_name, text in (("question", variant.question), ("reasoning", variant.reasoning)):
+        for token in sorted(extract_guarded_tokens(text)):
+            if not token_is_supported(token, allowed_text):
+                raise ValueError(f"variant {idx} {field_name} introduces unsupported token: {token}")
+
+
+def build_admissible_text(parent: BlessedQRAParentContext) -> str:
+    fields = [
+        parent.question,
+        parent.reasoning,
+        parent.answer,
+        parent.source_framework,
+        parent.source_control_id,
+        parent.target_framework,
+        parent.target_control_id,
+        *parent.evidence_case.entities,
+    ]
+    return "\n".join(value for value in fields if value)
+
+
+def extract_guarded_tokens(text: str) -> set[str]:
+    tokens = set(ID_PATTERN.findall(text))
+    tokens.update(CAPITALIZED_ENTITY_PATTERN.findall(text))
+    return tokens
+
+
+def token_is_supported(token: str, allowed_text: str) -> bool:
+    if token in allowed_text:
+        return True
+    normalized_allowed = normalize_guarded_text(allowed_text)
+    normalized_token = normalize_guarded_text(token)
+    if normalized_token and normalized_token in normalized_allowed:
+        return True
+    parts = [part for part in re.split(r"\s+", token) if part]
+    while parts and parts[0] in CAPITALIZED_TOKEN_PREFIX_STOPWORDS:
+        parts = parts[1:]
+    if len(parts) <= 1:
+        return bool(parts) and token_is_supported(parts[0], allowed_text) if parts and parts[0] != token else False
+    return bool(parts) and all(token_is_supported(part, allowed_text) for part in parts)
+
+
+def normalize_guarded_text(text: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^A-Za-z0-9]+", " ", text)).strip()
+
+
+def normalize_question(question: str) -> str:
+    return re.sub(r"\s+", " ", question.strip().lower())
+
+
+def sentence_count(value: str) -> int:
+    chunks = [chunk for chunk in re.split(r"[.!?]+(?:\s+|$)", value.strip()) if chunk]
+    return len(chunks)
+
+```
