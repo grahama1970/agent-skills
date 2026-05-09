@@ -16,4 +16,4 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
     set +a
 fi
 
-exec uv run --with typer --with rich --with loguru --with httpx --no-project -- python "$SCRIPT_DIR/checkpoint.py" "$@"
+exec uv run --project "$SCRIPT_DIR" -- python "$SCRIPT_DIR/checkpoint.py" "$@"
