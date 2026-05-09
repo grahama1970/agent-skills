@@ -2,9 +2,10 @@
 name = "governance-skill"
 version = "0.1.0"
 description = "Deterministic pre-plan governance gate"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 dependencies = [
     "typer>=0.12",
+    "python-dotenv>=1.0",
 ]
 
 [dependency-groups]
