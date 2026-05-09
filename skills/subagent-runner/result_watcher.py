@@ -94,6 +94,7 @@ def finalize_session(
     store: SessionStore,
     state: SessionState,
     *,
+    spec: SessionSpec | None = None,
     status: SessionStatus,
     exit_code: int | None,
     summary: str,
@@ -108,6 +109,7 @@ def finalize_session(
         intervention_state="idle" if status in TERMINAL_STATUSES else state.intervention_state,
         status_reason=summary,
     )
+    final_message = extract_final_message(store, state, spec)
     store.append_event(SessionEvent(
         session_id=state.session_id,
         task_id=state.task_id,
@@ -115,7 +117,12 @@ def finalize_session(
         kind=_EVENT_KIND_BY_STATUS[status],
         status=status,
         source=source,
-        payload={"exit_code": exit_code, "summary": summary},
+        payload={
+            "exit_code": exit_code,
+            "summary": summary,
+            "final_message_status": final_message["status"],
+            "final_message_source": final_message["source"],
+        },
     ))
     duration = finished_at - state.started_at
     store.write_result(SessionResult(
@@ -129,8 +136,70 @@ def finalize_session(
         duration_seconds=duration,
         artifact_dir=state.artifact_dir,
         summary=summary,
+        final_message=final_message["message"],
+        final_message_source=final_message["source"],
+        final_message_status=final_message["status"],
+        final_message_file=final_message["file"],
+        final_message_warnings=final_message["warnings"],
     ))
     return state
+
+
+def extract_final_message(
+    store: SessionStore,
+    state: SessionState,
+    spec: SessionSpec | None,
+) -> dict[str, object]:
+    """Resolve the final agent message into the typed result artifact."""
+    paths = store.paths(state.session_id)
+    warnings: list[str] = []
+    configured_path = _configured_final_message_file(spec)
+    transcript = _read_text(Path(paths.transcript_file))
+    if configured_path:
+        raw = _read_text(configured_path).strip()
+        if raw:
+            if _looks_like_terminal_hook_output(raw):
+                warnings.append("configured final-message file looked like terminal hook output")
+                fallback = _extract_pre_hook_content(transcript).strip()
+                if fallback:
+                    return {
+                        "message": fallback,
+                        "source": "transcript_pre_hook",
+                        "status": "degraded",
+                        "file": str(configured_path),
+                        "warnings": warnings,
+                    }
+                return {
+                    "message": "",
+                    "source": "configured_file",
+                    "status": "polluted",
+                    "file": str(configured_path),
+                    "warnings": warnings,
+                }
+            return {
+                "message": raw,
+                "source": "configured_file",
+                "status": "ok",
+                "file": str(configured_path),
+                "warnings": warnings,
+            }
+        warnings.append("configured final-message file was missing or empty")
+    fallback = _extract_pre_hook_content(transcript).strip()
+    if fallback:
+        return {
+            "message": fallback,
+            "source": "transcript",
+            "status": "degraded",
+            "file": str(configured_path or ""),
+            "warnings": warnings,
+        }
+    return {
+        "message": "",
+        "source": "",
+        "status": "missing",
+        "file": str(configured_path or ""),
+        "warnings": warnings,
+    }
 
 
 def drain_command_queue(store: SessionStore, state: SessionState, master_fd: int, position: int) -> tuple[SessionState, int]:
@@ -173,6 +242,7 @@ def monitor_subprocess(
                     state = finalize_session(
                         store,
                         current_state,
+                        spec=spec,
                         status=SessionStatus.timed_out,
                         exit_code=process.poll(),
                         summary=f"session exceeded timeout_seconds={spec.timeout_seconds}",
@@ -186,6 +256,7 @@ def monitor_subprocess(
                         state = finalize_session(
                             store,
                             current_state,
+                            spec=spec,
                             status=SessionStatus.stalled,
                             exit_code=process.poll(),
                             summary=f"no transcript growth for {spec.idle_timeout_seconds}s",
@@ -232,6 +303,7 @@ def monitor_subprocess(
                     state = finalize_session(
                         store,
                         terminal_state,
+                        spec=spec,
                         status=SessionStatus.cancelled,
                         exit_code=exit_code,
                         summary="session cancelled by controller or human",
@@ -241,6 +313,7 @@ def monitor_subprocess(
                     state = finalize_session(
                         store,
                         terminal_state,
+                        spec=spec,
                         status=SessionStatus.completed,
                         exit_code=exit_code,
                         summary="session completed successfully",
@@ -250,6 +323,7 @@ def monitor_subprocess(
                     state = finalize_session(
                         store,
                         terminal_state,
+                        spec=spec,
                         status=SessionStatus.failed,
                         exit_code=exit_code,
                         summary=f"session exited with code {exit_code}",
@@ -262,6 +336,59 @@ def monitor_subprocess(
         except OSError:
             pass
     return state
+
+
+def _configured_final_message_file(spec: SessionSpec | None) -> Path | None:
+    if spec is None:
+        return None
+    for key in ("SUBAGENT_RUNNER_FINAL_MESSAGE_FILE", "ASK_ORACLE_ANSWER_FILE"):
+        value = spec.env.get(key, "").strip()
+        if value:
+            return Path(value)
+    return None
+
+
+def _read_text(path: Path) -> str:
+    try:
+        if path.exists():
+            return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    return ""
+
+
+def _looks_like_terminal_hook_output(content: str) -> bool:
+    lowered = content.lower()
+    return any(
+        marker in lowered
+        for marker in (
+            "cdp verification",
+            "ui cdp verification",
+            ".codex/ui-verification",
+            "no rendered ui target",
+            "no real target url",
+            "ui verification marker",
+            "hook: stop",
+            "hook script",
+            "<target-url>",
+        )
+    )
+
+
+def _extract_pre_hook_content(transcript: str) -> str:
+    if not transcript:
+        return ""
+    hook_markers = ("\nhook: Stop", "\nHook: Stop", "\n[hook: Stop")
+    hook_index = -1
+    for marker in hook_markers:
+        hook_index = transcript.find(marker)
+        if hook_index >= 0:
+            break
+    before_hook = transcript[:hook_index].rstrip() if hook_index >= 0 else transcript.rstrip()
+    marker_index = before_hook.rfind("\ncodex\n")
+    if marker_index >= 0:
+        return before_hook[marker_index + len("\ncodex\n"):].strip()
+    return before_hook.strip()
 
 
 def attach_transcript(session_dir: str | Path, *, follow: bool = True, lines: int = 200) -> None:

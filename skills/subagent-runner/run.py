@@ -45,6 +45,7 @@ def start(
     watcher = subprocess.Popen(
         [sys.executable, str(Path(__file__).resolve()), "watch", state.artifact_dir],
         cwd=spec.cwd,
+        env={**os.environ, **spec.env},
         start_new_session=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,

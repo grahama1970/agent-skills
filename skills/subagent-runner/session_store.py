@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import socket
 import time
 import uuid
 from pathlib import Path
@@ -88,9 +90,22 @@ class SessionStore:
 
     def append_event(self, event: SessionEvent) -> None:
         paths = self.paths(event.session_id)
+        event_json = event.model_dump_json()
         with Path(paths.events_file).open("a", encoding="utf-8") as handle:
-            handle.write(event.model_dump_json())
+            handle.write(event_json)
             handle.write("\n")
+        self._publish_event_socket(event_json)
+
+    def _publish_event_socket(self, event_json: str) -> None:
+        socket_path = os.environ.get("SUBAGENT_RUNNER_EVENT_SOCKET", "").strip()
+        if not socket_path:
+            return
+        try:
+            with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as client:
+                client.connect(socket_path)
+                client.sendall(event_json.encode("utf-8"))
+        except OSError:
+            return
 
     def write_result(self, result: SessionResult) -> None:
         paths = self.paths(result.session_id)

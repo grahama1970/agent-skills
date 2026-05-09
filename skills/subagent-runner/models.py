@@ -130,3 +130,8 @@ class SessionResult(BaseModel):
     duration_seconds: float | None = None
     artifact_dir: str
     summary: str = ""
+    final_message: str = ""
+    final_message_source: str = ""
+    final_message_status: str = "missing"
+    final_message_file: str = ""
+    final_message_warnings: list[str] = Field(default_factory=list)
