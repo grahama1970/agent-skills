@@ -20,6 +20,25 @@ triggers:
   - fill form
   - take screenshot
   - screenshot
+  - full interface screenshot
+  - complete interface screenshot
+  - entire interface element
+  - entire ui element
+  - whole component screenshot
+  - complete component screenshot
+  - beyond the fold
+  - below the fold
+  - non-visible parts
+  - nested scroll screenshot
+  - scroll container screenshot
+  - stitched screenshot
+  - stitch screenshot
+  - capture full pane
+  - capture entire pane
+  - full pane screenshot
+  - complete pane screenshot
+  - screenshot full card
+  - screenshot complete card
   - navigate to
   - go to url
   - automate browser
@@ -124,12 +143,36 @@ The `click` command auto-detects whether the argument is an element ref (`e<N>`)
 surf snap                        # Screenshot to /tmp
 surf snap --output /tmp/page.png # Specify output path
 surf snap --full                 # Full page screenshot
+surf snap-container '[data-qid="pane"]' --output /tmp/pane.png
+                                 # Stitch a nested scroll container
 surf scroll down                 # Scroll down
 surf scroll up                   # Scroll up
 surf scroll top                  # Scroll to top
 surf scroll bottom               # Scroll to bottom
 surf wait 2                      # Wait 2 seconds
 ```
+
+### Full-Interface Screenshot Contract
+
+When the user asks to render or verify a UI as an image, do **not** treat a non-blank screenshot as sufficient. The required output is the requested interface, complete and visually inspected.
+
+Rules:
+- Capture the requested surface, not the surrounding workbench shell, unless the shell is explicitly requested.
+- For component workbenches such as UX Lab, target the component root or final rendered surface; do not include sidebars/top nav/chrome by default.
+- Full-page screenshots are not enough for apps with fixed-height shells or nested scroll containers. Use a tall viewport, component-root clipping, scroll-container expansion, or vertical stitching until the whole requested surface is present.
+- Save disposable verification screenshots under `/tmp`, not inside the project tree, unless the user requests a repository artifact.
+- Verify more than file existence and non-blank pixels: inspect the rendered image and confirm it is not cut off, not the wrong surface, and not hiding important content below an internal scroll boundary.
+- If the capture is incomplete, say it is incomplete and rerun the capture; do not report success.
+
+For nested scroll containers, prefer the built-in stitched capture:
+
+```bash
+surf snap-container '[data-qid="qras:artifact:evidence:root"]' \
+  --output /tmp/qra-evidence-full.png \
+  --json
+```
+
+`snap-container` resolves the selector, uses the nearest scrollable ancestor by default, captures every vertical scroll segment, stitches the segments into one PNG, and returns the selector, resolved container, scroll dimensions, segment offsets, and output path.
 
 ## Element References
 

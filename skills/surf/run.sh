@@ -433,6 +433,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf type <text>        Type text (--ref <ref> to target element)"
     echo "  surf key <key>          Press key (Enter, Tab, Escape...)"
     echo "  surf snap               Take screenshot (--full for full page)"
+    echo "  surf snap-container <selector>  Stitch a nested scroll container screenshot"
     echo "  surf scroll <dir>       Scroll (up/down/top/bottom)"
     echo "  surf wait <seconds>     Wait"
     echo "  surf text               Get page text content"
@@ -488,6 +489,11 @@ case "$1" in
     snap|screenshot)
         shift
         run_cdp_controller snap "$@"
+        exit $?
+        ;;
+    snap-container|screenshot-container)
+        shift
+        run_cdp_controller snap-container "$@"
         exit $?
         ;;
     scroll)

@@ -178,6 +178,48 @@ def snap(
         cdp.close()
 
 
+@app.command("snap-container")
+def snap_container(
+    selector: str = typer.Argument(..., help="CSS selector for the component or scroll container"),
+    port: int = typer.Option(CDP_PORT, help="CDP port"),
+    as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
+    output: Optional[str] = typer.Option(None, "-o", "--output", help="Output path for stitched screenshot"),
+    nearest: bool = typer.Option(True, help="Use nearest scrollable ancestor instead of the selected element"),
+    max_segments: int = typer.Option(80, help="Maximum vertical segments to capture"),
+    settle_ms: int = typer.Option(80, help="Milliseconds to wait after each scroll step"),
+):
+    """Capture and stitch a nested scroll container."""
+    cdp = CDPController(port=port)
+    try:
+        result = cdp.screenshot_container(
+            selector=selector,
+            output_path=output,
+            nearest=nearest,
+            max_segments=max_segments,
+            settle_ms=settle_ms,
+        )
+        if result.get("error"):
+            if as_json:
+                print(json.dumps(result, indent=2))
+            else:
+                print(f"Error: {result['error']}", file=sys.stderr)
+            raise typer.Exit(code=1)
+        if as_json:
+            print(json.dumps(result, indent=2))
+        else:
+            print(f"Container screenshot saved: {result['path']}")
+    except typer.Exit:
+        raise
+    except Exception as e:
+        if as_json:
+            print(json.dumps({"error": str(e)}))
+        else:
+            print(f"Error: {e}", file=sys.stderr)
+        raise typer.Exit(code=1)
+    finally:
+        cdp.close()
+
+
 @app.command()
 def scroll(
     direction: str = typer.Argument("down", help="Scroll direction (down, up, top, bottom)"),

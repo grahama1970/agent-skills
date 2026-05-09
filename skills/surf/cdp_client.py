@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import base64
+import math
 from pathlib import Path
 
 from dotenv import load_dotenv, find_dotenv
@@ -368,6 +369,213 @@ class CDPController:
         Path(output_path).write_bytes(img_data)
 
         return {"path": output_path, "size": len(img_data)}
+
+    def screenshot_container(
+        self,
+        selector: str,
+        output_path: str = None,
+        nearest: bool = True,
+        max_segments: int = 80,
+        settle_ms: int = 80,
+    ) -> dict:
+        """Capture and stitch a vertically scrollable element/container.
+
+        The selector identifies the component of interest. By default we use the
+        nearest scrollable ancestor; if none exists, the selected element itself
+        is used. This handles fixed-height app panes that full-page screenshots
+        cannot reveal.
+        """
+        if max_segments < 1:
+            raise ValueError("max_segments must be >= 1")
+        if settle_ms < 0:
+            raise ValueError("settle_ms must be >= 0")
+
+        target = self.evaluate(f"""
+(() => {{
+  const selected = document.querySelector({json.dumps(selector)});
+  if (!selected) return {{ error: 'selector_not_found', selector: {json.dumps(selector)} }};
+  function isScrollable(el) {{
+    const style = getComputedStyle(el);
+    const overflowY = style.overflowY;
+    return (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 1;
+  }}
+  let container = selected;
+  if ({str(nearest).lower()}) {{
+    let node = selected;
+    while (node && node !== document.body && node !== document.documentElement) {{
+      if (isScrollable(node)) {{ container = node; break; }}
+      node = node.parentElement;
+    }}
+  }}
+  const rect = container.getBoundingClientRect();
+  const previousScrollTop = container.scrollTop || 0;
+  container.scrollTop = 0;
+  const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+  return {{
+    selector: {json.dumps(selector)},
+    resolvedTag: container.tagName,
+    resolvedDataQid: container.getAttribute('data-qid'),
+    rect: {{ x: rect.x, y: rect.y, width: rect.width, height: rect.height }},
+    scrollHeight: container.scrollHeight,
+    clientHeight: container.clientHeight,
+    clientWidth: container.clientWidth,
+    maxScrollTop,
+    previousScrollTop,
+  }};
+}})()
+        """)
+        if not target or target.get("error"):
+            return target or {"error": "container_resolution_failed", "selector": selector}
+
+        rect = target["rect"]
+        viewport = self.evaluate("""
+({
+  width: window.innerWidth,
+  height: window.innerHeight,
+  deviceScaleFactor: window.devicePixelRatio || 1
+})
+        """)
+
+        clip_x = max(0, float(rect["x"]))
+        clip_y = max(0, float(rect["y"]))
+        clip_width = min(float(rect["width"]), float(viewport["width"]) - clip_x)
+        clip_height = min(float(rect["height"]), float(viewport["height"]) - clip_y)
+        if clip_width <= 0 or clip_height <= 0:
+            return {
+                "error": "container_not_visible",
+                "selector": selector,
+                "rect": rect,
+                "viewport": viewport,
+            }
+
+        scroll_height = int(target["scrollHeight"])
+        client_height = max(1, int(target["clientHeight"]))
+        offsets: list[int] = []
+        current = 0
+        while current < scroll_height and len(offsets) < max_segments:
+            offsets.append(current)
+            current += client_height
+        bottom_offset = max(0, scroll_height - client_height)
+        if bottom_offset not in offsets and len(offsets) < max_segments:
+            offsets.append(bottom_offset)
+        offsets = sorted(set(offsets))
+        if len(offsets) >= max_segments and offsets[-1] < bottom_offset:
+            return {
+                "error": "too_many_segments",
+                "selector": selector,
+                "segments": len(offsets),
+                "max_segments": max_segments,
+                "scrollHeight": scroll_height,
+                "clientHeight": client_height,
+            }
+
+        try:
+            from PIL import Image
+            from io import BytesIO
+        except ImportError as exc:
+            raise RuntimeError("snap-container requires Pillow; add pillow to surf dependencies") from exc
+
+        segment_images = []
+        for offset in offsets:
+            self.evaluate(f"""
+(() => {{
+  const selected = document.querySelector({json.dumps(selector)});
+  let container = selected;
+  function isScrollable(el) {{
+    const style = getComputedStyle(el);
+    const overflowY = style.overflowY;
+    return (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 1;
+  }}
+  if ({str(nearest).lower()}) {{
+    let node = selected;
+    while (node && node !== document.body && node !== document.documentElement) {{
+      if (isScrollable(node)) {{ container = node; break; }}
+      node = node.parentElement;
+    }}
+  }}
+  container.scrollTop = {int(offset)};
+  return container.scrollTop;
+}})()
+            """)
+            if settle_ms:
+                time.sleep(settle_ms / 1000.0)
+            shot = self.send("Page.captureScreenshot", {
+                "format": "png",
+                "clip": {
+                    "x": clip_x,
+                    "y": clip_y,
+                    "width": clip_width,
+                    "height": clip_height,
+                    "scale": 1,
+                },
+                "captureBeyondViewport": False,
+            })
+            image = Image.open(BytesIO(base64.b64decode(shot["data"]))).convert("RGBA")
+            segment_images.append((offset, image))
+
+        if not segment_images:
+            return {"error": "no_segments_captured", "selector": selector}
+
+        scale = segment_images[0][1].height / clip_height
+        output_width = segment_images[0][1].width
+        output_height = max(1, int(math.ceil(scroll_height * scale)))
+        stitched = Image.new("RGBA", (output_width, output_height), (0, 0, 0, 0))
+
+        written_until = 0
+        for offset, image in segment_images:
+            start = max(offset, written_until)
+            end = min(offset + client_height, scroll_height)
+            if end <= start:
+                continue
+            crop_top = int(round((start - offset) * scale))
+            crop_bottom = int(round((end - offset) * scale))
+            crop_bottom = min(crop_bottom, image.height)
+            crop = image.crop((0, crop_top, image.width, crop_bottom))
+            stitched.paste(crop, (0, int(round(start * scale))))
+            written_until = end
+
+        # Restore original scroll position for non-destructive verification.
+        self.evaluate(f"""
+(() => {{
+  const selected = document.querySelector({json.dumps(selector)});
+  if (!selected) return false;
+  function isScrollable(el) {{
+    const style = getComputedStyle(el);
+    const overflowY = style.overflowY;
+    return (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 1;
+  }}
+  let container = selected;
+  if ({str(nearest).lower()}) {{
+    let node = selected;
+    while (node && node !== document.body && node !== document.documentElement) {{
+      if (isScrollable(node)) {{ container = node; break; }}
+      node = node.parentElement;
+    }}
+  }}
+  container.scrollTop = {int(target.get("previousScrollTop") or 0)};
+  return true;
+}})()
+        """)
+
+        if not output_path:
+            output_path = f"/tmp/container_screenshot_{int(time.time())}.png"
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        stitched.save(output_path)
+
+        return {
+            "path": output_path,
+            "selector": selector,
+            "nearest": nearest,
+            "resolved_tag": target.get("resolvedTag"),
+            "resolved_data_qid": target.get("resolvedDataQid"),
+            "scrollHeight": scroll_height,
+            "clientHeight": client_height,
+            "clientWidth": int(target["clientWidth"]),
+            "segments": len(segment_images),
+            "offsets": offsets,
+            "size": Path(output_path).stat().st_size,
+            "image": {"width": stitched.width, "height": stitched.height},
+        }
 
     def get_page_text(self) -> dict:
         """Get the page's text content."""
