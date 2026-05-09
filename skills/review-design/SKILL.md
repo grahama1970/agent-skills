@@ -86,7 +86,8 @@ Supports multiple vision-capable providers:
 - **Claude** (`claude`) - claude-sonnet-4-20250514 (vision)
 - **OpenAI** (`openai`) - gpt-4o (vision)
 - **Gemini** (`gemini`) - gemini-2.0-flash (vision)
-- **Subagent** (`subagent`) - any model via `/subagent-service` (supports image I/O)
+- **scillm** (`scillm`, aliases: `vlm`, `subagent`) - `model: "vlm"` via
+  `POST /v1/chat/completions`, using scillm's VLM fallback cascade.
 
 ## Requirements
 
@@ -98,6 +99,353 @@ Capture screenshots before running a review:
 - `flameshot full --path ./screenshots/current.png` — System screenshot
 
 The `--screenshots` directory must contain at least one PNG/JPG image.
+
+Prefer a screenshot set, not a single screenshot:
+- one full-surface shot for layout and hierarchy
+- cropped shots for local defects
+- zoomed shots for typography, spacing, chips, badges, and dense evidence UI
+
+If `/surf` is available, use its crop and zoom capabilities to capture the exact defect area instead of relying only on full-page screenshots.
+
+## Bakeoff Board Contract
+
+When `$review-design` is used for a bakeoff, the generated bakeoff board is a
+review surface, not just a gallery. It must make the selection state obvious to
+a human in the first viewport.
+
+The board must answer these questions without requiring logs, screenshots
+folder inspection, or tab-click discovery:
+
+1. **Who won?** Show one and only one `Winner` label on the winning base
+   candidate.
+2. **Why did it win?** Put the winning rationale in a one-sentence
+   first-viewport summary.
+3. **What is being iterated now?** Show one and only one `Current iteration` or
+   `Active iteration` label on the successor candidate.
+4. **What changed in the iteration?** Summarize the active deltas in the same
+   first-viewport band.
+5. **How do I open it?** Candidate cards and the winner/iteration CTA must open
+   the corresponding design by click and keyboard focus.
+
+Required rendered elements:
+
+- A top-level winner/iteration banner above the candidate grid.
+- A distinct `Winner` badge on the original selected candidate.
+- A distinct `Current iteration` or `Active iteration` badge on the patched
+  successor.
+- A visible CTA such as `Open Current Iteration`.
+- Clickable/focusable candidate cards with tooltips or titles describing what
+  will open.
+- A fresh screenshot proving the first viewport shows the banner, badges, and
+  clickable affordances.
+
+Failure conditions:
+
+- The winner appears only in prose, filenames, logs, or final response text.
+- Multiple candidates look equally selected.
+- The iteration card looks like another peer candidate.
+- Navigation only works through tab buttons.
+- The user has to infer that `v2`, `iterate`, or a score means active work.
+- The screenshot shown to the human does not include the winner/iteration
+  banner.
+
+## Design Blockage Protocol
+
+If the problem is genuinely design-driven rather than implementation-driven, do not improvise.
+
+1. Check the current UI visually first (`/surf snap`, equivalent CDP capture, or system screenshot).
+2. Before asking for a redesign, ask each candidate model to generate 3–4 UI kit directions on a new isolated page or mockup surface.
+3. Compare the generated kits, select concrete patterns to keep, and state which patterns are rejected.
+4. If the issue is still ambiguous after visual inspection and UI-kit exploration, stop coding.
+5. Generate a complete external-review bundle for a web LLM reviewer.
+6. Hand off the bundle with explicit design questions instead of guessing.
+
+Use this protocol when the open question is about hierarchy, spacing, density, affordance,
+interaction semantics, or visual weight rather than a code defect.
+
+The isolated UI-kit page is intentional: it lets models explore visual systems without
+damaging the production surface. Treat the kits as design options, not implementation
+authority. The agent should pick and compose the strongest parts before touching the
+real UI.
+
+## External Web LLM Preference
+
+For serious design adjudication, prefer generating a complete bundle for manual upload to a
+web LLM reviewer instead of relying on an API call. Gemini AI Studio web is one good target,
+but the packaging workflow should remain model-agnostic.
+
+Use provider API review for:
+- quick iterative critique
+- broad screenshot audits
+- low-risk comparison passes
+
+Use `bundle` / `bundle-code` / `bundle-upload` for external web review when:
+- the agent is blocked on design judgment
+- the user asks for external design help
+- the review needs full context, screenshots, code, constraints, and open questions together
+- you need a durable handoff another human can inspect before sending
+
+## Async Review Backoff Loop
+
+Use this workflow when a selected design direction needs iterative reviewer
+backoff before implementation. This is common after `/create-mockup bakeoff`
+selects a winning candidate and the human adds corrections.
+
+The loop is deterministic and bounded. It does not require Pi or an interactive
+session manager; Pi/boomerang may summarize context, but the durable state must
+live in files and SSE/status artifacts.
+
+### Ask-Backed OpenCode Kimi Reviews
+
+When the human asks for `$ask oc kimi` with `$review-design`, treat that as a
+clear request to run the review-design critique loop through `/ask` + `/scillm`
+using the direct model `opencode-go/kimi-k2.6`. Do not route it through
+`review-design --provider subagent`, because that provider selects the
+subagent/default VLM lane rather than OpenCode Kimi.
+
+`$ask oc kimi ... for $review-design with maximum 3 rounds` means:
+
+1. Capture or use a fresh screenshot bundle for the target surface.
+2. Ask `opencode-go/kimi-k2.6` to review the screenshot(s) with the
+   review-design persona, constraints, and verdict schema.
+3. Patch the UI yourself; the reviewer only critiques.
+4. Re-render and capture a fresh screenshot before the next reviewer round.
+5. Stop at the first `satisfied`/PASS verdict, a concrete blocker, or the
+   requested maximum round count.
+
+The round limit is binding. If the user says "maximum 3 rounds", run at most
+three reviewer verdict rounds. If the user says "maximum 5 tries", run at most
+five. Each round must write artifacts under a durable loop directory and record
+the screenshot, reviewer response, verdict, patch summary, and next action.
+
+Use direct `/scillm` when the `/ask` CLI cannot attach images for the current
+surface, but preserve the `/ask` semantics: model shorthand resolution,
+streaming liveness, bounded rounds, and artifact-backed verdicts.
+
+### Section-Scoped Review Bundles
+
+When the human asks to review each section of a complex surface, do **not** send
+the whole page screenshot set to one reviewer call. Run one reviewer call per
+section, or at most a very small batch when sections are tightly coupled.
+
+Each section review call should include:
+
+1. One rendered screenshot cropped to the section under review.
+2. The section's purpose in the product workflow.
+3. The focused React/JSX/HTML that renders that section.
+4. The focused CSS affecting that section, plus shared design variables when
+   relevant.
+5. Short global context and non-negotiables that apply to every section.
+6. A strict verdict schema: `satisfied | needs_changes | blocked`.
+
+For React applications, include the relevant component code directly. Kimi and
+other strong multimodal reviewers can reason over the rendered screenshot and
+the React/CSS implementation together. Prefer focused code over whole-file dumps:
+send the section component, helper functions used by that section, and the CSS
+selectors that affect it. Include whole-file context only as a secondary
+reference and tell the reviewer to focus on the section.
+
+Correct section prompt shape:
+
+```text
+Review section: TOC Audit / Document Map
+
+Global context:
+- PDF Lab Coverage must avoid dashboard theater.
+- Evidence must be human-inspectable.
+- Provenance keys are not Memory/Qdrant recall proof.
+- Final confidence depends on real artifacts and recall QA.
+
+Section purpose:
+- Show whether TOC entries resolve to extracted document anchors.
+
+Attached:
+1. Section screenshot
+2. Section React/JSX
+3. Section CSS
+4. Relevant artifact field definitions
+
+Return:
+VERDICT: satisfied | needs_changes | blocked
+BLOCKING_CHANGES:
+- ...
+FIRST_PATCH:
+- ...
+```
+
+Wrong section review shape:
+
+```text
+Here are 12 screenshots of the whole page. Review every section.
+```
+
+That overloads the reviewer, encourages reasoning-only timeouts, and produces
+ambiguous aggregate feedback. If a section fails, patch only that section and
+re-review only that section before synthesizing the overall result.
+
+```text
+for round in 1..N:
+  1. project agent renders the current candidate and captures screenshots
+  2. reviewer model critiques screenshots + constraints + previous deltas
+  3. reviewer returns a structured verdict
+  4. project agent patches the design, never the reviewer model
+  5. project agent verifies with CDP and records artifacts
+  6. stop early if verdict is satisfied or if blocking ambiguity remains
+```
+
+### Roles
+
+- **Project agent** owns file changes, implementation judgment, CDP
+  verification, artifact paths, and final integration.
+- **Reviewer model** owns critique only. It must return findings, deltas, and a
+  verdict; it must not edit files or claim implementation is complete.
+- **Human** owns product constraints and may interrupt with new hard
+  requirements. New human constraints must be fed into the next reviewer round
+  before patching unless they are purely mechanical.
+
+### Required State Artifacts
+
+For each loop, create a stable directory such as:
+
+```text
+reviews/<surface>/loop/
+  state.json
+  events.jsonl
+  rounds/
+    001/
+      prompt.md
+      screenshot.png
+      read.json
+      reviewer.md
+      verdict.json
+      patch_summary.md
+      cdp.json
+    002/
+      ...
+  final/
+    approved_screenshot.png
+    implementation_handoff.md
+```
+
+`state.json` must include:
+
+```json
+{
+  "state": "running | needs_patch | waiting_review | satisfied | blocked | failed",
+  "round": 2,
+  "surface": "sparta-chat-kimi-v2",
+  "latest_screenshot": "rounds/002/screenshot.png",
+  "latest_verdict": "rounds/002/verdict.json",
+  "next_action": "patch | review | ask_human | implement"
+}
+```
+
+### SSE Event Contract
+
+Long-running review loops should expose or record SSE-shaped events so the human
+and project agent can work on other tasks while the loop progresses.
+
+```text
+event: round_started
+data: {"round":2,"surface":"sparta-chat-kimi-v2"}
+
+event: reviewer_progress
+data: {"round":2,"model":"opencode-go/kimi-k2.6","content_chars":3192}
+
+event: reviewer_verdict
+data: {"round":2,"verdict":"needs_changes","blocking_changes":[...]}
+
+event: patch_started
+data: {"round":2}
+
+event: cdp_verified
+data: {"round":2,"screenshot":"rounds/002/screenshot.png"}
+
+event: satisfied
+data: {"round":4,"handoff":"final/implementation_handoff.md"}
+```
+
+If the backing reviewer route is `/ask`, preserve its runtime artifacts and
+map `oracle_scillm_call_started`, `oracle_scillm_stream_progress`,
+`oracle_scillm_call_finished`, and failures into the loop `events.jsonl`.
+
+### Reviewer Verdict Schema
+
+Every reviewer round must return this shape, either as JSON or as Markdown with
+the same headings:
+
+```json
+{
+  "verdict": "satisfied | needs_changes | blocked",
+  "blocking_changes": [],
+  "non_blocking_changes": [],
+  "implementation_notes": [],
+  "screenshot_checks": [],
+  "do_not_do": []
+}
+```
+
+`satisfied` is only valid when the reviewer has inspected a fresh rendered
+screenshot. A reviewer may not mark a design satisfied from source files alone.
+
+### Bakeoff Winner Iteration
+
+After a design bakeoff:
+
+1. Select the winning structural candidate from rendered screenshots.
+2. Apply the **Bakeoff Board Contract** before reporting results to the human.
+   The rendered board must show the winner, rationale, current iteration,
+   active deltas, and open action in the first viewport.
+3. Verify the bakeoff board screenshot itself. Do not rely only on screenshots
+   of the candidate design.
+4. Make overview cards open the corresponding design when clicked or focused;
+   the board must not require guessing that only the tab bar is navigational.
+5. Preserve both the winning base candidate and the active iteration so the
+   lineage is clear.
+6. Start a bounded backoff loop on that candidate only.
+7. Feed human corrections and known failure examples into reviewer prompts.
+8. Patch the winning design in place or in a versioned copy such as `kimi-v2`.
+9. Run persona-based `/review-design` on the converged screenshot before React,
+   Tailwind, QML, or production implementation.
+
+Do not run another broad bakeoff unless the selected direction itself is no
+longer valid.
+
+The bakeoff board is itself a design artifact. A human should be able to answer
+these questions in the first viewport without reading logs: Who won? What is the
+active iteration? Why is it being iterated? How do I open it?
+
+### SPARTA / Compliance UI Rules
+
+For SPARTA, PDF Lab, QRA, CAE, CMMC, or compliance-review surfaces, the loop
+must explicitly test:
+
+- evidence cases are readable by a compliance officer
+- evidence cases are visually separate from final agent responses
+- controls, techniques, artifacts, and domain terms have hover/focus
+  explanations, not only color
+- source context never replaces citable evidence receipts
+- uploads are explicit when the workflow requires PDFs or source documents
+- no model picker is added unless the product requirement explicitly asks for
+  model selection
+- no dashboard, raw context pane, or metrics wall displaces the chat/evidence
+  task flow
+
+### Implementation Handoff
+
+When the reviewer is satisfied, the project agent writes
+`final/implementation_handoff.md` with:
+
+- approved screenshot path
+- approved mockup/source path
+- required components and states
+- animation requirements
+- accessibility and keyboard requirements
+- blocked/deferred items
+- exact screenshot checks to rerun after implementation
+
+Only then should the project agent implement the design in React/Tailwind,
+QML, or the target application.
 
 ## Usage
 
@@ -123,6 +471,24 @@ The `--screenshots` directory must contain at least one PNG/JPG image.
 
 # Generate review request bundle (for manual submission)
 ./run.sh bundle --screenshots ./ui/ --tokens ./tokens.json --output review_request.md
+
+# Generate low-file-count upload zip for external web LLMs
+./run.sh bundle-upload \
+  --screenshots ./ui/ \
+  --files src/components/sparta/shared/EvidenceCaseTrace.tsx \
+  --files src/components/sparta/explorer/QRAsView.tsx \
+  --context-file ./REVIEW_CONTEXT.md \
+  --core-objective "Audit whether the interface supports decision-first human correction of failed evidence cases" \
+  --audit-target "EvidenceView.tsx currently merges question, answer, and reasoning into one extraction blob; assess the impact on question-vs-answer grounding clarity" \
+  --audit-target "EvidenceCaseTrace.tsx uses a 3-column verification grid; predict failure in narrow chat layouts" \
+  --focus "hierarchy,density,inline entity emphasis" \
+  --surface-role "Middle pane: question, status, and agent response" \
+  --surface-role "Right pane: evidence explanation and optional details" \
+  --known-issue "Inline entities previously rendered as oversized chips in prose" \
+  --known-issue "Crosswalk chain counts leaked implementation detail into the primary UX" \
+  --request-mockup \
+  --target "Gemini web" \
+  --clipboard-file
 ```
 
 ## Burst Filmstrip Mode
@@ -203,22 +569,25 @@ roundN_audit.json    # Structured findings (machine-readable)
 
 | Provider | Model | Vision | Codebase Access | Default |
 |----------|-------|--------|----------------|---------|
-| **subagent** | gemini-2.5-pro (via `/subagent-service`) | Yes | **Yes** — Docker mounts full codebase + 237 skills | **DEFAULT** |
+| **scillm** | `vlm` via `localhost:4001` | Yes | Screenshots + explicit `--code-context` | **DEFAULT** |
 | claude | claude-sonnet-4-20250514 | Yes | No — screenshots only | |
 | openai | gpt-4o | Yes | No — screenshots only | |
 | gemini | gemini-2.0-flash | Yes | No — screenshots only | |
 
-### Why Subagent is Default
+### Why scillm is Default
 
-The subagent provider routes through `/subagent-service` (Docker container) which has:
-- **Full codebase access** — can read React components, design tokens, CSS alongside screenshots
-- **All 237 skills mounted** — can cross-reference `/best-practices-react`, `/taxonomy`, etc.
-- **Persona agents** — loaded from `.pi/agents/` for persona-driven reviews
-- **Memory/embedding services** — connected to host ArangoDB for prior review context
+The scillm provider routes through the local proxy:
 
-Direct providers (claude/openai/gemini) only see the base64 images + whatever code context
-you manually pass via `--code-context`. They can't grep the codebase or check if a design
-token is actually used correctly in the implementation. Subagent can.
+- It uses the public `vlm` model alias, not a hardcoded provider model.
+- scillm owns the VLM fallback cascade: Gemini free -> Gemini paid -> Claude OAuth -> Codex OAuth.
+- Calls include `Authorization: Bearer sk-dev-proxy-123` and `X-Caller-Skill: review-design`
+  for logging, budget tracking, and actionable provider errors.
+- Direct providers only see the screenshots and whatever code context you manually pass via
+  `--code-context`; scillm is the default path for model routing and fallback.
+
+`--provider vlm` and `--provider subagent` are accepted as compatibility aliases for
+`--provider scillm`. Do not add direct Chutes or Gemini model names as review-design
+providers; use scillm model aliases through the scillm route.
 
 ## Commands
 
@@ -230,6 +599,58 @@ Runs the 3-step pipeline for N rounds, each round refining findings.
 
 ### `bundle` - Generate review request
 Creates a markdown file with embedded images (base64) for manual submission to any LLM.
+
+When blocked on design, this is the default escalation path.
+
+### `bundle-upload` - Generate model-agnostic web-upload package
+Creates a low-file-count zip for upload to web LLM interfaces with strict file-count limits.
+
+Use this when:
+- the web UI rejects larger zips with too many files
+- you need a single upload artifact plus screenshots
+- you want model-agnostic packaging rather than provider-specific formatting
+
+The zip contains:
+- `REVIEW_REQUEST.md`
+- `REACT_COMPONENTS_BUNDLE.md`
+- `DIFF.md`
+- screenshot files (up to `--max-files`)
+
+For good results, populate the request with:
+- `--core-objective` stating the actual operator decision the UI must support
+- `--audit-target` entries naming exact requirement-vs-implementation tensions
+- `--surface-role` entries explaining what each pane or tab is supposed to do
+- `--known-issue` entries naming the exact UX failures already observed
+- a strong `--context` / `--context-file` describing the product workflow and constraints
+- a screenshot set that includes full context plus cropped/zoomed defect views
+
+This is the preferred path for Gemini web, Claude web, and similar browser upload flows.
+
+#### KDE Plasma clipboard file handoff
+
+When copying the generated zip to the clipboard on KDE Plasma/X11, prefer the
+Qt-compatible `text/uri-list` target. The GNOME-specific
+`x-special/gnome-copied-files` target may advertise successfully in `xclip` but
+not paste as a file in KDE/browser upload surfaces.
+
+Use this fallback after generating a review zip:
+
+```bash
+zip=/tmp/pdf-lab-review-design-bundle/pdf-lab-current-mockups-review.zip
+printf 'file://%s\r\n' "$(realpath "$zip")" | xclip -selection clipboard -t text/uri-list
+xclip -selection clipboard -t TARGETS -o | tr '\0' '\n'
+xclip -selection clipboard -t text/uri-list -o
+```
+
+Expected clipboard payload:
+
+```text
+file:///tmp/pdf-lab-review-design-bundle/pdf-lab-current-mockups-review.zip
+```
+
+If file-paste still fails in a browser, use the file picker with the zip path
+directly. The clipboard payload is still useful for Dolphin and KDE-aware paste
+targets.
 
 ### `bundle-code` - Generate COMPLETE code review bundle for external LLMs
 Creates a comprehensive markdown bundle with ALL code for honest external review.
@@ -269,6 +690,14 @@ Output includes (NO TRUNCATION):
 - Full source files (every line)
 - Full CSS files
 - Structured review questions asking for specific, actionable feedback
+
+When preparing an external web LLM handoff, include:
+- what the user is trying to accomplish
+- what currently looks wrong, with screenshots
+- what has already been changed
+- the relevant components/files
+- constraints and non-goals
+- the exact design decisions that are still unresolved
 
 ### `compare` - Side-by-side comparison
 Generates a visual comparison report between current and target design.
@@ -320,8 +749,13 @@ After design review produces token changes, you can:
 
 - Screenshots should be captured at 1x scale for consistent analysis
 - Include the full UI context (not just cropped elements) for better spatial reasoning
+- Also include cropped and zoomed screenshots for localized issues when available; broad context alone is usually not enough for strong UI critique
 - Reference images help but aren't required. However, screenshots ARE required — the skill will fail without them.
 - Large images are automatically resized to fit provider limits
+- Do not treat internal metrics, decorative pipeline graphics, or implementation details as user-facing UX value without visual justification.
+- If a design call cannot be defended after visual inspection, stop and escalate with an external web LLM bundle instead of pushing through.
+- Prefer packaging only the relevant components for the UX under review; do not dump the whole repo unless the review genuinely requires it.
+- For browser upload flows with zip limits, use `bundle-upload` so the final archive stays within a small file-count budget.
 
 ## Common Mistakes
 
@@ -346,14 +780,15 @@ flameshot full --path ./screenshots/current.png
 ./run.sh review --persona brandon-bailey --screenshots ./screenshots/
 ```
 
-### WRONG: Using direct provider (claude/openai) instead of subagent
+### WRONG: Adding direct model aliases as review-design providers
 ```bash
-./run.sh review --persona brandon-bailey --provider claude --screenshots ./ui/
-# Loses codebase access, can't cross-reference components
+./run.sh review --persona brandon-bailey --provider gemini-2.5-flash --screenshots ./ui/
+# review-design providers are not raw model IDs
 ```
 
-### RIGHT: Use subagent (default) for full codebase + skill access
+### RIGHT: Use scillm/default VLM routing
 ```bash
 ./run.sh review --persona brandon-bailey --screenshots ./ui/
-# subagent has Docker-mounted codebase, 237 skills, memory access
+./run.sh review --persona brandon-bailey --provider vlm --screenshots ./ui/
+# both route through scillm model: "vlm"
 ```

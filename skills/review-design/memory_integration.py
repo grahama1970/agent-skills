@@ -12,7 +12,9 @@ Pattern: Follows discover-contacts/memory_integration.py with graceful degradati
 
 import importlib.util
 import json
+import signal
 import sys
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -43,6 +45,14 @@ if _TAXONOMY_PATH.exists():
         _taxonomy_extract = getattr(_mod, "extract_taxonomy", None)
     except Exception as e:
         logger.debug(f"Taxonomy module load failed: {e}")
+
+
+class _MemoryRecallTimeout(BaseException):
+    pass
+
+
+def _handle_recall_timeout(signum: int, frame: Any) -> None:
+    raise _MemoryRecallTimeout()
 
 
 # ---------------------------------------------------------------------------
@@ -86,6 +96,7 @@ def recall_prior_design_reviews(
     project: str,
     component: str = "",
     k: int = 5,
+    timeout_s: float = 2.0,
 ) -> str:
     """
     Recall prior design reviews for a project or component.
@@ -97,7 +108,7 @@ def recall_prior_design_reviews(
     if not _HAS_MEMORY:
         return ""
 
-    try:
+    def _recall() -> str:
         client = MemoryClient(scope=MemoryScope.OPERATIONAL)
         result = client.recall(
             f"review_design {project} {component} accessibility responsive",
@@ -105,6 +116,23 @@ def recall_prior_design_reviews(
         )
         if result.found:
             return result.to_context(max_items=k)
+        return ""
+
+    try:
+        if threading.current_thread() is threading.main_thread():
+            previous_handler = signal.getsignal(signal.SIGALRM)
+            signal.signal(signal.SIGALRM, _handle_recall_timeout)
+            signal.setitimer(signal.ITIMER_REAL, timeout_s)
+            try:
+                return _recall()
+            finally:
+                signal.setitimer(signal.ITIMER_REAL, 0)
+                signal.signal(signal.SIGALRM, previous_handler)
+        return _recall()
+    except _MemoryRecallTimeout:
+        logger.warning(
+            f"Prior design review recall timed out after {timeout_s:.1f}s; continuing without memory context"
+        )
         return ""
     except Exception as e:
         logger.warning(f"Prior design review recall failed: {e}")

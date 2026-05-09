@@ -10,8 +10,11 @@ Implements the 3-step design review pipeline:
 import typer
 import base64
 import json
+import os
 import subprocess
 import sys
+import tempfile
+import zipfile
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -24,6 +27,7 @@ from config import (
     OUTPUT_BASE,
     PROVIDERS,
     ReviewRequest,
+    normalize_provider,
 )
 from memory_integration import recall_prior_design_reviews, learn_design_review
 from prompts import (
@@ -33,6 +37,186 @@ from prompts import (
     format_step2_prompt,
     format_step3_prompt,
 )
+
+
+def _read_context(context: Optional[str], context_file: Optional[Path]) -> str:
+    if context_file and context_file.exists():
+        return context_file.read_text()
+    if context:
+        return context
+    return (
+        "No explicit context provided. Explain the product surface, current UX problem, "
+        "constraints, prior failures, and what kind of review you need."
+    )
+
+
+def _copy_text_to_clipboard(text: str) -> str:
+    try:
+        subprocess.run(["wl-copy"], input=text.encode(), check=True)
+        return "wl-copy"
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        subprocess.run(["xclip", "-selection", "clipboard"], input=text.encode(), check=True)
+        return "xclip"
+
+
+def _copy_file_to_clipboard(path: Path) -> str:
+    uri_payload = f"file://{path}\r\n".encode()
+    try:
+        subprocess.run(["wl-copy", "--type", "text/uri-list"], input=uri_payload, check=True)
+        return "wl-copy"
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        subprocess.run(
+            ["xclip", "-selection", "clipboard", "-t", "text/uri-list"],
+            input=uri_payload,
+            check=True,
+        )
+        return "xclip"
+
+
+def _lang_for_path(path: Path) -> str:
+    ext = path.suffix[1:] if path.suffix else ""
+    lang_map = {"tsx": "tsx", "ts": "typescript", "jsx": "jsx", "js": "javascript", "py": "python"}
+    return lang_map.get(ext, ext)
+
+
+def _write_design_review_request(
+    output: Path,
+    *,
+    context_text: str,
+    focus: str,
+    files: list[Path],
+    screenshot_names: list[str],
+    target: str,
+    known_issues: list[str],
+    surface_roles: list[str],
+    core_objective: Optional[str],
+    audit_targets: list[str],
+    request_mockup: bool,
+) -> None:
+    focus_lines = ""
+    if focus:
+        focus_lines = "\n".join(f"- {item.strip()}" for item in focus.split(",") if item.strip())
+    file_lines = "\n".join(f"- `{file_path}`" for file_path in files)
+    screenshot_lines = "\n".join(f"- `{name}`" for name in screenshot_names) or "- No screenshots included"
+    issues_lines = "\n".join(f"- {item}" for item in known_issues) or (
+        "- No explicit known issues provided. Add concrete prior failures so the reviewer critiques the real problems."
+    )
+    surface_lines = "\n".join(f"- {item}" for item in surface_roles) or (
+        "- No explicit pane/tab roles provided. Add what each pane or tab is supposed to do so the reviewer can judge fit."
+    )
+    audit_target_lines = "\n".join(f"- {item}" for item in audit_targets) or (
+        "- No explicit code-aware audit targets provided. Add concrete implementation tensions or file-level risks."
+    )
+    core_objective_text = core_objective or (
+        "Conduct a decision-first UX audit that compares the intended workflow against the actual implementation, "
+        "with emphasis on human-in-the-loop correction and clarity of evidence."
+    )
+    required_output_tail = [
+        "6. When a finding is implementation-driven, cite the relevant file and explain the data-flow or layout consequence"
+    ]
+    if request_mockup:
+        required_output_tail.insert(0, "6. A concrete HTML/CSS or layout mockup of the recommended information flow")
+        required_output_tail[1] = "7. When a finding is implementation-driven, cite the relevant file and explain the data-flow or layout consequence"
+    required_output_lines = "\n".join(required_output_tail)
+    output.write_text(
+        f"""# Design Review Request
+
+Review the attached screenshot files, this request, the bundled implementation, and the focused diff.
+
+Target reviewer: {target}
+
+This is a tactical UX review, not a generic code review. Treat it as a delta audit: compare the stated requirements and observed failures against the actual React implementation and screenshots. Focus on hierarchy, density, information scent, visual weight, and whether the interface exposes the right information in the right order.
+
+## Core Objective
+
+{core_objective_text}
+
+## Context
+
+{context_text}
+
+## Surface Roles
+
+{surface_lines}
+
+## Known Observed Problems
+
+{issues_lines}
+
+## Code-Aware Audit Targets
+
+{audit_target_lines}
+
+## Review Focus
+
+{focus_lines or "- hierarchy\n- density\n- evidence summary clarity\n- inline entity emphasis\n- shared component fit"}
+
+## Primary Questions
+
+1. Is the current information hierarchy correct for the operator workflow?
+2. Are any reading-surface entity styles still too heavy?
+3. What belongs in the collapsed evidence summary versus hidden details?
+4. Should the shared component be identical across explorer and chat, or use a thin variant layer?
+5. What remaining UI is decorative, implementation-centric, or insufficiently informative?
+
+## Required Output
+
+1. Primary findings first, ordered by severity
+2. For each finding:
+   - what is wrong
+   - why it hurts the workflow
+   - exact recommendation
+3. Recommended final information order
+4. Recommended inline entity styling rules
+5. Recommendation on shared-vs-variant component design
+{required_output_lines}
+
+## Included Screenshots
+
+{screenshot_lines}
+
+Use the screenshots intentionally:
+- include at least one full-surface screenshot for hierarchy and context
+- include cropped screenshots for specific defects
+- include zoomed screenshots when the issue is local typography, spacing, badges, chips, or dense evidence UI
+- if a cropped screenshot is attached, evaluate it as the primary evidence for that local defect
+
+## Included Source Files
+
+{file_lines}
+"""
+    )
+
+
+def _write_code_bundle(output: Path, files: list[Path], css: list[Path]) -> None:
+    parts = [
+        "# Relevant Source Bundle\n\n",
+        "Only the components relevant to the current design review are included here.\n",
+    ]
+    for file_path in [*files, *css]:
+        if file_path.exists():
+            content = file_path.read_text()
+            parts.append(f"\n---\n\n## `{file_path}`\n\n```{_lang_for_path(file_path)}\n")
+            parts.append(content)
+            if not content.endswith("\n"):
+                parts.append("\n")
+            parts.append("```\n")
+        else:
+            parts.append(f"\n---\n\n## `{file_path}`\n\nERROR: file not found.\n")
+    output.write_text("".join(parts))
+
+
+def _write_diff_bundle(output: Path, git_diff: Optional[str], files: list[Path], css: list[Path]) -> None:
+    if not git_diff:
+        output.write_text("")
+        return
+    result = subprocess.run(
+        ["git", "diff", "--no-color", git_diff, "--", *[str(p) for p in [*files, *css]]],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    output.write_text(result.stdout if result.returncode == 0 else "")
 
 
 def encode_image_base64(image_path: Path) -> str:
@@ -126,7 +310,17 @@ def collect_images(directory: Path, max_images: int = 10, include_burst: bool = 
     return images
 
 
-from providers import call_provider  # noqa: E402 — provider dispatch (claude, openai, gemini, subagent)
+from providers import call_provider, check_scillm_health  # noqa: E402 — provider dispatch
+
+
+def _artifact_dir() -> Path:
+    override = os.environ.get("REVIEW_DESIGN_ARTIFACTS_DIR")
+    if override:
+        return Path(override)
+    artifact_root = Path(
+        os.environ.get("AGENT_SKILLS_ARTIFACT_ROOT", "/mnt/storage12tb/artifacts/agent-skills")
+    )
+    return artifact_root / "review-design"
 
 
 def find_implementation_files(screenshots_dir: Path) -> list[Path]:
@@ -140,8 +334,26 @@ def find_implementation_files(screenshots_dir: Path) -> list[Path]:
         "*.vue", "*.svelte", "*Style*.py", "*style*.ts"
     ]
 
-    # Search up to 3 levels up from screenshots dir
-    search_dirs = [screenshots_dir.parent, screenshots_dir.parent.parent]
+    # Search near the screenshot bundle, but never walk broad system roots. Test
+    # screenshots often live in /tmp; rglob from / would hang the review before
+    # the provider call.
+    blocked_roots = {
+        Path("/"),
+        Path("/tmp"),
+        Path("/var"),
+        Path("/home"),
+        Path("/mnt"),
+        Path("/mnt/storage12tb"),
+    }
+    search_dirs = []
+    for candidate in (screenshots_dir.parent, screenshots_dir.parent.parent):
+        resolved = candidate.resolve()
+        if resolved in blocked_roots:
+            continue
+        if len(resolved.parts) < 5:
+            continue
+        if resolved not in search_dirs:
+            search_dirs.append(resolved)
 
     for search_dir in search_dirs:
         if not search_dir.exists():
@@ -150,6 +362,8 @@ def find_implementation_files(screenshots_dir: Path) -> list[Path]:
             for path in search_dir.rglob(pattern):
                 if path.is_file() and path.stat().st_size < 100000:  # Skip huge files
                     impl_files.append(path)
+                    if len(impl_files) >= 5:
+                        return impl_files
 
     return impl_files[:5]  # Limit to 5 most relevant
 
@@ -526,31 +740,41 @@ def check_cmd(
     provider: str = typer.Option(DEFAULT_PROVIDER, "-p", "--provider", help=f"Provider to check (default: {DEFAULT_PROVIDER})"),
 ):
     """Check provider access."""
+    provider = normalize_provider(provider)
     prov = PROVIDERS[provider]
     print(f"Checking {prov.name}...")
     print(f"  CLI: {prov.cli}")
     print(f"  Model: {prov.model}")
     print(f"  Vision: {prov.supports_vision}")
 
-    result = subprocess.run(
-        ["which", prov.cli],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode == 0:
-        print(f"  CLI found: {result.stdout.strip()}")
+    if provider == "scillm":
+        check_scillm_health()
+        print("  scillm health: ok")
     else:
-        print(f"  CLI not found: {prov.cli}")
-        raise typer.Exit(code=1)
+        result = subprocess.run(
+            ["which", prov.cli],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            print(f"  CLI found: {result.stdout.strip()}")
+        else:
+            print(f"  CLI not found: {prov.cli}")
+            raise typer.Exit(code=1)
 
 
 @app.command()
 def bundle(
     screenshots: Path = typer.Option(..., "-s", "--screenshots", help="Directory containing UI screenshots"),
     tokens: Optional[Path] = typer.Option(None, "-t", "--tokens", help="Path to design tokens JSON file"),
-    output: Path = typer.Option(Path("review_request.md"), "-o", "--output", help="Output markdown file"),
+    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output markdown file"),
 ):
     """Generate review request bundle."""
+    if output is None:
+        output_dir = _artifact_dir()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output = output_dir / "review_request.md"
+
     print(f"Generating review bundle: {output}")
 
     images = collect_images(screenshots)
@@ -581,7 +805,7 @@ def bundle_code(
     css: list[Path] = typer.Option([], "--css", help="CSS/style files to include (repeatable)"),
     test_results: Optional[Path] = typer.Option(None, "--test-results", help="Test results JSON file"),
     git_diff: Optional[str] = typer.Option(None, "--git-diff", help="Git ref to diff against (e.g., HEAD~3)"),
-    output: Path = typer.Option(Path("REVIEW_BUNDLE.md"), "-o", "--output", help="Output markdown file"),
+    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output markdown file"),
     context: Optional[str] = typer.Option(None, "-c", "--context", help="Project context/rationale for the review"),
     context_file: Optional[Path] = typer.Option(None, "--context-file", help="File containing project context"),
     focus: str = typer.Option("", "--focus", help="Specific review focus areas (comma-separated)"),
@@ -594,6 +818,11 @@ def bundle_code(
     """
     from datetime import datetime
     import subprocess
+
+    if output is None:
+        output_dir = _artifact_dir()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output = output_dir / "REVIEW_BUNDLE.md"
 
     bundle_parts = []
 
@@ -728,12 +957,8 @@ def bundle_code(
 
     if clipboard:
         try:
-            try:
-                subprocess.run(["wl-copy"], input=bundle_content.encode(), check=True)
-                print(f"Copied to clipboard (wl-copy)")
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                subprocess.run(["xclip", "-selection", "clipboard"], input=bundle_content.encode(), check=True)
-                print(f"Copied to clipboard (xclip)")
+            backend = _copy_text_to_clipboard(bundle_content)
+            print(f"Copied to clipboard ({backend})")
             print(f"  Size: {total_bytes:,} bytes ({total_lines:,} lines)")
         except Exception as e:
             print(f"Clipboard copy failed: {e}")
@@ -746,6 +971,93 @@ def bundle_code(
         print(f"  Size: {total_bytes:,} bytes ({total_lines:,} lines)")
         print(f"  Files: {len(files) + len(css)}")
         print(f"\nTo copy: cat {output} | wl-copy")
+
+
+@app.command("bundle-upload")
+def bundle_upload(
+    screenshots: Path = typer.Option(..., "-s", "--screenshots", help="Directory containing screenshot files"),
+    files: list[Path] = typer.Option([], "-f", "--files", help="Relevant source files to include (repeatable)"),
+    css: list[Path] = typer.Option([], "--css", help="Relevant CSS/style files to include (repeatable)"),
+    git_diff: Optional[str] = typer.Option(None, "--git-diff", help="Git ref to diff against (e.g., HEAD~3)"),
+    output: Optional[Path] = typer.Option(None, "-o", "--output", help="Output zip file"),
+    context: Optional[str] = typer.Option(None, "-c", "--context", help="Project context/rationale for the review"),
+    context_file: Optional[Path] = typer.Option(None, "--context-file", help="File containing project context"),
+    focus: str = typer.Option("", "--focus", help="Specific review focus areas (comma-separated)"),
+    target: str = typer.Option("external web LLM", "--target", help="Target review surface, e.g. Gemini web, Claude web"),
+    core_objective: Optional[str] = typer.Option(None, "--core-objective", help="Primary decision or workflow objective for the review"),
+    audit_target: list[str] = typer.Option([], "--audit-target", help="Specific code-aware audit target or requirement/implementation conflict (repeatable)"),
+    known_issue: list[str] = typer.Option([], "--known-issue", help="Concrete UX failures or prior rejected patterns (repeatable)"),
+    surface_role: list[str] = typer.Option([], "--surface-role", help="What each pane/tab is supposed to do (repeatable)"),
+    request_mockup: bool = typer.Option(False, "--request-mockup", help="Ask the reviewer for an HTML/CSS or layout mockup of the proposed information flow"),
+    max_files: int = typer.Option(10, "--max-files", min=3, help="Maximum files allowed inside the zip"),
+    clipboard_file: bool = typer.Option(False, "--clipboard-file", help="Copy the resulting zip file to the clipboard as a file reference"),
+):
+    """Generate a low-file-count upload zip for external web LLM review."""
+    if output is None:
+        output_dir = _artifact_dir()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output = output_dir / "REVIEW_UPLOAD_PACKAGE.zip"
+
+    if not screenshots.exists() or not screenshots.is_dir():
+        raise typer.BadParameter(f"Screenshots directory not found: {screenshots}")
+
+    image_extensions = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+    screenshot_paths = [
+        path for path in sorted(screenshots.iterdir())
+        if path.is_file() and path.suffix.lower() in image_extensions
+    ]
+    if not screenshot_paths:
+        raise typer.BadParameter("At least one screenshot is required.")
+
+    reserved_files = 3  # request + code bundle + diff
+    allowed_screenshots = max_files - reserved_files
+    if allowed_screenshots < 1:
+        raise typer.BadParameter("--max-files must allow at least one screenshot.")
+    screenshot_paths = screenshot_paths[:allowed_screenshots]
+
+    context_text = _read_context(context, context_file)
+
+    with tempfile.TemporaryDirectory(prefix="review_design_upload_") as tmpdir:
+        bundle_dir = Path(tmpdir)
+        request_path = bundle_dir / "REVIEW_REQUEST.md"
+        code_bundle_path = bundle_dir / "REACT_COMPONENTS_BUNDLE.md"
+        diff_path = bundle_dir / "DIFF.md"
+
+        _write_design_review_request(
+            request_path,
+            context_text=context_text,
+            focus=focus,
+            files=[*files, *css],
+            screenshot_names=[path.name for path in screenshot_paths],
+            target=target,
+            known_issues=known_issue,
+            surface_roles=surface_role,
+            core_objective=core_objective,
+            audit_targets=audit_target,
+            request_mockup=request_mockup,
+        )
+        _write_code_bundle(code_bundle_path, files, css)
+        _write_diff_bundle(diff_path, git_diff, files, css)
+
+        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.write(request_path, request_path.name)
+            archive.write(code_bundle_path, code_bundle_path.name)
+            archive.write(diff_path, diff_path.name)
+            for screenshot_path in screenshot_paths:
+                archive.write(screenshot_path, screenshot_path.name)
+
+    with zipfile.ZipFile(output) as archive:
+        count = len(archive.namelist())
+        if count > max_files:
+            raise RuntimeError(f"Generated zip has {count} files, exceeds --max-files={max_files}")
+
+    print(f"Saved: {output}")
+    print(f"  Files in zip: {count}")
+    print(f"  Screenshots included: {len(screenshot_paths)}")
+    print(f"  Target: {target}")
+    if clipboard_file:
+        backend = _copy_file_to_clipboard(output.resolve())
+        print(f"Copied zip to clipboard as file reference ({backend})")
 
 
 if __name__ == "__main__":

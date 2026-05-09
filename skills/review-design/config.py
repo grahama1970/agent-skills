@@ -57,26 +57,37 @@ PROVIDERS = {
     "gemini": ProviderConfig(
         name="Google Gemini",
         cli="gemini",
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         supports_vision=True,
         supports_session=False,
         cost="free-tier",
         max_images=50,
         notes="1M+ context window. Handles 50+ screenshots + burst filmstrips + source code. Free tier. Direct REST API (no CLI piping)."
     ),
-    "subagent": ProviderConfig(
-        name="scillm Proxy",
+    "scillm": ProviderConfig(
+        name="scillm VLM proxy",
         cli="httpx",
         model="vlm",
         supports_vision=True,
         supports_session=False,
         cost="paid",
         max_images=50,
-        notes="Routes through scillm proxy on localhost:4001. Uses VLM alias for vision + large context."
+        notes="Routes through scillm on localhost:4001 using the public VLM cascade: Gemini free -> paid -> Claude OAuth -> Codex OAuth."
     ),
 }
 
-DEFAULT_PROVIDER = "subagent"
+PROVIDER_ALIASES = {
+    "subagent": "scillm",
+    "vlm": "scillm",
+}
+
+DEFAULT_PROVIDER = "scillm"
+
+
+def normalize_provider(provider: str) -> str:
+    """Return the canonical review-design provider name."""
+    provider_name = (provider or DEFAULT_PROVIDER).strip()
+    return PROVIDER_ALIASES.get(provider_name, provider_name)
 
 
 @dataclass
@@ -92,6 +103,9 @@ class ReviewRequest:
     description: str = ""
     focus_areas: list = field(default_factory=list)
     code_context_files: list = field(default_factory=list)  # Explicit source files for animation/implementation context
+
+    def __post_init__(self) -> None:
+        self.provider = normalize_provider(self.provider)
 
     def validate(self) -> list[str]:
         """Validate the request, return list of errors."""
@@ -126,7 +140,9 @@ class ReviewRequest:
         if self.reference_dir and not self.reference_dir.exists():
             errors.append(f"Reference directory not found: {self.reference_dir}")
         if self.provider not in PROVIDERS:
-            errors.append(f"Unknown provider: {self.provider}. Available: {list(PROVIDERS.keys())}")
+            valid = list(PROVIDERS.keys())
+            aliases = ", ".join(f"{alias}->{target}" for alias, target in sorted(PROVIDER_ALIASES.items()))
+            errors.append(f"Unknown provider: {self.provider}. Available: {valid}. Aliases: {aliases}")
         return errors
 
 
