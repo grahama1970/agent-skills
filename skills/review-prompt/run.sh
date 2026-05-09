@@ -5,5 +5,10 @@ set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SKILL_DIR"
 
-# Single command — pass all args directly
+# Accept the documented `./run.sh review ...` shape while preserving the
+# existing single-command Typer entrypoint.
+if [[ "${1:-}" == "review" ]]; then
+  shift
+fi
+
 uv run python review_prompt.py "$@"
