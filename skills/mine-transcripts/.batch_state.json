@@ -1,0 +1,17 @@
+{
+  "skill": "mine-transcripts",
+  "completed": 31578,
+  "total": 31578,
+  "description": "mine-transcripts",
+  "current_item": "codex:019df8ce-9638-7a93-9918-fb195cc9bc5c",
+  "progress_pct": 100.0,
+  "elapsed_seconds": 1.0,
+  "eta_seconds": null,
+  "throughput_per_sec": 31710.99,
+  "stats": {
+    "success": 31578,
+    "failed": 0
+  },
+  "last_updated": "2026-05-09 03:00:51",
+  "status": "completed"
+}
