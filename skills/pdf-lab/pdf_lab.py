@@ -54,6 +54,23 @@ from lib.convergence import run_convergence, ConvergenceResult
 from lib.tuner import tune as run_tune, TuneResult, PipelineHaltError
 from lib.verify import verify_real as run_verify_real, VerifyResult
 from lib.writer import EXTRACTOR_ROOT
+from lib.forensic import (
+    run_forensic_page,
+    run_non_pdf_oxide_table_scan,
+    run_pdf_oxide_element_scan,
+    run_preset_scan,
+    run_toc_scan,
+)
+from lib.agentic import (
+    compare_expected_actual,
+    run_agent_scan,
+    run_agentic_extract,
+    run_final_agent_pass,
+    run_pdf_oxide_pages,
+)
+from lib.memory_qa import MemoryQaConfig, write_memory_qa_report
+from lib.status_report import StatusReportPaths, build_status_report, default_paths, render_html
+from lib.coverage_loop import CoverageLoopConfig, build_coverage_loop
 
 try:
     import sys as _sys
@@ -211,6 +228,318 @@ def diagnose(
         typer.echo(f"Failing steps: {', '.join(diagnosis.failing_steps) or 'none'}")
         if diagnosis.s00_overestimated:
             typer.echo("NOTE: S00 appears to be systematically overestimating.")
+
+
+@app.command()
+def forensic(
+    pdf: Path = typer.Argument(..., help="Path to the PDF file"),
+    query: Optional[str] = typer.Option(None, help="Search request used to select an example page"),
+    page: Optional[int] = typer.Option(None, help="1-based page number; bypasses query page search"),
+    output_dir: Optional[Path] = typer.Option(None, "--out", help="Directory for PNG, JSON, and HTML artifacts"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Create a page PNG + beautified JSON/schema forensic report."""
+    try:
+        result = run_forensic_page(
+            pdf=pdf,
+            query=query,
+            page=page,
+            output_dir=output_dir,
+        )
+    except Exception as exc:
+        logger.error(f"Forensic report failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab forensic report created")
+    typer.echo(f"  page: {result.page}")
+    typer.echo(f"  triage tasks: {result.triage_count}")
+    typer.echo(f"  png: {result.png_path}")
+    typer.echo(f"  raw extraction: {result.raw_extraction_path}")
+    typer.echo(f"  schema: {result.schema_path}")
+    typer.echo(f"  html: {result.html_path}")
+
+
+@app.command(name="toc-scan")
+def toc_scan(
+    pdf: Path = typer.Argument(..., help="Path to the PDF file"),
+    output_dir: Optional[Path] = typer.Option(None, "--out", help="Directory for TOC JSON and HTML"),
+    toc_pages: int = typer.Option(12, help="Number of front-matter pages to inspect for printed TOC evidence"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Build a section map before table, element, or forensic scans."""
+    try:
+        result = run_toc_scan(pdf=pdf, output_dir=output_dir, toc_pages=toc_pages)
+    except Exception as exc:
+        logger.error(f"TOC scan failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab TOC scan created")
+    typer.echo(f"  sections: {result.section_count}")
+    typer.echo(f"  toc: {result.toc_path}")
+    typer.echo(f"  html: {result.html_path}")
+
+
+@app.command(name="preset-scan")
+def preset_scan(
+    pdf: Path = typer.Argument(..., help="Path to the PDF file"),
+    output_dir: Optional[Path] = typer.Option(None, "--out", help="Directory for preset scan JSON, PNGs, and HTML"),
+    top_k: int = typer.Option(5, help="Top pages to keep per preset"),
+    max_rendered: int = typer.Option(16, help="Max high-signal pages to render"),
+    dpi: int = typer.Option(95, help="Render DPI for candidate thumbnails"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Sweep every pdf_oxide preset against the PDF."""
+    try:
+        result = run_preset_scan(
+            pdf=pdf,
+            output_dir=output_dir,
+            top_k=top_k,
+            max_rendered=max_rendered,
+            dpi=dpi,
+        )
+    except Exception as exc:
+        logger.error(f"Preset scan failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab preset scan created")
+    typer.echo(f"  presets: {result.preset_count}")
+    typer.echo(f"  page count: {result.page_count}")
+    typer.echo(f"  preset scan: {result.preset_scan_path}")
+    typer.echo(f"  html: {result.html_path}")
+
+
+@app.command(name="agent-scan")
+def agent_scan(
+    pdf: Path = typer.Argument(..., help="Path to the PDF file"),
+    output_dir: Optional[Path] = typer.Option(None, "--out", help="Directory for expected_elements.json and scan artifacts"),
+    max_pages: int = typer.Option(12, help="Max representative pages to select"),
+    top_k: int = typer.Option(3, help="Top pages to retain per preset during preset scan"),
+    preset_path: Optional[Path] = typer.Option(None, "--preset", help="Document-family preset JSON to apply to matching policy"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Create the provisional agent oracle expected_elements.json."""
+    try:
+        result = run_agent_scan(pdf=pdf, output_dir=output_dir, max_pages=max_pages, top_k=top_k, preset_path=preset_path)
+    except Exception as exc:
+        logger.error(f"Agent scan failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab agent scan created")
+    typer.echo(f"  selected pages: {', '.join(str(page) for page in result.selected_pages)}")
+    typer.echo(f"  expected elements: {result.expected_count}")
+    typer.echo(f"  expected JSON: {result.expected_elements_path}")
+    typer.echo(f"  toc JSON: {result.toc_path}")
+    typer.echo(f"  preset JSON: {result.preset_scan_path}")
+
+
+@app.command(name="extract-pages")
+def extract_pages(
+    pdf: Path = typer.Argument(..., help="Path to the PDF file"),
+    pages: str = typer.Option(..., "--pages", help="Comma-separated 1-based pages to extract with pdf_oxide"),
+    output_dir: Path = typer.Option(..., "--out", help="Directory for actual_elements.json"),
+    preset_path: Optional[Path] = typer.Option(None, "--preset", help="Document-family preset JSON to apply to actual elements"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Run deterministic pdf_oxide extraction for selected pages."""
+    try:
+        page_numbers = _parse_page_list(pages)
+        result = run_pdf_oxide_pages(pdf=pdf, pages=page_numbers, output_dir=output_dir, preset_path=preset_path)
+    except Exception as exc:
+        logger.error(f"Page extraction failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab deterministic page extraction created")
+    typer.echo(f"  pages: {', '.join(str(page) for page in result.pages)}")
+    typer.echo(f"  actual elements: {result.actual_count}")
+    typer.echo(f"  actual JSON: {result.actual_elements_path}")
+
+
+@app.command(name="compare-json")
+def compare_json(
+    expected_json: Path = typer.Argument(..., help="agent expected_elements.json"),
+    actual_json: Path = typer.Argument(..., help="pdf_oxide actual_elements.json"),
+    output_dir: Path = typer.Option(..., "--out", help="Directory for comparison.json"),
+    target: float = typer.Option(0.95, help="Required match accuracy"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Compare agent scan JSON against pdf_oxide deterministic JSON."""
+    try:
+        result = compare_expected_actual(expected_json, actual_json, output_dir=output_dir, target=target)
+    except Exception as exc:
+        logger.error(f"JSON comparison failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab JSON comparison created")
+    typer.echo(f"  accuracy: {result.accuracy:.3f}")
+    typer.echo(f"  matched: {result.matched_count}/{result.total_expected}")
+    typer.echo(f"  passed: {result.passed}")
+    typer.echo(f"  comparison JSON: {result.comparison_path}")
+
+
+@app.command(name="agentic-extract")
+def agentic_extract(
+    pdf: Path = typer.Argument(..., help="Path to the PDF file"),
+    output_dir: Optional[Path] = typer.Option(None, "--out", help="Directory for agentic extraction artifacts"),
+    target: float = typer.Option(0.95, help="Required JSON-to-JSON match accuracy"),
+    max_iterations: int = typer.Option(5, help="Max extraction/compare iterations"),
+    max_pages: int = typer.Option(12, help="Max representative pages selected by agent scan"),
+    top_k: int = typer.Option(3, help="Top pages to retain per preset during preset scan"),
+    preset_path: Optional[Path] = typer.Option(None, "--preset", help="Document-family preset JSON for isolated extraction tuning"),
+    full_extract: bool = typer.Option(False, "--full-extract", help="Run full-document extraction if target is reached"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Run agent scan -> pdf_oxide extraction -> JSON comparison loop."""
+    try:
+        result = run_agentic_extract(
+            pdf=pdf,
+            output_dir=output_dir,
+            target=target,
+            max_iterations=max_iterations,
+            max_pages=max_pages,
+            top_k=top_k,
+            preset_path=preset_path,
+            full_extract=full_extract,
+        )
+    except Exception as exc:
+        logger.error(f"Agentic extraction failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab agentic extraction run created")
+    typer.echo(f"  accuracy: {result.accuracy:.3f}")
+    typer.echo(f"  passed: {result.passed}")
+    typer.echo(f"  iterations: {result.iterations}")
+    typer.echo(f"  expected JSON: {result.expected_elements_path}")
+    typer.echo(f"  actual JSON: {result.actual_elements_path}")
+    typer.echo(f"  comparison JSON: {result.comparison_path}")
+    typer.echo(f"  preset update plan: {result.preset_update_plan_path}")
+    typer.echo(f"  summary: {result.summary_path}")
+
+
+@app.command(name="final-pass")
+def final_pass(
+    extraction_path: Path = typer.Argument(..., help="Full-document final_extraction.json"),
+    output_dir: Optional[Path] = typer.Option(None, "--out", help="Directory for human_triage_queue.json"),
+    comparison_path: Optional[Path] = typer.Option(None, "--comparison", help="Representative-page comparison JSON"),
+    preset_path: Optional[Path] = typer.Option(None, "--preset", help="Document-family preset JSON used for extraction"),
+    max_tasks: Optional[int] = typer.Option(None, "--max-tasks", help="Optional cap for smoke tests"),
+    second_pass_model: str = typer.Option("oc-kimi", "--second-pass-model", help="scillm multimodal model for live second-pass review"),
+    second_pass_endpoint: str = typer.Option("http://localhost:4001/v1/chat/completions", "--second-pass-endpoint", help="scillm chat-completions endpoint"),
+    second_pass_timeout_s: float = typer.Option(300.0, "--second-pass-timeout", help="Timeout in seconds for each live second-pass model call"),
+    max_second_pass_cases: Optional[int] = typer.Option(None, "--max-second-pass-cases", help="Optional cap for live second-pass model calls"),
+    offline_second_pass: bool = typer.Option(False, "--offline-second-pass", help="Do not call scillm; write deterministic guardrail artifacts only"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Generate final human_triage_queue.json from full deterministic extraction."""
+    try:
+        result = run_final_agent_pass(
+            extraction_path=extraction_path,
+            output_dir=output_dir,
+            comparison_path=comparison_path,
+            preset_path=preset_path,
+            max_tasks=max_tasks,
+            second_pass_model=None if offline_second_pass else second_pass_model,
+            second_pass_endpoint=second_pass_endpoint,
+            second_pass_timeout_s=second_pass_timeout_s,
+            max_second_pass_cases=max_second_pass_cases,
+        )
+    except Exception as exc:
+        logger.error(f"Final agent pass failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab final agent pass created")
+    typer.echo(f"  pages: {result.page_count}")
+    typer.echo(f"  triage tasks: {result.task_count}")
+    typer.echo(f"  human triage queue: {result.triage_queue_path}")
+
+
+@app.command(name="table-scan")
+def table_scan(
+    pdf: Path = typer.Argument(..., help="Path to the PDF file"),
+    output_dir: Optional[Path] = typer.Option(None, "--out", help="Directory for candidate JSON, PNGs, and HTML"),
+    max_candidates: int = typer.Option(10, help="Max rendered candidates"),
+    dpi: int = typer.Option(110, help="Render DPI for candidate thumbnails"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Find likely table pages without using pdf_oxide extraction."""
+    try:
+        result = run_non_pdf_oxide_table_scan(
+            pdf=pdf,
+            output_dir=output_dir,
+            max_candidates=max_candidates,
+            dpi=dpi,
+        )
+    except Exception as exc:
+        logger.error(f"Table candidate scan failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab table candidate scan created")
+    typer.echo(f"  selected pages: {', '.join(str(page) for page in result.selected_pages)}")
+    typer.echo(f"  candidates: {result.candidates_path}")
+    typer.echo(f"  html: {result.html_path}")
+
+
+@app.command(name="element-scan")
+def element_scan(
+    pdf: Path = typer.Argument(..., help="Path to the PDF file"),
+    output_dir: Optional[Path] = typer.Option(None, "--out", help="Directory for element inventory JSON, PNGs, and HTML"),
+    max_rendered: int = typer.Option(12, help="Max high-signal pages to render"),
+    output_json: bool = typer.Option(False, "--json", help="JSON output"),
+):
+    """Inventory every per-page extraction layer exposed by pdf_oxide."""
+    try:
+        result = run_pdf_oxide_element_scan(
+            pdf=pdf,
+            output_dir=output_dir,
+            max_rendered=max_rendered,
+        )
+    except Exception as exc:
+        logger.error(f"Element scan failed: {exc}")
+        raise typer.Exit(1) from exc
+
+    if output_json:
+        typer.echo(json.dumps(result.to_dict(), indent=2))
+        return
+
+    typer.echo("pdf-lab pdf_oxide element inventory created")
+    typer.echo(f"  page count: {result.page_count}")
+    typer.echo(f"  inventory: {result.inventory_path}")
+    typer.echo(f"  html: {result.html_path}")
 
 
 @app.command()
@@ -573,6 +902,155 @@ def status():
         typer.echo("  (git log unavailable)")
 
 
+@app.command(name="status-report")
+def status_report(
+    manifest: Optional[Path] = typer.Option(None, help="Workflow manifest JSON"),
+    triage: Optional[Path] = typer.Option(None, help="Human triage queue JSON"),
+    comparison: Optional[Path] = typer.Option(None, help="JSON comparison artifact"),
+    extraction: Optional[Path] = typer.Option(None, help="Full extraction artifact"),
+    toc_audit: Optional[Path] = typer.Option(None, help="TOC audit artifact"),
+    evidence_manifest: Optional[Path] = typer.Option(None, help="Promoted evidence crop manifest"),
+    memory_qa: Optional[Path] = typer.Option(None, help="Memory/Qdrant final QA report"),
+    second_pass_backlog: Optional[Path] = typer.Option(None, help="Agent second-pass engineering backlog JSON"),
+    public_dir: Path = typer.Option(
+        Path("/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public"),
+        help="UX Lab public directory used to discover default PDF Lab artifacts",
+    ),
+    output: Optional[Path] = typer.Option(None, "--out", help="HTML report output path"),
+    json_output: Optional[Path] = typer.Option(None, "--json-out", help="JSON report output path"),
+    stdout_json: bool = typer.Option(False, "--json", help="Print JSON report to stdout"),
+):
+    """Create an artifact-derived PDF Lab status / definition-of-done report.
+
+    This command is deliberately conservative: missing artifacts, unresolved
+    human triage, suppressed agent findings, and sample-only evidence coverage
+    are all surfaced as blockers instead of being treated as success.
+    """
+    discovered = default_paths(public_dir)
+    paths = StatusReportPaths(
+        manifest=manifest or discovered.manifest,
+        triage=triage or discovered.triage,
+        comparison=comparison or discovered.comparison,
+        extraction=extraction or discovered.extraction,
+        toc_audit=toc_audit or discovered.toc_audit,
+        evidence_manifest=evidence_manifest or discovered.evidence_manifest,
+        memory_qa=memory_qa or discovered.memory_qa,
+        second_pass_backlog=second_pass_backlog or discovered.second_pass_backlog,
+    )
+    report = build_status_report(paths)
+
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+
+    if stdout_json:
+        typer.echo(json.dumps(report, indent=2, sort_keys=True))
+        return
+
+    output_path = output or Path("/tmp/pdf-lab-status-report.html")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(render_html(report), encoding="utf-8")
+
+    summary = report["summary"]
+    blockers = report["blockers"]
+    typer.echo("pdf-lab status report created")
+    typer.echo(f"  html: {output_path}")
+    if json_output:
+        typer.echo(f"  json: {json_output}")
+    typer.echo(f"  parity: {summary.get('parity_accuracy', 'unknown')}")
+    typer.echo(f"  human triage cards: {summary.get('human_triage_task_count', 'unknown')}")
+    typer.echo(f"  blockers: {len(blockers)}")
+
+
+@app.command(name="memory-qa")
+def memory_qa(
+    extraction: Optional[Path] = typer.Option(None, help="Full extraction artifact"),
+    evidence_manifest: Optional[Path] = typer.Option(None, help="Promoted evidence crop manifest"),
+    output: Optional[Path] = typer.Option(None, "--out", help="Memory/Qdrant QA report output path"),
+    public_dir: Path = typer.Option(
+        Path("/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public"),
+        help="UX Lab public directory used to discover default PDF Lab artifacts",
+    ),
+    sample_size: int = typer.Option(8, help="Number of evidence elements to check through Qdrant recall"),
+    apply_memory: bool = typer.Option(False, "--apply-memory", help="Persist evidence metadata to ArangoDB memory before checking Qdrant"),
+):
+    """Build the final Memory/Qdrant PDF-element recall QA artifact.
+
+    This is the standard post-triage agent QA gate. It uses real PDF Lab
+    extraction/evidence artifacts and reports failure when crops, memory upsert,
+    text vectors, visual vectors, or recall checks are incomplete.
+    """
+    discovered = default_paths(public_dir)
+    evidence_path = evidence_manifest or discovered.evidence_manifest
+    if evidence_path is None:
+        typer.echo("No evidence manifest configured; regenerate/promote evidence artifacts first.", err=True)
+        raise typer.Exit(1)
+
+    output_path = output or (public_dir / "pdf-lab-memory-qa-report.json")
+    report = write_memory_qa_report(MemoryQaConfig(
+        extraction_path=extraction or discovered.extraction,
+        evidence_manifest_path=evidence_path,
+        output_path=output_path,
+        public_root=public_dir,
+        sample_size=sample_size,
+        apply_memory=apply_memory,
+    ))
+
+    summary = report["summary"]
+    typer.echo(f"Memory/Qdrant QA passed: {report['passed']}")
+    typer.echo(f"Evidence coverage: {summary['evidence_elements']} / {summary['extraction_elements']}")
+    typer.echo(f"Text indexed: {summary['text_indexed_elements']}")
+    typer.echo(f"Visual indexed: {summary['visual_indexed_elements']}")
+    typer.echo(f"Sample checks: {summary['sample_checks_passed']} / {summary['sample_checks']}")
+    typer.echo(f"Wrote: {output_path}")
+
+
+@app.command(name="coverage-loop")
+def coverage_loop(
+    status_report_path: Optional[Path] = typer.Option(None, "--status-report", help="Artifact-derived PDF Lab status report JSON"),
+    public_dir: Path = typer.Option(
+        Path("/home/graham/workspace/experiments/pi-mono/packages/ux-lab/public"),
+        help="UX Lab public directory containing promoted PDF Lab artifacts",
+    ),
+    project_knowledge: Path = typer.Option(
+        Path("/home/graham/workspace/experiments/pdf_oxide/PROJECT_KNOWLEDGE.md"),
+        help="PDF Lab project-knowledge file containing anti-drift loop policy",
+    ),
+    active_plan: Optional[Path] = typer.Option(None, "--active-plan", help="Current repair/regenerate orchestration plan"),
+    output: Optional[Path] = typer.Option(None, "--out", help="Coverage loop artifact output path"),
+    history: Optional[Path] = typer.Option(None, "--history", help="Coverage loop JSONL history path"),
+    no_history: bool = typer.Option(False, "--no-history", help="Do not append this generation to loop history"),
+    stdout_json: bool = typer.Option(False, "--json", help="Print JSON artifact to stdout"),
+):
+    """Generate the PDF Lab Coverage anti-hallucination loop artifact.
+
+    The output records whether Coverage is complete, needs a new/amended plan,
+    or must stop for interview/dogpile because the same blocker persisted.
+    """
+    status_path = status_report_path or (public_dir / "pdf-lab-status-report.json")
+    out_path = output or (public_dir / "pdf-lab-coverage-loop.json")
+    artifact = build_coverage_loop(
+        CoverageLoopConfig(
+            status_report_path=status_path,
+            project_knowledge_path=project_knowledge,
+            active_plan_path=active_plan,
+            output_path=out_path,
+            history_path=history,
+        ),
+        append_history=not no_history,
+    )
+
+    if stdout_json:
+        typer.echo(json.dumps(artifact, indent=2, sort_keys=True))
+        return
+
+    typer.echo("pdf-lab coverage loop artifact created")
+    typer.echo(f"  json: {out_path}")
+    typer.echo(f"  next_action: {artifact['next_action']}")
+    typer.echo(f"  blocker_signature: {artifact['blocker_signature']}")
+    typer.echo(f"  same_blocker_streak: {artifact['same_blocker_streak']}")
+
+
 @app.command()
 def rollback(
     sha: str = typer.Option(..., help="Commit SHA to revert"),
@@ -703,6 +1181,28 @@ def _try_auto_delta(pdf: Path) -> ExtractionDelta:
     # Return empty delta (will trigger "looks good" or diagnosis)
     logger.warning("Could not find pipeline output. Using empty delta.")
     return ExtractionDelta()
+
+
+def _parse_page_list(pages: str) -> list[int]:
+    """Parse comma-separated pages and ranges, e.g. 1,4,9-12."""
+    parsed: list[int] = []
+    for part in pages.split(","):
+        token = part.strip()
+        if not token:
+            continue
+        if "-" in token:
+            start_text, end_text = token.split("-", 1)
+            start, end = int(start_text), int(end_text)
+            if end < start:
+                raise ValueError(f"Invalid page range: {token}")
+            parsed.extend(range(start, end + 1))
+        else:
+            parsed.append(int(token))
+    if not parsed:
+        raise ValueError("No pages provided")
+    if any(page < 1 for page in parsed):
+        raise ValueError("Pages are 1-based and must be positive")
+    return sorted(set(parsed))
 
 
 def _print_tune_result(result: TuneResult) -> None:

@@ -1,0 +1,41 @@
+{
+  "schema_version": "pdf_lab.second_pass_decision.v1",
+  "case_id": "p457_table_bounds_actual_p457_table_0",
+  "preset_id": "pdf.table.v1",
+  "decision": "agent_resolved",
+  "human_triage_required": false,
+  "classification": "real_table_candidate_or_row_fragment_engine_backlog",
+  "confidence": "high",
+  "reason": "The supplied visual evidence and actual JSON establish a table header plus one data row. There is no human table/not-table question and no supplied corrected JSON conflict.",
+  "target_evidence_used": [
+    {
+      "field_path": "actual_json.rows",
+      "fact": "Actual JSON contains the visible header row and data row."
+    },
+    {
+      "field_path": "known_visual_facts[0]",
+      "fact": "Visible evidence shows one table header row and one data row."
+    }
+  ],
+  "missing_evidence": [],
+  "validators": [
+    {
+      "validator_id": "rows_match_visible_text",
+      "status": "pass",
+      "fact": "Rows in actual JSON match the visible table text."
+    },
+    {
+      "validator_id": "bbox_does_not_cut_visible_table_content",
+      "status": "pass",
+      "fact": "No supplied visual fact says visible table content is cut off."
+    }
+  ],
+  "human_question": null,
+  "recommended_engine_fix": "Track any row-fragment/bounds learning as deterministic extractor backlog, not human triage.",
+  "proposed_json_delta": null,
+  "fixture_candidate": {
+    "enabled": true,
+    "fixture_family": "nist_control_tables",
+    "reason": "Use as a regression fixture that raw table candidates with visible header+row evidence must not become table/not-table human cards."
+  }
+}

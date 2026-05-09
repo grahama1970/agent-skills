@@ -1,0 +1,49 @@
+{
+  "schema_version": "pdf_lab.element_preset.v1",
+  "required_inputs": [
+    "case_id",
+    "page",
+    "element_id",
+    "original_page_image_path",
+    "annotated_page_image_path",
+    "actual_json",
+    "provenance"
+  ],
+  "common_validators": [
+    "artifact_paths_exist",
+    "actual_json_present",
+    "no_invented_text",
+    "page_matches_element_page"
+  ],
+  "decision_outputs": [
+    "agent_resolved",
+    "human_triage",
+    "fixture_candidate",
+    "blocker"
+  ],
+  "preset_id": "pdf.reference.v1",
+  "element_type": "reference",
+  "required_outputs": [
+    "reference_type",
+    "text",
+    "target_text",
+    "target_id",
+    "page",
+    "bbox",
+    "confidence",
+    "evidence"
+  ],
+  "validators": [
+    "reference_text_visible",
+    "target_must_exist_or_null",
+    "no_invented_cross_reference"
+  ],
+  "human_triage_gate": "Only escalate when a real cross-reference target is ambiguous across supplied artifacts.",
+  "rendering_contract": [
+    "show_original_page",
+    "show_annotated_page_or_crop",
+    "show_actual_json",
+    "show_candidate_corrected_json_or_null",
+    "show_validator_results"
+  ]
+}

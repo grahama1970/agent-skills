@@ -1,0 +1,49 @@
+{
+  "schema_version": "pdf_lab.element_preset.v1",
+  "required_inputs": [
+    "case_id",
+    "page",
+    "element_id",
+    "original_page_image_path",
+    "annotated_page_image_path",
+    "actual_json_or_actual_candidates",
+    "provenance"
+  ],
+  "common_validators": [
+    "artifact_paths_exist",
+    "extraction_evidence_present",
+    "no_invented_text",
+    "page_matches_element_page"
+  ],
+  "decision_outputs": [
+    "agent_resolved",
+    "human_triage",
+    "fixture_candidate",
+    "blocker"
+  ],
+  "preset_id": "pdf.unknown_region.v1",
+  "element_type": "unknown_region",
+  "required_outputs": [
+    "region_id",
+    "page",
+    "bbox",
+    "possible_element_types",
+    "why_unknown",
+    "blocked_outputs",
+    "safe_next_action",
+    "evidence"
+  ],
+  "validators": [
+    "no_structured_extraction_when_unknown",
+    "possible_types_from_closed_vocabulary",
+    "blocking_evidence_listed"
+  ],
+  "human_triage_gate": "Escalate with one narrow question only after artifact blockers are listed.",
+  "rendering_contract": [
+    "show_original_page",
+    "show_annotated_page_or_crop",
+    "show_actual_json_or_actual_candidates",
+    "show_candidate_corrected_json_or_null",
+    "show_validator_results"
+  ]
+}

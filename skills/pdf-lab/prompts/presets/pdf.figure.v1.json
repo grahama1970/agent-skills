@@ -1,0 +1,52 @@
+{
+  "schema_version": "pdf_lab.element_preset.v1",
+  "required_inputs": [
+    "case_id",
+    "page",
+    "element_id",
+    "original_page_image_path",
+    "annotated_page_image_path",
+    "actual_json",
+    "provenance"
+  ],
+  "common_validators": [
+    "artifact_paths_exist",
+    "actual_json_present",
+    "no_invented_text",
+    "page_matches_element_page"
+  ],
+  "decision_outputs": [
+    "agent_resolved",
+    "human_triage",
+    "fixture_candidate",
+    "blocker"
+  ],
+  "preset_id": "pdf.figure.v1",
+  "element_type": "figure",
+  "required_outputs": [
+    "figure_id",
+    "page",
+    "bbox",
+    "figure_type",
+    "caption",
+    "visible_labels",
+    "summary",
+    "confidence",
+    "warnings",
+    "evidence"
+  ],
+  "validators": [
+    "page_image_required",
+    "caption_link_checked",
+    "no_invented_labels",
+    "do_not_extract_unreadable_values"
+  ],
+  "human_triage_gate": "Only escalate when figure/caption attachment or figure type cannot be resolved from artifacts.",
+  "rendering_contract": [
+    "show_original_page",
+    "show_annotated_page_or_crop",
+    "show_actual_json",
+    "show_candidate_corrected_json_or_null",
+    "show_validator_results"
+  ]
+}

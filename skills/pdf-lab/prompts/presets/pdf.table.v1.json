@@ -1,0 +1,131 @@
+{
+  "schema_version": "pdf_lab.element_preset.v1",
+  "required_inputs": [
+    "case_id",
+    "page",
+    "element_id",
+    "original_page_image_path",
+    "annotated_page_image_path",
+    "actual_json",
+    "provenance"
+  ],
+  "common_validators": [
+    "artifact_paths_exist",
+    "actual_json_present",
+    "no_invented_text",
+    "page_matches_element_page"
+  ],
+  "decision_outputs": [
+    "agent_resolved",
+    "human_triage",
+    "fixture_candidate",
+    "blocker"
+  ],
+  "preset_id": "pdf.table.v1",
+  "element_type": "table",
+  "required_outputs": [
+    "table_id",
+    "page",
+    "bbox",
+    "columns",
+    "rows",
+    "cell_grid",
+    "merged_cells",
+    "header_rows",
+    "caption",
+    "notes",
+    "confidence",
+    "warnings",
+    "evidence"
+  ],
+  "validators": [
+    "page_image_required",
+    "annotated_bbox_required",
+    "rows_match_visible_text",
+    "no_invented_cells",
+    "bbox_does_not_cut_visible_table_content",
+    "table_metrics_present",
+    "table_merge_evidence_present",
+    "merged_cells_match_visible_grid",
+    "spanning_text_not_duplicated",
+    "rowspan_colspan_preserved",
+    "covered_cells_not_emitted_as_blank_cells"
+  ],
+  "false_positive_rejection_rules": [
+    {
+      "rule_id": "prose_fragment_rows_with_empty_trailing_cells",
+      "fixture_family": "table_false_positive",
+      "resolved_type": "paragraph_block",
+      "recommended_operation": "replace_element",
+      "description": "Reject ordinary paragraph prose that pdf_oxide split into fake table rows/cells.",
+      "reject_when_all_supported": [
+        "has_header is false",
+        "visible region has no grid lines or cell boundaries",
+        "visible region has no semantic row-column relationship",
+        "candidate rows read as continuous paragraph prose fragments",
+        "candidate has one populated prose column plus empty trailing cells"
+      ],
+      "correction_contract": [
+        "Set claimed_element.is_valid to false.",
+        "Set table_review.is_semantic_table to false.",
+        "Set resolved_element.type to paragraph_block.",
+        "Use replace_element only when paragraph_block is persistable downstream.",
+        "Preserve source_bbox when it tightly covers the prose excerpt.",
+        "Do not reconstruct body_text from corrupted fake table cells in this pass."
+      ],
+      "positive_control": "Do not apply this rejection rule to real tables with explicit header-row evidence and populated data rows."
+    },
+    {
+      "rule_id": "titled_boxed_prose_callout",
+      "fixture_family": "table_false_positive",
+      "resolved_type": "boxed_callout",
+      "recommended_operation": "mark_false_positive_plus_route_to_preset",
+      "route_to_preset": "pdf.boxed_callout.v1",
+      "description": "Reject titled bordered or shaded prose callouts that pdf_oxide promoted to tables.",
+      "reject_when_all_supported": [
+        "visible region is bordered or shaded",
+        "visible region has a title plus prose body",
+        "visible region has no table grid, column headers, or structured rows"
+      ],
+      "correction_contract": [
+        "Set resolved_element.type to boxed_callout.",
+        "Preserve source_bbox.",
+        "Emit corrected_bbox for the outer visible callout when source_bbox is over_broad.",
+        "Route to pdf.boxed_callout.v1 when boxed_callout is not persistable downstream."
+      ]
+    }
+  ],
+  "merge_review_contract": {
+    "purpose": "Decide whether visually adjacent table candidates should remain separate tables or merge into one logical table.",
+    "required_visual_inputs": [
+      "primary_table_annotated_page_image",
+      "adjacent_or_continuation_table_annotated_page_images_when_present"
+    ],
+    "required_metrics": [
+      "row_count",
+      "col_count",
+      "populated_column_count",
+      "has_header",
+      "populated_cell_count",
+      "empty_cell_count",
+      "non_empty_ratio",
+      "cells_with_colspan",
+      "cells_with_rowspan",
+      "max_colspan",
+      "max_rowspan"
+    ],
+    "decision_rule": "Use both annotated page images and extracted table metrics. Merge only when visual continuity, compatible column structure, and cell/data quality support one logical table; otherwise classify as separate tables or engineering backlog.",
+    "human_triage_gate": "Escalate only when the supplied images and metrics conflict on whether adjacent table regions are one logical table and the selected preset validators cannot resolve it."
+  },
+  "human_triage_gate": "Only escalate when visible table content and actual/candidate JSON conflict on table identity, bounds, merge/continuation status, row structure, column structure, spanning cells, or cell text.",
+  "rendering_contract": [
+    "show_original_page",
+    "show_annotated_page_or_crop",
+    "show_adjacent_table_page_images_when_present",
+    "show_actual_json",
+    "show_table_metrics",
+    "show_table_merge_review",
+    "show_candidate_corrected_json_or_null",
+    "show_validator_results"
+  ]
+}

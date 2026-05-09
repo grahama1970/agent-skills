@@ -1,0 +1,51 @@
+{
+  "schema_version": "pdf_lab.element_preset.v1",
+  "required_inputs": [
+    "case_id",
+    "page",
+    "element_id",
+    "original_page_image_path",
+    "annotated_page_image_path",
+    "actual_json",
+    "provenance"
+  ],
+  "common_validators": [
+    "artifact_paths_exist",
+    "actual_json_present",
+    "no_invented_text",
+    "page_matches_element_page"
+  ],
+  "decision_outputs": [
+    "agent_resolved",
+    "human_triage",
+    "fixture_candidate",
+    "blocker"
+  ],
+  "preset_id": "pdf.section.v1",
+  "element_type": "section",
+  "required_outputs": [
+    "section_id",
+    "title",
+    "level",
+    "page_start",
+    "page_end",
+    "parent_section",
+    "subsections",
+    "summary",
+    "evidence_pages",
+    "evidence"
+  ],
+  "validators": [
+    "toc_or_heading_evidence_required",
+    "page_range_consistent",
+    "no_invented_section_titles"
+  ],
+  "human_triage_gate": "Only escalate when TOC, heading extraction, and page evidence disagree on section identity or range.",
+  "rendering_contract": [
+    "show_original_page",
+    "show_annotated_page_or_crop",
+    "show_actual_json",
+    "show_candidate_corrected_json_or_null",
+    "show_validator_results"
+  ]
+}

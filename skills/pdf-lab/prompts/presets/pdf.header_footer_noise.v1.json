@@ -1,0 +1,50 @@
+{
+  "schema_version": "pdf_lab.element_preset.v1",
+  "required_inputs": [
+    "case_id",
+    "page",
+    "element_id",
+    "original_page_image_path",
+    "annotated_page_image_path",
+    "actual_json",
+    "provenance"
+  ],
+  "common_validators": [
+    "artifact_paths_exist",
+    "actual_json_present",
+    "no_invented_text",
+    "page_matches_element_page"
+  ],
+  "decision_outputs": [
+    "agent_resolved",
+    "human_triage",
+    "fixture_candidate",
+    "blocker"
+  ],
+  "preset_id": "pdf.header_footer_noise.v1",
+  "element_type": "header_footer_noise",
+  "required_outputs": [
+    "noise_id",
+    "page",
+    "bbox",
+    "text",
+    "noise_type",
+    "repeat_pattern",
+    "action",
+    "confidence",
+    "evidence"
+  ],
+  "validators": [
+    "repeat_pattern_or_margin_band_required",
+    "do_not_use_as_content_evidence",
+    "safe_to_suppress_requires_repetition_or_margin_role"
+  ],
+  "human_triage_gate": "Only escalate when suppressing the region would remove unique document content.",
+  "rendering_contract": [
+    "show_original_page",
+    "show_annotated_page_or_crop",
+    "show_actual_json",
+    "show_candidate_corrected_json_or_null",
+    "show_validator_results"
+  ]
+}

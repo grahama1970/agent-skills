@@ -1,0 +1,49 @@
+{
+  "schema_version": "pdf_lab.element_preset.v1",
+  "required_inputs": [
+    "case_id",
+    "page",
+    "element_id",
+    "original_page_image_path",
+    "annotated_page_image_path",
+    "actual_json",
+    "provenance"
+  ],
+  "common_validators": [
+    "artifact_paths_exist",
+    "actual_json_present",
+    "no_invented_text",
+    "page_matches_element_page"
+  ],
+  "decision_outputs": [
+    "agent_resolved",
+    "human_triage",
+    "fixture_candidate",
+    "blocker"
+  ],
+  "preset_id": "pdf.mixed_region.v1",
+  "element_type": "mixed_region",
+  "required_outputs": [
+    "region_id",
+    "page",
+    "bbox",
+    "sub_elements",
+    "blocked_outputs",
+    "safe_next_action",
+    "confidence",
+    "evidence"
+  ],
+  "validators": [
+    "sub_elements_have_types",
+    "do_not_force_single_type",
+    "blocked_outputs_named"
+  ],
+  "human_triage_gate": "Escalate only if split into sub-elements cannot be resolved from artifacts.",
+  "rendering_contract": [
+    "show_original_page",
+    "show_annotated_page_or_crop",
+    "show_actual_json",
+    "show_candidate_corrected_json_or_null",
+    "show_validator_results"
+  ]
+}

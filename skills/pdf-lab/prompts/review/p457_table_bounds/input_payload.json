@@ -1,0 +1,44 @@
+{
+  "schema_version": "pdf_lab.second_pass_case_payload.v1",
+  "case_id": "p457_table_bounds_actual_p457_table_0",
+  "preset_id": "pdf.table.v1",
+  "page": 457,
+  "element_id": "actual:p457:table:0",
+  "original_page_image_path": "/tmp/pdf-lab-case-contract-first-confusion.html#original-page",
+  "annotated_page_image_path": "/tmp/pdf-lab-case-contract-first-confusion.html#annotated-page",
+  "actual_json": {
+    "element_id": "actual:p457:table:0",
+    "type": "table",
+    "page": 457,
+    "bbox": [
+      72,
+      96,
+      508,
+      74
+    ],
+    "source": "pdf_oxide.extract_tables",
+    "rows": [
+      [
+        "CONTROL NUMBER",
+        "CONTROL NAME",
+        "IMPLEMENTED BY",
+        "ASSURANCE"
+      ],
+      [
+        "IR-10",
+        "Integrated Information Security Analysis Team",
+        "W",
+        "W: Moved to IR-4(11)"
+      ]
+    ]
+  },
+  "candidate_corrected_json": null,
+  "known_visual_facts": [
+    "Visible evidence shows one table header row and one data row.",
+    "No visible table content is cut off in the supplied annotation."
+  ],
+  "provenance": {
+    "source": "pdf_oxide.extract_tables",
+    "artifact": "/tmp/pdf-lab-second-pass-table-gate-v2/human_triage_queue.json"
+  }
+}

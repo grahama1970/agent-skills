@@ -1,0 +1,71 @@
+# RATIONALE (not sent to LLM)
+# Purpose: User-message template for one PDF Lab second-pass evidence case.
+# Consumer: scillm or equivalent model call invoked by pdf-lab final-pass/prompt review harness.
+# Why this matters: The payload must be stable enough to review, replay, and turn into fixtures.
+# Input: CASE_PAYLOAD JSON inserted below.
+# Output: JSON matching the exact schema at the end of this file.
+# Last reviewed: 2026-05-07 by project agent.
+
+Given `CASE_PAYLOAD`, apply the selected element preset and return the second-pass decision.
+
+Evidence classification:
+1. Target evidence: supplied artifact paths, expected JSON, actual JSON, actual candidate extractions, candidate corrected JSON, bbox, page, element ID, and provenance.
+2. Technique evidence: element-type rules from the selected preset.
+3. Missing evidence: required preset inputs absent from `CASE_PAYLOAD`.
+
+Rules:
+- Recommend human triage only when target evidence contains an unresolved conflict.
+- Do not cite the selected preset as target evidence.
+- Do not infer missing rows, cells, values, captions, or section relationships.
+- Do not ask bbox-expansion questions unless visible content is cut off or candidate corrected JSON proves a mismatch.
+- For table merge/split/continuation questions, use `table_merge_review.primary_table_metrics`, `table_merge_review.adjacent_table_candidates[]`, and all supplied annotated page images before deciding. Do not escalate to a human if the metrics and images support a deterministic separate/merge/backlog classification.
+- If `actual_json` is null but `actual_candidates[]` is non-empty, evaluate the candidate extraction evidence instead of returning blocker for missing `actual_json`.
+- Use real JSON types: booleans as true/false, integers as numbers, arrays as arrays, null as null.
+
+CASE_PAYLOAD:
+```json
+{{CASE_PAYLOAD_JSON}}
+```
+
+Return this exact JSON shape:
+```json
+{
+  "schema_version": "pdf_lab.second_pass_decision.v1",
+  "case_id": "string",
+  "preset_id": "string",
+  "decision": "agent_resolved|human_triage|fixture_candidate|blocker",
+  "human_triage_required": true,
+  "classification": "string",
+  "confidence": "low|medium|high",
+  "reason": "string",
+  "target_evidence_used": [
+    {
+      "field_path": "string",
+      "fact": "string"
+    }
+  ],
+  "missing_evidence": ["string"],
+  "validators": [
+    {
+      "validator_id": "string",
+      "status": "pass|fail|blocked",
+      "fact": "string"
+    }
+  ],
+  "table_merge_review": {
+    "merge_decision": "merge|separate|not_applicable|blocked|null",
+    "primary_table_metrics": "object|null",
+    "adjacent_table_metrics_considered": [],
+    "visual_evidence_used": [],
+    "reason": "string|null"
+  },
+  "human_question": null,
+  "recommended_engine_fix": null,
+  "proposed_json_delta": null,
+  "fixture_candidate": {
+    "enabled": false,
+    "fixture_family": null,
+    "reason": null
+  }
+}
+```

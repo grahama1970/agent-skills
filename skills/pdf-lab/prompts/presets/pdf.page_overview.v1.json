@@ -1,0 +1,46 @@
+{
+  "schema_version": "pdf_lab.element_preset.v1",
+  "required_inputs": [
+    "case_id",
+    "page",
+    "element_id",
+    "original_page_image_path",
+    "annotated_page_image_path",
+    "actual_json",
+    "provenance"
+  ],
+  "common_validators": [
+    "artifact_paths_exist",
+    "actual_json_present",
+    "no_invented_text",
+    "page_matches_element_page"
+  ],
+  "decision_outputs": [
+    "agent_resolved",
+    "human_triage",
+    "fixture_candidate",
+    "blocker"
+  ],
+  "preset_id": "pdf.page_overview.v1",
+  "element_type": "page_overview",
+  "required_outputs": [
+    "page",
+    "detected_element_counts",
+    "dominant_layout",
+    "evidence_paths",
+    "warnings"
+  ],
+  "validators": [
+    "page_image_required",
+    "element_inventory_required",
+    "do_not_infer_missing_structures"
+  ],
+  "human_triage_gate": "Only escalate when page-level artifact inventory is missing or contradicts page image.",
+  "rendering_contract": [
+    "show_original_page",
+    "show_annotated_page_or_crop",
+    "show_actual_json",
+    "show_candidate_corrected_json_or_null",
+    "show_validator_results"
+  ]
+}
