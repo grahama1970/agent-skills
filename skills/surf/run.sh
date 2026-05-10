@@ -410,7 +410,21 @@ fi
 
 # Handle setup/sanity check
 if [[ "$1" == "setup" || "$1" == "sanity" || "$1" == "doctor" ]]; then
+    if [[ "${2:-}" == "webgpt" ]]; then
+        exec "$SKILL_DIR/scripts/webgpt-sanity.sh" "${@:3}"
+    fi
     exec "$SKILL_DIR/sanity.sh" "${@:2}"
+fi
+
+# Higher-level WebGPT handoff helpers. These intentionally live in the skill
+# wrapper because they own file artifacts and completion proof, while surf-cli
+# owns browser mechanics.
+if [[ "$1" == "webgpt.submit" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-submit.sh" "${@:2}"
+fi
+
+if [[ "$1" == "webgpt.sanity" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-sanity.sh" "${@:2}"
 fi
 
 # Handle help
@@ -437,6 +451,10 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf scroll <dir>       Scroll (up/down/top/bottom)"
     echo "  surf wait <seconds>     Wait"
     echo "  surf text               Get page text content"
+    echo ""
+    echo "WebGPT Handoff:"
+    echo "  surf webgpt.submit --input request.md --output response.md"
+    echo "  surf webgpt.sanity      Run a real sentinel round-trip smoke"
     echo ""
     echo "CDP Fallback (when extension not available):"
     echo "  surf cdp start [port] [--headless]  Start Chrome with CDP"

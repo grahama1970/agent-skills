@@ -124,6 +124,90 @@ surf read --filter all           # Include all elements (not just interactive)
 surf text                        # Get raw text content only
 ```
 
+### WebGPT Completion-Sentinel Handoff
+
+For ChatGPT/WebGPT handoffs, use `webgpt.submit` instead of manually pasting a
+completion marker into prompts. The command owns sentinel generation, prompt
+injection, completion waiting, stability polling, cleaned output, raw output,
+and proof metadata.
+
+```bash
+surf webgpt.submit \
+  --input .webgpt/01_request.md \
+  --output .webgpt/02_response.md \
+  --raw-output .webgpt/02_response.raw.md \
+  --meta-output .webgpt/02_response.meta.json \
+  --sentinel auto \
+  --stable-polls 3 \
+  --timeout 900 \
+  --tab-id 837343233
+```
+
+If the human gives a full ChatGPT conversation URL instead of a tab id, use
+`--url` only to resolve an already-open tab:
+
+```bash
+surf webgpt.submit \
+  --input .webgpt/01_request.md \
+  --output .webgpt/02_response.md \
+  --url "https://chatgpt.com/c/6a0097ff-e7e0-83ea-93c2-3a6b88e2a67f"
+```
+
+Behavior:
+- `--sentinel auto` creates a unique marker such as
+  `<<<WEBGPT_DONE:20260510T123456Z:8f41c2ab>>>`.
+- `$surf` appends a non-optional final-marker instruction to the submitted
+  prompt.
+- `$surf` waits for the final assistant DOM message to contain the marker and
+  then remain unchanged for `--stable-polls` polls.
+- Whole-page text is diagnostic only. It must never satisfy the completion
+  contract because the submitted prompt itself contains the sentinel.
+- Raw output keeps the marker. Clean output strips the marker. Metadata records
+  the sentinel, output paths, timeout, stability policy, and whether the marker
+  appeared only in the raw output.
+- The controlled ChatGPT tab id is required metadata. `controlled_tab_id=null`
+  is a failed handoff, even if some page text contains the sentinel.
+- The clean output strips only a terminal sentinel from assistant-only text; it
+  must not include page chrome, sidebar history, submitted prompt text, or a Tab
+  ID footer.
+- `webgpt.submit` persists the controlled tab id in
+  `/tmp/surf-webgpt-controlled-tab-id` by default and reuses it on later runs.
+- An explicit `--tab-id` overrides persisted state and tab discovery. Use this
+  when the human names the WebGPT tab that should be controlled.
+- An explicit `--url` resolves an already-open ChatGPT tab by exact URL and
+  then behaves like `--tab-id`. It fails if no open tab matches; it does not
+  silently pick a different ChatGPT tab.
+- Set `SURF_WEBGPT_TAB_STATE=/path/to/state` for an alternate state file, or
+  pass a `--tab-id` through lower-level `surf chatgpt` commands when debugging.
+
+Do not infer WebGPT completion from spinner absence, button state, visual
+stillness, or page text outside the final assistant response. Use the sentinel
+contract for any workflow that copies WebGPT output into files.
+
+Real-world sanity check:
+
+```bash
+surf webgpt.sanity --output-dir /tmp/surf-webgpt-sanity --timeout 900 --tab-id 837343233
+```
+
+This submits a compact but complex SPARTA/Embry OS infographic prompt and
+requires the response to round trip through the sentinel protocol with expected
+Markdown sections. It captures a same-tab screenshot and fails if the proof tab
+differs from the controlled tab, if the screenshot/page text is Cloudflare or an
+unrelated site, if no controlled tab id is recorded, or if clean output contains
+the prompt/sentinel/page chrome.
+
+For ChatGPT/WebGPT handoffs, the generic CDP verification hook is not
+authoritative proof. It launches or controls a separate browser context and may
+hit Cloudflare even when the authenticated surf extension tab is working. Treat
+generic CDP screenshots of `chatgpt.com` as diagnostics only. The required proof
+for WebGPT is the surf extension artifact set: controlled tab id, assistant-DOM
+sentinel match, clean response without the sentinel or page chrome, same-tab
+page text, and same-tab screenshot.
+
+Do not disable CDP verification globally. For non-ChatGPT UI work, especially
+local app surfaces, CDP verification remains valid and should still be used.
+
 ### Element Interaction
 
 ```bash
