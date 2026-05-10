@@ -1060,5 +1060,141 @@ def bundle_upload(
         print(f"Copied zip to clipboard as file reference ({backend})")
 
 
+@app.command("webgpt-review")
+def webgpt_review(
+    persona: str = typer.Option(..., "--persona", help="REQUIRED: Persona agent name or reviewer role"),
+    screenshots: Optional[Path] = typer.Option(None, "-s", "--screenshots", help="Directory containing screenshot files"),
+    files: list[Path] = typer.Option([], "-f", "--files", help="Relevant source files to include (repeatable)"),
+    css: list[Path] = typer.Option([], "--css", help="Relevant CSS/style files to include (repeatable)"),
+    context: Optional[str] = typer.Option(None, "-c", "--context", help="Project context/rationale for the review"),
+    context_file: Optional[Path] = typer.Option(None, "--context-file", help="File containing project context"),
+    focus: str = typer.Option("", "--focus", help="Specific review focus areas (comma-separated)"),
+    core_objective: Optional[str] = typer.Option(None, "--core-objective", help="Primary decision or workflow objective for the review"),
+    audit_target: list[str] = typer.Option([], "--audit-target", help="Specific code-aware audit target or requirement/implementation conflict (repeatable)"),
+    known_issue: list[str] = typer.Option([], "--known-issue", help="Concrete UX failures or prior rejected patterns (repeatable)"),
+    surface_role: list[str] = typer.Option([], "--surface-role", help="What each pane/tab is supposed to do (repeatable)"),
+    output_dir: Optional[Path] = typer.Option(None, "-o", "--output-dir", help="Directory for WebGPT review artifacts"),
+    tab_id: str = typer.Option("", "--tab-id", help="ChatGPT tab id to use for surf webgpt.submit"),
+    url: str = typer.Option("", "--url", help="Already-open ChatGPT conversation URL to resolve to a tab"),
+    timeout: int = typer.Option(900, "--timeout", help="WebGPT timeout seconds"),
+    submit_text_only: bool = typer.Option(False, "--submit-text-only", help="Submit the text bundle through surf; screenshots are listed but not visually attached"),
+    clipboard_file: bool = typer.Option(False, "--clipboard-file", help="Copy upload zip to clipboard as a file reference"),
+):
+    """Generate a WebGPT design review handoff and optionally submit the text bundle.
+
+    This command is honest about current automation limits: surf can reliably
+    submit text to WebGPT, but this path does not attach screenshot files to
+    ChatGPT. For actual visual review, upload the generated zip manually or use
+    a future surf file-attachment path.
+    """
+    if not persona.strip():
+        raise typer.BadParameter("--persona is required")
+
+    if output_dir is None:
+        output_dir = _artifact_dir() / "webgpt-review" / datetime.now().strftime("%Y%m%dT%H%M%S")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    context_text = _read_context(context, context_file)
+    screenshot_paths: list[Path] = []
+    if screenshots:
+        if not screenshots.exists() or not screenshots.is_dir():
+            raise typer.BadParameter(f"Screenshots directory not found: {screenshots}")
+        image_extensions = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+        screenshot_paths = [
+            path for path in sorted(screenshots.iterdir())
+            if path.is_file() and path.suffix.lower() in image_extensions
+        ]
+        if not screenshot_paths:
+            raise typer.BadParameter("Screenshots directory provided but contains no images.")
+
+    request_path = output_dir / "WEBGPT_REVIEW_REQUEST.md"
+    code_bundle_path = output_dir / "REACT_COMPONENTS_BUNDLE.md"
+    zip_path = output_dir / "WEBGPT_REVIEW_UPLOAD_PACKAGE.zip"
+
+    _write_code_bundle(code_bundle_path, files, css)
+    _write_design_review_request(
+        request_path,
+        context_text=context_text,
+        focus=focus,
+        files=[*files, *css],
+        screenshot_names=[path.name for path in screenshot_paths],
+        target="WebGPT",
+        known_issues=known_issue,
+        surface_roles=surface_role,
+        core_objective=core_objective,
+        audit_targets=audit_target,
+        request_mockup=False,
+    )
+    with request_path.open("a") as handle:
+        handle.write(
+            f"\n## Reviewer Persona\n\n"
+            f"Review as `{persona}`. Apply that persona's domain priorities when weighing hierarchy, workflow fit, risk, and evidence clarity.\n"
+            "\n## WebGPT Automation Note\n\n"
+            "If this request is submitted through `surf webgpt.submit`, screenshot files are not visually attached. "
+            "Do not claim screenshot inspection unless the screenshots are manually uploaded or a file-attachment path is used. "
+            "For text-only submission, review the stated context, source excerpts, and design contract only.\n"
+        )
+
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.write(request_path, request_path.name)
+        archive.write(code_bundle_path, code_bundle_path.name)
+        for screenshot_path in screenshot_paths[:8]:
+            archive.write(screenshot_path, screenshot_path.name)
+
+    result = {
+        "status": "bundle_created",
+        "persona": persona,
+        "request_md": str(request_path),
+        "code_bundle": str(code_bundle_path),
+        "upload_zip": str(zip_path),
+        "screenshots": [str(path) for path in screenshot_paths],
+        "submit_text_only": submit_text_only,
+        "webgpt": None,
+    }
+
+    if clipboard_file:
+        result["clipboard"] = _copy_file_to_clipboard(zip_path.resolve())
+
+    if submit_text_only:
+        surf_run = Path(__file__).resolve().parent.parent / "surf" / "run.sh"
+        response_path = output_dir / "WEBGPT_RESPONSE.md"
+        meta_path = output_dir / "WEBGPT_RESPONSE.meta.json"
+        command = [
+            str(surf_run), "webgpt.submit",
+            "--input", str(request_path),
+            "--output", str(response_path),
+            "--meta-output", str(meta_path),
+            "--timeout", str(timeout),
+            "--stable-polls", "3",
+        ]
+        if tab_id:
+            command.extend(["--tab-id", tab_id])
+        if url:
+            command.extend(["--url", url])
+        proc = subprocess.run(command, cwd=surf_run.parent, capture_output=True, text=True, timeout=timeout + 60)
+        meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
+        result["status"] = "submitted_text_only" if proc.returncode == 0 else "submission_failed"
+        result["webgpt"] = {
+            "command": command,
+            "returncode": proc.returncode,
+            "response_md": str(response_path),
+            "meta_json": str(meta_path),
+            "controlled_tab_id": meta.get("controlled_tab_id"),
+            "requested_tab_id": meta.get("requested_tab_id"),
+            "requested_url": meta.get("requested_url"),
+            "raw_contains_sentinel": meta.get("raw_contains_sentinel"),
+            "clean_contains_sentinel": meta.get("clean_contains_sentinel"),
+            "stdout": proc.stdout[-8000:],
+            "stderr": proc.stderr[-8000:],
+            "visual_review_status": "not_visual_unless_screenshots_uploaded",
+        }
+
+    result_path = output_dir / "webgpt-review-result.json"
+    result_path.write_text(json.dumps(result, indent=2) + "\n")
+    print(json.dumps(result, indent=2))
+    if result["status"] == "submission_failed":
+        raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()

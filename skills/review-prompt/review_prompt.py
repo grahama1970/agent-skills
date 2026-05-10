@@ -1362,6 +1362,114 @@ def _run_ask_gate(
     return ask_artifacts
 
 
+def _extract_webgpt_verdict(response_path: Path) -> str | None:
+    if not response_path.exists():
+        return None
+    text = response_path.read_text()
+    json_match = re.search(r"\{[\s\S]*\}", text)
+    if json_match:
+        try:
+            data = json.loads(json_match.group(0))
+            verdict = data.get("verdict") or data.get("final_verdict") or data.get("safety_verdict")
+            if isinstance(verdict, str):
+                normalized = verdict.strip().upper()
+                if normalized in {"SAFE", "SAFE_WITH_CONDITIONS", "NOT_SAFE", "INSUFFICIENT_EVIDENCE"}:
+                    return normalized
+        except json.JSONDecodeError:
+            pass
+    match = re.search(
+        r"(?im)^\s*(?:VERDICT|FINAL_VERDICT|SAFETY_VERDICT)\s*:\s*"
+        r"(SAFE_WITH_CONDITIONS|INSUFFICIENT_EVIDENCE|NOT_SAFE|SAFE)\b",
+        text,
+    )
+    return match.group(1).upper() if match else None
+
+
+def _run_webgpt_gate(
+    bundle_path: Path,
+    webgpt_tab_id: str,
+    webgpt_url: str,
+    webgpt_timeout: int,
+    final_dir: Path,
+) -> dict:
+    skill_dir = Path(__file__).resolve().parent
+    surf_run = skill_dir.parent / "surf" / "run.sh"
+    gate_dir = final_dir / "webgpt"
+    gate_dir.mkdir(parents=True, exist_ok=True)
+    request_path = gate_dir / "request.md"
+    response_path = gate_dir / "response.md"
+    meta_path = gate_dir / "response.meta.json"
+
+    if not surf_run.exists():
+        result = {"status": "blocked", "reason": "surf runtime not found", "surf_run": str(surf_run)}
+        _write_json(final_dir / "webgpt-artifacts.json", result)
+        return result
+
+    bundle = json.loads(bundle_path.read_text())
+    request_path.write_text(
+        "\n".join([
+            "# WebGPT Prompt Contract Gate",
+            "",
+            "You are reviewing a prompt contract bundle as an external high-judgment reviewer.",
+            "Return a strict JSON object only with this shape:",
+            "",
+            "```json",
+            '{"verdict":"SAFE|SAFE_WITH_CONDITIONS|NOT_SAFE|INSUFFICIENT_EVIDENCE","blocking_findings":[],"conditions":[],"non_blocking_findings":[],"deterministic_gate_notes":[]}',
+            "```",
+            "",
+            "Use SAFE only when the prompt contract is ready and the deterministic review-prompt gates described in the bundle are sufficient.",
+            "Use SAFE_WITH_CONDITIONS only when every condition maps to a deterministic gate or explicit human-accepted residual risk.",
+            "Use NOT_SAFE for merge-blocking prompt, schema, safety, evidence, or consumer-contract issues.",
+            "Use INSUFFICIENT_EVIDENCE when the bundle lacks payloads, validators, expected outputs, source files, or proof artifacts required to judge readiness.",
+            "",
+            "Do not rewrite the prompt. Review the contract and explain blockers.",
+            "",
+            "## Bundle JSON",
+            "",
+            "```json",
+            json.dumps(bundle, indent=2),
+            "```",
+            "",
+        ])
+    )
+
+    command = [
+        str(surf_run), "webgpt.submit",
+        "--input", str(request_path),
+        "--output", str(response_path),
+        "--meta-output", str(meta_path),
+        "--timeout", str(webgpt_timeout),
+        "--stable-polls", "3",
+    ]
+    if webgpt_tab_id:
+        command.extend(["--tab-id", webgpt_tab_id])
+    if webgpt_url:
+        command.extend(["--url", webgpt_url])
+
+    proc = subprocess.run(command, cwd=surf_run.parent, capture_output=True, text=True, timeout=webgpt_timeout + 60)
+    meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
+    verdict = _extract_webgpt_verdict(response_path)
+    status = "passed" if proc.returncode == 0 and verdict == "SAFE" else "blocked"
+    result = {
+        "status": status,
+        "returncode": proc.returncode,
+        "command": command,
+        "request_md": str(request_path),
+        "response_md": str(response_path),
+        "meta_json": str(meta_path),
+        "verdict": verdict,
+        "controlled_tab_id": meta.get("controlled_tab_id"),
+        "requested_tab_id": meta.get("requested_tab_id"),
+        "requested_url": meta.get("requested_url"),
+        "raw_contains_sentinel": meta.get("raw_contains_sentinel"),
+        "clean_contains_sentinel": meta.get("clean_contains_sentinel"),
+        "stdout": proc.stdout[-8000:],
+        "stderr": proc.stderr[-8000:],
+    }
+    _write_json(final_dir / "webgpt-artifacts.json", result)
+    return result
+
+
 @app.command()
 def review(
     template: str = typer.Option(..., "--template", "-t", help="Prompt template file"),
@@ -1381,6 +1489,10 @@ def review(
     ask_model: str = typer.Option("gpt-5.5", "--ask-model", help="Ask oracle model for final gate"),
     ask_reasoning: str = typer.Option("high", "--ask-reasoning", help="Ask oracle reasoning effort for final gate"),
     ask_timeout: int = typer.Option(900, "--ask-timeout", help="Ask final gate timeout seconds"),
+    webgpt_gate: bool = typer.Option(False, "--webgpt-gate", help="Run WebGPT through surf as an external final gate"),
+    webgpt_tab_id: str = typer.Option("", "--webgpt-tab-id", help="ChatGPT tab id for --webgpt-gate"),
+    webgpt_url: str = typer.Option("", "--webgpt-url", help="Open ChatGPT conversation URL for --webgpt-gate"),
+    webgpt_timeout: int = typer.Option(900, "--webgpt-timeout", help="WebGPT final gate timeout seconds"),
     reasoning_effort: str = typer.Option("", "--reasoning-effort", help="Top-level /scillm reasoning_effort for reviewer and fix calls"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show prompt without calling LLM"),
 ) -> None:
@@ -1489,6 +1601,10 @@ def review(
         "ask_gate": ask_gate,
         "ask_model": ask_model,
         "ask_reasoning": ask_reasoning,
+        "webgpt_gate": webgpt_gate,
+        "webgpt_tab_id": webgpt_tab_id,
+        "webgpt_url": webgpt_url,
+        "webgpt_timeout": webgpt_timeout,
         "reasoning_effort": reasoning_effort,
         "fix_model": fix_model,
         "validator": validator,
@@ -1867,12 +1983,16 @@ def review(
             "baseline_gate_outputs": baseline_gate_outputs,
             "ask_model": ask_model,
             "ask_reasoning": ask_reasoning,
+            "webgpt_gate": webgpt_gate,
+            "webgpt_tab_id": webgpt_tab_id,
+            "webgpt_url": webgpt_url,
             "reasoning_effort": reasoning_effort,
             "pass_condition": "ask verdict SAFE and deterministic review-prompt gates pass",
         },
     })
 
     ask_artifacts = None
+    webgpt_artifacts = None
     if ask_gate:
         ask_artifacts = _run_ask_gate(
             ask_bundle_path,
@@ -1888,6 +2008,23 @@ def review(
         audit_json["status"] = "passed" if ask_artifacts.get("status") == "passed" and deterministic_passed else "blocked"
         _write_json(final_dir / "audit.json", audit_json)
 
+    if webgpt_gate:
+        webgpt_artifacts = _run_webgpt_gate(
+            ask_bundle_path,
+            webgpt_tab_id,
+            webgpt_url,
+            webgpt_timeout,
+            final_dir,
+        )
+        if webgpt_artifacts.get("status") != "passed":
+            logger.error("  WEBGPT GATE BLOCKED: verdict={}", webgpt_artifacts.get("verdict"))
+        audit_json["webgpt_gate"] = webgpt_artifacts
+        if audit_json.get("status") == "blocked":
+            audit_json["status"] = "blocked"
+        else:
+            audit_json["status"] = "passed" if webgpt_artifacts.get("status") == "passed" and deterministic_passed else "blocked"
+        _write_json(final_dir / "audit.json", audit_json)
+
     # Write rounds log
     log_file = template_path.parent / f"{template_path.stem}.review.json"
     log_file.write_text(json.dumps({
@@ -1897,6 +2034,7 @@ def review(
         "best_score": best_score if best_score != float("inf") else None,
         "run_dir": str(run_dir),
         "ask_gate": ask_artifacts,
+        "webgpt_gate": webgpt_artifacts,
     }, indent=2))
     logger.info("  Review log: {}", log_file)
 

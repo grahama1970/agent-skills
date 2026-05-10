@@ -71,7 +71,10 @@ regress.
 9. Keep only if score improves and no required gate regresses; otherwise revert.
 10. Write all request, response, score, diff, gate, and keep/revert artifacts.
 11. Run `$ask` deep review as the final gate when required by scope or `--ask-gate`.
-12. Stop on gate pass, score 0, max rounds, blocked preflight, exhausted strategies, or `$ask` blocker.
+12. Optionally run WebGPT through `$surf` as an external final gate when
+    `--webgpt-gate` is supplied.
+13. Stop on gate pass, score 0, max rounds, blocked preflight, exhausted
+    strategies, `$ask` blocker, or WebGPT blocker.
 ```
 
 ## Deterministic Loop Requirements
@@ -171,6 +174,8 @@ Required coded stages:
   --ask-gate \
   --ask-model gpt-5.5 \
   --ask-reasoning high \
+  --webgpt-gate \
+  --webgpt-tab-id 837343233 \
   --max-rounds 2
 ```
 
@@ -193,6 +198,10 @@ Required coded stages:
 | `--ask-gate` | Run `$ask --deep-review` as the final readiness/debug gate |
 | `--ask-model` | `$ask` oracle model for the final gate (default: `gpt-5.5`) |
 | `--ask-reasoning` | `$ask` oracle reasoning effort for the final gate (default: `high`) |
+| `--webgpt-gate` | Run WebGPT through `$surf webgpt.submit` as an external final gate |
+| `--webgpt-tab-id` | Exact ChatGPT tab id for `--webgpt-gate`; preferred over URL |
+| `--webgpt-url` | Already-open ChatGPT conversation URL to resolve to a concrete tab id |
+| `--webgpt-timeout` | WebGPT gate timeout seconds (default: 900) |
 
 ## Scoring
 
@@ -283,6 +292,44 @@ The final `/review-prompt` audit must link the `$ask` artifact set:
 Do not run `$ask` on every inner round by default. Inner rounds need cheap
 parallel breadth; `$ask` is the expensive final/debug gate with persistent proof.
 
+## WebGPT Final Gate
+
+`/review-prompt` can run WebGPT as an external final gate via `$surf` when WebGPT
+has demonstrated better judgment than Codex/scillm for the prompt class under
+review.
+
+Use WebGPT for:
+
+- prompt contracts with high judgment burden
+- prompt specs that previously produced dashboard theater, vague diagrams, or
+  performative artifacts
+- final adjudication where WebGPT has already outperformed local/API routes
+
+Do not replace the coded loop with WebGPT. The deterministic validators, fixture
+checks, consumer smoke tests, and keep/revert logic still decide whether a prompt
+candidate can be kept. WebGPT is a fail-closed external gate: if it returns
+`NOT_SAFE`, `INSUFFICIENT_EVIDENCE`, `SAFE_WITH_CONDITIONS`, malformed output,
+or no verdict, readiness is blocked unless a human explicitly accepts the
+residual risk.
+
+Required command shape:
+
+```bash
+./run.sh review \
+  --template prompts/my_prompt.txt \
+  --payload fixtures/expected_input.json \
+  --context "Prompt purpose and consumer contract" \
+  --persona "consumer/reviewer role" \
+  --validator "python validate_expected_response.py" \
+  --webgpt-gate \
+  --webgpt-tab-id 837343233
+```
+
+Artifacts are written under `artifacts/review-prompt/<run_id>/final/webgpt/`
+plus `final/webgpt-artifacts.json`. The WebGPT request is sent through
+`surf webgpt.submit`, so proof must include controlled tab id, raw response,
+clean response, sentinel metadata, and no page-chrome contamination.
+
 ## Artifact Layout
 
 Each run writes:
@@ -310,6 +357,11 @@ artifacts/review-prompt/<run_id>/
       summary.md
       ask-review-bundle.json
       ask-artifacts.json
+      webgpt-artifacts.json
+      webgpt/
+        request.md
+        response.md
+        response.meta.json
 ```
 
 Write artifacts after every iteration, before deciding whether to continue.
@@ -332,3 +384,4 @@ Write artifacts after every iteration, before deciding whether to continue.
 | `/code-runner` | Consumer of reviewed prompts |
 | `/best-practices-self-improvement-loop` | Required coded loop pattern |
 | `/ask` | Required high-reasoning final/debug gate for high-stakes prompt contracts; optional for cheap inner rounds |
+| `/surf` | Optional WebGPT browser handoff for final high-judgment prompt adjudication |

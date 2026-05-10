@@ -1,6 +1,6 @@
 # Project Knowledge: agent-skills
 
-**Last updated:** 2026-05-10 10:52 by agent
+**Last updated:** 2026-05-10 11:56 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -27,6 +27,7 @@
 - 2026-05-10 /surf WebGPT sentinel handoff is now proven through assistant-DOM-only extraction and same-controlled-tab proof. The passing real-world sanity artifact is /tmp/surf-webgpt-sanity-fixed2: raw assistant text contains the terminal sentinel, clean output strips it, controlled_tab_id=screenshot_tab_id=837343567, no page chrome/submitted prompt contamination was detected, and the screenshot shows the ChatGPT response plus sentinel rather than Cloudflare or an unrelated active tab. Whole-page sentinel matches remain diagnostic-only and must never turn a run green.
 - 2026-05-10 /surf WebGPT wrappers now support explicit tab binding. webgpt.submit/webgpt.sanity accept --tab-id, which overrides persisted state and tab discovery, and accept --url only to resolve an already-open ChatGPT tab to a concrete tab id. The handoff fails closed on controlled_tab_id mismatch. Verified: requested_tab_id=controlled_tab_id=837343233 for /tmp/surf-webgpt-explicit-tab-probe3, and URL resolution passed for the currently open conversation URL in /tmp/surf-webgpt-explicit-url-probe2. A stale/non-open URL failed closed instead of routing to another ChatGPT tab.
 - 2026-05-10 /surf WebGPT proof policy: generic CDP verification is diagnostic-only for chatgpt.com because it can hit Cloudflare in a separate browser context. Authoritative WebGPT proof is the surf extension artifact set: controlled tab id, assistant-DOM sentinel match, clean response without sentinel/page chrome, same-tab page text, and same-tab screenshot. Keep CDP verification for non-ChatGPT/local UI surfaces.
+- 2026-05-10: review-prompt and review-design now include explicit WebGPT integration. review-prompt can run a fail-closed WebGPT final gate through surf with controlled-tab metadata after deterministic validators and optional ask gates. review-design can build a WebGPT upload package and optionally submit text through surf, but text-only submission is marked as design-contract critique and must not be treated as screenshot-based visual proof without upload evidence.
 
 ## Recent Decisions
 

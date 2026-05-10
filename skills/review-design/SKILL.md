@@ -174,6 +174,10 @@ For serious design adjudication, prefer generating a complete bundle for manual 
 web LLM reviewer instead of relying on an API call. Gemini AI Studio web is one good target,
 but the packaging workflow should remain model-agnostic.
 
+WebGPT is also an approved external design reviewer when prior project evidence
+shows it gives stronger design judgment than Codex/scillm/API routes for the
+surface class. Treat it as a reviewer, not as an implementation agent.
+
 Use provider API review for:
 - quick iterative critique
 - broad screenshot audits
@@ -184,6 +188,69 @@ Use `bundle` / `bundle-code` / `bundle-upload` for external web review when:
 - the user asks for external design help
 - the review needs full context, screenshots, code, constraints, and open questions together
 - you need a durable handoff another human can inspect before sending
+
+Use `webgpt-review` when:
+- the target reviewer is WebGPT/ChatGPT web
+- a stable ChatGPT tab id or conversation URL is available through `$surf`
+- the review request needs the same artifact structure as `bundle-upload`
+- the agent needs a durable request/response record with controlled-tab metadata
+
+Important limitation: automated `surf webgpt.submit` currently submits text. It
+does not prove WebGPT inspected screenshot pixels unless screenshots were
+manually uploaded or a future file-attachment path records that upload. A
+text-only WebGPT response may critique design requirements and code context, but
+it is not a visual review verdict.
+
+### WebGPT Review Command
+
+`webgpt-review` builds a WebGPT-oriented review package and can optionally submit
+the text request through `$surf`.
+
+```bash
+# Create a WebGPT upload package for manual browser upload.
+./run.sh webgpt-review \
+  --persona brandon-bailey \
+  --screenshots ./ui/ \
+  --files src/components/sparta/explorer/QRAsView.tsx \
+  --css src/styles/sparta.css \
+  --context-file ./REVIEW_CONTEXT.md \
+  --core-objective "Assess whether the QRA pane supports evidence-first correction without dashboard theater" \
+  --audit-target "Right pane must expose answer, reasoning, evidence freshness, and review actions without hiding failures" \
+  --known-issue "Prior dashboard-style layouts looked polished but did not explain the operator workflow" \
+  --surface-role "Right pane: QRA evidence, correction, approval, and review history" \
+  --clipboard-file
+```
+
+```bash
+# Submit only the text request to an already-controlled ChatGPT tab.
+# This is useful for prompt/design-contract critique, but not visual proof.
+./run.sh webgpt-review \
+  --persona brandon-bailey \
+  --context-file ./REVIEW_CONTEXT.md \
+  --core-objective "Review the design contract before rendering" \
+  --tab-id 837343233 \
+  --submit-text-only
+```
+
+Required artifacts:
+
+```text
+WEBGPT_REVIEW_REQUEST.md
+REACT_COMPONENTS_BUNDLE.md
+WEBGPT_REVIEW_UPLOAD_PACKAGE.zip
+webgpt-review-result.json
+webgpt-response.md          # only when --submit-text-only is used
+webgpt-response.meta.json   # only when --submit-text-only is used
+```
+
+Fail-closed rules:
+
+- Do not claim visual satisfaction from `--submit-text-only`.
+- Do not claim screenshot inspection unless the package was actually uploaded
+  to WebGPT or the automation records file attachment proof.
+- Do not let WebGPT copy generated-image or screenshot text as source truth.
+- Preserve controlled tab id, conversation URL, sentinel metadata, and response
+  source in `webgpt-review-result.json` for any automated submission.
 
 ## Async Review Backoff Loop
 
@@ -625,6 +692,15 @@ For good results, populate the request with:
 - a screenshot set that includes full context plus cropped/zoomed defect views
 
 This is the preferred path for Gemini web, Claude web, and similar browser upload flows.
+
+### `webgpt-review` - Generate and optionally submit WebGPT design review package
+Creates the same kind of compact external-review bundle as `bundle-upload`, but
+adds a WebGPT-specific request and optional `$surf webgpt.submit` submission.
+
+Use this command when WebGPT is the intended reviewer and you want the design
+handoff to be reproducible. Use manual upload for actual screenshot-based review.
+Use `--submit-text-only` only for design-contract critique, source/context
+review, or WebGPT routing smoke tests.
 
 #### KDE Plasma clipboard file handoff
 
