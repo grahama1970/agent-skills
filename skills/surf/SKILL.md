@@ -197,6 +197,48 @@ differs from the controlled tab, if the screenshot/page text is Cloudflare or an
 unrelated site, if no controlled tab id is recorded, or if clean output contains
 the prompt/sentinel/page chrome.
 
+#### Background controlled-tab mode (`--no-activate`)
+
+`webgpt.submit --no-activate` keeps the controlled ChatGPT tab in the
+background so it does not foreground over whatever window the user has active.
+The proof contract is unchanged — controlled tab id required, sentinel in the
+final assistant DOM message, clean output strips only the terminal sentinel —
+plus the additional invariants:
+
+- The user's foreground tab and focused window are unchanged across the run
+  (`focus_changed: false` in meta).
+- The screenshot (when taken alongside) goes through CDP `Page.captureScreenshot`,
+  never the `chrome.tabs.captureVisibleTab` fallback. The fallback is disabled
+  in `--no-activate` mode because it would capture whichever tab is actually
+  foreground, not the controlled tab.
+- `--no-activate` requires `--tab-id` or `--url` (resolving to an already-open
+  ChatGPT tab). Without an explicit target we'd have to foreground a tab to
+  discover one, defeating the purpose.
+
+```bash
+surf webgpt.submit \
+  --input .webgpt/01_request.md \
+  --output .webgpt/02_response.md \
+  --tab-id 837343233 \
+  --no-activate
+```
+
+Background-mode sanity check:
+
+```bash
+surf webgpt.no-activate-sanity --tab-id 837343233 --output-dir /tmp/surf-webgpt-noact
+```
+
+Asserts the focus state did not change, the screenshot method is `cdp`
+(authoritative), and the standard sentinel/section requirements still hold.
+
+**Do not confuse `--no-activate` with `surf cdp start --headless`.** The
+`--headless` CDP mode launches a separate Chrome process against
+`/tmp/chrome-cdp-profile` and is **not authoritative for ChatGPT**: it has no
+authenticated session and will trip Cloudflare. `--no-activate` runs inside
+the user's authenticated Chrome via the extension; the only difference from
+the default WebGPT path is that the controlled tab is not foregrounded.
+
 For ChatGPT/WebGPT handoffs, the generic CDP verification hook is not
 authoritative proof. It launches or controls a separate browser context and may
 hit Cloudflare even when the authenticated surf extension tab is working. Treat

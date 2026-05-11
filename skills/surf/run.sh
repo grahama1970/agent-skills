@@ -427,6 +427,10 @@ if [[ "$1" == "webgpt.sanity" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-sanity.sh" "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.no-activate-sanity" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-no-activate-sanity.sh" "${@:2}"
+fi
+
 # Handle help
 if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "surf - Unified browser automation for AI agents"
@@ -455,6 +459,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "WebGPT Handoff:"
     echo "  surf webgpt.submit --input request.md --output response.md"
     echo "  surf webgpt.sanity      Run a real sentinel round-trip smoke"
+    echo "  surf webgpt.no-activate-sanity --tab-id ID  Background controlled-tab proof"
     echo ""
     echo "CDP Fallback (when extension not available):"
     echo "  surf cdp start [port] [--headless]  Start Chrome with CDP"
