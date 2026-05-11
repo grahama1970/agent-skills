@@ -39,4 +39,10 @@ MONITOR_PERSONAS_RUN = os.environ.get(
     "ASK_MONITOR_PERSONAS_RUN",
     str(SKILLS_DIR / "monitor-personas" / "run.sh"),
 )
-ORACLE_BACKENDS = frozenset({"auto", "scillm", "subagent-runner"})
+SURF_RUN = os.environ.get(
+    "ASK_SURF_RUN",
+    str(SKILLS_DIR / "surf" / "run.sh"),
+)
+WEBGPT_DEFAULT_TIMEOUT = float(os.environ.get("ASK_WEBGPT_TIMEOUT", "900"))
+WEBGPT_STABLE_POLLS = int(os.environ.get("ASK_WEBGPT_STABLE_POLLS", "3"))
+ORACLE_BACKENDS = frozenset({"auto", "scillm", "subagent-runner", "webgpt"})

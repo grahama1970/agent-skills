@@ -1385,16 +1385,53 @@ def _extract_webgpt_verdict(response_path: Path) -> str | None:
     return match.group(1).upper() if match else None
 
 
+def _resolve_chatgpt_tab(surf_run: Path) -> tuple[str, list[dict]]:
+    """Auto-discover an open ChatGPT tab via surf tab.list.
+
+    Returns (tab_id, candidates). tab_id is "" if 0 or >1 candidates were found.
+    candidates is the full list of {id,title,url} for chatgpt.com tabs so the
+    caller can produce a clear diagnostic when the choice is ambiguous.
+    """
+    try:
+        proc = subprocess.run(
+            [str(surf_run), "tab.list"],
+            cwd=surf_run.parent,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except Exception:
+        return "", []
+    if proc.returncode != 0:
+        return "", []
+    candidates: list[dict] = []
+    for line in proc.stdout.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 3:
+            continue
+        tab_id, title, url = parts[0], parts[1], parts[2]
+        if "chatgpt.com" not in url:
+            continue
+        candidates.append({"id": tab_id, "title": title, "url": url})
+    if len(candidates) == 1:
+        return candidates[0]["id"], candidates
+    return "", candidates
+
+
 def _run_webgpt_gate(
     bundle_path: Path,
     webgpt_tab_id: str,
     webgpt_url: str,
     webgpt_timeout: int,
     final_dir: Path,
+    webgpt_no_activate: bool = False,
+    webgpt_round: int | None = None,
 ) -> dict:
     skill_dir = Path(__file__).resolve().parent
     surf_run = skill_dir.parent / "surf" / "run.sh"
     gate_dir = final_dir / "webgpt"
+    if webgpt_round is not None:
+        gate_dir = gate_dir / f"round-{int(webgpt_round):03d}"
     gate_dir.mkdir(parents=True, exist_ok=True)
     request_path = gate_dir / "request.md"
     response_path = gate_dir / "response.md"
@@ -1404,6 +1441,24 @@ def _run_webgpt_gate(
         result = {"status": "blocked", "reason": "surf runtime not found", "surf_run": str(surf_run)}
         _write_json(final_dir / "webgpt-artifacts.json", result)
         return result
+
+    auto_resolved_tab = False
+    resolution_candidates: list[dict] = []
+    if not webgpt_tab_id and not webgpt_url:
+        webgpt_tab_id, resolution_candidates = _resolve_chatgpt_tab(surf_run)
+        auto_resolved_tab = bool(webgpt_tab_id)
+        if not webgpt_tab_id:
+            result = {
+                "status": "blocked",
+                "reason": (
+                    "no_chatgpt_tab" if not resolution_candidates
+                    else "ambiguous_chatgpt_tab"
+                ),
+                "candidates": resolution_candidates,
+                "hint": "Pass --webgpt-tab-id or --webgpt-url. Open exactly one ChatGPT tab to auto-resolve.",
+            }
+            _write_json(final_dir / "webgpt-artifacts.json", result)
+            return result
 
     bundle = json.loads(bundle_path.read_text())
     request_path.write_text(
@@ -1445,6 +1500,8 @@ def _run_webgpt_gate(
         command.extend(["--tab-id", webgpt_tab_id])
     if webgpt_url:
         command.extend(["--url", webgpt_url])
+    if webgpt_no_activate:
+        command.append("--no-activate")
 
     proc = subprocess.run(command, cwd=surf_run.parent, capture_output=True, text=True, timeout=webgpt_timeout + 60)
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
@@ -1463,6 +1520,11 @@ def _run_webgpt_gate(
         "requested_url": meta.get("requested_url"),
         "raw_contains_sentinel": meta.get("raw_contains_sentinel"),
         "clean_contains_sentinel": meta.get("clean_contains_sentinel"),
+        "no_activate": meta.get("no_activate"),
+        "focus_changed": meta.get("focus_changed"),
+        "round": webgpt_round,
+        "auto_resolved_tab": auto_resolved_tab,
+        "resolution_candidates": resolution_candidates if auto_resolved_tab or not webgpt_tab_id else None,
         "stdout": proc.stdout[-8000:],
         "stderr": proc.stderr[-8000:],
     }
@@ -1490,9 +1552,11 @@ def review(
     ask_reasoning: str = typer.Option("high", "--ask-reasoning", help="Ask oracle reasoning effort for final gate"),
     ask_timeout: int = typer.Option(900, "--ask-timeout", help="Ask final gate timeout seconds"),
     webgpt_gate: bool = typer.Option(False, "--webgpt-gate", help="Run WebGPT through surf as an external final gate"),
-    webgpt_tab_id: str = typer.Option("", "--webgpt-tab-id", help="ChatGPT tab id for --webgpt-gate"),
+    webgpt_tab_id: str = typer.Option("", "--webgpt-tab-id", help="ChatGPT tab id for --webgpt-gate (auto-resolved from surf tab.list if omitted and exactly one chatgpt.com tab is open)"),
     webgpt_url: str = typer.Option("", "--webgpt-url", help="Open ChatGPT conversation URL for --webgpt-gate"),
     webgpt_timeout: int = typer.Option(900, "--webgpt-timeout", help="WebGPT final gate timeout seconds"),
+    webgpt_no_activate: bool = typer.Option(False, "--webgpt-no-activate", help="Run the WebGPT gate against a background controlled tab; never foreground it (requires --webgpt-tab-id or auto-resolution to find exactly one chatgpt.com tab)"),
+    webgpt_round: int | None = typer.Option(None, "--webgpt-round", help="Round number for multi-turn iteration; artifacts go to final/webgpt/round-NNN/ instead of final/webgpt/"),
     reasoning_effort: str = typer.Option("", "--reasoning-effort", help="Top-level /scillm reasoning_effort for reviewer and fix calls"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show prompt without calling LLM"),
 ) -> None:
@@ -2015,6 +2079,8 @@ def review(
             webgpt_url,
             webgpt_timeout,
             final_dir,
+            webgpt_no_activate=webgpt_no_activate,
+            webgpt_round=webgpt_round,
         )
         if webgpt_artifacts.get("status") != "passed":
             logger.error("  WEBGPT GATE BLOCKED: verdict={}", webgpt_artifacts.get("verdict"))
