@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any
 
 from .ask_config import SURF_RUN, WEBGPT_DEFAULT_TIMEOUT, WEBGPT_STABLE_POLLS
+from . import webgpt_project
 
 
 @dataclass(frozen=True)
@@ -253,6 +254,7 @@ def call_webgpt(
     tab_id: str = "",
     url: str = "",
     create_tab: bool = False,
+    project: str = "",
     timeout: float = WEBGPT_DEFAULT_TIMEOUT,
     stable_polls: int = WEBGPT_STABLE_POLLS,
     artifact_dir: Path | None = None,
@@ -280,11 +282,31 @@ def call_webgpt(
     surf = surf_run or _surf_run_path()
     if not surf.exists():
         raise WebgptBackendError(f"surf runtime not found: {surf}")
+
+    # Project binding takes precedence after explicit tab_id/url but before
+    # create_tab/auto-resolve. A bound, still-open tab gets reused; a stale
+    # auto-binding silently re-creates; a stale manual binding raises so the
+    # human re-binds explicitly.
+    project_state_loaded = False
+    if project and not tab_id and not url:
+        try:
+            existing = webgpt_project.verify(project, surf_run=surf)
+        except webgpt_project.ProjectBindingError as exc:
+            raise WebgptBackendError(str(exc)) from exc
+        if existing and existing.tab_id:
+            tab_id = existing.tab_id
+            url = existing.conversation_url or ""
+            project_state_loaded = True
+
     if create_tab and not tab_id and not url:
         # Skip resolution entirely; surf webgpt.submit will fall through to
         # CHATGPT_NEW_TAB which creates a fresh tab. With --no-activate, the
         # new tab is created with active=false so it stays in the background.
         resolution = WebgptTabResolution(tab_id="", candidates=[], source="create")
+        resolved_tab_id = ""
+    elif project and not tab_id and not url:
+        # Project specified but no binding exists yet — implicitly create one.
+        resolution = WebgptTabResolution(tab_id="", candidates=[], source="project_create")
         resolved_tab_id = ""
     else:
         resolution = resolve_chatgpt_tab(tab_id, url, surf_run=surf)
@@ -406,5 +428,29 @@ def call_webgpt(
             raw_contains_sentinel=result.raw_contains_sentinel,
             clean_contains_sentinel=result.clean_contains_sentinel,
             focus_changed=result.focus_changed,
+            project=project or None,
+            project_state_loaded=project_state_loaded if project else None,
         )
+
+    # Persist the project binding (auto-bind on first use; refresh
+    # last_used_at / conversation_url on every successful call).
+    if project and result.controlled_tab_id:
+        try:
+            existing = webgpt_project.load(project)
+            manual = bool(existing.bound_manually) if existing else False
+            convo_url = (
+                meta.get("conversation_url")
+                or result.requested_url
+                or (existing.conversation_url if existing else "")
+            )
+            webgpt_project.bind(
+                project,
+                result.controlled_tab_id,
+                conversation_url=convo_url or "",
+                manual=manual,
+            )
+        except Exception:
+            # Persistence is best-effort; never fail the oracle call.
+            pass
+
     return result

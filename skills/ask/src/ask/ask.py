@@ -139,6 +139,7 @@ def ask(
     webgpt_tab_id: str = "",
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
+    webgpt_project: str = "",
     run_state: Optional[AskRunState] = None,
 ) -> dict:
     """Query accumulated knowledge.
@@ -636,6 +637,7 @@ def ask(
             webgpt_tab_id=webgpt_tab_id,
             webgpt_url=webgpt_url,
             webgpt_create_tab=webgpt_create_tab,
+            webgpt_project=webgpt_project,
             run_state=run_state,
         )
     if run_state:
@@ -886,6 +888,7 @@ def main(
     webgpt_tab_id: str = typer.Option("", "--webgpt-tab-id", help="Chrome tab id to control for --oracle-backend webgpt. Optional: auto-resolved from a single open chatgpt.com tab."),
     webgpt_url: str = typer.Option("", "--webgpt-url", help="ChatGPT conversation URL to resolve to an open Chrome tab for --oracle-backend webgpt."),
     webgpt_create_tab: bool = typer.Option(False, "--webgpt-create-tab", help="Skip auto-resolve and let surf create/pick a background chatgpt.com tab for --oracle-backend webgpt. The controlled tab id is reported back in oracle_model_served so the agent can reuse it on follow-up rounds."),
+    webgpt_project: str = typer.Option("", "--webgpt-project", help="Bind this call to a project name; the controlled ChatGPT tab is persisted at ~/.pi/webgpt-projects/<name>.json and reused across calls. First call for a new project auto-creates a background tab; manually-bound projects (webgpt-project bind ...) never auto-replace their tab."),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     stdin_question = False
@@ -1506,6 +1509,7 @@ def main(
             webgpt_tab_id=webgpt_tab_id,
             webgpt_url=webgpt_url,
             webgpt_create_tab=webgpt_create_tab,
+            webgpt_project=webgpt_project,
             run_state=run_state,
         )
     except Exception as exc:

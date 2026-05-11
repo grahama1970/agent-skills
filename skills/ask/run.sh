@@ -258,6 +258,10 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.nightly "$@"
         ;;
+    webgpt-project)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.webgpt_project_cli "$@"
+        ;;
     os)
         shift
         subcmd="${1:-ask}"

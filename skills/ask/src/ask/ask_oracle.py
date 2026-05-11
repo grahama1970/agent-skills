@@ -90,6 +90,7 @@ def _run_oracle_webgpt(
     webgpt_tab_id: str,
     webgpt_url: str,
     webgpt_create_tab: bool,
+    webgpt_project: str,
     run_state: object | None,
     oracle_state: dict,
 ) -> tuple[str, str, list[dict]]:
@@ -105,6 +106,7 @@ def _run_oracle_webgpt(
     tab_id = (webgpt_tab_id or str(oracle_state.get("webgpt_tab_id", "") or "")).strip()
     url = (webgpt_url or str(oracle_state.get("webgpt_url", "") or "")).strip()
     create_tab = bool(webgpt_create_tab)
+    project = (webgpt_project or str(oracle_state.get("webgpt_project", "") or "")).strip()
     attachments = extract_file_attachments(question)
     prompt = build_webgpt_prompt(
         base_prompt,
@@ -128,6 +130,7 @@ def _run_oracle_webgpt(
                 tab_id=tab_id,
                 url=url,
                 create_tab=create_tab and turn_number == 1,
+                project=project,
                 timeout=timeout,
                 no_activate=True,
                 run_state=run_state,
@@ -208,6 +211,7 @@ def _apply_oracle_synthesis(
     webgpt_tab_id: str = "",
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
+    webgpt_project: str = "",
     run_state: object | None = None,
 ) -> None:
     """Use an oracle backend for final high-reasoning synthesis."""
@@ -308,6 +312,7 @@ def _apply_oracle_synthesis(
                 webgpt_tab_id=webgpt_tab_id,
                 webgpt_url=webgpt_url,
                 webgpt_create_tab=webgpt_create_tab,
+                webgpt_project=webgpt_project,
                 run_state=run_state,
                 oracle_state=result.get("oracle", {}),
             )

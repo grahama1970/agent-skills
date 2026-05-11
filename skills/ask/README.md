@@ -191,6 +191,8 @@ persona or roundtable request.
 | Argue | You want a real two-sided argument with a judge | `./run.sh ask "argue whether X" --argue` |
 | Parallel review | You want independent reviewers looking at the same thing without influencing each other | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
 | Deep review | You want a thorough, audit-friendly review with artifacts | `./run.sh ask "deep review this" --deep-review --deep-review-target src/ask/ask.py` |
+| WebGPT | You want the user's authenticated ChatGPT session as a peer oracle, without foregrounding the tab | `./run.sh ask webgpt review this design --webgpt-project sparta-review` |
+| WebGPT project bindings | You want one persistent ChatGPT conversation per project so context survives across days | `./run.sh webgpt-project bind sparta-review --tab-id 837343543` |
 | Doctor | You want a preflight check on dependencies and runtime | `./run.sh doctor --json` |
 | Chains | You want to inspect saved review workflows | `./run.sh chains list --json` |
 | Status | You want to see recent runs and memory state | `./run.sh status --runs --json` |

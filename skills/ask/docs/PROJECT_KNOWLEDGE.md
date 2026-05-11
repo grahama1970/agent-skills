@@ -120,6 +120,9 @@ curated context. Memory recall is context, not evidence.
 | 2026-05-01 | Treat provider-family shorthand as a first-class $ask oracle route | The model shorthand is user-facing routing policy, uses live OpenCode Go discovery where available, and must preserve resolved alias metadata in output and runtime artifacts. |
 | 2026-05-02 | Treat CAE gap review as QRA review, not QRA generation | This preserves /create-evidence-case as the evidence trail builder while /ask runs bounded Brandon/Margaret/Jennifer reviewer roles plus a judge that reroutes only unresolved missing evidence before halting. |
 | 2026-05-03 | Add direct scillm oracle call runtime events and lengthen OpenCode Go discovery timeout | `$ask oc kimi` could answer successfully but looked stalled after `synthesis_started`; events now expose the active scillm model call and served model. |
+| 2026-05-11 | Add WebGPT as a first-class `/ask` oracle backend (`--oracle-backend webgpt`, `$ask webgpt …`). | Project agents need a way to use the user's authenticated ChatGPT session as a peer oracle without the surf-cli plumbing leaking into every consumer skill. Routes through `surf webgpt.submit --no-activate` so the controlled tab never foregrounds and the sentinel proof contract still holds. `/review-prompt`, `/review-design`, `/review-code`, `/review-plan` inherit the backend for free by composing `/ask`. |
+| 2026-05-11 | Bind WebGPT tab id per project under `~/.pi/webgpt-projects/<name>.json`. | One ChatGPT conversation per project isolates context across tasks: Project A's review thread doesn't pollute Project B's. Auto-bind is silent and re-creates closed tabs; manual `webgpt-project bind` marks the binding as human-curated and refuses to auto-replace. |
+| 2026-05-11 | `webgpt-project bind/list/show/verify/unbind/gc` as a Typer subcommand. | Operators need an explicit way to inspect, override, and garbage-collect the project-tab map without editing JSON state files by hand. `gc` only removes auto-bindings; manual bindings are sticky by design. |
 
 ## Open Questions
 
@@ -151,6 +154,10 @@ curated context. Memory recall is context, not evidence.
 | `src/ask/argue.py` | Three-call `/scillm` argue DAG, judge verifier, and argue artifacts |
 | `src/ask/parallel_review.py` | `/scillm` reviewer fanout, judge synthesis, verifier, and code-runner handoff artifacts |
 | `src/ask/scillm_runtime.py` | Shared `/scillm` metadata, source bundle, observability, and debug helpers |
+| `src/ask/webgpt_runtime.py` | WebGPT oracle subprocess wrapper around `surf webgpt.submit --no-activate`; tab resolution (explicit id → url → project binding → create → auto), file auto-attachment, project state persistence |
+| `src/ask/webgpt_project.py` | Per-project tab binding state at `~/.pi/webgpt-projects/<name>.json`: bind, load, verify-against-surf, garbage-collect; manual vs auto bindings |
+| `src/ask/webgpt_project_cli.py` | `webgpt-project bind/list/show/verify/unbind/gc` Typer subcommands |
+| `sanity-webgpt.sh` | Live e2e for `$ask webgpt`: --tab-id / --url / --create-tab / auto-resolve modes; asserts focus_changed=false and the sentinel proof contract |
 | `src/ask/run_state.py` | Runtime request/status/events protocol, needs-attention states, run listing, pruning |
 | `src/ask/run_viewer.py` | Token-gated local HTML monitor for request/status/events artifacts |
 | `src/ask/doctor.py` | Fast and live runtime diagnostics |

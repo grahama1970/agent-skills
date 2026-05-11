@@ -189,23 +189,68 @@ it never foregrounds.
 
 # Autonomous mode: let surf pick or create a background ChatGPT tab.
 ./run.sh ask webgpt summarise the review bundle --webgpt-create-tab
+
+# Per-project tab binding — first call auto-creates and persists; subsequent
+# calls reuse the same tab so the conversation context survives across days.
+./run.sh ask webgpt summarise the review bundle --webgpt-project code-runner-review
 ```
+
+### Per-project tab bindings
+
+`--webgpt-project NAME` binds the call to a per-project ChatGPT tab whose id
+is persisted at `~/.pi/webgpt-projects/<name>.json`. Two workflows:
+
+**Autonomous (default — ephemeral tasks):**
+```bash
+# First call: auto-create a background tab and remember it under "pr-1234".
+./run.sh ask webgpt review this PR diff --webgpt-project pr-1234
+
+# Subsequent calls reuse the same tab; ChatGPT preserves conversation state.
+./run.sh ask webgpt and now check the migration path --webgpt-project pr-1234
+```
+If the bound tab gets closed, the runtime silently creates a new one and
+re-binds.
+
+**Manual (long-lived projects you want to babysit):**
+```bash
+# Open exactly the ChatGPT tab you want, copy its id from the Tab ID Viewer
+# Chrome extension, then bind once:
+./run.sh webgpt-project bind code-runner-review --tab-id 837343543 \
+  --url "https://chatgpt.com/c/<conv-id>"
+
+# All future calls for that project use this exact tab — never replaced.
+./run.sh ask webgpt continue the review --webgpt-project code-runner-review
+```
+Manual bindings are recorded with `bound_manually: true`. If the tab is
+later closed, the runtime raises a clear `ProjectBindingError` asking the
+human to re-bind explicitly — it will not silently swap in a new tab.
+
+**Management commands** (`./run.sh webgpt-project ...`):
+- `bind NAME --tab-id ID [--url URL] [--manual|--auto]` — create or update a binding
+- `list [--json] [--verify]` — show all projects; `--verify` checks tab still open in Chrome
+- `show NAME [--json]` — full state dump for one project
+- `verify NAME [--json]` — re-check whether the bound tab is still open
+- `unbind NAME` — remove a binding (does not close the Chrome tab)
+- `gc [--days 30]` — remove stale auto-bindings (manual bindings are never collected)
 
 Behavior:
 
 - **Tab resolution.** Priority: `--webgpt-tab-id` → `--webgpt-url` →
-  `--webgpt-create-tab` → auto-resolve from `surf tab.list` filtered to
-  chatgpt.com. **Auto-resolve fails closed** when 0 or >1 candidates exist —
-  the call refuses to run rather than guess. When the project agent hits
-  this, it must ask the human to either:
+  `--webgpt-project NAME` (with a valid binding) → `--webgpt-create-tab` →
+  auto-resolve from `surf tab.list` filtered to chatgpt.com.
+  **Auto-resolve fails closed** when 0 or >1 candidates exist — the call
+  refuses to run rather than guess. When the project agent hits this, it
+  must ask the human to either:
   (a) open exactly one ChatGPT tab so auto-resolve picks it,
   (b) provide a tab id from the Tab ID Viewer extension to pass through
-  `--webgpt-tab-id`, or
+  `--webgpt-tab-id`,
   (c) re-invoke with `--webgpt-create-tab` for the agent to acquire a tab
   autonomously (surf picks the most-recent existing chatgpt.com tab without
-  foregrounding, or creates a fresh background one if none are open). The
-  resolved tab id surfaces in `oracle_model_served: webgpt:<id>` so the
-  agent can pass it explicitly to follow-up rounds.
+  foregrounding, or creates a fresh background one if none are open), or
+  (d) pass `--webgpt-project NAME` to bind this call to a persistent
+  per-project tab (see "Per-project tab bindings" below). The resolved tab
+  id surfaces in `oracle_model_served: webgpt:<id>` so the agent can pass
+  it explicitly to follow-up rounds.
 - **File auto-attachment.** Absolute paths embedded in the question (e.g.
   `/tmp/foo.md`, `~/notes.md`) are read from disk and inlined under
   `## Attached files` in the prompt. Truncated at 2 MB per file.
