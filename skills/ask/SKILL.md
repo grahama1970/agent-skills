@@ -280,6 +280,17 @@ Behavior:
   prints a 4-option help block when 0 or >1 candidates exist). Run after
   changes to `webgpt_runtime.py`, the oracle dispatcher, or the model
   alias router.
+- **Rate-limit guard.** Multi-round ping-pong can fan out to many ChatGPT
+  rounds quickly. `webgpt_rate_limit.py` enforces a per-hour budget per
+  account (default 30 rounds) and refuses to start new rounds once the
+  cap is hit. Tunable via `ASK_WEBGPT_MAX_ROUNDS_PER_HOUR`; bypass via
+  `ASK_WEBGPT_RATE_LIMIT_DISABLE=1` (tests only). State at
+  `~/.pi/webgpt-rate-limit.json`.
+- **Verdict JSON parsing.** ChatGPT occasionally emits technically-invalid
+  JSON (raw control chars inside string fields, trailing commas, missing
+  quotes). `extract_verdict` layers strict `json.loads` → `json_repair` →
+  plain-text `VERDICT:` regex, so transient model misbehavior never
+  silently drops the verdict label.
 
 ## Image Generation Mode
 

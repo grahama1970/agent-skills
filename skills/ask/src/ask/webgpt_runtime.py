@@ -31,6 +31,7 @@ from typing import Any
 
 from .ask_config import SURF_RUN, WEBGPT_DEFAULT_TIMEOUT, WEBGPT_STABLE_POLLS
 from . import webgpt_project
+from .webgpt_rate_limit import WebgptRateLimitError, check_and_record
 
 
 @dataclass(frozen=True)
@@ -284,16 +285,34 @@ def call_webgpt(
     if not surf.exists():
         raise WebgptBackendError(f"surf runtime not found: {surf}")
 
+    # Soft rate-limit guard: stop a runaway loop from burning the
+    # ChatGPT account's per-3-hour cap. Configurable via
+    # ASK_WEBGPT_MAX_ROUNDS_PER_HOUR; bypassable for tests via
+    # ASK_WEBGPT_RATE_LIMIT_DISABLE=1.
+    try:
+        check_and_record()
+    except WebgptRateLimitError as exc:
+        raise WebgptBackendError(str(exc)) from exc
+
     # Project binding takes precedence after explicit tab_id/url but before
     # create_tab/auto-resolve. A bound, still-open tab gets reused; a stale
     # auto-binding silently re-creates; a stale manual binding raises so the
-    # human re-binds explicitly.
+    # human re-binds explicitly — UNLESS create_tab=True, in which case the
+    # caller has explicitly opted in to overwriting the manual binding and we
+    # must NOT raise (bug ASK-WEBGPT-002 flagged by ChatGPT: the documented
+    # recovery path "pass --webgpt-create-tab" was unreachable because verify
+    # raised before the create_tab branch even got a chance to run).
     project_state_loaded = False
     if project and not tab_id and not url:
         try:
             existing = webgpt_project.verify(project, surf_run=surf)
         except webgpt_project.ProjectBindingError as exc:
-            raise WebgptBackendError(str(exc)) from exc
+            if create_tab:
+                # Caller explicitly asked to (re)acquire a tab; overwrite
+                # the stale manual binding silently on success.
+                existing = None
+            else:
+                raise WebgptBackendError(str(exc)) from exc
         if existing and existing.tab_id:
             tab_id = existing.tab_id
             url = existing.conversation_url or ""

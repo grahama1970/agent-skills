@@ -212,7 +212,7 @@ services:
       ASK_SUBAGENT_OUTPUT_DIR: /tmp/ask-oracle-subagents
     volumes:
       - type: bind
-        source: ${ASK_WORKSPACE_ROOT:-../..}
+        source: ${ASK_WORKSPACE_ROOT:-../../../..}
         target: /workspace/agent-skills
       - type: ${ASK_VOLUME_TYPE:-volume}
         source: ${ASK_ARTIFACT_SOURCE:-ask-artifacts}
@@ -234,7 +234,7 @@ services:
         required: false
     volumes:
       - type: bind
-        source: ${ASK_WORKSPACE_ROOT:-../..}
+        source: ${ASK_WORKSPACE_ROOT:-../../../..}
         target: /workspace/agent-skills
     depends_on:
       memory:
@@ -250,7 +250,7 @@ services:
     network_mode: host
     volumes:
       - type: bind
-        source: ${ASK_WORKSPACE_ROOT:-../..}
+        source: ${ASK_WORKSPACE_ROOT:-../../../..}
         target: /workspace/agent-skills
     depends_on:
       memory:
@@ -264,7 +264,7 @@ services:
     network_mode: host
     volumes:
       - type: bind
-        source: ${ASK_WORKSPACE_ROOT:-../..}
+        source: ${ASK_WORKSPACE_ROOT:-../../../..}
         target: /workspace/agent-skills
     depends_on:
       memory:
@@ -280,7 +280,7 @@ services:
     network_mode: host
     volumes:
       - type: bind
-        source: ${ASK_WORKSPACE_ROOT:-../..}
+        source: ${ASK_WORKSPACE_ROOT:-../../../..}
         target: /workspace/agent-skills
       - type: ${ASK_VOLUME_TYPE:-volume}
         source: ${ASK_ARTIFACT_SOURCE:-ask-artifacts}

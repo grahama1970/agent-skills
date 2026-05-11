@@ -99,7 +99,12 @@ services:
     environment:
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
       EMBEDDING_DEVICE: ${EMBEDDING_DEVICE:-cpu}
-      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
+      # MiniLM-L6-v2 outputs 384-dim vectors. The canonical
+      # deploy/docker/compose.ask-stack.yml already uses 384; this default
+      # was 768 (bug ASK-DOCKER-002 flagged by ChatGPT), which would have
+      # silently corrupted vector-store dimension compatibility on the
+      # one-command release path.
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-384}
       EMBEDDING_PORT: "8602"
       EMBEDDING_HOST: 0.0.0.0
       HF_TOKEN: ${HF_TOKEN:-}

@@ -192,12 +192,19 @@ def _verdict_from_data(data: dict) -> tuple[Optional[str], dict]:
 
 
 def resolve_diff(diff_scope: str, *, cwd: Path | None = None) -> str:
-    """Run `git diff <scope>` to a single string. Best-effort; returns "" on error."""
-    if not diff_scope:
-        return ""
+    """Run `git diff <scope>` to a single string. Best-effort; returns "" on error.
+
+    An empty `diff_scope` is meaningful here — it means the operator asked
+    for the uncommitted (staged + unstaged) working-tree changes, which
+    is the result of `git diff` with no scope arguments. We honour that
+    rather than short-circuit to empty, which would let an
+    uncommitted-only review run with no diff evidence (bug ASK-WEBGPT-001
+    flagged by ChatGPT against this skill).
+    """
     cwd = cwd or Path.cwd()
     parts = ["git", "diff", "--no-color"]
-    parts.extend(diff_scope.split())
+    if diff_scope:
+        parts.extend(diff_scope.split())
     try:
         proc = subprocess.run(parts, cwd=cwd, capture_output=True, text=True, timeout=30)
     except Exception:
