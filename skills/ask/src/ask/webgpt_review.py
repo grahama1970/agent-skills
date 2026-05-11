@@ -136,11 +136,24 @@ def parse_rounds(text: str, default: int = 1) -> int:
     return max(1, min(10, n))
 
 
+_JSON_VERDICT_RE = re.compile(
+    r'"(?:verdict|final_verdict|safety_verdict)"\s*:\s*"'
+    r'(SAFE_WITH_CONDITIONS|INSUFFICIENT_EVIDENCE|NOT_SAFE|SAFE)"',
+    re.IGNORECASE,
+)
+
+
 def extract_verdict(response: str) -> tuple[Optional[str], dict]:
     """Find the verdict JSON in a webgpt response.
 
-    Returns (verdict_string, parsed_object). verdict_string is None when the
-    response can't be parsed cleanly.
+    Robustness layers:
+      1. Try strict json.loads on the outer {...}. Returns the parsed dict
+         when valid.
+      2. If json.loads fails (ChatGPT sometimes embeds raw newlines inside
+         JSON string fields, which is technically invalid), fall back to a
+         regex that matches `"verdict":"VALUE"` so we still surface the
+         verdict label even when the rest of the JSON is unparseable.
+      3. If even that fails, fall back to plain-text `VERDICT: VALUE`.
     """
     if not response:
         return None, {}
@@ -155,7 +168,29 @@ def extract_verdict(response: str) -> tuple[Optional[str], dict]:
                     return normalised, data
             return None, data
         except json.JSONDecodeError:
-            pass
+            # Try once more with newlines escaped inside JSON-string regions.
+            # ChatGPT occasionally embeds raw \n in string fields; this is
+            # technically invalid JSON but trivially recoverable.
+            try:
+                cleaned = re.sub(
+                    r'("(?:[^"\\]|\\.)*?)\n+(.*?")',
+                    lambda m: m.group(1) + " " + m.group(2),
+                    json_match.group(0),
+                    flags=re.DOTALL,
+                )
+                data = json.loads(cleaned)
+                v = data.get("verdict") or data.get("final_verdict") or data.get("safety_verdict")
+                if isinstance(v, str):
+                    normalised = v.strip().upper()
+                    if normalised in VALID_VERDICTS:
+                        return normalised, data
+                return None, data
+            except Exception:
+                pass
+    # Last-ditch: pull just the verdict label out via regex, return without data.
+    m = _JSON_VERDICT_RE.search(response)
+    if m:
+        return m.group(1).upper(), {}
     m = _VERDICT_RE.search(response)
     return (m.group(1).upper() if m else None), {}
 
