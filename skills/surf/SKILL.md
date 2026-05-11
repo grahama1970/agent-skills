@@ -55,6 +55,30 @@ triggers:
   - check browser
   - browser not working
   - cdp not connecting
+  # WebGPT / ChatGPT handoff
+  - chatgpt
+  - ask chatgpt
+  - send to chatgpt
+  - chatgpt prompt
+  - webgpt
+  - webgpt submit
+  - webgpt handoff
+  - chatgpt sentinel
+  - completion sentinel
+  - controlled chatgpt tab
+  - chatgpt round trip
+  # Background controlled-tab mode (no focus stealing)
+  - no activate
+  - background chatgpt
+  - background controlled tab
+  - background webgpt
+  - without stealing focus
+  - without hijacking the browser
+  - dont foreground
+  - do not foreground
+  - keep tab in background
+  - while i work
+  - quiet mode chatgpt
 metadata:
   short-description: Browser automation (extension preferred, CDP fallback)
   cdp-port: 9222
@@ -125,6 +149,20 @@ surf text                        # Get raw text content only
 ```
 
 ### WebGPT Completion-Sentinel Handoff
+
+**Routing for project agents:**
+
+| If the user says... | Use |
+|---|---|
+| "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id>` |
+| "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` to the above (requires `--tab-id` or `--url`) |
+| "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
+| "prove background mode works", "no-activate sanity" | `surf webgpt.no-activate-sanity --tab-id <id>` |
+| "what tab/window am I focused on" | `surf focus.state --json` |
+
+Always require a `--tab-id` (or `--url` that resolves to an open ChatGPT tab).
+Don't let surf-cli auto-discover or create a tab when the user has explicitly
+chosen one. `controlled_tab_id` in the meta JSON must equal `requested_tab_id`.
 
 For ChatGPT/WebGPT handoffs, use `webgpt.submit` instead of manually pasting a
 completion marker into prompts. The command owns sentinel generation, prompt
