@@ -255,6 +255,7 @@ def call_webgpt(
     url: str = "",
     create_tab: bool = False,
     project: str = "",
+    attach_file: str = "",
     timeout: float = WEBGPT_DEFAULT_TIMEOUT,
     stable_polls: int = WEBGPT_STABLE_POLLS,
     artifact_dir: Path | None = None,
@@ -339,6 +340,8 @@ def call_webgpt(
         command.extend(["--url", url])
     if no_activate:
         command.append("--no-activate")
+    if attach_file:
+        command.extend(["--attach-file", str(attach_file)])
 
     event_payload = {
         "backend": "webgpt",

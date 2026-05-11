@@ -739,6 +739,162 @@ def _question_too_large_for_child_argv(question: str) -> bool:
     return len(question.encode("utf-8", errors="replace")) > 12000
 
 
+def _handle_webgpt_review_dispatch(
+    review_type: str,
+    description: str,
+    parsed_rounds: int,
+    webgpt_tab_id: str,
+    webgpt_url: str,
+    webgpt_project: str,
+    webgpt_create_tab: bool,
+    oracle_timeout: float,
+    as_json: bool,
+) -> None:
+    """Run the webgpt-review ping-pong loop and print the result.
+
+    Triggered when `$ask webgpt /review-(code|design|prompt|plan) …` is
+    parsed. Owns its own /interview-driven ambiguity resolution for diff
+    scope and project binding; the rest of `/ask`'s synthesis chain is
+    bypassed because the answer here is the webgpt verdict, not a
+    memory-grounded synthesis.
+    """
+    import json as _json
+    import os as _os
+    import subprocess as _subprocess
+    from pathlib import Path as _Path
+
+    from .webgpt_review import (
+        WebgptReviewRequest,
+        resolve_diff,
+        run_webgpt_review,
+    )
+    from .ask_webgpt_interview import (
+        clarify_diff_scope,
+        clarify_max_rounds,
+    )
+
+    # Resolve the diff scope.
+    # Default: HEAD~5..HEAD ("recent" without dragging in months of branch
+    # work). For long-lived feature branches the full origin/main..HEAD can be
+    # hundreds of KB which trips the OS argv limit on surf chatgpt — prefer a
+    # smaller default and ask /interview when the description is ambiguous or
+    # missing.
+    diff_scope = "HEAD~5..HEAD"
+    if not description or description.strip() in {"", "this", "the diff"}:
+        chosen = clarify_diff_scope(description or "(no description given)")
+        if chosen is not None:
+            diff_scope = chosen
+    diff_text = resolve_diff(diff_scope) if diff_scope else resolve_diff("")
+
+    # Resolve rounds. Parsed-from-query wins; otherwise default 1, escalated
+    # to 2 if the description mentions "iterate" without a number.
+    rounds = parsed_rounds
+    if rounds <= 1 and any(
+        kw in (description or "").lower() for kw in ("iterate", "ping-pong", "back and forth")
+    ):
+        chosen_rounds = clarify_max_rounds(description)
+        if chosen_rounds is not None:
+            rounds = chosen_rounds
+
+    # Default project name when --webgpt-project not given: cwd basename.
+    project = webgpt_project
+    if not project and not webgpt_tab_id and not webgpt_url and not webgpt_create_tab:
+        try:
+            repo_root = _subprocess.run(
+                ["git", "rev-parse", "--show-toplevel"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if repo_root.returncode == 0:
+                project = _Path(repo_root.stdout.strip()).name
+        except Exception:
+            project = ""
+
+    req = WebgptReviewRequest(
+        review_type=review_type,
+        description=description,
+        diff_scope=diff_scope,
+        diff_text=diff_text,
+        max_rounds=rounds,
+        tab_id=webgpt_tab_id,
+        url=webgpt_url,
+        project=project,
+        create_tab=webgpt_create_tab,
+        timeout=oracle_timeout,
+    )
+
+    try:
+        result = run_webgpt_review(req)
+    except Exception as exc:
+        err = {
+            "status": "failed",
+            "error": f"{type(exc).__name__}: {exc}",
+            "review_type": review_type,
+            "diff_scope": diff_scope,
+            "rounds_requested": rounds,
+        }
+        if as_json:
+            print(_json.dumps(err, indent=2))
+        else:
+            print(f"webgpt /review-{review_type} failed: {err['error']}")
+        raise typer.Exit(code=1)
+
+    payload = {
+        "status": "completed",
+        "review_type": result.review_type,
+        "final_verdict": result.final_verdict,
+        "final_verdict_data": result.final_verdict_data,
+        "halt_reason": result.halt_reason,
+        "controlled_tab_id": result.controlled_tab_id,
+        "project": result.project,
+        "diff_scope": diff_scope,
+        "rounds_completed": len(result.rounds),
+        "rounds_requested": rounds,
+        "rounds": [
+            {
+                "round": r.round_num,
+                "verdict": r.verdict,
+                "artifact_dir": r.artifact_dir,
+                "took_ms": r.took_ms,
+                "raw_contains_sentinel": r.raw_contains_sentinel,
+            }
+            for r in result.rounds
+        ],
+    }
+
+    if as_json:
+        print(_json.dumps(payload, indent=2))
+    else:
+        print(f"\n-- $ask webgpt /review-{result.review_type} --\n")
+        print(f"Verdict:      {result.final_verdict or 'UNPARSEABLE'}")
+        print(f"Halt reason:  {result.halt_reason}")
+        print(f"Rounds:       {len(result.rounds)}/{rounds}")
+        print(f"Tab:          {result.controlled_tab_id}")
+        if result.project:
+            print(f"Project:      {result.project}")
+        print(f"Diff scope:   {diff_scope}")
+        print()
+        if result.final_verdict_data.get("blocking_findings"):
+            print("Blocking findings:")
+            for f in result.final_verdict_data["blocking_findings"]:
+                if isinstance(f, dict):
+                    loc = f.get("file", "")
+                    if f.get("lines"):
+                        loc = f"{loc}:{f['lines']}" if loc else str(f["lines"])
+                    print(f"  - {f.get('summary', '')}" + (f"  [{loc}]" if loc else ""))
+                else:
+                    print(f"  - {f}")
+        elif result.final_verdict_data.get("conditions"):
+            print("Conditions:")
+            for c in result.final_verdict_data["conditions"]:
+                print(f"  - {c if isinstance(c, str) else _json.dumps(c)}")
+        print()
+        print("Per-round artifacts:")
+        for r in result.rounds:
+            print(f"  round {r.round_num}: {r.artifact_dir}")
+        print()
+    raise typer.Exit(code=0 if result.final_verdict == "SAFE" else 1)
+
+
 def _record_ask_telemetry(
     result: dict,
     started_at: float,
@@ -915,6 +1071,29 @@ def main(
         oracle = True
         oracle_backend = model_alias_route.oracle_backend
         oracle_model = model_alias_route.resolved_model
+
+    # Early dispatch: $ask webgpt /review-X … routes to the webgpt review
+    # loop (multi-round ping-pong + content-aware follow-ups + /interview
+    # ambiguity resolution) instead of plain oracle synthesis.
+    if (
+        model_alias_route
+        and getattr(model_alias_route, "oracle_backend", "") == "webgpt"
+    ):
+        from .ask_routing import _parse_webgpt_review_query
+        rt, desc, parsed_rounds = _parse_webgpt_review_query(question_parts)
+        if rt in {"code", "design", "prompt", "plan"}:
+            _handle_webgpt_review_dispatch(
+                review_type=rt,
+                description=desc,
+                parsed_rounds=parsed_rounds,
+                webgpt_tab_id=webgpt_tab_id,
+                webgpt_url=webgpt_url,
+                webgpt_project=webgpt_project,
+                webgpt_create_tab=webgpt_create_tab,
+                oracle_timeout=oracle_timeout,
+                as_json=as_json,
+            )
+            return
 
     question, inferred_cae_gap_review = _parse_natural_cae_gap_review_query(question_parts)
     if stdin_question:

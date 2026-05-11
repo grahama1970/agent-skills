@@ -25,6 +25,12 @@ Options:
   --no-activate             Background controlled-tab mode. Do not foreground
                             the tab or its window. Requires --tab-id or --url
                             so an authenticated ChatGPT tab is already open.
+  --attach-file PATH        Attach a file to the ChatGPT message (uses CDP
+                            DOM.setFileInputFiles via the surf chatgpt --file
+                            flag). The prompt body is sent normally; ChatGPT
+                            reads the attached file alongside it. Use this
+                            instead of inlining large bundles in the prompt
+                            to stay under the OS argv limit.
 EOF
 }
 
@@ -40,6 +46,7 @@ model=""
 tab_id=""
 target_url=""
 no_activate=0
+attach_file=""
 tab_state_file="${SURF_WEBGPT_TAB_STATE:-/tmp/surf-webgpt-controlled-tab-id}"
 
 while [[ $# -gt 0 ]]; do
@@ -56,6 +63,7 @@ while [[ $# -gt 0 ]]; do
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
     --no-activate) no_activate=1; shift ;;
+    --attach-file) attach_file="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -147,6 +155,15 @@ if [[ "$no_activate" -eq 1 ]]; then
     exit 2
   fi
   args+=(--no-activate)
+fi
+
+if [[ -n "$attach_file" ]]; then
+  if [[ ! -f "$attach_file" ]]; then
+    echo "--attach-file: file not found: $attach_file" >&2
+    exit 2
+  fi
+  attach_file_abs="$(readlink -f "$attach_file")"
+  args+=(--file "$attach_file_abs")
 fi
 
 # Pre-run focus snapshot for proof. Best-effort: if focus.state is missing

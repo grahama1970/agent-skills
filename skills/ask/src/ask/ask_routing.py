@@ -367,6 +367,64 @@ def _looks_like_persona_prefix(value: str) -> bool:
     return all(word[:1].isupper() for word in words)
 
 
+_REVIEW_SKILL_RE = re.compile(
+    r"/?(?:review-(?P<kind>code|design|prompt|plan))\b",
+    re.IGNORECASE,
+)
+
+
+def _parse_webgpt_review_query(
+    question_parts: list[str],
+) -> tuple[Optional[str], str, int]:
+    """Parse `webgpt /review-X <description> over N rounds` after the webgpt
+    model alias has been resolved.
+
+    Returns (review_type, description, max_rounds). review_type is None when
+    no /review-(code|design|prompt|plan) literal appears in the input.
+
+    Both unquoted (`question_parts = ["/review-code", "our", ...]`) and quoted
+    (`question_parts = ["/review-code our recent changes over 2 rounds"]`) are
+    supported. "Over N (iteration )?rounds" / "N rounds" inside the question
+    is consumed and stripped from the description.
+    """
+    if not question_parts:
+        return None, "", 1
+    text = " ".join(question_parts).strip()
+    m = _REVIEW_SKILL_RE.search(text)
+    if not m:
+        return None, text, 1
+    kind = m.group("kind").lower()
+    # Description is everything before+after the /review-X token, minus the
+    # rounds phrase.
+    before = text[: m.start()].rstrip(" ,:;")
+    after = text[m.end():].lstrip(" ,:;")
+    # Pull the rounds count from anywhere in the question.
+    rounds = 1
+    rounds_re = re.compile(
+        r"\b(?:over\s+|in\s+|with\s+|across\s+)?(\d+)\s+(?:iteration\s+)?rounds?\b",
+        re.IGNORECASE,
+    )
+    rm = rounds_re.search(text)
+    if rm:
+        try:
+            rounds = max(1, min(10, int(rm.group(1))))
+        except (TypeError, ValueError):
+            rounds = 1
+    # Strip filler words at the start of the description: "for a", "of", "to do".
+    desc_raw = f"{before} {after}".strip()
+    # Strip rounds phrase from description.
+    desc = rounds_re.sub("", desc_raw).strip()
+    # Strip leading filler words iteratively: "for a of your changes" → "your changes".
+    leading_filler = re.compile(r"^(for\s+a|for|of|to\s+do|about|on|the)\s+", re.IGNORECASE)
+    while True:
+        new_desc = leading_filler.sub("", desc, count=1)
+        if new_desc == desc:
+            break
+        desc = new_desc
+    desc = re.sub(r"\s{2,}", " ", desc).strip(" ,:;")
+    return kind, desc, rounds
+
+
 def _should_auto_oracle_persona(question: str) -> bool:
     """Return True for broad analytical questions that benefit from a persona oracle."""
     q = question.lower().strip()
