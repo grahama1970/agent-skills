@@ -52,6 +52,10 @@ def _synthesise(
     parallel_review_focus: Optional[str] = None,
     parallel_review_role_preset: str = "adversarial-review",
     deep_review_request: Optional[dict] = None,
+    webgpt_tab_id: str = "",
+    webgpt_url: str = "",
+    webgpt_create_tab: bool = False,
+    run_state: object | None = None,
 ) -> None:
     """Build the answer string and print output."""
     question = result["question"]
@@ -88,7 +92,9 @@ def _synthesise(
                 log.debug("Filtered %d meta items from synthesis", meta_count)
         log.info("Synthesised answer from %d items", len(result["items"]))
     else:
-        if auto_learn:
+        if oracle_model:
+            result["answer"] = "[no memory context retrieved; passing original question directly to oracle]"
+        elif auto_learn:
             result["answer"] = (
                 f'No knowledge found for "{question}" even after auto-learning. '
                 f'Try providing specific YouTube URLs: ./run.sh learn "{question}" '
@@ -128,11 +134,15 @@ def _synthesise(
             roundtable_rounds=roundtable_rounds,
             roundtable_mode=roundtable_mode,
             roundtable_persist=roundtable_persist,
-            parallel_review=parallel_review,
+            parallel_review=parallel_review and not deep_review_request,
             parallel_reviewers=parallel_reviewers,
             parallel_review_personas=parallel_review_personas,
             parallel_review_focus=parallel_review_focus,
             parallel_review_role_preset=parallel_review_role_preset,
+            webgpt_tab_id=webgpt_tab_id,
+            webgpt_url=webgpt_url,
+            webgpt_create_tab=webgpt_create_tab,
+            run_state=run_state,
         )
 
     if deep_review_request:

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
+import shlex
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,6 +18,8 @@ ALLOWED_VERDICTS = {"SAFE", "SAFE_WITH_CONDITIONS", "NOT_SAFE", "INSUFFICIENT_EV
 ALLOWED_SECTION_STATUSES = {"verified", "issues_found", "none_found", "not_assessed"}
 ALLOWED_ARTIFACT_PREFIXES = (".ask_artifacts/", "reviews/")
 DEEP_REVIEW_SCHEMA_VERSION = "1.0"
+MAX_TARGET_FILE_CHARS = 120_000
+MAX_TARGET_BUNDLE_CHARS = 240_000
 DEEP_REVIEW_SECTION_NAMES = (
     "target_reconstruction",
     "architecture_boundaries",
@@ -81,7 +85,13 @@ def build_deep_review_request(
 def resolve_deep_review_target(question: str, explicit_target: str | None = None) -> dict[str, Any]:
     """Resolve the review target without inventing repo scope."""
     if explicit_target and explicit_target.strip():
-        return {"status": "explicit", "target": explicit_target.strip(), "requires_target": False}
+        target = explicit_target.strip()
+        return {
+            "status": "explicit",
+            "target": target,
+            "requires_target": False,
+            "target_bundle": build_target_bundle(target),
+        }
     normalized = question.lower().strip()
     vague = (
         normalized in {"safe to proceed?", "safe to proceed", "is this safe?", "is this safe"}
@@ -94,7 +104,23 @@ def resolve_deep_review_target(question: str, explicit_target: str | None = None
             "requires_target": True,
             "message": "Deep review needs an explicit target: paths, branch diff, plan, manifest, or artifact.",
         }
-    return {"status": "question", "target": question.strip(), "requires_target": False}
+    return {"status": "question", "target": question.strip(), "requires_target": False, "target_bundle": build_target_bundle("")}
+
+
+def build_target_bundle(target: str) -> dict[str, Any]:
+    """Build bounded, auditable target material for the deep-review prompt."""
+    entries: list[dict[str, Any]] = []
+    remaining = MAX_TARGET_BUNDLE_CHARS
+    tokens = _target_tokens(target)
+    for index, token in enumerate(tokens, 1):
+        entry, remaining = _target_entry(index, token, remaining)
+        entries.append(entry)
+    return {
+        "schema_version": "ask.deep_review.target_bundle.v1",
+        "entries": entries,
+        "truncated": any(bool(entry.get("truncated")) for entry in entries),
+        "total_entries": len(entries),
+    }
 
 
 def build_deep_review_prompt(result: dict[str, Any], request: dict[str, Any]) -> str:
@@ -102,6 +128,7 @@ def build_deep_review_prompt(result: dict[str, Any], request: dict[str, Any]) ->
     target = request["target"]
     resolved_target = target.get("target") or "[missing explicit target]"
     inspected_context = _summarize_context_items(result.get("items", []))
+    target_material = _render_target_bundle(target.get("target_bundle") or {})
     return f"""You are performing a Web-GPT-heavy-reasoning-equivalent deep review.
 
 This is not a terse PR review and not an implementation task. Do not edit files.
@@ -110,6 +137,9 @@ artifacts, command output, or explicit user-provided target material as evidence
 
 Target:
 {resolved_target}
+
+Target material:
+{target_material}
 
 User question:
 {request["original_question"]}
@@ -138,6 +168,8 @@ Required passes:
 Every major issue must include severity, evidence, evidence_citations, impact, fix, and verification.
 Structured citations are required for review safety claims. Memory may guide context but
 must not be used as code/review safety evidence.
+Use `TARGET.N` source IDs or concrete file paths from Target material for evidence citations.
+If Target material is missing, declared-only, unreadable, or truncated, do not return SAFE.
 Final verdict must be SAFE, SAFE_WITH_CONDITIONS, NOT_SAFE, or INSUFFICIENT_EVIDENCE.
 
 Return a comprehensive markdown review. End with one fenced JSON block matching this shape:
@@ -220,8 +252,13 @@ def normalise_review_json(parsed: dict[str, Any], result: dict[str, Any], reques
     """Normalize model output into the machine-checkable deep-review schema."""
     target = request["target"]
     sections = parsed.get("sections") if isinstance(parsed.get("sections"), dict) else {}
+    evidence_citations = normalize_citations(parsed.get("evidence_citations"), supports="verdict")
+    evidence_index = _build_evidence_citation_index(evidence_citations, target.get("target_bundle") or {})
     normalized_sections = {
-        name: _normalize_section(sections.get(name) if isinstance(sections.get(name), dict) else None)
+        name: _normalize_section(
+            sections.get(name) if isinstance(sections.get(name), dict) else None,
+            evidence_index=evidence_index,
+        )
         for name in DEEP_REVIEW_SECTION_NAMES
     }
     verdict = str(parsed.get("verdict") or "INSUFFICIENT_EVIDENCE").upper()
@@ -234,9 +271,10 @@ def normalise_review_json(parsed: dict[str, Any], result: dict[str, Any], reques
         "verdict": verdict,
         "target_reviewed": parsed.get("target_reviewed") or target.get("target") or request["original_question"],
         "target_resolution": target,
+        "target_bundle": target.get("target_bundle") or {},
         "files_inspected": _list_value(parsed.get("files_inspected")),
         "files_not_inspected_but_relevant": _list_value(parsed.get("files_not_inspected_but_relevant")),
-        "evidence_citations": normalize_citations(parsed.get("evidence_citations"), supports="verdict"),
+        "evidence_citations": evidence_citations,
         "sections": normalized_sections,
         "blocking_issues": _list_value(parsed.get("blocking_issues")),
         "significant_risks": _list_value(parsed.get("significant_risks")),
@@ -271,6 +309,7 @@ def verify_review_json(review_json: dict[str, Any]) -> dict[str, Any]:
     if review_json.get("verdict") in {"SAFE", "SAFE_WITH_CONDITIONS"} and not review_json.get("files_inspected"):
         failures.append("safe verdict requires files_inspected evidence")
     if review_json.get("verdict") in {"SAFE", "SAFE_WITH_CONDITIONS"}:
+        _verify_deep_review_target_bundle(review_json.get("target_bundle") or {}, failures)
         failures.extend(validate_citations(
             "deep_review evidence_citations",
             normalize_citations(review_json.get("evidence_citations"), supports="verdict"),
@@ -363,19 +402,33 @@ def unexpected_git_changes(before: list[str], after: list[str]) -> list[str]:
     return unexpected
 
 
-def _normalize_section(section: dict[str, Any] | None) -> dict[str, Any]:
+def _normalize_section(
+    section: dict[str, Any] | None,
+    *,
+    evidence_index: dict[str, dict[str, str]] | None = None,
+) -> dict[str, Any]:
     if not section:
         return {"status": "not_assessed", "summary": "", "evidence_examined": [], "findings": []}
     status = section.get("status", "not_assessed")
     if status not in ALLOWED_SECTION_STATUSES:
         status = "not_assessed"
+    evidence_examined = _list_value(section.get("evidence_examined"))
+    evidence_citations = _normalize_section_citations(
+        section.get("evidence_citations"),
+        evidence_examined=evidence_examined,
+        evidence_index=evidence_index or {},
+    )
     return {
         "status": status,
         "summary": str(section.get("summary", "")),
-        "evidence_examined": _list_value(section.get("evidence_examined")),
-        "evidence_citations": normalize_citations(section.get("evidence_citations"), supports="section"),
+        "evidence_examined": evidence_examined,
+        "evidence_citations": evidence_citations,
         "findings": [
-            _normalize_finding(finding)
+            _normalize_finding(
+                finding,
+                evidence_index=evidence_index or {},
+                fallback_citations=evidence_citations,
+            )
             for finding in _list_value(section.get("findings"))
             if isinstance(finding, dict)
         ],
@@ -395,10 +448,288 @@ def _verify_finding(prefix: str, finding: dict[str, Any], failures: list[str]) -
     ))
 
 
-def _normalize_finding(finding: dict[str, Any]) -> dict[str, Any]:
+def _normalize_finding(
+    finding: dict[str, Any],
+    *,
+    evidence_index: dict[str, dict[str, str]] | None = None,
+    fallback_citations: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
     normalized = dict(finding)
-    normalized["evidence_citations"] = normalize_citations(finding.get("evidence_citations"), supports="finding")
+    normalized["evidence_citations"] = _normalize_finding_citations(
+        finding.get("evidence_citations"),
+        finding=finding,
+        evidence_index=evidence_index or {},
+        fallback_citations=fallback_citations or [],
+    )
     return normalized
+
+
+def _normalize_finding_citations(
+    raw_citations: Any,
+    *,
+    finding: dict[str, Any],
+    evidence_index: dict[str, dict[str, str]],
+    fallback_citations: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    citations = normalize_citations(raw_citations, supports="finding")
+    repaired: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for citation in citations:
+        repaired_citation = _repair_finding_citation(citation, evidence_index)
+        if not repaired_citation.get("source_id") or not repaired_citation.get("source_kind"):
+            continue
+        key = (repaired_citation.get("source_id", ""), repaired_citation.get("quote_or_summary", ""))
+        if key not in seen:
+            repaired.append(repaired_citation)
+            seen.add(key)
+    if repaired:
+        return repaired
+    for field in ("evidence", "verification", "impact", "fix"):
+        citation = _citation_from_evidence_value(
+            str(finding.get(field) or ""),
+            evidence_index,
+            supports="finding",
+        )
+        if citation:
+            key = (citation.get("source_id", ""), citation.get("quote_or_summary", ""))
+            if key not in seen:
+                repaired.append(citation)
+                seen.add(key)
+    if repaired:
+        return repaired
+    if fallback_citations and str(finding.get("evidence", "")).strip():
+        fallback_repaired: list[dict[str, str]] = []
+        for fallback_citation in fallback_citations:
+            if not fallback_citation.get("source_id") or not fallback_citation.get("source_kind"):
+                continue
+            citation = dict(fallback_citation)
+            citation["supports"] = "finding"
+            citation["quote_or_summary"] = str(finding.get("evidence"))
+            key = (citation.get("source_id", ""), citation.get("quote_or_summary", ""))
+            if key not in seen:
+                fallback_repaired.append(citation)
+                seen.add(key)
+        if fallback_repaired:
+            return fallback_repaired
+    return []
+
+
+def _repair_finding_citation(
+    citation: dict[str, str],
+    evidence_index: dict[str, dict[str, str]],
+) -> dict[str, str]:
+    if citation.get("source_id") and citation.get("source_kind"):
+        repaired = dict(citation)
+        repaired["supports"] = "finding"
+        return repaired
+    match = _citation_from_evidence_value(
+        citation.get("quote_or_summary", ""),
+        evidence_index,
+        supports="finding",
+    )
+    if not match:
+        return citation
+    repaired = dict(citation)
+    repaired["source_id"] = match["source_id"]
+    repaired["source_kind"] = match["source_kind"]
+    repaired["supports"] = "finding"
+    if not repaired.get("quote_or_summary"):
+        repaired["quote_or_summary"] = match.get("quote_or_summary", match["source_id"])
+    return repaired
+
+
+def _normalize_section_citations(
+    raw_citations: Any,
+    *,
+    evidence_examined: list[Any],
+    evidence_index: dict[str, dict[str, str]],
+) -> list[dict[str, str]]:
+    citations = normalize_citations(raw_citations, supports="section")
+    repaired: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for citation in citations:
+        repaired_citation = _repair_section_citation(citation, evidence_index)
+        key = (repaired_citation.get("source_id", ""), repaired_citation.get("quote_or_summary", ""))
+        if key not in seen:
+            repaired.append(repaired_citation)
+            seen.add(key)
+    if repaired:
+        return repaired
+    for value in evidence_examined:
+        citation = _citation_from_evidence_value(str(value), evidence_index)
+        if citation:
+            key = (citation.get("source_id", ""), citation.get("quote_or_summary", ""))
+            if key not in seen:
+                repaired.append(citation)
+                seen.add(key)
+    return repaired
+
+
+def _repair_section_citation(
+    citation: dict[str, str],
+    evidence_index: dict[str, dict[str, str]],
+) -> dict[str, str]:
+    if citation.get("source_id") and citation.get("source_kind"):
+        return citation
+    match = _citation_from_evidence_value(citation.get("quote_or_summary", ""), evidence_index)
+    if not match:
+        return citation
+    repaired = dict(citation)
+    repaired["source_id"] = match["source_id"]
+    repaired["source_kind"] = match["source_kind"]
+    if not repaired.get("quote_or_summary"):
+        repaired["quote_or_summary"] = match.get("quote_or_summary", match["source_id"])
+    return repaired
+
+
+def _citation_from_evidence_value(
+    value: str,
+    evidence_index: dict[str, dict[str, str]],
+    *,
+    supports: str = "section",
+) -> dict[str, str] | None:
+    literal = _citation_from_literal_source(value, supports=supports)
+    if literal:
+        return literal
+    for alias in _evidence_aliases(value):
+        citation = evidence_index.get(alias)
+        if citation:
+            return {
+                "source_id": citation["source_id"],
+                "source_kind": citation["source_kind"],
+                "quote_or_summary": value or citation.get("quote_or_summary", citation["source_id"]),
+                "supports": supports,
+            }
+    return None
+
+
+def _citation_from_literal_source(value: str, *, supports: str) -> dict[str, str] | None:
+    stripped = value.strip()
+    if not stripped:
+        return None
+    source_id = _literal_source_id(stripped)
+    if not source_id:
+        return None
+    return {
+        "source_id": source_id,
+        "source_kind": _source_kind_for_literal_source(source_id),
+        "quote_or_summary": stripped,
+        "supports": supports,
+    }
+
+
+def _build_evidence_citation_index(
+    evidence_citations: list[dict[str, str]],
+    target_bundle: dict[str, Any],
+) -> dict[str, dict[str, str]]:
+    index: dict[str, dict[str, str]] = {}
+    for citation in evidence_citations:
+        source_id = citation.get("source_id", "")
+        source_kind = citation.get("source_kind", "")
+        if not source_id or not source_kind:
+            continue
+        entry = {
+            "source_id": source_id,
+            "source_kind": source_kind,
+            "quote_or_summary": citation.get("quote_or_summary", ""),
+        }
+        for alias in _evidence_aliases(source_id):
+            index.setdefault(alias, entry)
+        for alias in _evidence_aliases(citation.get("quote_or_summary", "")):
+            index.setdefault(alias, entry)
+    target_entries = [entry for entry in _list_value(target_bundle.get("entries")) if isinstance(entry, dict)]
+    for entry in target_entries:
+        source_id = str(entry.get("source_id") or "")
+        if not source_id:
+            continue
+        citation = {
+            "source_id": source_id,
+            "source_kind": "target_bundle",
+            "quote_or_summary": str(entry.get("target") or entry.get("resolved_path") or source_id),
+        }
+        for field in ("source_id", "target", "resolved_path"):
+            for alias in _evidence_aliases(str(entry.get(field) or "")):
+                index.setdefault(alias, citation)
+        if len(target_entries) == 1:
+            for alias in ("target", "target material", "target bundle", "review target", "seed payload"):
+                index.setdefault(alias, citation)
+    return index
+
+
+def _evidence_aliases(value: str) -> set[str]:
+    stripped = value.strip()
+    if not stripped:
+        return set()
+    aliases = {stripped}
+    for token in _source_tokens(stripped):
+        aliases.add(token)
+        path = Path(_strip_line_suffix(token))
+        aliases.add(str(path))
+        if path.name:
+            aliases.add(path.name)
+    path = Path(_strip_line_suffix(stripped))
+    if path.name:
+        aliases.add(path.name)
+    return aliases
+
+
+def _literal_source_id(value: str) -> str:
+    if _looks_like_target_source(value):
+        return value
+    tokens = _source_tokens(value)
+    if len(tokens) == 1 and tokens[0] == value:
+        return value
+    return ""
+
+
+def _source_tokens(value: str) -> list[str]:
+    tokens: list[str] = []
+    for match in re.finditer(r"\bTARGET\.\d+\b", value):
+        tokens.append(match.group(0))
+    for match in re.finditer(
+        r"(?:/|\.{1,2}/|~\/)[^\s,;`'\"<>)]*(?:\.[A-Za-z0-9_+-]+)(?::\d+(?:-\d+)?)?",
+        value,
+    ):
+        tokens.append(match.group(0))
+    return tokens
+
+
+def _strip_line_suffix(value: str) -> str:
+    return re.sub(r":\d+(?:-\d+)?$", "", value)
+
+
+def _looks_like_target_source(value: str) -> bool:
+    return bool(re.fullmatch(r"TARGET\.\d+", value))
+
+
+def _source_kind_for_literal_source(source_id: str) -> str:
+    if _looks_like_target_source(source_id):
+        return "target_bundle"
+    if source_id.startswith("DIFF."):
+        return "diff"
+    if source_id.startswith("COMMAND."):
+        return "command_output"
+    if source_id.startswith("ARTIFACT."):
+        return "runtime_artifact"
+    stripped = _strip_line_suffix(source_id)
+    if "/.ask_artifacts/" in stripped or stripped.endswith(".json"):
+        return "runtime_artifact"
+    return "file"
+
+
+def _verify_deep_review_target_bundle(target_bundle: dict[str, Any], failures: list[str]) -> None:
+    entries = [entry for entry in _list_value(target_bundle.get("entries")) if isinstance(entry, dict)]
+    if not entries:
+        failures.append("safe verdict requires target material")
+        return
+    if target_bundle.get("truncated"):
+        failures.append("safe verdict requires untruncated target material")
+    concrete = [entry for entry in entries if entry.get("kind") == "file" and entry.get("content")]
+    if not concrete:
+        failures.append("safe verdict requires inspected file or artifact content")
+    for entry in entries:
+        if entry.get("kind") in {"declared", "missing", "directory", "unreadable"}:
+            failures.append(f"safe verdict cannot rely on {entry.get('kind')} target: {entry.get('target')}")
 
 
 def _list_value(value: Any) -> list[Any]:
@@ -418,6 +749,74 @@ def _summarize_context_items(items: list[dict[str, Any]]) -> str:
         solution = str(item.get("solution") or "")[:400]
         lines.append(f"{index}. {problem}\n   {solution}")
     return "\n".join(lines)
+
+
+def _target_tokens(target: str) -> list[str]:
+    if not target.strip():
+        return []
+    try:
+        tokens = shlex.split(target)
+    except ValueError:
+        tokens = target.split()
+    return tokens or [target]
+
+
+def _target_entry(index: int, token: str, remaining: int) -> tuple[dict[str, Any], int]:
+    path = Path(token).expanduser()
+    resolved = path.resolve() if path.is_absolute() else (Path.cwd() / path).resolve()
+    source_id = f"TARGET.{index}"
+    base = {
+        "source_id": source_id,
+        "target": token,
+        "resolved_path": str(resolved),
+    }
+    if not resolved.exists():
+        return {**base, "kind": "missing", "content": "", "truncated": False}, remaining
+    if resolved.is_dir():
+        return {**base, "kind": "directory", "content": "", "truncated": False}, remaining
+    try:
+        data = resolved.read_bytes()
+    except OSError as exc:
+        return {**base, "kind": "unreadable", "error": str(exc), "content": "", "truncated": False}, remaining
+    digest = hashlib.sha256(data).hexdigest()
+    text = data.decode("utf-8", errors="replace")
+    allowed = max(0, min(MAX_TARGET_FILE_CHARS, remaining))
+    truncated = len(text) > allowed
+    content = text[:allowed]
+    remaining = max(0, remaining - len(content))
+    return {
+        **base,
+        "kind": "file",
+        "bytes": len(data),
+        "sha256": digest,
+        "content_chars": len(content),
+        "truncated": truncated,
+        "content": content,
+    }, remaining
+
+
+def _render_target_bundle(target_bundle: dict[str, Any]) -> str:
+    entries = [entry for entry in _list_value(target_bundle.get("entries")) if isinstance(entry, dict)]
+    if not entries:
+        return "- No concrete target material was resolved. Treat this as insufficient evidence."
+    rendered: list[str] = []
+    for entry in entries:
+        source_id = entry.get("source_id", "TARGET.?")
+        kind = entry.get("kind", "unknown")
+        rendered.append(
+            f"[{source_id}] kind={kind} target={entry.get('target', '')} "
+            f"resolved_path={entry.get('resolved_path', '')} "
+            f"sha256={entry.get('sha256', '')} bytes={entry.get('bytes', '')} "
+            f"truncated={entry.get('truncated', False)}"
+        )
+        content = str(entry.get("content") or "")
+        if content:
+            rendered.append("```text")
+            rendered.append(content)
+            rendered.append("```")
+        elif entry.get("error"):
+            rendered.append(f"Error: {entry['error']}")
+    return "\n".join(rendered)
 
 
 def _next_output_dir(root: Path) -> Path:

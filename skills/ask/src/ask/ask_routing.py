@@ -175,6 +175,35 @@ def _parse_natural_roundtable_query(question_parts: list[str]) -> tuple[str, str
     return topic, ",".join(personas), True
 
 
+def _parse_missing_persona_roundtable_query(question_parts: list[str]) -> tuple[str, list[str]]:
+    """Detect ambiguous roundtable requests that name roles as missing personas.
+
+    Example: `Have the tester and maintainer roundtable the migration risk`.
+    Lowercase role labels are not durable persona identities. They need a
+    clarification path instead of falling through to memory recall or silently
+    inventing personas.
+    """
+    question = _normalize_question_parts(question_parts)
+    if not question:
+        return question, []
+    patterns = [
+        r"^(?:have|ask|let)\s+(?P<names>.+?)\s+roundtable\s+(?P<topic>.+)$",
+        r"^(?:have|ask|let)\s+(?P<names>.+?)\s+debate\s+(?P<topic>.+)$",
+        r"^(?:have|ask|let)\s+(?P<names>.+?)\s+discuss\s+(?P<topic>.+)$",
+    ]
+    for pattern in patterns:
+        match = re.match(pattern, question, flags=re.IGNORECASE)
+        if not match:
+            continue
+        personas = _parse_persona_list(match.group("names"))
+        normalized = [_strip_persona_article(persona.split(":", 1)[0].strip()) for persona in personas if persona]
+        missing = [persona for persona in normalized if persona and not _looks_like_persona_prefix(persona)]
+        topic = _clean_roundtable_topic(match.group("topic"))
+        if len(personas) >= 2 and missing and topic:
+            return topic, missing
+    return question, []
+
+
 def _parse_natural_parallel_review_query(question_parts: list[str]) -> tuple[str, bool, int | None, str | None]:
     """Parse human syntax like `run 3 parallel reviewers on this design`.
 
@@ -207,6 +236,37 @@ def _parse_natural_parallel_review_query(question_parts: list[str]) -> tuple[str
     if "adversarial reviewers" in lowered or "adversarial review" in lowered:
         return question, True, None, None
     return question, False, None, None
+
+
+def _parse_natural_cae_gap_review_query(question_parts: list[str]) -> tuple[str, bool]:
+    """Parse human syntax like `run cae gap review on AC-2 evidence`."""
+    question = _normalize_question_parts(question_parts)
+    if not question:
+        return question, False
+    patterns = [
+        r"^(?:run|launch|perform)\s+(?:a\s+)?cae\s+gap\s+review\s+(?:on|for)\s+(?P<topic>.+)$",
+        r"^(?:run|launch|perform)\s+(?:a\s+)?cae\s+review\s+(?:on|for)\s+(?P<topic>.+)$",
+        r"^cae\s+gap\s+review\s+(?P<topic>.+)$",
+        r"^cae\s+review\s+(?P<topic>.+)$",
+        r"^(?:ask\s+)?cae\s+reviewers?\s+(?:to\s+)?review\s+(?P<topic>.+)$",
+    ]
+    for pattern in patterns:
+        match = re.match(pattern, question, flags=re.IGNORECASE)
+        if not match:
+            continue
+        topic = match.group("topic").strip(" ,:;")
+        if topic:
+            return topic, True
+    lowered = question.lower()
+    negated_patterns = [
+        r"\b(?:do\s+not|don't|dont|without|no)\s+(?:run\s+|launch\s+|perform\s+|use\s+|ask\s+for\s+)?(?:a\s+)?cae\s+gap\s+review\b",
+        r"\bnot\s+(?:a\s+)?cae\s+gap\s+review\b",
+    ]
+    if any(re.search(pattern, lowered, flags=re.IGNORECASE) for pattern in negated_patterns):
+        return question, False
+    if "cae" in lowered and "gap" in lowered and "review" in lowered:
+        return question, True
+    return question, False
 
 
 def _parse_natural_argue_query(question_parts: list[str]) -> tuple[str, bool]:
@@ -253,6 +313,14 @@ def _parse_persona_list(value: str) -> list[str]:
             break
     names_text = names_text.replace(", and ", ",").replace(" and ", ",")
     return [part.strip() for part in names_text.split(",") if part.strip()]
+
+
+def _strip_persona_article(value: str) -> str:
+    lowered = value.lower()
+    for prefix in ("the ", "a ", "an "):
+        if lowered.startswith(prefix):
+            return value[len(prefix):].strip()
+    return value
 
 
 def _clean_roundtable_topic(value: str) -> str:

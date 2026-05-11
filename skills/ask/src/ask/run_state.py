@@ -19,7 +19,7 @@ SKILL_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RUN_ROOT = SKILL_ROOT / ".ask_artifacts" / "runs"
 DEFAULT_ARTIFACT_ROOT = SKILL_ROOT / ".ask_artifacts"
 RUN_ID_RE = re.compile(r"[^A-Za-z0-9_.-]+")
-TERMINAL_STATES = {"answered", "completed", "no_results", "failed", "cancelled", "needs_attention"}
+TERMINAL_STATES = {"answered", "completed", "no_results", "failed", "cancelled", "needs_attention", "stale"}
 RESUMABLE_STATES = {"created", "running"}
 INDEX_FILENAME = "index.jsonl"
 
@@ -356,6 +356,7 @@ class AskRunState:
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "runtime_protocol_version": RUNTIME_PROTOCOL_VERSION,
             "artifacts": artifacts,
+            "controller_pid": os.getpid(),
             **fields,
         }
         if "needs_attention" in current and "needs_attention" not in payload:
@@ -386,12 +387,17 @@ class AskRunState:
     def finish(self, result: dict[str, Any], state: str | None = None) -> None:
         oracle = result.get("oracle") or {}
         has_oracle_answer = bool(oracle) and bool(str(result.get("answer", "")).strip()) and not oracle.get("error")
-        final_state = state or ("answered" if result.get("items") or has_oracle_answer else "no_results")
+        image_generation = result.get("image_generation") or {}
+        has_image_generation = bool(image_generation.get("files"))
+        final_state = state or ("answered" if result.get("items") or has_oracle_answer or has_image_generation else "no_results")
         summary = {
             "question": result.get("question", ""),
             "scope": result.get("scope", ""),
             "items_count": len(result.get("items", [])),
             "auto_learned": bool(result.get("auto_learned")),
+            "image_generation_enabled": has_image_generation,
+            "image_generation_model": image_generation.get("model", ""),
+            "image_generation_files_count": len(image_generation.get("files", [])),
             "oracle_enabled": bool(result.get("oracle")),
             "oracle_model": oracle.get("model", ""),
             "oracle_model_served": oracle.get("model_served", ""),
@@ -520,7 +526,9 @@ class NoopRunState:
     def finish(self, result: dict[str, Any], state: str | None = None) -> None:
         oracle = result.get("oracle") or {}
         has_oracle_answer = bool(oracle) and bool(str(result.get("answer", "")).strip()) and not oracle.get("error")
-        self.state = state or ("answered" if result.get("items") or has_oracle_answer else "no_results")
+        image_generation = result.get("image_generation") or {}
+        has_image_generation = bool(image_generation.get("files"))
+        self.state = state or ("answered" if result.get("items") or has_oracle_answer or has_image_generation else "no_results")
 
     def fail(self, exc: BaseException) -> None:
         self.state = "failed"
@@ -548,10 +556,50 @@ def read_status(target: str, tail_events: int = 0, output_root: Path | str | Non
     if not status_path.exists():
         raise FileNotFoundError(f"Run status not found: {target}")
     payload = json.loads(status_path.read_text())
+    payload = annotate_runtime_liveness(payload)
     if tail_events > 0:
         events_path = Path(payload.get("artifacts", {}).get("events", ""))
         payload["event_tail"] = read_event_tail(events_path, tail_events)
     return payload
+
+
+def annotate_runtime_liveness(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return a status payload with derived stale-state detection.
+
+    The status file itself remains append-only/read-only for status commands.
+    If a run says it is still running but the recorded controller process is
+    gone, callers should see a terminal stale state rather than a misleading
+    live running state.
+    """
+    if payload.get("state") != "running":
+        return payload
+    pid_alive = _pid_is_alive(payload.get("controller_pid"))
+    if pid_alive is not False:
+        return payload
+    annotated = dict(payload)
+    annotated["state"] = "stale"
+    annotated["observed_state"] = "stale"
+    annotated["recorded_state"] = "running"
+    annotated["stale_reason"] = "controller_pid_not_alive"
+    return annotated
+
+
+def _pid_is_alive(pid: Any) -> bool | None:
+    try:
+        pid_int = int(pid)
+    except (TypeError, ValueError):
+        return None
+    if pid_int <= 0:
+        return None
+    try:
+        os.kill(pid_int, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return None
+    return True
 
 
 def read_event_tail(events_path: Path, limit: int) -> list[dict[str, Any]]:
@@ -574,19 +622,44 @@ def watch_status(
     timeout_seconds: float = 300,
     output_root: Path | str | None = None,
 ) -> None:
-    last_state = None
+    payload = read_status(target, tail_events=tail_events, output_root=output_root)
+    print(json.dumps(payload, indent=2, sort_keys=True, default=str))
+    state = payload.get("state", "unknown")
+    if state in TERMINAL_STATES:
+        return
+    events_path = Path(payload.get("artifacts", {}).get("events", ""))
+    event_position = events_path.stat().st_size if events_path.exists() else 0
+    last_state = state
+    next_status_check = time.time() + interval
     deadline = time.time() + timeout_seconds
     while True:
-        payload = read_status(target, tail_events=tail_events, output_root=output_root)
-        state = payload.get("state", "unknown")
-        if state != last_state:
-            print(json.dumps(payload, indent=2, sort_keys=True, default=str))
-            last_state = state
+        event_seen = False
+        if events_path.exists():
+            with events_path.open("r", encoding="utf-8", errors="replace") as handle:
+                handle.seek(event_position)
+                for line in handle:
+                    event_position = handle.tell()
+                    if not line.strip():
+                        continue
+                    try:
+                        event = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    print(json.dumps({"event_stream": event}, indent=2, sort_keys=True, default=str))
+                    event_seen = True
+        now = time.time()
+        if event_seen or now >= next_status_check:
+            payload = read_status(target, tail_events=tail_events, output_root=output_root)
+            state = payload.get("state", "unknown")
+            if state != last_state:
+                print(json.dumps(payload, indent=2, sort_keys=True, default=str))
+                last_state = state
+            next_status_check = now + interval
         if state in TERMINAL_STATES:
             return
-        if time.time() >= deadline:
+        if now >= deadline:
             raise TimeoutError(f"Timed out watching /ask run '{target}' after {timeout_seconds:g}s")
-        time.sleep(interval)
+        time.sleep(min(interval, 0.25))
 
 
 def list_runs(

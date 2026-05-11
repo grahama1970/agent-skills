@@ -8,11 +8,14 @@ ask_oracle.py while isolating external process/network behavior here.
 
 import hashlib
 import json
+import os
+import socket
 import subprocess
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import httpx
 from loguru import logger as log
@@ -99,6 +102,7 @@ def _run_oracle_subagent_iterations(
     iterations: int,
     persona_model: Optional[str],
     peer_model: Optional[str],
+    run_state: Any | None = None,
 ) -> tuple[str, str, list[dict]]:
     """Run oracle deliberation as focused Codex sessions plus scillm one-shot peers."""
     total_iterations = max(1, iterations)
@@ -129,6 +133,7 @@ def _run_oracle_subagent_iterations(
             prompt=prompt,
             persona=f"{primary_name} with {peer_name}",
             turn_number=1,
+            run_state=run_state,
         )
         return content, primary_model, [{
             "iteration": 1,
@@ -165,6 +170,7 @@ def _run_oracle_subagent_iterations(
                 prompt=prompt,
                 persona=active_persona,
                 turn_number=turn_number,
+                run_state=run_state,
             )
             turns.append({
                 "iteration": turn_number,
@@ -180,6 +186,9 @@ def _run_oracle_subagent_iterations(
                 reasoning_effort=reasoning_effort,
                 timeout=timeout,
                 prompt=prompt,
+                run_state=run_state,
+                iteration=turn_number,
+                persona=active_persona,
             )
             turns.append({
                 "iteration": turn_number,
@@ -201,6 +210,7 @@ def _complete_oracle_subagent_call(
     prompt: str,
     persona: str,
     turn_number: int,
+    run_state: Any | None = None,
 ) -> tuple[str, str]:
     """Start one /subagent-runner Codex exec session and return its final answer."""
     runner = Path(SUBAGENT_RUNNER)
@@ -212,25 +222,24 @@ def _complete_oracle_subagent_call(
     safe_persona = _safe_task_fragment(persona)
     task_id = f"ask-oracle-{safe_persona}-{turn_number}-{int(time.time())}"
     answer_file = output_root / f"{task_id}-answer.txt"
+    prompt_file = output_root / f"{task_id}-prompt.md"
     spec_file = output_root / f"{task_id}-spec.json"
     subagent_prompt = _format_subagent_oracle_prompt(prompt)
+    prompt_file.write_text(subagent_prompt)
+    event_socket, event_socket_path = _open_subagent_event_socket(task_id)
 
     command = [
-        "codex",
-        "exec",
-        "--model",
-        model,
-        "-c",
-        f'reasoning_effort="{reasoning_effort}"',
-        "--sandbox",
-        "read-only",
-        "--cd",
-        str(Path.cwd()),
-        "--output-last-message",
-        str(answer_file),
-        "--color",
-        "never",
-        subagent_prompt,
+        "bash",
+        "-lc",
+        (
+            'codex exec --model "$ASK_ORACLE_MODEL" '
+            '-c "reasoning_effort=\\"$ASK_ORACLE_REASONING\\"" '
+            '--sandbox read-only '
+            '--cd "$ASK_ORACLE_CWD" '
+            '--output-last-message "$ASK_ORACLE_ANSWER_FILE" '
+            '--color never '
+            '- < "$ASK_ORACLE_PROMPT_FILE"'
+        ),
     ]
     spec = {
         "task_id": task_id,
@@ -251,42 +260,61 @@ def _complete_oracle_subagent_call(
             "SCILLM_API_KEY": SCILLM_API_KEY,
             "ASK_ORACLE_MODEL": model,
             "ASK_ORACLE_REASONING": reasoning_effort,
+            "ASK_ORACLE_CWD": str(Path.cwd()),
+            "ASK_ORACLE_ANSWER_FILE": str(answer_file),
+            "ASK_ORACLE_PROMPT_FILE": str(prompt_file),
             "ASK_ORACLE_IDLE_TIMEOUT": str(idle_timeout),
             "ASK_ORACLE_HEARTBEAT_INTERVAL": str(heartbeat_interval),
+            "SUBAGENT_RUNNER_FINAL_MESSAGE_FILE": str(answer_file),
             "SUBAGENT_RUNNER_IDLE_MODE": "heartbeat",
             "SUBAGENT_RUNNER_HEARTBEAT_INTERVAL": str(heartbeat_interval),
+            "SUBAGENT_RUNNER_EVENT_SOCKET": event_socket_path or "",
         },
         "tags": ["ask", "oracle", "subagent-runner", model, reasoning_effort],
     }
     spec_file.write_text(json.dumps(spec, indent=2))
 
-    started = subprocess.run(
-        [str(runner), "start", str(spec_file)],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    if started.returncode != 0:
-        raise RuntimeError(f"subagent-runner start failed: {started.stderr.strip()}")
+    try:
+        env = {**os.environ}
+        if event_socket_path:
+            env["SUBAGENT_RUNNER_EVENT_SOCKET"] = event_socket_path
+        started = subprocess.run(
+            [str(runner), "start", str(spec_file)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env=env,
+        )
+        if started.returncode != 0:
+            raise RuntimeError(f"subagent-runner start failed: {started.stderr.strip()}")
 
-    start_data = json.loads(started.stdout)
-    artifact_dir = str(start_data["artifact_dir"])
-    state = _wait_for_subagent_session(
-        runner,
-        artifact_dir,
-        timeout,
-        heartbeat_interval=heartbeat_interval,
-        task_id=task_id,
-        persona=persona,
-        model=model,
-        turn_number=turn_number,
-    )
+        start_data = json.loads(started.stdout)
+        artifact_dir = str(start_data["artifact_dir"])
+        state = _wait_for_subagent_session(
+            runner,
+            artifact_dir,
+            timeout,
+            idle_timeout=idle_timeout,
+            heartbeat_interval=heartbeat_interval,
+            task_id=task_id,
+            persona=persona,
+            model=model,
+            turn_number=turn_number,
+            event_socket=event_socket,
+            run_state=run_state,
+        )
+    finally:
+        _close_subagent_event_socket(event_socket, event_socket_path)
     if state.get("status") != "completed":
         transcript = _read_subagent_transcript(artifact_dir)
         raise RuntimeError(
             f"subagent-runner session {state.get('status')}: "
             f"{state.get('status_reason', '')}\n{transcript[-2000:]}"
         )
+
+    result_message = _read_subagent_result_final_message(artifact_dir)
+    if result_message:
+        return result_message, artifact_dir
 
     if answer_file.exists():
         content = answer_file.read_text().strip()
@@ -303,16 +331,35 @@ def _complete_oracle_subagent_call(
     return transcript, artifact_dir
 
 
+def _read_subagent_result_final_message(artifact_dir: str) -> str:
+    result_path = Path(artifact_dir) / "result.json"
+    if not result_path.exists():
+        return ""
+    try:
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+    status = str(result.get("final_message_status") or "")
+    message = str(result.get("final_message") or "").strip()
+    if status in {"ok", "degraded"} and message and not _looks_like_hook_pollution(message):
+        return message
+    return ""
+
+
 def _looks_like_hook_pollution(content: str) -> bool:
     lowered = content.lower()
     return any(
         marker in lowered
         for marker in (
             "cdp verification hook",
+            "cdp verification",
+            "ui cdp verification",
             ".codex/ui-verification",
             "no rendered ui target",
             "no real target url",
             "ui verification marker",
+            "hook script",
+            "<target-url>",
         )
     )
 
@@ -335,24 +382,103 @@ def _wait_for_subagent_session(
     artifact_dir: str,
     timeout: float,
     *,
+    idle_timeout: float,
     heartbeat_interval: float,
     task_id: str,
     persona: str,
     model: str,
     turn_number: int,
+    event_socket: socket.socket | None = None,
+    run_state: Any | None = None,
 ) -> dict:
-    """Follow /subagent-runner event stream until terminal state."""
+    """Follow /subagent-runner events until terminal state.
+
+    The preferred transport is a parent-owned Unix datagram socket. The
+    canonical events.jsonl and status.json files remain the durable fallback.
+    """
     terminal_statuses = {"completed", "failed", "cancelled", "timed_out", "stalled"}
     deadline = time.time() + timeout + 15
+    event_idle_timeout = max(30.0, float(idle_timeout))
+    last_event_at = time.time()
     last_state: dict = {}
     events_path = Path(artifact_dir) / "events.jsonl"
     status_path = Path(artifact_dir) / "status.json"
     event_position = 0
     next_heartbeat_at = 0.0
     heartbeat_interval = max(5.0, heartbeat_interval)
+    seen_events: set[str] = set()
+
+    def process_event(event: dict[str, Any]) -> bool:
+        nonlocal last_state, last_event_at
+        event_key = json.dumps(event, sort_keys=True, default=str)
+        if event_key in seen_events:
+            return False
+        seen_events.add(event_key)
+        last_event_at = time.time()
+        last_state = _read_subagent_state(status_path, fallback_status=event.get("status"))
+        kind = str(event.get("kind", "event"))
+        _mirror_subagent_event(
+            run_state,
+            event,
+            state=last_state,
+            artifact_dir=artifact_dir,
+            task_id=task_id,
+            persona=persona,
+            model=model,
+            turn_number=turn_number,
+        )
+        terminal_status = str(last_state.get("status") or "")
+        if terminal_status in terminal_statuses and kind not in {
+            "session_completed",
+            "session_failed",
+            "session_cancelled",
+            "session_timed_out",
+            "session_stalled",
+        }:
+            _mirror_subagent_event(
+                run_state,
+                {
+                    "kind": _event_kind_for_terminal_status(terminal_status),
+                    "status": terminal_status,
+                    "payload": {
+                        "exit_code": last_state.get("exit_code"),
+                        "summary": last_state.get("status_reason"),
+                    },
+                },
+                state=last_state,
+                artifact_dir=artifact_dir,
+                task_id=task_id,
+                persona=persona,
+                model=model,
+                turn_number=turn_number,
+            )
+        if kind in {
+            "session_started",
+            "session_heartbeat",
+            "session_completed",
+            "session_failed",
+            "session_cancelled",
+            "session_timed_out",
+            "session_stalled",
+        }:
+            _record_subagent_heartbeat(
+                last_state,
+                artifact_dir=artifact_dir,
+                task_id=task_id,
+                persona=persona,
+                model=model,
+                turn_number=turn_number,
+                heartbeat_kind=f"event:{kind}",
+            )
+        return True
+
     while time.time() < deadline:
         now = time.time()
         event_seen = False
+        for event in _drain_subagent_event_socket(event_socket):
+            event_seen = process_event(event) or event_seen
+            if last_state.get("status") in terminal_statuses:
+                return last_state
         if events_path.exists():
             with events_path.open("r", encoding="utf-8", errors="replace") as handle:
                 handle.seek(event_position)
@@ -369,29 +495,39 @@ def _wait_for_subagent_session(
                     except json.JSONDecodeError:
                         event_position = line_start
                         break
-                    event_seen = True
-                    last_state = _read_subagent_state(status_path, fallback_status=event.get("status"))
-                    kind = str(event.get("kind", "event"))
-                    if kind in {
-                        "session_started",
-                        "session_heartbeat",
-                        "session_completed",
-                        "session_failed",
-                        "session_cancelled",
-                        "session_timed_out",
-                        "session_stalled",
-                    }:
-                        _record_subagent_heartbeat(
-                            last_state,
-                            artifact_dir=artifact_dir,
-                            task_id=task_id,
-                            persona=persona,
-                            model=model,
-                            turn_number=turn_number,
-                            heartbeat_kind=f"event:{kind}",
-                        )
+                    event_seen = process_event(event) or event_seen
                     if last_state.get("status") in terminal_statuses:
                         return last_state
+
+        if now - last_event_at > event_idle_timeout:
+            subprocess.run([str(runner), "cancel", artifact_dir], capture_output=True, text=True, timeout=15)
+            last_state = _read_subagent_state(status_path)
+            last_state["status"] = "stalled"
+            last_state["status_reason"] = f"no subagent events for {event_idle_timeout:g}s"
+            _mirror_subagent_event(
+                run_state,
+                {
+                    "kind": "controller_stalled",
+                    "status": "stalled",
+                    "payload": {"idle_for_seconds": round(now - last_event_at, 3)},
+                },
+                state=last_state,
+                artifact_dir=artifact_dir,
+                task_id=task_id,
+                persona=persona,
+                model=model,
+                turn_number=turn_number,
+            )
+            _record_subagent_heartbeat(
+                last_state,
+                artifact_dir=artifact_dir,
+                task_id=task_id,
+                persona=persona,
+                model=model,
+                turn_number=turn_number,
+                heartbeat_kind="controller_idle_timeout",
+            )
+            return last_state
 
         if now >= next_heartbeat_at:
             last_state = _read_subagent_state(status_path)
@@ -406,6 +542,24 @@ def _wait_for_subagent_session(
             )
             next_heartbeat_at = now + heartbeat_interval
         if last_state.get("status") in terminal_statuses:
+            terminal_status = str(last_state.get("status"))
+            _mirror_subagent_event(
+                run_state,
+                {
+                    "kind": _event_kind_for_terminal_status(terminal_status),
+                    "status": terminal_status,
+                    "payload": {
+                        "exit_code": last_state.get("exit_code"),
+                        "summary": last_state.get("status_reason"),
+                    },
+                },
+                state=last_state,
+                artifact_dir=artifact_dir,
+                task_id=task_id,
+                persona=persona,
+                model=model,
+                turn_number=turn_number,
+            )
             _record_subagent_heartbeat(
                 last_state,
                 artifact_dir=artifact_dir,
@@ -421,6 +575,16 @@ def _wait_for_subagent_session(
     subprocess.run([str(runner), "cancel", artifact_dir], capture_output=True, text=True, timeout=15)
     last_state["status"] = "timed_out"
     last_state["status_reason"] = f"controller timed out after {timeout}s"
+    _mirror_subagent_event(
+        run_state,
+        {"kind": "controller_timed_out", "status": "timed_out", "payload": {"timeout_seconds": timeout}},
+        state=last_state,
+        artifact_dir=artifact_dir,
+        task_id=task_id,
+        persona=persona,
+        model=model,
+        turn_number=turn_number,
+    )
     _record_subagent_heartbeat(
         last_state,
         artifact_dir=artifact_dir,
@@ -431,6 +595,145 @@ def _wait_for_subagent_session(
         heartbeat_kind="controller_timeout",
     )
     return last_state
+
+
+def _open_subagent_event_socket(task_id: str) -> tuple[socket.socket | None, str | None]:
+    socket_path = Path(tempfile.gettempdir()) / f"ask-subagent-events-{hashlib.sha256(task_id.encode()).hexdigest()[:16]}.sock"
+    server: socket.socket | None = None
+    try:
+        if socket_path.exists():
+            socket_path.unlink()
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        server.bind(str(socket_path))
+        server.setblocking(False)
+        return server, str(socket_path)
+    except OSError:
+        if server is not None:
+            try:
+                server.close()
+            except Exception:
+                pass
+        return None, None
+
+
+def _close_subagent_event_socket(event_socket: socket.socket | None, socket_path: str | None) -> None:
+    if event_socket is not None:
+        try:
+            event_socket.close()
+        except OSError:
+            pass
+    if socket_path:
+        try:
+            Path(socket_path).unlink()
+        except OSError:
+            pass
+
+
+def _drain_subagent_event_socket(event_socket: socket.socket | None) -> list[dict[str, Any]]:
+    if event_socket is None:
+        return []
+    events: list[dict[str, Any]] = []
+    while True:
+        try:
+            data = event_socket.recv(1024 * 1024)
+        except BlockingIOError:
+            break
+        except OSError:
+            break
+        if not data:
+            break
+        try:
+            event = json.loads(data.decode("utf-8", errors="replace"))
+        except json.JSONDecodeError:
+            continue
+        if isinstance(event, dict):
+            events.append(event)
+    return events
+
+
+def _mirror_subagent_event(
+    run_state: Any | None,
+    event: dict[str, Any],
+    *,
+    state: dict[str, Any],
+    artifact_dir: str,
+    task_id: str,
+    persona: str,
+    model: str,
+    turn_number: int,
+) -> None:
+    if run_state is None or getattr(run_state, "disabled", False):
+        return
+    kind = str(event.get("kind", "event"))
+    payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+    subagent = {
+        "task_id": task_id,
+        "session_id": str(state.get("session_id") or Path(artifact_dir).name),
+        "artifact_dir": artifact_dir,
+        "persona": persona,
+        "model": model,
+        "turn_number": turn_number,
+        "last_event": kind,
+        "status": str(state.get("status") or event.get("status") or "unknown"),
+        "status_reason": str(state.get("status_reason") or ""),
+        "transcript_bytes": payload.get("transcript_bytes"),
+        "last_output_at": state.get("last_output_at"),
+    }
+    try:
+        run_state.event(
+            f"subagent_{kind}",
+            subagent=subagent,
+            child_payload=_safe_child_payload(kind, payload),
+        )
+        run_state.update(
+            "running",
+            current_step="synthesis",
+            subagent=subagent,
+        )
+    except Exception as exc:
+        log.warning("Failed to mirror subagent event into ask run state: %s", exc)
+
+
+def _safe_child_payload(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Keep parent runtime events useful without copying prompts/transcripts."""
+    if kind == "transcript_delta":
+        return {
+            "bytes": payload.get("bytes"),
+            "transcript_bytes": payload.get("transcript_bytes"),
+        }
+    if kind == "session_heartbeat":
+        return {
+            "pid": payload.get("pid"),
+            "process_alive": payload.get("process_alive"),
+            "idle_for_seconds": payload.get("idle_for_seconds"),
+        }
+    if kind == "session_started":
+        return {
+            "pid": payload.get("pid"),
+            "pty_device": payload.get("pty_device"),
+            "command_argv_count": len(payload.get("command") or []) if isinstance(payload.get("command"), list) else None,
+        }
+    if kind in {"session_completed", "session_failed", "session_cancelled", "session_timed_out", "session_stalled"}:
+        return {
+            "exit_code": payload.get("exit_code"),
+            "summary": payload.get("summary"),
+        }
+    return {
+        key: value
+        for key, value in payload.items()
+        if key not in {"command", "prompt", "transcript", "stdout", "stderr"}
+        and isinstance(value, (str, int, float, bool, type(None)))
+    }
+
+
+def _event_kind_for_terminal_status(status: str) -> str:
+    return {
+        "completed": "session_completed",
+        "failed": "session_failed",
+        "cancelled": "session_cancelled",
+        "timed_out": "session_timed_out",
+        "stalled": "session_stalled",
+    }.get(status, "session_terminal")
 
 
 def _read_subagent_state(status_path: Path, *, fallback_status: object | None = None) -> dict:
@@ -516,8 +819,23 @@ def _complete_oracle_call(
     reasoning_effort: str,
     timeout: float,
     prompt: str,
+    run_state: object | None = None,
+    iteration: int | None = None,
+    persona: str | None = None,
 ) -> tuple[str, str]:
     """Make one scillm oracle completion call."""
+    event_payload = {
+        "backend": "scillm",
+        "model": model,
+        "reasoning_effort": reasoning_effort,
+        "timeout_seconds": timeout,
+    }
+    if iteration is not None:
+        event_payload["iteration"] = iteration
+    if persona:
+        event_payload["persona"] = persona
+    if run_state is not None and hasattr(run_state, "event"):
+        run_state.event("oracle_scillm_call_started", **event_payload)
     body = {
         "model": model,
         "messages": [
@@ -533,19 +851,103 @@ def _complete_oracle_call(
         ],
         "temperature": 0,
         "reasoning_effort": reasoning_effort,
+        "stream": True,
+        "stream_progress_events": True,
+        "timeout": timeout,
+        "stream_heartbeat_s": max(5.0, min(15.0, float(timeout) / 20.0)),
     }
-    response = httpx.post(
-        f"{SCILLM_BASE_URL.rstrip('/')}/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {SCILLM_API_KEY}",
-            "X-Caller-Skill": "ask",
-        },
-        json=body,
-        timeout=timeout,
-    )
-    response.raise_for_status()
-    data = response.json()
-    return data["choices"][0]["message"]["content"], data.get("model", model)
+    try:
+        content_parts: list[str] = []
+        model_served = model
+        saw_done = False
+        last_progress_at = time.monotonic()
+        heartbeat_interval = float(body["stream_heartbeat_s"])
+        timeout_config = httpx.Timeout(
+            float(timeout),
+            connect=min(10.0, float(timeout)),
+            read=max(30.0, heartbeat_interval * 3.0),
+            write=30.0,
+            pool=10.0,
+        )
+        with httpx.stream(
+            "POST",
+            f"{SCILLM_BASE_URL.rstrip('/')}/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {SCILLM_API_KEY}",
+                "X-Caller-Skill": "ask",
+            },
+            json=body,
+            timeout=timeout_config,
+        ) as response:
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                if line.startswith(":"):
+                    now = time.monotonic()
+                    if now - last_progress_at >= heartbeat_interval and run_state is not None and hasattr(run_state, "event"):
+                        run_state.event(
+                            "oracle_scillm_stream_progress",
+                            **event_payload,
+                            model_served=model_served,
+                            content_chars=sum(len(part) for part in content_parts),
+                            heartbeat=True,
+                        )
+                        last_progress_at = now
+                    continue
+                if not line.startswith("data:"):
+                    continue
+                data_text = line[len("data:"):].strip()
+                if data_text == "[DONE]":
+                    saw_done = True
+                    break
+                try:
+                    data = json.loads(data_text)
+                except json.JSONDecodeError:
+                    continue
+                if data.get("error"):
+                    raise RuntimeError(str(data["error"]))
+                model_served = str(data.get("model") or model_served)
+                choices = data.get("choices") or []
+                if choices and isinstance(choices[0], dict):
+                    choice = choices[0]
+                    delta = choice.get("delta") if isinstance(choice.get("delta"), dict) else {}
+                    message = choice.get("message") if isinstance(choice.get("message"), dict) else {}
+                    content = delta.get("content")
+                    if content is None:
+                        content = message.get("content")
+                    if content:
+                        content_parts.append(str(content))
+                now = time.monotonic()
+                if now - last_progress_at >= heartbeat_interval and run_state is not None and hasattr(run_state, "event"):
+                    run_state.event(
+                        "oracle_scillm_stream_progress",
+                        **event_payload,
+                        model_served=model_served,
+                        content_chars=sum(len(part) for part in content_parts),
+                    )
+                    last_progress_at = now
+        content = "".join(content_parts)
+        if not saw_done and not content:
+            raise RuntimeError("scillm stream ended without content or [DONE]")
+        if run_state is not None and hasattr(run_state, "event"):
+            run_state.event(
+                "oracle_scillm_call_finished",
+                **event_payload,
+                model_served=model_served,
+                stream=True,
+                content_chars=len(content),
+            )
+        return content, model_served
+    except Exception as exc:
+        if run_state is not None and hasattr(run_state, "event"):
+            run_state.event(
+                "oracle_scillm_call_failed",
+                **event_payload,
+                error_type=type(exc).__name__,
+                error=str(exc)[:500],
+            )
+        raise
 
 
 def _default_oracle_peer(consult_personas: list[dict]) -> str:

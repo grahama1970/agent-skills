@@ -24,6 +24,10 @@ triggers:
   - ask parallel reviewers
   - ask adversarial review
   - ask deep review
+  - ask image generation
+  - ask generate image
+  - ask CAE gap review
+  - ask QRA gap review
   - ask safe to proceed
   - ask comprehensive review
   - ask persona roundtable about
@@ -33,6 +37,15 @@ triggers:
   - ask current architecture risk
   - ask the oracle as
   - ask oracle with persona
+  - ask webgpt
+  - $ask webgpt
+  - ask chatgpt
+  - $ask chatgpt
+  - webgpt review
+  - webgpt oracle
+  - chatgpt oracle
+  - ask webgpt to review
+  - ask webgpt about
   - teach me about
   - what does X say about
   - what does Sapolsky say
@@ -49,7 +62,7 @@ triggers:
 metadata:
   short-description: Zero cognitive-load learning and querying for personas, topics, and OS internals
   author: "Horus"
-  version: "0.6.0"
+  version: "0.6.1"
 
 provides:
   - ask
@@ -88,7 +101,7 @@ composes:
 
 # ask
 
-Zero cognitive-load learning and querying interface. Six modes:
+Zero cognitive-load learning and querying interface. Eight modes:
 
 1. **Learn Mode** — Discover, ingest, and extract knowledge about a topic or persona
 2. **Ask Mode** — Query accumulated knowledge with Federated Taxonomy multi-hop traversal
@@ -96,12 +109,136 @@ Zero cognitive-load learning and querying interface. Six modes:
 4. **Nightly Mode** — Scheduled incremental updates to persona knowledge bases
 5. **OS Mode** — Learn about and query embry-os internals, skills, packages, and runtime health
 6. **Deep Review Mode** — High-reasoning, read-only review with `review.md` and `review.json`
+7. **CAE Gap Review Mode** — Evidence-case-backed QRA review with bounded reviewer/judge rerouting
+8. **Image Generation Mode** — Generate image artifacts through `/scillm` `/v1/images/generations`
+
+## Literal Runtime Contract
+
+When a human names `$ask`, `/ask`, or asks to use the ask skill, the project
+agent must use this skill's `./run.sh` runtime unless the human explicitly asks
+for a fallback or the runtime is unavailable.
+
+Do not replace `$ask` with:
+
+- `spawn_agent`
+- an informal subagent prompt
+- a plain model call
+- a hand-written reviewer summary
+- a web search
+- a local-only critique that bypasses ask artifacts
+
+For review requests, pass the complete target artifact through the documented
+ask mode instead of summarizing it. Examples:
+
+- Use `--deep-review --deep-review-target <path>` for Web-GPT-style prompt,
+  schema, code, plan, or artifact reviews.
+- Use `--parallel-review` for independent reviewer fanout.
+- Use `--roundtable` only when the user asks for persona deliberation.
+- Use `--cae-gap-review` only for evidence-case-backed CAE/QRA gap review.
+
+Proof of a real `$ask` run is the ask artifact set, not an assistant summary.
+Return the relevant artifact paths, such as:
+
+- `.request.json`
+- `.status.json`
+- `.events.jsonl`
+- `review.md`
+- `review.json`
+- mode-specific generated artifacts
+
+If the runtime is unavailable, report that directly and ask before substituting
+`spawn_agent` or another fallback.
+
+Release readiness is evidence-based, not implied. `/ask` uses `ask.config.yml`,
+`config doctor`, live sanity reports, and Docker preflights to say what is ready,
+what needs user attention, and what is not established.
 
 Every `ask` call also writes runtime artifacts so long oracle/review runs are
 inspectable without guessing whether the runner is blocked in retrieval,
 persona routing, oracle synthesis, or artifact verification.
+Direct scillm oracle calls use SSE streaming and record
+`oracle_scillm_call_started`, `oracle_scillm_stream_progress`,
+`oracle_scillm_call_finished`, and `oracle_scillm_call_failed` events so
+project agents can distinguish active model work from hard-deadline failure.
 The same runtime protocol is available for `learn`, `nightly`, `os learn`,
 `os ask`, and `os health`.
+
+## WebGPT Oracle Backend
+
+`--oracle-backend webgpt` (or the `$ask webgpt …` shorthand) routes oracle
+synthesis through the user's already-authenticated ChatGPT tab in Chrome via
+`surf webgpt.submit --no-activate`. The tab is controlled in the background;
+it never foregrounds.
+
+```bash
+# Auto-resolve tab id (when exactly one chatgpt.com tab is open)
+./run.sh ask "to perform the review on /tmp/code-runner-reliability-review/review-bundle.md" \
+  --oracle --oracle-backend webgpt
+
+# Equivalent shorthand
+./run.sh ask webgpt to perform the review on /tmp/code-runner-reliability-review/review-bundle.md
+
+# Explicit tab id (from the Tab ID Viewer Chrome extension)
+./run.sh ask "summarise the review bundle" \
+  --oracle --oracle-backend webgpt --webgpt-tab-id 837343564
+
+# Resolve by ChatGPT conversation URL
+./run.sh ask "summarise the review bundle" \
+  --oracle --oracle-backend webgpt \
+  --webgpt-url "https://chatgpt.com/c/6a0097ff-e7e0-83ea-93c2-3a6b88e2a67f"
+```
+
+Behavior:
+
+- **Tab resolution.** Priority: `--webgpt-tab-id` → `--webgpt-url` → auto-resolve
+  from `surf tab.list` filtered to chatgpt.com. **Auto-resolve fails closed**
+  when 0 or >1 candidates exist — the call refuses to run rather than guess.
+  When the project agent hits this, it must ask the human to either:
+  (a) open exactly one ChatGPT tab so auto-resolve picks it, or
+  (b) provide a tab id from the Tab ID Viewer extension to pass through
+  `--webgpt-tab-id`.
+- **File auto-attachment.** Absolute paths embedded in the question (e.g.
+  `/tmp/foo.md`, `~/notes.md`) are read from disk and inlined under
+  `## Attached files` in the prompt. Truncated at 2 MB per file.
+- **Focus preservation.** The controlled tab is never foregrounded. The
+  caller's active tab and focused window are unchanged across the call;
+  `meta.focus_changed` must be `false`.
+- **Multi-turn iteration.** Each `$ask webgpt` call is one round on the same
+  controlled tab. ChatGPT keeps the conversation context per tab, so a second
+  call refines naturally. The canonical pattern is: project agent reads the
+  first round's answer, decides whether to push back, and re-invokes
+  `$ask webgpt …` to send the follow-up — no special iteration flag needed.
+  Internal `--oracle-iterations N` is also honoured: each iteration sends one
+  follow-up nudge ("identify the weakest claim and address it").
+- **Proof contract.** Inherits the WebGPT sentinel contract from `surf`:
+  `controlled_tab_id == requested_tab_id`, sentinel present in raw response,
+  stripped from clean response, no clean-response contamination from page
+  chrome. `oracle_webgpt_call_started` / `_finished` / `_failed` events are
+  recorded to the run state.
+- **Other consumers.** `/review-prompt`, `/review-design`, `/review-code`,
+  `/review-plan` compose `/ask` and inherit this backend for free —
+  pass `--oracle-backend webgpt` (or set `ASK_ORACLE_BACKEND=webgpt`) to the
+  underlying `/ask` call.
+
+## Image Generation Mode
+
+Use `/ask --image-generate` when the answer should be an image artifact rather
+than retrieved memory or an oracle text response. `/ask` sends the prompt to
+`/scillm` `POST /v1/images/generations`, writes generated image files under the
+ask run directory by default, and records an `image_generation.json` manifest.
+
+```bash
+./run.sh ask "a precise architecture diagram of ask calling scillm for image generation" \
+  --image-generate \
+  --image-model gpt-image-2 \
+  --image-size 1024x1024 \
+  --image-quality high
+```
+
+Image generation is standalone: do not combine it with memory retrieval,
+oracle, roundtable, argue, parallel-review, deep-review, or CAE gap-review
+options. Use `--image-output` to choose a file or directory, and
+`--image-output-format png|jpeg|webp` to choose the artifact format.
 
 ## Zero Cognitive Load for Project Agents
 
@@ -136,8 +273,12 @@ Agent translation rules:
 - Treat "parallel reviewers", "adversarial reviewers", or "N reviewers" as `--parallel-review`.
 - Treat "argue whether", "debate whether", or "make the case for and against" as `--argue`.
 - Treat "review then roundtable" as both `--parallel-review` and `--roundtable`.
+- Treat "CAE gap review", "QRA gap review", or "CAE reviewers" as `--cae-gap-review`.
+- Treat "generate an image", "image generation", or "make an image" as
+  `--image-generate`; keep it standalone from memory/oracle/review modes.
 - Treat "deep review", "comprehensive review", "safe to proceed", or "production readiness" as `--deep-review`; require or infer a concrete `--deep-review-target`.
 - Treat leading model shorthand such as `$ask oc kimi ...`, `$ask opencode qwen ...`, `$ask chutes kimi ...`, `$ask oc-kimi ...`, or `$ask chutes-kimi ...` as `--oracle --oracle-backend scillm` with the resolved provider model.
+- Treat leading `$ask webgpt ...` (or `$ask chatgpt ...`) as `--oracle --oracle-backend webgpt`. This drives an already-authenticated ChatGPT tab in the user's Chrome via the surf-cli extension; the controlled tab never foregrounds (`--no-activate`).
 - Treat date-sensitive words (`2026`, `current`, `latest`, `today`, `recent`) as `--dogpile auto`.
 - Default high-value analytical questions to `--oracle --oracle-model gpt-5.5 --oracle-reasoning high`.
 
@@ -146,10 +287,13 @@ Agent translation rules:
 | `$ask what do we know about the release checklist?` | Memory-backed ask synthesis |
 | `$ask What is the state of Python packaging in 2026?` | Oracle with auto persona selection and `--dogpile auto` |
 | `$ask What is the state of space-based cybersecurity in 2026?` | SPARTA-scoped oracle: `--scope sparta --oracle` |
-| `$ask oc kimi explain this design tradeoff` | scillm OpenCode Go oracle using live model discovery, currently `opencode-go/kimi-k2.6` |
+| `$ask oc kimi explain this design tradeoff` | scillm OpenCode Go oracle using live model discovery and capability metadata, currently `opencode-go/kimi-k2.6` |
+| `$ask oc kimi for a $review-design with maximum 3 rounds` | Ask-backed review-design loop using `opencode-go/kimi-k2.6`; capture fresh screenshots, ask Kimi for a verdict, patch locally, re-render, and stop after PASS/blocker/3 rounds |
 | `$ask oc-qwen compare these options` | Hyphenated OpenCode Go shorthand, currently `opencode-go/qwen3.6-plus` |
-| `$ask chutes kimi explain this design tradeoff` | scillm Chutes oracle using configured alias `text-kimi` |
-| `$ask chutes-kimi explain this design tradeoff` | Hyphenated Chutes shorthand using configured alias `text-kimi` |
+| `$ask chutes kimi explain this design tradeoff` | scillm Chutes oracle using configured alias `chutes-kimi` |
+| `$ask chutes-kimi explain this design tradeoff` | Hyphenated Chutes shorthand using configured alias `chutes-kimi` |
+| `$ask webgpt to perform the review on /tmp/review-bundle.md` | WebGPT oracle backed by the user's signed-in ChatGPT tab (via `surf webgpt.submit --no-activate`). File paths in the prompt are auto-attached. Tab id auto-resolves when exactly one chatgpt.com tab is open; otherwise pass `--webgpt-tab-id`. |
+| `$ask webgpt again — refine your answer` | Multi-turn: each `$ask webgpt` call is one round against the same controlled tab. ChatGPT preserves conversation context, so iterations form a coherent dialogue. |
 | `$ask Brandon what is the state of space-based cybersecurity in 2016?` | Brandon persona oracle over `--scope sparta` |
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: What is the state of cybersecurity in 2026?` | SPARTA-scoped sequential persona roundtable |
 | `$ask Brandon what is the best way to review this API boundary?` | Brandon persona oracle subagent |
@@ -158,6 +302,8 @@ Agent translation rules:
 | `$ask Brandon ask Margaret where are we weak?` | Safe Brandon→Margaret peer deliberation |
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: Should this service use retries or queues?` | Sequential protocolized persona roundtable |
 | `$ask run 3 parallel adversarial reviewers on this implementation` | Independent parallel review plus moderator synthesis |
+| `$ask cae gap review AC-2 MFA evidence for the production tenant` | Evidence-case-backed QRA review: `--cae-gap-review --cae-max-rounds 3` |
+| `$ask generate an image of the ask to scillm image route` | Image artifact generation: `--image-generate` |
 | `$ask argue whether we should ship this change` | Two parallel `/scillm` advocates plus sequential judge and verifier |
 | `$ask deep review this implementation --deep-review-target src/ask/ask.py` | Read-only deep review with markdown and JSON artifacts |
 | `$ask review then roundtable with Brandon, Margaret, Jennifer` | Parallel findings first, then sequential persona debate |
@@ -256,6 +402,10 @@ Options:
   --parallel-review-personas <p> Comma-separated reviewer persona[:protocol_role] specs
   --parallel-review-focus <f> Comma-separated focus labels for default reviewers
   --parallel-review-role-preset <p> Role preset for parallel reviewers
+  --cae-gap-review      Run evidence-case-backed CAE/QRA gap review
+  --cae-reviewers <p>   Comma-separated CAE persona:role pairs
+  --cae-judge <p>       CAE judge persona label
+  --cae-max-rounds <n>  Maximum CAE clarify/reroute rounds
   --deep-review          Run read-only deep review with review.md and review.json artifacts
   --deep-review-target <target> Explicit target: paths, diff, plan, manifest, or artifact
   --deep-review-profile <p> Deep-review profile label (default: max_available)
@@ -273,6 +423,14 @@ Options:
   --overwrite            Replace an existing run directory for --ask-id
   --resume               Resume a non-terminal existing run directory for --ask-id
   --raw                   Return raw memory results (no synthesis)
+  --image-generate        Generate image artifact(s) through scillm
+  --image-model <model>   Image generation model (default: gpt-image-2)
+  --image-size <size>     Image size, for example auto or 1024x1024
+  --image-quality <q>     Image quality, for example auto, medium, or high
+  --image-count <n>       Number of images to generate (default: 1)
+  --image-output <path>   Output file or directory for generated image(s)
+  --image-output-format <fmt> Image file format: png, jpeg, or webp
+  --image-timeout <sec>   Image generation timeout in seconds (default: 300)
   --json                  JSON output
   --debug                 Enable debug logging
 ```
@@ -359,10 +517,17 @@ role/focus labels without making the agent infer the review contract.
 Preflight the runtime:
 
 ```bash
+./run.sh config doctor --profile release --json
+./run.sh config init
 ./run.sh doctor
 ./run.sh doctor --json
 ./run.sh doctor --live --json
 ```
+
+`config doctor` is non-interactive and safe for CI/release sanity. Missing config,
+credentials, Docker storage, or companion service paths return `needs_attention`
+with `safe_default=do_not_claim_release_ready`. `config init` is the interactive
+repair path and may call `/interview` to collect missing local values.
 
 **Oracle Synthesis:**
 
@@ -400,6 +565,29 @@ orchestrate persona-to-persona turns. For same-model persona dialogue, `/ask`
 uses one subagent session and has it switch personas dynamically so it keeps the
 full subagent conversation context. Separate sessions are only for isolation,
 parallelism, or different peer model backends such as DeepSeek via `/scillm`.
+
+**Ask-backed design review loops:**
+
+When `$ask` is combined with `$review-design`, route the request as a bounded
+review-design critique loop, not as a generic Q&A answer. Leading model
+shorthand still applies. For example, `$ask oc kimi for a $review-design with
+maximum 3 rounds` resolves the reviewer model to `opencode-go/kimi-k2.6`
+through `/scillm`.
+
+Required behavior:
+
+1. Capture or accept the current screenshot bundle for the UI surface.
+2. Send the screenshot(s), design constraints, and review-design verdict schema
+   to the resolved reviewer model.
+3. Require a structured verdict: `satisfied`, `needs_changes`, or `blocked`.
+4. If the verdict is `needs_changes`, the project agent patches the UI, captures
+   a fresh screenshot, and asks the reviewer again.
+5. Stop at the first `satisfied` verdict, concrete blocker, or requested maximum
+   round count.
+
+The round cap is literal. "maximum 3 rounds" means no more than three reviewer
+verdict calls. The reviewer must inspect a fresh rendered screenshot before
+marking the design satisfied.
 
 Peer turns can use any one-shot model supported by `/scillm`. This lets a Codex
 subagent converse with DeepSeek V4, MiniMax, Gemini, or other scillm routes:
@@ -440,13 +628,14 @@ Core tool rules for oracle subagents:
 
 Use oracle mode for single high-value questions, not nightly runs or batch ingestion loops.
 
-**Roundtable, Argue, and Parallel Review Modes:**
+**Roundtable, Argue, Parallel Review, and CAE Gap Review Modes:**
 
-`/ask` supports three distinct adversarial review protocols:
+`/ask` supports four distinct review protocols:
 
 - `--parallel-review`: independent reviewers inspect the same artifact/question concurrently, then a neutral moderator synthesizes findings.
 - `--argue`: a FOR advocate and AGAINST advocate run in parallel through `/scillm`; a sequential judge decides or abstains, then a deterministic verifier gates the verdict.
 - `--roundtable`: selected personas speak sequentially through a state-machine protocol; each turn must reference prior claims and critiques.
+- `--cae-gap-review`: `/create-evidence-case` builds or loads the QRA/evidence snapshot first; Brandon, Margaret, and Jennifer review policy evidence, technical enforcement, and control mapping; a judge reroutes one missing evidence item per round before halting.
 
 Use both together when you want independent findings first, followed by persona debate over those findings.
 
@@ -528,6 +717,34 @@ Review then roundtable:
   --parallel-review \
   --roundtable \
   --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer"
+```
+
+CAE/QRA gap review:
+
+```bash
+./run.sh ask "cae gap review AC-2 MFA evidence for the production tenant" \
+  --cae-reviewers "Brandon:cae_policy_evidence,Margaret:cae_technical_enforcement,Jennifer:cae_control_mapping" \
+  --cae-judge "CAE Gap Judge" \
+  --cae-max-rounds 3
+```
+
+CAE gap review is a post-evidence-case review layer, not the QRA generator and
+not a compliance oracle. The QRA claim, answer, controls, and `evidence_case`
+snapshot stay fixed. The only adaptive behavior is targeted recurrence: when the
+judge returns `NEEDS_CLARIFICATION`, `/ask` reroutes exactly one missing evidence
+item to the matching CAE reviewer role, then asks the judge again. It halts on a
+terminal judge decision, repeated missing evidence, invalid judge JSON, model
+failure, or the max round limit.
+
+Use it in the QRA lifecycle as:
+
+```text
+generated QRA
+  → candidate QRA
+  → CAE gap review
+  → human review
+  → approve / edit / reject / defer
+  → promote to sparta_qra or keep as gap
 ```
 
 Protocol rules:

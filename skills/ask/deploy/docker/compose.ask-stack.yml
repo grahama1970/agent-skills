@@ -1,0 +1,299 @@
+# Canonical /ask core Docker Compose stack.
+#
+# Render/inspect without starting containers:
+#   docker compose -f deploy/docker/compose.ask-stack.yml config
+#
+# Start the required local runtime:
+#   docker compose -f deploy/docker/compose.ask-stack.yml --profile core up -d
+#
+# Profiles:
+#   core  - required services: arangodb, qdrant/vector-store, embedder, memory, scillm
+#   learn - optional ingestion/discovery companions
+#   ops   - optional monitoring/task-monitor companions
+#   ask   - optional ask runner/service container
+#
+# Storage:
+#   By default services use named Docker volumes. For developer host-mounted
+#   storage, set ASK_SETUP_VOLUME_ROOT to a local directory and optionally switch
+#   ASK_VOLUME_TYPE=bind, for example:
+#     ASK_SETUP_VOLUME_ROOT=$PWD/.ask-stack-data ASK_VOLUME_TYPE=bind \
+#       docker compose -f deploy/docker/compose.ask-stack.yml --profile core up -d
+#   Compose cannot create the per-service bind directories for every Docker
+#   version, so create arangodb, qdrant, redis, scillm-logs, and ask-artifacts
+#   below ASK_SETUP_VOLUME_ROOT first when using bind mounts.
+#
+# Networking note:
+#   memory and scillm have a known localhost coupling in normal skill execution.
+#   This stack intentionally uses host networking for memory, scillm, and the
+#   optional ask runner so that localhost/127.0.0.1 service URLs behave the same
+#   inside and outside containers. Healthchecks assert the localhost endpoints.
+#
+# Secrets/OAuth:
+#   Provider secrets are not baked into images and no provider token defaults are
+#   declared here. Put local values in env files such as deploy/docker/ask-stack.env
+#   or mount host OAuth files explicitly via the *_OAUTH_* variables below.
+
+name: ask-stack
+
+x-core-profile: &core_profile ["core"]
+x-health-defaults: &health_defaults
+  interval: 15s
+  timeout: 10s
+  retries: 5
+  start_period: 30s
+
+services:
+  arangodb:
+    image: arangodb:3.12.6
+    labels:
+      org.ask.profile: core
+    environment:
+      ARANGO_NO_AUTH: "1"
+      ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY: ${ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY:-4G}
+    ports:
+      - "${ARANGO_PORT:-8529}:8529"
+    volumes:
+      - type: ${ASK_VOLUME_TYPE:-volume}
+        source: ${ASK_ARANGO_SOURCE:-ask-arango-data}
+        target: /var/lib/arangodb3
+      - type: ${ASK_VOLUME_TYPE:-volume}
+        source: ${ASK_ARANGO_APPS_SOURCE:-ask-arango-apps}
+        target: /var/lib/arangodb3-apps
+    command:
+      - arangod
+      - --server.endpoint=tcp://0.0.0.0:8529
+      - --server.authentication=false
+      - --vector-index
+    healthcheck:
+      test: ["CMD-SHELL", "arangosh --server.endpoint tcp://127.0.0.1:8529 --server.authentication false --javascript.execute-string 'db._version()' >/dev/null 2>&1"]
+      <<: *health_defaults
+      start_period: 60s
+
+  qdrant:
+    image: qdrant/qdrant:v1.17.1
+    labels:
+      org.ask.profile: core
+    ports:
+      - "${QDRANT_HTTP_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - type: ${ASK_VOLUME_TYPE:-volume}
+        source: ${ASK_QDRANT_SOURCE:-ask-qdrant-data}
+        target: /qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:6333/healthz >/dev/null || wget -q --spider http://127.0.0.1:6333/healthz"]
+      <<: *health_defaults
+
+  vector-store:
+    image: qdrant/qdrant:v1.17.1
+    profiles: ["learn"]
+    ports:
+      - "${VECTOR_STORE_HTTP_PORT:-6335}:6333"
+      - "${VECTOR_STORE_GRPC_PORT:-6336}:6334"
+    volumes:
+      - type: ${ASK_VOLUME_TYPE:-volume}
+        source: ${ASK_VECTOR_STORE_SOURCE:-ask-vector-store-data}
+        target: /qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:6333/healthz >/dev/null || wget -q --spider http://127.0.0.1:6333/healthz"]
+      <<: *health_defaults
+
+  embedder:
+    build:
+      context: ${MEMORY_REPO:-../../../memory}/docker/embedding
+      dockerfile: Dockerfile
+      args:
+        EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+    labels:
+      org.ask.profile: core
+    environment:
+      EMBEDDING_HOST: 0.0.0.0
+      EMBEDDING_PORT: "${EMBEDDING_PORT:-8602}"
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+      EMBEDDING_DEVICE: ${EMBEDDING_DEVICE:-cpu}
+      EMBEDDING_DIMENSIONS: "${EMBEDDING_DIMENSIONS:-384}"
+    ports:
+      - "${EMBEDDING_PORT:-8602}:${EMBEDDING_PORT:-8602}"
+    healthcheck:
+      test: ["CMD-SHELL", "python - <<'PY'\nimport urllib.request\nurllib.request.urlopen('http://127.0.0.1:${EMBEDDING_PORT:-8602}/health', timeout=5).read()\nPY"]
+      <<: *health_defaults
+      start_period: 90s
+
+  memory:
+    build:
+      context: ${MEMORY_REPO:-../../../memory}
+      dockerfile: docker/memory/Dockerfile
+    labels:
+      org.ask.profile: core
+    network_mode: host
+    env_file:
+      - path: ./ask-stack.env
+        required: false
+    environment:
+      ARANGO_HOST: 127.0.0.1
+      ARANGO_PORT: "${ARANGO_PORT:-8529}"
+      ARANGO_USER: root
+      ARANGO_DB: ${ARANGO_DB:-memory}
+      EMBEDDING_SERVICE_URL: http://127.0.0.1:${EMBEDDING_PORT:-8602}
+      QDRANT_URL: http://127.0.0.1:${QDRANT_HTTP_PORT:-6333}
+      SEMANTIC_VECTOR_BACKEND: qdrant
+      SCILLM_API_BASE: http://127.0.0.1:${SCILLM_PORT:-4001}
+      MEMORY_HOST: 0.0.0.0
+      MEMORY_PORT: "${MEMORY_PORT:-8000}"
+    depends_on:
+      arangodb:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      embedder:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:${MEMORY_PORT:-8000}/health >/dev/null || curl -fsS http://127.0.0.1:${MEMORY_PORT:-8000}/status >/dev/null"]
+      <<: *health_defaults
+      start_period: 60s
+
+  scillm:
+    build:
+      context: ${SCILLM_REPO:-../../../scillm}
+      dockerfile: deploy/docker/Dockerfile.scillm
+    labels:
+      org.ask.profile: core
+    network_mode: host
+    env_file:
+      - path: ./ask-stack.env
+        required: false
+    environment:
+      PYTHONPATH: /app/src
+      CONFIG_FILE_PATH: /app/config.yaml
+      SCILLM_HOST: 0.0.0.0
+      SCILLM_PORT: "${SCILLM_PORT:-4001}"
+      METRICS_ENV: ${METRICS_ENV:-dev}
+      REDIS_HOST: 127.0.0.1
+    volumes:
+      - type: bind
+        source: ${SCILLM_CONFIG_FILE:-../../../scillm/local/proxy_server_config.yaml}
+        target: /app/config.yaml
+        read_only: true
+      - type: ${ASK_VOLUME_TYPE:-volume}
+        source: ${ASK_SCILLM_LOG_SOURCE:-ask-scillm-logs}
+        target: /var/log/scillm
+      - type: bind
+        source: ${SCILLM_CODEX_OAUTH:-${HOME}/.codex/auth.json}
+        target: /root/.codex/auth.json
+        read_only: true
+      - type: bind
+        source: ${SCILLM_CLAUDE_OAUTH:-${HOME}/.claude/.credentials.json}
+        target: /root/.claude/.credentials.json
+        read_only: true
+      - type: bind
+        source: ${SCILLM_GEMINI_OAUTH_DIR:-${HOME}/.gemini}
+        target: /root/.gemini
+        read_only: true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:${SCILLM_PORT:-4001}/health >/dev/null || curl -fsS http://127.0.0.1:${SCILLM_PORT:-4001}/health/liveliness >/dev/null"]
+      <<: *health_defaults
+    depends_on:
+      arangodb:
+        condition: service_healthy
+
+  ask:
+    image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+    profiles: ["ask"]
+    working_dir: /workspace/agent-skills/skills/ask
+    network_mode: host
+    env_file:
+      - path: ./ask-stack.env
+        required: false
+    environment:
+      ASK_CONFIG: /workspace/agent-skills/skills/ask/ask.config.yml
+      SCILLM_BASE_URL: http://127.0.0.1:${SCILLM_PORT:-4001}
+      MEMORY_BASE_URL: http://127.0.0.1:${MEMORY_PORT:-8000}
+      ASK_RUN_OUTPUT_DIR: /workspace/agent-skills/skills/ask/.ask_artifacts/runs
+      ASK_SUBAGENT_OUTPUT_DIR: /tmp/ask-oracle-subagents
+    volumes:
+      - type: bind
+        source: ${ASK_WORKSPACE_ROOT:-../..}
+        target: /workspace/agent-skills
+      - type: ${ASK_VOLUME_TYPE:-volume}
+        source: ${ASK_ARTIFACT_SOURCE:-ask-artifacts}
+        target: /tmp/ask-artifacts
+    depends_on:
+      memory:
+        condition: service_healthy
+      scillm:
+        condition: service_healthy
+    command: ["bash", "-lc", "./run.sh config doctor --profile release --json && ./run.sh doctor --live --profile release --json"]
+
+  ingestion-worker:
+    image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+    profiles: ["learn"]
+    working_dir: /workspace/agent-skills/skills/ask
+    network_mode: host
+    env_file:
+      - path: ./ask-stack.env
+        required: false
+    volumes:
+      - type: bind
+        source: ${ASK_WORKSPACE_ROOT:-../..}
+        target: /workspace/agent-skills
+    depends_on:
+      memory:
+        condition: service_healthy
+      scillm:
+        condition: service_healthy
+    command: ["bash", "-lc", "./run.sh learn --help >/dev/null && sleep infinity"]
+
+  discovery-worker:
+    image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+    profiles: ["learn"]
+    working_dir: /workspace/agent-skills/skills/ask
+    network_mode: host
+    volumes:
+      - type: bind
+        source: ${ASK_WORKSPACE_ROOT:-../..}
+        target: /workspace/agent-skills
+    depends_on:
+      memory:
+        condition: service_healthy
+    command: ["bash", "-lc", "./run.sh os learn --help >/dev/null && sleep infinity"]
+
+  monitor:
+    image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+    profiles: ["ops"]
+    working_dir: /workspace/agent-skills/skills/ask
+    network_mode: host
+    volumes:
+      - type: bind
+        source: ${ASK_WORKSPACE_ROOT:-../..}
+        target: /workspace/agent-skills
+    depends_on:
+      memory:
+        condition: service_healthy
+      scillm:
+        condition: service_healthy
+    command: ["bash", "-lc", "./run.sh os health --json || true; sleep infinity"]
+
+  task-monitor:
+    image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+    profiles: ["ops"]
+    working_dir: /workspace/agent-skills/skills/ask
+    network_mode: host
+    volumes:
+      - type: bind
+        source: ${ASK_WORKSPACE_ROOT:-../..}
+        target: /workspace/agent-skills
+      - type: ${ASK_VOLUME_TYPE:-volume}
+        source: ${ASK_ARTIFACT_SOURCE:-ask-artifacts}
+        target: /tmp/ask-artifacts
+    depends_on:
+      memory:
+        condition: service_healthy
+    command: ["bash", "-lc", "while true; do ./run.sh status --json || true; sleep 60; done"]
+
+volumes:
+  ask-arango-data:
+  ask-arango-apps:
+  ask-qdrant-data:
+  ask-vector-store-data:
+  ask-scillm-logs:
+  ask-artifacts:

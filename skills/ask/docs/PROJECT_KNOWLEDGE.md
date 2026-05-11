@@ -1,6 +1,6 @@
 # Project Knowledge: ask
 
-**Last updated:** 2026-05-01 09:41 by agent
+**Last updated:** 2026-05-06 12:56 by agent
 **Status:** Active development
 
 This file is the human-readable current-state projection for `/ask`
@@ -85,6 +85,11 @@ curated context. Memory recall is context, not evidence.
 - The argue verifier rejects high-confidence judge verdicts when
   `missing_evidence` is non-empty.
 - /ask now supports leading provider-family shorthand for direct scillm oracle calls: `$ask oc kimi ...`, `$ask oc-qwen ...`, `$ask chutes kimi ...`, and `$ask chutes-kimi ...`. OpenCode Go shorthand queries scillm live model discovery before selecting the preferred configured family model; Chutes shorthand uses configured scillm aliases such as `text-kimi`.
+- 2026-05-03 live E2E reconfirmed `$ask oc kimi` and `$ask chutes-kimi` through real `/scillm`; both returned oracle answers and `answered` runtime state. Direct `/scillm` Kimi also passed for `opencode-go/kimi-k2.6` and `text-kimi`. Direct scillm oracle calls now use OpenAI-compatible SSE streaming, pass an explicit request `timeout`, and emit `oracle_scillm_call_started`, `oracle_scillm_stream_progress`, `oracle_scillm_call_finished`, and `oracle_scillm_call_failed` runtime events with model, served model, reasoning effort, backend, timeout, and accumulated content length so long Kimi/GPT calls are not opaque after `synthesis_started`. OpenCode Go shorthand discovery timeout increased to 30s so `$ask oc kimi` can use live `/v1/scillm/opencode-go/models` instead of falling back prematurely.
+- 2026-05-03 Kimi deep-review E2E proved the previous stale/running bug is fixed at the observability layer: `$ask` emitted SSE progress events until the declared hard budget, then wrote terminal `failed` status and JSON error output without a Rich traceback. OpenCode Kimi remains too slow for the tested 35s/240s deep-review budget, so use a larger `--oracle-timeout` or GPT-5.5 High for production review until Kimi latency improves.
+- `/ask --cae-gap-review` is a post-evidence-case QRA review layer. `/create-evidence-case` builds or loads the QRA, controls, answer, crosswalk chains, formal proof/SACM refs when present, and cached `evidence_case`; `/ask` freezes that snapshot and reviews whether the QRA has enough cited support for human review.
+- 2026-05-06: /ask now has standalone image generation mode. Use ./run.sh ask <prompt> --image-generate to call /scillm POST /v1/images/generations, write generated image files plus image_generation.json into the ask run artifacts, and mark the run answered without mixing memory retrieval, oracle, roundtable, argue, parallel-review, deep-review, or CAE gap-review modes.
+- 2026-05-06 correction: /ask --image-generate relies on scillm image credentials; the normal project-agent path is existing Codex/OpenAI OAuth through scillm. OPENAI_API_KEY is optional platform-key override only, not required for project agents when OAuth is configured.
 
 ## Recent Decisions
 
@@ -113,6 +118,8 @@ curated context. Memory recall is context, not evidence.
 | 2026-04-29 | Add an ephemeral HTML run viewer. | `status --watch` is necessary but not sufficient for human inspection of DAG state, artifacts, verifier failures, and `needs_attention` reasons. |
 | 2026-05-01 | Make release config doctor verify readiness with read-only probes. | Release readiness should be evidence-based in one command, without starting containers or relying on a separate live doctor transcript. |
 | 2026-05-01 | Treat provider-family shorthand as a first-class $ask oracle route | The model shorthand is user-facing routing policy, uses live OpenCode Go discovery where available, and must preserve resolved alias metadata in output and runtime artifacts. |
+| 2026-05-02 | Treat CAE gap review as QRA review, not QRA generation | This preserves /create-evidence-case as the evidence trail builder while /ask runs bounded Brandon/Margaret/Jennifer reviewer roles plus a judge that reroutes only unresolved missing evidence before halting. |
+| 2026-05-03 | Add direct scillm oracle call runtime events and lengthen OpenCode Go discovery timeout | `$ask oc kimi` could answer successfully but looked stalled after `synthesis_started`; events now expose the active scillm model call and served model. |
 
 ## Open Questions
 
@@ -181,7 +188,7 @@ Allowed final verdicts:
 
 ## Validation State
 
-Latest implementation checks, as of 2026-04-29:
+Latest implementation checks, as of 2026-05-01:
 
 - Deep-review contract doc exists.
 - Deep-review verifier tests exist.

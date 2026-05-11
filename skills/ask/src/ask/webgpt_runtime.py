@@ -252,6 +252,7 @@ def call_webgpt(
     *,
     tab_id: str = "",
     url: str = "",
+    create_tab: bool = False,
     timeout: float = WEBGPT_DEFAULT_TIMEOUT,
     stable_polls: int = WEBGPT_STABLE_POLLS,
     artifact_dir: Path | None = None,
@@ -263,14 +264,31 @@ def call_webgpt(
 ) -> WebgptResult:
     """One WebGPT round trip against the controlled ChatGPT tab.
 
+    Tab acquisition priority:
+      1. explicit `tab_id`
+      2. explicit `url`
+      3. `create_tab=True` — surf's CHATGPT_NEW_TAB path creates a fresh
+         chatgpt.com tab; with no_activate=True the tab is created in the
+         background (`active: false`) and never foregrounds. The new tab's id
+         is returned in `controlled_tab_id` so the caller can reuse it for
+         follow-up rounds.
+      4. auto-resolve a single open chatgpt.com tab via `surf tab.list`.
+
     Multi-turn iteration: call this function repeatedly with the same tab_id.
     ChatGPT preserves conversation context per tab; each call appends a turn.
     """
     surf = surf_run or _surf_run_path()
     if not surf.exists():
         raise WebgptBackendError(f"surf runtime not found: {surf}")
-    resolution = resolve_chatgpt_tab(tab_id, url, surf_run=surf)
-    resolved_tab_id = resolution.tab_id
+    if create_tab and not tab_id and not url:
+        # Skip resolution entirely; surf webgpt.submit will fall through to
+        # CHATGPT_NEW_TAB which creates a fresh tab. With --no-activate, the
+        # new tab is created with active=false so it stays in the background.
+        resolution = WebgptTabResolution(tab_id="", candidates=[], source="create")
+        resolved_tab_id = ""
+    else:
+        resolution = resolve_chatgpt_tab(tab_id, url, surf_run=surf)
+        resolved_tab_id = resolution.tab_id
 
     if artifact_dir is None:
         artifact_dir = Path(tempfile.mkdtemp(prefix="ask-webgpt-"))

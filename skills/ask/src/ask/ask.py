@@ -31,6 +31,7 @@ from .ask_config import (
 )
 from .argue import ARGUE_TIE_BREAKERS, run_argue
 from .chain_specs import apply_chain_options
+from .cae_gap_review import DEFAULT_CAE_JUDGE, DEFAULT_CAE_REVIEWERS, run_cae_gap_review
 from .deep_review import build_deep_review_request, infer_deep_review
 from .dry_run_spec import build_ask_dry_run_spec, print_execution_spec
 from .parallel_review import MAX_REVIEWERS, ParallelReviewError, run_parallel_review, validate_code_runner_allowed_files
@@ -41,6 +42,8 @@ from .preflight import EVIDENCE_CASE, NEEDS_ATTENTION, NORMAL_ANSWER, run_sparta
 from .ask_results import _synthesise
 from .ask_routing import (
     _is_operational_question,
+    _parse_natural_cae_gap_review_query,
+    _parse_missing_persona_roundtable_query,
     _parse_natural_argue_query,
     _parse_natural_persona_query,
     _parse_natural_parallel_review_query,
@@ -59,6 +62,7 @@ from .persona_routing import (
     suggest_persona_consultation,
 )
 from .hybrid import ask_hybrid, learn_back
+from .image_generation import generate_image_with_scillm
 from .model_aliases import ModelAliasRoute, resolve_model_alias_route
 
 app = typer.Typer(help="/ask ask - Query accumulated knowledge")
@@ -128,6 +132,13 @@ def ask(
     deep_review_fallback_policy: str = "fail_closed",
     deep_review_persist: str = "summary",
     deep_review_output_root: str = ".ask_artifacts/deep-review",
+    cae_gap_review: bool = False,
+    cae_reviewers: Optional[str] = None,
+    cae_judge: str = DEFAULT_CAE_JUDGE,
+    cae_max_rounds: int = 3,
+    webgpt_tab_id: str = "",
+    webgpt_url: str = "",
+    webgpt_create_tab: bool = False,
     run_state: Optional[AskRunState] = None,
 ) -> dict:
     """Query accumulated knowledge.
@@ -180,6 +191,7 @@ def ask(
         apply_fixes: Alias for explicit code-runner implementation intent.
         dogpile_mode: auto, off, or force freshness policy for oracle subagents.
         deep_review: Run Web-GPT-style deep review with JSON/markdown artifacts.
+        cae_gap_review: Run evidence-case-backed CAE reviewer/judge loop.
 
     Returns:
         dict with answer, sources, bridges.
@@ -197,7 +209,19 @@ def ask(
         "auto_learned": False,
         "hybrid_mode": hybrid,
     }
-    preflight_decision = run_sparta_preflight(question, scope, k, run_state=run_state)
+    skip_argv_bound_lookup = (
+        bool(oracle_model)
+        and _question_too_large_for_child_argv(question)
+        and not any([hybrid, use_bridges, auto_learn, cae_gap_review, parallel_review, deep_review, argue])
+    )
+    if skip_argv_bound_lookup:
+        preflight_decision = {
+            "route": "normal_answer",
+            "reason": "large_oracle_prompt_skipped_argv_bound_preflight",
+            "skipped": True,
+        }
+    else:
+        preflight_decision = run_sparta_preflight(question, scope, k, run_state=run_state)
     result["preflight"] = preflight_decision
     if preflight_decision.get("route") == NEEDS_ATTENTION:
         attention_payload = {
@@ -252,6 +276,12 @@ def ask(
                 "personas": parallel_review_personas or "",
                 "focus": parallel_review_focus or "",
                 "role_preset": parallel_review_role_preset,
+            }
+        if cae_gap_review:
+            result["oracle"]["cae_gap_review"] = {
+                "reviewers": cae_reviewers or DEFAULT_CAE_REVIEWERS,
+                "judge": cae_judge,
+                "max_rounds": cae_max_rounds,
             }
         result["oracle"]["dogpile_mode"] = dogpile_mode
         result["oracle"]["dogpile_recommended"] = _should_use_dogpile(question, dogpile_mode)
@@ -339,7 +369,21 @@ def ask(
         return parallel_result
 
     # Step 1: Memory recall (hybrid or standard)
-    if hybrid:
+    if skip_argv_bound_lookup:
+        if run_state:
+            run_state.step_started("memory_recall", scope=scope, k=k)
+            run_state.step_finished(
+                "memory_recall",
+                returncode=0,
+                items_count=0,
+                skipped=True,
+                reason="large_oracle_prompt_skipped_argv_bound_recall",
+            )
+        result["memory_lookup_skipped"] = {
+            "reason": "large_oracle_prompt_skipped_argv_bound_recall",
+            "question_bytes": len(question.encode("utf-8", errors="replace")),
+        }
+    elif hybrid:
         if run_state:
             run_state.step_started("hybrid_recall", scope=scope, k=k)
         log.info("Hybrid querying memory: q=%r scope=%r k=%d", question, scope, k)
@@ -414,7 +458,7 @@ def ask(
     # content about satellites, not pipeline health data.
     is_operational = _is_operational_question(question)
     preflight_route = result.get("preflight", {}).get("route")
-    should_build_evidence_case = preflight_route == EVIDENCE_CASE
+    should_build_evidence_case = preflight_route == EVIDENCE_CASE or cae_gap_review
     if should_build_evidence_case:
         if run_state:
             run_state.step_started(
@@ -499,6 +543,39 @@ def ask(
                 attention = run_state.needs_attention(**attention)
             result["needs_attention"] = attention
             return result
+        if cae_gap_review:
+            cae_result = run_cae_gap_review(
+                question=question,
+                scope=scope,
+                evidence_case=evidence_result,
+                reviewers=cae_reviewers or DEFAULT_CAE_REVIEWERS,
+                judge=cae_judge,
+                max_rounds=cae_max_rounds,
+                model=oracle_model or DEFAULT_ORACLE_MODEL,
+                reasoning_effort=oracle_reasoning,
+                timeout=oracle_timeout,
+                idle_timeout=oracle_idle_timeout,
+                heartbeat_interval=oracle_heartbeat_interval,
+                backend=oracle_backend,
+                dogpile_mode=dogpile_mode,
+                run_state=run_state,
+            )
+            result["cae_gap_review"] = cae_result
+            result["answer"] = cae_result["answer"]
+            result["oracle"] = {
+                "model": oracle_model or DEFAULT_ORACLE_MODEL,
+                "reasoning_effort": oracle_reasoning,
+                "backend": oracle_backend,
+                "source": "cae_gap_review",
+                "cae_gap_review": {
+                    "reviewers": cae_result["reviewers"],
+                    "judge": cae_result["judge"],
+                    "rounds_completed": cae_result["rounds_completed"],
+                    "halt_reason": cae_result["halt_reason"],
+                    "dogpile_mode": dogpile_mode,
+                },
+            }
+            return result
 
     # Step 2c: Auto-learn if still no domain results
     if not domain_items and auto_learn:
@@ -556,6 +633,10 @@ def ask(
             parallel_review_focus=parallel_review_focus,
             parallel_review_role_preset=parallel_review_role_preset,
             deep_review_request=deep_review_request,
+            webgpt_tab_id=webgpt_tab_id,
+            webgpt_url=webgpt_url,
+            webgpt_create_tab=webgpt_create_tab,
+            run_state=run_state,
         )
     if run_state:
         run_state.step_finished(
@@ -566,6 +647,23 @@ def ask(
         )
         if result.get("deep_review", {}).get("artifact_paths"):
             run_state.add_artifacts(result["deep_review"]["artifact_paths"])
+    if (
+        deep_review_request
+        and deep_review_fallback_policy == "fail_closed"
+        and result.get("deep_review", {}).get("verifier_status") == "FAIL"
+    ):
+        attention = {
+            "reason": "deep_review_verifier_failed",
+            "question": "Deep review verifier failed; do not treat this run as SAFE or release-ready.",
+            "safe_default": "do_not_use_review_verdict",
+            "resume_hint": "Inspect review.md, review.json, and events.jsonl; fix the review runtime or target bundle, then rerun.",
+            "verifier_failures": result.get("deep_review", {}).get("verifier_failures", []),
+            "artifact_paths": result.get("deep_review", {}).get("artifact_paths", {}),
+        }
+        if run_state:
+            attention = run_state.needs_attention(**attention)
+        result["needs_attention"] = attention
+        return result
 
     # Step 4: Learn-back for persona accumulation
     if persona_id and result["items"]:
@@ -633,6 +731,10 @@ def _should_use_dogpile(question: str, mode: str) -> bool:
     if mode == "off":
         return False
     return is_date_sensitive_question(question)
+
+
+def _question_too_large_for_child_argv(question: str) -> bool:
+    return len(question.encode("utf-8", errors="replace")) > 12000
 
 
 def _record_ask_telemetry(
@@ -703,6 +805,14 @@ def main(
     bridges: bool = typer.Option(False, help="Also traverse bridge attributes"),
     raw: bool = typer.Option(False, help="Return raw memory results"),
     as_json: bool = typer.Option(False, "--json", help="JSON output"),
+    image_generate: bool = typer.Option(False, "--image-generate", help="Generate image artifact(s) through scillm"),
+    image_model: str = typer.Option("gpt-image-2", "--image-model", help="Image generation model"),
+    image_size: str = typer.Option("auto", "--image-size", help="Image size, for example auto or 1024x1024"),
+    image_quality: str = typer.Option("auto", "--image-quality", help="Image quality, for example auto, medium, or high"),
+    image_count: int = typer.Option(1, "--image-count", help="Number of images to generate"),
+    image_output: Optional[str] = typer.Option(None, "--image-output", help="Output file or directory for generated image(s)"),
+    image_output_format: str = typer.Option("png", "--image-output-format", help="Image file format: png, jpeg, or webp"),
+    image_timeout: float = typer.Option(300.0, "--image-timeout", help="Image generation timeout in seconds"),
     auto_learn: bool = typer.Option(False, help="Auto-discover and learn if no knowledge found"),
     collection: str = typer.Option("behavioral", help="Taxonomy collection for auto-learn (default: behavioral)"),
     hybrid: bool = typer.Option(False, help="Use hybrid RAG+QRA retrieval (separate collection queries)"),
@@ -758,6 +868,10 @@ def main(
     deep_review_fallback_policy: str = typer.Option("fail_closed", help="Deep-review downgrade policy: fail_closed or warn"),
     deep_review_persist: str = typer.Option("summary", help="Deep-review persistence: summary or full"),
     deep_review_output_root: str = typer.Option(".ask_artifacts/deep-review", help="Deep-review artifact directory"),
+    cae_gap_review: bool = typer.Option(False, "--cae-gap-review", help="Run evidence-case-backed CAE reviewer/judge loop"),
+    cae_reviewers: Optional[str] = typer.Option(None, "--cae-reviewers", help="Comma-separated persona:role CAE reviewers"),
+    cae_judge: str = typer.Option(DEFAULT_CAE_JUDGE, "--cae-judge", help="CAE judge persona label"),
+    cae_max_rounds: int = typer.Option(3, "--cae-max-rounds", help="Maximum CAE clarify/reroute rounds"),
     review_context: str = typer.Option("fresh", "--review-context", help="Context policy: fresh or inherited"),
     inherit_memory: str = typer.Option("summary", "--inherit-memory", help="Context policy memory inheritance: none, summary, or full"),
     inherit_skills: str = typer.Option("selected", "--inherit-skills", help="Context policy skill inheritance: none, selected, or all"),
@@ -769,10 +883,22 @@ def main(
     run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for ask runtime artifacts"),
     overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
     resume_run: bool = typer.Option(False, "--resume", help="Resume a non-terminal existing run directory for --ask-id"),
+    webgpt_tab_id: str = typer.Option("", "--webgpt-tab-id", help="Chrome tab id to control for --oracle-backend webgpt. Optional: auto-resolved from a single open chatgpt.com tab."),
+    webgpt_url: str = typer.Option("", "--webgpt-url", help="ChatGPT conversation URL to resolve to an open Chrome tab for --oracle-backend webgpt."),
+    webgpt_create_tab: bool = typer.Option(False, "--webgpt-create-tab", help="Skip auto-resolve and let surf create/pick a background chatgpt.com tab for --oracle-backend webgpt. The controlled tab id is reported back in oracle_model_served so the agent can reuse it on follow-up rounds."),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
+    stdin_question = False
+    if len(question_parts) == 1 and question_parts[0] == "-":
+        stdin_question = sys.stdin.read()
+        if not stdin_question.strip():
+            raise typer.BadParameter("stdin question is empty", param_hint="question")
+        question_parts = [stdin_question]
+        stdin_question = True
+
     missing_persona_attention: dict | None = None
     model_alias_route: ModelAliasRoute | None = None
+    explicit_oracle = oracle
     try:
         model_alias_route = resolve_model_alias_route(
             question_parts,
@@ -787,10 +913,26 @@ def main(
         oracle_backend = model_alias_route.oracle_backend
         oracle_model = model_alias_route.resolved_model
 
+    question, inferred_cae_gap_review = _parse_natural_cae_gap_review_query(question_parts)
+    if stdin_question:
+        inferred_cae_gap_review = False
+    if explicit_oracle:
+        inferred_cae_gap_review = False
+    if inferred_cae_gap_review:
+        cae_gap_review = True
+        oracle = True
+        if oracle_backend == DEFAULT_ORACLE_BACKEND:
+            oracle_backend = "subagent-runner"
+
+    routed_question_parts = [question] if inferred_cae_gap_review else question_parts
     question, inferred_parallel_review, inferred_parallel_reviewers, inferred_parallel_focus = (
-        _parse_natural_parallel_review_query(question_parts)
+        _parse_natural_parallel_review_query(routed_question_parts)
     )
-    if inferred_parallel_review:
+    if stdin_question:
+        inferred_parallel_review = False
+        inferred_parallel_reviewers = None
+        inferred_parallel_focus = None
+    if inferred_parallel_review and not explicit_oracle:
         parallel_review = True
         oracle = True
         if inferred_parallel_reviewers is not None:
@@ -800,16 +942,21 @@ def main(
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
 
-    argue_question_parts = [question] if inferred_parallel_review else question_parts
+    argue_question_parts = [question] if (inferred_parallel_review or inferred_cae_gap_review) else question_parts
     question, inferred_argue = _parse_natural_argue_query(argue_question_parts)
+    if stdin_question:
+        inferred_argue = False
     if inferred_argue:
         argue = True
         oracle = True
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "scillm"
 
-    roundtable_question_parts = [question] if (inferred_parallel_review or inferred_argue) else question_parts
+    roundtable_question_parts = [question] if (inferred_parallel_review or inferred_argue or inferred_cae_gap_review) else question_parts
     question, inferred_roundtable_personas, inferred_roundtable = _parse_natural_roundtable_query(roundtable_question_parts)
+    if stdin_question:
+        inferred_roundtable_personas = None
+        inferred_roundtable = False
     if inferred_roundtable:
         roundtable = True
         oracle = True
@@ -817,12 +964,41 @@ def main(
             roundtable_personas = inferred_roundtable_personas
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
+    elif not roundtable and not stdin_question:
+        missing_topic, missing_personas = _parse_missing_persona_roundtable_query(roundtable_question_parts)
+        if missing_personas:
+            question = missing_topic
+            missing_persona_attention = {
+                "reason": "missing_roundtable_personas",
+                "question": (
+                    "The prompt names roundtable participants that do not resolve to stored personas: "
+                    + ", ".join(missing_personas)
+                    + "."
+                ),
+                "safe_default": "clarify_before_roundtable",
+                "resume_hint": (
+                    "Choose one path: use generic protocol roles, select existing personas, "
+                    "or create the missing personas with /interview and /create-persona before rerunning."
+                ),
+                "missing_personas": missing_personas,
+                "clarification_options": [
+                    "Use generic protocol roles for this one review without stored persona profiles.",
+                    "Select existing stored personas to stand in for these roles.",
+                    "Create the missing personas through /interview and /create-persona.",
+                    "Cancel the roundtable until persona identities are explicit.",
+                ],
+                "suggested_skills": ["/interview", "/create-persona"],
+            }
 
-    persona_question_parts = [question] if (inferred_roundtable or inferred_parallel_review or inferred_argue) else question_parts
+    persona_question_parts = [question] if (inferred_roundtable or inferred_parallel_review or inferred_argue or inferred_cae_gap_review) else question_parts
     question, inferred_persona, inferred_peer, inferred_oracle = _parse_natural_persona_query(
         persona_question_parts,
         explicit_persona=oracle_persona,
     )
+    if stdin_question:
+        inferred_persona = None
+        inferred_peer = None
+        inferred_oracle = False
     if inferred_persona:
         oracle_persona = inferred_persona
     if inferred_peer and not oracle_peer:
@@ -833,12 +1009,12 @@ def main(
         oracle = True
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
-    elif not oracle and not raw and _should_auto_oracle_persona(question):
+    elif not image_generate and not oracle and not raw and not stdin_question and _should_auto_oracle_persona(question):
         oracle = True
         consult_personas = True
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
             oracle_backend = "subagent-runner"
-    if roundtable or parallel_review or argue:
+    if roundtable or parallel_review or argue or cae_gap_review:
         oracle = True
         if argue:
             oracle_backend = "scillm"
@@ -871,7 +1047,7 @@ def main(
         deep_review_focus = ",".join(filter(None, [deep_review_focus, reviewer_focus]))
         parallel_review_focus = ",".join(filter(None, [parallel_review_focus, reviewer_focus]))
 
-    if deep_review or infer_deep_review(question):
+    if deep_review or (not image_generate and not oracle and infer_deep_review(question)):
         deep_review = True
         oracle = True
         parallel_review = True
@@ -897,6 +1073,27 @@ def main(
         raise typer.BadParameter(
             "Dogpile mode must be one of: auto, off, force.",
             param_hint="--dogpile",
+        )
+    if image_count < 1:
+        raise typer.BadParameter(
+            "Image count must be >= 1.",
+            param_hint="--image-count",
+        )
+    if image_generate and any([
+        raw,
+        oracle,
+        auto_learn,
+        hybrid,
+        consult_personas,
+        roundtable,
+        argue,
+        parallel_review,
+        deep_review,
+        cae_gap_review,
+    ]):
+        raise typer.BadParameter(
+            "--image-generate is a standalone artifact-generation mode. Remove memory, oracle, and review options.",
+            param_hint="--image-generate",
         )
     if roundtable_persist not in {"summary", "full"}:
         raise typer.BadParameter(
@@ -983,6 +1180,11 @@ def main(
             "Review DAG must be judge-best or hybrid.",
             param_hint="--review-dag",
         )
+    if cae_gap_review and cae_max_rounds < 1:
+        raise typer.BadParameter(
+            "CAE max rounds must be >= 1.",
+            param_hint="--cae-max-rounds",
+        )
     if implement_with and implement_with != "code-runner":
         raise typer.BadParameter(
             "Only --implement-with code-runner is supported.",
@@ -1040,6 +1242,8 @@ def main(
         argue,
         parallel_review,
         parallel_review_personas,
+        cae_gap_review,
+        cae_reviewers,
         oracle_backend != DEFAULT_ORACLE_BACKEND,
         oracle_idle_timeout != DEFAULT_ORACLE_IDLE_TIMEOUT,
         oracle_heartbeat_interval != DEFAULT_ORACLE_HEARTBEAT_INTERVAL,
@@ -1051,7 +1255,11 @@ def main(
 
     run_id = ask_id or make_run_id(question)
     context_policy = build_context_policy(
-        "deep-review" if deep_review else "argue" if argue else "ask",
+        (
+            "image-generation"
+            if image_generate
+            else "deep-review" if deep_review else "cae-gap-review" if cae_gap_review else "argue" if argue else "ask"
+        ),
         review_context=review_context,
         inherit_memory=inherit_memory,
         inherit_skills=inherit_skills,
@@ -1064,6 +1272,14 @@ def main(
         "k": k,
         "bridges": bridges,
         "raw": raw,
+        "image_generate": image_generate,
+        "image_model": image_model if image_generate else None,
+        "image_size": image_size if image_generate else None,
+        "image_quality": image_quality if image_generate else None,
+        "image_count": image_count if image_generate else None,
+        "image_output": image_output if image_generate else None,
+        "image_output_format": image_output_format if image_generate else None,
+        "image_timeout": image_timeout if image_generate else None,
         "auto_learn": auto_learn,
         "collection": collection,
         "hybrid": hybrid,
@@ -1108,11 +1324,17 @@ def main(
         "deep_reviewers": deep_reviewers,
         "deep_review_focus": deep_review_focus,
         "deep_review_output_root": deep_review_output_root,
+        "cae_gap_review": cae_gap_review,
+        "cae_reviewers": cae_reviewers or DEFAULT_CAE_REVIEWERS if cae_gap_review else None,
+        "cae_judge": cae_judge,
+        "cae_max_rounds": cae_max_rounds,
         "context_policy": context_policy,
         "chain": chain,
         "reviewer_specs": reviewer_specs or [],
         "suggested_personas_count": 0,
     }
+    if missing_persona_attention:
+        request_payload["missing_persona_clarification"] = missing_persona_attention
     if dry_run:
         print_execution_spec(build_ask_dry_run_spec(request_payload), as_json=as_json)
         raise typer.Exit(code=0)
@@ -1127,7 +1349,7 @@ def main(
         )
         request_payload["suggested_personas_count"] = len(suggested_personas)
 
-    require_runtime_artifacts = deep_review or parallel_review or argue
+    require_runtime_artifacts = image_generate or deep_review or parallel_review or argue or cae_gap_review
     try:
         run_state = AskRunState(run_id, output_root=run_output_root, overwrite=overwrite_run, resume=resume_run)
         run_state.write_request(request_payload)
@@ -1142,6 +1364,80 @@ def main(
         typer.echo(f"Warning: Runtime artifacts disabled: {exc}", err=True)
         run_state = NoopRunState(run_id, reason=str(exc))
     run_state.event("ask_started")
+
+    if image_generate:
+        try:
+            result = generate_image_with_scillm(
+                question,
+                run_state=run_state,
+                model=image_model,
+                size=image_size,
+                quality=image_quality,
+                count=image_count,
+                output=image_output,
+                output_format=image_output_format,
+                timeout=image_timeout,
+            )
+            result["ask_id"] = run_state.ask_id
+            result["runtime_artifacts"] = run_state.artifacts
+            run_state.finish(result, state="answered")
+        except Exception as exc:
+            run_state.fail(exc)
+            failure_result = {
+                "question": question,
+                "scope": "image-generation",
+                "ask_id": run_state.ask_id,
+                "runtime_artifacts": run_state.artifacts,
+                "status": "failed",
+                "error": {
+                    "type": type(exc).__name__,
+                    "message": str(exc),
+                },
+            }
+            if as_json:
+                print(json.dumps(failure_result, indent=2, default=str))
+            else:
+                print("\n-- /ask image generation failed --")
+                print(f"   Error: {type(exc).__name__}: {exc}")
+                print(f"   Status: {run_state.artifacts.get('status')}")
+                print()
+            raise typer.Exit(code=1) from exc
+
+        if as_json:
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            print("\n-- /ask image generation --")
+            for file_info in result["image_generation"]["files"]:
+                print(f"   Image: {file_info['path']}")
+            print(f"   Manifest: {result['artifacts']['image_manifest']}")
+            print()
+        raise typer.Exit(code=0)
+
+    if missing_persona_attention:
+        attention = run_state.needs_attention(**missing_persona_attention)
+        result = {
+            "question": question,
+            "scope": scope,
+            "items": [],
+            "bridges_found": [],
+            "answer": "",
+            "auto_learned": False,
+            "hybrid_mode": hybrid,
+            "needs_attention": attention,
+            "ask_id": run_state.ask_id,
+            "runtime_artifacts": run_state.artifacts,
+        }
+        run_state.finish(result, state="needs_attention")
+        if as_json:
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            print("\n-- /ask needs attention --")
+            print(f"   Reason: {attention.get('reason', 'unknown')}")
+            print(f"   Question: {attention.get('question', '')}")
+            if attention.get("resume_hint"):
+                print(f"   Resume: {attention['resume_hint']}")
+            print()
+        raise typer.Exit(code=2)
 
     started_at = time.time()
     try:
@@ -1203,6 +1499,13 @@ def main(
             deep_review_fallback_policy=deep_review_fallback_policy,
             deep_review_persist=deep_review_persist,
             deep_review_output_root=deep_review_output_root,
+            cae_gap_review=cae_gap_review,
+            cae_reviewers=cae_reviewers,
+            cae_judge=cae_judge,
+            cae_max_rounds=cae_max_rounds,
+            webgpt_tab_id=webgpt_tab_id,
+            webgpt_url=webgpt_url,
+            webgpt_create_tab=webgpt_create_tab,
             run_state=run_state,
         )
     except Exception as exc:
@@ -1227,7 +1530,25 @@ def main(
             oracle_iterations=oracle_iterations,
         )
         run_state.fail(exc)
-        raise
+        failure_result = {
+            "question": question,
+            "scope": scope,
+            "ask_id": run_state.ask_id,
+            "runtime_artifacts": run_state.artifacts,
+            "status": "failed",
+            "error": {
+                "type": type(exc).__name__,
+                "message": str(exc),
+            },
+        }
+        if as_json:
+            print(json.dumps(failure_result, indent=2, default=str))
+        else:
+            print("\n-- /ask failed --")
+            print(f"   Error: {type(exc).__name__}: {exc}")
+            print(f"   Status: {run_state.artifacts.get('status')}")
+            print()
+        raise typer.Exit(code=1) from exc
 
     if consult_personas:
         suggestion = _format_persona_suggestion(suggested_personas)
@@ -1238,6 +1559,7 @@ def main(
     result["ask_id"] = run_state.ask_id
     result["runtime_artifacts"] = run_state.artifacts
     if result.get("needs_attention"):
+        run_state.finish(result, state="needs_attention")
         if as_json:
             print(json.dumps(result, indent=2, default=str))
         else:
@@ -1249,7 +1571,7 @@ def main(
                 print(f"   Resume: {attention['resume_hint']}")
             print()
         raise typer.Exit(code=2)
-    if result.get("parallel_review") or result.get("argue"):
+    if result.get("parallel_review") or result.get("argue") or result.get("cae_gap_review"):
         if as_json:
             print(json.dumps(result, indent=2, default=str))
         else:
@@ -1257,7 +1579,7 @@ def main(
     run_state.finish(result)
     oracle = result.get("oracle", {})
     has_oracle_answer = bool(oracle) and bool(str(result.get("answer", "")).strip()) and not oracle.get("error")
-    sys.exit(0 if result["items"] or result.get("parallel_review") or result.get("argue") or has_oracle_answer else 1)
+    sys.exit(0 if result["items"] or result.get("parallel_review") or result.get("argue") or result.get("cae_gap_review") or has_oracle_answer else 1)
 
 
 if __name__ == "__main__":

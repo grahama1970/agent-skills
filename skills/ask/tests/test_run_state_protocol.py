@@ -100,6 +100,21 @@ def test_read_status_includes_event_tail(tmp_path):
     assert [event["event"] for event in status["event_tail"]] == ["middle", "finished"]
 
 
+def test_read_status_marks_dead_running_controller_stale(tmp_path):
+    run = AskRunState("dead-controller", output_root=tmp_path)
+    run.write_request({"question": "stuck?", "scope": "ask"})
+    payload = json.loads(run.status_path.read_text())
+    payload["state"] = "running"
+    payload["controller_pid"] = 999999
+    run.status_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+    status = read_status("dead-controller", output_root=tmp_path)
+
+    assert status["state"] == "stale"
+    assert status["recorded_state"] == "running"
+    assert status["stale_reason"] == "controller_pid_not_alive"
+
+
 def test_run_state_needs_attention_and_artifact_registration_survive_finish(tmp_path):
     run = AskRunState("attention-test", output_root=tmp_path)
     run.write_request({"question": "safe to proceed?", "scope": "ask"})
@@ -390,6 +405,17 @@ def test_argue_verifier_rejects_high_confidence_with_missing_evidence():
 
 def test_argue_verifier_rejects_for_when_grounding_fell_back():
     payload = _valid_argue_result(verdict="FOR")
+    payload["source_bundle"]["sources"].append(
+        {"source_id": "MEMORY.1", "kind": "memory", "content": "The change is small and reversible."}
+    )
+    payload["judge"]["evidence_citations"] = [
+        {
+            "source_id": "MEMORY.1",
+            "source_kind": "memory",
+            "quote_or_summary": "The change is small and reversible.",
+            "supports": "verdict",
+        }
+    ]
     payload["judge"]["scillm"] = {
         "source_grounding_status": "retry_without_source_after_error",
         "grounding_passed": False,
@@ -416,6 +442,33 @@ def test_argue_verifier_rejects_for_when_grounding_fell_back():
     assert any("grounding" in failure for failure in result["failures"])
 
 
+def test_argue_verifier_allows_grounding_fallback_for_direct_question_evidence():
+    payload = _valid_argue_result(verdict="FOR")
+    payload["judge"]["scillm"] = {
+        "source_grounding_status": "retry_without_source_after_error",
+        "grounding_passed": False,
+        "metadata_requested": {
+            "ask_id": "argue-question-grounding",
+            "protocol": "argue",
+            "node_id": "judge",
+            "batch_id": "ask-argue-argue-question-grounding",
+            "item_id": "judge",
+        },
+        "metadata_returned": {
+            "ask_id": "argue-question-grounding",
+            "protocol": "argue",
+            "node_id": "judge",
+            "batch_id": "ask-argue-argue-question-grounding",
+            "item_id": "judge",
+        },
+    }
+
+    result = argue_module.verify_argue_result(payload)
+
+    assert result["status"] == "PASS"
+    assert result["grounding_degraded"] is True
+
+
 def test_argue_verifier_rejects_scillm_metadata_return_mismatch():
     payload = _valid_argue_result(verdict="FOR")
     payload["judge"]["scillm"] = {
@@ -440,6 +493,21 @@ def test_argue_verifier_rejects_scillm_metadata_return_mismatch():
 
     assert result["status"] == "FAIL"
     assert any("metadata" in failure for failure in result["failures"])
+
+
+def test_argue_judge_prompt_calibrates_missing_evidence_and_confidence():
+    payload = _valid_argue_result()
+
+    prompt = argue_module.build_judge_prompt(
+        payload["question"],
+        payload["for_case"],
+        payload["against_case"],
+    )
+
+    assert "missing_evidence must contain only decision-blocking evidence" in prompt
+    assert "If missing_evidence is non-empty, confidence must not be high." in prompt
+    assert "cite QUESTION and set missing_evidence to []" in prompt
+    assert "not missing_evidence" in prompt
 
 
 def test_argue_verifier_requires_tie_breaker_for_decision_required():
@@ -573,7 +641,7 @@ def test_cli_argue_runs_two_parallel_advocates_then_judge(monkeypatch, tmp_path)
     assert artifacts["argue_result"].endswith("argue.json")
     assert metadata_by_role["FOR advocate"]["protocol"] == "argue"
     assert metadata_by_role["FOR advocate"]["node_id"] == "FOR"
-    assert metadata_by_role["FOR advocate"]["batch_id"] == "ask-argue-argue-dag"
+    assert metadata_by_role["FOR advocate"]["batch_id"].startswith("ask-argue-argue-dag-")
     assert metadata_by_role["sequential judge"]["node_id"] == "judge"
     assert "QUESTION" in source_by_role["FOR advocate"]
     for_case = json.loads((tmp_path / "argue-dag" / "argue" / "for.json").read_text())
@@ -631,6 +699,7 @@ def test_cli_argue_verifier_failure_exits_needs_attention(monkeypatch, tmp_path)
     assert result.exit_code == 2
     payload = json.loads(result.stdout)
     assert payload["needs_attention"]["reason"] == "argue_verifier_failed"
+    assert read_status("argue-fail", output_root=tmp_path)["state"] == "needs_attention"
     assert (tmp_path / "argue-fail" / "argue" / "verifier.log").exists()
 
 
@@ -793,7 +862,7 @@ def test_parallel_review_reviewer_payloads_include_scillm_metadata_and_source(tm
     assert metadata["ask_id"] == "parallel-metadata"
     assert metadata["protocol"] == "parallel_review"
     assert metadata["node_role"] == "reviewer"
-    assert metadata["batch_id"] == "ask-parallel_review-parallel-metadata"
+    assert metadata["batch_id"].startswith("ask-parallel_review-parallel-metadata-")
     assert metadata["item_id"] == "reviewer-1"
     assert metadata["source_bundle_id"] == source_bundle["source_bundle_id"]
     assert "TARGET_BUNDLE" in payload["source"]
@@ -2172,6 +2241,19 @@ def test_watch_status_times_out_for_nonterminal_run(tmp_path):
         watch_status("stuck", output_root=tmp_path, interval=0.01, timeout_seconds=0.05)
 
 
+def test_watch_status_streams_new_events_until_terminal(tmp_path, capsys):
+    run = AskRunState("event-stream", output_root=tmp_path)
+    run.write_request({"question": "stream"})
+    run.event("subagent_session_heartbeat", subagent={"status": "running"})
+    run.finish({"question": "stream", "items": []})
+
+    watch_status("event-stream", output_root=tmp_path, interval=0.01, timeout_seconds=1)
+
+    captured = capsys.readouterr().out
+    assert '"state": "no_results"' in captured
+    assert "event-stream" in captured
+
+
 def test_cli_status_watch_timeout_exits_nonzero(tmp_path):
     run = AskRunState("stuck-cli", output_root=tmp_path)
     run.write_request({"question": "stuck"})
@@ -2518,3 +2600,35 @@ def test_cli_os_health_writes_runtime_artifacts(monkeypatch, tmp_path):
 
     assert result.exit_code == 0
     assert read_status("os-health-smoke", output_root=tmp_path)["state"] == "completed"
+
+
+def test_cli_os_health_json_is_machine_readable(monkeypatch, tmp_path):
+    monkeypatch.setattr(os_query_module, "get_health_data", lambda subsystem: {"status": "ok"})
+    monkeypatch.setattr(
+        os_query_module,
+        "recall_os",
+        lambda *args, **kwargs: [
+            {"description": "Memory health monitor verifies recall, storage, and retrieval pipeline status."}
+        ],
+    )
+    result = CliRunner().invoke(
+        os_query_module.app,
+        [
+            "health",
+            "is memory healthy?",
+            "--subsystem",
+            "memory",
+            "--ask-id",
+            "os-health-json",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["subsystem"] == "memory"
+    assert payload["health_data"]["status"] == "ok"
+    assert "retrieval pipeline status" in payload["answer"]
+    assert read_status("os-health-json", output_root=tmp_path)["state"] == "completed"

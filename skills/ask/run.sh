@@ -47,6 +47,8 @@ Commands:
   learn <topic>     Discover, ingest, and extract knowledge about a topic
   ask <question>    Query accumulated knowledge (with optional auto-learn)
   status            Show learning progress and task-monitor state
+  setup             Interview-driven setup wizard (safe by default)
+  config            Initialize and validate release configuration
   doctor            Check runtime prerequisites and artifact writability
   chains            Inspect saved review workflows
   nightly           Run scheduled persona update (incremental learning)
@@ -79,6 +81,14 @@ Ask Options:
   --auto-learn          Auto-discover and learn if no knowledge found
   --collection <coll>   Taxonomy collection for auto-learn (default: behavioral)
   --raw                 Return raw memory results
+  --image-generate      Generate image artifact(s) through scillm
+  --image-model <m>     Image generation model (default: gpt-image-2)
+  --image-size <s>      Image size, for example auto or 1024x1024
+  --image-quality <q>   Image quality, for example auto, medium, or high
+  --image-count <n>     Number of images to generate (default: 1)
+  --image-output <path> Output file or directory for generated image(s)
+  --image-output-format <f> Image format: png, jpeg, or webp
+  --image-timeout <s>   Image generation timeout in seconds
   --oracle              Use scillm/Codex for final oracle synthesis
   --oracle-backend <b>  Oracle backend: auto, scillm, subagent-runner
   --oracle-model <m>    Oracle synthesis model (default: gpt-5.5)
@@ -145,10 +155,21 @@ Nightly Options:
   --resume              Resume a non-terminal existing run directory for --ask-id
   --json                Output summary as JSON
   --debug               Enable debug logging
+Setup Options:
+  --interactive         Always use /interview for high-level setup choices
+  --profile <profile>   local-dev or shared-stack
+  --dry-run             Preview without writing config or starting services
+  --json                JSON output
+  --yes                 Accept inferred defaults without prompting
+  --start-missing       Explicit consent to start missing services
 
 Doctor Options:
   --live                Run live subprocess/service checks
   --json                JSON output
+
+Config Commands:
+  config doctor         Validate ask.config.yml and release prerequisites
+  config init           Launch /interview to create ask.config.yml
 
 Examples:
   # Learn about a topic
@@ -209,13 +230,21 @@ case "${1:-help}" in
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.learn "$@"
         ;;
-    ask|query)
+    ask)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.ask "$@"
+        ;;
+    setup)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.config_cli setup "$@"
         ;;
     status)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.status "$@"
+        ;;
+    config)
+        shift
+        exec uv run --project "$SCRIPT_DIR" python -m ask.config_cli "$@"
         ;;
     doctor)
         shift

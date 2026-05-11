@@ -59,6 +59,7 @@ $ask what did we decide about idempotent token refresh under concurrent auth ret
 $ask ask the reliability architect whether the queue fallback fails closed when Redis quorum is lost
 $ask run 3 parallel reviewers on the cache invalidation migration
 $ask argue whether replayed webhook delivery handling is safe to ship
+$ask cae gap review AC-2 MFA evidence for the production tenant
 $ask deep review src/ask/ask.py
 $ask oc kimi explain the tradeoff in this patch
 $ask chutes-kimi summarize the risk in this plan
@@ -115,6 +116,21 @@ more control.
   --deep-review-target src/ask/ask.py
 ```
 
+**Review a compliance/cybersecurity evidence gap?**
+
+```bash
+./run.sh ask "cae gap review AC-2 MFA evidence for the production tenant" \
+  --cae-max-rounds 3
+```
+
+This freezes a `/create-evidence-case` result first, then runs Brandon,
+Margaret, and Jennifer through bounded CAE prompt-role presets. The judge may
+reroute one unresolved missing evidence item per round, then stops with
+`NEEDS_VERIFICATION`, `INSUFFICIENT_EVIDENCE`, or `NEEDS_CLARIFICATION`.
+In the QRA lifecycle this sits after QRA generation and before human
+approval: generated QRA → candidate QRA → CAE gap review → human review →
+approve, edit, reject, or defer.
+
 **Check if the runtime is healthy:**
 
 ```bash
@@ -136,6 +152,12 @@ agent-facing contract, see [SKILL.md](SKILL.md).
 persona is not just a name tag: it can include profile data, domain expertise,
 prior lessons, operating style, and lore. `/ask` recalls the actual persona
 profile before answering instead of treating the name as a prompt label.
+
+If a prompt names a persona that is not in memory, `/ask` treats that as an
+error-correction moment, not a chance to invent a role. It should use
+`/memory clarify`-style ambiguity handling, pause with `needs_attention`, and
+offer a guided `/interview` or `/create-persona` path before rerunning the
+persona or roundtable request.
 
 ```bash
 # One loaded persona
@@ -204,6 +226,34 @@ cd /path/to/agent-skills/skills/ask
 If a companion skill is missing, some modes fail closed with
 `needs_attention`; others continue with an explicit degraded status. Fail
 closed means a required dependency is missing and `/ask` refuses to guess.
+
+### Release setup
+
+For release-grade use, create a local non-secret config and validate it before
+running live checks:
+
+```bash
+./run.sh config init
+./run.sh config doctor --profile release --json
+```
+
+`config init` may launch `/interview` to collect local paths and credential
+policy. `config doctor` never prompts; it returns machine-readable
+`needs_attention` when config, credentials, companion skill paths, Docker
+storage, or service URLs are missing.
+
+For a one-command Docker release attempt:
+
+```bash
+docker compose --profile release up --build
+```
+
+The compose stack includes `/ask`, `/memory` infrastructure, `/scillm`,
+`utls-proxy`, Redis, ArangoDB, Qdrant, and embedding service wiring. It mounts
+host credentials such as `~/.codex`, `~/.claude`, and `~/.gemini` explicitly so
+missing auth becomes a release blocker instead of a hallucinated success.
+Set `SCILLM_REPO` or `MEMORY_REPO` if those repositories are not siblings of
+`agent-skills`.
 
 ## Talking to It in Plain English
 
@@ -284,6 +334,37 @@ Rule of thumb: use `failure_mode` when the question is "how does this break,"
   --roundtable \
   --roundtable-personas "Architect:failure_mode,Tester:evidence_auditor,Maintainer:complexity_minimizer"
 ```
+
+### CAE gap review
+
+CAE gap review is for compliance/cybersecurity evidence questions, not generic
+website or design critique. It composes `/create-evidence-case` with fixed CAE
+prompt-role presets:
+
+- `Brandon:cae_policy_evidence`
+- `Margaret:cae_technical_enforcement`
+- `Jennifer:cae_control_mapping`
+- judge: `CAE Gap Judge`
+
+```bash
+./run.sh ask "cae gap review AC-2 MFA evidence for the production tenant" \
+  --cae-reviewers "Brandon:cae_policy_evidence,Margaret:cae_technical_enforcement,Jennifer:cae_control_mapping" \
+  --cae-judge "CAE Gap Judge" \
+  --cae-max-rounds 3
+```
+
+The claim and retrieved evidence case stay fixed. The adaptive part is narrow:
+if the judge says `NEEDS_CLARIFICATION`, `/ask` reroutes exactly one missing
+evidence item to the matching reviewer role and asks the judge again. It halts
+on a terminal judge decision, repeated missing evidence, invalid judge JSON, or
+the max round limit. The output is an analyst workbench result, not approval,
+certification, attestation, or an audit opinion.
+
+Within a QRA review system, `/create-evidence-case` is still responsible for
+building or loading the QRA, resolved controls, answer, crosswalk chains,
+formal-proof/SACM references when present, and cached `evidence_case` metadata.
+`/ask --cae-gap-review` reviews that frozen snapshot and writes a separate
+review artifact that can inform human promotion, edit, rejection, or deferral.
 
 ### Adversarial argue
 
@@ -497,6 +578,10 @@ these are the knobs you will reach for most often:
 
 Full list: [SKILL.md](SKILL.md).
 
+Local release config lives in `ask.config.yml`; use
+`ask.config.yml.example` as the documented template. Secrets stay in `.env` or
+host credential stores, not in `ask.config.yml`.
+
 ## Artifacts and Telemetry
 
 `ask` writes execution details into `/memory` so timeout and reliability policy
@@ -585,6 +670,38 @@ Mocked tests are regression coverage, not integration proof. New user-visible
 composition paths through `/scillm` require an opt-in live smoke/E2E check
 before being described as validated.
 
+### Live bug-hunting sanity
+
+`sanity.sh` is deterministic regression coverage. It intentionally uses mocked
+or controlled paths for speed and repeatability.
+
+Use `sanity-e2e.sh` when you want real-world bug discovery across composed
+skills. It calls live `/memory`, `/scillm`, `/subagent-runner`, OS health,
+review, argue, deep-review, and missing-persona clarification paths, then
+writes `report.json`, `index.html`, and `report.md` with feature readiness,
+claim coverage signals, command results, artifacts, liveness, and findings.
+
+```bash
+# Preview the planned live checks without calling external services.
+./sanity-e2e.sh --plan-only
+
+# Run the release-profile live bug-hunting suite.
+ASK_LIVE_SANITY_E2E=1 ./sanity-e2e.sh --profile release
+
+# Include slower/costlier fresh-discovery and SPARTA evidence-case routes.
+ASK_LIVE_SANITY_E2E=1 ./sanity-e2e.sh --include-expensive
+```
+
+Reports are written under `.ask_artifacts/live-sanity/<run_id>/`.
+Failures are not softened: nonzero exits, timeouts, tracebacks, malformed JSON,
+missing runtime artifacts, suspiciously shallow answers, non-answer markers,
+unexpected `needs_attention`, and missing registered artifacts are reported as
+findings. Skipped release-required routes are coverage gaps or blockers, not
+success. The suite also checks that prompts such as "have the tester and
+maintainer roundtable this risk" do not silently invent missing personas; `/ask`
+should clarify and offer persona creation through `/interview` or
+`/create-persona`.
+
 ## Interop with Companion Skills
 
 `ask` is a routing and verification layer. It composes with companion skills
@@ -593,10 +710,12 @@ development context.
 
 | Companion | What `ask` uses it for |
 | --- | --- |
-| `/memory` | Durable recall, persona profiles, lessons, scoped context |
+| `/memory` | Durable recall, persona profiles, lessons, scoped context, and clarification when recall is ambiguous |
 | `/dogpile` | Fresh external evidence when memory is stale or thin |
 | `/extract-entities` | First-pass entity extraction for SPARTA/CWE/NIST routing |
 | `/create-evidence-case` | Required grounding step for SPARTA-class questions |
+| `/interview` | Clarification and guided persona creation when a prompt names missing personas |
+| `/create-persona` | Persona materialization after the user confirms a missing-persona interview |
 | `/scillm` | Model calls, advocate/judge DAG execution, peer checks |
 | `/subagent-runner` | Detached child sessions for oracle and deep-review runs |
 | `/project-knowledge` | Curated current-state projection for development context |
@@ -618,7 +737,12 @@ As of 2026-05-01, `$ask` is usable for the intended interactive workflows:
 - Live `$ask` E2E passes for OpenCode Go and Chutes model shorthand:
   `$ask oc kimi`, `$ask oc-qwen`, `$ask chutes kimi`, and `$ask chutes-kimi`
   all reach scillm, return oracle answers, preserve alias metadata, and mark
-  runtime status as `answered`.
+  runtime status as `answered`. As of 2026-05-03, direct scillm oracle calls
+  use OpenAI-compatible SSE streaming with explicit request deadlines and emit
+  `oracle_scillm_call_started` / `oracle_scillm_stream_progress` /
+  `oracle_scillm_call_finished` / `oracle_scillm_call_failed` runtime events
+  with requested model, served model, backend, reasoning effort, timeout, and
+  accumulated content length.
 - SPARTA evidence-case routing fails closed when `/create-evidence-case` is
   required but unavailable.
 - Runtime status can be inspected in an auto-updating local HTML viewer with
@@ -667,6 +791,8 @@ current-state projection, not a replacement for inspected code or test output.
 | `docs/HUMAN_CHAT_EXAMPLES.md` | Human prompt examples and route expectations |
 | `docs/PROJECT_KNOWLEDGE.md` | Curated current development state |
 | `sanity.sh` | Deterministic smoke checks |
+| `sanity-e2e.sh` | Opt-in live bug-hunting sanity checks with HTML report |
+| `scripts/live_sanity_report.py` | Real-world composed-path E2E reporter |
 
 ## Development
 
@@ -676,6 +802,13 @@ For code changes:
 
 ```bash
 bash sanity.sh
+```
+
+For live integration checks that intentionally look for real composed-path
+bugs:
+
+```bash
+ASK_LIVE_SANITY_E2E=1 ./sanity-e2e.sh
 ```
 
 When tests are added or modified:

@@ -2,7 +2,8 @@
 
 These examples describe how a human can invoke `$ask` from chat. The skill
 accepts natural phrasing, then maps it to memory recall, oracle synthesis,
-persona consultation, argue, roundtable review, parallel review, or deep review.
+persona consultation, argue, roundtable review, parallel review, CAE gap review,
+or deep review.
 
 ## Defaults
 
@@ -11,6 +12,7 @@ persona consultation, argue, roundtable review, parallel review, or deep review.
 - Use `gpt-5.5` with `high` reasoning for normal oracle paths, and `xhigh` for deep-review unless unavailable or overridden.
 - Use `subagent-runner` for personas, peers, roundtables, parallel review, and deep review.
 - Use three `/scillm` calls for argue: two parallel advocates, then one sequential judge.
+- Use CAE gap review only for compliance/cybersecurity evidence-case gap analysis.
 - Treat memory recall as context, not evidence.
 - Use `--scope sparta` for SPARTA, NIST-to-SPARTA, and space-cybersecurity questions.
 - Treat empty answers, refusal-style non-answers, missing personas, or missing domain grounding as failed E2E behavior.
@@ -207,6 +209,31 @@ Forced binary decisions must be explicit:
 
 Argue returns `FOR`, `AGAINST`, `NO_CLEAR_WINNER`, or
 `INSUFFICIENT_EVIDENCE`. It does not edit files or invoke `/code-runner`.
+
+## CAE Gap Review
+
+```text
+$ask cae gap review AC-2 MFA evidence for the production tenant
+$ask run cae gap review on audit logging evidence for the SOC platform
+$ask ask cae reviewers to review incident response evidence for IR-4
+```
+
+Expected route:
+
+```bash
+./run.sh ask "AC-2 MFA evidence for the production tenant" \
+  --cae-gap-review \
+  --cae-reviewers "Brandon:cae_policy_evidence,Margaret:cae_technical_enforcement,Jennifer:cae_control_mapping" \
+  --cae-judge "CAE Gap Judge" \
+  --cae-max-rounds 3
+```
+
+CAE reviewers are persona plus prompt-role preset pairs. The default personas
+are Brandon, Margaret, and Jennifer; the bounded prompt roles are policy
+evidence, technical enforcement, and control mapping. The judge reroutes only
+one unresolved missing evidence item per round, then stops. The output is not a
+compliance approval, certification, attestation, audit opinion, or assurance
+outcome.
 
 ## Parallel Review Then Roundtable
 

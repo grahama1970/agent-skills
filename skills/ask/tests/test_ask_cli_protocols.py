@@ -16,6 +16,66 @@ def _load_ask_module():
     return ask_module
 
 
+def test_cli_image_generate_uses_scillm_route(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_generate_image_with_scillm(prompt, **kwargs):
+        captured["prompt"] = prompt
+        captured.update(kwargs)
+        image_path = tmp_path / "image.png"
+        manifest_path = tmp_path / "manifest.json"
+        image_path.write_bytes(b"image")
+        manifest_path.write_text("{}\n")
+        return {
+            "question": prompt,
+            "scope": "image-generation",
+            "items": [],
+            "bridges_found": [],
+            "answer": "Generated 1 image file(s).",
+            "image_generation": {
+                "model": kwargs["model"],
+                "files": [{"index": 0, "path": str(image_path), "mime_type": "image/png"}],
+            },
+            "artifacts": {"image_001": str(image_path), "image_manifest": str(manifest_path)},
+        }
+
+    monkeypatch.setattr(ask_module, "generate_image_with_scillm", fake_generate_image_with_scillm)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "a",
+            "diagram",
+            "of",
+            "the",
+            "ask",
+            "image",
+            "route",
+            "--image-generate",
+            "--image-model",
+            "gpt-image-2",
+            "--image-size",
+            "1024x1024",
+            "--image-quality",
+            "high",
+            "--image-output",
+            str(tmp_path / "out.png"),
+            "--ask-id",
+            "image-cli-test",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["prompt"] == "a diagram of the ask image route"
+    assert captured["model"] == "gpt-image-2"
+    assert captured["size"] == "1024x1024"
+    assert captured["quality"] == "high"
+    assert captured["output"] == str(tmp_path / "out.png")
+    assert "Image:" in result.stdout
+
+
 def test_cli_natural_roundtable_maps_to_protocol(monkeypatch):
     ask_module = _load_ask_module()
     captured = {}
@@ -83,6 +143,42 @@ def test_cli_parallel_review_implies_oracle(monkeypatch):
     assert captured["oracle_model"] == "gpt-5.5"
     assert captured["oracle_backend"] == "subagent-runner"
     assert captured["oracle_reasoning"] == "high"
+
+
+def test_cli_natural_cae_gap_review_maps_to_protocol(monkeypatch):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {
+            "items": [],
+            "answer": "cae result",
+            "bridges_found": [],
+            "cae_gap_review": {"final_judge": {"decision": "NEEDS_CLARIFICATION"}},
+        }
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "cae",
+            "gap",
+            "review",
+            "AC-2",
+            "MFA",
+            "evidence",
+            "--cae-max-rounds",
+            "2",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "AC-2 MFA evidence"
+    assert captured["cae_gap_review"] is True
+    assert captured["cae_reviewers"] is None
+    assert captured["cae_max_rounds"] == 2
+    assert captured["oracle_backend"] == "subagent-runner"
 
 
 def test_cli_natural_argue_maps_to_scillm_protocol(monkeypatch):
@@ -178,4 +274,121 @@ def test_cli_deep_review_respects_explicit_reasoning(monkeypatch):
 
     assert result.exit_code == 0
     assert captured["deep_review"] is True
+    assert captured["oracle_reasoning"] == "high"
+
+
+def test_cli_explicit_oracle_suppresses_natural_deep_review_inference(monkeypatch):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [], "answer": "oracle review", "bridges_found": [], "oracle": {"model": "gpt-5.5"}}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Perform",
+            "a",
+            "Web",
+            "GPT",
+            "code-review",
+            "quality",
+            "comparison.",
+            "--oracle",
+            "--oracle-backend",
+            "subagent-runner",
+            "--oracle-model",
+            "gpt-5.5",
+            "--oracle-reasoning",
+            "high",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["deep_review"] is False
+    assert captured["parallel_review"] is False
+    assert captured["oracle_model"] == "gpt-5.5"
+    assert captured["oracle_backend"] == "subagent-runner"
+    assert captured["oracle_reasoning"] == "high"
+
+
+def test_cli_explicit_oracle_suppresses_natural_parallel_review_inference(monkeypatch):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [], "answer": "oracle review", "bridges_found": [], "oracle": {"model": "gpt-5.5"}}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Read",
+            "this",
+            "code-review",
+            "bundle.",
+            "Produce",
+            "a",
+            "concise",
+            "merge-blocking",
+            "review",
+            "finding",
+            "list.",
+            "--oracle",
+            "--oracle-backend",
+            "subagent-runner",
+            "--oracle-model",
+            "gpt-5.5",
+            "--oracle-reasoning",
+            "high",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["deep_review"] is False
+    assert captured["parallel_review"] is False
+    assert captured["oracle_model"] == "gpt-5.5"
+    assert captured["oracle_backend"] == "subagent-runner"
+    assert captured["oracle_reasoning"] == "high"
+
+
+def test_cli_explicit_oracle_suppresses_natural_cae_gap_review_inference(monkeypatch):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [], "answer": "oracle synthesis", "bridges_found": [], "oracle": {"model": "gpt-5.5"}}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Synthesize",
+            "these",
+            "design",
+            "reviews.",
+            "Do",
+            "not",
+            "run",
+            "CAE",
+            "gap",
+            "review.",
+            "--oracle",
+            "--oracle-backend",
+            "subagent-runner",
+            "--oracle-model",
+            "gpt-5.5",
+            "--oracle-reasoning",
+            "high",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["cae_gap_review"] is False
+    assert captured["oracle_model"] == "gpt-5.5"
+    assert captured["oracle_backend"] == "subagent-runner"
     assert captured["oracle_reasoning"] == "high"

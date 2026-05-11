@@ -31,7 +31,6 @@ CHUTES_FAMILIES = {
     "ds": "deepseek",
     "kimi": "kimi",
     "qwen": "qwen",
-    "research": "research",
     "text": "text",
     "default": "text",
 }
@@ -84,10 +83,9 @@ OPENCODE_PREFERENCES = {
 }
 
 CHUTES_MODELS = {
-    "deepseek": "text",
-    "kimi": "text-kimi",
-    "qwen": "text-qwen3-large",
-    "research": "text-research",
+    "deepseek": "chutes-deepseek",
+    "kimi": "chutes-kimi",
+    "qwen": "chutes-qwen",
     "text": "text",
 }
 
@@ -103,6 +101,7 @@ class ModelAliasRoute:
     raw_alias: str
     source: str
     oracle_backend: str = "scillm"
+    input_capabilities: dict[str, bool] | None = None
     warning: str | None = None
 
     @property
@@ -128,9 +127,35 @@ def resolve_model_alias_route(
     *,
     scillm_base_url: str,
     scillm_api_key: str,
-    timeout: float = 3.0,
+    timeout: float = 30.0,
+    required_input: str | None = None,
 ) -> ModelAliasRoute | None:
     """Resolve leading provider-family shorthand, if present."""
+
+    # WebGPT shorthand: `$ask webgpt ...` routes to --oracle-backend webgpt.
+    # This is a browser-driven oracle backed by the human's signed-in ChatGPT
+    # tab via surf; the tab id is auto-resolved (or supplied via --webgpt-tab-id).
+    # Accept both unquoted ($ask webgpt foo bar) and quoted ($ask "webgpt foo bar")
+    # forms by splitting the first arg on whitespace before checking the alias.
+    if question_parts:
+        first_arg = question_parts[0]
+        first_tokens = first_arg.split()
+        first_clean = _clean_token(first_tokens[0]).lower() if first_tokens else ""
+        if first_clean in {"webgpt", "chatgpt"}:
+            tail_of_first = " ".join(first_tokens[1:]).strip()
+            remaining = ([tail_of_first] if tail_of_first else []) + list(question_parts[1:])
+            if not remaining:
+                raise ValueError(f"{first_tokens[0]} requires a question after the model shorthand.")
+            return ModelAliasRoute(
+                provider_hint="webgpt",
+                family="webgpt",
+                resolved_model="webgpt",
+                question_parts=remaining,
+                raw_alias=first_tokens[0],
+                source="webgpt-controlled-tab",
+                oracle_backend="webgpt",
+                input_capabilities={"text": True, "image": False, "pdf": False},
+            )
 
     parsed = _parse_model_alias(question_parts)
     if not parsed:
@@ -145,7 +170,7 @@ def resolve_model_alias_route(
             models = fetch_opencode_go_models(scillm_base_url, scillm_api_key, timeout=timeout)
         except httpx.HTTPError as exc:
             warning = f"OpenCode Go discovery failed; used fallback map: {type(exc).__name__}"
-        resolved_model = select_opencode_model(parsed.family, models)
+        resolved_model = select_opencode_model(parsed.family, models, required_input=required_input)
         return ModelAliasRoute(
             provider_hint=parsed.provider_hint,
             family=parsed.family,
@@ -153,6 +178,7 @@ def resolve_model_alias_route(
             question_parts=parsed.question_parts,
             raw_alias=parsed.raw_alias,
             source="live-opencode-go-models" if models else "static-opencode-go-fallback",
+            input_capabilities=opencode_model_input_capabilities(resolved_model, models),
             warning=warning,
         )
 
@@ -164,6 +190,7 @@ def resolve_model_alias_route(
         question_parts=parsed.question_parts,
         raw_alias=parsed.raw_alias,
         source="chutes-configured-alias",
+        input_capabilities={"text": True, "image": False, "pdf": False},
     )
 
 
@@ -188,7 +215,12 @@ def fetch_opencode_go_models(
     return [model for model in models if isinstance(model, dict)]
 
 
-def select_opencode_model(family: str, models: list[dict[str, Any]]) -> str:
+def select_opencode_model(
+    family: str,
+    models: list[dict[str, Any]],
+    *,
+    required_input: str | None = None,
+) -> str:
     """Pick the best currently supported OpenCode Go model for a family."""
 
     normalized = OPENCODE_FAMILIES.get(family.lower(), family.lower())
@@ -205,12 +237,42 @@ def select_opencode_model(family: str, models: list[dict[str, Any]]) -> str:
             continue
         if model.get("key_configured") is False:
             continue
+        if required_input and not model_supports_input(model, required_input):
+            continue
         available.add(model_id)
 
     for model_id in preference:
         if model_id in available:
             return model_id
+    if required_input:
+        raise ValueError(f"No configured OpenCode Go {family} model supports {required_input} input.")
     return OPENCODE_FALLBACK_MODELS[normalized]
+
+
+def model_supports_input(model: dict[str, Any], input_kind: str) -> bool:
+    """Return whether model metadata reports support for an input kind."""
+    input_capabilities = model.get("input")
+    if not isinstance(input_capabilities, dict):
+        return input_kind == "text"
+    return bool(input_capabilities.get(input_kind))
+
+
+def opencode_model_input_capabilities(model_id: str, models: list[dict[str, Any]]) -> dict[str, bool]:
+    """Return input capability metadata for a selected OpenCode Go model."""
+    for model in models:
+        candidate_id = str(model.get("id") or model.get("name") or "")
+        if candidate_id != model_id:
+            continue
+        input_capabilities = model.get("input")
+        if isinstance(input_capabilities, dict):
+            return {
+                "text": bool(input_capabilities.get("text")),
+                "image": bool(input_capabilities.get("image")),
+                "pdf": bool(input_capabilities.get("pdf")),
+            }
+    if "/kimi-" in model_id:
+        return {"text": True, "image": True, "pdf": False}
+    return {"text": True, "image": False, "pdf": False}
 
 
 def resolve_chutes_model(family: str, *, exact_model: str | None = None) -> str:
