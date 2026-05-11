@@ -136,63 +136,59 @@ def parse_rounds(text: str, default: int = 1) -> int:
     return max(1, min(10, n))
 
 
-_JSON_VERDICT_RE = re.compile(
-    r'"(?:verdict|final_verdict|safety_verdict)"\s*:\s*"'
-    r'(SAFE_WITH_CONDITIONS|INSUFFICIENT_EVIDENCE|NOT_SAFE|SAFE)"',
-    re.IGNORECASE,
-)
-
-
 def extract_verdict(response: str) -> tuple[Optional[str], dict]:
     """Find the verdict JSON in a webgpt response.
 
-    Robustness layers:
-      1. Try strict json.loads on the outer {...}. Returns the parsed dict
-         when valid.
-      2. If json.loads fails (ChatGPT sometimes embeds raw newlines inside
-         JSON string fields, which is technically invalid), fall back to a
-         regex that matches `"verdict":"VALUE"` so we still surface the
-         verdict label even when the rest of the JSON is unparseable.
-      3. If even that fails, fall back to plain-text `VERDICT: VALUE`.
+    ChatGPT sometimes emits technically-invalid JSON (raw control characters
+    inside string fields, trailing commas, missing quotes). We layer:
+
+      1. Strict json.loads on the outer {...}. Preferred — returns the
+         full parsed dict when valid.
+      2. json_repair.repair_json on the same candidate. The json_repair
+         library is battle-tested for LLM output recovery; we use it
+         instead of hand-rolled fixups so edge cases (unterminated
+         strings, embedded newlines, trailing commas, single quotes)
+         are all handled consistently.
+      3. Plain-text `VERDICT: VALUE` regex fallback for when the model
+         skipped JSON entirely.
     """
     if not response:
         return None, {}
     json_match = re.search(r"\{[\s\S]*\}", response)
     if json_match:
+        candidate = json_match.group(0)
+        # 1. Strict parse first — preferred when the model behaved.
         try:
-            data = json.loads(json_match.group(0))
-            v = data.get("verdict") or data.get("final_verdict") or data.get("safety_verdict")
-            if isinstance(v, str):
-                normalised = v.strip().upper()
-                if normalised in VALID_VERDICTS:
-                    return normalised, data
-            return None, data
+            data = json.loads(candidate)
+            return _verdict_from_data(data)
         except json.JSONDecodeError:
-            # Try once more with newlines escaped inside JSON-string regions.
-            # ChatGPT occasionally embeds raw \n in string fields; this is
-            # technically invalid JSON but trivially recoverable.
+            pass
+        # 2. json_repair — handles raw newlines in strings, trailing
+        #    commas, missing quotes, single quotes, etc.
+        try:
+            from json_repair import repair_json
+        except ImportError:
+            repair_json = None  # type: ignore[assignment]
+        if repair_json is not None:
             try:
-                cleaned = re.sub(
-                    r'("(?:[^"\\]|\\.)*?)\n+(.*?")',
-                    lambda m: m.group(1) + " " + m.group(2),
-                    json_match.group(0),
-                    flags=re.DOTALL,
-                )
-                data = json.loads(cleaned)
-                v = data.get("verdict") or data.get("final_verdict") or data.get("safety_verdict")
-                if isinstance(v, str):
-                    normalised = v.strip().upper()
-                    if normalised in VALID_VERDICTS:
-                        return normalised, data
-                return None, data
+                repaired = repair_json(candidate, return_objects=True)
+                if isinstance(repaired, dict):
+                    return _verdict_from_data(repaired)
             except Exception:
                 pass
-    # Last-ditch: pull just the verdict label out via regex, return without data.
-    m = _JSON_VERDICT_RE.search(response)
-    if m:
-        return m.group(1).upper(), {}
+    # 3. Plain-text fallback for when the response was prose-only.
     m = _VERDICT_RE.search(response)
     return (m.group(1).upper() if m else None), {}
+
+
+def _verdict_from_data(data: dict) -> tuple[Optional[str], dict]:
+    """Pull the normalized verdict label out of a parsed verdict dict."""
+    v = data.get("verdict") or data.get("final_verdict") or data.get("safety_verdict")
+    if isinstance(v, str):
+        normalised = v.strip().upper()
+        if normalised in VALID_VERDICTS:
+            return normalised, data
+    return None, data
 
 
 def resolve_diff(diff_scope: str, *, cwd: Path | None = None) -> str:

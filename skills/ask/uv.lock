@@ -110,6 +110,15 @@ wheels = [
 ]
 
 [[package]]
+name = "json-repair"
+version = "0.59.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2f/70/b1b95ad29e20df1b0f4ced18c0d389e9ff372202dc40d8e02931710c4f2c/json_repair-0.59.7.tar.gz", hash = "sha256:f23c7890b7d1760185ff316421bc776d31a29290a8d45997cfaf6c3add895aaa", size = 48886, upload-time = "2026-05-11T09:19:27.464Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/05/8f5b0a35dca1d101e76dd7e2a56c66dd0fdd0ff573e1d4dcff644c3d33c2/json_repair-0.59.7-py3-none-any.whl", hash = "sha256:933fc5c81c5edabb004472e58c495f1ae656a8778e9fd26ca806ae42f3110b07", size = 47538, upload-time = "2026-05-11T09:19:25.831Z" },
+]
+
+[[package]]
 name = "loguru"
 version = "0.7.2"
 source = { registry = "https://pypi.org/simple" }
@@ -158,6 +167,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
+    { name = "json-repair" },
     { name = "loguru" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
@@ -172,6 +182,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.27.0" },
+    { name = "json-repair", specifier = ">=0.30.0" },
     { name = "loguru", specifier = ">=0.7.2,<0.7.3" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "pyyaml", specifier = ">=6.0.2" },
