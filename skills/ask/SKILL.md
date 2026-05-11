@@ -186,17 +186,26 @@ it never foregrounds.
 ./run.sh ask "summarise the review bundle" \
   --oracle --oracle-backend webgpt \
   --webgpt-url "https://chatgpt.com/c/6a0097ff-e7e0-83ea-93c2-3a6b88e2a67f"
+
+# Autonomous mode: let surf pick or create a background ChatGPT tab.
+./run.sh ask webgpt summarise the review bundle --webgpt-create-tab
 ```
 
 Behavior:
 
-- **Tab resolution.** Priority: `--webgpt-tab-id` → `--webgpt-url` → auto-resolve
-  from `surf tab.list` filtered to chatgpt.com. **Auto-resolve fails closed**
-  when 0 or >1 candidates exist — the call refuses to run rather than guess.
-  When the project agent hits this, it must ask the human to either:
-  (a) open exactly one ChatGPT tab so auto-resolve picks it, or
+- **Tab resolution.** Priority: `--webgpt-tab-id` → `--webgpt-url` →
+  `--webgpt-create-tab` → auto-resolve from `surf tab.list` filtered to
+  chatgpt.com. **Auto-resolve fails closed** when 0 or >1 candidates exist —
+  the call refuses to run rather than guess. When the project agent hits
+  this, it must ask the human to either:
+  (a) open exactly one ChatGPT tab so auto-resolve picks it,
   (b) provide a tab id from the Tab ID Viewer extension to pass through
-  `--webgpt-tab-id`.
+  `--webgpt-tab-id`, or
+  (c) re-invoke with `--webgpt-create-tab` for the agent to acquire a tab
+  autonomously (surf picks the most-recent existing chatgpt.com tab without
+  foregrounding, or creates a fresh background one if none are open). The
+  resolved tab id surfaces in `oracle_model_served: webgpt:<id>` so the
+  agent can pass it explicitly to follow-up rounds.
 - **File auto-attachment.** Absolute paths embedded in the question (e.g.
   `/tmp/foo.md`, `~/notes.md`) are read from disk and inlined under
   `## Attached files` in the prompt. Truncated at 2 MB per file.
@@ -219,6 +228,13 @@ Behavior:
   `/review-plan` compose `/ask` and inherit this backend for free —
   pass `--oracle-backend webgpt` (or set `ASK_ORACLE_BACKEND=webgpt`) to the
   underlying `/ask` call.
+- **Live sanity.** `skills/ask/sanity-webgpt.sh` exercises the full path
+  end-to-end against a real ChatGPT tab and asserts the proof contract,
+  oracle wiring, and focus invariance. Modes: `--tab-id ID`, `--url URL`,
+  `--create-tab`, or no flag (which auto-picks a single chatgpt.com tab or
+  prints a 4-option help block when 0 or >1 candidates exist). Run after
+  changes to `webgpt_runtime.py`, the oracle dispatcher, or the model
+  alias router.
 
 ## Image Generation Mode
 
