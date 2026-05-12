@@ -155,6 +155,7 @@ surf text                        # Get raw text content only
 | If the user says... | Use |
 |---|---|
 | "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id>` |
+| "recover an already completed WebGPT tab" | `surf webgpt.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
 | "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` to the above (requires `--tab-id` or `--url`) |
 | "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
 | "prove background mode works", "no-activate sanity" | `surf webgpt.no-activate-sanity --tab-id <id>` |
@@ -179,6 +180,19 @@ surf webgpt.submit \
   --stable-polls 3 \
   --timeout 900 \
   --tab-id 837343233
+```
+
+If a previous `webgpt.submit` was interrupted after ChatGPT visibly completed,
+recover the assistant-only DOM text from the controlled tab without submitting
+a new prompt:
+
+```bash
+surf webgpt.extract \
+  --tab-id 837343543 \
+  --sentinel '<<<WEBGPT_DONE:20260512T132258Z:fa18b118>>>' \
+  --output .webgpt/recovered-response.md \
+  --raw-output .webgpt/recovered-response.raw.md \
+  --meta-output .webgpt/recovered-response.meta.json
 ```
 
 If the human gives a full ChatGPT conversation URL instead of a tab id, use
@@ -221,6 +235,34 @@ Behavior:
 Do not infer WebGPT completion from spinner absence, button state, visual
 stillness, or page text outside the final assistant response. Use the sentinel
 contract for any workflow that copies WebGPT output into files.
+
+#### Bounded reviewer/executor loops
+
+For project-agent work where WebGPT is acting as an external reviewer, `$surf`
+is only the transport and proof layer. Keep the loop bounded and artifact-based:
+
+```text
+human intent
+  -> optional /interview clarification for acceptance criteria
+  -> project agent implements or gathers evidence
+  -> surf webgpt.submit sends the evidence bundle for review
+  -> project agent applies concrete corrections
+  -> repeat until PASS, BLOCKED, or max rounds
+  -> human decides only unresolved product/acceptance questions
+```
+
+Each WebGPT round must write clean output, raw output, and meta JSON. The
+review request should include:
+
+- current state
+- blocker or open question
+- proposed decision
+- evidence artifact paths
+- what changed since the previous round
+- whether a human decision is required
+
+Use `webgpt.extract` only to recover an already completed controlled tab; do
+not use it as a substitute for submitting a new evidence bundle.
 
 Real-world sanity check:
 

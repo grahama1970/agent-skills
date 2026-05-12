@@ -172,7 +172,12 @@ focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 set +e
-"$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+if command -v timeout >/dev/null 2>&1; then
+  hard_timeout_s=$((timeout_s + 60))
+  timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+else
+  "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+fi
 status=$?
 set -e
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

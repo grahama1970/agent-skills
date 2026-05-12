@@ -423,6 +423,10 @@ if [[ "$1" == "webgpt.submit" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-submit.sh" "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.extract" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-extract.sh" "${@:2}"
+fi
+
 if [[ "$1" == "webgpt.sanity" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-sanity.sh" "${@:2}"
 fi
@@ -458,6 +462,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo ""
     echo "WebGPT Handoff:"
     echo "  surf webgpt.submit --input request.md --output response.md"
+    echo "  surf webgpt.extract --tab-id ID --output response.md"
     echo "  surf webgpt.sanity      Run a real sentinel round-trip smoke"
     echo "  surf webgpt.no-activate-sanity --tab-id ID  Background controlled-tab proof"
     echo ""

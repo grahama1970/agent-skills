@@ -14,13 +14,17 @@ triggers:
   - improve prompt template
   - multi-model prompt review
   - prompt optimization
+  - review-prompt with webgpt
+  - webgpt prompt review
+  - prompt review over 2 rounds
+  - webgpt prompt contract review
 metadata:
   short-description: Multi-model prompt review loop via /scillm batch
 provides:
   - prompt-review
   - prompt-contract-review
   - deterministic-prompt-improvement
-composes: [scillm, prompt-lab, best-practices-self-improvement-loop, ask]
+composes: [scillm, prompt-lab, best-practices-self-improvement-loop, ask, project-knowledge, surf]
 
 taxonomy:
   - prompt-engineering
@@ -329,6 +333,53 @@ Artifacts are written under `artifacts/review-prompt/<run_id>/final/webgpt/`
 plus `final/webgpt-artifacts.json`. The WebGPT request is sent through
 `surf webgpt.submit`, so proof must include controlled tab id, raw response,
 clean response, sentinel metadata, and no page-chrome contamination.
+
+### WebGPT Reviewer Loop Shorthand
+
+When the user says a short prompt such as:
+
+```text
+per current changes and project knowledge, $review-prompt with webgpt over 2 rounds
+```
+
+expand it into a bounded prompt-contract reviewer/project-agent loop:
+
+1. Use `$project-knowledge` to recover the prompt purpose, consumer contract,
+   known prompt failures, required schemas, and previous review findings.
+2. Build a complete prompt contract bundle before any WebGPT call. The bundle
+   must include the full prompt templates, concrete rendered fixture, input
+   payload, expected response, validators/smoke commands, consumer code/schema,
+   invalid examples or rejection criteria, current diff, and non-goals.
+3. If required expected output or validator evidence is missing, stop with
+   `missing_expected_response` or the specific missing gate. Do not ask WebGPT
+   to judge prompt wording alone.
+4. Run the real `$ask`/WebGPT route on the complete bundle and preserve
+   request/status/events/review artifacts plus controlled-tab metadata when
+   `$surf` is used.
+5. The project agent applies or adapts valid prompt/schema/test changes, then
+   runs the deterministic validators and consumer smoke checks.
+6. Build the round-2 bundle with round-1 findings, what changed since round 1,
+   rejected findings with rationale, fresh expected-output/validator evidence,
+   and remaining open questions.
+7. Run exactly one more WebGPT review round unless round 1 blocks on a human
+   product or acceptance decision.
+8. Final status includes changed files, deterministic gate output, WebGPT/ask
+   artifact paths, unresolved risks, and whether human decision is required.
+
+Preferred human prompt:
+
+```text
+per current changes and project knowledge, $review-prompt with webgpt over 2 rounds
+```
+
+Scoped variant:
+
+```text
+per current changes, $review-prompt with webgpt over 2 rounds for the Stage 12 QRA prompt contract
+```
+
+Do not make the human write the artifact checklist in a long prompt. The skill
+owns the expansion, and the expected-response gate remains non-negotiable.
 
 ## Artifact Layout
 

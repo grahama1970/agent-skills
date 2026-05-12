@@ -32,11 +32,15 @@ triggers:
   - review based on changes
   - review with gpt-5
   - review with codex
+  - review-code with webgpt
+  - webgpt code review
+  - webgpt over 2 rounds
+  - 2 round webgpt review
 metadata:
   short-description: Multi-provider AI code review CLI
 provides:
   - code-review
-composes: [task-monitor, scillm]
+composes: [task-monitor, scillm, ask, project-knowledge]
 
 taxonomy:
   - validation
@@ -45,7 +49,25 @@ taxonomy:
 
 # review-code
 
-Submit structured code review requests to multiple AI providers and get unified diffs back.
+Submit structured code review requests to multiple AI providers and get unified
+diffs or implementation deltas back. The reviewer output is advisory until the
+project agent applies and verifies it.
+
+## Project Agent Ownership
+
+Reviewer models do not own the repository. They may return findings, patch
+suggestions, or unified diffs, but the project agent owns:
+
+- deciding which findings are valid
+- applying or adapting patches
+- preserving unrelated user changes
+- running tests and deterministic checks
+- updating runtime/status artifacts
+- deciding whether the loop continues, blocks, or is ready for handoff
+
+Do not let a reviewer model directly mutate files unless the user explicitly
+requested an isolated worker implementation and the write scope is clear.
+Prefer reviewer-as-critic, project-agent-as-integrator.
 
 ## Supported Providers & Models
 
@@ -106,6 +128,7 @@ Use the table below to map user requests to the correct command.
 | "Quick review via scillm/Codex"   | `one-shot -f file1.ts -f file2.py --context "..." --persona senior --model gpt-5.3-codex` |
 | "Review with Gemini via scillm"   | `one-shot -f file1.ts --context "..." --persona nico --model text-gemini --focus "security"` |
 | "Bundle for Web GPT review"       | `bundle --context "What changed and why" -R src/file.py -R tests/test_file.py`                 |
+| "$review-code with WebGPT over 2 rounds" | Build a scoped `bundle`, run real `$ask`/WebGPT review, apply valid fixes, regenerate the bundle with changes since round 1, run one more WebGPT review, then verify |
 
 > **💡 COST-SAVING TIP**: Always use `--provider github` for Claude models to avoid API charges. The `github` provider includes Claude models at no additional cost beyond your GitHub Copilot subscription.
 
@@ -167,6 +190,188 @@ code_review.py loop \
   --reviewer-provider openai --reviewer-model gpt-5.2-codex \
   --rounds 5 --file request.md
 ```
+
+## Async Review Backoff Loop
+
+Use this pattern when a code implementation follows an approved design,
+architecture, or review handoff and needs bounded model critique while the human
+or project agent works elsewhere.
+
+```text
+for round in 1..N:
+  1. project agent resolves the review target and current diff
+  2. reviewer model inspects files, diff, tests, and handoff constraints
+  3. reviewer returns a structured verdict
+  4. project agent applies/adapts valid changes
+  5. project agent runs tests/checks and records artifacts
+  6. stop early on satisfied, blocked, or repeated no-change verdict
+```
+
+This loop may be driven by `/ask`, `/scillm`, `review-full`, `loop`, or a
+repo-local controller. Pi/boomerang is optional context summarization; the loop
+must be resumable from artifacts without Pi.
+
+### WebGPT Reviewer Loop Shorthand
+
+When the user says a short prompt such as:
+
+```text
+per current changes and project knowledge, $review-code with webgpt over 2 rounds
+```
+
+expand it into this bounded workflow:
+
+1. Use `$project-knowledge` only to recover current project facts, prior
+   decisions, and known failure modes.
+2. Resolve a tight code review scope from the active task and current diff.
+   If the worktree is broad and no scope can be inferred safely, ask one
+   concise scope question before bundling.
+3. Create a `$review-code bundle` with selected files, scoped diff,
+   tests/checks run so far, expected contracts, non-goals, and known risks.
+4. Send the complete bundle through the real `$ask` runtime to WebGPT or the
+   configured WebGPT-backed reviewer. Preserve `$ask` request/status/events and
+   review artifacts.
+5. The project agent applies or adapts valid findings. The reviewer does not
+   mutate files and does not own the repository.
+6. Run relevant tests/checks, then create the round-2 bundle with:
+   - round-1 reviewer findings
+   - what changed since round 1
+   - remaining open questions or rejected findings with rationale
+   - fresh diff and verification output
+7. Run exactly one more WebGPT review round unless round 1 is blocked by a
+   human acceptance question.
+8. Final status includes changed files, verification commands, reviewer
+   artifact paths, unresolved risks, and whether human decision is required.
+
+Preferred human prompt:
+
+```text
+per current changes and project knowledge, $review-code with webgpt over 2 rounds
+```
+
+Scoped variant:
+
+```text
+per current changes, $review-code with webgpt over 2 rounds for skills/surf and surf-cli
+```
+
+Do not make the human write the orchestration details in a long prompt. The
+skill owns the expansion; the human owns scope, intent, and acceptance
+questions.
+
+### Required Loop Artifacts
+
+Create a stable directory for long or asynchronous loops:
+
+```text
+reviews/<surface-or-feature>/code-loop/
+  state.json
+  events.jsonl
+  rounds/
+    001/
+      request.md
+      diff.patch
+      reviewer.md
+      verdict.json
+      applied.patch
+      test_results.txt
+      summary.md
+    002/
+      ...
+  final/
+    implementation_handoff.md
+    verification.md
+```
+
+`state.json` must include:
+
+```json
+{
+  "state": "running | needs_patch | waiting_review | satisfied | blocked | failed",
+  "round": 2,
+  "target": "src/components/PdfEvidenceCase.tsx",
+  "latest_verdict": "rounds/002/verdict.json",
+  "latest_tests": "rounds/002/test_results.txt",
+  "next_action": "patch | review | ask_human | ship"
+}
+```
+
+### SSE Event Contract
+
+When the loop runs asynchronously, record or expose SSE-shaped events:
+
+```text
+event: round_started
+data: {"round":2,"target":"PdfEvidenceCase"}
+
+event: reviewer_progress
+data: {"round":2,"model":"gpt-5.3-codex","content_chars":2411}
+
+event: reviewer_verdict
+data: {"round":2,"verdict":"needs_changes","blocking_findings":[...]}
+
+event: patch_started
+data: {"round":2}
+
+event: tests_finished
+data: {"round":2,"command":"npm test","status":"passed"}
+
+event: satisfied
+data: {"round":4,"handoff":"final/implementation_handoff.md"}
+```
+
+If the reviewer route is `/ask`, preserve its runtime artifacts and map
+`oracle_scillm_call_started`, `oracle_scillm_stream_progress`,
+`oracle_scillm_call_finished`, and failures into the loop `events.jsonl`.
+
+### Reviewer Verdict Schema
+
+Every reviewer round must return:
+
+```json
+{
+  "verdict": "satisfied | needs_changes | blocked",
+  "blocking_findings": [],
+  "non_blocking_findings": [],
+  "patch_suggestions": [],
+  "tests_to_run": [],
+  "do_not_do": []
+}
+```
+
+`satisfied` is only valid after the reviewer has inspected the current diff and
+the project agent has recorded successful verification commands. A reviewer
+must not mark implementation satisfied from a stale request bundle.
+
+### Design-To-Code Handoff
+
+When implementation follows `$review-design`, include the design handoff in the
+code review request:
+
+- approved screenshot path
+- approved mockup/source path
+- required components and states
+- animation requirements
+- accessibility and keyboard requirements
+- explicit non-goals
+- screenshot checks that must still pass after implementation
+
+For UI work, code review does not replace rendered verification. After applying
+review-code findings, the project agent must rerun browser/CDP or app-surface
+verification and include the screenshot artifact path in the final status.
+
+### Code Loop Stop Conditions
+
+Stop the loop when any of these occur:
+
+- reviewer verdict is `satisfied` and tests/render checks pass
+- the same blocking finding repeats after a patch without new evidence
+- reviewer requests information not present in the target or handoff
+- test commands cannot be run or produce inconclusive output
+- the human changes scope or constraints
+
+On stop, write a final `implementation_handoff.md` or `blocked.md` instead of
+leaving the loop state implicit.
 
 ### bundle
 

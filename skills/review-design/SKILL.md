@@ -17,6 +17,10 @@ triggers:
   - check the UX
   - assess the design
   - design feedback
+  - review-design with webgpt
+  - webgpt design review
+  - webgpt visual review
+  - design review over 2 rounds
 allowed-tools:
   - Bash
   - Python
@@ -25,7 +29,7 @@ metadata:
 
 provides:
   - review-design
-composes: [task-monitor, memory, scillm]
+composes: [task-monitor, memory, scillm, ask, project-knowledge, surf]
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
@@ -200,6 +204,55 @@ does not prove WebGPT inspected screenshot pixels unless screenshots were
 manually uploaded or a future file-attachment path records that upload. A
 text-only WebGPT response may critique design requirements and code context, but
 it is not a visual review verdict.
+
+### WebGPT Reviewer Loop Shorthand
+
+When the user says a short prompt such as:
+
+```text
+per current changes and project knowledge, $review-design with webgpt over 2 rounds
+```
+
+expand it into a bounded design reviewer/project-agent loop:
+
+1. Use `$project-knowledge` and current artifacts to recover product intent,
+   accepted design direction, known visual failures, non-goals, and any
+   previous reviewer findings.
+2. Capture or reuse fresh screenshots that visibly prove the current state.
+   Include cropped/zoomed screenshots for the exact defect area when relevant.
+3. Build a `webgpt-review`, `bundle-upload`, or equivalent review package with
+   screenshots, relevant React/QML/HTML/CSS, design tokens, constraints, known
+   issues, and exact design questions.
+4. Send the complete package through the real `$ask`/WebGPT route when the
+   request is text-only, or prepare the upload package when screenshot pixels
+   must be inspected manually. Preserve request, response, controlled-tab, and
+   package artifacts.
+5. The project agent applies or adapts valid design findings, re-renders the
+   surface, and captures a fresh screenshot.
+6. Build the round-2 package with round-1 findings, what changed since round 1,
+   rejected findings with rationale, fresh screenshot evidence, and remaining
+   questions.
+7. Run exactly one more WebGPT review round unless round 1 blocks on a human
+   product decision.
+8. Final status includes screenshot artifact paths, package/reviewer artifacts,
+   changed files, visual verification statement, unresolved risks, and whether
+   human decision is required.
+
+Preferred human prompt:
+
+```text
+per current changes and project knowledge, $review-design with webgpt over 2 rounds
+```
+
+Scoped variant:
+
+```text
+per current changes, $review-design with webgpt over 2 rounds for the QRA evidence pane
+```
+
+Do not make the human encode the workflow in a long prompt. The skill owns the
+loop expansion; the human owns product intent, hard constraints, and acceptance
+decisions.
 
 ### WebGPT Review Command
 
