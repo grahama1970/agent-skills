@@ -277,6 +277,30 @@ class FinalReportClosureTests(unittest.TestCase):
         self.assertFalse(by_path["run-artifacts/post-patch-verification.MISSING.json"]["exists"])
         self.assertIsNotNone(by_path["run-artifacts/post-patch-verification.MISSING.json"]["sha256"])
 
+    def test_review_package_contains_product_patch_handoff_when_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._make_run_root(tmp)
+            patch_dir = root / "openclaw-product-patch"
+            patch_dir.mkdir()
+            (patch_dir / "0001-fix-gateway-reject-hook-websocket-upgrades.patch").write_text("patch\n")
+            (patch_dir / "commit-summary.txt").write_text("summary\n")
+            report_json, report_markdown = final_report.build_report(root)
+            (root / "HACK_FINAL_REPORT.json").write_text(json.dumps(report_json, indent=2) + "\n")
+            (root / "HACK_FINAL_REPORT.md").write_text(report_markdown)
+            (root / "HACK_FINAL_REPORT.html").write_text(final_infographic.build_html(root))
+            output = root / "package.zip"
+            package_review.main_for_test(root, output)
+
+            with zipfile.ZipFile(output) as archive:
+                names = set(archive.namelist())
+                manifest = json.loads(archive.read("MANIFEST.json"))
+
+        self.assertIn("product-patch/0001-fix-gateway-reject-hook-websocket-upgrades.patch", names)
+        self.assertIn("product-patch/commit-summary.txt", names)
+        by_path = {entry["path"]: entry for entry in manifest["entries"]}
+        self.assertTrue(by_path["product-patch/0001-fix-gateway-reject-hook-websocket-upgrades.patch"]["exists"])
+        self.assertIsNotNone(by_path["product-patch/0001-fix-gateway-reject-hook-websocket-upgrades.patch"]["sha256"])
+
     def test_final_infographic_renders_verified_fixed_without_stale_blocked_copy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = self._make_run_root(tmp)

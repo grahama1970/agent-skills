@@ -107,6 +107,10 @@ def build_package(run_root: pathlib.Path, output: pathlib.Path) -> pathlib.Path:
         for path in sorted((evolve_dir / "promotion-tasks").glob("*")) if (evolve_dir / "promotion-tasks").exists() else []:
             if path.is_file():
                 add_existing(bundle, manifest, path, f"raw-ledgers/promotion-tasks/{path.name}")
+        product_patch_dir = run_root / "openclaw-product-patch"
+        for path in sorted(product_patch_dir.glob("*")) if product_patch_dir.exists() else []:
+            if path.is_file():
+                add_existing(bundle, manifest, path, f"product-patch/{path.name}")
 
         manifest_payload = {
             "schema": "hack.final_review_package_manifest.v1",
