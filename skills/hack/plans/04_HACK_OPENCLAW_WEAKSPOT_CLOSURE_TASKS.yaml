@@ -1,0 +1,749 @@
+version: 1
+kind: orchestrate-plan
+repo_root: /home/graham/workspace/experiments/agent-skills
+
+metadata:
+  title: "/hack OpenClaw Known-Weakspot Closure Plan"
+  goal: "Fix and prove the known /hack weak spots before any fresh OpenClaw green claim: Dogpile citation provenance, successful-hack origin attribution, fresh mode coverage, battle evidence, container provenance, scoring/gate ledgers, fail-closed final reports, HTML visual proof, and patch-verification status."
+  plan_type: code
+  created: "2026-05-10"
+  primary_persona:
+    name: "Project agent"
+    role: "The Codex/project agent responsible for proving /hack works against real OpenClaw artifacts, not synthetic or self-serving tests."
+    source: "skills/hack/SKILL.md, /hack project knowledge, and OpenClaw closure artifacts"
+  goal_closure:
+    requested: true
+    max_replans: 3
+    close_only_when:
+      - "The plan starts by fixing/validating every currently known weak spot before rerunning OpenClaw."
+      - "Dogpile or seed evidence for every successful hack has exact origin attribution, or the report explicitly labels the hack as agent_generated_mutation."
+      - "OpenClaw preflight captures target repo, commit, branch, Docker/runtime details, and target reachability."
+      - "session-audit runs against real OpenClaw source or fails closed with a concrete artifact."
+      - "chaos-campaign is validated as generation-zero exploration inside the evolve lifecycle or fails closed if the CLI entrypoint is absent."
+      - "evolve-campaign runs a fresh multi-generation OpenClaw campaign with scoring, classification, gate reasons, and promotion tasks."
+      - "battle runs against the real OpenClaw target or fails closed with a concrete incompatibility artifact."
+      - "Final report artifacts exist as HACK_FINAL_REPORT.json, HACK_FINAL_REPORT.md, and HACK_FINAL_REPORT.html."
+      - "The final report names successful hacks, hack groups, useful Dogpile/source/fuzzing evidence, mutation lineage, false-green pruning, patch status, and reviewer actions."
+      - "HTML visual proof is rendered and inspected from a fresh screenshot marker before closure."
+  no_self_serving_tests:
+    - "No mocked OpenClaw service."
+    - "No synthetic vulnerable app substituted for OpenClaw."
+    - "No pass from HTTP 200 alone."
+    - "No pass from unit tests alone."
+    - "No invented Dogpile citation, hash, timestamp, CVSS, or scoring formula."
+    - "No green if post-patch verification is missing; use blocked_patch_not_applied instead."
+
+execution:
+  max_concurrency: 1
+  wave_barrier: true
+  scheduling_policy: wave_then_dependency
+
+capability_overlap:
+  - "/memory recall found existing /hack project knowledge and the prior OpenClaw defect: live evolve artifacts existed, but report provenance and Dogpile citation quality were weak."
+  - "Skill discovery: CALL /hack for session-audit, chaos-campaign, evolve-campaign, battle delegation, and final reports."
+  - "Skill discovery: CALL /dogpile for citation-bearing seed evidence; do not replace it with informal research."
+  - "Skill discovery: CALL /battle through /hack battle mode; distinguish ineffective battle output from a pass."
+  - "Skill discovery: CALL /project-infographic and /best-practices-infographic for the final HTML/CSS/SVG report and visual assessment."
+  - "Skill discovery: CALL /review-plan and /orchestrate for plan validation/execution; use local runner tasks, not /code-runner, because this closure tests /hack itself."
+  - "Decision: EXTEND /hack only where closure exposes missing fail-closed contracts; do not create a parallel security framework."
+
+questions_blockers: []
+
+assumptions:
+  - "OpenClaw source is available from the existing /hack session artifact unless a fresh checkout path is supplied."
+  - "OpenClaw live gateway is authorized and expected at http://127.0.0.1:18789."
+  - "If OpenClaw is unreachable, missing, or unauthorized, the correct result is a blocked artifact, not a fake report."
+
+lanes:
+  - id: "0"
+    label: "Wave 0: Known weak spots first"
+  - id: "1"
+    label: "Wave 1: Fresh OpenClaw mode coverage"
+  - id: "2"
+    label: "Wave 2: Findings and report generation"
+  - id: "3"
+    label: "Wave 3: Closure proof"
+
+tasks:
+  - id: "0.1"
+    title: "Write weakspot closure checklist"
+    gate: "All known weak spots are explicit, executable closure gates before OpenClaw is rerun."
+    lane: "0"
+    runner: local
+    depends_on: []
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack, memory]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=/mnt/storage12tb/artifacts/agent-skills/hack/openclaw-weakspot-closure-$(date -u +%Y%m%dT%H%M%SZ)
+      mkdir -p "$RUN_ROOT"
+      python3 - <<'PY'
+      import json, pathlib, time
+      root = pathlib.Path("/mnt/storage12tb/artifacts/agent-skills/hack")
+      run_root = sorted(root.glob("openclaw-weakspot-closure-*"))[-1]
+      weakspots = [
+        "dogpile_exact_citation_spans_missing",
+        "successful_hack_origin_attribution_must_be_fail_closed",
+        "fresh_current_code_openclaw_run_required",
+        "session_audit_real_repo_mode_must_be_revalidated",
+        "chaos_campaign_must_be_generation_zero_not_separate_semantics",
+        "evolve_campaign_must_run_multi_generation_with_scoring_and_gates",
+        "battle_mode_must_produce_real_artifacts_or_incompatibility_blocker",
+        "container_commit_branch_image_digest_provenance_missing",
+        "scoring_and_gate_reasons_need_ledger_extraction",
+        "final_json_md_html_report_must_be_required",
+        "html_report_requires_fresh_visual_proof",
+        "patch_status_must_remain_blocked_until_patch_and_rerun_exist",
+      ]
+      data = {
+        "status": "weakspots_declared",
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "run_root": str(run_root),
+        "weakspots": weakspots,
+        "close_only_when_all_have_evidence": True,
+      }
+      (run_root / "WEAKSPOT_CLOSURE_CHECKLIST.json").write_text(json.dumps(data, indent=2) + "\n")
+      pathlib.Path("/tmp/hack-openclaw-weakspot-run-root.txt").write_text(str(run_root))
+      print(json.dumps(data, indent=2))
+      PY
+    tests:
+      - "test -f /tmp/hack-openclaw-weakspot-run-root.txt"
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); data=json.loads((root/'WEAKSPOT_CLOSURE_CHECKLIST.json').read_text()); assert len(data['weakspots']) >= 12; assert data['close_only_when_all_have_evidence'] is True\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); data=json.loads((root/'WEAKSPOT_CLOSURE_CHECKLIST.json').read_text()); assert data['status']=='weakspots_declared'; print(root)\nPY"
+      assertion: "The plan has a concrete weakspot ledger before executing any fresh OpenClaw mode."
+
+  - id: "0.2"
+    title: "Validate citation and origin report contract"
+    gate: "A successful hack without exact origin attribution or explicit agent_generated_mutation is a report failure."
+    lane: "0"
+    runner: local
+    depends_on: ["0.1"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack, dogpile]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      python3 - <<'PY'
+      import json, pathlib, re
+      run_root = pathlib.Path("/tmp/hack-openclaw-weakspot-run-root.txt").read_text().strip()
+      root = pathlib.Path(run_root)
+      contract = {
+        "status": "required",
+        "successful_hack_origin_fields": [
+          "origin_type",
+          "origin_label",
+          "source_artifact",
+          "source_location",
+          "citation_text_or_agent_generated_mutation_reason",
+        ],
+        "allowed_origin_types": [
+          "dogpile_citation",
+          "validated_seed_lane",
+          "scanner_finding",
+          "source_code",
+          "memory_project_knowledge",
+          "greybox_fuzzing_evidence",
+          "agent_generated_mutation",
+        ],
+        "fail_if_missing": True,
+      }
+      skill = pathlib.Path("skills/hack/SKILL.md").read_text()
+      required_terms = ["citation", "agent_generated_mutation", "HACK_FINAL_REPORT.html"]
+      missing = [term for term in required_terms if term not in skill]
+      contract["skill_contract_terms_present"] = not missing
+      contract["missing_terms"] = missing
+      (root / "origin-citation-contract.json").write_text(json.dumps(contract, indent=2) + "\n")
+      if missing:
+          raise SystemExit(f"missing report contract terms: {missing}")
+      print(json.dumps(contract, indent=2))
+      PY
+    tests:
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); data=json.loads((pathlib.Path(root)/'origin-citation-contract.json').read_text()); assert data['fail_if_missing'] is True; assert data['skill_contract_terms_present'] is True\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); data=json.loads((pathlib.Path(root)/'origin-citation-contract.json').read_text()); assert 'agent_generated_mutation' in data['allowed_origin_types']; print('origin contract ready')\nPY"
+      assertion: "Successful-hack origins are a hard report contract, not optional prose."
+
+  - id: "0.3"
+    title: "Preflight real OpenClaw provenance"
+    gate: "Fresh run must capture repo, commit, branch, Docker/runtime details, and target health before modes run."
+    lane: "0"
+    runner: local
+    depends_on: ["0.2"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      SESSION=/mnt/storage12tb/artifacts/agent-skills/hack/session-20260505T211914Z-openclaw-openclaw
+      REPO="$SESSION/target/repo"
+      TARGET=http://127.0.0.1:18789
+      test -d "$REPO"
+      python3 - <<'PY'
+      import json, pathlib, subprocess, urllib.request, time
+      run_root = pathlib.Path("/tmp/hack-openclaw-weakspot-run-root.txt").read_text().strip()
+      root = pathlib.Path(run_root)
+      repo = pathlib.Path("/mnt/storage12tb/artifacts/agent-skills/hack/session-20260505T211914Z-openclaw-openclaw/target/repo")
+      session = repo.parents[1]
+      target = "http://127.0.0.1:18789"
+      def cmd(args, cwd=None):
+          try:
+              return {"ok": True, "stdout": subprocess.check_output(args, cwd=cwd, text=True, stderr=subprocess.STDOUT).strip(), "error": None}
+          except subprocess.CalledProcessError as exc:
+              return {"ok": False, "stdout": (exc.output or "").strip(), "error": f"{type(exc).__name__}: exit={exc.returncode}"}
+          except Exception as exc:
+              return {"ok": False, "stdout": "", "error": f"{type(exc).__name__}: {exc}"}
+      def read_log(name):
+          path = session / "logs" / name
+          if not path.exists():
+              return ""
+          text = path.read_text(errors="replace")
+          marker = "## stdout"
+          if marker in text:
+              after = text.split(marker, 1)[1]
+              return after.split("## stderr", 1)[0].strip()
+          return text.strip()
+      def git_field(args, fallback_log):
+          result = cmd(args, cwd=repo)
+          if result["ok"] and result["stdout"]:
+              return {"value": result["stdout"], "source": "git", "error": None}
+          fallback = read_log(fallback_log)
+          if fallback:
+              return {"value": fallback, "source": f"session-log:{fallback_log}", "error": result["error"]}
+          return {"value": None, "source": "missing", "error": result["error"]}
+      health = {}
+      for path in ["/", "/healthz", "/readyz"]:
+          try:
+              with urllib.request.urlopen(target + path, timeout=5) as res:
+                  health[path] = {"status": res.status, "content_type": res.headers.get("content-type", ""), "body_prefix": res.read(256).decode("utf-8", "replace")}
+          except Exception as exc:
+              health[path] = {"error": type(exc).__name__, "message": str(exc)}
+      images = cmd(["docker", "images", "--digests", "--format", "{{.Repository}}:{{.Tag}} {{.Digest}} {{.ID}}"])
+      docker_version = cmd(["docker", "version", "--format", "{{.Server.Version}}"])
+      commit = git_field(["git", "rev-parse", "HEAD"], "target-head.log")
+      branch = git_field(["git", "branch", "--show-current"], "target-branch.log")
+      origin = git_field(["git", "remote", "get-url", "origin"], "target-origin.log")
+      digest_lines = images["stdout"].splitlines()[:100] if images["ok"] else []
+      docker_digest_captured = any(
+          line.startswith("hack-session-scanner:")
+          and len(line.split()) >= 2
+          and line.split()[1].startswith("sha256:")
+          for line in digest_lines
+      )
+      provenance_complete = all([commit["value"], branch["value"], origin["value"], docker_version["ok"], docker_digest_captured])
+      data = {
+          "status": "ready" if health.get("/healthz", {}).get("status") == 200 and health.get("/readyz", {}).get("status") == 200 else "blocked_target_unreachable",
+          "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+          "target": target,
+          "repo": str(repo),
+          "origin": origin["value"],
+          "origin_source": origin["source"],
+          "commit": commit["value"],
+          "commit_source": commit["source"],
+          "branch": branch["value"],
+          "branch_source": branch["source"],
+          "git_errors": {k: v["error"] for k, v in {"origin": origin, "commit": commit, "branch": branch}.items() if v["error"]},
+          "docker_version": docker_version["stdout"] if docker_version["ok"] else None,
+          "docker_error": docker_version["error"],
+          "docker_images_digest_listing": digest_lines,
+          "docker_image_digest_captured": docker_digest_captured,
+          "provenance_complete": provenance_complete,
+          "health": health,
+      }
+      (root / "OPENCLAW_PREFLIGHT.json").write_text(json.dumps(data, indent=2) + "\n")
+      if data["status"] != "ready":
+          raise SystemExit(json.dumps(data, indent=2))
+      if not data["commit"] or not data["branch"] or not data["origin"]:
+          raise SystemExit(json.dumps(data, indent=2))
+      print(json.dumps(data, indent=2))
+      PY
+    tests:
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'OPENCLAW_PREFLIGHT.json').read_text()); assert d['status']=='ready'; assert d['commit'] and not str(d['commit']).startswith('ERROR:'); assert d['branch'] and not str(d['branch']).startswith('ERROR:'); assert d['origin']; assert d['docker_version']; assert d['health']['/healthz']['status']==200\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'OPENCLAW_PREFLIGHT.json').read_text()); assert d['repo']; assert d['commit']; assert d['branch'] is not None; assert d['commit_source'] in ('git','session-log:target-head.log'); print(d['commit'])\nPY"
+      assertion: "OpenClaw provenance is captured before security mode execution."
+
+  - id: "1.1"
+    title: "Run fresh session-audit on OpenClaw"
+    gate: "session-audit proves current scanner/report behavior on real OpenClaw source or emits a blocker."
+    lane: "1"
+    runner: local
+    depends_on: ["0.3"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      REPO=$(python3 - <<'PY'
+      import json, pathlib
+      root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip()
+      print(json.loads((pathlib.Path(root)/'OPENCLAW_PREFLIGHT.json').read_text())['repo'])
+      PY
+      )
+      ./skills/hack/run.sh session-audit "$REPO" \
+        --session-root "$RUN_ROOT" \
+        --target-url http://127.0.0.1:18789 \
+        --external-target \
+        --probe-exploits || true
+      python3 - <<'PY'
+      import json, pathlib
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      sessions=sorted(root.glob("session-*"))
+      data={"status":"blocked_missing_session_audit_artifacts","sessions":[str(p) for p in sessions]}
+      if sessions:
+          latest=sessions[-1]
+          reports=latest/"reports"
+          data.update({
+              "status": "ran",
+              "session_dir": str(latest),
+              "has_hack_report": (reports/"HACK_REPORT.md").exists(),
+              "has_semgrep": (reports/"semgrep.json").exists(),
+              "has_launch_plan": (reports/"target-launch-plan.json").exists(),
+          })
+      (root/"session-audit-assessment.json").write_text(json.dumps(data, indent=2)+"\n")
+      assert data["status"] == "ran", data
+      assert data["has_hack_report"], data
+      print(json.dumps(data, indent=2))
+      PY
+    tests:
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'session-audit-assessment.json').read_text()); assert d['status']=='ran'; assert d['has_hack_report']\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'session-audit-assessment.json').read_text()); print(d['session_dir'])\nPY"
+      assertion: "session-audit produced real OpenClaw artifacts in the closure run root."
+
+  - id: "1.2"
+    title: "Acquire citation-bearing Dogpile seed"
+    gate: "Dogpile evidence must include exact source artifacts/locations or the report must mark successful hacks as agent-generated mutations."
+    lane: "1"
+    runner: local
+    depends_on: ["1.1"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [dogpile, hack]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      SESSION_ASSESS="$RUN_ROOT/session-audit-assessment.json"
+      python3 - <<'PY'
+      import json, pathlib, time
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      session=json.loads((root/"session-audit-assessment.json").read_text())
+      seed={
+          "status":"citation_seed_contract_created",
+          "created_at":time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+          "target_url":"http://127.0.0.1:18789",
+          "required_dogpile_question":"Which OpenClaw exploit hypotheses should seed /hack evolve-campaign, with exact citations to Dogpile report text, scanner artifacts, or source files for each lane?",
+          "source_artifacts":[
+              session.get("session_dir",""),
+              str(root/"OPENCLAW_PREFLIGHT.json"),
+              str(root/"origin-citation-contract.json")
+          ],
+          "minimum_lane_citation_fields":["lane","origin_type","source_artifact","source_location","citation_text"],
+          "fallback_if_absent":"agent_generated_mutation",
+      }
+      (root/"dogpile-citation-seed-contract.json").write_text(json.dumps(seed, indent=2)+"\n")
+      print(json.dumps(seed, indent=2))
+      PY
+      ./skills/dogpile/run.sh "OpenClaw /hack seed evidence with exact citations for WebSocket control routes, auth/session, API protocol, filesystem/path, child-process/tool, parser/dependency, and stateful workflow exploit lanes. Cite exact source artifacts or Dogpile report text for each lane; if no citation exists, say uncited." > "$RUN_ROOT/dogpile-openclaw-citation-run.txt" || true
+      python3 - <<'PY'
+      import json, pathlib
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      text=(root/"dogpile-openclaw-citation-run.txt").read_text(errors="replace") if (root/"dogpile-openclaw-citation-run.txt").exists() else ""
+      assessment={
+          "status":"needs_exact_citation_extraction" if "uncited" in text.lower() or len(text.strip()) < 200 else "dogpile_output_available",
+          "output_path":str(root/"dogpile-openclaw-citation-run.txt"),
+          "output_chars":len(text),
+          "contains_uncited": "uncited" in text.lower(),
+      }
+      (root/"dogpile-citation-assessment.json").write_text(json.dumps(assessment, indent=2)+"\n")
+      print(json.dumps(assessment, indent=2))
+      PY
+    tests:
+      - "test -f $(cat /tmp/hack-openclaw-weakspot-run-root.txt)/dogpile-citation-seed-contract.json"
+      - "test -f $(cat /tmp/hack-openclaw-weakspot-run-root.txt)/dogpile-citation-assessment.json"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'dogpile-citation-assessment.json').read_text()); assert d['output_path']; print(d['status'])\nPY"
+      assertion: "Dogpile citation weakness is explicitly tested and carried into final report generation."
+
+  - id: "1.3"
+    title: "Run fresh chaos and evolve campaigns"
+    gate: "OpenClaw chaos and evolve both produce real artifacts; evolve must show multi-generation scoring and gates."
+    lane: "1"
+    runner: local
+    depends_on: ["1.2"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      SEED_ROOT=/mnt/storage12tb/artifacts/agent-skills/hack/openclaw-e2e-20260509T174851Z
+      SCANNER=$(python3 - <<'PY'
+      import json, pathlib
+      root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip()
+      d=json.loads((pathlib.Path(root)/'session-audit-assessment.json').read_text())
+      print(str(pathlib.Path(d['session_dir'])/'reports'/'semgrep.json'))
+      PY
+      )
+      ./skills/hack/run.sh validate-seed "$SEED_ROOT/openclaw-evolution-seed.json" --verify-paths --result-output "$RUN_ROOT/openclaw-seed-validation.json"
+      ./skills/hack/run.sh chaos-campaign http://127.0.0.1:18789 --output-root "$RUN_ROOT" --duration-minutes 1 --max-attempts 64 --seed 260610 --scanner-findings "$SCANNER" --dogpile-report "$RUN_ROOT/dogpile-openclaw-citation-run.txt" || true
+      ./skills/hack/run.sh evolve-campaign http://127.0.0.1:18789 --output-root "$RUN_ROOT" --duration-minutes 10 --max-generations 4 --max-attempts 128 --population-size 24 --seed 260611 --seed-json "$SEED_ROOT/openclaw-evolution-seed.json" --seed-validation "$RUN_ROOT/openclaw-seed-validation.json" --scanner-findings "$SCANNER" --dogpile-report "$RUN_ROOT/dogpile-openclaw-citation-run.txt"
+      python3 - <<'PY'
+      import json, pathlib, collections
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      chaos=sorted(root.glob("chaos-campaign-*"))
+      evolve=sorted(root.glob("evolve-campaign-*-127.0.0.1-18789"))
+      assert chaos, "missing chaos artifacts"
+      assert evolve, "missing evolve artifacts"
+      ev=evolve[-1]
+      attempts=[json.loads(line) for line in (ev/"attempts.jsonl").read_text().splitlines() if line.strip()]
+      anomalies=[json.loads(line) for line in (ev/"anomalies.jsonl").read_text().splitlines() if line.strip()] if (ev/"anomalies.jsonl").exists() else []
+      summary=json.loads((ev/"summary.json").read_text())
+      generations=sorted(ev.glob("generation-*.json"))
+      classes=collections.Counter(a.get("classification","unknown") for a in attempts)
+      data={
+          "chaos_dir":str(chaos[-1]),
+          "evolve_dir":str(ev),
+          "attempt_count":len(attempts),
+          "anomaly_count":len(anomalies),
+          "generation_count":len(generations),
+          "classifications":dict(classes),
+          "summary":summary,
+      }
+      (root/"fresh-campaign-assessment.json").write_text(json.dumps(data, indent=2)+"\n")
+      assert data["generation_count"] >= 4, data
+      assert data["attempt_count"] >= 48, data
+      print(json.dumps(data, indent=2))
+      PY
+    tests:
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'fresh-campaign-assessment.json').read_text()); assert d['generation_count'] >= 4; assert d['attempt_count'] >= 48\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'fresh-campaign-assessment.json').read_text()); print(d['evolve_dir'])\nPY"
+      assertion: "Fresh OpenClaw chaos/evolve coverage is real and multi-generation."
+
+  - id: "1.4"
+    title: "Run battle mode against OpenClaw"
+    gate: "battle must create real mode evidence or a concrete incompatibility blocker; zero findings is not automatically success."
+    lane: "1"
+    runner: local
+    depends_on: ["0.3"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack, battle]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      REPO=$(python3 - <<'PY'
+      import json, pathlib
+      root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip()
+      print(json.loads((pathlib.Path(root)/'OPENCLAW_PREFLIGHT.json').read_text())['repo'])
+      PY
+      )
+      START_TS=$(date +%s)
+      echo "$START_TS" > "$RUN_ROOT/battle-start-epoch.txt"
+      set +e
+      ./skills/hack/run.sh battle "$REPO" --rounds 5 > "$RUN_ROOT/battle-command.log" 2>&1
+      BATTLE_EXIT=$?
+      set -e
+      echo "$BATTLE_EXIT" > "$RUN_ROOT/battle-exit-code.txt"
+      python3 - <<'PY'
+      import json, pathlib, os, re
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      start=int((root/"battle-start-epoch.txt").read_text().strip())
+      log_path=root/"battle-command.log"
+      exit_code=int((root/"battle-exit-code.txt").read_text().strip())
+      assert log_path.exists(), "battle-command.log was not created"
+      log=log_path.read_text(errors="replace")
+      candidates=list(pathlib.Path("skills/battle/battles").glob("*.json")) + list(pathlib.Path("skills/battle/reports").glob("*.md"))
+      fresh=[p for p in candidates if p.exists() and int(p.stat().st_mtime) >= start]
+      limitations=[]
+      lower=log.lower()
+      if "memory" in lower and ("unavailable" in lower or "not available" in lower or "failed" in lower or "500" in lower):
+          limitations.append("memory_skill_unavailable")
+      if "dogpile" in lower and ("unavailable" in lower or "not available" in lower or "failed" in lower or "not found" in lower):
+          limitations.append("dogpile_skill_unavailable")
+      if "null production" in lower:
+          limitations.append("null_production_no_findings")
+      if "0 findings" in lower or "findings: 0" in lower:
+          limitations.append("zero_findings_not_success")
+      if exit_code != 0:
+          limitations.append(f"battle_exit_code_{exit_code}")
+      if fresh and limitations:
+          status="battle_ran_with_limitations"
+      elif fresh:
+          status="battle_ran_with_fresh_artifacts"
+      elif exit_code == 0:
+          status="battle_ran_no_fresh_artifacts_not_success"
+      else:
+          status="battle_blocked_no_fresh_artifacts"
+      data={
+          "status":status,
+          "exit_code": exit_code,
+          "command_log": str(log_path),
+          "fresh_battle_artifacts":[str(p) for p in fresh[:200]],
+          "battle_files":[str(log_path), *[str(p) for p in fresh[:200]]],
+          "limitations": limitations,
+          "log_excerpt": log[-4000:],
+          "zero_finding_is_not_success": True,
+      }
+      (root/"battle-mode-assessment.json").write_text(json.dumps(data, indent=2)+"\n")
+      assert data["command_log"], data
+      assert data["status"] != "ran_with_artifacts", data
+      print(json.dumps(data, indent=2))
+      PY
+    tests:
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'battle-mode-assessment.json').read_text()); assert d['command_log']; assert 'fresh_battle_artifacts' in d; assert d['zero_finding_is_not_success'] is True; assert d['status'] != 'ran_with_artifacts'\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'battle-mode-assessment.json').read_text()); print(d['status'])\nPY"
+      assertion: "battle mode is covered with real artifacts or fails closed."
+
+  - id: "1.5"
+    title: "Run Docker focused WebSocket repro"
+    gate: "A proof candidate is not a successful hack until a focused Docker repro artifact exists."
+    lane: "1"
+    runner: local
+    depends_on: ["1.3"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      EVOLVE_DIR=$(ls -td "$RUN_ROOT"/evolve-campaign-*-127.0.0.1-18789 | head -1)
+      mkdir -p "$EVOLVE_DIR/proof-candidates"
+      PROOF_SCRIPT="$RUN_ROOT/focused_websocket_repro.py"
+      cat > "$PROOF_SCRIPT" <<'PY'
+      import base64, hashlib, json, os, socket, time
+      host='127.0.0.1'; port=18789; path='/hooks/wake'; total=15
+      runs=[]; last_request=b''
+      for idx in range(total):
+          key=base64.b64encode(os.urandom(16)).decode()
+          req=(f'GET {path} HTTP/1.1\r\nHost: {host}:{port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\nOrigin: null\r\n\r\n').encode()
+          last_request=req
+          started=time.time(); status_line=''; accepted=False; error=None
+          try:
+              with socket.create_connection((host, port), timeout=5) as sock:
+                  sock.sendall(req)
+                  data=sock.recv(4096)
+                  status_line=data.split(b'\r\n', 1)[0].decode('latin1', 'replace') if data else ''
+                  accepted=status_line.startswith('HTTP/1.1 101') or status_line.startswith('HTTP/1.0 101')
+          except Exception as exc:
+              error=f'{type(exc).__name__}: {exc}'
+          runs.append({'index':idx,'status_line':status_line,'accepted':accepted,'error':error,'elapsed_ms':round((time.time()-started)*1000,2)})
+      accepted_runs=sum(1 for row in runs if row['accepted'])
+      payload={'schema':'hack.focused_repro.websocket.v1','target':'http://127.0.0.1:18789','path':path,'auth_state':'unauthenticated','origin':'null','total_runs':total,'accepted_runs':accepted_runs,'rejected_runs':total-accepted_runs,'pass':accepted_runs == total,'observed_signal':'HTTP 101 Switching Protocols' if accepted_runs else 'no accepted websocket upgrades','raw_request_sha256':hashlib.sha256(last_request).hexdigest(),'runs':runs}
+      print(json.dumps(payload, indent=2))
+      PY
+      docker run --rm --network host -v "$PROOF_SCRIPT:/repro.py:ro" python:3.11-slim python /repro.py > "$EVOLVE_DIR/proof-candidates/hooks-wake-websocket-repro.json"
+      python3 - <<'PY'
+      import json, pathlib
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      ev=sorted(root.glob('evolve-campaign-*-127.0.0.1-18789'))[-1]
+      proof=json.loads((ev/'proof-candidates'/'hooks-wake-websocket-repro.json').read_text())
+      assessment={'status':'focused_repro_created','proof_artifact':str(ev/'proof-candidates'/'hooks-wake-websocket-repro.json'),'accepted_runs':proof['accepted_runs'],'total_runs':proof['total_runs'],'pass':proof['pass']}
+      (root/'focused-repro-assessment.json').write_text(json.dumps(assessment, indent=2)+'\n')
+      assert proof['accepted_runs'] == proof['total_runs'], assessment
+      print(json.dumps(assessment, indent=2))
+      PY
+    tests:
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'focused-repro-assessment.json').read_text()); assert d['accepted_runs'] == d['total_runs'] == 15\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'focused-repro-assessment.json').read_text()); assert d['pass'] is True; print(d['proof_artifact'])\nPY"
+      assertion: "A Docker-contained focused proof artifact confirms the promoted WebSocket finding."
+
+  - id: "2.1"
+    title: "Generate source-derived final report artifacts"
+    gate: "Final reports are generated from run artifacts and fail closed on missing origin/provenance data."
+    lane: "2"
+    runner: local
+    depends_on: ["1.5", "1.4"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack, project-infographic]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      python3 skills/hack/scripts/generate_final_report.py "$RUN_ROOT"
+      python3 skills/hack/scripts/generate_final_infographic.py "$RUN_ROOT" --output "$RUN_ROOT/HACK_FINAL_REPORT.html"
+      python3 - <<'PY'
+      import json, pathlib
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      required=["HACK_FINAL_REPORT.json","HACK_FINAL_REPORT.md","HACK_FINAL_REPORT.html"]
+      missing=[name for name in required if not (root/name).exists()]
+      assert not missing, missing
+      data=json.loads((root/"HACK_FINAL_REPORT.json").read_text())
+      text=(root/"HACK_FINAL_REPORT.md").read_text()
+      html=(root/"HACK_FINAL_REPORT.html").read_text()
+      proof=json.loads(pathlib.Path(data["source_artifacts"]["proof_candidate"]).read_text())
+      battle=data.get("mode_evidence", {}).get("battle", {})
+      status=data.get("status")
+      checks={
+          "has_origin_citation": "origin_citation" in json.dumps(data) or "agent_generated_mutation" in json.dumps(data),
+          "has_battle": "battle" in json.dumps(data).lower() or "battle" in html.lower(),
+          "has_dogpile": "dogpile" in json.dumps(data).lower() or "dogpile" in html.lower(),
+          "has_patch_status": "blocked_patch_not_applied" in json.dumps(data) or "blocked_patch_not_applied" in html,
+          "proof_repro_numeric": isinstance(proof.get("accepted_runs"), int) and isinstance(proof.get("total_runs"), int),
+          "no_none_none_repro": "None/None" not in text and "None/None" not in html,
+          "status_not_unknown": status not in (None, "", "unknown"),
+          "md_status_matches_json": f"Status: `{status}`" in text,
+          "has_hash_ledger": "sha256:" in html.lower(),
+          "dogpile_weakness_visible": "exact Dogpile citation spans" in text,
+          "battle_limitations_visible": battle.get("status") in text and "Zero findings are not treated as success" in text,
+          "post_patch_not_green": data.get("verified_fixed") is False and data.get("verification_status") == "blocked_patch_not_applied",
+      }
+      (root/"final-report-assessment.json").write_text(json.dumps(checks, indent=2)+"\n")
+      assert all(checks.values()), checks
+      print(json.dumps(checks, indent=2))
+      PY
+    tests:
+      - "test -f $(cat /tmp/hack-openclaw-weakspot-run-root.txt)/HACK_FINAL_REPORT.json"
+      - "test -f $(cat /tmp/hack-openclaw-weakspot-run-root.txt)/HACK_FINAL_REPORT.md"
+      - "test -f $(cat /tmp/hack-openclaw-weakspot-run-root.txt)/HACK_FINAL_REPORT.html"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); checks=json.loads((pathlib.Path(root)/'final-report-assessment.json').read_text()); assert all(checks.values()); print('final reports ready')\nPY"
+      assertion: "Final reports are present, source-derived, and provenance-aware."
+
+  - id: "2.2"
+    title: "Render and inspect final infographic report"
+    gate: "The HTML report must pass infographic checks and produce a fresh visual proof marker."
+    lane: "2"
+    runner: local
+    depends_on: ["2.1"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [project-infographic, best-practices-infographic]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      ./skills/best-practices-infographic/run.sh assess "$RUN_ROOT/HACK_FINAL_REPORT.html" --json > "$RUN_ROOT/infographic-assessment.json"
+      mkdir -p .codex/ui-verification
+      python3 - <<'PY'
+      import json, pathlib, time
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      assessment=json.loads((root/"infographic-assessment.json").read_text())
+      marker={
+          "created_at":time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+          "surface":"hack-openclaw-final-report",
+          "url":"file://" + str(root/"HACK_FINAL_REPORT.html"),
+          "source_html":str(root/"HACK_FINAL_REPORT.html"),
+          "visual_check_required":True,
+          "infographic_pass": assessment.get("pass") is True or assessment.get("status") == "pass",
+      }
+      pathlib.Path(".codex/ui-verification/latest.json").write_text(json.dumps(marker, indent=2)+"\n")
+      (root/"ui-verification-marker.json").write_text(json.dumps(marker, indent=2)+"\n")
+      assert marker["infographic_pass"], assessment
+      print(json.dumps(marker, indent=2))
+      PY
+    tests:
+      - "test -f .codex/ui-verification/latest.json"
+      - "python3 - <<'PY'\nimport json; d=json.load(open('.codex/ui-verification/latest.json')); assert d['surface']=='hack-openclaw-final-report'; assert d['visual_check_required'] is True; assert d['infographic_pass'] is True\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json; d=json.load(open('.codex/ui-verification/latest.json')); print(d['url'])\nPY"
+      assertion: "The final HTML report has a fresh verification marker and infographic assessment."
+
+  - id: "3.1"
+    title: "Write final closure verdict"
+    gate: "Closure verdict is allowed only after weakspot, mode, report, and visual proof gates are evaluated."
+    lane: "3"
+    runner: local
+    depends_on: ["2.2"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack, memory]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      python3 - <<'PY'
+      import json, pathlib, time
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      required=[
+           "WEAKSPOT_CLOSURE_CHECKLIST.json",
+           "origin-citation-contract.json",
+           "OPENCLAW_PREFLIGHT.json",
+          "session-audit-assessment.json",
+          "dogpile-citation-assessment.json",
+          "fresh-campaign-assessment.json",
+          "battle-mode-assessment.json",
+          "final-report-assessment.json",
+           "ui-verification-marker.json",
+       ]
+       missing=[name for name in required if not (root/name).exists()]
+       preflight=json.loads((root/"OPENCLAW_PREFLIGHT.json").read_text()) if (root/"OPENCLAW_PREFLIGHT.json").exists() else {}
+       repro=json.loads((root/"focused-repro-assessment.json").read_text()) if (root/"focused-repro-assessment.json").exists() else {}
+       post=json.loads((root/"post-patch-verification.json").read_text()) if (root/"post-patch-verification.json").exists() else {"status":"blocked_patch_not_applied","pass":False}
+       proof_candidate_reproduced = repro.get("pass") is True
+       verified_fixed = post.get("pass") is True
+       provenance_complete = preflight.get("provenance_complete") is True
+       if missing:
+           status="halted_missing_required_artifacts"
+       elif proof_candidate_reproduced and not verified_fixed:
+           status="proof_candidate_reproduced_patch_pending"
+       elif verified_fixed:
+           status="verified_fixed"
+       else:
+           status="blocked_no_reproducible_proof"
+       final={
+           "status":status,
+           "created_at":time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+           "run_root":str(root),
+           "missing":missing,
+           "proof_candidate_reproduced": proof_candidate_reproduced,
+           "patch_pending": not verified_fixed,
+           "verified_fixed": verified_fixed,
+           "verification_status": post.get("status", "blocked_patch_not_applied"),
+           "provenance_complete": provenance_complete,
+           "provenance_defects": [] if provenance_complete else ["target commit/branch/origin fallback or Docker image digest incomplete"],
+           "patch_status":"patch_pending_until_post_patch_verification_exists",
+       }
+       if (root/"post-patch-verification.json").exists():
+           final["patch_status"]="post_patch_verification_present"
+       (root/"CLOSURE_VERDICT.json").write_text(json.dumps(final, indent=2)+"\n")
+       assert not missing, final
+       assert final["status"] != "closed_with_patch_pending_allowed", final
+       print(json.dumps(final, indent=2))
+       PY
+      python3 skills/hack/scripts/generate_final_report.py "$RUN_ROOT"
+      python3 skills/hack/scripts/generate_final_infographic.py "$RUN_ROOT" --output "$RUN_ROOT/HACK_FINAL_REPORT.html"
+    tests:
+      - "test -f $(cat /tmp/hack-openclaw-weakspot-run-root.txt)/CLOSURE_VERDICT.json"
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'CLOSURE_VERDICT.json').read_text()); assert 'green_allowed' not in d; assert d['verified_fixed'] is False; assert d['patch_status']; print(d['status'])\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'CLOSURE_VERDICT.json').read_text()); assert d['proof_candidate_reproduced'] is True; assert d['verified_fixed'] is False; print(root)\nPY"
+      assertion: "The closure result is artifact-backed and distinguishes /hack proof/report closure from post-patch verification."
+
+  - id: "3.2"
+    title: "Package raw review bundle"
+    gate: "External review must receive raw proof, attempts, anomalies, generations, promotion tasks, hashes, and missing post-patch marker."
+    lane: "3"
+    runner: local
+    depends_on: ["3.1"]
+    cwd: /home/graham/workspace/experiments/agent-skills
+    skills: [hack, review-code]
+    command: |-
+      set -euo pipefail
+      RUN_ROOT=$(cat /tmp/hack-openclaw-weakspot-run-root.txt)
+      OUT="$RUN_ROOT/HACK_OPENCLAW_CLOSURE_REVIEW_PACKAGE.zip"
+      python3 skills/hack/scripts/package_final_review.py "$RUN_ROOT" --output "$OUT"
+      python3 - <<'PY'
+      import json, pathlib, zipfile
+      root=pathlib.Path(pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip())
+      package=root/"HACK_OPENCLAW_CLOSURE_REVIEW_PACKAGE.zip"
+      with zipfile.ZipFile(package) as zf:
+          names=set(zf.namelist())
+          manifest=json.loads(zf.read("MANIFEST.json"))
+      required={
+          "raw-ledgers/attempts.jsonl",
+          "raw-ledgers/anomalies.jsonl",
+          "raw-ledgers/proof-candidates/hooks-wake-websocket-repro.json",
+          "raw-ledgers/next-dogpile-seed.json",
+          "run-artifacts/CLOSURE_VERDICT.json",
+          "run-artifacts/HACK_FINAL_REPORT.json",
+          "run-artifacts/HACK_FINAL_REPORT.md",
+          "run-artifacts/HACK_FINAL_REPORT.html",
+      }
+      missing=sorted(required-names)
+      assert not missing, missing
+      assert any(name.startswith("raw-ledgers/generation-") for name in names), "missing generation ledgers"
+      assert all("sha256" in entry for entry in manifest["entries"]), "manifest lacks hashes"
+      (root/"review-package-assessment.json").write_text(json.dumps({"status":"packaged_with_raw_ledgers","package":str(package),"entry_count":len(names)}, indent=2)+"\n")
+      print(package)
+      PY
+    tests:
+      - "test -f $(cat /tmp/hack-openclaw-weakspot-run-root.txt)/HACK_OPENCLAW_CLOSURE_REVIEW_PACKAGE.zip"
+      - "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'review-package-assessment.json').read_text()); assert d['status']=='packaged_with_raw_ledgers'\nPY"
+    definition_of_done:
+      command: "python3 - <<'PY'\nimport json, pathlib; root=pathlib.Path('/tmp/hack-openclaw-weakspot-run-root.txt').read_text().strip(); d=json.loads((pathlib.Path(root)/'review-package-assessment.json').read_text()); print(d['package'])\nPY"
+      assertion: "The WebGPT/review-code package is replayable from raw artifacts and hashes."
