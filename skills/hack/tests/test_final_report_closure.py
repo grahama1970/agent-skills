@@ -277,6 +277,54 @@ class FinalReportClosureTests(unittest.TestCase):
         self.assertFalse(by_path["run-artifacts/post-patch-verification.MISSING.json"]["exists"])
         self.assertIsNotNone(by_path["run-artifacts/post-patch-verification.MISSING.json"]["sha256"])
 
+    def test_final_infographic_renders_verified_fixed_without_stale_blocked_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = self._make_run_root(tmp)
+            self._write_json(
+                root / "post-patch-verification.json",
+                {
+                    "status": "verified_fixed",
+                    "verification_status": "verified_fixed",
+                    "pass": True,
+                    "verified_fixed": True,
+                    "disallowed_websocket": {"accepted_runs": 0, "total_runs": 15, "pass": True},
+                    "allowed_gateway_websocket": {"accepted_runs": 15, "total_runs": 15, "pass": True},
+                },
+            )
+            self._write_json(
+                root / "CLOSURE_VERDICT.json",
+                {
+                    "status": "verified_fixed",
+                    "proof_candidate_reproduced": True,
+                    "patch_pending": False,
+                    "verified_fixed": True,
+                    "verification_status": "verified_fixed",
+                    "provenance_complete": False,
+                },
+            )
+            self._write_json(
+                root / "openclaw-hooks-wake-patch-objective.json",
+                {
+                    "finding": "unauthenticated WebSocket upgrade on /hooks/wake",
+                    "patch_status": "patch_applied_verified_in_local_branch",
+                    "required_fix_contract": "disallowed handshakes must not return HTTP 101",
+                },
+            )
+            report_json, _ = final_report.build_report(root)
+            html = final_infographic.build_html(root)
+
+        self.assertEqual(report_json["status"], "verified_fixed")
+        self.assertFalse(report_json["patch_pending"])
+        self.assertTrue(report_json["verified_fixed"])
+        self.assertEqual(report_json["verification_status"], "verified_fixed")
+        self.assertIn("Verified Fix", html)
+        self.assertIn("Verification Gate", html)
+        self.assertIn("verified_fixed", html)
+        self.assertNotIn("blocked patch verification", html)
+        self.assertNotIn("not a verified fix", html)
+        self.assertNotIn("Patch implementation and rerun are still missing", html)
+        self.assertNotIn("Apply patch, rerun focused Docker proof", html)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -263,6 +263,34 @@ def build_html(run_root: pathlib.Path) -> str:
     status = closure.get("status", final_report.get("status", "blocked_no_verdict"))
     post_status = closure.get("verification_status", post.get("status", "blocked_patch_not_applied"))
     verification_pass = closure.get("verified_fixed", post.get("pass", False))
+    verified_fixed = verification_pass is True
+    if verified_fixed:
+        subtitle = (
+            "Evidence envelope showing how Dogpile/seed input and greybox fuzzing evolved many mostly-failing attempts "
+            "into one repeatable /hooks/wake WebSocket proof candidate, then verified the focused Docker proof no longer "
+            "reproduces after the local patch."
+        )
+        verification_tag = "verified fixed"
+        proof_panel_title = "Verified Fix"
+        proof_panel_text = "The surviving group produced a focused proof candidate, and the post-patch Docker proof no longer reproduced it."
+        patch_panel_class = "green"
+        patch_panel_title = "Verification Gate"
+        patch_panel_text = "Patch verification passed: disallowed /hooks/wake WebSocket handshakes stopped returning HTTP 101 while the allowed gateway WebSocket path still upgraded."
+        required_text = "Keep post-patch-verification.json with the raw before/after status lines and rerun on any gate changes."
+        footer_text = "Final invariant satisfied for this local branch: proof reproduced before patch, focused Docker rerun stopped reproducing after patch, and provenance gaps remain explicit."
+    else:
+        subtitle = (
+            "Evidence envelope showing how Dogpile/seed input and greybox fuzzing evolved many mostly-failing attempts "
+            "into one repeatable /hooks/wake WebSocket proof candidate, then stopped honestly at blocked patch verification."
+        )
+        verification_tag = "blocked verification"
+        proof_panel_title = "Proof Candidate"
+        proof_panel_text = "The surviving group produced a focused proof candidate, not a verified fix."
+        patch_panel_class = "red"
+        patch_panel_title = "Patch Gate"
+        patch_panel_text = "The report must not claim remediation. Patch implementation and rerun are still missing."
+        required_text = "Apply patch, rerun focused Docker proof, require disallowed variants to stop upgrading."
+        footer_text = "Final invariant: `/hack` may promote a proof candidate, but it cannot report “fixed” until a real patch is applied and the focused Docker proof stops reproducing."
     source_urls = ", ".join(seed_payload.get("source_urls", [])) or "none"
     battle_status = battle.get("status", "missing")
     battle_limitations = ", ".join(battle.get("limitations", [])) or "none recorded"
@@ -297,10 +325,10 @@ def build_html(run_root: pathlib.Path) -> str:
 <path d="M1170 735 C1170 820 1040 850 990 920" stroke="#ff7c75" stroke-width="4" fill="none" stroke-dasharray="9 7" marker-end="url(#arrow-red)"/>
 <path d="M710 760 C840 850 630 910 750 1000" stroke="#ffd36a" stroke-width="4" fill="none" marker-end="url(#arrow)"/>
 </svg>
-<header>
-<div class="eyebrow">source-derived HTML/CSS/SVG report · no dashboard theater</div>
-<h1>/hack OpenClaw Final Evidence Report</h1>
-<div class="subtitle">Evidence envelope showing how Dogpile/seed input and greybox fuzzing evolved many mostly-failing attempts into one repeatable <code>/hooks/wake</code> WebSocket proof candidate, then stopped honestly at blocked patch verification.</div>
+	<header>
+	<div class="eyebrow">source-derived HTML/CSS/SVG report · no dashboard theater</div>
+	<h1>/hack OpenClaw Final Evidence Report</h1>
+	<div class="subtitle">{html.escape(subtitle)}</div>
 <div class="ribbon">
 <div><span class="k">Run ID</span><span class="v">{html.escape(run_root.name)}</span></div>
 <div><span class="k">Target URL</span><span class="v">{html.escape(str(target_url))}</span></div>
@@ -311,13 +339,13 @@ def build_html(run_root: pathlib.Path) -> str:
 <div><span class="k">Seed validation</span><span class="v">valid={html.escape(str(seed_valid))} · {html.escape(str(seed_sha))[:16]}</span></div>
 <div><span class="k">Image digest</span><span class="v">{'captured' if preflight.get('docker_image_digest_captured') else 'not captured · report defect RQD-001'}</span></div>
 </div>
-<div class="legend"><span class="tag blue">source evidence</span><span class="tag warn">greybox evolution</span><span class="tag ok">proof candidate</span><span class="tag bad">blocked verification</span><span class="tag purple">artifact-derived view</span></div>
+	<div class="legend"><span class="tag blue">source evidence</span><span class="tag warn">greybox evolution</span><span class="tag ok">proof candidate</span><span class="tag bad">{html.escape(verification_tag)}</span><span class="tag purple">artifact-derived view</span></div>
 </header>
 
 <section class="band grid cols3" style="margin-top:22px">
 <div class="panel blue"><h2><span class="num">1</span>Evidence In</h2><p>Inputs are validated seed research, target context, session-audit artifacts, and prior knowledge. The chart does not trust unsupported route guesses.</p><div class="metric"><b>Dogpile/seed</b><span>{html.escape(str(seed.get('seed_source')))}</span></div><div class="metric"><b>Attempts</b><span>{len(attempts)}</span></div><div class="metric"><b>Artifacts</b><span><code>strategies.seed.json</code>, <code>attempts.jsonl</code></span></div><span class="source-chip">source: strategies.seed.json</span></div>
 <div class="panel amber"><h2><span class="num">2</span>Central Evolution Loop</h2><p>Most combinations failed or stayed unproven. The useful path was repeatedly selected because WebSocket upgrade evidence survived mutation and scoring.</p><div class="center-loop"><div class="loop-title">websocket_control survives</div><p style="text-align:center">seed-003 → selected parent → mutated variants → repeated <code>101</code> signal → focused repro</p><div class="gen-row">{generation_cards}</div><table style="margin-top:18px"><thead><tr><th>Attempt</th><th>Gen</th><th>Score</th><th>Gene</th><th>Headers</th><th>Mutation</th><th>Result</th></tr></thead><tbody>{''.join(lineage_rows)}</tbody></table></div><span class="source-chip">source: generation-*.json + anomalies.jsonl</span></div>
-<div class="panel green"><h2><span class="num">3</span>Proof Candidate</h2><p>The surviving group produced a focused proof candidate, not a verified fix.</p><div class="metric"><b>Group</b><span><code>websocket_control</code></span></div><div class="metric"><b>Origin</b><span><code>validated_seed_lane:websocket_control</code></span></div><div class="metric"><b>Path</b><span><code>/hooks/wake</code></span></div><div class="metric"><b>Signal</b><span><code>HTTP/1.1 101</code></span></div><div class="metric"><b>Repro</b><span><code>{proof.get('accepted_runs')}/{proof.get('total_runs')}</code> accepted upgrades</span></div><div class="metric"><b>Proof</b><span><code>hooks-wake-websocket-repro.json</code></span></div><span class="source-chip">origin citation: validated seed + attempts/anomalies lineage</span></div>
+	<div class="panel green"><h2><span class="num">3</span>{html.escape(proof_panel_title)}</h2><p>{html.escape(proof_panel_text)}</p><div class="metric"><b>Group</b><span><code>websocket_control</code></span></div><div class="metric"><b>Origin</b><span><code>validated_seed_lane:websocket_control</code></span></div><div class="metric"><b>Path</b><span><code>/hooks/wake</code></span></div><div class="metric"><b>Original signal</b><span><code>HTTP/1.1 101</code></span></div><div class="metric"><b>Original repro</b><span><code>{proof.get('accepted_runs')}/{proof.get('total_runs')}</code> accepted upgrades</span></div><div class="metric"><b>Post-patch</b><span><code>{html.escape(str(post_status))}</code>, pass=<code>{html.escape(str(verification_pass).lower())}</code></span></div><span class="source-chip">origin citation: validated seed + attempts/anomalies lineage</span></div>
 </section>
 
 <section class="band grid cols2">
@@ -326,12 +354,12 @@ def build_html(run_root: pathlib.Path) -> str:
 </section>
 
 <section class="band grid cols2">
-<div class="panel red"><h2><span class="num">6</span>Patch Gate</h2><p>The report must not claim remediation. Patch implementation and rerun are still missing.</p><div class="metric"><b>Finding</b><span>{html.escape(str(patch.get('finding')))}</span></div><div class="metric"><b>Patch status</b><span><code>{html.escape(str(patch.get('patch_status')))}</code></span></div><div class="metric"><b>Verification</b><span><code>{html.escape(str(post_status))}</code>, pass=<code>{html.escape(str(verification_pass).lower())}</code></span></div><div class="metric"><b>Required</b><span>Apply patch, rerun focused Docker proof, require disallowed variants to stop upgrading.</span></div><span class="source-chip">source: patch objective + post-patch-verification.json</span></div>
+	<div class="panel {patch_panel_class}"><h2><span class="num">6</span>{html.escape(patch_panel_title)}</h2><p>{html.escape(patch_panel_text)}</p><div class="metric"><b>Finding</b><span>{html.escape(str(patch.get('finding')))}</span></div><div class="metric"><b>Patch status</b><span><code>{html.escape(str(patch.get('patch_status')))}</code></span></div><div class="metric"><b>Verification</b><span><code>{html.escape(str(post_status))}</code>, pass=<code>{html.escape(str(verification_pass).lower())}</code></span></div><div class="metric"><b>Required</b><span>{html.escape(required_text)}</span></div><span class="source-chip">source: patch objective + post-patch-verification.json</span></div>
 <div class="panel"><h2><span class="num">7</span>Reviewer Actions</h2><ul><li><b>Confirm exposure</b><span>Determine whether <code>/hooks/wake</code> is localhost-only, internal, or remotely/browser reachable.</span></li><li><b>Close RQD-001</b><span>Capture Docker image digest for exact before/after binding.</span></li><li><b>Patch WebSocket gate</b><span>Unauthenticated/disallowed-origin handshakes must not return <code>101</code>.</span></li><li><b>Rerun proof</b><span>Compare the focused proof harness after patching.</span></li><li><b>Battle limitation</b><span>Status <code>{html.escape(str(battle_status))}</code>; limitations: {html.escape(battle_limitations)}. Zero findings are not success.</span></li></ul></div>
 </section>
 
 <section class="band panel"><h2><span class="num">8</span>Artifact Ledger With Real Hashes</h2><div class="grid" style="gap:7px">{artifact_rows}</div></section>
-<footer class="bottom-thesis">Final invariant: `/hack` may promote a proof candidate, but it cannot report “fixed” until a real patch is applied and the focused Docker proof stops reproducing.</footer>
+	<footer class="bottom-thesis">{html.escape(footer_text)}</footer>
 </main></div></body></html>"""
 
 
