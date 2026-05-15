@@ -381,10 +381,12 @@ def _is_transient_qra_error(error: Any) -> bool:
         marker in text
         for marker in (
             "429",
+            "500",
             "502",
             "503",
             "504",
             "bad gateway",
+            "internal server error",
             "service unavailable",
             "gateway timeout",
             "timeout",
