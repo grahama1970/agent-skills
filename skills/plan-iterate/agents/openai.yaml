@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Iterate"
+  short_description: "Evidence-gated phase iteration"
+  default_prompt: "Use plan-iterate to define a phase contract, package implementation evidence, default external review through scillm gpt-5.5 high reasoning, record reviewer verdicts, and block phase completion until deterministic artifacts or review pass."

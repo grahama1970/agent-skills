@@ -1,0 +1,32 @@
+{
+  "schema": "plan_iterate.phase_status.v1",
+  "phase_id": "__PHASE_ID__",
+  "status": "planned",
+  "implementation_summary": "",
+  "acceptance_contract": [],
+  "changed_files": [],
+  "validation_commands": [],
+  "evidence_artifacts": [],
+  "progress_context_artifacts": [],
+  "skill_context_artifacts": [],
+  "review_artifacts": [],
+  "known_caveats": [],
+  "claims": [],
+  "blockers": [],
+  "memory_context": {
+    "collection": "plan_iterate_phase_context",
+    "keys": []
+  },
+  "reviewer_policy": {
+    "required": true,
+    "comparison_required": false,
+    "closure_rule": "deterministic_validation_and_external_review"
+  },
+  "review_results": [],
+  "review_comparison": {
+    "agreement": "pending",
+    "closure_allowed": false,
+    "reason": ""
+  },
+  "review_status": "pending"
+}
