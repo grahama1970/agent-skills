@@ -3,7 +3,8 @@ name: best-practices-agent
 description: >
   Non-negotiable agent behavior rules. Covers: no silent failures, no error bypassing,
   no raw AQL, no direct imports, no parallel infrastructure, no swallowed exceptions,
-  use existing skills, fix errors don't dodge them, transparency in verdicts.
+  use existing skills, fix errors don't dodge them, transparency in verdicts,
+  no simulated reviews, and evidence-gated decisions.
 triggers:
   - best practices agent
   - agent rules
@@ -14,6 +15,9 @@ triggers:
   - silent failures
   - error handling rules
   - bypass errors
+  - simulated review
+  - fake validation
+  - evidence-gated decisions
 license: MIT
 taxonomy:
   - precision
@@ -381,7 +385,328 @@ This applies to:
 
 ---
 
-See [RULES_EXTENDED.md](references/RULES_EXTENDED.md) for rules 9-17 covering prompt usage, scillm, daemon endpoints, storage, error handling, response shapes, mandatory skill chains, memory reading, and service-first architecture.
+## Rule 9: No Simulated Agents / Evidence-Gated Decisions — `agent-no-simulated-review`
+
+**Severity: CRITICAL**
+
+> Deeper companion: [`references/NO_SIMULATED_REVIEW.md`](references/NO_SIMULATED_REVIEW.md) (synced from upstream `grahama1970/agent-skills` on 2026-05-13).
+
+Agents must not create authoritative-looking review, second-pass, validation, or
+closure results from heuristics or partial checks.
+
+A heuristic may create a hint. It may not create a confirmed finding, correction,
+core bug, or closure state.
+
+Core principle:
+
+```text
+If no model or human reviewed it, do not call it a review.
+If no audit proved it, do not call it confirmed.
+If no deterministic gate passed, do not call it closed.
+```
+
+### Bad patterns (BANNED)
+
+```python
+# BAD: Heuristic becomes correction label
+if bbox_area > 0.45:
+    risk_reasons.append("bbox_over_broad")
+
+# BAD: Label copy masquerades as review
+if "bbox_over_broad" in risk_reasons:
+    result["decision"] = "emit_correction"
+    result["confidence"] = "high"
+
+# BAD: Misleading name — no LLM or human is actually reviewing
+python run_second_pass_reviews.py
+
+# BAD: Report says closed without deterministic gate
+status = "core_fixed"  # no core patch, no fixture, no rerun
+```
+
+### Good patterns (REQUIRED)
+
+```python
+# GOOD: Heuristic is only a hint
+if bbox_area > 0.45:
+    risk_reasons.append("bbox_suspect_large_area")
+
+# GOOD: Audit decides strong label
+audit = bbox_audit_for_element(element)
+if audit.status == "confirmed":
+    risk_reasons.append("bbox_over_broad")
+elif audit.status == "insufficient_evidence":
+    risk_reasons.append("bbox_audit_insufficient")
+
+# GOOD: Honest process name
+python apply_deterministic_candidate_classification.py
+
+# GOOD: Explicit adjudicator identity
+result["adjudicator_kind"] = "deterministic_classifier"  # or llm / human / verifier
+result["confidence"] = "deterministic"
+```
+
+### Required vocabulary discipline
+
+Use these meanings consistently:
+
+- `*_suspect_*` = weak heuristic hint
+- `*_confirmed_*` = audit-backed finding
+- `*_insufficient_evidence` = unresolved, not accepted
+- `*_pending` = unresolved workflow state
+- `*_fixed` / `closed` = deterministic gate passed
+
+### Replay artifact requirement
+
+Every model, human, or deterministic review result must be replayable.
+
+Required artifacts:
+
+```text
+system_prompt.txt              # if LLM
+user_prompt.txt                # if LLM
+input_payload.json
+selected_config_or_preset.json
+source_artifacts/              # images, crops, diffs, overlays, logs
+model_response.json            # if LLM
+deterministic_response.json    # if deterministic classifier
+validated_decision.json
+validation_result.json
+```
+
+No replay bundle, no accepted review result.
+
+### Closure authority hierarchy
+
+Project agents may propose.
+LLMs may adjudicate ambiguous cases.
+Humans may resolve policy/semantic ambiguity.
+Only deterministic gates may close.
+
+Closure requires:
+
+1. source evidence attached or reproducible
+2. mechanism named honestly
+3. result replayable
+4. weak hints separated from confirmed findings
+5. deterministic validation passed
+6. unresolved cases remain explicitly pending
+
+### Canary before batch
+
+Before running a new agent/review loop on many cases, prove the contract on canaries:
+
+- one expected positive case
+- one expected negative case
+- one ambiguous/insufficient-evidence case
+- one expected failure case
+- one regression fixture
+
+Do not batch until the canaries pass.
+
+---
+
+## Rule 10: Receipts Are Not the Work — `agent-no-receipt-loop`
+
+**Severity: CRITICAL**
+
+Review bundles, WebGPT responses, dashboards, status pages, reports, screenshots,
+and validation manifests are **receipts**. They prove or explain work. They are
+not the success metric unless the user's requested deliverable is explicitly the
+artifact itself.
+
+When the real task is containment, prevention, repair, migration, deployment,
+or data integrity, do not spend cycles polishing the receipt while the underlying
+writer, bug, corrupted data, or failing gate remains active.
+
+### Bad patterns (BANNED)
+
+```text
+# BAD: Better bundle, no containment progress
+WebGPT asked for a better proof bundle, so the agent rebuilds the bundle three
+times while the mutation-capable monitor process is still respawning.
+
+# BAD: Dashboard/report churn instead of fixing the source
+The monitor says PASS incorrectly, so the agent edits the dashboard copy instead
+of patching the monitor checks or stopping the writer.
+
+# BAD: Review loop as success metric
+"WebGPT accepted the bundle" is reported as done even though no prevention patch
+landed and no delayed no-respawn check ran.
+```
+
+### Good patterns (REQUIRED)
+
+```text
+# GOOD: Name the real success metric
+Success is: no mutation-capable process now and after one full interval;
+writer path disabled by default; endpoint verified not to spawn it.
+
+# GOOD: Use the bundle only as proof
+Patch the writer path, restart the service, run immediate and delayed checks,
+then update the review bundle to document those facts.
+
+# GOOD: Stop when the receipt exposes real work
+If a reviewer finds "containment proof incomplete", do not just add prose.
+Run the containment check. If it fails, identify and patch the respawn source.
+```
+
+### Required operating pattern
+
+For any operational task, write down the real success metric before creating or
+refreshing a review artifact:
+
+```text
+Real success metric:
+- What process, writer, endpoint, data state, or user-visible behavior must be true?
+- What deterministic proof shows it is true?
+- What delayed/retry proof is needed to show it stays true?
+- What remains explicitly blocked or pending?
+```
+
+Only after that may the agent package a review bundle, status report, or visual
+artifact. The receipt must point to the proof; it must not replace the proof.
+
+### SPARTA containment example
+
+```text
+Wrong goal:
+- create a better WebGPT review bundle
+
+Right goal:
+- prove no monitor_sparta supervisor, health --fix, observe-loop, or coverage
+  endpoint can spawn mutation-capable work by default
+- verify immediately and after one full 300-second interval
+- patch fail-closed prevention paths first
+- only then package the review bundle as evidence
+```
+
+---
+
+## Rule 11: Monitor Lanes Must Close the Loop — `agent-monitor-lane-closure`
+
+**Severity: CRITICAL**
+
+Monitor skills are not passive reports. A `monitor-*` skill has two jobs:
+
+1. **Monitor truth:** observe, classify, report, and fail closed.
+2. **Repair orchestration:** decide what is safe, run bounded repairs, verify
+   positive evidence, and continue until healthy or blocked.
+
+A monitor is not complete because it detected a problem, wrote a manifest, or
+reported a queue. Every failing dimension must have exactly one lane state and
+exactly one next action.
+
+### Required lane states
+
+| Lane state | Meaning | Required behavior |
+|------------|---------|-------------------|
+| `healthy` | Positive evidence passes | Continue scheduled observation |
+| `auto_repairable` | Deterministic, bounded, reversible, and backed by an existing approved skill/service | Run repair automatically in bounded batches, verify after each batch, continue until empty or failed |
+| `review_gated` | Mutation, semantic, policy, schema, source, or high-cost risk | Write the manifest/approval artifact and surface the exact approval request |
+| `blocked` | Missing dependency, service, source, credential, or endpoint | Record the blocker, exact retry/check command, and retry schedule |
+| `failed_repair` | Auto repair was attempted and failed | Stop that lane, preserve logs/state, classify the failure, and escalate with resume command |
+| `waived` | Human-approved non-action | Store approval source, timestamp, scope, and expiry/review date |
+
+### Banned monitor anti-patterns
+
+```text
+# BAD: Monitor reports failure, writes manifest, then idles forever.
+qra_coverage_per_control: fail
+manifest: /tmp/qra_gap_manifest.json
+next action: none
+
+# BAD: Running is treated as progress.
+monitor-sparta.service is active, therefore QRA backfill is progressing.
+
+# BAD: Old backlog bucket hides a newer failing health dimension.
+create_qras_remaining_calls=0, therefore QRA coverage is complete, even though
+qra_coverage_per_control still fails.
+
+# BAD: Review-gated and auto-repairable work are collapsed together.
+All QRA gaps are review-gated, so no safe direct/native text-backed QRA backfill runs.
+```
+
+### Required monitor behavior
+
+```text
+# GOOD: Every failing dimension has state + action.
+dimension: qra_coverage_per_control
+state: auto_repairable
+reason: source-backed direct/native controls have real descriptions and
+        deterministic mode selection
+next action: run reviewed /create-qras manifest in 100-control batch
+proof after action: controls covered, QRAs stored, skipped/failed jobs,
+                    no inline embeddings, gap delta
+
+# GOOD: Risky lane is review-gated, not ignored.
+dimension: relationship_comparison_candidates
+state: review_gated
+reason: control-to-control relationship claims require accepted
+        /create-evidence-case responses
+next action: write approval manifest with evidence-case status per candidate
+```
+
+### Auto-repair criteria
+
+A monitor lane may auto-repair only when all are true:
+
+- the source data needed for repair already exists and is not stub/padded;
+- the repair uses an existing approved skill or service;
+- the action is bounded by batch size or item limit;
+- the action is idempotent or has deterministic keys;
+- rollback/write-ahead or replay artifacts exist when mutation occurs;
+- post-run verification can prove positive state change;
+- failures stop the lane instead of being swallowed;
+- the lane cannot synthesize unsupported source records, descriptions,
+  relationships, schemas, or policy decisions.
+
+If any criterion is false, the lane is `review_gated` or `blocked`, not
+`auto_repairable`.
+
+### Required monitor loop invariant
+
+For every failing dimension:
+
+```text
+dimension
+current_count / severity
+lane_state
+why this state is safe/correct
+next_action
+owner skill/service
+retry/check cadence
+proof required to transition state
+artifact paths
+```
+
+The monitor must keep acting on `auto_repairable` lanes until they become
+`healthy`, `failed_repair`, or `blocked`. Writing a manifest is only a receipt;
+it is not the work unless the lane is explicitly `review_gated`.
+
+### SPARTA example
+
+```text
+qra_coverage_per_control:
+  direct/native text-backed gaps -> auto_repairable
+  relationship comparison candidates -> review_gated
+  terminal disposition decisions -> review_gated
+  missing source text -> review_gated or blocked
+  inline embedding cleanup -> review_gated unless rollback-backed and explicitly approved
+
+Correct behavior:
+  monitor-sparta classifies direct/native QRA gaps as gated_runnable,
+  launches bounded reviewed /create-qras batches, verifies each batch, and
+  continues until the direct gap is empty or a real blocker occurs.
+
+Incorrect behavior:
+  monitor-sparta reports 4,614 missing QRAs forever while no create-qras
+  process is running and no lane is marked blocked or review-gated.
+```
+
+---
+
+See [RULES_EXTENDED.md](references/RULES_EXTENDED.md) for additional extended rules covering prompt usage, scillm, daemon endpoints, storage, error handling, response shapes, mandatory skill chains, memory reading, and service-first architecture.
 
 ---
 
@@ -455,6 +780,13 @@ Before submitting ANY code, check:
 3. **Did I import graph_memory directly?** → If yes, use the daemon socket
 4. **Did I build something that a skill already does?** → If yes, use the skill
 5. **Does my output show WHY, not just WHAT?** → If no, add reasoning
+6. **Did I call something a review without a reviewer/model?** → Rename it or wire the reviewer
+7. **Did a heuristic emit a confirmed label?** → Change it to a suspect hint and add an audit
+8. **Did I claim fixed/closed without a deterministic gate?** → Downgrade to pending
+9. **Can the decision be replayed from artifacts?** → If no, generate replay artifacts
+10. **Did I batch before a canary passed?** → Stop and prove one representative case first
+11. **Am I polishing a receipt instead of fixing the real blocker?** → Define the real success metric, fix/prove that first, then package evidence
+12. **Is a monitor reporting a failure without lane state + next action?** → Classify it as `auto_repairable`, `review_gated`, `blocked`, `failed_repair`, or `waived`, then run or surface the required action
 
 ---
 

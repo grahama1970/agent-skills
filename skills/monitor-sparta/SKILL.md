@@ -29,6 +29,36 @@ composes:
 **Continuous quality monitor for the SPARTA QRA pipeline.** Runs alongside Stage 12
 and validates at configurable checkpoints (default: every 10K QRAs).
 
+## Full Coverage Definition for SPARTA QRAs
+
+`/monitor-sparta` must report SPARTA QRA coverage by semantic bucket, not as a
+single LLM-call count. Full coverage means:
+
+1. Canonical SPARTA QRAs exist for every in-scope/actionable SPARTA technique,
+   tactic, and countermeasure.
+2. Technique-context relationship QRAs exist for valid tactic→technique and
+   technique→related-control prompts.
+3. Technique-related control-to-control QRAs exist only for pairs that pass
+   `/create-evidence-case` evidence-case adjudication inside technique `T`; raw related
+   control pairs are diagnostic candidates, not coverage obligations.
+4. Non-SPARTA native QRAs exist for configured source frameworks used by SPARTA
+   analysis: ATT&CK, CWE, NIST, CAPEC, D3FEND, ESA, NVD, and related imported
+   corpora.
+
+Health reporting must distinguish:
+
+- `raw_candidates`: diagnostic universe, never equivalent to missing QRAs
+- `gated_runnable`: evidence-gated jobs that should be run
+- `stored_qras`: schema-valid generated artifacts
+- `deterministic_skips`: valid no-call or no-store outcomes such as
+  `no_grounded_relationship`
+- `failures`: transport/schema/runtime defects
+
+A monitor status that reports only "remaining calls" is incomplete unless it
+identifies which bucket those calls belong to and whether control-to-control jobs
+were `/create-evidence-case` gated.
+
+
 ## Architecture
 
 ```
@@ -46,7 +76,7 @@ monitor-sparta (this skill)
     │   ├── Tier 2: Brandon via /scillm (edge cases only)
     │   │   └── Labels accumulate toward training threshold
     │   ├── Training trigger: ~2000 labels → /create-gpt iterate
-    │   ├── Auto-fix: regenerate failed controls
+    │   ├── Repair plans: write review-required manifests for failed controls
     │   └── Convergence: issue count must decrease
     │
     └── When GPT promoted (>90% agreement):
@@ -64,6 +94,41 @@ questions with 95%+ accurate results. Stops automatically when:
 - Persona test: 95%+ A+ accuracy (Margaret/Jennifer → Brandon → verify vs spreadsheet)
 - Or: human explicitly stops the monitor
 
+## Sparta Explorer Coverage UX
+
+`http://localhost:3002/#sparta-explorer/coverage` is the UX projection of this
+skill. The page must not be a passive report. Each Coverage section is a lane
+subagent under `/monitor-sparta`:
+
+| Coverage section | Lane subagent | Safe automatic behavior | Human-gated behavior |
+|------------------|---------------|--------------------------|----------------------|
+| QRA Generation | `qra_generation` | observe backlog, write manifests, rerun audits, launch reviewed/runnable native + SPARTA v2 `/create-qras` backlog | launch or override blocked control-to-control comparison jobs without accepted `/create-evidence-case` responses |
+| Prompt Health / Prompt Inventory | `prompt_health` | run `/best-practices-prompt`, classify prompt-unit failures, generate `/review-prompt` payloads | apply non-mechanical prompt rewrites or promote prompt changes |
+| Monitor Health | `monitor_health` | run health scanners, publish heartbeat/state | change thresholds or suppress dimensions |
+| UX Coverage | `ux_coverage` | scan data-qid/test-interaction coverage | edit React routes/components |
+| Python Fallbacks | `python_fallbacks` | scan silent fallback patterns | remove or rewrite fallback behavior |
+| Source/Text/QRA Coverage | `source_text_qra_coverage` | observe control/URL text and QRA gaps, write manifests | fetch URLs or generate QRAs |
+| Source/Embedding Coverage | `source_embedding_coverage` | observe Arango/Qdrant coverage, write manifests | mutate Arango/Qdrant |
+
+Trigger model:
+
+- push-triggered: UI, CLI, Discord, Slack, and voice commands enqueue lane work
+  immediately;
+- scheduled: nightly or supervisor-managed runs catch drift when no human is
+  present;
+- browser: WebSocket/SSE pushes state to Sparta Explorer, with polling fallback.
+
+Prompt Health lane rule:
+
+1. Run the local prompt-health scanner on prompt units, not isolated user
+   fragments or README files.
+2. Apply `/best-practices-prompt` first.
+3. Run `/review-prompt` for non-mechanical rewrites, low-confidence edits, or
+   prompts that affect generation semantics.
+4. Auto-apply only mechanical edits that pass the scanner and prompt canary.
+5. Escalate any semantic rewrite, schema change, or production-promotion
+   decision to the human with exact files, failure codes, and resume command.
+
 ### Persona-Driven Self-Improvement Loop
 
 The key differentiator: **Margaret Chen and Jennifer Cheung ARE the test harness.**
@@ -78,8 +143,8 @@ Margaret/Jennifer ask F-36 question
       → A+: correct, grounded, complete
       → F: wrong, hallucinated, or missing
         → Trace to source QRA keys
-          → Quarantine bad QRAs (quarantined=true, grounding_override=FAIL)
-            → Next checkpoint regenerates for affected controls
+              → Stage review-gated QRA repair candidates
+            → Approved apply regenerates affected controls
               → Retest. Loop until 95% A+.
 ```
 
@@ -230,3 +295,49 @@ The monitor tracks quality metrics across checkpoints:
 | `/monitor-sparta` | **Continuous autonomous monitoring** (this skill) |
 | `regenerate_failed.py` | Regeneration action triggered by this monitor |
 | `backfill_parent_context.py` | Upstream fix triggered by this monitor |
+
+## Data Integrity (ArangoDB Only)
+
+`/monitor-sparta` is ArangoDB-first. Do not use DuckDB in this workflow.
+
+Health command coverage (`monitor-sparta health`):
+1. Description audit
+2. Upstream version
+3. Source control parity (missing controls)
+4. Control description coverage (missing/empty descriptions)
+5. Relationship coverage
+6. Taxonomy backfill coverage
+7. Embedding gaps
+8. Corpus completeness
+9. Description preservation
+10. Requirement quality
+11. Formalizability coverage
+12. QRA evidence coverage (missing/empty evidence_case + version)
+13. QRA reasoning coverage
+14. Crosswalk edge coverage
+15. Crosswalk-chain schema discipline
+
+Read-only default:
+
+- `monitor-sparta` must not mutate SPARTA corpus data by default.
+- `monitor-sparta health --fix` is blocked unless
+  `SPARTA_MONITOR_MUTATION_ENABLED=1` is explicitly set for an approved,
+  rollback-backed apply.
+- Regeneration requests from checkpoint/persona paths must write
+  review-required manifests by default, not upsert controls, synthesize
+  descriptions, create relationships, or start Stage 12.
+- Missing source text is not a QRA eligibility problem to pad around. Stub text
+  such as "requires QRA generation" must be treated as missing/unsupported
+  evidence until authoritative text is supplied.
+
+Former automatic remediation lanes are now review-gated:
+
+- Backfill missing source controls into `sparta_controls`
+- Backfill missing/empty control descriptions
+- Backfill missing mind taxonomy tags
+- Backfill embedding gaps
+- Backfill QRA `evidence_case` fields (spans/glossary/version)
+- Backfill missing/invalid QRA reasoning
+
+Each mutating lane requires approved patch artifacts and rollback manifests
+before `SPARTA_MONITOR_MUTATION_ENABLED=1` may be used.

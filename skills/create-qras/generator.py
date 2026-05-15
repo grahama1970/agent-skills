@@ -15,12 +15,46 @@ import os
 import re
 import sys
 import time
+import importlib.util
 from pathlib import Path
 from typing import Any
 
 import httpx
 import typer
 import yaml
+
+SKILLS_ROOT = Path(__file__).resolve().parents[1]
+if str(SKILLS_ROOT) not in sys.path:
+    sys.path.insert(0, str(SKILLS_ROOT))
+
+
+def _load_json_cleaner():
+    """Prefer the project-local SPARTA JSON helper, then fall back to skill common."""
+    candidates = []
+    project_root_env = os.environ.get("SPARTA_PROJECT_ROOT")
+    if project_root_env:
+        candidates.append(Path(project_root_env) / ".agents" / "skills" / "json_utils.py")
+    candidates.append(Path.cwd() / ".agents" / "skills" / "json_utils.py")
+    candidates.append(Path("/home/graham/workspace/experiments/sparta/.agents/skills/json_utils.py"))
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        spec = importlib.util.spec_from_file_location("_sparta_json_utils", candidate)
+        if spec is None or spec.loader is None:
+            continue
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        cleaner = getattr(module, "clean_json_string", None)
+        if callable(cleaner):
+            return cleaner
+    try:
+        from common.json_utils import clean_json_string
+    except ImportError:
+        return None
+    return clean_json_string
+
+
+_clean_llm_json = _load_json_cleaner()
 
 # Import schema validation for CWE QRAs
 try:
@@ -45,7 +79,8 @@ except ImportError:
 
 app = typer.Typer(help="Generate QRA pairs from various sources")
 CREATE_QRAS_MANIFEST_STATE_FILE = Path.home() / ".create_qras_manifest_state.json"
-SCILLM_BATCH_CHUNK_SIZE = 4
+SCILLM_BATCH_CHUNK_SIZE = 8
+SCILLM_QRA_MODEL_POOL = os.getenv("SCILLM_QRA_MODEL_POOL", "qra-deepseek-pool")
 
 # Framework detection patterns
 # Updated 2026-04-16 to match actual control_id formats in sparta_controls
@@ -277,7 +312,7 @@ def _get_scillm_client() -> httpx.Client:
             "Authorization": "Bearer sk-dev-proxy-123",
             "x-caller-skill": "create-qras",
         },
-        timeout=300.0,  # Chutes can take 200s+ per call under load
+        timeout=900.0,  # Server-side QRA pool may queue and run up to 600s per lane
     )
 
 
@@ -289,7 +324,76 @@ def _get_async_scillm_client() -> httpx.AsyncClient:
             "Authorization": "Bearer sk-dev-proxy-123",
             "x-caller-skill": "create-qras",
         },
-        timeout=300.0,  # Chutes can take 200s+ per call under load
+        timeout=900.0,  # Server-side QRA pool may queue and run up to 600s per lane
+    )
+
+
+def _first_json_value(text: str) -> dict[str, Any] | list[Any] | None:
+    """Return the first complete JSON object/array in text."""
+    decoder = json.JSONDecoder()
+    for idx, char in enumerate(text):
+        if char not in "{[":
+            continue
+        try:
+            value, _end = decoder.raw_decode(text[idx:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, (dict, list)):
+            return value
+    return None
+
+
+def _parse_json_content(content: str) -> dict[str, Any]:
+    """Parse model JSON content through the shared skill JSON repair path."""
+    text = content.strip()
+    if not text:
+        raise ValueError("empty_json_response")
+    if text.startswith("```"):
+        lines = text.splitlines()
+        if lines and lines[0].strip().startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+    parsed = _first_json_value(text)
+    if isinstance(parsed, dict):
+        return parsed
+    if isinstance(parsed, list):
+        return {"pairs": parsed}
+    if _clean_llm_json is not None:
+        parsed = _clean_llm_json(content, return_dict=True)
+        if isinstance(parsed, dict):
+            return parsed
+        if isinstance(parsed, list):
+            return {"pairs": parsed}
+    parsed = json.loads(text)
+    if isinstance(parsed, dict):
+        return parsed
+    if isinstance(parsed, list):
+        return {"pairs": parsed}
+    raise ValueError(f"non_object_json_response:{parsed!r}")
+
+
+def _is_transient_qra_error(error: Any) -> bool:
+    """Return true for provider/proxy errors that are safe to retry."""
+    text = str(error or "").lower()
+    return any(
+        marker in text
+        for marker in (
+            "429",
+            "502",
+            "503",
+            "504",
+            "bad gateway",
+            "service unavailable",
+            "gateway timeout",
+            "timeout",
+            "timed out",
+            "temporarily",
+            "connection reset",
+            "empty_json_response",
+            "non_object_json_response",
+        )
     )
 
 
@@ -578,10 +682,28 @@ def _resolve_manifest_control(
     control_id: str,
     manifest_lookup: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any] | None:
-    """Resolve manifest snapshot first, then fall back to live /memory."""
-    if manifest_lookup and control_id in manifest_lookup:
-        return manifest_lookup[control_id]
-    return _fetch_control(client, control_id)
+    """Resolve a manifest control without letting sparse snapshots hide live data."""
+    manifest_doc = manifest_lookup.get(control_id) if manifest_lookup else None
+    live_doc = _fetch_control(client, control_id)
+
+    if manifest_doc and live_doc:
+        merged = dict(live_doc)
+        for key, value in manifest_doc.items():
+            if value in (None, "", [], {}):
+                continue
+            if (
+                isinstance(value, str)
+                and isinstance(live_doc.get(key), str)
+                and key.endswith("description")
+            ):
+                manifest_text = value.strip()
+                live_text = str(live_doc.get(key) or "").strip()
+                if len(live_text) > len(manifest_text) and live_text.startswith(manifest_text):
+                    continue
+            merged[key] = value
+        return merged
+
+    return live_doc or manifest_doc
 
 
 def _build_inline_relationship_control(
@@ -617,38 +739,58 @@ def _summarize_existing_qras(
     control_ids: list[str],
     progress_callback=None,
 ) -> tuple[dict[str, dict[str, int]], list[dict[str, str]]]:
-    """Summarize existing QRA totals per source control using filtered /list lookups."""
+    """Summarize legacy QRA totals per source control using one paged scan.
+
+    Do not issue one filtered /list request per control. On the large legacy
+    sparta_qra collection, those filters are slow enough to make review appear
+    stalled and they violate the memory skill's batch-access contract.
+    """
     summary: dict[str, dict[str, int]] = {}
     errors: list[dict[str, str]] = []
     if not control_ids:
         return summary, errors
 
-    for field in ("source_control_id", "control_id"):
-        for idx, control_id in enumerate(control_ids, start=1):
-            try:
-                resp = client.post(
-                    "/list",
-                    json={
-                        "collection": "sparta_qra",
-                        "filters": {field: control_id},
-                        "limit": 1,
-                        "return_fields": [field],
-                    },
-                )
-                resp.raise_for_status()
-                total = resp.json().get("total", 0)
-                if total:
-                    field_totals = summary.setdefault(control_id, {})
-                    field_totals[field] = total
-            except Exception as exc:
-                errors.append({
-                    "field": field,
-                    "control_id": control_id,
-                    "error": str(exc),
-                })
+    wanted = set(control_ids)
+    offset = 0
+    limit = 500
+    scanned = 0
+    try:
+        while True:
+            resp = client.post(
+                "/list",
+                json={
+                    "collection": "sparta_qra",
+                    "allow_full_scan": True,
+                    "offset": offset,
+                    "limit": limit,
+                    "return_fields": ["source_control_id", "control_id"],
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            docs = data.get("documents", [])
+            if not docs:
+                break
 
+            for doc in docs:
+                for field in ("source_control_id", "control_id"):
+                    control_id = doc.get(field)
+                    if control_id in wanted:
+                        field_totals = summary.setdefault(control_id, {})
+                        field_totals[field] = field_totals.get(field, 0) + 1
+
+            scanned += len(docs)
+            offset += len(docs)
             if progress_callback:
-                progress_callback(f"Existing-QRA check {idx}/{len(control_ids)} via {field}")
+                progress_callback(f"Existing-QRA scan {scanned}/{data.get('total', scanned)}")
+            if scanned >= data.get("total", 0):
+                break
+    except Exception as exc:
+        errors.append({
+            "field": "scan",
+            "control_id": "*",
+            "error": str(exc),
+        })
 
     return summary, errors
 
@@ -2102,6 +2244,88 @@ def _build_independent_evidence_case(control: dict) -> dict:
     }
 
 
+def _source_description_text(control: dict) -> str:
+    """Return the source-backed description text used for deterministic native fallback."""
+    text = str(control.get("description") or control.get("text") or "").strip()
+    if not text or text.lower() in {"no description", "none", "n/a", "null"}:
+        return ""
+    return re.sub(r"\s+", " ", text)
+
+
+def _first_sentence_or_clause(text: str, limit: int = 420) -> str:
+    """Compact source text without inventing a summary."""
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) <= limit:
+        return text
+    match = re.search(r"(?<=[.!?])\s+", text[:limit])
+    if match:
+        return text[: match.end()].strip()
+    return text[:limit].rstrip() + "..."
+
+
+def _build_deterministic_native_qras(
+    control: dict,
+    framework: str,
+    *,
+    raw_result: dict[str, Any] | None = None,
+) -> list[dict] | None:
+    """Build one source-description QRA when the LLM abstains on source-backed native content.
+
+    This fallback is deliberately narrow: it only uses the exact control id,
+    name/title, and description already present in the source control document.
+    """
+    control_id = str(control.get("control_id") or control.get("_key") or "").strip()
+    description = _source_description_text(control)
+    if not control_id or len(description) < 80:
+        return None
+
+    control_name = str(control.get("name") or control.get("title") or control_id).strip()
+    qra_type = FRAMEWORK_TO_CATEGORY.get(framework, f"{framework.lower()}_native")
+    qra_key = _generate_qra_key(qra_type, f"{control_id}_p1")
+    framework_label = framework if framework != "ATT&CK" else "MITRE ATT&CK"
+    excerpt = _first_sentence_or_clause(description, limit=700)
+
+    raw_reason = ""
+    if raw_result:
+        raw_reason = str(raw_result.get("skipped_reason") or raw_result.get("reason") or "").strip()
+
+    return [
+        {
+            "_key": qra_key,
+            "qra_id": qra_key,
+            "run_id": f"skill_create_qras_{int(time.time())}",
+            "qra_type": qra_type,
+            "category": qra_type,
+            "source_framework": framework,
+            "source_control_id": control_id,
+            "sparta_linked": False,
+            "created_at": int(time.time()),
+            "generator": "skill:create-qras",
+            "generation_method": "deterministic_native_source_description_fallback",
+            "fallback_from_model_no_pairs": True,
+            "fallback_reason": raw_reason,
+            "verdict": "SATISFIED",
+            "pair_id": f"{control_id}-QRA-1",
+            "pair_type": "source_description_definition",
+            "actionable_for": ["training"],
+            "question": f"What is {control_id} {control_name} according to {framework_label}?",
+            "reasoning": (
+                f"The source control record for {control_id} contains a source-backed "
+                "description, so the answer is derived directly from that description."
+            ),
+            "answer": f"{control_id} {control_name}: {excerpt}",
+            "confidence": "medium",
+            "evidence_quotes": [
+                {
+                    "quote": excerpt,
+                    "relevance": "Source control description used verbatim or with safe truncation.",
+                }
+            ],
+            "evidence_case": _build_independent_evidence_case(control),
+        }
+    ]
+
+
 def _format_cwe_record(control: dict) -> str:
     """Format CWE document into human-readable text for prompt injection."""
     control_id = control.get("control_id", control.get("_key"))
@@ -2419,6 +2643,354 @@ def _extract_cwe_sections(control: dict) -> dict[str, str]:
     return sections
 
 
+def _build_independent_qra_messages(
+    memory: httpx.Client | httpx.AsyncClient | None,
+    control: dict,
+    max_pairs: int = 6,
+) -> tuple[str, str, list[dict]]:
+    """Build the native independent-QRA prompt messages for one control."""
+    control_id = control.get("control_id", control.get("_key"))
+    raw_framework = control.get("source_framework") or _detect_framework(control_id) or "UNKNOWN"
+    framework = FRAMEWORK_PROMPT_MAP.get(raw_framework, raw_framework)
+    system_prompt = ""
+
+    if framework == "CWE":
+        system_prompt, user_template = _load_prompt_pair("cwe", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "")
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id or "(None)",
+        )
+    elif framework == "ATT&CK":
+        system_prompt, user_template = _load_prompt_pair("attack", native=True)
+        control_name = control.get("question", control.get("title", control.get("name", "Unknown")))
+        control_details = control.get("answer", control.get("description", "No description"))
+        supplementary = control.get("extended_content", control.get("supplementary", ""))
+        prompt = user_template.format(
+            framework=control.get("source_framework", "ATT_CK_Enterprise"),
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            supplementary_content=supplementary or "(No supplementary content available)",
+        )
+    elif framework == "D3FEND":
+        system_prompt, user_template = _load_prompt_pair("d3fend", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "Unknown")
+        mind_list = control.get("mind", [])
+        mind = ", ".join(mind_list) if isinstance(mind_list, list) else str(mind_list)
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id,
+            mind=mind or "Unknown",
+        )
+    elif framework == "CAPEC":
+        system_prompt, user_template = _load_prompt_pair("capec", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "")
+        category_name = control.get("category_name", "")
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id or "(None)",
+            category_name=category_name or "(Unknown)",
+        )
+    elif framework == "NIST":
+        system_prompt, user_template = _load_prompt_pair("nist", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        family = control.get("family", control.get("control_family", ""))
+        family_name = control.get("family_name", "")
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            family=family or "(Unknown)",
+            family_name=family_name or "(Unknown)",
+        )
+    elif framework == "SPARTA":
+        system_prompt, prompt = _build_sparta_native_prompt(memory, control)
+    elif framework == "ESA":
+        system_prompt, user_template = _load_prompt_pair("esa", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        parent_id = control.get("parent_id", "")
+        prompt = user_template.format(
+            control_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            parent_id=parent_id or "(None)",
+        )
+    elif framework == "NVD":
+        system_prompt, user_template = _load_prompt_pair("cve", native=True)
+        control_name = control.get("name", control.get("title", "Unknown"))
+        control_details = control.get("description", "No description")
+        weaknesses = control.get("weaknesses", control.get("cwe_ids", []))
+        if isinstance(weaknesses, list):
+            weaknesses = json.dumps(weaknesses)
+        vuln_status = control.get("vuln_status", control.get("status", "Unknown"))
+        prompt = user_template.format(
+            cve_id=control_id,
+            control_name=control_name,
+            control_details=control_details,
+            weaknesses=weaknesses,
+            vuln_status=vuln_status,
+        )
+    else:
+        title = control.get("title", control.get("name", "Untitled"))
+        description = control.get("description", control.get("text", "No description"))
+        prompt_template = _load_prompt("independent")
+        prompt = prompt_template.format(
+            max_pairs=max_pairs,
+            framework=framework,
+            control_id=control_id,
+            title=title,
+            description=description,
+        )
+
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+    return raw_framework, framework, messages
+
+
+def _independent_qra_docs_from_result(
+    control: dict,
+    raw_framework: str,
+    framework: str,
+    result: dict,
+) -> list[dict] | dict | None:
+    """Convert one parsed independent-QRA model result into storage documents."""
+    control_id = control.get("control_id", control.get("_key"))
+
+    if result.get("abstained", False):
+        return {
+            "abstained": True,
+            "abstain_reason_code": result.get("abstain_reason_code", "unknown"),
+            "abstain_reason": result.get("abstain_reason", "Model abstained"),
+            "control_id": control_id,
+            "pair_count": 0,
+        }
+
+    pairs = result.get("pairs", [])
+    if not pairs:
+        fallback_qras = _build_deterministic_native_qras(control, framework, raw_result=result)
+        if fallback_qras:
+            return fallback_qras
+        reason = result.get("reason") or result.get("abstain_reason") or "no_pairs"
+        return _build_skipped_result(reason, control_id=control_id, raw_result=result)
+
+    if framework == "CWE" and HAS_SCHEMA_VALIDATION:
+        try:
+            record_sections = _extract_cwe_sections(control)
+            validated = validate_qra_payload(result, record_sections)
+            pairs = [p.model_dump() for p in validated.pairs]
+        except Exception as validation_error:
+            print(f"Schema validation warning for {control_id}: {validation_error}")
+
+    run_id = f"skill_create_qras_{int(time.time())}"
+    qra_docs = []
+    qra_type = FRAMEWORK_TO_CATEGORY.get(framework, f"{framework.lower()}_native")
+
+    for idx, pair in enumerate(pairs, start=1):
+        qra_key = _generate_qra_key(qra_type, f"{control_id}_p{idx}")
+        raw_evidence = pair.get("evidence_quotes", pair.get("evidence", []))
+        evidence_quotes = [
+            {
+                "quote": e.get("quote", ""),
+                "relevance": e.get("relevance", e.get("field", "")),
+            }
+            for e in raw_evidence
+        ]
+
+        qra_docs.append({
+            "_key": qra_key,
+            "qra_id": qra_key,
+            "run_id": run_id,
+            "qra_type": qra_type,
+            "category": qra_type,
+            "source_framework": framework,
+            "source_control_id": control_id,
+            "sparta_linked": False,
+            "created_at": int(time.time()),
+            "generator": "skill:create-qras",
+            "verdict": "SATISFIED",
+            "pair_id": pair.get("pair_id", f"{control_id}-QRA-{idx}"),
+            "pair_type": pair.get("pair_type"),
+            "actionable_for": pair.get("actionable_for", []),
+            "question": pair.get("question"),
+            "reasoning": pair.get("reasoning"),
+            "answer": pair.get("answer"),
+            "confidence": pair.get("confidence"),
+            "evidence_quotes": evidence_quotes,
+            "evidence_case": _build_independent_evidence_case(control),
+        })
+
+    return qra_docs
+
+
+async def _iter_sse_events(response: httpx.Response):
+    """Yield ``(event, data)`` pairs from a text/event-stream response."""
+    event_name = "message"
+    data_lines: list[str] = []
+    async for line in response.aiter_lines():
+        if line == "":
+            if data_lines:
+                raw_data = "\n".join(data_lines)
+                yield event_name, json.loads(raw_data)
+            event_name = "message"
+            data_lines = []
+            continue
+        if line.startswith(":"):
+            continue
+        if line.startswith("event:"):
+            event_name = line[len("event:"):].strip() or "message"
+        elif line.startswith("data:"):
+            data_lines.append(line[len("data:"):].strip())
+    if data_lines:
+        yield event_name, json.loads("\n".join(data_lines))
+
+
+async def _post_scillm_batch_stream(
+    client: httpx.AsyncClient,
+    payload: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    """Submit a scillm model-pool batch and collect terminal item events.
+
+    The stream endpoint emits heartbeats while items are running, which prevents
+    the caller from mistaking a long provider call for a dead connection. The
+    QRA runner still returns per-item results to the existing storage path.
+    """
+    results_by_id: dict[str, dict[str, Any]] = {}
+    batch_done: dict[str, Any] | None = None
+    async with client.stream("POST", "/v1/scillm/batch/completions/stream", json=payload) as response:
+        response.raise_for_status()
+        async for event_name, event_data in _iter_sse_events(response):
+            if event_name == "item_completed":
+                item_id = str(event_data.get("item_id") or event_data.get("id") or "")
+                if item_id:
+                    results_by_id[item_id] = event_data
+            elif event_name == "item_failed":
+                item_id = str(event_data.get("item_id") or event_data.get("id") or "")
+                if item_id:
+                    results_by_id[item_id] = event_data
+            elif event_name == "item_replayed":
+                item_id = str(event_data.get("item_id") or event_data.get("id") or "")
+                if item_id:
+                    replayed = dict(event_data)
+                    if "ok" not in replayed:
+                        replayed["ok"] = replayed.get("status") == "ok"
+                    results_by_id[item_id] = replayed
+            elif event_name == "batch_done":
+                batch_done = event_data
+            elif event_name in {"batch_started", "item_started", "heartbeat"}:
+                continue
+
+    if batch_done is None:
+        raise RuntimeError("scillm batch stream ended without batch_done")
+    return results_by_id
+
+
+async def _generate_independent_qra_chunk_async(
+    client: httpx.AsyncClient,
+    memory: httpx.AsyncClient,
+    controls: list[dict],
+    max_pairs: int = 6,
+    batch_id: str | None = None,
+    chunk_index: int | None = None,
+    attempt: int = 1,
+) -> list[tuple[int, dict, list[dict] | dict | None]]:
+    """Generate one real multi-item scillm pool batch for a chunk of controls."""
+    parent_batch_id = batch_id or f"create-qras-independent-{int(time.time())}"
+    attempt_suffix = f"-attempt-{attempt:02d}" if attempt > 1 else ""
+    child_batch_id = (
+        f"{parent_batch_id}-chunk-{chunk_index:04d}{attempt_suffix}"
+        if chunk_index is not None
+        else f"{parent_batch_id}{attempt_suffix}"
+    )
+    items = []
+    metadata_by_id = {}
+
+    for idx, control in enumerate(controls):
+        control_id = str(control.get("control_id", control.get("_key")))
+        try:
+            raw_framework, framework, messages = _build_independent_qra_messages(memory, control, max_pairs=max_pairs)
+        except Exception as e:
+            metadata_by_id[control_id] = (idx, control, None, None)
+            items.append({"id": control_id, "messages": [{"role": "user", "content": f"Prompt build failed: {e}"}]})
+            continue
+        metadata_by_id[control_id] = (idx, control, raw_framework, framework)
+        items.append({"id": control_id, "messages": messages})
+
+    try:
+        results_by_id = await _post_scillm_batch_stream(
+            client,
+            {
+                "model_pool": SCILLM_QRA_MODEL_POOL,
+                "batch_id": child_batch_id,
+                "temperature": 0,
+                "response_format": {"type": "json_object"},
+                "items": items,
+            },
+        )
+    except Exception as e:
+        return [
+            (idx, control, {"error": str(e), "control_id": control.get("control_id", control.get("_key")), "batch_id": child_batch_id})
+            for idx, control in enumerate(controls)
+        ]
+    output = []
+    for item in items:
+        item_id = str(item.get("id"))
+        idx, control, raw_framework, framework = metadata_by_id[item_id]
+        item_result = results_by_id.get(item_id)
+        if not item_result:
+            output.append((idx, control, {
+                "error": "scillm batch returned no result for item",
+                "control_id": control.get("control_id", control.get("_key")),
+                "batch_id": child_batch_id,
+            }))
+            continue
+        if not raw_framework or not framework:
+            output.append((idx, control, {
+                "error": "independent QRA prompt build failed",
+                "control_id": control.get("control_id", control.get("_key")),
+                "batch_id": child_batch_id,
+            }))
+            continue
+        if not item_result.get("ok"):
+            output.append((idx, control, {
+                "error": item_result.get("error") or "scillm batch item failed",
+                "control_id": control.get("control_id", control.get("_key")),
+                "batch_id": child_batch_id,
+                "provider": item_result.get("provider"),
+                "model": item_result.get("model"),
+            }))
+            continue
+        try:
+            parsed = _parse_json_content(item_result.get("content") or "")
+            output.append((idx, control, _independent_qra_docs_from_result(control, raw_framework, framework, parsed)))
+        except Exception as e:
+            output.append((idx, control, {
+                "error": str(e),
+                "control_id": control.get("control_id", control.get("_key")),
+                "batch_id": child_batch_id,
+                "provider": item_result.get("provider"),
+                "model": item_result.get("model"),
+            }))
+
+    return output
+
+
 async def _generate_independent_qra_async(
     client: httpx.AsyncClient,
     control: dict,
@@ -2565,32 +3137,45 @@ async def _generate_independent_qra_async(
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        request_body = {
-            "model": "text",
-            "messages": messages,
-            "response_format": {"type": "json_object"},
-        }
-        # Add scillm_metadata for automatic batch resume and dashboard progress
-        if batch_id:
-            metadata = {
-                "batch_id": batch_id,
-                "item_id": control_id,
-            }
-            if expected_total:
-                metadata["expected_total"] = expected_total
-            # Chunk tracking for hierarchical dashboard display
-            if chunk_index is not None:
-                metadata["chunk_index"] = chunk_index
-            if chunk_total is not None:
-                metadata["chunk_total"] = chunk_total
-            if item_index_in_chunk is not None:
-                metadata["item_index_in_chunk"] = item_index_in_chunk
-            request_body["scillm_metadata"] = metadata
-
-        resp = await client.post("/v1/chat/completions", json=request_body)
+        item_id = str(control_id)
+        safe_item_id = re.sub(r"[^A-Za-z0-9_.:-]+", "_", item_id)
+        parent_batch_id = batch_id or f"create-qras-independent-{int(time.time())}"
+        child_batch_id = (
+            f"{parent_batch_id}-chunk-{chunk_index:04d}-{safe_item_id}"
+            if chunk_index is not None
+            else f"{parent_batch_id}-{safe_item_id}"
+        )
+        resp = await client.post(
+            "/v1/scillm/batch/completions",
+            json={
+                "model_pool": SCILLM_QRA_MODEL_POOL,
+                "batch_id": child_batch_id,
+                "temperature": 0,
+                "response_format": {"type": "json_object"},
+                "items": [
+                    {
+                        "id": item_id,
+                        "messages": messages,
+                    }
+                ],
+            },
+        )
         resp.raise_for_status()
-        content = resp.json()["choices"][0]["message"]["content"]
-        result = json.loads(content)
+        batch_data = resp.json()
+        results = batch_data.get("results") or []
+        if not results:
+            return {"error": "scillm batch returned no results", "control_id": control_id, "batch_id": child_batch_id}
+        item_result = results[0]
+        if not item_result.get("ok"):
+            return {
+                "error": item_result.get("error") or "scillm batch item failed",
+                "control_id": control_id,
+                "batch_id": child_batch_id,
+                "provider": item_result.get("provider"),
+                "model": item_result.get("model"),
+            }
+        content = item_result.get("content") or ""
+        result = _parse_json_content(content)
 
         # New schema: check abstained flag
         if result.get("abstained", False):
@@ -2605,6 +3190,9 @@ async def _generate_independent_qra_async(
         # New schema: pairs array with 1-6 items
         pairs = result.get("pairs", [])
         if not pairs:
+            fallback_qras = _build_deterministic_native_qras(control, framework, raw_result=result)
+            if fallback_qras:
+                return fallback_qras
             # Check both old and new schema field names
             reason = result.get("reason") or result.get("abstain_reason") or "no_pairs"
             return _build_skipped_result(reason, control_id=control_id, raw_result=result)
@@ -2667,15 +3255,12 @@ async def _run_batch_independent_qras(
     store_callback=None,  # Called with each QRA as it completes (as_completed pattern)
     state_callback=None,
 ) -> list[dict]:
-    """Run batch independent QRA generation with as_completed pattern.
+    """Run batch independent QRA generation through the scillm model pool.
 
-    Uses asyncio.as_completed to process each LLM result immediately:
-    1. Fire chunk_size LLM calls in parallel
-    2. As each completes, call /create-evidence-case to enrich
-    3. Store immediately via store_callback (crash-safe)
-
-    This maximizes throughput since evidence case enrichment runs while
-    other LLM calls are still in flight.
+    Each chunk is submitted as one multi-item /v1/scillm/batch/completions
+    request. The pool scheduler assigns lanes by item index within that request,
+    so one-item calls would bypass the intended Chutes/OpenCode Go distribution.
+    Completed chunk items are enriched and stored immediately for crash safety.
     """
     all_results = []
     stored_count = 0
@@ -2705,27 +3290,53 @@ async def _run_batch_independent_qras(
                         "total_jobs": total,
                     })
 
-                # Create tasks that return (index, control, result) for context
-                async def process_control(idx: int, ctrl: dict):
-                    try:
-                        result = await _generate_independent_qra_async(
-                            scillm_client, ctrl,
-                            batch_id=batch_id,
-                            expected_total=total,
-                            chunk_index=chunk_num,
-                            chunk_total=total_chunks,
-                            item_index_in_chunk=idx + 1,
-                        )
-                        return (idx, ctrl, result)
-                    except Exception as e:
-                        return (idx, ctrl, {"error": str(e)})
+                # Submit the whole chunk as one real scillm pool batch. The
+                # pool distributes lanes by item index inside a batch, so
+                # one-item calls defeat Chutes/OpenCode Go model pooling.
+                chunk_results = []
+                last_chunk_error = None
+                for attempt in range(1, 4):
+                    chunk_results = await _generate_independent_qra_chunk_async(
+                        scillm_client,
+                        memory_client,
+                        chunk,
+                        batch_id=batch_id,
+                        chunk_index=chunk_num,
+                        attempt=attempt,
+                    )
+                    retryable_errors = [
+                        (ctrl, result.get("error"))
+                        for _idx, ctrl, result in chunk_results
+                        if isinstance(result, dict)
+                        and result.get("error")
+                        and _is_transient_qra_error(result.get("error"))
+                    ]
+                    hard_errors = [
+                        (ctrl, result.get("error"))
+                        for _idx, ctrl, result in chunk_results
+                        if isinstance(result, dict)
+                        and result.get("error")
+                        and not _is_transient_qra_error(result.get("error"))
+                    ]
+                    if not retryable_errors or hard_errors or attempt == 3:
+                        break
+                    last_chunk_error = retryable_errors[0][1]
+                    if state_callback:
+                        for ctrl, error in retryable_errors:
+                            state_callback({
+                                "event": "job_retry",
+                                "source_id": ctrl.get("control_id", ctrl.get("_key")),
+                                "attempt": attempt,
+                                "error": error,
+                            })
+                    await asyncio.sleep(10 * attempt)
 
-                tasks = [process_control(i, ctrl) for i, ctrl in enumerate(chunk)]
+                if not chunk_results:
+                    raise RuntimeError(f"QRA generation failed for chunk {chunk_num}: {last_chunk_error or 'empty result'}")
 
-                # Process results as they complete (as_completed pattern)
+                # Process results after the scillm pool batch returns.
                 chunk_stored = 0
-                for coro in asyncio.as_completed(tasks):
-                    idx, ctrl, result = await coro
+                for idx, ctrl, result in sorted(chunk_results, key=lambda item: item[0]):
 
                     # Handle exceptions
                     if isinstance(result, Exception):
@@ -2743,6 +3354,21 @@ async def _run_batch_independent_qras(
                         continue
 
                     # Process list of QRAs or single QRA
+                    if isinstance(result, dict) and result.get("error"):
+                        error = result.get("error")
+                        all_results.append(result)
+                        if state_callback:
+                            state_callback({
+                                "event": "job_complete",
+                                "source_id": ctrl.get("control_id", ctrl.get("_key")),
+                                "ok": False,
+                                "skipped": False,
+                                "qra_count": 0,
+                                "stored_count": 0,
+                                "error": error,
+                            })
+                        continue
+
                     qras_to_process = result if isinstance(result, list) else [result]
                     item_qra_count = 0
                     item_stored_count = 0
@@ -2786,6 +3412,18 @@ async def _run_batch_independent_qras(
 
                 if progress_callback and store_callback:
                     progress_callback(f"  Stored {chunk_stored} QRAs (total: {stored_count})")
+
+                chunk_errors = [
+                    result
+                    for _idx, _ctrl, result in chunk_results
+                    if isinstance(result, dict) and result.get("error")
+                ]
+                if chunk_errors:
+                    first_error = chunk_errors[0]
+                    raise RuntimeError(
+                        "QRA generation failed for "
+                        f"{first_error.get('control_id', 'unknown')}: {first_error.get('error')}"
+                    )
 
     return all_results
 
@@ -2979,14 +3617,12 @@ def _json_safe_copy(value: Any, *, _seen: set[int] | None = None) -> Any:
 
 
 def _store_qra(client: httpx.Client, qra: dict, collection: str | None = None) -> bool:
-    """Store QRA to v2 collection with embedding.
+    """Store QRA to v2 collection through memory's canonical upsert path.
 
     v2 architecture:
     - sparta_qra_canonical: native QRAs (about one control)
     - sparta_qra_relationship: relationship QRAs (why two controls relate)
     """
-    import sys
-
     # Determine target collection from qra_type if not specified
     if collection is None:
         qra_type = qra.get("qra_type", "")
@@ -2997,27 +3633,24 @@ def _store_qra(client: httpx.Client, qra: dict, collection: str | None = None) -
             collection = "sparta_qra_canonical"
 
     qra_doc = _json_safe_copy(qra)
-    embed_text = f"{qra_doc.get('question', '')} {qra_doc.get('answer', '')} {qra_doc.get('reasoning', '')}".strip()
-    print(f"DEBUG: Getting embedding for {qra.get('_key', 'unknown')} ({len(embed_text)} chars)", file=sys.stderr)
-    embedding = _get_embedding(embed_text)
-    print(f"DEBUG: Got embedding: {len(embedding) if embedding else None}", file=sys.stderr)
-    if embedding:
-        qra_doc["embedding"] = embedding
-        print(f"DEBUG: Added embedding to qra, now has {len(qra_doc.get('embedding', []))} dims", file=sys.stderr)
-    else:
-        print(f"WARNING: No embedding for {qra.get('_key', 'unknown')}", file=sys.stderr)
+    for field in ("_id", "_rev", "embedding", "embeddings", "embedding_multimodal"):
+        qra_doc.pop(field, None)
 
     try:
-        payload = {"document": qra_doc, "collection": collection}
-        print(f"DEBUG: Storing to {collection}: {qra.get('_key', 'unknown')}", file=sys.stderr)
-        resp = client.post("/store", json=payload)
+        payload = {"documents": [qra_doc], "collection": collection, "skip_embedding": False}
+        resp = client.post("/upsert", json=payload)
         if resp.status_code != 200:
-            print(f"STORAGE FAILED {resp.status_code} for {qra.get('_key', 'unknown')}: {resp.text}", file=sys.stderr)
+            raise RuntimeError(
+                f"/upsert {collection} failed for {qra.get('_key', 'unknown')} "
+                f"({resp.status_code}): {resp.text[:1000]}"
+            )
         resp.raise_for_status()
+        result = resp.json()
+        if result.get("errors"):
+            raise RuntimeError(f"/upsert {collection} returned errors for {qra.get('_key', 'unknown')}: {result['errors']}")
         return True
     except Exception as e:
-        print(f"STORAGE ERROR for {qra.get('_key', 'unknown')}: {e}", file=sys.stderr)
-        return False
+        raise RuntimeError(f"QRA storage failed for {qra.get('_key', 'unknown')} in {collection}: {e}") from e
 
 
 @app.command()
@@ -3491,6 +4124,7 @@ def manifest(
     prompt_kind: str = typer.Option("", "--prompt-kind", "-p", help="Filter by prompt_kind"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be processed"),
     skip_review: bool = typer.Option(False, "--skip-review", help="Skip review gate check"),
+    batch_id: str = typer.Option("", "--batch-id", help="Stable scillm batch id for replay/resume"),
 ):
     """Execute QRA generation from a pre-built manifest.
 
@@ -3508,6 +4142,10 @@ def manifest(
 
     with open(manifest_file) as f:
         manifest_data = json.load(f)
+
+    if not batch_id:
+        safe_stem = re.sub(r"[^A-Za-z0-9_.:-]+", "-", manifest_file.stem).strip("-")
+        batch_id = f"create-qras-manifest-{safe_stem}"
 
     # Check review gate
     review_path = manifest_file.with_name(manifest_file.stem.replace("_manifest", "_review") + ".json")
@@ -3674,17 +4312,30 @@ def manifest(
                     progress_callback=progress,
                     store_callback=store_cb,
                     state_callback=state_event,
+                    batch_id=batch_id,
                 ))
                 qra_count = sum(1 for r in results if isinstance(r, dict) and "error" not in r and not r.get("skipped"))
+                skipped_items = [r for r in results if isinstance(r, dict) and r.get("skipped")]
                 error_items = [r for r in results if isinstance(r, dict) and "error" in r]
                 err_count = len(error_items)
                 total_qras += qra_count
                 errors += err_count
-                state["last_message"] = f"Canonical complete: {qra_count} QRAs, {err_count} errors"
+                state["last_message"] = f"Canonical complete: {qra_count} QRAs, {len(skipped_items)} skipped, {err_count} errors"
                 persist_state()
-                typer.echo(f"  Generated {qra_count} QRAs, {err_count} errors")
+                typer.echo(f"  Generated {qra_count} QRAs, {len(skipped_items)} skipped, {err_count} errors")
+                for item in skipped_items[:5]:
+                    typer.echo(
+                        "    SKIP "
+                        f"{item.get('control_id', item.get('source_id', 'unknown'))}: "
+                        f"{item.get('skipped_reason', item.get('reason', 'unknown'))}"
+                    )
                 for item in error_items[:5]:
                     typer.echo(f"    ERROR {item.get('source_id', item.get('control_id', 'unknown'))}: {item.get('error')}")
+                if qra_count == 0 and skipped_items and not error_items:
+                    raise RuntimeError(
+                        f"canonical manifest produced zero QRAs and skipped {len(skipped_items)} jobs; "
+                        "treating as failed no-op"
+                    )
 
         # Process relationship jobs via _run_batch_relationship_qras
         if relationship_jobs:
@@ -3740,18 +4391,31 @@ def manifest(
                     progress_callback=progress,
                     store_callback=store_cb,
                     state_callback=state_event,
+                    batch_id=batch_id,
                 ))
                 qra_count = sum(1 for r in results if isinstance(r, dict) and "error" not in r and not r.get("skipped"))
+                skipped_items = [r for r in results if isinstance(r, dict) and r.get("skipped")]
                 error_items = [r for r in results if isinstance(r, dict) and "error" in r]
                 err_count = len(error_items)
                 total_qras += qra_count
                 errors += err_count
-                state["last_message"] = f"Relationship complete: {qra_count} QRAs, {err_count} errors"
+                state["last_message"] = f"Relationship complete: {qra_count} QRAs, {len(skipped_items)} skipped, {err_count} errors"
                 persist_state()
-                typer.echo(f"  Generated {qra_count} QRAs, {err_count} errors")
+                typer.echo(f"  Generated {qra_count} QRAs, {len(skipped_items)} skipped, {err_count} errors")
+                for item in skipped_items[:5]:
+                    typer.echo(
+                        "    SKIP "
+                        f"{item.get('source_id', 'unknown')} -> {item.get('target_id', 'unknown')}: "
+                        f"{item.get('skipped_reason', item.get('reason', 'unknown'))}"
+                    )
                 for item in error_items[:5]:
                     typer.echo(
                         f"    ERROR {item.get('source_id', 'unknown')} -> {item.get('target_id', 'unknown')}: {item.get('error')}"
+                    )
+                if qra_count == 0 and skipped_items and not error_items:
+                    raise RuntimeError(
+                        f"relationship manifest produced zero QRAs and skipped {len(skipped_items)} jobs; "
+                        "treating as failed no-op"
                     )
 
         state["status"] = "completed"
@@ -3877,6 +4541,11 @@ def preflight(
 def review(
     manifest_path: str = typer.Argument(..., help="Path to execution manifest JSON"),
     output: str = typer.Option("", "--output", "-o", help="Output path for review JSON (default: manifest_review.json)"),
+    audit_legacy_overlap: bool = typer.Option(
+        False,
+        "--audit-legacy-overlap",
+        help="Opt in to scanning legacy sparta_qra for overlap warnings. Disabled by default because v2 target collections are authoritative for repair gating.",
+    ),
 ):
     """Generate a review dossier for a manifest with deterministic checks.
 
@@ -4046,30 +4715,31 @@ def review(
                 "detail": f"Could not verify existing v2 target jobs: {e}"
             })
 
-        try:
-            legacy_existing_qras, qra_lookup_errors = _summarize_existing_qras(
-                memory,
-                source_ids,
-                progress_callback=lambda msg: typer.echo(f"  {msg}"),
-            )
-            if legacy_existing_qras:
+        if audit_legacy_overlap:
+            try:
+                legacy_existing_qras, qra_lookup_errors = _summarize_existing_qras(
+                    memory,
+                    source_ids,
+                    progress_callback=lambda msg: typer.echo(f"  {msg}"),
+                )
+                if legacy_existing_qras:
+                    warnings.append({
+                        "id": "W004",
+                        "title": "Legacy sparta_qra overlap",
+                        "detail": f"{len(legacy_existing_qras)} source controls already have legacy sparta_qra docs"
+                    })
+                if qra_lookup_errors:
+                    warnings.append({
+                        "id": "W005",
+                        "title": "Existing-QRA scan errors",
+                        "detail": f"{len(qra_lookup_errors)} paged legacy sparta_qra scans failed during review"
+                    })
+            except Exception as e:
                 warnings.append({
-                    "id": "W004",
-                    "title": "Legacy sparta_qra overlap",
-                    "detail": f"{len(legacy_existing_qras)} source controls already have legacy sparta_qra docs"
+                    "id": "W008",
+                    "title": "Legacy overlap lookup failed",
+                    "detail": f"Could not verify legacy sparta_qra overlap: {e}"
                 })
-            if qra_lookup_errors:
-                warnings.append({
-                    "id": "W005",
-                    "title": "Existing-QRA lookup errors",
-                    "detail": f"{len(qra_lookup_errors)} filtered /list lookups failed during review"
-                })
-        except Exception as e:
-            warnings.append({
-                "id": "W008",
-                "title": "Legacy overlap lookup failed",
-                "detail": f"Could not verify legacy sparta_qra overlap: {e}"
-            })
 
     # 6. Prompt inventory with hashes
     prompt_kinds = set(j.get("prompt_kind") for j in jobs if j.get("prompt_kind"))
@@ -4174,8 +4844,12 @@ def review(
             },
             {
                 "name": "legacy_sparta_qra_overlap",
-                "status": "warn" if legacy_existing_qras else "pass",
-                "detail": f"{len(legacy_existing_qras)} source ids already exist in legacy sparta_qra",
+                "status": ("warn" if legacy_existing_qras else "pass") if audit_legacy_overlap else "skipped",
+                "detail": (
+                    f"{len(legacy_existing_qras)} source ids already exist in legacy sparta_qra"
+                    if audit_legacy_overlap
+                    else "legacy overlap scan skipped by default; v2 target collections are authoritative for repair gating"
+                ),
             },
             {
                 "name": "existing_qra_lookup",

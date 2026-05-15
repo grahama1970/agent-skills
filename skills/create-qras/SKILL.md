@@ -30,6 +30,55 @@ taxonomy:
 
 Generate QRA pairs from any source: controls, documents, or raw text.
 
+## Mandatory Preflight Before Any QRA Run
+
+Before running `review`, `manifest`, `generate`, or modifying this skill, the
+agent must read this entire `SKILL.md` from disk and print a read receipt. The
+receipt must include:
+
+- absolute `SKILL.md` path
+- line count
+- SHA-256 hash
+- selected mode: `native`, `relationship`, `standalone`, or `auto`
+- execution scope: `smoke`, `canary`, `corpus_repair`, or `skill_edit`
+- backend contract for the chosen scope
+- execution gate for the chosen scope
+- JSON repair path
+- fail-fast rule
+
+Required backend contract for large/corpus repair:
+
+- use `/v1/scillm/batch/completions`
+- use `model_pool: "qra-deepseek-pool"` by default
+- use stable `batch_id`
+- use stable item ids
+- use `response_format: {"type": "json_object"}`
+- do not hand-pick provider SDKs or call Claude/Codex OAuth for high-volume QRA generation
+
+Required execution gate for corpus repair:
+
+1. `./run.sh review <manifest>`
+2. inspect `BLOCKED` / `CANARY_ONLY` / `FULL_RUN_OK`
+3. `./run.sh manifest <manifest> --limit <N> --dry-run`
+4. small canary write
+5. only then a larger reviewed batch
+
+Required JSON repair path:
+
+1. project-local `.agents/skills/json_utils.py`
+2. shared `skills/common/json_utils.py` fallback
+
+If `.agents/skills/json_utils.py` lacks real JSON extraction/repair for LLM
+output, stop and fix it before running QRA generation.
+
+Required fail-fast rule:
+
+- unrecovered item errors fail the manifest run
+- partial progress is not success
+- a run with skipped/error jobs must not be reported green
+
+If the read receipt is missing, the run is invalid even if it writes QRAs.
+
 ## Quick Decision: Which Mode Do I Use?
 
 | I want to answer... | Use mode | Example |
@@ -203,7 +252,21 @@ QRAs failing gates get `verdict: NEEDS_REVIEW` and should not be used.
 
 ## LLM Backend
 
-Uses `/scillm` proxy with `model: "text"`. All models via Chutes API.
+Uses `/scillm` proxy. For large QRA/default DeepSeek work, `create-qras`
+MUST use `POST /v1/scillm/batch/completions` with
+`model_pool: "qra-deepseek-pool"` by default, stable `batch_id`, stable item ids, and
+`response_format: {"type": "json_object"}`. The skill must not hand-pick
+provider SDKs or run high-volume QRA calls through Claude/Codex OAuth.
+
+If a pool lane is degraded during a live corpus repair, the operator may set
+`SCILLM_QRA_MODEL_POOL` to a scillm-defined QRA pool such as
+`qra-deepseek-opencode-pool`. This is still server-side scillm pooling; it is
+not permission to bypass scillm or call provider SDKs directly.
+
+Single/control smoke calls may use `/v1/chat/completions` with a family-specific
+profile such as `chutes-deepseek` or `oc-deepseek`; avoid `model: "text"`
+because broad cross-family fallback can change prompt/response behavior.
+Batch repair and corpus coverage work uses the server-side pool.
 
 | Priority | Model | Timeout | Notes |
 |----------|-------|---------|-------|
@@ -214,16 +277,19 @@ Uses `/scillm` proxy with `model: "text"`. All models via Chutes API.
 | 5 | Qwen3-235B-A22B-Thinking | 180s | 100% grounding |
 | 6 | Qwen3.5-397B-A17B-TEE | 300s | Last resort |
 
-### How Fallbacks Work
+### How Model Pools Work
 
-The scillm proxy manages fallbacks dynamically:
+For QRA generation, scillm manages explicit model-pool lanes, not broad
+cross-family fallback:
 
-1. **Request routing:** Skill requests `model: "text"` → proxy resolves to primary (V3.2-TEE)
-2. **Failure detection:** If primary returns 429/503/timeout, proxy automatically tries next in chain
-3. **Circuit breaker:** After N consecutive failures, model is temporarily removed from rotation
-4. **Recovery:** Circuit breaker resets after cooldown; model rejoins the chain
+1. **Request routing:** Skill submits QRA batch items to `qra-deepseek-pool`; scillm routes each item to configured DeepSeek-family lanes.
+2. **Lane consistency:** The pool must stay inside the intended model family unless the operator explicitly selects another scillm-defined pool.
+3. **Provider/catalog validation:** Before large corpus repair, verify `/v1/scillm/model-pools/qra-deepseek-pool/status` and the Chutes catalog show the configured DeepSeek lane is currently callable.
+4. **Failure handling:** Retry transient lane failures, but do not silently switch QRA generation to an unrelated model family.
 
-**Fallback chain is defined in config, not code.** The proxy reads `router_settings.fallbacks` from `proxy_server_config.yaml` and executes the chain. Skills don't know which model actually served the request — they just get the response.
+**Pool lane configuration is defined in scillm, not project code.**
+The skill declares the pool and structured-output requirement; scillm selects
+the actual serving model/lane and records provider/model metadata.
 
 **Resource allocation:** Models are ordered by:
 - **Availability** — TEE variants have dedicated capacity, non-TEE share pools
@@ -232,20 +298,46 @@ The scillm proxy manages fallbacks dynamically:
 
 The proxy tracks real-time concurrency via `/v1/scillm/concurrency` and adjusts effective limits when 429s occur (adaptive backoff).
 
-### Batching (as_completed pattern)
+### Batching (server-side model pool)
 
-Streaming batch processing for maximum throughput:
+Server-side batch processing for maximum throughput:
 
-1. Fire `chunk_size=4` parallel `/scillm` LLM calls
-2. `asyncio.as_completed` processes each result **the moment it returns**
-3. Per-result: call `/create-evidence-case` → enrich QRA with `evidence_case` field
-4. Store immediately via `store_callback` (crash-safe)
+1. Build a bounded `chunk_size=8` group of QRA work items.
+2. Submit the whole chunk as one `/v1/scillm/batch/completions/stream` request with `model_pool` from `SCILLM_QRA_MODEL_POOL` or default `qra-deepseek-pool`, and multiple `items`.
+3. Let scillm assign those items across the configured model-pool lanes.
+4. Parse JSON through the project-local SPARTA helper (`.agents/skills/json_utils.py`) when available, falling back to the shared skill JSON repair helper (`skills/common/json_utils.py`) before treating malformed output as an error.
+5. Per-result: call `/create-evidence-case` → enrich QRA with `evidence_case` field.
+6. Store immediately via `store_callback` (crash-safe).
 
-**Key advantage:** Evidence enrichment runs while other LLM calls still in flight.
-Not `asyncio.gather` (waits for entire chunk) — `as_completed` (streaming).
+**Key requirement:** do not send high-volume corpus repair as one-item
+`/v1/scillm/batch/completions` requests. The scillm pool assigns lanes by item
+index inside a batch; one-item calls repeatedly use index `0` and can starve
+secondary lanes such as OpenCode Go.
 
-- `scillm_metadata` with `batch_id` + `item_id` for automatic resume
-- Dynamic `chunk_size` via `/v1/scillm/concurrency`
+- Stable `batch_id` + `item_id` through the server-side pool for durable resume.
+- `response_format: {"type": "json_object"}` so scillm JSON guard/repair is active before local parsing.
+- Dynamic pool health via `/v1/scillm/model-pools/<pool>/status`.
+- Streaming heartbeats identify in-flight item ids, lanes, providers, models,
+  and elapsed seconds while long-running provider calls are still active.
+- Transient scillm/proxy failures (`429`, `502`, `503`, `504`, timeout)
+  retry the chunk before the batch is marked failed.
+- Any unrecovered item error must fail the manifest run fast. Do not continue a
+  repair batch after failed jobs and then treat partial progress as success.
+
+Preferred corpus-repair shape: submit each `chunk_size=8` chunk as one
+`/v1/scillm/batch/completions/stream` request with multiple `items`, then
+process `item_completed`, `item_failed`, and `item_replayed` events with the
+same crash-safe per-item storage semantics.
+
+Acceptable debugging fallback: one item per `/v1/scillm/batch/completions`
+request, but only for canaries, incident recovery, or while preserving
+crash-safe per-item storage during a code fix. Do not describe this fallback as
+the preferred batch shape.
+
+Corpus repair manifests should run in reviewed batches of 100 controls unless a
+previous stable run, pool health, and post-run proof justify increasing size.
+If 250-control or larger batches produce provider/proxy failures, return to
+100-control batches until the failure mode is patched and verified.
 
 **Config:** `~/workspace/experiments/scillm/local/proxy_server_config.yaml`
 
@@ -278,9 +370,9 @@ The `review` command generates a JSON dossier with:
 |-------|-------------|
 | `verdict.status` | `BLOCKED` / `CANARY_ONLY` / `FULL_RUN_OK` |
 | `blocking_issues` | Must-fix before execution (duplicate keys, missing prompt_kind) |
-| `warnings` | Review before full run (sentinels, existing QRAs) |
+| `warnings` | Review before full run (sentinels, existing target-collection QRAs) |
 | `prompt_inventory` | Hash-versioned prompts with pair_types |
-| `db_sanity` | Referential integrity, existing QRA counts |
+| `db_sanity` | Referential integrity, existing target-collection QRA counts, optional legacy audit status |
 | `manifest_invariants` | Duplicate job_ids, logical keys, sentinel counts |
 | `risky_samples` | Top 20 jobs needing human review |
 | `executor` | Timeout, concurrency, crash-safe, as_completed pattern |
@@ -294,17 +386,46 @@ The `review` command generates a JSON dossier with:
 | missing_prompt_kind | BLOCKED | Job has no prompt_kind |
 | missing_source_control | BLOCKED | Source control not in DB |
 | sentinel_rows | WARN | Contains CM-NA, placeholder, TBD |
-| existing_qras | WARN | QRAs already exist for control |
+| existing_target_collection_jobs | WARN | v2 canonical/relationship QRAs already exist for a manifest job |
+| legacy_sparta_qra_overlap | SKIPPED by default / WARN when audited | Legacy `sparta_qra` overlap is diagnostic only; run review with `--audit-legacy-overlap` when needed |
 | missing_target_control | WARN | Target control not in DB |
+
+Review must not issue per-control `/list` calls against large memory
+collections. Use one paged scan or a dedicated batch endpoint. Legacy
+`sparta_qra` overlap is not authoritative for v2 repair gating and must remain
+opt-in so routine manifests do not scan 245K+ legacy rows just to produce a
+non-blocking warning.
 
 ### Executor Guarantees
 
 The `manifest` command uses:
-- **300s timeout** per LLM call
+- **900s client timeout** for queued server-side pool calls; serving lanes may
+  enforce lower provider-specific timeouts
 - **`asyncio.as_completed`** for streaming results
 - **`/create-evidence-case`** enrichment per QRA
 - **Immediate storage** via `store_callback` (crash-safe)
 - **Per-item retry** with exponential backoff (30s, 60s, 90s)
+
+### Required Post-Run Proof
+
+A QRA batch is not successful until the agent reports explicit proof:
+
+- manifest path and review verdict
+- dry-run command/result
+- write command/result
+- generated QRA count
+- controls covered
+- skipped job count
+- failed job count
+- storage collection(s)
+- confirmation that `_id`, `_rev`, inline `embedding`, `embeddings`, and
+  `embedding_multimodal` fields were not stored in QRA documents
+- post-run `monitor-sparta` or source-text QRA gap delta
+- current `qra_coverage_per_control` status
+- artifact paths for logs/state/verification outputs
+
+Do not claim `monitor-sparta` green unless the direct QRA gap manifest is empty
+and terminal/url lanes are explicitly resolved.
 
 ## Prompt Templates
 
