@@ -43,8 +43,7 @@ pushd "$TMP_DIR" >/dev/null
 bash "$SCRIPT_DIR/run.sh" init-python \
   --task sanity-case \
   --target scripts/failing_target.py \
-  --target-arg=--value \
-  --target-arg=7 \
+  --target-args-json '["--value", "7"]' \
   --breakpoint 'scripts/failing_target.py:11:value,len(items),payload.get("key")'
 
 python3 - <<'PY'
@@ -68,6 +67,7 @@ assert manifest['schema'] == 'agent_debugger_manifest.v1'
 assert manifest['language'] == 'python'
 assert manifest['task'] == 'sanity-case'
 assert manifest['launch_config_name'] == 'Agent Debugger: sanity-case'
+assert manifest['target_args'] == ['--value', '7']
 assert manifest['breakpoints'][0]['file'] == 'scripts/failing_target.py'
 assert manifest['breakpoints'][0]['line'] == 11
 assert manifest['breakpoints'][0]['expressions'] == ['value', 'len(items)', 'payload.get("key")']
