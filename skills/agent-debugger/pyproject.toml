@@ -4,6 +4,3 @@ version = "0.1.0"
 description = "Python-first VS Code debug harness generator for agent-debugger."
 requires-python = ">=3.10"
 dependencies = ["typer==0.12.5"]
-
-[project.scripts]
-agent-debugger = "create_python_debug_harness:APP"
