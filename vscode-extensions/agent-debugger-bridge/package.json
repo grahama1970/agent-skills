@@ -76,6 +76,23 @@
         "command": "agentDebugger.processCommandQueue",
         "title": "Agent Debugger: Process Command Queue"
       }
+    ],
+    "debuggers": [
+      {
+        "type": "agent-debugger-mock",
+        "label": "Agent Debugger Mock Test Adapter",
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Workspace test file used by the mock adapter."
+              }
+            }
+          }
+        }
+      }
     ]
   },
   "scripts": {
