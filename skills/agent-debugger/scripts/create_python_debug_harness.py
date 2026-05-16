@@ -7,7 +7,7 @@ import shlex
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated, List, Optional
+from typing import Annotated, Any, List, Optional
 
 import typer
 
@@ -25,6 +25,16 @@ class BreakpointSpec:
 def _slug(value: str) -> str:
     slug = re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip()).strip("-._")
     return slug or "debug-task"
+
+
+def _parse_json_string_list(raw: str, field: str) -> List[str]:
+    try:
+        parsed: Any = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise typer.BadParameter(f"{field} must be a JSON array of strings: {exc}") from exc
+    if not isinstance(parsed, list) or not all(isinstance(item, str) for item in parsed):
+        raise typer.BadParameter(f"{field} must be a JSON array of strings")
+    return list(parsed)
 
 
 def _parse_breakpoint(value: str) -> BreakpointSpec:
@@ -126,15 +136,15 @@ def callback() -> None:
 def init_python(
     task: Annotated[str, typer.Option(help="Task/debug-session id used under .plan-iterate/<task>/debug.")],
     target: Annotated[Path, typer.Option(help="Python script path relative to the workspace root.")],
-    target_arg: Annotated[Optional[List[str]], typer.Option("--target-arg", help="Argument passed to the target script. Repeat for multiple args.")] = None,
-    breakpoint: Annotated[Optional[List[str]], typer.Option("--breakpoint", help="Breakpoint as file:line or file:line:expr,expr. Repeatable.")] = None,
+    target_args_json: Annotated[str, typer.Option(help="JSON array of arguments passed to the target script.")] = "[]",
+    breakpoints_json: Annotated[str, typer.Option(help="JSON array of breakpoint strings: file:line or file:line:expr,expr.")] = "[]",
     root: Annotated[Path, typer.Option(help="Workspace root where artifacts should be created.")] = Path("."),
     plan_root: Annotated[str, typer.Option(help="Plan/evidence root under the workspace.")] = ".plan-iterate",
     launch_name: Annotated[Optional[str], typer.Option(help="Optional launch.json configuration name.")] = None,
 ) -> None:
     """Create a Python harness, manifest, and VS Code launch config."""
-    target_args = list(target_arg or [])
-    breakpoint_args = list(breakpoint or [])
+    target_args = _parse_json_string_list(target_args_json, "target_args_json")
+    breakpoint_args = _parse_json_string_list(breakpoints_json, "breakpoints_json")
 
     workspace = root.resolve()
     target_rel = target.as_posix()
