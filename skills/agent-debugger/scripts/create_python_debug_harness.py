@@ -7,7 +7,7 @@ import shlex
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated, Any, List, Optional
+from typing import Any, List, Optional
 
 import typer
 
@@ -134,13 +134,13 @@ def callback() -> None:
 
 @APP.command("init-python")
 def init_python(
-    task: Annotated[str, typer.Option(help="Task/debug-session id used under .plan-iterate/<task>/debug.")],
-    target: Annotated[Path, typer.Option(help="Python script path relative to the workspace root.")],
-    target_args_json: Annotated[str, typer.Option(help="JSON array of arguments passed to the target script.")] = "[]",
-    breakpoints_json: Annotated[str, typer.Option(help="JSON array of breakpoint strings: file:line or file:line:expr,expr.")] = "[]",
-    root: Annotated[Path, typer.Option(help="Workspace root where artifacts should be created.")] = Path("."),
-    plan_root: Annotated[str, typer.Option(help="Plan/evidence root under the workspace.")] = ".plan-iterate",
-    launch_name: Annotated[Optional[str], typer.Option(help="Optional launch.json configuration name.")] = None,
+    task: str = typer.Option(..., "--task", help="Task/debug-session id used under .plan-iterate/<task>/debug."),
+    target: Path = typer.Option(..., "--target", help="Python script path relative to the workspace root."),
+    target_args_json: str = typer.Option("[]", "--target-args-json", help="JSON array of arguments passed to the target script."),
+    breakpoints_json: str = typer.Option("[]", "--breakpoints-json", help="JSON array of breakpoint strings: file:line or file:line:expr,expr."),
+    root: Path = typer.Option(Path("."), "--root", help="Workspace root where artifacts should be created."),
+    plan_root: str = typer.Option(".plan-iterate", "--plan-root", help="Plan/evidence root under the workspace."),
+    launch_name: Optional[str] = typer.Option(None, "--launch-name", help="Optional launch.json configuration name."),
 ) -> None:
     """Create a Python harness, manifest, and VS Code launch config."""
     target_args = _parse_json_string_list(target_args_json, "target_args_json")
