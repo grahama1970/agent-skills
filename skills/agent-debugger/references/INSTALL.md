@@ -15,14 +15,17 @@ Generate a Python debug session from a target project root:
 skills/agent-debugger/run.sh init-python \
   --task qra-null-key \
   --target scripts/rebuild_qra.py \
-  --target-arg=--control \
-  --target-arg=AC-1 \
+  --target-args-json '["--control", "AC-1"]' \
   --breakpoint src/sparta/qra_loader.py:402:control_id,bind_vars,query_text,result
 ```
+
+Use `--breakpoints-json '["file.py:10:x", "file.py:20:y"]'` for multiple breakpoints.
 
 This creates `.plan-iterate/<task>/debug/` artifacts and updates `.vscode/launch.json`.
 
 ## VS Code Bridge Extension
+
+The generated Python launch config uses VS Code's `debugpy` debug type, so the target VS Code workspace needs the Python debugger support that provides `debugpy` launch handling.
 
 Open the extension folder:
 
@@ -36,8 +39,9 @@ Run in development:
 
 1. Open `vscode-extensions/agent-debugger-bridge` in VS Code.
 2. Press `F5` to open an Extension Development Host.
-3. In the target project, run `Agent Debugger: Load Manifest`.
-4. Run `Agent Debugger: Run Current Manifest`.
+3. Open the target project in that Extension Development Host.
+4. Run `Agent Debugger: Load Manifest`.
+5. Run `Agent Debugger: Run Current Manifest`.
 
 Package locally:
 
