@@ -46,6 +46,15 @@ class AgentDebuggerBridge {
       vscode.commands.registerCommand('agentDebugger.stepIn', () => this.sendThreadRequest('stepIn')),
       vscode.commands.registerCommand('agentDebugger.stepOut', () => this.sendThreadRequest('stepOut')),
       vscode.commands.registerCommand('agentDebugger.pause', () => this.sendThreadRequest('pause')),
+      vscode.commands.registerCommand('agentDebugger.evaluate', async (expression?: string) => {
+        const selected = expression ?? await vscode.window.showInputBox({
+          title: 'Agent Debugger: Evaluate Expression',
+          prompt: 'Expression to evaluate in the current paused stack frame',
+        });
+        if (selected) {
+          await this.evaluateExpression(selected);
+        }
+      }),
       vscode.commands.registerCommand('agentDebugger.processCommandQueue', () => this.processCommandQueue()),
     ];
   }
