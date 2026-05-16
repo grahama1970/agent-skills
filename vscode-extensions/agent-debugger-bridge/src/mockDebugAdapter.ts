@@ -1,8 +1,19 @@
 import * as vscode from 'vscode';
-import { DebugProtocol } from '@vscode/debugprotocol';
+
+type ProtocolMessage = { seq: number; type: string };
+type RequestMessage = ProtocolMessage & { type: 'request'; command: string; arguments?: Record<string, unknown> };
+type ResponseMessage = ProtocolMessage & {
+  type: 'response';
+  request_seq: number;
+  command: string;
+  success: boolean;
+  message?: string;
+  body?: unknown;
+};
+type EventMessage = ProtocolMessage & { type: 'event'; event: string; body?: unknown };
 
 export class MockDebugAdapter implements vscode.DebugAdapter {
-  private readonly emitter = new vscode.EventEmitter<DebugProtocol.ProtocolMessage>();
+  private readonly emitter = new vscode.EventEmitter<ProtocolMessage>();
   readonly onDidSendMessage = this.emitter.event;
   private seq = 1;
   private currentLine = 1;
@@ -12,8 +23,8 @@ export class MockDebugAdapter implements vscode.DebugAdapter {
     this.sourcePath = program ?? 'target.py';
   }
 
-  handleMessage(message: DebugProtocol.ProtocolMessage): void {
-    const request = message as DebugProtocol.Request;
+  handleMessage(message: ProtocolMessage): void {
+    const request = message as RequestMessage;
     if (request.type !== 'request') {
       return;
     }
@@ -28,22 +39,19 @@ export class MockDebugAdapter implements vscode.DebugAdapter {
         this.sendEvent('initialized', {});
         return;
       case 'launch':
-        this.sourcePath = String((request.arguments as { program?: string } | undefined)?.program ?? this.sourcePath);
+        this.sourcePath = String(request.arguments?.program ?? this.sourcePath).replace('${workspaceFolder}', vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '');
         this.sendResponse(request);
         return;
       case 'setBreakpoints': {
-        const args = request.arguments as DebugProtocol.SetBreakpointsArguments;
-        this.sourcePath = args.source.path ?? this.sourcePath;
-        const requested = args.breakpoints ?? [];
+        const source = request.arguments?.source as { path?: string } | undefined;
+        const breakpoints = request.arguments?.breakpoints as Array<{ line?: number }> | undefined;
+        this.sourcePath = source?.path ?? this.sourcePath;
+        const requested = breakpoints ?? [];
         if (requested.length > 0 && requested[0].line) {
           this.currentLine = requested[0].line;
         }
         this.sendResponse(request, {
-          breakpoints: requested.map((bp, index) => ({
-            id: index + 1,
-            verified: true,
-            line: bp.line,
-          })),
+          breakpoints: requested.map((bp, index) => ({ id: index + 1, verified: true, line: bp.line })),
         });
         return;
       }
@@ -70,9 +78,9 @@ export class MockDebugAdapter implements vscode.DebugAdapter {
         });
         return;
       case 'evaluate': {
-        const args = request.arguments as DebugProtocol.EvaluateArguments;
+        const expression = String(request.arguments?.expression ?? '');
         this.sendResponse(request, {
-          result: this.evaluate(String(args.expression)),
+          result: this.evaluate(expression),
           variablesReference: 0,
         });
         return;
@@ -112,8 +120,8 @@ export class MockDebugAdapter implements vscode.DebugAdapter {
     return values[expression] ?? `mock:${expression}`;
   }
 
-  private sendResponse(request: DebugProtocol.Request, body?: unknown, success = true, message?: string): void {
-    const response: DebugProtocol.Response = {
+  private sendResponse(request: RequestMessage, body?: unknown, success = true, message?: string): void {
+    const response: ResponseMessage = {
       seq: this.seq++,
       type: 'response',
       request_seq: request.seq,
@@ -126,7 +134,7 @@ export class MockDebugAdapter implements vscode.DebugAdapter {
   }
 
   private sendEvent(event: string, body: unknown): void {
-    const protocolEvent: DebugProtocol.Event = {
+    const protocolEvent: EventMessage = {
       seq: this.seq++,
       type: 'event',
       event,
