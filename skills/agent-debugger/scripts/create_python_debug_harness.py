@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """Create Python-first VS Code debug harness artifacts for agent-debugger."""
 
-from __future__ import annotations
-
 import json
 import re
 import shlex
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, List, Optional
 
 import typer
 
@@ -20,7 +18,7 @@ APP = typer.Typer(add_completion=False, help="Create Python VS Code debug harnes
 class BreakpointSpec:
     file: str
     line: int
-    expressions: list[str]
+    expressions: List[str]
     reason: str
 
 
@@ -41,7 +39,7 @@ def _parse_breakpoint(value: str) -> BreakpointSpec:
         raise typer.BadParameter(f"breakpoint line must be an integer: {line_text}") from exc
     if line < 1:
         raise typer.BadParameter("breakpoint line must be >= 1")
-    expressions: list[str] = []
+    expressions: List[str] = []
     if len(parts) == 3 and parts[2].strip():
         expressions = [item.strip() for item in parts[2].split(",") if item.strip()]
     return BreakpointSpec(
@@ -54,7 +52,7 @@ def _parse_breakpoint(value: str) -> BreakpointSpec:
 
 def _strip_jsonc(text: str) -> str:
     """Best-effort JSONC comment stripper for VS Code launch.json files."""
-    out: list[str] = []
+    out: List[str] = []
     in_string = False
     escaped = False
     i = 0
@@ -128,11 +126,11 @@ def callback() -> None:
 def init_python(
     task: Annotated[str, typer.Option(help="Task/debug-session id used under .plan-iterate/<task>/debug.")],
     target: Annotated[Path, typer.Option(help="Python script path relative to the workspace root.")],
-    target_arg: Annotated[list[str] | None, typer.Option("--target-arg", help="Argument passed to the target script. Repeat for multiple args.")] = None,
-    breakpoint: Annotated[list[str] | None, typer.Option("--breakpoint", help="Breakpoint as file:line or file:line:expr,expr. Repeatable.")] = None,
+    target_arg: Annotated[Optional[List[str]], typer.Option("--target-arg", help="Argument passed to the target script. Repeat for multiple args.")] = None,
+    breakpoint: Annotated[Optional[List[str]], typer.Option("--breakpoint", help="Breakpoint as file:line or file:line:expr,expr. Repeatable.")] = None,
     root: Annotated[Path, typer.Option(help="Workspace root where artifacts should be created.")] = Path("."),
     plan_root: Annotated[str, typer.Option(help="Plan/evidence root under the workspace.")] = ".plan-iterate",
-    launch_name: Annotated[str | None, typer.Option(help="Optional launch.json configuration name.")] = None,
+    launch_name: Annotated[Optional[str], typer.Option(help="Optional launch.json configuration name.")] = None,
 ) -> None:
     """Create a Python harness, manifest, and VS Code launch config."""
     target_args = list(target_arg or [])
