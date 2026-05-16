@@ -23,6 +23,7 @@
     "onCommand:agentDebugger.stepIn",
     "onCommand:agentDebugger.stepOut",
     "onCommand:agentDebugger.pause",
+    "onCommand:agentDebugger.evaluate",
     "onCommand:agentDebugger.processCommandQueue"
   ],
   "main": "./out/extension.js",
@@ -71,6 +72,10 @@
       {
         "command": "agentDebugger.pause",
         "title": "Agent Debugger: Pause"
+      },
+      {
+        "command": "agentDebugger.evaluate",
+        "title": "Agent Debugger: Evaluate Expression"
       },
       {
         "command": "agentDebugger.processCommandQueue",
