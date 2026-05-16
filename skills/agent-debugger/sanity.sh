@@ -2,7 +2,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TMP_DIR="$(mktemp -d)"
 cleanup() {
   rm -rf "$TMP_DIR"
@@ -17,7 +16,7 @@ if importlib.util.find_spec('typer') is None:
     raise SystemExit(2)
 PY
 
-mkdir -p "$TMP_DIR/scripts" "$TMP_DIR/src/demo"
+mkdir -p "$TMP_DIR/scripts"
 cat > "$TMP_DIR/scripts/failing_target.py" <<'PY'
 import argparse
 from pathlib import Path
@@ -41,12 +40,12 @@ PY
 )"
 
 pushd "$TMP_DIR" >/dev/null
-"$SCRIPT_DIR/run.sh" init-python \
+bash "$SCRIPT_DIR/run.sh" init-python \
   --task sanity-case \
   --target scripts/failing_target.py \
   --target-arg=--value \
   --target-arg=7 \
-  --breakpoint scripts/failing_target.py:11:value,len(items),payload.get\("key"\)
+  --breakpoint 'scripts/failing_target.py:11:value,len(items),payload.get("key")'
 
 python3 - <<'PY'
 from pathlib import Path
@@ -71,6 +70,7 @@ assert manifest['task'] == 'sanity-case'
 assert manifest['launch_config_name'] == 'Agent Debugger: sanity-case'
 assert manifest['breakpoints'][0]['file'] == 'scripts/failing_target.py'
 assert manifest['breakpoints'][0]['line'] == 11
+assert manifest['breakpoints'][0]['expressions'] == ['value', 'len(items)', 'payload.get("key")']
 assert manifest['commands_path'].endswith('debug_commands.jsonl')
 assert manifest['observations_path'].endswith('debug_observations.jsonl')
 assert manifest['session_state_path'].endswith('debug_session_state.json')
