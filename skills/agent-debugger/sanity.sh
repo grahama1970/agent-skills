@@ -43,7 +43,8 @@ pushd "$TMP_DIR" >/dev/null
 bash "$SCRIPT_DIR/run.sh" init-python \
   --task sanity-case \
   --target scripts/failing_target.py \
-  --target-args-json '["--value", "7"]' \
+  --target-arg=--value \
+  --target-arg=7 \
   --breakpoint 'scripts/failing_target.py:11:value,len(items),payload.get("key")'
 
 python3 - <<'PY'
