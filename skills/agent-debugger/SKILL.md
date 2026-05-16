@@ -143,12 +143,12 @@ From the target project root:
 skills/agent-debugger/run.sh init-python \
   --task qra-null-key \
   --target scripts/rebuild_qra.py \
-  --target-args-json '["--control", "AC-1"]' \
+  --target-arg=--control \
+  --target-arg=AC-1 \
   --breakpoint src/sparta/qra_loader.py:402:control_id,bind_vars,query_text,result
 ```
 
-Use `--breakpoints-json '["file.py:10:x", "file.py:20:y"]'` when more than
-one breakpoint is needed.
+Repeat `--breakpoint` for multiple breakpoints.
 
 Run local skill sanity after edits:
 
