@@ -15,11 +15,12 @@ Generate a Python debug session from a target project root:
 skills/agent-debugger/run.sh init-python \
   --task qra-null-key \
   --target scripts/rebuild_qra.py \
-  --target-args-json '["--control", "AC-1"]' \
+  --target-arg=--control \
+  --target-arg=AC-1 \
   --breakpoint src/sparta/qra_loader.py:402:control_id,bind_vars,query_text,result
 ```
 
-Use `--breakpoints-json '["file.py:10:x", "file.py:20:y"]'` for multiple breakpoints.
+Repeat `--target-arg` for each target script argument and repeat `--breakpoint` for multiple breakpoints.
 
 This creates `.plan-iterate/<task>/debug/` artifacts and updates `.vscode/launch.json`.
 
