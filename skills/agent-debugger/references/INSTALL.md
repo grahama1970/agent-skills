@@ -1,32 +1,42 @@
 # Agent Debugger Install Notes
 
-## Skill
+## Skill dependencies
 
 From the repository root that contains `skills/agent-debugger`:
 
 ```bash
-python3 -m pip install typer==0.12.5
+python3 -m pip install typer==0.12.5 debugpy==1.8.16
 bash skills/agent-debugger/sanity.sh
 ```
 
-Generate a Python debug session from a target project root:
+## Generate a Python debug session
+
+From a target project root:
 
 ```bash
 skills/agent-debugger/run.sh init-python \
   --task qra-null-key \
   --target scripts/rebuild_qra.py \
-  --target-arg=--control \
-  --target-arg=AC-1 \
-  --breakpoint src/sparta/qra_loader.py:402:control_id,bind_vars,query_text,result
+  --target-args-json '["--control", "AC-1"]' \
+  --breakpoints-json '["src/sparta/qra_loader.py:402:control_id,bind_vars,query_text,result"]'
 ```
-
-Repeat `--target-arg` for each target script argument and repeat `--breakpoint` for multiple breakpoints.
 
 This creates `.plan-iterate/<task>/debug/` artifacts and updates `.vscode/launch.json`.
 
-## VS Code Bridge Extension
+## Mode 1: agent-only headless debugpy/DAP
 
-The generated Python launch config uses VS Code's `debugpy` debug type, so the target VS Code workspace needs the Python debugger support that provides `debugpy` launch handling.
+Run without VS Code:
+
+```bash
+skills/agent-debugger/run.sh run-headless \
+  --manifest .plan-iterate/qra-null-key/debug/debug_manifest.json
+```
+
+The runner launches the generated harness through debugpy/DAP on `127.0.0.1`, sets the manifest breakpoints, evaluates requested expressions, and writes observations to `debug_observations.jsonl`.
+
+## Mode 2: human-agent VS Code collaboration
+
+The generated Python launch config uses VS Code's `debugpy` debug type, so the target VS Code workspace needs Python debugger support that provides `debugpy` launch handling.
 
 Open the extension folder:
 
@@ -53,13 +63,10 @@ code --install-extension agent-debugger-bridge-0.1.0.vsix
 
 ## Debugging Flow
 
-1. Agent creates the manifest and launch config.
-2. Human opens VS Code on the target project.
-3. Bridge loads the latest `.plan-iterate/**/debug/debug_manifest.json`.
-4. Bridge sets agent-requested breakpoints.
-5. Bridge starts the named launch config.
-6. On each stop, bridge writes observations to `debug_observations.jsonl`.
-7. Human and agent discuss runtime state before patching.
+1. Agent creates the harness, manifest, and launch config.
+2. Agent runs headless mode, or human opens VS Code collaboration mode.
+3. Runtime observations are written to `debug_observations.jsonl`.
+4. Human and/or agent discuss runtime state before patching.
 
 ## v1 Limits
 
@@ -67,4 +74,5 @@ code --install-extension agent-debugger-bridge-0.1.0.vsix
 - No attach mode.
 - No native data breakpoints.
 - No reverse debugging.
-- Replay means stop and restart the same managed launch config.
+- Headless debugpy binds to `127.0.0.1` only.
+- VS Code replay means stop and restart the same managed launch config.
