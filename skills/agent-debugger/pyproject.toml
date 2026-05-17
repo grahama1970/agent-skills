@@ -1,6 +1,6 @@
 [project]
 name = "agent-debugger"
 version = "0.1.0"
-description = "Python-first VS Code debug harness generator for agent-debugger."
+description = "Python-first debugger harness and headless debugpy runner for agent-debugger."
 requires-python = ">=3.10"
-dependencies = ["typer==0.12.5"]
+dependencies = ["typer==0.12.5", "debugpy==1.8.16"]
