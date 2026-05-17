@@ -1,12 +1,12 @@
 ---
 name: agent-debugger
 description: >
-  Agent-invoked and human-collaborative Python debugger workflow for VS Code:
-  create harnesses, launch.json entries, manifests, breakpoints, and runtime
-  observation loops when an agent is stuck or a human asks to inspect failing
-  code with breakpoints.
+  Python-first agent debugger with two supported modes: agent-only headless
+  debugpy/DAP runtime inspection, and optional human-agent collaboration through
+  a VS Code bridge over the same manifest.
 triggers:
   - agent debugger
+  - debug this script
   - debug this script in vscode
   - create a debug harness
   - help me step through this failing script
@@ -18,6 +18,7 @@ triggers:
 provides:
   - agent-debugger
   - debugger-harness
+  - headless-debugpy-runner
   - vscode-launch-config
   - debug-manifest
   - collaborative-debug-workflow
@@ -34,8 +35,8 @@ taxonomy:
 
 # Agent Debugger
 
-Use this skill when an agent is stuck, or when a human asks to debug Python code
-in VS Code, and runtime state must be inspected before patching.
+Use this skill when an agent is stuck, or when a human asks to debug Python code,
+and runtime state must be inspected before patching.
 
 This is a **Python-first** agent debugger. TypeScript targets, Rust targets,
 attach-mode debugging, native data breakpoints, and reverse debugging are out of
@@ -58,8 +59,49 @@ This skill follows `/best-practices-skills`.
 When runtime behavior is uncertain, do not guess harder. Create a debug session.
 
 Production code stays clean. Debugging happens through a generated Python
-harness, VS Code launch configuration, and debug manifest. The harness must run
-the real target code and must not copy the logic being debugged.
+harness, debug manifest, and runtime observation loop. The harness must run the
+real target code and must not copy the logic being debugged.
+
+## Two Supported Modes
+
+### Mode 1: Agent-only headless mode
+
+This is the default agent mode. It does **not** require VS Code.
+
+The agent uses the generated manifest and runs debugpy/DAP headlessly:
+
+```bash
+skills/agent-debugger/run.sh run-headless \
+  --manifest .plan-iterate/<task>/debug/debug_manifest.json
+```
+
+The headless runner must:
+
+- launch the generated harness under debugpy/DAP;
+- set manifest breakpoints;
+- continue until breakpoints are hit;
+- capture file, line, frame, and requested expression values;
+- write `debug_observations.jsonl` and `debug_session_state.json`;
+- avoid arbitrary process control and attach mode in v1.
+
+Use this mode when the agent needs runtime truth without a human in the editor.
+
+### Mode 2: Human-agent VS Code collaboration mode
+
+This mode uses the same manifest, but the human can inspect and steer the debug
+session in VS Code.
+
+The VS Code bridge extension may:
+
+- load `debug_manifest.json`;
+- set agent-requested breakpoints/logpoints;
+- record human-added breakpoints;
+- start/stop/replay only the managed launch configuration;
+- capture stopped events, stack frame, file/line, and expression values;
+- write observations back for the agent to read and discuss.
+
+Use this mode when the human and agent need to look at the same runtime state
+breakpoint by breakpoint.
 
 ## Autonomous Agent Trigger
 
@@ -83,25 +125,6 @@ Suspicious state is Y.
 This observation will confirm or reject hypothesis Z.
 ```
 
-## Supported VS Code Bridge Features
-
-The companion `vscode-extensions/agent-debugger-bridge` extension is the only
-component that talks to VS Code. It supports only documented VS Code extension
-and Debug Adapter Protocol actions used in v1:
-
-- source breakpoints and logpoints;
-- starting a named `.vscode/launch.json` configuration;
-- stopping only the managed debug session;
-- replay as stop-and-start of the same launch configuration;
-- observing debug-session lifecycle and breakpoint changes;
-- capturing stopped events through a debug adapter tracker;
-- requesting `stackTrace` and `evaluate` while paused;
-- requesting `continue`, `next`, `stepIn`, `stepOut`, and `pause`, with adapter
-  failures recorded instead of hidden.
-
-Do not claim support for native data breakpoints, reverse debugging, arbitrary
-session control, or attach-mode debugging in v1.
-
 ## Generated Project Artifacts
 
 For task `qra-null-key`, generate:
@@ -121,18 +144,18 @@ For task `qra-null-key`, generate:
 
 The manifest is the contract between agent, human, and VS Code bridge. It names
 the launch configuration, breakpoint locations, expressions to evaluate, and the
-reason each breakpoint exists.
+reason each breakpoint exists. The same manifest must work for headless mode and
+VS Code collaboration mode.
 
 ## Workflow
 
 1. Human or agent names the Python script to debug.
-2. Agent creates a Python harness and `.vscode/launch.json` entry.
+2. Agent creates a Python harness, manifest, and `.vscode/launch.json` entry.
 3. Agent chooses hypothesis-driven breakpoints and expressions.
-4. VS Code bridge loads `debug_manifest.json` and sets breakpoints/logpoints.
-5. Human or agent starts/replays the managed debug session.
-6. Bridge records breakpoint hits, stack frame, and evaluated expressions.
-7. Human and agent discuss observations breakpoint by breakpoint.
-8. Agent patches only after the failure path is understood, or asks for another
+4. Agent runs headless mode, or human/agent opens VS Code collaboration mode.
+5. Runtime observations are written to `debug_observations.jsonl`.
+6. Human and/or agent discuss observations breakpoint by breakpoint.
+7. Agent patches only after the failure path is understood, or asks for another
    runtime observation.
 
 ## Python CLI
@@ -143,12 +166,22 @@ From the target project root:
 skills/agent-debugger/run.sh init-python \
   --task qra-null-key \
   --target scripts/rebuild_qra.py \
-  --target-arg=--control \
-  --target-arg=AC-1 \
-  --breakpoint src/sparta/qra_loader.py:402:control_id,bind_vars,query_text,result
+  --target-args-json '["--control", "AC-1"]' \
+  --breakpoints-json '["src/sparta/qra_loader.py:402:control_id,bind_vars,query_text,result"]'
 ```
 
-Repeat `--breakpoint` for multiple breakpoints.
+Then run agent-only mode:
+
+```bash
+skills/agent-debugger/run.sh run-headless \
+  --manifest .plan-iterate/qra-null-key/debug/debug_manifest.json
+```
+
+Or open VS Code and run the bridge command:
+
+```text
+Agent Debugger: Run Current Manifest
+```
 
 Run local skill sanity after edits:
 
@@ -166,7 +199,8 @@ When the agent creates a debug session, it must report:
 - generated harness path;
 - launch configuration name;
 - manifest path;
-- exact VS Code command to run;
+- exact headless command;
+- exact VS Code command when human collaboration is requested;
 - breakpoint map with reason for each breakpoint;
 - expressions to inspect;
 - expected vs suspicious values;
@@ -177,8 +211,9 @@ When the agent creates a debug session, it must report:
 
 - Do not add temporary debug variables or branches to production scripts.
 - Do not hardcode local machine paths in production code.
+- Do not expose debugpy beyond `127.0.0.1` in v1.
 - Do not remove human breakpoints.
 - Do not stop unrelated debug sessions.
 - Do not turn missing runtime evidence into a confident patch.
-- If the bridge cannot evaluate an expression, record the failure as an
-  observation and ask for a narrower expression.
+- If the runner or bridge cannot evaluate an expression, record the failure as
+  an observation and ask for a narrower expression.
