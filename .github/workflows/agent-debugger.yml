@@ -16,8 +16,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install skill dependency
-        run: python -m pip install typer==0.12.5
+      - name: Install skill dependencies
+        run: python -m pip install typer==0.12.5 debugpy==1.8.16
       - name: Run agent-debugger skill sanity
         run: bash skills/agent-debugger/sanity.sh
 
