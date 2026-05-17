@@ -1,6 +1,11 @@
 # Agent Debugger Test Matrix
 
-## Skill sanity
+The skill has two supported modes over the same generated manifest:
+
+1. **Agent-only headless mode**: `debugpy` / DAP runner, no VS Code UI.
+2. **Human-agent VS Code collaboration mode**: VS Code bridge extension over the same manifest.
+
+## Skill sanity and headless mode
 
 Command:
 
@@ -17,7 +22,10 @@ Covered behavior:
 | Manifest generation | validates `agent_debugger_manifest.v1` fields |
 | Breakpoint expressions | validates expression list is preserved |
 | VS Code launch config | validates `.vscode/launch.json` has `debugpy` launch entry |
-| Real target execution | runs generated harness and checks target output |
+| Agent-only headless mode | runs `run-headless` against the generated manifest |
+| debugpy/DAP runtime stop | expects at least one `breakpoint_hit` observation |
+| Expression evaluation | verifies `value`, `len(items)`, and `payload.get("key")` values |
+| Session state | verifies `debug_session_state.json` reaches `completed` |
 | Production cleanliness | hashes target before/after and fails if changed |
 | Storage policy | fails if heavy artifact dirs appear in skill folder |
 
@@ -46,6 +54,10 @@ Covered behavior:
 | Command queue | test appends JSONL `evaluate` and `continue` commands |
 | Lifecycle continue | bridge sends DAP continue and records termination |
 | Replay | bridge records replay and starts the same launch config again |
+
+## Manual local smoke still required
+
+Automated tests prove the headless debugpy/DAP path and bridge mechanics. Before merge, run one local VS Code + Python debugger smoke test in a real project to confirm the human-facing UI path works with the installed Python debugger extension.
 
 ## Non-claims deliberately untested in v1
 
