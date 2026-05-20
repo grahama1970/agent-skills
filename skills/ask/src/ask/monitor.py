@@ -5,6 +5,10 @@ Provides the AskMonitor class for progress tracking, sub-step tracking,
 ETA estimation, and task-monitor API integration.
 """
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 import json
 import os
 import time

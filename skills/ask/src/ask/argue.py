@@ -157,6 +157,10 @@ Do not manufacture certainty. A FOR or AGAINST verdict is only valid if the
 winning side defeats the strongest opposing argument under an explicit criterion.
 Every evidence item must carry structured citations from the advocate outputs.
 Memory citations can support knowledge/context claims, not code-review safety claims.
+missing_evidence must contain only decision-blocking evidence.
+If missing_evidence is non-empty, confidence must not be high.
+If the answer is fully supported by the user's question, cite QUESTION and set missing_evidence to [].
+Unknown facts, optional follow-up checks, and routine implementation risks are not missing_evidence.
 
 {decision_instruction}
 
@@ -377,7 +381,12 @@ def verify_argue_result(result: dict[str, Any]) -> dict[str, Any]:
     failures.extend(scillm_summary["metadata_failures"])
 
     if verdict in {"FOR", "AGAINST"}:
-        if scillm_summary["grounding_degraded"]:
+        question_only_evidence = bool(evidence_citations) and all(
+            str(citation.get("source_id") or "").startswith("QUESTION")
+            and citation.get("source_kind") == "question"
+            for citation in evidence_citations
+        )
+        if scillm_summary["grounding_degraded"] and not question_only_evidence:
             failures.append("FOR/AGAINST verdict requires successful source grounding")
         required_fields = [
             "decision_criterion",

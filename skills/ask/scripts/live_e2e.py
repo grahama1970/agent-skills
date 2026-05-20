@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from dotenv import find_dotenv, load_dotenv
+
+load_dotenv(find_dotenv(usecwd=True), override=False)
+
 import argparse
 import json
 import os

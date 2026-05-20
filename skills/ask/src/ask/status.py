@@ -1,5 +1,9 @@
 """Status reporting for ask knowledge counts and task-monitor learning progress."""
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 #!/usr/bin/env python3
 """
 /ask status — Show learning progress for a scope.

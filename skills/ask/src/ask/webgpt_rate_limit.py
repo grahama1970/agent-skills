@@ -17,6 +17,10 @@ Env vars:
 
 from __future__ import annotations
 
+from .env import load_dotenv_once
+
+load_dotenv_once()
+
 import json
 import os
 import time

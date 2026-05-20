@@ -1,0 +1,6 @@
+interface:
+  display_name: "Align"
+  short_description: "Round-based context alignment lock"
+  default_prompt: "Use $align to reconcile context across the human, project agent, memory, project knowledge, scillm, ask, dogpile, and WebGPT before execution."
+policy:
+  allow_implicit_invocation: true

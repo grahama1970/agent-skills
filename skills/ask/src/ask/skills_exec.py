@@ -5,6 +5,10 @@ Provides functions for running sibling skills via run.sh and parsing their JSON
 output. Memory access is routed through the memory skill, not direct imports.
 """
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 import json
 import os
 import subprocess

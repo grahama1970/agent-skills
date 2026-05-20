@@ -1,5 +1,9 @@
 """Local relevance heuristics for ask retrieval results."""
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 import json
 import os
 import subprocess
