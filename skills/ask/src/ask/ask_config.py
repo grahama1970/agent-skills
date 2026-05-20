@@ -1,5 +1,9 @@
 """Shared configuration for the ask skill."""
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 import os
 import tempfile
 from pathlib import Path

@@ -19,6 +19,10 @@ Usage:
     ./nightly.py --dry-run          # Preview without storing
 """
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 import typer
 import json
 import os

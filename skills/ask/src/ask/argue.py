@@ -157,6 +157,10 @@ Do not manufacture certainty. A FOR or AGAINST verdict is only valid if the
 winning side defeats the strongest opposing argument under an explicit criterion.
 Every evidence item must carry structured citations from the advocate outputs.
 Memory citations can support knowledge/context claims, not code-review safety claims.
+missing_evidence must contain only decision-blocking evidence.
+If missing_evidence is non-empty, confidence must not be high.
+If the answer is fully supported by the user's question, cite QUESTION and set missing_evidence to [].
+Unknown facts, optional follow-up checks, and routine implementation risks are not missing_evidence.
 
 {decision_instruction}
 

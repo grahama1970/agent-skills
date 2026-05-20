@@ -123,6 +123,8 @@ def validate_skill(skill_dir: Path, skills_root: Path | None = None) -> list[dic
         _add("STRUCT", "error", "Missing SKILL.md")
         return findings
 
+    fm = _extract_frontmatter(skill_md)
+
     if (skill_dir / "CHANGELOG.md").exists():
         _add("STRUCT", "warning", "Has CHANGELOG.md (anti-pattern)")
     if (skill_dir / "README.md").exists():
@@ -131,7 +133,6 @@ def validate_skill(skill_dir: Path, skills_root: Path | None = None) -> list[dic
             _add("STRUCT", "info", "Has README.md (allowed for provides: skills, consider if needed)")
 
     # --- Frontmatter checks ---
-    fm = _extract_frontmatter(skill_md)
     if fm is None:
         _add("FM001", "error", "No valid YAML frontmatter found (must use standalone --- delimiters)")
         return findings

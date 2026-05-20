@@ -1,5 +1,9 @@
 """Embry OS indexing workflow for skills, packages, configuration, and extensions."""
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 #!/usr/bin/env python3
 """
 /ask os learn — Crawl and index embry-os internal knowledge.

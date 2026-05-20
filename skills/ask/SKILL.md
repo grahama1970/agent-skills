@@ -66,6 +66,7 @@ composes:
   - extractor
   - taxonomy
   - scillm
+  - surf
   - subagent-runner
   - create-context
   - monitor-memory
@@ -102,6 +103,229 @@ inspectable without guessing whether the runner is blocked in retrieval,
 persona routing, oracle synthesis, or artifact verification.
 The same runtime protocol is available for `learn`, `nightly`, `os learn`,
 `os ask`, and `os health`.
+
+## WebGPT Oracle Backend
+
+`--oracle-backend webgpt` (or the `$ask webgpt …` shorthand) routes oracle
+synthesis through the user's already-authenticated ChatGPT tab in Chrome via
+`surf webgpt.submit --no-activate`. The tab is controlled in the background;
+it never foregrounds.
+
+Boundary contract:
+
+- `$ask` owns WebGPT orchestration: routing, run artifacts, rate limiting,
+  project tab binding, multi-turn review loops, and oracle/review semantics.
+- `$surf` owns browser transport and proof: controlled tab selection,
+  `webgpt.submit`, sentinel injection, completion waiting, clean/raw/meta
+  outputs, screenshots, and no-activate focus preservation.
+- `$scillm` owns direct model-provider calls through `localhost:4001`, including
+  GPT-5.5 high reasoning, Gemini, Claude, Chutes, OpenCode Go, image generation,
+  streaming, batching, JSON repair, fallback, and usage logging.
+- Do not add WebGPT browser-tab access to `$scillm`. WebGPT is not a provider
+  API call; it depends on the user's live authenticated browser session and the
+  `$surf` sentinel proof contract. Callers that want WebGPT must use
+  `$ask webgpt` or `--oracle-backend webgpt`.
+- Do not call `$surf` directly for ask/oracle/review work unless debugging the
+  transport layer. Normal callers should use `$ask` so request/status/events
+  artifacts, WebGPT rate limits, tab bindings, file auto-attachment, and
+  reviewer loop semantics are preserved.
+
+```bash
+# Auto-resolve tab id (when exactly one chatgpt.com tab is open)
+./run.sh ask "to perform the review on /tmp/code-runner-reliability-review/review-bundle.md" \
+  --oracle --oracle-backend webgpt
+
+# Equivalent shorthand
+./run.sh ask webgpt to perform the review on /tmp/code-runner-reliability-review/review-bundle.md
+
+# Explicit tab id (from the Tab ID Viewer Chrome extension)
+./run.sh ask "summarise the review bundle" \
+  --oracle --oracle-backend webgpt --webgpt-tab-id 837343564
+
+# Resolve by ChatGPT conversation URL
+./run.sh ask "summarise the review bundle" \
+  --oracle --oracle-backend webgpt \
+  --webgpt-url "https://chatgpt.com/c/6a0097ff-e7e0-83ea-93c2-3a6b88e2a67f"
+
+# Autonomous mode: let surf pick or create a background ChatGPT tab.
+./run.sh ask webgpt summarise the review bundle --webgpt-create-tab
+
+# Per-project tab binding — first call auto-creates and persists; subsequent
+# calls reuse the same tab so the conversation context survives across days.
+./run.sh ask webgpt summarise the review bundle --webgpt-project code-runner-review
+```
+
+### Per-project tab bindings
+
+`--webgpt-project NAME` binds the call to a per-project ChatGPT tab whose id
+is persisted at `~/.pi/webgpt-projects/<name>.json`. Two workflows:
+
+**Autonomous (default — ephemeral tasks):**
+```bash
+# First call: auto-create a background tab and remember it under "pr-1234".
+./run.sh ask webgpt review this PR diff --webgpt-project pr-1234
+
+# Subsequent calls reuse the same tab; ChatGPT preserves conversation state.
+./run.sh ask webgpt and now check the migration path --webgpt-project pr-1234
+```
+If the bound tab gets closed, the runtime silently creates a new one and
+re-binds.
+
+**Manual (long-lived projects you want to babysit):**
+```bash
+# Open exactly the ChatGPT tab you want, copy its id from the Tab ID Viewer
+# Chrome extension, then bind once:
+./run.sh webgpt-project bind code-runner-review --tab-id 837343543 \
+  --url "https://chatgpt.com/c/<conv-id>"
+
+# All future calls for that project use this exact tab — never replaced.
+./run.sh ask webgpt continue the review --webgpt-project code-runner-review
+```
+Manual bindings are recorded with `bound_manually: true`. If the tab is
+later closed, the runtime raises a clear `ProjectBindingError` asking the
+human to re-bind explicitly — it will not silently swap in a new tab.
+
+**Management commands** (`./run.sh webgpt-project ...`):
+- `bind NAME --tab-id ID [--url URL] [--manual|--auto]` — create or update a binding
+- `list [--json] [--verify]` — show all projects; `--verify` checks tab still open in Chrome
+- `show NAME [--json]` — full state dump for one project
+- `verify NAME [--json]` — re-check whether the bound tab is still open
+- `unbind NAME` — remove a binding (does not close the Chrome tab)
+- `gc [--days 30]` — remove stale auto-bindings (manual bindings are never collected)
+
+Behavior:
+
+- **Tab resolution.** Priority: `--webgpt-tab-id` → `--webgpt-url` →
+  `--webgpt-project NAME` (with a valid binding) → `--webgpt-create-tab` →
+  auto-resolve from `surf tab.list` filtered to chatgpt.com.
+  **Auto-resolve fails closed** when 0 or >1 candidates exist — the call
+  refuses to run rather than guess. When the project agent hits this, it
+  must ask the human to either:
+  (a) open exactly one ChatGPT tab so auto-resolve picks it,
+  (b) provide a tab id from the Tab ID Viewer extension to pass through
+  `--webgpt-tab-id`,
+  (c) re-invoke with `--webgpt-create-tab` for the agent to acquire a tab
+  autonomously (surf picks the most-recent existing chatgpt.com tab without
+  foregrounding, or creates a fresh background one if none are open), or
+  (d) pass `--webgpt-project NAME` to bind this call to a persistent
+  per-project tab (see "Per-project tab bindings" below). The resolved tab
+  id surfaces in `oracle_model_served: webgpt:<id>` so the agent can pass
+  it explicitly to follow-up rounds.
+- **File auto-attachment.** Absolute paths embedded in the question (e.g.
+  `/tmp/foo.md`, `~/notes.md`) are read from disk and inlined under
+  `## Attached files` in the prompt. Truncated at 2 MB per file.
+- **Focus preservation.** The controlled tab is never foregrounded. The
+  caller's active tab and focused window are unchanged across the call;
+  `meta.focus_changed` must be `false`.
+- **Multi-turn iteration.** Each `$ask webgpt` call is one round on the same
+  controlled tab. ChatGPT keeps the conversation context per tab, so a second
+  call refines naturally. The canonical pattern is: project agent reads the
+  first round's answer, decides whether to push back, and re-invokes
+  `$ask webgpt …` to send the follow-up — no special iteration flag needed.
+  Internal `--oracle-iterations N` is also honoured: each iteration sends one
+  follow-up nudge ("identify the weakest claim and address it").
+- **Proof contract.** Inherits the WebGPT sentinel contract from `surf`:
+  `controlled_tab_id == requested_tab_id`, sentinel present in raw response,
+  stripped from clean response, no clean-response contamination from page
+  chrome. `oracle_webgpt_call_started` / `_finished` / `_failed` events are
+  recorded to the run state.
+- **Other consumers.** `/review-prompt`, `/review-design`, `/review-code`,
+  `/review-plan` compose `/ask` and inherit this backend for free —
+  pass `--oracle-backend webgpt` (or set `ASK_ORACLE_BACKEND=webgpt`) to the
+  underlying `/ask` call.
+- **Live sanity.** `skills/ask/sanity-webgpt.sh` exercises the full path
+  end-to-end against a real ChatGPT tab and asserts the proof contract,
+  oracle wiring, and focus invariance. Modes: `--tab-id ID`, `--url URL`,
+  `--create-tab`, or no flag (which auto-picks a single chatgpt.com tab or
+  prints a 4-option help block when 0 or >1 candidates exist). Run after
+  changes to `webgpt_runtime.py`, the oracle dispatcher, or the model
+  alias router.
+- **Rate-limit guard.** Multi-round ping-pong can fan out to many ChatGPT
+  rounds quickly. `webgpt_rate_limit.py` enforces a per-hour budget per
+  account (default 30 rounds) and refuses to start new rounds once the
+  cap is hit. Tunable via `ASK_WEBGPT_MAX_ROUNDS_PER_HOUR`; bypass via
+  `ASK_WEBGPT_RATE_LIMIT_DISABLE=1` (tests only). State at
+  `~/.pi/webgpt-rate-limit.json`.
+- **Verdict JSON parsing.** ChatGPT occasionally emits technically-invalid
+  JSON (raw control chars inside string fields, trailing commas, missing
+  quotes). `extract_verdict` layers strict `json.loads` → `json_repair` →
+  plain-text `VERDICT:` regex, so transient model misbehavior never
+  silently drops the verdict label.
+
+### Bounded reviewer/executor workflow
+
+Use this pattern when the human wants WebGPT as a reviewer/oracle while the
+project agent remains the executor:
+
+```text
+human defines intent
+  -> optional /interview for acceptance criteria
+  -> project agent implements or gathers evidence
+  -> /ask webgpt reviews the evidence bundle
+  -> project agent applies corrections
+  -> repeat until gate passes, max rounds is reached, or a human decision is required
+```
+
+Start with `/interview` when the acceptance criteria are not concrete enough
+to verify without guessing. Examples: product workflow direction, UI purpose,
+schema ownership, status vocabulary, prompt contract expected outputs, or any
+case where the reviewer would otherwise invent the definition of done. Skip
+`/interview` when the human already provided executable acceptance criteria or
+the task is a narrow bug fix with an obvious failing proof.
+
+The project agent should not expose every internal reviewer turn to the human.
+Human-facing status should be limited to:
+
+- current state
+- blocker
+- proposed decision
+- evidence link or artifact path
+- what changed since the previous round
+- whether a human decision is required
+
+Recommended bounded loop:
+
+```bash
+./run.sh ask webgpt "Review the evidence bundle at /tmp/review-bundle.md.
+Return PASS, NEEDS_CHANGES, or BLOCKED with specific fixes only." \
+  --webgpt-project <project-review> \
+  --oracle-iterations 1
+```
+
+Then the project agent applies fixes locally, regenerates the evidence bundle,
+and calls `/ask webgpt` again on the same `--webgpt-project` until one of these
+terminal conditions occurs:
+
+- `PASS`: the reviewer verdict is satisfied and local proof also passes.
+- `BLOCKED`: the reviewer names a missing dependency or unresolved product
+  decision.
+- `MAX_ROUNDS`: the configured round cap is reached.
+- `NEEDS_HUMAN_DECISION`: the remaining issue is acceptance/product policy, not
+  implementation.
+
+Do not use this loop for unbounded brainstorming, bulk review queues, or as a
+substitute for deterministic tests. WebGPT review is a gate over concrete
+evidence, not proof by itself.
+
+## Image Generation Mode
+
+Use `/ask --image-generate` when the answer should be an image artifact rather
+than retrieved memory or an oracle text response. `/ask` sends the prompt to
+`/scillm` `POST /v1/images/generations`, writes generated image files under the
+ask run directory by default, and records an `image_generation.json` manifest.
+
+```bash
+./run.sh ask "a precise architecture diagram of ask calling scillm for image generation" \
+  --image-generate \
+  --image-model gpt-image-2 \
+  --image-size 1024x1024 \
+  --image-quality high
+```
+
+Image generation is standalone: do not combine it with memory retrieval,
+oracle, roundtable, argue, parallel-review, deep-review, or CAE gap-review
+options. Use `--image-output` to choose a file or directory, and
+`--image-output-format png|jpeg|webp` to choose the artifact format.
 
 ## Zero Cognitive Load for Project Agents
 
@@ -231,7 +455,7 @@ Options:
   --persona-scope <scope> Scope to search for personas (default: personas)
   --hybrid                Use hybrid RAG+QRA retrieval
   --oracle                Use scillm/Codex for final oracle synthesis
-  --oracle-backend <b>    Oracle backend: auto, scillm, subagent-runner
+  --oracle-backend <b>    Oracle backend: auto, scillm, subagent-runner, webgpt
   --oracle-model <model>  Oracle synthesis model (default: gpt-5.5)
   --oracle-reasoning <r>  Oracle reasoning effort (default: high; deep-review default: xhigh)
   --oracle-timeout <sec>  Oracle HTTP timeout in seconds (default: 300)
@@ -609,6 +833,7 @@ Runner-backed oracle calls also have heartbeat/recovery telemetry:
 | User intent | Use | Why |
 |-------------|-----|-----|
 | One direct high-reasoning answer | `--oracle --oracle-backend scillm` | Fast path through `/scillm` |
+| Browser/session-backed ChatGPT answer or review | `$ask webgpt ...` or `--oracle --oracle-backend webgpt` | Preserves `/ask` artifacts while using `/surf` sentinel proof against the authenticated ChatGPT tab |
 | Focused Codex agent answer | `--oracle --oracle-backend subagent-runner` | Runs a real Codex CLI subagent session |
 | Persona or peer deliberation | `--oracle --oracle-backend auto --oracle-iterations 2+` | `auto` selects `subagent-runner` |
 | N-persona sequential debate | `--roundtable --roundtable-personas ...` | State-machine review protocol with claim anchoring |
@@ -1019,6 +1244,7 @@ Query: "How does stress affect decision-making?"
 |-------|--------------|
 | `/dogpile` | Primary discovery engine (Brave, Perplexity, ArXiv, YouTube, GitHub) |
 | `/memory` | Knowledge storage and retrieval |
+| `/surf` | Browser transport and sentinel proof layer for `$ask webgpt` |
 | `/project-knowledge` | Curated human-readable current-state document for `/ask` development |
 | `/discover-books` | Book discovery via OpenLibrary |
 | `/ingest-youtube` | YouTube transcript extraction |

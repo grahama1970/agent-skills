@@ -7,6 +7,10 @@ Handles the last two major steps:
 - Post-pipeline: Persona profile storage and colleague discovery
 """
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 import json
 import os
 import re

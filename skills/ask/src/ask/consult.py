@@ -1,5 +1,9 @@
 """Persona consultation logic for matching questions to stored expertise profiles."""
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 #!/usr/bin/env python3
 """
 /ask consult — Generate responses AS a persona.

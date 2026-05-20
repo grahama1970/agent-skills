@@ -6,6 +6,10 @@ bounded deliberation transcript formatting. It keeps orchestration policy in
 ask_oracle.py while isolating external process/network behavior here.
 """
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 import hashlib
 import json
 import subprocess

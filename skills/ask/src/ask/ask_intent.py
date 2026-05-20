@@ -1,5 +1,9 @@
 """Intent classification helpers for routing ask prompts to OS, health, and knowledge flows."""
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 #!/usr/bin/env python3
 """
 /ask intent classifier — 3-stage classification for routing /ask queries.

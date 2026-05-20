@@ -1,5 +1,9 @@
 """Learning pipeline orchestration for discovery, ingestion, extraction, and memory storage."""
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 #!/usr/bin/env python3
 """
 /ask learn pipeline -- Main learning orchestration.

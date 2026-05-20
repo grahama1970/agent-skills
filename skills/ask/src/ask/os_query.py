@@ -1,5 +1,9 @@
 """Embry OS query and health dispatch commands backed by memory and monitor skills."""
 
+
+from .env import load_dotenv_once
+
+load_dotenv_once()
 #!/usr/bin/env python3
 """
 /ask os query — Query embry-os internal knowledge and runtime health.
@@ -345,10 +349,12 @@ def ask_os_health(
             print(f"\n  {result['answer']}\n")
         return result
 
-    print(f"\n── OS Health: {subsystem} ──")
+    if not as_json:
+        print(f"\n── OS Health: {subsystem} ──")
 
     # Get runtime health data
-    print(f"   Checking {subsystem}...")
+    if not as_json:
+        print(f"   Checking {subsystem}...")
     if run_state:
         run_state.step_started("os_health_dispatch", subsystem=subsystem)
     health_data = get_health_data(subsystem)
@@ -388,7 +394,7 @@ def ask_os_health(
     if knowledge:
         parts.append("\nArchitecture:")
         for item in knowledge[:2]:
-            sol = item.get("solution", "")
+            sol = item.get("solution", "") or item.get("description", "")
             if sol:
                 parts.append(f"  {sol[:200]}")
 
