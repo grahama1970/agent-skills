@@ -423,6 +423,13 @@ include Docker deployment:
   negative-control/noise fixture, safety-boundary assertions for forbidden side
   effects, and concrete artifact/schema assertions for the skill's claimed
   outputs.
+- Composite runtime skills that orchestrate three or more live downstream skills
+  such as `memory`, `dogpile`, `ask`, `scillm`, or `surf` MUST also provide an
+  opt-in live E2E gate (`sanity-live.sh`, `sanity-e2e.sh`, `sanity-webgpt.sh`,
+  or `scripts/live_e2e.py`). The live gate must call the real downstream skill
+  entrypoints, persist machine-readable proof artifacts, and fail closed when a
+  required downstream receipt is missing. A generated request file is not a live
+  proof.
 - **CLI: Typer only** — all Python CLIs use `typer`. NEVER `argparse` or `click`.
 - **No bespoke reimplementations** — if a helper skill exists, the new skill delegates to it.
 - **PyYAML dependency** — any script that parses SKILL.md frontmatter MUST depend on

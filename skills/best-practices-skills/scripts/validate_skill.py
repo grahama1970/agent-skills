@@ -52,6 +52,8 @@ except ImportError:
 RULES_FILE = Path(__file__).parent.parent / "references" / "rules.yml"
 VOCAB_FILE = Path(__file__).parent.parent / "references" / "capability_vocabulary.yml"
 FRONTMATTER_RE = re.compile(r"\A---\n(?P<frontmatter>.*?)\n---(?:\n|$)", re.DOTALL)
+LIVE_RUNTIME_DEPS = {"ask", "dogpile", "memory", "scillm", "surf"}
+LIVE_E2E_MARKERS = ("sanity-live.sh", "sanity-e2e.sh", "sanity-webgpt.sh", "scripts/live_e2e.py")
 
 
 def _extract_frontmatter(skill_md: Path) -> dict | None:
@@ -164,6 +166,17 @@ def validate_skill(skill_dir: Path, skills_root: Path | None = None) -> list[dic
     # --- Circular composition check ---
     if isinstance(composes, list) and skill_dir.name in composes:
         _add("COMP002", "error", f"Self-referential composition: {skill_dir.name}")
+
+    if isinstance(composes, list):
+        live_deps = sorted(set(composes) & LIVE_RUNTIME_DEPS)
+        if len(live_deps) >= 3 and not any((skill_dir / marker).exists() for marker in LIVE_E2E_MARKERS):
+            _add(
+                "LIVE001",
+                "error",
+                "Composite runtime skill composes "
+                f"{', '.join(live_deps)} but has no opt-in live E2E gate "
+                "(expected sanity-live.sh, sanity-e2e.sh, sanity-webgpt.sh, or scripts/live_e2e.py)",
+            )
 
     # --- Vocabulary check ---
     if isinstance(provides, list) and VOCAB_FILE.exists():
