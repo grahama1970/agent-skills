@@ -252,11 +252,50 @@ skills/ask/run.sh ask webgpt "Review the alignment request at .align/reviews/rou
   --webgpt-tab-id 837343529 --oracle-iterations 1
 
 # dogpile research only if alignment is blocked by missing external facts
-skills/dogpile/run.sh ".align/reviews/round-001-dogpile-request.md"
+skills/dogpile/run.sh search "facts needed to unblock this alignment" \
+  --context-file ".align/reviews/round-001-dogpile-request.md"
 ```
 
 Store the resulting reviewer text with `add-response`. Reviewer receipts are
 inputs to alignment; they are not execution approval by themselves.
+
+## Live Composition Sanity
+
+`sanity.sh` is the fast local check. It proves the round loop, blocking-question
+gate, reviewer request generation, and lock schema without spending external
+quota.
+
+`sanity-live.sh` is the required real-world E2E gate before claiming `$align`
+is ready as a composite skill. It is opt-in because it calls live downstream
+systems:
+
+- `$memory recall --brief` through the real memory skill
+- project-agent response ingestion through `$align add-response`
+- `$dogpile search` with the generated alignment request as context
+- `$ask webgpt` against the authenticated browser-backed WebGPT path
+- final `alignment_lock.json` creation only after those receipts validate
+
+Run it only when the local workstation has memory, dogpile credentials/search,
+Chrome, and an authenticated ChatGPT session:
+
+```bash
+ALIGN_LIVE_E2E=1 skills/align/sanity-live.sh
+```
+
+Optional controls:
+
+```bash
+ALIGN_LIVE_E2E=1 \
+ALIGN_WEBGPT_TAB_ID=837343529 \
+ALIGN_LIVE_OUTPUT_ROOT=/mnt/storage12tb/skills/align/live-e2e \
+skills/align/sanity-live.sh
+```
+
+If no `ALIGN_WEBGPT_TAB_ID` or `ALIGN_WEBGPT_PROJECT` is provided, the live
+check passes `--webgpt-create-tab` to `$ask`; this still requires a valid local
+Chrome/WebGPT setup. The proof artifact is
+`/mnt/storage12tb/skills/align/live-e2e/<timestamp>/report.json` by default.
+Skipped live checks do not establish readiness.
 
 ## Artifact Layout
 
@@ -279,6 +318,13 @@ inputs to alignment; they are not execution approval by themselves.
     round-001-dogpile-request.md
     round-001-webgpt-request.md
     round-001-webgpt-ask-command.sh
+
+/mnt/storage12tb/skills/align/live-e2e/<timestamp>/
+  report.json
+  memory.stdout
+  dogpile.stdout
+  webgpt.stdout
+  ask-runs/<ask_id>/
 ```
 
 ## Stop Conditions
