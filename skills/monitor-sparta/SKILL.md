@@ -118,6 +118,18 @@ Trigger model:
   present;
 - browser: WebSocket/SSE pushes state to Sparta Explorer, with polling fallback.
 
+Expensive health-check rule:
+
+- Sparta Explorer may poll or subscribe continuously, but browser reads must
+  return the last durable snapshot unless a cheap change signature says the
+  SPARTA corpus/supervisor state changed.
+- `run_all_checks()` and other full Arango health scans are allowed only for an
+  explicit human/operator force refresh, a nightly/checkpoint run, or a detected
+  change signature. They must not be launched by ordinary page refreshes.
+- The Coverage API must expose whether a response is `change_gated`,
+  `change_detected`, `force_requested`, or `snapshot_only` so agents can tell
+  whether they are looking at a durable snapshot or an active audit.
+
 Prompt Health lane rule:
 
 1. Run the local prompt-health scanner on prompt units, not isolated user
