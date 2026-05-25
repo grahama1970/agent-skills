@@ -1,0 +1,4 @@
+interface:
+  display_name: "Best Practices Design"
+  short_description: "Product UX and design-routing guardrails"
+  default_prompt: "Use $best-practices-design to classify the design surface, select applicable best-practices skills, and define UX acceptance criteria before mockup or implementation."

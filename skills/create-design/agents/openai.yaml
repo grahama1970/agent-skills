@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Design"
+  short_description: "Research-backed UX collaboration loop"
+  default_prompt: "Use $create-design to start a research-backed design collaboration loop with memory, research, reviewers, human interview, mockups, ux-lab implementation, and evidence gates."
