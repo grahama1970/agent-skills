@@ -1,0 +1,4 @@
+interface:
+  display_name: "Best Practices Report"
+  short_description: "Evidence-first technical report guardrails"
+  default_prompt: "Use $best-practices-report to produce an evidence-first technical report instead of a dashboard."

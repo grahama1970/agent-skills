@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Technical Report Template</title>
+  <link rel="stylesheet" href="report-template.css" />
+</head>
+<body>
+  <main class="report-shell">
+    <header class="report-header">
+      <p class="eyebrow">Technical Report</p>
+      <h1>Report Title</h1>
+      <p class="lede">
+        Replace this with one paragraph stating the main finding, readiness state, evidence basis,
+        and whether the reviewed system is verified, blocked, degraded, stale, or unknown.
+      </p>
+    </header>
+
+    <section class="report-section" aria-labelledby="report-summary">
+      <h2 id="report-summary">Report Summary</h2>
+      <dl class="summary-grid">
+        <dt>Overall Finding</dt>
+        <dd><span class="state-label state-warning">Needs Changes</span></dd>
+
+        <dt>Core Conclusion</dt>
+        <dd>One clear paragraph explaining the report's conclusion.</dd>
+
+        <dt>Evidence Basis</dt>
+        <dd>Name the actual reviewed files, screenshots, logs, validation runs, records, or artifacts.</dd>
+
+        <dt>Highest-Risk Issues</dt>
+        <dd>
+          <ol>
+            <li><span class="finding-id">F-001</span> Issue title — why it matters.</li>
+            <li><span class="finding-id">F-002</span> Issue title — why it matters.</li>
+          </ol>
+        </dd>
+
+        <dt>Immediate Next Steps</dt>
+        <dd>
+          <ol>
+            <li><span class="action-id">A-001</span> Concrete action tied to a finding ID and acceptance check.</li>
+            <li><span class="action-id">A-002</span> Concrete action tied to a finding ID and acceptance check.</li>
+          </ol>
+        </dd>
+
+        <dt>Non-Claims</dt>
+        <dd>This report does not prove production readiness, full correctness, or runtime safety unless explicitly evidenced below.</dd>
+      </dl>
+    </section>
+
+    <section class="report-section" aria-labelledby="scope">
+      <h2 id="scope">Scope</h2>
+      <dl class="metadata-list">
+        <dt>Reviewed</dt>
+        <dd>Specific files, surfaces, screenshots, logs, or artifacts.</dd>
+        <dt>Not Reviewed</dt>
+        <dd>Explicit exclusions.</dd>
+        <dt>Evidence Available</dt>
+        <dd>Named source artifacts.</dd>
+        <dt>Evidence Gaps</dt>
+        <dd>Missing or stale sources that limit claims.</dd>
+      </dl>
+    </section>
+
+    <section class="report-section" aria-labelledby="sources">
+      <h2 id="sources">Source-of-Truth Inventory</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Sources used by this report</caption>
+          <thead>
+            <tr>
+              <th>Source ID</th>
+              <th>Source Name</th>
+              <th>Type</th>
+              <th>Recency</th>
+              <th>Used For</th>
+              <th>Limitations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="source-ref">S-001</span></td>
+              <td>Artifact name</td>
+              <td>Screenshot / log / file / DB record</td>
+              <td><span class="state-label state-unknown">Unknown</span></td>
+              <td>F-001, F-002</td>
+              <td>State exact limitations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="report-section" aria-labelledby="findings">
+      <h2 id="findings">Findings</h2>
+
+      <article class="finding finding-warning" aria-labelledby="finding-001">
+        <h3 id="finding-001"><span class="finding-id">F-001</span> Finding Name</h3>
+        <dl class="finding-list">
+          <dt>Status</dt>
+          <dd><span class="state-label state-warning">Needs Changes</span></dd>
+          <dt>Evidence</dt>
+          <dd>Specific file, record, screenshot, log, validation result, source object, or observed behavior.</dd>
+          <dt>Rationale</dt>
+          <dd>Why the evidence supports the finding.</dd>
+          <dt>Impact</dt>
+          <dd>What breaks, degrades, confuses, delays, or risks the workflow.</dd>
+          <dt>Owner</dt>
+          <dd>Persona or role responsible for action.</dd>
+          <dt>Valid Next Actions</dt>
+          <dd>Finite list of acceptable next steps.</dd>
+          <dt>Acceptance Check</dt>
+          <dd>How to verify that the issue has been addressed.</dd>
+          <dt>Non-Claims</dt>
+          <dd>What this finding does not prove.</dd>
+        </dl>
+        <blockquote class="evidence-block">
+          <strong>Evidence block:</strong> include concise source excerpt or source pointer here. Long raw excerpts belong in the appendix.
+        </blockquote>
+      </article>
+    </section>
+
+    <section class="report-section" aria-labelledby="contracts">
+      <h2 id="contracts">Surface / Module Contracts</h2>
+
+      <article class="surface-contract" aria-labelledby="surface-001">
+        <h3 id="surface-001">Surface Contract: Functional Surface Name</h3>
+        <dl class="contract-list">
+          <dt>System Surface Name</dt>
+          <dd>Clear, unhyped functional name of the view, module, or report section.</dd>
+          <dt>Owning Persona</dt>
+          <dd>Explicit human role/title responsible for this surface.</dd>
+          <dt>Core Purpose</dt>
+          <dd>Start with a strong verb explaining what the persona achieves here.</dd>
+          <dt>Primary Object</dt>
+          <dd>Exact artifact, record, entity, file, queue item, or database object manipulated or evaluated here.</dd>
+          <dt>Source of Truth</dt>
+          <dd>Database, file, graph index, API, registry, log, validation artifact, or human-owned source backing the data.</dd>
+          <dt>Valid Actions</dt>
+          <dd>Finite list of state changes, routing operations, edits, reviews, exports, or decisions.</dd>
+          <dt>Outstanding / Broken / Constraints</dt>
+          <dd>Raw blockers, degraded data paths, missing validations, stale inputs, unresolved risks, or prerequisites.</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="report-section constraint-block" aria-labelledby="unknowns">
+      <h2 id="unknowns">Outstanding / Broken / Unknown</h2>
+      <ul>
+        <li>Unverified data path...</li>
+        <li>Missing validation artifact...</li>
+        <li>Blocked implementation dependency...</li>
+      </ul>
+    </section>
+
+    <section class="report-section action-queue" aria-labelledby="actions">
+      <h2 id="actions">Plan-Ready Next Actions</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Action queue that can be converted into an implementation plan</caption>
+          <thead>
+            <tr>
+              <th>Action ID</th>
+              <th>Related Finding</th>
+              <th>Action</th>
+              <th>Owner Persona</th>
+              <th>Primary Object</th>
+              <th>Acceptance Check</th>
+              <th>Priority</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="action-id">A-001</span></td>
+              <td><span class="finding-id">F-001</span></td>
+              <td>Concrete verb-led task.</td>
+              <td>Role/persona</td>
+              <td>File, component, record, or surface</td>
+              <td>Deterministic verification condition</td>
+              <td>P1</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="report-section non-claims" aria-labelledby="non-claims">
+      <h2 id="non-claims">Non-Claims</h2>
+      <p>
+        This report does not prove production readiness, full corpus correctness, runtime safety,
+        or complete implementation unless those claims are explicitly evidenced above.
+      </p>
+    </section>
+
+    <section class="report-section appendix-block" aria-labelledby="appendix">
+      <h2 id="appendix">Appendix / Evidence Details</h2>
+      <details class="details-block">
+        <summary>Secondary evidence or raw source excerpt</summary>
+        <div>
+          <p>Place long logs, source excerpts, record dumps, or implementation details here.</p>
+        </div>
+      </details>
+    </section>
+  </main>
+</body>
+</html>
