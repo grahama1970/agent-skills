@@ -216,6 +216,26 @@ A valid VS Code debugger proof includes:
 
 The project-agent may drive the VS Code debugger through DAP in a terminal when a GUI is not required. The proof still must show that the breakpoint was set, hit, and used to inspect live runtime state.
 
+## Language-Neutral Debugging Contract
+
+The project-agent and human should not need a different debugging workflow for
+Python, TypeScript, Rust, or any other implementation language. The useful
+object is always the paused variable state at a particular breakpoint.
+
+Language only determines the adapter used to stop execution and read frame
+state:
+
+- Python uses the bundled Python harness, VS Code debugpy, or another Python
+  debugger.
+- TypeScript, JavaScript, and Node use the VS Code JavaScript debugger through
+  generated launch configurations.
+- Rust uses CodeLLDB/lldb-compatible VS Code launch configurations through the
+  bundled Rust writer, or an equivalent Rust-capable DAP/debugger.
+
+The reported proof must have the same shape for every language: debugger used,
+breakpoint file and line, hit or miss, paused frame, selected locals or watches,
+human-examinable breakpoint handoff, and what the observed state proves.
+
 ## TypeScript And Node Debugging
 
 Use TypeScript debugging when the runtime-state question crosses JavaScript, TypeScript, Node, browser, or VS Code extension code. This includes React state, server-side Node handlers, build/test runners, Playwright helpers, VS Code extension host behavior, source-map mismatches, async callback order, and any bug where compiled JavaScript does not obviously match the TypeScript source.
@@ -261,6 +281,63 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
 ```
 
 The evidence standard is the same as Python: breakpoint location, source-mapped frame, stopped reason, selected locals, watches when safe, and analysis of what the paused state proves. For TypeScript, also report the generated JavaScript/debugger mapping when source maps affect breakpoint placement.
+
+## Rust Debugging
+
+Use Rust debugging when the runtime-state question crosses Rust code, cargo
+tests, native binaries, FFI boundaries, async Rust tasks, parser/extractor
+state, or any bug where ownership, mutation, enum variant selection, error
+propagation, or compiled native behavior matters.
+
+For Rust targets, generate a VS Code CodeLLDB-compatible launch configuration
+instead of forcing the Python harness or TypeScript writer:
+
+```bash
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
+uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
+  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_rust_launch.py \
+  --workspace /path/to/project \
+  --name "Debug Rust test with $debugger" \
+  --kind cargo-test \
+  --cargo-arg test \
+  --cargo-arg --no-run \
+  --cargo-arg exact_case \
+  --cargo-arg -- \
+  --cargo-arg --exact \
+  --filter-name crate_or_test_target \
+  --filter-kind test \
+  --arg --nocapture \
+  --env RUST_BACKTRACE=1
+```
+
+For a Rust binary launched through cargo:
+
+```bash
+uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
+  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_rust_launch.py \
+  --workspace /path/to/project \
+  --kind cargo-run \
+  --cargo-arg run \
+  --cargo-arg --bin \
+  --cargo-arg my_binary \
+  --arg --sample-input
+```
+
+For an already compiled binary:
+
+```bash
+uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
+  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_rust_launch.py \
+  --workspace /path/to/project \
+  --kind program \
+  --program '${workspaceFolder}/target/debug/my_binary'
+```
+
+The evidence standard is the same as Python and TypeScript: breakpoint location,
+stopped reason, selected locals, watches when safe, and analysis of what the
+paused state proves. For Rust, also report the Rust debugger adapter used, such
+as CodeLLDB, `lldb-dap`, or `rust-gdb`, and any limitation in local/watch
+evaluation for optimized or inlined code.
 
 ## Trigger Bar
 

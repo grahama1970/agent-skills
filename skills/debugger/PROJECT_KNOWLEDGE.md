@@ -13,6 +13,10 @@
   to stdout, stderr, logs, and stack traces after the fact, but those outputs do
   not reliably show variable state, branch choice, mutation timing, or adapter
   payloads at the moment the bug first appears.
+- The debugger workflow is language-neutral at the human/agent contract level:
+  the important artifact is paused variable state at a breakpoint. Language only
+  determines the adapter used to stop the runtime and read the frame.
+- Current first-class adapters are Python, TypeScript/JavaScript/Node, and Rust.
 - The two README-level jobs are:
   1. Make the project agent prove runtime state before patching.
   2. Make human collaboration easy when a paused state needs semantic or product
@@ -30,6 +34,7 @@
 | 2026-05-26 | Use the vintage DEBUGGER machine banner direction | It has more character than a modern software-debugging image and matches the `$ask` README's memorable object style |
 | 2026-05-26 | Keep README prose focused on runtime state, breakpoints, and collaboration | The user wanted the README to explain when the agent should use `$debugger`, when to collaborate with the human, and how breakpoints work |
 | 2026-05-26 | Treat `$review-docs` as the better future name than `$review-readme` | README review is broader than prose: it should include rendered docs, image/link checks, examples, SKILL.md contradiction checks, and model prose review |
+| 2026-05-26 | Promote Rust to first-class debugger support | The common project stack is Python + TypeScript + Rust, and the debugger proof model should be language-neutral for the agent and human |
 
 ## Open Questions
 
@@ -82,10 +87,12 @@
 | `scripts/capture_breakpoints.py` | Python breakpoint/local/watch capture harness |
 | `scripts/write_vscode_launch.py` | Writes Python/debugpy VS Code launch configurations |
 | `scripts/write_vscode_typescript_launch.py` | Writes TypeScript/Node/extension-host VS Code launch configurations |
+| `scripts/write_vscode_rust_launch.py` | Writes Rust CodeLLDB-compatible VS Code launch configurations |
 | `scripts/request_vscode_bridge.py` | Writes visible VS Code bridge requests |
 | `vscode-bridge/` | Companion VS Code extension bridge for visible debug-session control and DAP proof |
 | `sanity.sh` | Python harness sanity checks |
 | `sanity-typescript.sh` | TypeScript launch writer sanity checks |
+| `sanity-rust.sh` | Rust launch writer sanity checks |
 | `sanity-bridge.sh` | Bridge protocol and smoke checks |
 | `sanity-e2e.sh` | End-to-end breakpoint proof checks |
 

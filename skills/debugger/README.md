@@ -160,6 +160,37 @@ If the breakpoint does not hit, that is evidence too. It means the current
 hypothesis about the execution path is wrong or the reproduction did not reach
 the target state.
 
+## Supported Code Languages
+
+The debugger workflow is language-neutral. The project agent and human should
+not need a different mental model for Python, TypeScript, Rust, or any other
+runtime. The useful object is always the same: paused variable state at a
+specific breakpoint.
+
+Language only matters below the surface, where the skill chooses the adapter
+that can stop that runtime and read its frame state.
+
+Current first-class support:
+
+- **Python:** bundled breakpoint harness for in-process Python commands and
+  tests, plus VS Code/debugpy launch generation and DAP proof capture.
+- **TypeScript, JavaScript, and Node:** VS Code JavaScript debugger launch
+  generation for npm scripts, direct Node/TypeScript entrypoints, Playwright or
+  build/test runners, browser-adjacent state, and VS Code extension-host code.
+- **Rust:** VS Code CodeLLDB-compatible launch generation for cargo tests,
+  cargo-launched binaries, and already compiled Rust programs.
+
+Current generic support:
+
+- **Other runtimes:** use the platform debugger directly and preserve the same
+  proof artifact: debugger used, breakpoint file/line, hit or miss, paused
+  frame, selected locals or watches, and what the observed state proves.
+
+For Rust, the adapter is usually CodeLLDB, `lldb-dap`, or another
+LLDB/GDB-backed Rust debugger. That adapter detail should not change the
+human-facing proof: the agent still reports the breakpoint, hit/miss status,
+paused frame, selected variables, and what the values prove.
+
 ## Try This First
 
 For Python tests or commands that can run in-process:
@@ -202,6 +233,23 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
   --runtime-arg test \
   --runtime-arg -- \
   --arg path/to/test.spec.ts
+```
+
+For Rust cargo tests or binaries:
+
+```bash
+uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
+  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_rust_launch.py \
+  --workspace /path/to/project \
+  --name "Debug Rust test with $debugger" \
+  --kind cargo-test \
+  --cargo-arg test \
+  --cargo-arg --no-run \
+  --cargo-arg exact_case \
+  --cargo-arg -- \
+  --cargo-arg --exact \
+  --arg --nocapture \
+  --env RUST_BACKTRACE=1
 ```
 
 ## VS Code Bridge
@@ -255,6 +303,7 @@ Run these from this directory:
 ```bash
 ./sanity.sh
 ./sanity-typescript.sh
+./sanity-rust.sh
 ./sanity-bridge.sh
 ./sanity-e2e.sh
 ```
