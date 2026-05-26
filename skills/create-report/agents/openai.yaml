@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Report"
+  short_description: "Project-aware evidence report orchestrator"
+  default_prompt: "Use $create-report to produce a project-aware evidence report with a plan-iterate handoff."
