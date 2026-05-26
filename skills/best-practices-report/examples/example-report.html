@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DAG Planner Report Surface Review</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --paper: #ffffff;
+      --text: #172033;
+      --muted: #475569;
+      --subtle: #64748b;
+      --border: #d8dee9;
+      --blue-bg: #eff6ff;
+      --blue-border: #2563eb;
+      --blue-text: #1d4ed8;
+      --amber-bg: #fffbeb;
+      --amber-border: #d97706;
+      --amber-text: #92400e;
+      --red-bg: #fef2f2;
+      --red-border: #dc2626;
+      --red-text: #991b1b;
+      --gray-bg: #f1f5f9;
+      --gray-border: #64748b;
+      --gray-text: #334155;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.62 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .report-shell { max-width: 1020px; margin: 0 auto; padding: 40px 28px 72px; }
+    .report-header, .report-section, .finding, .surface-contract { background: var(--paper); border: 1px solid var(--border); border-radius: 14px; padding: 22px 26px; margin: 18px 0; }
+    .report-header { border-top: 6px solid var(--gray-border); }
+    .eyebrow { margin: 0 0 8px; color: var(--subtle); font-size: 0.78rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
+    h1, h2, h3 { color: #0f172a; line-height: 1.18; }
+    h1 { margin: 0 0 14px; font-size: clamp(2rem, 4vw, 3rem); letter-spacing: -0.035em; }
+    h2 { margin: 0 0 14px; font-size: 1.35rem; letter-spacing: -0.015em; }
+    h3 { margin: 0 0 10px; font-size: 1.08rem; }
+    p { margin: 0 0 12px; }
+    .lede { max-width: 72ch; color: #334155; font-size: 1.08rem; line-height: 1.65; }
+    dl { display: grid; grid-template-columns: minmax(150px, 230px) 1fr; gap: 9px 18px; margin: 0; }
+    dt { color: var(--gray-text); font-weight: 780; }
+    dd { margin: 0; min-width: 0; }
+    ul, ol { margin: 8px 0 0 1.25rem; padding: 0; }
+    li + li { margin-top: 6px; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; margin: 14px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.94rem; background: var(--paper); }
+    caption { padding: 10px 12px; color: var(--muted); text-align: left; font-weight: 700; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { color: #334155; background: #f8fafc; font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    .state-label { display: inline-flex; align-items: center; padding: 0.16rem 0.48rem; border: 1px solid currentColor; border-radius: 999px; font-size: 0.78rem; font-weight: 800; white-space: nowrap; }
+    .state-warning { color: var(--amber-text); background: var(--amber-bg); }
+    .state-blocked { color: var(--red-text); background: var(--red-bg); }
+    .state-unknown { color: var(--gray-text); background: var(--gray-bg); }
+    .finding-warning { border-left: 6px solid var(--amber-border); background: var(--amber-bg); }
+    .finding-blocked, .constraint-block { border-left: 6px solid var(--red-border); background: var(--red-bg); }
+    .evidence-block { border-left: 5px solid var(--blue-border); border-radius: 12px; padding: 14px 18px; margin: 14px 0; background: var(--blue-bg); }
+    .non-claims { border-style: dashed; background: #fff; }
+    .source-ref, .finding-id, .action-id { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.9em; font-weight: 800; }
+    @media (max-width: 720px) { .report-shell { padding: 24px 14px 56px; } .report-header, .report-section, .finding, .surface-contract { padding: 18px; } dl { grid-template-columns: 1fr; gap: 3px 0; } dt { margin-top: 8px; } }
+  </style>
+</head>
+<body>
+  <main class="report-shell">
+    <header class="report-header">
+      <p class="eyebrow">Technical Report Example</p>
+      <h1>DAG Planner Report Surface Review</h1>
+      <p class="lede">The reviewed report surface needs changes because it presents broad status before evidence, ownership, and plan-ready repair actions. This example demonstrates a report layout that uses prose, source inventory, findings, contracts, constraints, and action queues instead of dashboard theater.</p>
+    </header>
+
+    <section class="report-section">
+      <h2>Report Summary</h2>
+      <dl>
+        <dt>Overall Finding</dt>
+        <dd><span class="state-label state-warning">Needs Changes</span></dd>
+        <dt>Core Conclusion</dt>
+        <dd>The report surface is not ready to serve as a project-agent planning readout until summary claims are tied to evidence and findings are converted into concrete actions.</dd>
+        <dt>Evidence Basis</dt>
+        <dd>Example screenshot <span class="source-ref">S-001</span>, example diff summary <span class="source-ref">S-002</span>, and example validation note <span class="source-ref">S-003</span>. Replace placeholders with actual artifacts before making verification claims.</dd>
+        <dt>Highest-Risk Issues</dt>
+        <dd>
+          <ol>
+            <li><span class="finding-id">F-001</span> Summary cards are not evidence-backed.</li>
+            <li><span class="finding-id">F-002</span> Source-of-truth inventory is missing.</li>
+            <li><span class="finding-id">F-003</span> Findings do not map to repair actions.</li>
+          </ol>
+        </dd>
+        <dt>Immediate Next Steps</dt>
+        <dd>
+          <ol>
+            <li><span class="action-id">A-001</span> Replace the status-card summary with prose tied to finding IDs.</li>
+            <li><span class="action-id">A-002</span> Add a source-of-truth inventory before findings.</li>
+            <li><span class="action-id">A-003</span> Add a plan-ready action queue with acceptance checks.</li>
+          </ol>
+        </dd>
+        <dt>Non-Claims</dt>
+        <dd>This example does not prove production readiness, complete UI correctness, or runtime data integrity.</dd>
+      </dl>
+    </section>
+
+    <section class="report-section">
+      <h2>Source-of-Truth Inventory</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Sources used by this example report</caption>
+          <thead>
+            <tr><th>Source ID</th><th>Source Name</th><th>Type</th><th>Recency</th><th>Used For</th><th>Limitations</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="source-ref">S-001</span></td><td>Planner screenshot</td><td>Screenshot</td><td><span class="state-label state-unknown">Unknown</span></td><td>F-001</td><td>Example-only placeholder.</td></tr>
+            <tr><td><span class="source-ref">S-002</span></td><td>UI implementation diff</td><td>Diff</td><td><span class="state-label state-unknown">Unknown</span></td><td>F-001, F-003</td><td>Example-only placeholder.</td></tr>
+            <tr><td><span class="source-ref">S-003</span></td><td>Validation note</td><td>Review note</td><td><span class="state-label state-unknown">Unknown</span></td><td>F-002, F-003</td><td>No executable validation included.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="report-section">
+      <h2>Findings</h2>
+      <article class="finding finding-warning">
+        <h3><span class="finding-id">F-001</span> Summary cards are not evidence-backed</h3>
+        <dl>
+          <dt>Status</dt><dd><span class="state-label state-warning">Needs Changes</span></dd>
+          <dt>Evidence</dt><dd><span class="source-ref">S-001</span> shows summary cards before evidence; <span class="source-ref">S-002</span> does not bind states to validation records.</dd>
+          <dt>Rationale</dt><dd>The surface presents status before exposing the source records or predicates that justify status.</dd>
+          <dt>Impact</dt><dd>Readers may treat an unverified summary as operational truth.</dd>
+          <dt>Owner</dt><dd>Report surface designer / project-agent UI implementer.</dd>
+          <dt>Acceptance Check</dt><dd>Every top-summary status maps to a finding ID and source artifact.</dd>
+        </dl>
+        <blockquote class="evidence-block"><strong>Evidence note:</strong> This example intentionally labels sources as placeholders so it does not imply verification.</blockquote>
+      </article>
+
+      <article class="finding finding-blocked">
+        <h3><span class="finding-id">F-002</span> Missing source-of-truth inventory</h3>
+        <dl>
+          <dt>Status</dt><dd><span class="state-label state-blocked">Blocked</span></dd>
+          <dt>Evidence</dt><dd>The report contains no explicit source table listing files, logs, screenshots, APIs, or validation artifacts.</dd>
+          <dt>Rationale</dt><dd>Without source inventory, the reader cannot distinguish verified claims from assumptions.</dd>
+          <dt>Impact</dt><dd>The report cannot support reliable implementation planning.</dd>
+          <dt>Owner</dt><dd>Report author / review agent.</dd>
+          <dt>Acceptance Check</dt><dd>The report contains a source inventory with source IDs referenced by findings.</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="report-section">
+      <h2>Surface / Module Contracts</h2>
+      <article class="surface-contract">
+        <h3>Surface Contract: Report Summary Section</h3>
+        <dl>
+          <dt>System Surface Name</dt><dd>Report Summary Section</dd>
+          <dt>Owning Persona</dt><dd>Project-agent reviewer</dd>
+          <dt>Core Purpose</dt><dd>Orient the human to the main conclusion, strongest evidence, top risks, and first actions.</dd>
+          <dt>Primary Object</dt><dd>Evidence-backed report summary item.</dd>
+          <dt>Source of Truth</dt><dd>Finding records, source inventory, validation artifacts.</dd>
+          <dt>Valid Actions</dt><dd>Read finding; jump to evidence; copy next action; route issue to plan.</dd>
+          <dt>Outstanding / Broken / Constraints</dt><dd>Must not use hero metrics or unbound status chips.</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="report-section constraint-block">
+      <h2>Outstanding / Broken / Unknown</h2>
+      <ul>
+        <li>Live validation data is not included in this example.</li>
+        <li>Source recency is unknown.</li>
+        <li>Runtime graph behavior is not proven.</li>
+      </ul>
+    </section>
+
+    <section class="report-section">
+      <h2>Plan-Ready Next Actions</h2>
+      <div class="table-wrap">
+        <table>
+          <caption>Action queue for repair planning</caption>
+          <thead><tr><th>Action ID</th><th>Related Finding</th><th>Action</th><th>Owner</th><th>Acceptance Check</th><th>Priority</th></tr></thead>
+          <tbody>
+            <tr><td><span class="action-id">A-001</span></td><td><span class="finding-id">F-001</span></td><td>Replace card summary with prose-first report summary tied to finding IDs.</td><td>UI implementer</td><td>Summary references finding IDs and evidence.</td><td>P1</td></tr>
+            <tr><td><span class="action-id">A-002</span></td><td><span class="finding-id">F-002</span></td><td>Add source-of-truth inventory before findings.</td><td>Report author</td><td>Every finding cites source IDs.</td><td>P0</td></tr>
+            <tr><td><span class="action-id">A-003</span></td><td><span class="finding-id">F-003</span></td><td>Add action queue with acceptance checks.</td><td>Project-agent planner</td><td>Every action maps to a finding and verification condition.</td><td>P1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="report-section non-claims">
+      <h2>Non-Claims</h2>
+      <p>This example does not prove production readiness, full UI correctness, full data integrity, or runtime safety.</p>
+    </section>
+  </main>
+</body>
+</html>

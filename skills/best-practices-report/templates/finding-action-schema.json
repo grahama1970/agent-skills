@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Best Practices Report Semantic Model",
+  "type": "object",
+  "required": [
+    "reportTitle",
+    "overallFinding",
+    "scope",
+    "sources",
+    "findings",
+    "surfaceContracts",
+    "outstandingBrokenUnknown",
+    "actions",
+    "nonClaims"
+  ],
+  "properties": {
+    "reportTitle": { "type": "string" },
+    "overallFinding": {
+      "type": "string",
+      "enum": ["Ready", "Partially Verified", "Needs Changes", "Degraded", "Blocked", "Unknown"]
+    },
+    "coreConclusion": { "type": "string" },
+    "evidenceBasis": { "type": "string" },
+    "scope": {
+      "type": "object",
+      "required": ["reviewed", "notReviewed", "evidenceAvailable", "evidenceGaps"],
+      "properties": {
+        "reviewed": { "type": "array", "items": { "type": "string" } },
+        "notReviewed": { "type": "array", "items": { "type": "string" } },
+        "evidenceAvailable": { "type": "array", "items": { "type": "string" } },
+        "evidenceGaps": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceId", "sourceName", "type", "recency", "usedFor", "limitations"],
+        "properties": {
+          "sourceId": { "type": "string", "pattern": "^S-[0-9]{3,}$" },
+          "sourceName": { "type": "string" },
+          "type": { "type": "string" },
+          "recency": { "type": "string", "enum": ["Fresh", "Stale", "Unknown", "Partial"] },
+          "usedFor": { "type": "array", "items": { "type": "string" } },
+          "limitations": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "findingId",
+          "title",
+          "status",
+          "evidence",
+          "rationale",
+          "impact",
+          "owner",
+          "validNextActions",
+          "acceptanceCheck",
+          "nonClaims"
+        ],
+        "properties": {
+          "findingId": { "type": "string", "pattern": "^F-[0-9]{3,}$" },
+          "title": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["Verified", "Unverified", "Stale", "Blocked", "Needs Decision", "Needs Changes", "Degraded", "Unknown"]
+          },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "rationale": { "type": "string" },
+          "impact": { "type": "string" },
+          "owner": { "type": "string" },
+          "validNextActions": { "type": "array", "items": { "type": "string" } },
+          "acceptanceCheck": { "type": "string" },
+          "nonClaims": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "surfaceContracts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "systemSurfaceName",
+          "owningPersona",
+          "corePurpose",
+          "primaryObject",
+          "sourceOfTruth",
+          "validActions",
+          "outstandingBrokenConstraints"
+        ],
+        "properties": {
+          "systemSurfaceName": { "type": "string" },
+          "owningPersona": { "type": "string" },
+          "corePurpose": { "type": "string" },
+          "primaryObject": { "type": "string" },
+          "sourceOfTruth": { "type": "array", "items": { "type": "string" } },
+          "validActions": { "type": "array", "items": { "type": "string" } },
+          "outstandingBrokenConstraints": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "outstandingBrokenUnknown": { "type": "array", "items": { "type": "string" } },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "actionId",
+          "relatedFinding",
+          "action",
+          "ownerPersona",
+          "primaryObject",
+          "rationale",
+          "acceptanceCheck",
+          "dependencies",
+          "riskIfSkipped",
+          "priority"
+        ],
+        "properties": {
+          "actionId": { "type": "string", "pattern": "^A-[0-9]{3,}$" },
+          "relatedFinding": { "type": "string", "pattern": "^F-[0-9]{3,}$" },
+          "action": { "type": "string" },
+          "ownerPersona": { "type": "string" },
+          "primaryObject": { "type": "string" },
+          "rationale": { "type": "string" },
+          "acceptanceCheck": { "type": "string" },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "riskIfSkipped": { "type": "string" },
+          "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] }
+        }
+      }
+    },
+    "nonClaims": { "type": "array", "items": { "type": "string" } }
+  }
+}
