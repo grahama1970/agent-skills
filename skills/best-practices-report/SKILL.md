@@ -247,7 +247,16 @@ A blunt list of what is not proven, not implemented, stale, missing, degraded, o
 
 ## Plan-Ready Next Actions
 
-A finite action queue that can be converted directly into an implementation plan.
+A finite action queue that can be converted directly into a `$plan-iterate`
+phase, phase graph, or implementation plan.
+
+## Plan-Iterate Seed
+
+When the report finds implementation, validation, UX, code, prompt, compliance,
+or source-of-truth work, include the initial `$plan-iterate` seed: objective,
+phase candidates, deterministic evidence gates, applicable domain review loops,
+human-only decisions, and non-claims. If no follow-on phase is warranted, state
+the evidence-backed reason explicitly.
 
 ## Non-Claims
 
@@ -395,6 +404,174 @@ Use concrete actions such as:
 - "Add acceptance predicate for each report finding."
 - "Remove green status badge until validation run is bound to source artifact."
 
+## Plan-Iterate Seed Contract
+
+For reports that identify actionable repair or implementation work, add a
+`Plan-Iterate Seed` section after `Plan-Ready Next Actions`.
+
+The seed is not a plan ledger and it is not closure. It is the report's
+handoff into a new `$plan-iterate` phase or graph.
+
+Required fields:
+
+| Field | Required Content |
+|---|---|
+| Objective | One sentence describing the implementation or validation outcome the next phase must prove. |
+| Candidate Phases | Ordered phase candidates, each tied to finding IDs and action IDs. |
+| Deterministic Evidence Gates | Commands, validators, screenshots, manifests, DB/API queries, fixture checks, or artifact hashes required before acceptance. |
+| Domain Review Loops | Which of `$review-design`, `$review-code`, `$review-prompt`, or another review skill applies, with persona, target, and required artifacts. |
+| Interaction Evidence | Whether `$test-interactions` is required, the live surface URL or manifest target, and the expected `results.json` / screenshot artifacts. |
+| Ask / Persona Review | Whether a real `$ask` runtime review is required, the persona or reviewer route, the target bundle, and expected ask artifact paths. |
+| Dogpile / Reference Research | Whether `$dogpile` is required for external product/project references, repeated blockers, modern UX benchmarks, or competing implementations. |
+| Human Decisions | Product, policy, credential, scope, or acceptance decisions the agent cannot safely infer. |
+| Non-Claims | What the seed does not prove and what remains unvalidated until `$plan-iterate` runs. |
+
+### New `$plan-iterate` Creation Instructions
+
+The `Plan-Iterate Seed` must include clear creation instructions for the next
+phase. Use this structure:
+
+```md
+### New Plan-Iterate Instructions
+
+**Recommended phase id:** `<short-kebab-case-phase-id>`
+
+**Phase objective:**  
+One sentence describing the outcome the phase must prove.
+
+**Initial acceptance contract:**
+1. Predicate that must be proven with deterministic evidence.
+2. Predicate that must be proven with reviewer artifacts.
+3. Predicate that must remain explicitly non-claimed until later work.
+
+**Suggested phase graph:**
+1. Project-agent patch or artifact-generation node.
+2. Deterministic validation node.
+3. Applicable domain review node: `$review-design`, `$review-code`,
+   `$review-prompt`, or a skip artifact with evidence.
+4. Optional `$dogpile` reference/research node.
+5. `$scillm` aggregation gate node.
+
+**Required evidence artifacts:**
+- Exact expected files, logs, screenshots, manifests, monitor outputs, or query
+  results.
+
+**Required commands or command patterns:**
+- `$plan-iterate init` / `record-context` / `record-plan-graph` inputs.
+- `$test-interactions`, `$review-design`, `$review-code`, `$review-prompt`,
+  `$ask`, `$dogpile`, `$monitor-sparta`, or other commands that should run.
+
+**Stop conditions:**
+- What counts as `BLOCKED`, `HUMAN_REQUIRED`, or `INSUFFICIENT_EVIDENCE`.
+
+**Non-claims:**
+- What the new phase must not claim until the evidence gates pass.
+```
+
+If the report cannot provide these fields, the report must say which field is
+missing and why. Do not leave the next phase as "make a plan" or "continue
+cleanup." The report should be specific enough that a project agent can run
+`$plan-iterate init`, record the context/graph, and begin the first
+project-agent patch or validation node.
+
+For `$plan-iterate`, the report's action queue should map cleanly to phase
+inputs:
+
+- UI / UX / report-surface work -> `$review-design` plus fresh screenshots and,
+  when the surface is interactive, `$test-interactions` results.
+- Code implementation work -> `$review-code` plus scoped diff, selected files,
+  tests, build/typecheck/lint/runtime smoke, and known contracts.
+- Prompt-contract work -> `$review-prompt` plus templates, rendered fixture,
+  expected response, validators, consumer/schema, and smoke output.
+- Compliance/security/source-of-truth work -> domain-specific validators,
+  raw evidence artifacts, and persona review receipts.
+
+Do not write `Plan-Ready Next Actions` as a vague backlog. Each action should
+be executable as a project-agent patch iteration, a deterministic validation
+gate, a read-only domain review loop, a `$dogpile` research escalation, or a
+human decision.
+
+## Composition Rules
+
+Use other skills as evidence producers and reviewers. Do not duplicate their
+internal behavior inside the report.
+
+### `$test-interactions`
+
+Require `$test-interactions` when the report reviews a live UI, report surface,
+graph, pane, navigation, form, tab, keyboard flow, approval workflow, or
+interactive evidence viewer.
+
+The report must name:
+
+- manifest path or required manifest target,
+- live URL or app surface,
+- persona used for review where applicable,
+- `results.json` path,
+- focused/container screenshot paths when relevant,
+- deterministic failures and COTS/QID gaps,
+- and how each failure maps to findings and actions.
+
+Do not treat DOM assertions alone as visual proof. Screenshot artifacts must
+visibly correspond to the claim being made.
+
+### `$ask` Persona Review
+
+Use the real `$ask` runtime when the report needs Brandon, Nico, WebGPT, a
+roundtable, deep review, parallel review, or other persona/oracle judgment.
+
+The report may cite `$ask` only by artifact, such as:
+
+- request JSON,
+- status JSON,
+- events JSONL,
+- `review.md`,
+- `review.json`,
+- controlled-tab or backend receipt when applicable.
+
+Do not summarize an informal persona opinion as `$ask` evidence. `$ask` is the
+artifact-bearing reviewer/oracle route; the report consumes its receipts.
+
+### `$review-design`, `$review-code`, and `$review-prompt`
+
+When the report identifies a domain review need, route it to the matching
+review skill:
+
+- `$review-design`: visual and interaction review. Requires screenshots; uses
+  persona; composes `$test-interactions` for live DOM evidence.
+- `$review-code`: code review. Requires scoped files/diff, context, expected
+  contracts, and validation output.
+- `$review-prompt`: prompt-contract review. Requires prompt templates,
+  rendered fixture, expected response, validator/smoke command, and
+  consumer/schema. Wording-only prompt reviews are incomplete.
+
+The report must state whether each loop is required, not applicable with
+evidence, or blocked by missing inputs. Review outputs are receipts, not phase
+closure.
+
+### `$dogpile`
+
+Use `$dogpile` when external source-derived context can materially improve the
+report or prevent repeated local guessing. This is especially appropriate for:
+
+- repeated blockers or false-green loops,
+- modern UX/reference patterns for serious workflow surfaces,
+- competing products, projects, or repositories relevant to a surface such as
+  Sparta Explorer,
+- current documentation or upstream issues,
+- ambiguous design or workflow conventions where outside examples can sharpen
+  the contract.
+
+For Sparta Explorer, `$dogpile` should be considered when page purpose,
+persona workflow, evidence inspection, compliance review, or maintenance UX is
+being redesigned or challenged as dashboard theater. The query must include
+the persona/rationale/context so retrieved examples are interpreted against the
+actual SPARTA workflow, not generic dashboard inspiration.
+
+Dogpile output is advisory. The report must cite the report path,
+partial-results JSON, useful findings, degraded provider lanes, and any
+limitations. It must not claim product correctness from external examples.
+
 ## Finding-to-Action Traceability
 
 Every major finding must map to at least one of:
@@ -423,9 +600,13 @@ Do not assign priority without rationale.
 
 The report must be usable as the input to a repair plan.
 
-A reader should be able to take the `Plan-Ready Next Actions` section and create an implementation plan without rereading the entire report.
+A reader should be able to take the `Plan-Ready Next Actions` and
+`Plan-Iterate Seed` sections and create a `$plan-iterate` phase or phase graph
+without rereading the entire report.
 
-If the report identifies issues but does not provide concrete next actions, the report is incomplete.
+If the report identifies issues but does not provide concrete next actions and
+the next `$plan-iterate` seed, the report is incomplete unless it explicitly
+states that no follow-on implementation phase is warranted and cites why.
 
 ## Writing Style Requirements
 
@@ -858,6 +1039,73 @@ Required fields:
 | Recency | Fresh / stale / unknown, with timestamp if known. |
 | Used For | Which findings or surface contracts rely on it. |
 | Limitations | Missing scope, stale areas, partial data, unverified assumptions. |
+
+## Project-Specific Source Checks
+
+When a report is about a named project or product surface, read the project's
+current goals before assessing what is finished, pending, outstanding, broken,
+or blocked.
+
+Use `$project-knowledge` as the coordination layer:
+
+- recall project knowledge from `/memory` first when available,
+- read the human-facing `PROJECT_KNOWLEDGE.md` projection when present,
+- identify active goals, recent decisions, open questions, takeover notes, and
+  evidence pointers,
+- distinguish project goals from implementation status,
+- and cite the exact project-knowledge source or memory recall used.
+
+Do not treat a rendered page, dashboard, or report shell as proof that a project
+goal is finished. A goal is finished only when the project-knowledge goal maps
+to deterministic evidence, accepted phase ledgers, monitor state, or review
+artifacts that prove the goal's acceptance predicate.
+
+### SPARTA / Sparta Explorer Reports
+
+When the report is about SPARTA, Sparta Explorer, Sparta Chat, SPARTA Coverage,
+F-36 corpora, QRAs, controls, sources, URLs, supply chain, posture, or threat
+matrix, include `$monitor-sparta` and project-knowledge state in the source
+inventory unless the report is explicitly scoped away from operational status.
+
+Required SPARTA source checks:
+
+1. Project goals: read or recall current SPARTA project goals, active work,
+   open questions, and takeover notes from `$project-knowledge`.
+2. Monitor state: use `$monitor-sparta` health/status outputs or durable
+   monitor artifacts when available.
+3. Coverage semantics: separate `raw_candidates`, `gated_runnable`,
+   `stored_qras`, `deterministic_skips`, and `failures`; do not collapse them
+   into one "remaining" or "coverage" number.
+4. Coverage lanes: identify which Sparta Explorer Coverage lanes are relevant:
+   QRA Generation, Prompt Health, Monitor Health, UX Coverage, Python
+   Fallbacks, Source/Text/QRA Coverage, and Source/Embedding Coverage.
+5. Arango-first integrity: treat SPARTA monitor and data integrity as
+   ArangoDB-first; do not substitute DuckDB or UI counts for corpus health.
+6. Review-gated mutation: mark corpus mutations, prompt promotions, QRA
+   generation, source backfills, embedding backfills, and threshold changes as
+   review-gated unless explicit approved apply artifacts exist.
+7. Persona workflow: map each Explorer page to its owning persona and purpose,
+   especially Brandon for compliance/evidence adjudication and Nico for corpus
+   maintenance pages such as Controls, Sources, URLs, and Coverage.
+8. State split: publish a visible table or section separating `Finished`,
+   `Pending`, `Outstanding`, `Broken`, `Blocked`, and `Unproven` against the
+   project goals and monitor evidence.
+
+For Sparta Explorer page-purpose reports, the report must answer:
+
+- Which project goals does this page serve?
+- Which persona owns the page's primary workflow?
+- Which source of truth backs the page?
+- What is finished with evidence?
+- What is pending or outstanding?
+- What is broken, blocked, stale, or unproven?
+- Which `$monitor-sparta` lane, `$test-interactions` manifest, `$ask` persona
+  review, `$review-design`, `$review-code`, `$review-prompt`, or `$dogpile`
+  step should feed the next `$plan-iterate` phase?
+
+If `$monitor-sparta` or project-knowledge evidence is unavailable, the report
+must state `Unknown` or `Blocked` for operational status rather than filling the
+gap with dashboard-style summaries.
 
 ## Readiness Semantics
 
