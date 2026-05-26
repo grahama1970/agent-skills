@@ -1,0 +1,9 @@
+[project]
+name = "debugger-skill"
+version = "0.1.0"
+description = "Self-contained debugger skill helpers"
+requires-python = ">=3.11"
+dependencies = [
+    "loguru>=0.7.0",
+    "typer>=0.9.0",
+]

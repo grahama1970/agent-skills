@@ -1,0 +1,4 @@
+interface:
+  display_name: "Debugger"
+  short_description: "Set breakpoints and inspect live state"
+  default_prompt: "Use $debugger to set breakpoints where the bug may be, stop at a breakpoint, and analyze live variable state before patching."

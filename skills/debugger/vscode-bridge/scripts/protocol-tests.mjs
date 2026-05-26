@@ -1,0 +1,200 @@
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+
+import {
+  AsyncKeyedQueue,
+  assertWorkspacePath,
+  assessProofValidity,
+  canonicalRequestHash,
+  claimRequestId,
+  decideOwnedStatusWritePath,
+  enforceFreshRequest,
+  invalidRequestStatusPath,
+  isRequestAlreadyClaimed,
+  resolveWorkspacePath,
+  usesSharedRequestOwner,
+  validateRequest,
+  verifyPendingStatus,
+  withFreshRequestMetadata,
+} from '../out/protocol.js';
+
+async function rejectsWith(fn, pattern) {
+  await assert.rejects(fn, (error) => {
+    assert.match(error.message, pattern);
+    return true;
+  });
+}
+
+function throwsWith(fn, pattern) {
+  assert.throws(fn, (error) => {
+    assert.match(error.message, pattern);
+    return true;
+  });
+}
+
+const tempRoot = await mkdtemp(path.join(os.tmpdir(), 'debugger-bridge-protocol.'));
+try {
+  const workspace = path.join(tempRoot, 'workspace');
+  const statusPath = path.join(workspace, '.vscode', 'debugger-bridge', 'status.json');
+  const request = withFreshRequestMetadata({
+    id: 'debugger-protocol-test',
+    action: 'start',
+    workspace,
+    breakpoints: [{ file: 'src/app.ts', line: 12 }],
+    locals: ['value'],
+    createdAt: new Date().toISOString(),
+    maxRequestAgeMs: 120000,
+  });
+
+  validateRequest(request);
+  enforceFreshRequest(request);
+  assert.equal(request.requestHash, canonicalRequestHash(request));
+  assert.equal(resolveWorkspacePath(workspace, '.vscode/debugger-bridge/status.json', 'output'), statusPath);
+
+  await writeFile(
+    statusPath,
+    JSON.stringify({ id: request.id, status: 'pending', requestHash: request.requestHash }, null, 2),
+    'utf8',
+  ).catch(async (error) => {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+    await import('node:fs/promises').then(({ mkdir }) => mkdir(path.dirname(statusPath), { recursive: true }));
+    await writeFile(
+      statusPath,
+      JSON.stringify({ id: request.id, status: 'pending', requestHash: request.requestHash }, null, 2),
+      'utf8',
+    );
+  });
+  await verifyPendingStatus(statusPath, request);
+  assert.equal(await isRequestAlreadyClaimed(statusPath, request.id, request.requestHash), false);
+  await claimRequestId(statusPath, request.id, request.requestHash);
+  assert.equal(await isRequestAlreadyClaimed(statusPath, request.id, request.requestHash), true);
+  const processed = JSON.parse(await readFile(path.join(path.dirname(statusPath), 'processed-ids.json'), 'utf8'));
+  assert.equal(typeof processed[request.id], 'number');
+  await rejectsWith(
+    () => isRequestAlreadyClaimed(statusPath, request.id, '1'.repeat(64)),
+    /different requestHash/,
+  );
+  assert.equal(await claimRequestId(statusPath, request.id, request.requestHash), false);
+  await rejectsWith(() => claimRequestId(statusPath, request.id, '2'.repeat(64)), /different requestHash/);
+
+  assert.deepEqual(decideOwnedStatusWritePath(statusPath, request.id, request.requestHash, undefined), {
+    outputPath: statusPath,
+    superseded: false,
+  });
+  assert.deepEqual(
+    decideOwnedStatusWritePath(statusPath, request.id, request.requestHash, {
+      id: request.id,
+      requestHash: request.requestHash,
+    }),
+    { outputPath: statusPath, superseded: false },
+  );
+  assert.deepEqual(
+    decideOwnedStatusWritePath(statusPath, request.id, request.requestHash, {
+      id: 'debugger-newer-request',
+      requestHash: '3'.repeat(64),
+    }),
+    {
+      outputPath: path.join(path.dirname(statusPath), `status.${request.id}.superseded.json`),
+      superseded: true,
+    },
+  );
+  assert.equal(
+    invalidRequestStatusPath(statusPath, new Date('2026-05-26T20:00:01.234Z')),
+    path.join(path.dirname(statusPath), 'status.invalid-request.20260526T200001234Z.json'),
+  );
+  assert.equal(usesSharedRequestOwner(statusPath), true);
+  const perRequestStatusPath = path.join(path.dirname(statusPath), `status.${request.id}.json`);
+  assert.equal(usesSharedRequestOwner(perRequestStatusPath), false);
+  await writeFile(
+    perRequestStatusPath,
+    JSON.stringify({ id: request.id, status: 'pending', requestHash: request.requestHash }, null, 2),
+    'utf8',
+  );
+  await verifyPendingStatus(perRequestStatusPath, request);
+
+  const queue = new AsyncKeyedQueue();
+  const order = [];
+  let releaseFirst;
+  const firstStarted = queue.run(statusPath, async () => {
+    order.push('first-start');
+    await new Promise((resolve) => {
+      releaseFirst = resolve;
+    });
+    order.push('first-end');
+    return 'first';
+  });
+  const secondStarted = queue.run(statusPath, async () => {
+    order.push('second-start');
+    return 'second';
+  });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(order, ['first-start']);
+  releaseFirst();
+  assert.equal(await firstStarted, 'first');
+  assert.equal(await secondStarted, 'second');
+  assert.deepEqual(order, ['first-start', 'first-end', 'second-start']);
+
+  const tampered = { ...request, requestHash: '0'.repeat(64) };
+  throwsWith(() => validateRequest({ ...request, id: 'short' }), /request id/);
+  throwsWith(() => validateRequest({ ...request, requestHash: 'not-a-hash' }), /requestHash/);
+  throwsWith(() => validateRequest({ ...request, maxRequestAgeMs: 999999 }), /maxRequestAgeMs/);
+  throwsWith(() => validateRequest({ ...request, watches: ['value + 1'] }), /allowWatchEval/);
+  assert.notEqual(tampered.requestHash, canonicalRequestHash(tampered));
+
+  const oldRequest = withFreshRequestMetadata({
+    id: 'debugger-protocol-old',
+    action: 'start',
+    createdAt: new Date(Date.now() - 60_000).toISOString(),
+    maxRequestAgeMs: 100,
+  });
+  throwsWith(() => enforceFreshRequest(oldRequest), /Stale debugger bridge request rejected/);
+  throwsWith(() => assertWorkspacePath(workspace, path.join(tempRoot, 'outside.json'), 'output'), /must stay inside workspace/);
+  throwsWith(() => resolveWorkspacePath(workspace, '../outside.json', 'output'), /must stay inside workspace/);
+
+  await writeFile(statusPath, JSON.stringify({ id: request.id, status: 'starting', requestHash: request.requestHash }));
+  await rejectsWith(() => verifyPendingStatus(statusPath, request), /pending status does not match/);
+
+  assert.deepEqual(
+    assessProofValidity({ breakpoints: [{ file: 'src/app.ts', line: 12 }] }, { reason: 'breakpoint', matchedBreakpoint: true }),
+    {
+      stopProofValid: true,
+      variableInspectionValid: false,
+      proofValid: false,
+      missingLocals: [],
+      missingWatches: [],
+      watchErrors: {},
+      capturedLocals: [],
+      capturedWatches: [],
+      reason: 'no locals or watches were requested, so this is breakpoint-only proof',
+    },
+  );
+  assert.equal(
+    assessProofValidity(
+      { locals: ['value'], watches: ['value + 1'] },
+      { reason: 'breakpoint', matchedBreakpoint: true, locals: {}, watches: { 'value + 1': '15' } },
+    ).proofValid,
+    false,
+  );
+  assert.equal(
+    assessProofValidity(
+      { locals: ['value'], watches: ['missing.attr'] },
+      { reason: 'breakpoint', matchedBreakpoint: true, locals: { value: '14' }, watches: { 'missing.attr': '<error: nope>' } },
+    ).proofValid,
+    false,
+  );
+  assert.equal(
+    assessProofValidity(
+      { locals: ['value'], watches: ['value + 1'] },
+      { reason: 'breakpoint', matchedBreakpoint: true, locals: { value: '14' }, watches: { 'value + 1': '15' } },
+    ).proofValid,
+    true,
+  );
+
+  console.log('debugger bridge protocol tests passed');
+} finally {
+  await rm(tempRoot, { recursive: true, force: true });
+}
