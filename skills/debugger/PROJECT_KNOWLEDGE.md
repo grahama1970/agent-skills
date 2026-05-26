@@ -35,6 +35,7 @@
 | 2026-05-26 | Keep README prose focused on runtime state, breakpoints, and collaboration | The user wanted the README to explain when the agent should use `$debugger`, when to collaborate with the human, and how breakpoints work |
 | 2026-05-26 | Treat `$review-docs` as the better future name than `$review-readme` | README review is broader than prose: it should include rendered docs, image/link checks, examples, SKILL.md contradiction checks, and model prose review |
 | 2026-05-26 | Promote Rust to first-class debugger support | The common project stack is Python + TypeScript + Rust, and the debugger proof model should be language-neutral for the agent and human |
+| 2026-05-26 | Apply Kimi README/SKILL clarity review and `$best-practices-skills` constraints | Examples now use `$SKILL_DIR`, bridge behavior is explained plainly, debugger-tool failure is explicit, and bridge internals moved into a reference doc |
 
 ## Open Questions
 
@@ -76,6 +77,20 @@
   - `$ask oc-kimi` inline-file README/SKILL review returned: "No Critical, High,
     or Medium issues found"; low/nit edits were applied to README proof and
     collaboration wording.
+  - WebGPT later identified Medium bridge status ownership/auditability issues;
+    bridge status writes now use a shared lock plus atomic replace, and protocol
+    tests cover superseded writes, malformed request quarantine behavior,
+    retry-after-pending-race behavior, and custom-output error routing.
+  - Real runtime E2E sanity now exists for Python, TypeScript, and Rust:
+    `sanity-e2e.sh`, `sanity-e2e-typescript.sh`, and `sanity-e2e-rust.sh`.
+  - Kimi's follow-up README/SKILL review found no blocking conceptual issues
+    but requested portability and clarity changes: replace local absolute
+    command paths, clarify what the VS Code bridge actually does, add debugger
+    failure handling, and reduce implementation detail in SKILL.md.
+  - `$best-practices-skills` was checked after that review. The relevant local
+    constraints are valid frontmatter, explicit triggers/provides/composes,
+    concise SKILL.md with details in references, behavioral sanity checks with
+    positive/negative controls, and no heavy transient artifacts committed.
 
 ## Key Files
 
@@ -88,11 +103,15 @@
 | `scripts/write_vscode_launch.py` | Writes Python/debugpy VS Code launch configurations |
 | `scripts/write_vscode_typescript_launch.py` | Writes TypeScript/Node/extension-host VS Code launch configurations |
 | `scripts/write_vscode_rust_launch.py` | Writes Rust CodeLLDB-compatible VS Code launch configurations |
+| `scripts/node_inspector_breakpoint_proof.mjs` | Captures real TypeScript paused locals through Node inspector |
 | `scripts/request_vscode_bridge.py` | Writes visible VS Code bridge requests |
 | `vscode-bridge/` | Companion VS Code extension bridge for visible debug-session control and DAP proof |
+| `references/vscode-bridge.md` | Bridge implementation notes, status ownership rules, and current limitations |
 | `sanity.sh` | Python harness sanity checks |
 | `sanity-typescript.sh` | TypeScript launch writer sanity checks |
 | `sanity-rust.sh` | Rust launch writer sanity checks |
+| `sanity-e2e-typescript.sh` | Real TypeScript breakpoint/local-state E2E proof |
+| `sanity-e2e-rust.sh` | Real Rust breakpoint/local-state E2E proof through rust-gdb |
 | `sanity-bridge.sh` | Bridge protocol and smoke checks |
 | `sanity-e2e.sh` | End-to-end breakpoint proof checks |
 

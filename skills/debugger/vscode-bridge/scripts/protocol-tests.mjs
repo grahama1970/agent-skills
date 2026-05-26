@@ -18,6 +18,8 @@ import {
   validateRequest,
   verifyPendingStatus,
   withFreshRequestMetadata,
+  writeJsonFile,
+  writeOwnedJsonFile,
 } from '../out/protocol.js';
 
 async function rejectsWith(fn, pattern) {
@@ -157,6 +159,70 @@ try {
 
   await writeFile(statusPath, JSON.stringify({ id: request.id, status: 'starting', requestHash: request.requestHash }));
   await rejectsWith(() => verifyPendingStatus(statusPath, request), /pending status does not match/);
+
+  const newerRequest = withFreshRequestMetadata({
+    id: 'debugger-newer-owner',
+    action: 'start',
+    workspace,
+    createdAt: new Date().toISOString(),
+  });
+  await writeJsonFile(statusPath, {
+    id: newerRequest.id,
+    status: 'pending',
+    requestHash: newerRequest.requestHash,
+  });
+  const supersededWrite = await writeOwnedJsonFile(statusPath, request.id, request.requestHash, {
+    id: request.id,
+    status: 'stopped',
+    requestHash: request.requestHash,
+  });
+  assert.equal(supersededWrite.superseded, true);
+  assert.equal(supersededWrite.outputPath, path.join(path.dirname(statusPath), `status.${request.id}.superseded.json`));
+  assert.deepEqual(JSON.parse(await readFile(statusPath, 'utf8')), {
+    id: newerRequest.id,
+    status: 'pending',
+    requestHash: newerRequest.requestHash,
+  });
+  assert.deepEqual(JSON.parse(await readFile(supersededWrite.outputPath, 'utf8')), {
+    id: request.id,
+    status: 'stopped',
+    requestHash: request.requestHash,
+  });
+
+  const invalidPath = invalidRequestStatusPath(statusPath, new Date('2026-05-26T20:00:02.000Z'));
+  await writeJsonFile(invalidPath, {
+    status: 'error',
+    error: 'malformed request',
+  });
+  assert.deepEqual(JSON.parse(await readFile(statusPath, 'utf8')), {
+    id: newerRequest.id,
+    status: 'pending',
+    requestHash: newerRequest.requestHash,
+  });
+  assert.equal(JSON.parse(await readFile(invalidPath, 'utf8')).error, 'malformed request');
+
+  await rejectsWith(() => verifyPendingStatus(statusPath, request), /pending status does not match/);
+  await writeJsonFile(statusPath, {
+    id: request.id,
+    status: 'pending',
+    requestHash: request.requestHash,
+  });
+  await verifyPendingStatus(statusPath, request);
+
+  const customStatusPath = path.join(workspace, '.vscode', 'debugger-bridge', 'custom-status.json');
+  await writeJsonFile(customStatusPath, {
+    id: request.id,
+    status: 'pending',
+    requestHash: request.requestHash,
+  });
+  const customErrorWrite = await writeOwnedJsonFile(customStatusPath, request.id, request.requestHash, {
+    id: request.id,
+    status: 'error',
+    requestHash: request.requestHash,
+    error: 'freshness failed',
+  });
+  assert.equal(customErrorWrite.outputPath, customStatusPath);
+  assert.equal(JSON.parse(await readFile(customStatusPath, 'utf8')).error, 'freshness failed');
 
   assert.deepEqual(
     assessProofValidity({ breakpoints: [{ file: 'src/app.ts', line: 12 }] }, { reason: 'breakpoint', matchedBreakpoint: true }),

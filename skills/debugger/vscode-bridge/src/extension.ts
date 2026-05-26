@@ -8,7 +8,6 @@ import {
   assessProofValidity,
   canonicalRequestHash,
   claimRequestId,
-  decideOwnedStatusWritePath,
   enforceFreshRequest,
   invalidRequestStatusPath,
   isRequestAlreadyClaimed,
@@ -18,6 +17,7 @@ import {
   validateRequest,
   verifyPendingStatus,
   withFreshRequestMetadata,
+  writeOwnedJsonFile,
   writeJsonFile,
 } from './protocol';
 
@@ -594,38 +594,27 @@ async function writeOwnedStatus(
   body: unknown,
   requireCurrentRequestOwner: boolean,
 ) {
-  const currentRequestOwner =
-    requireCurrentRequestOwner && usesSharedRequestOwner(filePath) ? await readCurrentRequestOwner(filePath) : undefined;
-  const current = currentRequestOwner ?? (await readStatusOwner(filePath));
-  const decision = decideOwnedStatusWritePath(filePath, requestId, requestHash, current);
+  const decision = await writeOwnedJsonFile(
+    filePath,
+    requestId,
+    requestHash,
+    body,
+    requireCurrentRequestOwner && usesSharedRequestOwner(filePath) ? () => readCurrentRequestOwner(filePath) : undefined,
+  );
   if (decision.superseded) {
-    await writeJsonFile(decision.outputPath, body);
-    const ownerId = current ? String(current.id) : '<missing>';
+    const ownerId = decision.owner ? String(decision.owner.id) : '<missing>';
     channel.appendLine(
       `Archived debugger bridge status for superseded request ${requestId}; current status belongs to ${ownerId}.`,
     );
     return false;
   }
-  await writeStatus(decision.outputPath, body);
+  channel.appendLine(`Wrote debugger bridge status: ${decision.outputPath}`);
   return true;
 }
 
 async function readCurrentRequestOwner(statusPath: string): Promise<{ id?: unknown; requestHash?: unknown } | undefined> {
   try {
     const raw = await vscode.workspace.fs.readFile(vscode.Uri.file(path.join(path.dirname(statusPath), 'request.json')));
-    const parsed = JSON.parse(Buffer.from(raw).toString('utf8')) as { id?: unknown; requestHash?: unknown };
-    return { id: parsed.id, requestHash: parsed.requestHash };
-  } catch (error) {
-    if ((error as { code?: string }).code === 'FileNotFound' || (error as { code?: string }).code === 'ENOENT') {
-      return undefined;
-    }
-    throw error;
-  }
-}
-
-async function readStatusOwner(filePath: string): Promise<{ id?: unknown; requestHash?: unknown } | undefined> {
-  try {
-    const raw = await vscode.workspace.fs.readFile(vscode.Uri.file(filePath));
     const parsed = JSON.parse(Buffer.from(raw).toString('utf8')) as { id?: unknown; requestHash?: unknown };
     return { id: parsed.id, requestHash: parsed.requestHash };
   } catch (error) {

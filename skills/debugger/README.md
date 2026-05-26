@@ -191,14 +191,29 @@ LLDB/GDB-backed Rust debugger. That adapter detail should not change the
 human-facing proof: the agent still reports the breakpoint, hit/miss status,
 paused frame, selected variables, and what the values prove.
 
+The skill includes real runtime E2E sanity checks for all three common project
+languages:
+
+- Python: VS Code/debugpy breakpoint proof captures paused locals.
+- TypeScript: Node inspector breakpoint proof captures paused locals in a
+  `.ts` source file.
+- Rust: `rust-gdb` breakpoint proof captures paused Rust locals in a compiled
+  debug binary.
+
 ## Try This First
+
+Choose the runtime that matches the failing path. All examples assume:
+
+```bash
+export SKILL_DIR="${SKILL_DIR:-$(pwd)}"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
+```
 
 For Python tests or commands that can run in-process:
 
 ```bash
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/capture_breakpoints.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/capture_breakpoints.py" \
   --break path/to/file.py:123 \
   --local some_var \
   --watch 'some_obj.field' \
@@ -211,8 +226,8 @@ For VS Code, first write a launch configuration, then use either direct DAP
 proof or the bundled VS Code bridge:
 
 ```bash
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_launch.py" \
   --workspace /path/to/project \
   --name "Debug failing pytest with $debugger" \
   --python '${workspaceFolder}/.venv/bin/python3' \
@@ -224,8 +239,8 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
 For TypeScript, Node, or VS Code extension work:
 
 ```bash
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_typescript_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_typescript_launch.py" \
   --workspace /path/to/project \
   --name "Debug TypeScript test with $debugger" \
   --kind npm \
@@ -238,8 +253,8 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
 For Rust cargo tests or binaries:
 
 ```bash
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_rust_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_rust_launch.py" \
   --workspace /path/to/project \
   --name "Debug Rust test with $debugger" \
   --kind cargo-test \
@@ -258,14 +273,14 @@ The companion extension lets a request from the integrated terminal start or
 continue a visible VS Code debug session. Install or update it with:
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/install_vscode_bridge.sh
+"$SKILL_DIR/scripts/install_vscode_bridge.sh"
 ```
 
 Then publish a request:
 
 ```bash
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/request_vscode_bridge.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/request_vscode_bridge.py" \
   --workspace /path/to/project \
   --action restart \
   --launch-config-name "Debug failing pytest with $debugger" \
@@ -273,8 +288,15 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
   --local some_var
 ```
 
-The bridge does not scrape the Variables pane. It captures equivalent runtime
-state through the Debug Adapter Protocol while the visible session is stopped.
+Plainly: the terminal writer creates a request file, the VS Code extension reads
+that file inside the trusted workspace, starts or continues the debug session,
+queries the stopped adapter for selected locals/watches, and writes a status
+artifact back. The bridge does not scrape the Variables pane. It captures
+equivalent runtime state through the Debug Adapter Protocol while the visible
+session is stopped.
+
+The full operational contract lives in [SKILL.md](SKILL.md); implementation
+notes for the bridge live in [references/vscode-bridge.md](references/vscode-bridge.md).
 
 ## Proof Standard
 
@@ -304,10 +326,20 @@ Run these from this directory:
 ./sanity.sh
 ./sanity-typescript.sh
 ./sanity-rust.sh
+./sanity-e2e-typescript.sh
+./sanity-e2e-rust.sh
 ./sanity-bridge.sh
 ./sanity-e2e.sh
 ```
 
-Known low-severity hardening areas remain: stronger extension-host concurrency
-tests, compound VS Code session attribution, atomic extension status writes,
-and symlink-hardened output containment.
+Current bridge safety status:
+
+- covered by deterministic protocol tests: atomic status ownership across
+  terminal writer and bridge writer, malformed request quarantine,
+  retry-after-pending-race behavior, and custom-output error routing
+- residual limitations: compound VS Code session attribution, stronger
+  manual-interference docs, and broader symlink/path containment checks for
+  future adapters
+
+Do not claim a stronger bridge-proof status than the executed checks and
+artifacts support.

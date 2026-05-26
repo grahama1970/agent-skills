@@ -55,6 +55,14 @@ If these functions are not demonstrated, the skill has not been used.
 
 Use `$debugger` when the next correct action depends on live runtime state, not on what the code appears to do. The purpose is to prevent the project-agent from patching by inference when a debugger can show the actual value, branch, frame, request, response, object mutation, or adapter payload.
 
+When in doubt, ask this gate question:
+
+```text
+Would seeing the actual paused variable/frame/request state change the patch I am about to make?
+```
+
+If yes, use `$debugger`.
+
 Mandatory triggers:
 
 - The human asks for `$debugger`, debugger, VS Code debugger, breakpoints, debug mode, stepping, locals, variable state, or proof of runtime behavior.
@@ -73,21 +81,24 @@ Use `$debugger` before patching in these cases because it gives positive evidenc
 - relevant variables and watches were inspected while execution was stopped
 - the agent can say which state is already wrong, which state is still correct, and what transition should be inspected next
 
-Do not use `$debugger` as busywork for problems already explained by deterministic evidence, such as syntax errors, formatter failures, missing imports, type-checker diagnostics, or a test assertion that directly names the incorrect literal value and requires no hidden state. Fix those directly, then test.
+This positive evidence matters because it prevents the agent from confidently
+patching a wrong hypothesis. If the observed state contradicts the planned edit,
+the edit must change or stop.
 
-When in doubt, ask this gate question:
-
-```text
-Would seeing the actual paused variable/frame/request state change the patch I am about to make?
-```
-
-If yes, use `$debugger`.
+Do not use `$debugger` as busywork for problems already explained by deterministic evidence, such as syntax errors, formatter failures, missing imports, dependency resolution, environment setup, type-checker diagnostics, formatter output, or a test assertion that directly names the incorrect literal value and requires no hidden state. Fix those directly, then test.
 
 ## Self-Contained Scope
 
 This skill is project-agnostic and must remain self-contained in the `agent-skills` repo. Any project agent can use it against the current project by choosing breakpoints in that project's code and running the local reproduction command under the bundled harness or an equivalent platform debugger.
 
 Do not move the reusable debugger workflow into a project repo. Project-specific debugger UI, adapters, or debug-session APIs may live in that project, but they are consumers of this skill. The skill remains the cross-project contract: stop, hypothesize, break, run, inspect real variables, then patch.
+
+All command examples assume:
+
+```bash
+export SKILL_DIR="${SKILL_DIR:-/path/to/agent-skills/skills/debugger}"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
+```
 
 ## Required Loop
 
@@ -127,25 +138,14 @@ Therefore, this skill has two honest modes:
 
 ### Bundled VS Code Extension Bridge
 
-The bundled bridge lives at:
+The bundled bridge lives at `$SKILL_DIR/vscode-bridge`. It runs inside the VS
+Code extension host and provides the missing boundary that a terminal process
+cannot cross directly.
 
-```text
-/home/graham/workspace/experiments/agent-skills/skills/debugger/vscode-bridge
-```
-
-It runs inside the VS Code extension host and provides the missing boundary that a terminal process cannot cross directly:
-
-- command `debuggerBridge.processRequestFile`
-- command `debuggerBridge.startLaunchConfig`
-- file watcher for `.vscode/debugger-bridge/request.json`
-- `vscode.debug.startDebugging(...)` for visible VS Code session start
-- `vscode.debug.addBreakpoints(...)` for source breakpoints
-- breakpoint replacement in requested files so stale bridge breakpoints do not accumulate
-- dirty-source save before start/restart so VS Code does not leave the breakpoint unverified because the file is modified
-- `restart` requests that stop the active session, replace breakpoints, and start the launch configuration again
-- `workbench.action.debug.continue` for continuing an already stopped visible session
-- debug adapter tracker for stopped events
-- DAP `stackTrace`, `scopes`, `variables`, and `evaluate` requests for paused variable state
+Plainly: the terminal writer creates `.vscode/debugger-bridge/request.json`,
+the extension reads that request inside the trusted workspace, starts or
+continues the visible debug session, queries the stopped adapter for selected
+locals/watches, and writes a status/proof artifact back.
 
 The bridge is intentionally fail-closed:
 
@@ -158,10 +158,13 @@ The bridge is intentionally fail-closed:
 - watch expressions are opt-in per request and should be used only when the expression is known to be side-effect safe
 - visible bridge status must not be treated as adapter breakpoint verification unless it includes adapter proof; bridge status can prove the session stopped at the requested source line, while direct DAP proof can additionally show the adapter `setBreakpoints` response
 
+Detailed bridge commands, watcher behavior, status ownership rules, and known
+limitations live in `references/vscode-bridge.md`.
+
 Install or update it with:
 
 ```bash
-/home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/install_vscode_bridge.sh
+"$SKILL_DIR/scripts/install_vscode_bridge.sh"
 ```
 
 If VS Code was already open before installation, reload the VS Code window so the extension activates.
@@ -169,9 +172,8 @@ If VS Code was already open before installation, reload the VS Code window so th
 To request a visible VS Code debug session from a VS Code integrated terminal, write the bridge request file:
 
 ```bash
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/request_vscode_bridge.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/request_vscode_bridge.py" \
   --workspace /path/to/project \
   --launch-config-name "Debug failing pytest with $debugger" \
   --break path/to/file.py:123 \
@@ -191,9 +193,8 @@ The bridge does not scrape the Variables pane UI. It captures the same class of 
 Use the bundled writer:
 
 ```bash
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_launch.py" \
   --workspace /path/to/project \
   --name "Debug failing pytest with $debugger" \
   --python '${workspaceFolder}/backend/.venv/bin/python3' \
@@ -243,9 +244,8 @@ Use TypeScript debugging when the runtime-state question crosses JavaScript, Typ
 For TypeScript/Node targets, generate a VS Code JavaScript debugger configuration instead of forcing the Python harness:
 
 ```bash
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_typescript_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_typescript_launch.py" \
   --workspace /path/to/project \
   --name "Debug TypeScript test with $debugger" \
   --kind npm \
@@ -260,8 +260,8 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
 For a direct Node/TypeScript entrypoint:
 
 ```bash
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_typescript_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_typescript_launch.py" \
   --workspace /path/to/project \
   --kind node \
   --program '${workspaceFolder}/src/index.ts' \
@@ -273,14 +273,19 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
 For VS Code extension debugging, use an extension host configuration:
 
 ```bash
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_typescript_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_typescript_launch.py" \
   --workspace /path/to/project \
   --kind extensionHost \
   --arg '--extensionDevelopmentPath=${workspaceFolder}'
 ```
 
 The evidence standard is the same as Python: breakpoint location, source-mapped frame, stopped reason, selected locals, watches when safe, and analysis of what the paused state proves. For TypeScript, also report the generated JavaScript/debugger mapping when source maps affect breakpoint placement.
+
+The TypeScript E2E sanity check must prove a real paused runtime state, not only
+launch configuration generation. `./sanity-e2e-typescript.sh` uses the Node
+inspector against a `.ts` file, stops at a breakpoint, and captures selected
+locals from the paused frame.
 
 ## Rust Debugging
 
@@ -293,9 +298,8 @@ For Rust targets, generate a VS Code CodeLLDB-compatible launch configuration
 instead of forcing the Python harness or TypeScript writer:
 
 ```bash
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_rust_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_rust_launch.py" \
   --workspace /path/to/project \
   --name "Debug Rust test with $debugger" \
   --kind cargo-test \
@@ -313,8 +317,8 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
 For a Rust binary launched through cargo:
 
 ```bash
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_rust_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_rust_launch.py" \
   --workspace /path/to/project \
   --kind cargo-run \
   --cargo-arg run \
@@ -326,8 +330,8 @@ uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger
 For an already compiled binary:
 
 ```bash
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/write_vscode_rust_launch.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/write_vscode_rust_launch.py" \
   --workspace /path/to/project \
   --kind program \
   --program '${workspaceFolder}/target/debug/my_binary'
@@ -338,6 +342,11 @@ stopped reason, selected locals, watches when safe, and analysis of what the
 paused state proves. For Rust, also report the Rust debugger adapter used, such
 as CodeLLDB, `lldb-dap`, or `rust-gdb`, and any limitation in local/watch
 evaluation for optimized or inlined code.
+
+The Rust E2E sanity check must prove a real paused runtime state, not only
+launch configuration generation. `./sanity-e2e-rust.sh` compiles a Rust debug
+binary, runs it under `rust-gdb`, stops at a source breakpoint, and verifies
+selected Rust locals from the paused frame.
 
 ## Trigger Bar
 
@@ -366,9 +375,8 @@ Set two or three focused breakpoints rather than scattering probes. If the first
 For Python targets, prefer the bundled harness when it fits:
 
 ```bash
-export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
-uv run --project /home/graham/workspace/experiments/agent-skills/skills/debugger \
-  python /home/graham/workspace/experiments/agent-skills/skills/debugger/scripts/capture_breakpoints.py \
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/capture_breakpoints.py" \
   --break path/to/file.py:123 \
   --local some_var \
   --watch 'some_var' \
@@ -391,6 +399,18 @@ When the bug occurs only in a running service:
 5. Capture a proof artifact: debugger console transcript, JSON dump from the paused frame, screenshot of the debugger UI, or structured harness output.
 
 For UI bugs, debugger evidence does not replace screenshot proof. Use debugger state to explain why the UI is wrong, then verify the rendered UI visually.
+
+## If The Debugger Itself Fails
+
+If the harness crashes, the DAP adapter will not start, the bridge extension is
+not installed or active, a breakpoint cannot be set, or the requested local
+state cannot be inspected, report that failure as the current blocker. Include
+the command, adapter, breakpoint request, error text, and any partial artifact.
+
+Do not silently downgrade the result into a static-code explanation. You may
+fall back to static analysis or logs only after saying that debugger proof was
+not established and why. The next patch must be labeled as based on fallback
+evidence, not debugger proof.
 
 ## Evidence Standard
 

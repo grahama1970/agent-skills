@@ -55,6 +55,10 @@ export type OwnedStatusWriteDecision = {
   superseded: boolean;
 };
 
+export type OwnedStatusWriteResult = OwnedStatusWriteDecision & {
+  owner?: StatusOwner;
+};
+
 export class AsyncKeyedQueue {
   private readonly tails = new Map<string, Promise<void>>();
 
@@ -217,6 +221,45 @@ export async function claimRequestId(outputPath: string, requestId: string, requ
   return true;
 }
 
+export async function writeOwnedJsonFile(
+  filePath: string,
+  requestId: string,
+  requestHash: string,
+  body: unknown,
+  readCurrentOwner?: () => Promise<StatusOwner | undefined>,
+): Promise<OwnedStatusWriteResult> {
+  return withStatusFileLock(filePath, async () => {
+    const owner = (await readCurrentOwner?.()) ?? (await readStatusOwner(filePath));
+    const decision = decideOwnedStatusWritePath(filePath, requestId, requestHash, owner);
+    await writeJsonFile(decision.outputPath, body);
+    return { ...decision, owner };
+  });
+}
+
+async function withStatusFileLock<T>(filePath: string, task: () => Promise<T>): Promise<T> {
+  const lockPath = `${filePath}.lock`;
+  const deadline = Date.now() + 10_000;
+  while (true) {
+    try {
+      await fs.mkdir(lockPath);
+      break;
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'EEXIST') {
+        throw error;
+      }
+      if (Date.now() > deadline) {
+        throw new Error(`Timed out waiting for debugger bridge status lock: ${lockPath}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+  }
+  try {
+    return await task();
+  } finally {
+    await fs.rm(lockPath, { recursive: true, force: true });
+  }
+}
+
 function requestClaimPath(outputPath: string, requestId: string) {
   return path.join(path.dirname(outputPath), 'processed-claims', `${safeFileName(requestId)}.json`);
 }
@@ -318,7 +361,12 @@ export function assertWorkspacePath(workspacePath: string, candidatePath: string
 
 export async function writeJsonFile(filePath: string, body: unknown) {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, JSON.stringify(body, null, 2) + '\n', 'utf8');
+  const tempPath = path.join(
+    path.dirname(filePath),
+    `.${path.basename(filePath)}.${process.pid}.${Date.now()}.${crypto.randomBytes(6).toString('hex')}.tmp`,
+  );
+  await fs.writeFile(tempPath, JSON.stringify(body, null, 2) + '\n', 'utf8');
+  await fs.rename(tempPath, filePath);
 }
 
 export function sha256(value: string) {
@@ -328,6 +376,19 @@ export function sha256(value: string) {
 export function canonicalRequestHash(request: BridgeRequest) {
   const { requestHash: _requestHash, ...payload } = request;
   return sha256(stableStringify(payload));
+}
+
+async function readStatusOwner(filePath: string): Promise<StatusOwner | undefined> {
+  try {
+    const raw = await fs.readFile(filePath, 'utf8');
+    const parsed = JSON.parse(raw) as StatusOwner;
+    return { id: parsed.id, requestHash: parsed.requestHash };
+  } catch (error) {
+    if ((error as { code?: string }).code === 'ENOENT') {
+      return undefined;
+    }
+    throw error;
+  }
 }
 
 function stableStringify(value: unknown): string {

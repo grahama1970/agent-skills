@@ -95,10 +95,15 @@ assert "await bridgeQueue.run('vscode-debugger-session'" in source, source
 assert "async function writeOwnedStatus" in source, source
 assert "readCurrentRequestOwner(filePath)" in source, source
 assert "usesSharedRequestOwner(filePath)" in source, source
+assert "writeOwnedJsonFile(" in source, source
 assert "export function usesSharedRequestOwner" in protocol, protocol
+assert "export async function writeOwnedJsonFile" in protocol, protocol
+assert "withStatusFileLock(filePath" in protocol, protocol
+assert "const lockPath = `${filePath}.lock`" in protocol, protocol
+assert "Timed out waiting for debugger bridge status lock" in protocol, protocol
 assert "requestErrorStatusPath(uri.fsPath, parsedRequest)" in source, source
 assert "resolveContainedWorkspacePath(workspacePath, request.output, 'output')" in source, source
-assert "decideOwnedStatusWritePath(filePath, requestId, requestHash, current)" in source, source
+assert "decideOwnedStatusWritePath(filePath, requestId, requestHash, owner)" in protocol, protocol
 assert "status.${safeFileName(requestId)}.superseded.json" in protocol, protocol
 assert "status.invalid-request.${stamp}.json" in protocol, protocol
 assert "isRequestAlreadyClaimed(outputPath, requestId, requestHash)" in source, source
