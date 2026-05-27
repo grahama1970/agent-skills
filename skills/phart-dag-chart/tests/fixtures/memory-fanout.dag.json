@@ -1,0 +1,40 @@
+{
+  "schema_version": "ask.dag.v1",
+  "graph_id": "memory-fanout",
+  "description": "Concurrent memory recall then final report",
+  "max_concurrency": 4,
+  "nodes": [
+    {
+      "id": "memory_a",
+      "type": "memory.recall",
+      "depends_on": [],
+      "input": {
+        "query": "topic A",
+        "scope": "ask"
+      }
+    },
+    {
+      "id": "memory_b",
+      "type": "memory.recall",
+      "depends_on": [],
+      "input": {
+        "query": "topic B",
+        "scope": "ask"
+      }
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": [
+        "memory_a",
+        "memory_b"
+      ],
+      "input": {
+        "skill": "create-report",
+        "args": [
+          "--brief"
+        ]
+      }
+    }
+  ]
+}
