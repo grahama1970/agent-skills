@@ -31,7 +31,19 @@ ALLOWED_REVIEW_STATUSES = {
     "conditional_pass",
     "needs_changes",
     "blocked",
+    "insufficient_evidence",
+    "malformed",
+    "no_verdict",
     "not_required",
+}
+ALLOWED_REVIEW_RESULT_VERDICTS = {
+    "pass",
+    "needs_changes",
+    "blocked",
+    "insufficient_evidence",
+    "conditional_pass",
+    "malformed",
+    "no_verdict",
 }
 ALLOWED_ADJUDICATOR_KINDS = {
     "webgpt",
@@ -46,12 +58,22 @@ ALLOWED_REVIEW_AGREEMENTS = {
     "disagree",
     "insufficient",
 }
+ALLOWED_DOMAIN_LOOP_STATES = {
+    "needs_patch",
+    "verified",
+    "blocked",
+    "failed",
+    "skipped",
+}
+BLOCKING_REVIEW_VERDICTS = {"blocked", "needs_changes", "conditional_pass", "insufficient_evidence", "malformed", "no_verdict"}
+RESOLVED_REVIEW_STATUSES = {"resolved_by_later_pass", "superseded_by_later_pass"}
 
 
 def default_status(phase_id: str) -> dict[str, Any]:
     return {
         "schema": SCHEMA,
         "phase_id": phase_id,
+        "plan_id": "",
         "status": "planned",
         "implementation_summary": "",
         "acceptance_contract": [],
@@ -60,6 +82,9 @@ def default_status(phase_id: str) -> dict[str, Any]:
         "evidence_artifacts": [],
         "progress_context_artifacts": [],
         "skill_context_artifacts": [],
+        "plan_graph_artifacts": [],
+        "active_plan_graph_artifact": "",
+        "domain_review_loops": [],
         "review_artifacts": [],
         "known_caveats": [],
         "claims": [],
@@ -102,7 +127,25 @@ def _is_nonempty_string(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
 
+def _is_resolved_review_result(result: dict[str, Any]) -> bool:
+    return result.get("resolution_status") in RESOLVED_REVIEW_STATUSES
+
+
+def _is_unresolved_blocking_review(result: dict[str, Any]) -> bool:
+    return result.get("verdict") in BLOCKING_REVIEW_VERDICTS and not _is_resolved_review_result(result)
+
+
 def _require_list(status: dict[str, Any], key: str, errors: list[str]) -> list[Any]:
+    value = status.get(key)
+    if not isinstance(value, list):
+        errors.append(f"{key} must be a list")
+        return []
+    return value
+
+
+def _optional_list(status: dict[str, Any], key: str, errors: list[str]) -> list[Any]:
+    if key not in status:
+        return []
     value = status.get(key)
     if not isinstance(value, list):
         errors.append(f"{key} must be a list")
@@ -160,6 +203,10 @@ def compute_phase_subject_sha256(status: dict[str, Any]) -> str:
         "evidence_artifacts": status.get("evidence_artifacts", []),
         "progress_context_artifacts": status.get("progress_context_artifacts", []),
         "skill_context_artifacts": status.get("skill_context_artifacts", []),
+        "plan_id": status.get("plan_id", ""),
+        "plan_graph_artifacts": status.get("plan_graph_artifacts", []),
+        "active_plan_graph_artifact": status.get("active_plan_graph_artifact", ""),
+        "domain_review_loops": status.get("domain_review_loops", []),
         "validation_commands": validation_commands,
         "known_caveats": status.get("known_caveats", []),
         "blockers": status.get("blockers", []),
@@ -265,6 +312,133 @@ def _validate_phase_relative_path(path_value: str, label: str, errors: list[str]
     return True
 
 
+def _validate_plan_graph_payload(graph: Any, label: str, errors: list[str]) -> None:
+    if not isinstance(graph, dict):
+        errors.append(f"{label} must contain a JSON object")
+        return
+    if not _is_nonempty_string(graph.get("exec_graph_version")):
+        errors.append(f"{label}.exec_graph_version must be non-empty")
+    if not _is_nonempty_string(graph.get("graph_id")):
+        errors.append(f"{label}.graph_id must be non-empty")
+    if graph.get("plan_id", "") not in {"", None} and not _is_nonempty_string(graph.get("plan_id")):
+        errors.append(f"{label}.plan_id must be non-empty when set")
+    if not _is_nonempty_string(graph.get("graph_goal")):
+        errors.append(f"{label}.graph_goal must be non-empty")
+    if not isinstance(graph.get("self_improvement_iterations"), int) or graph.get("self_improvement_iterations") < 1:
+        errors.append(f"{label}.self_improvement_iterations must be a positive integer")
+    default_iterations = graph.get("self_improvement_iterations")
+    iteration_limits = graph.get("review_iteration_limits")
+    if iteration_limits is None:
+        iteration_limits = {}
+    if not isinstance(iteration_limits, dict):
+        errors.append(f"{label}.review_iteration_limits must be an object when set")
+        iteration_limits = {}
+    for key in ["review_code", "review_design", "review_prompt"]:
+        value = iteration_limits.get(key, default_iterations)
+        if not isinstance(value, int) or value < 0:
+            errors.append(f"{label}.review_iteration_limits.{key} must be a non-negative integer")
+    fanout_limits = graph.get("review_fanout_limits")
+    if not isinstance(fanout_limits, dict):
+        errors.append(f"{label}.review_fanout_limits must be an object")
+        fanout_limits = {}
+    for key in ["review_code", "review_design", "review_prompt"]:
+        if not isinstance(fanout_limits.get(key), int) or fanout_limits.get(key) < 0:
+            errors.append(f"{label}.review_fanout_limits.{key} must be a non-negative integer")
+
+    nodes = graph.get("nodes")
+    if not isinstance(nodes, list) or not nodes:
+        errors.append(f"{label}.nodes must be a non-empty list")
+        return
+
+    node_ids: set[str] = set()
+    deps_by_id: dict[str, list[str]] = {}
+    for index, node in enumerate(nodes):
+        node_label = f"{label}.nodes[{index}]"
+        if not isinstance(node, dict):
+            errors.append(f"{node_label} must be an object")
+            continue
+        node_id = node.get("id")
+        if not _is_nonempty_string(node_id):
+            errors.append(f"{node_label}.id must be non-empty")
+            continue
+        node_id = str(node_id)
+        if node_id in node_ids:
+            errors.append(f"{label} duplicate node id: {node_id}")
+        node_ids.add(node_id)
+        if not _is_nonempty_string(node.get("type")):
+            errors.append(f"{node_label}.type must be non-empty")
+        if not _is_nonempty_string(node.get("node_goal")):
+            errors.append(f"{node_label}.node_goal must be non-empty")
+        dependencies = node.get("depends_on", [])
+        if dependencies is None:
+            dependencies = []
+        if not isinstance(dependencies, list):
+            errors.append(f"{node_label}.depends_on must be a list when set")
+            dependencies = []
+        clean_dependencies: list[str] = []
+        for dep_index, dependency in enumerate(dependencies):
+            if not _is_nonempty_string(dependency):
+                errors.append(f"{node_label}.depends_on[{dep_index}] must be non-empty")
+                continue
+            dependency = str(dependency)
+            if dependency == node_id:
+                errors.append(f"{node_label} cannot depend on itself")
+            clean_dependencies.append(dependency)
+        deps_by_id[node_id] = clean_dependencies
+
+        review_like = "review-code" in str(node.get("type", "")) or "review-code" in node_id
+        review_scopes = node.get("review_scopes", [])
+        if review_scopes is None:
+            review_scopes = []
+        if review_like and (not isinstance(review_scopes, list) or not review_scopes):
+            errors.append(f"{node_label}.review_scopes must be non-empty for review-code nodes")
+        if review_scopes:
+            if not isinstance(review_scopes, list):
+                errors.append(f"{node_label}.review_scopes must be a list")
+                continue
+            for scope_index, scope in enumerate(review_scopes):
+                scope_label = f"{node_label}.review_scopes[{scope_index}]"
+                if not isinstance(scope, dict):
+                    errors.append(f"{scope_label} must be an object")
+                    continue
+                for key in ["scope", "model", "agent", "contract", "review_level", "proof_level"]:
+                    if not _is_nonempty_string(scope.get(key)):
+                        errors.append(f"{scope_label}.{key} must be non-empty")
+                best_practice_skills = scope.get("best_practice_skills")
+                if not isinstance(best_practice_skills, list) or not best_practice_skills:
+                    errors.append(f"{scope_label}.best_practice_skills must be a non-empty list")
+                else:
+                    for skill_index, skill_name in enumerate(best_practice_skills):
+                        if not _is_nonempty_string(skill_name):
+                            errors.append(f"{scope_label}.best_practice_skills[{skill_index}] must be non-empty")
+                        elif not str(skill_name).startswith("best-practices-"):
+                            errors.append(f"{scope_label}.best_practice_skills[{skill_index}] must name a best-practices-* skill")
+
+    for node_id, dependencies in deps_by_id.items():
+        for dependency in dependencies:
+            if dependency not in node_ids:
+                errors.append(f"{label} node {node_id} depends on missing node: {dependency}")
+
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(node_id: str, stack: list[str]) -> None:
+        if node_id in visited:
+            return
+        if node_id in visiting:
+            errors.append(f"{label} contains cycle: {' -> '.join([*stack, node_id])}")
+            return
+        visiting.add(node_id)
+        for dependency in deps_by_id.get(node_id, []):
+            if dependency in node_ids:
+                visit(dependency, [*stack, node_id])
+        visiting.remove(node_id)
+        visited.add(node_id)
+
+    for node_id in sorted(node_ids):
+        visit(node_id, [])
+
+
 def _default_repo_root(phase_dir: Path | None) -> Path | None:
     if phase_dir is None:
         return None
@@ -335,6 +509,9 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
         errors.append(f"schema must be {SCHEMA}")
     if not _is_nonempty_string(status.get("phase_id")):
         errors.append("phase_id must be a non-empty string")
+    phase_plan_id = status.get("plan_id", "")
+    if phase_plan_id not in {"", None} and not _is_nonempty_string(phase_plan_id):
+        errors.append("plan_id must be a non-empty string when set")
 
     state = status.get("status")
     if state not in ALLOWED_STATES:
@@ -350,6 +527,8 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
     evidence_artifacts = _require_list(status, "evidence_artifacts", errors)
     progress_context_artifacts = _require_list(status, "progress_context_artifacts", errors)
     skill_context_artifacts = _require_list(status, "skill_context_artifacts", errors)
+    plan_graph_artifacts = _optional_list(status, "plan_graph_artifacts", errors)
+    domain_review_loops = _require_list(status, "domain_review_loops", errors)
     review_artifacts = _require_list(status, "review_artifacts", errors)
     known_caveats = _require_list(status, "known_caveats", errors)
     claims = _require_list(status, "claims", errors)
@@ -358,6 +537,8 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
 
     artifact_names = _artifact_set(status)
     review_artifact_names = _path_set(status, "review_artifacts")
+    progress_artifact_names = _path_set(status, "progress_context_artifacts")
+    plan_graph_names = _path_set(status, "plan_graph_artifacts")
 
     reviewer_policy = status.get("reviewer_policy")
     if not isinstance(reviewer_policy, dict):
@@ -401,6 +582,15 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
             for index, key in enumerate(keys):
                 if not _is_nonempty_string(key):
                     errors.append(f"memory_context.keys[{index}] must be non-empty")
+
+    active_plan_graph_artifact = status.get("active_plan_graph_artifact", "")
+    if active_plan_graph_artifact:
+        if not _is_nonempty_string(active_plan_graph_artifact):
+            errors.append("active_plan_graph_artifact must be a non-empty string when set")
+        elif not _validate_phase_relative_path(str(active_plan_graph_artifact), "active_plan_graph_artifact", errors):
+            pass
+        elif str(active_plan_graph_artifact) not in plan_graph_names:
+            errors.append("active_plan_graph_artifact must be listed in plan_graph_artifacts")
 
     for index, command in enumerate(validation_commands):
         if not isinstance(command, dict):
@@ -447,6 +637,27 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
                 elif _sha256_file(source_path) != changed_file["sha256"]:
                     errors.append(f"changed_files[{index}].sha256 does not match current file bytes")
 
+    for index, artifact in enumerate(plan_graph_artifacts):
+        path_value = _artifact_path_value(artifact)
+        if not isinstance(path_value, str) or not path_value.strip():
+            continue
+        if not isinstance(artifact, dict) or not _is_nonempty_string(artifact.get("sha256")):
+            errors.append(f"plan_graph_artifacts[{index}].sha256 must be non-empty")
+        if isinstance(artifact, dict):
+            artifact_plan_id = artifact.get("plan_id", "")
+            if artifact_plan_id not in {"", None} and not _is_nonempty_string(artifact_plan_id):
+                errors.append(f"plan_graph_artifacts[{index}].plan_id must be non-empty when set")
+            elif _is_nonempty_string(phase_plan_id) and _is_nonempty_string(artifact_plan_id) and artifact_plan_id != phase_plan_id:
+                errors.append(f"plan_graph_artifacts[{index}].plan_id must match phase plan_id")
+        if isinstance(artifact, dict) and artifact.get("runtime_readiness_artifact") is not None:
+            readiness_artifact = artifact.get("runtime_readiness_artifact")
+            if not _is_nonempty_string(readiness_artifact):
+                errors.append(f"plan_graph_artifacts[{index}].runtime_readiness_artifact must be non-empty when set")
+            elif not _validate_phase_relative_path(str(readiness_artifact), f"plan_graph_artifacts[{index}].runtime_readiness_artifact", errors):
+                pass
+            if not _is_nonempty_string(artifact.get("runtime_readiness_sha256")):
+                errors.append(f"plan_graph_artifacts[{index}].runtime_readiness_sha256 must be non-empty when runtime_readiness_artifact is set")
+
     for index, item in enumerate(acceptance_contract):
         if not _is_nonempty_string(item):
             errors.append(f"acceptance_contract[{index}] must be a non-empty string")
@@ -478,7 +689,7 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
             errors.append(f"review_results[{index}].reviewer_id must be non-empty")
         if result.get("adjudicator_kind") not in ALLOWED_ADJUDICATOR_KINDS:
             errors.append(f"review_results[{index}].adjudicator_kind must be one of {sorted(ALLOWED_ADJUDICATOR_KINDS)}")
-        if result.get("verdict") not in ALLOWED_REVIEW_STATUSES - {"pending", "not_required"}:
+        if result.get("verdict") not in ALLOWED_REVIEW_RESULT_VERDICTS:
             errors.append(f"review_results[{index}].verdict must be a concrete review verdict")
         artifact = result.get("artifact")
         if not _is_nonempty_string(artifact):
@@ -509,8 +720,20 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
                 errors.append(f"review_results[{index}].skill_context_sha256 does not match current skill context")
         if not _is_nonempty_string(result.get("phase_subject_sha256")):
             errors.append(f"review_results[{index}].phase_subject_sha256 must be non-empty")
-        elif state in {"external_review_passed", "accepted"} and result.get("phase_subject_sha256") != compute_phase_subject_sha256(status):
+        elif (
+            state in {"external_review_passed", "accepted"}
+            and not _is_resolved_review_result(result)
+            and result.get("phase_subject_sha256") != compute_phase_subject_sha256(status)
+        ):
             errors.append(f"review_results[{index}].phase_subject_sha256 does not match current phase subject")
+        if _is_resolved_review_result(result):
+            if result.get("resolution_status") == "resolved_by_later_pass" and result.get("verdict") not in BLOCKING_REVIEW_VERDICTS:
+                errors.append(f"review_results[{index}].resolution_status is only valid for blocking review verdicts")
+            if result.get("resolution_status") == "superseded_by_later_pass" and result.get("verdict") != "pass":
+                errors.append(f"review_results[{index}].superseded_by_later_pass is only valid for pass review verdicts")
+            for key in ["resolved_by_reviewer_id", "resolved_by_recorded_at"]:
+                if not _is_nonempty_string(result.get(key)):
+                    errors.append(f"review_results[{index}].{key} must be non-empty when resolution_status is set")
         for key in ["review_request_artifact", "review_bundle_artifact"]:
             value = result.get(key)
             if not _is_nonempty_string(value):
@@ -563,6 +786,72 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
         if isinstance(occurrences, int) and occurrences >= 2 and blocker.get("escalated") is not True:
             errors.append(f"blockers[{index}] repeated twice without escalated=true")
 
+    for index, loop in enumerate(domain_review_loops):
+        if not isinstance(loop, dict):
+            errors.append(f"domain_review_loops[{index}] must be an object")
+            continue
+        for key in [
+            "skill",
+            "persona",
+            "immutable_goal",
+            "context_artifact",
+            "state_artifact",
+            "events_artifact",
+            "aggregate_artifact",
+            "matrix_artifact",
+            "model_fanout_artifact",
+            "end_state",
+        ]:
+            if not _is_nonempty_string(loop.get(key)):
+                errors.append(f"domain_review_loops[{index}].{key} must be non-empty")
+        best_practice_skills = loop.get("best_practice_skills")
+        if not isinstance(best_practice_skills, list) or not best_practice_skills:
+            errors.append(f"domain_review_loops[{index}].best_practice_skills must be a non-empty list")
+        else:
+            for skill_index, skill_name in enumerate(best_practice_skills):
+                if not _is_nonempty_string(skill_name):
+                    errors.append(f"domain_review_loops[{index}].best_practice_skills[{skill_index}] must be non-empty")
+                elif not str(skill_name).startswith("best-practices-"):
+                    errors.append(f"domain_review_loops[{index}].best_practice_skills[{skill_index}] must name a best-practices-* skill")
+        iteration_plans = loop.get("iteration_plans")
+        if not isinstance(iteration_plans, list) or not iteration_plans:
+            errors.append(f"domain_review_loops[{index}].iteration_plans must be a non-empty list")
+            iteration_plans = []
+        if loop.get("end_state") not in ALLOWED_DOMAIN_LOOP_STATES:
+            errors.append(f"domain_review_loops[{index}].end_state must be one of {sorted(ALLOWED_DOMAIN_LOOP_STATES)}")
+        if loop.get("mutates_production") is not False:
+            errors.append(f"domain_review_loops[{index}].mutates_production must be false; domain reviewers suggest changes only")
+        artifact_keys = ["context_artifact", "state_artifact", "events_artifact", "aggregate_artifact", "matrix_artifact", "model_fanout_artifact"]
+        for plan_index, plan in enumerate(iteration_plans):
+            if not isinstance(plan, dict):
+                errors.append(f"domain_review_loops[{index}].iteration_plans[{plan_index}] must be an object")
+                continue
+            if not isinstance(plan.get("round"), int) or plan.get("round") < 1:
+                errors.append(f"domain_review_loops[{index}].iteration_plans[{plan_index}].round must be a positive integer")
+            for plan_key in ["implementation_plan_artifact", "validation_plan_artifact", "review_plan_artifact"]:
+                if not _is_nonempty_string(plan.get(plan_key)):
+                    errors.append(f"domain_review_loops[{index}].iteration_plans[{plan_index}].{plan_key} must be non-empty")
+                else:
+                    artifact_keys.append(str(plan[plan_key]))
+        for key in artifact_keys:
+            if key in {"context_artifact", "state_artifact", "events_artifact", "aggregate_artifact", "matrix_artifact", "model_fanout_artifact"}:
+                path_value = loop.get(key)
+                path_label = f"domain_review_loops[{index}].{key}"
+            else:
+                path_value = key
+                path_label = f"domain_review_loops[{index}].iteration_plans artifact"
+            if not isinstance(path_value, str):
+                continue
+            if not _validate_phase_relative_path(path_value, path_label, errors):
+                continue
+            known = path_value in artifact_names or path_value in review_artifact_names or path_value in progress_artifact_names
+            if not known:
+                errors.append(
+                    f"{path_label} must be listed in evidence_artifacts, review_artifacts, or progress_context_artifacts"
+                )
+        if state in {"external_review_passed", "accepted"} and loop.get("end_state") in {"needs_patch", "blocked", "failed"}:
+            errors.append(f"{state} cannot include unresolved domain_review_loops[{index}].end_state={loop.get('end_state')}")
+
     if phase_dir is not None:
         for index, artifact in enumerate(evidence_artifacts):
             path_value = _artifact_path_value(artifact)
@@ -606,6 +895,68 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
             if isinstance(artifact, dict) and _is_nonempty_string(artifact.get("sha256")) and candidate.exists():
                 if _sha256_file(candidate) != artifact["sha256"]:
                     errors.append(f"skill_context_artifacts[{index}].sha256 does not match current artifact bytes")
+        for index, artifact in enumerate(plan_graph_artifacts):
+            path_value = _artifact_path_value(artifact)
+            if not isinstance(path_value, str) or not path_value.strip():
+                errors.append(f"plan_graph_artifacts[{index}] must be a path string or object with path")
+                continue
+            if not _validate_phase_relative_path(path_value, f"plan_graph_artifacts[{index}]", errors):
+                continue
+            candidate = phase_dir / path_value
+            if not candidate.exists():
+                errors.append(f"plan graph artifact missing: {path_value}")
+            if isinstance(artifact, dict) and _is_nonempty_string(artifact.get("sha256")) and candidate.exists():
+                if _sha256_file(candidate) != artifact["sha256"]:
+                    errors.append(f"plan_graph_artifacts[{index}].sha256 does not match current artifact bytes")
+            if candidate.exists():
+                try:
+                    graph_payload = json.loads(candidate.read_text(encoding="utf-8"))
+                    _validate_plan_graph_payload(graph_payload, f"plan_graph_artifacts[{index}]", errors)
+                    if isinstance(artifact, dict) and isinstance(graph_payload, dict):
+                        artifact_plan_id = artifact.get("plan_id", "")
+                        graph_plan_id = graph_payload.get("plan_id", "")
+                        if _is_nonempty_string(artifact_plan_id) and _is_nonempty_string(graph_plan_id) and artifact_plan_id != graph_plan_id:
+                            errors.append(f"plan_graph_artifacts[{index}].plan_id must match graph plan_id")
+                        if _is_nonempty_string(phase_plan_id) and _is_nonempty_string(graph_plan_id) and phase_plan_id != graph_plan_id:
+                            errors.append(f"plan_graph_artifacts[{index}] graph plan_id must match phase plan_id")
+                except (OSError, json.JSONDecodeError) as exc:
+                    errors.append(f"plan_graph_artifacts[{index}] must be valid JSON: {exc}")
+            if isinstance(artifact, dict) and _is_nonempty_string(artifact.get("runtime_readiness_artifact")):
+                readiness_artifact = str(artifact["runtime_readiness_artifact"])
+                if not _validate_phase_relative_path(
+                    readiness_artifact,
+                    f"plan_graph_artifacts[{index}].runtime_readiness_artifact",
+                    errors,
+                ):
+                    continue
+                readiness_path = phase_dir / readiness_artifact
+                if not readiness_path.exists():
+                    errors.append(f"plan graph runtime readiness artifact missing: {readiness_artifact}")
+                else:
+                    if _is_nonempty_string(artifact.get("runtime_readiness_sha256")) and _sha256_file(readiness_path) != artifact["runtime_readiness_sha256"]:
+                        errors.append(f"plan_graph_artifacts[{index}].runtime_readiness_sha256 does not match current artifact bytes")
+                    try:
+                        readiness_payload = json.loads(readiness_path.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError) as exc:
+                        errors.append(f"plan_graph_artifacts[{index}].runtime_readiness_artifact must be valid JSON: {exc}")
+                    else:
+                        if not isinstance(readiness_payload, dict):
+                            errors.append(f"plan_graph_artifacts[{index}].runtime_readiness_artifact must contain a JSON object")
+                        elif readiness_payload.get("schema") != "plan_iterate.graph_runtime_readiness.v1":
+                            errors.append(f"plan_graph_artifacts[{index}].runtime_readiness_artifact schema must be plan_iterate.graph_runtime_readiness.v1")
+            if isinstance(artifact, dict) and _is_nonempty_string(artifact.get("plan_ascii_artifact")):
+                ascii_artifact = str(artifact["plan_ascii_artifact"])
+                if not _validate_phase_relative_path(
+                    ascii_artifact,
+                    f"plan_graph_artifacts[{index}].plan_ascii_artifact",
+                    errors,
+                ):
+                    continue
+                ascii_path = phase_dir / ascii_artifact
+                if not ascii_path.exists():
+                    errors.append(f"plan graph ASCII artifact missing: {ascii_artifact}")
+                elif _is_nonempty_string(artifact.get("plan_ascii_sha256")) and _sha256_file(ascii_path) != artifact["plan_ascii_sha256"]:
+                    errors.append(f"plan_graph_artifacts[{index}].plan_ascii_sha256 does not match current artifact bytes")
         for index, artifact in enumerate(review_artifacts):
             path_value = _artifact_path_value(artifact)
             if not isinstance(path_value, str) or not path_value.strip():
@@ -617,6 +968,27 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
             candidate = artifact_path if artifact_path.is_absolute() else phase_dir / artifact_path
             if not candidate.exists():
                 errors.append(f"review artifact missing: {path_value}")
+        for index, loop in enumerate(domain_review_loops):
+            if not isinstance(loop, dict):
+                continue
+            loop_paths = []
+            for key in ["context_artifact", "state_artifact", "events_artifact", "aggregate_artifact", "matrix_artifact", "model_fanout_artifact"]:
+                path_value = loop.get(key)
+                if isinstance(path_value, str) and path_value.strip():
+                    loop_paths.append((key, path_value))
+            iteration_plans = loop.get("iteration_plans")
+            if isinstance(iteration_plans, list):
+                for plan_index, plan in enumerate(iteration_plans):
+                    if not isinstance(plan, dict):
+                        continue
+                    for plan_key in ["implementation_plan_artifact", "validation_plan_artifact", "review_plan_artifact"]:
+                        path_value = plan.get(plan_key)
+                        if isinstance(path_value, str) and path_value.strip():
+                            loop_paths.append((f"iteration_plans[{plan_index}].{plan_key}", path_value))
+            for key, path_value in loop_paths:
+                candidate = phase_dir / path_value
+                if not candidate.exists():
+                    errors.append(f"domain_review_loops[{index}].{key} artifact missing: {path_value}")
 
     if state in {"ready_for_review", "external_review_passed", "accepted"}:
         if not acceptance_contract:
@@ -633,8 +1005,8 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
         if not has_failure:
             errors.append("local_validation_failed requires at least one non-zero validation exit_code")
 
-    if state == "external_review_blocked" and review_status not in {"needs_changes", "blocked", "conditional_pass"}:
-        errors.append("external_review_blocked requires review_status needs_changes, blocked, or conditional_pass")
+    if state == "external_review_blocked" and review_status not in {"needs_changes", "blocked", "conditional_pass", "insufficient_evidence", "malformed", "no_verdict"}:
+        errors.append("external_review_blocked requires review_status needs_changes, blocked, conditional_pass, insufficient_evidence, malformed, or no_verdict")
 
     if state == "external_review_passed" and review_required and review_status != "passed":
         errors.append("external_review_passed requires review_status=passed")
@@ -648,7 +1020,7 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
         passing_reviews = [
             result
             for result in review_results
-            if isinstance(result, dict) and result.get("verdict") == "passed"
+            if isinstance(result, dict) and result.get("verdict") == "pass"
         ]
         if not passing_reviews:
             errors.append(f"{state} requires at least one passing review result")
@@ -672,10 +1044,10 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
         blocking_reviews = [
             result
             for result in review_results
-            if isinstance(result, dict) and result.get("verdict") in {"blocked", "needs_changes", "conditional_pass"}
+            if isinstance(result, dict) and _is_unresolved_blocking_review(result)
         ]
         if blocking_reviews:
-            errors.append("accepted requires no blocked, needs_changes, or conditional_pass review_results")
+            errors.append("accepted requires no unresolved non-pass review_results")
         failing = [command for command in validation_commands if isinstance(command, dict) and command.get("exit_code") != 0]
         if failing:
             errors.append("accepted requires all validation_commands exit_code values to be 0")
@@ -706,16 +1078,16 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
         non_passing_reviews = [
             result
             for result in review_results
-            if isinstance(result, dict) and result.get("verdict") != "passed"
+            if isinstance(result, dict) and result.get("verdict") != "pass" and not _is_resolved_review_result(result)
         ]
         if non_passing_reviews:
-            errors.append(f"{state} requires all review_results verdict values to be passed when comparison_required=true")
+            errors.append(f"{state} requires all review_results verdict values to be pass when comparison_required=true")
         if agreement != "agree":
             errors.append(f"{state} requires review_comparison.agreement=agree when comparison_required=true")
         passing_bundle_hashes = {
             result.get("review_bundle_sha256")
             for result in review_results
-            if isinstance(result, dict) and result.get("verdict") == "passed"
+            if isinstance(result, dict) and result.get("verdict") == "pass"
         }
         if len(passing_bundle_hashes) != 1:
             errors.append(f"{state} requires all passing comparison reviews to reference the same review_bundle_sha256")
@@ -724,10 +1096,10 @@ def validate_status(status: dict[str, Any], phase_dir: Path | None = None, repo_
         blocking_reviews = [
             result
             for result in review_results
-            if isinstance(result, dict) and result.get("verdict") in {"blocked", "needs_changes", "conditional_pass"}
+            if isinstance(result, dict) and _is_unresolved_blocking_review(result)
         ]
         if blocking_reviews:
-            errors.append("external_review_passed requires no blocked, needs_changes, or conditional_pass review_results")
+            errors.append("external_review_passed requires no unresolved non-pass review_results")
 
     if state == "accepted":
         for index, caveat in enumerate(known_caveats):

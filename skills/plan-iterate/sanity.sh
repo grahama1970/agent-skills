@@ -331,4 +331,49 @@ for result in status["review_results"]:
             raise SystemExit(f"review result missing {key}")
 PY
 
-echo "SANITY PASS: plan-iterate medium-complexity skill context, progress context, bundle, receipt binding, and comparison review"
+python3 - "$SCRIPT_DIR" "$PHASE_ROOT" "$PHASE" <<'PY'
+import sys
+from pathlib import Path
+
+script_dir = Path(sys.argv[1])
+phase_root = Path(sys.argv[2])
+phase = sys.argv[3]
+sys.path.insert(0, str(script_dir / "scripts"))
+
+from phase_status import load_status, save_status, status_path  # noqa: E402
+
+status_file = status_path(phase_root, phase)
+status = load_status(status_file)
+status["status"] = "accepted"
+save_status(status_file, status)
+PY
+
+cat > "$REPO/PROJECT_KNOWLEDGE.md" <<'EOF'
+# Project Knowledge
+
+- Current blocker: the broader project still has an unmet acceptance gate.
+- Do not claim full project completion.
+- Next agent-executable candidate is a deterministic regression fixture for the next source-backed phase.
+EOF
+
+CONTINUE_JSON="$("$RUN_SH" --root "$PHASE_ROOT" continue --phase "$PHASE" --repo-root "$REPO")"
+python3 - "$CONTINUE_JSON" <<'PY'
+import json
+import sys
+
+decision = json.loads(sys.argv[1])
+if decision.get("decision") != "PROJECT_GOALS_REMAIN":
+    raise SystemExit(f"expected PROJECT_GOALS_REMAIN, got {decision.get('decision')}")
+if decision.get("should_continue") is not True:
+    raise SystemExit("expected should_continue=true")
+if decision.get("stop") is not False:
+    raise SystemExit("expected stop=false")
+next_action = decision.get("next_action", {})
+if next_action.get("type") != "create_next_phase_from_project_knowledge":
+    raise SystemExit(f"expected create_next_phase_from_project_knowledge, got {next_action.get('type')}")
+continuation = decision.get("project_knowledge_continuation", {})
+if continuation.get("agent_executable") is not True:
+    raise SystemExit("expected agent_executable project knowledge continuation")
+PY
+
+echo "SANITY PASS: plan-iterate medium-complexity review gates and project-knowledge continuation guard"

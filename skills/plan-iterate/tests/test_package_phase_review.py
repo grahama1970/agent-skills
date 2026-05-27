@@ -7,6 +7,8 @@ Inputs/Outputs/Failures: See functions below.
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import hashlib
 import tempfile
@@ -19,6 +21,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from package_phase_review import main
+from continuation_guard import evaluate as evaluate_continuation_guard
 from phase_status import compute_phase_subject_sha256, compute_progress_context_sha256, compute_skill_context_sha256, load_status, save_status, status_path, validate_status
 
 
@@ -211,6 +214,105 @@ class PackagePhaseReviewTest(unittest.TestCase):
                 self.assertIn("reports/audit.json", names)
                 self.assertIn("logs/audit.json", names)
 
+    def test_package_includes_explicit_domain_review_loop_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_dir = root / "phase-01"
+            (root / "file.py").write_text("source", encoding="utf-8")
+            (root / "file.py").write_text("print('changed')\n", encoding="utf-8")
+            loop_dir = phase_dir / "domain-review-loops" / "ui"
+            loop_dir.mkdir(parents=True)
+            for name, text in {
+                "context.md": "Persona: nico\nGoal: verify UI closure.\n",
+                "state.json": '{"state":"verified"}\n',
+                "events.jsonl": '{"end_state":"verified"}\n',
+                "aggregate_verdict.json": '{"state":"verified"}\n',
+                "DESIGN_REVIEW_ITERATE_MATRIX.md": "| Screenshot | End State |\n",
+                "fanout_result.json": '{"schema":"review_design.fanout.v1","verdict":"PASS"}\n',
+                "round-001-implementation-plan.md": "Patch only project-agent-approved blockers.\n",
+                "round-001-validation-plan.md": "Run deterministic interaction checks.\n",
+                "round-001-review-plan.md": "Run read-only review-design iterate.\n",
+            }.items():
+                (loop_dir / name).write_text(text, encoding="utf-8")
+            (phase_dir / "evidence.txt").write_text("proof", encoding="utf-8")
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            status.update(
+                {
+                    "status": "ready_for_review",
+                    "acceptance_contract": ["contract"],
+                    "changed_files": [{"path": "file.py", "sha256": sha256_text("source")}],
+                    "validation_commands": [{"command": "true", "exit_code": 0}],
+                    "evidence_artifacts": ["evidence.txt"],
+                    "review_artifacts": [
+                        "domain-review-loops/ui/context.md",
+                        "domain-review-loops/ui/state.json",
+                        "domain-review-loops/ui/events.jsonl",
+                        "domain-review-loops/ui/aggregate_verdict.json",
+                        "domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md",
+                        "domain-review-loops/ui/fanout_result.json",
+                        "domain-review-loops/ui/round-001-implementation-plan.md",
+                        "domain-review-loops/ui/round-001-validation-plan.md",
+                        "domain-review-loops/ui/round-001-review-plan.md",
+                    ],
+                    "domain_review_loops": [
+                        {
+                            "skill": "review-design",
+                            "persona": "nico-bailon",
+                            "immutable_goal": "Verify the UI closure state without mutating production code.",
+                            "context_artifact": "domain-review-loops/ui/context.md",
+                            "best_practice_skills": ["best-practices-react"],
+                            "state_artifact": "domain-review-loops/ui/state.json",
+                            "events_artifact": "domain-review-loops/ui/events.jsonl",
+                            "aggregate_artifact": "domain-review-loops/ui/aggregate_verdict.json",
+                            "matrix_artifact": "domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md",
+                            "model_fanout_artifact": "domain-review-loops/ui/fanout_result.json",
+                            "iteration_plans": [
+                                {
+                                    "round": 1,
+                                    "implementation_plan_artifact": "domain-review-loops/ui/round-001-implementation-plan.md",
+                                    "validation_plan_artifact": "domain-review-loops/ui/round-001-validation-plan.md",
+                                    "review_plan_artifact": "domain-review-loops/ui/round-001-review-plan.md",
+                                }
+                            ],
+                            "end_state": "verified",
+                            "mutates_production": False,
+                        }
+                    ],
+                    "claims": [{"claim": "validated", "evidence_artifacts": ["evidence.txt"]}],
+                }
+            )
+            add_skill_context(phase_dir, status)
+            save_status(status_file, status)
+            output = root / "bundle.zip"
+
+            exit_code = main(
+                [
+                    "--root",
+                    str(root),
+                    "package",
+                    "--phase",
+                    "phase-01",
+                    "--output",
+                    str(output),
+                    "--repo-root",
+                    str(root),
+                ]
+            )
+
+            self.assertEqual(0, exit_code)
+            with zipfile.ZipFile(output) as bundle:
+                names = bundle.namelist()
+                self.assertIn("domain-review-loops/ui/state.json", names)
+                self.assertIn("domain-review-loops/ui/events.jsonl", names)
+                self.assertIn("domain-review-loops/ui/aggregate_verdict.json", names)
+                self.assertIn("domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md", names)
+                self.assertIn("domain-review-loops/ui/fanout_result.json", names)
+                self.assertIn("domain-review-loops/ui/round-001-implementation-plan.md", names)
+                self.assertIn("domain-review-loops/ui/round-001-validation-plan.md", names)
+                self.assertIn("domain-review-loops/ui/round-001-review-plan.md", names)
+
     def test_record_review_transitions_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -290,6 +392,288 @@ class PackagePhaseReviewTest(unittest.TestCase):
             self.assertTrue((phase_dir / updated["review_results"][0]["invocation"]["receipt_artifact"]).exists())
             self.assertTrue(updated["review_comparison"]["closure_allowed"])
             self.assertTrue(any((phase_dir / artifact).exists() for artifact in updated["review_artifacts"]))
+
+    def test_later_passing_review_resolves_prior_blocking_review(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_dir = root / "phase-01"
+            (root / "file.py").write_text("source", encoding="utf-8")
+            (phase_dir / "evidence.txt").write_text("proof", encoding="utf-8")
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            status.update(
+                {
+                    "acceptance_contract": ["contract"],
+                    "changed_files": [{"path": "file.py", "sha256": sha256_text("source")}],
+                    "validation_commands": [{"command": "true", "exit_code": 0}],
+                    "evidence_artifacts": ["evidence.txt"],
+                }
+            )
+            add_skill_context(phase_dir, status)
+            save_status(status_file, status)
+
+            review_1 = root / "review-1.md"
+            request_1 = root / "request-1.md"
+            bundle_1 = root / "bundle-1.zip"
+            receipt_1 = root / "receipt-1.json"
+            review_1.write_text("NEEDS_CHANGES", encoding="utf-8")
+            request_1.write_text("review first pass", encoding="utf-8")
+            bundle_1.write_text("bundle one", encoding="utf-8")
+            status = load_status(status_file)
+            receipt_1.write_text(
+                receipt_for(
+                    "NEEDS_CHANGES",
+                    "review first pass",
+                    "bundle one",
+                    phase_subject_sha256=compute_phase_subject_sha256(status),
+                    skill_context_sha256=compute_skill_context_sha256(status, phase_dir),
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "--root",
+                        str(root),
+                        "record-review",
+                        "--phase",
+                        "phase-01",
+                        "--verdict",
+                        "needs_changes",
+                        "--review",
+                        str(review_1),
+                        "--review-request",
+                        str(request_1),
+                        "--review-bundle",
+                        str(bundle_1),
+                        "--invocation-command",
+                        "curl /v1/chat/completions model=gpt-5.5 reasoning_effort=high",
+                        "--invocation-receipt",
+                        str(receipt_1),
+                        "--repo-root",
+                        str(root),
+                    ]
+                ),
+            )
+
+            context = root / "context.md"
+            context.write_text("Prior finding fixed with deterministic evidence.\n", encoding="utf-8")
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "--root",
+                        str(root),
+                        "record-context",
+                        "--phase",
+                        "phase-01",
+                        "--context",
+                        str(context),
+                        "--memory-key",
+                        "phase-01-review-002",
+                        "--skip-memory-upsert",
+                        "--repo-root",
+                        str(root),
+                    ]
+                ),
+            )
+
+            review_2 = root / "review-2.md"
+            request_2 = root / "request-2.md"
+            bundle_2 = root / "bundle-2.zip"
+            receipt_2 = root / "receipt-2.json"
+            review_2.write_text("PASS", encoding="utf-8")
+            request_2.write_text("review rerun", encoding="utf-8")
+            bundle_2.write_text("bundle two", encoding="utf-8")
+            status = load_status(status_file)
+            receipt_2.write_text(
+                receipt_for(
+                    "PASS",
+                    "review rerun",
+                    "bundle two",
+                    phase_subject_sha256=compute_phase_subject_sha256(status),
+                    progress_context_sha256=compute_progress_context_sha256(status, phase_dir),
+                    skill_context_sha256=compute_skill_context_sha256(status, phase_dir),
+                ),
+                encoding="utf-8",
+            )
+
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "--root",
+                        str(root),
+                        "record-review",
+                        "--phase",
+                        "phase-01",
+                        "--verdict",
+                        "passed",
+                        "--review",
+                        str(review_2),
+                        "--review-request",
+                        str(request_2),
+                        "--review-bundle",
+                        str(bundle_2),
+                        "--invocation-command",
+                        "curl /v1/chat/completions model=gpt-5.5 reasoning_effort=high rerun",
+                        "--invocation-receipt",
+                        str(receipt_2),
+                        "--repo-root",
+                        str(root),
+                    ]
+                ),
+            )
+            updated = load_status(status_file)
+            self.assertEqual("external_review_passed", updated["status"])
+            self.assertEqual("resolved_by_later_pass", updated["review_results"][0]["resolution_status"])
+            self.assertEqual("scillm-gpt55-high", updated["review_results"][0]["resolved_by_reviewer_id"])
+            self.assertEqual("pass", updated["review_results"][1]["verdict"])
+            self.assertEqual([], validate_status(updated, phase_dir, root))
+
+    def test_later_passing_review_supersedes_prior_passing_review(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_dir = root / "phase-01"
+            (root / "file.py").write_text("source", encoding="utf-8")
+            (phase_dir / "evidence.txt").write_text("proof", encoding="utf-8")
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            status.update(
+                {
+                    "acceptance_contract": ["contract"],
+                    "changed_files": [{"path": "file.py", "sha256": sha256_text("source")}],
+                    "validation_commands": [{"command": "true", "exit_code": 0}],
+                    "evidence_artifacts": ["evidence.txt"],
+                }
+            )
+            add_skill_context(phase_dir, status)
+            save_status(status_file, status)
+
+            context = root / "context.md"
+            context.write_text("Review progress context available before repeated PASS.\n", encoding="utf-8")
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "--root",
+                        str(root),
+                        "record-context",
+                        "--phase",
+                        "phase-01",
+                        "--context",
+                        str(context),
+                        "--memory-key",
+                        "phase-01-review-002",
+                        "--skip-memory-upsert",
+                        "--repo-root",
+                        str(root),
+                    ]
+                ),
+            )
+
+            review_1 = root / "review-1.md"
+            request_1 = root / "request-1.md"
+            bundle_1 = root / "bundle-1.zip"
+            receipt_1 = root / "receipt-1.json"
+            review_1.write_text("PASS", encoding="utf-8")
+            request_1.write_text("review first pass", encoding="utf-8")
+            bundle_1.write_text("bundle one", encoding="utf-8")
+            status = load_status(status_file)
+            receipt_1.write_text(
+                receipt_for(
+                    "PASS",
+                    "review first pass",
+                    "bundle one",
+                    phase_subject_sha256=compute_phase_subject_sha256(status),
+                    progress_context_sha256=compute_progress_context_sha256(status, phase_dir),
+                    skill_context_sha256=compute_skill_context_sha256(status, phase_dir),
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "--root",
+                        str(root),
+                        "record-review",
+                        "--phase",
+                        "phase-01",
+                        "--verdict",
+                        "passed",
+                        "--review",
+                        str(review_1),
+                        "--review-request",
+                        str(request_1),
+                        "--review-bundle",
+                        str(bundle_1),
+                        "--invocation-command",
+                        "curl /v1/chat/completions model=gpt-5.5 reasoning_effort=high",
+                        "--invocation-receipt",
+                        str(receipt_1),
+                        "--repo-root",
+                        str(root),
+                    ]
+                ),
+            )
+
+            status = load_status(status_file)
+            status["known_caveats"] = ["subject changed after adding accepted-state hashes"]
+            save_status(status_file, status)
+
+            review_2 = root / "review-2.md"
+            request_2 = root / "request-2.md"
+            bundle_2 = root / "bundle-2.zip"
+            receipt_2 = root / "receipt-2.json"
+            review_2.write_text("PASS AGAIN", encoding="utf-8")
+            request_2.write_text("review second pass", encoding="utf-8")
+            bundle_2.write_text("bundle two", encoding="utf-8")
+            status = load_status(status_file)
+            receipt_2.write_text(
+                receipt_for(
+                    "PASS AGAIN",
+                    "review second pass",
+                    "bundle two",
+                    phase_subject_sha256=compute_phase_subject_sha256(status),
+                    progress_context_sha256=compute_progress_context_sha256(status, phase_dir),
+                    skill_context_sha256=compute_skill_context_sha256(status, phase_dir),
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "--root",
+                        str(root),
+                        "record-review",
+                        "--phase",
+                        "phase-01",
+                        "--verdict",
+                        "passed",
+                        "--review",
+                        str(review_2),
+                        "--review-request",
+                        str(request_2),
+                        "--review-bundle",
+                        str(bundle_2),
+                        "--invocation-command",
+                        "curl /v1/chat/completions model=gpt-5.5 reasoning_effort=high rerun",
+                        "--invocation-receipt",
+                        str(receipt_2),
+                        "--repo-root",
+                        str(root),
+                    ]
+                ),
+            )
+            updated = load_status(status_file)
+            self.assertEqual("superseded_by_later_pass", updated["review_results"][0]["resolution_status"])
+            self.assertEqual("pass", updated["review_results"][1]["verdict"])
+            self.assertEqual([], validate_status(updated, phase_dir, root))
 
     def test_conditional_pass_records_blocked_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -390,6 +774,852 @@ class PackagePhaseReviewTest(unittest.TestCase):
             self.assertEqual(1, len(updated["progress_context_artifacts"]))
             artifact = updated["progress_context_artifacts"][0]
             self.assertTrue((root / "phase-01" / artifact["path"]).exists())
+
+    def test_record_domain_loop_copies_fanout_and_self_improvement_plan_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_dir = root / "phase-01"
+            source_dir = root / "loop-source"
+            source_dir.mkdir()
+            files = {
+                "context.md": "Review-code fanout over plan-iterate internals.\n",
+                "state.json": '{"state":"verified","round":1}\n',
+                "events.jsonl": '{"event":"fanout_finished","end_state":"verified"}\n',
+                "aggregate_verdict.json": '{"verdict":"PASS","state":"verified"}\n',
+                "CODE_REVIEW_ITERATE_MATRIX.md": "| Scope | Model | End State |\n| correctness | gpt-5.5 | verified |\n",
+                "fanout_result.json": '{"schema":"review_code.fanout.v1","scope_models":{"correctness":"gpt-5.5"}}\n',
+                "implementation-plan.md": "Project agent accepts no patch suggestions this round.\n",
+                "validation-plan.md": "Run plan-iterate unit tests and package smoke.\n",
+                "review-plan.md": "Rerun scoped fanout if validation changes.\n",
+            }
+            for name, text in files.items():
+                (source_dir / name).write_text(text, encoding="utf-8")
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            add_skill_context(phase_dir, status)
+            save_status(status_file, status)
+
+            exit_code = main(
+                [
+                    "--root", str(root),
+                    "record-domain-loop",
+                    "--phase", "phase-01",
+                    "--loop-id", "code-fanout",
+                    "--skill", "review-code",
+                    "--persona", "scoped-evidence-contracts",
+                    "--immutable-goal", "Verify plan-iterate model fanout artifacts without mutating production code.",
+                    "--context-artifact", str(source_dir / "context.md"),
+                    "--state-artifact", str(source_dir / "state.json"),
+                    "--events-artifact", str(source_dir / "events.jsonl"),
+                    "--aggregate-artifact", str(source_dir / "aggregate_verdict.json"),
+                    "--matrix-artifact", str(source_dir / "CODE_REVIEW_ITERATE_MATRIX.md"),
+                    "--model-fanout-artifact", str(source_dir / "fanout_result.json"),
+                    "--implementation-plan", str(source_dir / "implementation-plan.md"),
+                    "--validation-plan", str(source_dir / "validation-plan.md"),
+                    "--review-plan", str(source_dir / "review-plan.md"),
+                    "--best-practice-skill", "best-practices-python",
+                    "--best-practice-skill", "best-practices-scillm",
+                    "--round", "1",
+                    "--end-state", "verified",
+                    "--repo-root", str(root),
+                ]
+            )
+
+            self.assertEqual(0, exit_code)
+            updated = load_status(status_file)
+            self.assertEqual(1, len(updated["domain_review_loops"]))
+            loop = updated["domain_review_loops"][0]
+            self.assertEqual("code-fanout", loop["loop_id"])
+            self.assertEqual("domain-review-loops/code-fanout/fanout_result.json", loop["model_fanout_artifact"])
+            self.assertEqual("domain-review-loops/code-fanout/implementation-plan.md", loop["iteration_plans"][0]["implementation_plan_artifact"])
+            self.assertIn("domain-review-loops/code-fanout/CODE_REVIEW_ITERATE_MATRIX.md", updated["review_artifacts"])
+            self.assertEqual([], validate_status(updated, phase_dir, root))
+
+    def test_record_plan_graph_requires_iteration_budget_and_review_scope_contracts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            graph = {
+                "exec_graph_version": "scillm.exec.graph.v1",
+                "graph_id": "phase-01-plan",
+                "graph_goal": "Verify plan-iterate can ingest DAG-authored review fanout.",
+                "self_improvement_iterations": 2,
+                "review_fanout_limits": {
+                    "review_code": 4,
+                    "review_design": 2,
+                    "review_prompt": 2,
+                },
+                "review_iteration_limits": {
+                    "review_code": 2,
+                    "review_design": 3,
+                    "review_prompt": 4,
+                },
+                "nodes": [
+                    {
+                        "id": "implement",
+                        "type": "project-agent",
+                        "node_goal": "Apply agreed scoped review recommendations.",
+                    },
+                    {
+                        "id": "review-code-fanout",
+                        "type": "review-code",
+                        "node_goal": "Run scoped review-code fanout.",
+                        "depends_on": ["implement"],
+                        "review_scopes": [
+                            {
+                                "scope": "correctness_regression",
+                                "model": "gpt-5.5",
+                                "agent": "correctness-reviewer",
+                                "contract": "correctness_regression",
+                                "review_level": "default",
+                                "proof_level": "static_confirmed",
+                                "best_practice_skills": ["best-practices-python", "best-practices-scillm"],
+                            }
+                        ],
+                    },
+                    {
+                        "id": "typecheck",
+                        "type": "local_command",
+                        "node_goal": "Run deterministic typecheck.",
+                        "depends_on": ["implement"],
+                        "command": "python -m compileall .",
+                    },
+                ],
+            }
+            graph_path = root / "plan.json"
+            graph_path.write_text(json.dumps(graph), encoding="utf-8")
+
+            exit_code = main(
+                [
+                    "--root", str(root),
+                    "record-plan-graph",
+                    "--phase", "phase-01",
+                    "--graph", str(graph_path),
+                    "--repo-root", str(root),
+                ]
+            )
+
+            self.assertEqual(0, exit_code)
+            status = load_status(status_path(root, "phase-01"))
+            self.assertEqual("phase-01-plan", status["plan_id"])
+            self.assertEqual(1, len(status["plan_graph_artifacts"]))
+            self.assertEqual(status["active_plan_graph_artifact"], status["plan_graph_artifacts"][0]["path"])
+            self.assertEqual("phase-01-plan", status["plan_graph_artifacts"][0]["plan_id"])
+            self.assertEqual(2, status["plan_graph_artifacts"][0]["self_improvement_iterations"])
+            self.assertEqual({"review_code": 4, "review_design": 2, "review_prompt": 2}, status["plan_graph_artifacts"][0]["review_fanout_limits"])
+            self.assertEqual({"review_code": 2, "review_design": 3, "review_prompt": 4}, status["plan_graph_artifacts"][0]["review_iteration_limits"])
+            readiness_path = root / "phase-01" / status["plan_graph_artifacts"][0]["runtime_readiness_artifact"]
+            self.assertTrue(readiness_path.exists())
+            recorded_graph = json.loads((root / "phase-01" / status["plan_graph_artifacts"][0]["path"]).read_text(encoding="utf-8"))
+            self.assertEqual("phase-01-plan", recorded_graph["plan_id"])
+            plan_status_path = root / "plans" / "phase-01-plan" / "PLAN_STATUS.json"
+            phases_path = root / "plans" / "phase-01-plan" / "phases.json"
+            self.assertTrue(plan_status_path.exists())
+            self.assertTrue(phases_path.exists())
+            plan_status = json.loads(plan_status_path.read_text(encoding="utf-8"))
+            self.assertEqual("plan_iterate.plan_status.v1", plan_status["schema"])
+            self.assertEqual("phase-01-plan", plan_status["plan_id"])
+            self.assertEqual(["phase-01"], [phase["phase_id"] for phase in plan_status["phases"]])
+            readiness = json.loads(readiness_path.read_text(encoding="utf-8"))
+            self.assertEqual("plan_iterate.graph_runtime_readiness.v1", readiness["schema"])
+            self.assertFalse(readiness["can_execute_runtime"])
+            self.assertEqual(["implement"], readiness["summary"]["manual_nodes"])
+            self.assertEqual(["context", "files"], readiness["summary"]["missing_fields_by_node"]["review-code-fanout"])
+            ascii_path = root / "phase-01" / status["plan_graph_artifacts"][0]["plan_ascii_artifact"]
+            self.assertTrue(ascii_path.exists())
+            ascii_text = ascii_path.read_text(encoding="utf-8")
+            self.assertIn("Lane 1 (sequential):", ascii_text)
+            self.assertIn("Lane 2 (concurrent):", ascii_text)
+            self.assertIn("[PENDING] [MANUAL] implement", ascii_text)
+            self.assertIn("[PENDING] [READY] typecheck after implement", ascii_text)
+            self.assertEqual([], validate_status(status, root / "phase-01", root))
+
+            package_path = root / "phase-review.zip"
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "--root",
+                        str(root),
+                        "package",
+                        "--phase",
+                        "phase-01",
+                        "--output",
+                        str(package_path),
+                        "--repo-root",
+                        str(root),
+                    ]
+                ),
+            )
+            with zipfile.ZipFile(package_path, "r") as bundle:
+                self.assertIn(status["plan_graph_artifacts"][0]["runtime_readiness_artifact"], bundle.namelist())
+                self.assertIn(status["plan_graph_artifacts"][0]["plan_ascii_artifact"], bundle.namelist())
+                self.assertIn("plans/phase-01-plan/PLAN_STATUS.json", bundle.namelist())
+                self.assertIn("plans/phase-01-plan/phases.json", bundle.namelist())
+
+    def test_compile_plan_graph_emits_runtime_graph_for_command_backed_semantic_nodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            status["changed_files"] = ["examples/exec-graph-debugger/ScillmExecGraphDebugger.tsx"]
+            save_status(status_file, status)
+            graph = {
+                "exec_graph_version": "scillm.exec.graph.v1",
+                "graph_id": "phase-01-self-improvement",
+                "graph_goal": "Compile a semantic plan-iterate DAG into executable scillm runtime nodes.",
+                "self_improvement_iterations": 2,
+                "review_fanout_limits": {
+                    "review_code": 4,
+                    "review_design": 2,
+                    "review_prompt": 2,
+                },
+                "review_iteration_limits": {
+                    "review_code": 2,
+                    "review_design": 2,
+                    "review_prompt": 2,
+                },
+                "nodes": [
+                    {
+                        "id": "implement",
+                        "type": "project-agent",
+                        "node_goal": "Apply accepted review findings.",
+                        "command": "python -c 'print({\"implemented\": true})'",
+                        "acceptance_evidence": ["validation-logs/unit.log"],
+                        "template_id": "project-agent.patch",
+                        "template_version": "1",
+                        "template_sha256": "template-sha",
+                        "catalog_id": "scillm.node.project-agent.patch",
+                        "catalog_version": "1",
+                        "catalog_sha256": "catalog-sha",
+                        "inline_overrides": {"command": True},
+                    },
+                    {
+                        "id": "review-code-fanout",
+                        "type": "review-code",
+                        "node_goal": "Run scoped code review fanout.",
+                        "depends_on": ["implement"],
+                        "context": "Review the changed DAG editor files.",
+                        "command": "python -c 'print({\"review_code\": \"recorded\"})'",
+                        "review_scopes": [
+                            {
+                                "scope": "correctness_regression",
+                                "model": "oc-kimi",
+                                "agent": "correctness-reviewer",
+                                "contract": "correctness_regression",
+                                "review_level": "default",
+                                "proof_level": "static_confirmed",
+                                "best_practice_skills": ["best-practices-python", "best-practices-scillm"],
+                            }
+                        ],
+                    },
+                    {
+                        "id": "package",
+                        "type": "plan-iterate",
+                        "node_goal": "Validate the phase ledger.",
+                        "depends_on": ["review-code-fanout"],
+                        "action": "validate",
+                        "command": "python -c 'print({\"host_validation_required\": true})'",
+                    },
+                ],
+            }
+            graph_path = root / "semantic.json"
+            graph_path.write_text(json.dumps(graph), encoding="utf-8")
+
+            output = root / "phase-01" / "plan-graphs" / "runtime.json"
+            exit_code = main(
+                [
+                    "--root", str(root),
+                    "compile-plan-graph",
+                    "--phase", "phase-01",
+                    "--graph", str(graph_path),
+                    "--output", "plan-graphs/runtime.json",
+                    "--repo-root", str(root),
+                ]
+            )
+
+            self.assertEqual(0, exit_code)
+            runtime_graph = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual("phase-01-self-improvement-runtime", runtime_graph["graph_id"])
+            self.assertEqual(["implement", "review-code-fanout", "package"], [node["id"] for node in runtime_graph["nodes"]])
+            self.assertEqual(["local_command", "local_command", "local_command"], [node["type"] for node in runtime_graph["nodes"]])
+            self.assertEqual("project-agent", runtime_graph["nodes"][0]["metadata"]["semantic_type"])
+            self.assertEqual("review-code", runtime_graph["nodes"][1]["metadata"]["semantic_type"])
+            self.assertEqual("plan-iterate", runtime_graph["nodes"][2]["metadata"]["semantic_type"])
+            self.assertEqual("project-agent.patch", runtime_graph["nodes"][0]["template_id"])
+            self.assertEqual("1", runtime_graph["nodes"][0]["template_version"])
+            self.assertEqual("template-sha", runtime_graph["nodes"][0]["template_sha256"])
+            self.assertEqual("scillm.node.project-agent.patch", runtime_graph["nodes"][0]["catalog_id"])
+            self.assertEqual("1", runtime_graph["nodes"][0]["catalog_version"])
+            self.assertEqual("catalog-sha", runtime_graph["nodes"][0]["catalog_sha256"])
+            self.assertEqual({"command": True}, runtime_graph["nodes"][0]["inline_overrides"])
+            status = load_status(status_file)
+            self.assertIn("plan-graphs/runtime.json", status["evidence_artifacts"])
+            self.assertEqual([], validate_status(status, root / "phase-01", root))
+
+    def test_compile_plan_graph_fails_closed_when_semantic_node_lacks_command(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            status["changed_files"] = ["src/example.py"]
+            save_status(status_file, status)
+            graph = {
+                "exec_graph_version": "scillm.exec.graph.v1",
+                "graph_id": "phase-01-self-improvement",
+                "graph_goal": "Semantic review nodes must not execute without an explicit audited command.",
+                "self_improvement_iterations": 1,
+                "review_fanout_limits": {
+                    "review_code": 4,
+                    "review_design": 2,
+                    "review_prompt": 2,
+                },
+                "nodes": [
+                    {
+                        "id": "review-code-fanout",
+                        "type": "review-code",
+                        "node_goal": "Run scoped code review fanout.",
+                        "context": "Review src/example.py",
+                        "review_scopes": [
+                            {
+                                "scope": "correctness_regression",
+                                "model": "oc-kimi",
+                                "agent": "correctness-reviewer",
+                                "contract": "correctness_regression",
+                                "review_level": "default",
+                                "proof_level": "static_confirmed",
+                                "best_practice_skills": ["best-practices-python", "best-practices-scillm"],
+                            }
+                        ],
+                    }
+                ],
+            }
+            graph_path = root / "semantic.json"
+            graph_path.write_text(json.dumps(graph), encoding="utf-8")
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                exit_code = main(
+                    [
+                        "--root", str(root),
+                        "compile-plan-graph",
+                        "--phase", "phase-01",
+                        "--graph", str(graph_path),
+                        "--repo-root", str(root),
+                    ]
+                )
+
+            self.assertEqual(1, exit_code)
+            self.assertIn("requires an explicit command", stderr.getvalue())
+
+    def test_inspect_plan_graph_reports_missing_runtime_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            status["changed_files"] = ["src/example.py"]
+            save_status(status_file, status)
+            graph = {
+                "exec_graph_version": "scillm.exec.graph.v1",
+                "graph_id": "phase-01-runtime-readiness",
+                "graph_goal": "Expose missing fields before compile.",
+                "self_improvement_iterations": 1,
+                "review_fanout_limits": {
+                    "review_code": 4,
+                    "review_design": 2,
+                    "review_prompt": 2,
+                },
+                "nodes": [
+                    {
+                        "id": "implementation",
+                        "type": "project-agent",
+                        "node_goal": "Patch agreed findings.",
+                    },
+                    {
+                        "id": "review-code",
+                        "type": "review-code",
+                        "node_goal": "Run code review fanout.",
+                        "review_scopes": [
+                            {
+                                "scope": "correctness_regression",
+                                "model": "gpt-5.5",
+                                "agent": "correctness-reviewer",
+                                "contract": "correctness_regression",
+                                "review_level": "default",
+                                "proof_level": "static_confirmed",
+                                "best_practice_skills": ["best-practices-python", "best-practices-scillm"],
+                            }
+                        ],
+                    },
+                    {
+                        "id": "review-design",
+                        "type": "review-design",
+                        "node_goal": "Review UI screenshots.",
+                    },
+                    {
+                        "id": "review-prompt",
+                        "type": "review-prompt",
+                        "node_goal": "Review prompt contract.",
+                    },
+                    {
+                        "id": "test-interactions",
+                        "type": "test-interactions",
+                        "node_goal": "Run interaction tests.",
+                    },
+                ],
+            }
+            graph_path = root / "readiness-plan.json"
+            graph_path.write_text(json.dumps(graph), encoding="utf-8")
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--root",
+                        str(root),
+                        "inspect-plan-graph",
+                        "--phase",
+                        "phase-01",
+                        "--graph",
+                        str(graph_path),
+                        "--repo-root",
+                        str(root),
+                    ]
+                )
+
+            self.assertEqual(0, exit_code)
+            readiness = json.loads(stdout.getvalue())
+            by_id = {node["node_id"]: node for node in readiness["nodes"]}
+            self.assertEqual(["src/example.py"], by_id["review-code"]["inferred_fields"][0]["value"])
+            self.assertEqual(["context"], by_id["review-code"]["missing_fields"])
+            self.assertEqual(["manifest_or_screenshots", "output_dir", "persona"], by_id["review-design"]["missing_fields"])
+            self.assertEqual(
+                ["consumer_or_schema", "context", "expected_response", "template", "validator_or_smoke"],
+                by_id["review-prompt"]["missing_fields"],
+            )
+            self.assertEqual(["manifest_or_url", "output_dir"], by_id["test-interactions"]["missing_fields"])
+            self.assertEqual("manual_action_required", by_id["implementation"]["status"])
+
+    def test_record_plan_graph_rejects_missing_review_scope_model_agent_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            graph = {
+                "exec_graph_version": "scillm.exec.graph.v1",
+                "graph_id": "phase-01-plan",
+                "graph_goal": "Invalid review graph.",
+                "self_improvement_iterations": 1,
+                "review_fanout_limits": {
+                    "review_code": 1,
+                    "review_design": 0,
+                    "review_prompt": 0,
+                },
+                "nodes": [
+                    {
+                        "id": "review-code-fanout",
+                        "type": "review-code",
+                        "node_goal": "Run scoped review-code fanout.",
+                        "review_scopes": [
+                            {
+                                "scope": "correctness_regression",
+                                "model": "gpt-5.5",
+                            }
+                        ],
+                    },
+                ],
+            }
+            graph_path = root / "invalid-plan.json"
+            graph_path.write_text(json.dumps(graph), encoding="utf-8")
+
+            exit_code = main(
+                [
+                    "--root", str(root),
+                    "record-plan-graph",
+                    "--phase", "phase-01",
+                    "--graph", str(graph_path),
+                    "--repo-root", str(root),
+                ]
+            )
+
+            self.assertEqual(1, exit_code)
+
+    def test_continue_resumes_actionable_local_validation_failed_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_dir = root / "phase-01"
+            (phase_dir / "validation-logs" / "failed.log").write_text("failed\n", encoding="utf-8")
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            status.update(
+                {
+                    "status": "local_validation_failed",
+                    "validation_commands": [
+                        {
+                            "command": "false",
+                            "exit_code": 1,
+                            "log": "validation-logs/failed.log",
+                        }
+                    ],
+                    "blockers": [
+                        {
+                            "blocker": "deterministic gate failed",
+                            "occurrences": 1,
+                            "escalated": False,
+                        }
+                    ],
+                }
+            )
+            save_status(status_file, status)
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(["--root", str(root), "continue", "--repo-root", str(root)])
+
+            self.assertEqual(0, exit_code)
+            decision = json.loads(stdout.getvalue())
+            self.assertEqual("plan_iterate.continue_decision.v1", decision["schema"])
+            self.assertEqual("CONTINUE", decision["decision"])
+            self.assertEqual("PASS", decision["controller_terminal_state"])
+            self.assertFalse(decision["stop"])
+            self.assertTrue(decision["should_continue"])
+            self.assertEqual("phase-01", decision["active_phase"])
+            self.assertEqual("resume_actionable_blocking_phase", decision["next_action"]["type"])
+
+    def test_continue_blocks_only_after_repeated_escalated_blocker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_dir = root / "phase-01"
+            (phase_dir / "validation-logs" / "failed.log").write_text("failed\n", encoding="utf-8")
+            status_file = status_path(root, "phase-01")
+            status = load_status(status_file)
+            status.update(
+                {
+                    "status": "local_validation_failed",
+                    "validation_commands": [
+                        {
+                            "command": "false",
+                            "exit_code": 1,
+                            "log": "validation-logs/failed.log",
+                        }
+                    ],
+                    "blockers": [
+                        {
+                            "blocker": "deterministic gate failed after dogpile",
+                            "occurrences": 2,
+                            "escalated": True,
+                            "dogpile_evaluated": True,
+                            "human_dependency_type": "environment",
+                            "human_dependency_detail": "human must provide the missing external dependency",
+                        }
+                    ],
+                }
+            )
+            save_status(status_file, status)
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(["--root", str(root), "continue", "--repo-root", str(root)])
+
+            self.assertEqual(2, exit_code)
+            decision = json.loads(stdout.getvalue())
+            self.assertEqual("BLOCKED", decision["decision"])
+            self.assertTrue(decision["stop"])
+            self.assertFalse(decision["should_continue"])
+            self.assertTrue(decision["stop_evidence"]["all_blockers_repeated_and_escalated"])
+
+    def test_continue_prefers_other_fixable_phase_over_hard_stop_blocker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-02"]))
+            phase_01_status = load_status(status_path(root, "phase-01"))
+            phase_01_status["status"] = "implementing"
+            save_status(status_path(root, "phase-01"), phase_01_status)
+            phase_02_status = load_status(status_path(root, "phase-02"))
+            phase_02_status.update(
+                {
+                    "status": "external_review_blocked",
+                    "review_status": "blocked",
+                    "blockers": [
+                        {
+                            "blocker": "human-only policy decision required",
+                            "occurrences": 2,
+                            "escalated": True,
+                            "dogpile_not_applicable_rationale": "internal admin-only decision",
+                            "human_dependency_type": "policy_decision",
+                            "human_dependency_detail": "product owner must choose the policy exception",
+                        }
+                    ],
+                }
+            )
+            save_status(status_path(root, "phase-02"), phase_02_status)
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(["--root", str(root), "continue", "--repo-root", str(root)])
+
+            self.assertEqual(0, exit_code)
+            decision = json.loads(stdout.getvalue())
+            self.assertEqual("CONTINUE", decision["decision"])
+            self.assertFalse(decision["stop"])
+            self.assertTrue(decision["should_continue"])
+            self.assertEqual("phase-01", decision["next_phase"])
+            self.assertEqual("resume_fixable_phase", decision["next_action"]["type"])
+
+    def test_continue_after_accepted_selects_next_runtime_ready_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-02"]))
+            phase_01_status = load_status(status_path(root, "phase-01"))
+            phase_01_status["status"] = "accepted"
+            save_status(status_path(root, "phase-01"), phase_01_status)
+            graph = {
+                "exec_graph_version": "scillm.exec.graph.v1",
+                "graph_id": "phase-02-plan",
+                "graph_goal": "Continue after accepted phase.",
+                "self_improvement_iterations": 1,
+                "review_fanout_limits": {
+                    "review_code": 0,
+                    "review_design": 0,
+                    "review_prompt": 0,
+                },
+                "nodes": [
+                    {
+                        "id": "inspect",
+                        "type": "local_command",
+                        "node_goal": "Inspect next phase readiness.",
+                        "command": "python -c 'print(\"ready\")'",
+                    }
+                ],
+            }
+            graph_path = root / "phase-02-plan.json"
+            graph_path.write_text(json.dumps(graph), encoding="utf-8")
+            self.assertEqual(
+                0,
+                main(
+                    [
+                        "--root",
+                        str(root),
+                        "record-plan-graph",
+                        "--phase",
+                        "phase-02",
+                        "--graph",
+                        str(graph_path),
+                        "--repo-root",
+                        str(root),
+                    ]
+                ),
+            )
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--root",
+                        str(root),
+                        "continue",
+                        "--phase",
+                        "phase-01",
+                        "--repo-root",
+                        str(root),
+                    ]
+                )
+
+            self.assertEqual(0, exit_code)
+            decision = json.loads(stdout.getvalue())
+            self.assertEqual("CONTINUE", decision["decision"])
+            self.assertFalse(decision["stop"])
+            self.assertTrue(decision["should_continue"])
+            self.assertEqual("phase-02", decision["next_phase"])
+            self.assertEqual("start_next_runtime_ready_phase", decision["next_action"]["type"])
+
+    def test_continue_after_accepted_resumes_later_actionable_blocking_phase(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-02"]))
+            phase_01_status = load_status(status_path(root, "phase-01"))
+            phase_01_status["status"] = "accepted"
+            save_status(status_path(root, "phase-01"), phase_01_status)
+            phase_02_status = load_status(status_path(root, "phase-02"))
+            phase_02_status["status"] = "external_review_blocked"
+            phase_02_status["review_status"] = "needs_changes"
+            phase_02_status["blockers"] = [
+                {
+                    "blocker": "review finding has an obvious patch path",
+                    "occurrences": 1,
+                    "escalated": False,
+                }
+            ]
+            save_status(status_path(root, "phase-02"), phase_02_status)
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--root",
+                        str(root),
+                        "continue",
+                        "--phase",
+                        "phase-01",
+                        "--repo-root",
+                        str(root),
+                    ]
+                )
+
+            self.assertEqual(0, exit_code)
+            decision = json.loads(stdout.getvalue())
+            self.assertEqual("CONTINUE", decision["decision"])
+            self.assertFalse(decision["stop"])
+            self.assertTrue(decision["should_continue"])
+            self.assertEqual("phase-02", decision["next_phase"])
+            self.assertEqual("resume_actionable_blocking_phase", decision["next_action"]["type"])
+
+    def test_continue_after_final_accepted_blocks_false_complete_when_project_knowledge_has_next_work(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            root = repo_root / ".plan-iterate"
+            repo_root.mkdir()
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_01_status = load_status(status_path(root, "phase-01"))
+            phase_01_status["status"] = "accepted"
+            save_status(status_path(root, "phase-01"), phase_01_status)
+            (repo_root / "PROJECT_KNOWLEDGE.md").write_text(
+                "\n".join(
+                    [
+                        "# Project Knowledge",
+                        "",
+                        "- Current blocker: element-family completeness gate is still failing.",
+                        "- Do not claim full project completion.",
+                        "- Next agent-executable candidate is independent page-text count source for section_heading.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--root",
+                        str(root),
+                        "continue",
+                        "--phase",
+                        "phase-01",
+                        "--repo-root",
+                        str(repo_root),
+                    ]
+                )
+
+            self.assertEqual(0, exit_code)
+            decision = json.loads(stdout.getvalue())
+            self.assertEqual("PROJECT_GOALS_REMAIN", decision["decision"])
+            self.assertEqual("PASS", decision["controller_terminal_state"])
+            self.assertFalse(decision["stop"])
+            self.assertTrue(decision["should_continue"])
+            self.assertEqual("create_next_phase_from_project_knowledge", decision["next_action"]["type"])
+            continuation = decision["project_knowledge_continuation"]
+            self.assertTrue(continuation["agent_executable"])
+            self.assertTrue(
+                any("Next agent-executable candidate" in match["text"] for match in continuation["matches"])
+            )
+
+    def test_continue_after_final_accepted_allows_overall_complete_without_project_knowledge_blocker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            root = repo_root / ".plan-iterate"
+            repo_root.mkdir()
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_01_status = load_status(status_path(root, "phase-01"))
+            phase_01_status["status"] = "accepted"
+            save_status(status_path(root, "phase-01"), phase_01_status)
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "--root",
+                        str(root),
+                        "continue",
+                        "--phase",
+                        "phase-01",
+                        "--repo-root",
+                        str(repo_root),
+                    ]
+                )
+
+            self.assertEqual(0, exit_code)
+            decision = json.loads(stdout.getvalue())
+            self.assertEqual("OVERALL_COMPLETE", decision["decision"])
+            self.assertFalse(decision["should_continue"])
+            self.assertEqual("none", decision["next_action"]["type"])
+
+    def test_continuation_guard_ignores_positive_browser_proof_evidence_pointer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            root = repo_root / ".plan-iterate"
+            repo_root.mkdir()
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_01_status = load_status(status_path(root, "phase-01"))
+            phase_01_status["status"] = "superseded"
+            save_status(status_path(root, "phase-01"), phase_01_status)
+            (repo_root / "PROJECT_KNOWLEDGE.md").write_text(
+                "\n".join(
+                    [
+                        "# Project Knowledge",
+                        "",
+                        "- Evidence pointers: public browser visual proof exists at .plan-iterate/phase-15/proof.json.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            result = evaluate_continuation_guard(
+                repo_root,
+                root,
+                "Current status: no active plan-iterate phase work remains.",
+            )
+
+            self.assertEqual("OVERALL_COMPLETE", result["decision"])
+            self.assertFalse(result["should_continue"])
+            self.assertFalse(result["block_final"])
+            self.assertIsNone(result["project_knowledge_continuation"])
+
+    def test_continuation_guard_blocks_missing_browser_proof_requirement(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp) / "repo"
+            root = repo_root / ".plan-iterate"
+            repo_root.mkdir()
+            self.assertEqual(0, main(["--root", str(root), "init", "--phase", "phase-01"]))
+            phase_01_status = load_status(status_path(root, "phase-01"))
+            phase_01_status["status"] = "superseded"
+            save_status(status_path(root, "phase-01"), phase_01_status)
+            (repo_root / "PROJECT_KNOWLEDGE.md").write_text(
+                "\n".join(
+                    [
+                        "# Project Knowledge",
+                        "",
+                        "- Current blocker: missing browser visual proof for the public chat surface.",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            result = evaluate_continuation_guard(
+                repo_root,
+                root,
+                "The project is complete.",
+            )
+
+            self.assertTrue(result["project_knowledge_continuation"])
+            self.assertTrue(result["block_final"])
+            self.assertFalse(result["should_continue"])
 
     def test_comparison_required_records_reviews_then_comparison(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

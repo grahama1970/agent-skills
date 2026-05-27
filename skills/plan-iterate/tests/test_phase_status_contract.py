@@ -41,7 +41,7 @@ def webgpt_receipt_text(phase_subject_sha256: str, extra: str = "", skill_contex
 
 def review_result(
     reviewer_id: str = "webgpt",
-    verdict: str = "passed",
+    verdict: str = "pass",
     artifact: str = "reviews/review.md",
     phase_subject_sha256: str = "phase-subject",
     skill_context_sha256: str = "skill-context",
@@ -137,6 +137,31 @@ class PhaseStatusContractTest(unittest.TestCase):
 
         self.assertIn("validation_commands[0].exit_code must be an integer", errors)
 
+    def test_plan_graph_artifact_requires_sha_without_filesystem_context(self) -> None:
+        status = default_status("phase-01")
+        status["plan_graph_artifacts"] = [{"path": "plan-graphs/phase-plan.json"}]
+        status["active_plan_graph_artifact"] = "plan-graphs/phase-plan.json"
+
+        errors = validate_status(status)
+
+        self.assertIn("plan_graph_artifacts[0].sha256 must be non-empty", errors)
+
+    def test_plan_graph_artifact_plan_id_must_match_phase_plan_id(self) -> None:
+        status = default_status("phase-01")
+        status["plan_id"] = "parent-plan"
+        status["plan_graph_artifacts"] = [
+            {
+                "path": "plan-graphs/phase-plan.json",
+                "sha256": "abc123",
+                "plan_id": "other-plan",
+            }
+        ]
+        status["active_plan_graph_artifact"] = "plan-graphs/phase-plan.json"
+
+        errors = validate_status(status)
+
+        self.assertIn("plan_graph_artifacts[0].plan_id must match phase plan_id", errors)
+
     def test_repeated_blocker_requires_escalation(self) -> None:
         status = default_status("phase-01")
         status["blockers"] = [{"id": "same-blocker", "occurrences": 2}]
@@ -172,7 +197,7 @@ class PhaseStatusContractTest(unittest.TestCase):
 
         errors = validate_status(status)
 
-        self.assertIn("accepted requires no blocked, needs_changes, or conditional_pass review_results", errors)
+        self.assertIn("accepted requires no unresolved non-pass review_results", errors)
 
     def test_accepted_status_with_evidence_is_valid(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -392,6 +417,164 @@ class PhaseStatusContractTest(unittest.TestCase):
         errors = validate_status(status)
 
         self.assertIn("claims[0] cites review artifact as implementation evidence: reviews/review.md", errors)
+
+    def test_domain_review_loop_requires_discrete_project_agent_state(self) -> None:
+        status = default_status("phase-01")
+        status["review_artifacts"] = [
+            "domain-review-loops/ui/context.md",
+            "domain-review-loops/ui/state.json",
+            "domain-review-loops/ui/events.jsonl",
+            "domain-review-loops/ui/aggregate_verdict.json",
+            "domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md",
+            "domain-review-loops/ui/fanout_result.json",
+            "domain-review-loops/ui/round-001-implementation-plan.md",
+            "domain-review-loops/ui/round-001-validation-plan.md",
+            "domain-review-loops/ui/round-001-review-plan.md",
+        ]
+        status["domain_review_loops"] = [
+            {
+                "skill": "review-design",
+                "persona": "nico-bailon",
+                "immutable_goal": "Verify the UI closure state without mutating production code.",
+                "context_artifact": "domain-review-loops/ui/context.md",
+                "best_practice_skills": ["best-practices-react"],
+                "state_artifact": "domain-review-loops/ui/state.json",
+                "events_artifact": "domain-review-loops/ui/events.jsonl",
+                "aggregate_artifact": "domain-review-loops/ui/aggregate_verdict.json",
+                "matrix_artifact": "domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md",
+                "model_fanout_artifact": "domain-review-loops/ui/fanout_result.json",
+                "iteration_plans": [
+                    {
+                        "round": 1,
+                        "implementation_plan_artifact": "domain-review-loops/ui/round-001-implementation-plan.md",
+                        "validation_plan_artifact": "domain-review-loops/ui/round-001-validation-plan.md",
+                        "review_plan_artifact": "domain-review-loops/ui/round-001-review-plan.md",
+                    }
+                ],
+                "end_state": "verified",
+                "mutates_production": False,
+            }
+        ]
+
+        errors = validate_status(status)
+
+        self.assertNotIn("domain_review_loops[0].mutates_production must be false; domain reviewers suggest changes only", errors)
+
+    def test_domain_review_loop_cannot_mutate_production_or_pass_with_blockers(self) -> None:
+        status = accepted_status()
+        status["review_artifacts"] = [
+            *status["review_artifacts"],
+            "domain-review-loops/ui/context.md",
+            "domain-review-loops/ui/state.json",
+            "domain-review-loops/ui/events.jsonl",
+            "domain-review-loops/ui/aggregate_verdict.json",
+            "domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md",
+            "domain-review-loops/ui/fanout_result.json",
+            "domain-review-loops/ui/round-001-implementation-plan.md",
+            "domain-review-loops/ui/round-001-validation-plan.md",
+            "domain-review-loops/ui/round-001-review-plan.md",
+        ]
+        status["domain_review_loops"] = [
+            {
+                "skill": "review-design",
+                "persona": "nico-bailon",
+                "immutable_goal": "Verify the UI closure state without mutating production code.",
+                "context_artifact": "domain-review-loops/ui/context.md",
+                "best_practice_skills": ["best-practices-react"],
+                "state_artifact": "domain-review-loops/ui/state.json",
+                "events_artifact": "domain-review-loops/ui/events.jsonl",
+                "aggregate_artifact": "domain-review-loops/ui/aggregate_verdict.json",
+                "matrix_artifact": "domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md",
+                "model_fanout_artifact": "domain-review-loops/ui/fanout_result.json",
+                "iteration_plans": [
+                    {
+                        "round": 1,
+                        "implementation_plan_artifact": "domain-review-loops/ui/round-001-implementation-plan.md",
+                        "validation_plan_artifact": "domain-review-loops/ui/round-001-validation-plan.md",
+                        "review_plan_artifact": "domain-review-loops/ui/round-001-review-plan.md",
+                    }
+                ],
+                "end_state": "needs_patch",
+                "mutates_production": True,
+            }
+        ]
+
+        errors = validate_status(status)
+
+        self.assertIn("domain_review_loops[0].mutates_production must be false; domain reviewers suggest changes only", errors)
+        self.assertIn("accepted cannot include unresolved domain_review_loops[0].end_state=needs_patch", errors)
+
+    def test_domain_review_loop_requires_goal_context_best_practices_and_three_plans(self) -> None:
+        status = default_status("phase-01")
+        status["review_artifacts"] = [
+            "domain-review-loops/ui/state.json",
+            "domain-review-loops/ui/events.jsonl",
+            "domain-review-loops/ui/aggregate_verdict.json",
+            "domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md",
+        ]
+        status["domain_review_loops"] = [
+            {
+                "skill": "review-code",
+                "persona": "senior",
+                "state_artifact": "domain-review-loops/ui/state.json",
+                "events_artifact": "domain-review-loops/ui/events.jsonl",
+                "aggregate_artifact": "domain-review-loops/ui/aggregate_verdict.json",
+                "matrix_artifact": "domain-review-loops/ui/DESIGN_REVIEW_ITERATE_MATRIX.md",
+                "best_practice_skills": ["react"],
+                "iteration_plans": [],
+                "end_state": "verified",
+                "mutates_production": False,
+            }
+        ]
+
+        errors = validate_status(status)
+
+        self.assertIn("domain_review_loops[0].immutable_goal must be non-empty", errors)
+        self.assertIn("domain_review_loops[0].context_artifact must be non-empty", errors)
+        self.assertIn("domain_review_loops[0].best_practice_skills[0] must name a best-practices-* skill", errors)
+        self.assertIn("domain_review_loops[0].iteration_plans must be a non-empty list", errors)
+
+    def test_domain_review_loop_requires_nonempty_best_practice_list(self) -> None:
+        status = default_status("phase-01")
+        status["review_artifacts"] = [
+            "domain-review-loops/code/context.md",
+            "domain-review-loops/code/state.json",
+            "domain-review-loops/code/events.jsonl",
+            "domain-review-loops/code/aggregate_verdict.json",
+            "domain-review-loops/code/CODE_REVIEW_ITERATE_MATRIX.md",
+            "domain-review-loops/code/fanout_result.json",
+            "domain-review-loops/code/round-001-implementation-plan.md",
+            "domain-review-loops/code/round-001-validation-plan.md",
+            "domain-review-loops/code/round-001-review-plan.md",
+        ]
+        status["domain_review_loops"] = [
+            {
+                "skill": "review-code",
+                "persona": "senior",
+                "immutable_goal": "Review the scoped code change without mutating production files.",
+                "context_artifact": "domain-review-loops/code/context.md",
+                "best_practice_skills": [],
+                "state_artifact": "domain-review-loops/code/state.json",
+                "events_artifact": "domain-review-loops/code/events.jsonl",
+                "aggregate_artifact": "domain-review-loops/code/aggregate_verdict.json",
+                "matrix_artifact": "domain-review-loops/code/CODE_REVIEW_ITERATE_MATRIX.md",
+                "model_fanout_artifact": "domain-review-loops/code/fanout_result.json",
+                "iteration_plans": [
+                    {
+                        "round": 1,
+                        "implementation_plan_artifact": "domain-review-loops/code/round-001-implementation-plan.md",
+                        "validation_plan_artifact": "domain-review-loops/code/round-001-validation-plan.md",
+                        "review_plan_artifact": "domain-review-loops/code/round-001-review-plan.md",
+                    }
+                ],
+                "end_state": "verified",
+                "mutates_production": False,
+            }
+        ]
+
+        errors = validate_status(status)
+
+        self.assertIn("domain_review_loops[0].best_practice_skills must be a non-empty list", errors)
 
 
 if __name__ == "__main__":
