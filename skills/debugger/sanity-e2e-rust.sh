@@ -37,4 +37,10 @@ rg 'Breakpoint 1, .*classify \(value=14\)' "$proof" >/dev/null
 rg -F '$1 = 14' "$proof" >/dev/null
 rg -F '$2 = "large"' "$proof" >/dev/null
 
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
+export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
+uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/validate_debugger_proof.py" "$proof" \
+  --expect-valid \
+  --canonical-out /tmp/debugger-rust-e2e-proof.canonical.json
+
 echo "debugger Rust E2E sanity passed: $proof"

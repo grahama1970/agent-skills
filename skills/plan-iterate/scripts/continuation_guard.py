@@ -17,6 +17,7 @@ TERMINAL_PHASE_STATES = {"accepted", "superseded", "abandoned"}
 FIXABLE_STATES = {"planned", "implementing", "ready_for_review", "external_review_passed"}
 BLOCKING_STATES = {"local_validation_failed", "external_review_blocked"}
 COMPLETED_NODE_STATES = {"accepted", "complete", "completed"}
+RESERVED_LEDGER_DIRS = {"plans"}
 PROJECT_KNOWLEDGE_AGENT_EXECUTABLE_MARKERS = (
     "next agent-executable candidate",
     "next agent executable candidate",
@@ -259,6 +260,8 @@ def load_ledger(repo_root: Path, root: Path) -> list[dict[str, Any]]:
 
     phase_dirs: list[Path] = []
     for candidate in sorted(path for path in ledger_root.iterdir() if path.is_dir()):
+        if candidate.name in RESERVED_LEDGER_DIRS:
+            continue
         if (candidate / "PHASE_STATUS.json").exists():
             phase_dirs.append(candidate)
             continue

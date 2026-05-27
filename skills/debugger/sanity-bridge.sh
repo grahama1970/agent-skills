@@ -122,4 +122,9 @@ assert "export async function claimRequestId" in protocol, protocol
 assert "export async function isRequestAlreadyClaimed" in protocol, protocol
 PY
 
+uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/validate_debugger_proof.py" \
+  "$SCRIPT_DIR/fixtures/proofs/vscode-bridge-status-valid.json" \
+  --expect-valid \
+  --canonical-out "$PROJECT_ROOT/.vscode/debugger-bridge/vscode-bridge-status.canonical.json"
+
 echo "debugger VS Code bridge smoke passed"

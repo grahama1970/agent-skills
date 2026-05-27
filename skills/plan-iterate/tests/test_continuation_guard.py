@@ -225,6 +225,24 @@ class ContinuationGuardTest(unittest.TestCase):
             self.assertEqual("OVERALL_COMPLETE", result["decision"])
             self.assertEqual(0, result["invalid_phase_count"])
 
+    def test_plan_index_directory_is_not_treated_as_missing_phase_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            phase_dir = repo / ".plan-iterate" / "phase-01"
+            plan_index = repo / ".plan-iterate" / "plans" / "debugger-plan"
+            phase_dir.mkdir(parents=True)
+            plan_index.mkdir(parents=True)
+            status = default_status("phase-01")
+            status["status"] = "abandoned"
+            save_status(phase_dir / "PHASE_STATUS.json", status)
+            (plan_index / "PLAN_STATUS.json").write_text('{"schema":"plan_iterate.plan_status.v1"}', encoding="utf-8")
+
+            result = evaluate(repo, Path(".plan-iterate"), "Phase accepted; summarizing.")
+
+            self.assertFalse(result["block_final"])
+            self.assertEqual("OVERALL_COMPLETE", result["decision"])
+            self.assertEqual(0, result["invalid_phase_count"])
+
     def test_blocks_final_when_all_phases_accepted_but_project_knowledge_has_agent_work(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

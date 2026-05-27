@@ -1,6 +1,6 @@
 # Project Knowledge: debugger
 
-**Last updated:** 2026-05-26 17:46 by agent
+**Last updated:** 2026-05-27 14:55 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -36,6 +36,9 @@
 | 2026-05-26 | Treat `$review-docs` as the better future name than `$review-readme` | README review is broader than prose: it should include rendered docs, image/link checks, examples, SKILL.md contradiction checks, and model prose review |
 | 2026-05-26 | Promote Rust to first-class debugger support | The common project stack is Python + TypeScript + Rust, and the debugger proof model should be language-neutral for the agent and human |
 | 2026-05-26 | Apply Kimi README/SKILL clarity review and `$best-practices-skills` constraints | Examples now use `$SKILL_DIR`, bridge behavior is explained plainly, debugger-tool failure is explicit, and bridge internals moved into a reference doc |
+| 2026-05-27 | Add Phase 1 proof-schema gate | `debugger.proof.v1` now has a schema, validator, fixtures, and validation coverage for Python, TypeScript, Rust, and VS Code bridge proof shapes |
+| 2026-05-27 | Add redacted debugger lesson distillation | Prior debugger proof can become a reusable lesson only after raw locals, watches, secrets, and local paths are removed |
+| 2026-05-27 | Add advisory memory recall normalization | Memory can guide breakpoint selection but cannot satisfy fresh debugger proof for the current bug |
 
 ## Open Questions
 
@@ -49,9 +52,9 @@
 
 ## Agent Takeover Notes
 
-- Current active work: finalize README/project knowledge/plan-iterate evidence,
-  verify the rendered README in a browser, run focused sanity checks, then use
-  `$skills-broadcast` to commit and push the debugger skill.
+- Current active work: remaining proof, lesson, memory recall, and docs phases
+  are being completed under `$plan-iterate`; commit/push to `agent-skills`
+  `main` is part of the `/goal` success condition.
 - Evidence pointers:
   - README: `README.md`
   - Banner: `docs/assets/debugger-banner.png`
@@ -64,8 +67,9 @@
     `/home/graham/workspace/experiments/agent-skills/skills/ask/.ask_artifacts/deep-review/20260526T204708Z/review.json`
   - Project-state quick report:
     `/tmp/debugger-project-state-quick.json`
-- Next action: update the plan-iterate phase ledger, render README preview via
-  CDP, run sanity checks, clean generated/transient artifacts, then broadcast.
+- Human authorization checkpoint: decide whether to start Phase 2, safe
+  proof-to-lesson distillation with redaction. Keep memory-bound lesson writes
+  out of Phase 1.
 - Blockers/caveats:
   - The chat-attached Gemini image is not available as a local file path in this
     workspace; current committed candidate is a generated vintage DEBUGGER banner
@@ -83,6 +87,9 @@
     retry-after-pending-race behavior, and custom-output error routing.
   - Real runtime E2E sanity now exists for Python, TypeScript, and Rust:
     `sanity-e2e.sh`, `sanity-e2e-typescript.sh`, and `sanity-e2e-rust.sh`.
+  - Phase 1 proof-schema validation commands passed:
+    `sanity-proof-schema.sh`, `sanity.sh`, `sanity-e2e-typescript.sh`,
+    `sanity-e2e-rust.sh`, and `sanity-bridge.sh`.
   - Kimi's follow-up README/SKILL review found no blocking conceptual issues
     but requested portability and clarity changes: replace local absolute
     command paths, clarify what the VS Code bridge actually does, add debugger
@@ -105,6 +112,12 @@
 | `scripts/write_vscode_rust_launch.py` | Writes Rust CodeLLDB-compatible VS Code launch configurations |
 | `scripts/node_inspector_breakpoint_proof.mjs` | Captures real TypeScript paused locals through Node inspector |
 | `scripts/request_vscode_bridge.py` | Writes visible VS Code bridge requests |
+| `scripts/validate_debugger_proof.py` | Validates and normalizes debugger proof artifacts into `debugger.proof.v1` |
+| `scripts/distill_debugger_lesson.py` | Converts valid fresh proof into redacted `debugger.lesson.v1` advisory lessons |
+| `scripts/recall_debugger_lessons.py` | Normalizes memory `/recall` results into advisory-only debugger context |
+| `schemas/debugger.proof.v1.schema.json` | Public canonical debugger proof schema |
+| `fixtures/proofs/` | Positive, negative, and redaction proof fixtures for schema and adapter validation |
+| `fixtures/memory/` | Deterministic memory recall fixture for advisory-only normalization |
 | `vscode-bridge/` | Companion VS Code extension bridge for visible debug-session control and DAP proof |
 | `references/vscode-bridge.md` | Bridge implementation notes, status ownership rules, and current limitations |
 | `sanity.sh` | Python harness sanity checks |
@@ -113,6 +126,9 @@
 | `sanity-e2e-typescript.sh` | Real TypeScript breakpoint/local-state E2E proof |
 | `sanity-e2e-rust.sh` | Real Rust breakpoint/local-state E2E proof through rust-gdb |
 | `sanity-bridge.sh` | Bridge protocol and smoke checks |
+| `sanity-proof-schema.sh` | Canonical proof-schema and adapter validation sanity check |
+| `sanity-lesson-distillation.sh` | Redaction sanity check for proof-to-lesson distillation |
+| `sanity-memory-recall.sh` | Advisory-only sanity check for memory recall normalization |
 | `sanity-e2e.sh` | End-to-end breakpoint proof checks |
 
 ## Infrastructure State

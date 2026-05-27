@@ -1,0 +1,83 @@
+{
+  "can_execute_runtime": true,
+  "created_at": "20260527T145705Z",
+  "graph_goal": "Complete remaining debugger phases: redacted lesson distillation, advisory memory recall, docs/workflow updates, validation, and commit/push to agent-skills main.",
+  "graph_id": "debugger-proof-and-memory-improvements",
+  "nodes": [
+    {
+      "adapter": "scillm_exec:local_command",
+      "inferred_fields": [],
+      "missing_artifacts": [],
+      "missing_fields": [],
+      "next_action": "compile or submit this runtime node after required fields are present",
+      "node_id": "phase-02-safe-lesson-distillation",
+      "present_fields": [
+        "command"
+      ],
+      "required_fields": [
+        "command"
+      ],
+      "status": "runtime_ready",
+      "type": "local_command"
+    },
+    {
+      "adapter": "scillm_exec:local_command",
+      "inferred_fields": [],
+      "missing_artifacts": [],
+      "missing_fields": [],
+      "next_action": "compile or submit this runtime node after required fields are present",
+      "node_id": "phase-03-memory-recall-integration",
+      "present_fields": [
+        "command"
+      ],
+      "required_fields": [
+        "command"
+      ],
+      "status": "runtime_ready",
+      "type": "local_command"
+    },
+    {
+      "adapter": "scillm_exec:local_command",
+      "inferred_fields": [],
+      "missing_artifacts": [],
+      "missing_fields": [],
+      "next_action": "compile or submit this runtime node after required fields are present",
+      "node_id": "phase-04-docs-workflow-update",
+      "present_fields": [
+        "command"
+      ],
+      "required_fields": [
+        "command"
+      ],
+      "status": "runtime_ready",
+      "type": "local_command"
+    },
+    {
+      "adapter": "scillm_exec:local_command",
+      "inferred_fields": [],
+      "missing_artifacts": [],
+      "missing_fields": [],
+      "next_action": "compile or submit this runtime node after required fields are present",
+      "node_id": "commit-and-push-main",
+      "present_fields": [
+        "command"
+      ],
+      "required_fields": [
+        "command"
+      ],
+      "status": "runtime_ready",
+      "type": "local_command"
+    }
+  ],
+  "phase_id": "phase-02-safe-lesson-distillation",
+  "schema": "plan_iterate.graph_runtime_readiness.v1",
+  "summary": {
+    "blocked_node_count": 0,
+    "blocked_nodes": [],
+    "manual_node_count": 0,
+    "manual_nodes": [],
+    "missing_fields_by_node": {},
+    "node_count": 4,
+    "runtime_ready_node_count": 4
+  }
+}

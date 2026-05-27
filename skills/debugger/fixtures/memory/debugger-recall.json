@@ -1,0 +1,17 @@
+{
+  "confidence": 0.81,
+  "found": true,
+  "items": [
+    {
+      "_key": "debugger-route-lesson",
+      "problem": "Agent patched a route handler without proving selected_handler at runtime.",
+      "score": 0.93,
+      "solution": "Use $debugger to stop before dispatch, inspect selected_handler and request payload, then patch only after fresh breakpoint proof.",
+      "tags": [
+        "debugger",
+        "resilience"
+      ]
+    }
+  ],
+  "should_scan": false
+}

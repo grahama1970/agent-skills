@@ -31,4 +31,10 @@ if (proof.locals.value !== 14) throw new Error(`expected value=14, got ${proof.l
 if (proof.locals.label !== 'large') throw new Error(`expected label=large, got ${proof.locals.label}`);
 JS
 
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/mnt/storage12tb/skills/debugger/.venv}"
+export UV_LINK_MODE="${UV_LINK_MODE:-copy}"
+uv run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/validate_debugger_proof.py" "$proof" \
+  --expect-valid \
+  --canonical-out /tmp/debugger-typescript-e2e-proof.canonical.json
+
 echo "debugger TypeScript E2E sanity passed: $proof"

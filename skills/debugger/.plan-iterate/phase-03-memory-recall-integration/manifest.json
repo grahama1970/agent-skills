@@ -1,0 +1,49 @@
+{
+  "created_at": "20260527T150446Z",
+  "entries": [
+    {
+      "bytes": 4903,
+      "path": "PHASE_STATUS.json",
+      "sha256": "0a2bf09ec434c69f81be0b0036858b5e10c696a637936d63cc353928e9e540b0"
+    },
+    {
+      "bytes": 2073,
+      "path": "PHASE_REVIEW_REQUEST.md",
+      "sha256": "15cbaf7bb47337a2c128ab0aa4a450b09a151c8cdf62b3f3a3af307eda810cbc"
+    },
+    {
+      "bytes": 15392,
+      "path": "changed-files.diff",
+      "sha256": "5df7cebe827db85242a18c87dead8a8c756de0f59666f33938c8f5ea67b9a2ee"
+    },
+    {
+      "bytes": 135,
+      "path": "sanity-memory-recall.log",
+      "sha256": "270a7dd210e22b1a550215c12a0b5709736156a7716550609531023fe5c4de96"
+    },
+    {
+      "bytes": 0,
+      "path": "py-compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 159,
+      "path": "scillm-assess-recall.json",
+      "sha256": "81b9d1a0c8cfc469d1e2598da09fb0dae0c5541bb0d93e3a3dca8d348d34982b"
+    },
+    {
+      "bytes": 1155,
+      "path": "plans/debugger-proof-and-memory-improvements/PLAN_STATUS.json",
+      "sha256": "cc264de9ac0648bf18384779a8b0b3000d49b2870067d3d77f877895c74b78aa"
+    },
+    {
+      "bytes": 859,
+      "path": "plans/debugger-proof-and-memory-improvements/phases.json",
+      "sha256": "ccea85ad176baae9e9d6161558e5212c4e321fa7074bbd43dc6c67e58639a3ca"
+    }
+  ],
+  "phase_id": "phase-03-memory-recall-integration",
+  "plan_id": "debugger-proof-and-memory-improvements",
+  "schema": "plan_iterate.review_bundle_manifest.v1",
+  "status_sha256": "0a2bf09ec434c69f81be0b0036858b5e10c696a637936d63cc353928e9e540b0"
+}

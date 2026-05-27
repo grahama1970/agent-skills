@@ -428,6 +428,52 @@ A valid debugger result includes:
 
 If the breakpoint is not hit, report that as evidence and adjust the hypothesis. Do not claim the debugger proved the bug location.
 
+## Proof Artifacts, Lessons, And Memory Recall
+
+Fresh debugger proof is the only evidence class that can satisfy this skill for
+a current bug. A reusable lesson or a memory recall result may guide breakpoint
+selection, but it cannot replace stopping the current program and inspecting the
+current paused state.
+
+Canonical proof artifacts use `debugger.proof.v1` and can be normalized with:
+
+```bash
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/validate_debugger_proof.py" \
+  /tmp/debugger-proof.json \
+  --expect-valid \
+  --canonical-out /tmp/debugger-proof.canonical.json
+```
+
+When storing a lesson from debugger proof, distill it through the redaction gate:
+
+```bash
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/distill_debugger_lesson.py" \
+  /tmp/debugger-proof.canonical.json \
+  --out /tmp/debugger-lesson.json
+```
+
+The lesson artifact is advisory. It preserves the debugger adapter, breakpoint
+shape, stopped frame, variable names/types, conclusion, and limitations, but it
+does not store raw paused locals, watch values, secrets, tokens, credentials, or
+machine-local absolute paths.
+
+Memory recall is also advisory-only. Query memory before scanning or patching
+when prior lessons may exist, then normalize the recall result explicitly:
+
+```bash
+uv run --project "$SKILL_DIR" \
+  python "$SKILL_DIR/scripts/recall_debugger_lessons.py" \
+  --query "route handler selected_handler mismatch" \
+  --live \
+  --out /tmp/debugger-memory-advisory.json
+```
+
+The normalized recall artifact must say `fresh_debugger_proof: false` and
+`can_satisfy_debugger_proof: false`. If it suggests a likely bug pattern, use
+that only to choose the next breakpoint or local/watch list.
+
 ## Human Escalation Checkpoint
 
 This skill is not a default request to make the human debug. The project-agent should inspect and analyze the paused state itself first.

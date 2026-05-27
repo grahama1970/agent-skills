@@ -1,0 +1,153 @@
+{
+  "acceptance_contract": [
+    "Valid debugger.proof.v1 artifacts can be distilled into debugger.lesson.v1.",
+    "Distilled lessons do not store raw paused locals, watches, tokens, credentials, or machine-local absolute paths.",
+    "Python helper follows local httpx/Typer/Loguru dependency conventions where applicable."
+  ],
+  "active_plan_graph_artifact": "plan-graphs/20260527T145705Z-debugger-proof-and-memory-improvements.json",
+  "blockers": [],
+  "changed_files": [
+    {
+      "path": "skills/debugger/scripts/distill_debugger_lesson.py",
+      "sha256": "2a24672146868bb9e1bb03e7865b0f6f5db1bec1bfdf4a4a01ec4f7cf5675d85"
+    },
+    {
+      "path": "skills/debugger/fixtures/proofs/contains-secrets-valid.json",
+      "sha256": "2d8a264e082c8e3eab652e276b634d8782cc45c272f8574da4219629f4427e07"
+    },
+    {
+      "path": "skills/debugger/sanity-lesson-distillation.sh",
+      "sha256": "6fb56343fb496015533ee47c202fc3f245278df6608d8c7bc9bc3f48e03ba4cf"
+    },
+    {
+      "path": "skills/debugger/pyproject.toml",
+      "sha256": "3190c842fd1478c58f4c848949bd2ab0e9dc3270790272c8a9890ccffbdd0ffb"
+    },
+    {
+      "path": "skills/debugger/uv.lock",
+      "sha256": "04a348c74e0d1c29243903e1b44e1139cf0c15ae30a86a82e847186ecbd9609a"
+    }
+  ],
+  "claims": [
+    {
+      "acceptance_contract": [
+        "Valid debugger.proof.v1 artifacts can be distilled into debugger.lesson.v1."
+      ],
+      "claim": "The distillation gate emits debugger.lesson.v1 and preserves only redacted shape/context from debugger proof.",
+      "evidence_artifacts": [
+        "sanity-lesson-distillation.log"
+      ]
+    },
+    {
+      "acceptance_contract": [
+        "Distilled lessons do not store raw paused locals, watches, tokens, credentials, or machine-local absolute paths."
+      ],
+      "claim": "The redaction fixture proves raw paused values, tokens, and local absolute paths are absent from the lesson artifact.",
+      "evidence_artifacts": [
+        "sanity-lesson-distillation.log"
+      ]
+    },
+    {
+      "acceptance_contract": [
+        "Python helper follows local httpx/Typer/Loguru dependency conventions where applicable."
+      ],
+      "claim": "The new Python helper passes scillm static assessment with no issues after switching to Typer and Loguru.",
+      "evidence_artifacts": [
+        "scillm-assess-distill.json"
+      ]
+    }
+  ],
+  "completed_plan_nodes": [
+    "phase-02-safe-lesson-distillation",
+    "phase-03-memory-recall-integration",
+    "phase-04-docs-workflow-update",
+    "commit-and-push-main"
+  ],
+  "domain_review_loops": [],
+  "evidence_artifacts": [
+    {
+      "path": "sanity-lesson-distillation.log",
+      "sha256": "81d3a36b4b8ca0648a9b6f0564a9f36e85bd17252b7c373e9ec47dd9a5182513"
+    },
+    {
+      "path": "scillm-assess-distill.json",
+      "sha256": "1eb61bd3146e7fdeb435bf22e7a0244eb08076ef1abf84f94ce24982f58596f3"
+    }
+  ],
+  "implementation_summary": "Added a redacted debugger.lesson.v1 distillation helper, secret/path redaction fixture, and sanity gate for safe proof-to-lesson conversion.",
+  "known_caveats": [],
+  "memory_context": {
+    "collection": "plan_iterate_phase_context",
+    "keys": []
+  },
+  "phase_id": "phase-02-safe-lesson-distillation",
+  "plan_graph_artifacts": [
+    {
+      "graph_id": "debugger-proof-and-memory-improvements",
+      "node_count": 4,
+      "path": "plan-graphs/20260527T145705Z-debugger-proof-and-memory-improvements.json",
+      "plan_ascii_artifact": "plan-graphs/20260527T145705Z-debugger-proof-and-memory-improvements-plan-ascii.md",
+      "plan_ascii_sha256": "bf5c0997ec9f4772a5fb8d3b32241fa9a4725c489086a73302563e159b5d1fc0",
+      "plan_id": "debugger-proof-and-memory-improvements",
+      "review_fanout_limits": {
+        "review_code": 0,
+        "review_design": 0,
+        "review_prompt": 0
+      },
+      "review_iteration_limits": {
+        "review_code": 3,
+        "review_design": 3,
+        "review_prompt": 3
+      },
+      "review_node_count": 0,
+      "review_scope_count": 0,
+      "runtime_readiness": {
+        "blocked_node_count": 0,
+        "blocked_nodes": [],
+        "manual_node_count": 0,
+        "manual_nodes": [],
+        "missing_fields_by_node": {},
+        "node_count": 4,
+        "runtime_ready_node_count": 4
+      },
+      "runtime_readiness_artifact": "plan-graphs/20260527T145705Z-debugger-proof-and-memory-improvements-runtime-readiness.json",
+      "runtime_readiness_sha256": "4e214dedca4e29c2f66daecdc8f70f034aaca4a84e6e10ac309c44e38425928a",
+      "self_improvement_iterations": 3,
+      "sha256": "d9760d860597354d8fd8c99e8374240d3fb270d369131d55373888241fe99685"
+    }
+  ],
+  "plan_id": "debugger-proof-and-memory-improvements",
+  "progress_context_artifacts": [],
+  "review_artifacts": [],
+  "review_comparison": {
+    "agreement": "agree",
+    "closure_allowed": true,
+    "reason": "External review waived; deterministic validation and scillm assess artifacts are recorded."
+  },
+  "review_results": [],
+  "review_status": "not_required",
+  "reviewer_policy": {
+    "closure_rule": "deterministic_validation_plus_scillm_static_assessment; external review waived for narrow local skill helper phase",
+    "comparison_required": false,
+    "required": false
+  },
+  "schema": "plan_iterate.phase_status.v1",
+  "skill_context_artifacts": [],
+  "status": "accepted",
+  "validation_commands": [
+    {
+      "command": "./sanity-lesson-distillation.sh",
+      "exit_code": 0,
+      "log": "sanity-lesson-distillation.log",
+      "log_sha256": "81d3a36b4b8ca0648a9b6f0564a9f36e85bd17252b7c373e9ec47dd9a5182513",
+      "phase_subject_sha256": "b7d3f2ea8b27f6dce8d9c6dc8b03a938d0b21a1a0ca7c7234f646b22c3def52f"
+    },
+    {
+      "command": "/home/graham/workspace/experiments/agent-skills/skills/scillm/run.sh assess scripts/distill_debugger_lesson.py --json",
+      "exit_code": 0,
+      "log": "scillm-assess-distill.json",
+      "log_sha256": "1eb61bd3146e7fdeb435bf22e7a0244eb08076ef1abf84f94ce24982f58596f3",
+      "phase_subject_sha256": "b7d3f2ea8b27f6dce8d9c6dc8b03a938d0b21a1a0ca7c7234f646b22c3def52f"
+    }
+  ]
+}

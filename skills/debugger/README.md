@@ -318,11 +318,39 @@ Debugger proof:
 If the breakpoint did not hit, that is evidence too. Move the breakpoint or
 revise the hypothesis; do not pretend the debugger proved the bug location.
 
+## Reusing Prior Debugger Lessons
+
+Prior debugger lessons can help choose breakpoints, but they are not proof for
+the current run. The reusable flow is:
+
+```text
+fresh debugger proof
+    ↓
+debugger.proof.v1 validation
+    ↓
+redacted debugger.lesson.v1 distillation
+    ↓
+optional memory recall as advisory context
+    ↓
+new breakpoint proof before patching this bug
+```
+
+Use `scripts/distill_debugger_lesson.py` before storing a lesson. It preserves
+the useful shape of the paused state while removing raw locals, watch values,
+tokens, credentials, and machine-local absolute paths.
+
+Use `scripts/recall_debugger_lessons.py` to normalize memory recall. Its output
+is intentionally marked `memory_recall_advisory`, with
+`can_satisfy_debugger_proof: false`.
+
 ## Verification
 
 Run these from this directory:
 
 ```bash
+./sanity-proof-schema.sh
+./sanity-lesson-distillation.sh
+./sanity-memory-recall.sh
 ./sanity.sh
 ./sanity-typescript.sh
 ./sanity-rust.sh

@@ -2,8 +2,9 @@
 name = "debugger-skill"
 version = "0.1.0"
 description = "Self-contained debugger skill helpers"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 dependencies = [
-    "loguru>=0.7.0",
+    "httpx>=0.28.0,<0.29.0",
+    "loguru>=0.7.0,<0.7.3",
     "typer>=0.9.0",
 ]

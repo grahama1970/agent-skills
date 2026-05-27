@@ -37,6 +37,9 @@ before_hash="$(sha256sum "$TARGET" | awk '{print $1}')"
   --out "$POSITIVE_OUT" \
   -- "$TARGET"
 
+"${PYTHON[@]}" "$SCRIPT_DIR/scripts/validate_debugger_proof.py" "$POSITIVE_OUT" --expect-valid \
+  --canonical-out "$WORK_DIR/positive-canonical.json"
+
 if "${PYTHON[@]}" "$SCRIPT_DIR/scripts/capture_breakpoints.py" \
   --break "$TARGET:2" \
   --watch unreachable \
@@ -68,6 +71,7 @@ assert hit["locals"]["value"] == "14", hit
 assert hit["watches"]["value"] == {"ok": "true", "value": "14"}, hit
 assert positive["locals_allowlist"] == ["value"], positive
 assert positive["allow_watch_eval"] is True, positive
+assert json.loads(Path(sys.argv[1]).with_name("positive-canonical.json").read_text())["schema"] == "debugger.proof.v1"
 
 assert negative["hit_count"] == 0, negative
 assert negative["status"]["ok"] is True, negative

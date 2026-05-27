@@ -1,0 +1,59 @@
+{
+  "created_at": "20260527T150446Z",
+  "entries": [
+    {
+      "bytes": 6076,
+      "path": "PHASE_STATUS.json",
+      "sha256": "ed388a15fdd1661edee6bc98f46d3ddff7c638633ee793a2504059f59e08235f"
+    },
+    {
+      "bytes": 2072,
+      "path": "PHASE_REVIEW_REQUEST.md",
+      "sha256": "fe7428e6c30f559a565967b3cad86a02565d8009e7f00a23fa8ec612d6efcce5"
+    },
+    {
+      "bytes": 19694,
+      "path": "changed-files.diff",
+      "sha256": "c01cd0819aff6084a62b669d56b84963b0cc625649f4cd75fb5a55a9e5f20ba2"
+    },
+    {
+      "bytes": 224,
+      "path": "sanity-lesson-distillation.log",
+      "sha256": "81d3a36b4b8ca0648a9b6f0564a9f36e85bd17252b7c373e9ec47dd9a5182513"
+    },
+    {
+      "bytes": 159,
+      "path": "scillm-assess-distill.json",
+      "sha256": "1eb61bd3146e7fdeb435bf22e7a0244eb08076ef1abf84f94ce24982f58596f3"
+    },
+    {
+      "bytes": 3139,
+      "path": "plan-graphs/20260527T145705Z-debugger-proof-and-memory-improvements.json",
+      "sha256": "d9760d860597354d8fd8c99e8374240d3fb270d369131d55373888241fe99685"
+    },
+    {
+      "bytes": 2490,
+      "path": "plan-graphs/20260527T145705Z-debugger-proof-and-memory-improvements-runtime-readiness.json",
+      "sha256": "4e214dedca4e29c2f66daecdc8f70f034aaca4a84e6e10ac309c44e38425928a"
+    },
+    {
+      "bytes": 1340,
+      "path": "plan-graphs/20260527T145705Z-debugger-proof-and-memory-improvements-plan-ascii.md",
+      "sha256": "bf5c0997ec9f4772a5fb8d3b32241fa9a4725c489086a73302563e159b5d1fc0"
+    },
+    {
+      "bytes": 1155,
+      "path": "plans/debugger-proof-and-memory-improvements/PLAN_STATUS.json",
+      "sha256": "cc264de9ac0648bf18384779a8b0b3000d49b2870067d3d77f877895c74b78aa"
+    },
+    {
+      "bytes": 859,
+      "path": "plans/debugger-proof-and-memory-improvements/phases.json",
+      "sha256": "ccea85ad176baae9e9d6161558e5212c4e321fa7074bbd43dc6c67e58639a3ca"
+    }
+  ],
+  "phase_id": "phase-02-safe-lesson-distillation",
+  "plan_id": "debugger-proof-and-memory-improvements",
+  "schema": "plan_iterate.review_bundle_manifest.v1",
+  "status_sha256": "ed388a15fdd1661edee6bc98f46d3ddff7c638633ee793a2504059f59e08235f"
+}
