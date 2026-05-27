@@ -69,6 +69,7 @@ provides:
   - oracle-query
   - os-knowledge
 composes:
+  - phart-dag-chart
   - memory
   - dogpile
   - extract-entities
@@ -794,6 +795,397 @@ Example native graph:
   ]
 }
 ```
+
+
+### Concurrent lanes and sequential joins
+
+`/ask` schedules nodes in **topological layers**. Nodes with no unresolved
+`depends_on` in the same layer run **concurrently** (up to `max_concurrency`).
+Nodes that list parents in `depends_on` wait until those parents finish, then
+run in a later layer — that is the **sequential join**.
+
+**RIGHT — Layer 1: two concurrent `memory.recall` nodes; Layer 2: one sequential
+`skill.run` join** (matches `./scripts/dag_e2e_sanity.py`):
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "graph_id": "memory-fanout-report-join",
+  "graph_goal": "Recall two memory scopes in parallel, then create one report.",
+  "max_concurrency": 2,
+  "nodes": [
+    {
+      "id": "memory_ask_contract",
+      "type": "memory.recall",
+      "input": {
+        "query": "ask DAG scillm metadata oracle review artifacts",
+        "scope": "ask",
+        "k": 3
+      }
+    },
+    {
+      "id": "memory_report_contract",
+      "type": "memory.recall",
+      "input": {
+        "query": "best practices report source-of-truth inventory findings",
+        "scope": "ask",
+        "k": 3
+      }
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": ["memory_ask_contract", "memory_report_contract"],
+      "input": {
+        "skill": "create-report",
+        "args": [
+          "--title", "Ask DAG Proof Report",
+          "--input", "${dag_context_json}",
+          "--output", "${dag_node_output}"
+        ]
+      }
+    }
+  ]
+}
+```
+
+Layer semantics for this graph:
+
+| Layer | Runs | Why |
+|-------|------|-----|
+| 1 | `memory_ask_contract` **and** `memory_report_contract` **in parallel** | No `depends_on`; same topological layer; `max_concurrency: 2` allows both at once. |
+| 2 | `final_report` **after both parents succeed** | `depends_on` lists both memory nodes — sequential join with merged `${dag_context_json}`. |
+
+Optional third layer (live model lane): add two concurrent `ask.oracle` nodes that
+both `depends_on` the memory pair, then point `final_report.depends_on` at the
+oracle ids as well. See `./scripts/dag_e2e_sanity.py --include-oracle`.
+
+**WRONG — expecting a join without `depends_on`:**
+
+```json
+{
+  "nodes": [
+    {"id": "memory_a", "type": "memory.recall", "input": {"query": "a"}},
+    {"id": "memory_b", "type": "memory.recall", "input": {"query": "b"}},
+    {"id": "final_report", "type": "skill.run", "input": {"skill": "create-report", "args": ["--help"]}}
+  ]
+}
+```
+
+All three nodes are in **one concurrent layer**. `final_report` can start before
+either memory recall finishes and may see empty upstream context.
+
+### PHART renderer (preferred)
+
+Terminal charts use **[PHART](https://github.com/scottvr/phart)** — Python Hierarchical
+ASCII Representation Tool. Source of truth: **https://github.com/scottvr/phart.git**
+(PHART 1.5+; PyPI is behind git).
+
+**Preferred path (mockup-style bboxes):** sibling skill **`$phart-dag-chart`**
+(`skills/phart-dag-chart/`) pins PHART from git on Python 3.14+ and renders
+`layout=layered` with `bboxes=True` (matches `scillm/docs/goals/DAG-ux-mockup.html` middle pane).
+
+```bash
+# One-time: install Python 3.14 for uv (if needed)
+uv python install 3.14
+
+cd skills/phart-dag-chart
+./run.sh validate path/to/plan.dag.json
+./run.sh chart path/to/plan.dag.json
+```
+
+`/ask` dry-run and `./scripts/render_dag_chart.py` delegate to `$phart-dag-chart` when uv + Python 3.14 are available.
+
+- `ask_dag.ascii_renderer`: `phart-git` | `phart-pypi` | `fallback`
+- **phart-git**: `$phart-dag-chart` subprocess (PHART 1.5 git)
+- **phart-pypi**: in-process PyPI phart 1.1.x on Python 3.11–3.12 (bracket style)
+- **fallback**: built-in renderer if PHART unavailable
+
+```bash
+./scripts/render_dag_chart.py /tmp/memory-fanout.dag.json
+```
+
+Legacy `skills/ask/phart-renderer/` is deprecated.
+
+### Terminal ASCII DAG chart
+
+Before a costful run, print the layer plan to the terminal so humans and project
+agents share the same mental model.
+
+**Preferred — dry-run prints the chart automatically:**
+
+```bash
+./run.sh ask "Plan the memory fanout DAG" \
+  --dag-file /tmp/memory-fanout-report-join.dag.json \
+  --dry-run
+```
+
+The dry-run payload includes `ask_dag.layers` (machine-readable) and prints
+`ask_dag.ascii_chart` to stdout before the JSON spec. The chart mirrors the
+**middle pane** of `scillm/docs/goals/DAG-ux-mockup.html`: boxed nodes, vertical
+trunk, concurrent fanout row, then join — simplified for the terminal.
+
+```text
+DAG decision tree · memory-fanout-report-join
+schema=ask.dag.v1 · max_concurrency=2
+
+┌───────────────┐   ┌───────────────┐
+│ memory_a      │   │ memory_b      │
+│ memory.recall │   │ memory.recall │
+│ [req]         │   │ [req]         │
+└───────────────┘   └───────────────┘
+        │                   │
+        ──────────┴──────────
+                  │
+         ┌────────────────┐
+         │ final_report   │
+         │ skill.run      │
+         │ [req]          │
+         └────────────────┘
+```
+
+Trunk + 3-way fanout + join (same mockup shape):
+
+```text
+                   ┌───────────────┐
+                   │ shape         │
+                   └───────────────┘
+                           │
+        ┬──────────────────┼───────────────────┬
+┌──────────────┐   ┌──────────────┐   ┌────────────────┐
+│ payload      │   │ exec         │   │ nico           │
+└──────────────┘   └──────────────┘   └────────────────┘
+        └──────────────────┴───────────────────┘
+                            │
+                    ┌──────────────┐
+                    │ gate         │
+                    └──────────────┘
+```
+
+**Also valid — JSON only (automation / logs):**
+
+```bash
+./run.sh ask "Plan the DAG" --dag-file /tmp/graph.dag.json --dry-run --json \
+  | jq -r '.options.ask_dag.ascii_chart'
+```
+
+After a real run, correlate the chart with `events.jsonl` (`dag_layer_started`,
+`dag_layer_finished`, `dag_layer_failed`) and `dag/manifest.json`.
+
+### Required-node failure: who fixes the bug?
+
+Bounded **auto-repair** (timeout bump, partial artifact consume) handles known
+deterministic modes. It does **not** replace debugging.
+
+When a **required** node fails (`allow_failure: false`, the default):
+
+1. `/ask` records `dag_layer_failed`, writes the failed node artifact
+   (`dag/<node_id>.json`), and **does not** run dependent layers.
+2. The **project agent** (or a **`/scillm` exec subagent** such as
+   `scillm exec pi-chutes-kimi` / `pi-opencode-kimi` in read-only sandbox) must
+   inspect evidence, fix the root cause, and re-run:
+   - `dag/<failed_node>.json` — `error`, `stderr`, `returncode`, `repairs`
+   - `events.jsonl` — `dag_node_failed`, `dag_layer_failed`, repair events
+   - Upstream skill logs under the run output root
+3. Fixes are usually: correct `input.args`, skill bug patch, timeout profile,
+   missing artifact path, or auth/routing (for `ask.oracle`, check `/v1/scillm/auth`
+   before blaming the DAG).
+4. Re-submit the same DAG with `--resume` when appropriate, or a corrected
+   `--dag-file` after the code/config fix lands.
+
+**WRONG — treating auto-repair or `answered` as proof the workflow succeeded:**
+
+```bash
+# dogpile still failed after repair; final_report never ran
+jq '.status' .ask_artifacts/runs/<ask-id>/status.json   # may still show failure
+grep dag_layer_failed .ask_artifacts/runs/<ask-id>/events.jsonl
+```
+
+**WRONG — marking a broken required probe optional instead of fixing it:**
+
+```json
+{"id": "fresh_context", "type": "dogpile.search", "allow_failure": true}
+```
+
+Use `allow_failure: true` only for shadow/best-effort enrichment. If the main
+path needs dogpile output, fix timeout/skill/code — do not hide a required failure.
+
+**RIGHT — project agent loop after `dag_layer_failed`:**
+
+```text
+1. Read ascii_chart + dag_layer_failed event
+2. Open dag/<node>.json and sibling skill stderr
+3. Patch skill/CLI/config OR adjust DAG input
+4. Re-run: ./run.sh ask "..." --dag-file fixed.dag.json --ask-id <id> --resume
+5. Confirm dag/manifest.json shows downstream node artifacts
+```
+
+
+**DAG JSON usage — good vs bad:**
+
+Use `ask.dag.v1` for project-agent handoffs. Prefer `--dag-file` when the graph
+is non-trivial; use `--dag-json` only for small inline graphs.
+
+**RIGHT — layered workflow with explicit dependencies, safe timeouts, and a
+single final join:**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "graph_id": "report-with-fresh-research",
+  "max_concurrency": 2,
+  "nodes": [
+    {
+      "id": "memory_first",
+      "type": "memory.recall",
+      "input": {"query": "prior lessons for this report", "scope": "project", "k": 5}
+    },
+    {
+      "id": "fresh_context",
+      "type": "dogpile.search",
+      "input": {
+        "query": "current state of LLM workflow orchestration boundaries",
+        "timeout": 360
+      }
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": ["memory_first", "fresh_context"],
+      "input": {
+        "skill": "create-report",
+        "args": [
+          "--title", "Ask DAG Proof Report",
+          "--input", "${dag_context_json}",
+          "--output", "${dag_node_output}"
+        ]
+      }
+    }
+  ]
+}
+```
+
+```bash
+./run.sh ask "Run the report DAG"   --dag-file /tmp/report-with-fresh-research.dag.json   --ask-id report-dag-proof   --run-output-root /tmp/ask-dag-proof/runs   --overwrite   --json
+```
+
+Why this is good:
+
+- `schema_version` is `ask.dag.v1`.
+- Node `id` values are stable snake_case identifiers.
+- `depends_on` expresses the real join order.
+- `dogpile.search` gets a realistic `timeout` (or omits it and uses the profile default).
+- `skill.run` targets a runnable sibling skill and passes DAG context placeholders.
+- Model-pool / queue / provider-capacity fields are **not** in the graph; only
+  `ask.oracle` nodes name a model/profile when needed.
+
+**RIGHT — optional probe that must not block the main path:**
+
+```json
+{
+  "id": "shadow_dogpile",
+  "type": "dogpile.search",
+  "allow_failure": true,
+  "input": {"query": "best-effort fresh sources", "timeout": 120}
+}
+```
+
+Use `allow_failure: true` only for enrichment probes. Required nodes stay
+fail-closed (default `allow_failure: false`).
+
+**WRONG — treating the DAG like a scillm transport/routing config:**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {
+      "id": "lane",
+      "type": "ask.oracle",
+      "input": {
+        "prompt": "Review this",
+        "model_pool": "gpt-pool",
+        "provider_queue": "chutes",
+        "fallback_chain": ["gemini", "claude"]
+      }
+    }
+  ]
+}
+```
+
+`/ask` owns orchestration and artifacts. `$scillm` owns pools, queues, fallback,
+and telemetry. Do not put transport knobs in project-agent DAG JSON.
+
+**WRONG — dependent node with no `depends_on` (race / empty context):**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {"id": "memory_first", "type": "memory.recall", "input": {"query": "context"}},
+    {"id": "final_report", "type": "skill.run", "input": {"skill": "create-report", "args": ["--help"]}}
+  ]
+}
+```
+
+Without `depends_on`, `final_report` can run in parallel with `memory_first` and
+receive empty `${dag_context_json}`.
+
+**WRONG — required node with an impossible budget, then expecting dependents to run:**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {
+      "id": "fresh_context",
+      "type": "dogpile.search",
+      "input": {"query": "broad research query", "timeout": 30}
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": ["fresh_context"],
+      "input": {"skill": "create-report", "args": ["--help"]}
+    }
+  ]
+}
+```
+
+If `fresh_context` stays failed after auto-repair, `/ask` records `dag_layer_failed`
+and does **not** create `final_report.json`. Fix the timeout/profile or mark the
+probe `allow_failure: true` when it is optional.
+
+**WRONG — inventing node types or skills:**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {"id": "x", "type": "scillm.batch", "input": {}},
+    {"id": "y", "type": "skill.run", "input": {"skill": "made-up-skill", "args": []}}
+  ]
+}
+```
+
+Allowed node types: `memory.recall`, `dogpile.search`, `ask.oracle`, `skill.run`.
+`skill.run` skills must have a sibling `SKILL.md` and `run.sh`.
+
+**WRONG — using `--orchestrate` and `--dag-file` together without a clear source of truth:**
+
+```bash
+./run.sh ask "Use $memory and $dogpile then $create-report"   --orchestrate   --dag-file /tmp/already-authored.dag.json
+```
+
+Pick one authoring path:
+
+- Natural language only: `--orchestrate` ( `/ask` drafts the DAG ).
+- Explicit graph: `--dag-file` or `--dag-json` (do not also `--orchestrate` unless
+  you intend to replace the hand-authored graph).
+
+When validation fails, `/ask` returns `AskDagError` at load time or
+`dag_layer_failed` at runtime; inspect `dag/manifest.json`, per-node artifacts,
+and `<ask_id>.events.jsonl` instead of guessing from the final answer text.
 
 React Flow or migration tooling may still hand `/ask` compatibility graph nodes
 with `exec_graph_version: "scillm.exec.graph.v1"` plus `execution` and

@@ -1,3 +1,9 @@
+"""test_parallel_review_live_e2e - tests.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 
 from dotenv import find_dotenv, load_dotenv
 

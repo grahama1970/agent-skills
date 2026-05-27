@@ -1,0 +1,27 @@
+schema: ask.config.v1
+profile: release
+services:
+  memory_run: ../memory/run.sh
+  scillm_run: ../scillm/run.sh
+  dogpile_run: ../dogpile/run.sh
+  interview_run: ../interview/run.sh
+  subagent_runner: ../subagent-runner/run.sh
+  scillm_base_url: http://127.0.0.1:4001
+storage:
+  run_output_dir: .ask_artifacts/runs
+  subagent_output_dir: /tmp/ask-oracle-subagents
+docker:
+  compose_project: ask-release
+  network_mode: host
+  memory_repo: ../../../memory
+  scillm_repo: ../../../scillm
+  storage_root: /mnt/storage12tb
+release:
+  require_config_file: true
+  require_live_services: true
+  require_oauth_credentials: true
+  require_expensive_routes: true
+  required_credentials:
+  - ~/.codex/auth.json
+  - ~/.claude/.credentials.json
+  - ~/.gemini

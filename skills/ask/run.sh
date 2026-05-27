@@ -116,6 +116,8 @@ Ask Options:
   --deep-review-focus <f> Comma-separated deep-review focus labels
   --chain <name|path> Saved review chain spec
   --reviewer-spec <name|path> Reviewer spec (repeatable)
+  --dag-json <json>     Execute inline ask/scillm-style DAG JSON
+  --dag-file <path>     Execute ask/scillm-style DAG JSON file
   --dry-run             Emit execution spec/risk analysis without mutation
   --dogpile <auto|off|force> Freshness policy for oracle subagents
   --ask-id <id>      Stable runtime artifact id for this ask call

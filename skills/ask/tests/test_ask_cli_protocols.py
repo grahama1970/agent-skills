@@ -7,6 +7,8 @@ Purpose: Auto-generated module docstring. Review for accuracy.
 Inputs/Outputs/Failures: See functions below.
 """
 
+import json
+
 from typer.testing import CliRunner
 
 import ask.ask as ask_module
@@ -76,6 +78,51 @@ def test_cli_image_generate_uses_scillm_route(monkeypatch, tmp_path):
     assert "Image:" in result.stdout
 
 
+def test_cli_oracle_image_records_request_and_passes_paths(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [{"solution": "ok"}], "answer": "ok", "bridges_found": []}
+
+    image_path = tmp_path / "posture-page.png"
+    image_path.write_bytes(b"\x89PNG\r\n\x1a\nask-oracle-image-test")
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "oc-kimi",
+            "review",
+            "the",
+            "Posture",
+            "page",
+            "screenshot",
+            "--oracle-image",
+            str(image_path),
+            "--ask-id",
+            "oracle-image-cli-test",
+            "--run-output-root",
+            str(tmp_path / "runs"),
+            "--overwrite",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert captured["question"] == "review the Posture page screenshot"
+    assert captured["oracle_backend"] == "scillm"
+    assert captured["oracle_model"] == "opencode-go/kimi-k2.6"
+    assert captured["oracle_image_paths"] == [str(image_path)]
+    request = json.loads(
+        (tmp_path / "runs" / "oracle-image-cli-test" / "oracle-image-cli-test.request.json").read_text()
+    )
+    assert request["oracle"] is True
+    assert request["oracle_image_paths"] == [str(image_path)]
+    assert request["oracle_model_alias"]["raw_alias"] == "oc-kimi"
+
+
 def test_cli_natural_roundtable_maps_to_protocol(monkeypatch):
     ask_module = _load_ask_module()
     captured = {}
@@ -110,6 +157,639 @@ def test_cli_natural_roundtable_maps_to_protocol(monkeypatch):
     assert captured["oracle_model"] == "gpt-5.5"
     assert captured["oracle_backend"] == "subagent-runner"
     assert captured["dogpile_mode"] == "auto"
+
+
+def test_cli_visible_subagent_trigger_preserves_route_and_skill_mentions(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [{"solution": "ok"}], "answer": "ok", "bridges_found": []}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Ask",
+            "Nico",
+            "to",
+            "use",
+            "$memory",
+            "and",
+            "$plan-iterate",
+            "before",
+            "implementing",
+            "--ask-id",
+            "visible-nico-cli-test",
+            "--run-output-root",
+            str(tmp_path / "visible-subagent"),
+            "--overwrite",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "use $memory and $plan-iterate before implementing"
+    assert captured["oracle_model"] == "gpt-5.5"
+    assert captured["oracle_backend"] == "scillm"
+    assert captured["oracle_persona"] == "Nico"
+
+    request = json.loads(
+        (tmp_path / "visible-subagent" / "visible-nico-cli-test" / "visible-nico-cli-test.request.json").read_text()
+    )
+    assert request["visible_subagent"] == {
+        "mode": "visible_subagent",
+        "persona": "Nico",
+        "visibility": "human_project_conversation",
+        "turn_type": "advisory",
+        "operation": "launch",
+        "memory_first": True,
+        "transport": "scillm_app_server_turn_steer",
+        "trigger_phrase": "Ask Nico",
+        "original_utterance": "Ask Nico to use $memory and $plan-iterate before implementing",
+    }
+    assert request["mentioned_skills"] == ["memory", "plan-iterate"]
+
+
+def test_cli_visible_subagent_rejects_non_scillm_backend(tmp_path):
+    ask_module = _load_ask_module()
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "--oracle-backend",
+            "subagent-runner",
+            "Ask",
+            "Nico",
+            "to",
+            "use",
+            "$memory",
+            "--ask-id",
+            "visible-nico-reject-scillm",
+            "--run-output-root",
+            str(tmp_path / "visible-subagent"),
+            "--overwrite",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Visible subagent conversation requires" in result.output
+    assert "scillm Codex App Server transport" in result.output
+
+
+def test_cli_visible_subagent_uses_scillm_delivery(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    monkeypatch.setattr(
+        ask_module,
+        "run_sparta_preflight",
+        lambda *args, **kwargs: {"route": "normal_answer", "reason": "test"},
+    )
+    monkeypatch.setattr(
+        ask_module,
+        "run_memory_recall",
+        lambda *args, **kwargs: {"returncode": 0, "stdout": "", "stderr": ""},
+    )
+    monkeypatch.setattr(ask_module, "parse_memory_output", lambda _stdout: [])
+    monkeypatch.setattr(ask_module, "_record_ask_telemetry", lambda **_kwargs: None)
+
+    def fake_visible_delivery(**kwargs):
+        captured.update(kwargs)
+        return {
+            "state": "completed",
+            "transport": "scillm_codex_app_server",
+            "persona": "Nico",
+            "worker_id": "nico",
+            "final_text": "I prefer the inspector-focused mockup because keyboard label changes are clearest.",
+            "event_log": str(tmp_path / "events.jsonl"),
+        }
+
+    monkeypatch.setattr(ask_module, "_run_visible_subagent_scillm", fake_visible_delivery)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Ask",
+            "Nico",
+            "to",
+            "use",
+            "$memory",
+            "before",
+            "$plan-iterate",
+            "--ask-id",
+            "visible-nico-agent-delivery",
+            "--run-output-root",
+            str(tmp_path / "visible-subagent"),
+            "--overwrite",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert captured["question"] == "use $memory before $plan-iterate"
+    assert captured["route"]["persona"] == "Nico"
+    assert captured["route"]["transport"] == "scillm_app_server_turn_steer"
+    assert captured["route"]["operation"] == "launch"
+    assert captured["mentioned_skills"] == ["memory", "plan-iterate"]
+    events_path = (
+        tmp_path
+        / "visible-subagent"
+        / "visible-nico-agent-delivery"
+        / "visible-nico-agent-delivery.events.jsonl"
+    )
+    events = [json.loads(line) for line in events_path.read_text().splitlines()]
+    delivery_events = [event for event in events if event["event"] == "visible_subagent_delivery"]
+    assert delivery_events[-1]["worker_id"] == "nico"
+    assert delivery_events[-1]["final_text"].startswith("I prefer the inspector-focused mockup")
+
+
+def test_visible_subagent_clean_viewer_shows_codex_launch_contract(tmp_path):
+    ask_module = _load_ask_module()
+    cleaner, follower = ask_module._write_visible_subagent_clean_viewer(tmp_path)
+
+    follower_text = follower.read_text()
+    assert cleaner.exists()
+    assert "Nico visible subagent" in follower_text
+    assert "watcher_pid" in follower_text
+    assert "command:" in follower_text
+    assert "subagent-runner send-input" in follower_text
+
+
+def test_ask_visible_subagent_fails_closed_for_non_scillm_backend(monkeypatch):
+    ask_module = _load_ask_module()
+
+    monkeypatch.setattr(
+        ask_module,
+        "run_sparta_preflight",
+        lambda *args, **kwargs: {"route": "normal_answer", "reason": "test"},
+    )
+    monkeypatch.setattr(
+        ask_module,
+        "run_memory_recall",
+        lambda *args, **kwargs: {"returncode": 0, "stdout": "", "stderr": ""},
+    )
+    monkeypatch.setattr(ask_module, "parse_memory_output", lambda _stdout: [])
+
+    try:
+        ask_module.ask(
+            question="use $memory",
+            oracle_model="gpt-5.5",
+            oracle_backend="subagent-runner",
+            visible_subagent={
+                "mode": "visible_subagent",
+                "persona": "Nico",
+                "visibility": "human_project_conversation",
+                "turn_type": "advisory",
+                "operation": "launch",
+                "memory_first": True,
+                "transport": "scillm_app_server_turn_steer",
+            },
+            mentioned_skills=["memory"],
+        )
+    except RuntimeError as exc:
+        assert "Visible subagent requires the scillm Codex app-server transport" in str(exc)
+    else:
+        raise AssertionError("visible_subagent must not fall through to ordinary synthesis")
+
+
+def test_ask_visible_subagent_rejects_malformed_route(monkeypatch):
+    ask_module = _load_ask_module()
+
+    monkeypatch.setattr(
+        ask_module,
+        "run_sparta_preflight",
+        lambda *args, **kwargs: {"route": "normal_answer", "reason": "test"},
+    )
+    monkeypatch.setattr(
+        ask_module,
+        "run_memory_recall",
+        lambda *args, **kwargs: {"returncode": 0, "stdout": "", "stderr": ""},
+    )
+    monkeypatch.setattr(ask_module, "parse_memory_output", lambda _stdout: [])
+
+    try:
+        ask_module.ask(
+            question="use $memory",
+            oracle_model="gpt-5.5",
+            oracle_backend="scillm",
+            visible_subagent={},
+            mentioned_skills=["memory"],
+        )
+    except ValueError as exc:
+        assert "visible_subagent must be a visible_subagent route" in str(exc)
+    else:
+        raise AssertionError("malformed visible_subagent must fail closed")
+
+
+def test_ask_visible_subagent_rejects_invalid_operation(monkeypatch):
+    ask_module = _load_ask_module()
+
+    try:
+        ask_module.ask(
+            question="use $memory",
+            oracle_model="gpt-5.5",
+            oracle_backend="scillm",
+            visible_subagent={
+                "mode": "visible_subagent",
+                "persona": "Nico",
+                "visibility": "human_project_conversation",
+                "turn_type": "advisory",
+                "operation": "terminal_input",
+                "memory_first": True,
+                "transport": "scillm_app_server_turn_steer",
+            },
+            mentioned_skills=["memory"],
+        )
+    except ValueError as exc:
+        assert "visible_subagent operation must be launch or steer" in str(exc)
+    else:
+        raise AssertionError("invalid visible_subagent operation must fail closed")
+
+
+def test_ask_visible_subagent_rejects_missing_transport(monkeypatch):
+    ask_module = _load_ask_module()
+
+    try:
+        ask_module.ask(
+            question="use $memory",
+            oracle_model="gpt-5.5",
+            oracle_backend="scillm",
+            visible_subagent={
+                "mode": "visible_subagent",
+                "persona": "Nico",
+                "visibility": "human_project_conversation",
+                "turn_type": "advisory",
+                "operation": "launch",
+                "memory_first": True,
+            },
+            mentioned_skills=["memory"],
+        )
+    except ValueError as exc:
+        assert "visible_subagent transport must be scillm_app_server_turn_steer" in str(exc)
+    else:
+        raise AssertionError("visible_subagent without transport must fail closed")
+
+
+def test_ask_visible_subagent_rejects_steer_without_steering_turn_type(monkeypatch):
+    ask_module = _load_ask_module()
+
+    try:
+        ask_module.ask(
+            question="use $memory",
+            oracle_model="gpt-5.5",
+            oracle_backend="scillm",
+            visible_subagent={
+                "mode": "visible_subagent",
+                "persona": "Nico",
+                "visibility": "human_project_conversation",
+                "turn_type": "advisory",
+                "operation": "steer",
+                "memory_first": True,
+                "transport": "scillm_app_server_turn_steer",
+            },
+            mentioned_skills=["memory"],
+        )
+    except ValueError as exc:
+        assert "operation=steer requires turn_type=steering" in str(exc)
+    else:
+        raise AssertionError("steer operation without steering turn_type must fail closed")
+
+
+def test_ask_visible_subagent_steer_requires_existing_ids(monkeypatch):
+    ask_module = _load_ask_module()
+
+    try:
+        ask_module.ask(
+            question="pause and wait",
+            oracle_model="gpt-5.5",
+            oracle_backend="scillm",
+            visible_subagent={
+                "mode": "visible_subagent",
+                "persona": "Nico",
+                "visibility": "human_project_conversation",
+                "turn_type": "steering",
+                "operation": "steer",
+                "memory_first": True,
+                "transport": "scillm_app_server_turn_steer",
+            },
+            mentioned_skills=[],
+        )
+    except ValueError as exc:
+        assert "visible_subagent steer requires an active handoff_id and lease_id" in str(exc)
+    else:
+        raise AssertionError("visible_subagent steer must require active handoff and lease ids")
+
+
+def test_ask_visible_subagent_steer_rejects_route_env_id_conflict(monkeypatch):
+    ask_module = _load_ask_module()
+
+    monkeypatch.setenv("ASK_VISIBLE_SUBAGENT_HANDOFF_ID", "stale-handoff")
+    monkeypatch.setenv("ASK_VISIBLE_SUBAGENT_LEASE_ID", "lease-1")
+    try:
+        ask_module.ask(
+            question="pause and wait",
+            oracle_model="gpt-5.5",
+            oracle_backend="scillm",
+            visible_subagent={
+                "mode": "visible_subagent",
+                "persona": "Nico",
+                "visibility": "human_project_conversation",
+                "turn_type": "steering",
+                "operation": "steer",
+                "memory_first": True,
+                "transport": "scillm_app_server_turn_steer",
+                "handoff_id": "handoff-1",
+                "lease_id": "lease-1",
+            },
+            mentioned_skills=[],
+        )
+    except ValueError as exc:
+        assert "visible_subagent handoff_id route/env conflict" in str(exc)
+    else:
+        raise AssertionError("conflicting route/env steering ids must fail closed")
+
+
+def test_ask_visible_subagent_steer_rejects_unsafe_env_id(monkeypatch):
+    ask_module = _load_ask_module()
+
+    monkeypatch.setenv("ASK_VISIBLE_SUBAGENT_HANDOFF_ID", "../other")
+    monkeypatch.setenv("ASK_VISIBLE_SUBAGENT_LEASE_ID", "lease-1")
+    try:
+        ask_module.ask(
+            question="pause and wait",
+            oracle_model="gpt-5.5",
+            oracle_backend="scillm",
+            visible_subagent={
+                "mode": "visible_subagent",
+                "persona": "Nico",
+                "visibility": "human_project_conversation",
+                "turn_type": "steering",
+                "operation": "steer",
+                "memory_first": True,
+                "transport": "scillm_app_server_turn_steer",
+            },
+            mentioned_skills=[],
+        )
+    except ValueError as exc:
+        assert "visible_subagent handoff_id from environment must be a safe identifier" in str(exc)
+    else:
+        raise AssertionError("unsafe environment steering ids must fail closed")
+
+
+def test_ask_visible_subagent_rejects_unsafe_worker_id_before_http(monkeypatch):
+    ask_module = _load_ask_module()
+    posts = []
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            return None
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def post(self, path, json):
+            posts.append({"path": path, "json": json})
+            raise AssertionError("HTTP should not be contacted for unsafe worker id")
+
+    monkeypatch.setenv("ASK_VISIBLE_SUBAGENT_WORKER_ID", "nico/steer")
+    monkeypatch.setattr(ask_module.httpx, "Client", FakeClient)
+    try:
+        ask_module.ask(
+            question="use $memory",
+            oracle_model="gpt-5.5",
+            oracle_backend="scillm",
+            visible_subagent={
+                "mode": "visible_subagent",
+                "persona": "Nico",
+                "visibility": "human_project_conversation",
+                "turn_type": "advisory",
+                "operation": "launch",
+                "memory_first": True,
+                "transport": "scillm_app_server_turn_steer",
+            },
+            mentioned_skills=["memory"],
+        )
+    except ValueError as exc:
+        assert "visible_subagent worker_id from environment must be a safe identifier" in str(exc)
+    else:
+        raise AssertionError("unsafe worker id must fail closed")
+    assert posts == []
+
+
+def test_visible_subagent_launch_turn_carries_high_level_contract(monkeypatch):
+    ask_module = _load_ask_module()
+    posts = []
+
+    class FakeResponse:
+        status_code = 200
+
+        def __init__(self, payload):
+            self._payload = payload
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self._payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs):
+            return None
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def post(self, path, json):
+            posts.append({"path": path, "json": json})
+            if path.endswith("/turn"):
+                return FakeResponse(
+                    {
+                        "state": "completed",
+                        "result_state": "completed",
+                        "transport": "codex_app_server_turn_start",
+                    }
+                )
+            return FakeResponse({"state": "ok"})
+
+        def get(self, path, params=None):
+            posts.append({"path": path, "params": params})
+            return FakeResponse(
+                {
+                    "schema": "scillm.agent_turn_result.v1",
+                    "final_text": "Nico response from app-server result.",
+                    "event_log": "/tmp/events.jsonl",
+                    "result_path": "/tmp/result.json",
+                }
+            )
+
+    monkeypatch.setattr(ask_module.httpx, "Client", FakeClient)
+    monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "", "stderr": ""})
+    monkeypatch.setattr(ask_module, "parse_memory_output", lambda _stdout: [])
+    monkeypatch.setattr(ask_module, "run_sparta_preflight", lambda *args, **kwargs: {"route": "normal_answer", "reason": "test"})
+
+    result = ask_module.ask(
+        question="use $memory before $plan-iterate",
+        oracle_model="gpt-5.5",
+        oracle_backend="scillm",
+        visible_subagent={
+            "mode": "visible_subagent",
+            "persona": "Nico",
+            "visibility": "human_project_conversation",
+            "turn_type": "advisory",
+            "operation": "launch",
+            "memory_first": True,
+            "transport": "scillm_app_server_turn_steer",
+            "original_utterance": "Ask Nico to use $memory before $plan-iterate",
+        },
+        mentioned_skills=["memory", "plan-iterate"],
+    )
+
+    turn_posts = [post for post in posts if post["path"].endswith("/turn")]
+    assert result["visible_subagent_delivery"]["state"] == "completed"
+    assert result["answer"] == "Nico: Nico response from app-server result."
+    assert len(turn_posts) == 1
+    turn_payload = turn_posts[0]["json"]
+    assert set(turn_payload) == {
+        "handoff_id",
+        "lease_id",
+        "service_name",
+        "wait_for_result",
+        "result_timeout_seconds",
+    }
+    assert turn_payload["wait_for_result"] is True
+    assert turn_payload["service_name"] == "ask-visible-subagent"
+    handoff = posts[0]["json"]
+    assert "payload" not in handoff
+    assert "metadata" in handoff
+    assert "Return an actual visible collaborator response" in handoff["validation_expectations"][0]
+    handoff_metadata = handoff["metadata"]
+    assert handoff_metadata["operation"] == "launch"
+    assert handoff_metadata["question"] == "use $memory before $plan-iterate"
+    assert handoff_metadata["mentioned_skills"] == ["memory", "plan-iterate"]
+    assert handoff_metadata["original_utterance"] == "Ask Nico to use $memory before $plan-iterate"
+
+
+def test_cli_bring_visible_subagent_is_launch_not_steer(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [{"solution": "ok"}], "answer": "ok", "bridges_found": []}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Bring",
+            "Nico",
+            "into",
+            "this",
+            "conversation",
+            "to",
+            "review",
+            "$memory",
+            "--ask-id",
+            "visible-nico-bring-launch",
+            "--run-output-root",
+            str(tmp_path / "visible-subagent"),
+            "--overwrite",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    request = json.loads(
+        (
+            tmp_path
+            / "visible-subagent"
+            / "visible-nico-bring-launch"
+            / "visible-nico-bring-launch.request.json"
+        ).read_text()
+    )
+    assert request["visible_subagent"]["trigger_phrase"] == "Bring Nico into this conversation"
+    assert request["visible_subagent"]["turn_type"] == "advisory"
+    assert request["visible_subagent"]["operation"] == "launch"
+    assert request["visible_subagent"]["transport"] == "scillm_app_server_turn_steer"
+    assert captured["oracle_backend"] == "scillm"
+
+
+def test_cli_visible_subagent_does_not_treat_absolute_path_as_skill(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+    captured = {}
+
+    def fake_ask(**kwargs):
+        captured.update(kwargs)
+        return {"items": [{"solution": "ok"}], "answer": "ok", "bridges_found": []}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Ask",
+            "Nico",
+            "to",
+            "read",
+            "/home/graham/workspace/experiments/agent-skills/skills/memory/SKILL.md",
+            "--ask-id",
+            "visible-nico-path-test",
+            "--run-output-root",
+            str(tmp_path / "visible-subagent"),
+            "--overwrite",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    request = json.loads(
+        (tmp_path / "visible-subagent" / "visible-nico-path-test" / "visible-nico-path-test.request.json").read_text()
+    )
+    assert request["mentioned_skills"] == []
+
+
+def test_cli_visible_subagent_does_not_treat_common_absolute_paths_as_skills(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+
+    def fake_ask(**_kwargs):
+        return {"items": [{"solution": "ok"}], "answer": "ok", "bridges_found": []}
+
+    monkeypatch.setattr(ask_module, "ask", fake_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Ask",
+            "Nico",
+            "to",
+            "read",
+            "/Users/alice/project",
+            "/workspace/repo",
+            "/private/tmp/file",
+            "--ask-id",
+            "visible-nico-common-path-test",
+            "--run-output-root",
+            str(tmp_path / "visible-subagent"),
+            "--overwrite",
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    request = json.loads(
+        (
+            tmp_path
+            / "visible-subagent"
+            / "visible-nico-common-path-test"
+            / "visible-nico-common-path-test.request.json"
+        ).read_text()
+    )
+    assert request["mentioned_skills"] == []
 
 
 def test_cli_parallel_review_implies_oracle(monkeypatch):
@@ -211,7 +891,7 @@ def test_cli_natural_argue_maps_to_scillm_protocol(monkeypatch):
     assert captured["decision_required"] is False
 
 
-def test_cli_deep_review_implies_xhigh_subagent_parallel_review(monkeypatch):
+def test_cli_deep_review_implies_xhigh_scillm_parallel_review(monkeypatch):
     ask_module = _load_ask_module()
     captured = {}
 
@@ -242,7 +922,7 @@ def test_cli_deep_review_implies_xhigh_subagent_parallel_review(monkeypatch):
     assert captured["deep_review_target"] == "src/ask/ask.py"
     assert captured["oracle_model"] == "gpt-5.5"
     assert captured["oracle_reasoning"] == "xhigh"
-    assert captured["oracle_backend"] == "subagent-runner"
+    assert captured["oracle_backend"] == "scillm"
     assert captured["parallel_review"] is True
     assert captured["parallel_reviewers"] == 6
     assert captured["parallel_review_focus"] == "boundaries,tests,auditability"

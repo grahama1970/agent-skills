@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ask_artifacts/
+local/
+.plan-iterate/
+*.pyc
+ask_task_state.json

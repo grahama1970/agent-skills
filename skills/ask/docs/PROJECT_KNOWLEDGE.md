@@ -90,6 +90,7 @@ curated context. Memory recall is context, not evidence.
 - `/ask --cae-gap-review` is a post-evidence-case QRA review layer. `/create-evidence-case` builds or loads the QRA, controls, answer, crosswalk chains, formal proof/SACM refs when present, and cached `evidence_case`; `/ask` freezes that snapshot and reviews whether the QRA has enough cited support for human review.
 - 2026-05-06: /ask now has standalone image generation mode. Use ./run.sh ask <prompt> --image-generate to call /scillm POST /v1/images/generations, write generated image files plus image_generation.json into the ask run artifacts, and mark the run answered without mixing memory retrieval, oracle, roundtable, argue, parallel-review, deep-review, or CAE gap-review modes.
 - 2026-05-06 correction: /ask --image-generate relies on scillm image credentials; the normal project-agent path is existing Codex/OpenAI OAuth through scillm. OPENAI_API_KEY is optional platform-key override only, not required for project agents when OAuth is configured.
+- 2026-05-20: A real `$ask --deep-review` run against the scillm DAG viewer-editor exposed two deep-review verifier/schema gaps. The prompt now explicitly requires top-level `blocking_issues` and `significant_risks` to include `severity`, `issue`, `evidence`, `evidence_citations`, `impact`, `fix`, and `verification`; the normalizer now backfills missing plain `evidence` from structured citations and filters incomplete section-local notes so they do not masquerade as formal findings. Final rerun `dag-ux-gpt55-round2-final` reached `state: answered`, verdict `SAFE_WITH_CONDITIONS`, verifier `PASS`.
 
 ## Recent Decisions
 
@@ -127,6 +128,7 @@ curated context. Memory recall is context, not evidence.
 | 2026-05-11 | Add per-hour ChatGPT round budget guard at the runtime layer. | Multi-round ping-pong + per-project bindings + retry-on-not-SAFE could exhaust the account's per-3-hour cap mid-session. `ASK_WEBGPT_MAX_ROUNDS_PER_HOUR` (default 30) caps total rounds across all projects; `ASK_WEBGPT_RATE_LIMIT_DISABLE=1` is only for tests. |
 | 2026-05-11 | Empty `--webgpt-diff-scope` means `git diff` (uncommitted), not "no diff at all". | ASK-WEBGPT-001 caught by the webgpt self-review: `clarify_diff_scope` returns `""` for the uncommitted choice; the prior `resolve_diff("")` short-circuited to empty so reviews could run with no evidence. Fixed by running bare `git diff --no-color`. |
 | 2026-05-11 | `--webgpt-create-tab` overrides a stale manual project binding. | ASK-WEBGPT-002 caught by the webgpt self-review: `call_webgpt` was raising `WebgptBackendError` from a stale manual binding before checking `create_tab`. The error message told users to pass `--webgpt-create-tab` but that branch never executed. Fixed by catching the ProjectBindingError when `create_tab=True`. |
+| 2026-05-20 | Deep-review verifier schema must normalize evidence-bearing findings before gating. | The DAG UX review runs showed that model outputs may provide structured `evidence_citations` without a plain `evidence` field and may emit informal section notes; verifier gates should fail closed, but prompt/normalizer must convert or discard those shapes deterministically instead of requiring manual artifact surgery. |
 
 ## Open Questions
 
@@ -143,6 +145,14 @@ curated context. Memory recall is context, not evidence.
       Current answer: realistic E2E must include domain scope, persona routing,
       roundtable behavior, and real `/scillm` calls for `/scillm` DAG paths;
       deterministic tests remain route/unit coverage.
+
+## Agent Takeover Notes
+
+- Current active work: Continue scillm DAG planner-editor visual/browser proof after the ask deep-review verifier repair.
+- Evidence pointers: ask runtime status `/home/graham/workspace/experiments/agent-skills/skills/ask/.ask_artifacts/runs/dag-ux-gpt55-round2-final/dag-ux-gpt55-round2-final.status.json`; final review `/home/graham/workspace/experiments/scillm/.ask_artifacts/deep-review/20260520T121424Z/review.md`; final review JSON `/home/graham/workspace/experiments/scillm/.ask_artifacts/deep-review/20260520T121424Z/review.json`; changed files `src/ask/deep_review.py` and `tests/test_deep_review_protocol.py`.
+- Next action: Capture or build fresh browser proof for the scillm DAG planner-editor showing the review-code fanout row with model, agent, contract, prompt, review level, proof floor, and editable Best-practice skills visible and not clipped.
+- Blockers/caveats: `examples/exec-graph-debugger` currently has no standalone runnable harness; do not claim final DAG UX readiness from code/DOM assertions alone. The ask review verdict is `SAFE_WITH_CONDITIONS`, not final visual PASS.
+- Last verified command/artifact: `PYTHONPATH=src pytest -q tests/test_deep_review_protocol.py tests/test_deep_review_section_citations.py tests/test_deep_review_telemetry.py` => 14 passed; `dag-ux-gpt55-round2-final.status.json` => state `answered`, verifier `PASS`.
 
 ## Key Files
 

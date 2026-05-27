@@ -197,6 +197,7 @@ def _apply_oracle_synthesis(
     persona_model: Optional[str],
     peer_model: Optional[str],
     persona_scope: str,
+    oracle_image_paths: Optional[list[str]] = None,
     roundtable: bool = False,
     roundtable_personas: Optional[str] = None,
     roundtable_role_preset: str = "adversarial-review",
@@ -299,6 +300,7 @@ def _apply_oracle_synthesis(
                 iterations=iterations,
                 persona_model=persona_model,
                 peer_model=peer_model,
+                image_paths=oracle_image_paths or [],
                 run_state=run_state,
             )
             protocol_state = {}
@@ -329,6 +331,7 @@ def _apply_oracle_synthesis(
                 iterations=iterations,
                 persona_model=persona_model,
                 peer_model=peer_model,
+                image_paths=oracle_image_paths or [],
                 run_state=run_state,
             )
             protocol_state = {}
@@ -354,6 +357,9 @@ def _apply_oracle_synthesis(
             result["oracle"]["persona_model"] = persona_model
         if peer_model:
             result["oracle"]["peer_model"] = peer_model
+        if oracle_image_paths:
+            result["oracle"]["image_paths"] = oracle_image_paths
+            result["oracle"]["image_count"] = len(oracle_image_paths)
         if freshness_policy.get("model_alias"):
             result["oracle"]["model_alias"] = freshness_policy["model_alias"]
         result["oracle"]["dogpile_mode"] = freshness_policy.get("dogpile_mode", "auto")
@@ -829,6 +835,7 @@ def _run_oracle_iterations(
     iterations: int,
     persona_model: Optional[str],
     peer_model: Optional[str],
+    image_paths: Optional[list[str]] = None,
     run_state: object | None = None,
 ) -> tuple[str, str, list[dict]]:
     """Run one or more sequential oracle calls as subagent-style deliberation."""
@@ -840,6 +847,7 @@ def _run_oracle_iterations(
             reasoning_effort=reasoning_effort,
             timeout=timeout,
             prompt=base_prompt,
+            image_paths=image_paths or [],
             run_state=run_state,
             iteration=1,
             persona=persona or "oracle",
@@ -875,6 +883,7 @@ def _run_oracle_iterations(
             reasoning_effort=reasoning_effort,
             timeout=timeout,
             prompt=prompt,
+            image_paths=image_paths or [],
             run_state=run_state,
             iteration=turn_number,
             persona=active_persona,

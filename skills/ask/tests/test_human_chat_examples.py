@@ -282,7 +282,7 @@ def test_documented_deep_review_prompt_maps_to_deep_review(monkeypatch):
     assert captured["deep_review"] is True
     assert captured["deep_review_target"] == "src/ask/ask.py"
     assert captured["oracle_reasoning"] == "xhigh"
-    assert captured["oracle_backend"] == "subagent-runner"
+    assert captured["oracle_backend"] == "scillm"
 
 
 def test_documented_chat_examples_file_keeps_required_categories():

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import tempfile
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -18,6 +20,16 @@ from .run_state import AskRunState
 from .scillm_runtime import build_scillm_metadata
 from .skills_exec import AGENT_SKILLS_DIR, SKILLS_DIR, parse_json_output, parse_memory_output, run_memory_recall, run_skill
 from .dag_repair import apply_dag_repairs, resolve_node_timeout
+
+try:
+    import networkx as nx
+except ImportError:  # pragma: no cover
+    nx = None  # type: ignore[assignment]
+
+try:
+    from phart import ASCIIRenderer
+except ImportError:  # pragma: no cover
+    ASCIIRenderer = None  # type: ignore[assignment,misc]
 
 
 ASK_DAG_SCHEMA_VERSION = "ask.dag.v1"
@@ -456,14 +468,320 @@ def validate_ask_dag(dag: dict[str, Any], *, base_dir: Path | None = None) -> di
     }
 
 
+def dag_execution_layers(dag: dict[str, Any]) -> list[dict[str, Any]]:
+    """Summarize topological layers for dry-run charts and telemetry."""
+    layers = _topological_layers(dag["nodes"])
+    return [
+        {
+            "layer_index": index,
+            "concurrent": len(layer) > 1,
+            "node_ids": [node["id"] for node in layer],
+            "nodes": [
+                {
+                    "id": node["id"],
+                    "type": node["type"],
+                    "depends_on": node.get("depends_on", []),
+                    "allow_failure": bool(node.get("allow_failure")),
+                }
+                for node in layer
+            ],
+        }
+        for index, layer in enumerate(layers, 1)
+    ]
+
+
+def _node_box_lines(node: dict[str, Any], width: int) -> list[str]:
+    """Render one mockup-style decision-tree node box."""
+    width = max(width, 16)
+    title = str(node["id"])[: width - 2]
+    kind = str(node["type"])[: width - 2]
+    marker = "opt" if node.get("allow_failure") else "req"
+    inner_w = width - 2
+    return [
+        f"┌{'─' * inner_w}┐",
+        f"│ {title.ljust(inner_w - 1)}│",
+        f"│ {kind.ljust(inner_w - 1)}│",
+        f"│ [{marker}]".ljust(width - 1) + "│",
+        f"└{'─' * inner_w}┘",
+    ]
+
+
+def _place_boxes_side_by_side(boxes: list[list[str]], gap: int = 3) -> tuple[list[str], list[int], int]:
+    if not boxes:
+        return [], [], 0
+    height = max(len(box) for box in boxes)
+    widths = [max(len(line) for line in box) for box in boxes]
+    padded: list[list[str]] = []
+    for box, w in zip(boxes, widths):
+        rows = [line.ljust(w) for line in box]
+        padded.append(rows + ["".ljust(w)] * (height - len(rows)))
+    segment_widths = widths[:-1] + [widths[-1]]
+    for idx in range(len(segment_widths) - 1):
+        segment_widths[idx] += gap
+    total_width = sum(segment_widths)
+    lines = ["".ljust(total_width) for _ in range(height)]
+    centers: list[int] = []
+    offset = 0
+    for idx, box in enumerate(padded):
+        w = widths[idx]
+        for row_idx, row in enumerate(box):
+            lines[row_idx] = lines[row_idx][:offset] + row + lines[row_idx][offset + w :]
+        centers.append(offset + w // 2)
+        offset += segment_widths[idx]
+    return lines, centers, total_width
+
+
+def _blank_row(width: int) -> list[str]:
+    return [" "] * width
+
+
+def _connect_layers(parent_cols: list[int], child_cols: list[int], width: int) -> list[str]:
+    """Draw decision-tree connectors between two topological layers."""
+    rows: list[list[str]] = []
+    if not parent_cols or not child_cols:
+        return []
+
+    if len(parent_cols) == 1 and len(child_cols) == 1:
+        parent_col, child_col = parent_cols[0], child_cols[0]
+        if parent_col == child_col:
+            row = _blank_row(width)
+            row[parent_col] = "│"
+            rows.append(row)
+            rows.append(list(row))
+            return ["".join(r) for r in rows]
+        left = min(parent_col, child_col)
+        right = max(parent_col, child_col)
+        top = _blank_row(width)
+        top[parent_col] = "│"
+        bridge = _blank_row(width)
+        for col in range(left, right + 1):
+            bridge[col] = "─"
+        bridge[child_col] = "┬"
+        bottom = _blank_row(width)
+        bottom[child_col] = "│"
+        return ["".join(top), "".join(bridge), "".join(bottom)]
+
+    if len(parent_cols) == 1 and len(child_cols) > 1:
+        parent_col = parent_cols[0]
+        top = _blank_row(width)
+        top[parent_col] = "│"
+        bridge = _blank_row(width)
+        left = min(child_cols)
+        right = max(child_cols)
+        for col in range(left, right + 1):
+            bridge[col] = "─"
+        for col in child_cols:
+            bridge[col] = "┬"
+        stems = _blank_row(width)
+        for col in child_cols:
+            stems[col] = "│"
+        return ["".join(top), "".join(bridge), "".join(stems)]
+
+    # fan-in (many parents → one child)
+    stems = _blank_row(width)
+    for col in parent_cols:
+        stems[col] = "│"
+    rows.append(stems)
+    bridge = _blank_row(width)
+    merge_cols = parent_cols + child_cols
+    left = min(merge_cols)
+    right = max(merge_cols)
+    for col in range(left, right + 1):
+        bridge[col] = "─"
+    bridge[child_cols[0]] = "┴"
+    bottom = _blank_row(width)
+    bottom[child_cols[0]] = "│"
+    rows.extend([bridge, bottom])
+    return ["".join(r) for r in rows]
+
+
+def _format_dag_ascii_chart_fallback(dag: dict[str, Any]) -> str:
+    """Fallback renderer when PHART is unavailable."""
+    graph_id = str(dag.get("graph_id") or dag.get("source_graph_id") or "ask-dag")
+    schema = str(dag.get("schema_version") or dag.get("source_graph_version") or ASK_DAG_SCHEMA_VERSION)
+    goal = str(dag.get("graph_goal") or "").strip()
+    max_concurrency = int(dag.get("max_concurrency", 8))
+    layers = dag_execution_layers(dag)
+
+    header = [
+        "```text",
+        f"DAG decision tree · {graph_id}",
+        f"schema={schema} · max_concurrency={max_concurrency}",
+    ]
+    if goal:
+        header.append(f"goal: {goal}")
+    header.append("req=required (fail-closed) · opt=allow_failure")
+    header.append("")
+
+    if not layers:
+        header.append("(empty graph)")
+        header.append("```")
+        return "\n".join(header)
+
+    rendered_layers: list[tuple[list[str], list[int], int]] = []
+    for layer in layers:
+        boxes = [
+            _node_box_lines(node, max(16, len(node["id"]) + 6, len(node["type"]) + 4))
+            for node in layer["nodes"]
+        ]
+        rendered_layers.append(_place_boxes_side_by_side(boxes))
+
+    canvas_width = max(width for _, _, width in rendered_layers)
+
+    canvas: list[str] = []
+    prev_centers: list[int] = []
+
+    for layer_index, (row_lines, centers, row_width) in enumerate(rendered_layers):
+        left_pad = (canvas_width - row_width) // 2
+        abs_centers = [center + left_pad for center in centers]
+        if prev_centers:
+            canvas.extend(_connect_layers(prev_centers, abs_centers, canvas_width))
+        canvas.extend(" " * left_pad + line for line in row_lines)
+        prev_centers = abs_centers
+
+    footer = [
+        "",
+        "flow: top → bottom · siblings on one row = concurrent lane (see DAG-ux-mockup.html)",
+    ]
+    return "\n".join(header + canvas + footer + ["```"])
+
+
+def _phart_display_name(node: dict[str, Any]) -> str:
+    """Compact node label for PHART boxes (id + short type + optional marker)."""
+    short_type = str(node["type"]).split(".")[-1]
+    suffix = "?" if node.get("allow_failure") else ""
+    name = f"{node['id']}:{short_type}{suffix}"
+    return name[:32]
+
+
+def _dag_to_networkx(dag: dict[str, Any]):
+    """Build a NetworkX DiGraph from an ask DAG for PHART rendering."""
+    if nx is None:
+        return None
+    graph = nx.DiGraph()
+    for node in dag["nodes"]:
+        graph.add_node(_phart_display_name(node), ask_id=node["id"], node_type=node["type"])
+    for node in dag["nodes"]:
+        child = _phart_display_name(node)
+        for parent_id in node.get("depends_on", []):
+            parent = next(
+                (n for n in dag["nodes"] if n["id"] == parent_id),
+                None,
+            )
+            if parent is None:
+                continue
+            graph.add_edge(_phart_display_name(parent), child)
+    return graph
+
+
+PHART_GIT_REPO = "https://github.com/scottvr/phart.git"
+PHART_DAG_CHART_DIR = Path(__file__).resolve().parents[2].parent / "phart-dag-chart"
+# Legacy nested renderer; prefer phart-dag-chart skill
+PHART_RENDERER_DIR = PHART_DAG_CHART_DIR
+
+
+def _format_dag_ascii_chart_phart_git(dag: dict[str, Any]) -> str | None:
+    """Render via $phart-dag-chart skill (PHART 1.5 git, Python 3.14)."""
+    uv_bin = "uv"
+    project_dir = PHART_DAG_CHART_DIR
+    if not (project_dir / "pyproject.toml").is_file():
+        return None
+    try:
+        with tempfile.NamedTemporaryFile("w", suffix=".dag.json", delete=False, encoding="utf-8") as handle:
+            json.dump(dag, handle, indent=2)
+            handle.flush()
+            dag_path = Path(handle.name)
+        proc = subprocess.run(
+            [uv_bin, "run", "--directory", str(project_dir), "phart-dag-chart", "chart", str(dag_path)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=90,
+        )
+        dag_path.unlink(missing_ok=True)
+        if proc.returncode != 0:
+            return None
+        out = proc.stdout.strip()
+        if not out and proc.stderr.strip():
+            return None
+        return out or None
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        return None
+
+
+def _format_dag_ascii_chart_phart_pypi(dag: dict[str, Any]) -> str | None:
+    """Render DAG via PHART PyPI (1.1.x, in-process, Python 3.11–3.12)."""
+    if ASCIIRenderer is None or nx is None:
+        return None
+    graph = _dag_to_networkx(dag)
+    if graph is None or graph.number_of_nodes() == 0:
+        return None
+    try:
+        renderer = ASCIIRenderer(
+            graph,
+            layer_spacing=3,
+            node_spacing=5,
+        )
+        body = renderer.render().rstrip()
+    except Exception:
+        return None
+    graph_id = str(dag.get("graph_id") or dag.get("source_graph_id") or "ask-dag")
+    schema = str(dag.get("schema_version") or dag.get("source_graph_version") or ASK_DAG_SCHEMA_VERSION)
+    goal = str(dag.get("graph_goal") or "").strip()
+    header = [
+        "```text",
+        f"DAG decision tree · {graph_id} (phart pypi)",
+        f"schema={schema} · max_concurrency={dag.get('max_concurrency', 8)}",
+    ]
+    if goal:
+        header.append(f"goal: {goal}")
+    header.append("node label: id:short_type  (? = allow_failure)")
+    header.append("")
+    footer = [
+        "",
+        "renderer: phart (pypi) · upgrade: phart-dag-chart skill uses github.com/scottvr/phart",
+    ]
+    return "\n".join(header + [body] + footer + ["```"])
+
+
+def _format_dag_ascii_chart_phart(dag: dict[str, Any]) -> str | None:
+    """Prefer PHART 1.5 git (bboxes); fall back to in-process PyPI phart."""
+    return _format_dag_ascii_chart_phart_git(dag) or _format_dag_ascii_chart_phart_pypi(dag)
+
+
+def format_dag_ascii_chart(dag: dict[str, Any], *, prefer_phart: bool = True) -> str:
+    """Render terminal DAG chart; PHART when installed, else built-in fallback."""
+    if prefer_phart:
+        phart_chart = _format_dag_ascii_chart_phart(dag)
+        if phart_chart:
+            return phart_chart
+    return _format_dag_ascii_chart_fallback(dag)
+
+
+def dag_ascii_renderer_name(dag: dict[str, Any] | None = None) -> str:
+    """Report which renderer would be used (phart-git|phart-pypi|fallback)."""
+    if dag is not None:
+        if _format_dag_ascii_chart_phart_git(dag) is not None:
+            return "phart-git"
+        if _format_dag_ascii_chart_phart_pypi(dag) is not None:
+            return "phart-pypi"
+    return "fallback"
+
+
 def dag_dry_run_summary(dag: dict[str, Any] | None) -> dict[str, Any] | None:
     if not dag:
         return None
+    layers = dag_execution_layers(dag)
     return {
         "schema_version": ASK_DAG_SCHEMA_VERSION,
         "source_graph_version": dag.get("source_graph_version", ""),
+        "graph_id": dag.get("graph_id", ""),
         "max_concurrency": dag.get("max_concurrency", 8),
         "node_count": len(dag["nodes"]),
+        "layer_count": len(layers),
+        "layers": layers,
+        "ascii_chart": format_dag_ascii_chart(dag),
+        "ascii_renderer": dag_ascii_renderer_name(dag),
         "nodes": [
             {
                 "id": node["id"],

@@ -208,6 +208,54 @@ def test_oracle_synthesis_preserves_model_alias_metadata(monkeypatch):
     assert result["oracle"]["model_served"] == "opencode-go/kimi-k2.6"
 
 
+def test_oracle_synthesis_forwards_image_paths_to_direct_scillm(monkeypatch, tmp_path):
+    image_path = tmp_path / "posture-page.png"
+    image_path.write_bytes(b"\x89PNG\r\n\x1a\nask-oracle-image-test")
+    captured = {}
+    result = {
+        "question": "review screenshot",
+        "scope": "ask",
+        "items": [{"problem": "screenshot", "solution": "Review the attached screenshot."}],
+        "answer": "Review the attached screenshot.",
+        "oracle": {
+            "dogpile_mode": "off",
+            "dogpile_recommended": False,
+        },
+    }
+
+    monkeypatch.setattr(ask_oracle, "_load_oracle_persona_profiles", lambda **_kwargs: {})
+
+    def fake_run_oracle_iterations(**kwargs):
+        captured.update(kwargs)
+        return "IMAGE REVIEW", kwargs["model"], [{"iteration": 1}]
+
+    monkeypatch.setattr(ask_oracle, "_run_oracle_iterations", fake_run_oracle_iterations)
+
+    ask_oracle._apply_oracle_synthesis(
+        result,
+        k=1,
+        model="opencode-go/kimi-k2.6",
+        reasoning_effort="high",
+        timeout=30,
+        idle_timeout=30,
+        heartbeat_interval=5,
+        persona=None,
+        consult_personas=[],
+        peer=None,
+        iterations=1,
+        backend="scillm",
+        persona_model=None,
+        peer_model=None,
+        persona_scope="personas",
+        oracle_image_paths=[str(image_path)],
+    )
+
+    assert captured["image_paths"] == [str(image_path)]
+    assert result["answer"] == "IMAGE REVIEW"
+    assert result["oracle"]["image_paths"] == [str(image_path)]
+    assert result["oracle"]["image_count"] == 1
+
+
 def test_subagent_event_socket_receives_structured_events():
     event_socket, socket_path = oracle_adapters._open_subagent_event_socket("socket-test")
     assert event_socket is not None
@@ -277,6 +325,7 @@ def test_wait_for_subagent_session_mirrors_socket_events_to_parent_run(monkeypat
         events = [event["event"] for event in parent_status["event_tail"]]
         assert state["status"] == "completed"
         assert "subagent_session_completed" in events
+        assert "subagent_final" in events
         assert parent_status["subagent"]["status"] == "completed"
         assert parent_status["subagent"]["transcript_bytes"] == 123
     finally:
@@ -359,6 +408,91 @@ def test_scillm_oracle_call_records_runtime_events(monkeypatch, tmp_path):
     assert "moonshotai/kimi-k2.6-20260420" in events
 
 
+def test_scillm_oracle_call_sends_openai_image_url_parts(monkeypatch, tmp_path):
+    run_state = AskRunState("scillm-oracle-image", output_root=tmp_path)
+    run_state.write_request({"command": "ask", "question": "image smoke"})
+    image_path = tmp_path / "posture-page.png"
+    image_path.write_bytes(b"\x89PNG\r\n\x1a\nask-oracle-image-test")
+
+    captured = {}
+
+    class _StreamResponse:
+        def raise_for_status(self):
+            return None
+
+        def iter_lines(self):
+            yield 'data: {"model":"opencode-go/kimi-k2.6","choices":[{"delta":{"content":"saw image"}}]}'
+            yield "data: [DONE]"
+
+    class _StreamContext:
+        def __enter__(self):
+            return _StreamResponse()
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    def fake_stream(*args, **kwargs):
+        captured.update(kwargs)
+        return _StreamContext()
+
+    monkeypatch.setattr(oracle_adapters.httpx, "stream", fake_stream)
+
+    content, model_served = oracle_adapters._complete_oracle_call(
+        model="oc-kimi",
+        reasoning_effort="high",
+        timeout=60,
+        prompt="review screenshot",
+        image_paths=[str(image_path)],
+        run_state=run_state,
+        iteration=1,
+        persona="Brandon",
+    )
+
+    user_content = captured["json"]["messages"][1]["content"]
+    events = run_state.events_path.read_text(encoding="utf-8")
+    assert content == "saw image"
+    assert model_served == "opencode-go/kimi-k2.6"
+    assert isinstance(user_content, list)
+    assert user_content[0] == {"type": "text", "text": "review screenshot"}
+    assert user_content[1]["type"] == "image_url"
+    assert user_content[1]["image_url"]["url"].startswith("data:image/png;base64,")
+    assert captured["json"]["stream"] is True
+    assert captured["json"]["stream_progress_events"] is True
+    assert '"image_count": 1' in events
+    request_built_events = [
+        json.loads(line)
+        for line in run_state.events_path.read_text(encoding="utf-8").splitlines()
+        if json.loads(line).get("event") == "oracle_scillm_request_built"
+    ]
+    assert len(request_built_events) == 1
+    request_built = request_built_events[0]
+    assert request_built["request_transport"] == "openai_chat_completions"
+    assert request_built["openai_multimodal"] is True
+    assert request_built["stream"] is True
+    assert request_built["stream_progress_events"] is True
+    assert request_built["message_roles"] == ["system", "user"]
+    assert request_built["user_content_part_types"] == ["text", "image_url"]
+    assert request_built["text_part_count"] == 1
+    assert request_built["image_url_count"] == 1
+    assert request_built["image_mime_types"] == ["image/png"]
+    assert request_built["image_byte_counts"] == [len(b"\x89PNG\r\n\x1a\nask-oracle-image-test")]
+    assert request_built["raw_payload_redacted"] is True
+    assert "ask-oracle-image-test" not in json.dumps(request_built)
+    assert "base64" not in json.dumps(request_built)
+
+
+def test_oracle_image_parts_reject_non_image_mime(tmp_path):
+    note_path = tmp_path / "note.txt"
+    note_path.write_text("not an image", encoding="utf-8")
+
+    try:
+        oracle_adapters._oracle_image_parts([str(note_path)])
+    except ValueError as exc:
+        assert "not an image MIME type" in str(exc)
+    else:
+        raise AssertionError("expected non-image oracle attachment to be rejected")
+
+
 def test_wait_for_subagent_session_mirrors_terminal_status_without_socket_event(monkeypatch, tmp_path):
     monkeypatch.setattr(oracle_adapters, "_record_subagent_heartbeat", lambda *args, **kwargs: None)
     artifact_dir = tmp_path / "child-terminal"
@@ -395,3 +529,4 @@ def test_wait_for_subagent_session_mirrors_terminal_status_without_socket_event(
     parent_status = read_status("parent-terminal", tail_events=10, output_root=tmp_path)
     assert state["status"] == "completed"
     assert any(event["event"] == "subagent_session_completed" for event in parent_status["event_tail"])
+    assert any(event["event"] == "subagent_final" for event in parent_status["event_tail"])

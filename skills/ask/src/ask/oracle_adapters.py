@@ -12,6 +12,8 @@ from .env import load_dotenv_once
 load_dotenv_once()
 import hashlib
 import json
+import base64
+import mimetypes
 import os
 import socket
 import subprocess
@@ -220,6 +222,11 @@ def _complete_oracle_subagent_call(
     runner = Path(SUBAGENT_RUNNER)
     if not runner.exists():
         raise RuntimeError(f"subagent-runner not found: {runner}")
+    codex_sandbox = os.environ.get("ASK_ORACLE_CODEX_SANDBOX", "read-only").strip() or "read-only"
+    if codex_sandbox not in {"read-only", "workspace-write", "danger-full-access"}:
+        raise RuntimeError(
+            "ASK_ORACLE_CODEX_SANDBOX must be one of: read-only, workspace-write, danger-full-access"
+        )
 
     output_root = Path(SUBAGENT_OUTPUT_DIR)
     output_root.mkdir(parents=True, exist_ok=True)
@@ -238,7 +245,7 @@ def _complete_oracle_subagent_call(
         (
             'codex exec --model "$ASK_ORACLE_MODEL" '
             '-c "reasoning_effort=\\"$ASK_ORACLE_REASONING\\"" '
-            '--sandbox read-only '
+            '--sandbox "$ASK_ORACLE_CODEX_SANDBOX" '
             '--cd "$ASK_ORACLE_CWD" '
             '--output-last-message "$ASK_ORACLE_ANSWER_FILE" '
             '--color never '
@@ -264,6 +271,7 @@ def _complete_oracle_subagent_call(
             "SCILLM_API_KEY": SCILLM_API_KEY,
             "ASK_ORACLE_MODEL": model,
             "ASK_ORACLE_REASONING": reasoning_effort,
+            "ASK_ORACLE_CODEX_SANDBOX": codex_sandbox,
             "ASK_ORACLE_CWD": str(Path.cwd()),
             "ASK_ORACLE_ANSWER_FILE": str(answer_file),
             "ASK_ORACLE_PROMPT_FILE": str(prompt_file),
@@ -274,7 +282,7 @@ def _complete_oracle_subagent_call(
             "SUBAGENT_RUNNER_HEARTBEAT_INTERVAL": str(heartbeat_interval),
             "SUBAGENT_RUNNER_EVENT_SOCKET": event_socket_path or "",
         },
-        "tags": ["ask", "oracle", "subagent-runner", model, reasoning_effort],
+        "tags": ["ask", "oracle", "subagent-runner", model, reasoning_effort, codex_sandbox],
     }
     spec_file.write_text(json.dumps(spec, indent=2))
 
@@ -670,6 +678,7 @@ def _mirror_subagent_event(
         return
     kind = str(event.get("kind", "event"))
     payload = event.get("payload") if isinstance(event.get("payload"), dict) else {}
+    event_source = str(event.get("source") or payload.get("source") or "controller")
     subagent = {
         "task_id": task_id,
         "session_id": str(state.get("session_id") or Path(artifact_dir).name),
@@ -678,6 +687,8 @@ def _mirror_subagent_event(
         "model": model,
         "turn_number": turn_number,
         "last_event": kind,
+        "last_event_ts": event.get("ts"),
+        "last_actor": event_source,
         "status": str(state.get("status") or event.get("status") or "unknown"),
         "status_reason": str(state.get("status_reason") or ""),
         "transcript_bytes": payload.get("transcript_bytes"),
@@ -689,6 +700,13 @@ def _mirror_subagent_event(
             subagent=subagent,
             child_payload=_safe_child_payload(kind, payload),
         )
+        normalized_kind = _normalized_visible_subagent_event(kind)
+        if normalized_kind:
+            run_state.event(
+                normalized_kind,
+                subagent=subagent,
+                child_payload=_safe_child_payload(kind, payload),
+            )
         run_state.update(
             "running",
             current_step="synthesis",
@@ -728,6 +746,21 @@ def _safe_child_payload(kind: str, payload: dict[str, Any]) -> dict[str, Any]:
         if key not in {"command", "prompt", "transcript", "stdout", "stderr"}
         and isinstance(value, (str, int, float, bool, type(None)))
     }
+
+
+def _normalized_visible_subagent_event(kind: str) -> str | None:
+    return {
+        "session_started": "subagent_started",
+        "transcript_delta": "transcript_delta",
+        "session_heartbeat": "heartbeat",
+        "session_completed": "subagent_final",
+        "session_failed": "needs_attention",
+        "session_cancelled": "needs_attention",
+        "session_timed_out": "needs_attention",
+        "session_stalled": "needs_attention",
+        "controller_stalled": "needs_attention",
+        "controller_timed_out": "needs_attention",
+    }.get(kind)
 
 
 def _event_kind_for_terminal_status(status: str) -> str:
@@ -823,6 +856,7 @@ def _complete_oracle_call(
     reasoning_effort: str,
     timeout: float,
     prompt: str,
+    image_paths: list[str] | None = None,
     run_state: object | None = None,
     iteration: int | None = None,
     persona: str | None = None,
@@ -838,8 +872,16 @@ def _complete_oracle_call(
         event_payload["iteration"] = iteration
     if persona:
         event_payload["persona"] = persona
+    image_parts = _oracle_image_parts(image_paths or [])
+    if image_parts:
+        event_payload["image_count"] = len(image_parts)
     if run_state is not None and hasattr(run_state, "event"):
         run_state.event("oracle_scillm_call_started", **event_payload)
+    user_content: str | list[dict[str, object]]
+    if image_parts:
+        user_content = [{"type": "text", "text": prompt}, *image_parts]
+    else:
+        user_content = prompt
     body = {
         "model": model,
         "messages": [
@@ -851,7 +893,7 @@ def _complete_oracle_call(
                     "knowledge from inference."
                 ),
             },
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": user_content},
         ],
         "temperature": 0,
         "reasoning_effort": reasoning_effort,
@@ -860,6 +902,12 @@ def _complete_oracle_call(
         "timeout": timeout,
         "stream_heartbeat_s": max(5.0, min(15.0, float(timeout) / 20.0)),
     }
+    if run_state is not None and hasattr(run_state, "event"):
+        run_state.event(
+            "oracle_scillm_request_built",
+            **event_payload,
+            **_summarize_scillm_request_body(body),
+        )
     try:
         content_parts: list[str] = []
         model_served = model
@@ -952,6 +1000,93 @@ def _complete_oracle_call(
                 error=str(exc)[:500],
             )
         raise
+
+
+def _oracle_image_parts(image_paths: list[str]) -> list[dict[str, object]]:
+    """Convert host image paths to OpenAI-compatible image_url data URI parts."""
+    parts: list[dict[str, object]] = []
+    for raw_path in image_paths:
+        path = Path(raw_path).expanduser()
+        if not path.exists():
+            raise FileNotFoundError(f"oracle image path does not exist: {path}")
+        if not path.is_file():
+            raise ValueError(f"oracle image path is not a file: {path}")
+        mime = mimetypes.guess_type(str(path))[0] or "image/png"
+        if not mime.startswith("image/"):
+            raise ValueError(f"oracle image path is not an image MIME type: {path} ({mime})")
+        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+        parts.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:{mime};base64,{encoded}"},
+        })
+    return parts
+
+
+def _summarize_scillm_request_body(body: dict[str, object]) -> dict[str, object]:
+    """Return a proof-oriented request shape without raw prompt or image bytes."""
+    messages = body.get("messages")
+    message_roles: list[str] = []
+    user_content_part_types: list[str] = []
+    image_mime_types: list[str] = []
+    image_byte_counts: list[int] = []
+    image_url_count = 0
+    text_part_count = 0
+
+    if isinstance(messages, list):
+        for message in messages:
+            if not isinstance(message, dict):
+                continue
+            role = message.get("role")
+            if isinstance(role, str):
+                message_roles.append(role)
+            content = message.get("content")
+            if isinstance(content, list):
+                for part in content:
+                    if not isinstance(part, dict):
+                        continue
+                    part_type = part.get("type")
+                    if isinstance(part_type, str):
+                        user_content_part_types.append(part_type)
+                    if part_type == "text":
+                        text_part_count += 1
+                    if part_type != "image_url":
+                        continue
+                    image_url = part.get("image_url")
+                    if not isinstance(image_url, dict):
+                        continue
+                    url = image_url.get("url")
+                    if not isinstance(url, str):
+                        continue
+                    image_url_count += 1
+                    mime, byte_count = _summarize_data_uri(url)
+                    if mime:
+                        image_mime_types.append(mime)
+                    if byte_count is not None:
+                        image_byte_counts.append(byte_count)
+
+    return {
+        "request_transport": "openai_chat_completions",
+        "openai_multimodal": image_url_count > 0,
+        "stream": bool(body.get("stream")),
+        "stream_progress_events": bool(body.get("stream_progress_events")),
+        "message_roles": message_roles,
+        "user_content_part_types": user_content_part_types,
+        "text_part_count": text_part_count,
+        "image_url_count": image_url_count,
+        "image_mime_types": image_mime_types,
+        "image_byte_counts": image_byte_counts,
+        "raw_payload_redacted": True,
+    }
+
+
+def _summarize_data_uri(url: str) -> tuple[str | None, int | None]:
+    if not url.startswith("data:") or "," not in url:
+        return None, None
+    header, encoded = url.split(",", 1)
+    mime = header.removeprefix("data:").split(";", 1)[0] or None
+    padding = encoded.count("=")
+    byte_count = max(0, (len(encoded) * 3) // 4 - padding)
+    return mime, byte_count
 
 
 def _default_oracle_peer(consult_personas: list[dict]) -> str:

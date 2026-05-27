@@ -22,7 +22,7 @@ BUILTIN_CHAINS: dict[str, dict[str, Any]] = {
             "deep_reviewers": 5,
             "deep_review_focus": "filesystem,fail-closed,tests,auditability,privacy",
             "parallel_review_focus": "filesystem,fail-closed,tests,auditability,privacy",
-            "oracle_backend": "subagent-runner",
+            "oracle_backend": "scillm",
             "oracle_reasoning": "xhigh",
         },
     }

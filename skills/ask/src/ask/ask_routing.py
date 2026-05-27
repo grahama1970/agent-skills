@@ -121,6 +121,56 @@ def _parse_natural_persona_query(
     return question, None, None, False
 
 
+def _parse_natural_visible_subagent_query(
+    question_parts: list[str],
+    explicit_persona: Optional[str],
+) -> tuple[str, Optional[str], Optional[str], Optional[str], bool]:
+    """Parse conversational requests to bring a named subagent into the chat.
+
+    Returns: prompt, persona, trigger_phrase, turn_type, inferred_visible_subagent.
+    """
+    question = _normalize_question_parts(question_parts)
+    if explicit_persona or not question:
+        return question, None, None, None, False
+
+    patterns: list[tuple[str, str]] = [
+        (
+            r"^(?P<trigger>(?i:ask)\s+(?P<persona>[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*){0,3}))\s+(?:(?i:to)\s+)?(?P<prompt>.+)$",
+            "advisory",
+        ),
+        (
+            r"^(?P<trigger>(?i:bring)\s+(?P<persona>[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*){0,3})\s+(?i:into)\s+(?i:this(?:\s+conversation)?|the\s+conversation))(?:\s+(?:(?i:to)\s+)?(?P<prompt>.+))?$",
+            "advisory",
+        ),
+        (
+            r"^(?P<trigger>(?i:have)\s+(?P<persona>[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*){0,3})\s+(?i:review)\s+(?i:this))(?:\s+(?P<prompt>.+))?$",
+            "review",
+        ),
+        (
+            r"^(?P<trigger>(?i:let)\s+(?P<persona>[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*){0,3})\s+(?i:steer)\s+(?i:this)\s+(?i:run))(?:\s+(?P<prompt>.+))?$",
+            "steering",
+        ),
+        (
+            r"^(?P<trigger>(?P<persona>[A-Z][A-Za-z0-9_-]*(?:\s+[A-Z][A-Za-z0-9_-]*){0,3})\s*,?\s+(?i:as)\s+(?P<role>[^,:;]+))[:,;]?\s*(?P<prompt>.+)$",
+            "implementation_guidance",
+        ),
+    ]
+    for pattern, turn_type in patterns:
+        match = re.match(pattern, question)
+        if not match:
+            continue
+        persona = (match.groupdict().get("persona") or "").strip(" ,:;")
+        if not _looks_like_persona_prefix(persona):
+            continue
+        prompt = (match.groupdict().get("prompt") or "").strip(" ,:;")
+        if not prompt:
+            prompt = "join the human/project-agent conversation and ask what you need before proceeding"
+        trigger = (match.groupdict().get("trigger") or persona).strip(" ,:;")
+        return prompt, persona, trigger, turn_type, True
+
+    return question, None, None, None, False
+
+
 def _parse_natural_roundtable_query(question_parts: list[str]) -> tuple[str, str | None, bool]:
     """Parse `Brandon, Margaret, and Jennifer to debate X` syntax.
 
@@ -360,7 +410,7 @@ def _looks_like_persona_prefix(value: str) -> bool:
         return False
     known_aliases = {
         "brandon", "brandon bailey", "margaret", "margaret bailey",
-        "jennifer", "jennifer cheung", "embry", "horus", "sapolsky", "barrett",
+        "jennifer", "jennifer cheung", "embry", "horus", "nico", "sapolsky", "barrett",
     }
     if value.lower() in known_aliases:
         return True

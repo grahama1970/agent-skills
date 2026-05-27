@@ -3,6 +3,7 @@
 
 from ask.deep_review import (
     DEEP_REVIEW_SECTION_NAMES,
+    build_deep_review_prompt,
     normalise_review_json,
     verify_review_json,
 )
@@ -24,6 +25,43 @@ def _section(status="verified"):
         "evidence_examined": ["src/ask/ask.py"],
         "evidence_citations": [_citation("section")],
         "findings": [],
+    }
+
+
+def _target_bundle():
+    return {
+        "schema_version": "ask.deep_review.target_bundle.v1",
+        "entries": [
+            {
+                "source_id": "TARGET.1",
+                "kind": "file",
+                "target": "src/ask/ask.py",
+                "resolved_path": "src/ask/ask.py",
+                "content": "def main(): pass",
+            }
+        ],
+        "truncated": False,
+        "total_entries": 1,
+    }
+
+
+def _request():
+    return {
+        "original_question": "deep review this implementation",
+        "target": {
+            "status": "explicit",
+            "target": "src/ask/ask.py",
+            "requires_target": False,
+            "target_bundle": _target_bundle(),
+        },
+        "requested_model": "gpt-5.5",
+        "requested_reasoning": "xhigh",
+        "requested_backend": "subagent-runner",
+        "profile": "max_available",
+        "reviewers": 5,
+        "focus": "",
+        "dogpile_mode": "off",
+        "git_before": [],
     }
 
 
@@ -57,14 +95,7 @@ def test_deep_review_verifier_accepts_evidence_bearing_schema():
     review_json = normalise_review_json(
         _valid_review_json(),
         {"oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"}},
-        {
-            "original_question": "deep review this implementation",
-            "target": {"status": "explicit", "target": "src/ask/ask.py", "requires_target": False},
-            "requested_model": "gpt-5.5",
-            "requested_reasoning": "xhigh",
-            "requested_backend": "subagent-runner",
-            "git_before": [],
-        },
+        _request(),
     )
     review_json["execution"]["git_after"] = []
     review_json["execution"]["unexpected_file_changes"] = []
@@ -73,6 +104,71 @@ def test_deep_review_verifier_accepts_evidence_bearing_schema():
 
     assert verification["status"] == "PASS"
     assert verification["failures"] == []
+
+
+def test_deep_review_prompt_defines_plan_level_section_status_discipline():
+    prompt = build_deep_review_prompt({"items": []}, _request())
+
+    assert "Section status discipline" in prompt
+    assert "If the target is a plan, contract, prompt, schema, or review bundle" in prompt
+    assert "evidence_auditability or test_proof as `not_assessed`" in prompt
+
+
+def test_not_assessed_section_with_complete_finding_is_normalized_to_issues_found():
+    parsed = _valid_review_json()
+    parsed["sections"]["evidence_auditability"] = {
+        "status": "not_assessed",
+        "summary": "The ledger was assessed and has a low auditability issue.",
+        "evidence_examined": ["src/ask/ask.py"],
+        "evidence_citations": [_citation("section")],
+        "findings": [
+            {
+                "severity": "low",
+                "issue": "Validation command lacks a log path.",
+                "evidence": "src/ask/ask.py wires CLI routing.",
+                "evidence_citations": [_citation("finding")],
+                "impact": "A future acceptance ledger would be harder to audit.",
+                "fix": "Record log paths or explicit no-log rationale.",
+                "verification": "Verifier accepts the evidence-backed section.",
+            }
+        ],
+    }
+    review_json = normalise_review_json(
+        parsed,
+        {"oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"}},
+        _request(),
+    )
+    review_json["execution"]["git_after"] = []
+    review_json["execution"]["unexpected_file_changes"] = []
+
+    assert review_json["sections"]["evidence_auditability"]["status"] == "issues_found"
+    verification = verify_review_json(review_json)
+    assert verification["status"] == "PASS"
+
+
+def test_deep_review_normalizer_backfills_finding_evidence_from_citations():
+    parsed = _valid_review_json()
+    parsed["significant_risks"] = [
+        {
+            "severity": "medium",
+            "issue": "Screenshot proof is missing.",
+            "evidence_citations": [_citation("finding")],
+            "impact": "The UI cannot be marked visually proven.",
+            "fix": "Capture the browser screenshot.",
+            "verification": "Post-patch screenshot artifact exists.",
+        }
+    ]
+    review_json = normalise_review_json(
+        parsed,
+        {"oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"}},
+        _request(),
+    )
+    review_json["execution"]["git_after"] = []
+    review_json["execution"]["unexpected_file_changes"] = []
+
+    assert review_json["significant_risks"][0]["evidence"] == "src/ask/ask.py wires CLI routing."
+    verification = verify_review_json(review_json)
+    assert verification["status"] == "PASS"
 
 
 def test_deep_review_verifier_rejects_shallow_safe_schema():

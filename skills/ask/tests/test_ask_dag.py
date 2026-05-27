@@ -468,3 +468,43 @@ def test_cli_orchestrate_records_drafted_dag(monkeypatch, tmp_path):
     assert request["orchestrate"] is True
     assert request["ask_dag"]["node_count"] == 3
     assert request["ask_dag"]["nodes"][-1]["id"] == "final_report"
+
+
+def test_dag_dry_run_summary_includes_layers_and_ascii_chart():
+    dag = ask_dag.validate_ask_dag(
+        {
+            "schema_version": "ask.dag.v1",
+            "graph_id": "fanout-join",
+            "max_concurrency": 2,
+            "nodes": [
+                {
+                    "id": "memory_a",
+                    "type": "memory.recall",
+                    "input": {"query": "a", "scope": "ask", "k": 1},
+                },
+                {
+                    "id": "memory_b",
+                    "type": "memory.recall",
+                    "input": {"query": "b", "scope": "ask", "k": 1},
+                },
+                {
+                    "id": "final_report",
+                    "type": "skill.run",
+                    "depends_on": ["memory_a", "memory_b"],
+                    "input": {"skill": "create-report", "args": ["--help"]},
+                },
+            ],
+        }
+    )
+    summary = ask_dag.dag_dry_run_summary(dag)
+    assert summary["layer_count"] == 2
+    assert summary["layers"][0]["concurrent"] is True
+    assert set(summary["layers"][0]["node_ids"]) == {"memory_a", "memory_b"}
+    assert summary["layers"][1]["node_ids"] == ["final_report"]
+    chart = summary["ascii_chart"]
+    assert "DAG decision tree" in chart
+    assert "┌" in chart or "[" in chart
+    assert "memory_a" in chart and "memory_b" in chart
+    assert "final_report" in chart
+    assert summary["ascii_renderer"] in {"phart-git", "phart-pypi", "fallback"}
+    assert "┌" in chart or "[" in chart
