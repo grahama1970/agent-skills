@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).resolve().parents[2].parent / "phart-dag-chart"
+SKILL_DIR = Path(__file__).resolve().parents[2] / "phart-dag-chart"
 RUN_SH = SKILL_DIR / "run.sh"
 
 

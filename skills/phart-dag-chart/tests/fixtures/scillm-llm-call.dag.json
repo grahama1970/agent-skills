@@ -1,0 +1,18 @@
+{
+  "exec_graph_version": "scillm.exec.graph.v1",
+  "graph_id": "scillm-llm-call",
+  "description": "Representative scillm model-call node",
+  "nodes": [
+    {
+      "id": "review_a",
+      "type": "scillm_call",
+      "depends_on": [],
+      "execution": {
+        "call_type": "one-shot",
+        "model": "gpt-5.5",
+        "reasoning_effort": "high"
+      },
+      "input": {}
+    }
+  ]
+}

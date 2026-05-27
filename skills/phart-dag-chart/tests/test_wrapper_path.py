@@ -1,0 +1,12 @@
+"""Path resolution for $ask render_dag_chart wrapper (H1 regression)."""
+
+from pathlib import Path
+
+
+def test_render_dag_chart_wrapper_finds_sibling_skill():
+    script = Path(__file__).resolve().parents[2] / "ask" / "scripts" / "render_dag_chart.py"
+    skill_dir = script.resolve().parents[2] / "phart-dag-chart"
+    run_sh = skill_dir / "run.sh"
+    assert skill_dir.name == "phart-dag-chart"
+    assert skill_dir.parent.name == "skills"
+    assert run_sh.is_file(), f"expected {run_sh}"

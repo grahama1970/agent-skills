@@ -1,0 +1,15 @@
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {
+      "id": "a",
+      "type": "memory.recall",
+      "depends_on": []
+    },
+    {
+      "id": "a",
+      "type": "memory.recall",
+      "depends_on": []
+    }
+  ]
+}
