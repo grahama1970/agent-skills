@@ -1,0 +1,30 @@
+[project]
+name = "phart-dag-chart"
+version = "0.1.0"
+description = "Validate ask/scillm DAG JSON and render PHART ASCII decision-tree charts"
+requires-python = ">=3.14"
+dependencies = [
+    "networkx>=3.3",
+    "phart",
+    "typer>=0.15.0",
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+phart-dag-chart = "phart_dag_chart.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/phart_dag_chart"]
+
+[tool.uv.sources]
+phart = { git = "https://github.com/scottvr/phart.git" }
+
+[dependency-groups]
+dev = ["pytest>=8.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
