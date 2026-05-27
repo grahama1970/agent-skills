@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 unset VIRTUAL_ENV
 
 if [[ -x "$SCRIPT_DIR/scripts/ensure_venv.sh" ]]; then
-  "$SCRIPT_DIR/scripts/ensure_venv.sh" || true
+  "$SCRIPT_DIR/scripts/ensure_venv.sh"
 fi
 
 if ! command -v uv >/dev/null 2>&1; then

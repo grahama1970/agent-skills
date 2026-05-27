@@ -14,13 +14,13 @@ def load_dag_file(path: Path) -> dict[str, Any]:
         raise DagChartError(
             f"DAG file not found: {path}",
             code="file_not_found",
-            hint="Pass an existing path, e.g. ./run.sh chart --dag-file plans/my.dag.json",
+            hint="Pass an existing path, e.g. ./run.sh chart plans/my.dag.json",
         )
     if not path.is_file():
         raise DagChartError(
             f"DAG path is not a file: {path}",
             code="not_a_file",
-            hint="Point --dag-file at a JSON file, not a directory.",
+            hint="Pass a JSON file path, e.g. ./run.sh chart plans/my.dag.json",
         )
     try:
         raw = path.read_text(encoding="utf-8")

@@ -11,26 +11,56 @@ from phart_dag_chart.dag_validate import validate_dag
 from phart_dag_chart.errors import DagChartError
 
 
-def _display_name(node: dict[str, Any]) -> str:
-    short = str(node.get("type", "")).split(".")[-1]
-    opt = "?" if node.get("allow_failure") else ""
-    return f"{node['id']}\n{short}{opt}"[:40]
+def _node_label(node: dict[str, Any]) -> str:
+    node_input = node.get("input") or {}
+    node_type = str(node.get("type") or "")
+    display_type = str(node.get("display_type") or node_type)
+    lines = [str(node["id"])]
+
+    if node_type == "skill.run":
+        skill = str(node_input.get("skill") or "missing-skill")
+        lines.append(f"skill.run:{skill}")
+    elif node_type == "ask.oracle":
+        model = str(node_input.get("model") or "model?")
+        lines.append(f"ask.oracle:{model}")
+        reasoning = node_input.get("reasoning_effort")
+        if reasoning:
+            lines.append(f"reasoning: {reasoning}")
+    elif node_type == "dogpile.search":
+        lines.append("dogpile.search")
+        query = node_input.get("query") or node_input.get("q")
+        if query:
+            lines.append(f"query: {str(query)[:30]}")
+    elif node_type == "memory.recall":
+        lines.append("memory.recall")
+        query = node_input.get("query") or node_input.get("q")
+        if query:
+            lines.append(f"query: {str(query)[:30]}")
+    else:
+        lines.append(display_type)
+
+    if node.get("allow_failure"):
+        lines.append("optional")
+
+    label = "\n".join(lines)
+    if len(label) > 120:
+        return label[:117] + "..."
+    return label
 
 
 def dag_to_nx(dag: dict[str, Any]) -> nx.DiGraph:
     graph = nx.DiGraph()
-    names = {node["id"]: _display_name(node) for node in dag["nodes"]}
+    ids = {node["id"] for node in dag["nodes"]}
     for node in dag["nodes"]:
-        graph.add_node(names[node["id"]], label=names[node["id"]])
+        graph.add_node(node["id"], label=_node_label(node))
     for node in dag["nodes"]:
-        child = names[node["id"]]
         for parent_id in node.get("depends_on", []):
-            if parent_id in names:
-                graph.add_edge(names[parent_id], child)
+            if parent_id in ids:
+                graph.add_edge(parent_id, node["id"])
     return graph
 
 
-def render_chart(dag: dict[str, Any], *, validate: bool = True) -> str:
+def render_chart(dag: dict[str, Any], *, validate: bool = True, plain: bool = False) -> str:
     if validate:
         dag, _warnings = validate_dag(dag, chart_only=True)
     if not dag.get("nodes"):
@@ -58,10 +88,12 @@ def render_chart(dag: dict[str, Any], *, validate: bool = True) -> str:
     graph_id = str(dag.get("graph_id") or "dag")
     schema = str(dag.get("schema_version") or dag.get("source_graph_version") or "")
     header = [
-        "```text",
         f"DAG decision tree · {graph_id} (phart 1.5 git)",
         f"schema={schema}",
         "",
     ]
     footer = ["", "renderer: phart@github.com/scottvr/phart · layout=layered · bboxes"]
-    return "\n".join(header + [body] + footer + ["```"])
+    lines = header + [body] + footer
+    if plain:
+        return "\n".join(lines)
+    return "\n".join(["```text", *lines, "```"])

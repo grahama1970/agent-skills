@@ -8,7 +8,9 @@ from phart_dag_chart.constants import (
     ALLOWED_NODE_TYPES,
     ASK_DAG_SCHEMA_VERSION,
     NODE_ID_RE,
+    SCILLM_CALL_TO_NODE_TYPE,
     SCILLM_EXEC_GRAPH_VERSION,
+    SCILLM_RAW_TYPE_TO_NODE_TYPE,
 )
 from phart_dag_chart.errors import DagChartError, ValidationIssue
 
@@ -40,6 +42,53 @@ def _topological_order(nodes: list[dict[str, Any]]) -> list[str]:
     return order
 
 
+def _map_scillm_node_type(raw_node: dict[str, Any], index: int) -> tuple[str, str, dict[str, Any]]:
+    """Return (chart_type, display_type, input) for a scillm exec graph node."""
+    execution = raw_node.get("execution") or {}
+    if not isinstance(execution, dict):
+        raise DagChartError(f"scillm exec graph node {index} execution must be an object.")
+    call_type = str(execution.get("call_type") or raw_node.get("call_type") or "one-shot").strip().lower()
+    raw_type = str(raw_node.get("type") or "").strip()
+    node_input = raw_node.get("input") if isinstance(raw_node.get("input"), dict) else {}
+    display_type = raw_type or call_type or "skill.run"
+
+    node_type = raw_type
+    if not node_type:
+        node_type = SCILLM_CALL_TO_NODE_TYPE.get(call_type, "")
+    if node_type in SCILLM_RAW_TYPE_TO_NODE_TYPE:
+        node_type = SCILLM_RAW_TYPE_TO_NODE_TYPE[node_type]
+    elif node_type and node_type not in ALLOWED_NODE_TYPES:
+        mapped = SCILLM_RAW_TYPE_TO_NODE_TYPE.get(node_type.lower())
+        if mapped:
+            node_type = mapped
+    if not node_type or node_type not in ALLOWED_NODE_TYPES:
+        node_type = SCILLM_CALL_TO_NODE_TYPE.get(call_type) or SCILLM_RAW_TYPE_TO_NODE_TYPE.get(
+            display_type.lower(), "skill.run"
+        )
+
+    if node_type == "ask.oracle":
+        model = str(execution.get("model") or node_input.get("model") or "").strip()
+        reasoning = execution.get("reasoning_effort") or node_input.get("reasoning_effort")
+        merged = dict(node_input)
+        if model:
+            merged["model"] = model
+        if reasoning:
+            merged["reasoning_effort"] = reasoning
+        node_input = merged
+    elif node_type == "skill.run":
+        skill = str(node_input.get("skill") or execution.get("skill") or "").strip()
+        if call_type in {"subagent", "subagent-runner"} and not skill:
+            skill = "subagent-runner"
+        args = node_input.get("args", execution.get("args", []))
+        node_input = {**node_input, "skill": skill, "args": args}
+    elif node_type in {"memory.recall", "dogpile.search"}:
+        query = raw_node.get("query", execution.get("query", node_input.get("query", node_input.get("q", ""))))
+        if query:
+            node_input = {**node_input, "query": str(query)}
+
+    return node_type, display_type, node_input
+
+
 def _normalize_scillm_for_chart(dag: dict[str, Any]) -> dict[str, Any]:
     nodes_raw = dag.get("nodes")
     if not isinstance(nodes_raw, list) or not nodes_raw:
@@ -51,7 +100,7 @@ def _normalize_scillm_for_chart(dag: dict[str, Any]) -> dict[str, Any]:
         node_id = str(raw_node.get("id") or "").strip()
         if not NODE_ID_RE.fullmatch(node_id) or node_id in {".", ".."}:
             raise DagChartError(f"DAG node {index} has an unsafe id {node_id!r}.")
-        node_type = str(raw_node.get("type") or "skill.run").strip()
+        node_type, display_type, node_input = _map_scillm_node_type(raw_node, index)
         depends_on = raw_node.get("depends_on", [])
         if depends_on is None:
             depends_on = []
@@ -62,8 +111,10 @@ def _normalize_scillm_for_chart(dag: dict[str, Any]) -> dict[str, Any]:
         normalized.append({
             "id": node_id,
             "type": node_type,
+            "display_type": display_type,
             "depends_on": depends_on,
             "allow_failure": bool(raw_node.get("allow_failure", False)),
+            "input": node_input,
         })
     return {
         "schema_version": ASK_DAG_SCHEMA_VERSION,

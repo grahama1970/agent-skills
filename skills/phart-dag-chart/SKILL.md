@@ -53,7 +53,7 @@ Aligned with `$ask` `validate_ask_dag` for structure (schema, node ids, types, d
 
 ## Requirements
 
-- **Python ≥3.14** (PHART 1.5 git pin in `pyproject.toml`)
+- **Python ≥3.14** (PHART 1.5 git rev pinned in `pyproject.toml` / `uv.lock`)
 - **uv** for `./run.sh`
 
 ## Common mistakes

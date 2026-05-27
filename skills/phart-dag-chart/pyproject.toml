@@ -21,7 +21,7 @@ build-backend = "hatchling.build"
 packages = ["src/phart_dag_chart"]
 
 [tool.uv.sources]
-phart = { git = "https://github.com/scottvr/phart.git" }
+phart = { git = "https://github.com/scottvr/phart.git", rev = "e3b482118a413ad694ac2176c3959d80e1422ef8" }
 
 [dependency-groups]
 dev = ["pytest>=8.0.0"]
