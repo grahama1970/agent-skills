@@ -63,6 +63,7 @@ $ask cae gap review AC-2 MFA evidence for the production tenant
 $ask deep review src/ask/ask.py
 $ask oc kimi explain the tradeoff in this patch
 $ask chutes-kimi summarize the risk in this plan
+$ask comment on the report --dag-file /tmp/report-review.dag.json
 $ask is memory healthy?
 ```
 
@@ -190,13 +191,68 @@ persona or roundtable request.
 | Roundtable | You want personas to deliberate in sequence with defined review roles | `./run.sh ask "topic" --roundtable --roundtable-personas Architect,Tester,Maintainer` |
 | Argue | You want a real two-sided argument with a judge | `./run.sh ask "argue whether X" --argue` |
 | Parallel review | You want independent reviewers looking at the same thing without influencing each other | `./run.sh ask "review this" --parallel-review --parallel-reviewers 3` |
+| Natural DAG orchestration | You want `/ask` to compile a clear natural-language skill workflow into an executable DAG | `./run.sh ask 'Use $memory and $scillm to analyze this, then $create-report a report' --orchestrate` |
+| DAG JSON | A project agent can express memory, dogpile, oracle, subagent, and report steps more clearly as a graph | `./run.sh ask "review report" --dag-file /tmp/report-review.dag.json` |
 | Deep review | You want a thorough, audit-friendly review with artifacts | `./run.sh ask "deep review this" --deep-review --deep-review-target src/ask/ask.py` |
 | WebGPT | You want the user's authenticated ChatGPT session as a peer oracle, without foregrounding the tab | `./run.sh ask webgpt review this design --webgpt-project sparta-review` |
 | WebGPT project bindings | You want one persistent ChatGPT conversation per project so context survives across days | `./run.sh webgpt-project bind sparta-review --tab-id 837343543` |
+| Bounded WebGPT review loop | You want WebGPT to review concrete evidence while the project agent patches locally | `./run.sh ask webgpt review /tmp/review-bundle.md --webgpt-project sparta-review` |
 | Doctor | You want a preflight check on dependencies and runtime | `./run.sh doctor --json` |
 | Chains | You want to inspect saved review workflows | `./run.sh chains list --json` |
 | Status | You want to see recent runs and memory state | `./run.sh status --runs --json` |
 | OS health | You are asking the runtime about itself | `./run.sh os health "is memory healthy?"` |
+
+## DAG JSON E2E
+
+`--orchestrate` is the natural-language front door for the same backend DAG
+executor. `/ask` owns skill dependencies and artifacts; `$scillm` owns model
+routing, pooling, queues, fallback, and telemetry; `$interview` is reserved for
+missing target skills, output artifacts, or acceptance criteria.
+
+Project agents can hand `/ask` a graph JSON file instead of expanding a long
+flag list. The live sanity check exercises the real `/ask`, `/memory`, and
+`/create-report` runtimes with an ask-owned DAG: two concurrent memory recall
+nodes feed a sequential report node. React Flow and migration tooling may still
+submit `scillm.exec.graph.v1` compatibility envelopes, but `/ask` normalizes
+them at the boundary; natural language and `ask.dag.v1` are the preferred
+human/project-agent surfaces.
+
+```bash
+./scripts/dag_e2e_sanity.py --output-root /tmp/ask-dag-e2e-proof --ask-id ask-dag-e2e-proof
+```
+
+The check verifies the ask request/status/events artifacts, DAG manifest,
+per-node artifacts, concurrent layer event, and generated Markdown report.
+Add `--include-oracle` when you want the same graph to include two live
+one-shot `/scillm` oracle nodes before the final report join. Oracle layers also
+write a `dag/layer-*-scillm.subgraph.json` handoff artifact so `$ask` remains
+the DAG owner while `$scillm` owns model routing, pooling, queues, fallback, and
+telemetry. That subgraph is a diagnostic handoff receipt, not a user-authored
+execution surface.
+
+
+Fail-closed required nodes and optional `allow_failure` probes are documented in
+`SKILL.md`. To prove a live required-node failure stops dependents and emits
+`dag_layer_failed`:
+
+```bash
+./scripts/dag_negative_sanity.py --output-root /tmp/ask-dag-negative-proof --ask-id ask-dag-negative-proof
+```
+
+### Bounded WebGPT Review Loop
+
+Use this when the human has given an intent and wants the project agent to
+execute while WebGPT reviews the evidence. Start with `/interview` only when
+the definition of done is still ambiguous.
+
+```text
+intent -> optional /interview -> implementation/evidence bundle
+  -> /ask webgpt review -> local fixes -> repeat to PASS/BLOCKED/max rounds
+```
+
+The human-facing update should stay short: current state, blocker, proposed
+decision, evidence path, what changed since last round, and whether a human
+decision is required.
 
 ## Installation
 

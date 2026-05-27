@@ -21,6 +21,56 @@ from dogpile.formatters import (
 )
 
 
+def _error_text(result: Any) -> Optional[str]:
+    """Return a readable error if a provider result is degraded."""
+    if isinstance(result, dict) and result.get("error"):
+        hint = result.get("hint")
+        return f"{result['error']} -> {hint}" if hint else str(result["error"])
+    if isinstance(result, dict) and result.get("skipped"):
+        hint = result.get("hint")
+        return f"Skipped: {result['skipped']} -> {hint}" if hint else f"Skipped: {result['skipped']}"
+    if isinstance(result, str) and result.startswith("Error:"):
+        return result.removeprefix("Error:").strip()
+    return None
+
+
+def _safe_section(name: str, formatter, *args, **kwargs) -> List[str]:
+    """Format one report section without letting it hide other successes."""
+    try:
+        return formatter(*args, **kwargs)
+    except Exception as e:
+        return [
+            f"## {name}",
+            f"> Error: report formatting failed for this section: {e}",
+            "",
+        ]
+
+
+def format_degraded_sources_section(
+    stage1_results: Optional[Dict[str, Any]] = None,
+    stage2_results: Optional[Dict[str, Any]] = None,
+) -> List[str]:
+    """Summarize failed/degraded providers while preserving successful sections."""
+    lines: List[str] = []
+    failures: List[tuple[str, str]] = []
+
+    for stage, results in [("stage1", stage1_results or {}), ("stage2", stage2_results or {})]:
+        if not isinstance(results, dict):
+            continue
+        for provider, result in results.items():
+            err = _error_text(result)
+            if err:
+                failures.append((f"{stage}:{provider}", err))
+
+    if failures:
+        lines.append("## Degraded Sources")
+        lines.append("Dogpile returned all successful source results. These sources failed or degraded:")
+        for provider, err in failures:
+            lines.append(f"- **{provider}**: {err}")
+        lines.append("")
+    return lines
+
+
 def format_github_section(
     github_res: Dict[str, Any],
     github_details: List[Dict],
@@ -32,7 +82,11 @@ def format_github_section(
     """Format GitHub search results."""
     lines = ["## GitHub"]
 
-    if "error" in github_res:
+    if not isinstance(github_res, dict):
+        lines.append(f"> Error: unexpected result type {type(github_res).__name__}")
+    elif "skipped" in github_res:
+        lines.append(f"> Skipped: {github_res['skipped']}")
+    elif "error" in github_res:
         lines.append(f"> Error: {github_res['error']}")
     else:
         lines.append("### Repositories")
@@ -60,9 +114,10 @@ def format_github_section(
 
                 lines.append(f"\n#### [{repo_name}]({meta.get('url', '#')}){target_marker}")
 
-                topics = meta.get("repositoryTopics", [])
-                topic_names = [t.get("name", "") for t in topics] if topics else []
-                lang = meta.get("primaryLanguage", {}).get("name", "Unknown")
+                topics = meta.get("repositoryTopics") or []
+                topic_names = [t.get("name", "") for t in topics if isinstance(t, dict)] if isinstance(topics, list) else []
+                lang_info = meta.get("primaryLanguage")
+                lang = lang_info.get("name", "Unknown") if isinstance(lang_info, dict) else (lang_info or "Unknown")
                 stars = meta.get("stargazerCount", 0)
                 updated = meta.get("updatedAt", "Unknown")[:10] if meta.get("updatedAt") else "Unknown"
 
@@ -180,7 +235,11 @@ def format_brave_section(brave_res: Dict[str, Any], brave_deep: List[Dict]) -> L
     """Format Brave search results."""
     lines = ["## Web Results (Brave)"]
 
-    if "error" in brave_res:
+    if not isinstance(brave_res, dict):
+        lines.append(f"> Error: unexpected result type {type(brave_res).__name__}")
+    elif "skipped" in brave_res:
+        lines.append(f"> Skipped: {brave_res['skipped']}")
+    elif "error" in brave_res:
         lines.append(f"> Error: {brave_res['error']}")
     else:
         web_results = brave_res.get("web", {}).get("results", []) or brave_res.get("results", [])
@@ -212,6 +271,12 @@ def format_arxiv_section(
 ) -> List[str]:
     """Format ArXiv search results."""
     lines = ["## Academic Papers (ArXiv)"]
+
+    if isinstance(arxiv_res, dict) and ("error" in arxiv_res or "skipped" in arxiv_res):
+        label = "Error" if "error" in arxiv_res else "Skipped"
+        lines.append(f"> {label}: {arxiv_res.get('error') or arxiv_res.get('skipped')}")
+        lines.append("")
+        return lines
 
     if arxiv_details:
         lines.append("### Deep Dive: Paper Details")
@@ -253,6 +318,17 @@ def format_arxiv_section(
 def format_youtube_section(youtube_res: List[Dict], youtube_transcripts: List[Dict]) -> List[str]:
     """Format YouTube search results."""
     lines = ["## Videos (YouTube)"]
+
+    if isinstance(youtube_res, dict) and ("error" in youtube_res or "skipped" in youtube_res):
+        label = "Error" if "error" in youtube_res else "Skipped"
+        lines.append(f"> {label}: {youtube_res.get('error') or youtube_res.get('skipped')}")
+        lines.append("")
+        return lines
+
+    if not isinstance(youtube_res, list):
+        lines.append(f"> Error: unexpected result type {type(youtube_res).__name__}")
+        lines.append("")
+        return lines
 
     if youtube_transcripts:
         lines.append("### Video Insights (Transcripts)")
@@ -300,21 +376,26 @@ def generate_report(
     youtube_transcripts: List[Dict],
     synthesis: Optional[str] = None,
     code_explanation: Optional[str] = None,
+    stage1_results: Optional[Dict[str, Any]] = None,
+    stage2_results: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Generate full markdown report from all search results."""
     md_lines = [f"# Dogpile Report: {query}", ""]
 
-    md_lines.extend(format_wayback_section(wayback_res))
-    md_lines.extend(format_codex_section(codex_src_res))
-    md_lines.extend(format_perplexity_section(perp_res))
-    md_lines.extend(format_readarr_section(readarr_res))
-    md_lines.extend(format_github_section(
+    md_lines.extend(format_degraded_sources_section(stage1_results, stage2_results))
+    md_lines.extend(_safe_section("Wayback", format_wayback_section, wayback_res))
+    md_lines.extend(_safe_section("Codex Technical Overview", format_codex_section, codex_src_res))
+    md_lines.extend(_safe_section("AI Research (Perplexity)", format_perplexity_section, perp_res))
+    md_lines.extend(_safe_section("Books & Usenet (Readarr)", format_readarr_section, readarr_res))
+    md_lines.extend(_safe_section(
+        "GitHub",
+        format_github_section,
         github_res, github_details, github_deep, target_repo, deep_code_res,
         code_explanation=code_explanation,
     ))
-    md_lines.extend(format_brave_section(brave_res, brave_deep))
-    md_lines.extend(format_arxiv_section(arxiv_res, arxiv_details, arxiv_deep))
-    md_lines.extend(format_youtube_section(youtube_res, youtube_transcripts))
+    md_lines.extend(_safe_section("Web Results (Brave)", format_brave_section, brave_res, brave_deep))
+    md_lines.extend(_safe_section("Academic Papers (ArXiv)", format_arxiv_section, arxiv_res, arxiv_details, arxiv_deep))
+    md_lines.extend(_safe_section("Videos (YouTube)", format_youtube_section, youtube_res, youtube_transcripts))
 
     if synthesis and not synthesis.startswith("Error:"):
         md_lines.append("## Codex Synthesis (gpt-5.2 High Reasoning)")

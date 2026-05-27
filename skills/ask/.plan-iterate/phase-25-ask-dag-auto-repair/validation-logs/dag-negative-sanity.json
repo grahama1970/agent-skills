@@ -1,0 +1,44 @@
+{
+  "artifacts": {
+    "broken_node": "/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2/dag/broken_step.json",
+    "dag_file": "/tmp/ask-dag-negative-proof2/negative.ask-dag.json",
+    "dependent_node": "/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2/dag/final_report.json",
+    "events": "/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2/ask-dag-negative-proof2.events.jsonl",
+    "output_root": "/tmp/ask-dag-negative-proof2",
+    "request": "/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2/ask-dag-negative-proof2.request.json",
+    "status": "/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2/ask-dag-negative-proof2.status.json"
+  },
+  "broken_node_ok": false,
+  "checks": {
+    "broken_node_artifact_exists": true,
+    "broken_node_not_ok": true,
+    "command_returncode_nonzero": true,
+    "dag_layer_failed_recorded": true,
+    "dependent_node_artifact_absent": true,
+    "events_exists": true,
+    "failed_node_ids_include_broken_step": true,
+    "request_exists": true,
+    "status_exists": true,
+    "status_failed": true,
+    "stderr_mentions_ask_dag_error": true
+  },
+  "command": [
+    "/home/graham/workspace/experiments/agent-skills/skills/ask/run.sh",
+    "ask",
+    "Run the ask DAG negative fail-closed sanity check.",
+    "--dag-file",
+    "/tmp/ask-dag-negative-proof2/negative.ask-dag.json",
+    "--ask-id",
+    "ask-dag-negative-proof2",
+    "--run-output-root",
+    "/tmp/ask-dag-negative-proof2/runs",
+    "--overwrite",
+    "--raw",
+    "--json"
+  ],
+  "ok": true,
+  "returncode": 1,
+  "status_state": "failed",
+  "stderr_tail": "2026-05-27 14:41:03.475 | DEBUG    | ask.skills_exec:run_skill:43 - Running skill '%s': %s %s\n2026-05-27 14:41:04.572 | DEBUG    | ask.skills_exec:run_skill:53 - Skill '%s' returned code=%d, stdout=%d bytes, stderr=%d bytes\n2026-05-27 14:41:04.573 | DEBUG    | ask.skills_exec:run_skill:43 - Running skill '%s': %s %s\n2026-05-27 14:41:06.272 | DEBUG    | ask.skills_exec:run_skill:53 - Skill '%s' returned code=%d, stdout=%d bytes, stderr=%d bytes\n2026-05-27 14:41:06.275 | DEBUG    | ask.skills_exec:run_skill:43 - Running skill '%s': %s %s\n2026-05-27 14:41:06.323 | DEBUG    | ask.skills_exec:run_skill:53 - Skill '%s' returned code=%d, stdout=%d bytes, stderr=%d bytes\n2026-05-27 14:41:06.324 | DEBUG    | ask.skills_exec:run_skill:56 - Skill '%s' stderr: %s\n",
+  "stdout_tail": "{\n  \"question\": \"Run the ask DAG negative fail-closed sanity check.\",\n  \"scope\": \"ask\",\n  \"ask_id\": \"ask-dag-negative-proof2\",\n  \"runtime_artifacts\": {\n    \"request\": \"/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2/ask-dag-negative-proof2.request.json\",\n    \"status\": \"/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2/ask-dag-negative-proof2.status.json\",\n    \"events\": \"/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2/ask-dag-negative-proof2.events.jsonl\",\n    \"run_dir\": \"/tmp/ask-dag-negative-proof2/runs/ask-dag-negative-proof2\"\n  },\n  \"status\": \"failed\",\n  \"error\": {\n    \"type\": \"AskDagError\",\n    \"message\": \"DAG required node(s) failed: ['broken_step'].\"\n  }\n}\n"
+}

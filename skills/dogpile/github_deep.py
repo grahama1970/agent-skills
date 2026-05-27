@@ -33,6 +33,30 @@ from dogpile.github_search import (
 )
 
 
+
+
+def _coerce_mapping(value: Any, default: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return a dict, treating JSON null / non-dicts as empty."""
+    if isinstance(value, dict):
+        return value
+    return default or {}
+
+
+def _language_name(meta: dict[str, Any]) -> str:
+    lang = _coerce_mapping(meta).get("primaryLanguage")
+    if isinstance(lang, dict):
+        return str(lang.get("name") or "Unknown")
+    if isinstance(lang, str):
+        return lang
+    return "Unknown"
+
+
+def _topic_names(meta: dict[str, Any]) -> list[str]:
+    topics = meta.get("repositoryTopics") or []
+    if not isinstance(topics, list):
+        return []
+    return [str(item.get("name") or "") for item in topics if isinstance(item, dict)]
+
 def fetch_repo_details(repo: str) -> Dict[str, Any]:
     """GitHub Stage 2: Fetch repository details including README content.
 
@@ -114,13 +138,12 @@ def evaluate_github_repos(repos_details: List[Dict[str, Any]], query: str, searc
     # Build summary for Codex evaluation
     summaries = []
     for i, repo in enumerate(repos_details):
-        meta = repo.get("metadata", {})
-        topics = meta.get("repositoryTopics", [])
-        topic_names = [t.get("name", "") for t in topics] if topics else []
+        meta = _coerce_mapping(repo.get("metadata"))
+        topic_names = _topic_names(meta)
 
         summary = f"""[{i+1}] **{repo.get('fullName')}**
 - Description: {meta.get('description', 'No description')}
-- Stars: {meta.get('stargazerCount', 0)} | Language: {meta.get('primaryLanguage', {}).get('name', 'Unknown')}
+- Stars: {meta.get('stargazerCount', 0)} | Language: {_language_name(meta)}
 - Topics: {', '.join(topic_names) if topic_names else 'None'}
 - README excerpt:
 {repo.get('readme', 'No README')[:800]}
@@ -180,8 +203,8 @@ def deep_search_github_repo(repo: str, query: str, repo_details: Dict[str, Any] 
     # Detect primary language for filtering
     language = None
     if repo_details:
-        lang_info = repo_details.get("metadata", {}).get("primaryLanguage", {})
-        language = lang_info.get("name") if lang_info else None
+        language = _language_name(_coerce_mapping(repo_details.get("metadata")))
+        language = None if language == "Unknown" else language
 
     result = {
         "repo": repo,
@@ -294,7 +317,7 @@ def run_stage2_github(
             github_details = [{
                 "fullName": target_repo,
                 "metadata": top_analysis.get("metadata", {}),
-                "readme": top_analysis.get("readme", {}).get("content", ""),
+                "readme": _coerce_mapping(top_analysis.get("readme")).get("content", ""),
                 "languages": top_analysis.get("languages", {})
             }]
 

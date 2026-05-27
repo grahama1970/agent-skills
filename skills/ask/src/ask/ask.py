@@ -3,9 +3,12 @@
 import json
 import hashlib
 import os
+import re
 import subprocess
 import sys
+import tempfile
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -28,8 +31,18 @@ from .ask_config import (
     ORACLE_BACKENDS,
     SCILLM_API_KEY,
     SCILLM_BASE_URL,
+    SUBAGENT_RUNNER,
 )
 from .argue import ARGUE_TIE_BREAKERS, run_argue
+from .ask_dag import (
+    AskDagError,
+    dag_dry_run_summary,
+    draft_ask_dag_from_question,
+    execute_ask_dag,
+    load_ask_dag,
+    natural_language_dag_attention,
+    should_orchestrate_from_text,
+)
 from .chain_specs import apply_chain_options
 from .cae_gap_review import DEFAULT_CAE_JUDGE, DEFAULT_CAE_REVIEWERS, run_cae_gap_review
 from .deep_review import build_deep_review_request, infer_deep_review
@@ -48,6 +61,7 @@ from .ask_routing import (
     _parse_natural_persona_query,
     _parse_natural_parallel_review_query,
     _parse_natural_roundtable_query,
+    _parse_natural_visible_subagent_query,
     _should_auto_oracle_persona,
 )
 from .reviewer_specs import focus_from_reviewer_specs, load_selected_reviewer_specs
@@ -66,6 +80,15 @@ from .image_generation import generate_image_with_scillm
 from .model_aliases import ModelAliasRoute, resolve_model_alias_route
 
 app = typer.Typer(help="/ask ask - Query accumulated knowledge")
+
+SKILL_MENTION_RE = re.compile(
+    r"(?<![\w/])(?:\$([A-Za-z][A-Za-z0-9_-]{1,80})|/(?!home/|tmp/|mnt/|var/|usr/|etc/|opt/|run/)([A-Za-z][A-Za-z0-9_-]{1,80})\b(?!/))"
+)
+VISIBLE_SUBAGENT_ID_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+
+
+def _extract_skill_mentions(text: str) -> list[str]:
+    return sorted({dollar or slash for dollar, slash in SKILL_MENTION_RE.findall(text) if dollar or slash})
 
 
 
@@ -98,6 +121,7 @@ def ask(
     oracle_peer_model: Optional[str] = None,
     oracle_model_alias: Optional[dict] = None,
     oracle_persona_scope: str = "personas",
+    oracle_image_paths: Optional[list[str]] = None,
     roundtable: bool = False,
     roundtable_personas: Optional[str] = None,
     roundtable_role_preset: str = "adversarial-review",
@@ -140,6 +164,9 @@ def ask(
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
     webgpt_project: str = "",
+    visible_subagent: Optional[dict] = None,
+    mentioned_skills: Optional[list[str]] = None,
+    ask_dag: Optional[dict] = None,
     run_state: Optional[AskRunState] = None,
 ) -> dict:
     """Query accumulated knowledge.
@@ -169,6 +196,7 @@ def ask(
         oracle_peer_model: Optional model for peer persona turns.
         oracle_model_alias: Resolved provider-family shorthand metadata.
         oracle_persona_scope: Preferred memory scope for persona profiles.
+        oracle_image_paths: Image files to attach to direct scillm oracle calls.
         roundtable: Run sequential state-machine persona deliberation.
         roundtable_personas: Comma-separated persona[:protocol_role] participants.
         roundtable_role_preset: Role preset for shorthand participant specs.
@@ -193,6 +221,9 @@ def ask(
         dogpile_mode: auto, off, or force freshness policy for oracle subagents.
         deep_review: Run Web-GPT-style deep review with JSON/markdown artifacts.
         cae_gap_review: Run evidence-case-backed CAE reviewer/judge loop.
+        visible_subagent: Visible subagent routing contract from the CLI.
+        mentioned_skills: Skill names detected in the original visible-subagent utterance.
+        ask_dag: Validated ask.dag.v1 document to execute before synthesis.
 
     Returns:
         dict with answer, sources, bridges.
@@ -210,6 +241,14 @@ def ask(
         "auto_learned": False,
         "hybrid_mode": hybrid,
     }
+    if visible_subagent is not None:
+        _validate_visible_subagent_route(visible_subagent)
+        transport = str(visible_subagent.get("transport") or "")
+        if transport == "scillm_app_server_turn_steer" and oracle_backend != "scillm":
+            raise RuntimeError(
+                "Visible subagent requires the scillm Codex app-server transport; "
+                "ordinary synthesis, subagent-runner, PTY stdin, tmux send-keys, and terminal input are not allowed."
+            )
     skip_argv_bound_lookup = (
         bool(oracle_model)
         and _question_too_large_for_child_argv(question)
@@ -237,6 +276,40 @@ def ask(
         result["needs_attention"] = attention_payload
         return result
 
+    if ask_dag:
+        if not run_state:
+            raise RuntimeError("DAG execution requires ask runtime artifacts.")
+        run_state.step_started("dag", schema_version=ask_dag.get("schema_version", ""))
+        dag_result = execute_ask_dag(
+            ask_dag,
+            question=question,
+            scope=scope,
+            run_state=run_state,
+            oracle_model=oracle_model or DEFAULT_ORACLE_MODEL,
+            oracle_reasoning=oracle_reasoning,
+            oracle_timeout=oracle_timeout,
+        )
+        result["dag"] = {
+            "schema_version": dag_result["schema_version"],
+            "manifest_path": dag_result["manifest_path"],
+            "nodes": [
+                {
+                    "id": node.get("id"),
+                    "type": node.get("type"),
+                    "ok": node.get("ok"),
+                    "artifact_path": node.get("artifact_path"),
+                }
+                for node in dag_result.get("nodes", [])
+            ],
+            "context_items_count": len(dag_result.get("context_items", [])),
+        }
+        result["items"].extend(dag_result.get("context_items", []))
+        run_state.step_finished(
+            "dag",
+            manifest_path=dag_result["manifest_path"],
+            context_items_count=len(dag_result.get("context_items", [])),
+        )
+
     if oracle_model:
         result["oracle"] = {
             "model": oracle_model,
@@ -258,6 +331,9 @@ def ask(
             result["oracle"]["peer_model"] = oracle_peer_model
         if oracle_model_alias:
             result["oracle"]["model_alias"] = oracle_model_alias
+        if oracle_image_paths:
+            result["oracle"]["image_paths"] = oracle_image_paths
+            result["oracle"]["image_count"] = len(oracle_image_paths)
         if roundtable:
             result["oracle"]["roundtable"] = {
                 "personas": roundtable_personas or "",
@@ -586,6 +662,58 @@ def ask(
         if run_state:
             run_state.step_finished("auto_learn", items_count=len(result.get("items", [])), auto_learned=bool(result.get("auto_learned")))
 
+    if visible_subagent is not None:
+        if str(visible_subagent.get("transport") or "") == "subagent_runner_tmux":
+            delivery = _run_visible_subagent_tmux(
+                question=question,
+                route=visible_subagent,
+                memory_items=result["items"],
+                mentioned_skills=mentioned_skills or [],
+                run_state=run_state,
+                timeout=oracle_timeout,
+                idle_timeout=oracle_idle_timeout,
+                model=oracle_model or DEFAULT_ORACLE_MODEL,
+                reasoning=oracle_reasoning or DEFAULT_ORACLE_REASONING,
+            )
+        else:
+            delivery = _run_visible_subagent_scillm(
+                question=question,
+                route=visible_subagent,
+                memory_items=result["items"],
+                mentioned_skills=mentioned_skills or [],
+                run_state=run_state,
+                timeout=oracle_timeout,
+            )
+        result["visible_subagent"] = visible_subagent
+        result["mentioned_skills"] = mentioned_skills or []
+        result["visible_subagent_delivery"] = delivery
+        result["answer"] = _format_visible_subagent_answer(delivery)
+        if run_state:
+            run_state.event("visible_subagent_delivery", **delivery)
+        session.add_turn("assistant", result.get("answer", ""), metadata={
+            "items_count": len(result["items"]),
+            "visible_subagent_delivery": delivery,
+        })
+        session_path = session.write()
+        if session_path:
+            result["session_path"] = str(session_path)
+        if run_state:
+            run_state.event("session_written", session_path=result.get("session_path", ""))
+        _record_ask_telemetry(
+            result=result,
+            started_at=started_at,
+            status="ok",
+            oracle_model=oracle_model,
+            oracle_reasoning=oracle_reasoning,
+            oracle_backend=oracle_backend,
+            oracle_idle_timeout=oracle_idle_timeout,
+            oracle_heartbeat_interval=oracle_heartbeat_interval,
+            oracle_persona=oracle_persona,
+            oracle_peer=oracle_peer,
+            oracle_iterations=oracle_iterations,
+        )
+        return result
+
     # Step 3: Synthesise answer or run argue protocol
     if run_state:
         run_state.step_started("synthesis", oracle_enabled=oracle_model is not None, deep_review=deep_review, argue=argue)
@@ -622,6 +750,7 @@ def ask(
             oracle_persona_model=oracle_persona_model,
             oracle_peer_model=oracle_peer_model,
             oracle_persona_scope=oracle_persona_scope,
+            oracle_image_paths=oracle_image_paths or [],
             roundtable=roundtable,
             roundtable_personas=roundtable_personas,
             roundtable_role_preset=roundtable_role_preset,
@@ -699,6 +828,561 @@ def ask(
     )
 
     return result
+
+
+def _format_visible_subagent_answer(delivery: dict) -> str:
+    persona = delivery.get("persona", "subagent")
+    transport = delivery.get("transport", "scillm_agents")
+    state = delivery.get("state", "started")
+    final_text = str(delivery.get("final_text") or delivery.get("response_text") or "").strip()
+    if final_text:
+        return f"{persona}: {final_text}"
+    attach_command = delivery.get("attach_command", "")
+    if attach_command:
+        return f"{persona} {state} through {transport}. Attach: {attach_command}"
+    worker_id = delivery.get("worker_id", "")
+    if worker_id:
+        return f"{persona} {state} through {transport} as worker {worker_id}."
+    return f"{persona} {state} through {transport}."
+
+
+def _visible_subagent_worker_id(route: dict) -> str:
+    configured = os.environ.get("ASK_VISIBLE_SUBAGENT_WORKER_ID", "").strip()
+    if configured:
+        _validate_visible_identifier("worker_id", configured, "environment")
+        return configured
+    persona = str(route.get("persona") or "nico").strip().lower()
+    cleaned = re.sub(r"[^a-z0-9_-]+", "-", persona).strip("-")
+    worker_id = cleaned or "nico"
+    _validate_visible_identifier("worker_id", worker_id, "route")
+    return worker_id
+
+
+def _visible_memory_context(items: list[dict], limit: int = 8) -> list[dict]:
+    context: list[dict] = []
+    for item in items[:limit]:
+        key = str(item.get("key") or item.get("_key") or item.get("id") or item.get("problem") or "")[:120]
+        summary = str(item.get("summary") or item.get("solution") or item.get("text") or item.get("problem") or "")[:1000]
+        if key or summary:
+            safe_key = key or f"memory-{len(context) + 1}"
+            context.append({"key": safe_key, "summary": summary or safe_key})
+    return context
+
+
+def _validate_visible_subagent_route(route: object) -> None:
+    if not isinstance(route, dict) or route.get("mode") != "visible_subagent":
+        raise ValueError("visible_subagent must be a visible_subagent route")
+    allowed_keys = {
+        "mode",
+        "persona",
+        "visibility",
+        "turn_type",
+        "operation",
+        "memory_first",
+        "transport",
+        "trigger_phrase",
+        "original_utterance",
+        "handoff_id",
+        "lease_id",
+    }
+    extra_keys = set(route) - allowed_keys
+    if extra_keys:
+        raise ValueError(f"visible_subagent route has unsupported fields: {sorted(extra_keys)}")
+    persona = route.get("persona")
+    if not isinstance(persona, str) or not persona.strip():
+        raise ValueError("visible_subagent persona is required")
+    if route.get("visibility") != "human_project_conversation":
+        raise ValueError("visible_subagent visibility must be human_project_conversation")
+    for id_field in ("handoff_id", "lease_id"):
+        id_value = route.get(id_field)
+        if id_value is not None:
+            if not isinstance(id_value, str):
+                raise ValueError(f"visible_subagent {id_field} must be a safe identifier")
+            _validate_visible_identifier(id_field, id_value, "route")
+    operation = route.get("operation")
+    turn_type = route.get("turn_type")
+    transport = route.get("transport")
+    if operation not in {"launch", "steer"}:
+        raise ValueError("visible_subagent operation must be launch or steer")
+    if turn_type not in {"advisory", "review", "implementation_guidance", "steering"}:
+        raise ValueError("visible_subagent turn_type is not supported")
+    if transport != "scillm_app_server_turn_steer":
+        raise ValueError("visible_subagent transport must be scillm_app_server_turn_steer")
+    if transport == "scillm_app_server_turn_steer" and operation == "steer" and turn_type != "steering":
+        raise ValueError("visible_subagent operation=steer requires turn_type=steering")
+    if transport == "scillm_app_server_turn_steer" and operation == "launch" and turn_type == "steering":
+        raise ValueError("visible_subagent turn_type=steering requires operation=steer")
+
+
+def _validate_visible_identifier(name: str, value: str, source: str) -> None:
+    if not VISIBLE_SUBAGENT_ID_RE.fullmatch(value) or value in {".", ".."}:
+        raise ValueError(f"visible_subagent {name} from {source} must be a safe identifier")
+
+
+def _resolve_visible_subagent_id(name: str, route: dict) -> tuple[str, str]:
+    route_value = str(route.get(name) or "").strip()
+    env_name = f"ASK_VISIBLE_SUBAGENT_{name.upper()}"
+    env_value = os.environ.get(env_name, "").strip()
+    for source, value in (("route", route_value), ("environment", env_value)):
+        if value:
+            _validate_visible_identifier(name, value, source)
+    if route_value and env_value and route_value != env_value:
+        raise ValueError(f"visible_subagent {name} route/env conflict")
+    if route_value:
+        return route_value, "route"
+    if env_value:
+        return env_value, "environment"
+    return "", ""
+
+
+def _visible_subagent_thread_id() -> str:
+    return os.environ.get("ASK_VISIBLE_SUBAGENT_THREAD_ID", "").strip()
+
+
+def _safe_visible_fragment(value: str, fallback: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip()).strip("-._")
+    return cleaned or fallback
+
+
+def _visible_tmux_session_name(route: dict) -> str:
+    configured = os.environ.get("ASK_VISIBLE_SUBAGENT_TMUX_SESSION", "").strip()
+    if configured:
+        _validate_visible_identifier("tmux_session", configured, "environment")
+        return configured
+    persona = _safe_visible_fragment(str(route.get("persona") or "nico").lower(), "nico")
+    project = _safe_visible_fragment(Path.cwd().name.lower().replace("_", "-"), "project")
+    session = f"{persona}-{project}"
+    _validate_visible_identifier("tmux_session", session, "route")
+    return session
+
+
+def _visible_tmux_binding_path(tmux_session: str) -> Path:
+    digest = hashlib.sha256(str(Path.cwd()).encode("utf-8", errors="replace")).hexdigest()[:12]
+    root = Path(os.environ.get(
+        "ASK_VISIBLE_SUBAGENT_BINDING_ROOT",
+        str(Path(tempfile.gettempdir()) / "ask-visible-subagents"),
+    )).expanduser()
+    return root / digest / f"{tmux_session}.json"
+
+
+def _tmux_has_session(tmux_session: str) -> bool:
+    return subprocess.run(
+        ["tmux", "has-session", "-t", tmux_session],
+        capture_output=True,
+        text=True,
+    ).returncode == 0
+
+
+def _write_visible_subagent_clean_viewer(visible_dir: Path) -> tuple[Path, Path]:
+    cleaner = visible_dir / "clean-transcript.py"
+    follower = visible_dir / "follow-clean-transcript.sh"
+    cleaner.write_text(
+        r'''#!/usr/bin/env python3
+import re
+import sys
+from pathlib import Path
+
+ansi = re.compile(r"\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
+
+def clean(text: str) -> str:
+    text = ansi.sub("", text).replace("\r", "\n")
+    lines = []
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        if not line:
+            continue
+        if line.strip() in {"-", "│", "┃", "█", "▌"}:
+            continue
+        if len(line.strip()) == 1 and line.startswith(" " * max(0, len(line) - 1)):
+            continue
+        lines.append(line)
+    return "\n".join(lines[-240:])
+
+path = Path(sys.argv[1])
+print(clean(path.read_text(errors="replace")) if path.exists() else "")
+''',
+        encoding="utf-8",
+    )
+    follower.write_text(
+        r'''#!/usr/bin/env bash
+set -euo pipefail
+session_dir="$1"
+transcript="$session_dir/transcript.log"
+status="$session_dir/status.json"
+commands="$session_dir/commands.jsonl"
+cleaner="$(dirname "$0")/clean-transcript.py"
+while true; do
+  clear
+  if [[ -f "$status" ]]; then
+    jq -r '
+      "Nico visible subagent",
+      "transport: /ask -> subagent-runner -> Codex PTY",
+      "status: \(.status)  pid=\(.pid // "unknown") watcher_pid=\(.watcher_pid // "unknown")",
+      "session_dir: \(.artifact_dir // "")",
+      "cwd: \(.cwd // "")",
+      "command: " + ((.command // []) | join(" "))
+    ' "$status" 2>/dev/null || true
+  else
+    echo "Nico visible subagent"
+    echo "transport: /ask -> subagent-runner -> Codex PTY"
+    echo "status: waiting for status.json"
+  fi
+  echo
+  echo "Human attach: tmux a -t ${TMUX_SESSION_NAME:-nico}"
+  echo "Project-agent input path: subagent-runner send-input <session_dir> '<message>'"
+  echo
+  echo "Project-agent inputs:"
+  if [[ -s "$commands" ]]; then
+    jq -r 'select(.action=="input") | "- " + (.text|tostring)' "$commands" 2>/dev/null | tail -8 || true
+  else
+    echo "- (none yet)"
+  fi
+  echo
+  echo "Clean transcript:"
+  python3 "$cleaner" "$transcript" 2>/dev/null || true
+  sleep 1
+done
+''',
+        encoding="utf-8",
+    )
+    cleaner.chmod(0o755)
+    follower.chmod(0o755)
+    return cleaner, follower
+
+
+def _run_visible_subagent_tmux(
+    *,
+    question: str,
+    route: dict,
+    memory_items: list[dict],
+    mentioned_skills: list[str],
+    run_state: Optional[AskRunState],
+    timeout: float,
+    idle_timeout: float,
+    model: str,
+    reasoning: str,
+) -> dict:
+    """Launch or steer a human-visible tmux-backed subagent through /ask."""
+    _validate_visible_subagent_route(route)
+    persona = str(route.get("persona") or "Nico").strip() or "Nico"
+    tmux_session = _visible_tmux_session_name(route)
+    binding_path = _visible_tmux_binding_path(tmux_session)
+    runner = Path(SUBAGENT_RUNNER)
+    if not runner.exists():
+        raise RuntimeError(f"subagent-runner not found: {runner}")
+
+    if run_state:
+        run_state.step_started(
+            "visible_subagent_tmux",
+            persona=persona,
+            tmux_session=tmux_session,
+        )
+
+    existing_binding: dict = {}
+    if binding_path.exists():
+        try:
+            existing_binding = json.loads(binding_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            existing_binding = {}
+    existing_session_dir = str(existing_binding.get("session_dir") or "")
+    if existing_session_dir and Path(existing_session_dir).exists() and _tmux_has_session(tmux_session):
+        send = subprocess.run(
+            [str(runner), "send-input", existing_session_dir, question, "--source", "controller"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if send.returncode != 0:
+            raise RuntimeError(f"visible subagent send-input failed: {send.stderr.strip()}")
+        try:
+            send_payload = json.loads(send.stdout)
+        except json.JSONDecodeError:
+            send_payload = {}
+        delivery = {
+            **existing_binding,
+            "state": "running",
+            "operation": "steer",
+            "persona": persona,
+            "transport": "subagent_runner_tmux",
+            "input_id": send_payload.get("input_id", ""),
+            "tmux_session": tmux_session,
+            "attach_command": f"tmux a -t {tmux_session}",
+            "send_input_command": f"{runner} send-input {existing_session_dir} '<message>'",
+        }
+        if run_state:
+            run_state.add_artifacts({
+                "visible_subagent_binding": binding_path,
+                "visible_subagent_session": existing_session_dir,
+                "visible_subagent_transcript": Path(existing_session_dir) / "transcript.log",
+            })
+            run_state.step_finished("visible_subagent_tmux", delivery_state="running", tmux_session=tmux_session)
+        return delivery
+
+    run_dir = Path(getattr(run_state, "run_dir", Path(tempfile.gettempdir()) / "ask-visible-subagent")).expanduser()
+    visible_dir = run_dir / "visible-subagent"
+    visible_dir.mkdir(parents=True, exist_ok=True)
+    cleaner, follower = _write_visible_subagent_clean_viewer(visible_dir)
+    prompt_file = visible_dir / f"{_safe_visible_fragment(persona.lower(), 'persona')}-prompt.md"
+    spec_file = visible_dir / f"{_safe_visible_fragment(persona.lower(), 'persona')}-spec.json"
+    output_dir = visible_dir / "sessions"
+    memory_context = _visible_memory_context(memory_items)
+    prompt_file.write_text(
+        "\n".join([
+            f"You are {persona}, a persistent visible subagent in a live project-agent/human collaboration.",
+            "Stay in the session after answering. Ask clarifying questions when needed.",
+            "The project agent will continue the conversation through /ask send-input, not through hidden manual fallback.",
+            "The human may attach to the tmux session to watch the conversation.",
+            "",
+            f"Original trigger: {route.get('original_utterance', '')}",
+            f"Turn type: {route.get('turn_type', 'advisory')}",
+            f"Mentioned skills: {', '.join(mentioned_skills) if mentioned_skills else '(none)'}",
+            "",
+            "Memory context:",
+            json.dumps(memory_context, indent=2, default=str),
+            "",
+            "Current project-agent message:",
+            question,
+        ]),
+        encoding="utf-8",
+    )
+    command = [
+        "bash",
+        "-lc",
+        (
+            'codex --model "$ASK_VISIBLE_SUBAGENT_MODEL" '
+            '-c "reasoning_effort=\\"$ASK_VISIBLE_SUBAGENT_REASONING\\"" '
+            '--sandbox "$ASK_VISIBLE_SUBAGENT_CODEX_SANDBOX" '
+            '--ask-for-approval never '
+            '--no-alt-screen '
+            '--cd "$ASK_VISIBLE_SUBAGENT_CWD" '
+            '"$(cat "$ASK_VISIBLE_SUBAGENT_PROMPT_FILE")"'
+        ),
+    ]
+    task_id = f"ask-visible-{_safe_visible_fragment(persona.lower(), 'persona')}-{int(time.time())}"
+    spec = {
+        "task_id": task_id,
+        "title": f"/ask visible subagent {persona}",
+        "prompt": "Persistent visible subagent prompt is stored in ASK_VISIBLE_SUBAGENT_PROMPT_FILE.",
+        "backend": "codex",
+        "command": command,
+        "cwd": str(Path.cwd()),
+        "output_dir": str(output_dir),
+        "timeout_seconds": int(max(timeout, 300)),
+        "idle_timeout_seconds": int(max(idle_timeout, 300)),
+        "env": {
+            "ASK_VISIBLE_SUBAGENT_MODEL": model,
+            "ASK_VISIBLE_SUBAGENT_REASONING": reasoning,
+            "ASK_VISIBLE_SUBAGENT_CODEX_SANDBOX": os.environ.get("ASK_VISIBLE_SUBAGENT_CODEX_SANDBOX", "read-only"),
+            "ASK_VISIBLE_SUBAGENT_CWD": str(Path.cwd()),
+            "ASK_VISIBLE_SUBAGENT_PROMPT_FILE": str(prompt_file),
+        },
+        "tags": ["ask", "visible-subagent", "persistent", "tmux", persona.lower()],
+    }
+    spec_file.write_text(json.dumps(spec, indent=2, default=str), encoding="utf-8")
+    started = subprocess.run(
+        [str(runner), "start", str(spec_file)],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if started.returncode != 0:
+        raise RuntimeError(f"visible subagent start failed: {started.stderr.strip()}")
+    start_data = json.loads(started.stdout)
+    session_dir = str(start_data["artifact_dir"])
+    if _tmux_has_session(tmux_session):
+        subprocess.run(["tmux", "kill-session", "-t", tmux_session], capture_output=True, text=True, timeout=10)
+    tmux = subprocess.run(
+        [
+            "tmux",
+            "new-session",
+            "-d",
+            "-s",
+            tmux_session,
+            "-n",
+            "nico-codex-live",
+            f"TMUX_SESSION_NAME={tmux_session} {follower} {session_dir}",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if tmux.returncode != 0:
+        raise RuntimeError(f"visible subagent tmux attach failed: {tmux.stderr.strip()}")
+    binding = {
+        "persona": persona,
+        "transport": "subagent_runner_tmux",
+        "state": "running",
+        "operation": "launch",
+        "tmux_session": tmux_session,
+        "session_dir": session_dir,
+        "transcript": str(Path(session_dir) / "transcript.log"),
+        "status": str(Path(session_dir) / "status.json"),
+        "events": str(Path(session_dir) / "events.jsonl"),
+        "spec": str(spec_file),
+        "prompt": str(prompt_file),
+        "clean_transcript": str(cleaner),
+        "clean_follow_command": f"{follower} {session_dir}",
+        "attach_command": f"tmux a -t {tmux_session}",
+        "send_input_command": f"{runner} send-input {session_dir} '<message>'",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    binding_path.parent.mkdir(parents=True, exist_ok=True)
+    binding_path.write_text(json.dumps(binding, indent=2, default=str), encoding="utf-8")
+    if run_state:
+        run_state.add_artifacts({
+            "visible_subagent_binding": binding_path,
+            "visible_subagent_session": session_dir,
+            "visible_subagent_transcript": Path(session_dir) / "transcript.log",
+            "visible_subagent_prompt": prompt_file,
+            "visible_subagent_spec": spec_file,
+            "visible_subagent_clean_transcript": cleaner,
+            "visible_subagent_clean_follow": follower,
+        })
+        run_state.step_finished("visible_subagent_tmux", delivery_state="running", tmux_session=tmux_session)
+    return binding
+
+
+def _run_visible_subagent_scillm(
+    *,
+    question: str,
+    route: dict,
+    memory_items: list[dict],
+    mentioned_skills: list[str],
+    run_state: Optional[AskRunState],
+    timeout: float,
+) -> dict:
+    """Launch or steer a visible subagent through scillm's Codex app-server agent API."""
+    _validate_visible_subagent_route(route)
+    worker_id = _visible_subagent_worker_id(route)
+    operation = str(route["operation"])
+    handoff_id, handoff_id_source = _resolve_visible_subagent_id("handoff_id", route)
+    lease_id, lease_id_source = _resolve_visible_subagent_id("lease_id", route)
+    previous_thread_id = _visible_subagent_thread_id()
+    ask_id = getattr(run_state, "ask_id", "") if run_state is not None else ""
+    if operation == "steer" and (not handoff_id or not lease_id):
+        raise ValueError("visible_subagent steer requires an active handoff_id and lease_id")
+    if operation == "steer" and handoff_id_source != lease_id_source:
+        raise ValueError("visible_subagent steer handoff_id and lease_id must come from the same source")
+    if operation == "launch" and not handoff_id:
+        handoff_id = re.sub(r"[^A-Za-z0-9_-]+", "-", ask_id or f"ask-visible-{int(time.time())}").strip("-")
+        if not handoff_id:
+            handoff_id = f"ask-visible-{uuid.uuid4().hex}"
+    if operation == "launch" and not lease_id:
+        lease_id = f"{handoff_id}-lease"
+
+    base_url = SCILLM_BASE_URL.rstrip("/")
+    headers = {
+        "Authorization": f"Bearer {SCILLM_API_KEY}",
+        "X-Caller-Skill": "ask",
+    }
+    memory_context = _visible_memory_context(memory_items)
+    prompt_payload = {
+        "persona": route.get("persona", "Nico"),
+        "question": question,
+        "turn_type": route.get("turn_type", "advisory"),
+        "operation": route["operation"],
+        "mentioned_skills": mentioned_skills,
+        "memory_first": bool(route.get("memory_first", True)),
+        "memory_context": memory_context,
+        "original_utterance": route.get("original_utterance", ""),
+        "ask_id": ask_id,
+    }
+    if run_state:
+        run_state.step_started(
+            "visible_subagent_scillm",
+            worker_id=worker_id,
+            handoff_id=handoff_id,
+            turn_type=route.get("turn_type", "advisory"),
+        )
+    try:
+        with httpx.Client(base_url=base_url, headers=headers, timeout=httpx.Timeout(float(timeout), connect=10.0)) as client:
+            if operation == "steer":
+                response = client.post(
+                    f"/v1/scillm/agents/{worker_id}/steer",
+                    json={
+                        "handoff_id": handoff_id,
+                        "lease_id": lease_id,
+                        "input_text": question,
+                        "actor": "human",
+                        "visible_subagent": route,
+                        "mentioned_skills": mentioned_skills,
+                    },
+                )
+                response.raise_for_status()
+                delivery = response.json()
+            elif operation == "launch":
+                handoff_response = client.post(
+                    f"/v1/scillm/agents/{worker_id}/handoffs",
+                    json={
+                        "handoff_id": handoff_id,
+                        "phase_id": "ask-visible-subagent",
+                        "goal": (
+                            f"{route.get('persona', 'Nico')} visible collaborator turn.\n\n"
+                            f"Question from project agent/human:\n{question}"
+                        ),
+                        "memory_context": memory_context,
+                        "validation_expectations": [
+                            "Return an actual visible collaborator response suitable for the project-agent terminal.",
+                            "If blocked, ask concrete clarifying questions instead of reporting generic status.",
+                        ],
+                        "metadata": prompt_payload,
+                    },
+                )
+                handoff_response.raise_for_status()
+                lease_response = client.post(
+                    f"/v1/scillm/agents/{worker_id}/leases",
+                    json={"handoff_id": handoff_id, "lease_id": lease_id, "owner": "ask-visible-subagent"},
+                )
+                lease_response.raise_for_status()
+                turn_response = client.post(
+                    f"/v1/scillm/agents/{worker_id}/turn",
+                    json={
+                        "handoff_id": handoff_id,
+                        "lease_id": lease_id,
+                        **({"thread_id": previous_thread_id} if previous_thread_id else {}),
+                        "service_name": "ask-visible-subagent",
+                        "wait_for_result": True,
+                        "result_timeout_seconds": max(5.0, min(float(timeout), 120.0)),
+                    },
+                )
+                turn_response.raise_for_status()
+                delivery = turn_response.json()
+                result_response = client.get(
+                    f"/v1/scillm/agents/{worker_id}/result",
+                    params={"handoff_id": handoff_id},
+                )
+                if result_response.status_code == 200:
+                    result_payload = result_response.json()
+                    delivery.setdefault("result", result_payload)
+                    final_text = str(result_payload.get("final_text") or "").strip()
+                    if final_text:
+                        delivery["final_text"] = final_text
+                    if result_payload.get("event_log"):
+                        delivery.setdefault("event_log", result_payload.get("event_log"))
+                    if result_payload.get("result_path"):
+                        delivery.setdefault("result_path", result_payload.get("result_path"))
+            else:
+                raise ValueError("visible_subagent operation must be launch or steer")
+        delivery = dict(delivery)
+        delivery.setdefault("worker_id", worker_id)
+        delivery.setdefault("handoff_id", handoff_id)
+        delivery.setdefault("lease_id", lease_id)
+        delivery.setdefault("persona", route.get("persona", "Nico"))
+        delivery.setdefault("transport", delivery.get("transport") or "scillm_codex_app_server")
+        delivery.setdefault("operation", route["operation"])
+        if operation == "launch" and not str(delivery.get("final_text") or "").strip():
+            state = delivery.get("result_state") or delivery.get("state") or "unknown"
+            raise RuntimeError(
+                "visible_subagent scillm turn did not produce final_text; "
+                f"worker_id={worker_id} handoff_id={handoff_id} state={state}"
+            )
+        if run_state:
+            run_state.step_finished("visible_subagent_scillm", delivery_state=delivery.get("state", "delivered"))
+        return delivery
+    except Exception as exc:
+        if run_state:
+            run_state.step_finished("visible_subagent_scillm", error=f"{type(exc).__name__}: {exc}")
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -992,6 +1676,7 @@ def main(
     oracle_persona_model: Optional[str] = typer.Option(None, help="Model for primary persona turns"),
     oracle_peer_model: Optional[str] = typer.Option(None, help="Model for peer persona turns"),
     oracle_iterations: int = typer.Option(1, help="Number of sequential oracle deliberation calls"),
+    oracle_image_paths: Optional[list[str]] = typer.Option(None, "--oracle-image", help="Image file to attach to direct scillm oracle calls (repeatable)"),
     roundtable: bool = typer.Option(False, help="Run a sequential protocolized persona roundtable"),
     roundtable_personas: Optional[str] = typer.Option(None, help="Comma-separated persona[:protocol_role] participants"),
     roundtable_role_preset: str = typer.Option("adversarial-review", help="Roundtable role preset"),
@@ -1036,6 +1721,9 @@ def main(
     inherit_project_context: str = typer.Option("no", "--inherit-project-context", help="Context policy project inheritance: no, summary, or full"),
     chain: Optional[str] = typer.Option(None, "--chain", help="Saved review chain spec name or path"),
     reviewer_specs: Optional[list[str]] = typer.Option(None, "--reviewer-spec", help="Reviewer spec name or path (repeatable)"),
+    orchestrate: bool = typer.Option(False, "--orchestrate", help="Draft and execute an ask DAG from the natural-language request"),
+    dag_json: str = typer.Option("", "--dag-json", help="Inline ask/scillm-style DAG JSON document to execute before synthesis"),
+    dag_file: str = typer.Option("", "--dag-file", help="Path to an ask/scillm-style DAG JSON document to execute before synthesis"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview execution spec and risk analysis without mutation"),
     ask_id: Optional[str] = typer.Option(None, "--ask-id", help="Stable runtime artifact id for this ask call"),
     run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for ask runtime artifacts"),
@@ -1047,6 +1735,7 @@ def main(
     webgpt_project: str = typer.Option("", "--webgpt-project", help="Bind this call to a project name; the controlled ChatGPT tab is persisted at ~/.pi/webgpt-projects/<name>.json and reused across calls. First call for a new project auto-creates a background tab; manually-bound projects (webgpt-project bind ...) never auto-replace their tab."),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
+    original_utterance = " ".join(part for part in question_parts)
     stdin_question = False
     if len(question_parts) == 1 and question_parts[0] == "-":
         stdin_question = sys.stdin.read()
@@ -1094,6 +1783,14 @@ def main(
                 as_json=as_json,
             )
             return
+
+    visible_subagent_route: dict | None = None
+    dag_orchestration_attention: dict | None = None
+    ask_dag: dict | None = None
+    try:
+        ask_dag = load_ask_dag(dag_json=dag_json, dag_file=dag_file)
+    except AskDagError as exc:
+        raise typer.BadParameter(str(exc), param_hint="--dag-json") from exc
 
     question, inferred_cae_gap_review = _parse_natural_cae_gap_review_query(question_parts)
     if stdin_question:
@@ -1173,6 +1870,41 @@ def main(
             }
 
     persona_question_parts = [question] if (inferred_roundtable or inferred_parallel_review or inferred_argue or inferred_cae_gap_review) else question_parts
+    if not stdin_question and not any([roundtable, parallel_review, argue, cae_gap_review, deep_review]):
+        (
+            visible_question,
+            visible_persona,
+            visible_trigger,
+            visible_turn_type,
+            inferred_visible_subagent,
+        ) = _parse_natural_visible_subagent_query(
+            persona_question_parts,
+            explicit_persona=oracle_persona,
+        )
+        if inferred_visible_subagent:
+            question = visible_question
+            oracle_persona = visible_persona
+            oracle = True
+            if oracle_backend == DEFAULT_ORACLE_BACKEND:
+                oracle_backend = "scillm"
+            elif oracle_backend != "scillm":
+                raise typer.BadParameter(
+                    "Visible subagent conversation requires the scillm Codex App Server transport; "
+                    "tmux/send-keys fallbacks are not allowed.",
+                    param_hint="--oracle-backend",
+                )
+            visible_subagent_route = {
+                "mode": "visible_subagent",
+                "persona": visible_persona,
+                "visibility": "human_project_conversation",
+                "turn_type": visible_turn_type,
+                "operation": "steer" if visible_turn_type == "steering" else "launch",
+                "memory_first": True,
+                "transport": "scillm_app_server_turn_steer",
+                "trigger_phrase": visible_trigger,
+                "original_utterance": original_utterance,
+            }
+            persona_question_parts = [question]
     question, inferred_persona, inferred_peer, inferred_oracle = _parse_natural_persona_query(
         persona_question_parts,
         explicit_persona=oracle_persona,
@@ -1237,7 +1969,7 @@ def main(
         if deep_review_focus and not parallel_review_focus:
             parallel_review_focus = deep_review_focus
         if oracle_backend == DEFAULT_ORACLE_BACKEND:
-            oracle_backend = "subagent-runner"
+            oracle_backend = "scillm"
         if oracle_reasoning is None:
             oracle_reasoning = "xhigh"
 
@@ -1419,6 +2151,7 @@ def main(
         oracle_peer,
         oracle_persona_model,
         oracle_peer_model,
+        bool(oracle_image_paths),
         roundtable,
         roundtable_personas,
         argue,
@@ -1436,6 +2169,19 @@ def main(
         )
 
     run_id = ask_id or make_run_id(question)
+    mentioned_skills = _extract_skill_mentions(original_utterance)
+    should_draft_dag = orchestrate or (not ask_dag and should_orchestrate_from_text(original_utterance))
+    if should_draft_dag and not ask_dag:
+        try:
+            ask_dag = draft_ask_dag_from_question(
+                question,
+                scope=scope,
+                mentioned_skills=mentioned_skills,
+            )
+        except AskDagError as exc:
+            dag_orchestration_attention = natural_language_dag_attention(exc)
+    if visible_subagent_route and run_output_root is None:
+        run_output_root = ".ask_artifacts/visible-subagent"
     context_policy = build_context_policy(
         (
             "image-generation"
@@ -1449,6 +2195,7 @@ def main(
     )
     request_payload = {
         "command": "ask",
+        "original_utterance": original_utterance,
         "question": question,
         "scope": scope,
         "k": k,
@@ -1478,6 +2225,7 @@ def main(
         "oracle_heartbeat_interval": oracle_heartbeat_interval,
         "oracle_persona": oracle_persona,
         "oracle_peer": oracle_peer,
+        "oracle_image_paths": oracle_image_paths or [],
         "oracle_iterations": oracle_iterations,
         "roundtable": roundtable,
         "roundtable_personas": roundtable_personas,
@@ -1511,12 +2259,18 @@ def main(
         "cae_judge": cae_judge,
         "cae_max_rounds": cae_max_rounds,
         "context_policy": context_policy,
+        "ask_dag": dag_dry_run_summary(ask_dag),
         "chain": chain,
         "reviewer_specs": reviewer_specs or [],
+        "orchestrate": should_draft_dag,
         "suggested_personas_count": 0,
+        "mentioned_skills": mentioned_skills,
+        "visible_subagent": visible_subagent_route,
     }
     if missing_persona_attention:
         request_payload["missing_persona_clarification"] = missing_persona_attention
+    if dag_orchestration_attention:
+        request_payload["dag_orchestration_clarification"] = dag_orchestration_attention
     if dry_run:
         print_execution_spec(build_ask_dry_run_spec(request_payload), as_json=as_json)
         raise typer.Exit(code=0)
@@ -1531,7 +2285,7 @@ def main(
         )
         request_payload["suggested_personas_count"] = len(suggested_personas)
 
-    require_runtime_artifacts = image_generate or deep_review or parallel_review or argue or cae_gap_review
+    require_runtime_artifacts = image_generate or bool(oracle_image_paths) or bool(ask_dag) or deep_review or parallel_review or argue or cae_gap_review
     try:
         run_state = AskRunState(run_id, output_root=run_output_root, overwrite=overwrite_run, resume=resume_run)
         run_state.write_request(request_payload)
@@ -1546,6 +2300,12 @@ def main(
         typer.echo(f"Warning: Runtime artifacts disabled: {exc}", err=True)
         run_state = NoopRunState(run_id, reason=str(exc))
     run_state.event("ask_started")
+    if visible_subagent_route:
+        run_state.event(
+            "visible_subagent_route",
+            visible_subagent=visible_subagent_route,
+            mentioned_skills=mentioned_skills,
+        )
 
     if image_generate:
         try:
@@ -1595,6 +2355,32 @@ def main(
             print()
         raise typer.Exit(code=0)
 
+    if dag_orchestration_attention:
+        attention = run_state.needs_attention(**dag_orchestration_attention)
+        result = {
+            "question": question,
+            "scope": scope,
+            "items": [],
+            "bridges_found": [],
+            "answer": "",
+            "auto_learned": False,
+            "hybrid_mode": hybrid,
+            "needs_attention": attention,
+            "ask_id": run_state.ask_id,
+            "runtime_artifacts": run_state.artifacts,
+        }
+        run_state.finish(result, state="needs_attention")
+        if as_json:
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            print("\n-- /ask needs attention --")
+            print(f"   Reason: {attention.get('reason', 'unknown')}")
+            print(f"   Question: {attention.get('question', '')}")
+            if attention.get("resume_hint"):
+                print(f"   Resume: {attention['resume_hint']}")
+            print()
+        raise typer.Exit(code=2)
+
     if missing_persona_attention:
         attention = run_state.needs_attention(**missing_persona_attention)
         result = {
@@ -1642,6 +2428,7 @@ def main(
             oracle_persona=oracle_persona,
             oracle_consult_personas=suggested_personas if oracle else None,
             oracle_peer=oracle_peer,
+            oracle_image_paths=oracle_image_paths or [],
             oracle_iterations=oracle_iterations,
             oracle_backend=oracle_backend,
             oracle_persona_model=oracle_persona_model,
@@ -1689,6 +2476,9 @@ def main(
             webgpt_url=webgpt_url,
             webgpt_create_tab=webgpt_create_tab,
             webgpt_project=webgpt_project,
+            visible_subagent=visible_subagent_route,
+            mentioned_skills=mentioned_skills,
+            ask_dag=ask_dag,
             run_state=run_state,
         )
     except Exception as exc:
@@ -1741,6 +2531,9 @@ def main(
 
     result["ask_id"] = run_state.ask_id
     result["runtime_artifacts"] = run_state.artifacts
+    if visible_subagent_route:
+        result["visible_subagent"] = visible_subagent_route
+        result["mentioned_skills"] = mentioned_skills
     if result.get("needs_attention"):
         run_state.finish(result, state="needs_attention")
         if as_json:

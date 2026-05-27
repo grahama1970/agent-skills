@@ -39,7 +39,7 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 
 ## Analyzed Sources
 
-1.  **Codex (🤖)**: High-reasoning technical starting point and final synthesis (gpt-5.2).
+1.  **scillm LLM lanes (🤖)**: Query ambiguity checks, query tailoring, technical overview, and code/paper relevance evaluation. Dogpile calls `POST http://localhost:4001/v1/chat/completions` with `Authorization: Bearer sk-dev-proxy-123` and `X-Caller-Skill: dogpile`; it does not call OpenAI, Claude, Gemini, or Codex provider APIs directly.
 2.  **Perplexity (🧠)**: AI-synthesized deep answers and reasoning (Sonar Reasoning).
 3.  **Brave Search (🌐)**: **Three-Stage Search** (Search → Evaluate → Deep Extract via /fetcher).
 4.  **ArXiv (📄)**: **Three-Stage Search** (Abstracts → Details → Full Paper via /fetcher + /extractor).
@@ -52,14 +52,14 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
 
 ## Features
 
-1.  **Query Tailoring**: Uses Codex to generate service-specific queries optimized for each source:
+1.  **Query Tailoring**: Uses `/scillm` to generate service-specific queries optimized for each source:
     - **ArXiv**: Academic/technical terms
     - **Perplexity**: Natural language questions
     - **Brave**: Documentation-style keyword queries that must fit Brave's hard limits (`<=400` chars, `<=50` words)
     - **GitHub**: Code patterns, library names
     - **YouTube**: Tutorial-style phrases
 
-2.  **Ambiguity Guard**: Uses Codex High Reasoning to analyze the query first. If ambiguous, it asks you for clarification before wasting resources.
+2.  **Ambiguity Guard**: Uses `/scillm` to analyze the query first. If ambiguous, it asks you for clarification before wasting resources.
 
 3.  **Three-Stage Deep Dive**:
     - **ArXiv**: Fetches detailed metadata → Agent evaluates → Full PDF extraction via /fetcher + /extractor
@@ -67,7 +67,7 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Brave**: Fetches results → Agent evaluates → Full page extraction via /fetcher
     - **YouTube**: Extracts full transcripts for the most relevant videos
 
-4.  **Codex Synthesis**: Consolidates all results into a coherent, high-reasoning conclusion.
+4.  **Report Assembly**: Consolidates successful provider results into a Markdown report. LLM source failures are reported as degraded provider results, not as a total search failure.
 
 5.  **Textual TUI Monitor**: Real-time progress tracking of all concurrent searches via `run.sh monitor`.
 
@@ -78,6 +78,50 @@ Orchestrate a multi-source deep search to "dogpile" on a problem from every angl
     - **Automatic retry**: Retries rate-limited requests after appropriate backoff
     - **Brave query budgeting**: Compresses overlong Brave queries before dispatch instead of sending invalid 422 requests
     - **Incremental result publishing**: Writes structured partial results as providers finish so the caller does not need to wait for the final report
+
+## LLM Contract
+
+Dogpile has exactly one active LLM integration: `/scillm`.
+
+- Endpoint: `POST http://localhost:4001/v1/chat/completions`
+- Required headers: `Authorization: Bearer sk-dev-proxy-123` and `X-Caller-Skill: dogpile`
+- Primary reasoning lane: `model: "gpt-5.5"` through `httpx`
+- No routine LLM fallback lane: if `gpt-5.5` is unavailable, the LLM source is logged as degraded and Dogpile still returns successful retrieval results
+- Vision/high-reasoning adjudication lane: `model: "gpt-5.5"` with image content sent through `/scillm`; do not spend Claude/Gemini quota unless explicitly requested
+- JSON tasks: send `response_format: {"type": "json_object"}` and ask for JSON in the prompt
+- Forbidden: `max_tokens` in dogpile's `/scillm` calls
+- Provider names in logs use logical lane names such as `scillm-gpt55`; scillm decides the concrete upstream provider and returns it in the response `model`
+- Retrieval sources: Brave Search, GitHub, ArXiv, Wayback, YouTube, and feed monitors use their native retrieval APIs. `/scillm` is for query tailoring, ranking, summarization, ambiguity checks, and review of retrieved evidence.
+- Perplexity status: currently quota-exhausted. It is skipped and logged as a degraded source even when requested.
+
+If `/scillm` fails, dogpile records the LLM lane as a degraded provider result and continues with Brave, GitHub, ArXiv, YouTube, Readarr, and Wayback results.
+
+## Persona, Rationale, and Problem Context
+
+Dogpile requests may include explicit review persona, rationale, and problem
+context. These fields are first-class request metadata, not hidden prose:
+
+```bash
+./run.sh search "accessible warning validation message contrast dark UI" \
+  --persona nico-bailon \
+  --rationale "Resolve repeated review-design blockers for the DAG editor" \
+  --context "Need evidence-backed guidance for warning acknowledgement, Memory amendment copy, and audit traceability"
+```
+
+Supported fields:
+
+- `--persona`: reviewer or research persona whose priorities should shape LLM
+  analysis and query tailoring.
+- `--rationale`: why the dogpile is being run now, including blocker context.
+- `--context`: concrete problem context and constraints.
+- `--context-file`: additional context read from a local file.
+
+Dogpile stores these fields in `dogpile_partial_results.json` under
+`request_context`, emits them in the initial `[dogpile-event] search_started`
+event, includes them in scillm-powered ambiguity/tailoring/knowledge prompts,
+and prepends them to the final report. Retrieval providers still receive
+search-engine-suitable queries; the context is used to generate and interpret
+those queries rather than silently broadening every native search call.
 
 ## GitHub Three-Stage Search
 
@@ -201,9 +245,19 @@ python cli.py errors --clear
 |------|----------|
 | `dogpile_errors.json` | Structured error log (last 50 sessions) |
 | `dogpile.log` | Human-readable log (timestamped) |
+
+### Ask DAG repair hints
+
+When `/ask` runs `dogpile.search`, it loads `config/ask_dag_repair_hints.yaml` from
+this skill. Published hints tell `/ask` to:
+
+- Bump low node timeouts to `360s` when dogpile is killed by the parent budget.
+- Consume `dogpile_partial_results.json` when a usable `final_report` or stage
+  results were persisted before timeout.
+
 | `dogpile_partial_results.json` | Structured partial results updated as each provider/stage completes |
 | `rate_limit_state.json` | Persistent rate limit tracking |
-| `dogpile_state.json` | Real-time status for monitoring |
+| `dogpile_task_state.json` | Real-time task-monitor status for monitoring |
 
 ### Incremental Result Contract
 
@@ -228,7 +282,7 @@ Rate limits are tracked per-provider with:
 When a provider is rate-limited:
 1. Error is logged to `dogpile_errors.json`
 2. Backoff multiplier increases (up to 10x)
-3. Status appears in `dogpile_state.json`
+3. Status appears in `dogpile_task_state.json`
 4. Summary shown at end of search
 
 ### Agent Debugging Workflow
@@ -244,7 +298,7 @@ python cli.py errors --json | jq '.rate_limits'
 python cli.py errors --json | jq '.recent_errors'
 
 # 4. Check specific provider
-cat dogpile_state.json | jq '.providers'
+cat dogpile_task_state.json | jq '.provider_status'
 ```
 
 ### Error Types

@@ -137,6 +137,16 @@ ask mode instead of summarizing it. Examples:
 - Use `--roundtable` only when the user asks for persona deliberation.
 - Use `--cae-gap-review` only for evidence-case-backed CAE/QRA gap review.
 
+For `$ask --deep-review`, the target must be readable review material. Do not
+pass compressed archives such as `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.7z`, or
+binary bundles directly as `--deep-review-target`; the runtime will treat them
+as opaque bytes and the reviewer cannot inspect the contents. If the only
+available artifact is a compressed review bundle, first extract or render the
+specific relevant files into readable text files, then pass an explicit
+space-separated list of those files as the deep-review target. Directory targets
+are metadata-only in deep-review target resolution, so do not pass a directory
+and assume its contents will be inspected.
+
 Proof of a real `$ask` run is the ask artifact set, not an assistant summary.
 Return the relevant artifact paths, such as:
 
@@ -426,6 +436,12 @@ Agent translation rules:
 - Treat "deep review", "comprehensive review", "safe to proceed", or "production readiness" as `--deep-review`; require or infer a concrete `--deep-review-target`.
 - Treat leading model shorthand such as `$ask oc kimi ...`, `$ask opencode qwen ...`, `$ask chutes kimi ...`, `$ask oc-kimi ...`, or `$ask chutes-kimi ...` as `--oracle --oracle-backend scillm` with the resolved provider model.
 - Treat leading `$ask webgpt ...` (or `$ask chatgpt ...`) as `--oracle --oracle-backend webgpt`. This drives an already-authenticated ChatGPT tab in the user's Chrome via the surf-cli extension; the controlled tab never foregrounds (`--no-activate`).
+- Treat `Ask Nico ...`, `Bring Nico into this conversation ...`, and other
+  visible named-subagent conversation requests as `/ask`-owned persistent
+  tmux-visible subagent sessions using `--oracle-backend subagent-runner`.
+  Do not satisfy these with direct `/subagent-runner`, a one-shot oracle answer,
+  or a hidden fallback. The proof artifact must include the tmux attach command,
+  session directory, transcript, status, events, and send-input command.
 - Treat date-sensitive words (`2026`, `current`, `latest`, `today`, `recent`) as `--dogpile auto`.
 - Default high-value analytical questions to `--oracle --oracle-model gpt-5.5 --oracle-reasoning high`.
 
@@ -441,6 +457,7 @@ Agent translation rules:
 | `$ask chutes-kimi explain this design tradeoff` | Hyphenated Chutes shorthand using configured alias `chutes-kimi` |
 | `$ask webgpt to perform the review on /tmp/review-bundle.md` | WebGPT oracle backed by the user's signed-in ChatGPT tab (via `surf webgpt.submit --no-activate`). File paths in the prompt are auto-attached. Tab id auto-resolves when exactly one chatgpt.com tab is open; otherwise pass `--webgpt-tab-id`. |
 | `$ask webgpt again — refine your answer` | Multi-turn: each `$ask webgpt` call is one round against the same controlled tab. ChatGPT preserves conversation context, so iterations form a coherent dialogue. |
+| `$ask Bring Nico into this conversation to review the mockups` | Persistent visible Nico session. Human attaches with `tmux a -t nico-<project>`; project agent sends follow-up turns through the `/ask` artifact's `send_input_command`. |
 | `$ask Brandon what is the state of space-based cybersecurity in 2016?` | Brandon persona oracle over `--scope sparta` |
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: What is the state of cybersecurity in 2026?` | SPARTA-scoped sequential persona roundtable |
 | `$ask Brandon what is the best way to review this API boundary?` | Brandon persona oracle subagent |
@@ -535,6 +552,7 @@ Options:
   --oracle-persona-model <m> Model for primary persona turns
   --oracle-peer-model <m> Model for peer persona turns
   --oracle-iterations <n> Sequential oracle deliberation calls (default: 1)
+  --oracle-image <path> Attach an image to a direct scillm oracle call (repeatable)
   --roundtable          Run sequential protocolized persona deliberation
   --roundtable-personas <p> Comma-separated persona[:protocol_role] participants
   --roundtable-role-preset <p> Role preset (default: adversarial-review)
@@ -563,6 +581,9 @@ Options:
   --deep-review-output-root <dir> Artifact root (default: .ask_artifacts/deep-review)
   --chain <name|path>   Saved review chain spec (e.g. deep-review-safety)
   --reviewer-spec <name|path> Reviewer role/focus spec (repeatable)
+  --orchestrate          Draft and execute an ask DAG from the natural-language request
+  --dag-json <json>     Execute an inline ask/scillm-style DAG before synthesis
+  --dag-file <path>     Execute an ask/scillm-style DAG JSON file before synthesis
   --dogpile <auto|off|force> Freshness policy for date-sensitive oracle prompts
   --dry-run             Emit execution spec/risk analysis without mutation
   --ask-id <id>          Stable runtime artifact id for this ask call
@@ -598,6 +619,187 @@ execution. `status.json` is atomically replaced as the run progresses.
 `request_written`, `ask_started`, `memory_recall_started`,
 `memory_recall_finished`, `evidence_case_started`, `synthesis_finished`,
 `finished`, and `failed`.
+
+### Natural-Language DAG Orchestration
+
+`/ask --orchestrate` drafts an executable `ask.dag.v1` from a clear natural
+language request. This is the zero-cognitive-load interface for project agents:
+the human names the desired skill orchestration, and `/ask` converts it into
+memory-first, optional dogpile, oracle, and sibling-skill nodes.
+
+Rules:
+
+- `/ask` owns skill orchestration, dependencies, joins, run-state artifacts,
+  and final synthesis.
+- `$scillm` remains a skill/backend boundary. `/ask` may request a model/profile
+  for an `ask.oracle` node, but it does not expose model-pool, queue,
+  provider-capacity, fallback, or transport choices.
+- `/memory` and `/dogpile` own their own recall/research internals.
+- `/interview` is used only when a natural-language request lacks a target
+  skill, output artifact, or acceptance criteria that cannot be safely inferred.
+- `skill.run` validation uses runnable sibling skill contracts (`SKILL.md` plus
+  `run.sh`) instead of a narrow product-specific skill list.
+
+Natural-language DAG drafting also auto-engages for prompts that explicitly ask
+for a DAG, workflow, skill graph, or orchestration. When the request is
+ambiguous, `/ask` fails closed with a `needs_attention` artifact pointing to
+`/interview` rather than guessing.
+
+### DAG JSON Mode
+
+`/ask` can execute a project-agent DAG directly with `--dag-json` or
+`--dag-file`. This is the preferred interface when an agent can express the
+workflow more clearly as JSON than as a long list of flags.
+
+Public graph envelope:
+
+- `ask.dag.v1`, the native ask DAG schema.
+
+Compatibility graph envelope:
+
+- `scillm.exec.graph.v1`, normalized at the `/ask` boundary for React Flow,
+  migration, and diagnostic tooling. This is not the preferred human/project
+  agent input surface; normal callers use natural language or `ask.dag.v1`.
+
+Supported node types:
+
+- `memory.recall` — run `/memory recall` and feed returned `items` into later
+  nodes and synthesis.
+- `dogpile.search` — run `/dogpile search` for fresh research context.
+- `ask.oracle` — run a one-shot `/scillm` chat completion through `/ask` with
+  the required ask caller headers and scillm metadata.
+- `skill.run` — run a runnable sibling skill with a `SKILL.md` and `run.sh`,
+  such as `create-report`, `review-code`, `subagent-runner`, `memory`, or
+  `dogpile`.
+
+Dependencies are expressed with `depends_on`. Independent nodes in the same
+layer run concurrently up to `max_concurrency`; dependent nodes run after their
+parents and receive upstream context. Each node may set `max_attempts` from 1
+to 10. DAG runs always write request/status/events artifacts plus
+`dag/manifest.json` and one JSON artifact per node.
+
+Each node may set `allow_failure` (boolean, default `false`). When a
+node finishes with `ok: false`:
+
+- `allow_failure: false` (default): the layer is fail-closed. `/ask` records
+  `dag_layer_failed` with `failed_node_ids` and `safe_default:
+  stop_before_dependent_nodes`, then raises `AskDagError` before any dependent
+  layer runs.
+- `allow_failure: true`: the failed node is recorded in `dag/manifest.json` and
+  its node artifact, but the DAG continues to dependent nodes that still declare
+  the failed parent in `depends_on`. Use only for optional probes, shadow checks,
+  or best-effort enrichment that must not block the main workflow.
+
+Bounded auto-repair runs after a node attempt when `/ask` recognizes a known,
+deterministic failure mode. Repairs are recorded on the node artifact (`repairs`,
+`auto_repaired`) and in run-state events:
+
+- `dag_node_auto_repair_started` / `dag_node_auto_repair_finished`
+- Current repair: `dogpile.search` with `returncode == -2` (skill timeout) when
+  `input.timeout` is below `360` seconds — one retry at `360s` with reason
+  `dogpile_timeout_budget_too_low`.
+- Auto-repair does not bypass the required-node gate. If the repaired attempt
+  still fails and `allow_failure` is false, the layer still fails closed.
+
+Repair policy is data-driven:
+
+- Global policy: `config/ask_dag_repair_policy.yaml`
+- Timeout profiles: `config/ask_dag_timeout_profiles.yaml`
+- Skill hints: `skills/<skill>/config/ask_dag_repair_hints.yaml` (for example
+  `skills/dogpile/config/ask_dag_repair_hints.yaml`)
+
+Supported repair actions:
+
+- `bump_timeout` — retry once with a higher `input.timeout` when the skill
+  subprocess was killed for budget (`returncode == -2`).
+- `consume_partial_artifact` — when a sibling skill wrote usable partial output
+  (for example `dogpile_partial_results.json` with `final_report`), promote that
+  artifact into the node result instead of failing immediately.
+
+- True ambiguity (missing target skill, artifact, or acceptance criteria) still
+  routes to `/interview` via `needs_attention`, not silent DAG repair.
+
+For layers containing `ask.oracle` nodes, `/ask` creates an internal
+`scillm.exec.graph.v1` subgraph artifact such as
+`dag/layer-001-scillm.subgraph.json` and records
+`dag_scillm_partition_started` / `dag_scillm_partition_finished` events. `/ask`
+still owns dependencies, sibling skills, joins, run state, and final artifacts;
+the partition artifact is a diagnostic handoff receipt for the scillm-owned
+model lane, not user-authored orchestration input.
+`/ask` does not expose model-pool, queue, provider-capacity, or transport
+choices in the DAG contract; those remain `$scillm` internals. `$ask` submits
+model nodes with the requested model/profile and required metadata, and `$scillm`
+handles routing, streaming, provider queues, fallback, pooling, and telemetry.
+
+The live sanity check for this contract is:
+
+```bash
+./scripts/dag_e2e_sanity.py --output-root /tmp/ask-dag-e2e-proof --ask-id ask-dag-e2e-proof
+```
+
+That check writes a realistic `scillm.exec.graph.v1` file, runs two concurrent
+`memory.recall` nodes, joins them into a sequential `create-report` node, and
+verifies request/status/events, `dag/manifest.json`, per-node artifacts, and the
+generated Markdown report.
+
+```bash
+./scripts/dag_negative_sanity.py --output-root /tmp/ask-dag-negative-proof --ask-id ask-dag-negative-proof
+```
+
+That check runs a required `skill.run` node with an invalid flag, records
+`dag_layer_failed`, leaves the failed node artifact, and does not create the
+dependent node artifact.
+
+For a costful live model lane, add `--include-oracle`; the same DAG inserts two
+concurrent `ask.oracle` nodes before the final `create-report` join.
+
+Example native graph:
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "max_concurrency": 2,
+  "nodes": [
+    {
+      "id": "memory_first",
+      "type": "memory.recall",
+      "input": {"query": "prior lessons for this report", "scope": "project"}
+    },
+    {
+      "id": "brandon",
+      "type": "ask.oracle",
+      "depends_on": ["memory_first"],
+      "input": {
+        "prompt": "Brandon: read the report and comment against the criteria.",
+        "model": "gpt-5.5",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "id": "margaret",
+      "type": "ask.oracle",
+      "depends_on": ["memory_first"],
+      "input": {
+        "prompt": "Margaret: read the report and comment against the criteria.",
+        "model": "gpt-5.5",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": ["brandon", "margaret"],
+      "input": {"skill": "create-report", "args": ["--help"]}
+    }
+  ]
+}
+```
+
+React Flow or migration tooling may still hand `/ask` compatibility graph nodes
+with `exec_graph_version: "scillm.exec.graph.v1"` plus `execution` and
+`prompt_payload`. `/ask` normalizes those at the boundary into `ask.dag.v1`
+before execution, so callers still do not choose model pools, queues, provider
+capacity, fallback, or transport.
 
 When a run cannot safely continue, `status.json` uses `state:
 needs_attention` and includes a structured `needs_attention` object with
@@ -688,6 +890,20 @@ reasoning. Backend `auto` uses direct scillm for simple one-shot calls and
 ./run.sh ask "What should we do next?" --oracle --oracle-backend subagent-runner --oracle-model gpt-5.5 --oracle-reasoning high
 ```
 
+Direct scillm oracle calls can include screenshots or other images with
+`--oracle-image`. `/ask` converts each local file to an OpenAI-compatible
+`image_url` data URI, sends it through the same SSE `/scillm`
+`/v1/chat/completions` route, and records `oracle_image_paths` in request
+artifacts:
+
+```bash
+./run.sh ask oc-kimi "Brandon, review this Posture page screenshot against the design brief" \
+  --oracle-image /tmp/posture-page.png \
+  --ask-id posture-page-brandon-review \
+  --run-output-root /tmp/ask-runs \
+  --overwrite
+```
+
 For deliberation, set `--oracle-iterations` and optional persona roles. `/ask` will run sequential
 subagent-style oracle calls, feeding each turn into the next:
 
@@ -712,6 +928,55 @@ orchestrate persona-to-persona turns. For same-model persona dialogue, `/ask`
 uses one subagent session and has it switch personas dynamically so it keeps the
 full subagent conversation context. Separate sessions are only for isolation,
 parallelism, or different peer model backends such as DeepSeek via `/scillm`.
+
+**Visible persistent subagents:**
+
+When the human asks to bring a named collaborator such as Nico into the current
+conversation, `/ask` must create or reuse a persistent, human-visible session.
+This is different from a bounded oracle answer.
+
+Contract:
+
+- `/ask` owns the runtime. Do not manually call `/subagent-runner`, send tmux
+  keys, or scrape terminal text as a hidden fallback.
+- The public abstraction is `ask_agent(agent_id, message)`: resolve the named
+  collaborator's durable conversation state, run the next turn, persist
+  transcript/events, and return the collaborator's `final_text`.
+- Conversation identity is provider-neutral state. Store `agent_id`,
+  `backend_type`, `conversation_id`, role/cwd, and timestamps in a dedicated
+  memory-backed registry such as `codex_subagent_state`; do not mix runtime ids
+  into lesson/persona lore.
+- Codex App Server is one backend adapter. Its `conversation_id` is the Codex
+  `thread.id`, and each message uses `turn/start` against that thread. Normal
+  follow-up turns must not create a new thread unless the user explicitly
+  resets/forks the collaborator.
+- `thread/resume` is for reconnecting/reloading a stored thread before the next
+  `turn/start`; `turn/steer` is only for appending input to an active in-flight
+  turn.
+- Proof is the visible conversation text plus artifacts: request/status/events,
+  backend event log, result JSON, `thread_id`, `turn_id`, observed App Server
+  methods, and returned `final_text`.
+
+Example:
+
+```bash
+./run.sh ask "Bring Nico into this conversation to review the PDF annotator mockups" \
+  --ask-id nico-pdf-oxide \
+  --run-output-root /tmp/ask-visible-subagents \
+  --overwrite
+```
+
+Required proof paths from the resulting `/ask` artifacts:
+
+- `<ask-id>.request.json`
+- `<ask-id>.status.json`
+- `<ask-id>.events.jsonl`
+- scillm/App Server event log path
+- scillm result JSON path
+- visible terminal rendering of `Nico -> project agent: <final_text>`
+
+Optional tmux/TUI views are diagnostic only. They are not the machine interface
+and are not proof unless backed by the structured event/result artifacts above.
 
 **Ask-backed design review loops:**
 
@@ -921,6 +1186,30 @@ Use deep review when the human wants a comprehensive, Web-GPT-style review
 without copy-paste into the browser. Deep review is not `/code-runner`; it must
 produce analysis and artifacts, not patches.
 
+Deep-review targets must be directly inspectable. Pass concrete readable files,
+diffs, manifests, plans, or rendered review artifacts. Do not pass compressed
+archives or opaque binary files as the target. If a phase or review package
+exists only as a ZIP or other archive, extract the archive or create a readable
+target manifest, then pass the individual files that the reviewer must inspect:
+
+```bash
+# WRONG: reviewer receives compressed bytes, not readable evidence.
+./run.sh ask "deep review this phase" \
+  --deep-review \
+  --deep-review-target /tmp/phase-review.zip \
+  --oracle-backend scillm \
+  --oracle-model gpt-5.5 \
+  --oracle-reasoning high
+
+# RIGHT: reviewer receives the actual readable phase artifacts.
+./run.sh ask "deep review this phase" \
+  --deep-review \
+  --deep-review-target "/tmp/phase-review/PHASE_STATUS.json /tmp/phase-review/PHASE_REVIEW_REQUEST.md /tmp/phase-review/progress-context.md /tmp/phase-review/plan.dag.json" \
+  --oracle-backend scillm \
+  --oracle-model gpt-5.5 \
+  --oracle-reasoning high
+```
+
 ```bash
 ./run.sh ask "deep review this implementation" \
   --deep-review \
@@ -1048,6 +1337,18 @@ Use $ask oracle and have GPT-5.5 converse with DeepSeek V4.
 ```
 
 **Incorrect Usage Examples:**
+
+```bash
+# WRONG: Asking deep-review to inspect a compressed package.
+./run.sh ask "deep review this review bundle" \
+  --deep-review \
+  --deep-review-target /tmp/review-bundle.zip
+
+# RIGHT: Extract or render the bundle, then pass concrete readable files.
+./run.sh ask "deep review this review bundle" \
+  --deep-review \
+  --deep-review-target "/tmp/review-bundle/PHASE_STATUS.json /tmp/review-bundle/review-request.md /tmp/review-bundle/manifest.json"
+```
 
 ```bash
 # WRONG: Using oracle mode for many independent items.

@@ -1,0 +1,112 @@
+"""Tests for configurable DAG repair policy."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from ask import ask_dag
+from ask.dag_repair import (
+    _consume_partial_artifact,
+    apply_dag_repairs,
+    load_repair_policy,
+    resolve_node_timeout,
+)
+from ask.run_state import AskRunState
+
+
+def test_resolve_node_timeout_uses_profile_defaults():
+    node = {"id": "fresh", "type": "dogpile.search", "input": {"query": "x"}}
+    assert resolve_node_timeout(node) == 180
+    node["input"]["timeout"] = 45
+    assert resolve_node_timeout(node) == 45
+
+
+def test_load_repair_policy_includes_dogpile_skill_hints():
+    policy = load_repair_policy()
+    ids = {rule.get("id") for rule in policy.get("repairs", []) if isinstance(rule, dict)}
+    assert "dogpile_timeout_budget" in ids
+    assert "dogpile_timeout_budget_too_low" in ids
+
+
+def test_consume_partial_artifact_from_final_report(tmp_path, monkeypatch):
+    partial_path = tmp_path / "dogpile_partial_results.json"
+    partial_path.write_text(
+        json.dumps(
+            {
+                "status": "running",
+                "final_report": "# Report\n\n" + ("evidence " * 80),
+                "results": {"stage1": {"brave": {"count": 1}}},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    class FakeSkillsDir:
+        def __iter__(self):
+            return iter([tmp_path / "dogpile"])
+
+    fake_dogpile = tmp_path / "dogpile"
+    fake_dogpile.mkdir()
+    (fake_dogpile / "dogpile_partial_results.json").write_text(
+        partial_path.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("ask.dag_repair.SKILLS_DIR", tmp_path)
+
+    node = {"id": "fresh", "type": "dogpile.search", "input": {"query": "q"}}
+    result = {"id": "fresh", "type": "dogpile.search", "ok": False, "returncode": -2, "stderr": "timeout"}
+    repaired = _consume_partial_artifact(
+        node,
+        result,
+        {"skill": "dogpile", "artifact": "dogpile_partial_results.json", "min_report_chars": 400},
+    )
+    assert repaired is not None
+    assert repaired["ok"] is True
+    assert repaired["partial_recovery"] is True
+    assert repaired["context_items"]
+
+
+def test_apply_dag_repairs_bump_timeout(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_execute(*args, **kwargs):
+        node = args[0] if args else kwargs["node"]
+        timeout = node["input"].get("timeout")
+        calls.append(timeout)
+        if len(calls) == 1:
+            return {"ok": False, "returncode": -2, "stderr": "timeout"}
+        return {"ok": True, "returncode": 0, "stdout": "ok", "context_items": []}
+
+    node = {
+        "id": "fresh",
+        "type": "dogpile.search",
+        "input": {"query": "q", "timeout": 90},
+    }
+    load_repair_policy.cache_clear()
+    repaired = apply_dag_repairs(
+        node,
+        {"ok": False, "returncode": -2},
+        execute_fn=fake_execute,
+        execute_args=(node,),
+        execute_kwargs={},
+    )
+    assert repaired is not None
+    assert repaired["ok"] is True
+    assert calls == [360]
+
+
+def test_github_language_name_handles_null_primary_language():
+    # Import via dogpile package on shared skills path
+    import sys
+    skills_dir = Path(__file__).resolve().parents[2]
+    if str(skills_dir) not in sys.path:
+        sys.path.insert(0, str(skills_dir))
+    from dogpile.github_deep import _language_name
+
+    assert _language_name({"primaryLanguage": None}) == "Unknown"
+    assert _language_name({"primaryLanguage": {"name": "Python"}}) == "Python"

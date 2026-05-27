@@ -1,0 +1,18 @@
+schema_version: skill.dag_repair_hints.v1
+skill: dogpile
+node_types: [dogpile.search]
+timeout_seconds: 360
+repairs:
+  - id: dogpile_timeout_budget_too_low
+    match:
+      returncode: -2
+    actions:
+      - type: bump_timeout
+        reason: dogpile_timeout_budget_too_low
+        target_seconds: 360
+        only_if_below: 360
+        reason: dogpile_timeout_budget_too_low
+      - type: consume_partial_artifact
+        artifact: dogpile_partial_results.json
+        min_report_chars: 400
+        reason: dogpile_partial_results_usable

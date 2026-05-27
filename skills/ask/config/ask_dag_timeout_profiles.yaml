@@ -1,0 +1,13 @@
+schema_version: ask.dag.timeout_profiles.v1
+# Default node budgets when a DAG node omits input.timeout.
+defaults:
+  memory.recall: 60
+  dogpile.search: 180
+  ask.oracle: 120
+  skill.run: 60
+skills:
+  dogpile: 360
+  create-report: 120
+  memory: 60
+  fetcher: 90
+  review-code: 180
