@@ -1,5 +1,29 @@
 """Six validation gates for F36-grounded persona questions."""
 from __future__ import annotations
+# --- dotenv (MUST be before any os.getenv / os.environ) ---
+import sys
+from pathlib import Path as _Path
+
+def _resolve_skills_dir() -> _Path:
+    p = _Path(__file__).resolve()
+    for parent in [p, *p.parents]:
+        if parent.name == "skills":
+            return parent
+    return p.parents[1]
+
+_SKILLS_DIR = _resolve_skills_dir()
+if str(_SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SKILLS_DIR))
+
+try:
+    from dotenv_helper import load_env as _load_env
+except Exception:
+    def _load_env() -> None:
+        return
+
+_load_env()
+
+
 import os
 
 import json
@@ -498,7 +522,7 @@ def check_system_leakage(question: str) -> GateResult:
 def check_difficulty(question: str, claimed_difficulty: str) -> GateResult:
     """Check that the claimed difficulty matches the actual complexity."""
     from prompts import difficulty_classification_system, difficulty_classification_user
-import httpx
+    import httpx
 
     if claimed_difficulty not in DIFFICULTY_LEVELS:
         return GateResult(

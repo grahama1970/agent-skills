@@ -33,6 +33,26 @@ metadata:
   version: "1.0.0"
 ---
 
+## Standard Review Iteration Parameters
+
+This `review-*` skill follows the shared contract in
+`skills/.system/review-iteration-contract.md`.
+
+Canonical parameters:
+
+- `--max-rounds N`
+- `--output-dir PATH`
+- `--ask-gate`
+- `--ask-model MODEL` (default `gpt-5.5`)
+- `--ask-reasoning LEVEL` (default `high`)
+- `--ask-timeout SECONDS`
+- `--ask-focus LABELS`
+
+When `--max-rounds > 1` is supplied, the skill must behave as a bounded
+gate-producing controller or fail closed if that mode is not implemented. The
+canonical gate artifact is `review_result.json` with verdict
+`PASS`, `NEEDS_CHANGES`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`.
+
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
 # /review-plan
@@ -57,9 +77,58 @@ Validate task files before `/orchestrate` runs them. Catches errors that waste h
 # Review with auto-fix suggestions
 ./run.sh review 01_MIGRATION_PLAN.md --suggest-fixes
 
+# Review with controller-owned iteration gate artifact
+./run.sh review 01_MIGRATION_PLAN.md --max-rounds 3 --ask-gate --json
+
 # Quick check (claims + DoD only, skip chain validation)
 ./run.sh check 01_MIGRATION_PLAN.md
 ```
+
+## Automatic Review Iteration Contract
+
+When a caller supplies an iteration parameter such as `--max-rounds N` where
+`N > 1`, `/review-plan` must switch from simple reporting to controller mode.
+Controller mode writes a machine-readable `review_result.json` gate artifact and
+returns nonzero until the gate verdict is `PASS`.
+
+Controller mode is fail-closed:
+
+- `WARN` and `FAIL` findings both prevent `PASS`.
+- The gate verdict is one of `PASS`, `NEEDS_CHANGES`, `BLOCKED`, or
+  `INSUFFICIENT_EVIDENCE`.
+- The gate artifact includes deterministic findings, suggested next-iteration
+  actions, iteration count, and any `$ask` artifacts.
+- `--ask-gate` runs real `$ask --deep-review` with readable target files after
+  deterministic checks are clean. It preserves `request.json`, `status.json`,
+  `events.jsonl`, `review.md`, and `review.json` paths when available.
+- If deterministic checks have findings, `$ask --deep-review` is skipped for
+  that round because the local plan is already blocked.
+- `/review-plan` does not silently rewrite an arbitrary task file. Remediation
+  is performed by the project agent, `$plan-iterate`, `/orchestrate`, or a
+  future explicit remediation command. The review skill owns the review gate and
+  next-iteration artifact, not hidden source mutation.
+
+Canonical artifact:
+
+```json
+{
+  "schema": "review_plan.gate.v1",
+  "target": "01_MIGRATION_PLAN.md",
+  "verdict": "PASS|NEEDS_CHANGES|BLOCKED|INSUFFICIENT_EVIDENCE",
+  "reason": "deterministic_review_has_warn_or_fail_findings",
+  "iterations": 1,
+  "counts": {"pass": 0, "warn": 0, "fail": 0},
+  "findings": [],
+  "severity_to_loop_rule": "WARN and FAIL findings both block PASS for review-plan auto mode.",
+  "next_iteration_plan": [],
+  "ask_artifacts": {}
+}
+```
+
+This is the same policy expected of all `review-*` skills: when a bounded
+iteration parameter is supplied, the skill should run as a gate-producing
+controller and block readiness for critical, high, medium, unresolved,
+unverified, or insufficient-evidence findings.
 
 ## NON-NEGOTIABLE: Blind Adversarial Testing
 
@@ -285,6 +354,76 @@ Scan plan metadata and task descriptions for compliance/evidence-case/CAE keywor
 **Catches:** Agent builds evidence case pipeline that auto-promotes verdicts from NEEDS_VERIFICATION to SATISFIED based on gate scores — no human ever reviews. Compliance officer discovers system issued "pass" verdicts autonomously. Also catches: CAE tree builder that outputs `status: "SATISFIED"` directly instead of `status: "NEEDS_VERIFICATION"`.
 
 **Reference:** See `docs/WALKTHROUGH_QRA_COVERAGE_AND_EVIDENCE_CASES.md` for the full governance model.
+
+### 17. Plan-Iterate Outer Loop Enforcement (FAIL grade)
+Scan task files for `$plan-iterate`, phase iteration, self-improvement,
+review-gated implementation, reviewer fanout, or phrases such as "iterate
+until fixed", "project agent continues", "review and patch until pass", or
+"agent stops when done". Any iterative implementation plan MUST make the loop a
+deterministic controller contract, not a prompt instruction to a project agent.
+
+Required contract:
+
+1. **Controller-owned terminal state**: The plan MUST define a deterministic
+   controller that reads a stored gate artifact and emits only `PASS`,
+   `BLOCKED`, `MAX_ITERATIONS_REACHED`, or `HUMAN_REQUIRED` as terminal states.
+   `done`, `ready`, stopped output, empty output, or project-agent prose MUST
+   NOT be closure evidence.
+2. **Externally supplied iteration limit**: The maximum iteration count MUST be
+   provided by the caller or plan graph. Hardcoded prompt-only retry counts
+   inside project-agent instructions are invalid.
+3. **Project-agent result artifact**: Each implementation pass MUST write a
+   machine-readable `project-agent-result.json` with iteration number, status,
+   files changed, commands run, remaining blockers, and whether human input is
+   required.
+4. **Reviewer fanout bundle**: Applicable domain reviewers MUST produce
+   read-only aggregation bundles: `$review-code` for code, `$review-design` for
+   UI/visual design, and `$review-prompt` for prompt contracts. Reviewer loops
+   may write review artifacts and suggestions; they MUST NOT mutate production
+   code or mark the phase complete.
+5. **GPT-5.5 high aggregation gate**: The plan MUST aggregate reviewer bundles
+   through `$scillm` using `model: "gpt-5.5"` and top-level
+   `reasoning_effort: "high"`. Do NOT set `max_tokens`. The gate artifact must
+   be machine-readable, commonly `review_result.json`, with one of `PASS`,
+   `NEEDS_CHANGES`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`.
+6. **Severity-to-loop rule**: Any medium, high, or critical finding, unresolved
+   blocker, missing required artifact, failed deterministic validator, or
+   insufficient evidence MUST prevent `PASS` and produce a concrete next
+   iteration plan or a human/blocker stop.
+7. **Prompt expected-response gate**: If the phase changes a prompt contract,
+   the plan MUST include at least one rendered fixture, expected response,
+   validator or smoke command, and consumer/schema. If the phase does not change
+   prompts, it MUST write a fail-closed `$review-prompt` skip artifact such as
+   `skipped_fail_closed` with `verdict: "not_applicable_verified"` and enough
+   phase evidence to prove no prompt contract changed. This maps to canonical
+   `skipped`; it must not run wording-only prompt review.
+8. **Design screenshot proof**: If the phase changes visible UI, `$review-design`
+   inputs MUST include fresh screenshots or `$test-interactions` captures with
+   expected human-visible outcomes. DOM assertions alone are invalid proof.
+9. **WebGPT routing discipline**: If the plan asks for ChatGPT/WebGPT review, it
+   MUST route through the real `$ask` runtime with `--oracle-backend webgpt` or
+   `$ask webgpt`, include the provided `--webgpt-tab-id` when specified, and
+   preserve ask artifacts (`request.json`, `status.json`, `events.jsonl`,
+   `review.md`, `review.json`, or WebGPT mode outputs). Direct `$surf`,
+   subagent, plain web search, or informal browser summaries are invalid for
+   `$ask` review requests.
+
+**Grading:**
+- **PASS**: The plan has a deterministic controller, stored project-agent
+  results, read-only domain reviewer bundles, `$scillm` GPT-5.5 high aggregation
+  gate, severity-to-loop rules, and applicable prompt/design proof gates.
+- **WARN**: The plan has the controller and gate, but artifact names or reviewer
+  bundle paths are incomplete while still recoverable before execution.
+- **FAIL**: The plan relies on project-agent prose as terminal state, lacks
+  `review_result.json` or equivalent gate JSON, omits applicable reviewer
+  bundles, uses WebGPT outside `$ask`, sets `max_tokens` on GPT-5.5 reasoning
+  review, or allows medium/high/critical findings to pass.
+
+**Catches:** A plan says "the project agent should keep fixing until all
+reviewers are happy" but has no controller-owned terminal states, no
+`project-agent-result.json`, no reviewer aggregation artifact, and no deterministic
+rule for what happens when `$review-design` passes while `$review-code` finds a
+medium issue. `/review-plan` must fail this before orchestration starts.
 
 ## Review Output
 

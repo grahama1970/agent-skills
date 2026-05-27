@@ -9,10 +9,35 @@ leverage accumulated knowledge across sessions.
 
 Pattern: Follows discover-contacts/memory_integration.py with graceful degradation.
 """
+# --- dotenv (MUST be before any os.getenv / os.environ) ---
+import sys
+from pathlib import Path as _Path
+
+def _resolve_skills_dir() -> _Path:
+    p = _Path(__file__).resolve()
+    for parent in [p, *p.parents]:
+        if parent.name == "skills":
+            return parent
+    return p.parents[1]
+
+_SKILLS_DIR = _resolve_skills_dir()
+if str(_SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SKILLS_DIR))
+
+try:
+    from dotenv_helper import load_env as _load_env
+except Exception:
+    def _load_env() -> None:
+        return
+
+_load_env()
+
 
 import importlib.util
 import json
+import os
 import signal
+import subprocess
 import sys
 import threading
 from datetime import datetime
@@ -110,12 +135,41 @@ def recall_prior_design_reviews(
 
     def _recall() -> str:
         client = MemoryClient(scope=MemoryScope.OPERATIONAL)
-        result = client.recall(
-            f"review_design {project} {component} accessibility responsive",
-            k=k,
+        query = f"review_design {project} {component} accessibility responsive"
+        run_script = client._get_run_script()
+        result = subprocess.run(
+            [
+                str(run_script),
+                "recall",
+                "--q",
+                query,
+                "--k",
+                str(k),
+                "--threshold",
+                "0.3",
+                "--scope",
+                str(MemoryScope.OPERATIONAL),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
+            cwd=str(client.memory_root),
+            env={key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"},
         )
-        if result.found:
-            return result.to_context(max_items=k)
+        if result.returncode != 0:
+            logger.warning(f"Prior design review recall failed: {result.stderr.strip()}")
+            return ""
+
+        data = json.loads(result.stdout)
+        recall_result = RecallResult(
+            items=data.get("items", []),
+            query=query,
+            scope=str(MemoryScope.OPERATIONAL),
+            k=k,
+            meta=data.get("meta", {}),
+        )
+        if recall_result.found:
+            return recall_result.to_context(max_items=k)
         return ""
 
     try:

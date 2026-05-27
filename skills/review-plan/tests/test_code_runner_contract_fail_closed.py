@@ -126,9 +126,9 @@ def main() -> None:
     module.check_execution_routing(forbidden_capability_task, capability_findings)
     capability_text = "\n".join(f.message for f in capability_findings if f.grade == "FAIL")
     assert "orchestration-only fields" in capability_text
-    assert "skills" in capability_text
     assert "memory" in capability_text
     assert "memory_query" in capability_text
+    assert "skills" not in capability_text
     assert "memory_context" not in capability_text
     assert "dogpile_context" not in capability_text
     assert "web_context" not in capability_text
@@ -142,6 +142,80 @@ def main() -> None:
     module.check_scillm_backend(native_adapter_backend_task, native_backend_findings)
     assert [finding for finding in native_backend_findings if finding.grade == "FAIL"] == []
 
+    scillm_file_mutation_task = {
+        "id": "scillm-file",
+        "line": 1,
+        "title": "Create shared artifact schema contract",
+        "runner": "scillm",
+        "backend": "claude-sonnet",
+        "mode": "one_shot",
+        "prompt": "Create docs/artifact-rendering-contract.md with table and graph schemas.",
+        "definition_of_done": {
+            "command": "test -f docs/artifact-rendering-contract.md && rg -n d3-graph docs/artifact-rendering-contract.md",
+            "assertion": "exit_code == 0",
+        },
+        "body": "Prompt: Create docs/artifact-rendering-contract.md",
+    }
+    scillm_file_findings = []
+    module.check_execution_routing(scillm_file_mutation_task, scillm_file_findings)
+    scillm_file_text = "\n".join(f.message for f in scillm_file_findings if f.grade == "FAIL")
+    assert "scillm runner cannot create or edit repository files" in scillm_file_text
+
+    scillm_review_task = {
+        "id": "scillm-review",
+        "line": 1,
+        "title": "Review screenshot semantics",
+        "runner": "scillm",
+        "backend": "claude-sonnet",
+        "mode": "one_shot",
+        "prompt": "Review whether this screenshot proves the artifact pane is open.",
+        "definition_of_done": {},
+        "body": "Prompt: Review screenshot semantics without editing files.",
+    }
+    scillm_review_findings = []
+    module.check_execution_routing(scillm_review_task, scillm_review_findings)
+    scillm_review_text = "\n".join(f.message for f in scillm_review_findings if f.grade == "FAIL")
+    assert "scillm runner cannot create or edit repository files" not in scillm_review_text
+
+    legacy_text_claude_task = {
+        "id": "legacy-scillm",
+        "line": 1,
+        "title": "Legacy scillm backend",
+        "runner": "scillm",
+        "backend": "text-claude",
+    }
+    legacy_findings = []
+    module.check_scillm_backend(legacy_text_claude_task, legacy_findings)
+    legacy_text = "\n".join(f"{f.message} {f.suggestion}" for f in legacy_findings if f.grade == "FAIL")
+    assert "legacy name" in legacy_text
+    assert "claude-sonnet" in legacy_text
+
+    gate_result = module.ReviewResult(
+        file="plan.yaml",
+        tasks=1,
+        phases=0,
+        findings=[
+            module.Finding(
+                task="Task 1",
+                check="routing",
+                grade="WARN",
+                message="review gate warning",
+                suggestion="fix warning",
+            )
+        ],
+    )
+    verdict, reason = module._gate_verdict(gate_result)
+    assert verdict == "NEEDS_CHANGES"
+    assert reason == "deterministic_review_has_warn_or_fail_findings"
+    next_iteration = module._next_iteration_plan(gate_result)
+    assert next_iteration
+    assert "fix warning" in next_iteration[0]
+
+    clean_gate_result = module.ReviewResult(file="plan.yaml", tasks=1, phases=0, findings=[])
+    clean_verdict, clean_reason = module._gate_verdict(clean_gate_result)
+    assert clean_verdict == "PASS"
+    assert clean_reason == "no_warn_fail_or_blocking_ask_gate_findings"
+
     live_public_test_task = {
         **tests_are_not_blind_task,
         "blind_tests": [{"command": "pytest -q"}],
@@ -151,6 +225,22 @@ def main() -> None:
     module.check_execution_routing(live_public_test_task, live_public_findings)
     live_public_text = "\n".join(f.message for f in live_public_findings if f.grade == "FAIL")
     assert "isolated worktree" in live_public_text
+
+    browser_filename_task = {
+        **tests_are_not_blind_task,
+        "blind_tests": [{"command": "pytest -q"}],
+        "definition_of_done": {
+            "command": "node -e \"require('./scripts/question-bank-browser.manifest.json')\"",
+            "assertion": "exit_code == 0",
+        },
+        "tests": ["Manifest JSON parses and includes data-qid coverage."],
+    }
+    browser_filename_findings = []
+    module.check_execution_routing(browser_filename_task, browser_filename_findings)
+    browser_filename_text = "\n".join(
+        f.message for f in browser_filename_findings if f.grade == "FAIL"
+    )
+    assert "isolated worktree" not in browser_filename_text
 
     browser_dod_task = {
         **tests_are_not_blind_task,

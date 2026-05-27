@@ -7,6 +7,29 @@ Contains:
 - Template strings
 """
 from __future__ import annotations
+# --- dotenv (MUST be before any os.getenv / os.environ) ---
+import sys
+from pathlib import Path as _Path
+
+def _resolve_skills_dir() -> _Path:
+    p = _Path(__file__).resolve()
+    for parent in [p, *p.parents]:
+        if parent.name == "skills":
+            return parent
+    return p.parents[1]
+
+_SKILLS_DIR = _resolve_skills_dir()
+if str(_SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SKILLS_DIR))
+
+try:
+    from dotenv_helper import load_env as _load_env
+except Exception:
+    def _load_env() -> None:
+        return
+
+_load_env()
+
 
 import os
 from pathlib import Path
@@ -90,11 +113,14 @@ PROVIDERS = {
         "cli": None,  # Uses httpx to localhost:4001, not a CLI
         "models": {
             "gpt-5.3-codex": "gpt-5.3-codex",
-            "text-gemini": "text-gemini",
-            "text": "text",
-            "text-claude": "text-claude",
+            "gpt-5.5": "gpt-5.5",
+            "gemini-flash": "gemini-flash",
+            "chutes-deepseek": "chutes-deepseek",
+            "oc-kimi": "oc-kimi",
+            "oc-glm": "oc-glm",
+            "oc-deepseek": "oc-deepseek",
         },
-        "default_model": "gpt-5.3-codex",
+        "default_model": "gpt-5.5",
         "env": {},
         "supports_continue": False,
         "cost": "free",  # Runs through local proxy with OAuth/API keys

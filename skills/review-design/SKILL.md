@@ -29,8 +29,28 @@ metadata:
 
 provides:
   - review-design
-composes: [task-monitor, memory, scillm, ask, project-knowledge, surf]
+composes: [task-monitor, memory, scillm, ask, project-knowledge, surf, test-interactions]
 ---
+
+## Standard Review Iteration Parameters
+
+This `review-*` skill follows the shared contract in
+`skills/.system/review-iteration-contract.md`.
+
+Canonical parameters:
+
+- `--max-rounds N`
+- `--output-dir PATH`
+- `--ask-gate`
+- `--ask-model MODEL` (default `gpt-5.5`)
+- `--ask-reasoning LEVEL` (default `high`)
+- `--ask-timeout SECONDS`
+- `--ask-focus LABELS`
+
+When `--max-rounds > 1` is supplied, the skill must behave as a bounded
+gate-producing controller or fail closed if that mode is not implemented. The
+canonical gate artifact is `review_result.json` with verdict
+`PASS`, `NEEDS_CHANGES`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`.
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
@@ -92,6 +112,91 @@ Supports multiple vision-capable providers:
 - **Gemini** (`gemini`) - gemini-2.0-flash (vision)
 - **scillm** (`scillm`, aliases: `vlm`, `subagent`) - `model: "vlm"` via
   `POST /v1/chat/completions`, using scillm's VLM fallback cascade.
+
+## Relationship To Plan Iterate And Test Interactions
+
+`$review-design` is the domain loop for UI/UX phases. `$plan-iterate` is the
+parent evidence ledger and acceptance gate; it records phase state, validation
+logs, reviewer receipts, blockers, and final acceptance. `$review-design` should
+not mark a phase accepted by itself.
+
+When the UI under review has live interactions, panes, graph states, keyboard
+flows, or nested scroll containers, `$review-design` must drive
+`$test-interactions` as its deterministic evidence backend:
+
+```text
+$plan-iterate phase
+  -> project agent implements UI change
+  -> $review-design loop
+       -> $test-interactions run on the live DOM
+       -> collect qid/COTS/DOM results and focused/container screenshots
+       -> reviewer critiques fresh screenshots
+       -> project agent patches valid blockers
+       -> rerun relevant $test-interactions interactions
+       -> rereview fresh screenshots
+  -> $plan-iterate records receipts and accepts or blocks
+```
+
+`$test-interactions` owns deterministic pass/fail, live-DOM clicks, qid/COTS
+checks, focused crop/zoom screenshots, and stitched container screenshots.
+`$review-design` owns the visual critique, blocker synthesis, and bounded
+reviewer backoff. A stale screenshot set or DOM-only assertion pass is not
+enough for a `satisfied` design verdict.
+
+When `$review-design` participates in a `$plan-iterate` phase, its primary
+deliverable is a read-only visual/interaction review bundle or loop artifact set
+for the phase-level `$scillm` aggregation gate. `$review-design` does not decide
+whether the phase continues or completes.
+
+Minimum aggregation input:
+
+```text
+review-design/
+  context.md
+  test-interactions-manifest.json
+  test-interactions-results.json
+  screenshots/
+  code-context.md
+  design-requirements.md
+  aggregate_verdict.json
+  DESIGN_REVIEW_ITERATE_MATRIX.md
+```
+
+The `$scillm` gate consumes this bundle alongside other applicable review
+bundles and returns `PASS`, `NEEDS_CHANGES`, `BLOCKED`, or
+`INSUFFICIENT_EVIDENCE`. A project-agent or reviewer statement of visual
+satisfaction is inadmissible unless the screenshot bundle visibly proves the
+target state.
+
+If a human has caught obvious UX errors after a prior review-design PASS, treat
+that as a false-green event. The next `$review-design` loop must harden the
+evidence packet before another PASS is admissible:
+
+- rerun `$test-interactions` with a manifest that covers every live `[data-qid]`
+  interactive element and the semantic workflow under review;
+- include focused/zoomed and container screenshots for the actual defect areas;
+- run section-scoped reviews rather than one aggregate whole-page critique;
+- include a Dogpile/web/GitHub/image-derived modern reference packet for
+  serious workflow editors, graph editors, evidence panes, queues, and other
+  high-judgment UI;
+- include a concise list of design requirements derived from that reference
+  packet, plus the source URLs/repos used to derive them;
+- attach reference screenshots captured from the modern examples when visual
+  comparison is part of the review question;
+- use the same review persona for the Dogpile research packet and the
+  `$review-design iterate` run when `--require-modern-reference` is set, so a
+  generic benchmark cannot launder a persona-bound verdict;
+- include the exact `$test-interactions` manifest and deterministic
+  `results.json` summary in the reviewer context so screenshots are compared
+  against the intended live DOM coverage, not judged as isolated images;
+- require the reviewer to list `missing_evidence` instead of filling gaps with
+  generic UX prose;
+- record a matrix with persona, round, screenshot, verdict, finding count,
+  missing evidence, model/proof, and end state.
+
+A design PASS is inadmissible when the modern/reference packet is required but
+missing, when the screenshots do not show the target state, or when
+`$test-interactions` did not exercise the interaction path being judged.
 
 ## Requirements
 
@@ -195,11 +300,13 @@ Use `bundle` / `bundle-code` / `bundle-upload` for external web review when:
 
 Use `webgpt-review` when:
 - the target reviewer is WebGPT/ChatGPT web
-- a stable ChatGPT tab id or conversation URL is available through `$surf`
+- a stable ChatGPT tab id or conversation URL is available for the real `$ask`
+  WebGPT route
 - the review request needs the same artifact structure as `bundle-upload`
-- the agent needs a durable request/response record with controlled-tab metadata
+- the agent needs a durable `$ask` request/status/events record with
+  controlled-tab metadata
 
-Important limitation: automated `surf webgpt.submit` currently submits text. It
+Important limitation: automated `$ask` WebGPT text submission currently submits text. It
 does not prove WebGPT inspected screenshot pixels unless screenshots were
 manually uploaded or a future file-attachment path records that upload. A
 text-only WebGPT response may critique design requirements and code context, but
@@ -257,7 +364,8 @@ decisions.
 ### WebGPT Review Command
 
 `webgpt-review` builds a WebGPT-oriented review package and can optionally submit
-the text request through `$surf`.
+the text request through the real `$ask` WebGPT route. `$surf` remains the lower
+level browser transport owned by `$ask`, not the review entrypoint.
 
 ```bash
 # Create a WebGPT upload package for manual browser upload.
@@ -275,7 +383,7 @@ the text request through `$surf`.
 ```
 
 ```bash
-# Submit only the text request to an already-controlled ChatGPT tab.
+# Submit only the text request to an already-controlled ChatGPT tab via `$ask`.
 # This is useful for prompt/design-contract critique, but not visual proof.
 ./run.sh webgpt-review \
   --persona brandon-bailey \
@@ -292,6 +400,9 @@ WEBGPT_REVIEW_REQUEST.md
 REACT_COMPONENTS_BUNDLE.md
 WEBGPT_REVIEW_UPLOAD_PACKAGE.zip
 webgpt-review-result.json
+ask-request.json            # only when --submit-text-only is used
+ask-status.json             # only when --submit-text-only is used
+ask-events.jsonl            # only when --submit-text-only is used
 webgpt-response.md          # only when --submit-text-only is used
 webgpt-response.meta.json   # only when --submit-text-only is used
 ```
@@ -413,6 +524,11 @@ for round in 1..N:
   6. stop early if verdict is satisfied or if blocking ambiguity remains
 ```
 
+For interaction-driven browser surfaces, step 1 and step 5 should normally be
+implemented by `$test-interactions run`, not manual screenshot capture. The
+manifest must target `[data-qid]` selectors and capture focused/zoomed evidence
+for the exact graph, pane, control, or nested scroll area under review.
+
 ### Roles
 
 - **Project agent** owns file changes, implementation judgment, CDP
@@ -489,6 +605,13 @@ If the backing reviewer route is `/ask`, preserve its runtime artifacts and
 map `oracle_scillm_call_started`, `oracle_scillm_stream_progress`,
 `oracle_scillm_call_finished`, and failures into the loop `events.jsonl`.
 
+When this loop is embedded in `$plan-iterate`, the project agent records the
+loop as a read-only `domain_review_loops[]` entry with the review persona,
+immutable UI/UX goal, context artifact, relevant `best-practices-*` skills,
+state/events/aggregate artifacts, and the screenshot-to-finding matrix. Each
+round also has exactly three project-agent-owned plan artifacts:
+implementation/patch, validation/evidence, and review/escalation.
+
 ### Reviewer Verdict Schema
 
 Every reviewer round must return this shape, either as JSON or as Markdown with
@@ -496,17 +619,21 @@ the same headings:
 
 ```json
 {
-  "verdict": "satisfied | needs_changes | blocked",
+  "verdict": "satisfied | needs_changes | blocked | insufficient_evidence",
   "blocking_changes": [],
   "non_blocking_changes": [],
   "implementation_notes": [],
   "screenshot_checks": [],
-  "do_not_do": []
+  "do_not_do": [],
+  "aggregation_ready": false,
+  "missing_evidence": []
 }
 ```
 
 `satisfied` is only valid when the reviewer has inspected a fresh rendered
 screenshot. A reviewer may not mark a design satisfied from source files alone.
+If screenshots, interaction results, or the exact target state are missing,
+return `insufficient_evidence` and list `missing_evidence`.
 
 ### Bakeoff Winner Iteration
 
@@ -717,6 +844,100 @@ Basic audit with optional reference comparison.
 ### `review-full` - Multi-round iterative audit (recommended)
 Runs the 3-step pipeline for N rounds, each round refining findings.
 
+### `iterate` - Design backoff loop with deterministic evidence
+Recommended target behavior for implementation-backed UI review loops. The loop
+should accept a `$test-interactions` manifest, run deterministic interactions,
+review the fresh selected screenshots, let the project agent patch blockers, and
+repeat until `satisfied`, `blocked`, or the configured round limit.
+
+The CLI implements the parallelizable part of the loop as a bounded scillm batch:
+
+- deterministic `$test-interactions run` stays sequential because later DOM
+  states depend on earlier clicks, edits, waits, and screenshots
+- independent screenshot/section reviewer calls run concurrently through
+  `POST /v1/chat/completions` using `asyncio.create_task` +
+  `asyncio.as_completed`
+- each section writes a reviewer response, verdict JSON, and discrete end state
+- the main project agent reads `state.json`, `events.jsonl`,
+  `aggregate_verdict.json`, and `DESIGN_REVIEW_ITERATE_MATRIX.md`
+
+```bash
+./run.sh iterate \
+  --manifest ./manifest.json \
+  --persona nico-bailon \
+  --provider scillm \
+  --output-dir ./reviews/dag-editor/loop \
+  --max-sections 8 \
+  --max-concurrency 3
+```
+
+Use `--screenshots ./captures` instead of `--manifest` when deterministic
+captures already exist. Use `--sections sections.json` for explicit
+section-scoped review bundles; otherwise the command auto-selects focused and
+container screenshots first.
+
+For serious or repeatedly false-green surfaces, run `$dogpile` first and pass
+the report or partial-results file as a modern reference packet:
+
+```bash
+/home/graham/workspace/experiments/agent-skills/skills/dogpile/run.sh search \
+  "2026 modern DAG graph workflow editor UX node inspector evidence panel review queue React" \
+  --persona margaret-chen \
+  --rationale "Repeated false-green review-design results missed obvious workflow errors" \
+  --context "Benchmark a node graph editor with evidence/provenance panels and approval queues" \
+  --html-report
+
+./run.sh iterate \
+  --manifest ./manifest.json \
+  --persona margaret-chen \
+  --provider scillm \
+  --modern-reference /home/graham/workspace/experiments/agent-skills/skills/dogpile/dogpile_partial_results.json \
+  --reference-screenshots ./reference-screenshots/dag-editor \
+  --require-modern-reference \
+  --output-dir ./reviews/dag-editor/loop
+```
+
+`--require-modern-reference` fails closed unless the reference file exists.
+When the reference file is Dogpile partial-results JSON, it must include a
+`request_context.persona` matching `--persona`; otherwise the run fails closed.
+Reviewers must compare screenshots to the provided reference packet and to the
+`$test-interactions` manifest/results packet, then list missing benchmark or
+interaction evidence under `missing_evidence`.
+
+`--reference-screenshots` attaches captured benchmark screenshots to every
+section review. Dogpile itself returns source URLs/reports, not guaranteed
+screenshot pixels; if no reference screenshot directory is supplied for a
+visual benchmark review, reviewers must treat the missing reference screenshots
+as `missing_evidence` rather than guessing from URLs alone.
+
+The durable loop directory has this shape:
+
+```text
+reviews/<surface>/loop/
+  context.md
+  state.json
+  events.jsonl
+  rounds/
+    001/
+      implementation-plan.md
+      validation-plan.md
+      review-plan.md
+      interaction-results.json
+      interaction-report.md
+      screenshots/
+      reviewer.md
+      verdict.json
+      patch_summary.md
+    002/
+      ...
+  aggregate_verdict.json
+  DESIGN_REVIEW_ITERATE_MATRIX.md
+```
+
+The matrix must be human-readable and include at least: round, persona,
+screenshot path, section id, verdict, highest severity, end state, finding
+count, missing evidence, model/proof fields, and verdict artifact path.
+
 ### `bundle` - Generate review request
 Creates a markdown file with embedded images (base64) for manual submission to any LLM.
 
@@ -748,7 +969,7 @@ This is the preferred path for Gemini web, Claude web, and similar browser uploa
 
 ### `webgpt-review` - Generate and optionally submit WebGPT design review package
 Creates the same kind of compact external-review bundle as `bundle-upload`, but
-adds a WebGPT-specific request and optional `$surf webgpt.submit` submission.
+adds a WebGPT-specific request and optional `$ask` WebGPT submission.
 
 Use this command when WebGPT is the intended reviewer and you want the design
 handoff to be reproducible. Use manual upload for actual screenshot-based review.

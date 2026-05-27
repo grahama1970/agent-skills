@@ -4,10 +4,12 @@ import os
 import re
 import subprocess
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import typer
+from dotenv import load_dotenv
 from loguru import logger
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -21,6 +23,8 @@ from _shared.structured_plan import (  # type: ignore
 app = typer.Typer(help="Validate task files before orchestration")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
+load_dotenv(PROJECT_ROOT / ".env")
+CALLER_ROOT = Path(os.environ.get("REVIEW_PLAN_CALLER_CWD", os.getcwd())).resolve()
 MANIFEST_PATH = PROJECT_ROOT / ".pi" / "skills-manifest.json"
 
 # ─── Data Structures ─────────────────────────────────────────────────────────
@@ -54,6 +58,16 @@ class ReviewResult:
     @property
     def fail_count(self) -> int:
         return sum(1 for f in self.findings if f.grade == "FAIL")
+
+
+@dataclass
+class GateResult:
+    verdict: str
+    reason: str
+    review_result_json: str
+    iterations: int
+    next_iteration_plan: list[str] = field(default_factory=list)
+    ask_artifacts: dict = field(default_factory=dict)
 
 
 # ─── Parsers ─────────────────────────────────────────────────────────────────
@@ -185,6 +199,7 @@ def parse_structured_task_file(path: Path) -> tuple[list[dict], int]:
             "reviewer": raw_item.get("reviewer"),
             "tools": raw_item.get("tools"),
             "tool_surface": raw_item.get("tool_surface"),
+            "cwd": raw_item.get("cwd"),
             "predecessor_patches": raw_item.get("predecessor_patches"),
             "memory": raw_item.get("memory"),
             "memory_query": raw_item.get("memory_query"),
@@ -624,6 +639,37 @@ def check_tool_names(task: dict, findings: list[Finding]):
             ))
 
 
+SOURCE_MUTATION_VERB = re.compile(
+    r"\b(create|write|edit|update|modify|extend|port|replace|wire|implement|add|refactor|patch|generate|materialize)\b",
+    re.IGNORECASE,
+)
+SOURCE_FILE_REFERENCE = re.compile(
+    r"(?:^|[\s`'\"])(?:\.?/)?(?:[\w.-]+/)+[\w.-]+\.(?:py|ts|tsx|js|jsx|json|md|mjs|sh|css|html|yaml|yml|toml|rs|go)\b",
+    re.IGNORECASE,
+)
+SOURCE_DOD_MATERIALIZATION = re.compile(
+    r"\b(test\s+-[fs]|rg\s+-n|grep\s+-q|npm\s+--prefix|npx\s+tsc|backend/sanity\.sh|require\(['\"]\.?/|node\s+-e)\b",
+    re.IGNORECASE,
+)
+
+
+def _scillm_appears_to_mutate_source(task: dict, body: str, title: str) -> bool:
+    """Return true when a direct scillm task asks for repo file materialization."""
+    prompt = str(task.get("prompt") or "")
+    command = str(task.get("command") or "")
+    dod = task.get("definition_of_done") or {}
+    dod_command = str(dod.get("command") or "") if isinstance(dod, dict) else ""
+    combined = "\n".join([title, body, prompt, command, dod_command])
+
+    if task.get("allowlist"):
+        return True
+    if SOURCE_MUTATION_VERB.search(combined) and SOURCE_FILE_REFERENCE.search(combined):
+        return True
+    if SOURCE_DOD_MATERIALIZATION.search(dod_command) and SOURCE_FILE_REFERENCE.search(combined):
+        return True
+    return False
+
+
 def check_execution_routing(task: dict, findings: list[Finding]):
     """Validate runner/backend/mode selection for structured plans."""
     runner = str(task.get("runner", "")).strip()
@@ -678,30 +724,22 @@ def check_execution_routing(task: dict, findings: list[Finding]):
                 line=task["line"],
                 suggestion="Set `mode: one_shot` or use `code-runner` for iterative work.",
             ))
-        if any(k in body or k in title for k in ["edit", "implement", "refactor", "patch", "build page", "write file"]):
-            # Skip for pattern-following design tasks — scillm one-shot is correct
-            combined = f"{title}\n{body}"
-            pattern_reuse_kw = [
-                r"same\s+pattern\s+as", r"reuse\s+.*pattern", r"follow.*pattern",
-                r"pattern\s+from", r"follows\s+existing", r"existing\s+pattern",
-            ]
-            design_kw = [
-                r"\.tsx", r"component", r"react", r"embry", r"gatechain", r"recallcard",
-                r"ux-lab", r"types\.ts", r"routes\.ts", r"artifact", r"shared-chat",
-            ]
-            has_pattern = any(re.search(p, combined, re.I) for p in pattern_reuse_kw)
-            has_design = any(re.search(p, combined, re.I) for p in design_kw)
-            if has_pattern and has_design:
-                pass  # Pattern-following design task — scillm one-shot is appropriate
-            else:
-                findings.append(Finding(
-                    task=f"Task {task['id']}",
-                    check="routing",
-                    grade="FAIL",
-                    message="Task appears iterative/edit-heavy but is routed to `scillm` one-shot.",
-                    line=task["line"],
-                    suggestion="Use `code-runner` for iterative or file-editing work.",
-                ))
+        if _scillm_appears_to_mutate_source(task, body, title):
+            findings.append(Finding(
+                task=f"Task {task['id']}",
+                check="routing",
+                grade="FAIL",
+                message=(
+                    "scillm runner cannot create or edit repository files; it only writes an "
+                    "LLM response artifact."
+                ),
+                line=task["line"],
+                suggestion=(
+                    "Use `code-runner` with allowlist/read_context/DoD/blind_tests for source "
+                    "mutation, or `local` for deterministic file operations. Keep direct "
+                    "`scillm` for non-mutating review, classification, or model judgment."
+                ),
+            ))
         if not str(task.get("prompt", "")).strip() and not body.strip():
             findings.append(Finding(
                 task=f"Task {task['id']}",
@@ -879,7 +917,7 @@ def check_execution_routing(task: dict, findings: list[Finding]):
         live_surface = _code_runner_live_surface(task, dod_cmd)
         if re.search(
             r'https?://|curl\s|wget\s|requests\.get|httpx\.\w+|urllib|'
-            r'playwright|puppeteer|cypress|webdriver|chromium|selenium|storybook|test-runner|cdp|browser|\be2e\b',
+            r'playwright|puppeteer|cypress|webdriver|chromium|selenium|storybook|test-runner|cdp|\be2e\b',
             live_surface,
             re.I,
         ):
@@ -941,10 +979,12 @@ def check_execution_routing(task: dict, findings: list[Finding]):
 SCILLM_MODELS = {
     # Primary models
     "text", "text-research", "text-deepseek", "text-kimi", "text-qwen3", "text-qwen3-large",
-    "text-gemini", "text-gemini-oauth", "text-gemini-paid", "text-gemini-3", "text-gemini-3-paid",
-    "text-claude", "text-claude-opus", "text-claude-haiku",
-    "gpt-5.3-codex", "text-glm",
-    "vlm", "vlm-paid", "vlm-claude", "vlm-codex",
+    "text-gemini", "gemini-flash", "gemini-flash-oauth", "gemini-flash-high",
+    "text-gemini-paid", "text-gemini-3", "text-gemini-3-paid",
+    "claude-sonnet", "claude-sonnet-high", "claude-opus", "claude-opus-high", "claude-haiku",
+    "gpt-5.5", "gpt-5.3-codex", "codex-vision", "oc-kimi", "oc-qwen", "oc-deepseek",
+    "chutes-deepseek", "chutes-kimi", "chutes-qwen", "chutes-vlm", "text-glm",
+    "vlm", "vlm-paid", "vlm-claude", "vlm-codex", "vlm-chutes",
     "local-text", "moonshot-text",
     # Pattern-based (auto-routed)
     # claude-*, gpt-*, codex-*, gemini-*, Org/Model, model:tag
@@ -952,12 +992,16 @@ SCILLM_MODELS = {
 
 # Legacy/deprecated backend names that need updating
 LEGACY_BACKEND_NAMES = {
-    "sonnet": "text-claude",
-    "opus": "text-claude-opus",
-    "haiku": "text-claude-haiku",
-    "codex": "gpt-5.3-codex",
-    "gemini": "text-gemini-oauth",
-    "claude": "text-claude",
+    "sonnet": "claude-sonnet",
+    "opus": "claude-opus",
+    "haiku": "claude-haiku",
+    "codex": "gpt-5.5",
+    "gemini": "gemini-flash-oauth",
+    "claude": "claude-sonnet",
+    "text-claude": "claude-sonnet",
+    "text-claude-opus": "claude-opus",
+    "text-claude-haiku": "claude-haiku",
+    "text-gemini-oauth": "gemini-flash-oauth",
 }
 
 
@@ -984,7 +1028,6 @@ CODE_RUNNER_FORBIDDEN_PLAN_FIELDS = {
     "planner",
     "predecessor_patches",
     "reviewer",
-    "skills",
     "tool_surface",
     "tools",
 }
@@ -1289,14 +1332,11 @@ from ux_checks import check_design_board, check_png_evidence, check_lab_subagent
 # ─── Commands ────────────────────────────────────────────────────────────────
 
 
-@app.command()
-def review(
-    task_file: str = typer.Argument(..., help="Path to task file (0N_TASKS.md or plan)"),
-    output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
-    suggest_fixes: bool = typer.Option(False, "--suggest-fixes", help="Include fix suggestions"),
-):
-    """Full review of a task file: claims, overlap, ordering, DoD, chains, tools."""
+def run_review_checks(task_file: str) -> ReviewResult:
+    """Full deterministic review of a task file."""
     path = Path(task_file)
+    if not path.exists():
+        path = CALLER_ROOT / task_file
     if not path.exists():
         # Try relative to project root
         path = PROJECT_ROOT / task_file
@@ -1356,58 +1396,320 @@ def review(
                 line=1,
             ))
 
-    if output_json:
-        output = {
-            "file": result.file,
-            "tasks": result.tasks,
-            "phases": result.phases,
+    return result
+
+
+def review_result_to_dict(result: ReviewResult, suggest_fixes: bool = False) -> dict:
+    return {
+        "file": result.file,
+        "tasks": result.tasks,
+        "phases": result.phases,
+        "pass": result.pass_count,
+        "warn": result.warn_count,
+        "fail": result.fail_count,
+        "findings": [
+            {
+                "task": f.task,
+                "check": f.check,
+                "grade": f.grade,
+                "message": f.message,
+                "line": f.line,
+                **({"suggestion": f.suggestion} if suggest_fixes and f.suggestion else {}),
+            }
+            for f in result.findings
+        ],
+    }
+
+
+def _gate_verdict(result: ReviewResult, ask_artifacts: dict | None = None) -> tuple[str, str]:
+    """Map deterministic and ask-gate evidence to a controller verdict."""
+    if result.fail_count > 0 or result.warn_count > 0:
+        return "NEEDS_CHANGES", "deterministic_review_has_warn_or_fail_findings"
+    if ask_artifacts:
+        status = ask_artifacts.get("status")
+        verdict = str(ask_artifacts.get("verdict") or "").upper()
+        if status != "passed":
+            return "INSUFFICIENT_EVIDENCE", "ask_deep_review_gate_did_not_pass"
+        if verdict and verdict not in {"SAFE", "PASS", "READY_FOR_PLAN_ITERATE"}:
+            return "NEEDS_CHANGES", "ask_deep_review_returned_blocking_verdict"
+    return "PASS", "no_warn_fail_or_blocking_ask_gate_findings"
+
+
+def _next_iteration_plan(result: ReviewResult) -> list[str]:
+    items: list[str] = []
+    for finding in result.findings:
+        if finding.grade not in {"FAIL", "WARN"}:
+            continue
+        suffix = f" Suggestion: {finding.suggestion}" if finding.suggestion else ""
+        items.append(f"{finding.task} [{finding.grade} {finding.check}]: {finding.message}.{suffix}")
+    return items
+
+
+def _extract_ask_verdict(review_json_path: Path | None) -> str | None:
+    if review_json_path is None or not review_json_path.exists():
+        return None
+    try:
+        data = json.loads(review_json_path.read_text())
+    except Exception:
+        return None
+    queue: list[object] = [data]
+    while queue:
+        current = queue.pop(0)
+        if isinstance(current, dict):
+            for key in ("verdict", "status", "decision"):
+                value = current.get(key)
+                if isinstance(value, str):
+                    normalized = value.strip().upper()
+                    if normalized:
+                        return normalized
+            queue.extend(current.values())
+        elif isinstance(current, list):
+            queue.extend(current)
+    return None
+
+
+def _run_ask_deep_review(
+    target: Path,
+    ask_id: str,
+    ask_model: str,
+    ask_reasoning: str,
+    ask_timeout: int,
+    focus: str,
+) -> dict:
+    ask_run = Path(__file__).resolve().parent.parent / "ask" / "run.sh"
+    if not ask_run.exists():
+        return {
+            "status": "blocked",
+            "reason": "ask runtime not found",
+            "ask_run": str(ask_run),
+        }
+
+    question = (
+        "Deep review this /review-plan target. Return a readiness verdict and "
+        "only concrete blockers. Any critical, high, or medium blocker, missing "
+        "artifact, failed validator, or insufficient evidence must prevent PASS."
+    )
+    command = [
+        str(ask_run),
+        "ask",
+        question,
+        "--deep-review",
+        "--deep-review-target",
+        str(target),
+        "--deep-review-focus",
+        focus,
+        "--oracle-backend",
+        "scillm",
+        "--oracle-model",
+        ask_model,
+        "--oracle-reasoning",
+        ask_reasoning,
+        "--oracle-timeout",
+        str(ask_timeout),
+        "--ask-id",
+        ask_id,
+        "--overwrite",
+        "--json",
+    ]
+    proc = subprocess.run(
+        command,
+        cwd=ask_run.parent,
+        capture_output=True,
+        text=True,
+        timeout=ask_timeout + 90,
+    )
+    run_dir = ask_run.parent / ".ask_artifacts" / "runs" / ask_id
+    status_path = run_dir / f"{ask_id}.status.json"
+    request_path = run_dir / f"{ask_id}.request.json"
+    events_path = run_dir / f"{ask_id}.events.jsonl"
+    review_md_path: Path | None = None
+    review_json_path: Path | None = None
+    status_data: dict = {}
+    if status_path.exists():
+        try:
+            status_data = json.loads(status_path.read_text())
+        except Exception:
+            status_data = {}
+        artifacts = status_data.get("artifacts", {})
+        if isinstance(artifacts, dict):
+            for key in ("review_md", "markdown"):
+                value = artifacts.get(key)
+                if isinstance(value, str):
+                    review_md_path = Path(value)
+                    if not review_md_path.is_absolute():
+                        review_md_path = ask_run.parent / review_md_path
+                    break
+            for key in ("review_json", "json"):
+                value = artifacts.get(key)
+                if isinstance(value, str):
+                    review_json_path = Path(value)
+                    if not review_json_path.is_absolute():
+                        review_json_path = ask_run.parent / review_json_path
+                    break
+    if review_json_path is None:
+        candidates = sorted((ask_run.parent / ".ask_artifacts" / "deep-review").glob("*/review.json"))
+        review_json_path = candidates[-1] if candidates else None
+    if review_md_path is None and review_json_path is not None:
+        review_md_path = review_json_path.with_name("review.md")
+    verdict = _extract_ask_verdict(review_json_path)
+    return {
+        "status": "passed" if proc.returncode == 0 and verdict in {"SAFE", "PASS", "READY_FOR_PLAN_ITERATE"} else "blocked",
+        "returncode": proc.returncode,
+        "ask_id": ask_id,
+        "command": command,
+        "request_json": str(request_path),
+        "status_json": str(status_path),
+        "events_jsonl": str(events_path),
+        "review_md": str(review_md_path) if review_md_path else None,
+        "review_json": str(review_json_path) if review_json_path else None,
+        "verdict": verdict,
+        "stdout_tail": proc.stdout[-4000:],
+        "stderr_tail": proc.stderr[-4000:],
+    }
+
+
+def _write_gate_artifact(
+    result: ReviewResult,
+    output_dir: Path,
+    iterations: int,
+    ask_artifacts: dict | None = None,
+    suggest_fixes: bool = True,
+) -> GateResult:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    verdict, reason = _gate_verdict(result, ask_artifacts)
+    payload = {
+        "schema": "review_plan.gate.v1",
+        "target": result.file,
+        "verdict": verdict,
+        "reason": reason,
+        "iterations": iterations,
+        "counts": {
             "pass": result.pass_count,
             "warn": result.warn_count,
             "fail": result.fail_count,
-            "findings": [
-                {
-                    "task": f.task,
-                    "check": f.check,
-                    "grade": f.grade,
-                    "message": f.message,
-                    "line": f.line,
-                    **({"suggestion": f.suggestion} if suggest_fixes and f.suggestion else {}),
-                }
-                for f in result.findings
-            ],
-        }
+        },
+        "findings": review_result_to_dict(result, suggest_fixes=suggest_fixes)["findings"],
+        "severity_to_loop_rule": "WARN and FAIL findings both block PASS for review-plan auto mode.",
+        "next_iteration_plan": _next_iteration_plan(result),
+        "ask_artifacts": ask_artifacts or {},
+    }
+    path = output_dir / "review_result.json"
+    path.write_text(json.dumps(payload, indent=2) + "\n")
+    return GateResult(
+        verdict=verdict,
+        reason=reason,
+        review_result_json=str(path),
+        iterations=iterations,
+        next_iteration_plan=payload["next_iteration_plan"],
+        ask_artifacts=ask_artifacts or {},
+    )
+
+
+def print_review_result(result: ReviewResult, path: Path, suggest_fixes: bool) -> None:
+    print(f"# Review: {path.name}\n")
+    print(f"## Summary")
+    print(f"- Tasks: {result.tasks}")
+    print(f"- Phases: {result.phases}")
+    print(f"- WARN: {result.warn_count} | FAIL: {result.fail_count}\n")
+
+    if result.fail_count > 0:
+        print("## FAIL\n")
+        for f in result.findings:
+            if f.grade == "FAIL":
+                print(f"### {f.task} (line {f.line})")
+                print(f"- **{f.check}**: {f.message}")
+                if suggest_fixes and f.suggestion:
+                    print(f"- **Fix**: {f.suggestion}")
+                print()
+
+    if result.warn_count > 0:
+        print("## WARN\n")
+        for f in result.findings:
+            if f.grade == "WARN":
+                print(f"### {f.task} (line {f.line})")
+                print(f"- **{f.check}**: {f.message}")
+                if suggest_fixes and f.suggestion:
+                    print(f"- **Suggest**: {f.suggestion}")
+                print()
+
+    if result.warn_count == 0 and result.fail_count == 0:
+        print("All checks passed.")
+
+
+@app.command()
+def review(
+    task_file: str = typer.Argument(..., help="Path to task file (0N_TASKS.md or plan)"),
+    output_json: bool = typer.Option(False, "--json", help="Output as JSON"),
+    suggest_fixes: bool = typer.Option(False, "--suggest-fixes", help="Include fix suggestions"),
+    max_rounds: int = typer.Option(1, "--max-rounds", help="Bounded review rounds. >1 enables controller artifacts and fail-closed iteration status."),
+    output_dir: str = typer.Option("", "--output-dir", help="Directory for review_result.json (default: artifacts/review-plan/<target>-<timestamp>)"),
+    ask_gate: bool = typer.Option(False, "--ask-gate", help="Run real $ask --deep-review as an external gate for the final round"),
+    ask_model: str = typer.Option("gpt-5.5", "--ask-model", help="Model for $ask --deep-review gate"),
+    ask_reasoning: str = typer.Option("high", "--ask-reasoning", help="Reasoning effort for $ask --deep-review gate"),
+    ask_timeout: int = typer.Option(900, "--ask-timeout", help="Timeout seconds for $ask --deep-review gate"),
+    ask_focus: str = typer.Option("plan-contract,ordering,definition-of-done,skill-overlap,iteration-gates", "--ask-focus", help="Comma-separated deep-review focus labels"),
+):
+    """Full review of a task file: claims, overlap, ordering, DoD, chains, tools."""
+    if max_rounds < 1:
+        logger.error("--max-rounds must be >= 1")
+        raise typer.Exit(2)
+    result = run_review_checks(task_file)
+    path = Path(result.file)
+
+    auto_mode = max_rounds > 1 or ask_gate or bool(output_dir)
+    gate: GateResult | None = None
+    ask_artifacts: dict | None = None
+    if auto_mode:
+        ts = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "-", path.name).strip("-") or "plan"
+        gate_dir = Path(output_dir) if output_dir else PROJECT_ROOT / "artifacts" / "review-plan" / f"{safe_name}-{ts}"
+        if ask_gate and result.fail_count == 0 and result.warn_count == 0:
+            ask_artifacts = _run_ask_deep_review(
+                target=path,
+                ask_id=f"review-plan-{safe_name}-{ts}",
+                ask_model=ask_model,
+                ask_reasoning=ask_reasoning,
+                ask_timeout=ask_timeout,
+                focus=ask_focus,
+            )
+        elif ask_gate:
+            ask_artifacts = {
+                "status": "skipped",
+                "reason": "deterministic_review_findings_block_external_gate",
+            }
+        gate = _write_gate_artifact(
+            result=result,
+            output_dir=gate_dir,
+            iterations=1,
+            ask_artifacts=ask_artifacts,
+            suggest_fixes=True,
+        )
+
+    if output_json:
+        output = review_result_to_dict(result, suggest_fixes=suggest_fixes)
+        if gate:
+            output["gate"] = {
+                "verdict": gate.verdict,
+                "reason": gate.reason,
+                "review_result_json": gate.review_result_json,
+                "iterations": gate.iterations,
+                "next_iteration_plan": gate.next_iteration_plan,
+                "ask_artifacts": gate.ask_artifacts,
+            }
         print(json.dumps(output, indent=2))
     else:
-        print(f"# Review: {path.name}\n")
-        print(f"## Summary")
-        print(f"- Tasks: {result.tasks}")
-        print(f"- Phases: {result.phases}")
-        print(f"- WARN: {result.warn_count} | FAIL: {result.fail_count}\n")
+        print_review_result(result, path, suggest_fixes=suggest_fixes)
+        if gate:
+            print("\n## Gate\n")
+            print(f"- Verdict: {gate.verdict}")
+            print(f"- Reason: {gate.reason}")
+            print(f"- Artifact: {gate.review_result_json}")
+            if gate.ask_artifacts:
+                print(f"- Ask status: {gate.ask_artifacts.get('status')}")
+                print(f"- Ask review JSON: {gate.ask_artifacts.get('review_json')}")
 
-        if result.fail_count > 0:
-            print("## FAIL\n")
-            for f in result.findings:
-                if f.grade == "FAIL":
-                    print(f"### {f.task} (line {f.line})")
-                    print(f"- **{f.check}**: {f.message}")
-                    if suggest_fixes and f.suggestion:
-                        print(f"- **Fix**: {f.suggestion}")
-                    print()
-
-        if result.warn_count > 0:
-            print("## WARN\n")
-            for f in result.findings:
-                if f.grade == "WARN":
-                    print(f"### {f.task} (line {f.line})")
-                    print(f"- **{f.check}**: {f.message}")
-                    if suggest_fixes and f.suggestion:
-                        print(f"- **Suggest**: {f.suggestion}")
-                    print()
-
-        if result.warn_count == 0 and result.fail_count == 0:
-            print("All checks passed.")
-
-    raise typer.Exit(1 if result.fail_count > 0 else 0)
+    blocked = result.fail_count > 0 or (gate is not None and gate.verdict != "PASS")
+    raise typer.Exit(1 if blocked else 0)
 
 
 @app.command()
@@ -1417,6 +1719,8 @@ def check(
 ):
     """Quick check: claims + DoD only (skip chain validation)."""
     path = Path(task_file)
+    if not path.exists():
+        path = CALLER_ROOT / task_file
     if not path.exists():
         path = PROJECT_ROOT / task_file
     if not path.exists():

@@ -4,6 +4,29 @@ Each provider function accepts (system_prompt, user_prompt, images) and returns
 the LLM response text. The call_provider() dispatcher handles retries and
 routing.
 """
+# --- dotenv (MUST be before any os.getenv / os.environ) ---
+import sys
+from pathlib import Path as _Path
+
+def _resolve_skills_dir() -> _Path:
+    p = _Path(__file__).resolve()
+    for parent in [p, *p.parents]:
+        if parent.name == "skills":
+            return parent
+    return p.parents[1]
+
+_SKILLS_DIR = _resolve_skills_dir()
+if str(_SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SKILLS_DIR))
+
+try:
+    from dotenv_helper import load_env as _load_env
+except Exception:
+    def _load_env() -> None:
+        return
+
+_load_env()
+
 
 import json
 import os
@@ -227,6 +250,74 @@ def _scillm_headers() -> dict[str, str]:
     }
 
 
+def _scillm_payload(
+    system_prompt: str,
+    user_prompt: str,
+    images: list[tuple[str, str]],
+    provider: str = "scillm",
+    *,
+    stream: bool = True,
+    response_format: Optional[dict] = None,
+    scillm_metadata: Optional[dict] = None,
+) -> tuple[str, dict]:
+    canonical_provider = normalize_provider(provider)
+    model = os.environ.get("REVIEW_DESIGN_SCILLM_MODEL", PROVIDERS[canonical_provider].model)
+
+    content = []
+    for name, uri in images:
+        if uri.startswith("data:"):
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": uri},
+            })
+            content.append({"type": "text", "text": f"[Image: {name}]"})
+
+    content.append({"type": "text", "text": user_prompt})
+
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": content},
+        ],
+        "temperature": 0.7,
+        "timeout": SCILLM_TIMEOUT_SEC,
+    }
+    reasoning_effort = os.environ.get("REVIEW_DESIGN_SCILLM_REASONING_EFFORT", "high").strip()
+    if reasoning_effort:
+        payload["reasoning_effort"] = reasoning_effort
+    exact_model_setting = os.environ.get("REVIEW_DESIGN_SCILLM_REQUIRE_EXACT_MODEL", "").strip().lower()
+    required_model = os.environ.get("REVIEW_DESIGN_SCILLM_REQUIRED_MODEL", "").strip()
+    require_exact_model = (
+        exact_model_setting not in {"0", "false", "no", "off"}
+        if exact_model_setting
+        else bool(required_model or model != "vlm")
+    )
+    if require_exact_model:
+        payload["require_exact_model"] = True
+        payload["allow_model_remap"] = False
+    if stream:
+        payload.update({
+            "stream": True,
+            "stream_progress_events": True,
+            "stream_heartbeat_s": 5,
+        })
+    if response_format:
+        payload["response_format"] = response_format
+    if scillm_metadata:
+        payload["scillm_metadata"] = scillm_metadata
+    return model, payload
+
+
+def _check_required_scillm_model(requested_model: str, served_model: str) -> None:
+    required_model = os.environ.get("REVIEW_DESIGN_SCILLM_REQUIRED_MODEL", "").strip()
+    if required_model and served_model != required_model:
+        raise RuntimeError(
+            f"scillm served model mismatch: required={required_model}, "
+            f"requested={requested_model}, served={served_model}"
+        )
+
+
 def check_scillm_health() -> None:
     """Fail fast with an actionable error if the scillm proxy is unavailable."""
     import httpx
@@ -258,35 +349,8 @@ def call_scillm(
     """
     import httpx
 
-    canonical_provider = normalize_provider(provider)
-    model = os.environ.get("REVIEW_DESIGN_SCILLM_MODEL", PROVIDERS[canonical_provider].model)
-
-    # Build multimodal content blocks (OpenAI-compatible format)
-    content = []
-    for name, uri in images:
-        if uri.startswith("data:"):
-            content.append({
-                "type": "image_url",
-                "image_url": {"url": uri},
-            })
-            content.append({"type": "text", "text": f"[Image: {name}]"})
-
-    content.append({"type": "text", "text": user_prompt})
-
     check_scillm_health()
-
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": content},
-        ],
-        "temperature": 0.7,
-        "stream": True,
-        "stream_progress_events": True,
-        "stream_heartbeat_s": 5,
-        "timeout": SCILLM_TIMEOUT_SEC,
-    }
+    model, payload = _scillm_payload(system_prompt, user_prompt, images, provider, stream=True)
 
     chunks: list[str] = []
     served_model = model
@@ -353,7 +417,123 @@ def call_scillm(
         raise RuntimeError("scillm returned empty streaming response")
 
     print(f"    scillm: requested={model}, served={served_model}, chars={len(text)}")
+    _check_required_scillm_model(model, served_model)
     return text
+
+
+async def call_scillm_async(
+    system_prompt: str,
+    user_prompt: str,
+    images: list[tuple[str, str]],
+    provider: str = "scillm",
+    *,
+    item_id: str = "",
+    batch_id: str = "",
+    response_format: Optional[dict] = None,
+) -> dict:
+    """Call scillm asynchronously for bounded review-design batches."""
+    import httpx
+
+    metadata = {}
+    if batch_id:
+        metadata["batch_id"] = batch_id
+    if item_id:
+        metadata["item_id"] = item_id
+
+    model, payload = _scillm_payload(
+        system_prompt,
+        user_prompt,
+        images,
+        provider,
+        stream=True,
+        response_format=response_format,
+        scillm_metadata=metadata or None,
+    )
+    timeout = httpx.Timeout(
+        connect=5.0,
+        read=SCILLM_TIMEOUT_SEC + 30.0,
+        write=30.0,
+        pool=10.0,
+    )
+    started = time.time()
+    chunks: list[str] = []
+    served_model = model
+    usage: dict | None = None
+    done_seen = False
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        async with client.stream(
+            "POST",
+            f"{SCILLM_BASE_URL}/v1/chat/completions",
+            headers=_scillm_headers(),
+            json=payload,
+        ) as response:
+            if response.status_code != 200:
+                body = await response.aread()
+                details = body.decode("utf-8", errors="replace")
+                try:
+                    error_payload = json.loads(details)
+                    error_obj = error_payload.get("error", error_payload)
+                    project_agent_message = error_obj.get("project_agent_message")
+                    provider_error_code = error_obj.get("provider_error_code") or error_obj.get("type")
+                    if project_agent_message:
+                        details = f"{project_agent_message} ({details})"
+                    if provider_error_code:
+                        details = f"{provider_error_code}: {details}"
+                except json.JSONDecodeError:
+                    pass
+                raise RuntimeError(f"scillm error {response.status_code}: {details}")
+
+            async for line in response.aiter_lines():
+                if not line or line.startswith(":") or line.startswith("event:"):
+                    continue
+                if not line.startswith("data:"):
+                    continue
+                data_text = line[len("data:"):].strip()
+                if data_text == "[DONE]":
+                    done_seen = True
+                    break
+                try:
+                    event = json.loads(data_text)
+                except json.JSONDecodeError:
+                    continue
+                if "error" in event:
+                    error_obj = event["error"] if isinstance(event["error"], dict) else {"message": str(event["error"])}
+                    raise RuntimeError(error_obj.get("message") or json.dumps(error_obj, sort_keys=True))
+                if event.get("model"):
+                    served_model = str(event["model"])
+                if isinstance(event.get("usage"), dict):
+                    usage = event["usage"]
+                choices = event.get("choices") or []
+                if not choices:
+                    continue
+                choice = choices[0] or {}
+                delta = choice.get("delta") or {}
+                message = choice.get("message") or {}
+                content_delta = delta.get("content")
+                if content_delta is None:
+                    content_delta = message.get("content")
+                if content_delta:
+                    chunks.append(str(content_delta))
+    elapsed_s = time.time() - started
+    if not done_seen:
+        raise RuntimeError("scillm stream ended without [DONE]")
+    _check_required_scillm_model(model, served_model)
+    content = "".join(chunks)
+    if not content:
+        raise RuntimeError("scillm returned empty streaming response")
+    data = {
+        "model": served_model,
+        "choices": [{"message": {"role": "assistant", "content": content}}],
+    }
+    if usage is not None:
+        data["usage"] = usage
+    return {
+        "content": content,
+        "requested_model": model,
+        "served_model": served_model,
+        "elapsed_s": elapsed_s,
+        "raw": data,
+    }
 
 
 def call_provider(

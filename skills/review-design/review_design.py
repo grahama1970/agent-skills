@@ -6,11 +6,36 @@ Implements the 3-step design review pipeline:
 2. Judge - Critique the audit findings
 3. Finalize - Produce actionable recommendations
 """
+# --- dotenv (MUST be before any os.getenv / os.environ) ---
+import sys
+from pathlib import Path as _Path
+
+def _resolve_skills_dir() -> _Path:
+    p = _Path(__file__).resolve()
+    for parent in [p, *p.parents]:
+        if parent.name == "skills":
+            return parent
+    return p.parents[1]
+
+_SKILLS_DIR = _resolve_skills_dir()
+if str(_SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SKILLS_DIR))
+
+try:
+    from dotenv_helper import load_env as _load_env
+except Exception:
+    def _load_env() -> None:
+        return
+
+_load_env()
+
 
 import typer
+import asyncio
 import base64
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -48,6 +73,233 @@ def _read_context(context: Optional[str], context_file: Optional[Path]) -> str:
         "No explicit context provided. Explain the product surface, current UX problem, "
         "constraints, prior failures, and what kind of review you need."
     )
+
+
+def _read_json(path: Path) -> Optional[dict]:
+    try:
+        return json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _summarize_test_interactions_manifest(path: Path) -> str:
+    data = _read_json(path)
+    if not data:
+        return f"Manifest: {path}\nStatus: unreadable or not JSON."
+
+    surfaces = data.get("surfaces") or []
+    lines = [
+        "## Test Interactions Manifest Contract",
+        "",
+        f"- Manifest: `{path}`",
+        f"- Generator: `{data.get('generator', 'unknown')}`",
+        f"- App: `{data.get('app', '')}`",
+        f"- Base URL: `{data.get('base_url', '')}`",
+        f"- Surfaces: {len(surfaces)}",
+        "",
+        "| Surface | Path | Elements | Interactions | QID Compliance |",
+        "|---|---|---:|---:|---|",
+    ]
+    total_elements = 0
+    total_interactions = 0
+    target_rows = []
+    for surface in surfaces:
+        elements = surface.get("elements") or []
+        interactions = [i for element in elements for i in (element.get("interactions") or [])]
+        total_elements += len(elements)
+        total_interactions += len(interactions)
+        lines.append(
+            f"| {surface.get('name', '')} | `{surface.get('path', '')}` | "
+            f"{len(elements)} | {len(interactions)} | {surface.get('qid_compliance', False)} |"
+        )
+        for element in elements:
+            for interaction in element.get("interactions") or []:
+                target = interaction.get("target") or interaction.get("screenshot_selector") or interaction.get("container_selector") or ""
+                if target:
+                    target_rows.append((
+                        surface.get("name", ""),
+                        element.get("name", ""),
+                        interaction.get("action", ""),
+                        target,
+                        interaction.get("description", ""),
+                    ))
+
+    lines.extend([
+        "",
+        f"- Total elements: {total_elements}",
+        f"- Total interactions: {total_interactions}",
+        "",
+        "| Surface | Element | Action | Target | Description |",
+        "|---|---|---|---|---|",
+    ])
+    for surface, element, action, target, description in target_rows[:80]:
+        safe_description = str(description).replace("|", "/")
+        lines.append(f"| {surface} | {element} | {action} | `{target}` | {safe_description} |")
+    if len(target_rows) > 80:
+        lines.append(f"| ... | ... | ... | ... | {len(target_rows) - 80} more targets omitted |")
+    lines.append("")
+    lines.append(
+        "Reviewer obligation: compare visible screenshots against this manifest. "
+        "If a live interactive target, graph state, pane, queue, or semantic workflow "
+        "required by the manifest is not visible in the screenshots, return `blocked` "
+        "with `missing_evidence`."
+    )
+    return "\n".join(lines)
+
+
+def _summarize_test_interactions_results(path: Path) -> str:
+    data = _read_json(path)
+    if not data:
+        return f"Results: {path}\nStatus: missing, unreadable, or not JSON."
+
+    lines = [
+        "## Test Interactions Deterministic Results",
+        "",
+        f"- Results: `{path}`",
+        f"- Total: {data.get('total', 0)}",
+        f"- Passed: {data.get('passed', 0)}",
+        f"- Failed: {data.get('failed', 0)}",
+        f"- Warnings: {data.get('warnings', data.get('warned', 0))}",
+        "",
+        "| Status | Surface | Element | Action | Evidence | Screenshots |",
+        "|---|---|---|---|---|---|",
+    ]
+    for item in (data.get("interactions") or [])[:120]:
+        screenshots = []
+        if item.get("screenshot"):
+            screenshots.append(item["screenshot"])
+        for asset in item.get("screenshots") or []:
+            if asset.get("path"):
+                screenshots.append(f"{asset.get('kind', 'screenshot')}:{asset.get('path')}")
+        evidence = str(item.get("evidence", "")).replace("|", "/")[:180]
+        lines.append(
+            f"| {item.get('status', '')} | {item.get('surface', '')} | {item.get('element', '')} | "
+            f"{item.get('action', '')} | {evidence} | {'<br>'.join(screenshots[:4])} |"
+        )
+    lines.append("")
+    lines.append(
+        "Reviewer obligation: deterministic FAIL/WARN rows, missing focused screenshots, "
+        "or mismatches between manifest targets and captured evidence are design-review "
+        "blockers unless explicitly scoped out in context."
+    )
+    return "\n".join(lines)
+
+
+def _read_modern_reference(path: Path, *, persona: str, require_persona_match: bool) -> str:
+    if not path.exists():
+        print(f"Modern reference report not found: {path}", file=sys.stderr)
+        raise typer.Exit(2)
+
+    reference_text = path.read_text()
+    data = _read_json(path)
+    if data:
+        request_context = data.get("request_context") or {}
+        reference_persona = request_context.get("persona") or ""
+        if require_persona_match and not reference_persona:
+            print(
+                "--require-modern-reference requires a Dogpile JSON reference with request_context.persona.",
+                file=sys.stderr,
+            )
+            raise typer.Exit(2)
+        if require_persona_match and reference_persona != persona:
+            print(
+                f"Dogpile reference persona `{reference_persona}` does not match review persona `{persona}`. "
+                "Rerun $dogpile with the same persona or omit --require-modern-reference.",
+                file=sys.stderr,
+            )
+            raise typer.Exit(2)
+        query = data.get("effective_query") or data.get("requested_query") or ""
+        brave_results = (((data.get("results") or {}).get("stage1") or {}).get("brave") or {}).get("results") or []
+        github_repos = (((data.get("results") or {}).get("stage1") or {}).get("github") or {}).get("repos") or []
+        reference_rows = []
+        design_requirements = [
+            "Graph/editor state must make selected node, edge meaning, execution status, and inspector linkage visible together.",
+            "Evidence/provenance panels must show source artifact, freshness, blocker state, and next action without log spelunking.",
+            "Review/amendment queues must read as auditable work queues with clear accepted/rejected/blocked/pending/stale states.",
+            "Controls must be targetable and inspectable through data-qid/data-qs-action/title evidence, not anonymous visual chrome.",
+            "Dense workflow surfaces must prioritize repeated operator scanning over marketing-style cards or decorative dashboards.",
+        ]
+        for item in brave_results[:10]:
+            title = item.get("title", "")
+            description = item.get("description", "")
+            url = item.get("url", "")
+            reference_rows.append(f"| Brave | {title} | {url} | {description.replace('|', '/')} |")
+        for item in github_repos[:10]:
+            name = item.get("name") or item.get("full_name") or item.get("url") or ""
+            url = item.get("url") or item.get("html_url") or ""
+            description = item.get("description", "")
+            reference_rows.append(f"| GitHub | {name} | {url} | {str(description).replace('|', '/')} |")
+        return (
+            "## Modern 2026 Reference / Dogpile Context\n\n"
+            "This is a persona-bound benchmarking packet for current workflow-editor, graph, "
+            "inspector, evidence, and review-queue UX patterns. Compare screenshots against "
+            "these references and list missing benchmark evidence under `missing_evidence`.\n\n"
+            f"- Dogpile persona: `{reference_persona or 'unknown'}`\n"
+            f"- Review persona: `{persona}`\n"
+            f"- Query: {query}\n"
+            f"- Status: {data.get('status', '')}\n"
+            f"- HTML report: `{data.get('html_report_path', '')}`\n\n"
+            "### Design Requirements Derived From Reference Packet\n\n"
+            + "\n".join(f"- {requirement}" for requirement in design_requirements)
+            + "\n\n### Reference URLs From Dogpile\n\n"
+            "| Source | Title/Repo | URL | Why relevant |\n"
+            "|---|---|---|---|\n"
+            + ("\n".join(reference_rows) if reference_rows else "| none | none | none | Dogpile did not return Brave/GitHub references. |\n")
+            + "\n\n### Reference Screenshot Requirement\n\n"
+            "Dogpile returns source URLs and reports, not guaranteed screenshot pixels. "
+            "For serious workflow-editor review, attach captured reference screenshots "
+            "with `--reference-screenshots`; otherwise reviewers must treat missing "
+            "visual benchmark screenshots as `missing_evidence` when visual comparison is required.\n\n"
+            + reference_text[:40000]
+        )
+
+    if require_persona_match:
+        print(
+            "--require-modern-reference requires Dogpile partial-results JSON so the persona can be verified.",
+            file=sys.stderr,
+        )
+        raise typer.Exit(2)
+
+    return (
+        "## Modern 2026 Reference / Dogpile Context\n\n"
+        "Use this as a benchmarking packet for current workflow-editor, graph, inspector, "
+        "evidence, and review-queue UX patterns. Persona metadata was not machine-verifiable.\n\n"
+        + reference_text[:40000]
+    )
+
+
+def _collect_reference_screenshot_images(directory: Optional[Path], max_images: int = 4) -> tuple[list[tuple[str, str]], str]:
+    if not directory:
+        return [], (
+            "## Reference Screenshots\n\n"
+            "No `--reference-screenshots` directory was supplied. If the review requires "
+            "visual comparison to Dogpile examples, return `blocked` with "
+            "`missing_evidence` for reference screenshots.\n"
+        )
+    if not directory.exists():
+        print(f"Reference screenshots directory not found: {directory}", file=sys.stderr)
+        raise typer.Exit(2)
+    images = collect_images(directory, max_images=max_images, include_burst=False)
+    if not images:
+        return [], (
+            "## Reference Screenshots\n\n"
+            f"`--reference-screenshots {directory}` was supplied but no PNG/JPG images were found. "
+            "Return `blocked` with `missing_evidence` when visual comparison is required.\n"
+        )
+    lines = [
+        "## Reference Screenshots",
+        "",
+        f"- Directory: `{directory}`",
+        f"- Attached reference screenshots: {len(images)}",
+    ]
+    for name, _uri in images:
+        lines.append(f"- `REFERENCE_{name}`")
+    lines.append("")
+    lines.append(
+        "Reviewer obligation: compare the target screenshot against these reference "
+        "screenshots for workflow-editor conventions, not decorative sameness."
+    )
+    return [(f"REFERENCE_{name}", uri) for name, uri in images], "\n".join(lines)
 
 
 def _copy_text_to_clipboard(text: str) -> str:
@@ -310,7 +562,7 @@ def collect_images(directory: Path, max_images: int = 10, include_burst: bool = 
     return images
 
 
-from providers import call_provider, check_scillm_health  # noqa: E402 — provider dispatch
+from providers import call_provider, call_scillm_async, check_scillm_health  # noqa: E402 — provider dispatch
 
 
 def _artifact_dir() -> Path:
@@ -522,24 +774,44 @@ def load_persona_context(persona_name: str) -> str:
     context_parts = []
 
     # 1. Load persona AGENTS.md
-    agents_dir = Path(__file__).parent.parent.parent / "agents"
-    agents_md = agents_dir / persona_name / "AGENTS.md"
-    if agents_md.exists():
+    candidate_roots = []
+    if os.environ.get("REVIEW_DESIGN_AGENTS_ROOT"):
+        candidate_roots.append(Path(os.environ["REVIEW_DESIGN_AGENTS_ROOT"]))
+    candidate_roots.extend([
+        Path(__file__).parent.parent.parent / "agents",
+        Path.home() / "workspace/experiments/pi-mono/.pi/agents",
+        Path.home() / "workspace/experiments/agent-skills/agents",
+    ])
+    agents_md = None
+    for agents_dir in candidate_roots:
+        candidate = agents_dir / persona_name / "AGENTS.md"
+        if candidate.exists():
+            agents_md = candidate
+            break
+    if agents_md is not None and agents_md.exists():
         agents_content = agents_md.read_text()
         context_parts.append(f"## Persona Identity: {persona_name}\n\n{agents_content}")
         print(f"  Loaded persona AGENTS.md: {agents_md} ({len(agents_content):,} chars)")
     else:
-        print(f"  WARNING: No AGENTS.md found at {agents_md}")
+        searched = ", ".join(str(root / persona_name / "AGENTS.md") for root in candidate_roots)
+        message = f"No AGENTS.md found for persona {persona_name}. Searched: {searched}"
+        if os.environ.get("REVIEW_DESIGN_ALLOW_MISSING_PERSONA") == "1":
+            print(f"  WARNING: {message}")
+        else:
+            raise RuntimeError(message)
 
     # 2. Memory recall — get persona's QRA corpus, relationships, domain knowledge
-    scope = persona_name.replace("-", "_")
-    print(f"  Recalling memory for scope: {scope}")
-    prior_context = recall_prior_design_reviews(project=scope, component="ux-lab")
-    if prior_context:
-        context_parts.append(f"## Prior Design Reviews from Memory\n\n{prior_context}")
-        print(f"  Memory recall returned {len(prior_context):,} chars of prior context")
+    if os.environ.get("REVIEW_DESIGN_DISABLE_MEMORY") == "1":
+        print("  Memory recall disabled by REVIEW_DESIGN_DISABLE_MEMORY=1")
     else:
-        print(f"  No prior design reviews found in memory for {scope}")
+        scope = persona_name.replace("-", "_")
+        print(f"  Recalling memory for scope: {scope}")
+        prior_context = recall_prior_design_reviews(project=scope, component="ux-lab")
+        if prior_context:
+            context_parts.append(f"## Prior Design Reviews from Memory\n\n{prior_context}")
+            print(f"  Memory recall returned {len(prior_context):,} chars of prior context")
+        else:
+            print(f"  No prior design reviews found in memory for {scope}")
 
     if not context_parts:
         print(f"  WARNING: No persona context loaded for {persona_name} — review will lack domain focus")
@@ -566,9 +838,11 @@ def run_full_review(request: ReviewRequest) -> list[AuditResult]:
     # Build persona-aware system prompt
     system_prompt = build_persona_system_prompt(request.persona, persona_context)
 
-    # Derive output directory from screenshots path (e.g. s2-midview → review-output/s2-midview/)
+    # Derive output directory from screenshots path (e.g. s2-midview → review-output/s2-midview/).
+    # REVIEW_DESIGN_OUTPUT_BASE lets orchestrators avoid collisions in the global review-output tree.
+    output_base = Path(os.environ.get("REVIEW_DESIGN_OUTPUT_BASE", str(OUTPUT_BASE)))
     surface_name = request.screenshots_dir.name  # e.g. "s2-midview"
-    OUTPUT_DIR = OUTPUT_BASE / surface_name
+    OUTPUT_DIR = output_base / surface_name
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     # Load tokens
@@ -705,6 +979,449 @@ def run_full_review(request: ReviewRequest) -> list[AuditResult]:
     return results
 
 
+def _append_jsonl(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as handle:
+        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+
+
+def _write_loop_state(
+    path: Path,
+    *,
+    state: str,
+    round_num: int,
+    surface: str,
+    latest_screenshot: str = "",
+    latest_verdict: str = "",
+    next_action: str = "",
+) -> None:
+    path.write_text(json.dumps({
+        "state": state,
+        "round": round_num,
+        "surface": surface,
+        "latest_screenshot": latest_screenshot,
+        "latest_verdict": latest_verdict,
+        "next_action": next_action,
+        "updated_at": datetime.now().isoformat(),
+    }, indent=2) + "\n")
+
+
+def _resolve_section_image_paths(section: dict, key: str, base_dir: Path) -> list[Path]:
+    paths: list[Path] = []
+    for raw_item in section.get(key) or []:
+        raw_path = raw_item.get("path") if isinstance(raw_item, dict) else raw_item
+        if not raw_path:
+            continue
+        image_path = Path(raw_path)
+        if not image_path.is_absolute():
+            image_path = (base_dir / image_path).resolve()
+        if image_path.exists() and image_path.is_file():
+            paths.append(image_path)
+    return paths
+
+
+def _load_review_sections(sections_path: Optional[Path], screenshots_dir: Path, max_sections: int) -> list[dict]:
+    image_extensions = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+    if sections_path:
+        raw = json.loads(sections_path.read_text())
+        sections = raw.get("sections", raw) if isinstance(raw, dict) else raw
+        normalized = []
+        for index, section in enumerate(sections, start=1):
+            screenshot_path = Path(section["screenshot"])
+            if not screenshot_path.is_absolute():
+                screenshot_path = (sections_path.parent / screenshot_path).resolve()
+            supporting_screenshots: list[Path] = []
+            for key in ("supporting_screenshots", "context_screenshots", "screenshots"):
+                supporting_screenshots.extend(_resolve_section_image_paths(section, key, sections_path.parent))
+            # Keep the target screenshot first and do not send duplicate images.
+            seen = {screenshot_path.resolve()}
+            supporting_screenshots = [
+                path for path in supporting_screenshots
+                if path.resolve() not in seen and not seen.add(path.resolve())
+            ]
+            normalized.append({
+                "id": section.get("id") or f"section-{index:03d}",
+                "title": section.get("title") or screenshot_path.stem,
+                "purpose": section.get("purpose") or "Review this captured UI state for design blockers.",
+                "screenshot": screenshot_path,
+                "supporting_screenshots": supporting_screenshots,
+            })
+        return normalized[:max_sections]
+
+    screenshots = [
+        path for path in screenshots_dir.rglob("*")
+        if path.is_file()
+        and path.suffix.lower() in image_extensions
+        and "vlm_preprocessed" not in path.parts
+        and "semantic_review_selection" not in path.parts
+    ]
+    # Section review must not overfit tight crops. Focus/container crops are
+    # useful supporting evidence, but a reviewer needs full context first to
+    # judge workflow state, selected object, evidence/provenance, and next
+    # action. Prefer full viewport captures, then container stitches, then
+    # isolated focus crops.
+    screenshots.sort(key=lambda path: (
+        2 if "__focus" in path.name else 1 if "__container" in path.name else 0,
+        str(path),
+    ))
+    return [
+        {
+            "id": f"section-{index:03d}",
+            "title": path.stem,
+            "purpose": "Auto-selected screenshot from deterministic interaction evidence.",
+            "screenshot": path,
+            "supporting_screenshots": [],
+        }
+        for index, path in enumerate(screenshots[:max_sections], start=1)
+    ]
+
+
+def _extract_json_object(text: str) -> dict:
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        stripped = re.sub(r"^```(?:json)?\s*", "", stripped)
+        stripped = re.sub(r"\s*```$", "", stripped)
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        match = re.search(r"\{[\s\S]*\}", stripped)
+        if match:
+            return json.loads(match.group(0))
+        raise
+
+
+def _section_end_state(verdict: dict) -> str:
+    if verdict.get("verdict") == "blocked":
+        return "blocked"
+    missing_evidence = verdict.get("missing_evidence") or []
+    if missing_evidence:
+        return "blocked"
+    screenshot_checks = verdict.get("screenshot_checks") or []
+    if verdict.get("verdict") == "satisfied" and not screenshot_checks:
+        return "blocked"
+    for check in screenshot_checks:
+        if isinstance(check, dict) and check.get("passed") is False:
+            severity = str(check.get("severity", "medium")).lower()
+            if severity in {"critical", "high", "medium"}:
+                return "needs_patch"
+    for check_group in ("reference_requirements_checked", "manifest_coverage_checks"):
+        for check in verdict.get(check_group) or []:
+            if isinstance(check, dict) and check.get("passed") is False:
+                severity = str(check.get("severity", "medium")).lower()
+                if severity in {"critical", "high", "medium"}:
+                    return "needs_patch"
+    findings = verdict.get("findings") or []
+    for finding in findings:
+        severity = str(finding.get("severity", "")).lower()
+        if severity in {"critical", "high", "medium"}:
+            return "needs_patch"
+    if verdict.get("verdict") == "needs_changes":
+        return "needs_patch"
+    return "verified"
+
+
+def _build_iterate_prompt(section: dict, context_text: str, code_context: str) -> str:
+    supporting = section.get("supporting_screenshots") or []
+    supporting_lines = "\n".join(f"- `{Path(path).name}`" for path in supporting) or "- none"
+    return f"""Review section: {section['title']}
+
+Section purpose:
+{section['purpose']}
+
+Attached current-state screenshots:
+- Target section screenshot: `{Path(section['screenshot']).name}`
+- Supporting context screenshots:
+{supporting_lines}
+
+Global context:
+{context_text or 'No additional context provided.'}
+
+{code_context}
+
+Review the target screenshot as `{section['id']}`. This is a section-scoped
+review inside `$review-design iterate`, but any supporting current-state
+screenshots are part of the same evidence packet. Use supporting screenshots to
+verify whole-interface context, adjacent panels, selected-object linkage,
+event/prompt evidence, or lower-panel continuity before listing missing
+evidence.
+
+Your primary job is to catch obvious human-facing UX errors before the project
+agent or human sees another false green. Be adversarial about visible workflow
+clarity, not decorative polish.
+
+Fail-closed review gates:
+- If the screenshot is stale, too broad, too cropped, illegible, or does not show
+  the section purpose, and no supporting current-state screenshot proves the
+  missing context, return `blocked` and list the missing screenshot evidence.
+- If this is an interaction-driven surface and no `$test-interactions` result,
+  focused crop, or container screenshot is attached or referenced in the
+  context, return `blocked` unless the section is explicitly static/read-only.
+- If modern/reference context is provided, compare against it. If no current
+  reference context is provided for a complex workflow editor, list that under
+  `missing_evidence` instead of pretending the design has been benchmarked.
+- If reference screenshots are attached, compare the target screenshot against
+  them. If Dogpile references are only URLs/text and the task requires visual
+  benchmark comparison, list missing reference screenshots under
+  `missing_evidence`.
+- Compare visible UI coverage against the `$test-interactions` manifest and
+  deterministic results in the context. A target/control/semantic workflow in
+  the manifest that is not visible in the target or supporting screenshot
+  evidence is missing evidence.
+- Repeated unsupported concerns are not consensus. Every critical/high/medium
+  finding needs visible screenshot evidence and, when source is supplied, a
+  concrete code/layout connection.
+
+Obvious UX error checklist:
+- Can the user tell what object is selected and what action happens next?
+- Are primary status, evidence, provenance, and end state visible without
+  hunting through logs?
+- Are review queues, amendment queues, and approval/rejection states readable as
+  operational state rather than decorative cards?
+- Are disabled, blocked, pending, approved, rejected, stale, and failed states
+  visually distinct without relying only on color?
+- Are dense tables/panels scannable, non-overlapping, and sized for repeated
+  work?
+- Are graph nodes, edge labels, inspector panels, and artifact panes connected
+  by visible selection/provenance cues?
+- Are buttons/controls large enough, titled, and semantically obvious?
+- Is any UI implying live truth from static/mock data or missing evidence?
+
+Return strict JSON only with this schema:
+{{
+  "verdict": "satisfied | needs_changes | blocked",
+  "section_id": "{section['id']}",
+  "summary": "one sentence",
+  "findings": [
+    {{
+      "severity": "critical | high | medium | low",
+      "issue": "specific visual/workflow problem",
+      "evidence": "what in the target/supporting screenshot proves it",
+      "recommendation": "concrete patch direction"
+    }}
+  ],
+  "modern_reference_gaps": [
+    {{
+      "reference": "specific modern UI pattern/repo/image/context item if provided",
+      "gap": "what the screenshot lacks compared with that reference",
+      "severity": "critical | high | medium | low"
+    }}
+  ],
+  "blocking_changes": [],
+  "non_blocking_changes": [],
+  "screenshot_checks": [
+    {{
+      "check": "specific visible state or evidence requirement",
+      "passed": true,
+      "evidence": "exact visible target/supporting screenshot detail",
+      "severity": "critical | high | medium | low"
+    }}
+  ],
+  "missing_evidence": [],
+  "reference_requirements_checked": [
+    {{
+      "requirement": "specific requirement from the Dogpile/reference packet",
+      "evidence": "target screenshot evidence or reference screenshot/url checked",
+      "passed": true,
+      "severity": "critical | high | medium | low"
+    }}
+  ],
+  "manifest_coverage_checks": [
+    {{
+      "manifest_target": "data-qid target or semantic workflow from manifest/results",
+      "screenshot_evidence": "where the target/supporting screenshot proves it, or what is missing",
+      "passed": true,
+      "severity": "critical | high | medium | low"
+    }}
+  ],
+  "do_not_do": []
+}}
+
+Critical/high/medium findings must be actionable implementation blockers. Low findings are non-blocking polish unless they hide evidence or user decisions.
+"""
+
+
+async def _review_section_async(
+    *,
+    section: dict,
+    system_prompt: str,
+    user_prompt: str,
+    provider: str,
+    round_dir: Path,
+    events_path: Path,
+    semaphore: asyncio.Semaphore,
+    batch_id: str,
+    reference_images: list[tuple[str, str]],
+) -> dict:
+    section_dir = round_dir / "sections" / section["id"]
+    section_dir.mkdir(parents=True, exist_ok=True)
+    prompt_path = section_dir / "prompt.md"
+    response_path = section_dir / "reviewer.md"
+    verdict_path = section_dir / "verdict.json"
+    raw_response_path = section_dir / "response.raw.json"
+    prompt_path.write_text(user_prompt)
+
+    _append_jsonl(events_path, {
+        "event": "reviewer_started",
+        "ts": datetime.now().isoformat(),
+        "round": round_dir.name,
+        "section_id": section["id"],
+        "screenshot": str(section["screenshot"]),
+    })
+    async with semaphore:
+        try:
+            images = [
+                (section["screenshot"].name, encode_image_base64(resize_image_if_needed(section["screenshot"])))
+            ]
+            for supporting_path in section.get("supporting_screenshots") or []:
+                images.append((
+                    f"context-{supporting_path.name}",
+                    encode_image_base64(resize_image_if_needed(supporting_path)),
+                ))
+            images += reference_images
+            result = await call_scillm_async(
+                system_prompt,
+                user_prompt,
+                images,
+                provider,
+                item_id=section["id"],
+                batch_id=batch_id,
+                response_format={"type": "json_object"},
+            )
+            response_path.write_text(result["content"])
+            raw_response_path.write_text(json.dumps(result["raw"], indent=2) + "\n")
+            verdict = _extract_json_object(result["content"])
+            verdict.setdefault("section_id", section["id"])
+            verdict["end_state"] = _section_end_state(verdict)
+            verdict["screenshot"] = str(section["screenshot"])
+            verdict["supporting_screenshots"] = [
+                str(path) for path in section.get("supporting_screenshots") or []
+            ]
+            verdict["requested_model"] = result["requested_model"]
+            verdict["served_model"] = result["served_model"]
+            verdict["elapsed_s"] = result["elapsed_s"]
+            verdict["review_route"] = "$review-design iterate"
+            verdict["persona_bound"] = bool(system_prompt.strip())
+            verdict["proof"] = {
+                "raw_response": str(raw_response_path),
+                "scillm_reasoning": result["raw"].get("scillm_reasoning"),
+                "scillm_multimodal": result["raw"].get("scillm_multimodal"),
+                "image_seen_by": (
+                    (result["raw"].get("scillm_multimodal") or {}).get("image_seen_by")
+                ),
+                "requested_model": result["requested_model"],
+                "served_model": result["served_model"],
+                "exact_model_required": True,
+            }
+            verdict_path.write_text(json.dumps(verdict, indent=2) + "\n")
+            _append_jsonl(events_path, {
+                "event": "reviewer_finished",
+                "ts": datetime.now().isoformat(),
+                "section_id": section["id"],
+                "served_model": result["served_model"],
+                "raw_response": str(raw_response_path),
+                "end_state": verdict["end_state"],
+                "verdict": verdict.get("verdict"),
+                "artifact": str(verdict_path),
+            })
+            return verdict
+        except Exception as exc:  # noqa: BLE001
+            failure = {
+                "section_id": section["id"],
+                "verdict": "blocked",
+                "findings": [{
+                    "severity": "critical",
+                    "issue": "reviewer call failed",
+                    "evidence": str(exc),
+                    "recommendation": "Fix the scillm/provider failure and rerun this section.",
+                }],
+                "blocking_changes": [str(exc)],
+                "non_blocking_changes": [],
+                "screenshot_checks": [],
+                "do_not_do": [],
+                "end_state": "failed",
+                "screenshot": str(section["screenshot"]),
+                "supporting_screenshots": [
+                    str(path) for path in section.get("supporting_screenshots") or []
+                ],
+            }
+            response_path.write_text(str(exc))
+            verdict_path.write_text(json.dumps(failure, indent=2) + "\n")
+            _append_jsonl(events_path, {
+                "event": "reviewer_failed",
+                "ts": datetime.now().isoformat(),
+                "section_id": section["id"],
+                "end_state": "failed",
+                "error": str(exc),
+                "artifact": str(verdict_path),
+            })
+            return failure
+
+
+async def _run_parallel_iterate_reviews(
+    *,
+    sections: list[dict],
+    system_prompt: str,
+    context_text: str,
+    code_context: str,
+    provider: str,
+    round_dir: Path,
+    events_path: Path,
+    max_concurrency: int,
+    batch_id: str,
+    reference_images: list[tuple[str, str]],
+) -> list[dict]:
+    semaphore = asyncio.Semaphore(max(1, max_concurrency))
+    tasks = [
+        asyncio.create_task(_review_section_async(
+            section=section,
+            system_prompt=system_prompt,
+            user_prompt=_build_iterate_prompt(section, context_text, code_context),
+            provider=provider,
+            round_dir=round_dir,
+            events_path=events_path,
+            semaphore=semaphore,
+            batch_id=batch_id,
+            reference_images=reference_images,
+        ))
+        for section in sections
+    ]
+    results = []
+    for task in asyncio.as_completed(tasks):
+        results.append(await task)
+    return results
+
+
+def _write_iterate_matrix(path: Path, verdicts: list[dict], *, persona: str, round_num: int) -> None:
+    lines = [
+        "# Review Design Iterate Matrix",
+        "",
+        "| Round | Persona | Screenshot | Supporting Screenshots | Section | Verdict | Highest Severity | End State | Findings | Missing Evidence | Model/Proof | Artifact |",
+        "|---|---|---|---:|---|---|---|---|---:|---|---|---|",
+    ]
+    for verdict in sorted(verdicts, key=lambda item: item.get("section_id", "")):
+        findings = verdict.get("findings") or []
+        severities = [str(f.get("severity", "low")).lower() for f in findings]
+        rank = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+        highest = max(severities, key=lambda severity: rank.get(severity, 0), default="none")
+        section_id = verdict.get("section_id", "")
+        proof = verdict.get("proof") or {}
+        proof_bits = []
+        if verdict.get("served_model"):
+            proof_bits.append(f"served={verdict.get('served_model')}")
+        if proof.get("image_seen_by"):
+            proof_bits.append(f"image={proof.get('image_seen_by')}")
+        missing = verdict.get("missing_evidence") or []
+        supporting_count = len(verdict.get("supporting_screenshots") or [])
+        lines.append(
+            f"| {round_num} | `{persona}` | `{verdict.get('screenshot', '')}` | {supporting_count} | `{section_id}` | "
+            f"{verdict.get('verdict', '')} | {highest} | {verdict.get('end_state', '')} | "
+            f"{len(findings)} | {', '.join(map(str, missing)) if missing else ''} | "
+            f"{'<br>'.join(proof_bits)} | "
+            f"`rounds/001/sections/{section_id}/verdict.json` |"
+        )
+    path.write_text("\n".join(lines) + "\n")
+
+
 app = typer.Typer(help="AI-powered design review for UI screenshots")
 
 
@@ -733,6 +1450,236 @@ def review(
         code_context_files=code_context_files or [],
     )
     run_full_review(request)
+
+
+@app.command("iterate")
+def iterate_cmd(
+    screenshots: Optional[Path] = typer.Option(None, "-s", "--screenshots", help="Directory containing fresh screenshots or test-interactions captures"),
+    persona: str = typer.Option(..., "--persona", help="REQUIRED: Persona agent name"),
+    manifest: Optional[Path] = typer.Option(None, "--manifest", help="Optional test-interactions manifest to run before review"),
+    output_dir: Optional[Path] = typer.Option(None, "-o", "--output-dir", help="Durable loop artifact directory"),
+    sections: Optional[Path] = typer.Option(None, "--sections", help="Optional JSON section manifest; otherwise one section per selected screenshot"),
+    code_context_files: Optional[list[Path]] = typer.Option(None, "-c", "--code-context", help="Source files to include in every section review"),
+    provider: str = typer.Option(DEFAULT_PROVIDER, "-p", "--provider", help="Provider; iterate batching currently requires scillm/vlm/subagent"),
+    max_sections: int = typer.Option(8, "--max-sections", help="Maximum screenshots/sections to review in one batch"),
+    max_concurrency: int = typer.Option(3, "--max-concurrency", help="Maximum concurrent scillm review calls"),
+    context: str = typer.Option("", "--context", help="Global review context"),
+    context_file: Optional[Path] = typer.Option(None, "--context-file", help="File containing global review context"),
+    modern_reference: Optional[Path] = typer.Option(None, "--modern-reference", help="Dogpile/current-design reference report to require reviewers to compare against"),
+    reference_screenshots: Optional[Path] = typer.Option(None, "--reference-screenshots", help="Directory of captured modern/reference screenshots to attach to each section review"),
+    require_modern_reference: bool = typer.Option(False, "--require-modern-reference", help="Fail closed unless --modern-reference is supplied"),
+    require_reference_persona_match: bool = typer.Option(True, "--require-reference-persona-match/--allow-reference-persona-mismatch", help="When modern reference is required, require Dogpile request_context.persona to match --persona"),
+    title: str = typer.Option("Design Review Iterate", "--title", help="Surface title"),
+):
+    """Run a parallelized review-design iterate batch over fresh UI evidence.
+
+    Deterministic browser interactions remain sequential in test-interactions.
+    Independent screenshot/section reviewer calls are batched through scillm
+    with asyncio.create_task + as_completed.
+    """
+    provider = normalize_provider(provider)
+    if provider != "scillm":
+        print("review-design iterate batches through scillm only; use --provider scillm/vlm/subagent", file=sys.stderr)
+        raise typer.Exit(2)
+    if require_modern_reference and not modern_reference:
+        print(
+            "--require-modern-reference was set but no --modern-reference report was supplied. "
+            "Run $dogpile and pass its report/partial-results path.",
+            file=sys.stderr,
+        )
+        raise typer.Exit(2)
+
+    check_scillm_health()
+
+    loop_root = output_dir or (
+        Path(os.environ.get("REVIEW_DESIGN_OUTPUT_BASE", str(OUTPUT_BASE)))
+        / f"{(screenshots or manifest or Path(title)).stem}-iterate"
+    )
+    loop_root.mkdir(parents=True, exist_ok=True)
+    state_path = loop_root / "state.json"
+    events_path = loop_root / "events.jsonl"
+    round_num = 1
+    round_dir = loop_root / "rounds" / f"{round_num:03d}"
+    round_dir.mkdir(parents=True, exist_ok=True)
+
+    _write_loop_state(
+        state_path,
+        state="running",
+        round_num=round_num,
+        surface=title,
+        next_action="test_interactions" if manifest else "parallel_review",
+    )
+    _append_jsonl(events_path, {
+        "event": "round_started",
+        "ts": datetime.now().isoformat(),
+        "round": round_num,
+        "surface": title,
+        "parallelizable": "section reviewer calls",
+    })
+
+    evidence_context_parts = []
+    if manifest:
+        if not manifest.exists():
+            print(f"Test interactions manifest not found: {manifest}", file=sys.stderr)
+            raise typer.Exit(2)
+        (round_dir / "test-interactions-manifest.snapshot.json").write_text(manifest.read_text())
+        evidence_context_parts.append(_summarize_test_interactions_manifest(manifest))
+        test_run = Path(__file__).resolve().parent.parent / "test-interactions" / "run.sh"
+        captures_dir = round_dir / "interaction-captures"
+        cmd = [str(test_run), "run", "--manifest", str(manifest), "--output-dir", str(captures_dir)]
+        _append_jsonl(events_path, {
+            "event": "test_interactions_started",
+            "ts": datetime.now().isoformat(),
+            "command": cmd,
+            "end_state": "running",
+        })
+        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
+        (round_dir / "test-interactions.stdout.log").write_text(proc.stdout)
+        (round_dir / "test-interactions.stderr.log").write_text(proc.stderr)
+        if proc.returncode != 0:
+            _append_jsonl(events_path, {
+                "event": "test_interactions_finished",
+                "ts": datetime.now().isoformat(),
+                "returncode": proc.returncode,
+                "end_state": "failed",
+                "artifact": str(captures_dir / "results.json"),
+            })
+            _write_loop_state(
+                state_path,
+                state="failed",
+                round_num=round_num,
+                surface=title,
+                latest_verdict=str(captures_dir / "results.json"),
+                next_action="patch_test_interactions_failure",
+            )
+            raise typer.Exit(proc.returncode)
+        screenshots = captures_dir
+        _append_jsonl(events_path, {
+            "event": "test_interactions_finished",
+            "ts": datetime.now().isoformat(),
+            "returncode": proc.returncode,
+                "end_state": "verified",
+                "artifact": str(captures_dir / "results.json"),
+            })
+        evidence_context_parts.append(_summarize_test_interactions_results(captures_dir / "results.json"))
+
+    if screenshots is None:
+        print("Either --screenshots or --manifest is required.", file=sys.stderr)
+        raise typer.Exit(2)
+    if not screenshots.exists():
+        print(f"Screenshots/captures directory not found: {screenshots}", file=sys.stderr)
+        raise typer.Exit(2)
+
+    print(f"\n{'='*60}")
+    print(f"PERSONA: {persona}")
+    print(f"{'='*60}")
+    persona_context = load_persona_context(persona)
+    system_prompt = build_persona_system_prompt(persona, persona_context)
+    context_text = _read_context(context or None, context_file)
+    if evidence_context_parts:
+        context_text += "\n\n" + "\n\n".join(evidence_context_parts)
+    if modern_reference:
+        context_text += "\n\n" + _read_modern_reference(
+            modern_reference,
+            persona=persona,
+            require_persona_match=require_modern_reference and require_reference_persona_match,
+        )
+    reference_images, reference_screenshot_context = _collect_reference_screenshot_images(reference_screenshots)
+    context_text += "\n\n" + reference_screenshot_context
+
+    context_parts = []
+    for fpath in code_context_files or []:
+        if fpath.exists():
+            content = fpath.read_text()
+            context_parts.append(
+                f"### {fpath}\nFull source ({len(content.splitlines())} lines):\n"
+                f"```{fpath.suffix.lstrip('.')}\n{content}\n```"
+            )
+    code_context = ""
+    if context_parts:
+        code_context = (
+            "Implementation context. Use this to connect visual findings to code, "
+            "but do not claim satisfaction without screenshot evidence.\n\n"
+            + "\n\n".join(context_parts)
+        )
+
+    review_sections = _load_review_sections(sections, screenshots, max_sections)
+    if not review_sections:
+        print(f"No screenshots found under {screenshots}", file=sys.stderr)
+        raise typer.Exit(2)
+
+    (round_dir / "sections_manifest.json").write_text(json.dumps(review_sections, indent=2, default=str) + "\n")
+    batch_id = f"review-design-iterate-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    _append_jsonl(events_path, {
+        "event": "parallel_review_started",
+        "ts": datetime.now().isoformat(),
+        "round": round_num,
+        "batch_id": batch_id,
+        "sections": len(review_sections),
+        "max_concurrency": max_concurrency,
+        "end_state": "running",
+    })
+
+    verdicts = asyncio.run(_run_parallel_iterate_reviews(
+        sections=review_sections,
+        system_prompt=system_prompt,
+        context_text=context_text,
+        code_context=code_context,
+        provider=provider,
+        round_dir=round_dir,
+        events_path=events_path,
+        max_concurrency=max_concurrency,
+        batch_id=batch_id,
+        reference_images=reference_images,
+    ))
+
+    matrix_path = loop_root / "DESIGN_REVIEW_ITERATE_MATRIX.md"
+    _write_iterate_matrix(matrix_path, verdicts, persona=persona, round_num=round_num)
+    aggregate_path = round_dir / "aggregate_verdict.json"
+    state = "verified"
+    next_action = "accept_or_record_low_followups"
+    if any(v.get("end_state") == "failed" for v in verdicts):
+        state = "failed"
+        next_action = "fix_reviewer_failures"
+    elif any(v.get("end_state") in {"blocked", "needs_patch"} for v in verdicts):
+        state = "needs_patch"
+        next_action = "patch_valid_blockers"
+    aggregate = {
+        "round": round_num,
+        "state": state,
+        "sections": len(verdicts),
+        "matrix": str(matrix_path),
+        "verdicts": verdicts,
+        "updated_at": datetime.now().isoformat(),
+    }
+    aggregate_path.write_text(json.dumps(aggregate, indent=2) + "\n")
+    _append_jsonl(events_path, {
+        "event": "parallel_review_finished",
+        "ts": datetime.now().isoformat(),
+        "round": round_num,
+        "sections": len(verdicts),
+        "end_state": state,
+        "artifact": str(aggregate_path),
+        "matrix": str(matrix_path),
+    })
+    _write_loop_state(
+        state_path,
+        state=state,
+        round_num=round_num,
+        surface=title,
+        latest_screenshot=str(review_sections[-1]["screenshot"]),
+        latest_verdict=str(aggregate_path),
+        next_action=next_action,
+    )
+    print(json.dumps({
+        "state": state,
+        "state_json": str(state_path),
+        "events_jsonl": str(events_path),
+        "matrix": str(matrix_path),
+        "aggregate_verdict": str(aggregate_path),
+    }, indent=2))
+    if state in {"failed", "needs_patch"}:
+        raise typer.Exit(1)
 
 
 @app.command("check")

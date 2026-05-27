@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Audio analysis with MIR tools + LLM music theory reasoning for Horus persona"
 requires-python = ">=3.10,<3.13"
 dependencies = [
+    "python-dotenv>=1.0.0",
     # Audio loading and basic features (core - always works)
     # Lyrics transcription (GPU-accelerated)
     # YouTube download

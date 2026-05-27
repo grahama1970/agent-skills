@@ -31,11 +31,95 @@ taxonomy:
   - llm
 ---
 
+## Standard Review Iteration Parameters
+
+This `review-*` skill follows the shared contract in
+`skills/.system/review-iteration-contract.md`.
+
+Canonical parameters:
+
+- `--max-rounds N`
+- `--output-dir PATH`
+- `--ask-gate`
+- `--ask-model MODEL` (default `gpt-5.5`)
+- `--ask-reasoning LEVEL` (default `high`)
+- `--ask-timeout SECONDS`
+- `--ask-focus LABELS`
+
+When `--max-rounds > 1` is supplied, the skill must behave as a bounded
+gate-producing controller or fail closed if that mode is not implemented. The
+canonical gate artifact is `review_result.json` with verdict
+`PASS`, `NEEDS_CHANGES`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`.
+
 # review-prompt — Deterministic Prompt Review Loop
 
 Concurrent multi-model review of prompt contracts with deterministic scoring.
 Same autoresearch pattern as `/code-runner`, but the loop must be coded. The
 agent invokes the loop; the agent is not the loop.
+
+## Relationship To Plan Iterate
+
+`$review-prompt` is the domain loop for prompt-contract improvement. It owns the
+coded preflight, model review, bounded patching, deterministic scoring,
+validator/smoke gates, and keep/revert decisions.
+
+`$plan-iterate` is the parent phase controller when prompt work is part of a
+larger evidence-gated phase. In that case `$plan-iterate` records the
+`$review-prompt` terminal audit, validator logs, smoke output, reviewer
+artifacts, blockers, and acceptance decision. It should not replace the coded
+prompt loop with an agent-directed retry sequence.
+
+When `$review-prompt` runs inside `$plan-iterate`, record it as a read-only
+`domain_review_loops[]` entry. That entry must include the reviewer persona,
+immutable prompt-contract goal, context artifact, relevant `best-practices-*`
+skills such as `best-practices-prompt`,
+`best-practices-self-improvement-loop`, `best-practices-scillm`, or
+`best-practices-security`, loop state/events/aggregate artifacts, and a
+prompt-fixture/gate-to-finding matrix. Each round also records exactly three
+project-agent-owned plan artifacts: implementation/patch, validation/evidence,
+and review/escalation.
+
+When `$review-prompt` participates in a `$plan-iterate` phase, its primary
+deliverable is a complete prompt-contract audit bundle for the phase-level
+`$scillm` aggregation gate. `$review-prompt` does not decide whether the phase
+continues or completes. If the current phase does not change a prompt contract,
+or if required prompt evidence is missing, write a fail-closed skip/blocker
+artifact instead of running a wording-only review.
+
+Minimum aggregation input for prompt phases:
+
+```text
+review-prompt/
+  context.md
+  prompt-templates/
+  rendered-fixtures/
+  expected-responses/
+  validators-and-smoke.md
+  consumer-or-schema.md
+  audit.json
+  aggregate_verdict.json
+  PROMPT_REVIEW_ITERATE_MATRIX.md
+```
+
+Minimum fail-closed skip artifact for non-prompt phases:
+
+```json
+{
+  "state": "skipped_fail_closed",
+  "skill": "review-prompt",
+  "reason": "No prompt contract changed in this phase.",
+  "missing_contract_fields": [],
+  "verdict": "not_applicable_verified"
+}
+```
+
+The `$scillm` gate consumes this artifact alongside other applicable review
+bundles and decides `PASS`, `NEEDS_CHANGES`, `BLOCKED`, or
+`INSUFFICIENT_EVIDENCE`. `not_applicable_verified` is non-blocking only when
+the phase evidence proves no prompt contract changed. Missing or uncertain
+prompt applicability, or missing expected-response evidence for a
+prompt-changing phase, remains fail-closed and must map to `BLOCKED` or
+`INSUFFICIENT_EVIDENCE`.
 
 This skill follows `/best-practices-self-improvement-loop`: every improve cycle
 must perform deterministic preflight, try an ordered strategy, measure against a
@@ -61,6 +145,12 @@ Do not claim a prompt is improved because a reviewer says it is clearer. It is
 improved only when executable gates pass and the weighted finding score does not
 regress.
 
+For `$plan-iterate` aggregation, expected response evidence is mandatory for at
+least one concrete fixture. If the expected response, validator/smoke command,
+or consumer/schema is missing, halt with `missing_expected_response`,
+`missing_validator`, or `missing_consumer_schema`; do not send the prompt to
+reviewers as prose only.
+
 ## How It Works
 
 ```
@@ -69,14 +159,19 @@ regress.
 3. Try the next ordered improvement strategy.
 4. Send the bundle to N models concurrently via `/scillm`.
 5. Parse findings into `critical`, `major`, and `minor`.
-6. Apply only bounded fixes allowed by the current strategy.
+6. Apply only bounded fixes allowed by the current strategy. Inside
+   `$plan-iterate`, apply fixes only to candidate artifacts/temp workspace
+   and never mutate production as a `domain_review_loops[]` reviewer entry. If
+   the human authorizes production mutation, record it as a separate
+   project-agent patch iteration or implementation-worker artifact whose output
+   is validated by the parent controller.
 7. Run validators, fixture checks, and configured smoke checks.
 8. Score the round from model findings plus deterministic gate failures.
 9. Keep only if score improves and no required gate regresses; otherwise revert.
 10. Write all request, response, score, diff, gate, and keep/revert artifacts.
 11. Run `$ask` deep review as the final gate when required by scope or `--ask-gate`.
-12. Optionally run WebGPT through `$surf` as an external final gate when
-    `--webgpt-gate` is supplied.
+12. Optionally run WebGPT through the real `$ask` WebGPT route as an external
+    final gate when `--webgpt-gate` is supplied.
 13. Stop on gate pass, score 0, max rounds, blocked preflight, exhausted
     strategies, `$ask` blocker, or WebGPT blocker.
 ```
@@ -194,6 +289,10 @@ Required coded stages:
 | `--max-rounds` | Max review rounds (default: 3) |
 | `--dry-run` | Show prompt without calling LLM |
 | `--output` / `-o` | Write final reviewed template to file |
+| `--payload` | Concrete rendered input payload or fixture used to exercise the prompt |
+| `--expected-response` | Expected response JSON/artifact for at least one concrete fixture |
+| `--consumer-schema` | Consumer code, JSON Schema, Pydantic model, or adapter contract that ingests the response |
+| `--persona` | Optional reviewer role/persona label for final `$ask`/WebGPT adjudication |
 | `--validator` | Deterministic validation command; may repeat |
 | `--smoke` | Consumer compatibility or runtime smoke command; may repeat |
 | `--gate` | Gate override such as `max_critical=0`; may repeat |
@@ -202,7 +301,7 @@ Required coded stages:
 | `--ask-gate` | Run `$ask --deep-review` as the final readiness/debug gate |
 | `--ask-model` | `$ask` oracle model for the final gate (default: `gpt-5.5`) |
 | `--ask-reasoning` | `$ask` oracle reasoning effort for the final gate (default: `high`) |
-| `--webgpt-gate` | Run WebGPT through `$surf webgpt.submit` as an external final gate |
+| `--webgpt-gate` | Run WebGPT through the real `$ask` WebGPT route as an external final gate |
 | `--webgpt-tab-id` | Exact ChatGPT tab id for `--webgpt-gate`; preferred over URL |
 | `--webgpt-url` | Already-open ChatGPT conversation URL to resolve to a concrete tab id |
 | `--webgpt-timeout` | WebGPT gate timeout seconds (default: 900) |
@@ -298,7 +397,7 @@ parallel breadth; `$ask` is the expensive final/debug gate with persistent proof
 
 ## WebGPT Final Gate
 
-`/review-prompt` can run WebGPT as an external final gate via `$surf` when WebGPT
+`/review-prompt` can run WebGPT as an external final gate via `$ask` when WebGPT
 has demonstrated better judgment than Codex/scillm for the prompt class under
 review.
 
@@ -322,6 +421,8 @@ Required command shape:
 ./run.sh review \
   --template prompts/my_prompt.txt \
   --payload fixtures/expected_input.json \
+  --expected-response fixtures/expected_response.json \
+  --consumer-schema schemas/my_prompt_response.schema.json \
   --context "Prompt purpose and consumer contract" \
   --persona "consumer/reviewer role" \
   --validator "python validate_expected_response.py" \
@@ -330,9 +431,10 @@ Required command shape:
 ```
 
 Artifacts are written under `artifacts/review-prompt/<run_id>/final/webgpt/`
-plus `final/webgpt-artifacts.json`. The WebGPT request is sent through
-`surf webgpt.submit`, so proof must include controlled tab id, raw response,
-clean response, sentinel metadata, and no page-chrome contamination.
+plus `final/webgpt-artifacts.json`. The WebGPT request is sent through the real
+`$ask` runtime with `--oracle-backend webgpt`, so proof must include `$ask`
+request/status/events artifacts, controlled tab id, raw/clean response,
+sentinel metadata, and no page-chrome contamination.
 
 ### WebGPT Reviewer Loop Shorthand
 
@@ -417,6 +519,33 @@ artifacts/review-prompt/<run_id>/
 
 Write artifacts after every iteration, before deciding whether to continue.
 
+When embedded in `$plan-iterate`, copy or reference the terminal audit and
+per-round artifacts from the phase `domain-review-loops/` directory:
+
+```text
+domain-review-loops/<prompt-surface>/
+  context.md
+  state.json
+  events.jsonl
+  audit.json
+  aggregate_verdict.json
+  PROMPT_REVIEW_ITERATE_MATRIX.md
+  rounds/
+    001/
+      implementation-plan.md
+      validation-plan.md
+      review-plan.md
+      model-requests.jsonl
+      model-responses.jsonl
+      score.json
+      decision.json
+```
+
+The implementation plan describes prompt/schema/test changes the project agent
+will make or reject. The validation plan names fixtures, expected responses,
+validators, and consumer smoke checks. The review plan names the next model,
+`$ask`, WebGPT, `$dogpile`, or human escalation gate.
+
 ## Do Not Do This
 
 - Do not run an agent-directed retry loop.
@@ -435,4 +564,4 @@ Write artifacts after every iteration, before deciding whether to continue.
 | `/code-runner` | Consumer of reviewed prompts |
 | `/best-practices-self-improvement-loop` | Required coded loop pattern |
 | `/ask` | Required high-reasoning final/debug gate for high-stakes prompt contracts; optional for cheap inner rounds |
-| `/surf` | Optional WebGPT browser handoff for final high-judgment prompt adjudication |
+| `/surf` | Browser transport owned by `$ask` for WebGPT; do not call directly for normal prompt review |

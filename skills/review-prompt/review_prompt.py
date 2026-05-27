@@ -6,6 +6,29 @@ structured compliance findings, the runtime scores/merges them deterministically
 an optional /ask deep-review gate blocks final readiness unless it returns SAFE.
 """
 from __future__ import annotations
+# --- dotenv (MUST be before any os.getenv / os.environ) ---
+import sys
+from pathlib import Path as _Path
+
+def _resolve_skills_dir() -> _Path:
+    p = _Path(__file__).resolve()
+    for parent in [p, *p.parents]:
+        if parent.name == "skills":
+            return parent
+    return p.parents[1]
+
+_SKILLS_DIR = _resolve_skills_dir()
+if str(_SKILLS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SKILLS_DIR))
+
+try:
+    from dotenv_helper import load_env as _load_env
+except Exception:
+    def _load_env() -> None:
+        return
+
+_load_env()
+
 
 import json
 import os
@@ -13,6 +36,7 @@ import re
 import difflib
 import hashlib
 import subprocess
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
@@ -21,6 +45,11 @@ from pathlib import Path
 import httpx
 import typer
 from loguru import logger
+
+try:
+    import json_repair
+except ImportError:  # pragma: no cover - optional in older skill environments
+    json_repair = None
 
 app = typer.Typer()
 
@@ -33,6 +62,9 @@ elif SCILLM_BASE_URL.endswith("/v1"):
 SCILLM_CHAT_URL = f"{SCILLM_BASE_URL}/v1/chat/completions"
 SCILLM_KEY = os.environ.get("SCILLM_API_KEY") or os.environ.get("SCILLM_PROXY_KEY") or "sk-dev-proxy-123"
 SCILLM_CALLER = os.environ.get("SCILLM_CALLER_SKILL", "review-prompt")
+DEFAULT_MODEL_TIMEOUT_SEC = int(os.environ.get("REVIEW_PROMPT_MODEL_TIMEOUT_SEC", "900"))
+DEFAULT_STREAM_HEARTBEAT_SEC = int(os.environ.get("REVIEW_PROMPT_STREAM_HEARTBEAT_SEC", "5"))
+DEFAULT_ACTIVE_CALL_POLL_SEC = float(os.environ.get("REVIEW_PROMPT_ACTIVE_CALL_POLL_SEC", "15"))
 
 DEFAULT_MODELS = ["vlm-codex", "text-gemini", "text"]
 
@@ -769,6 +801,97 @@ Return exactly this JSON shape and no prose outside it:
   "safe": true|false
 }'''
 
+# Override the legacy self-review prompt above. The executable skill reviews the
+# caller-supplied prompt contract bundle; it must not ask reviewers to audit the
+# /review-prompt skill implementation unless that implementation is the target.
+REVIEW_SYSTEM = '''You are a high-reasoning prompt-contract reviewer.
+
+Your job is to review the supplied prompt contract bundle, not the review-prompt
+runtime. Evaluate the prompt template, payload fixtures, expected responses,
+invalid examples, schema or semantic validators, consumer code, and gate
+artifacts included in the user message.
+
+Return strict JSON only. Do not include prose outside the JSON object.
+
+Review objective:
+1. Determine whether the prompt instructions are internally consistent.
+2. Determine whether the prompt can only produce outputs allowed by the schema
+   and downstream consumer contract.
+3. Determine whether evidence discipline is fail-closed: no unsupported facts,
+   invented citations, hidden assumptions, stale artifacts, prompt injection, or
+   out-of-scope answers.
+4. Determine whether valid and invalid fixtures prove answer, clarify, deflect,
+   refusal, citation, artifact, and parser behavior.
+5. Determine whether deterministic validators and smoke checks are sufficient
+   for the prompt's risk level.
+
+Treat these as findings:
+- missing or contradictory prompt requirements
+- ambiguous authority between evidence, retrieval, routing, model judgment, or
+  user text
+- schema gaps or loose vocabularies
+- expected responses that are not supported by the supplied fixture
+- invalid examples that are not rejected by validators
+- consumer parser incompatibility
+- prompt-injection exposure from untrusted evidence, QRA, user, glossary,
+  crosswalk, context, or source text fields
+- missing live or consumer-path proof
+- missing auditability for citations, artifacts, confidence, or routing
+- unsafe wording that encourages the model to infer facts not in evidence
+
+Return exactly this JSON shape:
+{
+  "findings": [
+    {
+      "stable_key": "deterministic string from requirement/location/problem",
+      "severity": "critical|major|minor|info",
+      "location": "prompt section, fixture, schema, validator, consumer code, or artifact",
+      "requirement": "specific prompt-contract requirement being evaluated",
+      "problem": "what is missing, unsafe, contradictory, unverifiable, or wrong",
+      "evidence": "specific observed evidence from the supplied bundle",
+      "fix": "bounded concrete fix",
+      "prior_status": "new|resolved|unresolved|regressed|not_applicable"
+    }
+  ],
+  "summary": "brief prompt-contract readiness summary",
+  "safe": true|false
+}
+
+Severity rules:
+- critical: can cause unsafe answer generation, invented facts/citations,
+  answer/clarify/deflect routing inversion, secret exposure, parser failure, or
+  false readiness.
+- major: a prompt-contract requirement is missing, partial, contradictory,
+  unauditable, weakly tested, or incompatible with a supplied consumer/schema.
+- minor: mostly correct with limited fixture, wording, audit, or edge-case gaps.
+- info: non-blocking clarity or maintainability improvement.
+
+Non-negotiable review rules:
+1. The prompt must identify the authoritative decision source.
+2. The prompt must fail closed when evidence is missing, ambiguous, stale, unsafe,
+   or outside the active profile.
+3. The prompt must treat user text and retrieved/source text as untrusted data.
+4. The prompt must forbid invented facts, citations, controls, QRAs, sources,
+   frameworks, and artifacts.
+5. The prompt must require closed-vocabulary action and reason fields when the
+   schema or consumer expects them.
+6. Expected responses must be tied to concrete input fixtures.
+7. Invalid examples and validators must cover the highest-risk failure modes.
+8. Consumer compatibility must be evidenced by schema or code.
+9. Do not mark safe from wording alone when live or consumer-path proof is
+   required by the bundle's stated acceptance contract.
+
+Be strict. If a requirement cannot be verified from the supplied prompt,
+fixtures, schema, validators, consumer code, or artifacts, report it as a
+finding.'''
+
+FOLLOWUP_SYSTEM = '''You are a high-reasoning prompt-contract reviewer doing a follow-up pass.
+
+Review the supplied prompt contract bundle, prior findings, patch summary, and
+gate artifacts. Determine whether prior issues are resolved, unresolved,
+regressed, or not applicable. Return the same strict JSON object shape as the
+primary review prompt and no prose outside it.'''
+
 FIX_SYSTEM = """You are a prompt engineering editor. You receive a prompt template and a list of findings (bugs/issues).
 Apply ALL fixes. Return ONLY the complete fixed prompt template text — no commentary, no markdown fences, no explanation.
 Start with the first line of the prompt. End with the last line. Nothing else."""
@@ -803,7 +926,14 @@ def _build_review_prompt(
     return "\n".join(parts)
 
 
-def _build_scillm_body(model: str, system: str, user: str, reasoning_effort: str = "", json_response: bool = True) -> dict:
+def _build_scillm_body(
+    model: str,
+    system: str,
+    user: str,
+    reasoning_effort: str = "",
+    json_response: bool = True,
+    model_timeout_sec: int = DEFAULT_MODEL_TIMEOUT_SEC,
+) -> dict:
     body = {
         "model": model,
         "messages": [
@@ -811,10 +941,10 @@ def _build_scillm_body(model: str, system: str, user: str, reasoning_effort: str
             {"role": "user", "content": user},
         ],
         "temperature": 0.1,
-        "timeout": 600,
+        "timeout": model_timeout_sec,
         "stream": True,
         "stream_progress_events": True,
-        "stream_heartbeat_s": 5,
+        "stream_heartbeat_s": DEFAULT_STREAM_HEARTBEAT_SEC,
     }
     if json_response:
         body["response_format"] = {"type": "json_object"}
@@ -841,31 +971,178 @@ def _extract_stream_delta(data: dict) -> str:
     return ""
 
 
-def _call_scillm(model: str, system: str, user: str, reasoning_effort: str = "", json_response: bool = True) -> str:
-    """Single /scillm call. Returns response text."""
+def _active_call_snapshot_for_model(model: str) -> dict | None:
     try:
+        data = _scillm_get("/v1/scillm/active-calls", timeout=2.0)
+    except Exception:
+        return None
+    active = data.get("active")
+    if not isinstance(active, list):
+        return data
+
+    def matches_model(row: dict) -> bool:
+        row_model = str(row.get("model") or "")
+        row_requested = str(row.get("model_requested") or "")
+        row_served = str(row.get("model_served") or "")
+        row_provider = str(row.get("provider") or "")
+        candidates = {row_model, row_requested, row_served}
+        if model in candidates:
+            return True
+        if model == "chutes-deepseek":
+            return row_provider == "chutes" and any("deepseek" in value.lower() for value in candidates)
+        if model == "oc-kimi":
+            return row_provider == "opencode-go" and any("kimi" in value.lower() for value in candidates)
+        return False
+
+    matches = [
+        row for row in active
+        if isinstance(row, dict) and matches_model(row)
+    ]
+    return {
+        "live_in_flight": data.get("live_in_flight"),
+        "stale_active_calls": data.get("stale_active_calls"),
+        "matches": matches,
+    }
+
+
+def _call_scillm(
+    model: str,
+    system: str,
+    user: str,
+    reasoning_effort: str = "",
+    json_response: bool = True,
+    model_timeout_sec: int = DEFAULT_MODEL_TIMEOUT_SEC,
+    diagnostic_dir: Path | None = None,
+) -> str:
+    """Single /scillm call. Returns response text."""
+    started = time.time()
+    diag_path = diagnostic_dir / f"stream-events-{_safe_slug(model)}.jsonl" if diagnostic_dir else None
+
+    def write_diag(event: str, **fields: object) -> None:
+        if diag_path is None:
+            return
+        row = {
+            "ts": _utc_now_iso(),
+            "elapsed_s": round(time.time() - started, 3),
+            "model": model,
+            "event": event,
+        }
+        row.update(fields)
+        _append_jsonl(diag_path, row)
+
+    def start_active_call_poller() -> tuple[threading.Event | None, threading.Thread | None]:
+        if diag_path is None or DEFAULT_ACTIVE_CALL_POLL_SEC <= 0:
+            return None, None
+        stop_event = threading.Event()
+
+        def poll() -> None:
+            while not stop_event.wait(DEFAULT_ACTIVE_CALL_POLL_SEC):
+                write_diag(
+                    "active_call_poll",
+                    active_call_snapshot=_active_call_snapshot_for_model(model),
+                )
+
+        thread = threading.Thread(target=poll, name=f"review-prompt-active-call-{_safe_slug(model)}", daemon=True)
+        thread.start()
+        return stop_event, thread
+
+    try:
+        body = _build_scillm_body(
+            model,
+            system,
+            user,
+            reasoning_effort,
+            json_response=json_response,
+            model_timeout_sec=model_timeout_sec,
+        )
+        write_diag(
+            "request_started",
+            model_timeout_sec=model_timeout_sec,
+            stream=body.get("stream"),
+            stream_progress_events=body.get("stream_progress_events"),
+            stream_heartbeat_s=body.get("stream_heartbeat_s"),
+            reasoning_effort=reasoning_effort or None,
+            json_response=json_response,
+        )
         chunks: list[str] = []
+        terminal_seen = False
+        last_event = ""
+        poll_stop: threading.Event | None = None
+        poll_thread: threading.Thread | None = None
         with httpx.stream(
             "POST",
             SCILLM_CHAT_URL,
             headers=_scillm_headers(),
-            json=_build_scillm_body(model, system, user, reasoning_effort, json_response=json_response),
+            json=body,
             timeout=httpx.Timeout(connect=10.0, read=None, write=30.0, pool=10.0),
         ) as resp:
+            write_diag(
+                "response_started",
+                status_code=resp.status_code,
+                scillm_timeout_ms=resp.headers.get("x-scillm-timeout-ms"),
+                scillm_timeout_source=resp.headers.get("x-scillm-timeout-source"),
+                active_call_snapshot=_active_call_snapshot_for_model(model),
+            )
             resp.raise_for_status()
-            for line in resp.iter_lines():
-                if not line or not line.startswith("data:"):
-                    continue
-                payload = line.removeprefix("data:").strip()
-                if payload == "[DONE]":
-                    break
-                try:
-                    data = json.loads(payload)
-                except json.JSONDecodeError:
-                    continue
-                chunks.append(_extract_stream_delta(data))
-        return "".join(chunks)
+            poll_stop, poll_thread = start_active_call_poller()
+            try:
+                for line in resp.iter_lines():
+                    if not line:
+                        continue
+                    if line.startswith(":"):
+                        write_diag("heartbeat_comment", partial_chars=sum(len(chunk) for chunk in chunks))
+                        continue
+                    if line.startswith("event:"):
+                        last_event = line[len("event:") :].strip()
+                        write_diag("sse_event", sse_event=last_event, partial_chars=sum(len(chunk) for chunk in chunks))
+                        continue
+                    if not line.startswith("data:"):
+                        write_diag("ignored_line", line_prefix=line[:80], partial_chars=sum(len(chunk) for chunk in chunks))
+                        continue
+                    payload = line[len("data:") :].strip()
+                    if payload == "[DONE]":
+                        terminal_seen = True
+                        write_diag("done", partial_chars=sum(len(chunk) for chunk in chunks))
+                        break
+                    try:
+                        event_data = json.loads(payload)
+                    except json.JSONDecodeError:
+                        write_diag("malformed_sse_json", payload_prefix=payload[:240], partial_chars=sum(len(chunk) for chunk in chunks))
+                        continue
+                    if last_event == "error" or event_data.get("error"):
+                        write_diag("provider_error", payload=event_data, partial_chars=sum(len(chunk) for chunk in chunks))
+                        raise ScillmRuntimeError(f"Model {model} SSE error: {event_data}")
+                    delta = _extract_stream_delta(event_data)
+                    if delta:
+                        chunks.append(delta)
+                        write_diag("delta", chunk_chars=len(delta), partial_chars=sum(len(chunk) for chunk in chunks))
+            finally:
+                if poll_stop is not None:
+                    poll_stop.set()
+                if poll_thread is not None:
+                    poll_thread.join(timeout=1.0)
+
+        if not terminal_seen:
+            write_diag(
+                "missing_done",
+                partial_chars=sum(len(chunk) for chunk in chunks),
+                last_event=last_event,
+                active_call_snapshot=_active_call_snapshot_for_model(model),
+            )
+            raise ScillmRuntimeError(f"Model {model} stream ended without [DONE]")
+        content = "".join(chunks)
+        if not content:
+            write_diag("empty_content", active_call_snapshot=_active_call_snapshot_for_model(model))
+            raise ScillmRuntimeError(f"Model {model} returned empty streamed content")
+        write_diag("response_complete", response_chars=len(content))
+        return content
     except Exception as e:
+        write_diag(
+            "stream_exception",
+            error_type=type(e).__name__,
+            error=str(e),
+            active_call_snapshot=_active_call_snapshot_for_model(model),
+        )
         logger.error("scillm {} failed: {}", model, e)
         raise ScillmRuntimeError(f"Model call failed for {model}: {e}") from e
 
@@ -885,7 +1162,14 @@ def _parse_findings(response: str) -> list[dict]:
     try:
         data = json.loads(text)
     except json.JSONDecodeError as exc:
-        raise ScillmRuntimeError(f"Reviewer returned malformed JSON: {exc}") from exc
+        if json_repair is None:
+            raise ScillmRuntimeError(f"Reviewer returned malformed JSON: {exc}") from exc
+        try:
+            data = json_repair.loads(text)
+        except Exception as repair_exc:
+            raise ScillmRuntimeError(
+                f"Reviewer returned malformed JSON: {exc}; repair failed: {repair_exc}"
+            ) from exc
 
     if isinstance(data, dict):
         findings = data.get("findings")
@@ -938,6 +1222,16 @@ def _safe_slug(value: str) -> str:
 def _write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text)
+
+
+def _append_jsonl(path: Path, row: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row, sort_keys=True) + "\n")
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _sha256_text(text: str) -> str:
@@ -1136,6 +1430,7 @@ def _concurrent_review(
     user_prompt: str,
     artifact_dir: Path | None = None,
     reasoning_effort: str = "",
+    model_timeout_sec: int = DEFAULT_MODEL_TIMEOUT_SEC,
 ) -> list[dict]:
     """Send review to N models concurrently, merge and deduplicate findings."""
     all_findings: list[dict] = []
@@ -1154,14 +1449,28 @@ def _concurrent_review(
 
     with ThreadPoolExecutor(max_workers=len(models)) as pool:
         futures = {
-            pool.submit(_call_scillm, model, system, user_prompt, reasoning_effort): model
+            pool.submit(
+                _call_scillm,
+                model,
+                system,
+                user_prompt,
+                reasoning_effort,
+                True,
+                model_timeout_sec,
+                artifact_dir,
+            ): model
             for model in models
         }
+        errors: list[str] = []
         for future in as_completed(futures):
             model = futures[future]
             try:
                 response = future.result()
-                response_rows.append({"model": model, "response": response})
+                response_rows.append({
+                    "model": model,
+                    "response": response,
+                    "stream_events": str(artifact_dir / f"stream-events-{_safe_slug(model)}.jsonl") if artifact_dir else None,
+                })
                 findings = _parse_findings(response)
                 for f in findings:
                     f["model"] = model  # tag source model
@@ -1169,13 +1478,21 @@ def _concurrent_review(
                 logger.info("  {} → {} findings", model, len(findings))
             except Exception as e:
                 logger.error("  {} failed: {}", model, e)
-                response_rows.append({"model": model, "error": str(e)})
+                response_rows.append({
+                    "model": model,
+                    "error": str(e),
+                    "stream_events": str(artifact_dir / f"stream-events-{_safe_slug(model)}.jsonl") if artifact_dir else None,
+                })
+                errors.append(f"{model}: {e}")
+            finally:
                 if artifact_dir is not None:
                     _write_text(
                         artifact_dir / "model-responses.jsonl",
                         "\n".join(json.dumps(row, sort_keys=True) for row in response_rows) + "\n",
                     )
-                raise
+
+        if errors:
+            raise ScillmRuntimeError("One or more reviewer model calls failed: " + " | ".join(errors))
 
     if artifact_dir is not None:
         _write_text(
@@ -1558,6 +1875,7 @@ def review(
     webgpt_no_activate: bool = typer.Option(False, "--webgpt-no-activate", help="Run the WebGPT gate against a background controlled tab; never foreground it (requires --webgpt-tab-id or auto-resolution to find exactly one chatgpt.com tab)"),
     webgpt_round: int | None = typer.Option(None, "--webgpt-round", help="Round number for multi-turn iteration; artifacts go to final/webgpt/round-NNN/ instead of final/webgpt/"),
     reasoning_effort: str = typer.Option("", "--reasoning-effort", help="Top-level /scillm reasoning_effort for reviewer and fix calls"),
+    model_timeout: int = typer.Option(DEFAULT_MODEL_TIMEOUT_SEC, "--model-timeout", help="Per-reviewer /scillm timeout seconds"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show prompt without calling LLM"),
 ) -> None:
     """Review and optimize a prompt template using concurrent multi-model feedback."""
@@ -1648,6 +1966,7 @@ def review(
     logger.info("  Payload: {}", "YES" if payload_text else "NO")
     logger.info("  Persona: {}", persona or "(none)")
     logger.info("  Max rounds: {}", max_rounds)
+    logger.info("  Model timeout: {}s", model_timeout)
     logger.info("  Validators: {}", len(validator))
     logger.info("  Smokes: {}", len(smoke))
 
@@ -1670,6 +1989,7 @@ def review(
         "webgpt_url": webgpt_url,
         "webgpt_timeout": webgpt_timeout,
         "reasoning_effort": reasoning_effort,
+        "model_timeout": model_timeout,
         "fix_model": fix_model,
         "validator": validator,
         "smoke": smoke,
@@ -1689,6 +2009,7 @@ def review(
         "smoke_count": len(smoke),
         "gate_overrides": gate_overrides,
         "gate_timeout": gate_timeout,
+        "model_timeout": model_timeout,
     }
     if missing_sources:
         preflight["status"] = "blocked"
@@ -1772,7 +2093,7 @@ def review(
 
         logger.info("── Round {}/{} ──", round_num, max_rounds)
         try:
-            findings = _concurrent_review(models, system, user_prompt, round_dir, reasoning_effort)
+            findings = _concurrent_review(models, system, user_prompt, round_dir, reasoning_effort, model_timeout)
         except ScillmRuntimeError as exc:
             round_entry = {
                 "round": round_num,
@@ -1899,7 +2220,7 @@ def review(
         )
         fixed_rescore_dir = round_dir / "fixed-rescore"
         try:
-            fixed_findings = _concurrent_review(models, REVIEW_SYSTEM, fixed_prompt, fixed_rescore_dir, reasoning_effort)
+            fixed_findings = _concurrent_review(models, REVIEW_SYSTEM, fixed_prompt, fixed_rescore_dir, reasoning_effort, model_timeout)
         except ScillmRuntimeError as exc:
             template_text = best_text
             template_path.write_text(best_text)
@@ -2051,6 +2372,7 @@ def review(
             "webgpt_tab_id": webgpt_tab_id,
             "webgpt_url": webgpt_url,
             "reasoning_effort": reasoning_effort,
+            "model_timeout": model_timeout,
             "pass_condition": "ask verdict SAFE and deterministic review-prompt gates pass",
         },
     })

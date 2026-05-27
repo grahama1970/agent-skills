@@ -4,6 +4,7 @@ unset VIRTUAL_ENV
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export REVIEW_PLAN_CALLER_CWD="${PWD}"
 shopt -s expand_aliases
 alias python='uv run --project "$SCRIPT_DIR" python'
 alias python3='uv run --project "$SCRIPT_DIR" python'

@@ -31,6 +31,26 @@ taxonomy:
   - precision
 ---
 
+## Standard Review Iteration Parameters
+
+This `review-*` skill follows the shared contract in
+`skills/.system/review-iteration-contract.md`.
+
+Canonical parameters:
+
+- `--max-rounds N`
+- `--output-dir PATH`
+- `--ask-gate`
+- `--ask-model MODEL` (default `gpt-5.5`)
+- `--ask-reasoning LEVEL` (default `high`)
+- `--ask-timeout SECONDS`
+- `--ask-focus LABELS`
+
+When `--max-rounds > 1` is supplied, the skill must behave as a bounded
+gate-producing controller or fail closed if that mode is not implemented. The
+canonical gate artifact is `review_result.json` with verdict
+`PASS`, `NEEDS_CHANGES`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`.
+
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
 # review-pdf

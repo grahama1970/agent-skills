@@ -5,6 +5,7 @@ description = "Multi-provider AI code review with unified diff output"
 requires-python = ">=3.11,<3.13"
 
 dependencies = [
+    "python-dotenv>=1.0.0",
     "httpx>=0.27.0",
     "typer>=0.9.0",
     "rich>=13.0.0",

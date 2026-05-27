@@ -27,12 +27,24 @@ from loguru import logger
 
 # Handle both import modes
 try:
-    from ..providers.scillm import build_review_prompt, send_review
+    from ..providers.scillm import (
+        build_review_prompt,
+        reduce_contract_receipts,
+        select_default_review_scopes,
+        send_review,
+        send_scoped_review,
+    )
 except ImportError:
     _SCRIPT_DIR = Path(__file__).resolve().parent.parent
     if str(_SCRIPT_DIR) not in sys.path:
         sys.path.insert(0, str(_SCRIPT_DIR))
-    from providers.scillm import build_review_prompt, send_review
+    from providers.scillm import (
+        build_review_prompt,
+        reduce_contract_receipts,
+        select_default_review_scopes,
+        send_review,
+        send_scoped_review,
+    )
 
 
 async def one_shot_review(
@@ -50,7 +62,7 @@ async def one_shot_review(
         context: What this code does, why it was built, what it replaces. REQUIRED.
         persona: Who is reviewing — role, expertise, perspective. REQUIRED.
         focus: Specific review focus (security, correctness, etc.)
-        model: scillm model (gpt-5.3-codex, text-gemini, text, etc.)
+        model: scillm model (gpt-5.5, gemini-flash, chutes-deepseek, oc-kimi, etc.)
 
     Returns:
         {"review": str, "model": str, "ok": bool, "error": str | None}
@@ -69,7 +81,9 @@ async def one_shot_review(
             "- Every finding MUST cite a specific line number and quote the problematic code.\n"
             "- Every finding MUST include a concrete fix (not just 'fix this').\n"
             "- Do NOT report style preferences or hypothetical issues.\n"
-            "- Output ONLY the JSON array of findings. No commentary.\n"
+            "- Output ONLY the JSON object review receipt requested by the prompt. No commentary.\n"
+            "- Never return a bare empty array. If there are no blockers, return "
+            "verdict=satisfied with empty finding arrays and a concrete rationale.\n"
         )
 
     prompt = build_review_prompt(files, context=context, focus=focus)
@@ -80,6 +94,7 @@ async def one_shot_review(
         prompt=prompt,
         model=model,
         system_prompt=system_prompt,
+        files_reviewed=list(files.keys()),
     )
 
     return {
@@ -88,9 +103,117 @@ async def one_shot_review(
         "usage": result["usage"],
         "ok": result["ok"],
         "error": result["error"],
+        "prompt_sha256": result.get("prompt_sha256"),
+        "raw_response": result.get("raw_response"),
+        "raw_review_content": result.get("raw_review_content"),
         "files_reviewed": list(files.keys()),
         "prompt_chars": len(prompt),
     }
+
+
+def _parse_scope_models(values: list[str] | None) -> dict[str, str]:
+    models: dict[str, str] = {}
+    for value in values or []:
+        if "=" not in value:
+            raise ValueError(f"--scope-model must use SCOPE=MODEL format, got: {value}")
+        scope, model = value.split("=", 1)
+        scope = scope.strip()
+        model = model.strip()
+        if not scope or not model:
+            raise ValueError(f"--scope-model must use SCOPE=MODEL format, got: {value}")
+        models[scope] = model
+    return models
+
+
+async def fanout_review(
+    *,
+    files: dict[str, str],
+    context: str,
+    focus: str,
+    default_model: str,
+    review_scopes: list[str] | None = None,
+    scope_models: dict[str, str] | None = None,
+    output_dir: Optional[Path] = None,
+    max_concurrency: int = 3,
+) -> dict:
+    """Run scoped evidence-contract reviews concurrently and reduce them."""
+    scopes = review_scopes or select_default_review_scopes(
+        files_reviewed=list(files.keys()),
+        context=context,
+        focus=focus,
+    )
+    models = scope_models or {}
+    if output_dir:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "context.md").write_text(context)
+        (output_dir / "scope-models.json").write_text(json.dumps({
+            "default_model": default_model,
+            "scopes": scopes,
+            "scope_models": models,
+            "max_concurrency": max_concurrency,
+        }, indent=2) + "\n")
+
+    semaphore = asyncio.Semaphore(max(1, max_concurrency))
+
+    async def run_scope(scope: str) -> dict:
+        async with semaphore:
+            model = models.get(scope, default_model)
+            logger.info(f"Scoped review {scope} with {model}")
+            result = await send_scoped_review(
+                files=files,
+                context=context,
+                focus=focus,
+                scope=scope,
+                model=model,
+            )
+            if output_dir:
+                scope_dir = output_dir / scope
+                scope_dir.mkdir(parents=True, exist_ok=True)
+                (scope_dir / "result.json").write_text(json.dumps(result, indent=2, default=str) + "\n")
+                if result.get("receipt"):
+                    (scope_dir / "verdict.json").write_text(json.dumps(result["receipt"], indent=2) + "\n")
+                if result.get("raw_review_content"):
+                    (scope_dir / "raw-review-content.txt").write_text(str(result["raw_review_content"]))
+            return result
+
+    tasks = [asyncio.create_task(run_scope(scope)) for scope in scopes]
+    scope_results = []
+    for task in asyncio.as_completed(tasks):
+        scope_results.append(await task)
+
+    receipts = [result["receipt"] for result in scope_results if result.get("ok") and result.get("receipt")]
+    aggregate = reduce_contract_receipts(receipts)
+    failed_scopes = [
+        {
+            "scope": result.get("scope"),
+            "model": result.get("model"),
+            "error": result.get("error"),
+        }
+        for result in scope_results
+        if not result.get("ok")
+    ]
+    if failed_scopes:
+        aggregate["verdict"] = "BLOCKED"
+        aggregate["failed_review_scopes"] = failed_scopes
+        aggregate["summary"] = (
+            f"{aggregate['summary']} {len(failed_scopes)} scoped reviewer calls failed."
+        )
+
+    response = {
+        "schema": "review_code.fanout.v1",
+        "ok": not failed_scopes,
+        "verdict": aggregate["verdict"],
+        "aggregate": aggregate,
+        "scopes": scopes,
+        "scope_models": {scope: models.get(scope, default_model) for scope in scopes},
+        "scope_results": scope_results,
+        "files_reviewed": list(files.keys()),
+        "prompt_chars": sum(len(content) for content in files.values()) + len(context) + len(focus),
+    }
+    if output_dir:
+        (output_dir / "aggregate_verdict.json").write_text(json.dumps(aggregate, indent=2) + "\n")
+        (output_dir / "fanout_result.json").write_text(json.dumps(response, indent=2, default=str) + "\n")
+    return response
 
 
 PERSONA_PRESETS: dict[str, str] = {
@@ -130,36 +253,40 @@ PERSONA_PRESETS: dict[str, str] = {
 def one_shot(
     files: list[str] = typer.Option(..., "--file", "-f", help="File paths to review (repeatable)"),
     context: str = typer.Option(..., "--context", "-c", help="REQUIRED. Architectural context: what this code does, why, what it replaces"),
-    persona: str = typer.Option(..., "--persona", "-p", help="REQUIRED. Reviewer identity OR preset name (nico, brandon, tim, senior)"),
+    persona: str = typer.Option("", "--persona", "-p", help="Legacy --single reviewer identity OR preset name (nico, brandon, tim, senior)"),
     focus: str = typer.Option("", "--focus", help="Specific review focus areas"),
-    model: str = typer.Option("gpt-5.3-codex", "--model", "-m", help="scillm model to use"),
+    model: str = typer.Option("gpt-5.5", "--model", "-m", help="scillm model to use"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Write review to file"),
     json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+    fanout: bool = typer.Option(True, "--fanout/--single", help="Run scoped evidence-contract reviewer fan-out by default; use --single for the legacy one-call review."),
+    review_scope: Optional[list[str]] = typer.Option(None, "--review-scope", help="Specific scoped reviewer to run; repeatable. Defaults are auto-selected from files/context."),
+    scope_model: Optional[list[str]] = typer.Option(None, "--scope-model", help="Per-scope model override as SCOPE=MODEL, e.g. correctness_regression=oc-kimi. Repeatable."),
+    output_dir: Optional[Path] = typer.Option(None, "--output-dir", help="Directory for per-scope fan-out artifacts."),
+    max_concurrency: int = typer.Option(3, "--max-concurrency", min=1, help="Maximum concurrent scoped scillm calls."),
 ) -> None:
-    """Bundle files with context and send for review in one call.
+    """Bundle files with context and run review-code through scillm.
 
-    Both --context and --persona are REQUIRED. Context-free reviews are shallow.
-    Persona-free reviews lack domain expertise.
-
-    Persona presets: nico, brandon, tim, senior
-    Or provide a custom persona string.
+    Fanout mode is the default: multiple scoped evidence-contract reviewers run
+    concurrently, then a reducer accepts only evidence-backed findings. Use
+    --single for the legacy one-call persona review.
 
     Examples:
-        # Senior engineer review with Codex
+        # Default scoped fanout
         quick-review -f src/executor.ts -f SKILL.md \\
           --context "Deterministic manifest executor replacing subagent approach" \\
-          --persona senior --model gpt-5.3-codex
+          --model oc-kimi --scope-model evidence_closure_safety=gpt-5.5
 
-        # Security review with Tim Blazytko persona
+        # Explicit security fanout
         quick-review -f run.sh -f probe.py \\
           --context "Model integrity probes sent to LLM via scillm" \\
-          --persona tim --focus "injection, command execution"
+          --review-scope correctness_regression --review-scope tests_validation \\
+          --review-scope security --scope-model security=gpt-5.5
 
-        # QA review with Nico persona
+        # Legacy single-call persona review
         quick-review -f collect.py --context "Passive signal collector from transcripts" \\
-          --persona nico --model text-gemini
+          --single --persona nico --model gpt-5.5
     """
-    # Resolve persona preset
+    # Resolve persona preset for the legacy single-call mode only.
     resolved_persona = PERSONA_PRESETS.get(persona.lower().strip(), persona)
 
     # Read all files
@@ -173,24 +300,56 @@ def one_shot(
 
     logger.info(f"Reviewing {len(file_contents)} files with {model} (persona: {persona})")
 
-    result = asyncio.run(one_shot_review(
-        files=file_contents,
-        context=context,
-        persona=resolved_persona,
-        focus=focus,
-        model=model,
-    ))
+    try:
+        parsed_scope_models = _parse_scope_models(scope_model)
+    except ValueError as exc:
+        logger.error(str(exc))
+        raise typer.Exit(2) from exc
 
+    if fanout:
+        fanout_output_dir = output_dir
+        if output and fanout_output_dir is None:
+            fanout_output_dir = output.parent / f"{output.stem}-reviewers"
+        if fanout_output_dir is not None:
+            fanout_output_dir = fanout_output_dir.expanduser().resolve()
+        result = asyncio.run(fanout_review(
+            files=file_contents,
+            context=context,
+            focus=focus,
+            default_model=model,
+            review_scopes=review_scope,
+            scope_models=parsed_scope_models,
+            output_dir=fanout_output_dir,
+            max_concurrency=max_concurrency,
+        ))
+    else:
+        if not resolved_persona.strip():
+            logger.error("--persona is required with --single legacy review mode")
+            raise typer.Exit(2)
+        result = asyncio.run(one_shot_review(
+            files=file_contents,
+            context=context,
+            persona=resolved_persona,
+            focus=focus,
+            model=model,
+        ))
+
+    failed = not result["ok"]
     if json_output:
         out = json.dumps(result, indent=2)
+    elif result["ok"] and fanout:
+        out = json.dumps(result["aggregate"], indent=2)
     elif result["ok"]:
-        out = result["review"]
+        out = str(result["review"])
     else:
-        out = f"Review failed: {result['error']}"
-        raise typer.Exit(1)
+        out = f"Review failed: {result.get('error') or result.get('aggregate', {}).get('summary') or 'fanout failed'}"
 
     if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(out)
         logger.info(f"Review written to {output}")
     else:
         print(out)
+
+    if failed:
+        raise typer.Exit(1)

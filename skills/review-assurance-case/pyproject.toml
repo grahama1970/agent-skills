@@ -5,6 +5,7 @@ description = "Multi-provider AI review of assurance cases (GSN/CAE). 47 checks 
 requires-python = ">=3.11,<3.13"
 
 dependencies = [
+    "python-dotenv>=1.0.0",
     "typer>=0.9.0",
     "rich>=13.0.0",
     "loguru>=0.7.0,<0.7.3",

@@ -47,11 +47,77 @@ taxonomy:
   - code-quality
 ---
 
+## Standard Review Iteration Parameters
+
+This `review-*` skill follows the shared contract in
+`skills/.system/review-iteration-contract.md`.
+
+Canonical parameters:
+
+- `--max-rounds N`
+- `--output-dir PATH`
+- `--ask-gate`
+- `--ask-model MODEL` (default `gpt-5.5`)
+- `--ask-reasoning LEVEL` (default `high`)
+- `--ask-timeout SECONDS`
+- `--ask-focus LABELS`
+
+When `--max-rounds > 1` is supplied, the skill must behave as a bounded
+gate-producing controller or fail closed if that mode is not implemented. The
+canonical gate artifact is `review_result.json` with verdict
+`PASS`, `NEEDS_CHANGES`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`.
+
 # review-code
 
 Submit structured code review requests to multiple AI providers and get unified
 diffs or implementation deltas back. The reviewer output is advisory until the
 project agent applies and verifies it.
+
+## Relationship To Plan Iterate
+
+`$review-code` is the domain loop for code critique. `$plan-iterate` is the
+parent phase controller when the implementation work needs evidence-gated
+acceptance. In a `$plan-iterate` phase, `$review-code` should provide scoped
+review bundles, reviewer receipts, patch suggestions, and code-loop artifacts;
+`$plan-iterate` records those artifacts and blocks acceptance until deterministic
+tests/checks also pass.
+
+When `$review-code` participates in a `$plan-iterate` phase, its primary
+deliverable is a read-only code review bundle or loop artifact set for the
+phase-level `$scillm` aggregation gate. `$review-code` does not decide whether
+the phase continues or completes.
+
+Minimum aggregation input:
+
+```text
+review-code/
+  context.md
+  scoped-diff.patch
+  files-reviewed.txt
+  tests-and-validation.md
+  expected-contracts.md
+  known-blockers.md
+  aggregate_verdict.json
+  CODE_REVIEW_ITERATE_MATRIX.md
+```
+
+The `$scillm` gate consumes this bundle alongside other applicable review
+bundles and returns `PASS`, `NEEDS_CHANGES`, `BLOCKED`, or
+`INSUFFICIENT_EVIDENCE`. Any project-agent claim of "done" is irrelevant until
+that gate passes and deterministic validation passes.
+
+For UI implementation that follows `$review-design`, `$review-code` does not
+replace rendered verification. The final phase evidence must still include
+browser/CDP screenshots or `$test-interactions` results for the implemented UI.
+
+When `$review-code` runs inside `$plan-iterate`, record it as a read-only
+`domain_review_loops[]` entry. That entry must include the reviewer persona,
+immutable code goal, context artifact, relevant `best-practices-*` skills
+(`best-practices-python`, `best-practices-react`, `best-practices-rust`,
+`best-practices-security`, etc.), loop state/events/aggregate artifacts, a
+file-or-diff-to-finding matrix, and one `iteration_plans[]` item per round.
+Each round has exactly three project-agent-owned plan artifacts:
+implementation/patch, validation/evidence, and review/escalation.
 
 ## Project Agent Ownership
 
@@ -126,7 +192,7 @@ Use the table below to map user requests to the correct command.
 | "Auto-generate request from repo" | `build -A -t "Fix bug" -o request.md`                                              |
 | "Quick one-shot via subagent"     | Read files, `POST /chat` to `/subagent-service` with inline content (see above)    |
 | "Quick review via scillm/Codex"   | `one-shot -f file1.ts -f file2.py --context "..." --persona senior --model gpt-5.3-codex` |
-| "Review with Gemini via scillm"   | `one-shot -f file1.ts --context "..." --persona nico --model text-gemini --focus "security"` |
+| "Review with Gemini via scillm"   | `one-shot -f file1.ts --context "..." --persona nico --model gemini-flash --focus "security"` |
 | "Bundle for Web GPT review"       | `bundle --context "What changed and why" -R src/file.py -R tests/test_file.py`                 |
 | "$review-code with WebGPT over 2 rounds" | Build a scoped `bundle`, run real `$ask`/WebGPT review, apply valid fixes, regenerate the bundle with changes since round 1, run one more WebGPT review, then verify |
 
@@ -231,12 +297,17 @@ expand it into this bounded workflow:
 4. Send the complete bundle through the real `$ask` runtime to WebGPT or the
    configured WebGPT-backed reviewer. Preserve `$ask` request/status/events and
    review artifacts.
-5. The project agent applies or adapts valid findings. The reviewer does not
-   mutate files and does not own the repository.
+5. The project agent adjudicates findings before implementation. It implements
+   only evidence-backed recommendations it agrees with, records accepted
+   findings that were implemented, accepted findings intentionally deferred, and
+   rejected findings with concrete rationale. The reviewer does not mutate files
+   and does not own the repository.
 6. Run relevant tests/checks, then create the round-2 bundle with:
    - round-1 reviewer findings
    - what changed since round 1
-   - remaining open questions or rejected findings with rationale
+   - accepted findings implemented in this round
+   - accepted findings deferred with rationale
+   - rejected findings with evidence-backed rationale
    - fresh diff and verification output
 7. Run exactly one more WebGPT review round unless round 1 is blocked by a
    human acceptance question.
@@ -265,11 +336,15 @@ Create a stable directory for long or asynchronous loops:
 
 ```text
 reviews/<surface-or-feature>/code-loop/
+  context.md
   state.json
   events.jsonl
   rounds/
     001/
       request.md
+      implementation-plan.md
+      validation-plan.md
+      review-plan.md
       diff.patch
       reviewer.md
       verdict.json
@@ -278,6 +353,8 @@ reviews/<surface-or-feature>/code-loop/
       summary.md
     002/
       ...
+  aggregate_verdict.json
+  CODE_REVIEW_ITERATE_MATRIX.md
   final/
     implementation_handoff.md
     verification.md
@@ -295,6 +372,18 @@ reviews/<surface-or-feature>/code-loop/
   "next_action": "patch | review | ask_human | ship"
 }
 ```
+
+For `$plan-iterate` aggregation, local loop states must be mapped into the
+canonical domain review enum before packaging: `satisfied -> verified`,
+`needs_patch -> needs_patch`, `blocked -> blocked`, `failed -> failed`, and
+`waiting_review` or `running` -> `failed` until a terminal reviewer artifact
+exists.
+
+For `$plan-iterate`, the main project agent mirrors or references these loop
+artifacts under the phase `domain-review-loops/` directory. The reviewer output
+remains advisory; `implementation-plan.md` describes what the project agent will
+do, `validation-plan.md` names executable checks, and `review-plan.md` names the
+next read-only reviewer or escalation gate.
 
 ### SSE Event Contract
 
@@ -330,18 +419,24 @@ Every reviewer round must return:
 
 ```json
 {
-  "verdict": "satisfied | needs_changes | blocked",
+  "verdict": "satisfied | needs_changes | blocked | insufficient_evidence",
   "blocking_findings": [],
   "non_blocking_findings": [],
   "patch_suggestions": [],
   "tests_to_run": [],
-  "do_not_do": []
+  "do_not_do": [],
+  "aggregation_ready": false,
+  "missing_evidence": []
 }
 ```
 
 `satisfied` is only valid after the reviewer has inspected the current diff and
 the project agent has recorded successful verification commands. A reviewer
 must not mark implementation satisfied from a stale request bundle.
+
+If required context, current diff, relevant files, or validation logs are
+missing, return `insufficient_evidence` and list `missing_evidence`; do not
+invent findings from stale or partial context.
 
 ### Design-To-Code Handoff
 
@@ -506,54 +601,84 @@ Called after review completes. Learns:
 
 - `memory_integration.py` -- Pre/post hooks with graceful degradation
 
-### one-shot (Project Agent Preferred Path)
+### one-shot / fanout (Project Agent Preferred Path)
 
-Bundle all files with context and send in one call via scillm. No request.md file needed.
-The project agent reads the files, provides architectural context, and gets a review back.
+Bundle all files with context and send scoped review-code contracts through
+scillm. No request.md file needed. Fanout is the default: the project agent
+creates/selects review scopes, runs them concurrently, reduces only
+evidence-backed findings, and writes per-scope artifacts when `--output` or
+`--output-dir` is supplied.
+
+Default fanout scopes:
+
+- `correctness_regression`
+- `tests_validation`
+- `simplicity_maintainability`
+- add `evidence_closure_safety` when the diff touches scillm evidence,
+  phase-closure, artifacts, review provenance, ledgers, or orchestration
+- replace `simplicity_maintainability` with `security` when the diff touches
+  auth, permissions, secrets, shell commands, file IO, network IO,
+  deserialization, user input, path handling, tokens, or sensitive logs
+
+Reducer rule: reject findings without concrete file/diff/test/log/artifact
+evidence. Repeated unsupported claims are not consensus. Only accepted,
+evidence-backed findings become code-runner handoff items.
 
 ```bash
-# Senior engineer review with Codex
+# Default scoped fanout with scillm
 code_review.py one-shot \
   -f packages/switchboard/src/executor.ts \
   -f .pi/skills/switchboard/SKILL.md \
   -f .pi/skills/switchboard/run.sh \
   --context "Deterministic manifest executor replacing failed subagent-service approach.
     Steps execute as subprocess, not agent reasoning. Added to existing Switchboard WebSocket server." \
-  --persona senior \
   --focus "security, correctness, race conditions" \
-  --model gpt-5.3-codex
+  --model oc-kimi \
+  --scope-model evidence_closure_safety=gpt-5.5 \
+  --output reviews/review-code-fanout.json
 
-# Security review with Tim Blazytko persona
+# Explicit scope/model mapping. Use exact scillm model aliases from
+# /v1/scillm/models; current local aliases include oc-kimi, oc-glm,
+# oc-deepseek, and gpt-5.5. Unknown aliases fail closed.
 code_review.py one-shot -f run.sh -f probe.py \
   --context "Model integrity probes sent to LLM via scillm" \
-  --persona tim --focus "injection, command execution"
+  --review-scope correctness_regression \
+  --review-scope tests_validation \
+  --review-scope security \
+  --scope-model correctness_regression=oc-kimi \
+  --scope-model tests_validation=oc-deepseek \
+  --scope-model security=gpt-5.5
 
-# QA review with Nico persona
-code_review.py one-shot -f collect.py \
-  --context "Passive signal collector from session transcripts" \
-  --persona nico --model text-gemini
-
-# Compliance review with Brandon Bailey persona
+# Legacy single-call persona review
 code_review.py one-shot -f src/*.py \
   --context "Training harness for classifier models" \
-  --persona brandon --model gpt-5.3-codex --json
+  --single --persona senior --model gpt-5.5 --json
 ```
 
 | Option | Description |
 |--------|-------------|
 | `--file` / `-f` | File paths to review (repeatable) |
 | `--context` / `-c` | **REQUIRED.** Architectural context — what it does, why, what it replaces |
-| `--persona` / `-p` | **REQUIRED.** Reviewer identity — preset name or custom description |
+| `--fanout/--single` | Fanout is default. Use `--single` only for the legacy persona review. |
+| `--review-scope` | Specific scoped reviewer to run; repeatable. Defaults are selected from files/context/focus. |
+| `--scope-model` | Per-scope model override as `SCOPE=MODEL`, repeatable. |
+| `--output-dir` | Directory for per-scope reviewer artifacts. If `--output` is set, a sibling `*-reviewers/` directory is created by default. |
+| `--max-concurrency` | Maximum concurrent scoped scillm calls. |
+| `--persona` / `-p` | Legacy `--single` reviewer identity — preset name or custom description |
 | `--focus` | Specific review areas (security, correctness, etc.) |
-| `--model` / `-m` | scillm model (default: `gpt-5.3-codex`) |
+| `--model` / `-m` | Default scillm model for scopes without `--scope-model` |
 | `--output` / `-o` | Write review to file |
 | `--json` | Output as JSON with metadata |
 
-**Persona presets:** `nico` (QA/data quality), `brandon` (defense/compliance), `tim` (security/reverse engineering), `senior` (architecture/maintainability). Or pass a custom string.
+**Legacy persona presets:** `nico` (QA/data quality), `brandon`
+(defense/compliance), `tim` (security/reverse engineering), `senior`
+(architecture/maintainability). Or pass a custom string with `--single`.
 
-**Why context and persona are required:** Context-free reviews are shallow — the reviewer
-doesn't know what problem the code solves. Persona-free reviews lack domain expertise —
-a generic "code reviewer" misses domain-specific risks that Nico, Brandon, or Tim would catch.
+**Why context and scope contracts are required:** Context-free reviews are shallow —
+the reviewer does not know what problem the code solves. Scope-free reviews blur
+responsibility and make aggregation weak. The project agent should include prior
+round adjudication in the next prompt: implemented, deferred, and rejected
+reviewer claims with rationale.
 
 ### scillm Provider
 
@@ -562,9 +687,10 @@ Routes through the local scillm proxy (`localhost:4001`) to any backend:
 | Model | Backend | Best for |
 |-------|---------|----------|
 | `gpt-5.3-codex` | Codex Cloud (OAuth) | Deep code review, architecture |
-| `text-gemini` | Gemini 2.5 Flash | Large files, long context |
-| `text` | DeepSeek-V3 | Cheapest, good for quick checks |
-| `text-deepseek` | DeepSeek direct | Fallback |
+| `gpt-5.5` | Codex/OpenAI OAuth | High-reasoning adjudication |
+| `gemini-flash` | Gemini 2.5 Flash | Large files, long context |
+| `chutes-deepseek` | Chutes DeepSeek family | Cheap quick checks |
+| `oc-kimi`, `oc-glm`, `oc-deepseek` | OpenCode Go routes | Scoped fanout reviewers |
 
 The proxy handles auth, retries, JSON validation, and fallback cascading.
 No API keys needed — scillm manages credentials.
