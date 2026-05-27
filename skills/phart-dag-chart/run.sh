@@ -5,6 +5,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 unset VIRTUAL_ENV
 
+if [[ -x "$SCRIPT_DIR/scripts/ensure_venv.sh" ]]; then
+  "$SCRIPT_DIR/scripts/ensure_venv.sh" || true
+fi
+
 if ! command -v uv >/dev/null 2>&1; then
   echo "error [uv_missing]: uv is required. Install uv before running this skill." >&2
   exit 2
@@ -15,7 +19,7 @@ shift || true
 
 case "$cmd" in
   chart|validate)
-    exec uv run --directory "$SCRIPT_DIR" phart-dag-chart "$cmd" "$@"
+    exec uv run --project "$SCRIPT_DIR" phart-dag-chart "$cmd" "$@"
     ;;
   ""|help|-h|--help)
     cat <<'EOF'

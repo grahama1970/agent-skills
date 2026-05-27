@@ -8,7 +8,7 @@ allowed-tools: Bash, Read
 triggers:
   - render dag chart
   - dag ascii chart
-  - phart dag
+  - render phart dag chart
   - validate dag json
   - dag decision tree
   - dry-run dag chart
@@ -16,6 +16,9 @@ provides:
   - dag-ascii-chart
   - dag-validate
 composes: []
+taxonomy:
+  - precision
+  - validation
 ---
 
 # phart-dag-chart
@@ -52,3 +55,9 @@ Aligned with `$ask` `validate_ask_dag` for structure (schema, node ids, types, d
 
 - **Python ≥3.14** (PHART 1.5 git pin in `pyproject.toml`)
 - **uv** for `./run.sh`
+
+## Common mistakes
+
+- Passing a directory instead of a `.json` file → `error [not_a_file]`.
+- Duplicate node ids or dependency cycles → validation exit **1** with `hint:` (no Python traceback).
+- Expecting PHART 1.5 on Python 3.12 → use `$ask` in-process PyPI fallback; this skill needs **3.14+**.
