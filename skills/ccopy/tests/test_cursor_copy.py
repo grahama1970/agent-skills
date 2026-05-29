@@ -1,0 +1,239 @@
+#!/usr/bin/env python3
+"""Tests for ccopy SQLite and agent-transcript backends."""
+
+from __future__ import annotations
+
+import json
+import pathlib
+import sqlite3
+import sys
+import tempfile
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from ccopy.core import build_last_turn
+from ccopy.errors import CursorCopyError
+from ccopy.formatters import format_turn
+from ccopy.cli import run
+from ccopy.transcript import parse_agent_transcript_last_turn
+
+
+def init_db(path: pathlib.Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    con = sqlite3.connect(path)
+    con.execute("CREATE TABLE ItemTable (key TEXT UNIQUE, value BLOB)")
+    con.execute("CREATE TABLE cursorDiskKV (key TEXT UNIQUE, value BLOB)")
+    con.commit()
+    con.close()
+
+
+def put(path: pathlib.Path, table: str, key: str, value) -> None:
+    con = sqlite3.connect(path)
+    raw = json.dumps(value).encode("utf-8") if not isinstance(value, (bytes, str)) else value
+    con.execute(f"INSERT OR REPLACE INTO {table}(key, value) VALUES (?, ?)", (key, raw))
+    con.commit()
+    con.close()
+
+
+def make_cursor_3_fixture(base: pathlib.Path, project: pathlib.Path) -> tuple[pathlib.Path, str]:
+    user_dir = base / "Cursor" / "User"
+    global_db = user_dir / "globalStorage" / "state.vscdb"
+    workspace_db = user_dir / "workspaceStorage" / "ws123" / "state.vscdb"
+    init_db(global_db)
+    init_db(workspace_db)
+    (workspace_db.parent / "workspace.json").write_text(json.dumps({"folder": project.as_uri()}))
+
+    cid = "fda95e1a-7d3a-4113-942f-7e033e454bef"
+    put(
+        global_db,
+        "ItemTable",
+        "composer.composerHeaders",
+        {
+            "allComposers": [
+                {
+                    "composerId": cid,
+                    "name": "Fixture chat",
+                    "createdAt": 1000,
+                    "lastUpdatedAt": 4000,
+                    "unifiedMode": "agent",
+                    "workspaceIdentifier": {
+                        "id": "ws123",
+                        "uri": {"fsPath": str(project), "scheme": "file", "external": project.as_uri()},
+                    },
+                }
+            ]
+        },
+    )
+    put(global_db, "cursorDiskKV", f"composerData:{cid}", {
+        "composerId": cid,
+        "name": "Fixture chat",
+        "fullConversationHeadersOnly": [
+            {"bubbleId": "u1", "type": 1},
+            {"bubbleId": "a1", "type": 2},
+            {"bubbleId": "u2", "type": 1},
+            {"bubbleId": "a2", "type": 2},
+        ],
+        "conversationMap": {},
+    })
+    put(global_db, "cursorDiskKV", f"bubbleId:{cid}:u1", {"type": 1, "text": "first user", "createdAt": 1000})
+    put(global_db, "cursorDiskKV", f"bubbleId:{cid}:a1", {"type": 2, "text": "first assistant", "createdAt": 2000})
+    put(global_db, "cursorDiskKV", f"bubbleId:{cid}:u2", {"type": 1, "text": "last user", "createdAt": 3000})
+    put(global_db, "cursorDiskKV", f"bubbleId:{cid}:a2", {"type": 2, "text": "last assistant", "createdAt": 4000})
+    put(workspace_db, "ItemTable", "composer.composerData", {
+        "selectedComposerIds": [cid],
+        "lastFocusedComposerIds": [cid],
+        "hasMigratedComposerData": True,
+    })
+    return user_dir, cid
+
+
+def make_cursor_2_fixture(base: pathlib.Path, project: pathlib.Path) -> tuple[pathlib.Path, str]:
+    user_dir = base / "Cursor" / "User"
+    global_db = user_dir / "globalStorage" / "state.vscdb"
+    workspace_db = user_dir / "workspaceStorage" / "legacyws" / "state.vscdb"
+    init_db(global_db)
+    init_db(workspace_db)
+    (workspace_db.parent / "workspace.json").write_text(json.dumps({"folder": project.as_uri()}))
+    cid = "11111111-2222-3333-4444-555555555555"
+    put(workspace_db, "ItemTable", "composer.composerData", {
+        "allComposers": [
+            {"composerId": cid, "name": "Legacy chat", "createdAt": 100, "lastUpdatedAt": 200}
+        ],
+        "selectedComposerIds": [cid],
+    })
+    put(global_db, "cursorDiskKV", f"composerData:{cid}", {
+        "composerId": cid,
+        "name": "Legacy chat",
+        "fullConversationHeadersOnly": [
+            {"bubbleId": "u", "type": 1},
+            {"bubbleId": "a", "type": 2},
+        ],
+    })
+    put(global_db, "cursorDiskKV", f"bubbleId:{cid}:u", {"type": 1, "text": "legacy user"})
+    put(global_db, "cursorDiskKV", f"bubbleId:{cid}:a", {"type": 2, "text": "legacy assistant"})
+    return user_dir, cid
+
+
+class CursorCopyTests(unittest.TestCase):
+    def test_cursor_3_last_turn_from_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = pathlib.Path(td)
+            project = base / "project"
+            project.mkdir()
+            user_dir, cid = make_cursor_3_fixture(base, project)
+            turn = build_last_turn(
+                user_dir=user_dir,
+                workspace_selector=None,
+                composer_id=None,
+                latest_global=False,
+                cwd=project,
+                source="sqlite",
+            )
+            self.assertEqual(turn.composer_id, cid)
+            self.assertEqual(turn.user.text, "last user")
+            self.assertEqual(turn.assistant.text, "last assistant")
+            rendered = format_turn(turn, "markdown")
+            self.assertIn("## User", rendered)
+            self.assertIn("last assistant", rendered)
+
+    def test_explicit_composer_json_format(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = pathlib.Path(td)
+            project = base / "project"
+            project.mkdir()
+            user_dir, cid = make_cursor_3_fixture(base, project)
+            turn = build_last_turn(
+                user_dir=user_dir,
+                workspace_selector=None,
+                composer_id=cid,
+                latest_global=True,
+                cwd=base,
+                source="sqlite",
+            )
+            payload = json.loads(format_turn(turn, "json", include_meta=True))
+            self.assertEqual(payload["messages"][0]["role"], "user")
+            self.assertEqual(payload["messages"][1]["content"], "last assistant")
+            self.assertEqual(payload["meta"]["composer_id"], cid)
+
+    def test_cursor_2_workspace_all_composers(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = pathlib.Path(td)
+            project = base / "legacy-project"
+            project.mkdir()
+            user_dir, cid = make_cursor_2_fixture(base, project)
+            turn = build_last_turn(
+                user_dir=user_dir,
+                workspace_selector="legacyws",
+                composer_id=None,
+                latest_global=False,
+                cwd=base,
+                source="sqlite",
+            )
+            self.assertEqual(turn.composer_id, cid)
+            self.assertEqual(turn.user.text, "legacy user")
+            self.assertEqual(turn.assistant.text, "legacy assistant")
+
+    def test_cli_print_sqlite(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = pathlib.Path(td)
+            project = base / "project"
+            project.mkdir()
+            user_dir, _ = make_cursor_3_fixture(base, project)
+            rc = run([
+                "--cursor-user-dir", str(user_dir),
+                "--cwd", str(project),
+                "--print",
+                "--format", "plain",
+                "--source", "sqlite",
+            ])
+            self.assertEqual(rc, 0)
+
+    def test_agent_transcript_last_turn_fixture(self) -> None:
+        fixture = ROOT / "tests" / "fixtures" / "sample_transcript.jsonl"
+        user, assistant = parse_agent_transcript_last_turn(fixture)
+        self.assertEqual(user.text, "last user question")
+        self.assertEqual(assistant.text, "last assistant answer")
+
+    def test_agent_transcript_project_layout(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = pathlib.Path(td)
+            home = base / "home"
+            project = home / "workspace" / "myproj"
+            project.mkdir(parents=True)
+            slug = project.resolve().as_posix().lstrip("/").replace("/", "-")
+            session = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+            transcript_dir = home / ".cursor" / "projects" / slug / "agent-transcripts" / session
+            transcript_dir.mkdir(parents=True)
+            transcript = transcript_dir / f"{session}.jsonl"
+            transcript.write_text((ROOT / "tests/fixtures/sample_transcript.jsonl").read_text())
+
+            old_home = pathlib.Path.home
+            try:
+                pathlib.Path.home = lambda: home  # type: ignore[method-assign]
+                turn = build_last_turn(
+                    user_dir=home / ".config" / "Cursor" / "User",
+                    workspace_selector=None,
+                    composer_id=None,
+                    latest_global=False,
+                    cwd=project,
+                    source="agent-transcript",
+                )
+            finally:
+                pathlib.Path.home = old_home  # type: ignore[method-assign]
+
+            self.assertEqual(turn.source, "agent-transcript")
+            self.assertEqual(turn.user.text, "last user question")
+            self.assertEqual(turn.assistant.text, "last assistant answer")
+
+    def test_empty_transcript_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            empty = pathlib.Path(td) / "empty.jsonl"
+            empty.write_text("\n")
+            with self.assertRaises(CursorCopyError):
+                parse_agent_transcript_last_turn(empty)
+
+
+if __name__ == "__main__":
+    unittest.main()
