@@ -24,6 +24,10 @@ triggers:
   - ask parallel reviewers
   - ask adversarial review
   - ask deep review
+  - ask image generation
+  - ask generate image
+  - ask CAE gap review
+  - ask QRA gap review
   - ask safe to proceed
   - ask comprehensive review
   - ask persona roundtable about
@@ -33,6 +37,15 @@ triggers:
   - ask current architecture risk
   - ask the oracle as
   - ask oracle with persona
+  - ask webgpt
+  - $ask webgpt
+  - ask chatgpt
+  - $ask chatgpt
+  - webgpt review
+  - webgpt oracle
+  - chatgpt oracle
+  - ask webgpt to review
+  - ask webgpt about
   - teach me about
   - what does X say about
   - what does Sapolsky say
@@ -49,13 +62,14 @@ triggers:
 metadata:
   short-description: Zero cognitive-load learning and querying for personas, topics, and OS internals
   author: "Horus"
-  version: "0.6.0"
+  version: "0.6.1"
 
 provides:
   - ask
   - oracle-query
   - os-knowledge
 composes:
+  - phart-dag-chart
   - memory
   - dogpile
   - extract-entities
@@ -89,7 +103,7 @@ composes:
 
 # ask
 
-Zero cognitive-load learning and querying interface. Six modes:
+Zero cognitive-load learning and querying interface. Eight modes:
 
 1. **Learn Mode** — Discover, ingest, and extract knowledge about a topic or persona
 2. **Ask Mode** — Query accumulated knowledge with Federated Taxonomy multi-hop traversal
@@ -97,10 +111,67 @@ Zero cognitive-load learning and querying interface. Six modes:
 4. **Nightly Mode** — Scheduled incremental updates to persona knowledge bases
 5. **OS Mode** — Learn about and query embry-os internals, skills, packages, and runtime health
 6. **Deep Review Mode** — High-reasoning, read-only review with `review.md` and `review.json`
+7. **CAE Gap Review Mode** — Evidence-case-backed QRA review with bounded reviewer/judge rerouting
+8. **Image Generation Mode** — Generate image artifacts through `/scillm` `/v1/images/generations`
+
+## Literal Runtime Contract
+
+When a human names `$ask`, `/ask`, or asks to use the ask skill, the project
+agent must use this skill's `./run.sh` runtime unless the human explicitly asks
+for a fallback or the runtime is unavailable.
+
+Do not replace `$ask` with:
+
+- `spawn_agent`
+- an informal subagent prompt
+- a plain model call
+- a hand-written reviewer summary
+- a web search
+- a local-only critique that bypasses ask artifacts
+
+For review requests, pass the complete target artifact through the documented
+ask mode instead of summarizing it. Examples:
+
+- Use `--deep-review --deep-review-target <path>` for Web-GPT-style prompt,
+  schema, code, plan, or artifact reviews.
+- Use `--parallel-review` for independent reviewer fanout.
+- Use `--roundtable` only when the user asks for persona deliberation.
+- Use `--cae-gap-review` only for evidence-case-backed CAE/QRA gap review.
+
+For `$ask --deep-review`, the target must be readable review material. Do not
+pass compressed archives such as `.zip`, `.tar`, `.tar.gz`, `.tgz`, `.7z`, or
+binary bundles directly as `--deep-review-target`; the runtime will treat them
+as opaque bytes and the reviewer cannot inspect the contents. If the only
+available artifact is a compressed review bundle, first extract or render the
+specific relevant files into readable text files, then pass an explicit
+space-separated list of those files as the deep-review target. Directory targets
+are metadata-only in deep-review target resolution, so do not pass a directory
+and assume its contents will be inspected.
+
+Proof of a real `$ask` run is the ask artifact set, not an assistant summary.
+Return the relevant artifact paths, such as:
+
+- `.request.json`
+- `.status.json`
+- `.events.jsonl`
+- `review.md`
+- `review.json`
+- mode-specific generated artifacts
+
+If the runtime is unavailable, report that directly and ask before substituting
+`spawn_agent` or another fallback.
+
+Release readiness is evidence-based, not implied. `/ask` uses `ask.config.yml`,
+`config doctor`, live sanity reports, and Docker preflights to say what is ready,
+what needs user attention, and what is not established.
 
 Every `ask` call also writes runtime artifacts so long oracle/review runs are
 inspectable without guessing whether the runner is blocked in retrieval,
 persona routing, oracle synthesis, or artifact verification.
+Direct scillm oracle calls use SSE streaming and record
+`oracle_scillm_call_started`, `oracle_scillm_stream_progress`,
+`oracle_scillm_call_finished`, and `oracle_scillm_call_failed` events so
+project agents can distinguish active model work from hard-deadline failure.
 The same runtime protocol is available for `learn`, `nightly`, `os learn`,
 `os ask`, and `os health`.
 
@@ -217,6 +288,15 @@ Behavior:
 - **Focus preservation.** The controlled tab is never foregrounded. The
   caller's active tab and focused window are unchanged across the call;
   `meta.focus_changed` must be `false`.
+- **Default multi-turn.** Unless `--once` is passed, explicit `$ask webgpt` uses
+  `ASK_WEBGPT_DEFAULT_ITERATIONS` (default **2**) on the same controlled tab via
+  `--oracle-iterations`. Use `--once` for a single round; use `--oracle-iterations N`
+  to override explicitly.
+- **No DAG on plain webgpt.** Product/architecture questions routed through
+  `$ask webgpt` do not auto-draft coding DAGs; use `--orchestrate` only when you
+  intend skill-graph execution.
+- **Background collaboration loops** → see `/collab` (`collab webgpt --profile …`),
+  which shells to `/ask webgpt` and fires `notify-send` on `HUMAN_REQUIRED` / `BLOCKED`.
 - **Multi-turn iteration.** Each `$ask webgpt` call is one round on the same
   controlled tab. ChatGPT keeps the conversation context per tab, so a second
   call refines naturally. The canonical pattern is: project agent reads the
@@ -251,6 +331,58 @@ Behavior:
   quotes). `extract_verdict` layers strict `json.loads` → `json_repair` →
   plain-text `VERDICT:` regex, so transient model misbehavior never
   silently drops the verdict label.
+
+### Tech lead vs code runner (read this before WebGPT rounds)
+
+When the human says WebGPT is the **tech lead** and the project agent is the
+**code runner**, roles are fixed:
+
+| Role | Who | Does | Does not |
+|------|-----|------|----------|
+| **Tech lead** | `$ask webgpt` on a bound tab (`--webgpt-project`) | Adjudicate policy, page contracts, screenshots; author `$test-interactions` manifest JSON; ask clarifying questions | Patch the repo, run shells, run `$test-interactions`, replace deterministic gates |
+| **Code runner** | Project agent (you) | Implement allowlisted fixes, `cargo check`, `uv run maturin develop`, re-extract/materialize, run gates, write artifacts | Pretend WebGPT output is proof; skip local verification |
+
+**How the tech lead is contacted (two modes):**
+
+1. **Clarifying question** — one focused ambiguity (policy, human vs pipeline,
+   closure count semantics). Minimal context: page id, counts, artifact paths.
+2. **Review bundle** — multi-file packet for real adjudication. Prefer a small
+   manifest plus attached paths, not a repo dump.
+
+Example bundle layout:
+
+```text
+/tmp/pdf-oxide-review-bundle/
+  REVIEW_REQUEST.md      # what you need decided (one paragraph)
+  MANIFEST.json          # file list + sha/size
+  diagnosis.json         # discrepancy / fix_error evidence
+  gate_output.json       # latest deterministic gate readout
+  diff_summary.md        # what you changed this round (optional)
+```
+
+Invoke WebGPT with explicit paths (auto-attached):
+
+```bash
+./run.sh ask webgpt "Review bundle at /tmp/pdf-oxide-review-bundle/REVIEW_REQUEST.md.
+Return PASS, NEEDS_CHANGES, HUMAN_REQUIRED, or BLOCKED with specific guidance only.
+Do not implement fixes."   --webgpt-project pdf-oxide   --oracle-iterations 1
+```
+
+For bounded background loops with desktop notify, use `/collab webgpt --profile …`
+(shells to this same `/ask webgpt` path; does not change roles).
+
+**Not the same lane as code repair:**
+
+- WebGPT guidance → `$ask webgpt` / `/collab` (surf, background tab).
+- Discrepancy + patch → project agent + optional `scillm` exec graph
+  (`scillm_call` + `oc-kimi` for multimodal review, `pi-opencode-kimi` for
+  allowlisted edits) or `scripts/pdf_lab/exec_two_call_page_repair.py`.
+- Do not describe WebGPT rounds as "two `scillm exec oc-kimi` calls"; `oc-kimi`
+  is HTTP chat, not `scillm exec`, and is for extraction repair—not the ChatGPT tab.
+
+Proof of a WebGPT round is under `.ask_artifacts/runs/<ask_id>/` (and
+`oracle_webgpt_call_finished` with `no_activate: true`), not an assistant paraphrase.
+
 
 ### Bounded reviewer/executor workflow
 
@@ -296,16 +428,155 @@ Then the project agent applies fixes locally, regenerates the evidence bundle,
 and calls `/ask webgpt` again on the same `--webgpt-project` until one of these
 terminal conditions occurs:
 
-- `PASS`: the reviewer verdict is satisfied and local proof also passes.
-- `BLOCKED`: the reviewer names a missing dependency or unresolved product
-  decision.
-- `MAX_ROUNDS`: the configured round cap is reached.
-- `NEEDS_HUMAN_DECISION`: the remaining issue is acceptance/product policy, not
-  implementation.
+- **`PASS` + local PASS (dual agreement):** WebGPT returns `PASS` (or
+  `VERDICT: PASS`) on the same **This round acceptance** bullets and
+  deterministic local gates pass. Only then set **Goals met this round: YES**
+  in `COLLABORATION_STATUS.md`. Eligible for `$plan-iterate close-phase` when
+  that phase's contract matches.
+- **`NEEDS_CHANGES`:** WebGPT names specific fixes; project agent patches,
+  refreshes status, re-runs local proof, re-asks WebGPT.
+- **`BLOCKED`:** WebGPT names a missing dependency or unresolved product
+  decision the agent cannot clear → human escalation (see below).
+- **`MAX_ROUNDS`:** configured round cap reached → human or narrower scope.
+- **`NEEDS_HUMAN_DECISION`:** acceptance/product policy, not implementation.
 
 Do not use this loop for unbounded brainstorming, bulk review queues, or as a
 substitute for deterministic tests. WebGPT review is a gate over concrete
 evidence, not proof by itself.
+
+### Collaboration status file (required for multi-round WebGPT)
+
+For any **multi-round** project-agent + WebGPT collaboration on the same
+`--webgpt-project`, maintain a shared **`COLLABORATION_STATUS.md`** at an
+absolute path. Refresh it **before every** `$ask webgpt` round. Embed that path
+in the question so file auto-attachment inlines it.
+
+Full contract: `docs/ASK_COLLABORATION_STATUS_CONTRACT.md`  
+Copy template: `docs/templates/COLLABORATION_STATUS.template.md`
+
+Required sections: **Goals** (table with per-goal status:
+**complete** | **outstanding** | **blocked** | **pending**), **North star**,
+**Accomplished**, **Standing (not closed)**,
+**Blockers** (agent-actionable vs human-required), **This round acceptance**,
+**Agreement (round N)** with local gates, WebGPT verdict, **Goals met this round**,
+**Human needed**.
+
+WebGPT reviews **only** **This round acceptance**. It must not invent criteria
+or declare overall project/phase complete unless both parties recorded PASS on
+those bullets.
+
+**Dual agreement:** Neither WebGPT alone nor the project agent alone may claim
+goals complete. WebGPT `PASS` without local live e2e/tests when bullets require
+them is **not** closure. Local PASS without a successful `$ask` artifact when
+review is required is **not** closure.
+
+**Human assistance** when: `BLOCKED`, non-empty **Human-required** blockers,
+`MAX_ROUNDS`, persistent local/WebGPT disagreement after one reconcile attempt,
+or `$plan-iterate` returns `HUMAN_REQUIRED`. Human-facing updates stay limited to
+state, blocker, decision, evidence paths, delta since last round, and whether a
+human decision is required.
+
+Recommended invocation:
+
+```bash
+./run.sh ask webgpt "Read /path/to/COLLABORATION_STATUS.md.
+Review ONLY 'This round acceptance'. Return VERDICT: PASS | NEEDS_CHANGES | BLOCKED."   --webgpt-project <project>   --ask-id <round-id>   --run-output-root /tmp/ask-webgpt-<project>   --overwrite
+```
+
+Proof of WebGPT review is the ask artifact set (`<ask-id>.status.json`, etc.),
+not an assistant summary. Update **Agreement** in the status file after each round.
+
+### Explorer / UI page review loop (WebGPT + test-interactions)
+
+Use when the human wants WebGPT to review **live product pages** (screenshots +
+contracts) and to **author interaction manifests** that the project agent runs.
+WebGPT is tech lead; the project agent is the only code runner.
+
+**Role split (non-negotiable):**
+
+| Output | Tech lead (WebGPT) | Code runner (project agent) |
+|--------|--------------------|-----------------------------|
+| Per-page verdict | pass / degraded / fail + reason | Re-check against live gates after fixes |
+| Overall package verdict | PASS / NEEDS_CHANGES / BLOCKED | Do not claim product-ready without local proof |
+| Interaction manifest JSON | Draft `[data-qid]` workflow + assertions | Run `/test-interactions/run.sh run` |
+| Code / predicate fixes | Describe required change only | Patch repo, re-capture, re-run gates |
+| systemd / human policy | Flag HUMAN_REQUIRED | Execute only after human approves |
+
+WebGPT **never** runs `./run.sh`, `uv run`, patches, or `$test-interactions`.
+Those are always project-agent steps after the ask artifact lands.
+
+**Review bundle (attach paths in the prompt — auto-inlined):**
+
+```text
+/tmp/<project>-page-review-rN/
+  REVIEW_REQUEST.md          # one paragraph: what must be decided this round
+  page-contract-audit.json   # current pass/degraded/fail per page
+  coverage-health.json       # live API snapshot when relevant
+  page-purpose-excerpt.md    # predicate excerpt from pagePurposeContracts.ts
+  screenshots/               # full-page + focused crops per tab
+    coverage-full.png
+    coverage-purpose-strip.png
+    sparta-chat-full.png
+  prior-verdict.md           # optional: last WebGPT round summary
+```
+
+Capture screenshots with `$test-interactions` (deterministic run) or `$surf` before
+the WebGPT round. Prefer crops of page-purpose strip, primary table/panel, and
+fail-closed empty states—not only UX Lab chrome.
+
+**Ask WebGPT for manifest output in the same round:**
+
+In `REVIEW_REQUEST.md`, require a fenced JSON block named
+`test-interactions-manifest` (or a separate file path WebGPT names explicitly)
+with semantic workflow steps the scaffold generator cannot infer:
+
+- navigate to Final Site + tab (if needed)
+- `wait_ready` on page-specific root qid
+- refresh / row drill / keyboard path
+- deterministic assertions (`assert_visible`, `assert_text`, monitor row counts)
+
+The project agent saves that JSON and runs:
+
+```bash
+/home/graham/.codex/skills/test-interactions/run.sh run   --manifest /tmp/<project>-coverage-manifest.json   --output-dir /tmp/<project>-coverage-ti-rN/
+
+/home/graham/.codex/skills/test-interactions/run.sh review   --captures /tmp/<project>-coverage-ti-rN/   --persona nico-bailon   # or brandon-bailey for compliance surfaces
+```
+
+PASS/FAIL comes from `$test-interactions`, not from WebGPT. WebGPT comments on
+evidence; it does not override deterministic verdicts.
+
+**Example invoke (tab-bound, review-only wording):**
+
+```bash
+cd ~/.codex/skills/ask
+./run.sh ask webgpt "Review /tmp/sparta-page-review-r4/REVIEW_REQUEST.md and attached screenshots.
+For each Explorer page: verdict pass|degraded|fail, blockers, and next evidence.
+Return overall PASS, NEEDS_CHANGES, or BLOCKED.
+Also emit test-interactions-manifest JSON for Coverage (semantic workflow, all [data-qid] selectors).
+Do not run commands or edit the repo."   --webgpt-tab-id 837344161   --webgpt-project sparta-explorer-review   --oracle-iterations 1
+```
+
+**Prompt vocabulary (avoid ask DAG misfire):**
+
+Natural-language `$ask` prompts containing **implement**, **fix**, **patch**, or
+**refactor** can auto-draft an `ask.dag.v1` with an `implement` node and fail
+with `AskDagError` on review-only work. For WebGPT review rounds, prefer:
+
+- "review", "adjudicate", "verdict", "guidance", "manifest JSON", "evidence bundle"
+- explicit "Do not run commands or edit the repo"
+
+If DAG mode is required for coding, use `--dag-file` explicitly—not accidental
+orchestrate triggers inside WebGPT review prompts.
+
+**Proof chain for the human:**
+
+1. `.ask_artifacts/runs/<ask_id>/` — request, status, events, WebGPT clean response
+2. Project-agent captures + `results.json` from `$test-interactions`
+3. Updated contract audit / monitor health JSON after local fixes
+
+Do not treat accepted plan-iterate phases or WebGPT PASS as product closure until
+(2) and (3) agree.
 
 ## Image Generation Mode
 
@@ -360,8 +631,23 @@ Agent translation rules:
 - Treat "parallel reviewers", "adversarial reviewers", or "N reviewers" as `--parallel-review`.
 - Treat "argue whether", "debate whether", or "make the case for and against" as `--argue`.
 - Treat "review then roundtable" as both `--parallel-review` and `--roundtable`.
+- Treat "CAE gap review", "QRA gap review", or "CAE reviewers" as `--cae-gap-review`.
+- Treat "generate an image", "image generation", or "make an image" as
+  `--image-generate`; keep it standalone from memory/oracle/review modes.
 - Treat "deep review", "comprehensive review", "safe to proceed", or "production readiness" as `--deep-review`; require or infer a concrete `--deep-review-target`.
 - Treat leading model shorthand such as `$ask oc kimi ...`, `$ask opencode qwen ...`, `$ask chutes kimi ...`, `$ask oc-kimi ...`, or `$ask chutes-kimi ...` as `--oracle --oracle-backend scillm` with the resolved provider model.
+- Treat leading `$ask webgpt ...` (or `$ask chatgpt ...`) as `--oracle --oracle-backend webgpt`. This drives an already-authenticated ChatGPT tab in the user's Chrome via the surf-cli extension; the controlled tab never foregrounds (`--no-activate`).
+- Treat multi-round WebGPT review with a bound `--webgpt-project` as requiring
+  an absolute-path `COLLABORATION_STATUS.md` (refresh before each round; see
+  `docs/ASK_COLLABORATION_STATUS_CONTRACT.md`). Dual agreement: local PASS and
+  WebGPT `PASS` on the same **This round acceptance** bullets before claiming
+  goals met.
+- Treat `Ask Nico ...`, `Bring Nico into this conversation ...`, and other
+  visible named-subagent conversation requests as `/ask`-owned persistent
+  tmux-visible subagent sessions using `--oracle-backend subagent-runner`.
+  Do not satisfy these with direct `/subagent-runner`, a one-shot oracle answer,
+  or a hidden fallback. The proof artifact must include the tmux attach command,
+  session directory, transcript, status, events, and send-input command.
 - Treat date-sensitive words (`2026`, `current`, `latest`, `today`, `recent`) as `--dogpile auto`.
 - Default high-value analytical questions to `--oracle --oracle-model gpt-5.5 --oracle-reasoning high`.
 
@@ -370,10 +656,15 @@ Agent translation rules:
 | `$ask what do we know about the release checklist?` | Memory-backed ask synthesis |
 | `$ask What is the state of Python packaging in 2026?` | Oracle with auto persona selection and `--dogpile auto` |
 | `$ask What is the state of space-based cybersecurity in 2026?` | SPARTA-scoped oracle: `--scope sparta --oracle` |
-| `$ask oc kimi explain this design tradeoff` | scillm OpenCode Go oracle using live model discovery, currently `opencode-go/kimi-k2.6` |
+| `$ask oc kimi explain this design tradeoff` | scillm OpenCode Go oracle using live model discovery and capability metadata, currently `opencode-go/kimi-k2.6` |
+| `$ask oc kimi for a $review-design with maximum 3 rounds` | Ask-backed review-design loop using `opencode-go/kimi-k2.6`; capture fresh screenshots, ask Kimi for a verdict, patch locally, re-render, and stop after PASS/blocker/3 rounds |
 | `$ask oc-qwen compare these options` | Hyphenated OpenCode Go shorthand, currently `opencode-go/qwen3.6-plus` |
-| `$ask chutes kimi explain this design tradeoff` | scillm Chutes oracle using configured alias `text-kimi` |
-| `$ask chutes-kimi explain this design tradeoff` | Hyphenated Chutes shorthand using configured alias `text-kimi` |
+| `$ask chutes kimi explain this design tradeoff` | scillm Chutes oracle using configured alias `chutes-kimi` |
+| `$ask chutes-kimi explain this design tradeoff` | Hyphenated Chutes shorthand using configured alias `chutes-kimi` |
+| `$ask webgpt review round 2 using COLLABORATION_STATUS.md` | WebGPT oracle with status file auto-attached; update **Agreement** after artifact; dual agreement before closure |
+| `$ask webgpt to perform the review on /tmp/review-bundle.md` | WebGPT oracle backed by the user's signed-in ChatGPT tab (via `surf webgpt.submit --no-activate`). File paths in the prompt are auto-attached. Tab id auto-resolves when exactly one chatgpt.com tab is open; otherwise pass `--webgpt-tab-id`. |
+| `$ask webgpt again — refine your answer` | Multi-turn: each `$ask webgpt` call is one round against the same controlled tab. ChatGPT preserves conversation context, so iterations form a coherent dialogue. |
+| `$ask Bring Nico into this conversation to review the mockups` | Persistent visible Nico session. Human attaches with `tmux a -t nico-<project>`; project agent sends follow-up turns through the `/ask` artifact's `send_input_command`. |
 | `$ask Brandon what is the state of space-based cybersecurity in 2016?` | Brandon persona oracle over `--scope sparta` |
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: What is the state of cybersecurity in 2026?` | SPARTA-scoped sequential persona roundtable |
 | `$ask Brandon what is the best way to review this API boundary?` | Brandon persona oracle subagent |
@@ -382,6 +673,8 @@ Agent translation rules:
 | `$ask Brandon ask Margaret where are we weak?` | Safe Brandon→Margaret peer deliberation |
 | `$ask Brandon, Margaret, and Jennifer personas to roundtable about the topic: Should this service use retries or queues?` | Sequential protocolized persona roundtable |
 | `$ask run 3 parallel adversarial reviewers on this implementation` | Independent parallel review plus moderator synthesis |
+| `$ask cae gap review AC-2 MFA evidence for the production tenant` | Evidence-case-backed QRA review: `--cae-gap-review --cae-max-rounds 3` |
+| `$ask generate an image of the ask to scillm image route` | Image artifact generation: `--image-generate` |
 | `$ask argue whether we should ship this change` | Two parallel `/scillm` advocates plus sequential judge and verifier |
 | `$ask deep review this implementation --deep-review-target src/ask/ask.py` | Read-only deep review with markdown and JSON artifacts |
 | `$ask review then roundtable with Brandon, Margaret, Jennifer` | Parallel findings first, then sequential persona debate |
@@ -466,6 +759,7 @@ Options:
   --oracle-persona-model <m> Model for primary persona turns
   --oracle-peer-model <m> Model for peer persona turns
   --oracle-iterations <n> Sequential oracle deliberation calls (default: 1)
+  --oracle-image <path> Attach an image to a direct scillm oracle call (repeatable)
   --roundtable          Run sequential protocolized persona deliberation
   --roundtable-personas <p> Comma-separated persona[:protocol_role] participants
   --roundtable-role-preset <p> Role preset (default: adversarial-review)
@@ -480,6 +774,10 @@ Options:
   --parallel-review-personas <p> Comma-separated reviewer persona[:protocol_role] specs
   --parallel-review-focus <f> Comma-separated focus labels for default reviewers
   --parallel-review-role-preset <p> Role preset for parallel reviewers
+  --cae-gap-review      Run evidence-case-backed CAE/QRA gap review
+  --cae-reviewers <p>   Comma-separated CAE persona:role pairs
+  --cae-judge <p>       CAE judge persona label
+  --cae-max-rounds <n>  Maximum CAE clarify/reroute rounds
   --deep-review          Run read-only deep review with review.md and review.json artifacts
   --deep-review-target <target> Explicit target: paths, diff, plan, manifest, or artifact
   --deep-review-profile <p> Deep-review profile label (default: max_available)
@@ -490,6 +788,9 @@ Options:
   --deep-review-output-root <dir> Artifact root (default: .ask_artifacts/deep-review)
   --chain <name|path>   Saved review chain spec (e.g. deep-review-safety)
   --reviewer-spec <name|path> Reviewer role/focus spec (repeatable)
+  --orchestrate          Draft and execute an ask DAG from the natural-language request
+  --dag-json <json>     Execute an inline ask/scillm-style DAG before synthesis
+  --dag-file <path>     Execute an ask/scillm-style DAG JSON file before synthesis
   --dogpile <auto|off|force> Freshness policy for date-sensitive oracle prompts
   --dry-run             Emit execution spec/risk analysis without mutation
   --ask-id <id>          Stable runtime artifact id for this ask call
@@ -497,6 +798,14 @@ Options:
   --overwrite            Replace an existing run directory for --ask-id
   --resume               Resume a non-terminal existing run directory for --ask-id
   --raw                   Return raw memory results (no synthesis)
+  --image-generate        Generate image artifact(s) through scillm
+  --image-model <model>   Image generation model (default: gpt-image-2)
+  --image-size <size>     Image size, for example auto or 1024x1024
+  --image-quality <q>     Image quality, for example auto, medium, or high
+  --image-count <n>       Number of images to generate (default: 1)
+  --image-output <path>   Output file or directory for generated image(s)
+  --image-output-format <fmt> Image file format: png, jpeg, or webp
+  --image-timeout <sec>   Image generation timeout in seconds (default: 300)
   --json                  JSON output
   --debug                 Enable debug logging
 ```
@@ -517,6 +826,595 @@ execution. `status.json` is atomically replaced as the run progresses.
 `request_written`, `ask_started`, `memory_recall_started`,
 `memory_recall_finished`, `evidence_case_started`, `synthesis_finished`,
 `finished`, and `failed`.
+
+### Natural-Language DAG Orchestration
+
+`/ask --orchestrate` drafts an executable `ask.dag.v1` from a clear natural
+language request. This is the zero-cognitive-load interface for project agents:
+the human names the desired skill orchestration, and `/ask` converts it into
+memory-first, optional dogpile, oracle, and sibling-skill nodes.
+
+Rules:
+
+- `/ask` owns skill orchestration, dependencies, joins, run-state artifacts,
+  and final synthesis.
+- `$scillm` remains a skill/backend boundary. `/ask` may request a model/profile
+  for an `ask.oracle` node, but it does not expose model-pool, queue,
+  provider-capacity, fallback, or transport choices.
+- `/memory` and `/dogpile` own their own recall/research internals.
+- `/interview` is used only when a natural-language request lacks a target
+  skill, output artifact, or acceptance criteria that cannot be safely inferred.
+- `skill.run` validation uses runnable sibling skill contracts (`SKILL.md` plus
+  `run.sh`) instead of a narrow product-specific skill list.
+
+Natural-language DAG drafting also auto-engages for prompts that explicitly ask
+for a DAG, workflow, skill graph, orchestration, or coding implementation
+(implement, fix, patch, refactor). When the request is
+ambiguous, `/ask` fails closed with a `needs_attention` artifact pointing to
+`/interview` rather than guessing.
+
+### DAG JSON Mode
+
+`/ask` can execute a project-agent DAG directly with `--dag-json` or
+`--dag-file`. This is the preferred interface when an agent can express the
+workflow more clearly as JSON than as a long list of flags.
+
+Public graph envelope:
+
+- `ask.dag.v1`, the native ask DAG schema.
+
+Compatibility graph envelope:
+
+- `scillm.exec.graph.v1`, normalized at the `/ask` boundary for React Flow,
+  migration, and diagnostic tooling. This is not the preferred human/project
+  agent input surface; normal callers use natural language or `ask.dag.v1`.
+
+Supported node types:
+
+- `memory.recall` — run `/memory recall` and feed returned `items` into later
+  nodes and synthesis.
+- `dogpile.search` — run `/dogpile search` for fresh research context.
+- `ask.oracle` — run a one-shot `/scillm` chat completion through `/ask` with
+  the required ask caller headers and scillm metadata.
+- `skill.run` — run a runnable sibling skill with a `SKILL.md` and `run.sh`,
+  such as `create-report`, `review-code`, `memory`, or `dogpile`.
+- `scillm.agent_turn` — run a standing Codex app-server worker through
+  `/v1/scillm/agents/{worker_id}/*` (handoff → lease → turn → result). Use this
+  for **coding** (worktree, `declared_write_set`, multi-turn, steer). Do not route
+  implementation through `/v1/chat/completions` or default `skill.run code-runner`.
+
+Coding DAG defaults:
+
+- Natural-language requests with implement/fix/patch/refactor intent draft an
+  `scillm.agent_turn` node (`id: implement`, `sandbox: workspace-write`).
+- Worker id: `--agent-worker`, else `ASK_AGENT_WORKER_ID`, else `implementation`.
+- Registry must expose an `implementation` worker in `config/scillm-agents.yaml`.
+
+Parallel review implementation:
+
+- `--implement-with code-runner` — handoff artifact only (read-only `/ask`).
+- `--implement-with scillm-agent` — same review path; no `--code-runner-dod-command`
+  required (worker worktree enforces bounds).
+
+Dependencies are expressed with `depends_on`. Independent nodes in the same
+layer run concurrently up to `max_concurrency`; dependent nodes run after their
+parents and receive upstream context. Each node may set `max_attempts` from 1
+to 10. DAG runs always write request/status/events artifacts plus
+`dag/manifest.json` and one JSON artifact per node.
+
+Each node may set `allow_failure` (boolean, default `false`). When a
+node finishes with `ok: false`:
+
+- `allow_failure: false` (default): the layer is fail-closed. `/ask` records
+  `dag_layer_failed` with `failed_node_ids` and `safe_default:
+  stop_before_dependent_nodes`, then raises `AskDagError` before any dependent
+  layer runs.
+- `allow_failure: true`: the failed node is recorded in `dag/manifest.json` and
+  its node artifact, but the DAG continues to dependent nodes that still declare
+  the failed parent in `depends_on`. Use only for optional probes, shadow checks,
+  or best-effort enrichment that must not block the main workflow.
+
+Bounded auto-repair runs after a node attempt when `/ask` recognizes a known,
+deterministic failure mode. Repairs are recorded on the node artifact (`repairs`,
+`auto_repaired`) and in run-state events:
+
+- `dag_node_auto_repair_started` / `dag_node_auto_repair_finished`
+- Current repair: `dogpile.search` with `returncode == -2` (skill timeout) when
+  `input.timeout` is below `360` seconds — one retry at `360s` with reason
+  `dogpile_timeout_budget_too_low`.
+- Auto-repair does not bypass the required-node gate. If the repaired attempt
+  still fails and `allow_failure` is false, the layer still fails closed.
+
+Repair policy is data-driven:
+
+- Global policy: `config/ask_dag_repair_policy.yaml`
+- Timeout profiles: `config/ask_dag_timeout_profiles.yaml`
+- Skill hints: `skills/<skill>/config/ask_dag_repair_hints.yaml` (for example
+  `skills/dogpile/config/ask_dag_repair_hints.yaml`)
+
+Supported repair actions:
+
+- `bump_timeout` — retry once with a higher `input.timeout` when the skill
+  subprocess was killed for budget (`returncode == -2`).
+- `consume_partial_artifact` — when a sibling skill wrote usable partial output
+  (for example `dogpile_partial_results.json` with `final_report`), promote that
+  artifact into the node result instead of failing immediately.
+
+- True ambiguity (missing target skill, artifact, or acceptance criteria) still
+  routes to `/interview` via `needs_attention`, not silent DAG repair.
+
+For layers containing `ask.oracle` nodes, `/ask` creates an internal
+`scillm.exec.graph.v1` subgraph artifact such as
+`dag/layer-001-scillm.subgraph.json` and records
+`dag_scillm_partition_started` / `dag_scillm_partition_finished` events. `/ask`
+still owns dependencies, sibling skills, joins, run state, and final artifacts;
+the partition artifact is a diagnostic handoff receipt for the scillm-owned
+model lane, not user-authored orchestration input.
+`/ask` does not expose model-pool, queue, provider-capacity, or transport
+choices in the DAG contract; those remain `$scillm` internals. `$ask` submits
+model nodes with the requested model/profile and required metadata, and `$scillm`
+handles routing, streaming, provider queues, fallback, pooling, and telemetry.
+
+The live sanity check for this contract is:
+
+```bash
+./scripts/dag_e2e_sanity.py --output-root /tmp/ask-dag-e2e-proof --ask-id ask-dag-e2e-proof
+```
+
+That check writes a realistic `scillm.exec.graph.v1` file, runs two concurrent
+`memory.recall` nodes, joins them into a sequential `create-report` node, and
+verifies request/status/events, `dag/manifest.json`, per-node artifacts, and the
+generated Markdown report.
+
+```bash
+./scripts/dag_negative_sanity.py --output-root /tmp/ask-dag-negative-proof --ask-id ask-dag-negative-proof
+```
+
+That check runs a required `skill.run` node with an invalid flag, records
+`dag_layer_failed`, leaves the failed node artifact, and does not create the
+dependent node artifact.
+
+For a costful live model lane, add `--include-oracle`; the same DAG inserts two
+concurrent `ask.oracle` nodes before the final `create-report` join.
+
+Example native graph:
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "max_concurrency": 2,
+  "nodes": [
+    {
+      "id": "memory_first",
+      "type": "memory.recall",
+      "input": {"query": "prior lessons for this report", "scope": "project"}
+    },
+    {
+      "id": "brandon",
+      "type": "ask.oracle",
+      "depends_on": ["memory_first"],
+      "input": {
+        "prompt": "Brandon: read the report and comment against the criteria.",
+        "model": "gpt-5.5",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "id": "margaret",
+      "type": "ask.oracle",
+      "depends_on": ["memory_first"],
+      "input": {
+        "prompt": "Margaret: read the report and comment against the criteria.",
+        "model": "gpt-5.5",
+        "reasoning_effort": "high"
+      }
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": ["brandon", "margaret"],
+      "input": {"skill": "create-report", "args": ["--help"]}
+    }
+  ]
+}
+```
+
+
+### Concurrent lanes and sequential joins
+
+`/ask` schedules nodes in **topological layers**. Nodes with no unresolved
+`depends_on` in the same layer run **concurrently** (up to `max_concurrency`).
+Nodes that list parents in `depends_on` wait until those parents finish, then
+run in a later layer — that is the **sequential join**.
+
+**RIGHT — Layer 1: two concurrent `memory.recall` nodes; Layer 2: one sequential
+`skill.run` join** (matches `./scripts/dag_e2e_sanity.py`):
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "graph_id": "memory-fanout-report-join",
+  "graph_goal": "Recall two memory scopes in parallel, then create one report.",
+  "max_concurrency": 2,
+  "nodes": [
+    {
+      "id": "memory_ask_contract",
+      "type": "memory.recall",
+      "input": {
+        "query": "ask DAG scillm metadata oracle review artifacts",
+        "scope": "ask",
+        "k": 3
+      }
+    },
+    {
+      "id": "memory_report_contract",
+      "type": "memory.recall",
+      "input": {
+        "query": "best practices report source-of-truth inventory findings",
+        "scope": "ask",
+        "k": 3
+      }
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": ["memory_ask_contract", "memory_report_contract"],
+      "input": {
+        "skill": "create-report",
+        "args": [
+          "--title", "Ask DAG Proof Report",
+          "--input", "${dag_context_json}",
+          "--output", "${dag_node_output}"
+        ]
+      }
+    }
+  ]
+}
+```
+
+Layer semantics for this graph:
+
+| Layer | Runs | Why |
+|-------|------|-----|
+| 1 | `memory_ask_contract` **and** `memory_report_contract` **in parallel** | No `depends_on`; same topological layer; `max_concurrency: 2` allows both at once. |
+| 2 | `final_report` **after both parents succeed** | `depends_on` lists both memory nodes — sequential join with merged `${dag_context_json}`. |
+
+Optional third layer (live model lane): add two concurrent `ask.oracle` nodes that
+both `depends_on` the memory pair, then point `final_report.depends_on` at the
+oracle ids as well. See `./scripts/dag_e2e_sanity.py --include-oracle`.
+
+**WRONG — expecting a join without `depends_on`:**
+
+```json
+{
+  "nodes": [
+    {"id": "memory_a", "type": "memory.recall", "input": {"query": "a"}},
+    {"id": "memory_b", "type": "memory.recall", "input": {"query": "b"}},
+    {"id": "final_report", "type": "skill.run", "input": {"skill": "create-report", "args": ["--help"]}}
+  ]
+}
+```
+
+All three nodes are in **one concurrent layer**. `final_report` can start before
+either memory recall finishes and may see empty upstream context.
+
+### PHART renderer (preferred)
+
+Terminal charts use **[PHART](https://github.com/scottvr/phart)** — Python Hierarchical
+ASCII Representation Tool. Source of truth: **https://github.com/scottvr/phart.git**
+(PHART 1.5+; PyPI is behind git).
+
+**Preferred path (mockup-style bboxes):** sibling skill **`$phart-dag-chart`**
+(`skills/phart-dag-chart/`) pins PHART from git on Python 3.14+ and renders
+`layout=layered` with `bboxes=True` (matches `scillm/docs/goals/DAG-ux-mockup.html` middle pane).
+
+```bash
+# One-time: install Python 3.14 for uv (if needed)
+uv python install 3.14
+
+cd skills/phart-dag-chart
+./run.sh validate path/to/plan.dag.json
+./run.sh chart path/to/plan.dag.json
+```
+
+`/ask` dry-run and `./scripts/render_dag_chart.py` delegate to `$phart-dag-chart` when uv + Python 3.14 are available.
+
+- `ask_dag.ascii_renderer`: `phart-git` | `phart-pypi` | `fallback`
+- **phart-git**: `$phart-dag-chart` subprocess (PHART 1.5 git)
+- **phart-pypi**: in-process PyPI phart 1.1.x on Python 3.11–3.12 (bracket style)
+- **fallback**: built-in renderer if PHART unavailable
+
+```bash
+./scripts/render_dag_chart.py /tmp/memory-fanout.dag.json
+```
+
+Legacy `skills/ask/phart-renderer/` is deprecated.
+
+### Terminal ASCII DAG chart
+
+Before a costful run, print the layer plan to the terminal so humans and project
+agents share the same mental model.
+
+**Preferred — dry-run prints the chart automatically:**
+
+```bash
+./run.sh ask "Plan the memory fanout DAG" \
+  --dag-file /tmp/memory-fanout-report-join.dag.json \
+  --dry-run
+```
+
+The dry-run payload includes `ask_dag.layers` (machine-readable) and prints
+`ask_dag.ascii_chart` to stdout before the JSON spec. The chart mirrors the
+**middle pane** of `scillm/docs/goals/DAG-ux-mockup.html`: boxed nodes, vertical
+trunk, concurrent fanout row, then join — simplified for the terminal.
+
+```text
+DAG decision tree · memory-fanout-report-join
+schema=ask.dag.v1 · max_concurrency=2
+
+┌───────────────┐   ┌───────────────┐
+│ memory_a      │   │ memory_b      │
+│ memory.recall │   │ memory.recall │
+│ [req]         │   │ [req]         │
+└───────────────┘   └───────────────┘
+        │                   │
+        ──────────┴──────────
+                  │
+         ┌────────────────┐
+         │ final_report   │
+         │ skill.run      │
+         │ [req]          │
+         └────────────────┘
+```
+
+Trunk + 3-way fanout + join (same mockup shape):
+
+```text
+                   ┌───────────────┐
+                   │ shape         │
+                   └───────────────┘
+                           │
+        ┬──────────────────┼───────────────────┬
+┌──────────────┐   ┌──────────────┐   ┌────────────────┐
+│ payload      │   │ exec         │   │ nico           │
+└──────────────┘   └──────────────┘   └────────────────┘
+        └──────────────────┴───────────────────┘
+                            │
+                    ┌──────────────┐
+                    │ gate         │
+                    └──────────────┘
+```
+
+**Also valid — JSON only (automation / logs):**
+
+```bash
+./run.sh ask "Plan the DAG" --dag-file /tmp/graph.dag.json --dry-run --json \
+  | jq -r '.options.ask_dag.ascii_chart'
+```
+
+After a real run, correlate the chart with `events.jsonl` (`dag_layer_started`,
+`dag_layer_finished`, `dag_layer_failed`) and `dag/manifest.json`.
+
+### Required-node failure: who fixes the bug?
+
+Bounded **auto-repair** (timeout bump, partial artifact consume) handles known
+deterministic modes. It does **not** replace debugging.
+
+When a **required** node fails (`allow_failure: false`, the default):
+
+1. `/ask` records `dag_layer_failed`, writes the failed node artifact
+   (`dag/<node_id>.json`), and **does not** run dependent layers.
+2. The **project agent** (or a **`/scillm` exec subagent** such as
+   `scillm exec pi-chutes-kimi` / `pi-opencode-kimi` in read-only sandbox) must
+   inspect evidence, fix the root cause, and re-run:
+   - `dag/<failed_node>.json` — `error`, `stderr`, `returncode`, `repairs`
+   - `events.jsonl` — `dag_node_failed`, `dag_layer_failed`, repair events
+   - Upstream skill logs under the run output root
+3. Fixes are usually: correct `input.args`, skill bug patch, timeout profile,
+   missing artifact path, or auth/routing (for `ask.oracle`, check `/v1/scillm/auth`
+   before blaming the DAG).
+4. Re-submit the same DAG with `--resume` when appropriate, or a corrected
+   `--dag-file` after the code/config fix lands.
+
+**WRONG — treating auto-repair or `answered` as proof the workflow succeeded:**
+
+```bash
+# dogpile still failed after repair; final_report never ran
+jq '.status' .ask_artifacts/runs/<ask-id>/status.json   # may still show failure
+grep dag_layer_failed .ask_artifacts/runs/<ask-id>/events.jsonl
+```
+
+**WRONG — marking a broken required probe optional instead of fixing it:**
+
+```json
+{"id": "fresh_context", "type": "dogpile.search", "allow_failure": true}
+```
+
+Use `allow_failure: true` only for shadow/best-effort enrichment. If the main
+path needs dogpile output, fix timeout/skill/code — do not hide a required failure.
+
+**RIGHT — project agent loop after `dag_layer_failed`:**
+
+```text
+1. Read ascii_chart + dag_layer_failed event
+2. Open dag/<node>.json and sibling skill stderr
+3. Patch skill/CLI/config OR adjust DAG input
+4. Re-run: ./run.sh ask "..." --dag-file fixed.dag.json --ask-id <id> --resume
+5. Confirm dag/manifest.json shows downstream node artifacts
+```
+
+
+**DAG JSON usage — good vs bad:**
+
+Use `ask.dag.v1` for project-agent handoffs. Prefer `--dag-file` when the graph
+is non-trivial; use `--dag-json` only for small inline graphs.
+
+**RIGHT — layered workflow with explicit dependencies, safe timeouts, and a
+single final join:**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "graph_id": "report-with-fresh-research",
+  "max_concurrency": 2,
+  "nodes": [
+    {
+      "id": "memory_first",
+      "type": "memory.recall",
+      "input": {"query": "prior lessons for this report", "scope": "project", "k": 5}
+    },
+    {
+      "id": "fresh_context",
+      "type": "dogpile.search",
+      "input": {
+        "query": "current state of LLM workflow orchestration boundaries",
+        "timeout": 360
+      }
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": ["memory_first", "fresh_context"],
+      "input": {
+        "skill": "create-report",
+        "args": [
+          "--title", "Ask DAG Proof Report",
+          "--input", "${dag_context_json}",
+          "--output", "${dag_node_output}"
+        ]
+      }
+    }
+  ]
+}
+```
+
+```bash
+./run.sh ask "Run the report DAG"   --dag-file /tmp/report-with-fresh-research.dag.json   --ask-id report-dag-proof   --run-output-root /tmp/ask-dag-proof/runs   --overwrite   --json
+```
+
+Why this is good:
+
+- `schema_version` is `ask.dag.v1`.
+- Node `id` values are stable snake_case identifiers.
+- `depends_on` expresses the real join order.
+- `dogpile.search` gets a realistic `timeout` (or omits it and uses the profile default).
+- `skill.run` targets a runnable sibling skill and passes DAG context placeholders.
+- Model-pool / queue / provider-capacity fields are **not** in the graph; only
+  `ask.oracle` nodes name a model/profile when needed.
+
+**RIGHT — optional probe that must not block the main path:**
+
+```json
+{
+  "id": "shadow_dogpile",
+  "type": "dogpile.search",
+  "allow_failure": true,
+  "input": {"query": "best-effort fresh sources", "timeout": 120}
+}
+```
+
+Use `allow_failure: true` only for enrichment probes. Required nodes stay
+fail-closed (default `allow_failure: false`).
+
+**WRONG — treating the DAG like a scillm transport/routing config:**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {
+      "id": "lane",
+      "type": "ask.oracle",
+      "input": {
+        "prompt": "Review this",
+        "model_pool": "gpt-pool",
+        "provider_queue": "chutes",
+        "fallback_chain": ["gemini", "claude"]
+      }
+    }
+  ]
+}
+```
+
+`/ask` owns orchestration and artifacts. `$scillm` owns pools, queues, fallback,
+and telemetry. Do not put transport knobs in project-agent DAG JSON.
+
+**WRONG — dependent node with no `depends_on` (race / empty context):**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {"id": "memory_first", "type": "memory.recall", "input": {"query": "context"}},
+    {"id": "final_report", "type": "skill.run", "input": {"skill": "create-report", "args": ["--help"]}}
+  ]
+}
+```
+
+Without `depends_on`, `final_report` can run in parallel with `memory_first` and
+receive empty `${dag_context_json}`.
+
+**WRONG — required node with an impossible budget, then expecting dependents to run:**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {
+      "id": "fresh_context",
+      "type": "dogpile.search",
+      "input": {"query": "broad research query", "timeout": 30}
+    },
+    {
+      "id": "final_report",
+      "type": "skill.run",
+      "depends_on": ["fresh_context"],
+      "input": {"skill": "create-report", "args": ["--help"]}
+    }
+  ]
+}
+```
+
+If `fresh_context` stays failed after auto-repair, `/ask` records `dag_layer_failed`
+and does **not** create `final_report.json`. Fix the timeout/profile or mark the
+probe `allow_failure: true` when it is optional.
+
+**WRONG — inventing node types or skills:**
+
+```json
+{
+  "schema_version": "ask.dag.v1",
+  "nodes": [
+    {"id": "x", "type": "scillm.batch", "input": {}},
+    {"id": "y", "type": "skill.run", "input": {"skill": "made-up-skill", "args": []}}
+  ]
+}
+```
+
+Allowed node types: `memory.recall`, `dogpile.search`, `ask.oracle`, `skill.run`.
+`skill.run` skills must have a sibling `SKILL.md` and `run.sh`.
+
+**WRONG — using `--orchestrate` and `--dag-file` together without a clear source of truth:**
+
+```bash
+./run.sh ask "Use $memory and $dogpile then $create-report"   --orchestrate   --dag-file /tmp/already-authored.dag.json
+```
+
+Pick one authoring path:
+
+- Natural language only: `--orchestrate` ( `/ask` drafts the DAG ).
+- Explicit graph: `--dag-file` or `--dag-json` (do not also `--orchestrate` unless
+  you intend to replace the hand-authored graph).
+
+When validation fails, `/ask` returns `AskDagError` at load time or
+`dag_layer_failed` at runtime; inspect `dag/manifest.json`, per-node artifacts,
+and `<ask_id>.events.jsonl` instead of guessing from the final answer text.
+
+React Flow or migration tooling may still hand `/ask` compatibility graph nodes
+with `exec_graph_version: "scillm.exec.graph.v1"` plus `execution` and
+`prompt_payload`. `/ask` normalizes those at the boundary into `ask.dag.v1`
+before execution, so callers still do not choose model pools, queues, provider
+capacity, fallback, or transport.
 
 When a run cannot safely continue, `status.json` uses `state:
 needs_attention` and includes a structured `needs_attention` object with
@@ -583,10 +1481,17 @@ role/focus labels without making the agent infer the review contract.
 Preflight the runtime:
 
 ```bash
+./run.sh config doctor --profile release --json
+./run.sh config init
 ./run.sh doctor
 ./run.sh doctor --json
 ./run.sh doctor --live --json
 ```
+
+`config doctor` is non-interactive and safe for CI/release sanity. Missing config,
+credentials, Docker storage, or companion service paths return `needs_attention`
+with `safe_default=do_not_claim_release_ready`. `config init` is the interactive
+repair path and may call `/interview` to collect missing local values.
 
 **Oracle Synthesis:**
 
@@ -598,6 +1503,20 @@ reasoning. Backend `auto` uses direct scillm for simple one-shot calls and
 ```bash
 ./run.sh ask "What should we do next?" --oracle
 ./run.sh ask "What should we do next?" --oracle --oracle-backend subagent-runner --oracle-model gpt-5.5 --oracle-reasoning high
+```
+
+Direct scillm oracle calls can include screenshots or other images with
+`--oracle-image`. `/ask` converts each local file to an OpenAI-compatible
+`image_url` data URI, sends it through the same SSE `/scillm`
+`/v1/chat/completions` route, and records `oracle_image_paths` in request
+artifacts:
+
+```bash
+./run.sh ask oc-kimi "Brandon, review this Posture page screenshot against the design brief" \
+  --oracle-image /tmp/posture-page.png \
+  --ask-id posture-page-brandon-review \
+  --run-output-root /tmp/ask-runs \
+  --overwrite
 ```
 
 For deliberation, set `--oracle-iterations` and optional persona roles. `/ask` will run sequential
@@ -624,6 +1543,78 @@ orchestrate persona-to-persona turns. For same-model persona dialogue, `/ask`
 uses one subagent session and has it switch personas dynamically so it keeps the
 full subagent conversation context. Separate sessions are only for isolation,
 parallelism, or different peer model backends such as DeepSeek via `/scillm`.
+
+**Visible persistent subagents:**
+
+When the human asks to bring a named collaborator such as Nico into the current
+conversation, `/ask` must create or reuse a persistent, human-visible session.
+This is different from a bounded oracle answer.
+
+Contract:
+
+- `/ask` owns the runtime. Do not manually call `/subagent-runner`, send tmux
+  keys, or scrape terminal text as a hidden fallback.
+- The public abstraction is `ask_agent(agent_id, message)`: resolve the named
+  collaborator's durable conversation state, run the next turn, persist
+  transcript/events, and return the collaborator's `final_text`.
+- Conversation identity is provider-neutral state. Store `agent_id`,
+  `backend_type`, `conversation_id`, role/cwd, and timestamps in a dedicated
+  memory-backed registry such as `codex_subagent_state`; do not mix runtime ids
+  into lesson/persona lore.
+- Codex App Server is one backend adapter. Its `conversation_id` is the Codex
+  `thread.id`, and each message uses `turn/start` against that thread. Normal
+  follow-up turns must not create a new thread unless the user explicitly
+  resets/forks the collaborator.
+- `thread/resume` is for reconnecting/reloading a stored thread before the next
+  `turn/start`; `turn/steer` is only for appending input to an active in-flight
+  turn.
+- Proof is the visible conversation text plus artifacts: request/status/events,
+  backend event log, result JSON, `thread_id`, `turn_id`, observed App Server
+  methods, and returned `final_text`.
+
+Example:
+
+```bash
+./run.sh ask "Bring Nico into this conversation to review the PDF annotator mockups" \
+  --ask-id nico-pdf-oxide \
+  --run-output-root /tmp/ask-visible-subagents \
+  --overwrite
+```
+
+Required proof paths from the resulting `/ask` artifacts:
+
+- `<ask-id>.request.json`
+- `<ask-id>.status.json`
+- `<ask-id>.events.jsonl`
+- scillm/App Server event log path
+- scillm result JSON path
+- visible terminal rendering of `Nico -> project agent: <final_text>`
+
+Optional tmux/TUI views are diagnostic only. They are not the machine interface
+and are not proof unless backed by the structured event/result artifacts above.
+
+**Ask-backed design review loops:**
+
+When `$ask` is combined with `$review-design`, route the request as a bounded
+review-design critique loop, not as a generic Q&A answer. Leading model
+shorthand still applies. For example, `$ask oc kimi for a $review-design with
+maximum 3 rounds` resolves the reviewer model to `opencode-go/kimi-k2.6`
+through `/scillm`.
+
+Required behavior:
+
+1. Capture or accept the current screenshot bundle for the UI surface.
+2. Send the screenshot(s), design constraints, and review-design verdict schema
+   to the resolved reviewer model.
+3. Require a structured verdict: `satisfied`, `needs_changes`, or `blocked`.
+4. If the verdict is `needs_changes`, the project agent patches the UI, captures
+   a fresh screenshot, and asks the reviewer again.
+5. Stop at the first `satisfied` verdict, concrete blocker, or requested maximum
+   round count.
+
+The round cap is literal. "maximum 3 rounds" means no more than three reviewer
+verdict calls. The reviewer must inspect a fresh rendered screenshot before
+marking the design satisfied.
 
 Peer turns can use any one-shot model supported by `/scillm`. This lets a Codex
 subagent converse with DeepSeek V4, MiniMax, Gemini, or other scillm routes:
@@ -664,13 +1655,14 @@ Core tool rules for oracle subagents:
 
 Use oracle mode for single high-value questions, not nightly runs or batch ingestion loops.
 
-**Roundtable, Argue, and Parallel Review Modes:**
+**Roundtable, Argue, Parallel Review, and CAE Gap Review Modes:**
 
-`/ask` supports three distinct adversarial review protocols:
+`/ask` supports four distinct review protocols:
 
 - `--parallel-review`: independent reviewers inspect the same artifact/question concurrently, then a neutral moderator synthesizes findings.
 - `--argue`: a FOR advocate and AGAINST advocate run in parallel through `/scillm`; a sequential judge decides or abstains, then a deterministic verifier gates the verdict.
 - `--roundtable`: selected personas speak sequentially through a state-machine protocol; each turn must reference prior claims and critiques.
+- `--cae-gap-review`: `/create-evidence-case` builds or loads the QRA/evidence snapshot first; Brandon, Margaret, and Jennifer review policy evidence, technical enforcement, and control mapping; a judge reroutes one missing evidence item per round before halting.
 
 Use both together when you want independent findings first, followed by persona debate over those findings.
 
@@ -754,6 +1746,34 @@ Review then roundtable:
   --roundtable-personas "Brandon:failure_mode,Margaret:evidence_auditor,Jennifer:complexity_minimizer"
 ```
 
+CAE/QRA gap review:
+
+```bash
+./run.sh ask "cae gap review AC-2 MFA evidence for the production tenant" \
+  --cae-reviewers "Brandon:cae_policy_evidence,Margaret:cae_technical_enforcement,Jennifer:cae_control_mapping" \
+  --cae-judge "CAE Gap Judge" \
+  --cae-max-rounds 3
+```
+
+CAE gap review is a post-evidence-case review layer, not the QRA generator and
+not a compliance oracle. The QRA claim, answer, controls, and `evidence_case`
+snapshot stay fixed. The only adaptive behavior is targeted recurrence: when the
+judge returns `NEEDS_CLARIFICATION`, `/ask` reroutes exactly one missing evidence
+item to the matching CAE reviewer role, then asks the judge again. It halts on a
+terminal judge decision, repeated missing evidence, invalid judge JSON, model
+failure, or the max round limit.
+
+Use it in the QRA lifecycle as:
+
+```text
+generated QRA
+  → candidate QRA
+  → CAE gap review
+  → human review
+  → approve / edit / reject / defer
+  → promote to sparta_qra or keep as gap
+```
+
 Protocol rules:
 - Critiques must anchor to specific claims.
 - Each participant must add a non-trivial disagreement or justify why none exists.
@@ -780,6 +1800,30 @@ Protocol rules:
 Use deep review when the human wants a comprehensive, Web-GPT-style review
 without copy-paste into the browser. Deep review is not `/code-runner`; it must
 produce analysis and artifacts, not patches.
+
+Deep-review targets must be directly inspectable. Pass concrete readable files,
+diffs, manifests, plans, or rendered review artifacts. Do not pass compressed
+archives or opaque binary files as the target. If a phase or review package
+exists only as a ZIP or other archive, extract the archive or create a readable
+target manifest, then pass the individual files that the reviewer must inspect:
+
+```bash
+# WRONG: reviewer receives compressed bytes, not readable evidence.
+./run.sh ask "deep review this phase" \
+  --deep-review \
+  --deep-review-target /tmp/phase-review.zip \
+  --oracle-backend scillm \
+  --oracle-model gpt-5.5 \
+  --oracle-reasoning high
+
+# RIGHT: reviewer receives the actual readable phase artifacts.
+./run.sh ask "deep review this phase" \
+  --deep-review \
+  --deep-review-target "/tmp/phase-review/PHASE_STATUS.json /tmp/phase-review/PHASE_REVIEW_REQUEST.md /tmp/phase-review/progress-context.md /tmp/phase-review/plan.dag.json" \
+  --oracle-backend scillm \
+  --oracle-model gpt-5.5 \
+  --oracle-reasoning high
+```
 
 ```bash
 ./run.sh ask "deep review this implementation" \
@@ -908,6 +1952,18 @@ Use $ask oracle and have GPT-5.5 converse with DeepSeek V4.
 ```
 
 **Incorrect Usage Examples:**
+
+```bash
+# WRONG: Asking deep-review to inspect a compressed package.
+./run.sh ask "deep review this review bundle" \
+  --deep-review \
+  --deep-review-target /tmp/review-bundle.zip
+
+# RIGHT: Extract or render the bundle, then pass concrete readable files.
+./run.sh ask "deep review this review bundle" \
+  --deep-review \
+  --deep-review-target "/tmp/review-bundle/PHASE_STATUS.json /tmp/review-bundle/review-request.md /tmp/review-bundle/manifest.json"
+```
 
 ```bash
 # WRONG: Using oracle mode for many independent items.

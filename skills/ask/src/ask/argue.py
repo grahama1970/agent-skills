@@ -381,7 +381,12 @@ def verify_argue_result(result: dict[str, Any]) -> dict[str, Any]:
     failures.extend(scillm_summary["metadata_failures"])
 
     if verdict in {"FOR", "AGAINST"}:
-        if scillm_summary["grounding_degraded"]:
+        question_only_evidence = bool(evidence_citations) and all(
+            str(citation.get("source_id") or "").startswith("QUESTION")
+            and citation.get("source_kind") == "question"
+            for citation in evidence_citations
+        )
+        if scillm_summary["grounding_degraded"] and not question_only_evidence:
             failures.append("FOR/AGAINST verdict requires successful source grounding")
         required_fields = [
             "decision_criterion",

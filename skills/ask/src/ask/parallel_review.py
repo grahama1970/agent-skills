@@ -224,14 +224,14 @@ def run_parallel_review(
     if dag_mode not in {"hybrid", "judge-best"}:
         raise ParallelReviewError("Parallel review DAG must be hybrid or judge-best")
     implementation_requested = bool(apply_fixes or implement_with)
-    if implement_with and implement_with != "code-runner":
-        raise ParallelReviewError("Only --implement-with code-runner is supported")
+    if implement_with and implement_with not in {"code-runner", "scillm-agent"}:
+        raise ParallelReviewError("Only --implement-with code-runner or scillm-agent is supported")
     if implementation_requested:
         code_runner_handoff = True
     run_dir = Path(getattr(run_state, "run_dir", ""))
     if not run_dir:
         raise ParallelReviewError("Parallel review requires runtime artifacts")
-    if implementation_requested and not any(command.strip() for command in (code_runner_dod_commands or [])):
+    if implementation_requested and implement_with != "scillm-agent" and not any(command.strip() for command in (code_runner_dod_commands or [])):
         attention = run_state.needs_attention(
             reason="missing_code_runner_dod",
             question="Explicit implementation intent requires at least one --code-runner-dod-command.",

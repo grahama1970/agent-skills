@@ -1,0 +1,384 @@
+version: 1
+kind: orchestrate-plan
+repo_root: /home/graham/workspace/experiments/agent-skills/skills/ask
+metadata:
+  title: Ask Release Readiness
+  created: "2026-05-01"
+  plan_type: code
+  owner: ask
+  primary_persona:
+    name: Project agent using /ask
+    role: Developer/operator asking memory-backed, oracle, review, and OS-health questions
+    source: /home/graham/workspace/experiments/agent-skills/skills/ask/SKILL.md
+  goal: >
+    Get /ask to a fully tested, ready-to-use state without turning it into a code runner.
+    /ask should remain the front door and composer for memory-backed questions, oracle review,
+    peer/fanout/argue modes, and provider-backed model calls through /scillm or agent sessions.
+  readiness_definition: >
+    Ready means the documented CLI entrypoints work, deterministic sanity checks pass, release
+    configuration reports no unknown readiness items, live composed checks pass against the real
+    downstream services, and provider limitations are explicit instead of silent.
+execution:
+  max_concurrency: 1
+  wave_barrier: true
+  scheduling_policy: wave_then_dependency
+capability_overlap:
+  memory_recall:
+    query: plan to get ask skill fully tested release ready run.sh ask dispatch failing sanity verifier config doctor live e2e
+    result: >
+      Existing memory identifies /ask as the zero-cognitive-load front door for memory-backed
+      synthesis and oracle review. It also identifies /scillm as the provider-routing boundary.
+  manifest_scan:
+    source: /home/graham/workspace/experiments/pi-mono/.pi/skills-manifest.json
+    relevant_existing_skills:
+      - ask
+      - assess
+      - memory
+      - monitor-memory
+      - ops-arango
+      - ops-docker
+      - ops-llm
+      - orchestrate
+      - plan
+      - review-plan
+      - scillm
+      - task-monitor
+      - test-lab
+    decision: >
+      Use and harden the existing /ask skill. Do not create a new ask-like skill or embed
+      duplicate provider adapters in /ask.
+  composition_boundary: >
+    /ask composes model calls. Gemini, Claude, OpenAI, Codex-compatible, and OpenCode Go models
+    should be reached through /scillm model routes for normal one-shot and multi-review calls.
+    Codex agent sessions remain a /subagent-runner integration point when an agent session is
+    explicitly selected. /ask must verify and report those boundaries clearly.
+questions_blockers:
+  - None
+known_runtime_gates:
+  - >
+    Claude currently reports expired in /scillm auth. Final live readiness needs a valid Claude
+    login or an explicit documented non-ready provider status.
+  - >
+    Release readiness depends on live local services. The final gate requires ArangoDB, Qdrant,
+    memory, embeddings, and scillm to be reachable without mocked substitutions.
+lanes:
+  - id: "0"
+    title: Baseline and routing repair
+  - id: "1"
+    title: Regression repair
+  - id: "2"
+    title: Runtime readiness
+  - id: "3"
+    title: Live validation and handoff
+tasks:
+  - id: T01
+    title: Capture current readiness baseline
+    lane: "0"
+    runner: local
+    skills:
+      - ask
+      - memory
+      - scillm
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      ./run.sh doctor --json &&
+      ./run.sh config doctor --profile release --json || true &&
+      ./sanity-e2e.sh --plan-only --profile release
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh doctor --json
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh doctor --json &&
+        ./run.sh config doctor --profile release --json || true &&
+        ./sanity-e2e.sh --plan-only --profile release
+      assertion: >
+        Baseline evidence records local doctor status, release-profile readiness gaps, and the
+        live E2E plan before code changes. Any non-ready item is listed with a concrete owner
+        service or missing credential.
+
+  - id: T02
+    title: Repair documented ask CLI dispatch
+    lane: "0"
+    runner: local
+    gate: The documented run.sh ask dry-run entrypoint exits 0 and returns valid JSON.
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      ./run.sh ask "Should ask dry-run work?" --dry-run --json | python -m json.tool &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_docs_setup_examples.py
+    depends_on:
+      - T01
+    skills:
+      - ask
+      - best-practices-skills
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/run.sh
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/ask.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_setup_cli.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_docs_setup_examples.py
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/run.sh
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_setup_cli.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_docs_setup_examples.py
+    prompt: >
+      Fix the mismatch where run.sh documents an ask command but dispatches it as unknown.
+      Preserve existing command names and help text. Add a regression test that executes the
+      documented dry-run path through run.sh rather than importing Python internals.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh ask "Should ask dry-run work?" --dry-run --json | python -m json.tool
+      assertion: >
+        The command exits 0, returns valid JSON, and invokes the ask command path rather than
+        printing "Unknown command: ask".
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_setup_cli.py tests/test_docs_setup_examples.py
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh ask "What do we know about ask?" --dry-run --json
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity.sh
+
+  - id: T03
+    title: Repair argue verifier regression
+    lane: "1"
+    runner: local
+    gate: High-confidence argue results with missing evidence fail closed with an explicit verifier reason.
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q
+      tests/test_run_state_protocol.py::test_argue_verifier_rejects_high_confidence_with_missing_evidence
+      tests/test_run_state_protocol.py::test_argue_verifier_rejects_for_when_grounding_fell_back
+      tests/test_run_state_protocol.py::test_argue_verifier_rejects_scillm_metadata_return_mismatch
+    depends_on:
+      - T01
+    skills:
+      - ask
+      - test-lab
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/argue.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_run_state_protocol.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/sanity.sh
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/argue.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_run_state_protocol.py
+    prompt: >
+      Investigate why sanity.sh reports
+      test_argue_verifier_rejects_high_confidence_with_missing_evidence as unexpectedly passing.
+      Fix the root cause so high-confidence argue results with missing evidence are rejected,
+      while preserving legitimate grounded high-confidence results.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q
+        tests/test_run_state_protocol.py::test_argue_verifier_rejects_high_confidence_with_missing_evidence
+        tests/test_run_state_protocol.py::test_argue_verifier_rejects_for_when_grounding_fell_back
+        tests/test_run_state_protocol.py::test_argue_verifier_rejects_scillm_metadata_return_mismatch
+      assertion: >
+        The targeted verifier tests pass and the missing-evidence case fails closed with an
+        explicit verifier reason in the run-state payload.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q
+        tests/test_run_state_protocol.py::test_argue_verifier_rejects_high_confidence_with_missing_evidence
+        tests/test_run_state_protocol.py::test_argue_verifier_rejects_for_when_grounding_fell_back
+        tests/test_run_state_protocol.py::test_argue_verifier_rejects_scillm_metadata_return_mismatch
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity.sh
+
+  - id: T04
+    title: Make release readiness probes decisive
+    lane: "2"
+    runner: local
+    gate: Release-profile readiness reports verified, degraded, and blocked dependency states without ambiguity.
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_config_doctor.py tests/test_setup_e2e_sanity.py &&
+      ./run.sh config doctor --profile release --json
+    depends_on:
+      - T02
+      - T03
+    skills:
+      - ask
+      - memory
+      - scillm
+      - ops-arango
+      - ops-llm
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/ask_config.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/doctor.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_config_doctor.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_setup_e2e_sanity.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/README.md
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/ask_config.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/doctor.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_config_doctor.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_setup_e2e_sanity.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/README.md
+    prompt: >
+      Make release-profile readiness actionable and non-ambiguous. The doctor/config doctor output
+      must distinguish configured, reachable, verified, degraded, and blocked states for ArangoDB,
+      Qdrant, vector store, embedder, memory, and scillm. Do not start containers or mask missing
+      services. Keep the safe default "do_not_claim_release_ready" until all required live probes
+      pass.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_config_doctor.py tests/test_setup_e2e_sanity.py &&
+        ./run.sh config doctor --profile release --json
+      assertion: >
+        Release-profile JSON has stable machine-readable statuses for every required dependency
+        and only reports release_ready true when all required live readiness checks are verified.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_config_doctor.py tests/test_setup_e2e_sanity.py
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh doctor --json
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity-e2e.sh --plan-only --profile release
+
+  - id: T05
+    title: Verify provider routing matrix
+    lane: "2"
+    runner: local
+    external_service: scillm
+    gate: scillm health, auth, and model listing endpoints are reachable and provider status is explicit.
+    depends_on:
+      - T04
+    skills:
+      - ask
+      - scillm
+      - ops-llm
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      curl -fsS http://localhost:4001/health &&
+      curl -fsS -H "Authorization: Bearer sk-dev-proxy-123" -H "X-Caller-Skill: ask" http://localhost:4001/v1/scillm/auth &&
+      curl -fsS -H "Authorization: Bearer sk-dev-proxy-123" -H "X-Caller-Skill: ask" http://localhost:4001/v1/models
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        curl -fsS http://localhost:4001/health
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        curl -fsS http://localhost:4001/health &&
+        curl -fsS -H "Authorization: Bearer sk-dev-proxy-123" -H "X-Caller-Skill: ask" http://localhost:4001/v1/scillm/auth &&
+        curl -fsS -H "Authorization: Bearer sk-dev-proxy-123" -H "X-Caller-Skill: ask" http://localhost:4001/v1/models
+      assertion: >
+        The provider matrix explicitly reports which routes are usable. Gemini, Codex-compatible,
+        Claude, and OpenCode Go routes are either live-usable or marked blocked with the exact
+        credential/service reason. Expired Claude auth is not treated as ready.
+
+  - id: T06
+    title: Pass deterministic full sanity
+    lane: "3"
+    runner: local
+    depends_on:
+      - T02
+      - T03
+      - T04
+    skills:
+      - ask
+      - test-lab
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      ./sanity.sh
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity.sh
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity.sh
+      assertion: >
+        The complete deterministic sanity suite exits 0 without expected-fail inversions,
+        unexpected skips, invalid artifacts, or undocumented warnings.
+
+  - id: T07
+    title: Pass live composed smoke checks
+    lane: "3"
+    runner: local
+    external_service: ask-live-stack
+    depends_on:
+      - T05
+      - T06
+    skills:
+      - ask
+      - memory
+      - scillm
+      - ops-arango
+      - ops-llm
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      ASK_LIVE_SCILLM_E2E=1 ./sanity.sh &&
+      ASK_LIVE_SANITY_E2E=1 ./sanity-e2e.sh --profile release
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ASK_LIVE_SCILLM_E2E=1 ./sanity.sh
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ASK_LIVE_SANITY_E2E=1 ./sanity-e2e.sh --profile release
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ASK_LIVE_SCILLM_E2E=1 ./sanity.sh &&
+        ASK_LIVE_SANITY_E2E=1 ./sanity-e2e.sh --profile release
+      assertion: >
+        Live checks exercise the real /ask to /memory and /ask to /scillm composition boundaries.
+        No required live check fails, no mocked downstream replaces a required service, and output
+        contains usable answers rather than empty responses or provider refusals.
+
+  - id: T08
+    title: Final release gate and handoff
+    lane: "3"
+    runner: local
+    depends_on:
+      - T07
+    skills:
+      - ask
+      - memory
+      - review-plan
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      ./run.sh config doctor --profile release --json &&
+      ./run.sh doctor --live --json &&
+      /home/graham/workspace/experiments/pi-mono/.pi/skills/memory/run.sh learn
+      --problem "ask release readiness status"
+      --solution "Ask is release-ready only after run.sh ask dispatch, argue verifier regression,
+      release-profile readiness probes, deterministic sanity, and live scillm/memory E2E checks pass."
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh config doctor --profile release --json
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh doctor --live --json
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh config doctor --profile release --json &&
+        ./run.sh doctor --live --json &&
+        /home/graham/workspace/experiments/pi-mono/.pi/skills/memory/run.sh learn
+        --problem "ask release readiness status"
+        --solution "Ask is release-ready only after run.sh ask dispatch, argue verifier regression,
+        release-profile readiness probes, deterministic sanity, and live scillm/memory E2E checks pass."
+      assertion: >
+        Release config reports release_ready true, live doctor exits 0, readiness evidence is
+        stored in memory, and the handoff states exactly which providers and agent paths are
+        supported through /ask.

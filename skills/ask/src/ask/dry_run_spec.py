@@ -160,6 +160,15 @@ def build_os_learn_dry_run_spec(request: dict[str, Any]) -> dict[str, Any]:
 
 
 def print_execution_spec(spec: dict[str, Any], as_json: bool = False) -> None:
+    ask_dag = spec.get("ask_dag") if isinstance(spec.get("ask_dag"), dict) else None
+    if ask_dag is None:
+        options = spec.get("options")
+        if isinstance(options, dict) and isinstance(options.get("ask_dag"), dict):
+            ask_dag = options["ask_dag"]
+    ascii_chart = str((ask_dag or {}).get("ascii_chart") or "").strip()
+    if ascii_chart and not as_json:
+        print(ascii_chart)
+        print()
     if as_json:
         print(json.dumps(spec, indent=2, sort_keys=True, default=str))
         return

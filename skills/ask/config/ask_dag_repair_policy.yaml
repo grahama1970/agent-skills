@@ -1,0 +1,33 @@
+schema_version: ask.dag.repair_policy.v1
+# Global repair policy for /ask DAG execution. Skill-specific hints may extend this.
+repairs:
+  - id: dogpile_timeout_budget
+    node_types: [dogpile.search]
+    match:
+      returncode: -2
+    actions:
+      - type: bump_timeout
+        reason: dogpile_timeout_budget_too_low
+        target_seconds: 360
+        only_if_below: 360
+      - type: consume_partial_artifact
+        skill: dogpile
+        artifact: dogpile_partial_results.json
+        min_report_chars: 400
+
+  - id: skill_run_timeout_budget
+    node_types: [skill.run]
+    match:
+      returncode: -2
+    actions:
+      - type: bump_timeout
+        target_seconds: 120
+        only_if_below: 120
+  - id: memory_recall_timeout_budget
+    node_types: [memory.recall]
+    match:
+      returncode: -2
+    actions:
+      - type: bump_timeout
+        target_seconds: 90
+        only_if_below: 90

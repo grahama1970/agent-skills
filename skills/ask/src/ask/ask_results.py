@@ -40,6 +40,7 @@ def _synthesise(
     oracle_persona_model: Optional[str] = None,
     oracle_peer_model: Optional[str] = None,
     oracle_persona_scope: str = "personas",
+    oracle_image_paths: Optional[list[str]] = None,
     roundtable: bool = False,
     roundtable_personas: Optional[str] = None,
     roundtable_role_preset: str = "adversarial-review",
@@ -52,6 +53,13 @@ def _synthesise(
     parallel_review_focus: Optional[str] = None,
     parallel_review_role_preset: str = "adversarial-review",
     deep_review_request: Optional[dict] = None,
+    webgpt_tab_id: str = "",
+    webgpt_url: str = "",
+    webgpt_create_tab: bool = False,
+    webgpt_project: str = "",
+    gemini_tab_id: str = "",
+    gemini_url: str = "",
+    run_state: object | None = None,
 ) -> None:
     """Build the answer string and print output."""
     question = result["question"]
@@ -88,7 +96,9 @@ def _synthesise(
                 log.debug("Filtered %d meta items from synthesis", meta_count)
         log.info("Synthesised answer from %d items", len(result["items"]))
     else:
-        if auto_learn:
+        if oracle_model:
+            result["answer"] = "[no memory context retrieved; passing original question directly to oracle]"
+        elif auto_learn:
             result["answer"] = (
                 f'No knowledge found for "{question}" even after auto-learning. '
                 f'Try providing specific YouTube URLs: ./run.sh learn "{question}" '
@@ -122,17 +132,25 @@ def _synthesise(
             persona_model=oracle_persona_model,
             peer_model=oracle_peer_model,
             persona_scope=oracle_persona_scope,
+            oracle_image_paths=oracle_image_paths or [],
             roundtable=roundtable,
             roundtable_personas=roundtable_personas,
             roundtable_role_preset=roundtable_role_preset,
             roundtable_rounds=roundtable_rounds,
             roundtable_mode=roundtable_mode,
             roundtable_persist=roundtable_persist,
-            parallel_review=parallel_review,
+            parallel_review=parallel_review and not deep_review_request,
             parallel_reviewers=parallel_reviewers,
             parallel_review_personas=parallel_review_personas,
             parallel_review_focus=parallel_review_focus,
             parallel_review_role_preset=parallel_review_role_preset,
+            webgpt_tab_id=webgpt_tab_id,
+            webgpt_url=webgpt_url,
+            webgpt_create_tab=webgpt_create_tab,
+            webgpt_project=webgpt_project,
+            gemini_tab_id=gemini_tab_id,
+            gemini_url=gemini_url,
+            run_state=run_state,
         )
 
     if deep_review_request:

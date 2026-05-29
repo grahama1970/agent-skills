@@ -1,6 +1,6 @@
 # Project Knowledge: ask
 
-**Last updated:** 2026-05-01 09:41 by agent
+**Last updated:** 2026-05-06 12:56 by agent
 **Status:** Active development
 
 This file is the human-readable current-state projection for `/ask`
@@ -85,6 +85,12 @@ curated context. Memory recall is context, not evidence.
 - The argue verifier rejects high-confidence judge verdicts when
   `missing_evidence` is non-empty.
 - /ask now supports leading provider-family shorthand for direct scillm oracle calls: `$ask oc kimi ...`, `$ask oc-qwen ...`, `$ask chutes kimi ...`, and `$ask chutes-kimi ...`. OpenCode Go shorthand queries scillm live model discovery before selecting the preferred configured family model; Chutes shorthand uses configured scillm aliases such as `text-kimi`.
+- 2026-05-03 live E2E reconfirmed `$ask oc kimi` and `$ask chutes-kimi` through real `/scillm`; both returned oracle answers and `answered` runtime state. Direct `/scillm` Kimi also passed for `opencode-go/kimi-k2.6` and `text-kimi`. Direct scillm oracle calls now use OpenAI-compatible SSE streaming, pass an explicit request `timeout`, and emit `oracle_scillm_call_started`, `oracle_scillm_stream_progress`, `oracle_scillm_call_finished`, and `oracle_scillm_call_failed` runtime events with model, served model, reasoning effort, backend, timeout, and accumulated content length so long Kimi/GPT calls are not opaque after `synthesis_started`. OpenCode Go shorthand discovery timeout increased to 30s so `$ask oc kimi` can use live `/v1/scillm/opencode-go/models` instead of falling back prematurely.
+- 2026-05-03 Kimi deep-review E2E proved the previous stale/running bug is fixed at the observability layer: `$ask` emitted SSE progress events until the declared hard budget, then wrote terminal `failed` status and JSON error output without a Rich traceback. OpenCode Kimi remains too slow for the tested 35s/240s deep-review budget, so use a larger `--oracle-timeout` or GPT-5.5 High for production review until Kimi latency improves.
+- `/ask --cae-gap-review` is a post-evidence-case QRA review layer. `/create-evidence-case` builds or loads the QRA, controls, answer, crosswalk chains, formal proof/SACM refs when present, and cached `evidence_case`; `/ask` freezes that snapshot and reviews whether the QRA has enough cited support for human review.
+- 2026-05-06: /ask now has standalone image generation mode. Use ./run.sh ask <prompt> --image-generate to call /scillm POST /v1/images/generations, write generated image files plus image_generation.json into the ask run artifacts, and mark the run answered without mixing memory retrieval, oracle, roundtable, argue, parallel-review, deep-review, or CAE gap-review modes.
+- 2026-05-06 correction: /ask --image-generate relies on scillm image credentials; the normal project-agent path is existing Codex/OpenAI OAuth through scillm. OPENAI_API_KEY is optional platform-key override only, not required for project agents when OAuth is configured.
+- 2026-05-20: A real `$ask --deep-review` run against the scillm DAG viewer-editor exposed two deep-review verifier/schema gaps. The prompt now explicitly requires top-level `blocking_issues` and `significant_risks` to include `severity`, `issue`, `evidence`, `evidence_citations`, `impact`, `fix`, and `verification`; the normalizer now backfills missing plain `evidence` from structured citations and filters incomplete section-local notes so they do not masquerade as formal findings. Final rerun `dag-ux-gpt55-round2-final` reached `state: answered`, verdict `SAFE_WITH_CONDITIONS`, verifier `PASS`.
 
 ## Recent Decisions
 
@@ -113,6 +119,16 @@ curated context. Memory recall is context, not evidence.
 | 2026-04-29 | Add an ephemeral HTML run viewer. | `status --watch` is necessary but not sufficient for human inspection of DAG state, artifacts, verifier failures, and `needs_attention` reasons. |
 | 2026-05-01 | Make release config doctor verify readiness with read-only probes. | Release readiness should be evidence-based in one command, without starting containers or relying on a separate live doctor transcript. |
 | 2026-05-01 | Treat provider-family shorthand as a first-class $ask oracle route | The model shorthand is user-facing routing policy, uses live OpenCode Go discovery where available, and must preserve resolved alias metadata in output and runtime artifacts. |
+| 2026-05-02 | Treat CAE gap review as QRA review, not QRA generation | This preserves /create-evidence-case as the evidence trail builder while /ask runs bounded Brandon/Margaret/Jennifer reviewer roles plus a judge that reroutes only unresolved missing evidence before halting. |
+| 2026-05-03 | Add direct scillm oracle call runtime events and lengthen OpenCode Go discovery timeout | `$ask oc kimi` could answer successfully but looked stalled after `synthesis_started`; events now expose the active scillm model call and served model. |
+| 2026-05-11 | Add WebGPT as a first-class `/ask` oracle backend (`--oracle-backend webgpt`, `$ask webgpt …`). | Project agents need a way to use the user's authenticated ChatGPT session as a peer oracle without the surf-cli plumbing leaking into every consumer skill. Routes through `surf webgpt.submit --no-activate` so the controlled tab never foregrounds and the sentinel proof contract still holds. `/review-prompt`, `/review-design`, `/review-code`, `/review-plan` inherit the backend for free by composing `/ask`. |
+| 2026-05-11 | Bind WebGPT tab id per project under `~/.pi/webgpt-projects/<name>.json`. | One ChatGPT conversation per project isolates context across tasks: Project A's review thread doesn't pollute Project B's. Auto-bind is silent and re-creates closed tabs; manual `webgpt-project bind` marks the binding as human-curated and refuses to auto-replace. |
+| 2026-05-11 | `webgpt-project bind/list/show/verify/unbind/gc` as a Typer subcommand. | Operators need an explicit way to inspect, override, and garbage-collect the project-tab map without editing JSON state files by hand. `gc` only removes auto-bindings; manual bindings are sticky by design. |
+| 2026-05-11 | Use `json_repair` (not hand-rolled regex) for ChatGPT verdict extraction. | Live e2e proved ChatGPT emits raw 0x0A control bytes inside JSON string fields, which `json.loads` correctly rejects per RFC 8259. The previous hand-rolled regex only recovered the verdict label and dropped `blocking_findings`; `json_repair` recovers the full object. |
+| 2026-05-11 | Add per-hour ChatGPT round budget guard at the runtime layer. | Multi-round ping-pong + per-project bindings + retry-on-not-SAFE could exhaust the account's per-3-hour cap mid-session. `ASK_WEBGPT_MAX_ROUNDS_PER_HOUR` (default 30) caps total rounds across all projects; `ASK_WEBGPT_RATE_LIMIT_DISABLE=1` is only for tests. |
+| 2026-05-11 | Empty `--webgpt-diff-scope` means `git diff` (uncommitted), not "no diff at all". | ASK-WEBGPT-001 caught by the webgpt self-review: `clarify_diff_scope` returns `""` for the uncommitted choice; the prior `resolve_diff("")` short-circuited to empty so reviews could run with no evidence. Fixed by running bare `git diff --no-color`. |
+| 2026-05-11 | `--webgpt-create-tab` overrides a stale manual project binding. | ASK-WEBGPT-002 caught by the webgpt self-review: `call_webgpt` was raising `WebgptBackendError` from a stale manual binding before checking `create_tab`. The error message told users to pass `--webgpt-create-tab` but that branch never executed. Fixed by catching the ProjectBindingError when `create_tab=True`. |
+| 2026-05-20 | Deep-review verifier schema must normalize evidence-bearing findings before gating. | The DAG UX review runs showed that model outputs may provide structured `evidence_citations` without a plain `evidence` field and may emit informal section notes; verifier gates should fail closed, but prompt/normalizer must convert or discard those shapes deterministically instead of requiring manual artifact surgery. |
 
 ## Open Questions
 
@@ -130,6 +146,14 @@ curated context. Memory recall is context, not evidence.
       roundtable behavior, and real `/scillm` calls for `/scillm` DAG paths;
       deterministic tests remain route/unit coverage.
 
+## Agent Takeover Notes
+
+- Current active work: Continue scillm DAG planner-editor visual/browser proof after the ask deep-review verifier repair.
+- Evidence pointers: ask runtime status `/home/graham/workspace/experiments/agent-skills/skills/ask/.ask_artifacts/runs/dag-ux-gpt55-round2-final/dag-ux-gpt55-round2-final.status.json`; final review `/home/graham/workspace/experiments/scillm/.ask_artifacts/deep-review/20260520T121424Z/review.md`; final review JSON `/home/graham/workspace/experiments/scillm/.ask_artifacts/deep-review/20260520T121424Z/review.json`; changed files `src/ask/deep_review.py` and `tests/test_deep_review_protocol.py`.
+- Next action: Capture or build fresh browser proof for the scillm DAG planner-editor showing the review-code fanout row with model, agent, contract, prompt, review level, proof floor, and editable Best-practice skills visible and not clipped.
+- Blockers/caveats: `examples/exec-graph-debugger` currently has no standalone runnable harness; do not claim final DAG UX readiness from code/DOM assertions alone. The ask review verdict is `SAFE_WITH_CONDITIONS`, not final visual PASS.
+- Last verified command/artifact: `PYTHONPATH=src pytest -q tests/test_deep_review_protocol.py tests/test_deep_review_section_citations.py tests/test_deep_review_telemetry.py` => 14 passed; `dag-ux-gpt55-round2-final.status.json` => state `answered`, verifier `PASS`.
+
 ## Key Files
 
 | File | Purpose |
@@ -144,6 +168,10 @@ curated context. Memory recall is context, not evidence.
 | `src/ask/argue.py` | Three-call `/scillm` argue DAG, judge verifier, and argue artifacts |
 | `src/ask/parallel_review.py` | `/scillm` reviewer fanout, judge synthesis, verifier, and code-runner handoff artifacts |
 | `src/ask/scillm_runtime.py` | Shared `/scillm` metadata, source bundle, observability, and debug helpers |
+| `src/ask/webgpt_runtime.py` | WebGPT oracle subprocess wrapper around `surf webgpt.submit --no-activate`; tab resolution (explicit id → url → project binding → create → auto), file auto-attachment, project state persistence |
+| `src/ask/webgpt_project.py` | Per-project tab binding state at `~/.pi/webgpt-projects/<name>.json`: bind, load, verify-against-surf, garbage-collect; manual vs auto bindings |
+| `src/ask/webgpt_project_cli.py` | `webgpt-project bind/list/show/verify/unbind/gc` Typer subcommands |
+| `sanity-webgpt.sh` | Live e2e for `$ask webgpt`: --tab-id / --url / --create-tab / auto-resolve modes; asserts focus_changed=false and the sentinel proof contract |
 | `src/ask/run_state.py` | Runtime request/status/events protocol, needs-attention states, run listing, pruning |
 | `src/ask/run_viewer.py` | Token-gated local HTML monitor for request/status/events artifacts |
 | `src/ask/doctor.py` | Fast and live runtime diagnostics |
@@ -181,7 +209,7 @@ Allowed final verdicts:
 
 ## Validation State
 
-Latest implementation checks, as of 2026-04-29:
+Latest implementation checks, as of 2026-05-01:
 
 - Deep-review contract doc exists.
 - Deep-review verifier tests exist.

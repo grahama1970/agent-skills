@@ -2,6 +2,7 @@
 
 import json
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
@@ -38,6 +39,20 @@ from .scillm_runtime import (
     memory_citations_from_items,
     normalize_citations,
 )
+from .webgpt_runtime import (
+    WebgptBackendError,
+    WebgptTabError,
+    build_webgpt_prompt,
+    call_webgpt,
+    extract_file_attachments,
+)
+from .gemini_runtime import (
+    GeminiBackendError,
+    GeminiBackendDegradedError,
+    GeminiTabError,
+    build_gemini_prompt,
+    call_gemini,
+)
 
 
 INLINE_CITATION_RE = re.compile(r"\[(MEMORY\.\d+|QUESTION|DOGPILE\.\d+|FETCHER\.\d+)\]")
@@ -73,6 +88,194 @@ def _rank_items(items: list[dict]) -> list[dict]:
     # Fallback: return all items if everything is meta (shouldn't happen)
     return items
 
+def _run_oracle_webgpt(
+    base_prompt: str,
+    question: str,
+    persona: Optional[str],
+    iterations: int,
+    timeout: float,
+    webgpt_tab_id: str,
+    webgpt_url: str,
+    webgpt_create_tab: bool,
+    webgpt_project: str,
+    run_state: object | None,
+    oracle_state: dict,
+) -> tuple[str, str, list[dict]]:
+    """Send one /ask synthesis prompt to the controlled ChatGPT tab via surf.
+
+    iterations: each /ask call is one round. Multi-turn iteration is achieved
+    by calling /ask repeatedly with the same controlled tab — ChatGPT
+    preserves conversation state on the tab. We honour the requested
+    iterations count by issuing that many turns in a single /ask call only
+    when the caller asked for them, but the canonical N-round pattern is
+    handled by re-calling /ask externally.
+    """
+    tab_id = (webgpt_tab_id or str(oracle_state.get("webgpt_tab_id", "") or "")).strip()
+    url = (webgpt_url or str(oracle_state.get("webgpt_url", "") or "")).strip()
+    create_tab = bool(webgpt_create_tab)
+    project = (webgpt_project or str(oracle_state.get("webgpt_project", "") or "")).strip()
+    attachments = extract_file_attachments(question)
+    prompt = build_webgpt_prompt(
+        base_prompt,
+        attachments,
+        system_preamble=(
+            "You are answering a /ask oracle call. Treat retrieved memory "
+            "context as supporting evidence; cite supported claims inline with "
+            "source IDs like [MEMORY.1]. Distinguish supported facts from "
+            "inference. Be concise and technically precise."
+        ),
+    )
+
+    turns: list[dict] = []
+    last_content = ""
+    total_iterations = max(1, int(iterations))
+    for index in range(total_iterations):
+        turn_number = index + 1
+        try:
+            result = call_webgpt(
+                prompt if turn_number == 1 else _format_webgpt_followup_prompt(turns, turn_number, total_iterations),
+                tab_id=tab_id,
+                url=url,
+                create_tab=create_tab and turn_number == 1,
+                project=project,
+                timeout=timeout,
+                no_activate=True,
+                run_state=run_state,
+                iteration=turn_number,
+                persona=persona,
+            )
+        except WebgptTabError as exc:
+            raise WebgptBackendError(
+                f"WebGPT oracle could not resolve a ChatGPT tab on round {turn_number}: {exc}"
+            ) from exc
+        # Lock in the resolved tab for subsequent rounds so the conversation
+        # context is preserved.
+        if not tab_id and result.controlled_tab_id:
+            tab_id = result.controlled_tab_id
+        turns.append({
+            "iteration": turn_number,
+            "backend": "webgpt",
+            "controlled_tab_id": result.controlled_tab_id,
+            "took_ms": result.took_ms,
+            "content": result.response,
+            "artifact_dir": str(result.artifact_dir),
+            "no_activate": result.no_activate,
+            "focus_changed": result.focus_changed,
+            "raw_contains_sentinel": result.raw_contains_sentinel,
+        })
+        last_content = result.response
+
+    model_served = f"webgpt:{tab_id}" if tab_id else "webgpt"
+    return last_content, model_served, turns
+
+
+def _run_oracle_webgemini(
+    base_prompt: str,
+    question: str,
+    persona: Optional[str],
+    iterations: int,
+    timeout: float,
+    gemini_tab_id: str,
+    gemini_url: str,
+    run_state: object | None,
+    oracle_state: dict,
+) -> tuple[str, str, list[dict]]:
+    """Send one /ask synthesis prompt to the controlled Gemini tab via surf.
+
+    iterations: each /ask call is one round. Multi-turn iteration is achieved
+    by calling /ask repeatedly with the same controlled tab — Gemini
+    preserves conversation state on the tab.
+    """
+    tab_id = (gemini_tab_id or str(oracle_state.get("gemini_tab_id", "") or "")).strip()
+    url = (gemini_url or str(oracle_state.get("gemini_url", "") or "")).strip()
+    attachments = extract_file_attachments(question)
+    prompt = build_gemini_prompt(
+        base_prompt,
+        attachments,
+        system_preamble=(
+            "You are answering a /ask oracle call. Treat retrieved memory "
+            "context as supporting evidence; cite supported claims inline with "
+            "source IDs like [MEMORY.1]. Distinguish supported facts from "
+            "inference. Be concise and technically precise."
+        ),
+    )
+
+    turns: list[dict] = []
+    last_content = ""
+    total_iterations = max(1, int(iterations))
+    for index in range(total_iterations):
+        turn_number = index + 1
+        try:
+            result = call_gemini(
+                prompt if turn_number == 1 else _format_gemini_followup_prompt(turns, turn_number, total_iterations),
+                tab_id=tab_id,
+                url=url,
+                timeout=timeout,
+                no_activate=True,
+                run_state=run_state,
+                iteration=turn_number,
+                persona=persona,
+            )
+        except GeminiTabError as exc:
+            raise GeminiBackendError(
+                f"Gemini oracle could not resolve a Gemini tab on round {turn_number}: {exc}"
+            ) from exc
+        except GeminiBackendDegradedError as exc:
+            raise  # propagate with self-correction guidance already in message
+        # Lock in the resolved tab for subsequent rounds.
+        if not tab_id and result.controlled_tab_id:
+            tab_id = result.controlled_tab_id
+        turns.append({
+            "iteration": turn_number,
+            "backend": "webgemini",
+            "controlled_tab_id": result.controlled_tab_id,
+            "took_ms": result.took_ms,
+            "content": result.response,
+            "artifact_dir": str(result.artifact_dir),
+            "no_activate": result.no_activate,
+            "focus_changed": result.focus_changed,
+            "raw_contains_sentinel": result.raw_contains_sentinel,
+        })
+        last_content = result.response
+
+    model_served = f"webgemini:{tab_id}" if tab_id else "webgemini"
+    return last_content, model_served, turns
+
+
+def _format_gemini_followup_prompt(
+    turns: list[dict],
+    turn_number: int,
+    total_iterations: int,
+) -> str:
+    """Build a follow-up prompt that nudges Gemini to refine the prior answer."""
+    return (
+        f"This is iteration {turn_number}/{total_iterations} on the same /ask oracle question. "
+        "Review your previous answer in this conversation. Identify the weakest claim or "
+        "the assumption most likely to be wrong, address it, and return an improved final "
+        "answer. If your previous answer is already correct and well-supported, say so "
+        "explicitly and restate the conclusion concisely."
+    )
+
+
+def _format_webgpt_followup_prompt(
+    turns: list[dict],
+    turn_number: int,
+    total_iterations: int,
+) -> str:
+    """Build a follow-up prompt that nudges ChatGPT to refine the prior answer.
+
+    The previous turn's content stays in ChatGPT's own conversation memory on
+    the tab — we don't need to re-include it. We only frame this turn.
+    """
+    return (
+        f"This is iteration {turn_number}/{total_iterations} on the same /ask oracle question. "
+        "Review your previous answer in this conversation. Identify the weakest claim or "
+        "the assumption most likely to be wrong, address it, and return an improved final "
+        "answer. If your previous answer is already correct and well-supported, say so "
+        "explicitly and restate the conclusion concisely."
+    )
+
+
 def _apply_oracle_synthesis(
     result: dict,
     k: int,
@@ -89,6 +292,7 @@ def _apply_oracle_synthesis(
     persona_model: Optional[str],
     peer_model: Optional[str],
     persona_scope: str,
+    oracle_image_paths: Optional[list[str]] = None,
     roundtable: bool = False,
     roundtable_personas: Optional[str] = None,
     roundtable_role_preset: str = "adversarial-review",
@@ -100,6 +304,13 @@ def _apply_oracle_synthesis(
     parallel_review_personas: Optional[str] = None,
     parallel_review_focus: Optional[str] = None,
     parallel_review_role_preset: str = "adversarial-review",
+    webgpt_tab_id: str = "",
+    webgpt_url: str = "",
+    webgpt_create_tab: bool = False,
+    webgpt_project: str = "",
+    gemini_tab_id: str = "",
+    gemini_url: str = "",
+    run_state: object | None = None,
 ) -> None:
     """Use an oracle backend for final high-reasoning synthesis."""
     question = result["question"]
@@ -170,6 +381,7 @@ def _apply_oracle_synthesis(
                 parallel_review_personas=parallel_review_personas,
                 parallel_review_focus=parallel_review_focus,
                 parallel_review_role_preset=parallel_review_role_preset,
+                run_state=run_state,
             )
         elif effective_backend == "subagent-runner":
             content, model_served, turns = _run_oracle_subagent_iterations(
@@ -185,6 +397,36 @@ def _apply_oracle_synthesis(
                 iterations=iterations,
                 persona_model=persona_model,
                 peer_model=peer_model,
+                image_paths=oracle_image_paths or [],
+                run_state=run_state,
+            )
+            protocol_state = {}
+        elif effective_backend == "webgpt":
+            content, model_served, turns = _run_oracle_webgpt(
+                base_prompt=prompt,
+                question=question,
+                persona=persona,
+                iterations=iterations,
+                timeout=timeout,
+                webgpt_tab_id=webgpt_tab_id,
+                webgpt_url=webgpt_url,
+                webgpt_create_tab=webgpt_create_tab,
+                webgpt_project=webgpt_project,
+                run_state=run_state,
+                oracle_state=result.get("oracle", {}),
+            )
+            protocol_state = {}
+        elif effective_backend == "webgemini":
+            content, model_served, turns = _run_oracle_webgemini(
+                base_prompt=prompt,
+                question=question,
+                persona=persona,
+                iterations=iterations,
+                timeout=timeout,
+                gemini_tab_id=gemini_tab_id,
+                gemini_url=gemini_url,
+                run_state=run_state,
+                oracle_state=result.get("oracle", {}),
             )
             protocol_state = {}
         else:
@@ -199,6 +441,8 @@ def _apply_oracle_synthesis(
                 iterations=iterations,
                 persona_model=persona_model,
                 peer_model=peer_model,
+                image_paths=oracle_image_paths or [],
+                run_state=run_state,
             )
             protocol_state = {}
         result["answer"] = content
@@ -223,6 +467,9 @@ def _apply_oracle_synthesis(
             result["oracle"]["persona_model"] = persona_model
         if peer_model:
             result["oracle"]["peer_model"] = peer_model
+        if oracle_image_paths:
+            result["oracle"]["image_paths"] = oracle_image_paths
+            result["oracle"]["image_count"] = len(oracle_image_paths)
         if freshness_policy.get("model_alias"):
             result["oracle"]["model_alias"] = freshness_policy["model_alias"]
         result["oracle"]["dogpile_mode"] = freshness_policy.get("dogpile_mode", "auto")
@@ -319,6 +566,7 @@ def _run_structured_review_protocol(
     parallel_review_personas: Optional[str],
     parallel_review_focus: Optional[str],
     parallel_review_role_preset: str,
+    run_state: object | None = None,
 ) -> tuple[str, str, list[dict], dict]:
     """Run parallel reviewers, a sequential roundtable, or both."""
     turns: list[dict] = []
@@ -332,12 +580,13 @@ def _run_structured_review_protocol(
     }
     model_served = model
     enriched_prompt = base_prompt
+    deadline = time.time() + timeout
 
     if parallel_review:
         review_content, model_served, review_turns, state = _run_parallel_review_protocol(
             model=model,
             reasoning_effort=reasoning_effort,
-            timeout=timeout,
+            timeout=_remaining_timeout(deadline, stage="parallel review"),
             idle_timeout=idle_timeout,
             heartbeat_interval=heartbeat_interval,
             base_prompt=enriched_prompt,
@@ -347,6 +596,7 @@ def _run_structured_review_protocol(
             reviewer_focus=parallel_review_focus,
             role_preset=parallel_review_role_preset,
             state=state,
+            run_state=run_state,
         )
         turns.extend(review_turns)
         enriched_prompt = (
@@ -359,7 +609,7 @@ def _run_structured_review_protocol(
         roundtable_content, model_served, roundtable_turns, state = _run_roundtable_protocol(
             model=model,
             reasoning_effort=reasoning_effort,
-            timeout=timeout,
+            timeout=_remaining_timeout(deadline, stage="roundtable"),
             idle_timeout=idle_timeout,
             heartbeat_interval=heartbeat_interval,
             base_prompt=enriched_prompt,
@@ -370,6 +620,7 @@ def _run_structured_review_protocol(
             mode=roundtable_mode,
             persist=roundtable_persist,
             state=state,
+            run_state=run_state,
         )
         turns.extend(roundtable_turns)
         return roundtable_content, model_served, turns, state
@@ -383,13 +634,14 @@ def _run_structured_review_protocol(
     content, model_served, artifact_dir = _run_protocol_turn(
         model=model,
         reasoning_effort=reasoning_effort,
-        timeout=timeout,
+        timeout=_remaining_timeout(deadline, stage="moderator synthesis"),
         idle_timeout=idle_timeout,
         heartbeat_interval=heartbeat_interval,
         prompt=moderator_prompt,
         persona="moderator",
         turn_number=len(turns) + 1,
         backend=backend,
+        run_state=run_state,
     )
     moderator_turn = {
         "iteration": len(turns) + 1,
@@ -406,6 +658,13 @@ def _run_structured_review_protocol(
     return content, model_served, turns, state
 
 
+def _remaining_timeout(deadline: float, *, stage: str) -> float:
+    remaining = deadline - time.time()
+    if remaining <= 0:
+        raise TimeoutError(f"oracle structured review exceeded wall-clock timeout before {stage}")
+    return remaining
+
+
 def _run_parallel_review_protocol(
     *,
     model: str,
@@ -420,6 +679,7 @@ def _run_parallel_review_protocol(
     reviewer_focus: Optional[str],
     role_preset: str,
     state: dict,
+    run_state: object | None = None,
 ) -> tuple[str, str, list[dict], dict]:
     participants = parse_participant_specs(reviewer_specs, role_preset=role_preset)
     if not participants:
@@ -448,6 +708,7 @@ def _run_parallel_review_protocol(
             persona=str(participant["persona"]),
             turn_number=index + 1,
             backend=backend,
+            run_state=run_state,
         )
         parsed = parse_protocol_turn(content)
         parsed.update(
@@ -514,6 +775,7 @@ def _run_roundtable_protocol(
     mode: str,
     persist: str,
     state: dict,
+    run_state: object | None = None,
 ) -> tuple[str, str, list[dict], dict]:
     participants = parse_participant_specs(persona_specs, role_preset=role_preset)
     if not participants:
@@ -544,6 +806,7 @@ def _run_roundtable_protocol(
                 persona=str(participant["persona"]),
                 turn_number=turn_number,
                 backend=backend,
+                run_state=run_state,
             )
             parsed = parse_protocol_turn(content)
             parsed.update(
@@ -583,6 +846,7 @@ def _run_roundtable_protocol(
         persona="moderator",
         turn_number=total_turns + 1,
         backend=backend,
+        run_state=run_state,
     )
     moderator_turn = {
         "iteration": total_turns + 1,
@@ -610,6 +874,7 @@ def _run_protocol_turn(
     persona: str,
     turn_number: int,
     backend: str,
+    run_state: object | None = None,
 ) -> tuple[str, str, str]:
     """Run one protocol turn and return content, served model, optional artifact dir."""
     if backend == "subagent-runner" and _is_codex_agent_model(model):
@@ -622,6 +887,7 @@ def _run_protocol_turn(
             prompt=prompt,
             persona=persona,
             turn_number=turn_number,
+            run_state=run_state,
         )
         return content, model, artifact_dir
     content, model_served = _complete_oracle_call(
@@ -629,6 +895,9 @@ def _run_protocol_turn(
         reasoning_effort=reasoning_effort,
         timeout=timeout,
         prompt=prompt,
+        run_state=run_state,
+        iteration=turn_number,
+        persona=persona,
     )
     return content, model_served, ""
 
@@ -676,6 +945,8 @@ def _run_oracle_iterations(
     iterations: int,
     persona_model: Optional[str],
     peer_model: Optional[str],
+    image_paths: Optional[list[str]] = None,
+    run_state: object | None = None,
 ) -> tuple[str, str, list[dict]]:
     """Run one or more sequential oracle calls as subagent-style deliberation."""
     total_iterations = max(1, iterations)
@@ -686,6 +957,10 @@ def _run_oracle_iterations(
             reasoning_effort=reasoning_effort,
             timeout=timeout,
             prompt=base_prompt,
+            image_paths=image_paths or [],
+            run_state=run_state,
+            iteration=1,
+            persona=persona or "oracle",
         )
         return content, model_served, [{
             "iteration": 1,
@@ -718,6 +993,10 @@ def _run_oracle_iterations(
             reasoning_effort=reasoning_effort,
             timeout=timeout,
             prompt=prompt,
+            image_paths=image_paths or [],
+            run_state=run_state,
+            iteration=turn_number,
+            persona=active_persona,
         )
         turns.append({
             "iteration": turn_number,

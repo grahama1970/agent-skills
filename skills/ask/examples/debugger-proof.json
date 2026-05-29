@@ -1,0 +1,38 @@
+{
+  "allow_watch_eval": false,
+  "breakpoints": [
+    {
+      "file": "/home/graham/workspace/experiments/agent-skills/skills/ask/examples/sample_target.py",
+      "line": 7
+    }
+  ],
+  "capture_all_locals": false,
+  "command": [
+    "/home/graham/workspace/experiments/agent-skills/skills/ask/.venv/bin/python",
+    "debug_repro.py"
+  ],
+  "duration_ms": 3,
+  "hit_count": 1,
+  "hits": [
+    {
+      "file": "/home/graham/workspace/experiments/agent-skills/skills/ask/examples/sample_target.py",
+      "function": "normalize_handoff_id",
+      "line": 7,
+      "locals": {
+        "raw": "'bad..id'"
+      },
+      "source": "candidate = raw.strip().replace(\".\", \"-\")",
+      "watches": {}
+    }
+  ],
+  "locals_allowlist": [
+    "raw",
+    "candidate"
+  ],
+  "status": {
+    "error": null,
+    "exit": null,
+    "ok": true
+  },
+  "watches": []
+}

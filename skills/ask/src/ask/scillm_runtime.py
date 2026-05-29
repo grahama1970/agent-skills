@@ -110,30 +110,38 @@ def serialize_source_bundle(source_bundle: dict[str, Any] | None) -> str | None:
     for source in source_bundle.get("sources", []):
         source_id = str(source.get("source_id", "SOURCE"))
         kind = str(source.get("kind", "unknown"))
+        parent_source_id = str(source.get("parent_source_id") or "")
         content = _truncate_source_text(str(source.get("content", "")))
-        lines.extend([
-            f"[SOURCE {source_id}]",
-            f"kind: {kind}",
-            content,
-            "",
-        ])
+        lines.append(f"[SOURCE {source_id}]")
+        if parent_source_id:
+            lines.append(f"parent_source_id: {parent_source_id}")
+        lines.extend([f"kind: {kind}", content, ""])
     return "\n".join(lines).strip()
 
 
 def source_ids_from_bundle(source_bundle: dict[str, Any] | None) -> set[str]:
     if not isinstance(source_bundle, dict):
         return set()
-    return {str(source.get("source_id")) for source in source_bundle.get("sources", []) if source.get("source_id")}
+    ids: set[str] = set()
+    for source in source_bundle.get("sources", []):
+        if source.get("source_id"):
+            ids.add(str(source["source_id"]))
+        if source.get("parent_source_id"):
+            ids.add(str(source["parent_source_id"]))
+    return ids
 
 
 def source_kind_by_id(source_bundle: dict[str, Any] | None) -> dict[str, str]:
     if not isinstance(source_bundle, dict):
         return {}
-    return {
-        str(source.get("source_id")): str(source.get("kind") or "unknown")
-        for source in source_bundle.get("sources", [])
-        if source.get("source_id")
-    }
+    kinds: dict[str, str] = {}
+    for source in source_bundle.get("sources", []):
+        kind = str(source.get("kind") or "unknown")
+        if source.get("source_id"):
+            kinds[str(source["source_id"])] = kind
+        if source.get("parent_source_id"):
+            kinds[str(source["parent_source_id"])] = kind
+    return kinds
 
 
 def normalize_citation(
@@ -147,10 +155,14 @@ def normalize_citation(
         source_kind = str(value.get("source_kind") or value.get("kind") or default_source_kind).strip()
         quote_or_summary = str(value.get("quote_or_summary") or value.get("quote") or value.get("summary") or "").strip()
         citation_supports = str(value.get("supports") or supports).strip()
+        if not source_id and _looks_like_source_id(quote_or_summary):
+            source_id = quote_or_summary
+        if not source_kind and source_id:
+            source_kind = _source_kind_for_id(source_id, default_source_kind)
     elif isinstance(value, str):
-        source_id = ""
-        source_kind = default_source_kind
         quote_or_summary = value.strip()
+        source_id = quote_or_summary if _looks_like_source_id(quote_or_summary) else ""
+        source_kind = _source_kind_for_id(source_id, default_source_kind) if source_id else default_source_kind
         citation_supports = supports
     else:
         return None
@@ -162,6 +174,43 @@ def normalize_citation(
         "quote_or_summary": quote_or_summary,
         "supports": citation_supports,
     }
+
+
+def _looks_like_source_id(value: str) -> bool:
+    if not value:
+        return False
+    prefixes = (
+        "TARGET.",
+        "TARGET_BUNDLE",
+        "MEMORY.",
+        "QUESTION",
+        "DOGPILE.",
+        "FETCHER.",
+        "COMMAND.",
+        "ARTIFACT.",
+        "DIFF.",
+    )
+    return value == "QUESTION" or any(value.startswith(prefix) for prefix in prefixes)
+
+
+def _source_kind_for_id(source_id: str, default_source_kind: str = "") -> str:
+    if source_id.startswith("TARGET.") or source_id.startswith("TARGET_BUNDLE"):
+        return "target_bundle"
+    if source_id.startswith("MEMORY."):
+        return "memory"
+    if source_id == "QUESTION":
+        return "question"
+    if source_id.startswith("DOGPILE."):
+        return "dogpile"
+    if source_id.startswith("FETCHER."):
+        return "fetcher"
+    if source_id.startswith("COMMAND."):
+        return "command_output"
+    if source_id.startswith("ARTIFACT."):
+        return "runtime_artifact"
+    if source_id.startswith("DIFF."):
+        return "diff"
+    return default_source_kind
 
 
 def normalize_citations(
@@ -296,7 +345,12 @@ def build_scillm_metadata(
     source_bundle_id: str = "",
     extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    batch_id = f"ask-{protocol}-{ask_id}"
+    extra_payload = extra or {}
+    identity = source_bundle_id or stable_hash(question)
+    cache_key = extra_payload.get("cache_key") or extra_payload.get("prompt_version")
+    if cache_key:
+        identity = f"{identity}-{stable_hash(str(cache_key))}"
+    batch_id = f"ask-{protocol}-{ask_id}-{identity}"
     payload = {
         "ask_id": ask_id,
         "protocol": protocol,
@@ -308,7 +362,7 @@ def build_scillm_metadata(
         "source_bundle_id": source_bundle_id,
         "artifact_dir": str(artifact_dir),
     }
-    payload.update(extra or {})
+    payload.update(extra_payload)
     return payload
 
 

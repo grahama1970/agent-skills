@@ -26,10 +26,12 @@ def _section():
 
 
 def test_deep_review_writes_markdown_and_json_artifacts(tmp_path):
+    target_file = tmp_path / "ask.py"
+    target_file.write_text("def route():\n    return 'ok'\n", encoding="utf-8")
     review_summary = {
         "verdict": "SAFE_WITH_CONDITIONS",
-        "target_reviewed": "src/ask/ask.py",
-        "files_inspected": ["src/ask/ask.py"],
+        "target_reviewed": str(target_file),
+        "files_inspected": [str(target_file)],
         "files_not_inspected_but_relevant": [],
         "evidence_citations": [_citation("verdict")],
         "sections": {name: _section() for name in DEEP_REVIEW_SECTION_NAMES},
@@ -47,7 +49,7 @@ def test_deep_review_writes_markdown_and_json_artifacts(tmp_path):
     }
     request = build_deep_review_request(
         question="deep review this implementation",
-        explicit_target="src/ask/ask.py",
+        explicit_target=str(target_file),
         profile="max_available",
         reviewers=5,
         focus="correctness,tests,auditability",
@@ -73,3 +75,43 @@ def test_deep_review_writes_markdown_and_json_artifacts(tmp_path):
     )
     assert "ask Deep Review" in review_md
     assert persisted["execution"]["requested_reasoning"] == "xhigh"
+
+
+def test_deep_review_safe_verdict_fails_without_target_material(tmp_path):
+    review_summary = {
+        "verdict": "SAFE",
+        "target_reviewed": "missing.py",
+        "files_inspected": ["missing.py"],
+        "files_not_inspected_but_relevant": [],
+        "evidence_citations": [_citation("verdict")],
+        "sections": {name: _section() for name in DEEP_REVIEW_SECTION_NAMES},
+        "blocking_issues": [],
+        "significant_risks": [],
+        "missing_deterministic_checks": [],
+        "test_gaps": [],
+        "read_only_claim": True,
+        "confidence": "medium",
+    }
+    result = {
+        "question": "deep review this implementation",
+        "answer": "Review body.\n\n```json\n" + json.dumps(review_summary) + "\n```",
+        "oracle": {"model": "gpt-5.5", "reasoning_effort": "xhigh", "backend": "subagent-runner"},
+    }
+    request = build_deep_review_request(
+        question="deep review this implementation",
+        explicit_target="missing.py",
+        profile="max_available",
+        reviewers=5,
+        focus="correctness,tests,auditability",
+        fallback_policy="fail_closed",
+        dogpile_mode="auto",
+        output_root=str(tmp_path),
+        model="gpt-5.5",
+        reasoning="xhigh",
+        backend="subagent-runner",
+    )
+
+    review_json = finalize_deep_review_result(result, request)
+
+    assert review_json["verifier"]["status"] == "FAIL"
+    assert "safe verdict requires inspected file or artifact content" in review_json["verifier"]["failures"]

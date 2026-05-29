@@ -1,0 +1,430 @@
+version: 1
+kind: orchestrate-plan
+repo_root: "/home/graham/workspace/experiments/agent-skills/skills/ask"
+
+metadata:
+  title: "Ask Setup Wizard and Core Docker Deployment"
+  goal: "Create an explicit setup wizard that configures and verifies the full ask runtime stack: ArangoDB, Qdrant/vector store, embedder, memory, scillm, and ask."
+  plan_type: code
+  created: "2026-04-30"
+  primary_persona:
+    name: "Project Developer"
+    role: "Developer or project agent installing /ask into a repo and expecting a reliable local or shared service deployment."
+    source: "/ask SKILL.md deployment and config-doctor contract"
+  install_boundary:
+    principle: "Installing the /ask skill must be passive and must not auto-launch Docker containers."
+    explicit_start: "Containers start only after an explicit command such as ./run.sh setup --profile local-dev --start-missing or an affirmative /interview response."
+    reason: "Skill install should not mutate host state, allocate ports, create databases, or start billable/provider-adjacent services without operator consent."
+
+execution:
+  max_concurrency: 1
+  wave_barrier: false
+  scheduling_policy: dependency_only
+
+capability_overlap:
+  - "/memory recall found prior Docker networking guidance: memory may require host networking to reach scillm at localhost:4001."
+  - "/ask already has config doctor/init, Docker preflight, live sanity reports, runtime artifacts, and release readiness reporting; extend those instead of creating a separate deployer."
+  - "/interview already provides TUI/HTML wizard forms; reuse it for human decisions and generate non-interactive defaults for project agents."
+  - "/memory owns ArangoDB schema, /upsert, /recall, /latency-stats, embedding dimension requirements, and searchable collection behavior."
+  - "/scillm owns model proxy health, auth checks, Arango-backed logs/cache/concurrency state, and JSON/batch behavior."
+  - "/ops-docker and /ops-arango should be preferred for low-level Docker and Arango diagnostics when available."
+
+questions_blockers: []
+
+lanes:
+  - id: "0"
+    label: "Wave 0: Contracts"
+  - id: "1"
+    label: "Wave 1: Setup Implementation"
+  - id: "2"
+    label: "Wave 2: Docker and Database Bootstrap"
+  - id: "3"
+    label: "Wave 3: Verification and Documentation"
+
+tasks:
+  - id: "1"
+    title: "Define setup readiness contract"
+    lane: "0"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on: []
+    command: "uv run --project . pytest tests/test_config_doctor.py -q"
+    skills:
+      - ask
+      - memory
+      - scillm
+    read_context:
+      - "SKILL.md"
+      - "README.md"
+      - "src/ask/ask_config.py"
+      - "src/ask/config_cli.py"
+      - "src/ask/doctor.py"
+      - "ask.config.yml.example"
+    allowlist:
+      - "src/ask/ask_config.py"
+      - "src/ask/config_cli.py"
+      - "src/ask/doctor.py"
+      - "ask.config.yml.example"
+      - "tests/test_config_doctor.py"
+    implementation:
+      - "Add a machine-readable setup readiness contract that distinguishes installed, configured, services_reachable, databases_bootstrapped, and release_ready states."
+      - "Add repair_command fields for missing Docker, ArangoDB, Qdrant/vector-store, embedder, memory, scillm, provider auth, and ask config failures."
+      - "Ensure config doctor never starts containers; it only reports readiness and repair commands."
+      - "Preserve fail-closed safe defaults: missing required core services returns needs_attention and safe_default=do_not_claim_release_ready."
+    tests:
+      - "uv run --project . pytest tests/test_config_doctor.py -q"
+      - "test-lab/run.sh verify-task ask-setup-contract skills/ask --domain python"
+    blind_tests:
+      - "Hidden test verifies install/config doctor does not invoke docker compose up."
+      - "Hidden test verifies missing memory/scillm/database layers include actionable repair_command fields."
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_config_doctor.py -q"
+      assertion: "Config doctor emits deterministic readiness JSON and never mutates host runtime state."
+
+  - id: "2"
+    title: "Create interview-driven setup wizard"
+    lane: "1"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "1"
+    command: "uv run --project . pytest tests/test_setup_cli.py -q"
+    skills:
+      - ask
+      - interview
+    read_context:
+      - "run.sh"
+      - "src/ask/config_cli.py"
+      - "src/ask/ask_config.py"
+      - "/home/graham/workspace/experiments/agent-skills/skills/interview/SKILL.md"
+    allowlist:
+      - "run.sh"
+      - "src/ask/setup_cli.py"
+      - "src/ask/config_cli.py"
+      - "src/ask/ask_config.py"
+      - "tests/test_setup_cli.py"
+    implementation:
+      - "Add ./run.sh setup with --interactive, --profile, --dry-run, --json, --yes, and --start-missing flags."
+      - "Use /interview only when required values cannot be inferred from env/config or when --interactive is set."
+      - "Ask only high-level deployment decisions: local-dev vs shared-stack, start missing services, persistent volume root, memory scope isolation, and provider credential availability."
+      - "Do not ask developers to manually configure Arango collections, Qdrant indexes, or embedding dimensions; bootstrap handles those idempotently."
+      - "Require explicit consent before starting containers from an interview response or --start-missing."
+    tests:
+      - "uv run --project . pytest tests/test_setup_cli.py -q"
+      - "test-lab/run.sh verify-task ask-setup-interview skills/ask --domain python"
+    blind_tests:
+      - "Hidden test verifies default setup --dry-run --json reports planned actions without writing config or starting Docker."
+      - "Hidden test verifies setup refuses to start containers without --start-missing, --yes, or affirmative interview consent."
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_setup_cli.py -q"
+      assertion: "Setup wizard supports interactive and project-agent non-interactive modes while preserving explicit-start safety."
+
+  - id: "3"
+    title: "Generate ask config and environment files"
+    lane: "1"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "2"
+    command: "uv run --project . pytest tests/test_setup_config_generation.py -q"
+    skills:
+      - ask
+    read_context:
+      - "src/ask/setup_cli.py"
+      - "src/ask/ask_config.py"
+      - "ask.config.yml.example"
+      - ".gitignore"
+    allowlist:
+      - "src/ask/setup_cli.py"
+      - "src/ask/ask_config.py"
+      - "ask.config.yml.example"
+      - ".gitignore"
+      - "tests/test_setup_config_generation.py"
+    implementation:
+      - "Generate ask.config.yml from profile defaults plus interview/env answers."
+      - "Generate local env template values without writing secrets into project knowledge or committed files."
+      - "Support shared-stack URLs for externally hosted memory/scillm and local-dev URLs for compose services."
+      - "Mark generated local config ignored by git when it may contain host-specific paths or secrets."
+    tests:
+      - "uv run --project . pytest tests/test_setup_config_generation.py -q"
+      - "test-lab/run.sh verify-task ask-setup-config-generation skills/ask --domain python"
+    blind_tests:
+      - "Hidden test verifies generated config redacts secrets in JSON/status output."
+      - "Hidden test verifies shared-stack profile does not generate docker start actions."
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_setup_config_generation.py -q"
+      assertion: "Setup creates deterministic config artifacts for local-dev and shared-stack profiles without leaking secrets."
+
+  - id: "4"
+    title: "Add core Docker Compose deployment"
+    lane: "2"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "1"
+    command: "docker compose -f deploy/docker/compose.ask-stack.yml config >/tmp/ask-compose-config.out && uv run --project . pytest tests/test_docker_compose_contract.py -q"
+    skills:
+      - ask
+      - memory
+      - scillm
+    read_context:
+      - "docker-compose.yml"
+      - "src/ask/ask_config.py"
+      - "/home/graham/workspace/experiments/agent-skills/skills/memory/SKILL.md"
+      - "/home/graham/workspace/experiments/agent-skills/skills/scillm/SKILL.md"
+    allowlist:
+      - "docker-compose.yml"
+      - "deploy/docker/Dockerfile.ask"
+      - "deploy/docker/compose.ask-stack.yml"
+      - "deploy/docker/README.md"
+      - "tests/test_docker_compose_contract.py"
+    implementation:
+      - "Add a canonical compose stack for core services: arangodb, qdrant/vector-store, embedder, memory, scillm, and optional ask service."
+      - "Use profiles: core for required services, learn for ingestion/discovery companions, ops for monitors/task-monitor."
+      - "Add healthchecks for ArangoDB, vector store, embedder, memory /health or status, and scillm /health."
+      - "Use named volumes by default and allow ASK_SETUP_VOLUME_ROOT override for host-mounted developer storage."
+      - "Account for the known memory-to-scillm networking issue by documenting and testing localhost/host-network behavior where required."
+      - "Do not bake provider secrets into images; consume env files or host OAuth mounts explicitly."
+    tests:
+      - "docker compose -f deploy/docker/compose.ask-stack.yml config >/tmp/ask-compose-config.out"
+      - "uv run --project . pytest tests/test_docker_compose_contract.py -q"
+      - "test-lab/run.sh verify-task ask-core-compose skills/ask --domain docker"
+    blind_tests:
+      - "Hidden test verifies compose config includes all required core services and healthchecks."
+      - "Hidden test verifies no provider API key literals or OAuth tokens are present in committed compose/Dockerfile content."
+    definition_of_done:
+      command: "docker compose -f deploy/docker/compose.ask-stack.yml config >/tmp/ask-compose-config.out && uv run --project . pytest tests/test_docker_compose_contract.py -q"
+      assertion: "Compose renders successfully and declares the complete required core stack without embedded secrets."
+
+  - id: "5"
+    title: "Implement database bootstrap automation"
+    lane: "2"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "1"
+      - "4"
+    command: "uv run --project . pytest tests/test_setup_bootstrap.py -q"
+    skills:
+      - memory
+      - ask
+    read_context:
+      - "/home/graham/workspace/experiments/agent-skills/skills/memory/SKILL.md"
+      - "src/ask/setup_cli.py"
+      - "src/ask/doctor.py"
+    allowlist:
+      - "src/ask/setup_bootstrap.py"
+      - "src/ask/setup_cli.py"
+      - "src/ask/doctor.py"
+      - "tests/test_setup_bootstrap.py"
+    implementation:
+      - "Add idempotent bootstrap for Arango database/user, required collections, ArangoSearch views/indexes, and scillm persistence collections when memory exposes or delegates those operations safely."
+      - "Add idempotent Qdrant/vector-store collection validation with the memory-required embedding dimension."
+      - "Verify embedder health and embedding vector dimension before enabling dense recall."
+      - "Prefer memory service endpoints for schema-sensitive operations; avoid raw AQL outside memory-owned bootstrap boundaries."
+      - "Return structured needs_attention with repair_command when bootstrap lacks credentials or service access."
+    tests:
+      - "uv run --project . pytest tests/test_setup_bootstrap.py -q"
+      - "test-lab/run.sh verify-task ask-database-bootstrap skills/ask --domain python"
+    blind_tests:
+      - "Hidden test verifies bootstrap is idempotent across repeated runs."
+      - "Hidden test verifies vector dimension mismatch fails closed before /memory recall is marked ready."
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_setup_bootstrap.py -q"
+      assertion: "Bootstrap code validates ArangoDB, vector store, and embedder requirements idempotently and fails closed on schema/dimension mismatch."
+
+  - id: "6"
+    title: "Wire setup orchestration and doctor repair"
+    lane: "2"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "2"
+      - "3"
+      - "4"
+      - "5"
+    command: "uv run --project . pytest tests/test_setup_orchestration.py -q"
+    skills:
+      - ask
+      - ops-docker
+      - ops-arango
+    read_context:
+      - "src/ask/setup_cli.py"
+      - "src/ask/setup_bootstrap.py"
+      - "src/ask/config_cli.py"
+      - "src/ask/doctor.py"
+    allowlist:
+      - "src/ask/setup_cli.py"
+      - "src/ask/config_cli.py"
+      - "src/ask/doctor.py"
+      - "tests/test_setup_orchestration.py"
+    implementation:
+      - "Implement setup flow: detect existing services, render plan, optionally start missing compose services, wait for healthchecks, bootstrap databases, write config, then run config doctor."
+      - "Ensure shared-stack mode validates URLs without starting local containers."
+      - "Ensure local-dev mode can start only missing services when explicit-start consent exists."
+      - "Emit setup.result.json-compatible output for project agents with ready, missing, started, skipped, repair_command, and safe_default fields."
+    tests:
+      - "uv run --project . pytest tests/test_setup_orchestration.py -q"
+      - "test-lab/run.sh verify-task ask-setup-orchestration skills/ask --domain python"
+    blind_tests:
+      - "Hidden test verifies existing healthy services are reused and not restarted."
+      - "Hidden test verifies partial failure reports the exact unhealthy layer and repair command."
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_setup_orchestration.py -q"
+      assertion: "Setup orchestrates detect/start/bootstrap/doctor safely for local-dev and shared-stack profiles."
+
+  - id: "7"
+    title: "Add setup E2E sanity harness"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "6"
+    command: "uv run --project . pytest tests/test_setup_e2e_sanity.py -q"
+    skills:
+      - ask
+      - memory
+      - scillm
+    read_context:
+      - "sanity-e2e.sh"
+      - "scripts/live_sanity_report.py"
+      - "src/ask/setup_cli.py"
+      - "src/ask/setup_bootstrap.py"
+    allowlist:
+      - "sanity-e2e.sh"
+      - "scripts/setup_e2e_sanity.py"
+      - "scripts/live_sanity_report.py"
+      - "tests/test_setup_e2e_sanity.py"
+    implementation:
+      - "Add a setup-focused E2E profile that can run against the compose stack or a shared-stack without destructive resets."
+      - "Verify /memory /upsert then /recall against a setup smoke collection."
+      - "Verify dense recall is established or explicitly reported unavailable with vector-store cause."
+      - "Verify /scillm /health, /v1/scillm/auth, and a low-cost JSON response_format call."
+      - "Verify /ask config doctor --profile release and one minimal ask/oracle-safe smoke path."
+      - "Integrate setup E2E results into report.json/index.html without weakening release readiness semantics."
+    tests:
+      - "uv run --project . pytest tests/test_setup_e2e_sanity.py -q"
+      - "test-lab/run.sh verify-task ask-setup-e2e-sanity skills/ask --domain python"
+    blind_tests:
+      - "Hidden test verifies E2E fails if /memory upsert succeeds but recall cannot retrieve the inserted document."
+      - "Hidden test verifies E2E fails if /scillm health passes but authenticated JSON call fails."
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_setup_e2e_sanity.py -q"
+      assertion: "Setup E2E harness validates memory, vector recall, scillm, ask doctor, and report integration."
+
+  - id: "8"
+    title: "Document setup and project-agent contract"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "6"
+      - "7"
+    command: "uv run --project . pytest tests/test_docs_setup_examples.py -q"
+    skills:
+      - ask
+      - project-knowledge
+    read_context:
+      - "SKILL.md"
+      - "README.md"
+      - "docs/PROJECT_KNOWLEDGE.md"
+      - "deploy/docker/README.md"
+    allowlist:
+      - "SKILL.md"
+      - "README.md"
+      - "docs/PROJECT_KNOWLEDGE.md"
+      - "deploy/docker/README.md"
+      - "docs/SETUP_WIZARD.md"
+      - "tests/test_docs_setup_examples.py"
+    implementation:
+      - "Document install-vs-setup boundary: install never starts containers; setup starts only with explicit consent."
+      - "Document local-dev, shared-stack, project-agent, ci-smoke, and offline-minimal profiles."
+      - "Document required core stack and bootstrap checks: ArangoDB, vector store, embedder, memory, scillm, ask."
+      - "Document E2E sanity commands and expected readiness JSON."
+      - "Update project knowledge with the durable setup contract and current decisions."
+    tests:
+      - "uv run --project . pytest tests/test_docs_setup_examples.py -q"
+      - "test-lab/run.sh verify-task ask-setup-docs skills/ask --domain docs"
+    blind_tests:
+      - "Hidden test verifies docs never state install auto-starts containers."
+      - "Hidden test verifies docs include machine-readable setup output fields."
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_docs_setup_examples.py -q"
+      assertion: "Documentation accurately explains explicit setup, core services, profiles, E2E sanity, and project-agent JSON."
+
+  - id: "9"
+    title: "Run non-destructive setup validation"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "8"
+    command: "./run.sh setup --profile local-dev --yes --dry-run --json && ./run.sh config doctor --profile release --json || test $? -eq 2"
+    implementation:
+      - "Validate the dry-run setup plan and release doctor without starting containers."
+    tests:
+      - "./run.sh setup --profile local-dev --yes --dry-run --json"
+      - "./run.sh config doctor --profile release --json || test $? -eq 2"
+    definition_of_done:
+      command: "./run.sh setup --profile local-dev --yes --dry-run --json && ./run.sh config doctor --profile release --json || test $? -eq 2"
+      assertion: "Dry-run setup and config doctor return machine-readable JSON without starting containers."
+
+  - id: "10"
+    title: "Run full Docker setup E2E sanity"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "9"
+    command: "uv run --project . pytest tests/test_setup_e2e_sanity.py -q"
+    preconditions:
+      - type: command_succeeds
+        command: "docker info >/tmp/ask-docker-info.out"
+    implementation:
+      - "Start missing local-dev containers only after explicit --start-missing --yes consent."
+      - "Run setup E2E sanity against the deployed stack."
+      - "Preserve existing developer containers and volumes; do not reset databases unless a future explicit destructive flag is added."
+    tests:
+      - "uv run --project . pytest tests/test_setup_e2e_sanity.py -q"
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_setup_e2e_sanity.py -q"
+      assertion: "The explicit-start Docker stack boots, databases bootstrap, memory/scillm/ask checks pass, and setup E2E sanity exits 0."
+
+  - id: "11"
+    title: "Run full release sanity report"
+    lane: "3"
+    runner: "local"
+    backend: ""
+    mode: ""
+    agent: "general-purpose"
+    depends_on:
+      - "10"
+    command: "uv run --project . pytest tests/test_setup_cli.py tests/test_setup_config_generation.py tests/test_setup_bootstrap.py tests/test_setup_orchestration.py tests/test_setup_e2e_sanity.py tests/test_docs_setup_examples.py -q"
+    implementation:
+      - "Run the full release profile after setup E2E passes."
+      - "Confirm report.json has release_readiness=ready and zero failed required cases."
+    tests:
+      - "uv run --project . pytest tests/test_setup_cli.py tests/test_setup_config_generation.py tests/test_setup_bootstrap.py tests/test_setup_orchestration.py tests/test_setup_e2e_sanity.py tests/test_docs_setup_examples.py -q"
+    definition_of_done:
+      command: "uv run --project . pytest tests/test_setup_cli.py tests/test_setup_config_generation.py tests/test_setup_bootstrap.py tests/test_setup_orchestration.py tests/test_setup_e2e_sanity.py tests/test_docs_setup_examples.py -q"
+      assertion: "Full release sanity exits 0 with release_readiness=ready, failed_required=0, and setup feature readiness established."

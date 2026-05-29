@@ -1,0 +1,198 @@
+# /ask release stack.
+#
+# One-click local release attempt:
+#   docker compose --profile release up --build
+#
+# The stack intentionally uses host networking because memory and scillm both
+# assume localhost service URLs in normal skill execution. Set SCILLM_REPO and
+# MEMORY_REPO when those repositories are not siblings of agent-skills.
+
+name: ask-release
+
+services:
+  ask-runner:
+    image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
+    working_dir: /workspace/agent-skills/skills/ask
+    network_mode: host
+    environment:
+      ASK_CONFIG: /workspace/agent-skills/skills/ask/ask.config.yml
+      ASK_LIVE_SANITY_E2E: "1"
+      SCILLM_BASE_URL: http://127.0.0.1:4001
+      SCILLM_API_KEY: ${SCILLM_API_KEY:-sk-dev-proxy-123}
+      ASK_RUN_OUTPUT_DIR: /workspace/agent-skills/skills/ask/.ask_artifacts/runs
+      ASK_SUBAGENT_OUTPUT_DIR: /tmp/ask-oracle-subagents
+    volumes:
+      - ../..:/workspace/agent-skills
+      - ${HOME}/.codex:/root/.codex:ro
+      - ${HOME}/.claude:/root/.claude:ro
+      - ${HOME}/.gemini:/root/.gemini
+      - ${HOME}/.pi:/root/.pi:ro
+      - /mnt/storage12tb:/mnt/storage12tb
+    depends_on:
+      memory:
+        condition: service_started
+      scillm-proxy:
+        condition: service_healthy
+    command:
+      - bash
+      - -lc
+      - |
+        ./run.sh config doctor --profile release --json
+        ./run.sh doctor --live --profile release --json
+    profiles: ["release"]
+
+  arangodb:
+    image: arangodb:3.12.6
+    network_mode: host
+    environment:
+      ARANGO_ROOT_PASSWORD: ${ARANGO_PASS:-openSesame}
+      ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY: "12G"
+    volumes:
+      - ask-arango-data:/var/lib/arangodb3
+      - /mnt/storage12tb/backups/arangodb:/backups:ro
+    command:
+      - arangod
+      - --server.endpoint=tcp://0.0.0.0:8529
+      - --server.authentication=true
+      - --vector-index
+    healthcheck:
+      test: ["CMD-SHELL", "arangosh --server.endpoint tcp://127.0.0.1:8529 --server.username root --server.password \"$${ARANGO_ROOT_PASSWORD}\" --javascript.execute-string \"db._version()\" >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 10
+    profiles: ["release"]
+
+  redis:
+    image: redis:7-alpine
+    network_mode: host
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - ask-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    profiles: ["release"]
+
+  qdrant:
+    image: qdrant/qdrant:v1.17.1
+    network_mode: host
+    volumes:
+      - ask-qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:6333/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    profiles: ["release"]
+
+  embedding:
+    build:
+      context: ${MEMORY_REPO:-../../../memory}/docker/embedding
+      dockerfile: Dockerfile
+      args:
+        HF_TOKEN: ${HF_TOKEN:-}
+        EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+    network_mode: host
+    environment:
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+      EMBEDDING_DEVICE: ${EMBEDDING_DEVICE:-cpu}
+      # MiniLM-L6-v2 outputs 384-dim vectors. The canonical
+      # deploy/docker/compose.ask-stack.yml already uses 384; this default
+      # was 768 (bug ASK-DOCKER-002 flagged by ChatGPT), which would have
+      # silently corrupted vector-store dimension compatibility on the
+      # one-command release path.
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-384}
+      EMBEDDING_PORT: "8602"
+      EMBEDDING_HOST: 0.0.0.0
+      HF_TOKEN: ${HF_TOKEN:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; r=httpx.get('http://127.0.0.1:8602/health',timeout=5); assert r.status_code==200"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    profiles: ["release"]
+
+  memory:
+    build:
+      context: ${MEMORY_REPO:-../../../memory}
+      dockerfile: docker/memory/Dockerfile
+    network_mode: host
+    environment:
+      ARANGO_HOST: localhost
+      ARANGO_PORT: "8529"
+      ARANGO_USER: root
+      ARANGO_PASS: ${ARANGO_PASS:-openSesame}
+      ARANGO_DB: memory
+      EMBEDDING_SERVICE_URL: http://localhost:8602
+      QDRANT_URL: http://localhost:6333
+      SEMANTIC_VECTOR_BACKEND: qdrant
+      SCILLM_API_BASE: http://localhost:4001
+      SCILLM_PROXY_KEY: ${SCILLM_API_KEY:-sk-dev-proxy-123}
+    depends_on:
+      arangodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      embedding:
+        condition: service_healthy
+    profiles: ["release"]
+
+  utls-proxy:
+    build:
+      context: ${SCILLM_REPO:-../../../scillm}/deploy/utls-proxy
+      dockerfile: Dockerfile
+    network_mode: host
+    environment:
+      UPSTREAM: https://chatgpt.com
+      LISTEN: :8444
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8444/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    profiles: ["release"]
+
+  scillm-proxy:
+    build:
+      context: ${SCILLM_REPO:-../../../scillm}
+      dockerfile: deploy/docker/Dockerfile.scillm
+    network_mode: host
+    environment:
+      PYTHONPATH: /app/src
+      CONFIG_FILE_PATH: /app/config.yaml
+      SCILLM_MASTER_KEY: ${SCILLM_API_KEY:-sk-dev-proxy-123}
+      LITELLM_MASTER_KEY: ${SCILLM_API_KEY:-sk-dev-proxy-123}
+      METRICS_ENV: dev
+      REDIS_HOST: localhost
+    volumes:
+      - ${SCILLM_REPO:-../../../scillm}/local/proxy_server_config.yaml:/app/config.yaml:ro
+      - ${HOME}/.pi/agent/auth.json:/root/.pi/agent/auth.json:ro
+      - ${HOME}/.claude/.credentials.json:/root/.claude/.credentials.json:ro
+      - ${HOME}/.codex/auth.json:/root/.codex/auth.json:ro
+      - ${HOME}/.gemini:/root/.gemini
+      - ${HOME}/.local/share/opencode/auth.json:/root/.local/share/opencode/auth.json:ro
+      - ${HOME}/.config/opencode:/root/.config/opencode:ro
+      - ${HOME}/.cache/opencode:/root/.cache/opencode
+      - /mnt/storage12tb/scillm-logs:/mnt/storage12tb/scillm-logs
+    depends_on:
+      utls-proxy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "-H", "Authorization: Bearer $${SCILLM_MASTER_KEY:-sk-dev-proxy-123}", "http://127.0.0.1:4001/health/liveliness"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    profiles: ["release"]
+
+volumes:
+  ask-arango-data:
+  ask-redis-data:
+  ask-qdrant-data:

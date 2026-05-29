@@ -1,5 +1,6 @@
 """Sanity coverage for documented human `$ask` chat examples."""
 
+import json
 import shlex
 from pathlib import Path
 
@@ -11,8 +12,8 @@ import ask.model_aliases as aliases
 
 ASK_DIR = Path(__file__).resolve().parents[1]
 OPENCODE_MODELS = [
-    {"id": "opencode-go/kimi-k2.6", "supported": True, "key_configured": True},
-    {"id": "opencode-go/qwen3.6-plus", "supported": True, "key_configured": True},
+    {"id": "opencode-go/kimi-k2.6", "supported": True, "key_configured": True, "input": {"text": True, "image": True, "pdf": False}},
+    {"id": "opencode-go/qwen3.6-plus", "supported": True, "key_configured": True, "input": {"text": True, "image": False, "pdf": False}},
 ]
 
 
@@ -80,6 +81,7 @@ def test_documented_spaced_opencode_model_shorthand_uses_latest_live_model(monke
     assert captured["oracle_backend"] == "scillm"
     assert captured["oracle_model_alias"]["provider_hint"] == "opencode"
     assert captured["oracle_model_alias"]["source"] == "live-opencode-go-models"
+    assert captured["oracle_model_alias"]["input_capabilities"]["image"] is True
 
 
 def test_documented_hyphenated_opencode_model_shorthand_uses_latest_live_model(monkeypatch):
@@ -104,7 +106,7 @@ def test_documented_chutes_model_shorthand_uses_configured_alias(monkeypatch):
 
     assert result.exit_code == 0
     assert captured["question"] == "explain this design tradeoff"
-    assert captured["oracle_model"] == "text-kimi"
+    assert captured["oracle_model"] == "chutes-kimi"
     assert captured["oracle_backend"] == "scillm"
     assert captured["oracle_model_alias"]["provider_hint"] == "chutes"
 
@@ -117,7 +119,7 @@ def test_documented_hyphenated_chutes_model_shorthand_uses_configured_alias(monk
 
     assert result.exit_code == 0
     assert captured["question"] == "explain this design tradeoff"
-    assert captured["oracle_model"] == "text-kimi"
+    assert captured["oracle_model"] == "chutes-kimi"
     assert captured["oracle_backend"] == "scillm"
 
 
@@ -189,6 +191,48 @@ def test_documented_role_roundtable_prompt_maps_to_protocol(monkeypatch):
     assert captured["oracle_backend"] == "subagent-runner"
 
 
+def test_missing_lowercase_roundtable_personas_clarify_before_memory(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+
+    def fail_ask(**_kwargs):
+        raise AssertionError("missing persona clarification should not call memory/oracle ask")
+
+    monkeypatch.setattr(ask_module, "ask", fail_ask)
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "Have",
+            "the",
+            "tester",
+            "and",
+            "maintainer",
+            "roundtable",
+            "the",
+            "cache",
+            "invalidation",
+            "migration",
+            "risk",
+            "for",
+            "cross-region",
+            "writes.",
+            "--ask-id",
+            "missing-personas",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2
+    payload = json.loads(result.stdout)
+    attention = payload["needs_attention"]
+    assert attention["reason"] == "missing_roundtable_personas"
+    assert attention["safe_default"] == "clarify_before_roundtable"
+    assert attention["missing_personas"] == ["tester", "maintainer"]
+    assert "/interview" in attention["suggested_skills"]
+    assert "/create-persona" in attention["suggested_skills"]
+
+
 def test_documented_parallel_review_prompt_maps_to_parallel_review(monkeypatch):
     result, captured = _invoke_chat_prompt(
         "$ask run 3 parallel adversarial reviewers on this implementation",
@@ -238,7 +282,7 @@ def test_documented_deep_review_prompt_maps_to_deep_review(monkeypatch):
     assert captured["deep_review"] is True
     assert captured["deep_review_target"] == "src/ask/ask.py"
     assert captured["oracle_reasoning"] == "xhigh"
-    assert captured["oracle_backend"] == "subagent-runner"
+    assert captured["oracle_backend"] == "scillm"
 
 
 def test_documented_chat_examples_file_keeps_required_categories():

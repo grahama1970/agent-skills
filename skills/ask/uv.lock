@@ -110,6 +110,15 @@ wheels = [
 ]
 
 [[package]]
+name = "json-repair"
+version = "0.59.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2f/70/b1b95ad29e20df1b0f4ced18c0d389e9ff372202dc40d8e02931710c4f2c/json_repair-0.59.7.tar.gz", hash = "sha256:f23c7890b7d1760185ff316421bc776d31a29290a8d45997cfaf6c3add895aaa", size = 48886, upload-time = "2026-05-11T09:19:27.464Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/00/05/8f5b0a35dca1d101e76dd7e2a56c66dd0fdd0ff573e1d4dcff644c3d33c2/json_repair-0.59.7-py3-none-any.whl", hash = "sha256:933fc5c81c5edabb004472e58c495f1ae656a8778e9fd26ca806ae42f3110b07", size = 47538, upload-time = "2026-05-11T09:19:25.831Z" },
+]
+
+[[package]]
 name = "loguru"
 version = "0.7.2"
 source = { registry = "https://pypi.org/simple" }
@@ -144,6 +153,15 @@ wheels = [
 ]
 
 [[package]]
+name = "networkx"
+version = "3.6.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/51/63fe664f3908c97be9d2e4f1158eb633317598cfa6e1fc14af5383f17512/networkx-3.6.1.tar.gz", hash = "sha256:26b7c357accc0c8cde558ad486283728b65b6a95d85ee1cd66bafab4c8168509", size = 2517025, upload-time = "2025-12-08T17:02:39.908Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9e/c9/b2622292ea83fbb4ec318f5b9ab867d0a28ab43c5717bb85b0a5f6b3b0a4/networkx-3.6.1-py3-none-any.whl", hash = "sha256:d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762", size = 2068504, upload-time = "2025-12-08T17:02:38.159Z" },
+]
+
+[[package]]
 name = "packaging"
 version = "26.2"
 source = { registry = "https://pypi.org/simple" }
@@ -153,12 +171,27 @@ wheels = [
 ]
 
 [[package]]
+name = "phart"
+version = "1.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "networkx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/14/f4/ab90e7d22b38cc1bad5a72683f8739137fa42f9e2336c92b82dee4cea87e/phart-1.1.4.tar.gz", hash = "sha256:2691e31152a938f48d51d5236715811ede80142a5c8b59d24568435f11ba9f2c", size = 264815, upload-time = "2025-01-25T12:59:36.687Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c5/20/dc20da33dd3f3fffa5584d35bdfe0dd31847d4f0443495dba6b2cd4ae70a/phart-1.1.4-py3-none-any.whl", hash = "sha256:b34fd91dfb61fc60a2704d9ee2e12bc89a95291efe6e114c7b191244bc5ad8f1", size = 19542, upload-time = "2025-01-25T12:59:35.107Z" },
+]
+
+[[package]]
 name = "pi-skill-ask"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
+    { name = "json-repair" },
     { name = "loguru" },
+    { name = "networkx" },
+    { name = "phart" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "typer" },
@@ -172,7 +205,10 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.27.0" },
+    { name = "json-repair", specifier = ">=0.30.0" },
     { name = "loguru", specifier = ">=0.7.2,<0.7.3" },
+    { name = "networkx", specifier = ">=3.6.1" },
+    { name = "phart", specifier = ">=1.1.4" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "typer", specifier = ">=0.16.0" },
