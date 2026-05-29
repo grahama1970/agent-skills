@@ -57,6 +57,8 @@ def _synthesise(
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
     webgpt_project: str = "",
+    gemini_tab_id: str = "",
+    gemini_url: str = "",
     run_state: object | None = None,
 ) -> None:
     """Build the answer string and print output."""
@@ -146,6 +148,8 @@ def _synthesise(
             webgpt_url=webgpt_url,
             webgpt_create_tab=webgpt_create_tab,
             webgpt_project=webgpt_project,
+            gemini_tab_id=gemini_tab_id,
+            gemini_url=gemini_url,
             run_state=run_state,
         )
 

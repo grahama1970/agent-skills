@@ -1243,8 +1243,7 @@ def test_cli_parallel_review_rejects_unknown_implementation_backend(tmp_path):
     )
 
     assert result.exit_code != 0
-    assert "Only --implement-with code-runner is" in result.output
-    assert "supported" in result.output
+    assert "scillm-agent is supported" in result.output
 
 
 def test_cli_code_runner_handoff_requires_parallel_review():
@@ -1258,8 +1257,7 @@ def test_cli_code_runner_handoff_requires_parallel_review():
     )
 
     assert result.exit_code != 0
-    assert "Code-runner handoff options require" in result.output
-    assert "--parallel-review" in result.output
+    assert "Implementation handoff options require" in result.output
 
 
 def test_parallel_review_verifier_rejects_missing_judge():

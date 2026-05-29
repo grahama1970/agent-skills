@@ -43,6 +43,7 @@ from .ask_dag import (
     natural_language_dag_attention,
     should_orchestrate_from_text,
 )
+from .scillm_agents import run_visible_subagent_turn
 from .chain_specs import apply_chain_options
 from .cae_gap_review import DEFAULT_CAE_JUDGE, DEFAULT_CAE_REVIEWERS, run_cae_gap_review
 from .deep_review import build_deep_review_request, infer_deep_review
@@ -164,6 +165,8 @@ def ask(
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
     webgpt_project: str = "",
+    gemini_tab_id: str = "",
+    gemini_url: str = "",
     visible_subagent: Optional[dict] = None,
     mentioned_skills: Optional[list[str]] = None,
     ask_dag: Optional[dict] = None,
@@ -216,7 +219,7 @@ def ask(
         review_dag: Review DAG mode: judge-best or hybrid.
         read_only_review: Keep reviewer calls read-only.
         code_runner_handoff: Emit /code-runner handoff artifact for actionable findings.
-        implement_with: Explicit implementation backend request; currently code-runner only.
+        implement_with: Implementation backend (code-runner handoff or scillm-agent standing worker).
         apply_fixes: Alias for explicit code-runner implementation intent.
         dogpile_mode: auto, off, or force freshness policy for oracle subagents.
         deep_review: Run Web-GPT-style deep review with JSON/markdown artifacts.
@@ -411,10 +414,10 @@ def ask(
                 attention = run_state.needs_attention(**attention)
             result["needs_attention"] = attention
             return result
-        if (apply_fixes or implement_with) and not any(command.strip() for command in (code_runner_dod_commands or [])):
+        if (apply_fixes or (implement_with and implement_with != "scillm-agent")) and not any(command.strip() for command in (code_runner_dod_commands or [])):
             attention = {
                 "reason": "missing_code_runner_dod",
-                "question": "Explicit implementation intent requires at least one --code-runner-dod-command.",
+                "question": "Explicit code-runner implementation intent requires at least one --code-runner-dod-command.",
                 "safe_default": "do_not_invoke_code_runner",
                 "resume_hint": "Run again with --code-runner-dod-command <safe validation command>.",
             }
@@ -767,6 +770,8 @@ def ask(
             webgpt_url=webgpt_url,
             webgpt_create_tab=webgpt_create_tab,
             webgpt_project=webgpt_project,
+            gemini_tab_id=gemini_tab_id,
+            gemini_url=gemini_url,
             run_state=run_state,
         )
     if run_state:
@@ -1253,129 +1258,27 @@ def _run_visible_subagent_scillm(
 ) -> dict:
     """Launch or steer a visible subagent through scillm's Codex app-server agent API."""
     _validate_visible_subagent_route(route)
-    worker_id = _visible_subagent_worker_id(route)
-    operation = str(route["operation"])
-    handoff_id, handoff_id_source = _resolve_visible_subagent_id("handoff_id", route)
-    lease_id, lease_id_source = _resolve_visible_subagent_id("lease_id", route)
-    previous_thread_id = _visible_subagent_thread_id()
     ask_id = getattr(run_state, "ask_id", "") if run_state is not None else ""
-    if operation == "steer" and (not handoff_id or not lease_id):
-        raise ValueError("visible_subagent steer requires an active handoff_id and lease_id")
-    if operation == "steer" and handoff_id_source != lease_id_source:
-        raise ValueError("visible_subagent steer handoff_id and lease_id must come from the same source")
-    if operation == "launch" and not handoff_id:
-        handoff_id = re.sub(r"[^A-Za-z0-9_-]+", "-", ask_id or f"ask-visible-{int(time.time())}").strip("-")
-        if not handoff_id:
-            handoff_id = f"ask-visible-{uuid.uuid4().hex}"
-    if operation == "launch" and not lease_id:
-        lease_id = f"{handoff_id}-lease"
-
-    base_url = SCILLM_BASE_URL.rstrip("/")
-    headers = {
-        "Authorization": f"Bearer {SCILLM_API_KEY}",
-        "X-Caller-Skill": "ask",
-    }
-    memory_context = _visible_memory_context(memory_items)
-    prompt_payload = {
-        "persona": route.get("persona", "Nico"),
-        "question": question,
-        "turn_type": route.get("turn_type", "advisory"),
-        "operation": route["operation"],
-        "mentioned_skills": mentioned_skills,
-        "memory_first": bool(route.get("memory_first", True)),
-        "memory_context": memory_context,
-        "original_utterance": route.get("original_utterance", ""),
-        "ask_id": ask_id,
-    }
     if run_state:
+        worker_id = os.environ.get("ASK_VISIBLE_SUBAGENT_WORKER_ID", "").strip()
+        if not worker_id:
+            persona = str(route.get("persona") or "nico").strip().lower()
+            worker_id = re.sub(r"[^a-z0-9_-]+", "-", persona).strip("-") or "nico"
         run_state.step_started(
             "visible_subagent_scillm",
             worker_id=worker_id,
-            handoff_id=handoff_id,
+            handoff_id=route.get("handoff_id"),
             turn_type=route.get("turn_type", "advisory"),
         )
     try:
-        with httpx.Client(base_url=base_url, headers=headers, timeout=httpx.Timeout(float(timeout), connect=10.0)) as client:
-            if operation == "steer":
-                response = client.post(
-                    f"/v1/scillm/agents/{worker_id}/steer",
-                    json={
-                        "handoff_id": handoff_id,
-                        "lease_id": lease_id,
-                        "input_text": question,
-                        "actor": "human",
-                        "visible_subagent": route,
-                        "mentioned_skills": mentioned_skills,
-                    },
-                )
-                response.raise_for_status()
-                delivery = response.json()
-            elif operation == "launch":
-                handoff_response = client.post(
-                    f"/v1/scillm/agents/{worker_id}/handoffs",
-                    json={
-                        "handoff_id": handoff_id,
-                        "phase_id": "ask-visible-subagent",
-                        "goal": (
-                            f"{route.get('persona', 'Nico')} visible collaborator turn.\n\n"
-                            f"Question from project agent/human:\n{question}"
-                        ),
-                        "memory_context": memory_context,
-                        "validation_expectations": [
-                            "Return an actual visible collaborator response suitable for the project-agent terminal.",
-                            "If blocked, ask concrete clarifying questions instead of reporting generic status.",
-                        ],
-                        "metadata": prompt_payload,
-                    },
-                )
-                handoff_response.raise_for_status()
-                lease_response = client.post(
-                    f"/v1/scillm/agents/{worker_id}/leases",
-                    json={"handoff_id": handoff_id, "lease_id": lease_id, "owner": "ask-visible-subagent"},
-                )
-                lease_response.raise_for_status()
-                turn_response = client.post(
-                    f"/v1/scillm/agents/{worker_id}/turn",
-                    json={
-                        "handoff_id": handoff_id,
-                        "lease_id": lease_id,
-                        **({"thread_id": previous_thread_id} if previous_thread_id else {}),
-                        "service_name": "ask-visible-subagent",
-                        "wait_for_result": True,
-                        "result_timeout_seconds": max(5.0, min(float(timeout), 120.0)),
-                    },
-                )
-                turn_response.raise_for_status()
-                delivery = turn_response.json()
-                result_response = client.get(
-                    f"/v1/scillm/agents/{worker_id}/result",
-                    params={"handoff_id": handoff_id},
-                )
-                if result_response.status_code == 200:
-                    result_payload = result_response.json()
-                    delivery.setdefault("result", result_payload)
-                    final_text = str(result_payload.get("final_text") or "").strip()
-                    if final_text:
-                        delivery["final_text"] = final_text
-                    if result_payload.get("event_log"):
-                        delivery.setdefault("event_log", result_payload.get("event_log"))
-                    if result_payload.get("result_path"):
-                        delivery.setdefault("result_path", result_payload.get("result_path"))
-            else:
-                raise ValueError("visible_subagent operation must be launch or steer")
-        delivery = dict(delivery)
-        delivery.setdefault("worker_id", worker_id)
-        delivery.setdefault("handoff_id", handoff_id)
-        delivery.setdefault("lease_id", lease_id)
-        delivery.setdefault("persona", route.get("persona", "Nico"))
-        delivery.setdefault("transport", delivery.get("transport") or "scillm_codex_app_server")
-        delivery.setdefault("operation", route["operation"])
-        if operation == "launch" and not str(delivery.get("final_text") or "").strip():
-            state = delivery.get("result_state") or delivery.get("state") or "unknown"
-            raise RuntimeError(
-                "visible_subagent scillm turn did not produce final_text; "
-                f"worker_id={worker_id} handoff_id={handoff_id} state={state}"
-            )
+        delivery = run_visible_subagent_turn(
+            question=question,
+            route=route,
+            memory_items=memory_items,
+            mentioned_skills=mentioned_skills,
+            ask_id=ask_id,
+            timeout=timeout,
+        )
         if run_state:
             run_state.step_finished("visible_subagent_scillm", delivery_state=delivery.get("state", "delivered"))
         return delivery
@@ -1383,6 +1286,8 @@ def _run_visible_subagent_scillm(
         if run_state:
             run_state.step_finished("visible_subagent_scillm", error=f"{type(exc).__name__}: {exc}")
         raise
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -1696,7 +1601,7 @@ def main(
     review_dag: str = typer.Option("hybrid", "--review-dag", help="Review DAG mode: judge-best or hybrid"),
     read_only_review: bool = typer.Option(True, "--read-only/--allow-edits", help="Keep parallel review read-only"),
     code_runner_handoff: bool = typer.Option(False, "--code-runner-handoff", help="Emit /code-runner handoff artifact for actionable findings"),
-    implement_with: Optional[str] = typer.Option(None, "--implement-with", help="Explicit implementation backend request; currently code-runner only"),
+    implement_with: Optional[str] = typer.Option(None, "--implement-with", help="Implementation backend: code-runner (handoff) or scillm-agent (standing worker)"),
     apply_fixes: bool = typer.Option(False, "--apply-fixes", help="Explicitly request code-runner implementation intent; /ask prepares artifacts but does not edit"),
     code_runner_allowed_files: Optional[list[str]] = typer.Option(None, "--code-runner-allowed-file", help="Allowed file for code-runner task (repeatable)"),
     code_runner_dod_commands: Optional[list[str]] = typer.Option(None, "--code-runner-dod-command", help="Definition-of-done command for code-runner task (repeatable)"),
@@ -1722,6 +1627,7 @@ def main(
     chain: Optional[str] = typer.Option(None, "--chain", help="Saved review chain spec name or path"),
     reviewer_specs: Optional[list[str]] = typer.Option(None, "--reviewer-spec", help="Reviewer spec name or path (repeatable)"),
     orchestrate: bool = typer.Option(False, "--orchestrate", help="Draft and execute an ask DAG from the natural-language request"),
+    agent_worker: Optional[str] = typer.Option(None, "--agent-worker", help="scillm implementation worker_id for coding DAG nodes"),
     dag_json: str = typer.Option("", "--dag-json", help="Inline ask/scillm-style DAG JSON document to execute before synthesis"),
     dag_file: str = typer.Option("", "--dag-file", help="Path to an ask/scillm-style DAG JSON document to execute before synthesis"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview execution spec and risk analysis without mutation"),
@@ -1733,6 +1639,13 @@ def main(
     webgpt_url: str = typer.Option("", "--webgpt-url", help="ChatGPT conversation URL to resolve to an open Chrome tab for --oracle-backend webgpt."),
     webgpt_create_tab: bool = typer.Option(False, "--webgpt-create-tab", help="Skip auto-resolve and let surf create/pick a background chatgpt.com tab for --oracle-backend webgpt. The controlled tab id is reported back in oracle_model_served so the agent can reuse it on follow-up rounds."),
     webgpt_project: str = typer.Option("", "--webgpt-project", help="Bind this call to a project name; the controlled ChatGPT tab is persisted at ~/.pi/webgpt-projects/<name>.json and reused across calls. First call for a new project auto-creates a background tab; manually-bound projects (webgpt-project bind ...) never auto-replace their tab."),
+    webgpt_once: bool = typer.Option(
+        False,
+        "--once",
+        help="Single-round WebGPT oracle on the controlled tab (disables default multi-turn unless --oracle-iterations is set explicitly).",
+    ),
+    gemini_tab_id: str = typer.Option("", "--gemini-tab-id", help="Chrome tab id to control for --oracle-backend webgemini. Optional: auto-resolved from a single open gemini.google.com tab."),
+    gemini_url: str = typer.Option("", "--gemini-url", help="Gemini conversation URL to resolve to an open Chrome tab for --oracle-backend webgemini."),
     debug: bool = typer.Option(False, help="Enable debug logging"),
 ):
     original_utterance = " ".join(part for part in question_parts)
@@ -1783,6 +1696,19 @@ def main(
                 as_json=as_json,
             )
             return
+
+    explicit_webgpt_oracle = bool(
+        model_alias_route
+        and getattr(model_alias_route, "oracle_backend", "") == "webgpt"
+    )
+    if explicit_webgpt_oracle:
+        if webgpt_once and oracle_iterations > 1:
+            oracle_iterations = 1
+        elif not webgpt_once and oracle_iterations == 1:
+            import os as _os
+
+            default_iters = int(_os.environ.get("ASK_WEBGPT_DEFAULT_ITERATIONS", "2"))
+            oracle_iterations = max(1, min(10, default_iters))
 
     visible_subagent_route: dict | None = None
     dag_orchestration_attention: dict | None = None
@@ -2099,9 +2025,9 @@ def main(
             "CAE max rounds must be >= 1.",
             param_hint="--cae-max-rounds",
         )
-    if implement_with and implement_with != "code-runner":
+    if implement_with and implement_with not in {"code-runner", "scillm-agent"}:
         raise typer.BadParameter(
-            "Only --implement-with code-runner is supported.",
+            "Only --implement-with code-runner or scillm-agent is supported.",
             param_hint="--implement-with",
         )
     if apply_fixes:
@@ -2118,7 +2044,7 @@ def main(
         implementation_risk_notes,
     ]) and not parallel_review:
         raise typer.BadParameter(
-            "Code-runner handoff options require --parallel-review.",
+            "Implementation handoff options require --parallel-review.",
             param_hint="--parallel-review",
         )
     if code_runner_allowed_files:
@@ -2170,13 +2096,16 @@ def main(
 
     run_id = ask_id or make_run_id(question)
     mentioned_skills = _extract_skill_mentions(original_utterance)
-    should_draft_dag = orchestrate or (not ask_dag and should_orchestrate_from_text(original_utterance))
+    should_draft_dag = (
+        orchestrate or (not ask_dag and should_orchestrate_from_text(original_utterance))
+    ) and not visible_subagent_route and not explicit_webgpt_oracle
     if should_draft_dag and not ask_dag:
         try:
             ask_dag = draft_ask_dag_from_question(
                 question,
                 scope=scope,
                 mentioned_skills=mentioned_skills,
+                agent_worker_id=agent_worker,
             )
         except AskDagError as exc:
             dag_orchestration_attention = natural_language_dag_attention(exc)
@@ -2263,6 +2192,7 @@ def main(
         "chain": chain,
         "reviewer_specs": reviewer_specs or [],
         "orchestrate": should_draft_dag,
+        "agent_worker": agent_worker,
         "suggested_personas_count": 0,
         "mentioned_skills": mentioned_skills,
         "visible_subagent": visible_subagent_route,
@@ -2476,6 +2406,8 @@ def main(
             webgpt_url=webgpt_url,
             webgpt_create_tab=webgpt_create_tab,
             webgpt_project=webgpt_project,
+            gemini_tab_id=gemini_tab_id,
+            gemini_url=gemini_url,
             visible_subagent=visible_subagent_route,
             mentioned_skills=mentioned_skills,
             ask_dag=ask_dag,

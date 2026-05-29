@@ -17,6 +17,13 @@ import httpx
 
 from .ask_config import DEFAULT_ORACLE_MODEL, DEFAULT_ORACLE_REASONING, DEFAULT_ORACLE_TIMEOUT, SCILLM_API_KEY, SCILLM_BASE_URL
 from .run_state import AskRunState
+from .scillm_agents import (
+    CODING_INTENT_RE,
+    ScillmAgentsError,
+    default_coding_worker_id,
+    memory_context_from_dag_dependencies,
+    run_agent_turn,
+)
 from .scillm_runtime import build_scillm_metadata
 from .skills_exec import AGENT_SKILLS_DIR, SKILLS_DIR, parse_json_output, parse_memory_output, run_memory_recall, run_skill
 from .dag_repair import apply_dag_repairs, resolve_node_timeout
@@ -40,6 +47,7 @@ ALLOWED_NODE_TYPES = {
     "dogpile.search",
     "ask.oracle",
     "skill.run",
+    "scillm.agent_turn",
 }
 ALLOWED_SKILL_RUN_SKILLS = {
     "code-runner",
@@ -52,6 +60,7 @@ ALLOWED_SKILL_RUN_SKILLS = {
     "extract-entities",
     "review-code",
     "subagent-runner",
+    "debugger",
 }
 INTERNAL_SKILL_MENTION_TYPES = {"ask", "memory", "dogpile", "scillm", "interview"}
 
@@ -87,8 +96,20 @@ def should_orchestrate_from_text(text: str) -> bool:
     lowered = text.lower()
     if re.search(r"\b(dag|orchestrat(?:e|ion)|workflow|skill graph|pipeline)\b", lowered):
         return True
+    if CODING_INTENT_RE.search(text):
+        return True
     mentions = set(_extract_skill_mentions_from_text(text))
     return len(mentions - {"ask"}) >= 2
+
+
+
+
+def _infer_persona_from_text(text: str) -> str:
+    lowered = text.lower()
+    for name in ("Brandon", "Margaret", "Jennifer", "Nico", "Embry"):
+        if name.lower() in lowered:
+            return name
+    return "Brandon"
 
 
 def draft_ask_dag_from_question(
@@ -97,6 +118,8 @@ def draft_ask_dag_from_question(
     scope: str = "ask",
     mentioned_skills: list[str] | None = None,
     max_concurrency: int = 4,
+    agent_worker_id: str | None = None,
+    prefer_agent_coding: bool = True,
 ) -> dict[str, Any]:
     """Draft a conservative executable DAG from natural language.
 
@@ -130,7 +153,32 @@ def draft_ask_dag_from_question(
     wants_oracle = "scillm" in mentions or bool(re.search(r"\b(analy[sz]e|review|critique|compare|decide|answer|synthesi[sz]e)\b", lowered))
     explicit_skill_mentions = [skill for skill in mentions if skill not in INTERNAL_SKILL_MENTION_TYPES]
 
-    if not any([needs_freshness, wants_report, wants_oracle, explicit_skill_mentions]):
+    wants_coding = bool(CODING_INTENT_RE.search(lowered)) or bool(
+        {"code-runner", "subagent-runner"} & set(explicit_skill_mentions)
+    )
+    coding_skills = {"code-runner", "subagent-runner"}
+    non_coding_skill_mentions = [skill for skill in explicit_skill_mentions if skill not in coding_skills]
+    wants_review_implement_loop = bool(
+        "review-code" in mentions and wants_coding
+    ) or bool(re.search(r"\breview\b.*\b(implement|fix|patch)\b", lowered))
+    persona_name = _infer_persona_from_text(text)
+
+    if wants_review_implement_loop:
+        return build_persona_review_implement_dag(
+            text,
+            scope=scope,
+            persona=persona_name,
+            agent_worker_id=agent_worker_id,
+            include_dogpile="dogpile" in mentions or needs_freshness or bool(
+                re.search(r"\b(blocked|dogpile|research|consult)\b", lowered)
+            ),
+            include_debugger_escalation="debugger" in mentions or bool(
+                re.search(r"\b(stuck|breakpoint|debugger|variable state|runtime error)\b", lowered)
+            ),
+            max_concurrency=max_concurrency,
+        )
+
+    if not any([needs_freshness, wants_report, wants_oracle, wants_coding, non_coding_skill_mentions]):
         raise AskDagError(
             "Natural-language DAG request is ambiguous. Use /interview to clarify the target skill, output artifact, or acceptance criteria."
         )
@@ -169,18 +217,36 @@ def draft_ask_dag_from_question(
         )
         dependency_tail = ["analysis"]
 
-    skill_nodes = [skill for skill in explicit_skill_mentions if skill != "create-report"]
-    for skill in skill_nodes:
-        node_id = _safe_node_id(skill)
+    if wants_coding and prefer_agent_coding:
+        worker_id = (agent_worker_id or "").strip() or default_coding_worker_id()
         nodes.append(
             {
-                "id": node_id,
-                "type": "skill.run",
+                "id": "implement",
+                "type": "scillm.agent_turn",
                 "depends_on": dependency_tail,
-                "input": {"skill": skill, "args": []},
+                "input": {
+                    "worker_id": worker_id,
+                    "operation": "launch",
+                    "goal": text,
+                    "sandbox": "workspace-write",
+                    "phase_id": "ask-dag-implement",
+                },
             }
         )
-        dependency_tail = [node_id]
+        dependency_tail = ["implement"]
+    else:
+        skill_nodes = [skill for skill in non_coding_skill_mentions if skill != "create-report"]
+        for skill in skill_nodes:
+            node_id = _safe_node_id(skill)
+            nodes.append(
+                {
+                    "id": node_id,
+                    "type": "skill.run",
+                    "depends_on": dependency_tail,
+                    "input": {"skill": skill, "args": []},
+                }
+            )
+            dependency_tail = [node_id]
 
     if wants_report:
         nodes.append(
@@ -201,6 +267,171 @@ def draft_ask_dag_from_question(
             "schema_version": ASK_DAG_SCHEMA_VERSION,
             "graph_id": "ask-natural-language-orchestration",
             "description": "Drafted by /ask from a natural-language orchestration request.",
+            "max_concurrency": max_concurrency,
+            "nodes": nodes,
+        }
+    )
+
+
+
+
+def build_persona_review_implement_dag(
+    question: str,
+    *,
+    scope: str = "ask",
+    persona: str = "Brandon",
+    review_files: list[str] | None = None,
+    agent_worker_id: str | None = None,
+    include_dogpile: bool = True,
+    include_debugger_escalation: bool = False,
+    max_concurrency: int = 4,
+) -> dict[str, Any]:
+    """Canonical persona → review-code → consult → scillm.agent_turn workflow."""
+    from .skills_exec import SKILL_ROOT
+
+    text = question.strip()
+    if not text:
+        raise AskDagError("Cannot build persona-review-implement DAG for an empty question.")
+    target_files = list(review_files or [str((SKILL_ROOT / "examples" / "sample_target.py").resolve())])
+    worker_id = (agent_worker_id or "").strip() or default_coding_worker_id(persona=persona)
+    review_context = (
+        f"Persona: {persona}. Review before bounded implementation. "
+        f"Question: {text}"
+    )
+    implement_goal = (
+        f"{persona} implementation turn for /ask DAG example.\n\n"
+        f"Task: {text}\n\n"
+        "Upstream artifacts: persona brief, /review-code findings, memory recall, optional dogpile.\n\n"
+        "When blocked (missing API docs, unknown library behavior, or conflicting prior art):\n"
+        "1. Consult /memory recall --brief for prior lessons and skill chains.\n"
+        "2. If still blocked, run /dogpile search with persona, rationale, and problem context.\n"
+        "3. Only then continue implementation inside the worker declared_write_set.\n\n"
+        "When stuck on a runtime error and the next patch depends on actual variable state:\n"
+        "use /debugger before guessing. Set breakpoints at the failing transition, run the real repro,\n"
+        "inspect paused locals/watches, report breakpoint file:line and observed values, then patch.\n"
+        "Do not replace debugger proof with log skims or static inference alone.\n\n"
+        "Do not use /v1/chat/completions for coding; you are on a standing scillm agent worker."
+    )
+    nodes: list[dict[str, Any]] = [
+        {
+            "id": "memory_first",
+            "type": "memory.recall",
+            "input": {"query": text, "scope": scope, "k": 8},
+        },
+        {
+            "id": "persona_brief",
+            "type": "ask.oracle",
+            "depends_on": ["memory_first"],
+            "input": {
+                "persona": persona,
+                "prompt": (
+                    f"As {persona}, state review priorities and acceptance criteria for:\n{text}\n\n"
+                    "Use memory context only as background, not as sole evidence."
+                ),
+                "model": DEFAULT_ORACLE_MODEL,
+                "reasoning_effort": DEFAULT_ORACLE_REASONING,
+            },
+        },
+        {
+            "id": "code_review",
+            "type": "skill.run",
+            "depends_on": ["persona_brief"],
+            "input": {
+                "skill": "review-code",
+                "args": [
+                    "one-shot",
+                    "--context",
+                    review_context,
+                    "--persona",
+                    persona.lower(),
+                    "--model",
+                    DEFAULT_ORACLE_MODEL,
+                    "--single",
+                    *[item for path in target_files for item in ("--file", path)],
+                ],
+                "timeout": 600,
+            },
+        },
+        {
+            "id": "memory_consult",
+            "type": "memory.recall",
+            "depends_on": ["code_review"],
+            "allow_failure": True,
+            "input": {
+                "query": f"When blocked on: {text}. Prior fixes, skill chains, and lessons.",
+                "scope": scope,
+                "k": 5,
+            },
+        },
+    ]
+    dependency_tail = ["memory_consult"]
+    if include_dogpile:
+        nodes.append(
+            {
+                "id": "dogpile_consult",
+                "type": "dogpile.search",
+                "depends_on": ["memory_consult"],
+                "allow_failure": True,
+                "input": {
+                    "query": text,
+                    "persona": persona.lower(),
+                    "rationale": f"Consult when blocked during implementation: {text[:200]}",
+                    "context": review_context,
+                    "auto_preset": True,
+                    "timeout": 420,
+                },
+            }
+        )
+        dependency_tail = ["dogpile_consult"]
+    if include_debugger_escalation:
+        sample_path = target_files[0]
+        proof_path = str((SKILL_ROOT / "examples" / "debugger-proof.json").resolve())
+        nodes.append(
+            {
+                "id": "debugger_stuck",
+                "type": "skill.run",
+                "depends_on": ["code_review"],
+                "allow_failure": True,
+                "input": {
+                    "skill": "debugger",
+                    "args": [
+                        "--break",
+                        f"{sample_path}:7",
+                        "--local",
+                        "raw",
+                        "--local",
+                        "candidate",
+                        "--out",
+                        proof_path,
+                        "--",
+                        "python3",
+                        str((SKILL_ROOT / "examples" / "debug_repro.py").resolve()),
+                    ],
+                    "timeout": 120,
+                },
+            }
+        )
+        dependency_tail = [*(["dogpile_consult"] if include_dogpile else ["memory_consult"]), "debugger_stuck"]
+    nodes.append(
+        {
+            "id": "implement",
+            "type": "scillm.agent_turn",
+            "depends_on": dependency_tail,
+            "input": {
+                "worker_id": worker_id,
+                "operation": "launch",
+                "goal": implement_goal,
+                "sandbox": "workspace-write",
+                "phase_id": "ask-persona-review-implement",
+                "result_timeout_seconds": 900,
+            },
+        }
+    )
+    return validate_ask_dag(
+        {
+            "schema_version": ASK_DAG_SCHEMA_VERSION,
+            "graph_id": "ask-persona-review-implement",
+            "description": "Persona brief, review-code, memory/dogpile consult, scillm agent implementation.",
             "max_concurrency": max_concurrency,
             "nodes": nodes,
         }
@@ -265,6 +496,8 @@ def _normalize_scillm_exec_graph(dag: dict[str, Any], *, base_dir: Path | None =
                 node_type = "dogpile.search"
             elif call_type in {"skill.run", "skill", "subagent", "subagent-runner"}:
                 node_type = "skill.run"
+            elif call_type in {"scillm.agent_turn", "agent_turn", "agent-turn", "implementation", "implement"}:
+                node_type = "scillm.agent_turn"
             else:
                 raise AskDagError(f"scillm exec graph node {raw_node.get('id', index)!r} has unsupported call_type {call_type!r}.")
 
@@ -285,6 +518,16 @@ def _normalize_scillm_exec_graph(dag: dict[str, Any], *, base_dir: Path | None =
             if isinstance(args, str):
                 args = [args]
             node_input = {**node_input, "skill": skill, "args": args}
+        elif node_type == "scillm.agent_turn":
+            goal = _prompt_from_scillm_node(raw_node, base_dir=base_dir)
+            node_input = {
+                **node_input,
+                "goal": str(node_input.get("goal") or node_input.get("prompt") or goal),
+                "worker_id": str(node_input.get("worker_id") or execution.get("worker_id") or ""),
+                "operation": str(node_input.get("operation") or execution.get("operation") or "launch"),
+                "sandbox": str(node_input.get("sandbox") or execution.get("sandbox") or "workspace-write"),
+                "phase_id": str(node_input.get("phase_id") or execution.get("phase_id") or "ask-dag-implement"),
+            }
         elif node_type in {"memory.recall", "dogpile.search"}:
             query = raw_node.get("query", execution.get("query", node_input.get("query", node_input.get("q", ""))))
             if query:
@@ -436,6 +679,27 @@ def validate_ask_dag(dag: dict[str, Any], *, base_dir: Path | None = None) -> di
             args = node_input.get("args", [])
             if not isinstance(args, list) or not all(isinstance(arg, str) for arg in args):
                 raise AskDagError(f"DAG node {node_id!r} skill.run args must be a string list.")
+        elif node_type == "scillm.agent_turn":
+            operation = str(node_input.get("operation") or "launch").strip().lower()
+            if operation not in {"launch", "steer"}:
+                raise AskDagError(f"DAG node {node_id!r} scillm.agent_turn operation must be launch or steer.")
+            goal = str(node_input.get("goal") or node_input.get("prompt") or "").strip()
+            if operation == "launch" and not goal:
+                raise AskDagError(f"DAG node {node_id!r} scillm.agent_turn requires goal or prompt for launch.")
+            sandbox = str(node_input.get("sandbox") or "workspace-write").strip()
+            if sandbox not in {"read-only", "workspace-write"}:
+                raise AskDagError(f"DAG node {node_id!r} scillm.agent_turn sandbox must be read-only or workspace-write.")
+            worker_id = str(node_input.get("worker_id") or "").strip()
+            if worker_id:
+                try:
+                    from .scillm_agents import validate_agent_identifier
+
+                    validate_agent_identifier("worker_id", worker_id, "dag")
+                except ValueError as exc:
+                    raise AskDagError(str(exc)) from exc
+            timeout = node_input.get("timeout", node_input.get("result_timeout_seconds", 900))
+            if not isinstance(timeout, (int, float)) or timeout <= 0 or timeout > 7200:
+                raise AskDagError(f"DAG node {node_id!r} scillm.agent_turn timeout must be between 1 and 7200 seconds.")
         normalized_nodes.append({
             **raw_node,
             "id": node_id,
@@ -966,6 +1230,13 @@ def _execute_node(
         return _execute_dogpile_search(node, question=question, context=context)
     if node_type == "skill.run":
         return _execute_skill_run(node, dag_dir=dag_dir, context=context)
+    if node_type == "scillm.agent_turn":
+        return _execute_scillm_agent_turn(
+            node,
+            question=question,
+            run_state=run_state,
+            context=context,
+        )
     if node_type == "ask.oracle":
         return _execute_oracle_node(
             node,
@@ -1224,6 +1495,97 @@ def _execute_skill_run(node: dict[str, Any], *, dag_dir: Path, context: dict[str
             "dag_node_type": node["type"],
         }] if (report_text or context_text).strip() else [],
     }
+
+
+def _execute_scillm_agent_turn(
+    node: dict[str, Any],
+    *,
+    question: str,
+    run_state: AskRunState,
+    context: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    node_input = node["input"]
+    operation = str(node_input.get("operation") or "launch").strip().lower()
+    goal = str(node_input.get("goal") or node_input.get("prompt") or question).strip()
+    worker_id = str(node_input.get("worker_id") or "").strip() or default_coding_worker_id()
+    sandbox = str(node_input.get("sandbox") or "workspace-write")
+    phase_id = str(node_input.get("phase_id") or "ask-dag-implement")
+    timeout = float(node_input.get("timeout") or node_input.get("result_timeout_seconds") or 900)
+    handoff_id = str(node_input.get("handoff_id") or "")
+    lease_id = str(node_input.get("lease_id") or "")
+    memory_context = node_input.get("memory_context")
+    if not isinstance(memory_context, list):
+        memory_context = memory_context_from_dag_dependencies(context)
+    run_state.step_started(
+        "scillm_agent_turn",
+        node_id=node["id"],
+        worker_id=worker_id,
+        operation=operation,
+        sandbox=sandbox,
+    )
+    try:
+        delivery = run_agent_turn(
+            worker_id=worker_id,
+            operation=operation,
+            goal=goal,
+            handoff_id=handoff_id,
+            lease_id=lease_id,
+            phase_id=phase_id,
+            ask_id=run_state.ask_id,
+            service_name=f"ask-dag-{node['id']}",
+            sandbox=sandbox,
+            wait_for_result=bool(node_input.get("wait_for_result", True)),
+            result_timeout_seconds=float(node_input.get("result_timeout_seconds") or timeout),
+            approval_policy=str(node_input.get("approval_policy") or "never"),
+            memory_context=memory_context,
+            metadata={
+                "dag_node_id": node["id"],
+                "question": question,
+                "depends_on": node.get("depends_on", []),
+            },
+            steer_input=str(node_input.get("steer_input") or ""),
+            timeout=timeout,
+        )
+        final_text = str(delivery.get("final_text") or "").strip()
+        ok = bool(final_text) or operation == "steer"
+        run_state.step_finished(
+            "scillm_agent_turn",
+            ok=ok,
+            worker_id=worker_id,
+            handoff_id=delivery.get("handoff_id"),
+            lease_id=delivery.get("lease_id"),
+            result_path=delivery.get("result_path"),
+        )
+        return {
+            "id": node["id"],
+            "type": node["type"],
+            "ok": ok,
+            "worker_id": worker_id,
+            "handoff_id": delivery.get("handoff_id"),
+            "lease_id": delivery.get("lease_id"),
+            "result_path": delivery.get("result_path"),
+            "final_text": final_text,
+            "delivery": delivery,
+            "context_items": [{
+                "problem": goal[:500],
+                "solution": final_text[:12000],
+                "via": "ask_dag",
+                "source": "scillm.agent_turn",
+                "dag_node_id": node["id"],
+                "dag_node_type": node["type"],
+                "worker_id": worker_id,
+                "handoff_id": delivery.get("handoff_id"),
+            }] if final_text else [],
+        }
+    except (ScillmAgentsError, httpx.HTTPError, ValueError) as exc:
+        run_state.step_finished("scillm_agent_turn", ok=False, error=f"{type(exc).__name__}: {exc}")
+        return {
+            "id": node["id"],
+            "type": node["type"],
+            "ok": False,
+            "error": f"{type(exc).__name__}: {exc}",
+            "context_items": [],
+        }
 
 
 def _execute_oracle_node(

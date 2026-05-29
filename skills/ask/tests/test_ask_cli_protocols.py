@@ -12,6 +12,7 @@ import json
 from typer.testing import CliRunner
 
 import ask.ask as ask_module
+import ask.scillm_agents as scillm_agents_module
 
 
 def _load_ask_module():
@@ -556,7 +557,7 @@ def test_ask_visible_subagent_rejects_unsafe_worker_id_before_http(monkeypatch):
             raise AssertionError("HTTP should not be contacted for unsafe worker id")
 
     monkeypatch.setenv("ASK_VISIBLE_SUBAGENT_WORKER_ID", "nico/steer")
-    monkeypatch.setattr(ask_module.httpx, "Client", FakeClient)
+    monkeypatch.setattr(scillm_agents_module.httpx, "Client", FakeClient)
     try:
         ask_module.ask(
             question="use $memory",
@@ -629,7 +630,7 @@ def test_visible_subagent_launch_turn_carries_high_level_contract(monkeypatch):
                 }
             )
 
-    monkeypatch.setattr(ask_module.httpx, "Client", FakeClient)
+    monkeypatch.setattr(scillm_agents_module.httpx, "Client", FakeClient)
     monkeypatch.setattr(ask_module, "run_memory_recall", lambda *args, **kwargs: {"returncode": 0, "stdout": "", "stderr": ""})
     monkeypatch.setattr(ask_module, "parse_memory_output", lambda _stdout: [])
     monkeypatch.setattr(ask_module, "run_sparta_preflight", lambda *args, **kwargs: {"route": "normal_answer", "reason": "test"})
@@ -656,13 +657,15 @@ def test_visible_subagent_launch_turn_carries_high_level_contract(monkeypatch):
     assert result["answer"] == "Nico: Nico response from app-server result."
     assert len(turn_posts) == 1
     turn_payload = turn_posts[0]["json"]
-    assert set(turn_payload) == {
+    assert {
         "handoff_id",
         "lease_id",
         "service_name",
         "wait_for_result",
         "result_timeout_seconds",
-    }
+        "sandbox",
+        "approval_policy",
+    }.issubset(set(turn_payload))
     assert turn_payload["wait_for_result"] is True
     assert turn_payload["service_name"] == "ask-visible-subagent"
     handoff = posts[0]["json"]

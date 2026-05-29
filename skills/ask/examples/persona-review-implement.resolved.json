@@ -1,0 +1,109 @@
+{
+  "description": "Persona brief, review-code, memory/dogpile consult, scillm agent implementation.",
+  "graph_id": "ask-persona-review-implement",
+  "max_concurrency": 4,
+  "nodes": [
+    {
+      "allow_failure": false,
+      "depends_on": [],
+      "id": "memory_first",
+      "input": {
+        "k": 8,
+        "query": "Brandon: review the ask DAG example module, then implement the fix with memory and dogpile when blocked",
+        "scope": "ask"
+      },
+      "max_attempts": 1,
+      "type": "memory.recall"
+    },
+    {
+      "allow_failure": false,
+      "depends_on": [
+        "memory_first"
+      ],
+      "id": "persona_brief",
+      "input": {
+        "model": "gpt-5.5",
+        "persona": "Brandon",
+        "prompt": "As Brandon, state review priorities and acceptance criteria for:\nBrandon: review the ask DAG example module, then implement the fix with memory and dogpile when blocked\n\nUse memory context only as background, not as sole evidence.",
+        "reasoning_effort": "high"
+      },
+      "max_attempts": 1,
+      "type": "ask.oracle"
+    },
+    {
+      "allow_failure": false,
+      "depends_on": [
+        "persona_brief"
+      ],
+      "id": "code_review",
+      "input": {
+        "args": [
+          "one-shot",
+          "--context",
+          "Persona: Brandon. Review before bounded implementation. Question: Brandon: review the ask DAG example module, then implement the fix with memory and dogpile when blocked",
+          "--persona",
+          "brandon",
+          "--model",
+          "gpt-5.5",
+          "--single",
+          "--file",
+          "/home/graham/workspace/experiments/agent-skills/skills/ask/examples/sample_target.py"
+        ],
+        "skill": "review-code",
+        "timeout": 600
+      },
+      "max_attempts": 1,
+      "type": "skill.run"
+    },
+    {
+      "allow_failure": true,
+      "depends_on": [
+        "code_review"
+      ],
+      "id": "memory_consult",
+      "input": {
+        "k": 5,
+        "query": "When blocked on: Brandon: review the ask DAG example module, then implement the fix with memory and dogpile when blocked. Prior fixes, skill chains, and lessons.",
+        "scope": "ask"
+      },
+      "max_attempts": 1,
+      "type": "memory.recall"
+    },
+    {
+      "allow_failure": true,
+      "depends_on": [
+        "memory_consult"
+      ],
+      "id": "dogpile_consult",
+      "input": {
+        "auto_preset": true,
+        "context": "Persona: Brandon. Review before bounded implementation. Question: Brandon: review the ask DAG example module, then implement the fix with memory and dogpile when blocked",
+        "persona": "brandon",
+        "query": "Brandon: review the ask DAG example module, then implement the fix with memory and dogpile when blocked",
+        "rationale": "Consult when blocked during implementation: Brandon: review the ask DAG example module, then implement the fix with memory and dogpile when blocked",
+        "timeout": 420
+      },
+      "max_attempts": 1,
+      "type": "dogpile.search"
+    },
+    {
+      "allow_failure": false,
+      "depends_on": [
+        "dogpile_consult"
+      ],
+      "id": "implement",
+      "input": {
+        "goal": "Brandon implementation turn for /ask DAG example.\n\nTask: Brandon: review the ask DAG example module, then implement the fix with memory and dogpile when blocked\n\nUpstream artifacts: persona brief, /review-code findings, memory recall, optional dogpile.\n\nWhen blocked (missing API docs, unknown library behavior, or conflicting prior art):\n1. Consult /memory recall --brief for prior lessons and skill chains.\n2. If still blocked, run /dogpile search with persona, rationale, and problem context.\n3. Only then continue implementation inside the worker declared_write_set.\n\nDo not use /v1/chat/completions for coding; you are on a standing scillm agent worker.",
+        "operation": "launch",
+        "phase_id": "ask-persona-review-implement",
+        "result_timeout_seconds": 900,
+        "sandbox": "workspace-write",
+        "worker_id": "implementation"
+      },
+      "max_attempts": 1,
+      "type": "scillm.agent_turn"
+    }
+  ],
+  "schema_version": "ask.dag.v1",
+  "source_graph_version": ""
+}

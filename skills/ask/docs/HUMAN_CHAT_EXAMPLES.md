@@ -377,3 +377,28 @@ Right: $ask safe to proceed? --deep-review-target "current branch vs main"
 Wrong: $ask use DeepSeek somehow
 Right: $ask oracle with GPT-5.5 and DeepSeek V4 using --oracle-peer-model opencode-go/deepseek-v4-pro
 ```
+
+## Persona Review → Implement (agents API)
+
+Full orchestration example with persona, `/review-code`, `/memory`, `/dogpile`
+when blocked, and implementation via scillm **agents** (not chat completions).
+
+```text
+$ask Brandon $review-code the ask example module then implement the handoff fix; consult $memory and $dogpile when blocked
+```
+
+Expected route:
+
+```bash
+cd skills/ask
+./examples/run-example.sh "Brandon: review-code then implement sample_target" dry-run
+# or
+./run.sh ask "Brandon \$review-code the module then implement the fix" \
+  --orchestrate --agent-worker implementation --dry-run --json
+```
+
+See `examples/README.md` for prerequisites (memory, scillm agents registry, implementation worker).
+
+When stuck on a runtime error during implementation, the workflow expects **`/debugger`**
+before guessing at patches: set breakpoints, run the repro, inspect paused variable state,
+then patch. See `examples/run-debugger-stuck.sh` and `examples/README.md`.

@@ -46,6 +46,13 @@ from .webgpt_runtime import (
     call_webgpt,
     extract_file_attachments,
 )
+from .gemini_runtime import (
+    GeminiBackendError,
+    GeminiBackendDegradedError,
+    GeminiTabError,
+    build_gemini_prompt,
+    call_gemini,
+)
 
 
 INLINE_CITATION_RE = re.compile(r"\[(MEMORY\.\d+|QUESTION|DOGPILE\.\d+|FETCHER\.\d+)\]")
@@ -162,6 +169,94 @@ def _run_oracle_webgpt(
     return last_content, model_served, turns
 
 
+def _run_oracle_webgemini(
+    base_prompt: str,
+    question: str,
+    persona: Optional[str],
+    iterations: int,
+    timeout: float,
+    gemini_tab_id: str,
+    gemini_url: str,
+    run_state: object | None,
+    oracle_state: dict,
+) -> tuple[str, str, list[dict]]:
+    """Send one /ask synthesis prompt to the controlled Gemini tab via surf.
+
+    iterations: each /ask call is one round. Multi-turn iteration is achieved
+    by calling /ask repeatedly with the same controlled tab — Gemini
+    preserves conversation state on the tab.
+    """
+    tab_id = (gemini_tab_id or str(oracle_state.get("gemini_tab_id", "") or "")).strip()
+    url = (gemini_url or str(oracle_state.get("gemini_url", "") or "")).strip()
+    attachments = extract_file_attachments(question)
+    prompt = build_gemini_prompt(
+        base_prompt,
+        attachments,
+        system_preamble=(
+            "You are answering a /ask oracle call. Treat retrieved memory "
+            "context as supporting evidence; cite supported claims inline with "
+            "source IDs like [MEMORY.1]. Distinguish supported facts from "
+            "inference. Be concise and technically precise."
+        ),
+    )
+
+    turns: list[dict] = []
+    last_content = ""
+    total_iterations = max(1, int(iterations))
+    for index in range(total_iterations):
+        turn_number = index + 1
+        try:
+            result = call_gemini(
+                prompt if turn_number == 1 else _format_gemini_followup_prompt(turns, turn_number, total_iterations),
+                tab_id=tab_id,
+                url=url,
+                timeout=timeout,
+                no_activate=True,
+                run_state=run_state,
+                iteration=turn_number,
+                persona=persona,
+            )
+        except GeminiTabError as exc:
+            raise GeminiBackendError(
+                f"Gemini oracle could not resolve a Gemini tab on round {turn_number}: {exc}"
+            ) from exc
+        except GeminiBackendDegradedError as exc:
+            raise  # propagate with self-correction guidance already in message
+        # Lock in the resolved tab for subsequent rounds.
+        if not tab_id and result.controlled_tab_id:
+            tab_id = result.controlled_tab_id
+        turns.append({
+            "iteration": turn_number,
+            "backend": "webgemini",
+            "controlled_tab_id": result.controlled_tab_id,
+            "took_ms": result.took_ms,
+            "content": result.response,
+            "artifact_dir": str(result.artifact_dir),
+            "no_activate": result.no_activate,
+            "focus_changed": result.focus_changed,
+            "raw_contains_sentinel": result.raw_contains_sentinel,
+        })
+        last_content = result.response
+
+    model_served = f"webgemini:{tab_id}" if tab_id else "webgemini"
+    return last_content, model_served, turns
+
+
+def _format_gemini_followup_prompt(
+    turns: list[dict],
+    turn_number: int,
+    total_iterations: int,
+) -> str:
+    """Build a follow-up prompt that nudges Gemini to refine the prior answer."""
+    return (
+        f"This is iteration {turn_number}/{total_iterations} on the same /ask oracle question. "
+        "Review your previous answer in this conversation. Identify the weakest claim or "
+        "the assumption most likely to be wrong, address it, and return an improved final "
+        "answer. If your previous answer is already correct and well-supported, say so "
+        "explicitly and restate the conclusion concisely."
+    )
+
+
 def _format_webgpt_followup_prompt(
     turns: list[dict],
     turn_number: int,
@@ -213,6 +308,8 @@ def _apply_oracle_synthesis(
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
     webgpt_project: str = "",
+    gemini_tab_id: str = "",
+    gemini_url: str = "",
     run_state: object | None = None,
 ) -> None:
     """Use an oracle backend for final high-reasoning synthesis."""
@@ -315,6 +412,19 @@ def _apply_oracle_synthesis(
                 webgpt_url=webgpt_url,
                 webgpt_create_tab=webgpt_create_tab,
                 webgpt_project=webgpt_project,
+                run_state=run_state,
+                oracle_state=result.get("oracle", {}),
+            )
+            protocol_state = {}
+        elif effective_backend == "webgemini":
+            content, model_served, turns = _run_oracle_webgemini(
+                base_prompt=prompt,
+                question=question,
+                persona=persona,
+                iterations=iterations,
+                timeout=timeout,
+                gemini_tab_id=gemini_tab_id,
+                gemini_url=gemini_url,
                 run_state=run_state,
                 oracle_state=result.get("oracle", {}),
             )

@@ -508,3 +508,75 @@ def test_dag_dry_run_summary_includes_layers_and_ascii_chart():
     assert "final_report" in chart
     assert summary["ascii_renderer"] in {"phart-git", "phart-pypi", "fallback"}
     assert "┌" in chart or "[" in chart
+
+
+def test_validate_ask_dag_accepts_scillm_agent_turn_node():
+    dag = ask_dag.validate_ask_dag(
+        {
+            "schema_version": "ask.dag.v1",
+            "nodes": [
+                {
+                    "id": "implement",
+                    "type": "scillm.agent_turn",
+                    "input": {
+                        "worker_id": "implementation",
+                        "goal": "Fix the path bug in render_dag_chart.py",
+                        "sandbox": "workspace-write",
+                    },
+                }
+            ],
+        }
+    )
+    assert dag["nodes"][0]["type"] == "scillm.agent_turn"
+
+
+def test_draft_ask_dag_from_question_uses_agent_turn_for_coding_intent():
+    dag = ask_dag.draft_ask_dag_from_question("Implement the fix for the DAG path bug")
+    node_types = [node["type"] for node in dag["nodes"]]
+    assert "scillm.agent_turn" in node_types
+    implement = next(node for node in dag["nodes"] if node["id"] == "implement")
+    assert implement["input"]["sandbox"] == "workspace-write"
+    assert "fix" in implement["input"]["goal"].lower()
+
+
+def test_should_orchestrate_from_text_detects_coding_intent():
+    assert ask_dag.should_orchestrate_from_text("Please implement the retry logic")
+
+
+def test_build_persona_review_implement_dag_validates():
+    dag = ask_dag.build_persona_review_implement_dag(
+        "Brandon: review-code then implement the sample_target fix",
+        persona="Brandon",
+        agent_worker_id="implementation",
+    )
+    node_ids = [node["id"] for node in dag["nodes"]]
+    assert node_ids == [
+        "memory_first",
+        "persona_brief",
+        "code_review",
+        "memory_consult",
+        "dogpile_consult",
+        "implement",
+    ]
+    implement = next(node for node in dag["nodes"] if node["id"] == "implement")
+    assert implement["type"] == "scillm.agent_turn"
+    assert implement["input"]["sandbox"] == "workspace-write"
+    review = next(node for node in dag["nodes"] if node["id"] == "code_review")
+    assert review["input"]["skill"] == "review-code"
+    assert "--file" in review["input"]["args"]
+
+
+def test_draft_ask_dag_review_code_implement_loop():
+    dag = ask_dag.draft_ask_dag_from_question(
+        "Brandon $review-code the module then implement the fix; use $memory and $dogpile when blocked"
+    )
+    assert dag["graph_id"] == "ask-persona-review-implement"
+    assert any(node["id"] == "code_review" for node in dag["nodes"])
+
+
+def test_build_persona_review_implement_includes_debugger_guidance():
+    dag = ask_dag.build_persona_review_implement_dag("fix sample", persona="Brandon")
+    implement = next(node for node in dag["nodes"] if node["id"] == "implement")
+    goal = implement["input"]["goal"]
+    assert "/debugger" in goal
+    assert "breakpoint" in goal.lower()

@@ -288,6 +288,15 @@ Behavior:
 - **Focus preservation.** The controlled tab is never foregrounded. The
   caller's active tab and focused window are unchanged across the call;
   `meta.focus_changed` must be `false`.
+- **Default multi-turn.** Unless `--once` is passed, explicit `$ask webgpt` uses
+  `ASK_WEBGPT_DEFAULT_ITERATIONS` (default **2**) on the same controlled tab via
+  `--oracle-iterations`. Use `--once` for a single round; use `--oracle-iterations N`
+  to override explicitly.
+- **No DAG on plain webgpt.** Product/architecture questions routed through
+  `$ask webgpt` do not auto-draft coding DAGs; use `--orchestrate` only when you
+  intend skill-graph execution.
+- **Background collaboration loops** → see `/collab` (`collab webgpt --profile …`),
+  which shells to `/ask webgpt` and fires `notify-send` on `HUMAN_REQUIRED` / `BLOCKED`.
 - **Multi-turn iteration.** Each `$ask webgpt` call is one round on the same
   controlled tab. ChatGPT keeps the conversation context per tab, so a second
   call refines naturally. The canonical pattern is: project agent reads the
@@ -322,6 +331,58 @@ Behavior:
   quotes). `extract_verdict` layers strict `json.loads` → `json_repair` →
   plain-text `VERDICT:` regex, so transient model misbehavior never
   silently drops the verdict label.
+
+### Tech lead vs code runner (read this before WebGPT rounds)
+
+When the human says WebGPT is the **tech lead** and the project agent is the
+**code runner**, roles are fixed:
+
+| Role | Who | Does | Does not |
+|------|-----|------|----------|
+| **Tech lead** | `$ask webgpt` on a bound tab (`--webgpt-project`) | Adjudicate policy, page contracts, screenshots; author `$test-interactions` manifest JSON; ask clarifying questions | Patch the repo, run shells, run `$test-interactions`, replace deterministic gates |
+| **Code runner** | Project agent (you) | Implement allowlisted fixes, `cargo check`, `uv run maturin develop`, re-extract/materialize, run gates, write artifacts | Pretend WebGPT output is proof; skip local verification |
+
+**How the tech lead is contacted (two modes):**
+
+1. **Clarifying question** — one focused ambiguity (policy, human vs pipeline,
+   closure count semantics). Minimal context: page id, counts, artifact paths.
+2. **Review bundle** — multi-file packet for real adjudication. Prefer a small
+   manifest plus attached paths, not a repo dump.
+
+Example bundle layout:
+
+```text
+/tmp/pdf-oxide-review-bundle/
+  REVIEW_REQUEST.md      # what you need decided (one paragraph)
+  MANIFEST.json          # file list + sha/size
+  diagnosis.json         # discrepancy / fix_error evidence
+  gate_output.json       # latest deterministic gate readout
+  diff_summary.md        # what you changed this round (optional)
+```
+
+Invoke WebGPT with explicit paths (auto-attached):
+
+```bash
+./run.sh ask webgpt "Review bundle at /tmp/pdf-oxide-review-bundle/REVIEW_REQUEST.md.
+Return PASS, NEEDS_CHANGES, HUMAN_REQUIRED, or BLOCKED with specific guidance only.
+Do not implement fixes."   --webgpt-project pdf-oxide   --oracle-iterations 1
+```
+
+For bounded background loops with desktop notify, use `/collab webgpt --profile …`
+(shells to this same `/ask webgpt` path; does not change roles).
+
+**Not the same lane as code repair:**
+
+- WebGPT guidance → `$ask webgpt` / `/collab` (surf, background tab).
+- Discrepancy + patch → project agent + optional `scillm` exec graph
+  (`scillm_call` + `oc-kimi` for multimodal review, `pi-opencode-kimi` for
+  allowlisted edits) or `scripts/pdf_lab/exec_two_call_page_repair.py`.
+- Do not describe WebGPT rounds as "two `scillm exec oc-kimi` calls"; `oc-kimi`
+  is HTTP chat, not `scillm exec`, and is for extraction repair—not the ChatGPT tab.
+
+Proof of a WebGPT round is under `.ask_artifacts/runs/<ask_id>/` (and
+`oracle_webgpt_call_finished` with `no_activate: true`), not an assistant paraphrase.
+
 
 ### Bounded reviewer/executor workflow
 
@@ -367,16 +428,155 @@ Then the project agent applies fixes locally, regenerates the evidence bundle,
 and calls `/ask webgpt` again on the same `--webgpt-project` until one of these
 terminal conditions occurs:
 
-- `PASS`: the reviewer verdict is satisfied and local proof also passes.
-- `BLOCKED`: the reviewer names a missing dependency or unresolved product
-  decision.
-- `MAX_ROUNDS`: the configured round cap is reached.
-- `NEEDS_HUMAN_DECISION`: the remaining issue is acceptance/product policy, not
-  implementation.
+- **`PASS` + local PASS (dual agreement):** WebGPT returns `PASS` (or
+  `VERDICT: PASS`) on the same **This round acceptance** bullets and
+  deterministic local gates pass. Only then set **Goals met this round: YES**
+  in `COLLABORATION_STATUS.md`. Eligible for `$plan-iterate close-phase` when
+  that phase's contract matches.
+- **`NEEDS_CHANGES`:** WebGPT names specific fixes; project agent patches,
+  refreshes status, re-runs local proof, re-asks WebGPT.
+- **`BLOCKED`:** WebGPT names a missing dependency or unresolved product
+  decision the agent cannot clear → human escalation (see below).
+- **`MAX_ROUNDS`:** configured round cap reached → human or narrower scope.
+- **`NEEDS_HUMAN_DECISION`:** acceptance/product policy, not implementation.
 
 Do not use this loop for unbounded brainstorming, bulk review queues, or as a
 substitute for deterministic tests. WebGPT review is a gate over concrete
 evidence, not proof by itself.
+
+### Collaboration status file (required for multi-round WebGPT)
+
+For any **multi-round** project-agent + WebGPT collaboration on the same
+`--webgpt-project`, maintain a shared **`COLLABORATION_STATUS.md`** at an
+absolute path. Refresh it **before every** `$ask webgpt` round. Embed that path
+in the question so file auto-attachment inlines it.
+
+Full contract: `docs/ASK_COLLABORATION_STATUS_CONTRACT.md`  
+Copy template: `docs/templates/COLLABORATION_STATUS.template.md`
+
+Required sections: **Goals** (table with per-goal status:
+**complete** | **outstanding** | **blocked** | **pending**), **North star**,
+**Accomplished**, **Standing (not closed)**,
+**Blockers** (agent-actionable vs human-required), **This round acceptance**,
+**Agreement (round N)** with local gates, WebGPT verdict, **Goals met this round**,
+**Human needed**.
+
+WebGPT reviews **only** **This round acceptance**. It must not invent criteria
+or declare overall project/phase complete unless both parties recorded PASS on
+those bullets.
+
+**Dual agreement:** Neither WebGPT alone nor the project agent alone may claim
+goals complete. WebGPT `PASS` without local live e2e/tests when bullets require
+them is **not** closure. Local PASS without a successful `$ask` artifact when
+review is required is **not** closure.
+
+**Human assistance** when: `BLOCKED`, non-empty **Human-required** blockers,
+`MAX_ROUNDS`, persistent local/WebGPT disagreement after one reconcile attempt,
+or `$plan-iterate` returns `HUMAN_REQUIRED`. Human-facing updates stay limited to
+state, blocker, decision, evidence paths, delta since last round, and whether a
+human decision is required.
+
+Recommended invocation:
+
+```bash
+./run.sh ask webgpt "Read /path/to/COLLABORATION_STATUS.md.
+Review ONLY 'This round acceptance'. Return VERDICT: PASS | NEEDS_CHANGES | BLOCKED."   --webgpt-project <project>   --ask-id <round-id>   --run-output-root /tmp/ask-webgpt-<project>   --overwrite
+```
+
+Proof of WebGPT review is the ask artifact set (`<ask-id>.status.json`, etc.),
+not an assistant summary. Update **Agreement** in the status file after each round.
+
+### Explorer / UI page review loop (WebGPT + test-interactions)
+
+Use when the human wants WebGPT to review **live product pages** (screenshots +
+contracts) and to **author interaction manifests** that the project agent runs.
+WebGPT is tech lead; the project agent is the only code runner.
+
+**Role split (non-negotiable):**
+
+| Output | Tech lead (WebGPT) | Code runner (project agent) |
+|--------|--------------------|-----------------------------|
+| Per-page verdict | pass / degraded / fail + reason | Re-check against live gates after fixes |
+| Overall package verdict | PASS / NEEDS_CHANGES / BLOCKED | Do not claim product-ready without local proof |
+| Interaction manifest JSON | Draft `[data-qid]` workflow + assertions | Run `/test-interactions/run.sh run` |
+| Code / predicate fixes | Describe required change only | Patch repo, re-capture, re-run gates |
+| systemd / human policy | Flag HUMAN_REQUIRED | Execute only after human approves |
+
+WebGPT **never** runs `./run.sh`, `uv run`, patches, or `$test-interactions`.
+Those are always project-agent steps after the ask artifact lands.
+
+**Review bundle (attach paths in the prompt — auto-inlined):**
+
+```text
+/tmp/<project>-page-review-rN/
+  REVIEW_REQUEST.md          # one paragraph: what must be decided this round
+  page-contract-audit.json   # current pass/degraded/fail per page
+  coverage-health.json       # live API snapshot when relevant
+  page-purpose-excerpt.md    # predicate excerpt from pagePurposeContracts.ts
+  screenshots/               # full-page + focused crops per tab
+    coverage-full.png
+    coverage-purpose-strip.png
+    sparta-chat-full.png
+  prior-verdict.md           # optional: last WebGPT round summary
+```
+
+Capture screenshots with `$test-interactions` (deterministic run) or `$surf` before
+the WebGPT round. Prefer crops of page-purpose strip, primary table/panel, and
+fail-closed empty states—not only UX Lab chrome.
+
+**Ask WebGPT for manifest output in the same round:**
+
+In `REVIEW_REQUEST.md`, require a fenced JSON block named
+`test-interactions-manifest` (or a separate file path WebGPT names explicitly)
+with semantic workflow steps the scaffold generator cannot infer:
+
+- navigate to Final Site + tab (if needed)
+- `wait_ready` on page-specific root qid
+- refresh / row drill / keyboard path
+- deterministic assertions (`assert_visible`, `assert_text`, monitor row counts)
+
+The project agent saves that JSON and runs:
+
+```bash
+/home/graham/.codex/skills/test-interactions/run.sh run   --manifest /tmp/<project>-coverage-manifest.json   --output-dir /tmp/<project>-coverage-ti-rN/
+
+/home/graham/.codex/skills/test-interactions/run.sh review   --captures /tmp/<project>-coverage-ti-rN/   --persona nico-bailon   # or brandon-bailey for compliance surfaces
+```
+
+PASS/FAIL comes from `$test-interactions`, not from WebGPT. WebGPT comments on
+evidence; it does not override deterministic verdicts.
+
+**Example invoke (tab-bound, review-only wording):**
+
+```bash
+cd ~/.codex/skills/ask
+./run.sh ask webgpt "Review /tmp/sparta-page-review-r4/REVIEW_REQUEST.md and attached screenshots.
+For each Explorer page: verdict pass|degraded|fail, blockers, and next evidence.
+Return overall PASS, NEEDS_CHANGES, or BLOCKED.
+Also emit test-interactions-manifest JSON for Coverage (semantic workflow, all [data-qid] selectors).
+Do not run commands or edit the repo."   --webgpt-tab-id 837344161   --webgpt-project sparta-explorer-review   --oracle-iterations 1
+```
+
+**Prompt vocabulary (avoid ask DAG misfire):**
+
+Natural-language `$ask` prompts containing **implement**, **fix**, **patch**, or
+**refactor** can auto-draft an `ask.dag.v1` with an `implement` node and fail
+with `AskDagError` on review-only work. For WebGPT review rounds, prefer:
+
+- "review", "adjudicate", "verdict", "guidance", "manifest JSON", "evidence bundle"
+- explicit "Do not run commands or edit the repo"
+
+If DAG mode is required for coding, use `--dag-file` explicitly—not accidental
+orchestrate triggers inside WebGPT review prompts.
+
+**Proof chain for the human:**
+
+1. `.ask_artifacts/runs/<ask_id>/` — request, status, events, WebGPT clean response
+2. Project-agent captures + `results.json` from `$test-interactions`
+3. Updated contract audit / monitor health JSON after local fixes
+
+Do not treat accepted plan-iterate phases or WebGPT PASS as product closure until
+(2) and (3) agree.
 
 ## Image Generation Mode
 
@@ -437,6 +637,11 @@ Agent translation rules:
 - Treat "deep review", "comprehensive review", "safe to proceed", or "production readiness" as `--deep-review`; require or infer a concrete `--deep-review-target`.
 - Treat leading model shorthand such as `$ask oc kimi ...`, `$ask opencode qwen ...`, `$ask chutes kimi ...`, `$ask oc-kimi ...`, or `$ask chutes-kimi ...` as `--oracle --oracle-backend scillm` with the resolved provider model.
 - Treat leading `$ask webgpt ...` (or `$ask chatgpt ...`) as `--oracle --oracle-backend webgpt`. This drives an already-authenticated ChatGPT tab in the user's Chrome via the surf-cli extension; the controlled tab never foregrounds (`--no-activate`).
+- Treat multi-round WebGPT review with a bound `--webgpt-project` as requiring
+  an absolute-path `COLLABORATION_STATUS.md` (refresh before each round; see
+  `docs/ASK_COLLABORATION_STATUS_CONTRACT.md`). Dual agreement: local PASS and
+  WebGPT `PASS` on the same **This round acceptance** bullets before claiming
+  goals met.
 - Treat `Ask Nico ...`, `Bring Nico into this conversation ...`, and other
   visible named-subagent conversation requests as `/ask`-owned persistent
   tmux-visible subagent sessions using `--oracle-backend subagent-runner`.
@@ -456,6 +661,7 @@ Agent translation rules:
 | `$ask oc-qwen compare these options` | Hyphenated OpenCode Go shorthand, currently `opencode-go/qwen3.6-plus` |
 | `$ask chutes kimi explain this design tradeoff` | scillm Chutes oracle using configured alias `chutes-kimi` |
 | `$ask chutes-kimi explain this design tradeoff` | Hyphenated Chutes shorthand using configured alias `chutes-kimi` |
+| `$ask webgpt review round 2 using COLLABORATION_STATUS.md` | WebGPT oracle with status file auto-attached; update **Agreement** after artifact; dual agreement before closure |
 | `$ask webgpt to perform the review on /tmp/review-bundle.md` | WebGPT oracle backed by the user's signed-in ChatGPT tab (via `surf webgpt.submit --no-activate`). File paths in the prompt are auto-attached. Tab id auto-resolves when exactly one chatgpt.com tab is open; otherwise pass `--webgpt-tab-id`. |
 | `$ask webgpt again — refine your answer` | Multi-turn: each `$ask webgpt` call is one round against the same controlled tab. ChatGPT preserves conversation context, so iterations form a coherent dialogue. |
 | `$ask Bring Nico into this conversation to review the mockups` | Persistent visible Nico session. Human attaches with `tmux a -t nico-<project>`; project agent sends follow-up turns through the `/ask` artifact's `send_input_command`. |
@@ -642,7 +848,8 @@ Rules:
   `run.sh`) instead of a narrow product-specific skill list.
 
 Natural-language DAG drafting also auto-engages for prompts that explicitly ask
-for a DAG, workflow, skill graph, or orchestration. When the request is
+for a DAG, workflow, skill graph, orchestration, or coding implementation
+(implement, fix, patch, refactor). When the request is
 ambiguous, `/ask` fails closed with a `needs_attention` artifact pointing to
 `/interview` rather than guessing.
 
@@ -670,8 +877,24 @@ Supported node types:
 - `ask.oracle` — run a one-shot `/scillm` chat completion through `/ask` with
   the required ask caller headers and scillm metadata.
 - `skill.run` — run a runnable sibling skill with a `SKILL.md` and `run.sh`,
-  such as `create-report`, `review-code`, `subagent-runner`, `memory`, or
-  `dogpile`.
+  such as `create-report`, `review-code`, `memory`, or `dogpile`.
+- `scillm.agent_turn` — run a standing Codex app-server worker through
+  `/v1/scillm/agents/{worker_id}/*` (handoff → lease → turn → result). Use this
+  for **coding** (worktree, `declared_write_set`, multi-turn, steer). Do not route
+  implementation through `/v1/chat/completions` or default `skill.run code-runner`.
+
+Coding DAG defaults:
+
+- Natural-language requests with implement/fix/patch/refactor intent draft an
+  `scillm.agent_turn` node (`id: implement`, `sandbox: workspace-write`).
+- Worker id: `--agent-worker`, else `ASK_AGENT_WORKER_ID`, else `implementation`.
+- Registry must expose an `implementation` worker in `config/scillm-agents.yaml`.
+
+Parallel review implementation:
+
+- `--implement-with code-runner` — handoff artifact only (read-only `/ask`).
+- `--implement-with scillm-agent` — same review path; no `--code-runner-dod-command`
+  required (worker worktree enforces bounds).
 
 Dependencies are expressed with `depends_on`. Independent nodes in the same
 layer run concurrently up to `max_concurrency`; dependent nodes run after their

@@ -49,4 +49,7 @@ SURF_RUN = os.environ.get(
 )
 WEBGPT_DEFAULT_TIMEOUT = float(os.environ.get("ASK_WEBGPT_TIMEOUT", "900"))
 WEBGPT_STABLE_POLLS = int(os.environ.get("ASK_WEBGPT_STABLE_POLLS", "3"))
-ORACLE_BACKENDS = frozenset({"auto", "scillm", "subagent-runner", "webgpt"})
+
+GEMINI_DEFAULT_TIMEOUT = float(os.environ.get("ASK_GEMINI_TIMEOUT", "300"))
+GEMINI_STABLE_POLLS = int(os.environ.get("ASK_GEMINI_STABLE_POLLS", "3"))
+ORACLE_BACKENDS = frozenset({"auto", "scillm", "subagent-runner", "webgpt", "webgemini"})
