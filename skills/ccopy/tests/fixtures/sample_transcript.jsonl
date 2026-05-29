@@ -1,0 +1,5 @@
+{"role":"user","message":{"content":[{"type":"text","text":"first user question"}]}}
+{"role":"assistant","message":{"content":[{"type":"text","text":"first assistant answer"}]}}
+{"role":"user","message":{"content":[{"type":"text","text":"last user question"}]}}
+{"role":"assistant","message":{"content":[{"type":"text","text":"last assistant answer"}]}}
+{"role":"assistant","message":{"content":[{"type":"tool_use","name":"Shell","input":{"command":"ignored"}}]}}
