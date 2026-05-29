@@ -16,7 +16,6 @@ provides:
 composes: []
 taxonomy:
   - precision
-disable-model-invocation: true
 ---
 
 # ccopy
