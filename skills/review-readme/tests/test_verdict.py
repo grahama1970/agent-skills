@@ -1,0 +1,19 @@
+from review_readme import combine_verdict, parse_verdict, run_t0, T0Finding, T0Result
+from pathlib import Path
+
+def test_parse_verdict():
+    text = "VERDICT: NEEDS_CHANGES\n\nEXECUTIVE SUMMARY\nok"
+    assert parse_verdict(text) == "NEEDS_CHANGES"
+
+def test_combine_pass():
+    t0 = T0Result()
+    assert combine_verdict(t0, "PASS") == ("PASS", "oracle_pass_and_t0_clear")
+
+def test_t0_aliases(tmp_path):
+    p = tmp_path / "README.md"
+    p.write_text("# X\n\nUse $surf and $ask here.\n\n## Quick start\nrun\n")
+    r = run_t0(p, strict=False)
+    assert any("terminology" in f.location for f in r.findings)
+
+def test_fixture_exists():
+    assert Path(__file__).parent.joinpath("fixtures/minimal_readme.md").exists()
