@@ -104,6 +104,14 @@ def match_workspace(workspaces: Sequence[Workspace], selector: Optional[str], cw
         if len(matches) == 1:
             return matches[0]
         if len(matches) > 1:
+            by_path: Dict[str, List[Workspace]] = {}
+            for w in matches:
+                key = (w.fs_path or w.uri or w.workspace_id).lower()
+                by_path.setdefault(key, []).append(w)
+            if len(by_path) == 1:
+                group = next(iter(by_path.values()))
+                group.sort(key=lambda w: w.db_path.stat().st_mtime, reverse=True)
+                return group[0]
             raise CursorCopyError(
                 "workspace selector matched multiple workspaces; use the exact hash from --list-workspaces"
             )
