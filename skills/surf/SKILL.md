@@ -270,6 +270,66 @@ Real-world sanity check:
 surf webgpt.sanity --output-dir /tmp/surf-webgpt-sanity --timeout 900 --tab-id 837343233
 ```
 
+## Cursor Browser (within Cursor IDE)
+
+When automating **Cursor's embedded Browser** (not external Chrome), use the
+`cursor-browser.*` commands. Tab targeting uses **`viewId`**, not Chrome tab ids.
+
+**Requires:** [cursor-browser-bridge](https://github.com/VectorlyApp/cursor-browser-bridge)
+installed and Cursor window reloaded (`/tmp/cursor-browser-bridge-port` must exist).
+
+```bash
+# List tabs (viewId \t title \t url)
+surf cursor-browser.tab.list
+surf cursor-browser.tab.list --json
+
+# Submit prompt to ChatGPT in Cursor Browser (sentinel proof contract)
+surf cursor-browser.submit \
+  --input .cursor-browser/01_request.md \
+  --output .cursor-browser/02_response.md \
+  --view-id f53e74 \
+  --timeout 900
+```
+
+### Routing for project agents
+
+| If the user says... | Use |
+|---|---|
+| "ask ChatGPT in Cursor Browser", "$ask cursor-browser" | `$ask cursor-browser …` (orchestration + artifacts) |
+| "list Cursor browser tabs", "what is the viewId" | `surf cursor-browser.tab.list` |
+| Transport-only submit with artifacts | `surf cursor-browser.submit --view-id …` |
+| External Chrome / background WebGPT | `surf webgpt.submit --tab-id CHROME_ID --no-activate` |
+
+**Do not** use `surf tab.list` or Chrome `--tab-id` for Cursor Browser work.
+**Do not** extend surf-cli Chrome extension for Cursor — Cursor Browser is MCP/bridge-native.
+
+### ChatGPT submit notes
+
+- Uses `browser_fill` on the "Chat with ChatGPT" textbox, then clicks **Send prompt**
+  (Enter alone may not submit on ChatGPT in Cursor Browser).
+- Sentinel contract matches `webgpt.submit` (`<<<WEBGPT_DONE:…>>>` stripped from clean output).
+- `controlled_view_id` in meta JSON is the **viewId**.
+
+### Web oracle sanity (all browser backends)
+
+When webgpt / webgemini / webkimi / webperplexity break frequently, run one
+deterministic check that exercises every oracle, collects debug artifacts on
+failure, and prints a report:
+
+```bash
+surf web.sanity --no-activate
+surf sanity web --only webperplexity   # alias; single oracle
+surf web.sanity --json                 # machine-readable report only
+```
+
+Reports land in `/tmp/surf-web-sanity-<timestamp>/` as `sanity-report.md` and
+`sanity-report.json`. Per-oracle artifacts include stderr, meta JSON, and
+`debug-bundle.txt` (host log tail + matching tabs).
+
+Tab ids default from state files (`/tmp/surf-webgpt-controlled-tab-id`, etc.) or
+`tab.list` discovery. Override with `--webgpt-tab-id`, `--gemini-tab-id`,
+`--kimi-tab-id`. Use `--full-webgpt` to add the slow `webgpt.sanity` sentinel test.
+
 This submits a compact but complex SPARTA/Embry OS infographic prompt and
 requires the response to round trip through the sentinel protocol with expected
 Markdown sections. It captures a same-tab screenshot and fails if the proof tab
@@ -527,15 +587,17 @@ cropped = smart_crop(full_page_bytes, region="detail")
 
 ## Extension Setup (One-time)
 
+The surf-cli fork is **vendored inside this skill** at `vendor/surf-cli/`. Source is committed; `node_modules/` and `dist/` are installed/built locally (`surf setup` or `surf extension.build`).
+
+
 **Important:** Google Chrome blocks `--load-extension` for security. Manual setup required:
 
 1. Build extension:
    ```bash
-   cd /home/graham/workspace/experiments/surf-cli
-   npm install && npm run build
+   surf extension.build   # npm ci && npm run build in vendor/surf-cli
    ```
 
-2. Load in Chrome: `chrome://extensions` → Enable Developer Mode → Load unpacked → select `dist/`
+2. Load in Chrome: `chrome://extensions` → Enable Developer Mode → Load unpacked → select `vendor/surf-cli/dist/`
 
 3. Copy the Extension ID shown (e.g., `lgamnnedgnehjplhndkkhojhbifgpcdp`)
 
@@ -547,6 +609,22 @@ cropped = smart_crop(full_page_bytes, region="detail")
 5. Verify: `surf tab.list` should show your browser tabs
 
 The socket at `/tmp/surf.sock` enables CLI ↔ extension communication.
+
+## Extension refresh (after surf-cli code changes)
+
+After editing or rebuilding surf-cli, refresh the loaded extension so the service worker picks up new dist code:
+
+```bash
+surf extension.build
+surf extension.fresh --json          # dist newer than src?
+surf extension.reload                # chrome.runtime.reload() + wait + ping
+# or: scripts/extension-reload.sh
+```
+
+**Bootstrap once:** The first time `EXTENSION_RELOAD` is added to the service worker, run one manual reload at `chrome://extensions` → Reload Surf (unpacked: `vendor/surf-cli/dist`). After that, `surf extension.reload` is sufficient.
+
+**Do not use CDP** (`surf cdp start`) to reload the extension — CDP uses a separate profile without Surf or ChatGPT auth. `chrome://extensions` is not automatable from outside the extension.
+
 
 ## Extension vs CDP Comparison
 

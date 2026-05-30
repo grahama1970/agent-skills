@@ -285,6 +285,42 @@ def test_documented_deep_review_prompt_maps_to_deep_review(monkeypatch):
     assert captured["oracle_backend"] == "scillm"
 
 
+
+
+def test_documented_webgpt_prompt_maps_to_webgpt_oracle(monkeypatch):
+    result, captured = _invoke_chat_prompt(
+        "$ask webgpt review /tmp/review-bundle.md",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["oracle_backend"] == "webgpt"
+    assert captured["oracle_model"] == "webgpt"
+    assert "review-bundle" in captured["question"]
+
+
+def test_documented_webgemini_prompt_maps_to_webgemini_oracle(monkeypatch):
+    result, captured = _invoke_chat_prompt(
+        "$ask webgemini review /tmp/review-bundle.md",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["oracle_backend"] == "webgemini"
+    assert captured["oracle_model"] == "webgemini"
+
+
+def test_documented_webperplexity_prompt_maps_to_webperplexity_oracle(monkeypatch):
+    result, captured = _invoke_chat_prompt(
+        "$ask webperplexity summarize the current state of space-based cybersecurity in 2026",
+        monkeypatch,
+    )
+
+    assert result.exit_code == 0
+    assert captured["oracle_backend"] == "webperplexity"
+    assert captured["oracle_model"] == "webperplexity"
+
+
 def test_documented_chat_examples_file_keeps_required_categories():
     examples = (ASK_DIR / "docs" / "HUMAN_CHAT_EXAMPLES.md").read_text()
     for required in [
@@ -304,5 +340,9 @@ def test_documented_chat_examples_file_keeps_required_categories():
         "mustard",
         "CM0001",
         "needs_attention",
+        "$ask webgpt review /tmp/review-bundle.md",
+        "$ask webgemini review /tmp/review-bundle.md",
+        "$ask webperplexity summarize the current state of space-based cybersecurity in 2026",
+        "Wrong: $ask webgpt review /tmp/bundle/REVIEW_REQUEST.md",
     ]:
         assert required in examples

@@ -194,9 +194,14 @@ persona or roundtable request.
 | Natural DAG orchestration | You want `/ask` to compile a clear natural-language skill workflow into an executable DAG | `./run.sh ask 'Use $memory and $scillm to analyze this, then $create-report a report' --orchestrate` |
 | DAG JSON | A project agent can express memory, dogpile, oracle, subagent, and report steps more clearly as a graph | `./run.sh ask "review report" --dag-file /tmp/report-review.dag.json` |
 | Deep review | You want a thorough, audit-friendly review with artifacts | `./run.sh ask "deep review this" --deep-review --deep-review-target src/ask/ask.py` |
-| WebGPT | You want the user's authenticated ChatGPT session as a peer oracle, without foregrounding the tab | `./run.sh ask webgpt review this design --webgpt-project sparta-review` |
-| WebGPT project bindings | You want one persistent ChatGPT conversation per project so context survives across days | `./run.sh webgpt-project bind sparta-review --tab-id 837343543` |
-| Bounded WebGPT review loop | You want WebGPT to review concrete evidence while the project agent patches locally | `./run.sh ask webgpt review /tmp/review-bundle.md --webgpt-project sparta-review` |
+| Browser oracle (WebGPT) | Authenticated ChatGPT tab as reviewer/tech lead; background tab via `$surf` | `./run.sh ask webgpt review /tmp/review-bundle.md --webgpt-project sparta-review` |
+| Browser oracle (Cursor Browser) | ChatGPT in Cursor embedded Browser; uses **viewId** not Chrome tab id | `./run.sh ask cursor-browser "question" --oracle --cursor-browser-project my-project --once` |
+| Cursor Browser project bindings | Persistent viewId per project (`~/.pi/cursor-browser-projects/`) | `./run.sh cursor-browser-project bind my-project --view-id f53e74 --manual` |
+| WebGPT project bindings | Persistent ChatGPT tab per project (`~/.pi/webgpt-projects/`) | `./run.sh webgpt-project bind sparta-review --tab-id 837343543` |
+| Browser oracle (WebGemini) | Authenticated Gemini tab in Chrome | `./run.sh ask webgemini "review /tmp/review-bundle.md" --oracle --gemini-tab-id <id>` |
+| Browser oracle (WebKimi) | Authenticated Kimi tab in Chrome | `./run.sh ask webkimi "review /tmp/review-bundle.md" --oracle --kimi-tab-id <id>` |
+| Browser oracle (WebPerplexity) | One-shot Perplexity research via `$surf` (no standing tab) | `./run.sh ask webperplexity "summarize current state of X" --oracle` |
+| Bounded browser review loop | Browser reviewer adjudicates evidence; project agent patches locally | `./run.sh ask webgpt review /tmp/review-bundle.md --webgpt-project sparta-review --once` |
 | Doctor | You want a preflight check on dependencies and runtime | `./run.sh doctor --json` |
 | Chains | You want to inspect saved review workflows | `./run.sh chains list --json` |
 | Status | You want to see recent runs and memory state | `./run.sh status --runs --json` |
@@ -239,15 +244,125 @@ Fail-closed required nodes and optional `allow_failure` probes are documented in
 ./scripts/dag_negative_sanity.py --output-root /tmp/ask-dag-negative-proof --ask-id ask-dag-negative-proof
 ```
 
-### Bounded WebGPT Review Loop
+## Browser-backed oracle backends
+
+Two browser lanes exist. Pick the one that matches where ChatGPT is open:
+
+| Lane | Tab id | Transport | When |
+| --- | --- | --- | --- |
+| **Chrome + `$ask webgpt`** | Chrome numeric tab id (Tab ID Viewer; `surf tab.list`) | surf-cli extension | Background tab while you work in other apps |
+| **Cursor Browser + `$ask cursor-browser`** | **`viewId`** (e.g. `f53e74`; `surf cursor-browser.tab.list`) | [cursor-browser-bridge](https://github.com/VectorlyApp/cursor-browser-bridge) | ChatGPT in Cursor's embedded Browser pane |
+
+Do not pass Chrome tab ids to `--cursor-browser-view-id`. They are different namespaces.
+
+### Chrome browser oracles
+
+Browser oracles in **external Chrome** route through your authenticated session via `$surf`.
+`$ask` owns orchestration, run artifacts, rate limits, tab bindings, and review
+semantics. `$surf` owns transport and proof (`webgpt.submit`, sentinel injection,
+`--no-activate`, clean/raw/meta outputs). Do not call `$surf` directly for normal
+review work unless you are debugging transport.
+
+| Shorthand | `--oracle-backend` | Site / tab | Multi-turn on same tab |
+| --- | --- | --- | --- |
+| `$ask webgpt` | `webgpt` | `chatgpt.com` | Yes (`--webgpt-project`, `--webgpt-tab-id`) |
+| `$ask webgemini` | `webgemini` | `gemini.google.com` | Yes (`--gemini-tab-id`, `--gemini-url`) |
+| `$ask webkimi` | `webkimi` | `kimi.com` | Yes (`--kimi-tab-id`, `--kimi-url`) |
+| `$ask webperplexity` | `webperplexity` | Perplexity (no standing tab) | No (one-shot research) |
+| `$ask cursor-browser` | `cursor-browser` | `chatgpt.com` in Cursor Browser | Yes (`--cursor-browser-project`, `--cursor-browser-view-id`) |
+
+Proof of a real browser-oracle run is the **ask artifact set**
+(`.ask_artifacts/runs/<ask_id>/`), not an assistant paraphrase. For WebGPT/Gemini/Kimi,
+meta JSON must record `controlled_tab_id == requested_tab_id` and a sentinel in the
+final assistant message.
+
+
+### Cursor Browser oracle (`$ask cursor-browser`)
+
+Shell automation for Cursor's embedded Browser requires **cursor-browser-bridge**
+(one-time install + Cursor window reload). Port file: `/tmp/cursor-browser-bridge-port`.
+
+```bash
+# List tabs (viewId, title, url)
+cd ~/.claude/skills/surf && ./run.sh cursor-browser.tab.list
+
+# Bind a project (recommended)
+./run.sh cursor-browser-project bind sparta-cursor --view-id f53e74 \
+  --url "https://chatgpt.com/c/..." --manual
+
+# Ask with artifacts (same proof contract as webgpt)
+./run.sh ask cursor-browser "what is the capital of Texas" \
+  --oracle --oracle-backend cursor-browser --once \
+  --cursor-browser-project sparta-cursor
+```
+
+Tab resolution is fail-closed: `--cursor-browser-view-id` → `--cursor-browser-url` →
+`--cursor-browser-project` → auto-resolve when exactly one `chatgpt.com` tab exists
+in Cursor Browser.
+
+Without the bridge, use `@Browser` in chat for ad-hoc work, or install the bridge for `./run.sh` artifacts.
+
+### Review bundle delivery (required for browser reviewers)
+
+Browser tabs **cannot read your local filesystem**. Listing paths in the prompt
+(e.g. "see `/tmp/foo.json` and `/tmp/bar.md`") does **not** deliver evidence.
+
+`$ask` validates evidence **before** calling `$surf` and returns a friendly
+project-agent message with `needs_attention` (exit code 2) when the bundle is
+unreadable:
+
+> I'm a web-based agent and I can't read local file paths. Please provide either
+> a zip review bundle of no more than 5 files, or give me a concatenated text file.
+
+**Valid formats:**
+
+| Format | When to use | Backends |
+| --- | --- | --- |
+| **Concatenated text** | One `.md` or `.txt` path in the prompt; `$ask` inlines content under `## Attached files` (max 2 MB) | WebGPT, WebGemini, WebKimi, WebPerplexity |
+| **Zip attach** | One `.zip` path only, ≤5 member files; passed to `surf webgpt.submit --attach-file` | **WebGPT only** |
+
+**Rejected (fail closed):**
+
+- Multiple path references without inlined content
+- Directory paths ("review everything in `/tmp/bundle/`")
+- `MANIFEST.json` that lists other files by path only
+- Zip bundles on WebGemini / WebKimi / WebPerplexity (use concatenated text instead)
+
+**RIGHT — concatenated review bundle:**
+
+```bash
+# Build one readable file the browser tab can actually see
+cat /tmp/evidence/REVIEW_REQUEST.md /tmp/evidence/gate_output.json   > /tmp/review-bundle.md
+
+./run.sh ask webgpt "Review /tmp/review-bundle.md. Return VERDICT: PASS | NEEDS_CHANGES | BLOCKED."   --webgpt-project my-review --once
+```
+
+**RIGHT — zip attach (WebGPT only):**
+
+```bash
+zip -j /tmp/review-bundle.zip REVIEW_REQUEST.md gate_output.json diagnosis.json
+./run.sh ask webgpt "Review /tmp/review-bundle.zip" --webgpt-project my-review --once
+```
+
+**WRONG — path-only manifest (browser cannot open these files):**
+
+```bash
+./run.sh ask webgpt "Review bundle at /tmp/bundle/REVIEW_REQUEST.md; see also /tmp/bundle/gate_output.json"
+```
+
+For multi-round review with `--webgpt-project`, maintain `COLLABORATION_STATUS.md`
+per `docs/ASK_COLLABORATION_STATUS_CONTRACT.md`. See `$surf` `SKILL.md` for
+sentinel proof, `--no-activate`, and `surf web.sanity` when transport breaks.
+
+### Bounded browser Review Loop
 
 Use this when the human has given an intent and wants the project agent to
-execute while WebGPT reviews the evidence. Start with `/interview` only when
+execute while a browser-backed reviewer (usually WebGPT) adjudicates the evidence. Start with `/interview` only when
 the definition of done is still ambiguous.
 
 ```text
 intent -> optional /interview -> implementation/evidence bundle
-  -> /ask webgpt review -> local fixes -> repeat to PASS/BLOCKED/max rounds
+  -> /ask webgpt|webgemini|webkimi|webperplexity review (concatenated or zip) -> local fixes -> repeat
 ```
 
 The human-facing update should stay short: current state, blocker, proposed
@@ -278,6 +393,7 @@ cd /path/to/agent-skills/skills/ask
 - `/create-evidence-case`
 - `/scillm`
 - `/subagent-runner`
+- `/surf` (Chrome transport for `webgpt`, `webgemini`, `webkimi`, `webperplexity`; Cursor Browser via `cursor-browser.*`)
 - `/project-knowledge`
 - monitor/ops skills used by OS mode
 

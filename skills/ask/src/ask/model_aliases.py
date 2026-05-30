@@ -156,6 +156,62 @@ def resolve_model_alias_route(
                 oracle_backend="webgpt",
                 input_capabilities={"text": True, "image": False, "pdf": False},
             )
+        if first_clean in {"cursor-browser", "cursorbrowser", "cursor"} and len(first_tokens) >= 2 and first_tokens[1].lower() in {"webgpt", "chatgpt", "browser"}:
+            # $ask cursor-browser webgpt ...
+            tail = " ".join(first_tokens[2:]).strip()
+            remaining = ([tail] if tail else []) + list(question_parts[1:])
+            if not remaining:
+                raise ValueError(f"{first_tokens[0]} {first_tokens[1]} requires a question after the model shorthand.")
+            return ModelAliasRoute(
+                provider_hint="cursor-browser",
+                family="cursor-browser",
+                resolved_model="cursor-browser",
+                question_parts=remaining,
+                raw_alias=f"{first_tokens[0]}-{first_tokens[1]}",
+                source="cursor-browser-view",
+                oracle_backend="cursor-browser",
+                input_capabilities={"text": True, "image": False, "pdf": False},
+            )
+        if first_clean in {"cursor-browser", "cursorbrowser"} or (first_clean == "cursor" and len(first_tokens) >= 2 and first_tokens[1].lower() == "browser"):
+            tail_of_first = " ".join(first_tokens[1:]).strip()
+            if first_clean == "cursor" and first_tokens[1].lower() == "browser":
+                tail_of_first = " ".join(first_tokens[2:]).strip()
+            remaining = ([tail_of_first] if tail_of_first else []) + list(question_parts[1:])
+            if not remaining:
+                raise ValueError(f"{first_tokens[0]} requires a question after the model shorthand.")
+            return ModelAliasRoute(
+                provider_hint="cursor-browser",
+                family="cursor-browser",
+                resolved_model="cursor-browser",
+                question_parts=remaining,
+                raw_alias=first_tokens[0],
+                source="cursor-browser-view",
+                oracle_backend="cursor-browser",
+                input_capabilities={"text": True, "image": False, "pdf": False},
+            )
+        browser_oracle_aliases = {
+            "webgemini": ("webgemini", "webgemini", "webgemini-controlled-tab"),
+            "gemini": ("webgemini", "webgemini", "webgemini-controlled-tab"),
+            "webkimi": ("webkimi", "webkimi", "webkimi-controlled-tab"),
+            "webperplexity": ("webperplexity", "webperplexity", "webperplexity-one-shot-cdp"),
+            "perplexity": ("webperplexity", "webperplexity", "webperplexity-one-shot-cdp"),
+        }
+        if first_clean in browser_oracle_aliases:
+            family, backend, source = browser_oracle_aliases[first_clean]
+            tail_of_first = " ".join(first_tokens[1:]).strip()
+            remaining = ([tail_of_first] if tail_of_first else []) + list(question_parts[1:])
+            if not remaining:
+                raise ValueError(f"{first_tokens[0]} requires a question after the model shorthand.")
+            return ModelAliasRoute(
+                provider_hint=backend,
+                family=family,
+                resolved_model=backend,
+                question_parts=remaining,
+                raw_alias=first_tokens[0],
+                source=source,
+                oracle_backend=backend,
+                input_capabilities={"text": True, "image": False, "pdf": False},
+            )
 
     parsed = _parse_model_alias(question_parts)
     if not parsed:

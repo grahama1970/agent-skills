@@ -39,12 +39,19 @@ from .scillm_runtime import (
     memory_citations_from_items,
     normalize_citations,
 )
+from .cursor_browser_runtime import (
+    CursorBrowserBackendError,
+    CursorBrowserTabError,
+    call_cursor_browser,
+)
 from .webgpt_runtime import (
     WebgptBackendError,
     WebgptTabError,
+    WebReviewBundleError,
     build_webgpt_prompt,
     call_webgpt,
     extract_file_attachments,
+    resolve_web_review_delivery,
 )
 from .gemini_runtime import (
     GeminiBackendError,
@@ -52,6 +59,18 @@ from .gemini_runtime import (
     GeminiTabError,
     build_gemini_prompt,
     call_gemini,
+)
+from .kimi_runtime import (
+    KimiBackendError,
+    KimiBackendDegradedError,
+    KimiTabError,
+    build_kimi_prompt,
+    call_kimi,
+)
+from .perplexity_runtime import (
+    PerplexityBackendError,
+    build_perplexity_prompt,
+    call_perplexity,
 )
 
 
@@ -115,6 +134,7 @@ def _run_oracle_webgpt(
     create_tab = bool(webgpt_create_tab)
     project = (webgpt_project or str(oracle_state.get("webgpt_project", "") or "")).strip()
     attachments = extract_file_attachments(question)
+    attach_file = resolve_web_review_delivery(question, attachments, backend="webgpt")
     prompt = build_webgpt_prompt(
         base_prompt,
         attachments,
@@ -138,6 +158,7 @@ def _run_oracle_webgpt(
                 url=url,
                 create_tab=create_tab and turn_number == 1,
                 project=project,
+                attach_file=attach_file if turn_number == 1 else "",
                 timeout=timeout,
                 no_activate=True,
                 run_state=run_state,
@@ -169,6 +190,68 @@ def _run_oracle_webgpt(
     return last_content, model_served, turns
 
 
+
+
+def _run_oracle_cursor_browser(
+    base_prompt: str,
+    question: str,
+    persona: Optional[str],
+    iterations: int,
+    timeout: float,
+    cursor_browser_view_id: str,
+    cursor_browser_url: str,
+    cursor_browser_project: str,
+    run_state: object | None,
+    oracle_state: dict,
+) -> tuple[str, str, list[dict]]:
+    view_id = (cursor_browser_view_id or str(oracle_state.get("cursor_browser_view_id", "") or "")).strip()
+    url = (cursor_browser_url or str(oracle_state.get("cursor_browser_url", "") or "")).strip()
+    project = (cursor_browser_project or str(oracle_state.get("cursor_browser_project", "") or "")).strip()
+    attachments = extract_file_attachments(question)
+    resolve_web_review_delivery(question, attachments, backend="cursor-browser")
+    prompt = build_webgpt_prompt(
+        base_prompt,
+        attachments,
+        system_preamble=(
+            "You are answering a /ask oracle call in Cursor Browser. "
+            "Treat retrieved memory context as supporting evidence."
+        ),
+    )
+    turns: list[dict] = []
+    last_content = ""
+    total_iterations = max(1, int(iterations))
+    for index in range(total_iterations):
+        turn_number = index + 1
+        try:
+            result = call_cursor_browser(
+                prompt if turn_number == 1 else _format_webgpt_followup_prompt(turns, turn_number, total_iterations),
+                view_id=view_id,
+                url=url,
+                project=project,
+                timeout=timeout,
+                run_state=run_state,
+                iteration=turn_number,
+                persona=persona,
+            )
+        except CursorBrowserTabError as exc:
+            raise CursorBrowserBackendError(
+                f"Cursor Browser oracle could not resolve a viewId on round {turn_number}: {exc}"
+            ) from exc
+        if not view_id and result.controlled_view_id:
+            view_id = result.controlled_view_id
+        turns.append({
+            "iteration": turn_number,
+            "backend": "cursor-browser",
+            "controlled_view_id": result.controlled_view_id,
+            "took_ms": result.took_ms,
+            "content": result.response,
+            "artifact_dir": str(result.artifact_dir),
+            "raw_contains_sentinel": result.raw_contains_sentinel,
+        })
+        last_content = result.response
+    model_served = f"cursor-browser:{view_id}" if view_id else "cursor-browser"
+    return last_content, model_served, turns
+
 def _run_oracle_webgemini(
     base_prompt: str,
     question: str,
@@ -189,6 +272,7 @@ def _run_oracle_webgemini(
     tab_id = (gemini_tab_id or str(oracle_state.get("gemini_tab_id", "") or "")).strip()
     url = (gemini_url or str(oracle_state.get("gemini_url", "") or "")).strip()
     attachments = extract_file_attachments(question)
+    resolve_web_review_delivery(question, attachments, backend="webgemini")
     prompt = build_gemini_prompt(
         base_prompt,
         attachments,
@@ -257,6 +341,124 @@ def _format_gemini_followup_prompt(
     )
 
 
+def _run_oracle_webkimi(
+    base_prompt: str,
+    question: str,
+    persona: Optional[str],
+    iterations: int,
+    timeout: float,
+    kimi_tab_id: str,
+    kimi_url: str,
+    run_state: object | None,
+    oracle_state: dict,
+) -> tuple[str, str, list[dict]]:
+    """Send one /ask synthesis prompt to the controlled Kimi tab via surf."""
+    tab_id = (kimi_tab_id or str(oracle_state.get("kimi_tab_id", "") or "")).strip()
+    url = (kimi_url or str(oracle_state.get("kimi_url", "") or "")).strip()
+    attachments = extract_file_attachments(question)
+    resolve_web_review_delivery(question, attachments, backend="webkimi")
+    prompt = build_kimi_prompt(
+        base_prompt,
+        attachments,
+        system_preamble=(
+            "You are answering a /ask oracle call. Treat retrieved memory "
+            "context as supporting evidence; cite supported claims inline with "
+            "source IDs like [MEMORY.1]. Distinguish supported facts from "
+            "inference. Be concise and technically precise."
+        ),
+    )
+
+    turns: list[dict] = []
+    last_content = ""
+    total_iterations = max(1, int(iterations))
+    for index in range(total_iterations):
+        turn_number = index + 1
+        try:
+            result = call_kimi(
+                prompt if turn_number == 1 else _format_kimi_followup_prompt(turns, turn_number, total_iterations),
+                tab_id=tab_id,
+                url=url,
+                timeout=timeout,
+                no_activate=True,
+                run_state=run_state,
+                iteration=turn_number,
+                persona=persona,
+            )
+        except KimiTabError as exc:
+            raise KimiBackendError(
+                f"Kimi oracle could not resolve a Kimi tab on round {turn_number}: {exc}"
+            ) from exc
+        except KimiBackendDegradedError:
+            raise
+        if not tab_id and result.controlled_tab_id:
+            tab_id = result.controlled_tab_id
+        turns.append({
+            "iteration": turn_number,
+            "backend": "webkimi",
+            "controlled_tab_id": result.controlled_tab_id,
+            "took_ms": result.took_ms,
+            "content": result.response,
+            "artifact_dir": str(result.artifact_dir),
+            "no_activate": result.no_activate,
+            "focus_changed": result.focus_changed,
+            "raw_contains_sentinel": result.raw_contains_sentinel,
+        })
+        last_content = result.response
+
+    model_served = f"webkimi:{tab_id}" if tab_id else "webkimi"
+    return last_content, model_served, turns
+
+
+def _format_kimi_followup_prompt(
+    turns: list[dict],
+    turn_number: int,
+    total_iterations: int,
+) -> str:
+    return (
+        f"This is iteration {turn_number}/{total_iterations} on the same /ask oracle question. "
+        "Review your previous answer in this conversation. Identify the weakest claim or "
+        "the assumption most likely to be wrong, address it, and return an improved final "
+        "answer. If your previous answer is already correct and well-supported, say so "
+        "explicitly and restate the conclusion concisely."
+    )
+
+
+def _run_oracle_webperplexity(
+    base_prompt: str,
+    question: str,
+    persona: Optional[str],
+    timeout: float,
+    run_state: object | None,
+) -> tuple[str, str, list[dict]]:
+    """One-shot Perplexity research oracle via surf (no standing tab)."""
+    attachments = extract_file_attachments(question)
+    resolve_web_review_delivery(question, attachments, backend="webperplexity")
+    prompt = build_perplexity_prompt(
+        base_prompt,
+        attachments,
+    )
+    if persona:
+        prompt = f"Persona perspective: {persona}\n\n{prompt}"
+    try:
+        result = call_perplexity(
+            prompt,
+            timeout=timeout,
+            run_state=run_state,
+        )
+    except PerplexityBackendError as exc:
+        raise PerplexityBackendError(
+            f"Perplexity oracle call failed: {exc}"
+        ) from exc
+    turns = [{
+        "iteration": 1,
+        "backend": "webperplexity",
+        "took_ms": result.took_ms,
+        "content": result.response,
+        "artifact_dir": str(result.artifact_dir),
+    }]
+    return result.response, "webperplexity", turns
+
+
 def _format_webgpt_followup_prompt(
     turns: list[dict],
     turn_number: int,
@@ -308,8 +510,13 @@ def _apply_oracle_synthesis(
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
     webgpt_project: str = "",
+    cursor_browser_view_id: str = "",
+    cursor_browser_url: str = "",
+    cursor_browser_project: str = "",
     gemini_tab_id: str = "",
     gemini_url: str = "",
+    kimi_tab_id: str = "",
+    kimi_url: str = "",
     run_state: object | None = None,
 ) -> None:
     """Use an oracle backend for final high-reasoning synthesis."""
@@ -416,6 +623,20 @@ def _apply_oracle_synthesis(
                 oracle_state=result.get("oracle", {}),
             )
             protocol_state = {}
+        elif effective_backend == "cursor-browser":
+            content, model_served, turns = _run_oracle_cursor_browser(
+                base_prompt=prompt,
+                question=question,
+                persona=persona,
+                iterations=iterations,
+                timeout=timeout,
+                cursor_browser_view_id=cursor_browser_view_id,
+                cursor_browser_url=cursor_browser_url,
+                cursor_browser_project=cursor_browser_project,
+                run_state=run_state,
+                oracle_state=result.get("oracle", {}),
+            )
+            protocol_state = {}
         elif effective_backend == "webgemini":
             content, model_served, turns = _run_oracle_webgemini(
                 base_prompt=prompt,
@@ -427,6 +648,28 @@ def _apply_oracle_synthesis(
                 gemini_url=gemini_url,
                 run_state=run_state,
                 oracle_state=result.get("oracle", {}),
+            )
+            protocol_state = {}
+        elif effective_backend == "webkimi":
+            content, model_served, turns = _run_oracle_webkimi(
+                base_prompt=prompt,
+                question=question,
+                persona=persona,
+                iterations=iterations,
+                timeout=timeout,
+                kimi_tab_id=kimi_tab_id,
+                kimi_url=kimi_url,
+                run_state=run_state,
+                oracle_state=result.get("oracle", {}),
+            )
+            protocol_state = {}
+        elif effective_backend == "webperplexity":
+            content, model_served, turns = _run_oracle_webperplexity(
+                base_prompt=prompt,
+                question=question,
+                persona=persona,
+                timeout=timeout,
+                run_state=run_state,
             )
             protocol_state = {}
         else:
@@ -517,6 +760,37 @@ def _apply_oracle_synthesis(
             "rule": "memory citations support knowledge answers but not code/review safety claims",
         }
         log.info("Oracle synthesis complete: model=%s reasoning=%s", model, reasoning_effort)
+    except WebReviewBundleError as exc:
+        result["answer"] = str(exc)
+        result["oracle"] = {
+            "model": model,
+            "reasoning_effort": reasoning_effort,
+            "idle_timeout_seconds": idle_timeout,
+            "heartbeat_interval_seconds": heartbeat_interval,
+            "backend": effective_backend,
+            "source": effective_backend,
+            "error": "web_review_bundle",
+            "bundle_error": True,
+        }
+        if persona:
+            result["oracle"]["persona"] = persona
+        if consult_personas:
+            result["oracle"]["consulted_personas"] = consult_personas
+        if peer:
+            result["oracle"]["peer"] = peer
+        if run_state is not None and hasattr(run_state, "needs_attention"):
+            result["needs_attention"] = run_state.needs_attention(
+                reason="web_review_bundle_unreadable",
+                question=str(exc),
+                safe_default="provide_concatenated_text_or_small_zip",
+                resume_hint=(
+                    "Rebuild evidence as one concatenated .md/.txt file, or a .zip "
+                    "with at most 5 files, then re-run $ask with only that path in "
+                    "the prompt."
+                ),
+            )
+        log.warning("Web review bundle rejected for project agent: %s", exc)
+        return
     except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
         result["oracle"] = {
             "model": model,

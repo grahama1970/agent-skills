@@ -1,0 +1,37 @@
+"""Tests for cursor-browser oracle alias routing."""
+
+from __future__ import annotations
+
+import pathlib
+import sys
+
+import pytest
+
+THIS_DIR = pathlib.Path(__file__).resolve().parent
+SRC_DIR = THIS_DIR.parent / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from ask.model_aliases import resolve_model_alias_route
+
+
+def test_cursor_browser_alias_sets_backend():
+    route = resolve_model_alias_route(
+        ["cursor-browser", "what", "is", "2+2?"],
+        scillm_base_url="http://scillm.test",
+        scillm_api_key="test",
+    )
+    assert route is not None
+    assert route.oracle_backend == "cursor-browser"
+    assert route.question == "what is 2+2?"
+
+
+def test_cursor_browser_webgpt_shorthand():
+    route = resolve_model_alias_route(
+        ["cursor-browser", "webgpt", "capital", "of", "Texas"],
+        scillm_base_url="http://scillm.test",
+        scillm_api_key="test",
+    )
+    assert route is not None
+    assert route.oracle_backend == "cursor-browser"
+    assert "capital" in route.question

@@ -1,40 +1,57 @@
 # Project Knowledge: ask
 
-**Last updated:** 2026-05-25 15:04 by agent
+**Last updated:** 2026-05-30 by agent
 **Status:** Active development
 
 ## Current Understanding
 
-- Project initialized, knowledge tracking started
-- 2026-05-20: A real `$ask --deep-review` run against the scillm DAG viewer-editor exposed two deep-review verifier/schema gaps. The prompt now explicitly requires top-level `blocking_issues` and `significant_risks` to include `severity`, `issue`, `evidence`, `evidence_citations`, `impact`, `fix`, and `verification`; the normalizer now backfills missing plain `evidence` from structured citations and filters incomplete section-local notes so they do not masquerade as formal findings. Final rerun `dag-ux-gpt55-round2-final` reached `state: answered`, verdict `SAFE_WITH_CONDITIONS`, verifier `PASS`.
-- 2026-05-25: Visible collaborator subagents such as Nico are not one-shot oracle answers and not hidden manual tmux fallbacks. The corrected product contract is that Nico is a third collaborator whose discourse must be surfaced in the project agent terminal and recorded in ask artifacts. Human tmux attachment is optional/debug only; the primary proof is the ask request/status/events plus the actual Nico response text printed by the project agent.
+- Browser-backed oracles (`webgpt`, `webgemini`, `webkimi`, `webperplexity`) cannot read local filesystem paths. `$ask` validates review evidence in `resolve_web_review_delivery()` before calling `$surf`; path-only manifests fail closed with a friendly project-agent message and `needs_attention` (exit code 2).
+- Valid evidence for browser reviewers: **one concatenated** `.md`/`.txt` path (inlined under `## Attached files`), or **one `.zip`** path with ≤5 files (**WebGPT only**, via `surf webgpt.submit --attach-file`).
+- `$ask` owns orchestration and artifacts; `$surf` owns sentinel transport and proof. Project agents must not call `$surf` directly for normal review rounds.
+- **Cursor Browser lane:** `$ask cursor-browser` / `--oracle-backend cursor-browser` drives ChatGPT in Cursor's embedded Browser via `$surf cursor-browser.submit` and **cursor-browser-bridge**. Tab identity is **`viewId`**, not Chrome tab id. Bindings live at `~/.pi/cursor-browser-projects/` (`cursor-browser-project` CLI).
+- Chrome lane (`$ask webgpt`) and Cursor Browser lane are separate namespaces; do not mix tab ids.
+- `README.md` now documents browser oracle backends, review bundle delivery, and `/surf` as a companion skill (aligned with `SKILL.md` WebGPT behavior section).
 
 ## Recent Decisions
 
 | Date | Decision | Why |
 |------|----------|-----|
-| 2026-05-20 | Initialize project knowledge | Enable shared human/agent context |
-| 2026-05-20 | Deep-review verifier schema must normalize evidence-bearing findings before gating | The DAG UX review runs showed that model outputs may provide structured evidence_citations without a plain evidence field and may emit informal section notes; verifier gates should fail closed but the prompt/normalizer must convert or discard those shapes deterministically instead of requiring manual artifact surgery. |
-| 2026-05-25 | Visible Nico collaborator output must be terminal-visible through ask artifacts, not aspirational tmux theater | The human clarified that manual tmux visibility is not required; reliability means the project agent can show Nico's response in this terminal and preserve artifacts. Codex App Server/scillm may be the right primary transport if it returns actual response text reliably; subagent-runner/tmux is only acceptable as an artifact-backed fallback, never a hidden workaround. |
+| 2026-05-20 | Deep-review verifier must normalize evidence-bearing findings before gating | DAG UX review runs showed informal section notes and missing plain `evidence` fields; prompt/normalizer must handle those deterministically. |
+| 2026-05-25 | Visible Nico collaborator output must be terminal-visible through ask artifacts | Human clarified reliability means actual Nico response text in project-agent terminal plus request/status/events proof, not hidden tmux workarounds. |
+| 2026-05-29 | Fail closed on path-only browser review bundles with a friendly message | WebGPT/WebGemini/WebKimi/WebPerplexity tabs cannot open local paths; listing paths in prompts caused silent useless reviews. |
+| 2026-05-29 | Zip attach limited to WebGPT and ≤5 files | Matches `surf webgpt.submit --attach-file` and keeps other web backends on inlined concatenated text only. |
+| 2026-05-29 | Document browser oracles in README.md | README had WebGPT-only coverage; `webgemini`, `webkimi`, `webperplexity`, and bundle delivery rules were only in code/SKILL.md. |
+| 2026-05-29 | Human-chat examples for all browser oracles | `docs/HUMAN_CHAT_EXAMPLES.md` + `tests/test_human_chat_examples.py` parity with README bundle rules. |
+| 2026-05-30 | Add `$ask cursor-browser` oracle backend for Cursor IDE | Shell scripts cannot call Cursor MCP directly; bridge exposes Browser to `/ask`/`/surf` with same sentinel artifact contract as WebGPT. |
+| 2026-05-30 | Document cursor-browser in README.md and SKILL.md | Human-facing README and PROJECT_KNOWLEDGE must cover viewId vs Chrome tab id and bridge prerequisite. |
 
 ## Open Questions
 
-- [ ] What are the key architectural decisions?
-- [ ] What are the known issues?
+- [ ] Add `sanity-cursor-browser.sh` E2E smoke once cursor-browser-bridge is installed on dev machines?
+- [ ] Should WebGemini/WebKimi gain zip attach parity with WebGPT, or stay concatenated-only?
+- [x] Human-chat routes for `$ask webgpt` / `webgemini` / `webkimi` / `webperplexity` documented in `docs/HUMAN_CHAT_EXAMPLES.md` (2026-05-29).
 
 ## Agent Takeover Notes
 
-Current active work: Continue scillm DAG planner-editor visual/browser proof after the ask deep-review verifier repair.\nEvidence pointers: ask runtime status /home/graham/workspace/experiments/agent-skills/skills/ask/.ask_artifacts/runs/dag-ux-gpt55-round2-final/dag-ux-gpt55-round2-final.status.json; final review /home/graham/workspace/experiments/scillm/.ask_artifacts/deep-review/20260520T121424Z/review.md; final review JSON /home/graham/workspace/experiments/scillm/.ask_artifacts/deep-review/20260520T121424Z/review.json; changed files src/ask/deep_review.py and tests/test_deep_review_protocol.py.\nNext action: Capture or build fresh browser proof for the scillm DAG planner-editor showing the review-code fanout row with model, agent, contract, prompt, review level, proof floor, and editable Best-practice skills visible and not clipped.\nBlockers/caveats: examples/exec-graph-debugger currently has no standalone runnable harness; do not claim final DAG UX readiness from code/DOM assertions alone. The ask review verdict is SAFE_WITH_CONDITIONS, not final visual PASS.\nLast verified command/artifact: PYTHONPATH=src pytest -q tests/test_deep_review_protocol.py tests/test_deep_review_section_citations.py tests/test_deep_review_telemetry.py => 14 passed; dag-ux-gpt55-round2-final status.json => state answered, verifier PASS.
-- Current active work: repair ask visible-subagent routing so 'Ask/Bring Nico' produces an actual Nico response in the project-agent terminal with request/status/events proof, rather than only reporting a running worker or relying on manual tmux send-keys. Evidence pointers: skills/ask/src/ask/ask.py visible_subagent route and _run_visible_subagent_scillm/_run_visible_subagent_tmux; skills/ask/tests/test_ask_cli_protocols.py visible_subagent tests; skills/scillm/SKILL.md long-running streaming and Codex/App Server boundary; this session's tmux proof showed manual Codex communication works but is not the target contract. Next action: prove or reject Codex App Server for synchronous/observable Nico discourse; if sufficient, make it the ask primary path and print Nico's actual response text. Blockers/caveats: do not claim success from 'worker running' or tmux attach metadata; proof requires actual Nico text in terminal/artifacts. Last verified command/artifact: PYTHONPATH=src uv run pytest tests/test_ask_cli_protocols.py -k 'visible_subagent or visible-nico or Nico' -q => 16 passed, 10 deselected before this project-knowledge correction.
+- **Current active work:** Cursor Browser oracle (`cursor-browser`) wired in code + SKILL.md; README/PROJECT_KNOWLEDGE updated 2026-05-30. E2E blocked until cursor-browser-bridge installed.
+- **Evidence pointers:** `src/ask/cursor_browser_runtime.py`, `src/ask/cursor_browser_project.py`, `src/ask/cursor_browser_project_cli.py`; `src/ask/webgpt_runtime.py`; `src/ask/ask_oracle.py`; `tests/test_cursor_browser_aliases.py`; `README.md` "Cursor Browser oracle"; `SKILL.md` "Cursor Browser Oracle Backend".
+- **Next action:** Run `uv run pytest tests/test_web_review_bundle_validation.py tests/test_webgpt_review.py -q` after any further oracle/surf changes; spot-check README examples against a live `$ask webgpt` call with `/tmp/review-bundle.md` (concatenated) vs path-only prompt.
+- **Blockers/caveats:** Do not claim a browser review succeeded without ask artifacts (`<ask_id>.status.json`, events, clean response). Zip attach is WebGPT-only. Perplexity has no standing tab.
+- **Last verified command/artifact:** `uv run pytest tests/test_web_review_bundle_validation.py tests/test_webgpt_review.py -q` => 25 passed (2026-05-29 session).
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| PROJECT_KNOWLEDGE.md | Shared project knowledge |
-| docs/PROJECT_KNOWLEDGE.md | Existing curated ask project knowledge projection |
-| src/ask/deep_review.py | Deep-review prompt, normalization, verifier, and artifacts |
-| tests/test_deep_review_protocol.py | Deterministic deep-review verifier regression tests |
+| `README.md` | Human-facing overview; Chrome + Cursor Browser oracle lanes |
+| `SKILL.md` | Operator contract; WebGPT, cursor-browser, path-only bundle rejection |
+| `src/ask/cursor_browser_runtime.py` | Cursor Browser oracle via surf cursor-browser.submit |
+| `src/ask/cursor_browser_project.py` | Project bindings (`viewId` at `~/.pi/cursor-browser-projects/`) |
+| `src/ask/webgpt_runtime.py` | WebGPT/Gemini/Kimi/Perplexity bundle validation and `call_webgpt` |
+| `src/ask/ask_oracle.py` | Oracle backend dispatch including browser lanes |
+| `tests/test_web_review_bundle_validation.py` | Path-only / zip / concatenated bundle tests |
+| `docs/HUMAN_CHAT_EXAMPLES.md` | Human `$ask` phrasing → CLI routes including browser oracles |
+| `docs/ASK_COLLABORATION_STATUS_CONTRACT.md` | Multi-round WebGPT collaboration status file |
 
 ## Infrastructure State
 

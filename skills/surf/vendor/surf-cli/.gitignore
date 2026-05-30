@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.local
+
+# Test coverage
+coverage/
+.playwright-mcp/
+FEATURE_COMPARISON.md
+
+# Fork-specific local content (not for upstream)
+local/
