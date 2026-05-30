@@ -1,0 +1,135 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+  "files": {
+    "includes": ["test/**/*.ts"]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "nursery": {
+        "recommended": true,
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error",
+        "noShadow": "error",
+        "noUnusedExpressions": "error",
+        "useAwaitThenable": "error",
+        "noUnnecessaryConditions": "warn"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "noUnusedFunctionParameters": "error",
+        "noUnusedPrivateClassMembers": "error",
+        "noUndeclaredVariables": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noConsole": "error",
+        "noDebugger": "error",
+        "noDoubleEquals": "error",
+        "noFocusedTests": "error",
+        "noSkippedTests": "warn",
+        "noDuplicateTestHooks": "error",
+        "noExportsInTest": "error",
+        "noMisplacedAssertion": "error",
+        "noImplicitAnyLet": "error",
+        "noConfusingVoidType": "error",
+        "noEmptyBlockStatements": "error",
+        "noAssignInExpressions": "error",
+        "noAsyncPromiseExecutor": "error",
+        "noTsIgnore": "error"
+      },
+      "style": {
+        "noNonNullAssertion": "error",
+        "useConst": "error",
+        "useTemplate": "error",
+        "useNodejsImportProtocol": "error",
+        "useExportType": "error",
+        "useImportType": "error",
+        "useBlockStatements": "error",
+        "noNestedTernary": "error",
+        "useThrowOnlyError": "error",
+        "noDoneCallback": "error",
+        "noParameterAssign": "error",
+        "useDefaultParameterLast": "error",
+        "noInferrableTypes": "error",
+        "useShorthandFunctionType": "error",
+        "useSelfClosingElements": "error",
+        "noUselessElse": "error"
+      },
+      "complexity": {
+        "noBannedTypes": "error",
+        "noForEach": "error",
+        "noUselessTypeConstraint": "error",
+        "noUselessConstructor": "error",
+        "noUselessCatch": "error",
+        "noUselessTernary": "error",
+        "noUselessThisAlias": "error",
+        "noExcessiveNestedTestSuites": "error",
+        "noExcessiveCognitiveComplexity": {
+          "level": "warn",
+          "options": { "maxAllowedComplexity": 15 }
+        },
+        "noVoid": "error",
+        "useOptionalChain": "error",
+        "useLiteralKeys": "error",
+        "useArrowFunction": "error"
+      },
+      "performance": {
+        "noDelete": "error",
+        "noAccumulatingSpread": "error"
+      },
+      "security": {
+        "noGlobalEval": "error"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["test/mocks/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "warn"
+          },
+          "style": {
+            "noNonNullAssertion": "warn"
+          },
+          "complexity": {
+            "noForEach": "off"
+          },
+          "performance": {
+            "noDelete": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["test/unit/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          },
+          "nursery": {
+            "useAwaitThenable": "off"
+          }
+        }
+      }
+    }
+  ]
+}

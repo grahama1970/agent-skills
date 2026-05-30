@@ -50,6 +50,14 @@ SURF_RUN = os.environ.get(
 WEBGPT_DEFAULT_TIMEOUT = float(os.environ.get("ASK_WEBGPT_TIMEOUT", "900"))
 WEBGPT_STABLE_POLLS = int(os.environ.get("ASK_WEBGPT_STABLE_POLLS", "3"))
 
+CURSOR_BROWSER_DEFAULT_TIMEOUT = float(os.environ.get("ASK_CURSOR_BROWSER_TIMEOUT", "900"))
+CURSOR_BROWSER_STABLE_POLLS = int(os.environ.get("ASK_CURSOR_BROWSER_STABLE_POLLS", "3"))
+
 GEMINI_DEFAULT_TIMEOUT = float(os.environ.get("ASK_GEMINI_TIMEOUT", "300"))
 GEMINI_STABLE_POLLS = int(os.environ.get("ASK_GEMINI_STABLE_POLLS", "3"))
-ORACLE_BACKENDS = frozenset({"auto", "scillm", "subagent-runner", "webgpt", "webgemini"})
+
+KIMI_DEFAULT_TIMEOUT = float(os.environ.get("ASK_KIMI_TIMEOUT", "300"))
+KIMI_STABLE_POLLS = int(os.environ.get("ASK_KIMI_STABLE_POLLS", "3"))
+
+PERPLEXITY_DEFAULT_TIMEOUT = float(os.environ.get("ASK_PERPLEXITY_TIMEOUT", "120"))
+ORACLE_BACKENDS = frozenset({"auto", "scillm", "subagent-runner", "webgpt", "webgemini", "webkimi", "webperplexity", "cursor-browser"})

@@ -1,0 +1,70 @@
+{
+  "manifest_version": 3,
+  "name": "Surf",
+  "version": "0.1.0",
+  "description": "Browser automation CLI for AI agents",
+  "options_page": "options/options.html",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Surf CLI",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/accessibility-tree.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/visual-indicator.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "activeTab",
+    "scripting",
+    "debugger",
+    "tabs",
+    "tabGroups",
+    "alarms",
+    "notifications",
+    "system.display",
+    "webNavigation",
+    "nativeMessaging",
+    "downloads",
+    "cookies",
+    "bookmarks",
+    "history"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https: wss:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+  },
+  "web_accessible_resources": [
+    {
+      "matches": ["<all_urls>"],
+      "resources": [
+        "content/accessibility-tree.js",
+        "content/visual-indicator.js"
+      ],
+      "use_dynamic_url": false
+    }
+  ]
+}

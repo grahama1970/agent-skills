@@ -25,14 +25,9 @@ SKILL_DIR="$SCRIPT_DIR"
 CDP_PORT="${CDP_PORT:-9222}"
 CHROME_USER_DATA="${CHROME_USER_DATA:-/tmp/chrome-cdp-profile}"
 CDP_PID_FILE="/tmp/chrome-cdp.pid"
-REPO="github:nicobailon/surf-cli"
-
-# Surf-cli paths (try known location, then env var)
-DEFAULT_SURF_CLI=""
-if [[ -d "/home/graham/workspace/experiments/surf-cli" ]]; then
-    DEFAULT_SURF_CLI="/home/graham/workspace/experiments/surf-cli"
-fi
-SURF_CLI_PATH="${SURF_CLI_PATH:-${DEFAULT_SURF_CLI}}"
+# Vendored surf-cli lives under vendor/surf-cli (override with SURF_CLI_PATH).
+# shellcheck source=scripts/lib/surf-cli-path.sh
+source "${SKILL_DIR}/scripts/lib/surf-cli-path.sh"
 
 # ─────────────────────────────────────────────────────────────
 # Chrome Detection
@@ -410,21 +405,62 @@ fi
 
 # Handle setup/sanity check
 if [[ "$1" == "setup" || "$1" == "sanity" || "$1" == "doctor" ]]; then
+    "$SKILL_DIR/scripts/ensure-surf-cli.sh" || true
     if [[ "${2:-}" == "webgpt" ]]; then
         exec "$SKILL_DIR/scripts/webgpt-sanity.sh" "${@:3}"
     fi
+    if [[ "${2:-}" == "web" ]]; then
+        exec "$SKILL_DIR/scripts/web-oracles-sanity.sh" "${@:3}"
+    fi
     exec "$SKILL_DIR/sanity.sh" "${@:2}"
+fi
+
+if [[ "$1" == "extension.build" ]]; then
+    exec "$SKILL_DIR/scripts/ensure-surf-cli.sh" "${@:2}"
 fi
 
 # Higher-level WebGPT handoff helpers. These intentionally live in the skill
 # wrapper because they own file artifacts and completion proof, while surf-cli
 # owns browser mechanics.
+if [[ "$1" == "extension.reload" ]]; then
+    exec "$SKILL_DIR/scripts/extension-reload.sh" "${@:2}"
+fi
+
+if [[ "$1" == "extension.fresh" ]]; then
+    exec "$SKILL_DIR/scripts/extension-fresh.sh" "${@:2}"
+fi
+
+if [[ "$1" == "vendor.sync" ]]; then
+    exec "$SKILL_DIR/scripts/vendor-sync.sh" "${@:2}"
+fi
+
+if [[ "$1" == "vendor.status" ]]; then
+    exec "$SKILL_DIR/scripts/vendor-status.sh" "${@:2}"
+fi
+
 if [[ "$1" == "webgpt.submit" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-submit.sh" "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.extract" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-extract.sh" "${@:2}"
+fi
+
 if [[ "$1" == "webgpt.sanity" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-sanity.sh" "${@:2}"
+fi
+
+if [[ "$1" == "cursor-browser.submit" ]]; then
+    exec "$SKILL_DIR/scripts/cursor-browser-submit.sh" "${@:2}"
+fi
+
+if [[ "$1" == "cursor-browser.tab.list" ]]; then
+    export PYTHONPATH="$SKILL_DIR/scripts${PYTHONPATH:+:$PYTHONPATH}"
+    exec python3 "$SKILL_DIR/scripts/cursor_browser_client.py" tab.list "${@:2}"
+fi
+
+if [[ "$1" == "webgpt.no-activate-sanity" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-no-activate-sanity.sh" "${@:2}"
 fi
 
 # Handle help
@@ -433,6 +469,11 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo ""
     echo "Setup:"
     echo "  surf setup              Check setup status & show install instructions"
+    echo "  surf extension.build    Build vendored surf-cli (npm ci && npm run build)"
+    echo "  surf extension.reload   Reload Chrome extension after build"
+    echo "  surf extension.fresh    Check whether dist matches source"
+    echo "  surf vendor.sync        Sync vendor/surf-cli from Embry fork"
+    echo "  surf vendor.status      Show vendored commit + dist freshness"
     echo "  surf install <ext-id>   Install native host for extension"
     echo ""
     echo "Tab Management (requires extension):"
@@ -454,7 +495,9 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo ""
     echo "WebGPT Handoff:"
     echo "  surf webgpt.submit --input request.md --output response.md"
+    echo "  surf webgpt.extract --tab-id ID --output response.md"
     echo "  surf webgpt.sanity      Run a real sentinel round-trip smoke"
+    echo "  surf webgpt.no-activate-sanity --tab-id ID  Background controlled-tab proof"
     echo ""
     echo "CDP Fallback (when extension not available):"
     echo "  surf cdp start [port] [--headless]  Start Chrome with CDP"
@@ -473,8 +516,18 @@ LOCAL_FORK_PATH="$SURF_CLI_PATH"
 LOCAL_CLI="${LOCAL_FORK_PATH}/native/cli.cjs"
 
 # If surf-cli socket is available, route ALL commands through it
-if surf_cli_available && [[ -f "$LOCAL_CLI" ]]; then
-    exec node "$LOCAL_CLI" "$@"
+if surf_cli_available; then
+    if [[ -f "$LOCAL_CLI" ]]; then
+        "$SKILL_DIR/scripts/ensure-surf-cli.sh"
+        exec node "$LOCAL_CLI" "$@"
+    fi
+    echo "Error: surf-cli socket present but CLI missing at $LOCAL_CLI" >&2
+    echo "Run: surf setup" >&2
+    exit 1
+fi
+
+if [[ -f "${SURF_CLI_PATH}/package.json" ]]; then
+    "$SKILL_DIR/scripts/ensure-surf-cli.sh" 2>/dev/null || true
 fi
 
 # Fallback: CDP controller for automation commands when no extension
@@ -531,7 +584,7 @@ case "$1" in
         ;;
     tab.*)
         echo "Error: Tab commands require surf-cli extension." >&2
-        echo "  1. Load extension: chrome://extensions → Load unpacked → surf-cli/dist" >&2
+        echo "  1. Load extension: chrome://extensions → Load unpacked → ${SURF_CLI_PATH}/dist" >&2
         echo "  2. Install host: surf install <extension-id>" >&2
         exit 1
         ;;

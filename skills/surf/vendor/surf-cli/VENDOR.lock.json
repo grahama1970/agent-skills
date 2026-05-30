@@ -1,0 +1,9 @@
+{
+  "synced_at": "2026-05-29T21:05:23Z",
+  "source_kind": "local",
+  "source_path": "/home/graham/workspace/experiments/surf-cli",
+  "source_ref": "feat/webgpt-no-activate",
+  "source_commit": "3acf60f98f3a2a8679774ec6f3ecc88433b0e2fb",
+  "vendor_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/vendor/surf-cli",
+  "package_version": "2.2.0"
+}

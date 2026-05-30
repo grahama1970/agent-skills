@@ -22,6 +22,15 @@ Options:
   --model MODEL             Optional ChatGPT model selector label.
   --tab-id ID               Use this exact Chrome tab as the controlled WebGPT tab.
   --url URL                 Resolve an already-open ChatGPT tab by exact URL.
+  --no-activate             Background controlled-tab mode. Do not foreground
+                            the tab or its window. Requires --tab-id or --url
+                            so an authenticated ChatGPT tab is already open.
+  --attach-file PATH        Attach a file to the ChatGPT message (uses CDP
+                            DOM.setFileInputFiles via the surf chatgpt --file
+                            flag). The prompt body is sent normally; ChatGPT
+                            reads the attached file alongside it. Use this
+                            instead of inlining large bundles in the prompt
+                            to stay under the OS argv limit.
 EOF
 }
 
@@ -36,6 +45,8 @@ timeout_s=900
 model=""
 tab_id=""
 target_url=""
+no_activate=0
+attach_file=""
 tab_state_file="${SURF_WEBGPT_TAB_STATE:-/tmp/surf-webgpt-controlled-tab-id}"
 
 while [[ $# -gt 0 ]]; do
@@ -51,6 +62,8 @@ while [[ $# -gt 0 ]]; do
     --model) model="${2:-}"; shift 2 ;;
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
+    --no-activate) no_activate=1; shift ;;
+    --attach-file) attach_file="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -132,15 +145,45 @@ elif [[ -f "$tab_state_file" ]]; then
   remembered_tab_id="$(tr -cd '0-9' < "$tab_state_file" | head -c 20 || true)"
   if [[ -n "$remembered_tab_id" ]]; then
     args+=(--tab-id "$remembered_tab_id")
+    requested_tab_id="$remembered_tab_id"
   fi
 fi
 
+if [[ "$no_activate" -eq 1 ]]; then
+  if [[ -z "${requested_tab_id:-}" ]]; then
+    echo "--no-activate requires --tab-id (or --url that resolves to an open tab) so we never have to foreground a tab to find one." >&2
+    exit 2
+  fi
+  args+=(--no-activate)
+fi
+
+if [[ -n "$attach_file" ]]; then
+  if [[ ! -f "$attach_file" ]]; then
+    echo "--attach-file: file not found: $attach_file" >&2
+    exit 2
+  fi
+  attach_file_abs="$(readlink -f "$attach_file")"
+  args+=(--file "$attach_file_abs")
+fi
+
+# Pre-run focus snapshot for proof. Best-effort: if focus.state is missing
+# from an older surf-cli, leave the fields as null.
+focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
+
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 set +e
-"$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+if command -v timeout >/dev/null 2>&1; then
+  hard_timeout_s=$((timeout_s + 60))
+  timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+else
+  "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
+fi
 status=$?
 set -e
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Post-run focus snapshot for proof.
+focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 
 cp "$raw_tmp" "$raw_output"
 
@@ -203,16 +246,23 @@ clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
 tab_id = None
+activated = None
+tab_was_created = None
 for line in reversed(stderr_text.splitlines()):
-    if line.startswith("Tab ID:"):
+    if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
+    elif line.startswith("Activated:") and activated is None:
+        activated = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("TabWasCreated:") and tab_was_created is None:
+        tab_was_created = line.split(":", 1)[1].strip() == "true"
+    if tab_id is not None and activated is not None and tab_was_created is not None:
         break
 contamination = []
 for needle in [
@@ -222,22 +272,55 @@ for needle in [
     "At the very end of your final answer, print exactly:",
     "Completion contract for browser automation:",
     "Tab ID:",
+    "Activated:",
+    "TabWasCreated:",
+    "NoActivate:",
 ]:
     if needle in out_text:
         contamination.append(needle)
+
+def _parse_focus(s):
+    if not s:
+        return {"focusedWindowId": None, "activeTabId": None, "activeTabUrl": None}
+    try:
+        d = json.loads(s)
+    except Exception:
+        return {"focusedWindowId": None, "activeTabId": None, "activeTabUrl": None}
+    return {
+        "focusedWindowId": d.get("focusedWindowId"),
+        "activeTabId": d.get("activeTabId"),
+        "activeTabUrl": d.get("activeTabUrl"),
+    }
+
+focus_before = _parse_focus(focus_before_s)
+focus_after = _parse_focus(focus_after_s)
+focus_changed = (
+    focus_before["focusedWindowId"] != focus_after["focusedWindowId"]
+    or focus_before["activeTabId"] != focus_after["activeTabId"]
+)
+no_activate = no_activate_s == "1"
+
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
+focus_violation = no_activate and focus_changed
 status = "completed" if (
     tab_id
     and not tab_mismatch
     and not contamination
     and sentinel in raw_text
     and sentinel not in out_text
+    and not focus_violation
 ) else "failed"
+if status == "completed":
+    failure = None
+elif focus_violation:
+    failure = "focus_stolen_despite_no_activate"
+elif tab_mismatch:
+    failure = "controlled_tab_id_mismatch"
+else:
+    failure = "missing_controlled_tab_id_or_contaminated_clean_output"
 pathlib.Path(meta).write_text(json.dumps({
     "status": status,
-    "failure": None if status == "completed" else (
-        "controlled_tab_id_mismatch" if tab_mismatch else "missing_controlled_tab_id_or_contaminated_clean_output"
-    ),
+    "failure": failure,
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -255,6 +338,14 @@ pathlib.Path(meta).write_text(json.dumps({
     "clean_chars": len(out_text),
     "controlled_tab_id": tab_id,
     "controlled_tab_id_mismatch": tab_mismatch,
+    "no_activate": no_activate,
+    "tab_was_created": tab_was_created,
+    "activated": activated,
+    "focused_window_before": focus_before["focusedWindowId"],
+    "focused_window_after": focus_after["focusedWindowId"],
+    "active_tab_before": focus_before["activeTabId"],
+    "active_tab_after": focus_after["activeTabId"],
+    "focus_changed": focus_changed,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")

@@ -55,6 +55,30 @@ triggers:
   - check browser
   - browser not working
   - cdp not connecting
+  # WebGPT / ChatGPT handoff
+  - chatgpt
+  - ask chatgpt
+  - send to chatgpt
+  - chatgpt prompt
+  - webgpt
+  - webgpt submit
+  - webgpt handoff
+  - chatgpt sentinel
+  - completion sentinel
+  - controlled chatgpt tab
+  - chatgpt round trip
+  # Background controlled-tab mode (no focus stealing)
+  - no activate
+  - background chatgpt
+  - background controlled tab
+  - background webgpt
+  - without stealing focus
+  - without hijacking the browser
+  - dont foreground
+  - do not foreground
+  - keep tab in background
+  - while i work
+  - quiet mode chatgpt
 metadata:
   short-description: Browser automation (extension preferred, CDP fallback)
   cdp-port: 9222
@@ -124,7 +148,38 @@ surf read --filter all           # Include all elements (not just interactive)
 surf text                        # Get raw text content only
 ```
 
+### Browser oracle routing (team default)
+
+Orchestration belongs in **`/ask`**. This skill provides **transport + proof** only.
+
+| Work type | Prefer `/ask` | `$surf` command | Notes |
+| --- | --- | --- | --- |
+| **Code** | `$ask webgpt` | `webgpt.submit` | Chrome tab id; `--no-activate` for background |
+| **Prose** | `$ask webkimi` | `kimi.submit` | Chrome; `kimi.com` tab |
+| **Design** | `$ask webgemini` | `gemini.submit` | Chrome; `gemini.google.com` tab |
+| **Research** | `$ask webperplexity` | `perplexity` | One-shot; not for multi-round review |
+| **Cursor IDE** | `$ask cursor-browser` | `cursor-browser.submit` | **viewId**; requires cursor-browser-bridge |
+
+In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-browser`** (self-contained). For **external Chrome** sessions, use the matching `*.submit` command with an explicit tab id.
+
+---
+
 ### WebGPT Completion-Sentinel Handoff
+
+**Routing for project agents:**
+
+| If the user says... | Use |
+|---|---|
+| "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id>` |
+| "recover an already completed WebGPT tab" | `surf webgpt.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
+| "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` to the above (requires `--tab-id` or `--url`) |
+| "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
+| "prove background mode works", "no-activate sanity" | `surf webgpt.no-activate-sanity --tab-id <id>` |
+| "what tab/window am I focused on" | `surf focus.state --json` |
+
+Always require a `--tab-id` (or `--url` that resolves to an open ChatGPT tab).
+Don't let surf-cli auto-discover or create a tab when the user has explicitly
+chosen one. `controlled_tab_id` in the meta JSON must equal `requested_tab_id`.
 
 For ChatGPT/WebGPT handoffs, use `webgpt.submit` instead of manually pasting a
 completion marker into prompts. The command owns sentinel generation, prompt
@@ -141,6 +196,19 @@ surf webgpt.submit \
   --stable-polls 3 \
   --timeout 900 \
   --tab-id 837343233
+```
+
+If a previous `webgpt.submit` was interrupted after ChatGPT visibly completed,
+recover the assistant-only DOM text from the controlled tab without submitting
+a new prompt:
+
+```bash
+surf webgpt.extract \
+  --tab-id 837343543 \
+  --sentinel '<<<WEBGPT_DONE:20260512T132258Z:fa18b118>>>' \
+  --output .webgpt/recovered-response.md \
+  --raw-output .webgpt/recovered-response.raw.md \
+  --meta-output .webgpt/recovered-response.meta.json
 ```
 
 If the human gives a full ChatGPT conversation URL instead of a tab id, use
@@ -184,11 +252,112 @@ Do not infer WebGPT completion from spinner absence, button state, visual
 stillness, or page text outside the final assistant response. Use the sentinel
 contract for any workflow that copies WebGPT output into files.
 
+#### Bounded reviewer/executor loops
+
+For project-agent work where WebGPT is acting as an external reviewer, `$surf`
+is only the transport and proof layer. Keep the loop bounded and artifact-based:
+
+```text
+human intent
+  -> optional /interview clarification for acceptance criteria
+  -> project agent implements or gathers evidence
+  -> surf webgpt.submit sends the evidence bundle for review
+  -> project agent applies concrete corrections
+  -> repeat until PASS, BLOCKED, or max rounds
+  -> human decides only unresolved product/acceptance questions
+```
+
+Each WebGPT round must write clean output, raw output, and meta JSON. The
+review request should include:
+
+- current state
+- blocker or open question
+- proposed decision
+- evidence artifact paths
+- what changed since the previous round
+- whether a human decision is required
+
+Use `webgpt.extract` only to recover an already completed controlled tab; do
+not use it as a substitute for submitting a new evidence bundle.
+
 Real-world sanity check:
 
 ```bash
 surf webgpt.sanity --output-dir /tmp/surf-webgpt-sanity --timeout 900 --tab-id 837343233
 ```
+
+## Cursor Browser (within Cursor IDE)
+
+When automating **Cursor's embedded Browser** (not external Chrome), use the
+`cursor-browser.*` commands. Tab targeting uses **`viewId`**, not Chrome tab ids.
+
+**Requires:** [cursor-browser-bridge](https://github.com/VectorlyApp/cursor-browser-bridge)
+installed and Cursor window reloaded (`/tmp/cursor-browser-bridge-port` must exist).
+
+```bash
+# List tabs (viewId \t title \t url)
+surf cursor-browser.tab.list
+surf cursor-browser.tab.list --json
+
+# Submit prompt to ChatGPT in Cursor Browser (sentinel proof contract)
+surf cursor-browser.submit \
+  --input .cursor-browser/01_request.md \
+  --output .cursor-browser/02_response.md \
+  --view-id f53e74 \
+  --timeout 900
+```
+
+### Routing for project agents
+
+| If the user says... | Use |
+|---|---|
+| "ask ChatGPT in Cursor Browser", "$ask cursor-browser" | `$ask cursor-browser …` (orchestration + artifacts) |
+| "list Cursor browser tabs", "what is the viewId" | `surf cursor-browser.tab.list` |
+| Transport-only submit with artifacts | `surf cursor-browser.submit --view-id …` |
+| External Chrome / background WebGPT | `surf webgpt.submit --tab-id CHROME_ID --no-activate` |
+
+**Do not** use `surf tab.list` or Chrome `--tab-id` for Cursor Browser work.
+**Do not** extend surf-cli Chrome extension for Cursor — Cursor Browser is MCP/bridge-native.
+
+### ChatGPT submit notes
+
+- Uses `browser_fill` on the "Chat with ChatGPT" textbox, then clicks **Send prompt**
+  (Enter alone may not submit on ChatGPT in Cursor Browser).
+- Sentinel contract matches `webgpt.submit` (`<<<WEBGPT_DONE:…>>>` stripped from clean output).
+- `controlled_view_id` in meta JSON is the **viewId**.
+
+
+### WebGemini / WebKimi / WebPerplexity (Chrome)
+
+Same sentinel proof contract as WebGPT where `*.submit` applies. Requires surf-cli extension (`/tmp/surf.sock`).
+
+| If the user says... | Use |
+|---|---|
+| "review design in Gemini", "ask Gemini about UX" | `surf gemini.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
+| "review prose in Kimi", "writing critique in Kimi" | `surf kimi.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
+| "research on Perplexity", "what is current about X" | `surf perplexity "question" [--no-activate]` (one-shot; no `--tab-id`) |
+
+Tab ids from `surf tab.list` filtered to `gemini.google.com` or `kimi.com`. Always pass explicit `--tab-id` when the human named a tab. Prefer `/ask webgemini`, `/ask webkimi`, `/ask webperplexity` for artifacts and bundle validation.
+
+### Web oracle sanity (all browser backends)
+
+When webgpt / webgemini / webkimi / webperplexity break frequently, run one
+deterministic check that exercises every oracle, collects debug artifacts on
+failure, and prints a report:
+
+```bash
+surf web.sanity --no-activate
+surf sanity web --only webperplexity   # alias; single oracle
+surf web.sanity --json                 # machine-readable report only
+```
+
+Reports land in `/tmp/surf-web-sanity-<timestamp>/` as `sanity-report.md` and
+`sanity-report.json`. Per-oracle artifacts include stderr, meta JSON, and
+`debug-bundle.txt` (host log tail + matching tabs).
+
+Tab ids default from state files (`/tmp/surf-webgpt-controlled-tab-id`, etc.) or
+`tab.list` discovery. Override with `--webgpt-tab-id`, `--gemini-tab-id`,
+`--kimi-tab-id`. Use `--full-webgpt` to add the slow `webgpt.sanity` sentinel test.
 
 This submits a compact but complex SPARTA/Embry OS infographic prompt and
 requires the response to round trip through the sentinel protocol with expected
@@ -196,6 +365,48 @@ Markdown sections. It captures a same-tab screenshot and fails if the proof tab
 differs from the controlled tab, if the screenshot/page text is Cloudflare or an
 unrelated site, if no controlled tab id is recorded, or if clean output contains
 the prompt/sentinel/page chrome.
+
+#### Background controlled-tab mode (`--no-activate`)
+
+`webgpt.submit --no-activate` keeps the controlled ChatGPT tab in the
+background so it does not foreground over whatever window the user has active.
+The proof contract is unchanged — controlled tab id required, sentinel in the
+final assistant DOM message, clean output strips only the terminal sentinel —
+plus the additional invariants:
+
+- The user's foreground tab and focused window are unchanged across the run
+  (`focus_changed: false` in meta).
+- The screenshot (when taken alongside) goes through CDP `Page.captureScreenshot`,
+  never the `chrome.tabs.captureVisibleTab` fallback. The fallback is disabled
+  in `--no-activate` mode because it would capture whichever tab is actually
+  foreground, not the controlled tab.
+- `--no-activate` requires `--tab-id` or `--url` (resolving to an already-open
+  ChatGPT tab). Without an explicit target we'd have to foreground a tab to
+  discover one, defeating the purpose.
+
+```bash
+surf webgpt.submit \
+  --input .webgpt/01_request.md \
+  --output .webgpt/02_response.md \
+  --tab-id 837343233 \
+  --no-activate
+```
+
+Background-mode sanity check:
+
+```bash
+surf webgpt.no-activate-sanity --tab-id 837343233 --output-dir /tmp/surf-webgpt-noact
+```
+
+Asserts the focus state did not change, the screenshot method is `cdp`
+(authoritative), and the standard sentinel/section requirements still hold.
+
+**Do not confuse `--no-activate` with `surf cdp start --headless`.** The
+`--headless` CDP mode launches a separate Chrome process against
+`/tmp/chrome-cdp-profile` and is **not authoritative for ChatGPT**: it has no
+authenticated session and will trip Cloudflare. `--no-activate` runs inside
+the user's authenticated Chrome via the extension; the only difference from
+the default WebGPT path is that the controlled tab is not foregrounded.
 
 For ChatGPT/WebGPT handoffs, the generic CDP verification hook is not
 authoritative proof. It launches or controls a separate browser context and may
@@ -405,15 +616,17 @@ cropped = smart_crop(full_page_bytes, region="detail")
 
 ## Extension Setup (One-time)
 
+The surf-cli fork is **vendored inside this skill** at `vendor/surf-cli/`. Source is committed; `node_modules/` and `dist/` are installed/built locally (`surf setup` or `surf extension.build`).
+
+
 **Important:** Google Chrome blocks `--load-extension` for security. Manual setup required:
 
 1. Build extension:
    ```bash
-   cd /home/graham/workspace/experiments/surf-cli
-   npm install && npm run build
+   surf extension.build   # npm ci && npm run build in vendor/surf-cli
    ```
 
-2. Load in Chrome: `chrome://extensions` → Enable Developer Mode → Load unpacked → select `dist/`
+2. Load in Chrome: `chrome://extensions` → Enable Developer Mode → Load unpacked → select `vendor/surf-cli/dist/`
 
 3. Copy the Extension ID shown (e.g., `lgamnnedgnehjplhndkkhojhbifgpcdp`)
 
@@ -425,6 +638,22 @@ cropped = smart_crop(full_page_bytes, region="detail")
 5. Verify: `surf tab.list` should show your browser tabs
 
 The socket at `/tmp/surf.sock` enables CLI ↔ extension communication.
+
+## Extension refresh (after surf-cli code changes)
+
+After editing or rebuilding surf-cli, refresh the loaded extension so the service worker picks up new dist code:
+
+```bash
+surf extension.build
+surf extension.fresh --json          # dist newer than src?
+surf extension.reload                # chrome.runtime.reload() + wait + ping
+# or: scripts/extension-reload.sh
+```
+
+**Bootstrap once:** The first time `EXTENSION_RELOAD` is added to the service worker, run one manual reload at `chrome://extensions` → Reload Surf (unpacked: `vendor/surf-cli/dist`). After that, `surf extension.reload` is sufficient.
+
+**Do not use CDP** (`surf cdp start`) to reload the extension — CDP uses a separate profile without Surf or ChatGPT auth. `chrome://extensions` is not automatable from outside the extension.
+
 
 ## Extension vs CDP Comparison
 

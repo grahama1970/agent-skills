@@ -24,6 +24,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import zipfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -139,6 +140,218 @@ def resolve_chatgpt_tab(
 
 
 _PATH_TOKEN_RE = re.compile(r"(?:(?:^|\s)|`)((?:~|/|\./|\.\./)[^\s`]+)")
+
+_ARCHIVE_EXTENSIONS = (
+    ".zip",
+    ".tar",
+    ".tgz",
+    ".tar.gz",
+    ".tar.bz2",
+    ".7z",
+)
+
+
+def extract_path_tokens(text: str) -> list[str]:
+    """Return unique filesystem path tokens referenced in *text*."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for match in _PATH_TOKEN_RE.finditer(text):
+        token = match.group(1).rstrip(".,;:)>")
+        if token not in seen:
+            seen.add(token)
+            out.append(token)
+    return out
+
+
+def _resolve_path_token(token: str) -> Path | None:
+    try:
+        path = Path(token).expanduser()
+    except Exception:
+        return None
+    if not path.is_absolute():
+        try:
+            path = path.resolve(strict=False)
+        except Exception:
+            return None
+    return path
+
+
+def _is_archive_path(path: Path) -> bool:
+    lower = path.name.lower()
+    return any(lower.endswith(ext) for ext in _ARCHIVE_EXTENSIONS)
+
+
+def _attachment_has_text(att: dict[str, Any]) -> bool:
+    return bool(att.get("text")) and not att.get("error")
+
+
+
+class WebReviewBundleError(WebgptBackendError):
+    """Browser reviewer cannot consume path-only evidence bundles."""
+
+    FRIENDLY = (
+        "I'm a web-based agent and I can't read local file paths. "
+        "Please provide either a zip review bundle of no more than 5 files, "
+        "or give me a concatenated text file."
+    )
+
+    def __init__(self, *, backend: str = "webgpt", detail: str = "") -> None:
+        message = self.FRIENDLY
+        if detail:
+            message = f"{message}\n\nDetected issue: {detail}"
+        super().__init__(message)
+        self.backend = backend
+        self.detail = detail
+
+
+def _zip_member_count(path: Path, *, max_files: int = 5) -> tuple[int, str | None]:
+    try:
+        with zipfile.ZipFile(path) as zf:
+            members = [info for info in zf.infolist() if not info.is_dir()]
+    except Exception as exc:
+        return 0, f"could not read zip archive: {exc}"
+    if not members:
+        return 0, "zip archive is empty"
+    if len(members) > max_files:
+        return len(members), f"zip contains {len(members)} files (maximum {max_files})"
+    return len(members), None
+
+
+def resolve_web_review_delivery(
+    question: str,
+    attachments: list[dict[str, Any]],
+    *,
+    backend: str = "webgpt",
+) -> str:
+    """Validate review evidence and return a zip path for --attach-file when used.
+
+    Returns an empty string when evidence is delivered as inlined concatenated text.
+    Raises WebReviewBundleError with a project-agent-friendly message when the
+    bundle only lists local paths the browser tab cannot read.
+    """
+    question_refs = extract_path_tokens(question)
+    zip_refs = [
+        token
+        for token in question_refs
+        if (p := _resolve_path_token(token)) is not None and _is_archive_path(p)
+    ]
+
+    if len(question_refs) == 1 and len(zip_refs) == 1:
+        archive = _resolve_path_token(zip_refs[0])
+        assert archive is not None
+        if not archive.is_file():
+            raise WebReviewBundleError(
+                backend=backend,
+                detail=f"zip path does not exist: {zip_refs[0]}",
+            )
+        _, zip_err = _zip_member_count(archive)
+        if zip_err:
+            raise WebReviewBundleError(backend=backend, detail=zip_err)
+        if backend != "webgpt":
+            raise WebReviewBundleError(
+                backend=backend,
+                detail=(
+                    "zip attach is supported for $ask webgpt only; "
+                    "use a concatenated text/markdown file for other web backends"
+                ),
+            )
+        return str(archive)
+
+    _validate_inlined_web_review_evidence(question, attachments, backend=backend)
+    return ""
+
+
+def _validate_inlined_web_review_evidence(
+    question: str,
+    attachments: list[dict[str, Any]],
+    *,
+    backend: str = "webgpt",
+) -> None:
+    """Require concatenated inlined text when not using a zip attach bundle."""
+    question_refs = extract_path_tokens(question)
+    referenced: list[str] = []
+    seen: set[str] = set()
+    for source in [question, *(a.get("text", "") for a in attachments if a.get("text"))]:
+        for token in extract_path_tokens(source):
+            if token not in seen:
+                seen.add(token)
+                referenced.append(token)
+
+    if not referenced:
+        return
+
+    inlined_paths: set[str] = set()
+    for att in attachments:
+        if not _attachment_has_text(att):
+            continue
+        raw_path = str(att.get("path", ""))
+        inlined_paths.add(raw_path)
+        resolved = _resolve_path_token(raw_path)
+        if resolved is not None:
+            inlined_paths.add(str(resolved))
+
+    details: list[str] = []
+    directories: list[str] = []
+    missing: list[str] = []
+    path_only: list[str] = []
+    archives: list[str] = []
+
+    for token in referenced:
+        path = _resolve_path_token(token)
+        if path is None:
+            missing.append(token)
+            continue
+        if _is_archive_path(path):
+            archives.append(token)
+            continue
+        if path.is_dir():
+            directories.append(token)
+            continue
+        if not path.is_file():
+            missing.append(token)
+            continue
+        if token not in inlined_paths and str(path) not in inlined_paths:
+            path_only.append(token)
+
+    if directories:
+        details.append(
+            "directory paths were referenced (" + ", ".join(directories) + ")"
+        )
+    if missing:
+        details.append(
+            "some referenced paths do not exist (" + ", ".join(missing) + ")"
+        )
+    if path_only:
+        details.append(
+            "these files were referenced by path only, without inlined content: "
+            + ", ".join(path_only)
+        )
+    if archives:
+        details.append(
+            "archive paths were referenced alongside other paths ("
+            + ", ".join(archives)
+            + "); pass only the zip path, or use one concatenated text file"
+        )
+    if question_refs and not any(_attachment_has_text(a) for a in attachments):
+        details.append(
+            "the prompt references filesystem paths but no readable text was inlined"
+        )
+    failed_reads = [a["path"] for a in attachments if a.get("error")]
+    if failed_reads:
+        details.append("attachment read failed: " + ", ".join(failed_reads))
+
+    if details:
+        raise WebReviewBundleError(backend=backend, detail="; ".join(details))
+
+
+def validate_web_review_evidence(
+    question: str,
+    attachments: list[dict[str, Any]],
+    *,
+    backend: str = "webgpt",
+) -> None:
+    """Backward-compatible wrapper around resolve_web_review_delivery."""
+    resolve_web_review_delivery(question, attachments, backend=backend)
 
 
 def extract_file_attachments(question: str, *, max_bytes: int = 2_000_000) -> list[dict[str, Any]]:

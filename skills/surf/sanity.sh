@@ -11,7 +11,8 @@ set -e
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUN="$SKILL_DIR/run.sh"
-SURF_CLI_PATH="/home/graham/workspace/experiments/surf-cli"
+# shellcheck source=scripts/lib/surf-cli-path.sh
+source "$SKILL_DIR/scripts/lib/surf-cli-path.sh"
 SOCKET_PATH="/tmp/surf.sock"
 
 # Colors for output
@@ -55,7 +56,7 @@ print_instruction() {
 # ─────────────────────────────────────────────────────────────
 
 check_chrome() {
-    print_step "1/6" "Chrome Installation"
+    print_step "1/7" "Chrome Installation"
     if command -v google-chrome &>/dev/null; then
         print_ok "Google Chrome found: $(command -v google-chrome)"
         return 0
@@ -70,7 +71,7 @@ check_chrome() {
 }
 
 check_extension_built() {
-    print_step "2/6" "Extension Built"
+    print_step "2/7" "Extension Built"
     if [[ -f "$SURF_CLI_PATH/dist/manifest.json" ]]; then
         local version=$(grep '"version"' "$SURF_CLI_PATH/dist/manifest.json" | head -1 | grep -oP '"\d+\.\d+\.\d+"' | tr -d '"')
         print_ok "Extension built: $SURF_CLI_PATH/dist (v$version)"
@@ -82,7 +83,7 @@ check_extension_built() {
 }
 
 check_extension_loaded() {
-    print_step "3/6" "Extension Loaded in Chrome"
+    print_step "3/7" "Extension Loaded in Chrome"
     # Check if socket exists - indicates extension is communicating
     if [[ -S "$SOCKET_PATH" ]]; then
         print_ok "Socket exists: $SOCKET_PATH"
@@ -95,7 +96,7 @@ check_extension_loaded() {
 }
 
 check_native_host() {
-    print_step "4/6" "Native Host Installed"
+    print_step "4/7" "Native Host Installed"
     local host_file="$HOME/.config/google-chrome/NativeMessagingHosts/surf.browser.host.json"
     if [[ -f "$host_file" ]]; then
         local ext_id=$(grep -oP '"chrome-extension://\K[^/]+' "$host_file" 2>/dev/null || echo "unknown")
@@ -108,8 +109,26 @@ check_native_host() {
     fi
 }
 
+check_native_host_path() {
+    print_step "7/7" "Native Host Uses Vendored Path"
+    local wrapper="$HOME/.local/share/surf-cli/host-wrapper.sh"
+    local expected="${SURF_CLI_PATH}/native/host.cjs"
+    if [[ ! -f "$wrapper" ]]; then
+        print_warn "Native host wrapper missing (run: surf install <extension-id>)"
+        return 1
+    fi
+    if grep -q "$expected" "$wrapper" 2>/dev/null; then
+        print_ok "Native host uses vendored path"
+        return 0
+    fi
+    print_warn "Native host wrapper still points elsewhere"
+    print_instruction "Re-run: surf install <extension-id> after loading vendor/surf-cli/dist"
+    print_instruction "Expected host: $expected"
+    return 1
+}
+
 check_tab_list() {
-    print_step "5/6" "CLI → Extension Communication"
+    print_step "5/7" "CLI → Extension Communication"
     if [[ ! -S "$SOCKET_PATH" ]]; then
         print_fail "Cannot test - no socket"
         return 1
@@ -130,7 +149,7 @@ check_tab_list() {
 }
 
 check_read_command() {
-    print_step "6/6" "Read Command"
+    print_step "6/7" "Read Command"
     if [[ ! -S "$SOCKET_PATH" ]]; then
         print_fail "Cannot test - no socket"
         return 1
@@ -172,7 +191,7 @@ guide_build_extension() {
     echo ""
     echo "Run this command:"
     echo ""
-    echo -e "  ${GREEN}cd $SURF_CLI_PATH && npm install && npm run build${NC}"
+    echo -e "  ${GREEN}surf extension.build${NC}   # or: cd $SURF_CLI_PATH && npm ci && npm run build"
     echo ""
 }
 
@@ -268,6 +287,8 @@ main() {
     if ! check_read_command; then
         all_passed=0
     fi
+
+    check_native_host_path || all_passed=0
 
     echo ""
 

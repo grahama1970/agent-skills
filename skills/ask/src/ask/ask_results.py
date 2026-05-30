@@ -59,6 +59,8 @@ def _synthesise(
     webgpt_project: str = "",
     gemini_tab_id: str = "",
     gemini_url: str = "",
+    kimi_tab_id: str = "",
+    kimi_url: str = "",
     run_state: object | None = None,
 ) -> None:
     """Build the answer string and print output."""
@@ -150,6 +152,8 @@ def _synthesise(
             webgpt_project=webgpt_project,
             gemini_tab_id=gemini_tab_id,
             gemini_url=gemini_url,
+            kimi_tab_id=kimi_tab_id,
+            kimi_url=kimi_url,
             run_state=run_state,
         )
 

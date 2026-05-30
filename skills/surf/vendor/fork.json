@@ -1,0 +1,21 @@
+{
+  "name": "surf-cli",
+  "fork_repo": "https://github.com/grahama1970/surf-cli.git",
+  "default_ref": "main",
+  "local_dev_path": "/home/graham/workspace/experiments/surf-cli",
+  "rsync_excludes": [
+    "node_modules",
+    "dist",
+    ".git",
+    "local",
+    "coverage",
+    ".playwright-mcp",
+    ".agent",
+    ".agents",
+    ".claude",
+    ".codex",
+    ".github",
+    ".kilocode",
+    ".pi"
+  ]
+}
