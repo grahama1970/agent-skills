@@ -148,6 +148,22 @@ surf read --filter all           # Include all elements (not just interactive)
 surf text                        # Get raw text content only
 ```
 
+### Browser oracle routing (team default)
+
+Orchestration belongs in **`/ask`**. This skill provides **transport + proof** only.
+
+| Work type | Prefer `/ask` | `$surf` command | Notes |
+| --- | --- | --- | --- |
+| **Code** | `$ask webgpt` | `webgpt.submit` | Chrome tab id; `--no-activate` for background |
+| **Prose** | `$ask webkimi` | `kimi.submit` | Chrome; `kimi.com` tab |
+| **Design** | `$ask webgemini` | `gemini.submit` | Chrome; `gemini.google.com` tab |
+| **Research** | `$ask webperplexity` | `perplexity` | One-shot; not for multi-round review |
+| **Cursor IDE** | `$ask cursor-browser` | `cursor-browser.submit` | **viewId**; requires cursor-browser-bridge |
+
+In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-browser`** (self-contained). For **external Chrome** sessions, use the matching `*.submit` command with an explicit tab id.
+
+---
+
 ### WebGPT Completion-Sentinel Handoff
 
 **Routing for project agents:**
@@ -309,6 +325,19 @@ surf cursor-browser.submit \
   (Enter alone may not submit on ChatGPT in Cursor Browser).
 - Sentinel contract matches `webgpt.submit` (`<<<WEBGPT_DONE:…>>>` stripped from clean output).
 - `controlled_view_id` in meta JSON is the **viewId**.
+
+
+### WebGemini / WebKimi / WebPerplexity (Chrome)
+
+Same sentinel proof contract as WebGPT where `*.submit` applies. Requires surf-cli extension (`/tmp/surf.sock`).
+
+| If the user says... | Use |
+|---|---|
+| "review design in Gemini", "ask Gemini about UX" | `surf gemini.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
+| "review prose in Kimi", "writing critique in Kimi" | `surf kimi.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
+| "research on Perplexity", "what is current about X" | `surf perplexity "question" [--no-activate]` (one-shot; no `--tab-id`) |
+
+Tab ids from `surf tab.list` filtered to `gemini.google.com` or `kimi.com`. Always pass explicit `--tab-id` when the human named a tab. Prefer `/ask webgemini`, `/ask webkimi`, `/ask webperplexity` for artifacts and bundle validation.
 
 ### Web oracle sanity (all browser backends)
 

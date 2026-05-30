@@ -46,6 +46,14 @@ triggers:
   - chatgpt oracle
   - ask webgpt to review
   - ask webgpt about
+  - ask cursor-browser
+  - $ask cursor-browser
+  - ask webgemini
+  - $ask webgemini
+  - ask webkimi
+  - $ask webkimi
+  - ask webperplexity
+  - $ask webperplexity
   - teach me about
   - what does X say about
   - what does Sapolsky say
@@ -174,6 +182,47 @@ Direct scillm oracle calls use SSE streaming and record
 project agents can distinguish active model work from hard-deadline failure.
 The same runtime protocol is available for `learn`, `nightly`, `os learn`,
 `os ask`, and `os health`.
+
+## Browser Oracle Backends — routing (read first)
+
+Project agents choose a browser oracle by **task type**, then confirm **Chrome vs Cursor**.
+
+### Team defaults (which backend for which work)
+
+| Work type | Use | Site / transport |
+| --- | --- | --- |
+| **Code** — review bundles, architecture, implementation, tests, tech-lead loops | `$ask webgpt` | `chatgpt.com` in **Chrome** via surf-cli; `--no-activate` |
+| **Prose** — papers, voice, clarity, long-form writing | `$ask webkimi` | `kimi.com` in **Chrome** |
+| **Design** — mockups, UX, visual hierarchy, design critique | `$ask webgemini` | `gemini.google.com` in **Chrome** |
+| **Research** — fresh facts, citations, current events, web synthesis | `$ask webperplexity` | Perplexity **one-shot** (no standing review tab) |
+| **Inside Cursor** — ChatGPT in embedded Browser (self-contained; no external Chrome) | `$ask cursor-browser` | Cursor Browser + **viewId** + cursor-browser-bridge |
+
+**Rules of thumb:**
+
+- In **Cursor IDE** with ChatGPT open in the embedded Browser → prefer **`cursor-browser`**, not `webgpt`.
+- Need **background Chrome** while working in another window → **`webgpt`** + `--webgpt-tab-id` or `--webgpt-project` + `--no-activate` (via surf).
+- Do **not** use `webperplexity` for multi-round review loops on the same thread.
+- Do **not** pass Chrome tab ids to `--cursor-browser-view-id` (different namespace from **viewId**).
+
+### Shared limitations (all browser backends)
+
+- Tabs **cannot read local paths** you only mention in the prompt. Use a **concatenated** `.md`/`.txt` bundle (inlined under `## Attached files`) or a **zip** (≤5 files, **`webgpt` only**).
+- Proof is the **ask artifact set** (`.ask_artifacts/runs/<ask_id>/`), not an assistant paraphrase.
+- Normal work: **`$ask …`** (orchestration). Raw **`$surf …`** only when debugging transport.
+
+### Backend reference
+
+| Shorthand | `--oracle-backend` | Multi-turn tab | Tab binding |
+| --- | --- | --- | --- |
+| `$ask webgpt` | `webgpt` | Yes | `--webgpt-project`, `--webgpt-tab-id` |
+| `$ask webgemini` | `webgemini` | Yes | `--gemini-tab-id`, `--gemini-url` |
+| `$ask webkimi` | `webkimi` | Yes | `--kimi-tab-id`, `--kimi-url` |
+| `$ask webperplexity` | `webperplexity` | **No** (one-shot) | — |
+| `$ask cursor-browser` | `cursor-browser` | Yes | `--cursor-browser-project`, `--cursor-browser-view-id` |
+
+Detailed contracts: **WebGPT** and **Cursor Browser** sections below; Gemini/Kimi/Perplexity share WebGPT-style bundle rules and Chrome tab resolution via `surf tab.list` (fail-closed when 0 or >1 tabs).
+
+---
 
 ## WebGPT Oracle Backend
 
@@ -649,11 +698,56 @@ Same layout as WebGPT rounds under `.ask_artifacts/runs/<ask_id>/`, with
 
 | Goal | Use |
 |------|-----|
-| Background Chrome tab, no Cursor Browser | `$ask webgpt` + `--webgpt-tab-id` or `--webgpt-project` |
-| Self-contained in Cursor IDE | `$ask cursor-browser` + `--cursor-browser-view-id` or `--cursor-browser-project` |
-| Ad-hoc one question, agent already in chat | `@Browser` on current ChatGPT page (no `./run.sh` artifacts unless you re-run ask) |
+| **Code** review / tech lead in Chrome (background) | `$ask webgpt` + `--webgpt-project` or `--webgpt-tab-id` |
+| **Prose** / writing in Chrome | `$ask webkimi` + `--kimi-tab-id` |
+| **Design** review in Chrome | `$ask webgemini` + `--gemini-tab-id` |
+| **Research** (fresh web, one shot) | `$ask webperplexity` |
+| **Cursor IDE** — ChatGPT in embedded Browser (self-contained) | `$ask cursor-browser` + `--cursor-browser-project` or `--cursor-browser-view-id` |
+| Ad-hoc one question, agent already in chat | `@Browser` on current page (no `./run.sh` artifacts unless you re-run ask) |
 
 Do not pass Chrome tab ids to `--cursor-browser-view-id`. They are different namespaces.
+
+
+## WebGemini Oracle Backend (design)
+
+`--oracle-backend webgemini` or `$ask webgemini …` — **design** work (mockups, UX, visual critique) via an authenticated **Gemini** tab in Chrome.
+
+- Transport: `surf gemini.submit --no-activate` (surf-cli extension required; `/tmp/surf.sock`).
+- Tab resolution: `--gemini-tab-id` → `--gemini-url` → auto-resolve when exactly one `gemini.google.com` tab is open (fail-closed otherwise).
+- Same **bundle rules** as WebGPT: concatenate evidence into one `.md`/`.txt`; no zip attach on this backend.
+- Multi-turn: re-invoke on the same controlled tab; no `--gemini-project` bindings yet (pass tab id explicitly).
+- Events: `oracle_gemini_call_started` / `_finished` / `_failed`.
+
+```bash
+./run.sh ask webgemini "Review /tmp/design-review-bundle.md for visual hierarchy and NVIS compliance."   --oracle --gemini-tab-id <id> --once
+```
+
+## WebKimi Oracle Backend (prose)
+
+`--oracle-backend webkimi` or `$ask webkimi …` — **prose** work (papers, voice, clarity, long-form writing) via an authenticated **Kimi** tab in Chrome.
+
+- Transport: `surf kimi.submit --no-activate`.
+- Tab resolution: `--kimi-tab-id` → `--kimi-url` → auto-resolve when exactly one `kimi.com` tab is open (fail-closed otherwise).
+- Same **bundle rules** as WebGPT (concatenated text; no zip).
+- Multi-turn on the same tab; no project bindings yet.
+- Events: `oracle_kimi_call_started` / `_finished` / `_failed`.
+
+```bash
+./run.sh ask webkimi "Review /tmp/paper-section.md for voice and clarity."   --oracle --kimi-tab-id <id> --once
+```
+
+## WebPerplexity Oracle Backend (research)
+
+`--oracle-backend webperplexity` or `$ask webperplexity …` — **research** questions needing fresh web synthesis (not multi-round review on a standing tab).
+
+- Transport: `surf perplexity` (one-shot CDP session per query).
+- **No standing tab** — each call is independent; do not use for bounded code/design review loops.
+- Bundle: concatenated `.md`/`.txt` only (paths inlined); no zip.
+- Events: `oracle_perplexity_call_started` / `_finished` / `_failed`.
+
+```bash
+./run.sh ask webperplexity "What changed in NIST SP 800-171 Rev 3 draft in the last 12 months?"   --oracle --once
+```
 
 ## Image Generation Mode
 

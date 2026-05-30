@@ -194,13 +194,13 @@ persona or roundtable request.
 | Natural DAG orchestration | You want `/ask` to compile a clear natural-language skill workflow into an executable DAG | `./run.sh ask 'Use $memory and $scillm to analyze this, then $create-report a report' --orchestrate` |
 | DAG JSON | A project agent can express memory, dogpile, oracle, subagent, and report steps more clearly as a graph | `./run.sh ask "review report" --dag-file /tmp/report-review.dag.json` |
 | Deep review | You want a thorough, audit-friendly review with artifacts | `./run.sh ask "deep review this" --deep-review --deep-review-target src/ask/ask.py` |
-| Browser oracle (WebGPT) | Authenticated ChatGPT tab as reviewer/tech lead; background tab via `$surf` | `./run.sh ask webgpt review /tmp/review-bundle.md --webgpt-project sparta-review` |
-| Browser oracle (Cursor Browser) | ChatGPT in Cursor embedded Browser; uses **viewId** not Chrome tab id | `./run.sh ask cursor-browser "question" --oracle --cursor-browser-project my-project --once` |
+| Browser oracle (WebGPT) | **Code** collaboration — ChatGPT in Chrome; background tab via `$surf` | `./run.sh ask webgpt review /tmp/review-bundle.md --webgpt-project sparta-review` |
+| Browser oracle (Cursor Browser) | **In Cursor IDE** — self-contained Browser; **viewId** not Chrome tab id | `./run.sh ask cursor-browser "question" --oracle --cursor-browser-project my-project --once` |
 | Cursor Browser project bindings | Persistent viewId per project (`~/.pi/cursor-browser-projects/`) | `./run.sh cursor-browser-project bind my-project --view-id f53e74 --manual` |
 | WebGPT project bindings | Persistent ChatGPT tab per project (`~/.pi/webgpt-projects/`) | `./run.sh webgpt-project bind sparta-review --tab-id 837343543` |
-| Browser oracle (WebGemini) | Authenticated Gemini tab in Chrome | `./run.sh ask webgemini "review /tmp/review-bundle.md" --oracle --gemini-tab-id <id>` |
-| Browser oracle (WebKimi) | Authenticated Kimi tab in Chrome | `./run.sh ask webkimi "review /tmp/review-bundle.md" --oracle --kimi-tab-id <id>` |
-| Browser oracle (WebPerplexity) | One-shot Perplexity research via `$surf` (no standing tab) | `./run.sh ask webperplexity "summarize current state of X" --oracle` |
+| Browser oracle (WebGemini) | **Design** review — Gemini tab in Chrome | `./run.sh ask webgemini "review /tmp/review-bundle.md" --oracle --gemini-tab-id <id>` |
+| Browser oracle (WebKimi) | **Prose** / writing — Kimi tab in Chrome | `./run.sh ask webkimi "review /tmp/review-bundle.md" --oracle --kimi-tab-id <id>` |
+| Browser oracle (WebPerplexity) | **Research** questions — one-shot Perplexity via `$surf` | `./run.sh ask webperplexity "summarize current state of X" --oracle` |
 | Bounded browser review loop | Browser reviewer adjudicates evidence; project agent patches locally | `./run.sh ask webgpt review /tmp/review-bundle.md --webgpt-project sparta-review --once` |
 | Doctor | You want a preflight check on dependencies and runtime | `./run.sh doctor --json` |
 | Chains | You want to inspect saved review workflows | `./run.sh chains list --json` |
@@ -246,16 +246,32 @@ Fail-closed required nodes and optional `allow_failure` probes are documented in
 
 ## Browser-backed oracle backends
 
-Two browser lanes exist. Pick the one that matches where ChatGPT is open:
+Embry OS routes browser oracle work by **task type** first, then by **where the browser lives** (Chrome vs Cursor).
+
+### Which backend for which work (team default)
+
+| Work type | Preferred backend | Why |
+| --- | --- | --- |
+| **Code** — review bundles, architecture, implementation, test manifests, tech-lead adjudication | `$ask webgpt` | ChatGPT in Chrome; background tab via `--no-activate`; multi-turn `--webgpt-project` |
+| **Prose** — papers, narratives, voice, clarity, long-form writing critique | `$ask webkimi` | Kimi in Chrome; same sentinel proof as WebGPT on `kimi.com` |
+| **Design** — mockups, UX, visual hierarchy, design review, tokens | `$ask webgemini` | Gemini in Chrome on `gemini.google.com` |
+| **Research** — fresh web facts, citations, "what is current", OSINT-style questions | `$ask webperplexity` | One-shot Perplexity (no standing review thread) |
+| **Inside Cursor IDE** — ChatGPT in the embedded Browser pane (self-contained, no external Chrome) | `$ask cursor-browser` | Uses **viewId** + cursor-browser-bridge; not Chrome tab ids |
+
+When you are already working in **Cursor** and want ChatGPT without switching to external Chrome, prefer **`cursor-browser`** over `webgpt`. When you need **background Chrome** while editing in another app, use **`webgpt`** with `--no-activate`.
+
+Do not use `webperplexity` for multi-round code/design review loops — it does not keep a standing conversation tab. Do not use `webgpt` when the human explicitly wants Gemini/Kimi/Perplexity for the task types above.
+
+### Chrome vs Cursor (transport)
+
+Two browser **lanes** exist. Pick the lane that matches where the session is open:
 
 | Lane | Tab id | Transport | When |
 | --- | --- | --- | --- |
-| **Chrome + `$ask webgpt`** | Chrome numeric tab id (Tab ID Viewer; `surf tab.list`) | surf-cli extension | Background tab while you work in other apps |
-| **Cursor Browser + `$ask cursor-browser`** | **`viewId`** (e.g. `f53e74`; `surf cursor-browser.tab.list`) | [cursor-browser-bridge](https://github.com/VectorlyApp/cursor-browser-bridge) | ChatGPT in Cursor's embedded Browser pane |
+| **Chrome** (`webgpt`, `webgemini`, `webkimi`, `webperplexity`) | Chrome numeric tab id (`surf tab.list`) | surf-cli extension | Signed-in tabs in your normal Chrome |
+| **Cursor Browser** (`cursor-browser`) | **`viewId`** (e.g. `f53e74`; `surf cursor-browser.tab.list`) | [cursor-browser-bridge](https://github.com/VectorlyApp/cursor-browser-bridge) | ChatGPT inside Cursor's embedded Browser |
 
-Do not pass Chrome tab ids to `--cursor-browser-view-id`. They are different namespaces.
-
-### Chrome browser oracles
+### Chrome browser oracles (external Chrome)
 
 Browser oracles in **external Chrome** route through your authenticated session via `$surf`.
 `$ask` owns orchestration, run artifacts, rate limits, tab bindings, and review

@@ -132,6 +132,24 @@ environment variables, and agent-facing rules, see [SKILL.md](SKILL.md).
 
 ## When to Use Each Mode
 
+### Browser oracle routing (team default — orchestration via `/ask`)
+
+Prefer **`$ask …`** for normal work. Use **`$surf …`** for transport debugging or when `/ask` is not in the loop.
+
+| Work type | `/ask` backend | `$surf` transport (Chrome unless noted) |
+| --- | --- | --- |
+| **Code** collaboration | `$ask webgpt` | `webgpt.submit` (+ `--no-activate`) |
+| **Prose** / writing | `$ask webkimi` | `kimi.submit` (+ `--no-activate`) |
+| **Design** | `$ask webgemini` | `gemini.submit` (+ `--no-activate`) |
+| **Research** (fresh web) | `$ask webperplexity` | `perplexity` (one-shot) |
+| **Inside Cursor IDE** (embedded Browser) | `$ask cursor-browser` | `cursor-browser.submit` (**viewId**, not Chrome tab id) |
+
+When working in **Cursor** with ChatGPT in the embedded Browser, use **`cursor-browser`** — the session is self-contained and does not require external Chrome. For **background Chrome** while you work elsewhere, use **`webgpt`** with `--no-activate`.
+
+See `/ask` `README.md` and `SKILL.md` for bundle delivery rules, project bindings (`webgpt-project`, `cursor-browser-project`), and proof artifacts.
+
+### Surf modes (transport)
+
 | Mode | Reach for it when… | Example |
 | --- | --- | --- |
 | Extension automation | You want tab control, reads, clicks, and screenshots in your signed-in Chrome | `./run.sh tab.list` then `./run.sh read` |
@@ -145,6 +163,10 @@ environment variables, and agent-facing rules, see [SKILL.md](SKILL.md).
 | Ask orchestration | Normal WebGPT review/oracle work — prefer `/ask` over raw `$surf` | `./run.sh` in `/ask`: `ask webgpt review … --webgpt-project NAME` |
 | Cursor Browser submit | ChatGPT in Cursor embedded Browser; tab target is **viewId** | `./run.sh cursor-browser.submit --input REQ.md --output RESP.md --view-id f53e74` |
 | Cursor Browser tab list | Discover viewIds for ChatGPT tabs in Cursor Browser | `./run.sh cursor-browser.tab.list` |
+| Gemini submit | **Design** — sentinel handoff on Gemini tab in Chrome | `./run.sh gemini.submit --input REQ.md --output RESP.md --tab-id ID` |
+| Kimi submit | **Prose** — sentinel handoff on Kimi tab in Chrome | `./run.sh kimi.submit --input REQ.md --output RESP.md --tab-id ID` |
+| Perplexity | **Research** — one-shot query (no standing tab) | `./run.sh perplexity "question" --no-activate` |
+| Web oracle sanity | All Chrome oracles + optional cursor-browser debug | `./run.sh web.sanity --no-activate` |
 
 > **At this point, you know enough to use `surf`.**
 >
