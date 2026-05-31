@@ -20,6 +20,7 @@ from .oracle_adapters import (
     _resolve_oracle_backend,
     _run_oracle_subagent_iterations,
 )
+from .oracle_contracts import normalize_oracle_failure, normalize_oracle_turns
 from .ask_persona_profiles import (
     _format_persona_profile_for_prompt,
     _load_oracle_persona_profiles,
@@ -65,7 +66,7 @@ from .kimi_runtime import (
     KimiBackendDegradedError,
     KimiTabError,
     build_kimi_prompt,
-    call_kimi,
+    call_kimi_with_capacity_retry,
 )
 from .perplexity_runtime import (
     PerplexityBackendError,
@@ -374,7 +375,7 @@ def _run_oracle_webkimi(
     for index in range(total_iterations):
         turn_number = index + 1
         try:
-            result = call_kimi(
+            result = call_kimi_with_capacity_retry(
                 prompt if turn_number == 1 else _format_kimi_followup_prompt(turns, turn_number, total_iterations),
                 tab_id=tab_id,
                 url=url,
@@ -700,6 +701,11 @@ def _apply_oracle_synthesis(
             "iterations_requested": iterations,
             "iterations_completed": len(turns),
         }
+        result["oracle"]["adapter_response"] = normalize_oracle_turns(
+            backend=effective_backend,
+            model_served=model_served,
+            turns=turns,
+        )
         if persona:
             result["oracle"]["persona"] = persona
         if consult_personas:
@@ -771,6 +777,12 @@ def _apply_oracle_synthesis(
             "source": effective_backend,
             "error": "web_review_bundle",
             "bundle_error": True,
+            "adapter_response": normalize_oracle_failure(
+                backend=effective_backend,
+                model=model,
+                error=exc,
+                error_code="web_review_bundle",
+            ),
         }
         if persona:
             result["oracle"]["persona"] = persona
@@ -800,6 +812,11 @@ def _apply_oracle_synthesis(
             "backend": effective_backend,
             "source": effective_backend,
             "error": str(exc),
+            "adapter_response": normalize_oracle_failure(
+                backend=effective_backend,
+                model=model,
+                error=exc,
+            ),
         }
         if persona:
             result["oracle"]["persona"] = persona

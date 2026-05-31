@@ -19,25 +19,40 @@ from pathlib import Path
 
 OPS_CHUTES_DIR = Path.home() / ".pi" / "skills" / "ops-chutes"
 PROXY_CONFIG = Path.home() / "workspace" / "experiments" / "scillm" / "local" / "proxy_server_config.yaml"
+DEFAULT_TEXT_MODEL_NAMES = ("chutes-deepseek", "text")
+
+
+def _line_indent(line: str) -> int:
+    return len(line) - len(line.lstrip(" "))
 
 
 def get_current_text_model() -> str | None:
-    """Extract current text model from proxy config."""
+    """Extract the configured default Chutes text deployment from proxy config."""
     if not PROXY_CONFIG.exists():
         return None
     content = PROXY_CONFIG.read_text()
-    # Simple extraction: find first model under "model_name: text"
+    # Current configs use the public provider-family profile chutes-deepseek.
+    # Older configs used text. Accept both so warm-check keeps working across
+    # config generations.
     lines = content.splitlines()
-    in_text_block = False
+    in_target_block = False
+    target_indent: int | None = None
     for line in lines:
-        if "model_name: text" in line and "text-" not in line:
-            in_text_block = True
-        elif in_text_block and "model:" in line and "model_name" not in line:
-            # Extract model value
-            model = line.split("model:")[-1].strip()
+        stripped = line.strip()
+        if stripped.startswith("- model_name:"):
+            model_name = stripped.split(":", 1)[1].strip()
+            in_target_block = model_name in DEFAULT_TEXT_MODEL_NAMES
+            target_indent = _line_indent(line) if in_target_block else None
+            continue
+        if not in_target_block:
+            continue
+        if target_indent is not None and stripped.startswith("- ") and _line_indent(line) <= target_indent:
+            in_target_block = False
+            target_indent = None
+            continue
+        if stripped.startswith("model:") and "model_name:" not in stripped:
+            model = stripped.split(":", 1)[1].strip()
             return model
-        elif in_text_block and "model_name:" in line:
-            break  # Next block
     return None
 
 

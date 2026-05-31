@@ -61,6 +61,9 @@ def _synthesise(
     gemini_url: str = "",
     kimi_tab_id: str = "",
     kimi_url: str = "",
+    cursor_browser_view_id: str = "",
+    cursor_browser_url: str = "",
+    cursor_browser_project: str = "",
     run_state: object | None = None,
 ) -> None:
     """Build the answer string and print output."""
@@ -154,6 +157,9 @@ def _synthesise(
             gemini_url=gemini_url,
             kimi_tab_id=kimi_tab_id,
             kimi_url=kimi_url,
+            cursor_browser_view_id=cursor_browser_view_id,
+            cursor_browser_url=cursor_browser_url,
+            cursor_browser_project=cursor_browser_project,
             run_state=run_state,
         )
 

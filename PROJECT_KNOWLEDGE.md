@@ -1,6 +1,6 @@
 # Project Knowledge: agent-skills
 
-**Last updated:** 2026-05-12 10:20 by agent
+**Last updated:** 2026-05-30 21:19 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -30,6 +30,7 @@
 - 2026-05-10: review-prompt and review-design now include explicit WebGPT integration. review-prompt can run a fail-closed WebGPT final gate through surf with controlled-tab metadata after deterministic validators and optional ask gates. review-design can build a WebGPT upload package and optionally submit text through surf, but text-only submission is marked as design-contract critique and must not be treated as screenshot-based visual proof without upload evidence.
 - 2026-05-10: /surf WebGPT round trips work now because completion is a tab-bound protocol, not page scraping. The valid path is webgpt.submit/webgpt.sanity with assistant-DOM-only extraction, a generated terminal sentinel, stable-poll completion, controlled_tab_id proof, same-tab screenshot proof, and clean-output stripping of only the terminal sentinel. Whole-page text, spinner/button state, visual stillness, random ChatGPT tab discovery, and generic CDP screenshots of chatgpt.com are diagnostic only and must not make a run green. Explicit --tab-id is the safest operator handoff; --url only resolves an already-open matching tab and fails closed otherwise.
 - 2026-05-12 /surf WebGPT false-hang root cause: ChatGPT completed on the controlled tab, but the assistant DOM rendered the terminal sentinel ending as >> instead of the exact >>> string, so exact assistant-DOM matching missed visible completion and webgpt.submit could remain alive before writing raw/clean/meta artifacts. Fix: assistant-DOM snapshot polling is bounded, sentinel matching normalizes this narrow rendered-marker variant, webgpt-submit.sh has a hard timeout/failure metadata path, and surf webgpt.extract can recover assistant-only text from an already completed controlled tab. Verified recovery for tab 837343543 and sentinel <<<WEBGPT_DONE:20260512T132258Z:fa18b118>>> wrote /tmp/sparta-webgpt-v2-recovered-response.md, .raw.md, and .meta.json with controlled_tab_id=837343543, raw_contains_sentinel=true, clean_contains_sentinel=false.
+- 2026-05-30 /ask control-plane competitiveness tranche added deterministic route decisions, lane health, fail-closed unavailable-lane handling, oracle adapter response normalization, artifact manifests, WebGPT path-token validation, and evidence docs. A debugger-backed follow-up fixed /scillm warm-check config parsing for the current chutes-deepseek profile, restoring /ask oc-kimi live scillm oracle smoke evidence.
 
 ## Recent Decisions
 
@@ -46,6 +47,7 @@
 | 2026-05-08 | Clean main push for pipeline reliability tranche | Commit 4d91538f was rebuilt from origin/main with only pipeline files after GitHub push protection blocked older local backlog commits containing token-like artifacts. Future pushes should prefer clean origin/main branches for pipeline tranches instead of merging broad local backlog. |
 | 2026-05-10 | Make WebGPT sentinel waiting a surf parameterized protocol | Manual sentinel instructions are brittle; surf should own sentinel generation, prompt injection, stability polling, raw/clean response artifacts, and metadata proof through webgpt.submit. A WebGPT handoff is not green until it records the controlled ChatGPT tab id, proves the sentinel in that same tab, extracts assistant-only text, and captures visual proof from that tab; active-tab screenshots are invalid proof. |
 | 2026-05-10 | Make WebGPT handoff success assistant-DOM and controlled-tab only | The prompt contains the sentinel, so whole-page text can false-positive on the user prompt or page chrome. A valid handoff must record the controlled ChatGPT tab id, extract from the last assistant DOM message, strip only a terminal assistant sentinel, and bind screenshot/page-text proof to that same tab. User-supplied or persisted tab id should be preferred over active-tab guessing; KDE desktop targeting is only a fallback/diagnostic unless it can be mapped to a concrete Chrome tab id. |
+| 2026-05-30 | Record /ask route decisions and artifact manifests as control-plane proof | Competitive /ask review requires deterministic local artifacts, not browser review alone; route_decision, artifact_manifest.json, and adapter_response now provide auditable proof surfaces. |
 
 ## Open Questions
 

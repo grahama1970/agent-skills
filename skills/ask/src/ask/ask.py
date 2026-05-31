@@ -48,6 +48,7 @@ from .chain_specs import apply_chain_options
 from .cae_gap_review import DEFAULT_CAE_JUDGE, DEFAULT_CAE_REVIEWERS, run_cae_gap_review
 from .deep_review import build_deep_review_request, infer_deep_review
 from .dry_run_spec import build_ask_dry_run_spec, print_execution_spec
+from .doctor import build_oracle_lane_health, probe_selected_oracle_lane
 from .parallel_review import MAX_REVIEWERS, ParallelReviewError, run_parallel_review, validate_code_runner_allowed_files
 from .ask_oracle import _is_meta_item
 from .ask_persona_profiles import _format_persona_suggestion
@@ -90,6 +91,106 @@ VISIBLE_SUBAGENT_ID_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 def _extract_skill_mentions(text: str) -> list[str]:
     return sorted({dollar or slash for dollar, slash in SKILL_MENTION_RE.findall(text) if dollar or slash})
+
+
+def _lane_health_map() -> dict[str, dict]:
+    return {item["lane"]: item for item in build_oracle_lane_health()}
+
+
+def _build_route_decision(
+    request: dict,
+    lane_health: Optional[dict[str, dict]] = None,
+    *,
+    live_selected_lane: bool = False,
+) -> dict:
+    """Describe the selected ask lane after CLI inference has normalized options."""
+    lane_health = lane_health or _lane_health_map()
+    selected_mode = "memory_ask"
+    reasons: list[str] = ["default_memory_backed_ask"]
+    if request.get("image_generate"):
+        selected_mode = "image_generation"
+        reasons = ["explicit_image_generate"]
+    elif request.get("ask_dag"):
+        selected_mode = "dag_orchestration"
+        reasons = ["ask_dag_present"]
+    elif request.get("deep_review"):
+        selected_mode = "deep_review"
+        reasons = ["deep_review_requested_or_inferred"]
+    elif request.get("cae_gap_review"):
+        selected_mode = "cae_gap_review"
+        reasons = ["cae_gap_review_requested_or_inferred"]
+    elif request.get("argue"):
+        selected_mode = "argue"
+        reasons = ["argue_requested_or_inferred"]
+    elif request.get("parallel_review"):
+        selected_mode = "parallel_review"
+        reasons = ["parallel_review_requested_or_inferred"]
+    elif request.get("roundtable"):
+        selected_mode = "roundtable"
+        reasons = ["roundtable_requested_or_inferred"]
+    elif request.get("oracle"):
+        selected_mode = "oracle"
+        reasons = ["oracle_requested_or_inferred"]
+
+    oracle_backend = str(request.get("oracle_backend") or DEFAULT_ORACLE_BACKEND)
+    selected_backend = (
+        str(request.get("image_model") or "")
+        if selected_mode == "image_generation"
+        else oracle_backend if request.get("oracle") else "memory"
+    )
+    evidence_policy = "runtime_artifacts"
+    if selected_mode in {"deep_review", "parallel_review", "cae_gap_review", "argue"}:
+        evidence_policy = "runtime_artifacts_and_verifier"
+    elif selected_backend in {"webgpt", "webgemini", "webkimi", "webperplexity", "cursor-browser"}:
+        evidence_policy = "browser_sentinel_and_runtime_artifacts"
+    elif selected_backend == "scillm":
+        evidence_policy = "scillm_response_and_runtime_artifacts"
+
+    alternatives: list[dict] = []
+    if selected_mode != "image_generation":
+        alternatives.append({
+            "lane": "memory_ask",
+            "status": "available",
+            "reason": "local_memory_retrieval_path",
+        })
+    if request.get("oracle"):
+        for backend in sorted(ORACLE_BACKENDS):
+            health = lane_health.get(backend, {})
+            health_state = str(health.get("state") or "available")
+            alternatives.append({
+                "lane": f"oracle:{backend}",
+                "status": "selected" if backend == oracle_backend else health_state,
+                "reason": "explicit_or_inferred_oracle_backend" if backend == oracle_backend else str(health.get("detail") or "configured_oracle_backend"),
+            })
+    if live_selected_lane and request.get("oracle") and selected_backend != "auto":
+        selected_health = probe_selected_oracle_lane(selected_backend)
+        lane_health[selected_backend] = selected_health
+    else:
+        selected_health = lane_health.get(selected_backend, {}) if request.get("oracle") else {}
+    unavailable_lane_reasons: list[dict] = []
+    if request.get("oracle") and selected_backend != "auto":
+        selected_state = str(selected_health.get("state") or "available")
+        if selected_state != "available":
+            unavailable_lane_reasons.append({
+                "lane": selected_backend,
+                "state": selected_state,
+                "detail": str(selected_health.get("detail") or "selected lane is not available"),
+                "safe_default": str(selected_health.get("safe_default") or "do_not_route_to_lane"),
+            })
+
+    return {
+        "schema_version": "ask.route_decision.v1",
+        "selected_mode": selected_mode,
+        "selected_backend": selected_backend,
+        "oracle_backend": oracle_backend if request.get("oracle") else None,
+        "oracle_model": request.get("oracle_model"),
+        "reasons": reasons,
+        "alternatives_considered": alternatives,
+        "required_evidence_policy": evidence_policy,
+        "fail_closed": selected_mode in {"deep_review", "parallel_review", "cae_gap_review", "argue"}
+        or selected_backend in {"webgpt", "webgemini", "webkimi", "webperplexity", "cursor-browser"},
+        "unavailable_lane_reasons": unavailable_lane_reasons,
+    }
 
 
 
@@ -169,6 +270,9 @@ def ask(
     gemini_url: str = "",
     kimi_tab_id: str = "",
     kimi_url: str = "",
+    cursor_browser_view_id: str = "",
+    cursor_browser_url: str = "",
+    cursor_browser_project: str = "",
     visible_subagent: Optional[dict] = None,
     mentioned_skills: Optional[list[str]] = None,
     ask_dag: Optional[dict] = None,
@@ -280,6 +384,30 @@ def ask(
             attention_payload = run_state.needs_attention(**attention_payload)
         result["needs_attention"] = attention_payload
         return result
+
+    if parallel_review and not deep_review:
+        if not review_target:
+            attention = {
+                "reason": "missing_parallel_review_target",
+                "question": "Parallel review requires an explicit --review-target such as git:diff or a path list.",
+                "safe_default": "do_not_run_review",
+                "resume_hint": "Run again with --review-target <git:diff|paths|artifact>.",
+            }
+            if run_state:
+                attention = run_state.needs_attention(**attention)
+            result["needs_attention"] = attention
+            return result
+        if (apply_fixes or (implement_with and implement_with != "scillm-agent")) and not any(command.strip() for command in (code_runner_dod_commands or [])):
+            attention = {
+                "reason": "missing_code_runner_dod",
+                "question": "Explicit code-runner implementation intent requires at least one --code-runner-dod-command.",
+                "safe_default": "do_not_invoke_code_runner",
+                "resume_hint": "Run again with --code-runner-dod-command <safe validation command>.",
+            }
+            if run_state:
+                attention = run_state.needs_attention(**attention)
+            result["needs_attention"] = attention
+            return result
 
     if ask_dag:
         if not run_state:
@@ -405,28 +533,6 @@ def ask(
             return result
 
     if parallel_review and not deep_review:
-        if not review_target:
-            attention = {
-                "reason": "missing_parallel_review_target",
-                "question": "Parallel review requires an explicit --review-target such as git:diff or a path list.",
-                "safe_default": "do_not_run_review",
-                "resume_hint": "Run again with --review-target <git:diff|paths|artifact>.",
-            }
-            if run_state:
-                attention = run_state.needs_attention(**attention)
-            result["needs_attention"] = attention
-            return result
-        if (apply_fixes or (implement_with and implement_with != "scillm-agent")) and not any(command.strip() for command in (code_runner_dod_commands or [])):
-            attention = {
-                "reason": "missing_code_runner_dod",
-                "question": "Explicit code-runner implementation intent requires at least one --code-runner-dod-command.",
-                "safe_default": "do_not_invoke_code_runner",
-                "resume_hint": "Run again with --code-runner-dod-command <safe validation command>.",
-            }
-            if run_state:
-                attention = run_state.needs_attention(**attention)
-            result["needs_attention"] = attention
-            return result
         parallel_result = run_parallel_review(
             question=question,
             target=review_target,
@@ -2116,7 +2222,7 @@ def main(
     mentioned_skills = _extract_skill_mentions(original_utterance)
     should_draft_dag = (
         orchestrate or (not ask_dag and should_orchestrate_from_text(original_utterance))
-    ) and not visible_subagent_route and not explicit_webgpt_oracle
+    ) and not visible_subagent_route and not explicit_webgpt_oracle and not parallel_review
     if should_draft_dag and not ask_dag:
         try:
             ask_dag = draft_ask_dag_from_question(
@@ -2219,6 +2325,8 @@ def main(
         request_payload["missing_persona_clarification"] = missing_persona_attention
     if dag_orchestration_attention:
         request_payload["dag_orchestration_clarification"] = dag_orchestration_attention
+    route_decision = _build_route_decision(request_payload, live_selected_lane=not dry_run)
+    request_payload["route_decision"] = route_decision
     if dry_run:
         print_execution_spec(build_ask_dry_run_spec(request_payload), as_json=as_json)
         raise typer.Exit(code=0)
@@ -2248,6 +2356,42 @@ def main(
         typer.echo(f"Warning: Runtime artifacts disabled: {exc}", err=True)
         run_state = NoopRunState(run_id, reason=str(exc))
     run_state.event("ask_started")
+    run_state.event("route_decision", route_decision=route_decision)
+    run_state.update("running", route_decision=route_decision)
+    if route_decision.get("unavailable_lane_reasons"):
+        first_reason = route_decision["unavailable_lane_reasons"][0]
+        attention = run_state.needs_attention(
+            reason="selected_oracle_lane_unavailable",
+            question=f"Selected oracle lane is not available: {first_reason.get('lane')}",
+            safe_default=str(first_reason.get("safe_default") or "do_not_route_to_lane"),
+            resume_hint="Run ./run.sh doctor --json, fix the selected lane, or choose a different --oracle-backend.",
+            route_decision=route_decision,
+            unavailable_lane_reasons=route_decision["unavailable_lane_reasons"],
+        )
+        result = {
+            "question": question,
+            "scope": scope,
+            "items": [],
+            "bridges_found": [],
+            "answer": "",
+            "auto_learned": False,
+            "hybrid_mode": hybrid,
+            "needs_attention": attention,
+            "ask_id": run_state.ask_id,
+            "runtime_artifacts": run_state.artifacts,
+            "route_decision": route_decision,
+        }
+        run_state.finish(result, state="needs_attention")
+        if as_json:
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            print("\n-- /ask needs attention --")
+            print(f"   Reason: {attention.get('reason', 'unknown')}")
+            print(f"   Question: {attention.get('question', '')}")
+            if attention.get("resume_hint"):
+                print(f"   Resume: {attention['resume_hint']}")
+            print()
+        raise typer.Exit(code=2)
     if visible_subagent_route:
         run_state.event(
             "visible_subagent_route",

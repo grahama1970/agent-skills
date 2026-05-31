@@ -1,0 +1,58 @@
+import importlib.util
+import tempfile
+import unittest
+from pathlib import Path
+
+
+MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "warm_check.py"
+SPEC = importlib.util.spec_from_file_location("warm_check", MODULE_PATH)
+warm_check = importlib.util.module_from_spec(SPEC)
+assert SPEC and SPEC.loader
+SPEC.loader.exec_module(warm_check)
+
+
+class WarmCheckConfigTests(unittest.TestCase):
+    def test_current_text_model_reads_chutes_deepseek_profile(self) -> None:
+        config = """
+model_list:
+  - model_name: chutes-deepseek
+    scillm_params:
+      model: deepseek-ai/DeepSeek-V3.2-TEE
+      api_base: os.environ/CHUTES_API_BASE
+  - model_name: chutes-kimi
+    scillm_params:
+      model: moonshotai/Kimi-K2.5-TEE
+""".lstrip()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "proxy_server_config.yaml"
+            path.write_text(config, encoding="utf-8")
+            previous = warm_check.PROXY_CONFIG
+            try:
+                warm_check.PROXY_CONFIG = path
+                self.assertEqual(warm_check.get_current_text_model(), "deepseek-ai/DeepSeek-V3.2-TEE")
+            finally:
+                warm_check.PROXY_CONFIG = previous
+
+    def test_current_text_model_keeps_legacy_text_profile(self) -> None:
+        config = """
+model_list:
+  - model_name: text
+    scillm_params:
+      model: deepseek-ai/DeepSeek-V3.1-TEE
+  - model_name: text-kimi
+    scillm_params:
+      model: moonshotai/Kimi-K2.5-TEE
+""".lstrip()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "proxy_server_config.yaml"
+            path.write_text(config, encoding="utf-8")
+            previous = warm_check.PROXY_CONFIG
+            try:
+                warm_check.PROXY_CONFIG = path
+                self.assertEqual(warm_check.get_current_text_model(), "deepseek-ai/DeepSeek-V3.1-TEE")
+            finally:
+                warm_check.PROXY_CONFIG = previous
+
+
+if __name__ == "__main__":
+    unittest.main()

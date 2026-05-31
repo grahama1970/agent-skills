@@ -81,3 +81,12 @@ def test_friendly_error_for_missing_paths() -> None:
     attachments = extract_file_attachments(question)
     with pytest.raises(WebReviewBundleError, match="can't read local file paths"):
         resolve_web_review_delivery(question, attachments, backend="webgemini")
+
+
+def test_skill_slash_mentions_are_not_treated_as_missing_paths(tmp_path: pathlib.Path) -> None:
+    bundle = tmp_path / "review-bundle.md"
+    bundle.write_text("# Review\n\nCompare /ask, /scillm, and /code-runner boundaries.\n", encoding="utf-8")
+    question = f"Review {bundle}. Be harsh about /ask versus /scillm and /code-runner."
+    attachments = extract_file_attachments(question)
+
+    assert resolve_web_review_delivery(question, attachments, backend="webgpt") == ""

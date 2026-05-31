@@ -287,6 +287,7 @@ class AskRunState:
             "request": str(self.request_path),
             "status": str(self.status_path),
             "events": str(self.events_path),
+            "artifact_manifest": str(self.run_dir / "artifact_manifest.json"),
             "run_dir": str(self.run_dir),
         }
 
@@ -365,8 +366,12 @@ class AskRunState:
         }
         if "needs_attention" in current and "needs_attention" not in payload:
             payload["needs_attention"] = current["needs_attention"]
+        for key in ("request", "route_decision"):
+            if key in current and key not in payload:
+                payload[key] = current[key]
         atomic_write_json(self.status_path, payload)
         self._append_index(payload)
+        self._write_artifact_manifest(payload)
 
     def needs_attention(
         self,
@@ -437,6 +442,23 @@ class AskRunState:
                 "runtime_protocol_version": RUNTIME_PROTOCOL_VERSION,
                 "artifacts": self.artifacts,
             }
+
+    def _write_artifact_manifest(self, status_payload: dict[str, Any]) -> None:
+        artifacts = dict(status_payload.get("artifacts") or self.artifacts)
+        manifest = {
+            "schema_version": "ask.artifact_manifest.v1",
+            "ask_id": self.ask_id,
+            "state": status_payload.get("state", self.state),
+            "updated_at": status_payload.get("updated_at", datetime.now(timezone.utc).isoformat()),
+            "request": artifacts.get("request", str(self.request_path)),
+            "status": artifacts.get("status", str(self.status_path)),
+            "events": artifacts.get("events", str(self.events_path)),
+            "route_decision": status_payload.get("route_decision") or (status_payload.get("request") or {}).get("route_decision"),
+            "needs_attention": status_payload.get("needs_attention"),
+            "result_summary": status_payload.get("result_summary"),
+            "artifacts": artifacts,
+        }
+        atomic_write_json(self.run_dir / "artifact_manifest.json", manifest)
 
     def _existing_status_state(self) -> str | None:
         payload = self._existing_status()

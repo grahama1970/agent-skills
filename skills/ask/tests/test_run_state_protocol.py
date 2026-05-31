@@ -5,6 +5,7 @@ import json
 import os
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
@@ -61,16 +62,44 @@ def test_run_state_writes_request_status_and_events(tmp_path):
     assert run.request_path.exists()
     assert run.status_path.exists()
     assert run.events_path.exists()
+    assert (run.run_dir / "artifact_manifest.json").exists()
 
     request = json.loads(run.request_path.read_text())
     status = json.loads(run.status_path.read_text())
+    manifest = json.loads((run.run_dir / "artifact_manifest.json").read_text())
     events = [json.loads(line) for line in run.events_path.read_text().splitlines()]
 
     assert request["runtime_protocol_version"] == "ask.runtime.v1"
     assert status["state"] == "answered"
     assert status["artifacts"]["request"] == str(run.request_path)
+    assert status["artifacts"]["artifact_manifest"] == str(run.run_dir / "artifact_manifest.json")
+    assert manifest["schema_version"] == "ask.artifact_manifest.v1"
+    assert manifest["state"] == "answered"
+    assert manifest["request"] == str(run.request_path)
+    assert manifest["status"] == str(run.status_path)
+    assert manifest["events"] == str(run.events_path)
     assert [event["event"] for event in events] == ["request_written", "custom_event", "finished"]
     assert validate_run_dir(run.run_dir)["ok"]
+
+
+def test_run_state_preserves_route_decision_through_finish(tmp_path):
+    run = AskRunState("route-decision", output_root=tmp_path)
+    route_decision = {
+        "schema_version": "ask.route_decision.v1",
+        "selected_mode": "oracle",
+        "selected_backend": "scillm",
+        "reasons": ["oracle_requested_or_inferred"],
+    }
+    run.write_request({"question": "route?", "scope": "ask", "route_decision": route_decision})
+    run.update("running", route_decision=route_decision)
+    run.finish({"question": "route?", "scope": "ask", "items": [{"solution": "ok"}]})
+
+    status = json.loads(run.status_path.read_text())
+    manifest = json.loads((run.run_dir / "artifact_manifest.json").read_text())
+
+    assert status["request"]["route_decision"] == route_decision
+    assert status["route_decision"] == route_decision
+    assert manifest["route_decision"] == route_decision
 
 
 def test_runtime_tree_schema_validation_reports_invalid_runs(tmp_path):
@@ -262,8 +291,17 @@ def test_cli_ask_writes_runtime_artifacts(monkeypatch, tmp_path):
 
     assert captured["question"] == "what changed?"
     assert request["question"] == "what changed?"
+    assert request["route_decision"]["schema_version"] == "ask.route_decision.v1"
+    assert request["route_decision"]["selected_mode"] == "memory_ask"
+    assert request["route_decision"]["selected_backend"] == "memory"
+    assert status["route_decision"]["selected_mode"] == "memory_ask"
     assert status["state"] == "answered"
-    assert [event["event"] for event in status["event_tail"]] == ["request_written", "ask_started", "finished"]
+    assert [event["event"] for event in status["event_tail"]] == [
+        "request_written",
+        "ask_started",
+        "route_decision",
+        "finished",
+    ]
 
 
 def test_cli_deep_review_missing_target_pauses_with_needs_attention(tmp_path):
@@ -1979,6 +2017,39 @@ def test_doctor_reports_runtime_sections():
     assert any(check["name"] == "artifact_root_writable" for check in result["checks"])
     assert any(check["name"] == "runtime_artifact_schema" for check in result["checks"])
     assert any(check["name"] == "skill:memory" for check in result["checks"])
+    lane_health = {item["lane"]: item for item in result["oracle_lane_health"]}
+    assert {"auto", "scillm", "subagent-runner", "webgpt", "cursor-browser"} <= set(lane_health)
+    assert all(item["state"] in {"available", "needs_attention", "blocked"} for item in lane_health.values())
+    assert lane_health["webgpt"]["safe_default"]
+
+
+def test_doctor_lane_health_marks_failed_live_scillm_needs_attention(monkeypatch):
+    import ask.doctor as doctor_module
+
+    monkeypatch.setattr(doctor_module, "_skill_path", lambda name: Path("/tmp/fake-run.sh"))
+    result = doctor_module.build_oracle_lane_health([
+        {
+            "name": "live:scillm",
+            "ok": False,
+            "detail": "Could not determine current text model from proxy config",
+        }
+    ])
+    lane_health = {item["lane"]: item for item in result}
+
+    assert lane_health["scillm"]["state"] == "needs_attention"
+    assert lane_health["scillm"]["safe_default"] == "do_not_claim_lane_ready"
+
+
+def test_doctor_lane_health_marks_missing_cursor_bridge_needs_attention(monkeypatch):
+    import ask.doctor as doctor_module
+
+    monkeypatch.setattr(doctor_module, "_skill_path", lambda name: Path("/tmp/fake-run.sh"))
+    result = doctor_module.build_oracle_lane_health([])
+    lane_health = {item["lane"]: item for item in result}
+
+    if not Path("/tmp/cursor-browser-bridge-port").exists():
+        assert lane_health["cursor-browser"]["state"] == "needs_attention"
+        assert "cursor-browser-bridge" in lane_health["cursor-browser"]["detail"]
 
 
 def test_list_runs_returns_recent_statuses(tmp_path):

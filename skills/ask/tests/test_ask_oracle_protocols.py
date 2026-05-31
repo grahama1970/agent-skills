@@ -206,6 +206,12 @@ def test_oracle_synthesis_preserves_model_alias_metadata(monkeypatch):
     assert result["answer"] == "READY"
     assert result["oracle"]["model_alias"] == alias_metadata
     assert result["oracle"]["model_served"] == "opencode-go/kimi-k2.6"
+    adapter_response = result["oracle"]["adapter_response"]
+    assert adapter_response["schema_version"] == "ask.oracle_adapter_response.v1"
+    assert adapter_response["backend"] == "scillm"
+    assert adapter_response["model_served"] == "opencode-go/kimi-k2.6"
+    assert adapter_response["status"] == "ok"
+    assert adapter_response["turns_count"] == 1
 
 
 def test_oracle_synthesis_forwards_image_paths_to_direct_scillm(monkeypatch, tmp_path):
@@ -254,6 +260,7 @@ def test_oracle_synthesis_forwards_image_paths_to_direct_scillm(monkeypatch, tmp
     assert result["answer"] == "IMAGE REVIEW"
     assert result["oracle"]["image_paths"] == [str(image_path)]
     assert result["oracle"]["image_count"] == 1
+    assert result["oracle"]["adapter_response"]["schema_version"] == "ask.oracle_adapter_response.v1"
 
 
 def test_subagent_event_socket_receives_structured_events():

@@ -26,6 +26,7 @@ Self-correction:
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -36,6 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from .ask_config import SURF_RUN, KIMI_DEFAULT_TIMEOUT, KIMI_STABLE_POLLS
+from .kimi_capacity import KimiCapacityBusyError, is_kimi_capacity_busy
 
 
 @dataclass(frozen=True)
@@ -342,7 +344,19 @@ def call_kimi(
         except Exception:
             meta = {}
 
-    if proc.returncode != 0 or meta.get("status") not in ("completed", "done"):
+    meta_status = str(meta.get("status") or "")
+    if meta_status == "capacity_busy" or meta.get("failure") == "kimi_capacity_busy":
+        excerpt = response_path.read_text() if response_path.exists() else ""
+        if run_state is not None and hasattr(run_state, "event"):
+            run_state.event(
+                "oracle_kimi_call_failed",
+                **event_payload,
+                error="kimi_capacity_busy",
+                meta_status=meta_status,
+            )
+        raise KimiCapacityBusyError(response_excerpt=excerpt)
+
+    if proc.returncode != 0 or meta_status not in ("completed", "done"):
         if run_state is not None and hasattr(run_state, "event"):
             run_state.event(
                 "oracle_kimi_call_failed",
@@ -381,6 +395,15 @@ def call_kimi(
     response_text = response_path.read_text() if response_path.exists() else ""
     raw_text = raw_path.read_text() if raw_path.exists() else ""
 
+    if is_kimi_capacity_busy(response_text) or is_kimi_capacity_busy(raw_text):
+        if run_state is not None and hasattr(run_state, "event"):
+            run_state.event(
+                "oracle_kimi_call_failed",
+                **event_payload,
+                error="kimi_capacity_busy",
+            )
+        raise KimiCapacityBusyError(response_excerpt=response_text or raw_text)
+
     result = KimiResult(
         response=response_text,
         raw_response=raw_text,
@@ -410,3 +433,37 @@ def call_kimi(
         )
 
     return result
+
+
+def call_kimi_with_capacity_retry(
+    prompt: str,
+    *,
+    max_retries: int | None = None,
+    backoff_seconds: float | None = None,
+    **kwargs: Any,
+) -> KimiResult:
+    """call_kimi with retries when Kimi reports system/capacity busy."""
+    retries = max_retries
+    if retries is None:
+        retries = int(os.environ.get("ASK_KIMI_CAPACITY_RETRIES", "3"))
+    backoff = backoff_seconds
+    if backoff is None:
+        backoff = float(os.environ.get("ASK_KIMI_CAPACITY_BACKOFF_SEC", "45"))
+    last_exc: KimiCapacityBusyError | None = None
+    for attempt in range(retries + 1):
+        try:
+            return call_kimi(prompt, **kwargs)
+        except KimiCapacityBusyError as exc:
+            last_exc = exc
+            if attempt >= retries:
+                raise
+            if kwargs.get("run_state") is not None and hasattr(kwargs["run_state"], "event"):
+                kwargs["run_state"].event(
+                    "oracle_kimi_capacity_retry",
+                    attempt=attempt + 1,
+                    max_retries=retries,
+                    backoff_seconds=backoff * (attempt + 1),
+                )
+            time.sleep(backoff * (attempt + 1))
+    assert last_exc is not None
+    raise last_exc

@@ -1,0 +1,462 @@
+version: 1
+kind: orchestrate-plan
+repo_root: /home/graham/workspace/experiments/agent-skills/skills/ask
+metadata:
+  title: Ask Control Plane Competitiveness
+  created: "2026-05-30"
+  plan_type: code
+  owner: ask
+  primary_persona:
+    name: Project agent using /ask
+    role: Developer/operator choosing an external reasoning, review, oracle, or browser lane with proof artifacts
+    source: /home/graham/workspace/experiments/agent-skills/skills/ask/SKILL.md
+  goal: >
+    Improve /ask from a useful oracle/review front door into a compelling agentic control plane
+    against LangGraph, CrewAI, AutoGen, OpenAI Agents SDK, and custom orchestration consoles.
+    The differentiator is not more worker execution; it is route choice, adapter discipline,
+    evidence ledgers, verifier gates, and live oracle proof that explain why a lane was chosen
+    and what artifacts prove the result.
+  readiness_definition: >
+    Competitive means /ask can show a deterministic route decision, call typed adapters through
+    health-checked lanes, persist traceable request/status/events artifacts, validate review and
+    oracle outputs, and run both fake-transport regression tests and explicit live-lane sanity
+    checks. No lane may appear ready from a missing backend, stale browser tab, or absent artifact.
+execution:
+  max_concurrency: 1
+  wave_barrier: true
+  scheduling_policy: wave_then_dependency
+capability_overlap:
+  - >
+    Existing /ask already owns memory-backed questions, oracle, roundtable, argue, parallel-review,
+    deep-review, CAE/QRA review, browser oracles, WebGPT, and /scillm-backed model calls. Extend
+    that control plane instead of creating a separate orchestration skill.
+  - >
+    Existing /orchestrate and /code-runner own implementation execution. This plan keeps /ask as
+    the selector, composer, verifier, and artifact writer rather than turning it into a worker pool.
+  - >
+    Existing /scillm owns provider routing for direct model calls. /ask should consume /scillm
+    through typed adapter contracts and surface model capability/failure information in its own
+    request ledger.
+  - >
+    Existing /surf browser lanes, including WebGPT and Cursor Browser, are differentiators only
+    when /ask proves the selected tab/view/project, request payload, returned artifacts, and
+    failure mode. Browser-lane status must fail closed when that proof is absent.
+questions_blockers:
+  - None
+known_runtime_gates:
+  - >
+    Live browser-lane validation requires authenticated local browser bridges and active tabs.
+    Deterministic fake-transport tests can be implemented first; live readiness remains blocked
+    until each lane produces a real request/status/events artifact bundle.
+  - >
+    Competitor analysis in this plan is based on the supplied critique and known public product
+    categories. Before release positioning is published, refresh external comparisons with a
+    bounded research pass and cite dated sources.
+lanes:
+  - id: "0"
+    title: Baseline and competitive contract
+  - id: "1"
+    title: Route kernel and adapter contracts
+  - id: "2"
+    title: Health, tracing, and deterministic tests
+  - id: "3"
+    title: Verifier gates and live proof
+  - id: "4"
+    title: Documentation and release evidence
+tasks:
+  - id: T01
+    title: Capture critique-derived capability matrix
+    lane: "0"
+    runner: local
+    backend: ""
+    mode: ""
+    depends_on: []
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      ./run.sh doctor --json &&
+      ./run.sh config doctor --profile release --json || true
+    implementation:
+      - "CREATE docs/competitiveness/control-plane-matrix.md."
+      - "Compare /ask against LangGraph, CrewAI, AutoGen, OpenAI Agents SDK, and custom control planes by capability, not marketing claims."
+      - "Classify each capability as present, partial, missing, or not-in-scope."
+      - "Include the concrete /ask artifact or source file that proves every present/partial claim."
+    tests:
+      - "cd /home/graham/workspace/experiments/agent-skills/skills/ask && ./run.sh doctor --json"
+    definition_of_done:
+      command: >
+        test -s /home/graham/workspace/experiments/agent-skills/skills/ask/docs/competitiveness/control-plane-matrix.md
+      assertion: >
+        Matrix exists and every competitive claim links to source, tests, or explicitly marked missing work.
+
+  - id: T02
+    title: Add route decision artifact contract
+    lane: "1"
+    runner: local
+    backend: ""
+    mode: ""
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_ask_cli_protocols.py tests/test_run_state_protocol.py
+    depends_on:
+      - T01
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/ask.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/ask_config.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/run_state.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/docs
+    prompt: >
+      Add a stable route_decision artifact to every /ask run path that chooses a lane. It must
+      record requested mode, inferred mode, selected backend, alternatives considered, required
+      freshness/evidence policy, unavailable lane reasons, and the final fail-open/fail-closed
+      decision. Persist it in request.json or route_decision.json and expose it in status JSON.
+      Keep the model worker boundary outside /ask.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_ask_cli_protocols.py tests/test_run_state_protocol.py
+      assertion: >
+        Tests prove at least ordinary ask, oracle, deep-review, and explicit browser-oracle paths
+        write a route decision with selected lane and unavailable-lane reasons.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_ask_cli_protocols.py tests/test_run_state_protocol.py
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh ask "route decision smoke" --dry-run --json
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh oracle "route decision smoke" --dry-run --json
+
+  - id: T03
+    title: Normalize oracle adapter request and response contracts
+    lane: "1"
+    runner: local
+    backend: ""
+    mode: ""
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_cursor_browser_aliases.py tests/test_webgpt_explicit_orchestration.py tests/test_ask_cli_protocols.py
+    depends_on:
+      - T02
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/ask_oracle.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/cursor_browser_runtime.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/webgpt_runtime.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/scillm_runtime.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/docs
+    prompt: >
+      Introduce typed adapter request/response structures for oracle and browser lanes. Normalize
+      answer text, citations, artifact paths, raw response metadata, backend identity, latency,
+      and failure taxonomy. Cover WebGPT, Cursor Browser, scillm, and existing browser aliases
+      without changing their external CLI flags.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_cursor_browser_aliases.py tests/test_webgpt_explicit_orchestration.py tests/test_ask_cli_protocols.py
+      assertion: >
+        Tests prove all existing oracle aliases still work and normalized adapter responses expose
+        backend, artifacts, citations, status, and typed error codes.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_cursor_browser_aliases.py tests/test_webgpt_explicit_orchestration.py tests/test_ask_cli_protocols.py
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_cursor_browser_aliases.py
+
+  - id: T04
+    title: Add lane health probes and fail-closed doctor output
+    lane: "2"
+    runner: local
+    backend: ""
+    mode: ""
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_config_doctor.py &&
+      ./run.sh config doctor --profile release --json | python -m json.tool >/tmp/ask-release-doctor.json
+    depends_on:
+      - T03
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/doctor.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/ask_config.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_config_doctor.py
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/docs
+    prompt: >
+      Extend ask doctor/config doctor with lane-level health for memory, scillm, WebGPT,
+      Cursor Browser, browser aliases, artifact root, and review verifier prerequisites. Health
+      states must be available, needs_attention, unavailable, or blocked. Missing auth, missing
+      bridge, unresolved tab/view/project, and unknown capability must never serialize as ready.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_config_doctor.py &&
+        ./run.sh config doctor --profile release --json | python -m json.tool >/tmp/ask-release-doctor.json
+      assertion: >
+        Doctor JSON includes every lane, its source probe, state, reason, and next action. Unknown
+        or missing backend state is represented as needs_attention or blocked, not ready.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_config_doctor.py
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh config doctor --profile release --json
+
+  - id: T05
+    title: Add deterministic fake-transport adapter regression matrix
+    lane: "2"
+    runner: local
+    backend: ""
+    mode: ""
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_oracle_adapter_matrix.py
+    depends_on:
+      - T03
+      - T04
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+    prompt: >
+      Add a fake-transport test matrix for each oracle adapter so regressions are caught without
+      live browser or provider credentials. Cover success, timeout, auth missing, malformed
+      response, missing citations, missing artifact, and transport unavailable cases.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_oracle_adapter_matrix.py
+      assertion: >
+        The adapter matrix proves every lane normalizes success and failure into the same response
+        contract and fails closed for missing evidence artifacts.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_oracle_adapter_matrix.py
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_oracle_adapter_matrix.py
+
+  - id: T06
+    title: Enrich request status events and artifact manifest tracing
+    lane: "2"
+    runner: local
+    backend: ""
+    mode: ""
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_run_state_protocol.py
+    depends_on:
+      - T02
+      - T05
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/run_state.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask/ask.py
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests/test_run_state_protocol.py
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/docs
+    prompt: >
+      Upgrade run artifacts so request.json, status.json, events.jsonl, and artifact_manifest.json
+      answer the operator questions: what did /ask choose, why, what did it call, what came back,
+      what verifier accepted/rejected it, and where are the proof files. Keep event payloads
+      structured and avoid storing secrets.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_run_state_protocol.py
+      assertion: >
+        Tests prove structured events and artifact_manifest entries exist for route decision,
+        adapter invocation, adapter result, verifier result, and final status.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_run_state_protocol.py
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./run.sh status --runs --json
+
+  - id: T07
+    title: Harden evidence and verifier gates for oracle and review outputs
+    lane: "3"
+    runner: local
+    backend: ""
+    mode: ""
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_run_state_protocol.py tests/test_deep_review_outputs.py tests/test_oracle_adapter_matrix.py
+    depends_on:
+      - T05
+      - T06
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/SKILL.md
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/docs
+    prompt: >
+      Strengthen verifier behavior so oracle/review outputs cannot claim grounded, complete, or
+      ready status without required citations/artifacts/schema fields. Deep-review JSON, review.md,
+      review.json, browser oracle outputs, and route decisions must share a small verifier result
+      vocabulary and explicit rejection reasons.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_run_state_protocol.py tests/test_deep_review_outputs.py tests/test_oracle_adapter_matrix.py
+      assertion: >
+        Tests prove missing citations, malformed review JSON, missing artifact manifest entries,
+        and unsupported readiness claims are rejected with structured verifier reasons.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q tests/test_run_state_protocol.py tests/test_deep_review_outputs.py tests/test_oracle_adapter_matrix.py
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity.sh
+
+  - id: T08
+    title: Add explicit live-lane sanity scripts and evidence bundle
+    lane: "3"
+    runner: local
+    backend: ""
+    mode: ""
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      ./sanity-e2e.sh --plan-only --profile release &&
+      ./run.sh config doctor --profile release --json | python -m json.tool >/tmp/ask-live-lanes.json
+    depends_on:
+      - T04
+      - T07
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/sanity-e2e.sh
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/scripts
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/sanity-e2e.sh
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/scripts
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/src/ask
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/tests
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/docs
+    prompt: >
+      Add live-lane sanity commands for WebGPT, Cursor Browser, scillm, and memory-backed ask.
+      Each command must either produce a copyable evidence bundle with request/status/events,
+      route decision, adapter result, and verifier result, or fail with a blocked reason that
+      names the missing auth, tab, bridge, service, or credential. Include a plan-only mode.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity-e2e.sh --plan-only --profile release &&
+        ./run.sh config doctor --profile release --json | python -m json.tool >/tmp/ask-live-lanes.json
+      assertion: >
+        Plan-only live sanity enumerates all live lanes and required proof artifacts. Real live
+        runs are not claimed ready unless the evidence bundle exists and the verifier accepts it.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity-e2e.sh --plan-only --profile release
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        ./sanity-e2e.sh --plan-only --profile release
+
+  - id: T09
+    title: Slim public contract and documentation around control-plane positioning
+    lane: "4"
+    runner: local
+    backend: ""
+    mode: ""
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      rg -n "route_decision|needs_attention|control plane|artifact_manifest|Cursor Browser|WebGPT" SKILL.md README.md docs
+    depends_on:
+      - T02
+      - T04
+      - T08
+    read_context:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/SKILL.md
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/README.md
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/docs
+    allowlist:
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/SKILL.md
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/README.md
+      - /home/graham/workspace/experiments/agent-skills/skills/ask/docs
+    prompt: >
+      Update /ask documentation to position it as a routing, review, oracle, and evidence control
+      plane. Document what /ask does, what /scillm and /orchestrate own, how route decisions are
+      inspected, how live browser lanes prove readiness, and what blocked/needs_attention means.
+      Do not oversell unverified live lanes.
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        rg -n "route_decision|needs_attention|control plane|artifact_manifest|Cursor Browser|WebGPT" SKILL.md README.md docs
+      assertion: >
+        Docs explain the competitive positioning and evidence contract with no fake-ready wording
+        for live lanes.
+    tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        rg -n "route_decision|needs_attention|control plane|artifact_manifest|Cursor Browser|WebGPT" SKILL.md README.md docs
+    blind_tests:
+      - >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        rg -n "control plane|route_decision|artifact_manifest" SKILL.md README.md docs
+
+  - id: T10
+    title: Assemble competitive release evidence bundle
+    lane: "4"
+    runner: local
+    backend: ""
+    mode: ""
+    depends_on:
+      - T06
+      - T07
+      - T08
+      - T09
+    command: >
+      cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+      PYTHONPATH=src uv run --project . --group dev python -m pytest -q &&
+      ./sanity.sh &&
+      ./sanity-e2e.sh --plan-only --profile release &&
+      ./run.sh config doctor --profile release --json | python -m json.tool
+    implementation:
+      - "CREATE docs/competitiveness/release-evidence.md."
+      - "List every deterministic command, output artifact, live-lane blocked reason, and proof bundle path."
+      - "Include an explicit residual-risk section for any lane not exercised live."
+    tests:
+      - "cd /home/graham/workspace/experiments/agent-skills/skills/ask && PYTHONPATH=src uv run --project . --group dev python -m pytest -q"
+      - "cd /home/graham/workspace/experiments/agent-skills/skills/ask && ./sanity.sh"
+      - "cd /home/graham/workspace/experiments/agent-skills/skills/ask && ./sanity-e2e.sh --plan-only --profile release"
+    definition_of_done:
+      command: >
+        cd /home/graham/workspace/experiments/agent-skills/skills/ask &&
+        test -s docs/competitiveness/release-evidence.md &&
+        PYTHONPATH=src uv run --project . --group dev python -m pytest -q &&
+        ./sanity.sh &&
+        ./sanity-e2e.sh --plan-only --profile release
+      assertion: >
+        Evidence document exists and deterministic local checks pass. Live lanes are only marked
+        ready when their evidence bundle paths and verifier results are present; otherwise they
+        remain blocked or needs_attention.

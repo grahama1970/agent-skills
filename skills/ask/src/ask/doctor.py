@@ -16,6 +16,7 @@ from typing import Any
 
 import typer
 
+from .ask_config import ORACLE_BACKENDS, SCILLM_BASE_URL, SURF_RUN
 from .chain_specs import load_chain_specs, validate_chain_spec
 from .reviewer_specs import load_reviewer_specs
 from .run_state import default_run_root
@@ -57,6 +58,109 @@ def _run_live_check(name: str, command: list[str], timeout: int = 10, severity: 
     if result.stderr:
         detail += f" stderr={result.stderr.strip()[:160]}"
     return _check(name, result.returncode == 0, detail, severity=severity)
+
+
+def _lane_state(
+    name: str,
+    *,
+    required_path: Path | None = None,
+    required_url: str = "",
+    detail: str = "",
+) -> dict[str, Any]:
+    if required_path is not None and not required_path.exists():
+        return {
+            "lane": name,
+            "state": "needs_attention",
+            "detail": f"missing runtime: {required_path}",
+            "safe_default": "do_not_route_to_lane",
+        }
+    if required_url and not required_url.startswith(("http://", "https://")):
+        return {
+            "lane": name,
+            "state": "needs_attention",
+            "detail": f"invalid url: {required_url}",
+            "safe_default": "do_not_route_to_lane",
+        }
+    return {
+        "lane": name,
+        "state": "available",
+        "detail": detail or "static prerequisites present; live readiness not asserted",
+        "safe_default": "requires_live_artifact_before_readiness_claim",
+    }
+
+
+def build_oracle_lane_health(checks: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    surf_path = Path(SURF_RUN)
+    scillm_skill = _skill_path("scillm")
+    subagent_runner = _skill_path("subagent-runner")
+    checks_by_name = {str(check.get("name")): check for check in (checks or [])}
+    health: list[dict[str, Any]] = []
+    for backend in sorted(ORACLE_BACKENDS):
+        if backend == "auto":
+            health.append({
+                "lane": "auto",
+                "state": "available",
+                "detail": "router lane; delegates to configured oracle backend policy",
+                "safe_default": "inspect_route_decision",
+            })
+        elif backend == "scillm":
+            live_scillm = checks_by_name.get("live:scillm")
+            if live_scillm and not live_scillm.get("ok"):
+                health.append({
+                    "lane": "scillm",
+                    "state": "needs_attention",
+                    "detail": str(live_scillm.get("detail") or "live scillm probe failed"),
+                    "safe_default": "do_not_claim_lane_ready",
+                })
+            else:
+                health.append(_lane_state("scillm", required_path=scillm_skill, required_url=SCILLM_BASE_URL))
+        elif backend == "subagent-runner":
+            health.append(_lane_state("subagent-runner", required_path=subagent_runner))
+        elif backend == "cursor-browser":
+            bridge_port = Path("/tmp/cursor-browser-bridge-port")
+            if not bridge_port.exists():
+                health.append({
+                    "lane": "cursor-browser",
+                    "state": "needs_attention",
+                    "detail": "cursor-browser-bridge is not running; /tmp/cursor-browser-bridge-port is missing",
+                    "safe_default": "do_not_route_to_lane",
+                })
+            else:
+                health.append(_lane_state(backend, required_path=surf_path))
+        elif backend in {"webgpt", "webgemini", "webkimi", "webperplexity"}:
+            health.append(_lane_state(backend, required_path=surf_path))
+        else:
+            health.append({
+                "lane": backend,
+                "state": "blocked",
+                "detail": "unknown oracle backend",
+                "safe_default": "do_not_route_to_lane",
+            })
+    return health
+
+
+def probe_selected_oracle_lane(backend: str) -> dict[str, Any]:
+    """Run the cheapest selected-lane proof before an expensive oracle call."""
+    backend = str(backend or "auto")
+    if backend == "scillm":
+        scillm = _skill_path("scillm")
+        check = _run_live_check("live:scillm", [str(scillm), "warm-check", "--json"] if scillm else [], timeout=15)
+        return {
+            "lane": "scillm",
+            "state": "available" if check.get("ok") else "needs_attention",
+            "detail": str(check.get("detail") or ""),
+            "safe_default": "requires_live_artifact_before_readiness_claim" if check.get("ok") else "do_not_claim_lane_ready",
+        }
+    if backend == "cursor-browser":
+        return next(item for item in build_oracle_lane_health([]) if item["lane"] == "cursor-browser")
+    if backend in {"webgpt", "webgemini", "webkimi", "webperplexity", "subagent-runner", "auto"}:
+        return next(item for item in build_oracle_lane_health([]) if item["lane"] == backend)
+    return {
+        "lane": backend,
+        "state": "blocked",
+        "detail": "unknown oracle backend",
+        "safe_default": "do_not_route_to_lane",
+    }
 
 
 def run_doctor(live: bool = False) -> dict[str, Any]:
@@ -135,6 +239,7 @@ def run_doctor(live: bool = False) -> dict[str, Any]:
         if runner:
             checks.append(_run_live_check("live:subagent-runner", [str(runner), "--help"], timeout=10))
 
+    lane_health = build_oracle_lane_health(checks)
     error_count = sum(1 for check in checks if not check["ok"] and check["severity"] == "error")
     warning_count = sum(1 for check in checks if not check["ok"] and check["severity"] == "warning")
     return {
@@ -144,6 +249,7 @@ def run_doctor(live: bool = False) -> dict[str, Any]:
         "skill_root": str(SKILL_ROOT),
         "run_root": str(run_root),
         "runtime_schema": schema_result,
+        "oracle_lane_health": lane_health,
         "checks": checks,
     }
 

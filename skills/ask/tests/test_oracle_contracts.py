@@ -1,0 +1,58 @@
+"""Oracle adapter contract normalization tests."""
+
+from ask.oracle_contracts import normalize_oracle_failure, normalize_oracle_turns
+
+
+def test_normalize_browser_turns_records_artifacts_and_sentinel_policy():
+    response = normalize_oracle_turns(
+        backend="webgpt",
+        model_served="webgpt:123",
+        turns=[
+            {
+                "iteration": 1,
+                "backend": "webgpt",
+                "controlled_tab_id": "123",
+                "took_ms": 42,
+                "content": "answer",
+                "artifact_dir": "/tmp/ask-webgpt",
+                "raw_contains_sentinel": True,
+                "focus_changed": False,
+            }
+        ],
+    )
+
+    assert response["schema_version"] == "ask.oracle_adapter_response.v1"
+    assert response["backend"] == "webgpt"
+    assert response["status"] == "ok"
+    assert response["sentinel_required"] is True
+    assert response["artifacts"] == ["/tmp/ask-webgpt"]
+    assert response["turns"][0]["controlled_tab_id"] == "123"
+    assert response["turns"][0]["latency_ms"] == 42
+    assert response["turns"][0]["content_chars"] == 6
+
+
+def test_normalize_scillm_turns_does_not_require_browser_sentinel():
+    response = normalize_oracle_turns(
+        backend="scillm",
+        model_served="gpt-5.5",
+        turns=[{"iteration": 1, "model": "gpt-5.5", "content": "ok"}],
+    )
+
+    assert response["sentinel_required"] is False
+    assert response["turns_count"] == 1
+    assert response["turns"][0]["model"] == "gpt-5.5"
+
+
+def test_normalize_oracle_failure_uses_typed_failure_code():
+    response = normalize_oracle_failure(
+        backend="cursor-browser",
+        model="cursor-browser",
+        error=RuntimeError("bridge missing"),
+        error_code="tab_unavailable",
+    )
+
+    assert response["schema_version"] == "ask.oracle_adapter_response.v1"
+    assert response["status"] == "error"
+    assert response["sentinel_required"] is True
+    assert response["failure"]["code"] == "tab_unavailable"
+    assert "bridge missing" in response["failure"]["message"]

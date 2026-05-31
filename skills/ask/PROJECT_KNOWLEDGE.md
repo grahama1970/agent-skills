@@ -1,6 +1,6 @@
 # Project Knowledge: ask
 
-**Last updated:** 2026-05-30 by agent
+**Last updated:** 2026-05-30 21:19 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -11,6 +11,7 @@
 - **Cursor Browser lane:** `$ask cursor-browser` / `--oracle-backend cursor-browser` drives ChatGPT in Cursor's embedded Browser via `$surf cursor-browser.submit` and **cursor-browser-bridge**. Tab identity is **`viewId`**, not Chrome tab id. Bindings live at `~/.pi/cursor-browser-projects/` (`cursor-browser-project` CLI).
 - Chrome lane (`$ask webgpt`) and Cursor Browser lane are separate namespaces; do not mix tab ids.
 - `README.md` now documents browser oracle backends, review bundle delivery, and `/surf` as a companion skill (aligned with `SKILL.md` WebGPT behavior section).
+- 2026-05-30 control-plane competitiveness tranche: /ask now records route_decision in request/status, probes selected oracle lane health before expensive oracle calls, fail-closes unavailable scillm/cursor-browser lanes with needs_attention, writes artifact_manifest.json for each run, and normalizes oracle adapter responses under ask.oracle_adapter_response.v1. WebGPT review returned NEEDS_CHANGES; the local response implemented the lane-health/fail-closed/artifact-manifest portions and recorded evidence in docs/competitiveness/release-evidence.md.
 
 ## Recent Decisions
 
@@ -24,6 +25,7 @@
 | 2026-05-29 | Human-chat examples for all browser oracles | `docs/HUMAN_CHAT_EXAMPLES.md` + `tests/test_human_chat_examples.py` parity with README bundle rules. |
 | 2026-05-30 | Add `$ask cursor-browser` oracle backend for Cursor IDE | Shell scripts cannot call Cursor MCP directly; bridge exposes Browser to `/ask`/`/surf` with same sentinel artifact contract as WebGPT. |
 | 2026-05-30 | Document cursor-browser in README.md and SKILL.md | Human-facing README and PROJECT_KNOWLEDGE must cover viewId vs Chrome tab id and bridge prerequisite. |
+| 2026-05-30 | Selected oracle lanes must fail closed when unavailable | A compelling /ask control plane must prove why it chose or refused a backend; unavailable selected lanes now stop before transport and emit route/manifest evidence. |
 
 ## Open Questions
 

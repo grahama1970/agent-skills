@@ -149,6 +149,7 @@ _ARCHIVE_EXTENSIONS = (
     ".tar.bz2",
     ".7z",
 )
+_PATH_LIKE_PREFIXES = ("/", "~", "./", "../")
 
 
 def extract_path_tokens(text: str) -> list[str]:
@@ -157,6 +158,10 @@ def extract_path_tokens(text: str) -> list[str]:
     out: list[str] = []
     for match in _PATH_TOKEN_RE.finditer(text):
         token = match.group(1).rstrip(".,;:)>")
+        if token.startswith("/") and "/" not in token[1:]:
+            # Skill shorthand such as /ask, /scillm, or /code-runner is not a
+            # local filesystem path for browser-review attachment validation.
+            continue
         if token not in seen:
             seen.add(token)
             out.append(token)
@@ -269,13 +274,14 @@ def _validate_inlined_web_review_evidence(
 ) -> None:
     """Require concatenated inlined text when not using a zip attach bundle."""
     question_refs = extract_path_tokens(question)
-    referenced: list[str] = []
-    seen: set[str] = set()
-    for source in [question, *(a.get("text", "") for a in attachments if a.get("text"))]:
-        for token in extract_path_tokens(source):
-            if token not in seen:
-                seen.add(token)
-                referenced.append(token)
+    # Only validate paths named in the question. Paths inside inlined review
+    # targets (READMEs, bundles) are document content, not missing attachments.
+    referenced_set = set(question_refs)
+    for att in attachments:
+        if _attachment_has_text(att):
+            for token in extract_path_tokens(str(att.get("text", ""))):
+                referenced_set.add(token)
+    referenced: list[str] = list(referenced_set)
 
     if not referenced:
         return

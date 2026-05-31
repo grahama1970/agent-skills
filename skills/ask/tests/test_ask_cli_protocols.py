@@ -122,6 +122,46 @@ def test_cli_oracle_image_records_request_and_passes_paths(monkeypatch, tmp_path
     assert request["oracle"] is True
     assert request["oracle_image_paths"] == [str(image_path)]
     assert request["oracle_model_alias"]["raw_alias"] == "oc-kimi"
+    assert request["route_decision"]["schema_version"] == "ask.route_decision.v1"
+    assert request["route_decision"]["selected_mode"] == "oracle"
+    assert request["route_decision"]["selected_backend"] == "scillm"
+    assert request["route_decision"]["oracle_model"] == "opencode-go/kimi-k2.6"
+
+
+def test_cli_blocks_selected_unavailable_oracle_lane(monkeypatch, tmp_path):
+    ask_module = _load_ask_module()
+
+    monkeypatch.setattr(
+        ask_module,
+        "probe_selected_oracle_lane",
+        lambda backend: {
+            "lane": str(backend),
+            "state": "needs_attention",
+            "detail": "cursor-browser-bridge is not running",
+            "safe_default": "do_not_route_to_lane",
+        },
+    )
+    monkeypatch.setattr(ask_module, "ask", lambda **_kwargs: (_ for _ in ()).throw(AssertionError("ask should not run")))
+
+    result = CliRunner().invoke(
+        ask_module.app,
+        [
+            "cursor-browser",
+            "review",
+            "this",
+            "--ask-id",
+            "blocked-cursor-lane",
+            "--run-output-root",
+            str(tmp_path),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 2, result.output
+    payload = json.loads(result.stdout)
+    assert payload["needs_attention"]["reason"] == "selected_oracle_lane_unavailable"
+    assert payload["route_decision"]["selected_backend"] == "cursor-browser"
+    assert payload["route_decision"]["unavailable_lane_reasons"][0]["state"] == "needs_attention"
 
 
 def test_cli_natural_roundtable_maps_to_protocol(monkeypatch):
