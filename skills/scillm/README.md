@@ -1,18 +1,25 @@
-<p align="center">
-  <img src="assets/scillm-header.webp" alt="scillm local multi-provider LLM proxy console" width="100%" />
-</p>
+# scillm skill
 
-<h3 align="center">One proxy. Any provider. Zero glue code.</h3>
+Agent entry: **SKILL.md** (workflow map, surface picker).
 
----
+Humans onboarding to the proxy: **[../../README.md](../../README.md)**.
 
-# scillm
+## references/
 
-`$scillm` is the universal LLM proxy skill for local calls through
-`localhost:4001`. It routes Claude, Codex, Gemini, Chutes, DeepSeek, GLM,
-OpenCode Go, and Ollama behind one OpenAI-compatible
-`/v1/chat/completions` endpoint.
+Load these on demand — do not paste into prompts unless the task needs that topic.
 
-Use the operational contract in [SKILL.md](SKILL.md) for provider setup,
-batch-call rules, VLM/PDF handling, OpenCode serve, transport, exec workers,
-and agent-worker surfaces.
+| File | Contents |
+|------|----------|
+| `models-and-routing.md` | Model table, auto-routing, Chutes/OpenCode Go notes |
+| `chat-calls.md` | Single call, JSON, VLM, message formats |
+| `batch-calls.md` | Parallel batch, server pools, OpenCode Go batches |
+| `opencode-serve.md` | Serve API, fork, skills allowlist, good/bad |
+| `opencode-transport.md` | Transport SSE, DAG collaboration |
+| `exec-workers.md` | `scillm exec` profiles |
+| `standing-agents.md` | `/v1/scillm/agents/*` handoff workflow |
+| `oauth-claude-codex.md` | OAuth setup and pitfalls |
+| `files-multimodal.md` | ZIP, PDF, images |
+| `proxy-internals.md` | Middleware, cascade, caching |
+| `ops-endpoints.md` | Full ops table |
+
+Canonical repo docs: `../../docs/SCILLM_OPENCODE_SERVE.md`, `../../docs/SCILLM_OPENCODE_TRANSPORT_V1.md`, `../../docs/interactive-agents/`.
