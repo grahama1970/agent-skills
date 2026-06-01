@@ -23,7 +23,7 @@ Extracted reference for `/scillm`. Load on demand — do not duplicate in SKILL.
 | `opencode-go/kimi-k2.6` | OpenCode Go `/chat/completions` | Kimi coding model | (none) |
 | `opencode-go/qwen3.6-plus` | OpenCode Go `/chat/completions` | Qwen coding model | (none) |
 | `vlm-claude` | Claude Sonnet (OAuth) | VLM fallback (images + PDFs) | (none) |
-| `vlm-codex` | GPT-5.3 Codex (OAuth) | VLM fallback (images + PDFs) | (none) |
+| `vlm-codex` | `gpt-5.3-codex` (OAuth) | VLM fallback (images + PDFs); exec uses same id via `codex-vision` profile | (none) |
 | Any `gemini-*` | Google | Auto-routed to Gemini API | (none) |
 | Any `claude-*` | Anthropic | Auto-routed via Claude Code OAuth | (none) |
 | Any `gpt-*`/`codex-*` | OpenAI | Auto-routed via Codex CLI OAuth | (none) |
