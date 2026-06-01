@@ -58,7 +58,7 @@ taxonomy:
 
 # scillm — One Endpoint for All LLM Calls
 
-**Human onboarding:** [README.md](../../README.md) · **Repo contracts:** [docs/SCILLM_OPENCODE_SERVE.md](../../docs/SCILLM_OPENCODE_SERVE.md), [docs/SCILLM_OPENCODE_TRANSPORT_V1.md](../../docs/SCILLM_OPENCODE_TRANSPORT_V1.md), [docs/interactive-agents/](../../docs/interactive-agents/)
+**Human onboarding:** [README.md](README.md) (section index) · [project README](../../README.md) · **Repo contracts:** [docs/SCILLM_OPENCODE_SERVE.md](../../docs/SCILLM_OPENCODE_SERVE.md), [docs/SCILLM_OPENCODE_TRANSPORT_V1.md](../../docs/SCILLM_OPENCODE_TRANSPORT_V1.md), [docs/interactive-agents/](../../docs/interactive-agents/)
 
 ## Critical Operating Rules
 
