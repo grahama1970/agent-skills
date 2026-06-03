@@ -1,0 +1,77 @@
+{
+  "edges": [
+    {
+      "from": "phase-02-safe-lesson-distillation",
+      "to": "phase-03-memory-recall-integration"
+    },
+    {
+      "from": "phase-03-memory-recall-integration",
+      "to": "phase-04-docs-workflow-update"
+    },
+    {
+      "from": "phase-04-docs-workflow-update",
+      "to": "commit-and-push-main"
+    }
+  ],
+  "exec_graph_version": "plan-iterate.exec_graph.v1",
+  "graph_goal": "Complete remaining debugger phases: redacted lesson distillation, advisory memory recall, docs/workflow updates, validation, and commit/push to agent-skills main.",
+  "graph_id": "debugger-proof-and-memory-improvements",
+  "nodes": [
+    {
+      "acceptance_evidence": [
+        "sanity-lesson-distillation.sh passes",
+        "distill_debugger_lesson.py emits debugger.lesson.v1 with raw_locals_stored=false"
+      ],
+      "command": "./sanity-lesson-distillation.sh",
+      "description": "Validate that debugger proof can be distilled into redacted advisory lessons without raw paused state leakage.",
+      "id": "phase-02-safe-lesson-distillation",
+      "node_goal": "Validate redacted proof-to-lesson distillation.",
+      "type": "local_command"
+    },
+    {
+      "acceptance_evidence": [
+        "sanity-memory-recall.sh passes",
+        "recall_debugger_lessons.py uses httpx over the memory Unix-socket endpoint",
+        "normalized artifact marks fresh_debugger_proof=false"
+      ],
+      "command": "./sanity-memory-recall.sh",
+      "description": "Validate advisory-only memory recall normalization for debugger lesson retrieval.",
+      "id": "phase-03-memory-recall-integration",
+      "node_goal": "Validate advisory-only memory recall normalization.",
+      "type": "local_command"
+    },
+    {
+      "acceptance_evidence": [
+        "README.md documents proof-to-lesson and advisory recall boundaries",
+        "SKILL.md distinguishes fresh proof from reusable lessons and memory recall",
+        "complete debugger sanity suite passes"
+      ],
+      "command": "./sanity-proof-schema.sh && ./sanity-lesson-distillation.sh && ./sanity-memory-recall.sh && ./sanity.sh && ./sanity-e2e-typescript.sh && ./sanity-e2e-rust.sh && ./sanity-bridge.sh && ./sanity-e2e.sh",
+      "description": "Validate updated debugger workflow docs and the complete debugger sanity suite.",
+      "id": "phase-04-docs-workflow-update",
+      "node_goal": "Validate debugger docs and full workflow checks.",
+      "type": "local_command"
+    },
+    {
+      "acceptance_evidence": [
+        "main branch commit created",
+        "origin/main contains pushed commit SHA"
+      ],
+      "command": "git push origin main",
+      "description": "Commit and push accepted debugger skill updates to agent-skills main.",
+      "id": "commit-and-push-main",
+      "node_goal": "Publish accepted debugger updates to agent-skills main.",
+      "type": "local_command"
+    }
+  ],
+  "plan_id": "debugger-proof-and-memory-improvements",
+  "review_fanout_limits": {
+    "review_code": 0,
+    "review_design": 0,
+    "review_prompt": 0
+  },
+  "review_iteration_limits": {
+    "max_total_review_rounds": 0
+  },
+  "self_improvement_iterations": 3
+}

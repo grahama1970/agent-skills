@@ -1,0 +1,126 @@
+{
+  "acceptance_contract": [
+    "Memory recall normalization uses httpx endpoint transport and the memory /recall items contract.",
+    "Normalized memory recall artifacts are advisory-only and cannot satisfy fresh debugger proof.",
+    "The helper compiles and passes scillm static assessment with no issues."
+  ],
+  "active_plan_graph_artifact": "",
+  "blockers": [],
+  "changed_files": [
+    {
+      "path": "skills/debugger/scripts/recall_debugger_lessons.py",
+      "sha256": "b311c02660ca75ce9e212034c3a2fc064e64384f5c84150480c4d2072a9816d5"
+    },
+    {
+      "path": "skills/debugger/fixtures/memory/debugger-recall.json",
+      "sha256": "2c375a12cb28e11e39fe71c31a2ac323361dcd6477487bb1be525e9d13600876"
+    },
+    {
+      "path": "skills/debugger/sanity-memory-recall.sh",
+      "sha256": "18c89f01478b0aadd3f64343085679aef4b6307c1b43ae17fe0ee13f4490b449"
+    },
+    {
+      "path": "skills/debugger/pyproject.toml",
+      "sha256": "3190c842fd1478c58f4c848949bd2ab0e9dc3270790272c8a9890ccffbdd0ffb"
+    },
+    {
+      "path": "skills/debugger/uv.lock",
+      "sha256": "04a348c74e0d1c29243903e1b44e1139cf0c15ae30a86a82e847186ecbd9609a"
+    }
+  ],
+  "claims": [
+    {
+      "acceptance_contract": [
+        "Memory recall normalization uses httpx endpoint transport and the memory /recall items contract."
+      ],
+      "claim": "recall_debugger_lessons.py calls memory /recall with httpx.HTTPTransport(uds=...) and reads items, not results.",
+      "evidence_artifacts": [
+        "sanity-memory-recall.log",
+        "scillm-assess-recall.json"
+      ]
+    },
+    {
+      "acceptance_contract": [
+        "Normalized memory recall artifacts are advisory-only and cannot satisfy fresh debugger proof."
+      ],
+      "claim": "The normalized recall artifact sets fresh_debugger_proof=false and can_satisfy_debugger_proof=false.",
+      "evidence_artifacts": [
+        "sanity-memory-recall.log"
+      ]
+    },
+    {
+      "acceptance_contract": [
+        "The helper compiles and passes scillm static assessment with no issues."
+      ],
+      "claim": "The helper compiles under uv and passes scillm assess with zero issues.",
+      "evidence_artifacts": [
+        "py-compile.log",
+        "scillm-assess-recall.json"
+      ]
+    }
+  ],
+  "domain_review_loops": [],
+  "evidence_artifacts": [
+    {
+      "path": "sanity-memory-recall.log",
+      "sha256": "270a7dd210e22b1a550215c12a0b5709736156a7716550609531023fe5c4de96"
+    },
+    {
+      "path": "py-compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scillm-assess-recall.json",
+      "sha256": "81b9d1a0c8cfc469d1e2598da09fb0dae0c5541bb0d93e3a3dca8d348d34982b"
+    }
+  ],
+  "implementation_summary": "Added advisory-only debugger memory recall normalization using httpx over the memory daemon Unix-socket endpoint plus deterministic fixture coverage.",
+  "known_caveats": [],
+  "memory_context": {
+    "collection": "plan_iterate_phase_context",
+    "keys": []
+  },
+  "phase_id": "phase-03-memory-recall-integration",
+  "plan_graph_artifacts": [],
+  "plan_id": "debugger-proof-and-memory-improvements",
+  "progress_context_artifacts": [],
+  "review_artifacts": [],
+  "review_comparison": {
+    "agreement": "agree",
+    "closure_allowed": true,
+    "reason": "External review waived; deterministic validation and scillm assess artifacts are recorded."
+  },
+  "review_results": [],
+  "review_status": "not_required",
+  "reviewer_policy": {
+    "closure_rule": "deterministic_validation_plus_scillm_static_assessment; external review waived for narrow local skill helper phase",
+    "comparison_required": false,
+    "required": false
+  },
+  "schema": "plan_iterate.phase_status.v1",
+  "skill_context_artifacts": [],
+  "status": "accepted",
+  "validation_commands": [
+    {
+      "command": "./sanity-memory-recall.sh",
+      "exit_code": 0,
+      "log": "sanity-memory-recall.log",
+      "log_sha256": "270a7dd210e22b1a550215c12a0b5709736156a7716550609531023fe5c4de96",
+      "phase_subject_sha256": "7252dce366bb7199c52e0e1fbf3543f323d1d098a9c93258f8db7d69a816108e"
+    },
+    {
+      "command": "uv run --project . python -m py_compile scripts/distill_debugger_lesson.py scripts/recall_debugger_lessons.py",
+      "exit_code": 0,
+      "log": "py-compile.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "phase_subject_sha256": "7252dce366bb7199c52e0e1fbf3543f323d1d098a9c93258f8db7d69a816108e"
+    },
+    {
+      "command": "/home/graham/workspace/experiments/agent-skills/skills/scillm/run.sh assess scripts/recall_debugger_lessons.py --json",
+      "exit_code": 0,
+      "log": "scillm-assess-recall.json",
+      "log_sha256": "81b9d1a0c8cfc469d1e2598da09fb0dae0c5541bb0d93e3a3dca8d348d34982b",
+      "phase_subject_sha256": "7252dce366bb7199c52e0e1fbf3543f323d1d098a9c93258f8db7d69a816108e"
+    }
+  ]
+}

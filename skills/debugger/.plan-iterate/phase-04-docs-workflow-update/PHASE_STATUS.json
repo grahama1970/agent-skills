@@ -1,0 +1,282 @@
+{
+  "acceptance_contract": [
+    "SKILL.md documents fresh proof, redacted lessons, and advisory memory recall boundaries.",
+    "README.md verification instructions include proof schema, lesson distillation, and memory recall sanity gates.",
+    "The complete debugger validation suite passes across Python, TypeScript, Rust, VS Code bridge, and DAP E2E checks."
+  ],
+  "active_plan_graph_artifact": "",
+  "blockers": [],
+  "changed_files": [
+    {
+      "path": "skills/debugger/SKILL.md",
+      "sha256": "95894b304780404dd00239a8f7f16e538fb1b7eefda71088b53a359f80f6eea8"
+    },
+    {
+      "path": "skills/debugger/README.md",
+      "sha256": "6e21b0cf91295da83be888790358ee42a4c27d600c76067404310149d7dd61ec"
+    },
+    {
+      "path": "skills/debugger/PROJECT_KNOWLEDGE.md",
+      "sha256": "016e32505eaa9ab765e6dab68fdc588c733a96cf03a5d9d26b7d7e3d62372ce8"
+    },
+    {
+      "path": "skills/debugger/scripts/distill_debugger_lesson.py",
+      "sha256": "2a24672146868bb9e1bb03e7865b0f6f5db1bec1bfdf4a4a01ec4f7cf5675d85"
+    },
+    {
+      "path": "skills/debugger/scripts/recall_debugger_lessons.py",
+      "sha256": "b311c02660ca75ce9e212034c3a2fc064e64384f5c84150480c4d2072a9816d5"
+    },
+    {
+      "path": "skills/debugger/scripts/validate_debugger_proof.py",
+      "sha256": "71e61b4b366e2ecca987154713f8b8ffeb05b261e781b92575047ece7ce000f8"
+    },
+    {
+      "path": "skills/debugger/schemas/debugger.proof.v1.schema.json",
+      "sha256": "af627da0b1c8c1ff7f8774b5852f9fbe5eaecce956ebf1b52d025d8fecd604c8"
+    },
+    {
+      "path": "skills/debugger/fixtures/proofs/canonical-valid.json",
+      "sha256": "f933f6e58579dc885e8b2a000e35c78e0cc7d165fb165b716635eb47533e2d7c"
+    },
+    {
+      "path": "skills/debugger/fixtures/proofs/canonical-invalid-no-state.json",
+      "sha256": "3b68080318c6fdce6f345a80f8b6c2a358eddd9516cdad3e6f84fdf5869ed0a4"
+    },
+    {
+      "path": "skills/debugger/fixtures/proofs/vscode-bridge-status-valid.json",
+      "sha256": "7e28a86d4845aadf8f72b7c5bbb8b241b6a418e6c3d8ae72a20ef87ecfb64061"
+    },
+    {
+      "path": "skills/debugger/fixtures/proofs/rust-gdb-valid.txt",
+      "sha256": "50ff4d444986bdfc56324e7e64293aeec8a56137b59b9a9867222adbc9788ee7"
+    },
+    {
+      "path": "skills/debugger/fixtures/proofs/contains-secrets-valid.json",
+      "sha256": "2d8a264e082c8e3eab652e276b634d8782cc45c272f8574da4219629f4427e07"
+    },
+    {
+      "path": "skills/debugger/fixtures/memory/debugger-recall.json",
+      "sha256": "2c375a12cb28e11e39fe71c31a2ac323361dcd6477487bb1be525e9d13600876"
+    },
+    {
+      "path": "skills/debugger/sanity-proof-schema.sh",
+      "sha256": "1def1b96ec970ad0fcb12046a2f6ec00b68d3ef2995677d2a8958e938cdcc1a1"
+    },
+    {
+      "path": "skills/debugger/sanity-lesson-distillation.sh",
+      "sha256": "6fb56343fb496015533ee47c202fc3f245278df6608d8c7bc9bc3f48e03ba4cf"
+    },
+    {
+      "path": "skills/debugger/sanity-memory-recall.sh",
+      "sha256": "18c89f01478b0aadd3f64343085679aef4b6307c1b43ae17fe0ee13f4490b449"
+    },
+    {
+      "path": "skills/debugger/sanity.sh",
+      "sha256": "fb2a5e14be772ea35c7f9b8c459a6ce9e404548fcd1f28fe9a229d71db117156"
+    },
+    {
+      "path": "skills/debugger/sanity-e2e-typescript.sh",
+      "sha256": "e83c53e841d11db63dcbfc5e6dc56c979a2b4eed1d248fec793ee8e8d6758532"
+    },
+    {
+      "path": "skills/debugger/sanity-e2e-rust.sh",
+      "sha256": "dbd241620395d48b2c8d5078c12a19d55a587fb45683136ffa5f36696907a934"
+    },
+    {
+      "path": "skills/debugger/sanity-bridge.sh",
+      "sha256": "8b47fa4e7f5b5988f68983c538c22cea32c30847599f8963a826a1d5eb9f2656"
+    },
+    {
+      "path": "skills/debugger/pyproject.toml",
+      "sha256": "3190c842fd1478c58f4c848949bd2ab0e9dc3270790272c8a9890ccffbdd0ffb"
+    },
+    {
+      "path": "skills/debugger/uv.lock",
+      "sha256": "04a348c74e0d1c29243903e1b44e1139cf0c15ae30a86a82e847186ecbd9609a"
+    }
+  ],
+  "claims": [
+    {
+      "acceptance_contract": [
+        "SKILL.md documents fresh proof, redacted lessons, and advisory memory recall boundaries."
+      ],
+      "claim": "SKILL.md distinguishes fresh debugger proof from redacted lessons and advisory memory recall.",
+      "evidence_artifacts": [
+        "sanity-proof-schema.log",
+        "sanity-lesson-distillation.log",
+        "sanity-memory-recall.log"
+      ]
+    },
+    {
+      "acceptance_contract": [
+        "README.md verification instructions include proof schema, lesson distillation, and memory recall sanity gates."
+      ],
+      "claim": "README.md verification now names the proof-schema, lesson-distillation, and memory-recall sanity gates.",
+      "evidence_artifacts": [
+        "sanity-proof-schema.log",
+        "sanity-lesson-distillation.log",
+        "sanity-memory-recall.log"
+      ]
+    },
+    {
+      "acceptance_contract": [
+        "The complete debugger validation suite passes across Python, TypeScript, Rust, VS Code bridge, and DAP E2E checks."
+      ],
+      "claim": "The complete validation suite passed across Python harness, TypeScript, Rust, VS Code bridge, and VS Code DAP E2E paths.",
+      "evidence_artifacts": [
+        "sanity-python.log",
+        "sanity-typescript.log",
+        "sanity-rust.log",
+        "sanity-e2e-typescript.log",
+        "sanity-e2e-rust.log",
+        "sanity-bridge.log",
+        "sanity-e2e-python-dap.log"
+      ]
+    }
+  ],
+  "domain_review_loops": [],
+  "evidence_artifacts": [
+    {
+      "path": "sanity-proof-schema.log",
+      "sha256": "f6ca2d2ba1d9a5c025f75e19657410b89c9b1b4a8e89fed2a8f5cb8cff8c1a81"
+    },
+    {
+      "path": "sanity-lesson-distillation.log",
+      "sha256": "23c03882b83aa7cde32ebff64a9e61c5fb971ccd103aeb908b7e5c28ed2e1ad9"
+    },
+    {
+      "path": "sanity-memory-recall.log",
+      "sha256": "a9402e1d5e32374cf9982a4f085ab5ca50c2c84a56f509d31f05c7fd262e00ce"
+    },
+    {
+      "path": "sanity-python.log",
+      "sha256": "3b809fe8166b83eaede3b15e02abdbc46d40b03be207196305ea02aa7a576c7d"
+    },
+    {
+      "path": "sanity-typescript.log",
+      "sha256": "781e6ca1d47ed826a30c0bdbdc50dfd94f1e4647e607ac72b0647068417f6904"
+    },
+    {
+      "path": "sanity-rust.log",
+      "sha256": "6c5c00d9be5906ce7a294097de79560c1c7417dd73cad24f3405d926b4986a42"
+    },
+    {
+      "path": "sanity-e2e-typescript.log",
+      "sha256": "d24e88e70fc54a088b6737e7484cd5a8dadb6a320009fecb212525718a66e0e2"
+    },
+    {
+      "path": "sanity-e2e-rust.log",
+      "sha256": "dfcaaf4d020c2391491a0883550d30240c352478f2e3bd2fbf0102e335844772"
+    },
+    {
+      "path": "sanity-bridge.log",
+      "sha256": "8762cbbf5ef17d467aebea1d802dde511a140a26e4057b270517fdcb939e404b"
+    },
+    {
+      "path": "sanity-e2e-python-dap.log",
+      "sha256": "9ca1b9fdba8d3177514df93a0bf950b2579324a666edefe11092a731aff6c321"
+    }
+  ],
+  "implementation_summary": "Updated debugger SKILL/README/project knowledge for canonical proof, redacted lessons, advisory memory recall, and ran the complete debugger validation suite.",
+  "known_caveats": [
+    "VS Code bridge smoke logs include npm audit warnings from existing bridge dependencies; protocol tests, package build, and smoke proof still passed.",
+    "Memory recall fixture is deterministic; live recall support uses httpx over the documented memory Unix socket but was not required for the local sanity gate."
+  ],
+  "memory_context": {
+    "collection": "plan_iterate_phase_context",
+    "keys": []
+  },
+  "phase_id": "phase-04-docs-workflow-update",
+  "plan_graph_artifacts": [],
+  "plan_id": "debugger-proof-and-memory-improvements",
+  "progress_context_artifacts": [],
+  "review_artifacts": [],
+  "review_comparison": {
+    "agreement": "agree",
+    "closure_allowed": true,
+    "reason": "External review waived; deterministic validation and scillm assess artifacts are recorded."
+  },
+  "review_results": [],
+  "review_status": "not_required",
+  "reviewer_policy": {
+    "closure_rule": "deterministic_validation_plus_scillm_static_assessment; external review waived for narrow local skill helper phase",
+    "comparison_required": false,
+    "required": false
+  },
+  "schema": "plan_iterate.phase_status.v1",
+  "skill_context_artifacts": [],
+  "status": "accepted",
+  "validation_commands": [
+    {
+      "command": "./sanity-proof-schema.sh",
+      "exit_code": 0,
+      "log": "sanity-proof-schema.log",
+      "log_sha256": "f6ca2d2ba1d9a5c025f75e19657410b89c9b1b4a8e89fed2a8f5cb8cff8c1a81",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity-lesson-distillation.sh",
+      "exit_code": 0,
+      "log": "sanity-lesson-distillation.log",
+      "log_sha256": "23c03882b83aa7cde32ebff64a9e61c5fb971ccd103aeb908b7e5c28ed2e1ad9",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity-memory-recall.sh",
+      "exit_code": 0,
+      "log": "sanity-memory-recall.log",
+      "log_sha256": "a9402e1d5e32374cf9982a4f085ab5ca50c2c84a56f509d31f05c7fd262e00ce",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity.sh",
+      "exit_code": 0,
+      "log": "sanity-python.log",
+      "log_sha256": "3b809fe8166b83eaede3b15e02abdbc46d40b03be207196305ea02aa7a576c7d",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity-typescript.sh",
+      "exit_code": 0,
+      "log": "sanity-typescript.log",
+      "log_sha256": "781e6ca1d47ed826a30c0bdbdc50dfd94f1e4647e607ac72b0647068417f6904",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity-rust.sh",
+      "exit_code": 0,
+      "log": "sanity-rust.log",
+      "log_sha256": "6c5c00d9be5906ce7a294097de79560c1c7417dd73cad24f3405d926b4986a42",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity-e2e-typescript.sh",
+      "exit_code": 0,
+      "log": "sanity-e2e-typescript.log",
+      "log_sha256": "d24e88e70fc54a088b6737e7484cd5a8dadb6a320009fecb212525718a66e0e2",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity-e2e-rust.sh",
+      "exit_code": 0,
+      "log": "sanity-e2e-rust.log",
+      "log_sha256": "dfcaaf4d020c2391491a0883550d30240c352478f2e3bd2fbf0102e335844772",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity-bridge.sh",
+      "exit_code": 0,
+      "log": "sanity-bridge.log",
+      "log_sha256": "8762cbbf5ef17d467aebea1d802dde511a140a26e4057b270517fdcb939e404b",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    },
+    {
+      "command": "./sanity-e2e.sh",
+      "exit_code": 0,
+      "log": "sanity-e2e-python-dap.log",
+      "log_sha256": "9ca1b9fdba8d3177514df93a0bf950b2579324a666edefe11092a731aff6c321",
+      "phase_subject_sha256": "7329d1d03a2fcd300b059bfd9d15a7737a9aa78c4da2bf53e545e233e2860476"
+    }
+  ]
+}

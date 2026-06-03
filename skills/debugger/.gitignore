@@ -1,0 +1,11 @@
+.venv
+__pycache__/
+scripts/__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.vscode/debugger-bridge/status.json
+.vscode/debugger-bridge/request.json
+vscode-bridge/node_modules/
+vscode-bridge/out/
+vscode-bridge/*.vsix

@@ -1,0 +1,6 @@
+Breakpoint 1 at 0x000000000000113d: file /tmp/debugger-rust/main.rs, line 3.
+Breakpoint 1, classify (value=14) at /tmp/debugger-rust/main.rs:3
+3	    label
+$1 = 14
+$2 = "large"
+#0  classify (value=14) at /tmp/debugger-rust/main.rs:3

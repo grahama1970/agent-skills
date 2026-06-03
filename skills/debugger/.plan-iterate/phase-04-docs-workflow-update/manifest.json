@@ -1,0 +1,84 @@
+{
+  "created_at": "20260527T150447Z",
+  "entries": [
+    {
+      "bytes": 11189,
+      "path": "PHASE_STATUS.json",
+      "sha256": "ccfc76b59f186ee622c629a60efe0764eede2693934f4245c68c97b7454d2b0a"
+    },
+    {
+      "bytes": 2068,
+      "path": "PHASE_REVIEW_REQUEST.md",
+      "sha256": "b02e28b8aa251a1bb20100c9e465aadfd9f3ff669fffae3f25651e04b941d06c"
+    },
+    {
+      "bytes": 64360,
+      "path": "changed-files.diff",
+      "sha256": "03666b6b3e77f57c0ec50b77a4a0353cf8a4820cabd0d45a96fabac39717f529"
+    },
+    {
+      "bytes": 2213,
+      "path": "sanity-proof-schema.log",
+      "sha256": "f6ca2d2ba1d9a5c025f75e19657410b89c9b1b4a8e89fed2a8f5cb8cff8c1a81"
+    },
+    {
+      "bytes": 224,
+      "path": "sanity-lesson-distillation.log",
+      "sha256": "23c03882b83aa7cde32ebff64a9e61c5fb971ccd103aeb908b7e5c28ed2e1ad9"
+    },
+    {
+      "bytes": 135,
+      "path": "sanity-memory-recall.log",
+      "sha256": "a9402e1d5e32374cf9982a4f085ab5ca50c2c84a56f509d31f05c7fd262e00ce"
+    },
+    {
+      "bytes": 442,
+      "path": "sanity-python.log",
+      "sha256": "3b809fe8166b83eaede3b15e02abdbc46d40b03be207196305ea02aa7a576c7d"
+    },
+    {
+      "bytes": 143,
+      "path": "sanity-typescript.log",
+      "sha256": "781e6ca1d47ed826a30c0bdbdc50dfd94f1e4647e607ac72b0647068417f6904"
+    },
+    {
+      "bytes": 194,
+      "path": "sanity-rust.log",
+      "sha256": "6c5c00d9be5906ce7a294097de79560c1c7417dd73cad24f3405d926b4986a42"
+    },
+    {
+      "bytes": 1094,
+      "path": "sanity-e2e-typescript.log",
+      "sha256": "d24e88e70fc54a088b6737e7484cd5a8dadb6a320009fecb212525718a66e0e2"
+    },
+    {
+      "bytes": 604,
+      "path": "sanity-e2e-rust.log",
+      "sha256": "dfcaaf4d020c2391491a0883550d30240c352478f2e3bd2fbf0102e335844772"
+    },
+    {
+      "bytes": 2411,
+      "path": "sanity-bridge.log",
+      "sha256": "8762cbbf5ef17d467aebea1d802dde511a140a26e4057b270517fdcb939e404b"
+    },
+    {
+      "bytes": 3920,
+      "path": "sanity-e2e-python-dap.log",
+      "sha256": "9ca1b9fdba8d3177514df93a0bf950b2579324a666edefe11092a731aff6c321"
+    },
+    {
+      "bytes": 1155,
+      "path": "plans/debugger-proof-and-memory-improvements/PLAN_STATUS.json",
+      "sha256": "cc264de9ac0648bf18384779a8b0b3000d49b2870067d3d77f877895c74b78aa"
+    },
+    {
+      "bytes": 859,
+      "path": "plans/debugger-proof-and-memory-improvements/phases.json",
+      "sha256": "ccea85ad176baae9e9d6161558e5212c4e321fa7074bbd43dc6c67e58639a3ca"
+    }
+  ],
+  "phase_id": "phase-04-docs-workflow-update",
+  "plan_id": "debugger-proof-and-memory-improvements",
+  "schema": "plan_iterate.review_bundle_manifest.v1",
+  "status_sha256": "ccfc76b59f186ee622c629a60efe0764eede2693934f4245c68c97b7454d2b0a"
+}

@@ -1,0 +1,45 @@
+{
+  "name": "debugger-vscode-bridge",
+  "displayName": "Debugger VS Code Bridge",
+  "description": "Bridge for the debugger skill to start visible VS Code debug sessions and capture stopped variable state.",
+  "version": "0.1.2",
+  "publisher": "agent-skills",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Debuggers"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:debuggerBridge.processRequestFile",
+    "onCommand:debuggerBridge.startLaunchConfig",
+    "onDebug"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "debuggerBridge.processRequestFile",
+        "title": "Debugger Bridge: Process Request File"
+      },
+      {
+        "command": "debuggerBridge.startLaunchConfig",
+        "title": "Debugger Bridge: Start Launch Configuration"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "test:protocol": "npm run compile && node scripts/protocol-tests.mjs",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.3.2",
+    "typescript": "^5.8.3"
+  }
+}

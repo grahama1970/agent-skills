@@ -1,0 +1,39 @@
+{
+  "adapterBreakpointVerification": "unavailable-vscode-api",
+  "addedBreakpoints": [
+    {
+      "file": "src/sample.py",
+      "line": 8
+    }
+  ],
+  "id": "debugger-fixture",
+  "launchConfigName": "Debug sample with $debugger",
+  "proofAssessment": {
+    "missingLocals": [],
+    "proofValid": true,
+    "requestedLocals": [
+      "value"
+    ],
+    "variableInspectionValid": true
+  },
+  "proofValid": true,
+  "requestHash": "fixture",
+  "status": "stopped",
+  "stoppedState": {
+    "frame": {
+      "line": 8,
+      "name": "classify",
+      "source": {
+        "path": "/tmp/project/src/sample.py"
+      }
+    },
+    "locals": {
+      "value": "14"
+    },
+    "reason": "breakpoint",
+    "sessionId": "session-fixture",
+    "threadId": 1,
+    "watches": {}
+  },
+  "updatedAt": "2026-05-27T00:00:00Z"
+}
