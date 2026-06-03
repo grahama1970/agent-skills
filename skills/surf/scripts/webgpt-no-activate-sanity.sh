@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 RUN_SH="${SURF_RUN_SH:-${SKILL_DIR}/run.sh}"
+# shellcheck source=lib/webgpt_resolve.sh
+source "${SCRIPT_DIR}/lib/webgpt_resolve.sh"
 
 usage() {
   cat <<'EOF'
@@ -15,7 +17,8 @@ mode (--no-activate) and asserts that the user's foreground tab/window did not
 change AND the proof contract still holds.
 
 Options:
-  --tab-id ID          REQUIRED. Authenticated ChatGPT tab id to control.
+  --tab-id ID
+  --url URL          REQUIRED. Authenticated ChatGPT tab id to control.
   --output-dir PATH    Artifact directory. Default: /tmp/surf-webgpt-noact-<timestamp>
   --timeout SECONDS    Browser wait timeout. Default: 900.
   --model MODEL        Optional ChatGPT model selector label.
@@ -23,6 +26,7 @@ EOF
 }
 
 tab_id=""
+target_url=""
 output_dir=""
 timeout_s=900
 model=""
@@ -30,6 +34,7 @@ model=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tab-id) tab_id="${2:-}"; shift 2 ;;
+    --url) target_url="${2:-}"; shift 2 ;;
     --output-dir) output_dir="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
@@ -38,8 +43,18 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ -n "$target_url" ]]; then
+  tab_list_text="$("$RUN_SH" tab.list 2>/dev/null || true)"
+  if webgpt_resolve_url_from_list "$target_url" "$tab_list_text"; then
+    tab_id="$resolved_tab_id"
+  else
+    echo "Could not resolve --url: $target_url (${resolve_error:-})" >&2
+    exit 2
+  fi
+fi
+
 if [[ -z "$tab_id" ]]; then
-  echo "--tab-id is required for the no-activate sanity check." >&2
+  echo "--tab-id or --url is required for the no-activate sanity check." >&2
   usage >&2
   exit 2
 fi

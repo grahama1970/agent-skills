@@ -172,14 +172,31 @@ In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-bro
 |---|---|
 | "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id>` |
 | "recover an already completed WebGPT tab" | `surf webgpt.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
-| "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` to the above (requires `--tab-id` or `--url`) |
+| "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` (requires `--tab-id`, `--url`, or `--create-tab`) |
 | "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
 | "prove background mode works", "no-activate sanity" | `surf webgpt.no-activate-sanity --tab-id <id>` |
+| "prove tab id targeting while I work elsewhere", "Tab ID Viewer" | `surf webgpt.tab-id-background-sanity --tab-id <id>` |
 | "what tab/window am I focused on" | `surf focus.state --json` |
+| "preflight WebGPT tab before submit" | `surf webgpt.preflight --tab-id <id> [--no-activate]` |
 
-Always require a `--tab-id` (or `--url` that resolves to an open ChatGPT tab).
-Don't let surf-cli auto-discover or create a tab when the user has explicitly
-chosen one. `controlled_tab_id` in the meta JSON must equal `requested_tab_id`.
+
+Always require a `--tab-id` (or `--url` that resolves to an open ChatGPT tab),
+or pass `--create-tab` to open a dedicated inactive reviewer tab.
+
+**Tab ID Viewer workflow (recommended for background review):**
+
+1. Open a dedicated ChatGPT tab for automation (not your daily conversation).
+2. Copy the numeric id from the Tab ID Viewer extension.
+3. Run `surf webgpt.submit ... --tab-id <ID> --no-activate` (add `--no-remember`
+   if you must not touch `/tmp/surf-webgpt-controlled-tab-id`).
+4. Confirm meta: `controlled_tab_id` == `requested_tab_id`, `focus_changed: false`.
+
+Do not rely on `/tmp/surf-webgpt-controlled-tab-id` alone — it may point at your
+foreground ChatGPT tab after an earlier successful run. Explicit `--tab-id`
+overrides that file; `--create-tab` skips it and opens a fresh inactive tab.
+
+Don't let surf-cli auto-discover or pick the newest `chatgpt.com` tab when the
+human named a tab. `controlled_tab_id` in the meta JSON must equal `requested_tab_id`.
 
 For ChatGPT/WebGPT handoffs, use `webgpt.submit` instead of manually pasting a
 completion marker into prompts. The command owns sentinel generation, prompt
@@ -247,6 +264,21 @@ Behavior:
   silently pick a different ChatGPT tab.
 - Set `SURF_WEBGPT_TAB_STATE=/path/to/state` for an alternate state file, or
   pass a `--tab-id` through lower-level `surf chatgpt` commands when debugging.
+- `--create-tab` opens `https://chatgpt.com/` via `tab.new` (inactive), then
+  submits on that id — use for isolated reviewer rounds.
+- `--no-remember` skips reading and writing the controlled-tab state file.
+- Explicit `--tab-id` or `--url` automatically implies `--no-remember` (do not
+  overwrite `/tmp/surf-webgpt-controlled-tab-id` with a reviewer tab).
+- `--url` matching is normalized (host, trailing slash) and conversation-uuid aware;
+  multiple open tabs with the same conversation id fail closed as `ambiguous_url`.
+- `--allow-foreground-controlled` opts out of the pre-submit guard that rejects
+  `--no-activate` when the controlled tab is already your foreground active tab.
+- Long submits poll focus every `SURF_WEBGPT_FOCUS_POLL_INTERVAL` seconds (default
+  `15`). Mid-run tab switches set `focus_stolen_mid_submit` in meta. Optional
+  `SURF_WEBGPT_ABORT_ON_FOCUS_STEAL=1` kills the in-flight submit when focus drifts.
+- **No auto-retry** after human tab switches: use `webgpt.extract` if ChatGPT already
+  finished, otherwise re-run the same `--tab-id` / `--url` deliberately.
+
 
 Do not infer WebGPT completion from spinner absence, button state, visual
 stillness, or page text outside the final assistant response. Use the sentinel
@@ -366,6 +398,51 @@ differs from the controlled tab, if the screenshot/page text is Cloudflare or an
 unrelated site, if no controlled tab id is recorded, or if clean output contains
 the prompt/sentinel/page chrome.
 
+
+#### Background tab targeting (read this first)
+
+Surf controls a **specific Chrome tab by numeric tab id** (e.g. from the Tab ID
+Viewer extension). It does **not** follow your mouse across KDE virtual desktops;
+it attaches CDP to the tab id you name.
+
+| Question | Answer |
+| --- | --- |
+| Can I work in **another Chrome tab** while surf controls ChatGPT? | **Yes** — pass `--tab-id <reviewer-tab>` and `--no-activate` on `webgpt.submit`, `js`, `click`, etc. |
+| Must I pass `--tab-id` every time? | **Yes** for background/reviewer work. Without it, `surf read` / `surf click` use the **active** tab in the last-focused Chrome window. |
+| Does surf work across **KDE desktop spaces**? | **Not proven here.** Tab ids are per Chrome tab. If the tab stays loaded in your profile, CDP usually still works; space switches are not part of the sanity gate. |
+| Will a long `webgpt.submit` pass if I **switch Chrome tabs** mid-run? | **No** — meta requires `focus_changed: false` for the whole submit. Stay on your work tab until the round finishes. |
+| What fails with `focus_stolen_despite_no_activate`? | Chrome's active tab or focused window changed during the run, or the controlled tab was your foreground work tab. Use a **dedicated reviewer tab** + explicit `--tab-id`. |
+
+
+#### Pre-submit checks (`webgpt.preflight`)
+
+Run before a long reviewer round when binding a new tab or after Chrome restarts:
+
+```bash
+surf webgpt.preflight --tab-id <TAB_ID> --no-activate
+# or conversation URL:
+surf webgpt.preflight --url "https://chatgpt.com/c/<uuid>" --no-activate --json
+```
+
+Fails fast when the extension socket is missing, `focus.state` is unavailable, the tab
+is not an open `chatgpt.com` tab, URL resolution is ambiguous, or (with
+`--no-activate`) the controlled tab is your foreground work tab.
+
+**Proof commands (real e2e):**
+
+```bash
+# Fast (~30s): CDP js+click on --tab-id while your active tab stays elsewhere
+surf webgpt.tab-id-background-sanity --tab-id <TAB_ID>
+# or: surf webgpt.tab-id-background-sanity --url "https://chatgpt.com/c/<uuid>"
+
+# Slow (minutes): full ChatGPT sentinel + focus + section proof
+surf webgpt.no-activate-sanity --tab-id <TAB_ID>
+# or: surf webgpt.no-activate-sanity --url "https://chatgpt.com/c/<uuid>"
+```
+
+**Required meta on success:** `controlled_tab_id` == `requested_tab_id`, `focus_changed: false`.
+
+
 #### Background controlled-tab mode (`--no-activate`)
 
 `webgpt.submit --no-activate` keeps the controlled ChatGPT tab in the
@@ -380,9 +457,8 @@ plus the additional invariants:
   never the `chrome.tabs.captureVisibleTab` fallback. The fallback is disabled
   in `--no-activate` mode because it would capture whichever tab is actually
   foreground, not the controlled tab.
-- `--no-activate` requires `--tab-id` or `--url` (resolving to an already-open
-  ChatGPT tab). Without an explicit target we'd have to foreground a tab to
-  discover one, defeating the purpose.
+- `--no-activate` requires `--tab-id`, `--url`, or `--create-tab`. Without an
+  explicit target we'd foreground or auto-pick a tab, defeating background mode.
 
 ```bash
 surf webgpt.submit \
@@ -392,7 +468,14 @@ surf webgpt.submit \
   --no-activate
 ```
 
-Background-mode sanity check:
+Fast tab-id + focus invariance (seconds, no ChatGPT round trip):
+
+```bash
+surf webgpt.tab-id-background-sanity --tab-id 837343233
+# or: SURF_WEBGPT_SANITY_TAB_ID=837343233 ./sanity.sh
+```
+
+Full sentinel background-mode sanity (minutes):
 
 ```bash
 surf webgpt.no-activate-sanity --tab-id 837343233 --output-dir /tmp/surf-webgpt-noact
@@ -420,6 +503,10 @@ Do not disable CDP verification globally. For non-ChatGPT UI work, especially
 local app surfaces, CDP verification remains valid and should still be used.
 
 ### Element Interaction
+
+**Background rule:** add `--tab-id <id>` to `click`, `js`, `read`, and `screenshot`
+when the target is not your foreground tab. Refs from `surf read` without
+`--tab-id` refer to the **active** tab only.
 
 ```bash
 surf click e5                    # Click element by ref

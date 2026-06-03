@@ -459,8 +459,16 @@ if [[ "$1" == "cursor-browser.tab.list" ]]; then
     exec python3 "$SKILL_DIR/scripts/cursor_browser_client.py" tab.list "${@:2}"
 fi
 
+if [[ "$1" == "webgpt.tab-id-background-sanity" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-tab-id-background-sanity.sh" "${@:2}"
+fi
+
 if [[ "$1" == "webgpt.no-activate-sanity" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-no-activate-sanity.sh" "${@:2}"
+fi
+
+if [[ "$1" == "webgpt.preflight" ]]; then
+    exec "$SKILL_DIR/scripts/webgpt-preflight.sh" "${@:2}"
 fi
 
 # Handle help
@@ -497,7 +505,9 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "  surf webgpt.submit --input request.md --output response.md"
     echo "  surf webgpt.extract --tab-id ID --output response.md"
     echo "  surf webgpt.sanity      Run a real sentinel round-trip smoke"
-    echo "  surf webgpt.no-activate-sanity --tab-id ID  Background controlled-tab proof"
+    echo "  surf webgpt.tab-id-background-sanity [--tab-id|--url]  Fast tab-id + focus proof"
+    echo "  surf webgpt.no-activate-sanity --tab-id ID|--url URL  Full sentinel + background proof"
+    echo "  surf webgpt.preflight --tab-id ID [--no-activate]  Pre-submit tab/focus checks"
     echo ""
     echo "CDP Fallback (when extension not available):"
     echo "  surf cdp start [port] [--headless]  Start Chrome with CDP"
