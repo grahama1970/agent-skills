@@ -148,6 +148,35 @@ check_tab_list() {
     fi
 }
 
+
+check_tab_id_background_sanity() {
+    print_step "8/8" "Tab-ID background targeting (optional)"
+    if [[ ! -S "$SOCKET_PATH" ]]; then
+        print_warn "Skipped (extension socket missing)"
+        return 0
+    fi
+    local args=()
+    if [[ -n "${SURF_WEBGPT_SANITY_TAB_ID:-}" ]]; then
+        args+=(--tab-id "$SURF_WEBGPT_SANITY_TAB_ID")
+    fi
+    set +e
+    local out
+    out=$("$RUN" webgpt.tab-id-background-sanity "${args[@]}" --json 2>&1)
+    local rc=$?
+    set -e
+    if [[ $rc -eq 3 ]]; then
+        print_warn "Skipped (no ChatGPT tab for background probe)"
+        return 0
+    fi
+    if [[ $rc -eq 0 ]]; then
+        print_ok "Tab-id background sanity passed"
+        return 0
+    fi
+    print_fail "Tab-id background sanity failed (exit $rc)"
+    echo "$out" | tail -20
+    return 1
+}
+
 check_read_command() {
     print_step "6/7" "Read Command"
     if [[ ! -S "$SOCKET_PATH" ]]; then
@@ -289,6 +318,8 @@ main() {
     fi
 
     check_native_host_path || all_passed=0
+
+    check_tab_id_background_sanity || all_passed=0
 
     echo ""
 

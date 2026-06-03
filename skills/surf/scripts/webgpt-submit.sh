@@ -5,6 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 RUN_SH="${SURF_RUN_SH:-${SKILL_DIR}/run.sh}"
 
+# shellcheck source=lib/webgpt_resolve.sh
+source "${SCRIPT_DIR}/lib/webgpt_resolve.sh"
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -22,9 +25,15 @@ Options:
   --model MODEL             Optional ChatGPT model selector label.
   --tab-id ID               Use this exact Chrome tab as the controlled WebGPT tab.
   --url URL                 Resolve an already-open ChatGPT tab by exact URL.
+  --create-tab              Open a fresh ChatGPT tab (inactive) and control that tab.
+                            Skips persisted controlled-tab state file lookup.
+  --no-remember             Do not read or write the global controlled-tab state file.
   --no-activate             Background controlled-tab mode. Do not foreground
-                            the tab or its window. Requires --tab-id or --url
-                            so an authenticated ChatGPT tab is already open.
+                            the tab or its window. Requires --tab-id, --url, or
+                            --create-tab so an authenticated ChatGPT tab exists.
+  --allow-foreground-controlled
+                            With --no-activate, allow the controlled tab to be
+                            the foreground active tab (not recommended).
   --attach-file PATH        Attach a file to the ChatGPT message (uses CDP
                             DOM.setFileInputFiles via the surf chatgpt --file
                             flag). The prompt body is sent normally; ChatGPT
@@ -46,6 +55,9 @@ model=""
 tab_id=""
 target_url=""
 no_activate=0
+create_tab=0
+no_remember=0
+allow_foreground_controlled=0
 attach_file=""
 tab_state_file="${SURF_WEBGPT_TAB_STATE:-/tmp/surf-webgpt-controlled-tab-id}"
 
@@ -63,11 +75,19 @@ while [[ $# -gt 0 ]]; do
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
     --no-activate) no_activate=1; shift ;;
+    --create-tab) create_tab=1; shift ;;
+    --no-remember) no_remember=1; shift ;;
+    --allow-foreground-controlled) allow_foreground_controlled=1; shift ;;
     --attach-file) attach_file="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
+
+# Explicit targets must not read/write global controlled-tab state.
+if [[ -n "$tab_id" || -n "$target_url" ]]; then
+  no_remember=1
+fi
 
 if [[ -z "$input" || -z "$output" ]]; then
   usage >&2
@@ -110,6 +130,24 @@ printf '%s\n' "$submitted_prompt" > "$submitted_output"
 
 stderr_log="$(mktemp /tmp/surf-webgpt-submit-stderr.XXXXXX.log)"
 raw_tmp="$(mktemp /tmp/surf-webgpt-submit-raw.XXXXXX.md)"
+# Dedicated reviewer tab (inactive). Avoids reusing global state or auto-picking
+# the newest chatgpt.com tab (often the user's foreground conversation).
+if [[ "$create_tab" -eq 1 ]]; then
+  no_remember=1
+  create_out="$("$RUN_SH" tab.new "https://chatgpt.com/" 2>&1)" || {
+    echo "webgpt.submit --create-tab failed: could not open ChatGPT tab" >&2
+    echo "$create_out" >&2
+    exit 2
+  }
+  requested_tab_id="$(printf '%s' "$create_out" | sed -n 's/^Created tab \([0-9][0-9]*\):.*/\1/p' | head -n 1)"
+  if [[ -z "$requested_tab_id" ]]; then
+    echo "webgpt.submit --create-tab failed: could not parse tab id from:" >&2
+    echo "$create_out" >&2
+    exit 2
+  fi
+  tab_id="$requested_tab_id"
+fi
+
 args=(chatgpt "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$timeout_s" --keep-tab)
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
@@ -122,26 +160,20 @@ if [[ -n "$tab_id" ]]; then
   fi
   args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
 elif [[ -n "$target_url" ]]; then
-  requested_tab_id="$(
-    "$RUN_SH" tab.list 2>/dev/null \
-      | awk -F '\t' -v target="$target_url" '
-          $3 == target { print $1; found=1; exit }
-          target !~ /\/$/ && $3 == target "/" { print $1; found=1; exit }
-          target ~ /\/$/ {
-            without=target
-            sub(/\/$/, "", without)
-            if ($3 == without) { print $1; found=1; exit }
-          }
-        ' \
-      | head -n 1
-  )"
-  if [[ -z "$requested_tab_id" ]]; then
-    echo "No open Chrome tab matched --url: $target_url" >&2
-    echo "Use --tab-id for the exact tab or open the URL before retrying." >&2
+  tab_list_text="$("$RUN_SH" tab.list 2>/dev/null || true)"
+  if ! webgpt_resolve_url_from_list "$target_url" "$tab_list_text"; then
+    if [[ "${resolve_error:-}" == "ambiguous_url" ]]; then
+      echo "Multiple open Chrome tabs match --url: $target_url" >&2
+      python3 -c "import json,sys; print(json.dumps(json.loads(sys.argv[1]).get('candidates', []), indent=2))" "$resolve_json" >&2
+    else
+      echo "No open Chrome tab matched --url: $target_url" >&2
+      echo "Use --tab-id for the exact tab or open the URL before retrying." >&2
+    fi
     exit 2
   fi
+  requested_tab_id="$resolved_tab_id"
   args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
-elif [[ -f "$tab_state_file" ]]; then
+elif [[ "$no_remember" -eq 0 && "$create_tab" -eq 0 && -f "$tab_state_file" ]]; then
   remembered_tab_id="$(tr -cd '0-9' < "$tab_state_file" | head -c 20 || true)"
   if [[ -n "$remembered_tab_id" ]]; then
     args+=(--tab-id "$remembered_tab_id")
@@ -149,10 +181,21 @@ elif [[ -f "$tab_state_file" ]]; then
   fi
 fi
 
+# Pre-run focus snapshot (also used for --no-activate foreground guard).
+focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
+
 if [[ "$no_activate" -eq 1 ]]; then
   if [[ -z "${requested_tab_id:-}" ]]; then
-    echo "--no-activate requires --tab-id (or --url that resolves to an open tab) so we never have to foreground a tab to find one." >&2
+    echo "--no-activate requires --tab-id, --url, or --create-tab so we never foreground a tab to discover one." >&2
     exit 2
+  fi
+  if [[ "$allow_foreground_controlled" -eq 0 ]]; then
+    active_now="$(webgpt_focus_active_tab_id "$focus_before_json")"
+    if [[ -n "$active_now" && "$active_now" == "$requested_tab_id" ]]; then
+      echo "Controlled tab $requested_tab_id is the foreground active tab; --no-activate will fail." >&2
+      echo "Switch to another tab, pick a dedicated reviewer tab, or pass --allow-foreground-controlled." >&2
+      exit 2
+    fi
   fi
   args+=(--no-activate)
 fi
@@ -166,19 +209,40 @@ if [[ -n "$attach_file" ]]; then
   args+=(--file "$attach_file_abs")
 fi
 
-# Pre-run focus snapshot for proof. Best-effort: if focus.state is missing
-# from an older surf-cli, leave the fields as null.
-focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
-
 started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+focus_mid_log="$(mktemp /tmp/surf-webgpt-focus-mid.XXXXXX.log)"
+focus_stolen_mid=0
 set +e
-if command -v timeout >/dev/null 2>&1; then
-  hard_timeout_s=$((timeout_s + 60))
-  timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
-else
-  "$RUN_SH" "${args[@]}" > "$raw_tmp" 2> "$stderr_log"
-fi
+run_submit() {
+  if command -v timeout >/dev/null 2>&1; then
+    hard_timeout_s=$((timeout_s + 60))
+    timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}"
+  else
+    "$RUN_SH" "${args[@]}"
+  fi
+}
+run_submit > "$raw_tmp" 2> "$stderr_log" &
+submit_pid=$!
+poll_interval="${SURF_WEBGPT_FOCUS_POLL_INTERVAL:-15}"
+(
+  while kill -0 "$submit_pid" 2>/dev/null; do
+    sleep "$poll_interval"
+    focus_now="$("$RUN_SH" focus.state --json 2>/dev/null || echo '{}')"
+    if python3 "${SCRIPT_DIR}/lib/focus_changed.py" "$focus_before_json" "$focus_now"; then
+      focus_stolen_mid=1
+      date -u +"%Y-%m-%dT%H:%M:%SZ focus_stolen_mid_submit" >>"$focus_mid_log"
+      if [[ -n "${SURF_WEBGPT_ABORT_ON_FOCUS_STEAL:-}" ]]; then
+        kill "$submit_pid" 2>/dev/null || true
+        break
+      fi
+    fi
+  done
+) &
+poll_pid=$!
+wait "$submit_pid"
 status=$?
+kill "$poll_pid" 2>/dev/null || true
+wait "$poll_pid" 2>/dev/null || true
 set -e
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -246,9 +310,9 @@ clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -301,7 +365,8 @@ focus_changed = (
 no_activate = no_activate_s == "1"
 
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
-focus_violation = no_activate and focus_changed
+focus_stolen_mid = focus_stolen_mid_s == "1"
+focus_violation = no_activate and (focus_changed or focus_stolen_mid)
 status = "completed" if (
     tab_id
     and not tab_mismatch
@@ -312,6 +377,8 @@ status = "completed" if (
 ) else "failed"
 if status == "completed":
     failure = None
+elif focus_violation and focus_stolen_mid:
+    failure = "focus_stolen_mid_submit"
 elif focus_violation:
     failure = "focus_stolen_despite_no_activate"
 elif tab_mismatch:
@@ -346,12 +413,15 @@ pathlib.Path(meta).write_text(json.dumps({
     "active_tab_before": focus_before["activeTabId"],
     "active_tab_after": focus_after["activeTabId"],
     "focus_changed": focus_changed,
+    "focus_stolen_mid_submit": focus_stolen_mid,
+    "focus_mid_log": focus_mid_log,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
 PY
 
-python3 - "$meta_output" "$tab_state_file" <<'PY'
+if [[ "$no_remember" -eq 0 ]]; then
+  python3 - "$meta_output" "$tab_state_file" <<'PY'
 import json, pathlib, sys
 meta_path, state_path = map(pathlib.Path, sys.argv[1:])
 meta = json.loads(meta_path.read_text())
@@ -359,6 +429,7 @@ tab_id = meta.get("controlled_tab_id")
 if meta.get("status") == "completed" and tab_id:
     state_path.write_text(str(tab_id).strip() + "\n")
 PY
+fi
 
 cat "$meta_output"
 python3 - "$meta_output" <<'PY'
