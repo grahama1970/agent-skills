@@ -23,6 +23,8 @@ Options:
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
   --timeout SECONDS         Browser wait timeout. Default: 900.
   --model MODEL             Optional ChatGPT model selector label.
+  --reasoning LABEL         Optional ChatGPT reasoning dropdown label
+                            (for example: "Pro" or "Heavy Reasoning").
   --tab-id ID               Use this exact Chrome tab as the controlled WebGPT tab.
   --url URL                 Resolve an already-open ChatGPT tab by exact URL.
   --create-tab              Open a fresh ChatGPT tab (inactive) and control that tab.
@@ -52,6 +54,7 @@ sentinel="auto"
 stable_polls=3
 timeout_s=900
 model=""
+reasoning=""
 tab_id=""
 target_url=""
 no_activate=0
@@ -72,6 +75,7 @@ while [[ $# -gt 0 ]]; do
     --stable-polls) stable_polls="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
+    --reasoning) reasoning="${2:-}"; shift 2 ;;
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
     --no-activate) no_activate=1; shift ;;
@@ -151,6 +155,9 @@ fi
 args=(chatgpt "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$timeout_s" --keep-tab)
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
+fi
+if [[ -n "$reasoning" ]]; then
+  args+=(--reasoning "$reasoning")
 fi
 if [[ -n "$tab_id" ]]; then
   requested_tab_id="$(printf '%s' "$tab_id" | tr -cd '0-9' | head -c 20 || true)"
@@ -252,9 +259,9 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, model, reasoning = sys.argv[1:]
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
@@ -266,6 +273,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -275,9 +284,9 @@ PY
 fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning = sys.argv[1:]
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
     "input": inp,
@@ -288,6 +297,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -304,15 +315,15 @@ idx = text.rfind(sentinel)
 if idx == -1:
     raise SystemExit("sentinel missing from assistant response")
 after = text[idx + len(sentinel):].strip()
-if after:
+if after and after.strip(">"):
     raise SystemExit("assistant response contains text after terminal sentinel")
 clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -396,6 +407,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
     "stable_polls": int(stable),
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,

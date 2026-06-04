@@ -81,6 +81,11 @@ describe("mapToolToMessage", () => {
       expect(msg.noActivate).toBe(true);
     });
 
+    it("threads --reasoning into chatgpt reasoning selection", () => {
+      const msg = helpers.mapToolToMessage("chatgpt", { query: "hi", reasoning: "Heavy Reasoning" });
+      expect(msg.reasoning).toBe("Heavy Reasoning");
+    });
+
     it("maps chatgpt.extract to assistant DOM extraction on an explicit tab", () => {
       const msg = helpers.mapToolToMessage("chatgpt.extract", {
         "tab-id": "837343543",

@@ -448,7 +448,7 @@ function handleToolRequest(msg, socket) {
   }
   
   if (extensionMsg.type === "CHATGPT_QUERY") {
-    const { query, model, withPage, file, timeout, sentinel, stablePolls, keepTab, targetTabId, noActivate } = extensionMsg;
+    const { query, model, reasoning, withPage, file, timeout, sentinel, stablePolls, keepTab, targetTabId, noActivate } = extensionMsg;
 
     queueAiRequest(async () => {
       let pageContext = null;
@@ -479,6 +479,7 @@ function handleToolRequest(msg, socket) {
       const result = await chatgptClient.query({
         prompt: fullPrompt,
         model,
+        reasoning,
         file,
         timeout,
         sentinel,
@@ -618,6 +619,7 @@ function handleToolRequest(msg, socket) {
       sendToolResponse(socket, originalId, {
         response: result.response,
         model: result.model,
+        reasoning: result.reasoning,
         tabId: result.tabId,
         controlledTabId: result.controlledTabId,
         conversationUrl: result.conversationUrl,

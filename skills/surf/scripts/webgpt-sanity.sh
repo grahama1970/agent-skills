@@ -18,6 +18,7 @@ Options:
   --output-dir PATH    Artifact directory. Default: /tmp/surf-webgpt-sanity-<timestamp>
   --timeout SECONDS    Browser wait timeout. Default: 900.
   --model MODEL        Optional ChatGPT model selector label.
+  --reasoning LABEL    Optional ChatGPT reasoning dropdown label.
   --tab-id ID          Use this exact Chrome tab as the controlled WebGPT tab.
   --url URL            Resolve an already-open ChatGPT tab by exact URL.
 EOF
@@ -26,6 +27,7 @@ EOF
 output_dir=""
 timeout_s=900
 model=""
+reasoning=""
 tab_id=""
 target_url=""
 
@@ -34,6 +36,7 @@ while [[ $# -gt 0 ]]; do
     --output-dir) output_dir="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
+    --reasoning) reasoning="${2:-}"; shift 2 ;;
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
@@ -79,6 +82,9 @@ EOF
 args=(webgpt.submit --input "$request" --output "$response" --meta-output "$meta" --timeout "$timeout_s" --stable-polls 3)
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
+fi
+if [[ -n "$reasoning" ]]; then
+  args+=(--reasoning "$reasoning")
 fi
 if [[ -n "$tab_id" ]]; then
   args+=(--tab-id "$tab_id")

@@ -22,6 +22,7 @@ Options:
   --output-dir PATH    Artifact directory. Default: /tmp/surf-webgpt-noact-<timestamp>
   --timeout SECONDS    Browser wait timeout. Default: 900.
   --model MODEL        Optional ChatGPT model selector label.
+  --reasoning LABEL    Optional ChatGPT reasoning dropdown label.
 EOF
 }
 
@@ -30,6 +31,7 @@ target_url=""
 output_dir=""
 timeout_s=900
 model=""
+reasoning=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -38,6 +40,7 @@ while [[ $# -gt 0 ]]; do
     --output-dir) output_dir="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
+    --reasoning) reasoning="${2:-}"; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -91,7 +94,8 @@ set +e
   --timeout "$timeout_s" \
   --stable-polls 3 \
   --no-activate \
-  ${model:+--model "$model"}
+  ${model:+--model "$model"} \
+  ${reasoning:+--reasoning "$reasoning"}
 submit_status=$?
 set -e
 

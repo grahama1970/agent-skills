@@ -1002,6 +1002,7 @@ function mapToolToMessage(tool, args, tabId) {
         type: "CHATGPT_QUERY",
         query: a.query,
         model: a.model,
+        reasoning: a.reasoning,
         withPage: a["with-page"],
         file: a.file,
         sentinel: a.sentinel,

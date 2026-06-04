@@ -209,6 +209,7 @@ surf webgpt.submit \
   --output .webgpt/02_response.md \
   --raw-output .webgpt/02_response.raw.md \
   --meta-output .webgpt/02_response.meta.json \
+  --reasoning "Heavy Reasoning" \
   --sentinel auto \
   --stable-polls 3 \
   --timeout 900 \
@@ -243,6 +244,9 @@ Behavior:
   `<<<WEBGPT_DONE:20260510T123456Z:8f41c2ab>>>`.
 - `$surf` appends a non-optional final-marker instruction to the submitted
   prompt.
+- `--model` selects the ChatGPT model dropdown before submit.
+- `--reasoning` selects the ChatGPT reasoning dropdown before submit; use labels
+  exactly as shown in ChatGPT, such as `Pro` or `Heavy Reasoning`.
 - `$surf` waits for the final assistant DOM message to contain the marker and
   then remain unchanged for `--stable-polls` polls.
 - Whole-page text is diagnostic only. It must never satisfy the completion
@@ -316,6 +320,7 @@ Real-world sanity check:
 
 ```bash
 surf webgpt.sanity --output-dir /tmp/surf-webgpt-sanity --timeout 900 --tab-id 837343233
+surf webgpt.sanity --tab-id 837343233 --reasoning "Heavy Reasoning"
 ```
 
 ## Cursor Browser (within Cursor IDE)
@@ -465,6 +470,7 @@ surf webgpt.submit \
   --input .webgpt/01_request.md \
   --output .webgpt/02_response.md \
   --tab-id 837343233 \
+  --reasoning "Pro" \
   --no-activate
 ```
 
@@ -700,6 +706,8 @@ cropped = smart_crop(full_page_bytes, region="detail")
 | Element not found          | Run `surf read` first to get current refs       |
 | Page not loading           | Check URL is valid, try with `https://`         |
 | Empty read output          | Page may still be loading - try `surf wait 2`   |
+| WebGPT submit hangs until I switch to the ChatGPT tab | Background tab: ChatGPT defers DOM updates while `document.hidden`. Use `webgpt.submit --tab-id … --no-activate` (blocks until done). Do **not** poll with `surf read` on the active tab. Rebuild surf-cli after vendor fix; optional `webgpt.extract` if already done. |
+| Agent "doesn't see" sentinel on another tab | `surf read` without `--tab-id` reads the **foreground** tab only. Completion is detected inside `webgpt.submit`, not by the project agent watching Chrome. |
 
 ## Extension Setup (One-time)
 

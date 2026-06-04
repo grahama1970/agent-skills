@@ -9,6 +9,7 @@
 - Extension mode (`/tmp/surf.sock`) is authoritative for authenticated ChatGPT/Gemini/Kimi work. CDP (`surf cdp start`) is for local UI automation and diagnostics — not signed-in ChatGPT proof.
 - WebGPT handoffs use a **sentinel contract**: `controlled_tab_id` required, marker in final assistant DOM message, clean output strips marker and page chrome. `--no-activate` keeps the controlled tab in the background.
 - `webgpt.submit` supports `--attach-file` for a single file (used by `$ask webgpt` for zip review bundles ≤5 files). Gemini and Kimi submit scripts also expose `--attach-file` via CDP file upload.
+- `webgpt.submit` supports `--reasoning LABEL` to select ChatGPT's reasoning dropdown before prompt submission (for example `Pro` or `Heavy Reasoning`).
 - `$ask` calls `$surf` internally for browser oracles; project agents should use `$ask webgpt` (etc.), not raw `surf webgpt.submit`, except when debugging transport.
 - **Cursor Browser lane:** `cursor-browser.tab.list` and `cursor-browser.submit` automate Cursor's embedded Browser via **cursor-browser-bridge** (HTTP on `/tmp/cursor-browser-bridge-port`). Tab id is **`viewId`**, not Chrome tab id. Do not extend surf-cli for Cursor — MCP/bridge-native.
 - `$ask cursor-browser` calls `$surf cursor-browser.submit`; same sentinel proof contract as WebGPT (`controlled_view_id` in meta JSON).

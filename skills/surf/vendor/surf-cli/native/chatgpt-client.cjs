@@ -4,6 +4,7 @@ const SELECTORS = {
   promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
   sendButton: 'button[data-testid="send-button"], button[data-testid*="composer-send"], form button[type="submit"]',
   modelButton: '[data-testid="model-switcher-dropdown-button"]',
+  reasoningButton: 'button[data-testid*="reason"], button[aria-label*="reason" i], button[aria-label*="thinking" i], button[aria-label*="effort" i]',
   menuContainer: '[role="menu"], [data-radix-collection-root]',
   menuItem: 'button, [role="menuitem"], [role="menuitemradio"], [data-testid*="model-switcher-"]',
   assistantMessage: '[data-message-author-role="assistant"], [data-turn="assistant"]',
@@ -17,6 +18,17 @@ const SELECTORS = {
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+async function wakeBackgroundTab(inputCdp, log) {
+  if (!inputCdp) return;
+  try {
+    await inputCdp("Page.setWebLifecycleState", { state: "active" });
+    log?.("Background tab lifecycle set to active for DOM polling");
+  } catch (err) {
+    log?.(`Page.setWebLifecycleState skipped: ${err?.message || err}`);
+  }
+}
+
 
 function buildClickDispatcher() {
   return `function dispatchClickSequence(target){
@@ -280,6 +292,110 @@ async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
   return result.label;
 }
 
+async function selectReasoning(cdp, desiredReasoning, timeoutMs = 8000) {
+  const normalizedReasoning = desiredReasoning.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const clicked = await evaluate(
+    cdp,
+    `(() => {
+      ${buildClickDispatcher()}
+      const normalize = (text) => (text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const desired = ${JSON.stringify(normalizedReasoning)};
+      const visible = (el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+      };
+      const explicit = Array.from(document.querySelectorAll('${SELECTORS.reasoningButton}'))
+        .filter(visible);
+      const semantic = Array.from(document.querySelectorAll('button,[role="button"]'))
+        .filter(visible)
+        .filter((button) => {
+          const text = normalize(button.textContent || '');
+          const aria = normalize(button.getAttribute('aria-label') || '');
+          const testId = normalize(button.getAttribute('data-testid') || '');
+          const combined = text + ' ' + aria + ' ' + testId;
+          const inComposer = Boolean(button.closest('form') || button.closest('[data-testid*="composer"]') || button.closest('#composer-background'));
+          const currentReasoningLabels = new Set(['auto', 'fast', 'pro', 'heavy', 'heavyreasoning']);
+          if (combined.includes('reason') || combined.includes('think') || combined.includes('effort')) return true;
+          if (inComposer && currentReasoningLabels.has(text)) return true;
+          if (desired.length >= 3 && text === desired) return true;
+          return desired.includes(text) && text.length >= 4;
+        });
+      const candidates = [...explicit, ...semantic];
+      const seen = new Set();
+      for (const button of candidates) {
+        if (seen.has(button)) continue;
+        seen.add(button);
+        dispatchClickSequence(button);
+        return {
+          success: true,
+          label: (button.textContent || button.getAttribute('aria-label') || button.getAttribute('data-testid') || '').trim(),
+        };
+      }
+      return { success: false, error: 'Reasoning selector button not found' };
+    })()`
+  );
+  if (!clicked || !clicked.success) {
+    throw new Error(`Reasoning selector button not found for: ${desiredReasoning}`);
+  }
+  await delay(300);
+  const result = await evaluate(
+    cdp,
+    `(async () => {
+      ${buildClickDispatcher()}
+      const TIMEOUT_MS = ${timeoutMs};
+      const targetReasoning = ${JSON.stringify(normalizedReasoning)};
+      const menuSelector = '${SELECTORS.menuContainer}, [role="listbox"], [role="dialog"], [data-radix-popper-content-wrapper]';
+      const itemSelector = '${SELECTORS.menuItem}, [role="option"], [cmdk-item], [data-value]';
+      const normalize = (text) => (text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const visible = (el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+      };
+      const deadline = Date.now() + TIMEOUT_MS;
+      while (Date.now() < deadline) {
+        const containers = Array.from(document.querySelectorAll(menuSelector)).filter(visible);
+        const roots = containers.length ? containers : [document.body];
+        let bestMatch = null;
+        let bestScore = 0;
+        for (const root of roots) {
+          const items = Array.from(root.querySelectorAll(itemSelector)).filter(visible);
+          for (const item of items) {
+            const textRaw = (item.textContent || '').trim();
+            const text = normalize(textRaw);
+            const aria = normalize(item.getAttribute('aria-label') || '');
+            const testId = normalize(item.getAttribute('data-testid') || '');
+            const value = normalize(item.getAttribute('data-value') || '');
+            let score = 0;
+            if (text === targetReasoning || aria === targetReasoning || value === targetReasoning) score = 120;
+            else if (text.includes(targetReasoning) || aria.includes(targetReasoning) || testId.includes(targetReasoning) || value.includes(targetReasoning)) score = 100;
+            else if (targetReasoning.includes(text) && text.length >= 3) score = 70;
+            if (score > bestScore) {
+              bestScore = score;
+              bestMatch = item;
+            }
+          }
+        }
+        if (bestMatch) {
+          const label = (bestMatch.textContent || bestMatch.getAttribute('aria-label') || bestMatch.getAttribute('data-value') || '').trim();
+          dispatchClickSequence(bestMatch);
+          await new Promise(r => setTimeout(r, 250));
+          return { success: true, label };
+        }
+        await new Promise(r => setTimeout(r, 100));
+      }
+      return { success: false, error: 'Reasoning option not found' };
+    })()`
+  );
+  if (!result || !result.success) {
+    throw new Error(`Reasoning option not found: ${desiredReasoning}`);
+  }
+  return result.label;
+}
+
 async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
   const fs = require("fs");
   const path = require("path");
@@ -477,6 +593,12 @@ async function clickSend(cdp, inputCdp) {
 
 async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const sentinel = options.sentinel || null;
+  const noActivate = options.noActivate === true;
+  const inputCdp = options.inputCdp || null;
+  const log = options.log || (() => {});
+  if (noActivate) {
+    await wakeBackgroundTab(inputCdp, log);
+  }
   const deadline = Date.now() + timeoutMs;
   let previousText = "";
   let stableCycles = 0;
@@ -511,7 +633,13 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
     }
     const stableMs = Date.now() - lastChangeAt;
     const hasSentinel = sentinel ? ((snapshot.text || "").includes(sentinel) || Boolean(snapshot.sentinelMatch)) : true;
-    if (!snapshot.stopVisible && hasSentinel) {
+    const pageHasSentinel = sentinel ? snapshot.pageTextContainsSentinel === true : false;
+    // Background/hidden tabs often keep [data-testid=stop-button] in the DOM until the tab
+    // is focused, even after the assistant message is complete. In --no-activate mode we
+    // trust a stable assistant sentinel (or page-level sentinel) instead of stop-button absence.
+    const stopGateOk = !snapshot.stopVisible
+      || (noActivate && hasSentinel && (snapshot.finished || pageHasSentinel));
+    if (stopGateOk && hasSentinel) {
       const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
       const finishedVisible = snapshot.finished;
       const responseComplete = sentinel ? stableEnough : (finishedVisible || stableEnough);
@@ -566,6 +694,7 @@ async function query(options) {
   const {
     prompt,
     model,
+    reasoning,
     file,
     timeout = 2700000,
     sentinel,
@@ -616,6 +745,11 @@ async function query(options) {
       const selectedLabel = await selectModel(cdp, model);
       log(`Selected model: ${selectedLabel}`);
     }
+    let selectedReasoning = null;
+    if (reasoning) {
+      selectedReasoning = await selectReasoning(cdp, reasoning);
+      log(`Selected reasoning: ${selectedReasoning}`);
+    }
     if (file) {
       await attachFile(cdp, inputCdp, file, log);
       log(`File attached: ${file}`);
@@ -624,12 +758,13 @@ async function query(options) {
     log("Prompt typed");
     await clickSend(cdp, inputCdp);
     log("Prompt sent, waiting for response...");
-    const response = await waitForResponse(cdp, timeout, { sentinel, stablePolls });
+    const response = await waitForResponse(cdp, timeout, { sentinel, stablePolls, noActivate, inputCdp, log });
     const conversationUrl = await evaluate(cdp, "window.location.href").catch(() => null);
     log(`Response received (${response.text.length} chars)`);
     return {
       response: response.text,
       model: model || "current",
+      reasoning: selectedReasoning || reasoning || null,
       tabId,
       controlledTabId: tabId,
       conversationUrl,

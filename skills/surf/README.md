@@ -62,6 +62,7 @@ $surf tab.list
 $surf read
 $surf snap --output /tmp/page.png
 $surf webgpt.submit --input request.md --output response.md --tab-id 837344453
+$surf webgpt.submit --input request.md --output response.md --tab-id 837344453 --reasoning "Heavy Reasoning"
 $surf webgpt.submit --input request.md --output response.md --tab-id 837344453 --no-activate
 $surf setup
 $surf extension.build
@@ -154,6 +155,7 @@ See `/ask` `README.md` and `SKILL.md` for bundle delivery rules, project binding
 | --- | --- | --- |
 | Extension automation | You want tab control, reads, clicks, and screenshots in your signed-in Chrome | `./run.sh tab.list` then `./run.sh read` |
 | WebGPT submit | You need sentinel-backed ChatGPT handoff with clean/raw/meta artifacts | `./run.sh webgpt.submit --input REQ.md --output RESP.md --tab-id ID` |
+| WebGPT reasoning | You need to switch ChatGPT's reasoning dropdown before submit | add `--reasoning "Pro"` or `--reasoning "Heavy Reasoning"` |
 | Background WebGPT | You must not foreground the controlled ChatGPT tab while you work | add `--no-activate` to `webgpt.submit` |
 | WebGPT extract | ChatGPT already finished and you need to recover assistant-only DOM text | `./run.sh webgpt.extract --tab-id ID --sentinel '<<<WEBGPT_DONE:...>>>'` |
 | WebGPT sanity | You want a real end-to-end proof that sentinel transport still works | `./run.sh webgpt.sanity --tab-id ID` |
@@ -396,7 +398,7 @@ Requires cursor-browser-bridge. ChatGPT submit clicks **Send prompt** after fill
 ### WebGPT handoff (Chrome)
 
 ```bash
-./run.sh webgpt.submit --input REQ.md --output RESP.md --tab-id ID [--no-activate]
+./run.sh webgpt.submit --input REQ.md --output RESP.md --tab-id ID [--reasoning "Heavy Reasoning"] [--no-activate]
 ./run.sh webgpt.extract --tab-id ID --sentinel '<<<WEBGPT_DONE:...>>>' --output OUT.md
 ./run.sh webgpt.sanity --tab-id ID
 ./run.sh webgpt.no-activate-sanity --tab-id ID

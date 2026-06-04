@@ -99,6 +99,7 @@ const TOOLS = {
         opts: {
           "with-page": "Include current page context",
           model: "Model: gpt-4o, o1, etc.",
+          reasoning: "Reasoning dropdown label: Pro, Heavy Reasoning, etc.",
           file: "Attach file",
           timeout: "Timeout in seconds (default: 2700 = 45min)",
           sentinel: "Wait until the final assistant message contains this exact marker",
@@ -111,6 +112,7 @@ const TOOLS = {
           { cmd: 'chatgpt "summarize" --with-page', desc: "With page context" },
           { cmd: 'chatgpt "review" --file code.ts', desc: "With file" },
           { cmd: 'chatgpt "analyze" --model gpt-4o', desc: "Specify model" },
+          { cmd: 'chatgpt "analyze" --reasoning "Heavy Reasoning"', desc: "Specify reasoning effort" },
         ]
       },
       "chatgpt.extract": {
@@ -2544,7 +2546,10 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
-    console.error(`\n[${data.model || 'unknown'} | ${((data.tookMs || 0) / 1000).toFixed(1)}s]`);
+    const meta = [data.model || 'unknown'];
+    if (data.reasoning) meta.push(data.reasoning);
+    meta.push(`${((data.tookMs || 0) / 1000).toFixed(1)}s`);
+    console.error(`\n[${meta.join(' | ')}]`);
   } else if (tool === "perplexity" && data?.response) {
     console.log(data.response);
     const meta = [];
