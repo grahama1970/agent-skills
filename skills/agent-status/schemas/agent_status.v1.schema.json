@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent_status.v1",
+  "title": "Agent Status v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema",
+    "campaign_id",
+    "updated_at",
+    "state",
+    "goal",
+    "current_step",
+    "next_action",
+    "human_decision_required",
+    "blockers",
+    "not_proven",
+    "proofs"
+  ],
+  "properties": {
+    "schema": { "const": "agent_status.v1" },
+    "campaign_id": { "type": "string", "minLength": 1 },
+    "updated_at": { "type": "string", "minLength": 1 },
+    "state": {
+      "enum": [
+        "not_started",
+        "running",
+        "needs_attention",
+        "blocked",
+        "failed",
+        "passed_scoped_gate",
+        "done",
+        "idle"
+      ]
+    },
+    "goal": { "type": "string", "minLength": 1 },
+    "current_step": {
+      "type": "object",
+      "required": ["id", "label", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "status": { "type": "string" }
+      }
+    },
+    "last_completed": {
+      "type": "object",
+      "properties": {
+        "label": { "type": "string" },
+        "verdict": { "type": "string" },
+        "proof_path": { "type": "string" }
+      }
+    },
+    "next_action": {
+      "type": "object",
+      "required": ["owner", "label", "why"],
+      "properties": {
+        "owner": { "enum": ["agent", "human", "none"] },
+        "label": { "type": "string" },
+        "why": { "type": "string" }
+      }
+    },
+    "human_decision_required": { "type": "boolean" },
+    "human_decisions": { "type": "array" },
+    "blockers": { "type": "array" },
+    "not_proven": { "type": "array" },
+    "do_not_do_next": { "type": "array" },
+    "proofs": { "type": "array" },
+    "artifacts": { "type": "array" },
+    "roadmap": { "type": "array" },
+    "metadata": { "type": "object" }
+  }
+}

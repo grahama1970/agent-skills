@@ -1,0 +1,75 @@
+{
+  "schema": "agent_status.v1",
+  "campaign_id": "refactor-harness-e2e",
+  "updated_at": "2026-06-05T16:24:16Z",
+  "state": "passed_scoped_gate",
+  "goal": "Finish scoped refactor harness E2E proof",
+  "current_step": {
+    "id": "a01-a18-hardened-gate",
+    "label": "A01-A18 hardened concurrent LLM + OpenCode summarize",
+    "status": "passed"
+  },
+  "last_completed": {
+    "label": "A01-A18 hardened concurrent LLM + OpenCode summarize",
+    "verdict": "PASS_SPEC",
+    "proof_path": ".plan-iterate/refactor-harness-e2e/proof/refactor-concurrent-mixed.json"
+  },
+  "next_action": {
+    "owner": "agent",
+    "label": "Start reviewer packet + reviewer fan-in phase",
+    "why": "This is the next unproven harness capability after concurrent fan-in passed."
+  },
+  "human_decision_required": true,
+  "human_decisions": [
+    {
+      "id": "A",
+      "label": "Continue harness",
+      "meaning": "Start reviewer packet + reviewer fan-in."
+    },
+    {
+      "id": "B",
+      "label": "Transport UI",
+      "meaning": "Start Transport Room B1 UI."
+    },
+    {
+      "id": "C",
+      "label": "Stabilize only",
+      "meaning": "Checkpoint and stop."
+    }
+  ],
+  "blockers": [],
+  "not_proven": [
+    "Transport Room B1 UI",
+    "build_review_packet reviewer fan-in",
+    "Full OpenCode message delivery",
+    "Standing agents / serve-as-harness",
+    "Full agentic harness completion"
+  ],
+  "do_not_do_next": [
+    "Do not call the whole agentic harness complete.",
+    "Do not rerun WebGPT just to get another generic green response.",
+    "Do not add vanity dashboard metrics or percentages."
+  ],
+  "proofs": [
+    {
+      "kind": "gate",
+      "label": "A01-A18 hardened concurrent LLM + OpenCode summarize",
+      "path": ".plan-iterate/refactor-harness-e2e/proof/refactor-concurrent-mixed.json",
+      "verdict": "PASS_SPEC",
+      "recorded_at": "2026-06-05T16:24:16Z"
+    }
+  ],
+  "roadmap": [
+    {
+      "area": "Concurrent mixed DAG",
+      "status": "passed",
+      "evidence": "Live non-mocked proof accepted as PASS_SPEC for A01-A18."
+    },
+    {
+      "area": "Reviewer packet + reviewer fan-in",
+      "status": "not_started",
+      "evidence": "Next recommended phase."
+    }
+  ],
+  "metadata": {}
+}
