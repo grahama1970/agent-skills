@@ -27,6 +27,13 @@ Options:
                             (for example: "Pro" or "Heavy Reasoning").
   --tab-id ID               Use this exact Chrome tab as the controlled WebGPT tab.
   --url URL                 Resolve an already-open ChatGPT tab by exact URL.
+  --expect-url URL          When using --tab-id, require that tab to match this
+                            ChatGPT URL/conversation before submitting.
+  --expect-title TEXT       When using --tab-id, require the current tab title
+                            to contain this text before submitting.
+  --allow-unverified-tab-id Allow a bare --tab-id even when multiple ChatGPT
+                            tabs are open. Use only for privileged/manual
+                            recovery where URL/title identity is unavailable.
   --create-tab              Open a fresh ChatGPT tab (inactive) and control that tab.
                             Skips persisted controlled-tab state file lookup.
   --no-remember             Do not read or write the global controlled-tab state file.
@@ -57,6 +64,9 @@ model=""
 reasoning=""
 tab_id=""
 target_url=""
+expect_url=""
+expect_title=""
+allow_unverified_tab_id=0
 no_activate=0
 create_tab=0
 no_remember=0
@@ -78,6 +88,9 @@ while [[ $# -gt 0 ]]; do
     --reasoning) reasoning="${2:-}"; shift 2 ;;
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
+    --expect-url) expect_url="${2:-}"; shift 2 ;;
+    --expect-title) expect_title="${2:-}"; shift 2 ;;
+    --allow-unverified-tab-id) allow_unverified_tab_id=1; shift ;;
     --no-activate) no_activate=1; shift ;;
     --create-tab) create_tab=1; shift ;;
     --no-remember) no_remember=1; shift ;;
@@ -166,6 +179,11 @@ if [[ -n "$tab_id" ]]; then
     exit 2
   fi
   args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
+  if [[ "$create_tab" -eq 1 ]]; then
+    requested_tab_source="create-tab"
+  else
+    requested_tab_source="tab-id"
+  fi
 elif [[ -n "$target_url" ]]; then
   tab_list_text="$("$RUN_SH" tab.list 2>/dev/null || true)"
   if ! webgpt_resolve_url_from_list "$target_url" "$tab_list_text"; then
@@ -180,12 +198,71 @@ elif [[ -n "$target_url" ]]; then
   fi
   requested_tab_id="$resolved_tab_id"
   args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
+  requested_tab_source="url"
 elif [[ "$no_remember" -eq 0 && "$create_tab" -eq 0 && -f "$tab_state_file" ]]; then
   remembered_tab_id="$(tr -cd '0-9' < "$tab_state_file" | head -c 20 || true)"
   if [[ -n "$remembered_tab_id" ]]; then
     args+=(--tab-id "$remembered_tab_id")
     requested_tab_id="$remembered_tab_id"
+    requested_tab_source="remembered"
   fi
+fi
+
+if [[ -n "${requested_tab_id:-}" ]]; then
+  tab_list_text="${tab_list_text:-$("$RUN_SH" tab.list 2>/dev/null || true)}"
+  identity_args=(check --tab-id "$requested_tab_id" --source "${requested_tab_source:-tab-id}")
+  if [[ -n "$target_url" && "${requested_tab_source:-}" == "url" ]]; then
+    identity_args+=(--expect-url "$target_url")
+  elif [[ -n "$expect_url" ]]; then
+    identity_args+=(--expect-url "$expect_url")
+  fi
+  if [[ -n "$expect_title" ]]; then
+    identity_args+=(--expect-title "$expect_title")
+  fi
+  if [[ "$allow_unverified_tab_id" -eq 1 ]]; then
+    identity_args+=(--allow-unverified-tab-id)
+  fi
+  set +e
+  identity_preflight_json="$(
+    printf '%s\n' "$tab_list_text" \
+      | python3 "${SCRIPT_DIR}/lib/webgpt_tab_identity.py" "${identity_args[@]}"
+  )"
+  identity_status=$?
+  set -e
+  if [[ "$identity_status" -ne 0 ]]; then
+    failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$identity_preflight_json" "$failed_at" <<'PY'
+import json, pathlib, sys
+meta, inp, submitted, out, raw, err, sentinel, requested_tab_id, target_url, model, reasoning, identity_s, failed_at = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "tab_identity_preflight_failed",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n")
+PY
+    echo "webgpt.submit tab identity preflight failed for tab $requested_tab_id." >&2
+    python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('error') or 'tab_identity_failed')" "$identity_preflight_json" >&2
+    echo "Use --url <conversation-url>, --expect-url, --expect-title, --create-tab, or --allow-unverified-tab-id." >&2
+    exit 2
+  fi
+else
+  identity_preflight_json=""
 fi
 
 # Pre-run focus snapshot (also used for --no-activate foreground guard).
@@ -259,9 +336,13 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, model, reasoning = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, model, reasoning, identity_s = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
@@ -275,6 +356,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_url": target_url or None,
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -284,9 +366,13 @@ PY
 fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning, identity_s = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
     "input": inp,
@@ -299,6 +385,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_url": target_url or None,
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -321,9 +408,13 @@ clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning, identity_s = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -409,6 +500,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_url": target_url or None,
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
     "stable_polls": int(stable),
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,

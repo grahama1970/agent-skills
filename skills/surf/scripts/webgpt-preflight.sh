@@ -17,6 +17,9 @@ Validates extension socket, focus.state, and WebGPT tab targeting before submit.
 Options:
   --tab-id ID
   --url URL
+  --expect-url URL
+  --expect-title TEXT
+  --allow-unverified-tab-id
   --no-activate
   --allow-foreground-controlled
   --json
@@ -26,6 +29,9 @@ EOF
 
 tab_id=""
 target_url=""
+expect_url=""
+expect_title=""
+allow_unverified_tab_id=0
 no_activate=0
 allow_foreground=0
 json_only=0
@@ -34,6 +40,9 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
+    --expect-url) expect_url="${2:-}"; shift 2 ;;
+    --expect-title) expect_title="${2:-}"; shift 2 ;;
+    --allow-unverified-tab-id) allow_unverified_tab_id=1; shift ;;
     --no-activate) no_activate=1; shift ;;
     --allow-foreground-controlled) allow_foreground=1; shift ;;
     --json) json_only=1; shift ;;
@@ -42,7 +51,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-export RUN_SH tab_id target_url no_activate allow_foreground json_only
+export RUN_SH SCRIPT_DIR tab_id target_url expect_url expect_title allow_unverified_tab_id no_activate allow_foreground json_only
 exec python3 - "$@" <<'PY'
 import json
 import os
@@ -52,10 +61,13 @@ import sys
 run_sh = os.environ["RUN_SH"]
 tab_id = os.environ.get("tab_id", "")
 target_url = os.environ.get("target_url", "")
+expect_url = os.environ.get("expect_url", "")
+expect_title = os.environ.get("expect_title", "")
+allow_unverified_tab_id = os.environ.get("allow_unverified_tab_id") == "1"
 no_activate = os.environ.get("no_activate") == "1"
 allow_foreground = os.environ.get("allow_foreground") == "1"
 json_only = os.environ.get("json_only") == "1"
-lib = os.path.join(os.path.dirname(__file__), "lib")
+lib = os.path.join(os.environ["SCRIPT_DIR"], "lib")
 
 def surf(*args):
     return subprocess.run([run_sh, *args], capture_output=True, text=True)
@@ -90,15 +102,32 @@ if tab_id:
     if not digits:
         add("tab_id_valid", False, "invalid --tab-id")
     else:
-        requested_tab_id = digits
-        add("tab_id_valid", True, digits)
-        open_ok = any(
-            len(p := line.split("\t", 2)) >= 3
-            and p[0] == digits
-            and "chatgpt.com" in p[2]
-            for line in tab_list.splitlines()
+        ident = subprocess.run(
+            [
+                sys.executable,
+                os.path.join(lib, "webgpt_tab_identity.py"),
+                "check",
+                "--tab-id",
+                digits,
+                "--source",
+                "tab-id",
+                *(["--expect-url", expect_url] if expect_url else []),
+                *(["--expect-title", expect_title] if expect_title else []),
+                *(["--allow-unverified-tab-id"] if allow_unverified_tab_id else []),
+            ],
+            input=tab_list,
+            capture_output=True,
+            text=True,
         )
-        add("tab_open_chatgpt", open_ok, "ok" if open_ok else f"no open chatgpt tab {digits}")
+        try:
+            identity = json.loads(ident.stdout)
+        except json.JSONDecodeError:
+            identity = {"ok": False, "error": "identity_checker_failed", "checks": []}
+        requested_tab_id = identity.get("tab_id") or digits
+        for check in identity.get("checks", []):
+            add(check.get("name", "tab_identity"), check.get("ok"), check.get("detail", ""))
+        if not identity.get("ok"):
+            add("tab_identity", False, identity.get("error") or "failed")
 elif target_url:
     proc = subprocess.run(
         [sys.executable, os.path.join(lib, "resolve_webgpt_tab.py"), "resolve-url", "--url", target_url],
@@ -113,6 +142,31 @@ elif target_url:
     if resolved.get("ok"):
         requested_tab_id = resolved["tab_id"]
         add("url_resolve", True, f"tab_id={requested_tab_id}")
+        ident = subprocess.run(
+            [
+                sys.executable,
+                os.path.join(lib, "webgpt_tab_identity.py"),
+                "check",
+                "--tab-id",
+                requested_tab_id,
+                "--source",
+                "url",
+                "--expect-url",
+                target_url,
+                *(["--expect-title", expect_title] if expect_title else []),
+            ],
+            input=tab_list,
+            capture_output=True,
+            text=True,
+        )
+        try:
+            identity = json.loads(ident.stdout)
+        except json.JSONDecodeError:
+            identity = {"ok": False, "error": "identity_checker_failed", "checks": []}
+        for check in identity.get("checks", []):
+            add(check.get("name", "tab_identity"), check.get("ok"), check.get("detail", ""))
+        if not identity.get("ok"):
+            add("tab_identity", False, identity.get("error") or "failed")
     else:
         err = resolved.get("error") or "no_open_tab_for_url"
         add("url_resolve", False, err)
