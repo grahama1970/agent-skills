@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+# dotenv_helper: not used — AGENT_STATUS_DIR / AGENT_STATUS_CAMPAIGN are optional process env only.
+
 
 VALID_STATES = {
     "not_started",
