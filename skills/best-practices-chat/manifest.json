@@ -1,0 +1,17 @@
+{
+  "name": "best-practices-chat",
+  "version": "0.1.0",
+  "description": "Keep Sparta Chat usable as modern chat while preserving evidence-gated compliance semantics.",
+  "entrypoint": "SKILL.md",
+  "project": "sparta-explorer-review",
+  "tags": [
+    "sparta-chat",
+    "chatwell",
+    "evidence-case",
+    "artifact-panel",
+    "nvis",
+    "qid",
+    "voice",
+    "streamdeck"
+  ]
+}
