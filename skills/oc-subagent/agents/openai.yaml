@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenCode Subagent"
+  short_description: "Persistent OpenCode child-session subagents"
+  default_prompt: "Use $oc-subagent to run persistent OpenCode child-session workers with proof artifacts."
