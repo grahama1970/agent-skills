@@ -1,0 +1,4 @@
+interface:
+  display_name: "Goal Helper"
+  short_description: "Turn messy work into proof-driven goals."
+  default_prompt: "Use goal-helper to define the single proof command, completion criteria, retry limit, stop condition, and status snapshot for this task."
