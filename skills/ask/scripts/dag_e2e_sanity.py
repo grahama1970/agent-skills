@@ -3,34 +3,41 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
+import typer
+
 
 ASK_DIR = Path(__file__).resolve().parents[1]
+app = typer.Typer(add_completion=False, help="Run /ask DAG live E2E sanity checks.")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Run a live /ask DAG E2E sanity check.")
-    parser.add_argument("--output-root", default="", help="Artifact root; defaults to a temporary directory")
-    parser.add_argument("--ask-id", default="ask-dag-e2e-sanity", help="Stable ask run id")
-    parser.add_argument("--keep", action="store_true", help="Keep temporary directory path in output")
-    parser.add_argument("--include-oracle", action="store_true", help="Also run two live one-shot scillm oracle nodes")
-    args = parser.parse_args()
-
+@app.command()
+def main(
+    output_root: str = typer.Option("", "--output-root", help="Artifact root; defaults to a temporary directory"),
+    ask_id: str = typer.Option("ask-dag-e2e-sanity", "--ask-id", help="Stable ask run id"),
+    keep: bool = typer.Option(False, "--keep", help="Keep temporary directory path in output"),
+    include_oracle: bool = typer.Option(False, "--include-oracle", help="Also run two live one-shot scillm oracle nodes"),
+) -> None:
     temp_dir_ctx = None
-    if args.output_root:
-        output_root = Path(args.output_root).expanduser().resolve()
-        output_root.mkdir(parents=True, exist_ok=True)
+    if output_root:
+        output_root_path = Path(output_root).expanduser().resolve()
+        output_root_path.mkdir(parents=True, exist_ok=True)
     else:
         temp_dir_ctx = tempfile.TemporaryDirectory(prefix="ask-dag-e2e-")
-        output_root = Path(temp_dir_ctx.name)
+        output_root_path = Path(temp_dir_ctx.name)
 
+    exit_code = _run(output_root=output_root_path, ask_id=ask_id, include_oracle=include_oracle)
+    if temp_dir_ctx is not None and not keep:
+        temp_dir_ctx.cleanup()
+    raise typer.Exit(exit_code)
+
+
+def _run(*, output_root: Path, ask_id: str, include_oracle: bool) -> int:
     dag_path = output_root / "realistic.scillm-dag.json"
     report_depends_on = ["memory_ask_contract", "memory_report_contract"]
     nodes: list[dict[str, Any]] = [
@@ -49,7 +56,7 @@ def main() -> int:
             "input": {"scope": "ask", "k": 3},
         },
     ]
-    if args.include_oracle:
+    if include_oracle:
         report_depends_on.extend(["brandon_comment", "margaret_comment"])
         nodes.extend([
             {
@@ -116,7 +123,7 @@ def main() -> int:
         "--dag-file",
         str(dag_path),
         "--ask-id",
-        args.ask_id,
+        ask_id,
         "--run-output-root",
         str(output_root / "runs"),
         "--overwrite",
@@ -124,10 +131,10 @@ def main() -> int:
         "--json",
     ]
     completed = subprocess.run(command, cwd=ASK_DIR, text=True, capture_output=True, timeout=180)
-    run_dir = output_root / "runs" / args.ask_id
-    request_path = run_dir / f"{args.ask_id}.request.json"
-    status_path = run_dir / f"{args.ask_id}.status.json"
-    events_path = run_dir / f"{args.ask_id}.events.jsonl"
+    run_dir = output_root / "runs" / ask_id
+    request_path = run_dir / f"{ask_id}.request.json"
+    status_path = run_dir / f"{ask_id}.status.json"
+    events_path = run_dir / f"{ask_id}.events.jsonl"
     manifest_path = run_dir / "dag" / "manifest.json"
     report_path = run_dir / "dag" / "final_report.out.md"
 
@@ -177,8 +184,6 @@ def main() -> int:
         "node_ok": node_ok,
     }
     print(json.dumps(summary, indent=2, sort_keys=True))
-    if temp_dir_ctx is not None and not args.keep:
-        temp_dir_ctx.cleanup()
     return 0 if ok else 1
 
 
@@ -192,4 +197,4 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    app()

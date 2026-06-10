@@ -6,7 +6,6 @@ from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(usecwd=True), override=False)
 
-import argparse
 import json
 import os
 import signal
@@ -15,11 +14,15 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
+
+import typer
 
 
 ASK_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT_ROOT = ASK_ROOT / ".ask_artifacts" / "phase2-e2e"
 SUBAGENT_RUNNER = ASK_ROOT.parent / "subagent-runner" / "run.sh"
+app = typer.Typer(add_completion=False, help="Run live /ask E2E checks.")
 
 
 @dataclass(frozen=True)
@@ -31,17 +34,17 @@ class Case:
     expect_zero: bool = True
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Run live /ask E2E checks.")
-    parser.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT))
-    parser.add_argument("--fast", action="store_true", help="Skip expensive live oracle/deep-review cases.")
-    parser.add_argument(
+@app.command()
+def main(
+    output_root: str = typer.Option(str(DEFAULT_OUTPUT_ROOT), "--output-root"),
+    fast: bool = typer.Option(False, "--fast", help="Skip expensive live oracle/deep-review cases."),
+    only: list[str] | None = typer.Option(
+        None,
         "--only",
-        action="append",
-        default=[],
         help="Run cases whose names contain this substring. May be repeated.",
-    )
-    args = parser.parse_args()
+    ),
+) -> None:
+    args = SimpleNamespace(output_root=output_root, fast=fast, only=only or [])
 
     output_root = Path(args.output_root)
     run_dir = output_root / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -64,7 +67,7 @@ def main() -> int:
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     (run_dir / "PHASE_2_E2E_REPORT.md").write_text(render_report(summary), encoding="utf-8")
     print(json.dumps(summary, indent=2))
-    return 1 if summary["failed"] else 0
+    raise typer.Exit(1 if summary["failed"] else 0)
 
 
 def build_cases(*, run_dir: Path, fast: bool) -> list[Case]:
@@ -584,4 +587,4 @@ def _runtime_cell(result: dict) -> str:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    app()

@@ -7,37 +7,47 @@ evidence report. It is intentionally outside the default pytest suite.
 
 from __future__ import annotations
 
-import argparse
 import json
 import os
 import subprocess
-import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
+import typer
 
 
 ASK_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = ASK_ROOT.parents[1]
 DEFAULT_SCILLM_BASE = os.environ.get("SCILLM_BASE_URL", "http://localhost:4001").rstrip("/")
 DEFAULT_SCILLM_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")
+app = typer.Typer(add_completion=False, help="Run real ask/scillm persona sanity checks.")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Run real ask/scillm persona sanity checks.")
-    parser.add_argument("--persona-id", default="Brandon")
-    parser.add_argument("--model", default=os.environ.get("ASK_PERSONA_E2E_MODEL", "gpt-5.5"))
-    parser.add_argument("--output-dir", default="/tmp/ask-persona-delegate-e2e")
-    parser.add_argument("--timeout", type=float, default=360.0)
-    parser.add_argument("--scillm-base-url", default=DEFAULT_SCILLM_BASE)
-    parser.add_argument("--scillm-api-key", default=DEFAULT_SCILLM_KEY)
-    parser.add_argument("--skip-ask", action="store_true")
-    parser.add_argument("--skip-scillm", action="store_true")
-    args = parser.parse_args()
-
+@app.command()
+def main(
+    persona_id: str = typer.Option("Brandon", "--persona-id"),
+    model: str = typer.Option(os.environ.get("ASK_PERSONA_E2E_MODEL", "gpt-5.5"), "--model"),
+    output_dir: str = typer.Option("/tmp/ask-persona-delegate-e2e", "--output-dir"),
+    timeout: float = typer.Option(360.0, "--timeout"),
+    scillm_base_url: str = typer.Option(DEFAULT_SCILLM_BASE, "--scillm-base-url"),
+    scillm_api_key: str = typer.Option(DEFAULT_SCILLM_KEY, "--scillm-api-key"),
+    skip_ask: bool = typer.Option(False, "--skip-ask"),
+    skip_scillm: bool = typer.Option(False, "--skip-scillm"),
+) -> None:
+    args = SimpleNamespace(
+        persona_id=persona_id,
+        model=model,
+        output_dir=output_dir,
+        timeout=timeout,
+        scillm_base_url=scillm_base_url,
+        scillm_api_key=scillm_api_key,
+        skip_ask=skip_ask,
+        skip_scillm=skip_scillm,
+    )
     output_dir = Path(args.output_dir).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
     started_at = datetime.now(timezone.utc).isoformat()
@@ -63,10 +73,10 @@ def main() -> int:
     report_path = output_dir / "persona-delegate-e2e-report.json"
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2, sort_keys=True, default=str))
-    return 0 if ok else 1
+    raise typer.Exit(0 if ok else 1)
 
 
-def run_ask_persona(args: argparse.Namespace, output_dir: Path) -> dict[str, Any]:
+def run_ask_persona(args: SimpleNamespace, output_dir: Path) -> dict[str, Any]:
     ask_id = "persona-delegate-ask-live"
     ask_runs = output_dir / "ask-runs"
     prompt = "Critique whether a retry loop fails closed when a downstream service stays unavailable. Keep it under 120 words."
@@ -146,7 +156,7 @@ def run_ask_persona(args: argparse.Namespace, output_dir: Path) -> dict[str, Any
     }
 
 
-def run_scillm_persona(args: argparse.Namespace, output_dir: Path) -> dict[str, Any]:
+def run_scillm_persona(args: SimpleNamespace, output_dir: Path) -> dict[str, Any]:
     started = time.time()
     request_path = output_dir / "scillm-persona.request.json"
     response_path = output_dir / "scillm-persona.response.json"
@@ -221,7 +231,7 @@ def run_scillm_persona(args: argparse.Namespace, output_dir: Path) -> dict[str, 
     }
 
 
-def cross_check(args: argparse.Namespace, checks: list[dict[str, Any]]) -> dict[str, Any]:
+def cross_check(args: SimpleNamespace, checks: list[dict[str, Any]]) -> dict[str, Any]:
     by_name = {check["name"]: check for check in checks}
     errors = []
     ask_check = by_name.get("ask_persona")
@@ -278,4 +288,4 @@ def _extract_chat_answer(payload: dict[str, Any]) -> str:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    app()

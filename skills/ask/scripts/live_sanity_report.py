@@ -11,7 +11,6 @@ from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(usecwd=True), override=False)
 
-import argparse
 import html
 import json
 import os
@@ -21,7 +20,10 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
+
+import typer
 
 
 ASK_ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +38,7 @@ BAD_ANSWER_MARKERS = [
     "i don't have enough information",
     "i cannot answer",
 ]
+app = typer.Typer(add_completion=False, help="Run opt-in live /ask sanity checks.")
 
 
 @dataclass(frozen=True)
@@ -57,16 +60,35 @@ class Case:
     readiness_contribution: str = "supports_feature_readiness"
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Run real-world /ask sanity E2E checks and render an HTML report.")
-    parser.add_argument("--output-root", default=str(DEFAULT_OUTPUT_ROOT), help="Directory for live sanity reports.")
-    parser.add_argument("--allow-live", action="store_true", help="Actually execute live checks.")
-    parser.add_argument("--plan-only", action="store_true", help="Write the report without executing checks.")
-    parser.add_argument("--profile", choices=("smoke", "core-live", "release"), default="release", help="Readiness profile to evaluate.")
-    parser.add_argument("--include-expensive", action="store_true", help="Include fresh discovery and SPARTA evidence-case checks.")
-    parser.add_argument("--only", action="append", default=[], help="Run cases whose name contains this substring.")
-    parser.add_argument("--timeout-scale", type=float, default=1.0, help="Scale every case timeout by this multiplier.")
-    args = parser.parse_args()
+@app.command()
+def main(
+    output_root: str = typer.Option(str(DEFAULT_OUTPUT_ROOT), "--output-root", help="Directory for live sanity reports."),
+    allow_live: bool = typer.Option(False, "--allow-live", help="Actually execute live checks."),
+    plan_only: bool = typer.Option(False, "--plan-only", help="Write the report without executing checks."),
+    profile: str = typer.Option(
+        "release",
+        "--profile",
+        help="Readiness profile to evaluate: smoke, core-live, or release.",
+    ),
+    include_expensive: bool = typer.Option(
+        False,
+        "--include-expensive",
+        help="Include fresh discovery and SPARTA evidence-case checks.",
+    ),
+    only: list[str] | None = typer.Option(None, "--only", help="Run cases whose name contains this substring."),
+    timeout_scale: float = typer.Option(1.0, "--timeout-scale", help="Scale every case timeout by this multiplier."),
+) -> None:
+    if profile not in {"smoke", "core-live", "release"}:
+        raise typer.BadParameter("profile must be one of: smoke, core-live, release")
+    args = SimpleNamespace(
+        output_root=output_root,
+        allow_live=allow_live,
+        plan_only=plan_only,
+        profile=profile,
+        include_expensive=include_expensive,
+        only=only or [],
+        timeout_scale=timeout_scale,
+    )
 
     if not args.allow_live and not args.plan_only and os.environ.get("ASK_LIVE_SANITY_E2E") != "1":
         raise SystemExit(
@@ -122,7 +144,7 @@ def main() -> int:
     (run_dir / "report.md").write_text(render_markdown(summary), encoding="utf-8")
 
     print(json.dumps({"run_dir": str(run_dir), "html": str(run_dir / "index.html"), **summary["totals"]}, indent=2))
-    return 1 if summary["totals"]["failed_required"] else 0
+    raise typer.Exit(1 if summary["totals"]["failed_required"] else 0)
 
 
 def build_cases(*, run_dir: Path, include_expensive: bool, profile: str) -> list[Case]:
@@ -1369,4 +1391,4 @@ def escape(value: Any) -> str:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    app()

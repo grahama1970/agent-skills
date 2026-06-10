@@ -3,34 +3,42 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
+import typer
+
 
 ASK_DIR = Path(__file__).resolve().parents[1]
+app = typer.Typer(add_completion=False, help="Run /ask DAG negative sanity checks.")
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Run a live /ask DAG check that fails closed on a required node.",
-    )
-    parser.add_argument("--output-root", default="", help="Artifact root; defaults to a temp directory")
-    parser.add_argument("--ask-id", default="ask-dag-negative-sanity", help="Stable ask run id")
-    parser.add_argument("--keep", action="store_true", help="Keep temporary directory path in output")
-    args = parser.parse_args()
-
+@app.command()
+def main(
+    output_root: str = typer.Option("", "--output-root", help="Artifact root; defaults to a temp directory"),
+    ask_id: str = typer.Option("ask-dag-negative-sanity", "--ask-id", help="Stable ask run id"),
+    keep: bool = typer.Option(False, "--keep", help="Keep temporary directory path in output"),
+) -> None:
     temp_dir_ctx = None
-    if args.output_root:
-        output_root = Path(args.output_root).expanduser().resolve()
-        output_root.mkdir(parents=True, exist_ok=True)
+    if output_root:
+        output_root_path = Path(output_root).expanduser().resolve()
+        output_root_path.mkdir(parents=True, exist_ok=True)
     else:
         temp_dir_ctx = tempfile.TemporaryDirectory(prefix="ask-dag-negative-")
-        output_root = Path(temp_dir_ctx.name)
+        output_root_path = Path(temp_dir_ctx.name)
+
+    exit_code = _run(output_root=output_root_path, ask_id=ask_id)
+    if temp_dir_ctx is not None and not keep:
+        temp_dir_ctx.cleanup()
+    raise typer.Exit(exit_code)
+
+
+def _run(*, output_root: Path, ask_id: str) -> int:
+    if output_root:
+        output_root.mkdir(parents=True, exist_ok=True)
 
     dag = {
         "schema_version": "ask.dag.v1",
@@ -66,7 +74,7 @@ def main() -> int:
         "--dag-file",
         str(dag_path),
         "--ask-id",
-        args.ask_id,
+        ask_id,
         "--run-output-root",
         str(output_root / "runs"),
         "--overwrite",
@@ -74,10 +82,10 @@ def main() -> int:
         "--json",
     ]
     completed = subprocess.run(command, cwd=ASK_DIR, text=True, capture_output=True, timeout=120)
-    run_dir = output_root / "runs" / args.ask_id
-    request_path = run_dir / f"{args.ask_id}.request.json"
-    status_path = run_dir / f"{args.ask_id}.status.json"
-    events_path = run_dir / f"{args.ask_id}.events.jsonl"
+    run_dir = output_root / "runs" / ask_id
+    request_path = run_dir / f"{ask_id}.request.json"
+    status_path = run_dir / f"{ask_id}.status.json"
+    events_path = run_dir / f"{ask_id}.events.jsonl"
     broken_artifact = run_dir / "dag" / "broken_step.json"
     dependent_artifact = run_dir / "dag" / "final_report.json"
 
@@ -120,8 +128,6 @@ def main() -> int:
         "broken_node_ok": broken.get("ok"),
     }
     print(json.dumps(summary, indent=2, sort_keys=True))
-    if temp_dir_ctx is not None and not args.keep:
-        temp_dir_ctx.cleanup()
     return 0 if ok else 1
 
 
@@ -135,4 +141,4 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    app()
