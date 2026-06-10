@@ -1,0 +1,4 @@
+interface:
+  display_name: "Grounded"
+  short_description: "Evidence gate before architecture recommendations"
+  default_prompt: "Use grounded to read the relevant files, map architectural evidence, and only then provide recommendation options."
