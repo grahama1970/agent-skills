@@ -65,6 +65,9 @@ triggers:
   - webgpt handoff
   - chatgpt sentinel
   - completion sentinel
+  - chatgpt image
+  - webgpt image
+  - image mockup
   - controlled chatgpt tab
   - chatgpt round trip
   # Background controlled-tab mode (no focus stealing)
@@ -86,6 +89,7 @@ metadata:
 provides:
   - surf
 composes:
+  - browser-oracle
   - memory
   - fetcher
   - extractor
@@ -154,7 +158,7 @@ Orchestration belongs in **`/ask`**. This skill provides **transport + proof** o
 
 | Work type | Prefer `/ask` | `$surf` command | Notes |
 | --- | --- | --- | --- |
-| **Code** | `$ask webgpt` | `webgpt.submit` | Chrome tab id; `--no-activate` for background |
+| **Code** | `$ask webgpt` | `webgpt.submit` | `$browser-oracle` walk-up or `--project` / `--tab-id`; `--no-activate` for background |
 | **Prose** | `$ask webkimi` | `kimi.submit` | Chrome; `kimi.com` tab |
 | **Design** | `$ask webgemini` | `gemini.submit` | Chrome; `gemini.google.com` tab |
 | **Research** | `$ask webperplexity` | `perplexity` | One-shot; not for multi-round review |
@@ -170,26 +174,49 @@ In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-bro
 
 | If the user says... | Use |
 |---|---|
-| "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id>` |
+| "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --no-activate` (walk-up from cwd) or `--project <name>` or `--tab-id <id> --expect-url <url>` |
 | "recover an already completed WebGPT tab" | `surf webgpt.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
 | "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` (requires `--tab-id`, `--url`, or `--create-tab`) |
 | "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
 | "prove background mode works", "no-activate sanity" | `surf webgpt.no-activate-sanity --tab-id <id>` |
 | "prove tab id targeting while I work elsewhere", "Tab ID Viewer" | `surf webgpt.tab-id-background-sanity --tab-id <id>` |
 | "what tab/window am I focused on" | `surf focus.state --json` |
-| "preflight WebGPT tab before submit" | `surf webgpt.preflight --tab-id <id> [--no-activate]` |
+| "preflight WebGPT tab before submit" | `surf webgpt.preflight --tab-id <id> --expect-url <conversation-url> [--no-activate]` |
 
 
 Always require a `--tab-id` (or `--url` that resolves to an open ChatGPT tab),
 or pass `--create-tab` to open a dedicated inactive reviewer tab.
 
+**Tab identity preflight (required before WebGPT handoff):**
+
+Project agents must not trust a remembered tab id or a copied Tab ID Viewer
+number by itself. Before any `webgpt.submit`, `$ask webgpt`, or
+`webgpt.extract` round, confirm the tab identity against the current browser
+state:
+
+1. Run `surf tab.list --json` and find the intended numeric tab id.
+2. Confirm the tab `url` is the expected `chatgpt.com` conversation URL, or at
+   minimum that the `title` matches the named review/session.
+3. Run `surf webgpt.preflight --tab-id <ID> --expect-url <URL> --no-activate --json`
+   when the conversation URL is known, or `--expect-title <session text>` when
+   only the visible review/session title is available.
+4. If the conversation URL is known, prefer `--url <conversation-url>` over
+   `--tab-id`; URL resolution fails closed on missing or ambiguous tabs.
+5. If the tab id, URL, title/session name, or foreground status does not match,
+   stop and ask for the correct tab or create a fresh inactive reviewer tab.
+
+This applies even when the human gives a tab id. Chrome tab ids can change after
+extension reloads, tab moves, browser restarts, or when several ChatGPT review
+sessions are open. A valid tab id is not enough; it must be the right session.
+
 **Tab ID Viewer workflow (recommended for background review):**
 
 1. Open a dedicated ChatGPT tab for automation (not your daily conversation).
 2. Copy the numeric id from the Tab ID Viewer extension.
-3. Run `surf webgpt.submit ... --tab-id <ID> --no-activate` (add `--no-remember`
-   if you must not touch `/tmp/surf-webgpt-controlled-tab-id`).
-4. Confirm meta: `controlled_tab_id` == `requested_tab_id`, `focus_changed: false`.
+3. Confirm the id with the tab identity preflight above.
+4. Run `surf webgpt.submit ... --tab-id <ID> --expect-url <URL> --no-activate`
+   (add `--no-remember` if you must not touch `/tmp/surf-webgpt-controlled-tab-id`).
+5. Confirm meta: `controlled_tab_id` == `requested_tab_id`, `focus_changed: false`.
 
 Do not rely on `/tmp/surf-webgpt-controlled-tab-id` alone — it may point at your
 foreground ChatGPT tab after an earlier successful run. Explicit `--tab-id`
@@ -197,6 +224,8 @@ overrides that file; `--create-tab` skips it and opens a fresh inactive tab.
 
 Don't let surf-cli auto-discover or pick the newest `chatgpt.com` tab when the
 human named a tab. `controlled_tab_id` in the meta JSON must equal `requested_tab_id`.
+Also do not assume the named tab is still the intended session: compare the
+current tab URL/title before submitting.
 
 For ChatGPT/WebGPT handoffs, use `webgpt.submit` instead of manually pasting a
 completion marker into prompts. The command owns sentinel generation, prompt
@@ -209,10 +238,12 @@ surf webgpt.submit \
   --output .webgpt/02_response.md \
   --raw-output .webgpt/02_response.raw.md \
   --meta-output .webgpt/02_response.meta.json \
+  --reasoning "Heavy Reasoning" \
   --sentinel auto \
   --stable-polls 3 \
   --timeout 900 \
-  --tab-id 837343233
+  --tab-id 837343233 \
+  --expect-url "https://chatgpt.com/c/6a0097ff-e7e0-83ea-93c2-3a6b88e2a67f"
 ```
 
 If a previous `webgpt.submit` was interrupted after ChatGPT visibly completed,
@@ -243,6 +274,9 @@ Behavior:
   `<<<WEBGPT_DONE:20260510T123456Z:8f41c2ab>>>`.
 - `$surf` appends a non-optional final-marker instruction to the submitted
   prompt.
+- `--model` selects the ChatGPT model dropdown before submit.
+- `--reasoning` selects the ChatGPT reasoning dropdown before submit; use labels
+  exactly as shown in ChatGPT, such as `Pro` or `Heavy Reasoning`.
 - `$surf` waits for the final assistant DOM message to contain the marker and
   then remain unchanged for `--stable-polls` polls.
 - Whole-page text is diagnostic only. It must never satisfy the completion
@@ -258,10 +292,18 @@ Behavior:
 - `webgpt.submit` persists the controlled tab id in
   `/tmp/surf-webgpt-controlled-tab-id` by default and reuses it on later runs.
 - An explicit `--tab-id` overrides persisted state and tab discovery. Use this
-  when the human names the WebGPT tab that should be controlled.
+  when the human names the WebGPT tab that should be controlled. If multiple
+  ChatGPT tabs are open, a bare `--tab-id` fails closed unless paired with
+  `--expect-url`, `--expect-title`, `--url`, `--create-tab`, or
+  `--allow-unverified-tab-id`.
 - An explicit `--url` resolves an already-open ChatGPT tab by exact URL and
   then behaves like `--tab-id`. It fails if no open tab matches; it does not
   silently pick a different ChatGPT tab.
+- `--expect-url` and `--expect-title` are identity assertions for tab-id
+  targeting. They are checked before a prompt is submitted and recorded in
+  `tab_identity_preflight` metadata.
+- `--allow-unverified-tab-id` is an explicit bypass for privileged/manual
+  recovery only. Do not use it for normal project-agent review handoffs.
 - Set `SURF_WEBGPT_TAB_STATE=/path/to/state` for an alternate state file, or
   pass a `--tab-id` through lower-level `surf chatgpt` commands when debugging.
 - `--create-tab` opens `https://chatgpt.com/` via `tab.new` (inactive), then
@@ -283,6 +325,82 @@ Behavior:
 Do not infer WebGPT completion from spinner absence, button state, visual
 stillness, or page text outside the final assistant response. Use the sentinel
 contract for any workflow that copies WebGPT output into files.
+
+#### WebGPT image mockups
+
+Do **not** force the WebGPT text sentinel as the completion gate when the user
+asks ChatGPT/WebGPT to create an image, visual mockup, UI mockup image, diagram,
+or other generated visual artifact. ChatGPT can finish generating the image
+without emitting the follow-up text marker, which makes `webgpt.submit` wait
+until timeout even though the requested artifact exists.
+
+Use the sentinel contract for text, code, review, prose, and any workflow that
+copies assistant text into files. For image mockups, completion proof is the
+image artifact itself:
+
+- the explicit `--tab-id` or resolved `--url` is the requested ChatGPT tab
+- a generated image is visible or found in that same tab's DOM
+- the selected image matches the request by alt text, dimensions, or the newest
+  relevant `chatgpt.com/backend-api/estuary/content` URL
+- the image is fetched/downloaded from inside the authenticated browser tab
+- the saved file is a valid PNG/JPEG with expected dimensions
+- the agent visually inspects the saved image and confirms it is the requested
+  mockup, not a placeholder, stale image, or broken download
+
+Do not use shell `curl` as the first download path for ChatGPT estuary image
+URLs. Signed image URLs can return `403` outside the authenticated browser
+session. Fetch the asset inside the controlled tab, trigger a browser download,
+then copy or move the downloaded file into the requested repository artifact
+path.
+
+Example same-tab extraction after the image is visible:
+
+```bash
+# List candidate images in the controlled ChatGPT tab.
+surf js "return JSON.stringify(Array.from(document.images).map((img, i) => ({
+  i,
+  src: img.currentSrc || img.src,
+  alt: img.alt,
+  w: img.naturalWidth,
+  h: img.naturalHeight,
+  cw: img.clientWidth,
+  ch: img.clientHeight
+})).filter(x => x.src || x.w || x.cw), null, 2)" --tab-id <CHATGPT_TAB_ID>
+
+# Download the matching generated image through the authenticated page context.
+surf js "const img = Array.from(document.images).find(img =>
+  (img.alt || '').includes('Generated image') &&
+  (img.currentSrc || img.src).includes('/backend-api/estuary/content')
+);
+if (!img) throw new Error('generated image not found');
+const src = img.currentSrc || img.src;
+const blob = await fetch(src).then(r => {
+  if (!r.ok) throw new Error('image fetch failed ' + r.status);
+  return r.blob();
+});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'webgpt-image-mockup.png';
+document.body.appendChild(a);
+a.click();
+setTimeout(() => URL.revokeObjectURL(url), 10000);
+return JSON.stringify({download: a.download, size: blob.size, type: blob.type});" \
+  --tab-id <CHATGPT_TAB_ID>
+```
+
+After the browser download, locate the file, place it in the requested artifact
+directory, and verify it:
+
+```bash
+file path/to/mockup.png
+identify -format '%w %h %m %[size]\n' path/to/mockup.png 2>/dev/null || true
+```
+
+If an image prompt was submitted through `webgpt.submit` and hangs after the
+image appears, stop the lingering submit process, then use same-tab image
+extraction. Report that the image path used artifact proof rather than a text
+sentinel.
 
 #### Bounded reviewer/executor loops
 
@@ -316,6 +434,7 @@ Real-world sanity check:
 
 ```bash
 surf webgpt.sanity --output-dir /tmp/surf-webgpt-sanity --timeout 900 --tab-id 837343233
+surf webgpt.sanity --tab-id 837343233 --reasoning "Heavy Reasoning"
 ```
 
 ## Cursor Browser (within Cursor IDE)
@@ -414,19 +533,138 @@ it attaches CDP to the tab id you name.
 | What fails with `focus_stolen_despite_no_activate`? | Chrome's active tab or focused window changed during the run, or the controlled tab was your foreground work tab. Use a **dedicated reviewer tab** + explicit `--tab-id`. |
 
 
+#### Chrome Google/Gemini side panel is browser UI
+
+Chrome's built-in Google/Gemini side panel, including the "Ask Gemini" panel
+input attached to a tab, is **not part of the page DOM**. Surf commands such as
+`surf read --tab-id`, `surf click --tab-id`, `surf type --tab-id`, `surf js`,
+and CDP screenshots can control or inspect the underlying tab, but they cannot
+directly address the side panel input or send button.
+
+Do not claim that side-panel typing, paste, or send can run in background mode
+with current Surf. The only proven method is foreground OS-level automation
+(`xdotool`/desktop clipboard/screen capture), and that method **does hijack the
+user's active window, mouse, and text input while it runs**.
+
+If the human explicitly permits foreground control of the browser UI, use this
+bounded recipe:
+
+```bash
+# 1. Activate the exact tab whose side panel is already open.
+surf tab.activate <TAB_ID>
+xdotool getactivewindow getwindowname getwindowgeometry
+
+# 2. Put the payload on the desktop clipboard.
+printf '%s' "$payload" | xclip -selection clipboard
+
+# 3. Click the side-panel input by measured window-relative coordinates,
+#    select the existing draft, and paste via Ctrl+V.
+xdotool mousemove --window <WINDOW_ID> <INPUT_X> <INPUT_Y> click 1
+xdotool key --clearmodifiers ctrl+a
+xdotool key --clearmodifiers ctrl+v
+
+# 4. Only if the human asked to submit, click the measured send button center.
+xdotool mousemove --window <WINDOW_ID> <SEND_X> <SEND_Y> click 1
+
+# 5. Capture the real Chrome window as proof. CDP cannot prove side-panel state.
+import -window <WINDOW_ID> /tmp/google-side-panel-proof.png
+```
+
+Required proof for this path:
+- An OS/window screenshot must visibly show the side panel input before submit,
+  or the sent message after submit.
+- The standard CDP hook may still be run for the underlying page route, but it
+  is not proof of Chrome side-panel content because the side panel is outside
+  the page target.
+- If the user requires no focus stealing or background operation, stop and say
+  this is not currently supported for Chrome's built-in side panel. Use a
+  normal ChatGPT/Gemini/Kimi webpage tab with `--tab-id --no-activate`, or add a
+  dedicated Surf extension feature for side-panel control, instead.
+
+
+
+#### Project binding via `$browser-oracle`
+
+`surf webgpt.submit` tab binding flags (same resolution order via `$browser-oracle`):
+
+| Flag | Role |
+|------|------|
+| `--tab-id <id>` | Explicit Chrome tab; skips walk-up |
+| `--url <url>` | Resolve open tab by conversation URL; skips walk-up |
+| `--expect-url <url>` | Identity assertion with `--tab-id` |
+| `--expect-title <text>` | Title assertion with `--tab-id` |
+| `--create-tab` | Fresh inactive ChatGPT tab; skips walk-up |
+| `--project <name>` | Explicit `~/.pi/webgpt-projects/<name>.json`; skips yaml |
+| `--browser-oracle-from <dir>` | Walk-up root (default: cwd) |
+| `--no-activate` | Background controlled tab (required for reviewer work) |
+| `--no-remember` | Do not touch `/tmp/surf-webgpt-controlled-tab-id` |
+
+```bash
+# Zero-flag from a registered directory
+surf webgpt.submit --input REQ.md --output RESP.md --no-activate
+
+# Explicit overrides
+surf webgpt.submit --input REQ.md --output RESP.md --project oc-subagent-personas --no-activate
+surf webgpt.submit --input REQ.md --output RESP.md --browser-oracle-from skills/oc-subagent/personas/mathematics --no-activate
+surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id> --expect-url <url> --no-activate
+```
+
 #### Pre-submit checks (`webgpt.preflight`)
 
 Run before a long reviewer round when binding a new tab or after Chrome restarts:
 
 ```bash
-surf webgpt.preflight --tab-id <TAB_ID> --no-activate
+surf webgpt.preflight --tab-id <TAB_ID> \
+  --expect-url "https://chatgpt.com/c/<uuid>" \
+  --no-activate
 # or conversation URL:
 surf webgpt.preflight --url "https://chatgpt.com/c/<uuid>" --no-activate --json
 ```
 
 Fails fast when the extension socket is missing, `focus.state` is unavailable, the tab
-is not an open `chatgpt.com` tab, URL resolution is ambiguous, or (with
-`--no-activate`) the controlled tab is your foreground work tab.
+is not an open `chatgpt.com` tab, URL resolution is ambiguous, multiple ChatGPT
+tabs are open and a bare `--tab-id` has no `--expect-url`/`--expect-title`, or
+(with `--no-activate`) the controlled tab is your foreground work tab.
+
+When there are several ChatGPT sessions open, do the full identity check before
+submitting:
+
+```bash
+# Inspect the candidate tab. The id must exist now, not only in old logs.
+surf tab.list --json | jq '.[] | select(.id == <TAB_ID>)'
+
+# Stronger: ask the tab itself what session it is.
+surf js 'return JSON.stringify({
+  title: document.title,
+  url: location.href,
+  text: document.body.innerText.slice(0, 1000)
+}, null, 2)' --tab-id <TAB_ID>
+
+# Then run preflight with a machine-checked identity assertion.
+surf webgpt.preflight --tab-id <TAB_ID> \
+  --expect-title "visual review" \
+  --no-activate \
+  --json
+```
+
+If the conversation URL is available, prefer URL targeting for both raw Surf
+and `/ask` WebGPT calls:
+
+```bash
+surf webgpt.preflight --url "https://chatgpt.com/c/<uuid>" --no-activate --json
+surf webgpt.submit --input REQ.md --output RESP.md \
+  --url "https://chatgpt.com/c/<uuid>" --no-activate
+
+# Through /ask:
+cd /home/graham/workspace/experiments/agent-skills/skills/ask
+./run.sh ask webgpt "Review /tmp/review-bundle.md" \
+  --webgpt-url "https://chatgpt.com/c/<uuid>" \
+  --once
+```
+
+Use tab-title or body-text matching only as a secondary sanity check. URL is the
+stable identity for a ChatGPT conversation; title text can be generic, stale, or
+duplicated across review sessions.
 
 **Proof commands (real e2e):**
 
@@ -465,6 +703,7 @@ surf webgpt.submit \
   --input .webgpt/01_request.md \
   --output .webgpt/02_response.md \
   --tab-id 837343233 \
+  --reasoning "Pro" \
   --no-activate
 ```
 
@@ -700,6 +939,8 @@ cropped = smart_crop(full_page_bytes, region="detail")
 | Element not found          | Run `surf read` first to get current refs       |
 | Page not loading           | Check URL is valid, try with `https://`         |
 | Empty read output          | Page may still be loading - try `surf wait 2`   |
+| WebGPT submit hangs until I switch to the ChatGPT tab | Background tab: ChatGPT defers DOM updates while `document.hidden`. `webgpt.submit --no-activate` re-wakes tab lifecycle during polling, only accepts the **current** sentinel on the **post-submit assistant turn** (ignores stale markers / prompt echo), falls back to turn-level page text when assistant DOM lags, and records `document_hidden_at_completion` / `background_hidden_polls` in meta. Rebuild + `surf extension.reload` after surf-cli vendor changes. Optional `webgpt.extract` if ChatGPT already finished. |
+| Agent "doesn't see" sentinel on another tab | `surf read` without `--tab-id` reads the **foreground** tab only. Completion is detected inside `webgpt.submit`, not by the project agent watching Chrome. |
 
 ## Extension Setup (One-time)
 

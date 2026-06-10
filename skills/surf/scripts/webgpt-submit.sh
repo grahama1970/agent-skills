@@ -7,6 +7,8 @@ RUN_SH="${SURF_RUN_SH:-${SKILL_DIR}/run.sh}"
 
 # shellcheck source=lib/webgpt_resolve.sh
 source "${SCRIPT_DIR}/lib/webgpt_resolve.sh"
+# shellcheck source=lib/browser_oracle_resolve.sh
+source "${SCRIPT_DIR}/lib/browser_oracle_resolve.sh"
 
 usage() {
   cat <<'EOF'
@@ -23,8 +25,19 @@ Options:
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
   --timeout SECONDS         Browser wait timeout. Default: 900.
   --model MODEL             Optional ChatGPT model selector label.
+  --reasoning LABEL         Optional ChatGPT reasoning dropdown label
+                            (for example: "Pro" or "Heavy Reasoning").
+  --project NAME            browser-oracle project binding (~/.pi/webgpt-projects/<name>.json).
+  --browser-oracle-from PATH  Walk-up directory for .ask/browser-oracles.yaml (default: cwd).
   --tab-id ID               Use this exact Chrome tab as the controlled WebGPT tab.
   --url URL                 Resolve an already-open ChatGPT tab by exact URL.
+  --expect-url URL          When using --tab-id, require that tab to match this
+                            ChatGPT URL/conversation before submitting.
+  --expect-title TEXT       When using --tab-id, require the current tab title
+                            to contain this text before submitting.
+  --allow-unverified-tab-id Allow a bare --tab-id even when multiple ChatGPT
+                            tabs are open. Use only for privileged/manual
+                            recovery where URL/title identity is unavailable.
   --create-tab              Open a fresh ChatGPT tab (inactive) and control that tab.
                             Skips persisted controlled-tab state file lookup.
   --no-remember             Do not read or write the global controlled-tab state file.
@@ -52,8 +65,14 @@ sentinel="auto"
 stable_polls=3
 timeout_s=900
 model=""
+reasoning=""
 tab_id=""
+project=""
+browser_oracle_from=""
 target_url=""
+expect_url=""
+expect_title=""
+allow_unverified_tab_id=0
 no_activate=0
 create_tab=0
 no_remember=0
@@ -72,8 +91,14 @@ while [[ $# -gt 0 ]]; do
     --stable-polls) stable_polls="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
+    --reasoning) reasoning="${2:-}"; shift 2 ;;
+    --project) project="${2:-}"; shift 2 ;;
+    --browser-oracle-from) browser_oracle_from="${2:-}"; shift 2 ;;
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
+    --expect-url) expect_url="${2:-}"; shift 2 ;;
+    --expect-title) expect_title="${2:-}"; shift 2 ;;
+    --allow-unverified-tab-id) allow_unverified_tab_id=1; shift ;;
     --no-activate) no_activate=1; shift ;;
     --create-tab) create_tab=1; shift ;;
     --no-remember) no_remember=1; shift ;;
@@ -101,6 +126,29 @@ if [[ -z "${SURF_RUN_SH:-}" && ! -S /tmp/surf.sock ]]; then
   echo "surf webgpt.submit requires the surf browser extension socket at /tmp/surf.sock." >&2
   echo "Run: surf setup" >&2
   exit 3
+fi
+
+# browser-oracle walk-up when no explicit tab/url/create-tab target.
+if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
+  bo_from="$(cd "${browser_oracle_from:-.}" 2>/dev/null && pwd || pwd)"
+  bo_payload="$(browser_oracle_resolve_json "$bo_from" webgpt "$project" "" 2>/dev/null || true)"
+  if [[ -n "$bo_payload" ]]; then
+    if [[ -z "$project" ]]; then
+      project="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("project") or "")' <<<"$bo_payload")"
+    fi
+    if [[ -z "$tab_id" ]]; then
+      tab_id="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("tab_id") or "")' <<<"$bo_payload")"
+    fi
+    if [[ -z "$target_url" ]]; then
+      bo_url="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("conversation_url") or "")' <<<"$bo_payload")"
+      if [[ -n "$bo_url" ]]; then
+        target_url="$bo_url"
+      fi
+    fi
+    if [[ -z "$expect_url" && -n "$target_url" ]]; then
+      expect_url="$target_url"
+    fi
+  fi
 fi
 
 if [[ "$sentinel" == "auto" || -z "$sentinel" ]]; then
@@ -152,6 +200,9 @@ args=(chatgpt "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
 fi
+if [[ -n "$reasoning" ]]; then
+  args+=(--reasoning "$reasoning")
+fi
 if [[ -n "$tab_id" ]]; then
   requested_tab_id="$(printf '%s' "$tab_id" | tr -cd '0-9' | head -c 20 || true)"
   if [[ -z "$requested_tab_id" ]]; then
@@ -159,6 +210,11 @@ if [[ -n "$tab_id" ]]; then
     exit 2
   fi
   args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
+  if [[ "$create_tab" -eq 1 ]]; then
+    requested_tab_source="create-tab"
+  else
+    requested_tab_source="tab-id"
+  fi
 elif [[ -n "$target_url" ]]; then
   tab_list_text="$("$RUN_SH" tab.list 2>/dev/null || true)"
   if ! webgpt_resolve_url_from_list "$target_url" "$tab_list_text"; then
@@ -173,12 +229,71 @@ elif [[ -n "$target_url" ]]; then
   fi
   requested_tab_id="$resolved_tab_id"
   args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
+  requested_tab_source="url"
 elif [[ "$no_remember" -eq 0 && "$create_tab" -eq 0 && -f "$tab_state_file" ]]; then
   remembered_tab_id="$(tr -cd '0-9' < "$tab_state_file" | head -c 20 || true)"
   if [[ -n "$remembered_tab_id" ]]; then
     args+=(--tab-id "$remembered_tab_id")
     requested_tab_id="$remembered_tab_id"
+    requested_tab_source="remembered"
   fi
+fi
+
+if [[ -n "${requested_tab_id:-}" ]]; then
+  tab_list_text="${tab_list_text:-$("$RUN_SH" tab.list 2>/dev/null || true)}"
+  identity_args=(check --tab-id "$requested_tab_id" --source "${requested_tab_source:-tab-id}")
+  if [[ -n "$target_url" && "${requested_tab_source:-}" == "url" ]]; then
+    identity_args+=(--expect-url "$target_url")
+  elif [[ -n "$expect_url" ]]; then
+    identity_args+=(--expect-url "$expect_url")
+  fi
+  if [[ -n "$expect_title" ]]; then
+    identity_args+=(--expect-title "$expect_title")
+  fi
+  if [[ "$allow_unverified_tab_id" -eq 1 ]]; then
+    identity_args+=(--allow-unverified-tab-id)
+  fi
+  set +e
+  identity_preflight_json="$(
+    printf '%s\n' "$tab_list_text" \
+      | python3 "${SCRIPT_DIR}/lib/webgpt_tab_identity.py" "${identity_args[@]}"
+  )"
+  identity_status=$?
+  set -e
+  if [[ "$identity_status" -ne 0 ]]; then
+    failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$identity_preflight_json" "$failed_at" <<'PY'
+import json, pathlib, sys
+meta, inp, submitted, out, raw, err, sentinel, requested_tab_id, target_url, model, reasoning, identity_s, failed_at = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "tab_identity_preflight_failed",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "stderr_log": err,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n")
+PY
+    echo "webgpt.submit tab identity preflight failed for tab $requested_tab_id." >&2
+    python3 -c "import json,sys; d=json.loads(sys.argv[1]); print(d.get('error') or 'tab_identity_failed')" "$identity_preflight_json" >&2
+    echo "Use --url <conversation-url>, --expect-url, --expect-title, --create-tab, or --allow-unverified-tab-id." >&2
+    exit 2
+  fi
+else
+  identity_preflight_json=""
 fi
 
 # Pre-run focus snapshot (also used for --no-activate foreground guard).
@@ -252,9 +367,13 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, model, reasoning, identity_s = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
@@ -266,6 +385,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -275,9 +397,13 @@ PY
 fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning, identity_s = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
     "input": inp,
@@ -288,6 +414,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -304,21 +433,31 @@ idx = text.rfind(sentinel)
 if idx == -1:
     raise SystemExit("sentinel missing from assistant response")
 after = text[idx + len(sentinel):].strip()
-if after:
+if after and after.strip(">"):
     raise SystemExit("assistant response contains text after terminal sentinel")
 clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning, identity_s = sys.argv[1:]
+try:
+    identity = json.loads(identity_s) if identity_s else None
+except Exception:
+    identity = {"ok": False, "error": "identity_meta_parse_failed"}
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
 tab_id = None
 activated = None
 tab_was_created = None
+response_source = None
+page_text_contains_sentinel = None
+document_hidden_at_completion = None
+visibility_state_at_completion = None
+background_hidden_polls = None
+background_poll_count = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -326,7 +465,34 @@ for line in reversed(stderr_text.splitlines()):
         activated = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TabWasCreated:") and tab_was_created is None:
         tab_was_created = line.split(":", 1)[1].strip() == "true"
-    if tab_id is not None and activated is not None and tab_was_created is not None:
+    elif line.startswith("ResponseSource:") and response_source is None:
+        response_source = line.split(":", 1)[1].strip()
+    elif line.startswith("PageTextContainsSentinel:") and page_text_contains_sentinel is None:
+        page_text_contains_sentinel = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("DocumentHiddenAtCompletion:") and document_hidden_at_completion is None:
+        document_hidden_at_completion = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("VisibilityStateAtCompletion:") and visibility_state_at_completion is None:
+        visibility_state_at_completion = line.split(":", 1)[1].strip()
+    elif line.startswith("BackgroundHiddenPolls:") and background_hidden_polls is None:
+        try:
+            background_hidden_polls = int(line.split(":", 1)[1].strip())
+        except Exception:
+            background_hidden_polls = None
+    elif line.startswith("BackgroundPollCount:") and background_poll_count is None:
+        try:
+            background_poll_count = int(line.split(":", 1)[1].strip())
+        except Exception:
+            background_poll_count = None
+    if (
+        tab_id is not None
+        and activated is not None
+        and tab_was_created is not None
+        and response_source is not None
+        and document_hidden_at_completion is not None
+        and visibility_state_at_completion is not None
+        and background_hidden_polls is not None
+        and background_poll_count is not None
+    ):
         break
 contamination = []
 for needle in [
@@ -396,6 +562,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "tab_identity_preflight": identity,
     "stable_polls": int(stable),
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,
@@ -415,6 +584,12 @@ pathlib.Path(meta).write_text(json.dumps({
     "focus_changed": focus_changed,
     "focus_stolen_mid_submit": focus_stolen_mid,
     "focus_mid_log": focus_mid_log,
+    "response_source": response_source,
+    "page_text_contains_sentinel": page_text_contains_sentinel,
+    "document_hidden_at_completion": document_hidden_at_completion,
+    "visibility_state_at_completion": visibility_state_at_completion,
+    "background_hidden_polls": background_hidden_polls,
+    "background_poll_count": background_poll_count,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")

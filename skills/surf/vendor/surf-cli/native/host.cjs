@@ -448,7 +448,7 @@ function handleToolRequest(msg, socket) {
   }
   
   if (extensionMsg.type === "CHATGPT_QUERY") {
-    const { query, model, withPage, file, timeout, sentinel, stablePolls, keepTab, targetTabId, noActivate } = extensionMsg;
+    const { query, model, reasoning, withPage, file, timeout, sentinel, stablePolls, keepTab, targetTabId, noActivate } = extensionMsg;
 
     queueAiRequest(async () => {
       let pageContext = null;
@@ -479,6 +479,7 @@ function handleToolRequest(msg, socket) {
       const result = await chatgptClient.query({
         prompt: fullPrompt,
         model,
+        reasoning,
         file,
         timeout,
         sentinel,
@@ -618,6 +619,7 @@ function handleToolRequest(msg, socket) {
       sendToolResponse(socket, originalId, {
         response: result.response,
         model: result.model,
+        reasoning: result.reasoning,
         tabId: result.tabId,
         controlledTabId: result.controlledTabId,
         conversationUrl: result.conversationUrl,
@@ -625,6 +627,11 @@ function handleToolRequest(msg, socket) {
         responseSource: result.responseSource,
         sentinel: result.sentinel,
         hasSentinel: result.hasSentinel,
+        pageTextContainsSentinel: result.pageTextContainsSentinel,
+        documentHiddenAtCompletion: result.documentHiddenAtCompletion,
+        visibilityStateAtCompletion: result.visibilityStateAtCompletion,
+        backgroundHiddenPolls: result.backgroundHiddenPolls,
+        backgroundPollCount: result.backgroundPollCount,
         tookMs: result.tookMs,
         activated: result.activated,
         tabWasCreated: result.tabWasCreated,
@@ -1370,6 +1377,16 @@ function processInput() {
                 screenshotId: msg.screenshotId,  // Preserve for upload_image workflow
                 method: msg.method,
                 authoritative: msg.authoritative,
+                selector: msg.selector,
+                nearest: msg.nearest,
+                resolvedTag: msg.resolvedTag,
+                resolvedDataQid: msg.resolvedDataQid,
+                scrollHeight: msg.scrollHeight,
+                clientHeight: msg.clientHeight,
+                clientWidth: msg.clientWidth,
+                segments: msg.segments,
+                offsets: msg.offsets,
+                image: origWidth && origHeight ? { width: origWidth, height: origHeight } : undefined,
               }, null);
             } catch (e) {
               sendToolResponse(socket, originalId, null, `Failed to save: ${e.message}`);

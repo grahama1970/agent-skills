@@ -4,6 +4,7 @@ const SELECTORS = {
   promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
   sendButton: 'button[data-testid="send-button"], button[data-testid*="composer-send"], form button[type="submit"]',
   modelButton: '[data-testid="model-switcher-dropdown-button"]',
+  reasoningButton: 'button[data-testid*="reason"], button[aria-label*="reason" i], button[aria-label*="thinking" i], button[aria-label*="effort" i]',
   menuContainer: '[role="menu"], [data-radix-collection-root]',
   menuItem: 'button, [role="menuitem"], [role="menuitemradio"], [data-testid*="model-switcher-"]',
   assistantMessage: '[data-message-author-role="assistant"], [data-turn="assistant"]',
@@ -17,6 +18,45 @@ const SELECTORS = {
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+const BACKGROUND_WAKE_EVERY_POLLS = 5;
+
+async function wakeBackgroundTab(inputCdp, log, reason = "poll") {
+  if (!inputCdp) return false;
+  try {
+    await inputCdp("Page.setWebLifecycleState", { state: "active" });
+    log?.(`Background tab lifecycle set to active (${reason})`);
+    return true;
+  } catch (err) {
+    log?.(`Page.setWebLifecycleState skipped (${reason}): ${err?.message || err}`);
+    return false;
+  }
+}
+
+async function nudgeBackgroundRendering(cdp, inputCdp, log, reason = "poll") {
+  await wakeBackgroundTab(inputCdp, log, reason);
+  try {
+    await evaluate(
+      cdp,
+      `(() => {
+        try {
+          document.dispatchEvent(new Event('visibilitychange'));
+          if (typeof document.onvisibilitychange === 'function') {
+            document.onvisibilitychange(new Event('visibilitychange'));
+          }
+        } catch (_) {}
+        return {
+          documentHidden: document.hidden === true,
+          visibilityState: document.visibilityState || null,
+          documentHasFocus: typeof document.hasFocus === 'function' ? document.hasFocus() : null,
+        };
+      })()`,
+    );
+  } catch (err) {
+    log?.(`Background render nudge skipped (${reason}): ${err?.message || err}`);
+  }
+}
+
 
 function buildClickDispatcher() {
   return `function dispatchClickSequence(target){
@@ -38,10 +78,15 @@ function buildClickDispatcher() {
 
 function hasRequiredCookies(cookies) {
   if (!cookies || !Array.isArray(cookies)) return false;
-  const sessionCookie = cookies.find(
-    (c) => c.name === "__Secure-next-auth.session-token" && c.value
+  const hasValue = (c) => Boolean(c && c.value);
+  const legacy = cookies.find(
+    (c) => c.name === "__Secure-next-auth.session-token" && hasValue(c)
   );
-  return Boolean(sessionCookie);
+  if (legacy) return true;
+  // NextAuth may shard large session cookies as .0, .1, ...
+  return cookies.some(
+    (c) => /^__Secure-next-auth\.session-token\.\d+$/.test(c.name) && hasValue(c)
+  );
 }
 
 async function evaluate(cdp, expression) {
@@ -66,15 +111,18 @@ function withTimeout(promise, timeoutMs, label) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
 
-const assistantSnapshotExpression = (sentinel) => {
+const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
+  const baseline = Number.isFinite(baselineAssistantCount) && baselineAssistantCount >= 0
+    ? Math.floor(baselineAssistantCount)
+    : 0;
   const sentinelLiteral = JSON.stringify(sentinel || null);
   return `(() => {
+    const BASELINE = ${baseline};
     const SENTINEL = ${sentinelLiteral};
     const CONVERSATION_SELECTOR = '${SELECTORS.conversationTurn}';
     const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
     const STOP_SELECTOR = '${SELECTORS.stopButton}';
     const FINISHED_SELECTOR = '${SELECTORS.finishedActions}';
-    const pageText = (document.body?.innerText || document.body?.textContent || '').trim();
     const isAssistantTurn = (node) => {
       if (!(node instanceof HTMLElement)) return false;
       const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
@@ -85,28 +133,33 @@ const assistantSnapshotExpression = (sentinel) => {
     };
     const directAssistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
       .filter((node) => node instanceof HTMLElement);
-    const turns = directAssistantTurns.length
+    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
+    const assistantTurns = directAssistantTurns.length
       ? directAssistantTurns
-      : Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
-    let lastAssistantTurn = null;
-    for (let i = turns.length - 1; i >= 0; i--) {
-      if (isAssistantTurn(turns[i])) {
-        lastAssistantTurn = turns[i];
-        break;
-      }
-    }
+      : conversationTurns.filter((node) => isAssistantTurn(node));
+    const newAssistantTurns = assistantTurns.slice(BASELINE);
+    const lastAssistantTurn = newAssistantTurns.length
+      ? newAssistantTurns[newAssistantTurns.length - 1]
+      : null;
     const sentinelVariants = SENTINEL
       ? [SENTINEL, ...(SENTINEL.endsWith('>>>') ? [SENTINEL.slice(0, -1)] : [])]
       : [];
     const findSentinel = (text) => sentinelVariants.find((marker) => text.includes(marker)) || null;
-    const pageTextContainsSentinel = Boolean(SENTINEL && findSentinel(pageText));
+    const documentHidden = document.hidden === true;
+    const visibilityState = document.visibilityState || null;
+    const documentHasFocus = typeof document.hasFocus === 'function' ? document.hasFocus() : null;
     if (!lastAssistantTurn) {
       return {
         text: '',
         stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
         finished: false,
-        source: 'no-assistant-turn',
-        pageTextContainsSentinel,
+        source: 'awaiting-assistant-turn',
+        pageTextContainsSentinel: false,
+        documentHidden,
+        visibilityState,
+        documentHasFocus,
+        baselineAssistantCount: BASELINE,
+        newAssistantTurnCount: 0,
       };
     }
     const messageRoot = lastAssistantTurn.querySelector(ASSISTANT_SELECTOR) || lastAssistantTurn;
@@ -129,13 +182,38 @@ const assistantSnapshotExpression = (sentinel) => {
     const stopVisible = Boolean(document.querySelector(STOP_SELECTOR));
     const finished = Boolean(lastAssistantTurn.querySelector(FINISHED_SELECTOR));
     const messageId = messageRoot.getAttribute('data-message-id') || null;
-    return { text, stopVisible, finished, messageId, turnIndex: turns.length - 1, source: 'assistant-dom', pageTextContainsSentinel, sentinelMatch };
+    const turnTextForSentinel = turnText || contentText || '';
+    const pageTextContainsSentinel = Boolean(SENTINEL && findSentinel(turnTextForSentinel));
+    let source = 'assistant-dom';
+    if (SENTINEL && pageTextContainsSentinel && !findSentinel(text)) {
+      const marker = findSentinel(turnTextForSentinel);
+      const idx = marker ? turnTextForSentinel.lastIndexOf(marker) : -1;
+      if (idx >= 0) {
+        text = turnTextForSentinel.slice(Math.max(0, idx - 12000), idx + marker.length).trim();
+        source = 'page-text-fallback';
+      }
+    }
+    return {
+      text,
+      stopVisible,
+      finished,
+      messageId,
+      turnIndex: assistantTurns.length - 1,
+      source,
+      pageTextContainsSentinel,
+      sentinelMatch,
+      documentHidden,
+      visibilityState,
+      documentHasFocus,
+      baselineAssistantCount: BASELINE,
+      newAssistantTurnCount: newAssistantTurns.length,
+    };
   })()`;
 };
 
-async function assistantSnapshot(cdp, sentinel, timeoutMs = 12000) {
+async function assistantSnapshot(cdp, sentinel, timeoutMs = 12000, baselineAssistantCount = 0) {
   return withTimeout(
-    evaluate(cdp, assistantSnapshotExpression(sentinel)),
+    evaluate(cdp, assistantSnapshotExpression(sentinel, baselineAssistantCount)),
     timeoutMs,
     "ChatGPT assistant DOM snapshot",
   );
@@ -276,6 +354,110 @@ async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
   );
   if (!result || !result.success) {
     throw new Error(`Model not found: ${desiredModel}`);
+  }
+  return result.label;
+}
+
+async function selectReasoning(cdp, desiredReasoning, timeoutMs = 8000) {
+  const normalizedReasoning = desiredReasoning.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const clicked = await evaluate(
+    cdp,
+    `(() => {
+      ${buildClickDispatcher()}
+      const normalize = (text) => (text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const desired = ${JSON.stringify(normalizedReasoning)};
+      const visible = (el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+      };
+      const explicit = Array.from(document.querySelectorAll('${SELECTORS.reasoningButton}'))
+        .filter(visible);
+      const semantic = Array.from(document.querySelectorAll('button,[role="button"]'))
+        .filter(visible)
+        .filter((button) => {
+          const text = normalize(button.textContent || '');
+          const aria = normalize(button.getAttribute('aria-label') || '');
+          const testId = normalize(button.getAttribute('data-testid') || '');
+          const combined = text + ' ' + aria + ' ' + testId;
+          const inComposer = Boolean(button.closest('form') || button.closest('[data-testid*="composer"]') || button.closest('#composer-background'));
+          const currentReasoningLabels = new Set(['auto', 'fast', 'pro', 'heavy', 'heavyreasoning']);
+          if (combined.includes('reason') || combined.includes('think') || combined.includes('effort')) return true;
+          if (inComposer && currentReasoningLabels.has(text)) return true;
+          if (desired.length >= 3 && text === desired) return true;
+          return desired.includes(text) && text.length >= 4;
+        });
+      const candidates = [...explicit, ...semantic];
+      const seen = new Set();
+      for (const button of candidates) {
+        if (seen.has(button)) continue;
+        seen.add(button);
+        dispatchClickSequence(button);
+        return {
+          success: true,
+          label: (button.textContent || button.getAttribute('aria-label') || button.getAttribute('data-testid') || '').trim(),
+        };
+      }
+      return { success: false, error: 'Reasoning selector button not found' };
+    })()`
+  );
+  if (!clicked || !clicked.success) {
+    throw new Error(`Reasoning selector button not found for: ${desiredReasoning}`);
+  }
+  await delay(300);
+  const result = await evaluate(
+    cdp,
+    `(async () => {
+      ${buildClickDispatcher()}
+      const TIMEOUT_MS = ${timeoutMs};
+      const targetReasoning = ${JSON.stringify(normalizedReasoning)};
+      const menuSelector = '${SELECTORS.menuContainer}, [role="listbox"], [role="dialog"], [data-radix-popper-content-wrapper]';
+      const itemSelector = '${SELECTORS.menuItem}, [role="option"], [cmdk-item], [data-value]';
+      const normalize = (text) => (text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const visible = (el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+      };
+      const deadline = Date.now() + TIMEOUT_MS;
+      while (Date.now() < deadline) {
+        const containers = Array.from(document.querySelectorAll(menuSelector)).filter(visible);
+        const roots = containers.length ? containers : [document.body];
+        let bestMatch = null;
+        let bestScore = 0;
+        for (const root of roots) {
+          const items = Array.from(root.querySelectorAll(itemSelector)).filter(visible);
+          for (const item of items) {
+            const textRaw = (item.textContent || '').trim();
+            const text = normalize(textRaw);
+            const aria = normalize(item.getAttribute('aria-label') || '');
+            const testId = normalize(item.getAttribute('data-testid') || '');
+            const value = normalize(item.getAttribute('data-value') || '');
+            let score = 0;
+            if (text === targetReasoning || aria === targetReasoning || value === targetReasoning) score = 120;
+            else if (text.includes(targetReasoning) || aria.includes(targetReasoning) || testId.includes(targetReasoning) || value.includes(targetReasoning)) score = 100;
+            else if (targetReasoning.includes(text) && text.length >= 3) score = 70;
+            if (score > bestScore) {
+              bestScore = score;
+              bestMatch = item;
+            }
+          }
+        }
+        if (bestMatch) {
+          const label = (bestMatch.textContent || bestMatch.getAttribute('aria-label') || bestMatch.getAttribute('data-value') || '').trim();
+          dispatchClickSequence(bestMatch);
+          await new Promise(r => setTimeout(r, 250));
+          return { success: true, label };
+        }
+        await new Promise(r => setTimeout(r, 100));
+      }
+      return { success: false, error: 'Reasoning option not found' };
+    })()`
+  );
+  if (!result || !result.success) {
+    throw new Error(`Reasoning option not found: ${desiredReasoning}`);
   }
   return result.label;
 }
@@ -429,6 +611,38 @@ async function typePrompt(cdp, inputCdp, prompt) {
   }
 }
 
+
+async function captureAssistantBaseline(cdp) {
+  const expr = `(() => {
+    const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
+    const CONVERSATION_SELECTOR = '${SELECTORS.conversationTurn}';
+    const isAssistantTurn = (node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
+      if (role === 'assistant') return true;
+      const turn = (node.getAttribute('data-turn') || '').toLowerCase();
+      if (turn === 'assistant') return true;
+      return Boolean(node.querySelector(ASSISTANT_SELECTOR));
+    };
+    const directAssistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
+      .filter((node) => node instanceof HTMLElement);
+    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
+    const assistantTurns = directAssistantTurns.length
+      ? directAssistantTurns
+      : conversationTurns.filter((node) => isAssistantTurn(node));
+    const last = assistantTurns.length ? assistantTurns[assistantTurns.length - 1] : null;
+    return {
+      assistantCount: assistantTurns.length,
+      lastMessageId: last ? (last.getAttribute('data-message-id') || null) : null,
+    };
+  })()`;
+  const value = await evaluate(cdp, expr);
+  return {
+    assistantCount: Number.isFinite(value?.assistantCount) ? value.assistantCount : 0,
+    lastMessageId: value?.lastMessageId || null,
+  };
+}
+
 async function clickSend(cdp, inputCdp) {
   const selectors = SELECTORS.sendButton.split(", ");
   const selectorsJson = JSON.stringify(selectors);
@@ -477,6 +691,12 @@ async function clickSend(cdp, inputCdp) {
 
 async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const sentinel = options.sentinel || null;
+  const baselineAssistantCount = Number.isFinite(options.baselineAssistantCount)
+    ? options.baselineAssistantCount
+    : 0;
+  const noActivate = options.noActivate === true;
+  const inputCdp = options.inputCdp || null;
+  const log = options.log || (() => {});
   const deadline = Date.now() + timeoutMs;
   let previousText = "";
   let stableCycles = 0;
@@ -486,10 +706,21 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
   const minStableMs = 1200;
   let lastChangeAt = Date.now();
   let lastSnapshotError = null;
+  let pollCount = 0;
+  let hiddenPolls = 0;
+  let lastVisibilityState = null;
+  let lastDocumentHidden = null;
+  if (noActivate) {
+    await nudgeBackgroundRendering(cdp, inputCdp, log, "start");
+  }
   while (Date.now() < deadline) {
+    pollCount++;
+    if (noActivate && (pollCount === 1 || pollCount % BACKGROUND_WAKE_EVERY_POLLS === 0)) {
+      await nudgeBackgroundRendering(cdp, inputCdp, log, `poll-${pollCount}`);
+    }
     let snapshot;
     try {
-      snapshot = await assistantSnapshot(cdp, sentinel);
+      snapshot = await assistantSnapshot(cdp, sentinel, 12000, baselineAssistantCount);
       lastSnapshotError = null;
     } catch (err) {
       lastSnapshotError = err;
@@ -500,6 +731,14 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       await delay(400);
       continue;
     }
+    if (snapshot.documentHidden === true) {
+      hiddenPolls++;
+      if (noActivate) {
+        await nudgeBackgroundRendering(cdp, inputCdp, log, `hidden-poll-${pollCount}`);
+      }
+    }
+    lastVisibilityState = snapshot.visibilityState || null;
+    lastDocumentHidden = snapshot.documentHidden === true;
     const currentText = snapshot.text || "";
     const currentLength = currentText.length;
     if (currentText !== previousText) {
@@ -510,8 +749,17 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       stableCycles++;
     }
     const stableMs = Date.now() - lastChangeAt;
-    const hasSentinel = sentinel ? ((snapshot.text || "").includes(sentinel) || Boolean(snapshot.sentinelMatch)) : true;
-    if (!snapshot.stopVisible && hasSentinel) {
+    const hasAssistantSentinel = sentinel
+      ? ((snapshot.text || "").includes(sentinel) || snapshot.sentinelMatch === sentinel)
+      : true;
+    const pageHasSentinel = sentinel ? snapshot.pageTextContainsSentinel === true : false;
+    const hasSentinel = sentinel ? hasAssistantSentinel : true;
+    // Background/hidden tabs often keep [data-testid=stop-button] in the DOM until the tab
+    // is focused, even after the assistant message is complete. In --no-activate mode we
+    // trust a stable sentinel on the post-submit assistant turn instead of stop-button absence.
+    const stopGateOk = !snapshot.stopVisible
+      || (noActivate && hasSentinel && (snapshot.finished || pageHasSentinel || snapshot.source === 'page-text-fallback'));
+    if (stopGateOk && hasSentinel) {
       const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
       const finishedVisible = snapshot.finished;
       const responseComplete = sentinel ? stableEnough : (finishedVisible || stableEnough);
@@ -524,13 +772,20 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
           hasSentinel,
           source: snapshot.source,
           pageTextContainsSentinel: snapshot.pageTextContainsSentinel,
+          documentHiddenAtCompletion: snapshot.documentHidden === true,
+          visibilityStateAtCompletion: snapshot.visibilityState || null,
+          backgroundHiddenPolls: hiddenPolls,
+          backgroundPollCount: pollCount,
         };
       }
     }
     await delay(400);
   }
   const detail = lastSnapshotError ? `; last snapshot error: ${lastSnapshotError.message}` : "";
-  throw new Error(`Response timeout${detail}`);
+  const hiddenDetail = noActivate
+    ? `; hidden_polls=${hiddenPolls}; last_visibility=${lastVisibilityState || "unknown"}; document_hidden=${lastDocumentHidden}`
+    : "";
+  throw new Error(`Response timeout${hiddenDetail}${detail}`);
 }
 
 async function extractAssistantResponse(options) {
@@ -556,6 +811,8 @@ async function extractAssistantResponse(options) {
     sentinel: sentinel || null,
     hasSentinel,
     pageTextContainsSentinel: snapshot?.pageTextContainsSentinel === true,
+    documentHiddenAtCompletion: snapshot?.documentHidden === true,
+    visibilityStateAtCompletion: snapshot?.visibilityState || null,
     stopVisible: snapshot?.stopVisible === true,
     finished: snapshot?.finished === true,
     turnIndex: snapshot?.turnIndex,
@@ -566,6 +823,7 @@ async function query(options) {
   const {
     prompt,
     model,
+    reasoning,
     file,
     timeout = 2700000,
     sentinel,
@@ -616,20 +874,35 @@ async function query(options) {
       const selectedLabel = await selectModel(cdp, model);
       log(`Selected model: ${selectedLabel}`);
     }
+    let selectedReasoning = null;
+    if (reasoning) {
+      selectedReasoning = await selectReasoning(cdp, reasoning);
+      log(`Selected reasoning: ${selectedReasoning}`);
+    }
     if (file) {
       await attachFile(cdp, inputCdp, file, log);
       log(`File attached: ${file}`);
     }
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
+    const assistantBaseline = await captureAssistantBaseline(cdp);
+    log(`Assistant baseline count: ${assistantBaseline.assistantCount}`);
     await clickSend(cdp, inputCdp);
     log("Prompt sent, waiting for response...");
-    const response = await waitForResponse(cdp, timeout, { sentinel, stablePolls });
+    const response = await waitForResponse(cdp, timeout, {
+      sentinel,
+      stablePolls,
+      noActivate,
+      inputCdp,
+      log,
+      baselineAssistantCount: assistantBaseline.assistantCount,
+    });
     const conversationUrl = await evaluate(cdp, "window.location.href").catch(() => null);
     log(`Response received (${response.text.length} chars)`);
     return {
       response: response.text,
       model: model || "current",
+      reasoning: selectedReasoning || reasoning || null,
       tabId,
       controlledTabId: tabId,
       conversationUrl,
@@ -637,6 +910,11 @@ async function query(options) {
       responseSource: response.source,
       sentinel,
       hasSentinel: response.hasSentinel,
+      pageTextContainsSentinel: response.pageTextContainsSentinel === true,
+      documentHiddenAtCompletion: response.documentHiddenAtCompletion === true,
+      visibilityStateAtCompletion: response.visibilityStateAtCompletion || null,
+      backgroundHiddenPolls: response.backgroundHiddenPolls || 0,
+      backgroundPollCount: response.backgroundPollCount || 0,
       tookMs: Date.now() - startTime,
       activated: tabInfo.activated === true,
       tabWasCreated: tabInfo.tabWasCreated === true,

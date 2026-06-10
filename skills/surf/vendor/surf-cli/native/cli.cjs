@@ -47,6 +47,7 @@ const VERSION = "2.0.0";
 
 const ALIASES = {
   snap: "screenshot",
+  "screenshot-container": "snap-container",
   read: "page.read",
   text: "page.text",
   find: "search",
@@ -99,6 +100,7 @@ const TOOLS = {
         opts: {
           "with-page": "Include current page context",
           model: "Model: gpt-4o, o1, etc.",
+          reasoning: "Reasoning dropdown label: Pro, Heavy Reasoning, etc.",
           file: "Attach file",
           timeout: "Timeout in seconds (default: 2700 = 45min)",
           sentinel: "Wait until the final assistant message contains this exact marker",
@@ -111,6 +113,7 @@ const TOOLS = {
           { cmd: 'chatgpt "summarize" --with-page', desc: "With page context" },
           { cmd: 'chatgpt "review" --file code.ts', desc: "With file" },
           { cmd: 'chatgpt "analyze" --model gpt-4o', desc: "Specify model" },
+          { cmd: 'chatgpt "analyze" --reasoning "Heavy Reasoning"', desc: "Specify reasoning effort" },
         ]
       },
       "chatgpt.extract": {
@@ -281,6 +284,20 @@ const TOOLS = {
         ]
       },
       "snap": { desc: "Alias for screenshot (auto-saves to /tmp)", args: [], alias: "screenshot" },
+      "snap-container": {
+        desc: "Capture and stitch a nested scroll container",
+        args: ["selector"],
+        opts: {
+          output: "Save to file",
+          nearest: "Use nearest scrollable ancestor (default: true)",
+          "max-segments": "Maximum vertical segments (default: 80)",
+          "settle-ms": "Wait after each scroll step (default: 80)"
+        },
+        examples: [
+          { cmd: 'snap-container "[data-qid=\\"pane\\"]" --output /tmp/pane.png', desc: "Stitch a scroll pane" }
+        ]
+      },
+      "screenshot-container": { desc: "Alias for snap-container", args: ["selector"], alias: "snap-container" },
     }
   },
   scroll: {
@@ -1124,7 +1141,7 @@ const ALL_SOCKET_TOOLS = [
   "javascript_tool", "health", "smoke",
   "click_type", "click_type_submit", "type", "key", "type_submit",
   "scroll", "scroll_to", "hover", "left_click_drag", "drag", "wait",
-  "computer",
+  "computer", "snap-container", "screenshot-container",
   "page.read", "page.text", "page.state",
   "locate.role", "locate.text", "locate.label",
   "extension.ping", "extension.reload",
@@ -1177,6 +1194,7 @@ const SEE_ALSO = {
   "perf.metrics": ["perf.start", "console", "network"],
   "navigate": ["wait.load", "page.read"],
   "screenshot": ["page.read", "scroll.bottom for fullpage"],
+  "snap-container": ["screenshot", "scroll.info"],
   "search": ["locate.text", "page.read"],
   "wait.element": ["wait.load", "wait.network"],
   "wait.load": ["wait.element", "wait.network"],
@@ -1858,6 +1876,8 @@ const PRIMARY_ARG_MAP = {
   "wait.url": "pattern",
   zoom: "level",
   "history.search": "query",
+  "snap-container": "selector",
+  "screenshot-container": "selector",
   "network.get": "id",
   "network.body": "id",
   "network.curl": "id",
@@ -1966,13 +1986,17 @@ if (!noScreenshot && AUTO_SCREENSHOT_TOOLS.includes(tool)) {
 const outputPath = toolArgs.output;
 delete toolArgs.output;
 
-if (tool === "screenshot" && outputPath) {
+if ((tool === "screenshot" || tool === "snap-container" || tool === "screenshot-container") && outputPath) {
   if (typeof outputPath !== "string") {
     console.error("Error: --output requires a file path");
     process.exit(1);
   }
   toolArgs.savePath = outputPath;
-  if (options.full) toolArgs.full = true;
+  if (tool === "snap-container" || tool === "screenshot-container") {
+    toolArgs.full = options.full !== false;
+  } else if (options.full) {
+    toolArgs.full = true;
+  }
   if (options["max-size"]) toolArgs["max-size"] = options["max-size"];
 }
 
@@ -2544,7 +2568,28 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
-    console.error(`\n[${data.model || 'unknown'} | ${((data.tookMs || 0) / 1000).toFixed(1)}s]`);
+    if (data.responseSource) {
+      console.error(`ResponseSource: ${data.responseSource}`);
+    }
+    if (data.pageTextContainsSentinel !== undefined) {
+      console.error(`PageTextContainsSentinel: ${data.pageTextContainsSentinel}`);
+    }
+    if (data.documentHiddenAtCompletion !== undefined) {
+      console.error(`DocumentHiddenAtCompletion: ${data.documentHiddenAtCompletion}`);
+    }
+    if (data.visibilityStateAtCompletion !== undefined) {
+      console.error(`VisibilityStateAtCompletion: ${data.visibilityStateAtCompletion}`);
+    }
+    if (data.backgroundHiddenPolls !== undefined) {
+      console.error(`BackgroundHiddenPolls: ${data.backgroundHiddenPolls}`);
+    }
+    if (data.backgroundPollCount !== undefined) {
+      console.error(`BackgroundPollCount: ${data.backgroundPollCount}`);
+    }
+    const meta = [data.model || 'unknown'];
+    if (data.reasoning) meta.push(data.reasoning);
+    meta.push(`${((data.tookMs || 0) / 1000).toFixed(1)}s`);
+    console.error(`\n[${meta.join(' | ')}]`);
   } else if (tool === "perplexity" && data?.response) {
     console.log(data.response);
     const meta = [];
