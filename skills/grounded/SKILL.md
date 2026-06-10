@@ -63,6 +63,21 @@ observed project boundaries.
    If additional reading changes the architecture model, revise the recommendation options instead
    of defending the earlier answer.
 
+## Readiness Gate
+
+Before giving final recommendation options, classify the evidence state:
+
+- `READY_TO_RECOMMEND`: Core surfaces, call paths, data models, configuration, tests, and
+  known contradictions have been checked or marked not applicable. Each recommendation has
+  file-backed evidence.
+- `PARTIAL`: Enough evidence exists for scoped options, but exclusions or unknowns remain.
+  Recommendations must name the limited scope and avoid claims beyond it.
+- `NOT_READY`: Missing evidence could reverse the recommendation. Keep reading when files are
+  available; otherwise report the missing evidence instead of recommending.
+
+Treat missing entry points, data models, ownership boundaries, or call sites as `NOT_READY`
+unless the user explicitly narrows the decision away from those surfaces.
+
 ## Minimum Evidence
 
 Before giving architecture recommendations, establish or explicitly mark missing:
@@ -75,6 +90,21 @@ Before giving architecture recommendations, establish or explicitly mark missing
 - Tests, fixtures, golden files, or validation scripts covering the behavior.
 - Existing docs or project knowledge that agree with or contradict the code.
 
+## Stop Conditions
+
+Stop reading and recommend only when:
+
+- Each recommendation option has direct evidence from files, tests, configs, docs, or commands.
+- Remaining unknowns are outside the user's decision scope and are listed under `Not established`.
+- Additional likely files would refine details but would not change the chosen architecture direction.
+
+Continue reading when:
+
+- An unknown could reverse the recommendation.
+- A claim relies on inferred intent instead of source evidence.
+- A doc and implementation appear to disagree.
+- Callers, callees, data models, or runtime entry points are still not established.
+
 ## Recommendation Format
 
 Use this structure when the user wants options:
@@ -82,6 +112,9 @@ Use this structure when the user wants options:
 ```text
 Scope:
 - <decision and affected surfaces>
+
+Readiness:
+- READY_TO_RECOMMEND|PARTIAL|NOT_READY
 
 Evidence read:
 - <file or command>: <what it established>
