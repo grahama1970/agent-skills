@@ -1,0 +1,5 @@
+version: 1
+webgpt:
+  default: oc-subagent-personas
+  by_relative_path:
+    personas/mathematics: oc-subagent-personas

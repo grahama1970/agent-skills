@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "name": "coverage-webgpt-page-review",
+  "base_url": "http://127.0.0.1:3002/#sparta-explorer",
+  "selector_policy": "data-qid-only",
+  "surfaces": [
+    {
+      "name": "coverage-gate1",
+      "page": "Coverage + embedded monitor-status",
+      "persona": "nico-bailon",
+      "wait_ready": "[data-qid='sparta:button:tab-coverage']",
+      "qid_compliance": true,
+      "elements": [
+        {
+          "name": "open-coverage",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='sparta:button:tab-coverage']",
+              "description": "Coverage tab opens"
+            },
+            {
+              "action": "wait",
+              "target": "[data-qid='coverage:live-status']",
+              "description": "Coverage live status is visible",
+              "assert_visible": "[data-qid='coverage:live-status']"
+            },
+            {
+              "action": "wait",
+              "target": "[data-qid='coverage:monitor-closure-panel']",
+              "description": "Monitor closure panel is visible",
+              "assert_visible": "[data-qid='coverage:monitor-closure-panel']"
+            },
+            {
+              "action": "screenshot",
+              "label": "coverage-full-page",
+              "description": "Full Coverage page screenshot captured"
+            }
+          ]
+        },
+        {
+          "name": "page-purpose",
+          "interactions": [
+            {
+              "action": "wait",
+              "target": "[data-qid='sparta:page-purpose:coverage']",
+              "description": "Coverage page-purpose strip is visible",
+              "assert_visible": "[data-qid='sparta:page-purpose:coverage']"
+            },
+            {
+              "action": "screenshot",
+              "label": "coverage-page-purpose-strip",
+              "description": "Page-purpose strip screenshot captured"
+            }
+          ]
+        },
+        {
+          "name": "monitor-closure",
+          "interactions": [
+            {
+              "action": "wait",
+              "target": "[data-qid='coverage:monitor-closure-panel']",
+              "description": "Closure rollup is visible with caveat text when applicable",
+              "assert_visible": "[data-qid='coverage:monitor-closure-panel']"
+            },
+            {
+              "action": "screenshot",
+              "label": "coverage-monitor-closure-panel",
+              "description": "Monitor closure crop captured"
+            }
+          ]
+        },
+        {
+          "name": "refresh-p0",
+          "interactions": [
+            {
+              "action": "click",
+              "target": "[data-qid='coverage:button:refresh']",
+              "description": "Refresh is available and does not hide page-purpose state"
+            },
+            {
+              "action": "wait",
+              "target": "[data-qid='sparta:page-purpose:coverage']",
+              "description": "Page-purpose strip remains visible after refresh",
+              "assert_visible": "[data-qid='sparta:page-purpose:coverage']"
+            },
+            {
+              "action": "screenshot",
+              "label": "coverage-after-refresh",
+              "description": "After-refresh screenshot captured"
+            }
+          ]
+        }
+      ],
+      "required_artifacts": [
+        "test-interactions-results.json",
+        "coverage-full-page.png",
+        "coverage-page-purpose-strip.png",
+        "coverage-monitor-closure-panel.png",
+        "coverage-after-refresh.png",
+        "coverage-health.json"
+      ],
+      "pass_criteria": [
+        "All interactions PASS",
+        "All selectors are data-qid selectors",
+        "Monitor closure panel is visible",
+        "Page-purpose strip is visible",
+        "Any raw/reconciled data caveat is visible and not hidden",
+        "Screenshots are attached to WebGPT packet"
+      ],
+      "fail_conditions": [
+        "Any required qid is missing",
+        "Any required screenshot is missing",
+        "Coverage status is shown as green while monitor/corpora caveat is hidden",
+        "Packet uses cached API state as current truth without labeling it"
+      ],
+      "wait_ready_timeout_ms": 30000
+    }
+  ]
+}

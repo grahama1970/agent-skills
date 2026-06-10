@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""align - scripts.
+
+Purpose: Auto-generated module docstring. Review for accuracy.
+Inputs/Outputs/Failures: See functions below.
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -41,6 +47,29 @@ def read_json(path: Path) -> dict:
 def write_json(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+def webgpt_ask_binding_flags(
+    *,
+    webgpt_tab_id: str | None = None,
+    webgpt_url: str | None = None,
+    webgpt_project: str | None = None,
+    browser_oracle_from: str | None = None,
+) -> list[str]:
+    """Build /ask webgpt tab-binding flags with browser-oracle parity."""
+    tab = (webgpt_tab_id or "").strip()
+    url = (webgpt_url or "").strip()
+    project = (webgpt_project or "").strip()
+    bo_from = (browser_oracle_from or "").strip()
+    if tab:
+        return ["--webgpt-tab-id", tab]
+    if url:
+        return ["--webgpt-url", url]
+    if bo_from:
+        return ["--browser-oracle-from", bo_from]
+    if project:
+        return ["--webgpt-project", project]
+    return []
+
 
 
 def state_path(root: Path) -> Path:
@@ -130,6 +159,9 @@ def init(
     acceptance_criteria: Annotated[list[str], typer.Option("--acceptance", help="Acceptance criterion.")] = None,
     max_rounds: Annotated[int, typer.Option("--max-rounds", help="Maximum alignment rounds.")] = 3,
     webgpt_tab_id: Annotated[str | None, typer.Option("--webgpt-tab-id", help="Known WebGPT tab id.")] = None,
+    webgpt_url: Annotated[str | None, typer.Option("--webgpt-url", help="ChatGPT conversation URL.")] = None,
+    webgpt_project: Annotated[str | None, typer.Option("--webgpt-project", help="Bound ~/.pi/webgpt-projects/<name>.json.")] = None,
+    browser_oracle_from: Annotated[str | None, typer.Option("--browser-oracle-from", help="Walk-up root for .ask/browser-oracles.yaml.")] = None,
     overwrite: Annotated[bool, typer.Option("--overwrite", help="Replace an existing alignment root.")] = False,
 ) -> None:
     if root.exists() and any(root.iterdir()) and not overwrite:
@@ -147,6 +179,9 @@ def init(
         "max_rounds": max_rounds,
         "current_round": 1,
         "webgpt_tab_id": webgpt_tab_id,
+        "webgpt_url": webgpt_url,
+        "webgpt_project": webgpt_project,
+        "browser_oracle_from": browser_oracle_from,
         "open_questions": [],
         "created_at": utc_now(),
         "updated_at": utc_now(),
@@ -254,6 +289,9 @@ def prepare_review(
     round_number: Annotated[int, typer.Option("--round", help="Round number.")] = 1,
     root: Annotated[Path, typer.Option("--root", help="Alignment artifact root.")] = DEFAULT_ROOT,
     webgpt_tab_id: Annotated[str | None, typer.Option("--webgpt-tab-id", help="WebGPT tab id.")] = None,
+    webgpt_url: Annotated[str | None, typer.Option("--webgpt-url", help="ChatGPT conversation URL.")] = None,
+    webgpt_project: Annotated[str | None, typer.Option("--webgpt-project", help="Bound ~/.pi/webgpt-projects/<name>.json.")] = None,
+    browser_oracle_from: Annotated[str | None, typer.Option("--browser-oracle-from", help="Walk-up root for .ask/browser-oracles.yaml.")] = None,
     scillm_model: Annotated[str, typer.Option("--scillm-model", help="scillm model for direct model review.")] = "gpt-5.5",
     reasoning_effort: Annotated[str, typer.Option("--reasoning-effort", help="Reasoning effort for scillm review.")] = "high",
     persona_prompt: Annotated[str | None, typer.Option("--persona-prompt", help="Optional system/persona prompt for scillm review.")] = None,
@@ -314,6 +352,9 @@ def prepare_review(
         command_path.chmod(0o755)
     else:
         tab = webgpt_tab_id or state.get("webgpt_tab_id")
+        url = webgpt_url or state.get("webgpt_url")
+        project = webgpt_project or state.get("webgpt_project")
+        bo_from = browser_oracle_from or state.get("browser_oracle_from")
         if reviewer_name == "dogpile":
             prompt = (
                 "Research only the external/current facts needed to unblock this "
@@ -322,7 +363,17 @@ def prepare_review(
                 "Do not design or implement the final task.\n\n"
                 f"{brief}"
             )
-        extra = f"\n\nWebGPT tab id: {tab}" if reviewer_name == "webgpt" and tab else ""
+        extra_bits: list[str] = []
+        if reviewer_name == "webgpt":
+            if tab:
+                extra_bits.append(f"WebGPT tab id: {tab}")
+            if url:
+                extra_bits.append(f"WebGPT url: {url}")
+            if project:
+                extra_bits.append(f"WebGPT project: {project}")
+            if bo_from:
+                extra_bits.append(f"Browser-oracle from: {bo_from}")
+        extra = ("\n\n" + "\n".join(extra_bits)) if extra_bits else ""
         request_path = out_dir / f"{stem}.md"
         request_path.write_text(prompt + extra + "\n", encoding="utf-8")
         if reviewer_name == "webgpt":
@@ -332,8 +383,14 @@ def prepare_review(
                 "webgpt",
                 f"Review the alignment request at {request_path}",
             ]
-            if tab:
-                command.extend(["--webgpt-tab-id", str(tab)])
+            command.extend(
+                webgpt_ask_binding_flags(
+                    webgpt_tab_id=str(tab) if tab else None,
+                    webgpt_url=str(url) if url else None,
+                    webgpt_project=str(project) if project else None,
+                    browser_oracle_from=str(bo_from) if bo_from else None,
+                )
+            )
             command.extend(["--oracle-iterations", "1"])
             command_text = "#!/usr/bin/env bash\nset -euo pipefail\n" + " ".join(shlex.quote(part) for part in command) + "\n"
             command_path = out_dir / f"round-{round_number:03d}-webgpt-ask-command.sh"

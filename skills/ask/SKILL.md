@@ -5,7 +5,7 @@ description: >
   by discovering, ingesting, and extracting knowledge — or ask questions against what's been learned.
   Supports multi-hour deep learning with progress tracking, persona profiles, and nightly incremental updates.
   Uses Federated Taxonomy for multi-hop graph traversal across knowledge domains.
-  Composes: dogpile, discover-books, ingest-youtube, fetcher, extractor, memory, taxonomy, task-monitor.
+  Composes: browser-oracle, dogpile, discover-books, ingest-youtube, fetcher, extractor, memory, surf, taxonomy, task-monitor.
 allowed-tools: [Bash, Read, Write]
 triggers:
   - I want to learn about
@@ -192,6 +192,7 @@ Project agents choose a browser oracle by **task type**, then confirm **Chrome v
 | Work type | Use | Site / transport |
 | --- | --- | --- |
 | **Code** — review bundles, architecture, implementation, tests, tech-lead loops | `$ask webgpt` | `chatgpt.com` in **Chrome** via surf-cli; `--no-activate` |
+| **Prove background tab id** while working elsewhere | `$surf webgpt.tab-id-background-sanity` or `$ask webgpt` + `--webgpt-tab-id` | Tab ID Viewer id; see Background tab targeting |
 | **Prose** — papers, voice, clarity, long-form writing | `$ask webkimi` | `kimi.com` in **Chrome** |
 | **Design** — mockups, UX, visual hierarchy, design critique | `$ask webgemini` | `gemini.google.com` in **Chrome** |
 | **Research** — fresh facts, citations, current events, web synthesis | `$ask webperplexity` | Perplexity **one-shot** (no standing review tab) |
@@ -200,7 +201,7 @@ Project agents choose a browser oracle by **task type**, then confirm **Chrome v
 **Rules of thumb:**
 
 - In **Cursor IDE** with ChatGPT open in the embedded Browser → prefer **`cursor-browser`**, not `webgpt`.
-- Need **background Chrome** while working in another window → **`webgpt`** + `--webgpt-tab-id` or `--webgpt-project` + `--no-activate` (via surf).
+- Need **background Chrome** while working in another window → **`webgpt`** with `$browser-oracle` walk-up from cwd (preferred), or `--webgpt-tab-id` / `--webgpt-project` + `--no-activate` (via surf).
 - Do **not** use `webperplexity` for multi-round review loops on the same thread.
 - Do **not** pass Chrome tab ids to `--cursor-browser-view-id` (different namespace from **viewId**).
 
@@ -214,7 +215,7 @@ Project agents choose a browser oracle by **task type**, then confirm **Chrome v
 
 | Shorthand | `--oracle-backend` | Multi-turn tab | Tab binding |
 | --- | --- | --- | --- |
-| `$ask webgpt` | `webgpt` | Yes | `--webgpt-project`, `--webgpt-tab-id` |
+| `$ask webgpt` | `webgpt` | Yes | `$browser-oracle` walk-up (cwd), `--browser-oracle-from`, `--webgpt-project`, `--webgpt-tab-id` |
 | `$ask webgemini` | `webgemini` | Yes | `--gemini-tab-id`, `--gemini-url` |
 | `$ask webkimi` | `webkimi` | Yes | `--kimi-tab-id`, `--kimi-url` |
 | `$ask webperplexity` | `webperplexity` | **No** (one-shot) | — |
@@ -250,6 +251,47 @@ Boundary contract:
   artifacts, WebGPT rate limits, tab bindings, file auto-attachment, and
   reviewer loop semantics are preserved.
 
+
+### Background tab targeting (Chrome + surf)
+
+`$ask webgpt` controls a **specific Chrome tab by numeric id** through `$surf`
+(`webgpt.submit --no-activate`). This is how you work in one tab while WebGPT
+runs in another.
+
+| Question | Answer |
+| --- | --- |
+| Different **Chrome tabs**, same window? | **Yes** — pass `--webgpt-tab-id <id>` from Tab ID Viewer (or a bound `--webgpt-project` tab that is **not** your daily conversation). |
+| **`surf click` / `surf read` without `--tab-id`?** | Targets the **active** tab only — not your reviewer tab. |
+| **KDE virtual desktops?** | Not part of the proof gate. Tab ids are per Chrome tab; keep the reviewer tab open in your profile. |
+| **Switch Chrome tabs during a long submit?** | **Fails** with `focus_stolen_despite_no_activate` — `meta.focus_changed` must stay `false` for the whole round. |
+| **Stale global state?** | `/tmp/surf-webgpt-controlled-tab-id` may point at your foreground ChatGPT tab after an earlier run. Explicit `--webgpt-tab-id` overrides it; `--webgpt-create-tab` skips it. |
+
+**Recommended:** dedicated reviewer tab → Tab ID Viewer id →
+`./run.sh ask webgpt "…" --webgpt-tab-id <ID> --webgpt-project <name> --once`
+
+**`--webgpt-create-tab` vs project binding:** When `--webgpt-create-tab` is set,
+`/ask` does **not** load an existing `--webgpt-project` tab first (so a stale
+`scillm-harness` binding to your foreground work tab cannot hijack the round).
+On success, the project binding is updated to the new tab.
+
+**Proof / sanity (real e2e):**
+
+```bash
+# Fast (~30s): CDP on --tab-id while your active tab stays elsewhere
+cd ~/.claude/skills/surf
+./run.sh webgpt.tab-id-background-sanity --tab-id <TAB_ID>
+
+# Full ask path + sentinel (minutes)
+cd ~/.claude/skills/ask
+./sanity-webgpt.sh --tab-id <TAB_ID>
+
+# Full surf sentinel + focus (minutes)
+./run.sh webgpt.no-activate-sanity --tab-id <TAB_ID>
+```
+
+See `$surf` SKILL.md section **Background tab targeting (read this first)** for
+transport flags (`--create-tab`, `--no-remember`) and element-interaction rules.
+
 ```bash
 # Auto-resolve tab id (when exactly one chatgpt.com tab is open)
 ./run.sh ask "to perform the review on /tmp/code-runner-reliability-review/review-bundle.md" \
@@ -274,6 +316,26 @@ Boundary contract:
 # calls reuse the same tab so the conversation context survives across days.
 ./run.sh ask webgpt summarise the review bundle --webgpt-project code-runner-review
 ```
+
+
+### Directory walk-up via `$browser-oracle` (preferred)
+
+When `--webgpt-tab-id`, `--webgpt-url`, and `--webgpt-create-tab` are **not** set, `/ask`
+composes `$browser-oracle` before WebGPT transport:
+
+1. Walk up from cwd (or `--browser-oracle-from`) for `.ask/browser-oracles.yaml`
+2. Map relative path → project name
+3. Load `~/.pi/webgpt-projects/<project>.json` for tab id + conversation URL
+
+```bash
+# From skills/oc-subagent/personas/mathematics — no tab flags needed
+./run.sh ask webgpt "Review /tmp/bundle.md" --once
+
+# Override walk-up root only
+./run.sh ask webgpt "…" --browser-oracle-from /path/to/worktree/subdir --once
+```
+
+Bind/register with `$browser-oracle` (`bind`, `register`, `doctor`). Legacy `webgpt-project` CLI remains compatible.
 
 ### Per-project tab bindings
 
@@ -316,19 +378,24 @@ human to re-bind explicitly — it will not silently swap in a new tab.
 Behavior:
 
 - **Tab resolution.** Priority: `--webgpt-tab-id` → `--webgpt-url` →
-  `--webgpt-project NAME` (with a valid binding) → `--webgpt-create-tab` →
-  auto-resolve from `surf tab.list` filtered to chatgpt.com.
+  `--webgpt-create-tab` (skips binding/registry lookup) →
+  **`$browser-oracle` walk-up** from cwd or `--browser-oracle-from` (`.ask/browser-oracles.yaml`
+  → project → `~/.pi/webgpt-projects/<name>.json`) →
+  `--webgpt-project NAME` (explicit project, skips yaml) →
+  auto-resolve from `surf tab.list` filtered to chatgpt.com (fail-closed).
   **Auto-resolve fails closed** when 0 or >1 candidates exist — the call
   refuses to run rather than guess. When the project agent hits this, it
   must ask the human to either:
   (a) open exactly one ChatGPT tab so auto-resolve picks it,
   (b) provide a tab id from the Tab ID Viewer extension to pass through
   `--webgpt-tab-id`,
-  (c) re-invoke with `--webgpt-create-tab` for the agent to acquire a tab
-  autonomously (surf picks the most-recent existing chatgpt.com tab without
-  foregrounding, or creates a fresh background one if none are open), or
+  (c) re-invoke with `--webgpt-create-tab` (surf opens a fresh inactive
+  ChatGPT tab via `tab.new`, then submits with `--no-activate`; does not reuse
+  a stale project binding or `/tmp/surf-webgpt-controlled-tab-id`), or
   (d) pass `--webgpt-project NAME` to bind this call to a persistent
-  per-project tab (see "Per-project tab bindings" below). The resolved tab
+  per-project tab (see "Per-project tab bindings" below), or
+  (e) register the directory with `$browser-oracle register` and bind the tab once
+  with `$browser-oracle bind` (see "Directory walk-up via `$browser-oracle`" above). The resolved tab
   id surfaces in `oracle_model_served: webgpt:<id>` so the agent can pass
   it explicitly to follow-up rounds.
 - **File auto-attachment.** Absolute paths embedded in the question (e.g.
@@ -344,9 +411,16 @@ Behavior:
   failure. Valid inputs: **one concatenated** `.md`/`.txt` path whose content is
   inlined, or **one `.zip` path** (≤5 files, `$ask webgpt` only) passed via
   `--attach-file`.
-- **Focus preservation.** The controlled tab is never foregrounded. The
-  caller's active tab and focused window are unchanged across the call;
-  `meta.focus_changed` must be `false`.
+- **Focus preservation.** Surf uses `--no-activate`; the controlled tab is
+  not intentionally foregrounded. The caller's active tab and focused window
+  must be unchanged across the call (`meta.focus_changed` must be `false`).
+  Failure `focus_stolen_despite_no_activate` usually means the controlled tab
+  was your foreground work tab or you switched Chrome tabs during the submit.
+  If Surf preflight returns exactly `not_foreground_controlled`, `/ask`
+  automatically retries preflight with Surf's `--allow-foreground-controlled`
+  and passes the same flag to `webgpt.submit`; this preserves artifacts while
+  allowing the explicitly targeted ChatGPT tab to be the current foreground tab.
+  Other preflight failures still fail closed before submit.
 - **Default multi-turn.** Unless `--once` is passed, explicit `$ask webgpt` uses
   `ASK_WEBGPT_DEFAULT_ITERATIONS` (default **2**) on the same controlled tab via
   `--oracle-iterations`. Use `--once` for a single round; use `--oracle-iterations N`
@@ -372,13 +446,13 @@ Behavior:
   `/review-plan` compose `/ask` and inherit this backend for free —
   pass `--oracle-backend webgpt` (or set `ASK_ORACLE_BACKEND=webgpt`) to the
   underlying `/ask` call.
-- **Live sanity.** `skills/ask/sanity-webgpt.sh` exercises the full path
-  end-to-end against a real ChatGPT tab and asserts the proof contract,
-  oracle wiring, and focus invariance. Modes: `--tab-id ID`, `--url URL`,
-  `--create-tab`, or no flag (which auto-picks a single chatgpt.com tab or
-  prints a 4-option help block when 0 or >1 candidates exist). Run after
-  changes to `webgpt_runtime.py`, the oracle dispatcher, or the model
-  alias router.
+- **Live sanity.** Two layers:
+  - **Fast transport:** `$surf webgpt.tab-id-background-sanity --tab-id ID`
+    (CDP js+click + `focus_changed: false`; seconds).
+  - **Full oracle:** `skills/ask/sanity-webgpt.sh` (`--tab-id`, `--url`,
+    `--create-tab`, or auto-resolve when exactly one chatgpt.com tab exists).
+  - **Full sentinel:** `$surf webgpt.no-activate-sanity --tab-id ID` (minutes).
+  Run after changes to `webgpt_runtime.py`, `webgpt-submit.sh`, or surf tab targeting.
 - **Rate-limit guard.** Multi-round ping-pong can fan out to many ChatGPT
   rounds quickly. `webgpt_rate_limit.py` enforces a per-hour budget per
   account (default 30 rounds) and refuses to start new rounds once the
@@ -546,6 +620,9 @@ Proof of WebGPT review is the ask artifact set (`<ask-id>.status.json`, etc.),
 not an assistant summary. Update **Agreement** in the status file after each round.
 
 ### Explorer / UI page review loop (WebGPT + test-interactions)
+
+**Packet builder:** `$ask webgpt /review-page <page_id>` invokes the `/review-page` skill (`run-ti` → `build`/`package`) and then adjudicates via `$ask webgpt`. `/review-page` does not call WebGPT.
+
 
 Use when the human wants WebGPT to review **live product pages** (screenshots +
 contracts) and to **author interaction manifests** that the project agent runs.
@@ -832,8 +909,9 @@ Agent translation rules:
 | `$ask oc-qwen compare these options` | Hyphenated OpenCode Go shorthand, currently `opencode-go/qwen3.6-plus` |
 | `$ask chutes kimi explain this design tradeoff` | scillm Chutes oracle using configured alias `chutes-kimi` |
 | `$ask chutes-kimi explain this design tradeoff` | Hyphenated Chutes shorthand using configured alias `chutes-kimi` |
+| `$ask webgpt review this from here` | WebGPT from cwd: `$browser-oracle` walk-up fills project/tab/url; no tab flags when `.ask/browser-oracles.yaml` + binding exist. |
 | `$ask webgpt review round 2 using COLLABORATION_STATUS.md` | WebGPT oracle with status file auto-attached; update **Agreement** after artifact; dual agreement before closure |
-| `$ask webgpt to perform the review on /tmp/review-bundle.md` | WebGPT oracle backed by the user's signed-in ChatGPT tab (via `surf webgpt.submit --no-activate`). File paths in the prompt are auto-attached. Tab id auto-resolves when exactly one chatgpt.com tab is open; otherwise pass `--webgpt-tab-id`. |
+| `$ask webgpt to perform the review on /tmp/review-bundle.md` | WebGPT oracle via `surf webgpt.submit --no-activate`. Paths in the prompt are auto-attached. Tab/project resolves via `$browser-oracle` walk-up from cwd when registered; else `--webgpt-tab-id`, `--webgpt-project`, or exactly one open chatgpt.com tab. |
 | `$ask webgpt again — refine your answer` | Multi-turn: each `$ask webgpt` call is one round against the same controlled tab. ChatGPT preserves conversation context, so iterations form a coherent dialogue. |
 | `$ask Bring Nico into this conversation to review the mockups` | Persistent visible Nico session. Human attaches with `tmux a -t nico-<project>`; project agent sends follow-up turns through the `/ask` artifact's `send_input_command`. |
 | `$ask Brandon what is the state of space-based cybersecurity in 2016?` | Brandon persona oracle over `--scope sparta` |
@@ -919,7 +997,28 @@ Options:
   --persona-scope <scope> Scope to search for personas (default: personas)
   --hybrid                Use hybrid RAG+QRA retrieval
   --oracle                Use scillm/Codex for final oracle synthesis
-  --oracle-backend <b>    Oracle backend: auto, scillm, subagent-runner, webgpt
+
+  --oracle-backend <b>    Oracle backend: auto, scillm, subagent-runner, webgpt, webgemini, webkimi, webperplexity, cursor-browser
+  --browser-oracle-from <dir>
+                          Walk-up root for `.ask/browser-oracles.yaml` (default: cwd). Composes
+                          `$browser-oracle resolve` before WebGPT when tab/url/create-tab unset.
+  --webgpt-tab-id <id>    Chrome tab id for `--oracle-backend webgpt`; skips walk-up
+  --webgpt-url <url>      ChatGPT conversation URL; skips walk-up
+  --webgpt-create-tab     Fresh inactive ChatGPT tab; skips walk-up and project binding lookup
+  --webgpt-project <name> Explicit `~/.pi/webgpt-projects/<name>.json`; skips yaml walk-up
+  --once                  Single-round WebGPT oracle on the controlled tab
+  --gemini-tab-id <id>    Chrome tab id for `--oracle-backend webgemini`
+  --gemini-url <url>      Gemini conversation URL
+  --kimi-tab-id <id>      Chrome tab id for `--oracle-backend webkimi`
+  --kimi-url <url>        Kimi conversation URL
+  --cursor-browser-view-id <id>  Cursor Browser viewId (not Chrome tab id)
+  --cursor-browser-url <url>     ChatGPT URL in Cursor Browser
+  --cursor-browser-project <name>  `~/.pi/cursor-browser-projects/<name>.json`
+
+**WebGPT tab resolution order:** `--webgpt-tab-id` → `--webgpt-url` → `--webgpt-create-tab` →
+`$browser-oracle` walk-up (`--browser-oracle-from` or cwd) → `--webgpt-project` →
+exactly one open `chatgpt.com` tab (fail-closed).
+
   --oracle-model <model>  Oracle synthesis model (default: gpt-5.5)
   --oracle-reasoning <r>  Oracle reasoning effort (default: high; deep-review default: xhigh)
   --oracle-timeout <sec>  Oracle HTTP timeout in seconds (default: 300)

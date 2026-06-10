@@ -1,0 +1,32 @@
+{
+  "schema": "review_page.v1",
+  "page": "",
+  "route": "",
+  "round_id": "",
+  "lead_persona": "",
+  "page_verdict": "insufficient_evidence",
+  "overall_verdict": "BLOCKED",
+  "human_decision_required": false,
+  "executive_summary": "",
+  "research": {
+    "web_research_required": true,
+    "query": "",
+    "sources": [],
+    "benchmark_findings": []
+  },
+  "evidence": {
+    "page_contract": "",
+    "test_interactions": "",
+    "api_state": "",
+    "derived_state": "",
+    "screenshots": []
+  },
+  "interactions": [],
+  "persona_evaluation": [],
+  "dashboard_theater_audit": [],
+  "blocking_findings": [],
+  "conditions": [],
+  "non_blocking_findings": [],
+  "code_runner_actions": [],
+  "non_claims": []
+}

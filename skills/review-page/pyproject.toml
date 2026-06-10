@@ -1,0 +1,10 @@
+[project]
+name = "review-page"
+version = "0.1.0"
+description = "Fail-closed WebGPT-centered page review for product/UI surfaces"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "httpx>=0.27.0",
+    "pillow>=10.0.0",
+    "typer>=0.9.0",
+]

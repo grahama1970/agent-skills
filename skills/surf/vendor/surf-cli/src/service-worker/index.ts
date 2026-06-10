@@ -185,6 +185,195 @@ async function captureFullPage(tabId: number, maxHeight: number): Promise<{ base
   return { base64, width: canvasWidth, height: canvasHeight };
 }
 
+async function captureScrollContainer(
+  tabId: number,
+  selector: string,
+  nearest = true,
+  maxSegments = 80,
+  settleMs = 80,
+): Promise<{
+  base64: string;
+  width: number;
+  height: number;
+  selector: string;
+  nearest: boolean;
+  resolvedTag?: string;
+  resolvedDataQid?: string | null;
+  scrollHeight: number;
+  clientHeight: number;
+  clientWidth: number;
+  segments: number;
+  offsets: number[];
+}> {
+  if (!selector) throw new Error("selector required");
+  if (maxSegments < 1) throw new Error("maxSegments must be >= 1");
+  if (settleMs < 0) throw new Error("settleMs must be >= 0");
+
+  const targetResult = await cdp.evaluateScript(tabId, `
+(() => {
+  const selected = document.querySelector(${JSON.stringify(selector)});
+  if (!selected) return { error: "selector_not_found", selector: ${JSON.stringify(selector)} };
+  function isScrollable(el) {
+    const style = getComputedStyle(el);
+    const overflowY = style.overflowY;
+    return (overflowY === "auto" || overflowY === "scroll") && el.scrollHeight > el.clientHeight + 1;
+  }
+  let container = selected;
+  if (${nearest ? "true" : "false"}) {
+    let node = selected;
+    while (node && node !== document.body && node !== document.documentElement) {
+      if (isScrollable(node)) { container = node; break; }
+      node = node.parentElement;
+    }
+  }
+  const rect = container.getBoundingClientRect();
+  const previousScrollTop = container.scrollTop || 0;
+  container.scrollTop = 0;
+  const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+  return {
+    selector: ${JSON.stringify(selector)},
+    resolvedTag: container.tagName,
+    resolvedDataQid: container.getAttribute("data-qid"),
+    rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+    clientLeft: container.clientLeft,
+    clientTop: container.clientTop,
+    scrollHeight: container.scrollHeight,
+    clientHeight: container.clientHeight,
+    clientWidth: container.clientWidth,
+    maxScrollTop,
+    previousScrollTop,
+  };
+})()
+  `);
+
+  const target = targetResult.result?.value;
+  if (!target) throw new Error("container_resolution_failed");
+  if (target.error) throw new Error(target.error);
+
+  const viewportResult = await cdp.evaluateScript(tabId, `({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    deviceScaleFactor: window.devicePixelRatio || 1
+  })`);
+  const viewport = viewportResult.result?.value;
+  if (!viewport) throw new Error("viewport_resolution_failed");
+
+  const rect = target.rect;
+  const clipX = Math.max(0, Number(rect.x) + Number(target.clientLeft || 0));
+  const clipY = Math.max(0, Number(rect.y) + Number(target.clientTop || 0));
+  const clipWidth = Math.min(Number(target.clientWidth), Number(viewport.width) - clipX);
+  const clipHeight = Math.min(Number(target.clientHeight), Number(viewport.height) - clipY);
+  if (clipWidth <= 0 || clipHeight <= 0) throw new Error("container_not_visible");
+
+  const scrollHeight = Math.max(1, Math.round(Number(target.scrollHeight)));
+  const clientHeight = Math.max(1, Math.round(Number(target.clientHeight)));
+  const offsets: number[] = [];
+  for (let current = 0; current < scrollHeight && offsets.length < maxSegments; current += clientHeight) {
+    offsets.push(current);
+  }
+  const bottomOffset = Math.max(0, scrollHeight - clientHeight);
+  if (!offsets.includes(bottomOffset) && offsets.length < maxSegments) offsets.push(bottomOffset);
+  offsets.sort((a, b) => a - b);
+  if (offsets.length >= maxSegments && offsets[offsets.length - 1] < bottomOffset) {
+    throw new Error(`too_many_segments: ${offsets.length}/${maxSegments}`);
+  }
+
+  const segmentImages: Array<{ offset: number; bitmap: ImageBitmap }> = [];
+  try {
+    for (const offset of offsets) {
+      await cdp.evaluateScript(tabId, `
+(() => {
+  const selected = document.querySelector(${JSON.stringify(selector)});
+  if (!selected) return false;
+  function isScrollable(el) {
+    const style = getComputedStyle(el);
+    const overflowY = style.overflowY;
+    return (overflowY === "auto" || overflowY === "scroll") && el.scrollHeight > el.clientHeight + 1;
+  }
+  let container = selected;
+  if (${nearest ? "true" : "false"}) {
+    let node = selected;
+    while (node && node !== document.body && node !== document.documentElement) {
+      if (isScrollable(node)) { container = node; break; }
+      node = node.parentElement;
+    }
+  }
+  container.scrollTop = ${Math.round(offset)};
+  return container.scrollTop;
+})()
+      `);
+      if (settleMs > 0) await new Promise(r => setTimeout(r, settleMs));
+      const shot = await cdp.sendCommand(tabId, "Page.captureScreenshot", {
+        format: "png",
+        clip: { x: clipX, y: clipY, width: clipWidth, height: clipHeight, scale: 1 },
+        captureBeyondViewport: false,
+      });
+      const blob = base64ToBlob(shot.data);
+      segmentImages.push({ offset, bitmap: await createImageBitmap(blob) });
+    }
+
+    if (segmentImages.length === 0) throw new Error("no_segments_captured");
+    const scale = segmentImages[0].bitmap.height / clipHeight;
+    const outputWidth = segmentImages[0].bitmap.width;
+    const outputHeight = Math.max(1, Math.ceil(scrollHeight * scale));
+    const canvas = new OffscreenCanvas(outputWidth, outputHeight);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Failed to get canvas context");
+
+    let writtenUntil = 0;
+    for (const { offset, bitmap } of segmentImages) {
+      const start = Math.max(offset, writtenUntil);
+      const end = Math.min(offset + clientHeight, scrollHeight);
+      if (end <= start) continue;
+      const cropTop = Math.round((start - offset) * scale);
+      const cropBottom = Math.min(Math.round((end - offset) * scale), bitmap.height);
+      const cropHeight = cropBottom - cropTop;
+      ctx.drawImage(bitmap, 0, cropTop, bitmap.width, cropHeight, 0, Math.round(start * scale), bitmap.width, cropHeight);
+      writtenUntil = end;
+    }
+
+    const resultBlob = await canvas.convertToBlob({ type: "image/png" });
+    const base64 = await blobToBase64(resultBlob);
+    return {
+      base64,
+      width: canvas.width,
+      height: canvas.height,
+      selector,
+      nearest,
+      resolvedTag: target.resolvedTag,
+      resolvedDataQid: target.resolvedDataQid,
+      scrollHeight,
+      clientHeight,
+      clientWidth: Math.round(Number(target.clientWidth)),
+      segments: segmentImages.length,
+      offsets,
+    };
+  } finally {
+    for (const { bitmap } of segmentImages) bitmap.close();
+    await cdp.evaluateScript(tabId, `
+(() => {
+  const selected = document.querySelector(${JSON.stringify(selector)});
+  if (!selected) return false;
+  function isScrollable(el) {
+    const style = getComputedStyle(el);
+    const overflowY = style.overflowY;
+    return (overflowY === "auto" || overflowY === "scroll") && el.scrollHeight > el.clientHeight + 1;
+  }
+  let container = selected;
+  if (${nearest ? "true" : "false"}) {
+    let node = selected;
+    while (node && node !== document.body && node !== document.documentElement) {
+      if (isScrollable(node)) { container = node; break; }
+      node = node.parentElement;
+    }
+  }
+  container.scrollTop = ${Math.round(Number(target.previousScrollTop) || 0)};
+  return true;
+})()
+    `);
+  }
+}
+
 const navigationResolvers = new Map<number, () => void>();
 const tabNameRegistry = new Map<string, number>();
 
@@ -399,6 +588,25 @@ export async function handleMessage(
           await chrome.tabs.sendMessage(tabId, { type: "SHOW_AFTER_TOOL_USE" });
         } catch (e) {}
       }
+    }
+
+    case "EXECUTE_CONTAINER_SCREENSHOT": {
+      if (!tabId) throw new Error("No tabId provided");
+      const result = await captureScrollContainer(
+        tabId,
+        message.selector,
+        message.nearest !== false,
+        Number.isFinite(Number(message.maxSegments)) ? Number(message.maxSegments) : 80,
+        Number.isFinite(Number(message.settleMs)) ? Number(message.settleMs) : 80,
+      );
+      const screenshotId = generateScreenshotId();
+      cacheScreenshot(screenshotId, result);
+      return {
+        ...result,
+        screenshotId,
+        method: "cdp_stitched_container",
+        authoritative: true,
+      };
     }
 
     case "EXECUTE_CLICK": {

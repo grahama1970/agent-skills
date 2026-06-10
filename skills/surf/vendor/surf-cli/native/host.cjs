@@ -1372,6 +1372,16 @@ function processInput() {
                 screenshotId: msg.screenshotId,  // Preserve for upload_image workflow
                 method: msg.method,
                 authoritative: msg.authoritative,
+                selector: msg.selector,
+                nearest: msg.nearest,
+                resolvedTag: msg.resolvedTag,
+                resolvedDataQid: msg.resolvedDataQid,
+                scrollHeight: msg.scrollHeight,
+                clientHeight: msg.clientHeight,
+                clientWidth: msg.clientWidth,
+                segments: msg.segments,
+                offsets: msg.offsets,
+                image: origWidth && origHeight ? { width: origWidth, height: origHeight } : undefined,
               }, null);
             } catch (e) {
               sendToolResponse(socket, originalId, null, `Failed to save: ${e.message}`);

@@ -1,0 +1,106 @@
+{
+  "schema": "review_page.v1",
+  "page": "Sparta Chat + Evidence Workspace",
+  "route": "http://127.0.0.1:3002/#sparta-explorer/chat",
+  "round_id": "r1",
+  "lead_persona": "Brandon Bailey",
+  "page_verdict": "fail",
+  "overall_verdict": "NEEDS_CHANGES",
+  "human_decision_required": false,
+  "executive_summary": "Sparta Chat has promising backend policy evidence, but the page cannot pass until evidence-case binding, citations, deflection, refresh persistence, and navigation persistence are visible and screenshot-proven.",
+  "research": {
+    "web_research_required": true,
+    "query": "Benchmark evidence workspaces and compliance chat products for visible citations, audit evidence, degraded states, and evidence persistence.",
+    "sources": [],
+    "benchmark_findings": [
+      {
+        "pattern": "Evidence workspace",
+        "benchmark_behavior": "Expose source artifacts and reasoning context near the answer.",
+        "implication": "Chat answers must show evidence-case id, citations, and caveats next to the response."
+      },
+      {
+        "pattern": "Compliance evidence automation",
+        "benchmark_behavior": "Distinguish current, stale, missing, and draft evidence.",
+        "implication": "Unsupported or draft evidence must be visually labeled, not hidden."
+      }
+    ]
+  },
+  "evidence": {
+    "screenshots": [
+      {
+        "path": "screenshots/01-full-page.png",
+        "label": "Full page",
+        "expected": "Chat workspace and evidence panel are visible.",
+        "observed": "Chat is visible; evidence binding requires proof.",
+        "verdict": "FAIL"
+      },
+      {
+        "path": "screenshots/04-after-refresh.png",
+        "label": "After refresh",
+        "expected": "Answer, evidence case, citations, and caveats persist.",
+        "observed": "Persistence not yet proven.",
+        "verdict": "FAIL"
+      }
+    ],
+    "test_interactions": "evidence/test-interactions-results.json",
+    "page_contract": "evidence/page-contract.json",
+    "api_state": "evidence/api-state.json"
+  },
+  "interactions": [
+    {
+      "qid": "sparta:button:tab-chat",
+      "action": "click",
+      "expected": "Chat opens",
+      "observed": "Opened",
+      "verdict": "PASS",
+      "screenshot": "screenshots/01-full-page.png"
+    },
+    {
+      "qid": "chat:evidence-case-panel",
+      "action": "assert_visible",
+      "expected": "Evidence case bound to answer is visible",
+      "observed": "Not production-proven",
+      "verdict": "FAIL",
+      "screenshot": "screenshots/03-evidence-panel.png"
+    }
+  ],
+  "persona_evaluation": [
+    {
+      "area": "Evidence trust",
+      "finding": "Evidence binding is the core trust mechanism and is not proven across refresh/navigation.",
+      "verdict": "FAIL"
+    },
+    {
+      "area": "Compliance risk",
+      "finding": "Answer text without persistent proof can be mistaken for approved evidence.",
+      "verdict": "FAIL"
+    }
+  ],
+  "dashboard_theater_audit": [
+    {
+      "risk": "Generic chat success",
+      "finding": "A response appearing can look like success even if evidence binding is missing.",
+      "required_behavior": "Pass requires answer, evidence case, citations, caveats, and persistence."
+    }
+  ],
+  "blocking_findings": [
+    {
+      "finding": "Evidence-case binding across refresh/navigation is not proven.",
+      "severity": "critical",
+      "owner": "code-runner",
+      "why_blocks": "This is the central trust requirement for Sparta Chat."
+    }
+  ],
+  "conditions": [],
+  "non_blocking_findings": [],
+  "code_runner_actions": [
+    "Persist selected evidence-case id, citations, caveats, and artifact links in page state across refresh and navigation.",
+    "Add real data-qid instrumentation for evidence-case panel, citations, deflection, refresh persistence, and navigation persistence.",
+    "Run a Chat interaction manifest and capture screenshots for every required visual state."
+  ],
+  "non_claims": [
+    "Coverage closure does not imply Chat pass.",
+    "Backend prompt policy pass does not imply page pass.",
+    "Phase-62 remains gated."
+  ]
+}

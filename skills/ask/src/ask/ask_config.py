@@ -102,6 +102,14 @@ MONITOR_PERSONAS_RUN = os.environ.get(
     "ASK_MONITOR_PERSONAS_RUN",
     str(SKILLS_DIR / "monitor-personas" / "run.sh"),
 )
+
+BROWSER_ORACLE_RUN = Path(
+    os.environ.get(
+        "ASK_BROWSER_ORACLE_RUN",
+        str(SKILLS_DIR / "browser-oracle" / "run.sh"),
+    )
+).expanduser()
+
 SURF_RUN = os.environ.get(
     "ASK_SURF_RUN",
     str(SKILLS_DIR / "surf" / "run.sh"),

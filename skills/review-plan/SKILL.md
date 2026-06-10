@@ -43,15 +43,25 @@ Canonical parameters:
 - `--max-rounds N`
 - `--output-dir PATH`
 - `--ask-gate`
-- `--ask-model MODEL` (default `gpt-5.5`)
-- `--ask-reasoning LEVEL` (default `high`)
+- `--ask-gate-backend scillm|webgpt` (default `scillm`)
+- `--ask-review-bundle PATH` (recommended for `webgpt`: one concatenated `.md`/`.txt`)
+- `--ask-attach-file PATH` (webgpt only: zip ≤5 files with `REQUEST.md` (or legacy `REVIEW.md`) + optional PNGs)
+- `--ask-model MODEL` (default `gpt-5.5`; scillm backend only)
+- `--ask-reasoning LEVEL` (default `high`; scillm backend only)
 - `--ask-timeout SECONDS`
-- `--ask-focus LABELS`
+- `--ask-focus LABELS` (scillm backend only)
+- `--browser-oracle-from DIR` (preferred walk-up root when cwd is wrong)
+- `--webgpt-project NAME` / `--webgpt-tab-id ID` / `--webgpt-url URL` (explicit overrides; skip walk-up)
+- `--oracle-iterations N` (webgpt backend; use `1` for single round)
 
-When `--max-rounds > 1` is supplied, the skill must behave as a bounded
-gate-producing controller or fail closed if that mode is not implemented. The
-canonical gate artifact is `review_result.json` with verdict
-`PASS`, `NEEDS_CHANGES`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`.
+`/review-plan` is **single-pass preflight**, not an improvement loop. Default
+`--max-rounds` is `1`. Values above `1` are **capped to 1** unless
+`--allow-extended-review` is set (hard cap `2` for one extra human-driven
+preflight only). There is **no automated multi-round re-review loop** inside
+this skill — use `/orchestrate` or `/plan-iterate` for implementation iterations.
+
+When gate artifacts are written, the canonical artifact is `review_result.json`
+with verdict `PASS`, `NEEDS_CHANGES`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`.
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
 
@@ -65,6 +75,41 @@ Validate task files before `/orchestrate` runs them. Catches errors that waste h
 /plan → /review-plan → /orchestrate
 ```
 
+## Execution-first (anti-spiral)
+
+**Purpose:** catch plan defects once, then **start executing**.
+
+| Do | Don't |
+|----|-------|
+| Run `/review-plan` once before `/orchestrate` | Re-run `/review-plan --ask-gate` in a loop hoping for PASS |
+| Fix deterministic FAIL/WARN, then orchestrate | Treat review as the main work product |
+| Optional **one** WebGPT preflight (`--oracle-iterations 1`) on a bundle | Multi-round WebGPT "until happy" |
+| Use `/plan-iterate` for phased implementation gates | Encode "iterate until reviewers pass" only in prompts |
+
+**Defaults:** `--ask-gate` off · `--max-rounds 1` · webgpt oracle capped at **1**.
+
+**On PASS:** `recommended_next_step` in `review_result.json` is **Run /orchestrate**.
+
+**On NEEDS_CHANGES:** fix blockers **once**, then orchestrate or `/plan-iterate` — not endless re-review.
+
+### WebGPT tab binding (CLI parity)
+
+Prefer **zero-flag** invocation from a registered working directory. `/ask` and `/surf` compose `$browser-oracle` automatically.
+
+| Flag | When to use |
+|------|-------------|
+| *(none)* | cwd has walk-up registry + binding — preferred |
+| `--browser-oracle-from <dir>` | Override walk-up root (monorepo subdir) |
+| `--webgpt-project <name>` | Explicit project; skips yaml walk-up |
+| `--webgpt-tab-id <id>` | One-off override; skips walk-up |
+| `--webgpt-url <url>` | Resolve by conversation URL; skips walk-up |
+
+Setup: `$browser-oracle register` + `bind` + `doctor --from <dir>`. See `$browser-oracle` and `$ask` SKILL.md **WebGPT tab binding** sections.
+
+**WebGPT prompt safety:** Never put `/review-plan` in the WebGPT question or zip filename — it triggers
+wrong `$ask` routing (git plan diff instead of your bundle). Use neutral names like `rdo-evidence.zip`.
+
+
 ## Usage
 
 ```bash
@@ -77,8 +122,26 @@ Validate task files before `/orchestrate` runs them. Catches errors that waste h
 # Review with auto-fix suggestions
 ./run.sh review 01_MIGRATION_PLAN.md --suggest-fixes
 
-# Review with controller-owned iteration gate artifact
-./run.sh review 01_MIGRATION_PLAN.md --max-rounds 3 --ask-gate --json
+# Review with controller-owned iteration gate artifact (scillm deep-review)
+./run.sh review 01_MIGRATION_PLAN.md --ask-gate --json
+
+# Same gate, but WebGPT tech-lead on a bounded review bundle + plan file
+./run.sh review 01_MIGRATION_PLAN.md --ask-gate \
+  --ask-gate-backend webgpt \
+  --ask-review-bundle /tmp/review-plan-bundle.md \
+  --webgpt-tab-id 837343814 \
+  --webgpt-project my-plan-review \
+  --oracle-iterations 1 \
+  --json
+
+
+# WebGPT gate with screenshot zip (no bare PNG paths in the prompt)
+./run.sh review plan.md --ask-gate \
+  --ask-gate-backend webgpt \
+  --ask-attach-file /tmp/review-plan-evidence.zip \
+  --webgpt-tab-id 837343814 \
+  --webgpt-project my-plan-review \
+  --json
 
 # Quick check (claims + DoD only, skip chain validation)
 ./run.sh check 01_MIGRATION_PLAN.md
@@ -86,10 +149,10 @@ Validate task files before `/orchestrate` runs them. Catches errors that waste h
 
 ## Automatic Review Iteration Contract
 
-When a caller supplies an iteration parameter such as `--max-rounds N` where
-`N > 1`, `/review-plan` must switch from simple reporting to controller mode.
-Controller mode writes a machine-readable `review_result.json` gate artifact and
-returns nonzero until the gate verdict is `PASS`.
+Controller mode (enabled by `--ask-gate`, `--output-dir`, or
+`--allow-extended-review` with `--max-rounds 2`) writes `review_result.json` and
+exits nonzero when the verdict is not `PASS`. It does **not** auto-loop: one
+deterministic pass plus at most one external ask-gate per invocation.
 
 Controller mode is fail-closed:
 
@@ -98,11 +161,15 @@ Controller mode is fail-closed:
   `INSUFFICIENT_EVIDENCE`.
 - The gate artifact includes deterministic findings, suggested next-iteration
   actions, iteration count, and any `$ask` artifacts.
-- `--ask-gate` runs real `$ask --deep-review` with readable target files after
-  deterministic checks are clean. It preserves `request.json`, `status.json`,
-  `events.jsonl`, `review.md`, and `review.json` paths when available.
-- If deterministic checks have findings, `$ask --deep-review` is skipped for
-  that round because the local plan is already blocked.
+- `--ask-gate` runs a real `$ask` external gate after deterministic checks are clean.
+  - **`--ask-gate-backend scillm`** (default): `$ask --deep-review` on the plan file path
+    (`review.md` / `review.json` are **$ask outputs**, not inputs).
+  - **`--ask-gate-backend webgpt`**: `$ask webgpt` on a **project-built review bundle**
+    (`docs/REVIEW_BUNDLE.template.md`). For agent-skills orchestration, prefer `plans/REQUEST.md` (from `./scripts/build_review_bundle.sh`). Use `--ask-review-bundle` for text-only (one `.md`, ≤2 MiB)
+    or `--ask-attach-file` for a zip (≤5 files). Requires walk-up registry+binding, or `--webgpt-tab-id` / `--webgpt-project` / `--webgpt-url`.
+    `/review-plan` validates bundle shape; it does not write `review.md` for WebGPT.
+  Both preserve `request.json`, `status.json`, `events.jsonl`, and review artifacts when available.
+- If deterministic checks have findings, the ask gate is skipped for that round because the local plan is already blocked.
 - `/review-plan` does not silently rewrite an arbitrary task file. Remediation
   is performed by the project agent, `$plan-iterate`, `/orchestrate`, or a
   future explicit remediation command. The review skill owns the review gate and
@@ -117,6 +184,9 @@ Canonical artifact:
   "verdict": "PASS|NEEDS_CHANGES|BLOCKED|INSUFFICIENT_EVIDENCE",
   "reason": "deterministic_review_has_warn_or_fail_findings",
   "iterations": 1,
+  "execution_policy": "single_preflight_then_orchestrate",
+  "recommended_next_step": "Run /orchestrate on this plan file now.",
+  "spiral_guard": [],
   "counts": {"pass": 0, "warn": 0, "fail": 0},
   "findings": [],
   "severity_to_loop_rule": "WARN and FAIL findings both block PASS for review-plan auto mode.",
@@ -124,6 +194,40 @@ Canonical artifact:
   "ask_artifacts": {}
 }
 ```
+
+
+
+## Orchestration plan layout (agent-skills)
+
+When the repo uses `plans/PLAN.md` + `plans/REQUEST.md`:
+
+| File | Role |
+|------|------|
+| `plans/PLAN.md` | Execution spec only — what `/orchestrate` and the project agent implement |
+| `plans/REQUEST.md` | WebGPT bundle — review sections, gates, inlined JSON (`./scripts/build_review_bundle.sh`) |
+
+- `./run.sh dag-preflight` runs Phase 0 DAG checks, regenerates `REQUEST.md`, and **fails** if `PLAN.md` still contains review/gate markers or `REQUEST.md` is missing.
+- WebGPT: send **`plans/REQUEST.md`** via `--ask-review-bundle` (not `PLAN.md`).
+- After acceptance: `./scripts/accept_plan.sh` archives `REQUEST.md`; `PLAN.md` stays.
+
+## Review evidence bundle (`$ask webgpt`)
+
+Browser tabs cannot read bare repo paths. Before `--ask-gate-backend webgpt`, the **project agent**
+builds evidence using `docs/REVIEW_BUNDLE.template.md`:
+
+| Mode | Flag | Contents |
+|------|------|----------|
+| Text only | `--ask-review-bundle PATH` | One `.md` with required sections; `$ask` inlines file bodies |
+| Text + images | `--ask-attach-file PATH` | Zip with `REQUEST.md` (or legacy `REVIEW.md`) + up to 4 PNGs (max 5 files total) |
+
+Required markdown sections (validated by `/review-plan` before calling `$ask`):
+
+- `## Review request`
+- `## This round acceptance`
+- `## Local gates`
+
+**Dual agreement** for plan-iterate phases: local deterministic `/review-plan` PASS **and** WebGPT
+`VERDICT: PASS` on **This round acceptance**, with `$ask` artifacts under `.ask_artifacts/runs/`.
 
 This is the same policy expected of all `review-*` skills: when a bounded
 iteration parameter is supplied, the skill should run as a gate-producing
@@ -402,11 +506,25 @@ Required contract:
    expected human-visible outcomes. DOM assertions alone are invalid proof.
 9. **WebGPT routing discipline**: If the plan asks for ChatGPT/WebGPT review, it
    MUST route through the real `$ask` runtime with `--oracle-backend webgpt` or
-   `$ask webgpt`, include the provided `--webgpt-tab-id` when specified, and
+   `$ask webgpt`, prefer zero-flag walk-up from cwd; use `--browser-oracle-from`, `--webgpt-project`, or `--webgpt-tab-id` when specified, and
    preserve ask artifacts (`request.json`, `status.json`, `events.jsonl`,
    `review.md`, `review.json`, or WebGPT mode outputs). Direct `$surf`,
    subagent, plain web search, or informal browser summaries are invalid for
    `$ask` review requests.
+10. **WebGPT evidence delivery** (FAIL grade when violated on plan-iterate /
+    orchestration plans that name WebGPT as tech lead): Browser tabs cannot read
+    bare path lists or repo-wide diffs. The plan MUST specify one of:
+    - **One concatenated** `.md` or `.txt` (absolute path; `$ask` inlines under
+      `## Attached files`, max 2 MB per file) when no screenshots are attached, or
+    - **One zip** with **at most 5 member files** (`$ask webgpt` / surf attach only).
+    When the human supplies `--webgpt-tab-id` or a bound `--webgpt-project`, the plan
+    and project agent MUST reuse that tab — do **not** default to
+    `--webgpt-create-tab`. Proof is the `$ask` artifact set
+    (`<ask_id>.status.json`, `events.jsonl`) or an equivalent surf submit with
+    `controlled_tab_id` matching the requested tab. Do not mark the phase complete
+    on local edits alone; dual agreement requires WebGPT `PASS` on **This round
+    acceptance** plus passing local gates.
+
 
 **Grading:**
 - **PASS**: The plan has a deterministic controller, stored project-agent

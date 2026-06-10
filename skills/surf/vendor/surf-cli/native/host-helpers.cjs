@@ -553,6 +553,19 @@ function mapToolToMessage(tool, args, tabId) {
         noActivate: a["no-activate"] === true,
         ...baseMsg
       };
+    case "snap-container":
+    case "screenshot-container":
+      return {
+        type: "EXECUTE_CONTAINER_SCREENSHOT",
+        selector: a.selector,
+        savePath: a.savePath || a.output,
+        nearest: a.nearest !== false && a.nearest !== "false",
+        maxSegments: a["max-segments"] ? parseInt(a["max-segments"], 10) : 80,
+        settleMs: a["settle-ms"] ? parseInt(a["settle-ms"], 10) : 80,
+        fullRes: a.full !== false,
+        maxSize: a["max-size"] || 1200,
+        ...baseMsg
+      };
     case "javascript_tool":
       return { type: "EXECUTE_JAVASCRIPT", code: a.code, ...baseMsg };
     case "wait_for_element":

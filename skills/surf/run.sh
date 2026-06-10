@@ -442,6 +442,14 @@ if [[ "$1" == "webgpt.submit" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-submit.sh" "${@:2}"
 fi
 
+if [[ "$1" == "gemini.submit" ]]; then
+    exec "$SKILL_DIR/scripts/gemini-submit.sh" "${@:2}"
+fi
+
+if [[ "$1" == "kimi.submit" ]]; then
+    exec "$SKILL_DIR/scripts/kimi-submit.sh" "${@:2}"
+fi
+
 if [[ "$1" == "webgpt.extract" ]]; then
     exec "$SKILL_DIR/scripts/webgpt-extract.sh" "${@:2}"
 fi

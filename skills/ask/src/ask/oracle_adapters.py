@@ -851,6 +851,15 @@ def _is_codex_agent_model(model: str) -> bool:
     return lowered.startswith("gpt-") or lowered.startswith("codex-")
 
 
+def _temperature_for_model(model: str) -> float:
+    lowered = model.strip().lower()
+    if lowered == "moonshot-text":
+        return 1.0
+    if "moonshot" in lowered or "kimi" in lowered:
+        return 0.6
+    return 0.0
+
+
 def _complete_oracle_call(
     model: str,
     reasoning_effort: str,
@@ -895,7 +904,7 @@ def _complete_oracle_call(
             },
             {"role": "user", "content": user_content},
         ],
-        "temperature": 0,
+        "temperature": _temperature_for_model(model),
         "reasoning_effort": reasoning_effort,
         "stream": True,
         "stream_progress_events": True,

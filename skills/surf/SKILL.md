@@ -89,6 +89,7 @@ metadata:
 provides:
   - surf
 composes:
+  - browser-oracle
   - memory
   - fetcher
   - extractor
@@ -157,7 +158,7 @@ Orchestration belongs in **`/ask`**. This skill provides **transport + proof** o
 
 | Work type | Prefer `/ask` | `$surf` command | Notes |
 | --- | --- | --- | --- |
-| **Code** | `$ask webgpt` | `webgpt.submit` | Chrome tab id; `--no-activate` for background |
+| **Code** | `$ask webgpt` | `webgpt.submit` | `$browser-oracle` walk-up or `--project` / `--tab-id`; `--no-activate` for background |
 | **Prose** | `$ask webkimi` | `kimi.submit` | Chrome; `kimi.com` tab |
 | **Design** | `$ask webgemini` | `gemini.submit` | Chrome; `gemini.google.com` tab |
 | **Research** | `$ask webperplexity` | `perplexity` | One-shot; not for multi-round review |
@@ -173,7 +174,7 @@ In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-bro
 
 | If the user says... | Use |
 |---|---|
-| "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id> --expect-url <conversation-url>` |
+| "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --no-activate` (walk-up from cwd) or `--project <name>` or `--tab-id <id> --expect-url <url>` |
 | "recover an already completed WebGPT tab" | `surf webgpt.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
 | "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` (requires `--tab-id`, `--url`, or `--create-tab`) |
 | "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
@@ -531,6 +532,82 @@ it attaches CDP to the tab id you name.
 | Will a long `webgpt.submit` pass if I **switch Chrome tabs** mid-run? | **No** — meta requires `focus_changed: false` for the whole submit. Stay on your work tab until the round finishes. |
 | What fails with `focus_stolen_despite_no_activate`? | Chrome's active tab or focused window changed during the run, or the controlled tab was your foreground work tab. Use a **dedicated reviewer tab** + explicit `--tab-id`. |
 
+
+#### Chrome Google/Gemini side panel is browser UI
+
+Chrome's built-in Google/Gemini side panel, including the "Ask Gemini" panel
+input attached to a tab, is **not part of the page DOM**. Surf commands such as
+`surf read --tab-id`, `surf click --tab-id`, `surf type --tab-id`, `surf js`,
+and CDP screenshots can control or inspect the underlying tab, but they cannot
+directly address the side panel input or send button.
+
+Do not claim that side-panel typing, paste, or send can run in background mode
+with current Surf. The only proven method is foreground OS-level automation
+(`xdotool`/desktop clipboard/screen capture), and that method **does hijack the
+user's active window, mouse, and text input while it runs**.
+
+If the human explicitly permits foreground control of the browser UI, use this
+bounded recipe:
+
+```bash
+# 1. Activate the exact tab whose side panel is already open.
+surf tab.activate <TAB_ID>
+xdotool getactivewindow getwindowname getwindowgeometry
+
+# 2. Put the payload on the desktop clipboard.
+printf '%s' "$payload" | xclip -selection clipboard
+
+# 3. Click the side-panel input by measured window-relative coordinates,
+#    select the existing draft, and paste via Ctrl+V.
+xdotool mousemove --window <WINDOW_ID> <INPUT_X> <INPUT_Y> click 1
+xdotool key --clearmodifiers ctrl+a
+xdotool key --clearmodifiers ctrl+v
+
+# 4. Only if the human asked to submit, click the measured send button center.
+xdotool mousemove --window <WINDOW_ID> <SEND_X> <SEND_Y> click 1
+
+# 5. Capture the real Chrome window as proof. CDP cannot prove side-panel state.
+import -window <WINDOW_ID> /tmp/google-side-panel-proof.png
+```
+
+Required proof for this path:
+- An OS/window screenshot must visibly show the side panel input before submit,
+  or the sent message after submit.
+- The standard CDP hook may still be run for the underlying page route, but it
+  is not proof of Chrome side-panel content because the side panel is outside
+  the page target.
+- If the user requires no focus stealing or background operation, stop and say
+  this is not currently supported for Chrome's built-in side panel. Use a
+  normal ChatGPT/Gemini/Kimi webpage tab with `--tab-id --no-activate`, or add a
+  dedicated Surf extension feature for side-panel control, instead.
+
+
+
+#### Project binding via `$browser-oracle`
+
+`surf webgpt.submit` tab binding flags (same resolution order via `$browser-oracle`):
+
+| Flag | Role |
+|------|------|
+| `--tab-id <id>` | Explicit Chrome tab; skips walk-up |
+| `--url <url>` | Resolve open tab by conversation URL; skips walk-up |
+| `--expect-url <url>` | Identity assertion with `--tab-id` |
+| `--expect-title <text>` | Title assertion with `--tab-id` |
+| `--create-tab` | Fresh inactive ChatGPT tab; skips walk-up |
+| `--project <name>` | Explicit `~/.pi/webgpt-projects/<name>.json`; skips yaml |
+| `--browser-oracle-from <dir>` | Walk-up root (default: cwd) |
+| `--no-activate` | Background controlled tab (required for reviewer work) |
+| `--no-remember` | Do not touch `/tmp/surf-webgpt-controlled-tab-id` |
+
+```bash
+# Zero-flag from a registered directory
+surf webgpt.submit --input REQ.md --output RESP.md --no-activate
+
+# Explicit overrides
+surf webgpt.submit --input REQ.md --output RESP.md --project oc-subagent-personas --no-activate
+surf webgpt.submit --input REQ.md --output RESP.md --browser-oracle-from skills/oc-subagent/personas/mathematics --no-activate
+surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id> --expect-url <url> --no-activate
+```
 
 #### Pre-submit checks (`webgpt.preflight`)
 

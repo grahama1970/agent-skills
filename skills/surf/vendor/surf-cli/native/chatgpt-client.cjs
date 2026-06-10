@@ -50,10 +50,15 @@ function buildClickDispatcher() {
 
 function hasRequiredCookies(cookies) {
   if (!cookies || !Array.isArray(cookies)) return false;
-  const sessionCookie = cookies.find(
-    (c) => c.name === "__Secure-next-auth.session-token" && c.value
+  const hasValue = (c) => Boolean(c && c.value);
+  const legacy = cookies.find(
+    (c) => c.name === "__Secure-next-auth.session-token" && hasValue(c)
   );
-  return Boolean(sessionCookie);
+  if (legacy) return true;
+  // NextAuth may shard large session cookies as .0, .1, ...
+  return cookies.some(
+    (c) => /^__Secure-next-auth\.session-token\.\d+$/.test(c.name) && hasValue(c)
+  );
 }
 
 async function evaluate(cdp, expression) {

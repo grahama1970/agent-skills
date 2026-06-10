@@ -7,6 +7,8 @@ import subprocess
 import tempfile
 import re
 import time
+import base64
+import mimetypes
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import deque
 from datetime import datetime, timezone
@@ -65,6 +67,15 @@ ALLOWED_SKILL_RUN_SKILLS = {
 INTERNAL_SKILL_MENTION_TYPES = {"ask", "memory", "dogpile", "scillm", "interview"}
 
 
+def _temperature_for_model(model: str) -> float:
+    lowered = model.strip().lower()
+    if lowered == "moonshot-text":
+        return 1.0
+    if "moonshot" in lowered or "kimi" in lowered:
+        return 0.6
+    return 0.0
+
+
 class AskDagError(ValueError):
     """Raised when an ask DAG is malformed or cannot be executed safely."""
 
@@ -119,6 +130,7 @@ def draft_ask_dag_from_question(
     mentioned_skills: list[str] | None = None,
     max_concurrency: int = 4,
     agent_worker_id: str | None = None,
+    default_oracle_model: str | None = None,
     prefer_agent_coding: bool = True,
 ) -> dict[str, Any]:
     """Draft a conservative executable DAG from natural language.
@@ -152,6 +164,12 @@ def draft_ask_dag_from_question(
     wants_report = "create-report" in mentions or bool(re.search(r"\b(report|write[- ]?up|briefing|summary document)\b", lowered))
     wants_oracle = "scillm" in mentions or bool(re.search(r"\b(analy[sz]e|review|critique|compare|decide|answer|synthesi[sz]e)\b", lowered))
     explicit_skill_mentions = [skill for skill in mentions if skill not in INTERNAL_SKILL_MENTION_TYPES]
+    if "review-design" in explicit_skill_mentions:
+        raise AskDagError(
+            "$ask + $review-design requires the bounded review-design loop with "
+            "persona, screenshots, and verdict artifacts; refusing to invoke "
+            "review-design with empty generic DAG args."
+        )
 
     wants_coding = bool(CODING_INTENT_RE.search(lowered)) or bool(
         {"code-runner", "subagent-runner"} & set(explicit_skill_mentions)
@@ -210,7 +228,7 @@ def draft_ask_dag_from_question(
                 "depends_on": dependency_tail,
                 "input": {
                     "prompt": text,
-                    "model": DEFAULT_ORACLE_MODEL,
+                    "model": default_oracle_model or DEFAULT_ORACLE_MODEL,
                     "reasoning_effort": DEFAULT_ORACLE_REASONING,
                 },
             }
@@ -1066,6 +1084,7 @@ def execute_ask_dag(
     oracle_model: str | None = None,
     oracle_reasoning: str = DEFAULT_ORACLE_REASONING,
     oracle_timeout: float = DEFAULT_ORACLE_TIMEOUT,
+    oracle_image_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     """Execute a validated ask DAG and return context items for synthesis."""
     ordered_nodes = _topological_order(dag["nodes"])
@@ -1107,6 +1126,7 @@ def execute_ask_dag(
                         oracle_model=oracle_model or DEFAULT_ORACLE_MODEL,
                         oracle_reasoning=oracle_reasoning,
                         oracle_timeout=oracle_timeout,
+                        oracle_image_paths=oracle_image_paths or [],
                         max_concurrency=max_concurrency,
                         layer_index=layer_index,
                     )
@@ -1124,6 +1144,7 @@ def execute_ask_dag(
                         oracle_model=oracle_model or DEFAULT_ORACLE_MODEL,
                         oracle_reasoning=oracle_reasoning,
                         oracle_timeout=oracle_timeout,
+                        oracle_image_paths=oracle_image_paths or [],
                     )
                 ] = node
             layer_results: dict[str, dict[str, Any]] = {}
@@ -1221,6 +1242,7 @@ def _execute_node(
     oracle_model: str,
     oracle_reasoning: str,
     oracle_timeout: float,
+    oracle_image_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     node_type = node["type"]
     node_input = node["input"]
@@ -1247,6 +1269,7 @@ def _execute_node(
             model=str(node_input.get("model") or oracle_model),
             reasoning_effort=str(node_input.get("reasoning_effort") or oracle_reasoning),
             timeout=float(node_input.get("timeout") or oracle_timeout),
+            image_paths=list(node_input.get("image_paths") or oracle_image_paths or []),
         )
     raise AskDagError(f"Unsupported node type {node_type!r}.")
 
@@ -1308,6 +1331,7 @@ def _execute_scillm_oracle_partition(
     oracle_model: str,
     oracle_reasoning: str,
     oracle_timeout: float,
+    oracle_image_paths: list[str],
     max_concurrency: int,
     layer_index: int,
 ) -> dict[str, Any]:
@@ -1333,6 +1357,7 @@ def _execute_scillm_oracle_partition(
                 "prompt_payload": {
                     "prompt": str(node["input"].get("prompt") or question),
                     "response_format": node["input"].get("response_format", ""),
+                    "image_paths": list(node["input"].get("image_paths") or oracle_image_paths or []),
                 },
             }
             for node in nodes
@@ -1359,6 +1384,7 @@ def _execute_scillm_oracle_partition(
                 oracle_model=oracle_model,
                 oracle_reasoning=oracle_reasoning,
                 oracle_timeout=oracle_timeout,
+                oracle_image_paths=oracle_image_paths,
             ): node
             for node in nodes
         }
@@ -1598,8 +1624,15 @@ def _execute_oracle_node(
     model: str,
     reasoning_effort: str,
     timeout: float,
+    image_paths: list[str] | None = None,
 ) -> dict[str, Any]:
     prompt = _build_oracle_prompt(node, question=question, context=context)
+    user_content: str | list[dict[str, object]]
+    image_parts = _oracle_image_parts(image_paths or [])
+    if image_parts:
+        user_content = [*image_parts, {"type": "text", "text": prompt}]
+    else:
+        user_content = prompt
     metadata = build_scillm_metadata(
         ask_id=run_state.ask_id,
         protocol="dag",
@@ -1620,9 +1653,9 @@ def _execute_oracle_node(
                     "outside the supplied DAG context."
                 ),
             },
-            {"role": "user", "content": prompt},
+            {"role": "user", "content": user_content},
         ],
-        "temperature": 0,
+        "temperature": _temperature_for_model(model),
         "reasoning_effort": reasoning_effort,
         "stream": True,
         "stream_progress_events": True,
@@ -1632,6 +1665,8 @@ def _execute_oracle_node(
     }
     if node["input"].get("response_format") == "json_object":
         body["response_format"] = {"type": "json_object"}
+    if image_paths:
+        body["oracle_image_paths"] = image_paths
     run_state.event(
         "dag_scillm_node_call_started",
         node_id=node["id"],
@@ -1639,6 +1674,7 @@ def _execute_oracle_node(
         reasoning_effort=reasoning_effort,
         stream=True,
         timeout_seconds=timeout,
+        image_count=len(image_paths or []),
     )
     content, model_served, stream_events_path = _call_scillm_chat_stream(
         body,
@@ -1673,6 +1709,22 @@ def _execute_oracle_node(
         partition_id="",
         batch_events_path="",
     )
+
+
+def _oracle_image_parts(image_paths: list[str]) -> list[dict[str, object]]:
+    parts: list[dict[str, object]] = []
+    for raw_path in image_paths:
+        path = Path(raw_path).expanduser()
+        if not path.exists():
+            raise FileNotFoundError(f"oracle image path does not exist: {path}")
+        if not path.is_file():
+            raise ValueError(f"oracle image path is not a file: {path}")
+        mime = mimetypes.guess_type(str(path))[0] or "image/png"
+        if not mime.startswith("image/"):
+            raise ValueError(f"oracle image path is not an image MIME type: {path} ({mime})")
+        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+        parts.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{encoded}"}})
+    return parts
 
 
 def _build_oracle_prompt(node: dict[str, Any], *, question: str, context: dict[str, dict[str, Any]]) -> str:

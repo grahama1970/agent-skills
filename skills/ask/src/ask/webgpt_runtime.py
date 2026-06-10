@@ -19,6 +19,8 @@ Contract:
 
 from __future__ import annotations
 
+import os
+import os
 import json
 import re
 import shutil
@@ -32,6 +34,28 @@ from typing import Any
 
 from .ask_config import SURF_RUN, WEBGPT_DEFAULT_TIMEOUT, WEBGPT_STABLE_POLLS
 from . import webgpt_project
+from .browser_oracle_client import apply_webgpt_browser_oracle
+
+
+_WEBGPT_DONE_RE = re.compile(r"<<<WEBGPT_DONE:[^>]+>>>\s*")
+
+
+def _env_truthy(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes"}
+
+
+def _sanitize_clean_response(text: str, *, sentinel: str = "") -> str:
+    """Strip sentinel tokens that surf may leave as trailing contamination."""
+    cleaned = text or ""
+    if sentinel:
+        before, sep, _after = cleaned.partition(sentinel)
+        if sep:
+            cleaned = before
+    marker = _WEBGPT_DONE_RE.search(cleaned)
+    if marker:
+        cleaned = cleaned[: marker.start()]
+    return cleaned.strip()
+
 from .webgpt_rate_limit import WebgptRateLimitError, check_and_record
 
 
@@ -53,6 +77,99 @@ class WebgptTabError(RuntimeError):
 
 class WebgptBackendError(RuntimeError):
     """Raised when surf webgpt.submit fails or the proof contract is broken."""
+
+
+def _run_webgpt_preflight_command(
+    command: list[str],
+    *,
+    surf: Path,
+) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
+    try:
+        proc = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=surf.parent,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise WebgptBackendError("surf webgpt.preflight timed out") from exc
+
+    try:
+        preflight = json.loads(proc.stdout or "{}")
+    except json.JSONDecodeError:
+        preflight = {"status": "invalid_json", "stdout": (proc.stdout or "")[-1000:]}
+    return proc, preflight
+
+
+def _run_webgpt_preflight(
+    *,
+    surf: Path,
+    resolved_tab_id: str,
+    url: str,
+    no_activate: bool,
+) -> dict[str, Any]:
+    """Run surf's fast WebGPT tab/focus preflight before a costly submit."""
+    if os.environ.get("ASK_WEBGPT_SKIP_PREFLIGHT", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }:
+        return {"status": "skipped", "reason": "ASK_WEBGPT_SKIP_PREFLIGHT"}
+
+    command = [str(surf), "webgpt.preflight", "--json"]
+    if resolved_tab_id:
+        command.extend(["--tab-id", resolved_tab_id])
+        if url:
+            command.extend(["--expect-url", url])
+    elif url:
+        command.extend(["--url", url])
+    else:
+        return {"status": "skipped", "reason": "no_explicit_tab_or_url"}
+
+    if no_activate:
+        command.append("--no-activate")
+    foreground_allowed_by_env = _env_truthy("ASK_WEBGPT_ALLOW_FOREGROUND")
+    if foreground_allowed_by_env:
+        command.append("--allow-foreground-controlled")
+    if _env_truthy("ASK_WEBGPT_ALLOW_UNVERIFIED_TAB_ID"):
+        command.append("--allow-unverified-tab-id")
+
+    proc, preflight = _run_webgpt_preflight_command(command, surf=surf)
+
+    preflight_failed = proc.returncode != 0 or preflight.get("status") != "pass"
+    if (
+        preflight_failed
+        and "not_foreground_controlled" in (preflight.get("failures") or [])
+        and not foreground_allowed_by_env
+    ):
+        retry_command = [*command, "--allow-foreground-controlled"]
+        retry_proc, retry_preflight = _run_webgpt_preflight_command(retry_command, surf=surf)
+        if retry_proc.returncode == 0 and retry_preflight.get("status") == "pass":
+            retry_preflight["foreground_controlled_auto_allowed"] = True
+            retry_preflight["initial_status"] = preflight.get("status")
+            retry_preflight["initial_failures"] = preflight.get("failures") or []
+            return retry_preflight
+        raise WebgptBackendError(
+            "surf webgpt.preflight failed before submit: "
+            f"returncode={retry_proc.returncode} status={retry_preflight.get('status')} "
+            f"failures={retry_preflight.get('failures')} "
+            f"initial_failures={preflight.get('failures')}\n"
+            f"stdout tail: {(retry_proc.stdout or '')[-1000:]}\n"
+            f"stderr tail: {(retry_proc.stderr or '')[-1000:]}"
+        )
+
+    if proc.returncode != 0 or preflight.get("status") != "pass":
+        raise WebgptBackendError(
+            "surf webgpt.preflight failed before submit: "
+            f"returncode={proc.returncode} status={preflight.get('status')} "
+            f"failures={preflight.get('failures')}\n"
+            f"stdout tail: {(proc.stdout or '')[-1000:]}\n"
+            f"stderr tail: {(proc.stderr or '')[-1000:]}"
+        )
+    if foreground_allowed_by_env:
+        preflight["foreground_controlled_env_allowed"] = True
+    return preflight
 
 
 def _surf_run_path() -> Path:
@@ -383,6 +500,9 @@ def extract_file_attachments(question: str, *, max_bytes: int = 2_000_000) -> li
                 continue
         if not p.exists() or not p.is_file():
             continue
+        # Archives are delivered via surf --attach-file, not inlined into argv.
+        if _is_archive_path(p):
+            continue
         if p in seen:
             continue
         seen.add(p)
@@ -410,6 +530,81 @@ def extract_file_attachments(question: str, *, max_bytes: int = 2_000_000) -> li
         })
     return out
 
+
+
+WEBGPT_REVIEW_FILE_PREAMBLE = (
+    "You are answering a /ask WebGPT review call. Treat the attached zip "
+    "bundle or inlined review file as primary evidence. Do not assume unstated "
+    "local filesystem paths. Do not run commands or edit repositories unless "
+    "explicitly asked."
+)
+
+# surf webgpt.submit passes the full prompt on argv to the chatgpt helper;
+# keep review rounds small when evidence is file-delivered (zip attach or one
+# inlined concatenated bundle).
+WEBGPT_ORACLE_PROMPT_MAX_BYTES = 256_000
+
+
+def strip_path_tokens(text: str) -> str:
+    """Remove filesystem path tokens from review questions."""
+    cleaned = text
+    for token in extract_path_tokens(text):
+        cleaned = cleaned.replace(token, " ")
+    return " ".join(cleaned.split())
+
+
+def webgpt_review_uses_file_delivery(
+    attach_file: str,
+    attachments: list[dict[str, Any]],
+) -> bool:
+    """True when browser evidence is file-delivered instead of memory synthesis."""
+    if attach_file:
+        return True
+    readable = [a for a in attachments if _attachment_has_text(a)]
+    return len(readable) == 1
+
+
+def build_webgpt_oracle_prompt(
+    base_prompt: str,
+    question: str,
+    attachments: list[dict[str, Any]],
+    *,
+    attach_file: str = "",
+    system_preamble: str | None = None,
+) -> str:
+    """Build a WebGPT oracle prompt sized for surf argv limits."""
+    if webgpt_review_uses_file_delivery(attach_file, attachments):
+        review_body = strip_path_tokens(question).strip() or question.strip()
+        inline_attachments: list[dict[str, Any]] = []
+        if not attach_file:
+            inline_attachments = [
+                a for a in attachments if _attachment_has_text(a)
+            ]
+        prompt = build_webgpt_prompt(
+            review_body,
+            inline_attachments,
+            system_preamble=system_preamble or WEBGPT_REVIEW_FILE_PREAMBLE,
+        )
+    else:
+        prompt = build_webgpt_prompt(
+            base_prompt,
+            attachments,
+            system_preamble=system_preamble
+            or (
+                "You are answering a /ask oracle call. Treat retrieved memory "
+                "context as supporting evidence; cite supported claims inline with "
+                "source IDs like [MEMORY.1]. Distinguish supported facts from "
+                "inference. Be concise and technically precise."
+            ),
+        )
+    if len(prompt.encode("utf-8")) > WEBGPT_ORACLE_PROMPT_MAX_BYTES:
+        raise WebgptBackendError(
+            "WebGPT oracle prompt exceeds argv-safe size "
+            f"({len(prompt.encode('utf-8')):,} bytes > "
+            f"{WEBGPT_ORACLE_PROMPT_MAX_BYTES:,}). Use a zip attach bundle "
+            "(one .zip path only) or a single concatenated review .md/.txt file."
+        )
+    return prompt
 
 def build_webgpt_prompt(
     base_prompt: str,
@@ -484,6 +679,7 @@ def call_webgpt(
     run_state: object | None = None,
     iteration: int | None = None,
     persona: str | None = None,
+    browser_oracle_from: str = "",
 ) -> WebgptResult:
     """One WebGPT round trip against the controlled ChatGPT tab.
 
@@ -504,6 +700,27 @@ def call_webgpt(
     if not surf.exists():
         raise WebgptBackendError(f"surf runtime not found: {surf}")
 
+    if not tab_id and not url and not create_tab:
+        from_path = (
+            browser_oracle_from.strip()
+            or os.environ.get("ASK_BROWSER_ORACLE_FROM", "").strip()
+            or os.getcwd()
+        )
+        project, tab_id, url, browser_oracle_meta = apply_webgpt_browser_oracle(
+            from_path=from_path,
+            project=project,
+            tab_id=tab_id,
+            url=url,
+            create_tab=create_tab,
+        )
+        if browser_oracle_meta.get("browser_oracle_applied") and run_state is not None and hasattr(
+            run_state, "event"
+        ):
+            run_state.event(
+                "browser_oracle_resolved",
+                **{k: v for k, v in browser_oracle_meta.items() if v is not None},
+            )
+
     # Soft rate-limit guard: stop a runaway loop from burning the
     # ChatGPT account's per-3-hour cap. Configurable via
     # ASK_WEBGPT_MAX_ROUNDS_PER_HOUR; bypassable for tests via
@@ -522,7 +739,7 @@ def call_webgpt(
     # recovery path "pass --webgpt-create-tab" was unreachable because verify
     # raised before the create_tab branch even got a chance to run).
     project_state_loaded = False
-    if project and not tab_id and not url:
+    if project and not tab_id and not url and not create_tab:
         try:
             existing = webgpt_project.verify(project, surf_run=surf)
         except webgpt_project.ProjectBindingError as exc:
@@ -574,12 +791,34 @@ def call_webgpt(
     ]
     if resolved_tab_id:
         command.extend(["--tab-id", resolved_tab_id])
+        if url:
+            command.extend(["--expect-url", url])
     elif url:
         command.extend(["--url", url])
+    if create_tab and not resolved_tab_id:
+        command.append("--create-tab")
     if no_activate:
         command.append("--no-activate")
+    if _env_truthy("ASK_WEBGPT_ALLOW_FOREGROUND"):
+        command.append("--allow-foreground-controlled")
+    if _env_truthy("ASK_WEBGPT_ALLOW_UNVERIFIED_TAB_ID"):
+        command.append("--allow-unverified-tab-id")
     if attach_file:
         command.extend(["--attach-file", str(attach_file)])
+
+    preflight: dict[str, Any] = {}
+    if not create_tab:
+        preflight = _run_webgpt_preflight(
+            surf=surf,
+            resolved_tab_id=resolved_tab_id,
+            url=url,
+            no_activate=no_activate,
+        )
+        if (
+            preflight.get("foreground_controlled_auto_allowed")
+            and "--allow-foreground-controlled" not in command
+        ):
+            command.append("--allow-foreground-controlled")
 
     event_payload = {
         "backend": "webgpt",
@@ -588,6 +827,13 @@ def call_webgpt(
         "no_activate": no_activate,
         "timeout_seconds": float(timeout),
         "artifact_dir": str(artifact_dir),
+        "preflight_status": preflight.get("status") if preflight else None,
+        "foreground_controlled_auto_allowed": bool(
+            preflight.get("foreground_controlled_auto_allowed")
+        ),
+        "foreground_controlled_env_allowed": bool(
+            preflight.get("foreground_controlled_env_allowed")
+        ),
     }
     if iteration is not None:
         event_payload["iteration"] = iteration
@@ -625,22 +871,58 @@ def call_webgpt(
             meta = {}
 
     if proc.returncode != 0 or meta.get("status") != "completed":
-        if run_state is not None and hasattr(run_state, "event"):
-            run_state.event(
-                "oracle_webgpt_call_failed",
-                **event_payload,
-                returncode=proc.returncode,
-                meta_status=meta.get("status"),
-                failure=meta.get("failure"),
-                stderr_tail=(proc.stderr or "")[-2000:],
+        raw_text = raw_path.read_text() if raw_path.exists() else ""
+        sentinel_match = _WEBGPT_DONE_RE.search(raw_text)
+        if sentinel_match:
+            sentinel_value = sentinel_match.group(0).strip()
+            response_text = _sanitize_clean_response(raw_text, sentinel=sentinel_value)
+            response_path.write_text(response_text + "\n", encoding="utf-8")
+            meta = {
+                **meta,
+                "status": "completed",
+                "recovered_after_submit_failure": True,
+                "submit_returncode": proc.returncode,
+                "submit_stderr_tail": (proc.stderr or "")[-2000:],
+                "sentinel": sentinel_value,
+                "controlled_tab_id": resolved_tab_id,
+                "requested_tab_id": resolved_tab_id,
+                "requested_url": url,
+                "raw_contains_sentinel": True,
+                "clean_contains_sentinel": False,
+                "no_activate": no_activate,
+                "focus_changed": False if no_activate else None,
+            }
+            meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+        else:
+            if run_state is not None and hasattr(run_state, "event"):
+                run_state.event(
+                    "oracle_webgpt_call_failed",
+                    **event_payload,
+                    returncode=proc.returncode,
+                    meta_status=meta.get("status"),
+                    failure=meta.get("failure"),
+                    stderr_tail=(proc.stderr or "")[-2000:],
+                )
+            raise WebgptBackendError(
+                f"surf webgpt.submit failed: returncode={proc.returncode} "
+                f"meta_status={meta.get('status')} failure={meta.get('failure')}\n"
+                f"stderr tail: {(proc.stderr or '')[-1000:]}"
             )
-        raise WebgptBackendError(
-            f"surf webgpt.submit failed: returncode={proc.returncode} "
-            f"meta_status={meta.get('status')} failure={meta.get('failure')}\n"
-            f"stderr tail: {(proc.stderr or '')[-1000:]}"
+
+    if meta.get("recovered_after_submit_failure") and run_state is not None and hasattr(run_state, "event"):
+        run_state.event(
+            "oracle_webgpt_call_recovered",
+            **event_payload,
+            returncode=proc.returncode,
+            stderr_tail=(proc.stderr or "")[-2000:],
         )
 
     response_text = response_path.read_text() if response_path.exists() else ""
+    sentinel_value = str(meta.get("sentinel", ""))
+    if response_text:
+        response_text = _sanitize_clean_response(response_text, sentinel=sentinel_value)
+        if response_path.exists() and sentinel_value and meta.get("clean_contains_sentinel"):
+            response_path.write_text(response_text + "\n", encoding="utf-8")
     raw_text = raw_path.read_text() if raw_path.exists() else ""
 
     result = WebgptResult(

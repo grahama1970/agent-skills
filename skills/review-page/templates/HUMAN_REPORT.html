@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{PAGE_NAME}} — SPARTA Page Review</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: #374151;
+      --pass: #22c55e;
+      --warn: #f59e0b;
+      --fail: #ef4444;
+      --info: #60a5fa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 28px 36px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(135deg, #111827, #0f172a);
+    }
+    h1, h2, h3 { margin: 0 0 12px; line-height: 1.2; }
+    h2 { margin-top: 32px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+    main { max-width: 1280px; margin: 0 auto; padding: 28px 36px 64px; }
+    .verdict-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .metric, .panel, .interaction-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .metric span { display: block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .badge {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .pass { background: rgba(34,197,94,.15); color: #86efac; border: 1px solid rgba(34,197,94,.35); }
+    .degraded, .warn { background: rgba(245,158,11,.15); color: #fcd34d; border: 1px solid rgba(245,158,11,.35); }
+    .fail { background: rgba(239,68,68,.15); color: #fca5a5; border: 1px solid rgba(239,68,68,.35); }
+    .blocked { background: rgba(96,165,250,.15); color: #bfdbfe; border: 1px solid rgba(96,165,250,.35); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 24px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th { background: var(--panel-2); color: #f3f4f6; }
+    td { background: rgba(17,24,39,.75); }
+    code {
+      background: #030712;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 1px 5px;
+      color: #d1d5db;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 18px;
+    }
+    .interaction-card {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    figure { margin: 0; }
+    img {
+      width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+      background: #020617;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    figcaption { color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .muted { color: var(--muted); }
+    .actions li { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="muted">SPARTA Explorer Page Review</p>
+    <h1>{{PAGE_NAME}}</h1>
+    <div class="verdict-bar">
+      <div class="metric"><span>Page verdict</span><strong class="badge {{PAGE_VERDICT_CLASS}}">{{PAGE_VERDICT}}</strong></div>
+      <div class="metric"><span>Overall verdict</span><strong class="badge {{OVERALL_VERDICT_CLASS}}">{{OVERALL_VERDICT}}</strong></div>
+      <div class="metric"><span>Lead persona</span><strong>{{PERSONA}}</strong></div>
+      <div class="metric"><span>Round</span><strong>{{ROUND_ID}}</strong></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Executive summary</h2>
+      <p>{{EXECUTIVE_SUMMARY}}</p>
+    </section>
+
+    <h2>Benchmark research</h2>
+    <table>
+      <thead><tr><th>Benchmark pattern</th><th>What good tools do</th><th>Implication for this page</th></tr></thead>
+      <tbody>
+        {{BENCHMARK_ROWS}}
+      </tbody>
+    </table>
+
+    <h2>Persona-specific evaluation</h2>
+    <table>
+      <thead><tr><th>Area</th><th>Finding</th><th>Verdict</th></tr></thead>
+      <tbody>
+        {{PERSONA_ROWS}}
+      </tbody>
+    </table>
+
+    <h2>Deterministic interaction review</h2>
+    <table>
+      <thead><tr><th>#</th><th>qid</th><th>Action</th><th>Expected</th><th>Observed</th><th>Verdict</th><th>Screenshot</th></tr></thead>
+      <tbody>
+        {{INTERACTION_ROWS}}
+      </tbody>
+    </table>
+
+    <h2>Screenshot gallery</h2>
+    <div class="gallery">
+      {{SCREENSHOT_CARDS}}
+    </div>
+
+    <h2>Dashboard-theater / hide-failure audit</h2>
+    <table>
+      <thead><tr><th>Risk</th><th>Finding</th><th>Required behavior</th></tr></thead>
+      <tbody>
+        {{THEATER_ROWS}}
+      </tbody>
+    </table>
+
+    <h2>Pass blockers</h2>
+    <table>
+      <thead><tr><th>Blocker</th><th>Severity</th><th>Owner</th><th>Why it blocks pass</th></tr></thead>
+      <tbody>
+        {{BLOCKER_ROWS}}
+      </tbody>
+    </table>
+
+    <h2>Code-runner next actions</h2>
+    <ol class="actions">
+      {{ACTION_ROWS}}
+    </ol>
+
+    <h2>Non-claims</h2>
+    <ul>
+      {{NON_CLAIMS}}
+    </ul>
+  </main>
+</body>
+</html>

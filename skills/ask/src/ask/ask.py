@@ -47,6 +47,7 @@ from .scillm_agents import run_visible_subagent_turn
 from .chain_specs import apply_chain_options
 from .cae_gap_review import DEFAULT_CAE_JUDGE, DEFAULT_CAE_REVIEWERS, run_cae_gap_review
 from .deep_review import build_deep_review_request, infer_deep_review
+from .delegate import DelegateError, load_delegate_registry, resolve_delegate_invocation
 from .dry_run_spec import build_ask_dry_run_spec, print_execution_spec
 from .doctor import build_oracle_lane_health, probe_selected_oracle_lane
 from .parallel_review import MAX_REVIEWERS, ParallelReviewError, run_parallel_review, validate_code_runner_allowed_files
@@ -107,7 +108,10 @@ def _build_route_decision(
     lane_health = lane_health or _lane_health_map()
     selected_mode = "memory_ask"
     reasons: list[str] = ["default_memory_backed_ask"]
-    if request.get("image_generate"):
+    if request.get("delegate_dry_run"):
+        selected_mode = "delegate_dry_run"
+        reasons = ["explicit_delegate_dry_run"]
+    elif request.get("image_generate"):
         selected_mode = "image_generation"
         reasons = ["explicit_image_generate"]
     elif request.get("ask_dag"):
@@ -134,6 +138,9 @@ def _build_route_decision(
 
     oracle_backend = str(request.get("oracle_backend") or DEFAULT_ORACLE_BACKEND)
     selected_backend = (
+        "delegate"
+        if selected_mode == "delegate_dry_run"
+        else
         str(request.get("image_model") or "")
         if selected_mode == "image_generation"
         else oracle_backend if request.get("oracle") else "memory"
@@ -147,7 +154,13 @@ def _build_route_decision(
         evidence_policy = "scillm_response_and_runtime_artifacts"
 
     alternatives: list[dict] = []
-    if selected_mode != "image_generation":
+    if selected_mode == "delegate_dry_run":
+        alternatives.append({
+            "lane": "delegate_resolver",
+            "status": "selected",
+            "reason": "explicit_delegate_dry_run",
+        })
+    elif selected_mode != "image_generation":
         alternatives.append({
             "lane": "memory_ask",
             "status": "available",
@@ -266,6 +279,7 @@ def ask(
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
     webgpt_project: str = "",
+    browser_oracle_from: str = "",
     gemini_tab_id: str = "",
     gemini_url: str = "",
     kimi_tab_id: str = "",
@@ -421,6 +435,7 @@ def ask(
             oracle_model=oracle_model or DEFAULT_ORACLE_MODEL,
             oracle_reasoning=oracle_reasoning,
             oracle_timeout=oracle_timeout,
+            oracle_image_paths=oracle_image_paths or [],
         )
         result["dag"] = {
             "schema_version": dag_result["schema_version"],
@@ -495,6 +510,18 @@ def ask(
             }
         result["oracle"]["dogpile_mode"] = dogpile_mode
         result["oracle"]["dogpile_recommended"] = _should_use_dogpile(question, dogpile_mode)
+
+        if webgpt_tab_id:
+            result["oracle"]["webgpt_tab_id"] = webgpt_tab_id
+        if webgpt_url:
+            result["oracle"]["webgpt_url"] = webgpt_url
+        if webgpt_project:
+            result["oracle"]["webgpt_project"] = webgpt_project
+        if browser_oracle_from:
+            result["oracle"]["browser_oracle_from"] = browser_oracle_from
+        elif not (webgpt_tab_id or webgpt_url or webgpt_create_tab):
+            import os as _os_bo
+            result["oracle"]["browser_oracle_from"] = browser_oracle_from or _os_bo.getcwd()
 
     deep_review_request = None
     if deep_review:
@@ -878,6 +905,7 @@ def ask(
             webgpt_url=webgpt_url,
             webgpt_create_tab=webgpt_create_tab,
             webgpt_project=webgpt_project,
+            browser_oracle_from=browser_oracle_from,
             cursor_browser_view_id=cursor_browser_view_id,
             cursor_browser_url=cursor_browser_url,
             cursor_browser_project=cursor_browser_project,
@@ -1441,6 +1469,131 @@ def _question_too_large_for_child_argv(question: str) -> bool:
     return len(question.encode("utf-8", errors="replace")) > 12000
 
 
+
+def _handle_webgpt_page_review_dispatch(
+    page_id: str,
+    round_label: str,
+    run_ti: bool,
+    capture_suffix: str,
+    force: bool,
+    step_loop: bool,
+    max_steps: int,
+    webgpt_tab_id: str,
+    webgpt_url: str,
+    webgpt_project: str,
+    browser_oracle_from: str,
+    webgpt_create_tab: bool,
+    oracle_timeout: float,
+    as_json: bool,
+) -> None:
+    """Run /review-page packet build, then $ask webgpt adjudication."""
+    import json as _json
+    from pathlib import Path
+
+    from .webgpt_page_review import WebgptPageReviewRequest, run_webgpt_page_review
+
+    if not page_id:
+        err = {
+            "status": "failed",
+            "error": "missing page id; use `$ask webgpt /review-page coverage`",
+        }
+        if as_json:
+            print(_json.dumps(err, indent=2))
+        else:
+            print(err["error"])
+        raise typer.Exit(code=2)
+
+    from .browser_oracle_client import apply_webgpt_browser_oracle
+    import os as _os_page
+
+    project = webgpt_project or "sparta-explorer-review"
+    tab_id = webgpt_tab_id
+    url = webgpt_url
+    bo_from = browser_oracle_from or _os_page.getcwd()
+    project, tab_id, url, _bo_meta = apply_webgpt_browser_oracle(
+        from_path=bo_from,
+        project=project,
+        tab_id=tab_id,
+        url=url,
+        create_tab=webgpt_create_tab,
+    )
+
+    req = WebgptPageReviewRequest(
+        page_id=page_id,
+        round_label=round_label,
+        capture_suffix=capture_suffix,
+        run_ti=run_ti,
+        force=force,
+        step_loop=step_loop,
+        max_steps=max_steps,
+        tab_id=tab_id,
+        url=url,
+        project=project,
+        create_tab=webgpt_create_tab,
+        timeout=oracle_timeout,
+    )
+
+    try:
+        result = run_webgpt_page_review(req)
+    except Exception as exc:
+        err = {
+            "status": "failed",
+            "error": f"{type(exc).__name__}: {exc}",
+            "page_id": page_id,
+        }
+        if as_json:
+            print(_json.dumps(err, indent=2))
+        else:
+            print(f"webgpt /review-page failed: {err['error']}")
+        raise typer.Exit(code=1)
+
+    payload = {
+        "status": "blocked" if result.blocked_before_webgpt else "completed",
+        "page_id": result.page_id,
+        "verdict": result.verdict,
+        "page_verdict": result.page_verdict,
+        "next_step": result.next_step,
+        "step_loop": step_loop,
+        "blocked_before_webgpt": result.blocked_before_webgpt,
+        "block_reason": result.block_reason,
+        "controlled_tab_id": result.controlled_tab_id,
+        "artifact_dir": result.artifact_dir,
+        "package": {
+            "out_dir": result.package.get("out_dir"),
+            "review_packet": result.package.get("review_packet"),
+            "review_bundle_zip": result.package.get("review_bundle_zip"),
+            "ask_blocked": result.package.get("ask_blocked"),
+            "webgpt_steps_manifest": str(
+                Path(str(result.package.get("out_dir") or "")) / "webgpt-steps" / "webgpt_steps_manifest.json"
+            ),
+            "webgpt_step_rollup": str(
+                Path(str(result.package.get("out_dir") or "")) / "webgpt-steps" / "webgpt-step-rollup.md"
+            ),
+        },
+    }
+
+    if as_json:
+        print(_json.dumps(payload, indent=2))
+    else:
+        mode = "step-loop" if step_loop else "packet"
+        print(f"\n-- $ask webgpt /review-page {result.page_id} ({mode}) --\n")
+        if result.blocked_before_webgpt:
+            print(f"Blocked before WebGPT: {result.block_reason}")
+            print(f"Package: {result.package.get('out_dir')}")
+        else:
+            print(f"Verdict:      {result.verdict or 'UNPARSEABLE'}")
+            print(f"Page verdict: {result.page_verdict or 'pending'}")
+            print(f"Next step:    {result.next_step or 'NONE'}")
+            print(f"Tab:          {result.controlled_tab_id}")
+            print(f"Artifacts:    {result.artifact_dir}")
+            print(f"Packet dir:   {result.package.get('out_dir')}")
+        print()
+
+    if result.blocked_before_webgpt:
+        raise typer.Exit(code=2)
+    raise typer.Exit(code=0 if result.verdict == "PASS" else 1)
+
+
 def _handle_webgpt_review_dispatch(
     review_type: str,
     description: str,
@@ -1448,6 +1601,7 @@ def _handle_webgpt_review_dispatch(
     webgpt_tab_id: str,
     webgpt_url: str,
     webgpt_project: str,
+    browser_oracle_from: str,
     cursor_browser_view_id: str,
     cursor_browser_url: str,
     cursor_browser_project: str,
@@ -1501,18 +1655,19 @@ def _handle_webgpt_review_dispatch(
         if chosen_rounds is not None:
             rounds = chosen_rounds
 
-    # Default project name when --webgpt-project not given: cwd basename.
+    from .browser_oracle_client import apply_webgpt_browser_oracle
+
     project = webgpt_project
-    if not project and not webgpt_tab_id and not webgpt_url and not webgpt_create_tab:
-        try:
-            repo_root = _subprocess.run(
-                ["git", "rev-parse", "--show-toplevel"],
-                capture_output=True, text=True, timeout=5,
-            )
-            if repo_root.returncode == 0:
-                project = _Path(repo_root.stdout.strip()).name
-        except Exception:
-            project = ""
+    tab_id = webgpt_tab_id
+    url = webgpt_url
+    bo_from = browser_oracle_from or _os.getcwd()
+    project, tab_id, url, _bo_meta = apply_webgpt_browser_oracle(
+        from_path=bo_from,
+        project=project,
+        tab_id=tab_id,
+        url=url,
+        create_tab=webgpt_create_tab,
+    )
 
     req = WebgptReviewRequest(
         review_type=review_type,
@@ -1520,8 +1675,8 @@ def _handle_webgpt_review_dispatch(
         diff_scope=diff_scope,
         diff_text=diff_text,
         max_rounds=rounds,
-        tab_id=webgpt_tab_id,
-        url=webgpt_url,
+        tab_id=tab_id,
+        url=url,
         project=project,
         create_tab=webgpt_create_tab,
         timeout=oracle_timeout,
@@ -1747,6 +1902,7 @@ def main(
     dag_json: str = typer.Option("", "--dag-json", help="Inline ask/scillm-style DAG JSON document to execute before synthesis"),
     dag_file: str = typer.Option("", "--dag-file", help="Path to an ask/scillm-style DAG JSON document to execute before synthesis"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Preview execution spec and risk analysis without mutation"),
+    delegate_dry_run: bool = typer.Option(False, "--delegate-dry-run", help="Resolve explicit delegate syntax and write an envelope without executing a runtime"),
     ask_id: Optional[str] = typer.Option(None, "--ask-id", help="Stable runtime artifact id for this ask call"),
     run_output_root: Optional[str] = typer.Option(None, "--run-output-root", help="Directory for ask runtime artifacts"),
     overwrite_run: bool = typer.Option(False, "--overwrite", help="Replace an existing run directory for --ask-id"),
@@ -1755,6 +1911,7 @@ def main(
     webgpt_url: str = typer.Option("", "--webgpt-url", help="ChatGPT conversation URL to resolve to an open Chrome tab for --oracle-backend webgpt."),
     webgpt_create_tab: bool = typer.Option(False, "--webgpt-create-tab", help="Skip auto-resolve and let surf create/pick a background chatgpt.com tab for --oracle-backend webgpt. The controlled tab id is reported back in oracle_model_served so the agent can reuse it on follow-up rounds."),
     webgpt_project: str = typer.Option("", "--webgpt-project", help="Bind this call to a project name; the controlled ChatGPT tab is persisted at ~/.pi/webgpt-projects/<name>.json and reused across calls. First call for a new project auto-creates a background tab; manually-bound projects (webgpt-project bind ...) never auto-replace their tab."),
+    browser_oracle_from: str = typer.Option("", "--browser-oracle-from", help="Directory for $browser-oracle walk-up (.ask/browser-oracles.yaml). Defaults to cwd when resolving webgpt tab/project without explicit --webgpt-tab-id/--webgpt-url/--webgpt-project."),
     cursor_browser_view_id: str = typer.Option("", "--cursor-browser-view-id", help="Cursor Browser viewId for --oracle-backend cursor-browser (from browser_tabs; NOT a Chrome tab id)."),
     cursor_browser_url: str = typer.Option("", "--cursor-browser-url", help="ChatGPT URL to resolve in Cursor Browser for --oracle-backend cursor-browser."),
     cursor_browser_project: str = typer.Option("", "--cursor-browser-project", help="Bind to ~/.pi/cursor-browser-projects/<name>.json (stores viewId)."),
@@ -1802,7 +1959,28 @@ def main(
         model_alias_route
         and getattr(model_alias_route, "oracle_backend", "") == "webgpt"
     ):
-        from .ask_routing import _parse_webgpt_review_query
+        from .ask_routing import _parse_webgpt_page_review_query, _parse_webgpt_review_query
+        page_matched, page_id, round_label, run_ti, capture_suffix, force, step_loop, max_steps = (
+            _parse_webgpt_page_review_query(question_parts)
+        )
+        if page_matched:
+            _handle_webgpt_page_review_dispatch(
+                page_id=page_id,
+                round_label=round_label,
+                run_ti=run_ti,
+                capture_suffix=capture_suffix,
+                force=force,
+                step_loop=step_loop,
+                max_steps=max_steps,
+                webgpt_tab_id=webgpt_tab_id,
+                webgpt_url=webgpt_url,
+                webgpt_project=webgpt_project,
+                browser_oracle_from=browser_oracle_from,
+                webgpt_create_tab=webgpt_create_tab,
+                oracle_timeout=oracle_timeout,
+                as_json=as_json,
+            )
+            return
         rt, desc, parsed_rounds = _parse_webgpt_review_query(question_parts)
         if rt in {"code", "design", "prompt", "plan"}:
             _handle_webgpt_review_dispatch(
@@ -1812,6 +1990,7 @@ def main(
                 webgpt_tab_id=webgpt_tab_id,
                 webgpt_url=webgpt_url,
                 webgpt_project=webgpt_project,
+                browser_oracle_from=browser_oracle_from,
             cursor_browser_view_id=cursor_browser_view_id,
             cursor_browser_url=cursor_browser_url,
             cursor_browser_project=cursor_browser_project,
@@ -2222,7 +2401,7 @@ def main(
     mentioned_skills = _extract_skill_mentions(original_utterance)
     should_draft_dag = (
         orchestrate or (not ask_dag and should_orchestrate_from_text(original_utterance))
-    ) and not visible_subagent_route and not explicit_webgpt_oracle and not parallel_review
+    ) and not visible_subagent_route and not explicit_webgpt_oracle and not parallel_review and not delegate_dry_run
     if should_draft_dag and not ask_dag:
         try:
             ask_dag = draft_ask_dag_from_question(
@@ -2230,6 +2409,7 @@ def main(
                 scope=scope,
                 mentioned_skills=mentioned_skills,
                 agent_worker_id=agent_worker,
+                default_oracle_model=oracle_model,
             )
         except AskDagError as exc:
             dag_orchestration_attention = natural_language_dag_attention(exc)
@@ -2320,7 +2500,18 @@ def main(
         "suggested_personas_count": 0,
         "mentioned_skills": mentioned_skills,
         "visible_subagent": visible_subagent_route,
+        "delegate_dry_run": delegate_dry_run,
     }
+    delegate_envelope: dict | None = None
+    delegate_attention: dict | None = None
+    if delegate_dry_run:
+        try:
+            registry = load_delegate_registry(Path(__file__).resolve().parents[4])
+            delegate_envelope = resolve_delegate_invocation(original_utterance, registry, request_id=run_id)
+            request_payload["delegate"] = delegate_envelope
+        except DelegateError as exc:
+            delegate_attention = exc.as_needs_attention()
+            request_payload["delegate_error"] = delegate_attention
     if missing_persona_attention:
         request_payload["missing_persona_clarification"] = missing_persona_attention
     if dag_orchestration_attention:
@@ -2398,6 +2589,60 @@ def main(
             visible_subagent=visible_subagent_route,
             mentioned_skills=mentioned_skills,
         )
+
+    if delegate_dry_run:
+        if delegate_attention:
+            attention = run_state.needs_attention(**delegate_attention)
+            result = {
+                "question": question,
+                "scope": scope,
+                "items": [],
+                "bridges_found": [],
+                "answer": "",
+                "auto_learned": False,
+                "hybrid_mode": hybrid,
+                "delegate": None,
+                "needs_attention": attention,
+                "ask_id": run_state.ask_id,
+                "runtime_artifacts": run_state.artifacts,
+                "route_decision": route_decision,
+            }
+            run_state.finish(result, state="needs_attention")
+            if as_json:
+                print(json.dumps(result, indent=2, default=str))
+            else:
+                print("\n-- /ask delegate needs attention --")
+                print(f"   Reason: {attention.get('reason', 'unknown')}")
+                print(f"   Question: {attention.get('question', '')}")
+                if attention.get("resume_hint"):
+                    print(f"   Resume: {attention['resume_hint']}")
+                print()
+            raise typer.Exit(code=2)
+        result = {
+            "question": question,
+            "scope": scope,
+            "items": [],
+            "bridges_found": [],
+            "answer": "Delegate envelope resolved. No runtime executed.",
+            "auto_learned": False,
+            "hybrid_mode": hybrid,
+            "delegate": delegate_envelope,
+            "ask_id": run_state.ask_id,
+            "runtime_artifacts": run_state.artifacts,
+            "route_decision": route_decision,
+        }
+        run_state.event("delegate_resolved", delegate=delegate_envelope)
+        run_state.finish(result, state="completed")
+        if as_json:
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            print("\n-- /ask delegate dry run --")
+            print(f"   Actor: {delegate_envelope['actor']['id']} ({delegate_envelope['actor']['kind']})")
+            print(f"   Mode: {delegate_envelope['mode']}")
+            print(f"   Runtime: {delegate_envelope['runtime']['selected']}")
+            print(f"   Status: {run_state.artifacts.get('status')}")
+            print()
+        raise typer.Exit(code=0)
 
     if image_generate:
         try:
@@ -2568,6 +2813,7 @@ def main(
             webgpt_url=webgpt_url,
             webgpt_create_tab=webgpt_create_tab,
             webgpt_project=webgpt_project,
+            browser_oracle_from=browser_oracle_from,
             cursor_browser_view_id=cursor_browser_view_id,
             cursor_browser_url=cursor_browser_url,
             cursor_browser_project=cursor_browser_project,

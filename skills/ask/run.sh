@@ -101,6 +101,25 @@ Ask Options:
   --oracle-persona-model <m> Model for primary persona turns
   --oracle-peer-model <m> Model for peer persona turns
   --oracle-iterations <n> Sequential oracle deliberation calls (default: 1)
+
+  WebGPT tab binding (compose $browser-oracle; explicit flags win):
+  --browser-oracle-from <dir>  Walk-up root for .ask/browser-oracles.yaml (default: cwd)
+  --webgpt-tab-id <id>         Chrome tab id (Tab ID Viewer); skips walk-up
+  --webgpt-url <url>           Open ChatGPT conversation URL; skips walk-up
+  --webgpt-create-tab          Fresh inactive tab; skips walk-up and binding lookup
+  --webgpt-project <name>      Explicit ~/.pi/webgpt-projects/<name>.json; skips yaml
+  --once                       Single-round WebGPT (disables default multi-turn)
+  Resolution: --webgpt-tab-id → --webgpt-url → --webgpt-create-tab →
+              $browser-oracle walk-up → --webgpt-project → one chatgpt.com tab (fail-closed)
+
+  Other browser oracle backends (--oracle-backend):
+  --gemini-tab-id <id>         Chrome tab id for webgemini
+  --gemini-url <url>           Gemini conversation URL
+  --kimi-tab-id <id>           Chrome tab id for webkimi
+  --kimi-url <url>             Kimi conversation URL
+  --cursor-browser-view-id <id>  Cursor Browser viewId (not Chrome tab id)
+  --cursor-browser-url <url>     ChatGPT URL in Cursor Browser
+  --cursor-browser-project <name>  ~/.pi/cursor-browser-projects/<name>.json
   --roundtable         Run sequential protocolized persona deliberation
   --roundtable-personas <p> Comma-separated persona[:role] participants
   --roundtable-role-preset <p> Role preset (default: adversarial-review)
@@ -126,6 +145,13 @@ Ask Options:
   --resume              Resume a non-terminal existing run directory for --ask-id
   --json                JSON output
   --debug               Enable debug logging
+
+
+Browser-oracle setup (sibling skill: skills/browser-oracle):
+  ./run.sh register --at <dir> --default --backend webgpt <project>
+  ./run.sh bind <project> --tab-id <id> --url <url> --manual
+  ./run.sh doctor --from <working-dir> --json
+  See: skills/browser-oracle/SKILL.md
 
 Status Options:
   --scope <scope>       Filter by scope

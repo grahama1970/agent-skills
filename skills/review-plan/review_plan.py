@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -26,6 +27,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 load_dotenv(PROJECT_ROOT / ".env")
 CALLER_ROOT = Path(os.environ.get("REVIEW_PLAN_CALLER_CWD", os.getcwd())).resolve()
 MANIFEST_PATH = PROJECT_ROOT / ".pi" / "skills-manifest.json"
+
+# Execution-first: /review-plan is one preflight before /orchestrate, not a review loop.
+REVIEW_PLAN_MAX_ROUNDS_DEFAULT = 1
+REVIEW_PLAN_MAX_ROUNDS_HARD_CAP = 2  # only with --allow-extended-review
+REVIEW_PLAN_MAX_WEBGPT_ORACLE_ITERATIONS = 1
+# Substring that breaks $ask webgpt routing (plan diff review instead of bundle inline).
+_ASK_WEBGPT_FORBIDDEN_SUBSTRINGS = ("/review-plan",)
 
 # ─── Data Structures ─────────────────────────────────────────────────────────
 
@@ -1421,6 +1429,163 @@ def review_result_to_dict(result: ReviewResult, suggest_fixes: bool = False) -> 
     }
 
 
+_ASK_GATE_PASS_VERDICTS = frozenset(
+    {"SAFE", "PASS", "SAFE_WITH_CONDITIONS", "READY_FOR_PLAN_ITERATE"}
+)
+_ASK_GATE_BLOCK_VERDICTS = frozenset(
+    {"NOT_SAFE", "NEEDS_CHANGES", "BLOCKED", "INSUFFICIENT_EVIDENCE"}
+)
+_REVIEW_BUNDLE_REQUIRED_SECTIONS = (
+    "## Review request",
+    "## This round acceptance",
+    "## Local gates",
+)
+_REVIEW_BUNDLE_MAX_BYTES = 2 * 1024 * 1024  # 2 MiB, matches $ask inline cap
+
+
+def validate_review_evidence_bundle(bundle_path: Path) -> list[str]:
+    """Return human-readable issues for a markdown review bundle (empty if ok)."""
+    issues: list[str] = []
+    if not bundle_path.exists():
+        return [f"review bundle not found: {bundle_path}"]
+    if bundle_path.suffix.lower() in {".zip", ".tar", ".gz", ".tgz", ".7z"}:
+        return ["use --ask-attach-file for zip archives, not --ask-review-bundle"]
+    try:
+        size = bundle_path.stat().st_size
+    except OSError as exc:
+        return [f"cannot stat review bundle: {exc}"]
+    if size > _REVIEW_BUNDLE_MAX_BYTES:
+        issues.append(
+            f"review bundle is {size} bytes (max {_REVIEW_BUNDLE_MAX_BYTES} for $ask inline attach)"
+        )
+    try:
+        body = bundle_path.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        return [f"cannot read review bundle: {exc}"]
+    lowered = body.lower()
+    for heading in _REVIEW_BUNDLE_REQUIRED_SECTIONS:
+        if heading.lower() not in lowered:
+            issues.append(f"missing required section: {heading}")
+    return issues
+
+
+def validate_review_attach_zip(zip_path: Path, *, max_files: int = 5) -> list[str]:
+    """Return issues for a WebGPT zip attach bundle (empty if ok)."""
+    import zipfile
+
+    issues: list[str] = []
+    if not zip_path.exists():
+        return [f"attach zip not found: {zip_path}"]
+    if zip_path.suffix.lower() != ".zip":
+        issues.append("ask-attach-file must be a .zip path for $ask webgpt")
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            members = [i.filename for i in zf.infolist() if not i.is_dir()]
+    except Exception as exc:
+        return [f"cannot read zip: {exc}"]
+    if not members:
+        issues.append("zip archive is empty")
+    elif len(members) > max_files:
+        issues.append(f"zip has {len(members)} files (maximum {max_files} for $ask webgpt)")
+    names = {Path(m).name.lower() for m in members}
+    if not any(n.endswith(".md") for n in names):
+        issues.append("zip should include REQUEST.md, PLAN.md, REVIEW.md, or review.md markdown file")
+    return issues
+
+
+
+
+
+def _import_webgpt_runtime():
+    ask_src = Path(__file__).resolve().parent.parent / "ask" / "src"
+    if str(ask_src) not in sys.path:
+        sys.path.insert(0, str(ask_src))
+    from ask.webgpt_runtime import WebgptBackendError, call_webgpt  # type: ignore
+
+    return call_webgpt, WebgptBackendError
+
+
+def _assert_webgpt_safe_text(text: str, *, label: str) -> None:
+    lowered = text.lower()
+    for forbidden in _ASK_WEBGPT_FORBIDDEN_SUBSTRINGS:
+        if forbidden.lower() in lowered:
+            raise ValueError(f"{label} must not contain {forbidden!r} (breaks $ask routing)")
+
+
+def _build_webgpt_readiness_prompt(
+    *,
+    attach_file: str,
+    review_bundle: Path | None,
+    target: Path,
+) -> str:
+    """Prompt for external tech-lead readiness (never use /review-plan in text)."""
+    intro = (
+        "You are the external tech lead reviewing orchestration plan readiness before "
+        "task execution. Return ONLY:\n"
+        "VERDICT: PASS | NEEDS_CHANGES | BLOCKED | INSUFFICIENT_EVIDENCE\n"
+        "then concrete blockers (if any). Do not implement fixes or run shell commands.\n\n"
+    )
+    if attach_file:
+        prompt = intro + f"Evidence is in the attached zip ({Path(attach_file).name})."
+    else:
+        chunks = [intro]
+        if review_bundle is not None:
+            chunks.append("## Evidence bundle\n\n")
+            chunks.append(review_bundle.read_text(encoding="utf-8"))
+        chunks.append(f"\n## Plan target\n\n{target.resolve()}\n")
+        prompt = "".join(chunks)
+    _assert_webgpt_safe_text(prompt, label="webgpt readiness prompt")
+    return prompt
+
+
+def _recommended_next_step(verdict: str, result: ReviewResult) -> str:
+    if verdict == "PASS":
+        return "Run /orchestrate on this plan file now."
+    if result.fail_count > 0 or result.warn_count > 0:
+        return (
+            "Fix deterministic findings once, then re-run /review-plan without --ask-gate; "
+            "do not loop external review."
+        )
+    return (
+        "Address external gate blockers once, then run /orchestrate or /plan-iterate; "
+        "avoid re-running /review-plan with --ask-gate in a loop."
+    )
+
+
+def _apply_spiral_guards(
+    *,
+    max_rounds: int,
+    allow_extended_review: bool,
+    ask_gate: bool,
+    oracle_iterations: int,
+    ask_gate_backend: str,
+) -> tuple[int, int, list[str]]:
+    """Cap review-plan iteration knobs so plans lead to execution, not review spirals."""
+    notes: list[str] = []
+    effective_max_rounds = max_rounds
+    if max_rounds > REVIEW_PLAN_MAX_ROUNDS_DEFAULT and not allow_extended_review:
+        notes.append(
+            f"--max-rounds {max_rounds} capped to {REVIEW_PLAN_MAX_ROUNDS_DEFAULT} "
+            "(execution-first; pass --allow-extended-review only for one extra human preflight)"
+        )
+        effective_max_rounds = REVIEW_PLAN_MAX_ROUNDS_DEFAULT
+    if allow_extended_review and max_rounds > REVIEW_PLAN_MAX_ROUNDS_HARD_CAP:
+        raise ValueError(
+            f"--max-rounds {max_rounds} exceeds hard cap {REVIEW_PLAN_MAX_ROUNDS_HARD_CAP} "
+            "even with --allow-extended-review"
+        )
+    effective_oracle = oracle_iterations
+    if ask_gate and ask_gate_backend.strip().lower() == "webgpt":
+        if oracle_iterations > REVIEW_PLAN_MAX_WEBGPT_ORACLE_ITERATIONS:
+            notes.append(
+                f"--oracle-iterations {oracle_iterations} capped to "
+                f"{REVIEW_PLAN_MAX_WEBGPT_ORACLE_ITERATIONS} for webgpt preflight"
+            )
+            effective_oracle = REVIEW_PLAN_MAX_WEBGPT_ORACLE_ITERATIONS
+    return effective_max_rounds, effective_oracle, notes
+
+
+
 def _gate_verdict(result: ReviewResult, ask_artifacts: dict | None = None) -> tuple[str, str]:
     """Map deterministic and ask-gate evidence to a controller verdict."""
     if result.fail_count > 0 or result.warn_count > 0:
@@ -1428,20 +1593,43 @@ def _gate_verdict(result: ReviewResult, ask_artifacts: dict | None = None) -> tu
     if ask_artifacts:
         status = ask_artifacts.get("status")
         verdict = str(ask_artifacts.get("verdict") or "").upper()
+        if status == "skipped":
+            return "INSUFFICIENT_EVIDENCE", str(ask_artifacts.get("reason") or "ask_gate_skipped")
         if status != "passed":
-            return "INSUFFICIENT_EVIDENCE", "ask_deep_review_gate_did_not_pass"
-        if verdict and verdict not in {"SAFE", "PASS", "READY_FOR_PLAN_ITERATE"}:
-            return "NEEDS_CHANGES", "ask_deep_review_returned_blocking_verdict"
+            return "INSUFFICIENT_EVIDENCE", "ask_gate_did_not_pass"
+        if verdict in _ASK_GATE_BLOCK_VERDICTS:
+            return "NEEDS_CHANGES", "ask_gate_returned_blocking_verdict"
+        if verdict and verdict not in _ASK_GATE_PASS_VERDICTS:
+            return "INSUFFICIENT_EVIDENCE", "ask_gate_verdict_unparseable"
     return "PASS", "no_warn_fail_or_blocking_ask_gate_findings"
 
 
-def _next_iteration_plan(result: ReviewResult) -> list[str]:
+def _next_iteration_plan(
+    result: ReviewResult,
+    *,
+    verdict: str = "",
+    ask_artifacts: dict | None = None,
+) -> list[str]:
     items: list[str] = []
     for finding in result.findings:
         if finding.grade not in {"FAIL", "WARN"}:
             continue
         suffix = f" Suggestion: {finding.suggestion}" if finding.suggestion else ""
         items.append(f"{finding.task} [{finding.grade} {finding.check}]: {finding.message}.{suffix}")
+    if ask_artifacts and ask_artifacts.get("status") == "blocked" and ask_artifacts.get("verdict"):
+        items.append(
+            f"External gate ({ask_artifacts.get('backend')}): {ask_artifacts.get('verdict')} — "
+            "fix blockers in plan or evidence bundle once."
+        )
+    step = _recommended_next_step(verdict or "NEEDS_CHANGES", result)
+    if verdict == "PASS":
+        items.insert(0, step)
+    else:
+        items.append(step)
+        items.append(
+            "Anti-spiral: do not auto-re-run /review-plan with --ask-gate; "
+            "use /orchestrate or /plan-iterate for implementation work."
+        )
     return items
 
 
@@ -1468,6 +1656,273 @@ def _extract_ask_verdict(review_json_path: Path | None) -> str | None:
     return None
 
 
+def _extract_verdict_from_text(text: str) -> str | None:
+    if not text.strip():
+        return None
+    match = re.search(
+        r"VERDICT:\s*([A-Z][A-Z0-9_]+)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        return match.group(1).upper()
+    ask_src = Path(__file__).resolve().parent.parent / "ask" / "src"
+    if str(ask_src) not in sys.path:
+        sys.path.insert(0, str(ask_src))
+    try:
+        from ask.webgpt_review import extract_verdict  # type: ignore
+
+        verdict, _data = extract_verdict(text)
+        if verdict:
+            return str(verdict).upper()
+    except Exception:
+        pass
+    return None
+
+
+def _ask_runtime_dir() -> Path:
+    return Path(__file__).resolve().parent.parent / "ask"
+
+
+def _collect_ask_run_artifacts(ask_root: Path, ask_id: str) -> dict:
+    run_dir = ask_root / ".ask_artifacts" / "runs" / ask_id
+    status_path = run_dir / f"{ask_id}.status.json"
+    request_path = run_dir / f"{ask_id}.request.json"
+    events_path = run_dir / f"{ask_id}.events.jsonl"
+    review_md_path: Path | None = None
+    review_json_path: Path | None = None
+    status_data: dict = {}
+    answer_text = ""
+    if status_path.exists():
+        try:
+            status_data = json.loads(status_path.read_text())
+        except Exception:
+            status_data = {}
+        result = status_data.get("result")
+        if isinstance(result, dict):
+            answer_text = str(result.get("answer") or "").strip()
+        artifacts = status_data.get("artifacts", {})
+        if isinstance(artifacts, dict):
+            for key in ("review_md", "markdown"):
+                value = artifacts.get(key)
+                if isinstance(value, str):
+                    review_md_path = Path(value)
+                    if not review_md_path.is_absolute():
+                        review_md_path = ask_root / review_md_path
+                    break
+            for key in ("review_json", "json"):
+                value = artifacts.get(key)
+                if isinstance(value, str):
+                    review_json_path = Path(value)
+                    if not review_json_path.is_absolute():
+                        review_json_path = ask_root / review_json_path
+                    break
+    if review_json_path is None:
+        candidates = sorted((ask_root / ".ask_artifacts" / "deep-review").glob("*/review.json"))
+        review_json_path = candidates[-1] if candidates else None
+    if review_md_path is None and review_json_path is not None:
+        review_md_path = review_json_path.with_name("review.md")
+    return {
+        "run_dir": str(run_dir),
+        "status_path": status_path,
+        "request_path": request_path,
+        "events_path": events_path,
+        "status_data": status_data,
+        "review_md_path": review_md_path,
+        "review_json_path": review_json_path,
+        "answer_text": answer_text,
+    }
+
+
+def _finalize_ask_gate_result(
+    *,
+    proc: subprocess.CompletedProcess[str],
+    ask_id: str,
+    command: list[str],
+    backend: str,
+    collected: dict,
+) -> dict:
+    status_path = collected["status_path"]
+    request_path = collected["request_path"]
+    events_path = collected["events_path"]
+    review_md_path = collected["review_md_path"]
+    review_json_path = collected["review_json_path"]
+    verdict = _extract_ask_verdict(review_json_path)
+    if not verdict:
+        verdict = _extract_verdict_from_text(collected["answer_text"])
+    if not verdict:
+        verdict = _extract_verdict_from_text(proc.stdout)
+    passed = proc.returncode == 0 and verdict in _ASK_GATE_PASS_VERDICTS
+    return {
+        "status": "passed" if passed else "blocked",
+        "backend": backend,
+        "returncode": proc.returncode,
+        "ask_id": ask_id,
+        "command": command,
+        "request_json": str(request_path),
+        "status_json": str(status_path),
+        "events_jsonl": str(events_path),
+        "run_dir": collected["run_dir"],
+        "review_md": str(review_md_path) if review_md_path else None,
+        "review_json": str(review_json_path) if review_json_path else None,
+        "verdict": verdict,
+        "stdout_tail": proc.stdout[-4000:],
+        "stderr_tail": proc.stderr[-4000:],
+    }
+
+
+def _run_ask_gate_webgpt(
+    *,
+    target: Path,
+    review_bundle: Path | None,
+    attach_file: str,
+    ask_id: str,
+    ask_timeout: int,
+    webgpt_tab_id: str,
+    webgpt_project: str,
+    oracle_iterations: int,
+    run_output_root: str,
+    webgpt_allow_foreground: bool = False,
+) -> dict:
+    if not webgpt_tab_id and not webgpt_project:
+        return {
+            "status": "blocked",
+            "backend": "webgpt",
+            "reason": "webgpt_tab_or_project_required",
+        }
+    try:
+        call_webgpt, WebgptBackendError = _import_webgpt_runtime()
+    except Exception as exc:
+        return {
+            "status": "blocked",
+            "backend": "webgpt",
+            "reason": "webgpt_runtime_import_failed",
+            "error": str(exc),
+        }
+
+    artifact_dir = (
+        Path(run_output_root) / ask_id
+        if run_output_root
+        else Path(tempfile.mkdtemp(prefix="review-plan-webgpt-"))
+    )
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+
+    old_fg = os.environ.get("ASK_WEBGPT_ALLOW_FOREGROUND")
+    if webgpt_allow_foreground:
+        os.environ["ASK_WEBGPT_ALLOW_FOREGROUND"] = "1"
+    try:
+        prompt = _build_webgpt_readiness_prompt(
+            attach_file=attach_file,
+            review_bundle=review_bundle,
+            target=target,
+        )
+        wg = call_webgpt(
+            prompt,
+            tab_id=webgpt_tab_id,
+            project=webgpt_project,
+            attach_file=attach_file or "",
+            timeout=float(ask_timeout),
+            artifact_dir=artifact_dir,
+            no_activate=True,
+        )
+    except WebgptBackendError as exc:
+        return {
+            "status": "blocked",
+            "backend": "webgpt",
+            "reason": "webgpt_call_failed",
+            "error": str(exc),
+            "artifact_dir": str(artifact_dir),
+            "ask_id": ask_id,
+        }
+    except ValueError as exc:
+        return {
+            "status": "blocked",
+            "backend": "webgpt",
+            "reason": "webgpt_prompt_invalid",
+            "error": str(exc),
+            "ask_id": ask_id,
+        }
+    finally:
+        if webgpt_allow_foreground:
+            if old_fg is None:
+                os.environ.pop("ASK_WEBGPT_ALLOW_FOREGROUND", None)
+            else:
+                os.environ["ASK_WEBGPT_ALLOW_FOREGROUND"] = old_fg
+
+    response_text = wg.response
+    verdict = _extract_verdict_from_text(response_text)
+    passed = verdict in _ASK_GATE_PASS_VERDICTS
+    response_path = artifact_dir / "02_response.md"
+    result = {
+        "status": "passed" if passed else "blocked",
+        "backend": "webgpt",
+        "returncode": 0 if passed else 1,
+        "ask_id": ask_id,
+        "command": ["call_webgpt", "in_process"],
+        "artifact_dir": str(artifact_dir),
+        "response_md": str(response_path),
+        "review_md": str(response_path),
+        "verdict": verdict,
+        "stdout_tail": response_text[-4000:],
+        "stderr_tail": "",
+        "oracle_iterations": max(1, min(oracle_iterations, REVIEW_PLAN_MAX_WEBGPT_ORACLE_ITERATIONS)),
+    }
+    if review_bundle is not None:
+        result["review_bundle"] = str(review_bundle.resolve())
+    result["plan_target"] = str(target.resolve())
+    if attach_file:
+        result["attach_file"] = attach_file
+    return result
+
+
+def _run_ask_gate(
+    *,
+    backend: str,
+    target: Path,
+    review_bundle: Path | None,
+    attach_file: str,
+    ask_id: str,
+    ask_model: str,
+    ask_reasoning: str,
+    ask_timeout: int,
+    focus: str,
+    webgpt_tab_id: str,
+    webgpt_project: str,
+    oracle_iterations: int,
+    run_output_root: str,
+    webgpt_allow_foreground: bool = False,
+) -> dict:
+    normalized = backend.strip().lower()
+    if normalized == "webgpt":
+        return _run_ask_gate_webgpt(
+            target=target,
+            review_bundle=review_bundle,
+            attach_file=attach_file,
+            ask_id=ask_id,
+            ask_timeout=ask_timeout,
+            webgpt_tab_id=webgpt_tab_id,
+            webgpt_project=webgpt_project,
+            oracle_iterations=oracle_iterations,
+            run_output_root=run_output_root,
+            webgpt_allow_foreground=webgpt_allow_foreground,
+        )
+    if normalized not in {"", "scillm", "deep-review"}:
+        return {
+            "status": "blocked",
+            "backend": normalized,
+            "reason": f"unsupported ask gate backend: {backend}",
+        }
+    return _run_ask_deep_review(
+        target=target,
+        ask_id=ask_id,
+        ask_model=ask_model,
+        ask_reasoning=ask_reasoning,
+        ask_timeout=ask_timeout,
+        focus=focus,
+        run_output_root=run_output_root,
+    )
+
+
 def _run_ask_deep_review(
     target: Path,
     ask_id: str,
@@ -1475,8 +1930,10 @@ def _run_ask_deep_review(
     ask_reasoning: str,
     ask_timeout: int,
     focus: str,
+    run_output_root: str = "",
 ) -> dict:
-    ask_run = Path(__file__).resolve().parent.parent / "ask" / "run.sh"
+    ask_root = _ask_runtime_dir()
+    ask_run = ask_root / "run.sh"
     if not ask_run.exists():
         return {
             "status": "blocked",
@@ -1511,61 +1968,26 @@ def _run_ask_deep_review(
         "--overwrite",
         "--json",
     ]
+    if run_output_root:
+        command.extend(["--run-output-root", run_output_root])
+
     proc = subprocess.run(
         command,
-        cwd=ask_run.parent,
+        cwd=ask_root,
         capture_output=True,
         text=True,
         timeout=ask_timeout + 90,
     )
-    run_dir = ask_run.parent / ".ask_artifacts" / "runs" / ask_id
-    status_path = run_dir / f"{ask_id}.status.json"
-    request_path = run_dir / f"{ask_id}.request.json"
-    events_path = run_dir / f"{ask_id}.events.jsonl"
-    review_md_path: Path | None = None
-    review_json_path: Path | None = None
-    status_data: dict = {}
-    if status_path.exists():
-        try:
-            status_data = json.loads(status_path.read_text())
-        except Exception:
-            status_data = {}
-        artifacts = status_data.get("artifacts", {})
-        if isinstance(artifacts, dict):
-            for key in ("review_md", "markdown"):
-                value = artifacts.get(key)
-                if isinstance(value, str):
-                    review_md_path = Path(value)
-                    if not review_md_path.is_absolute():
-                        review_md_path = ask_run.parent / review_md_path
-                    break
-            for key in ("review_json", "json"):
-                value = artifacts.get(key)
-                if isinstance(value, str):
-                    review_json_path = Path(value)
-                    if not review_json_path.is_absolute():
-                        review_json_path = ask_run.parent / review_json_path
-                    break
-    if review_json_path is None:
-        candidates = sorted((ask_run.parent / ".ask_artifacts" / "deep-review").glob("*/review.json"))
-        review_json_path = candidates[-1] if candidates else None
-    if review_md_path is None and review_json_path is not None:
-        review_md_path = review_json_path.with_name("review.md")
-    verdict = _extract_ask_verdict(review_json_path)
-    return {
-        "status": "passed" if proc.returncode == 0 and verdict in {"SAFE", "PASS", "READY_FOR_PLAN_ITERATE"} else "blocked",
-        "returncode": proc.returncode,
-        "ask_id": ask_id,
-        "command": command,
-        "request_json": str(request_path),
-        "status_json": str(status_path),
-        "events_jsonl": str(events_path),
-        "review_md": str(review_md_path) if review_md_path else None,
-        "review_json": str(review_json_path) if review_json_path else None,
-        "verdict": verdict,
-        "stdout_tail": proc.stdout[-4000:],
-        "stderr_tail": proc.stderr[-4000:],
-    }
+    collected = _collect_ask_run_artifacts(ask_root, ask_id)
+    result = _finalize_ask_gate_result(
+        proc=proc,
+        ask_id=ask_id,
+        command=command,
+        backend="scillm",
+        collected=collected,
+    )
+    result["plan_target"] = str(target.resolve())
+    return result
 
 
 def _write_gate_artifact(
@@ -1574,6 +1996,7 @@ def _write_gate_artifact(
     iterations: int,
     ask_artifacts: dict | None = None,
     suggest_fixes: bool = True,
+    spiral_guard: list[str] | None = None,
 ) -> GateResult:
     output_dir.mkdir(parents=True, exist_ok=True)
     verdict, reason = _gate_verdict(result, ask_artifacts)
@@ -1583,6 +2006,9 @@ def _write_gate_artifact(
         "verdict": verdict,
         "reason": reason,
         "iterations": iterations,
+        "execution_policy": "single_preflight_then_orchestrate",
+        "recommended_next_step": _recommended_next_step(verdict, result),
+        "spiral_guard": spiral_guard or [],
         "counts": {
             "pass": result.pass_count,
             "warn": result.warn_count,
@@ -1590,7 +2016,9 @@ def _write_gate_artifact(
         },
         "findings": review_result_to_dict(result, suggest_fixes=suggest_fixes)["findings"],
         "severity_to_loop_rule": "WARN and FAIL findings both block PASS for review-plan auto mode.",
-        "next_iteration_plan": _next_iteration_plan(result),
+        "next_iteration_plan": _next_iteration_plan(
+            result, verdict=verdict, ask_artifacts=ask_artifacts
+        ),
         "ask_artifacts": ask_artifacts or {},
     }
     path = output_dir / "review_result.json"
@@ -1643,20 +2071,59 @@ def review(
     suggest_fixes: bool = typer.Option(False, "--suggest-fixes", help="Include fix suggestions"),
     max_rounds: int = typer.Option(1, "--max-rounds", help="Bounded review rounds. >1 enables controller artifacts and fail-closed iteration status."),
     output_dir: str = typer.Option("", "--output-dir", help="Directory for review_result.json (default: artifacts/review-plan/<target>-<timestamp>)"),
-    ask_gate: bool = typer.Option(False, "--ask-gate", help="Run real $ask --deep-review as an external gate for the final round"),
-    ask_model: str = typer.Option("gpt-5.5", "--ask-model", help="Model for $ask --deep-review gate"),
-    ask_reasoning: str = typer.Option("high", "--ask-reasoning", help="Reasoning effort for $ask --deep-review gate"),
-    ask_timeout: int = typer.Option(900, "--ask-timeout", help="Timeout seconds for $ask --deep-review gate"),
-    ask_focus: str = typer.Option("plan-contract,ordering,definition-of-done,skill-overlap,iteration-gates", "--ask-focus", help="Comma-separated deep-review focus labels"),
+    ask_gate: bool = typer.Option(False, "--ask-gate", help="Run real $ask as an external gate after deterministic checks pass"),
+    ask_gate_backend: str = typer.Option("scillm", "--ask-gate-backend", help="Ask gate backend: scillm (deep-review) or webgpt"),
+    ask_review_bundle: str = typer.Option(
+        "",
+        "--ask-review-bundle",
+        help="Markdown review bundle for webgpt (text-only). Required sections: Review request, This round acceptance, Local gates",
+    ),
+    ask_attach_file: str = typer.Option(
+        "",
+        "--ask-attach-file",
+        help="Zip path for webgpt when bundle includes images (max 5 files; include REQUEST.md, PLAN.md, or REVIEW.md)",
+    ),
+    ask_model: str = typer.Option("gpt-5.5", "--ask-model", help="Model for scillm --deep-review gate"),
+    ask_reasoning: str = typer.Option("high", "--ask-reasoning", help="Reasoning effort for scillm --deep-review gate"),
+    ask_timeout: int = typer.Option(900, "--ask-timeout", help="Timeout seconds for $ask gate"),
+    ask_focus: str = typer.Option("plan-contract,ordering,definition-of-done,skill-overlap,iteration-gates", "--ask-focus", help="Comma-separated deep-review focus labels (scillm backend)"),
+    webgpt_tab_id: str = typer.Option("", "--webgpt-tab-id", help="Chrome tab id for webgpt ask gate"),
+    webgpt_project: str = typer.Option("", "--webgpt-project", help="Bound ChatGPT project name for webgpt ask gate"),
+    oracle_iterations: int = typer.Option(
+        1,
+        "--oracle-iterations",
+        help="Oracle rounds for webgpt gate (capped at 1; use /plan-iterate for phase loops)",
+    ),
+    allow_extended_review: bool = typer.Option(
+        False,
+        "--allow-extended-review",
+        help="Allow --max-rounds up to 2 for a second human-driven preflight only (no automated loop)",
+    ),
+    webgpt_allow_foreground: bool = typer.Option(
+        False,
+        "--webgpt-allow-foreground",
+        help="Set ASK_WEBGPT_ALLOW_FOREGROUND=1 when the controlled tab is the active Chrome tab",
+    ),
 ):
     """Full review of a task file: claims, overlap, ordering, DoD, chains, tools."""
     if max_rounds < 1:
         logger.error("--max-rounds must be >= 1")
         raise typer.Exit(2)
+    try:
+        effective_max_rounds, effective_oracle_iterations, spiral_guard_notes = _apply_spiral_guards(
+            max_rounds=max_rounds,
+            allow_extended_review=allow_extended_review,
+            ask_gate=ask_gate,
+            oracle_iterations=oracle_iterations,
+            ask_gate_backend=ask_gate_backend,
+        )
+    except ValueError as exc:
+        logger.error(str(exc))
+        raise typer.Exit(2)
     result = run_review_checks(task_file)
     path = Path(result.file)
 
-    auto_mode = max_rounds > 1 or ask_gate or bool(output_dir)
+    auto_mode = effective_max_rounds > 1 or ask_gate or bool(output_dir)
     gate: GateResult | None = None
     ask_artifacts: dict | None = None
     if auto_mode:
@@ -1664,14 +2131,49 @@ def review(
         safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "-", path.name).strip("-") or "plan"
         gate_dir = Path(output_dir) if output_dir else PROJECT_ROOT / "artifacts" / "review-plan" / f"{safe_name}-{ts}"
         if ask_gate and result.fail_count == 0 and result.warn_count == 0:
-            ask_artifacts = _run_ask_deep_review(
-                target=path,
-                ask_id=f"review-plan-{safe_name}-{ts}",
-                ask_model=ask_model,
-                ask_reasoning=ask_reasoning,
-                ask_timeout=ask_timeout,
-                focus=ask_focus,
-            )
+            bundle_path = Path(ask_review_bundle).resolve() if ask_review_bundle else None
+            attach_path = ask_attach_file.strip()
+            bundle_issues: list[str] = []
+            if ask_gate_backend.strip().lower() == "webgpt":
+                if attach_path:
+                    bundle_issues.extend(validate_review_attach_zip(Path(attach_path)))
+                elif bundle_path is not None:
+                    bundle_issues.extend(validate_review_evidence_bundle(bundle_path))
+                elif not attach_path and bundle_path is None:
+                    bundle_issues.append(
+                        "webgpt ask-gate requires --ask-review-bundle (.md) or --ask-attach-file (.zip)"
+                    )
+            if bundle_issues:
+                ask_artifacts = {
+                    "status": "blocked",
+                    "backend": ask_gate_backend,
+                    "reason": "review_evidence_bundle_invalid",
+                    "bundle_issues": bundle_issues,
+                }
+            elif bundle_path is not None and not bundle_path.exists():
+                ask_artifacts = {
+                    "status": "blocked",
+                    "backend": ask_gate_backend,
+                    "reason": "ask_review_bundle_missing",
+                    "review_bundle": str(bundle_path),
+                }
+            else:
+                ask_artifacts = _run_ask_gate(
+                    backend=ask_gate_backend,
+                    target=path,
+                    review_bundle=bundle_path,
+                    attach_file=attach_path,
+                    ask_id=f"review-plan-{safe_name}-{ts}",
+                    ask_model=ask_model,
+                    ask_reasoning=ask_reasoning,
+                    ask_timeout=ask_timeout,
+                    focus=ask_focus,
+                    webgpt_tab_id=webgpt_tab_id,
+                    webgpt_project=webgpt_project,
+                    oracle_iterations=effective_oracle_iterations,
+                    run_output_root=str(gate_dir / "ask-runs"),
+                    webgpt_allow_foreground=webgpt_allow_foreground,
+                )
         elif ask_gate:
             ask_artifacts = {
                 "status": "skipped",
@@ -1683,6 +2185,7 @@ def review(
             iterations=1,
             ask_artifacts=ask_artifacts,
             suggest_fixes=True,
+            spiral_guard=spiral_guard_notes,
         )
 
     if output_json:
@@ -1768,6 +2271,111 @@ def check(
             print(f"  [{f.grade}] {f.task}: {f.message}")
 
     raise typer.Exit(1 if result.fail_count > 0 else 0)
+
+
+
+from dag_readiness import (
+    validate_dag_readiness,
+    validate_plans_two_file_layout,
+    write_dag_readiness_report,
+)
+
+
+@app.command("dag-preflight")
+def dag_preflight(
+    dag_file: str = typer.Argument(
+        "plans/review-design-subagent-orchestration.dag.json",
+        help="Path to DAG JSON",
+    ),
+    registry_file: str = typer.Option(
+        "workers-registry.json",
+        "--registry",
+        help="Workers registry JSON",
+    ),
+    output: str = typer.Option(
+        "artifacts/review-design-orchestration/preflight/dag_readiness.json",
+        "--output",
+        help="Output path for dag_readiness.json",
+    ),
+    skip_phart: bool = typer.Option(False, "--skip-phart", help="Skip phart validate"),
+    output_json: bool = typer.Option(False, "--json", help="Print report JSON to stdout"),
+):
+    """DAG readiness preflight (Phase 0) for orchestration plans."""
+    dag_path = Path(dag_file)
+    if not dag_path.is_absolute():
+        for base in (CALLER_ROOT, PROJECT_ROOT):
+            candidate = base / dag_file
+            if candidate.exists():
+                dag_path = candidate
+                break
+    if not dag_path.exists():
+        logger.error(f"DAG not found: {dag_file}")
+        raise typer.Exit(1)
+
+    registry_path = Path(registry_file)
+    if not registry_path.is_absolute():
+        for base in (CALLER_ROOT, PROJECT_ROOT):
+            candidate = base / registry_file
+            if candidate.exists():
+                registry_path = candidate
+                break
+    if not registry_path.exists():
+        logger.error(f"Registry not found: {registry_file}")
+        raise typer.Exit(1)
+
+    out_path = Path(output)
+    if not out_path.is_absolute():
+        base = CALLER_ROOT if (CALLER_ROOT / "plans").is_dir() else PROJECT_ROOT
+        out_path = base / output
+
+    repo_root = CALLER_ROOT if (CALLER_ROOT / "plans").is_dir() else PROJECT_ROOT
+
+    report = validate_dag_readiness(
+        dag_path=dag_path,
+        registry_path=registry_path,
+        project_root=repo_root,
+        run_phart=not skip_phart,
+    )
+    written = write_dag_readiness_report(report, out_path)
+
+    bundle_script = repo_root / "scripts" / "build_review_bundle.py"
+    if bundle_script.is_file():
+        proc = subprocess.run(
+            [sys.executable, str(bundle_script), "--skip-checks"],
+            cwd=str(repo_root),
+            capture_output=True,
+            text=True,
+        )
+        if proc.returncode != 0:
+            report.blocking_errors.append(
+                f"build_review_bundle: exit {proc.returncode}: {(proc.stderr or proc.stdout or '')[:500]}"
+            )
+            report.ok = False
+        elif proc.stdout.strip():
+            print(proc.stdout.strip())
+
+    layout_errors, layout_warnings = validate_plans_two_file_layout(repo_root)
+    for err in layout_errors:
+        report.blocking_errors.append(f"plans_layout: {err}")
+    report.warnings.extend(layout_warnings)
+    if layout_errors:
+        report.ok = False
+
+    if output_json:
+        print(json.dumps(report.to_dict(), indent=2))
+    else:
+        print(f"DAG preflight: {'PASS' if report.ok else 'FAIL'}")
+        print(f"Report: {written}")
+        if report.missing_agents:
+            print(f"  missing_agents: {report.missing_agents}")
+        if report.missing_agents_md:
+            print(f"  missing_agents_md: {report.missing_agents_md}")
+        for err in report.blocking_errors:
+            print(f"  BLOCK: {err}")
+        for warn in report.warnings:
+            print(f"  WARN: {warn}")
+
+    raise typer.Exit(0 if report.ok else 1)
 
 
 if __name__ == "__main__":

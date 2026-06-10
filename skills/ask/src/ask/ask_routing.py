@@ -423,6 +423,67 @@ _REVIEW_SKILL_RE = re.compile(
 )
 
 
+_REVIEW_PAGE_SKILL_RE = re.compile(r"/?(?:review-page)\b", re.IGNORECASE)
+_PAGE_ID_RE = re.compile(
+    r"^(coverage|chat|qras|controls|sources|urls|threat-matrix|posture|supply-chain|explorer-nav)$",
+    re.IGNORECASE,
+)
+
+
+def _parse_webgpt_page_review_query(
+    question_parts: list[str],
+) -> tuple[bool, str, str, bool, str, bool, bool, int]:
+    """Parse `$ask webgpt /review-page <page_id> …`.
+
+    Returns (matched, page_id, round_label, run_ti, capture_suffix, force, step_loop, max_steps).
+    """
+    if not question_parts:
+        return False, "", "1", False, "", False, False, 0
+    text = " ".join(question_parts).strip()
+    if not _REVIEW_PAGE_SKILL_RE.search(text):
+        return False, text, "1", False, "", False, False, 0
+
+    run_ti = bool(re.search(r"\b(?:run-ti|run\s+ti)\b", text, re.IGNORECASE))
+    force = bool(re.search(r"(?:--force|force\s+webgpt)", text, re.IGNORECASE))
+    step_loop = bool(
+        re.search(r"\b(?:--step-loop|step-loop|per-step|step\s+loop|steps\s+loop)\b", text, re.IGNORECASE)
+    )
+    max_steps = 0
+    mm = re.search(r"\b(?:--max-steps|max-steps|max\s+steps)\s*[:=]?\s*(\d+)\b", text, re.IGNORECASE)
+    if mm:
+        try:
+            max_steps = max(0, int(mm.group(1)))
+        except (TypeError, ValueError):
+            max_steps = 0
+
+    round_label = "1"
+    rm = re.search(r"\b(?:round(?:-label)?|r)\s*[:=]?\s*(\d+)\b", text, re.IGNORECASE)
+    if rm:
+        round_label = rm.group(1)
+
+    capture_suffix = ""
+    sm = re.search(r"\b(?:capture-suffix|suffix)\s*[:=]?\s*([\w\-]+)\b", text, re.IGNORECASE)
+    if sm:
+        capture_suffix = sm.group(1)
+        if not capture_suffix.startswith("-"):
+            capture_suffix = f"-{capture_suffix}"
+
+    # page id: first known token after review-page
+    page_id = ""
+    tokens = re.split(r"\s+", text)
+    for idx, tok in enumerate(tokens):
+        if _REVIEW_PAGE_SKILL_RE.search(tok):
+            for candidate in tokens[idx + 1 :]:
+                cleaned = candidate.strip(" ,:;")
+                if cleaned.startswith("-"):
+                    continue
+                if _PAGE_ID_RE.match(cleaned):
+                    page_id = cleaned.lower()
+                    break
+            break
+    return True, page_id, round_label, run_ti, capture_suffix, force, step_loop, max_steps
+
+
 def _parse_webgpt_review_query(
     question_parts: list[str],
 ) -> tuple[Optional[str], str, int]:

@@ -1,6 +1,7 @@
 """Oracle synthesis and subagent orchestration for the ask skill."""
 
 import json
+import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -49,7 +50,7 @@ from .webgpt_runtime import (
     WebgptBackendError,
     WebgptTabError,
     WebReviewBundleError,
-    build_webgpt_prompt,
+    build_webgpt_oracle_prompt,
     call_webgpt,
     extract_file_attachments,
     resolve_web_review_delivery,
@@ -134,17 +135,18 @@ def _run_oracle_webgpt(
     url = (webgpt_url or str(oracle_state.get("webgpt_url", "") or "")).strip()
     create_tab = bool(webgpt_create_tab)
     project = (webgpt_project or str(oracle_state.get("webgpt_project", "") or "")).strip()
+    browser_oracle_from = str(
+        oracle_state.get("browser_oracle_from")
+        or os.environ.get("ASK_BROWSER_ORACLE_FROM", "")
+        or os.getcwd()
+    ).strip()
     attachments = extract_file_attachments(question)
     attach_file = resolve_web_review_delivery(question, attachments, backend="webgpt")
-    prompt = build_webgpt_prompt(
+    prompt = build_webgpt_oracle_prompt(
         base_prompt,
+        question,
         attachments,
-        system_preamble=(
-            "You are answering a /ask oracle call. Treat retrieved memory "
-            "context as supporting evidence; cite supported claims inline with "
-            "source IDs like [MEMORY.1]. Distinguish supported facts from "
-            "inference. Be concise and technically precise."
-        ),
+        attach_file=attach_file,
     )
 
     turns: list[dict] = []
@@ -162,6 +164,7 @@ def _run_oracle_webgpt(
                 attach_file=attach_file if turn_number == 1 else "",
                 timeout=timeout,
                 no_activate=True,
+                browser_oracle_from=browser_oracle_from,
                 run_state=run_state,
                 iteration=turn_number,
                 persona=persona,
@@ -511,6 +514,7 @@ def _apply_oracle_synthesis(
     webgpt_url: str = "",
     webgpt_create_tab: bool = False,
     webgpt_project: str = "",
+    browser_oracle_from: str = "",
     cursor_browser_view_id: str = "",
     cursor_browser_url: str = "",
     cursor_browser_project: str = "",
@@ -621,7 +625,7 @@ def _apply_oracle_synthesis(
                 webgpt_create_tab=webgpt_create_tab,
                 webgpt_project=webgpt_project,
                 run_state=run_state,
-                oracle_state=result.get("oracle", {}),
+                oracle_state={**result.get("oracle", {}), "browser_oracle_from": browser_oracle_from},
             )
             protocol_state = {}
         elif effective_backend == "cursor-browser":

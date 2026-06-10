@@ -47,6 +47,7 @@ const VERSION = "2.0.0";
 
 const ALIASES = {
   snap: "screenshot",
+  "screenshot-container": "snap-container",
   read: "page.read",
   text: "page.text",
   find: "search",
@@ -283,6 +284,20 @@ const TOOLS = {
         ]
       },
       "snap": { desc: "Alias for screenshot (auto-saves to /tmp)", args: [], alias: "screenshot" },
+      "snap-container": {
+        desc: "Capture and stitch a nested scroll container",
+        args: ["selector"],
+        opts: {
+          output: "Save to file",
+          nearest: "Use nearest scrollable ancestor (default: true)",
+          "max-segments": "Maximum vertical segments (default: 80)",
+          "settle-ms": "Wait after each scroll step (default: 80)"
+        },
+        examples: [
+          { cmd: 'snap-container "[data-qid=\\"pane\\"]" --output /tmp/pane.png', desc: "Stitch a scroll pane" }
+        ]
+      },
+      "screenshot-container": { desc: "Alias for snap-container", args: ["selector"], alias: "snap-container" },
     }
   },
   scroll: {
@@ -1126,7 +1141,7 @@ const ALL_SOCKET_TOOLS = [
   "javascript_tool", "health", "smoke",
   "click_type", "click_type_submit", "type", "key", "type_submit",
   "scroll", "scroll_to", "hover", "left_click_drag", "drag", "wait",
-  "computer",
+  "computer", "snap-container", "screenshot-container",
   "page.read", "page.text", "page.state",
   "locate.role", "locate.text", "locate.label",
   "extension.ping", "extension.reload",
@@ -1179,6 +1194,7 @@ const SEE_ALSO = {
   "perf.metrics": ["perf.start", "console", "network"],
   "navigate": ["wait.load", "page.read"],
   "screenshot": ["page.read", "scroll.bottom for fullpage"],
+  "snap-container": ["screenshot", "scroll.info"],
   "search": ["locate.text", "page.read"],
   "wait.element": ["wait.load", "wait.network"],
   "wait.load": ["wait.element", "wait.network"],
@@ -1860,6 +1876,8 @@ const PRIMARY_ARG_MAP = {
   "wait.url": "pattern",
   zoom: "level",
   "history.search": "query",
+  "snap-container": "selector",
+  "screenshot-container": "selector",
   "network.get": "id",
   "network.body": "id",
   "network.curl": "id",
@@ -1968,13 +1986,17 @@ if (!noScreenshot && AUTO_SCREENSHOT_TOOLS.includes(tool)) {
 const outputPath = toolArgs.output;
 delete toolArgs.output;
 
-if (tool === "screenshot" && outputPath) {
+if ((tool === "screenshot" || tool === "snap-container" || tool === "screenshot-container") && outputPath) {
   if (typeof outputPath !== "string") {
     console.error("Error: --output requires a file path");
     process.exit(1);
   }
   toolArgs.savePath = outputPath;
-  if (options.full) toolArgs.full = true;
+  if (tool === "snap-container" || tool === "screenshot-container") {
+    toolArgs.full = options.full !== false;
+  } else if (options.full) {
+    toolArgs.full = true;
+  }
   if (options["max-size"]) toolArgs["max-size"] = options["max-size"];
 }
 

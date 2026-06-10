@@ -7,6 +7,8 @@ RUN_SH="${SURF_RUN_SH:-${SKILL_DIR}/run.sh}"
 
 # shellcheck source=lib/webgpt_resolve.sh
 source "${SCRIPT_DIR}/lib/webgpt_resolve.sh"
+# shellcheck source=lib/browser_oracle_resolve.sh
+source "${SCRIPT_DIR}/lib/browser_oracle_resolve.sh"
 
 usage() {
   cat <<'EOF'
@@ -25,6 +27,8 @@ Options:
   --model MODEL             Optional ChatGPT model selector label.
   --reasoning LABEL         Optional ChatGPT reasoning dropdown label
                             (for example: "Pro" or "Heavy Reasoning").
+  --project NAME            browser-oracle project binding (~/.pi/webgpt-projects/<name>.json).
+  --browser-oracle-from PATH  Walk-up directory for .ask/browser-oracles.yaml (default: cwd).
   --tab-id ID               Use this exact Chrome tab as the controlled WebGPT tab.
   --url URL                 Resolve an already-open ChatGPT tab by exact URL.
   --expect-url URL          When using --tab-id, require that tab to match this
@@ -63,6 +67,8 @@ timeout_s=900
 model=""
 reasoning=""
 tab_id=""
+project=""
+browser_oracle_from=""
 target_url=""
 expect_url=""
 expect_title=""
@@ -86,6 +92,8 @@ while [[ $# -gt 0 ]]; do
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
     --reasoning) reasoning="${2:-}"; shift 2 ;;
+    --project) project="${2:-}"; shift 2 ;;
+    --browser-oracle-from) browser_oracle_from="${2:-}"; shift 2 ;;
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
     --expect-url) expect_url="${2:-}"; shift 2 ;;
@@ -118,6 +126,29 @@ if [[ -z "${SURF_RUN_SH:-}" && ! -S /tmp/surf.sock ]]; then
   echo "surf webgpt.submit requires the surf browser extension socket at /tmp/surf.sock." >&2
   echo "Run: surf setup" >&2
   exit 3
+fi
+
+# browser-oracle walk-up when no explicit tab/url/create-tab target.
+if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
+  bo_from="$(cd "${browser_oracle_from:-.}" 2>/dev/null && pwd || pwd)"
+  bo_payload="$(browser_oracle_resolve_json "$bo_from" webgpt "$project" "" 2>/dev/null || true)"
+  if [[ -n "$bo_payload" ]]; then
+    if [[ -z "$project" ]]; then
+      project="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("project") or "")' <<<"$bo_payload")"
+    fi
+    if [[ -z "$tab_id" ]]; then
+      tab_id="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("tab_id") or "")' <<<"$bo_payload")"
+    fi
+    if [[ -z "$target_url" ]]; then
+      bo_url="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("conversation_url") or "")' <<<"$bo_payload")"
+      if [[ -n "$bo_url" ]]; then
+        target_url="$bo_url"
+      fi
+    fi
+    if [[ -z "$expect_url" && -n "$target_url" ]]; then
+      expect_url="$target_url"
+    fi
+  fi
 fi
 
 if [[ "$sentinel" == "auto" || -z "$sentinel" ]]; then

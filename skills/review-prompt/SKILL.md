@@ -278,6 +278,20 @@ Required coded stages:
   --max-rounds 2
 ```
 
+### WebGPT tab binding (CLI parity)
+
+Prefer **zero-flag** invocation from a registered working directory. `/ask` and `/surf` compose `$browser-oracle` automatically.
+
+| Flag | When to use |
+|------|-------------|
+| *(none)* | cwd has walk-up registry + binding — preferred |
+| `--browser-oracle-from <dir>` | Override walk-up root (monorepo subdir) |
+| `--webgpt-project <name>` | Explicit project; skips yaml walk-up |
+| `--webgpt-tab-id <id>` | One-off override; skips walk-up |
+| `--webgpt-url <url>` | Resolve by conversation URL; skips walk-up |
+
+Setup: `$browser-oracle register` + `bind` + `doctor --from <dir>`. See `$browser-oracle` and `$ask` SKILL.md **WebGPT tab binding** sections.
+
 ## Options
 
 | Option | Description |
@@ -302,8 +316,10 @@ Required coded stages:
 | `--ask-model` | `$ask` oracle model for the final gate (default: `gpt-5.5`) |
 | `--ask-reasoning` | `$ask` oracle reasoning effort for the final gate (default: `high`) |
 | `--webgpt-gate` | Run WebGPT through the real `$ask` WebGPT route as an external final gate |
-| `--webgpt-tab-id` | Exact ChatGPT tab id for `--webgpt-gate`; preferred over URL |
-| `--webgpt-url` | Already-open ChatGPT conversation URL to resolve to a concrete tab id |
+| `--browser-oracle-from` | Walk-up root when cwd lacks registry (monorepo subdirs) |
+| `--webgpt-project` | Explicit project binding; skips yaml walk-up |
+| `--webgpt-tab-id` | Exact ChatGPT tab id; skips walk-up (override) |
+| `--webgpt-url` | Conversation URL; skips walk-up |
 | `--webgpt-timeout` | WebGPT gate timeout seconds (default: 900) |
 
 ## Scoring

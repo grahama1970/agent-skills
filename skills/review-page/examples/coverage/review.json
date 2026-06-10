@@ -1,0 +1,18 @@
+{
+  "schema": "review_page.v1",
+  "page": "Coverage + embedded monitor-status",
+  "route": "http://127.0.0.1:3002/#sparta-explorer",
+  "round_id": "r1",
+  "lead_persona": "Nico Bailon",
+  "page_verdict": "degraded",
+  "overall_verdict": "NEEDS_CHANGES",
+  "executive_summary": "Deterministic TI passes; WebGPT round 1 found zip/inventory mismatch and caveat visibility gaps.",
+  "code_runner_actions": [
+    "Align REVIEW_PACKET screenshot inventory with zip attach set only.",
+    "Surface SUPERVISOR STALE in page-purpose strip.",
+    "Separate reconciled vs raw ops-arango visually on monitor closure panel."
+  ],
+  "non_claims": [
+    "Phase-63 ledger pass does not imply product readiness."
+  ]
+}

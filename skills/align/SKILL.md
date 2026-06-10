@@ -175,6 +175,27 @@ If max rounds is reached with blocking questions open, stop with
 
 ## CLI
 
+### WebGPT tab binding (CLI parity)
+
+Prefer **zero-flag** `$ask webgpt` from a registered working directory. `/ask` composes
+`$browser-oracle` automatically. `init` and `prepare-review` persist binding hints in
+`.align/state.json` and emit the same flags on generated `round-*-webgpt-ask-command.sh`.
+
+| Flag | When to use |
+|------|-------------|
+| *(none)* | cwd has walk-up registry + binding — preferred |
+| `--browser-oracle-from <dir>` | Override walk-up root (monorepo subdir) |
+| `--webgpt-project <name>` | Explicit project; skips yaml walk-up |
+| `--webgpt-tab-id <id>` | One-off override; skips walk-up |
+| `--webgpt-url <url>` | Resolve by conversation URL; skips walk-up |
+
+**Resolution order** (same as `$ask` / `$surf`): `--webgpt-tab-id` → `--webgpt-url` →
+`$browser-oracle` walk-up → `--webgpt-project` → one `chatgpt.com` tab (fail-closed).
+
+Setup: `$browser-oracle register` + `bind` + `doctor --from <dir>`. See `$browser-oracle`
+and `$ask` SKILL.md **WebGPT tab binding** sections.
+
+
 Run from the repository or project root that owns the task:
 
 ```bash
@@ -187,8 +208,11 @@ skills/align/run.sh init \
   --participant scillm \
   --participant ask \
   --participant dogpile \
-  --participant webgpt \
-  --webgpt-tab-id 837343529
+  --participant webgpt
+# Prefer zero-flag from a registered dir, or persist walk-up root:
+#   --browser-oracle-from skills/oc-subagent/personas/mathematics
+# Legacy explicit override:
+#   --webgpt-tab-id 837343529
 ```
 
 Record participant responses:
@@ -221,7 +245,8 @@ not call the reviewer by itself.
 skills/align/run.sh prepare-review --round 1 --reviewer scillm
 skills/align/run.sh prepare-review --round 1 --reviewer ask
 skills/align/run.sh prepare-review --round 1 --reviewer dogpile
-skills/align/run.sh prepare-review --round 1 --reviewer webgpt --webgpt-tab-id 837343529
+skills/align/run.sh prepare-review --round 1 --reviewer webgpt --browser-oracle-from skills/oc-subagent/personas/mathematics
+# or: --webgpt-tab-id 837343529
 ```
 
 Use WebGPT when the review needs the human's authenticated ChatGPT browser
@@ -249,7 +274,7 @@ skills/ask/run.sh ask "Review the alignment request at .align/reviews/round-001-
   --deep-review --deep-review-target .align/reviews/round-001-ask-request.md
 
 skills/ask/run.sh ask webgpt "Review the alignment request at .align/reviews/round-001-webgpt-request.md" \
-  --webgpt-tab-id 837343529 --oracle-iterations 1
+  --browser-oracle-from skills/oc-subagent/personas/mathematics --oracle-iterations 1
 
 # dogpile research only if alignment is blocked by missing external facts
 skills/dogpile/run.sh search "facts needed to unblock this alignment" \
