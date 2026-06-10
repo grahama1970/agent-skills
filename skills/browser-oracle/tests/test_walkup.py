@@ -1,0 +1,52 @@
+from pathlib import Path
+
+from browser_oracle.walkup import find_all_registries, find_registry
+
+
+def test_find_registry_walks_up_to_parent(tmp_path: Path) -> None:
+    root = tmp_path / "repo"
+    child = root / "skills" / "oc-subagent" / "personas" / "mathematics"
+    child.mkdir(parents=True)
+    registry = root / "skills" / "oc-subagent" / ".ask" / "browser-oracles.yaml"
+    registry.parent.mkdir(parents=True)
+    registry.write_text("version: 1\n")
+
+    hit = find_registry(child)
+    assert hit is not None
+    assert hit.registry_path == registry
+    assert hit.registry_root == root / "skills" / "oc-subagent"
+
+
+def test_find_registry_nearest_child_wins(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".ask").mkdir()
+    (repo / ".ask" / "browser-oracles.yaml").write_text("version: 1\nrepo\n")
+    skill = repo / "skills" / "foo"
+    skill.mkdir(parents=True)
+    (skill / ".ask").mkdir()
+    (skill / ".ask" / "browser-oracles.yaml").write_text("version: 1\nskill\n")
+    leaf = skill / "bar"
+    leaf.mkdir()
+
+    hit = find_registry(leaf)
+    assert hit is not None
+    assert hit.registry_root == skill
+
+
+def test_find_all_registries_collects_chain(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / ".ask").mkdir()
+    (repo / ".ask" / "browser-oracles.yaml").write_text("version: 1\n")
+    skill = repo / "skills" / "foo"
+    skill.mkdir(parents=True)
+    (skill / ".ask").mkdir()
+    (skill / ".ask" / "browser-oracles.yaml").write_text("version: 1\n")
+    leaf = skill / "bar"
+    leaf.mkdir()
+
+    hits = find_all_registries(leaf)
+    assert len(hits) == 2
+    assert hits[0].registry_root == skill
+    assert hits[1].registry_root == repo

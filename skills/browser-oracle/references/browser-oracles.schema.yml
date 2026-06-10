@@ -1,0 +1,10 @@
+# Registry file: .ask/browser-oracles.yaml (walk-up from cwd, child-nearest wins)
+version: 1
+webgpt:
+  default: project-name-for-this-tree
+  by_relative_path:
+    personas/mathematics: project-name-for-subpath
+  lanes:
+    code-review: another-project-name
+cursor-browser:
+  default: cursor-project-name
