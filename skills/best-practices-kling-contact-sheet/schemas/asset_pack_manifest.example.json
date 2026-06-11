@@ -1,0 +1,89 @@
+{
+  "asset_name": "Maya_Ren",
+  "asset_type": "character",
+  "version": "v01",
+  "last_updated": "2026-06-11",
+  "references": [
+    {
+      "file": "references/01_main_front_full_body.png",
+      "role": "main",
+      "purpose": "Front-facing full-body identity anchor",
+      "must_show": [
+        "face",
+        "hair",
+        "outfit",
+        "shoes",
+        "overall proportions"
+      ]
+    },
+    {
+      "file": "references/02_three_quarter_full_body.png",
+      "role": "supplementary",
+      "purpose": "Depth, silhouette, face shape, hair volume",
+      "must_show": [
+        "same outfit",
+        "same hairstyle",
+        "body depth"
+      ]
+    },
+    {
+      "file": "references/03_side_or_back_view.png",
+      "role": "supplementary",
+      "purpose": "Side/back construction and profile",
+      "must_show": [
+        "hair shape",
+        "jacket back",
+        "profile",
+        "footwear"
+      ]
+    },
+    {
+      "file": "references/04_face_or_detail_closeup.png",
+      "role": "detail",
+      "purpose": "Face and signature mark lock",
+      "must_show": [
+        "green eyes",
+        "scar above left eyebrow",
+        "skin tone",
+        "hair texture"
+      ]
+    }
+  ],
+  "description": {
+    "core_identity": "Young adult woman with warm brown skin, short black curly hair, green eyes, and a scar above her left eyebrow.",
+    "visual_details": "Cream bomber jacket, black cargo pants, red fingerless gloves, silver pendant, worn white sneakers.",
+    "scale": "Human-sized, average height, athletic build.",
+    "style": "Cinematic photorealistic.",
+    "lighting_mood": "Neutral studio reference lighting.",
+    "do_not_change": [
+      "face shape",
+      "scar above left eyebrow",
+      "short black curly hair",
+      "green eyes",
+      "cream bomber jacket",
+      "red gloves"
+    ],
+    "allowed_variation": [
+      "pose",
+      "expression",
+      "camera angle",
+      "minor fabric wrinkles"
+    ],
+    "ignore": [
+      "plain gray background",
+      "neutral pose",
+      "temporary shadows",
+      "small sheet labels"
+    ]
+  },
+  "kling_constraints": {
+    "element_reference_count": "2-4",
+    "allowed_extensions": [
+      ".jpg",
+      ".jpeg",
+      ".png"
+    ],
+    "minimum_dimensions_px": 300,
+    "maximum_file_size_mb": 10
+  }
+}

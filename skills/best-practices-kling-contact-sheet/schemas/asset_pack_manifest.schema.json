@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kling Asset Pack Manifest",
+  "type": "object",
+  "required": [
+    "asset_name",
+    "asset_type",
+    "version",
+    "references",
+    "description"
+  ],
+  "properties": {
+    "asset_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_type": {
+      "type": "string",
+      "enum": [
+        "character",
+        "animal",
+        "prop-item",
+        "costume-accessory",
+        "scene",
+        "effect",
+        "other"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^v[0-9]{2,}$"
+    },
+    "last_updated": {
+      "type": "string"
+    },
+    "references": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "role",
+          "purpose"
+        ],
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "main",
+              "supplementary",
+              "detail",
+              "scale",
+              "mood"
+            ]
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "must_show": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "description": {
+      "type": "object",
+      "properties": {
+        "core_identity": {
+          "type": "string"
+        },
+        "visual_details": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "string"
+        },
+        "style": {
+          "type": "string"
+        },
+        "lighting_mood": {
+          "type": "string"
+        },
+        "do_not_change": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_variation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "kling_constraints": {
+      "type": "object",
+      "properties": {
+        "element_reference_count": {
+          "type": "string",
+          "const": "2-4"
+        },
+        "allowed_extensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minimum_dimensions_px": {
+          "type": "integer",
+          "minimum": 300
+        },
+        "maximum_file_size_mb": {
+          "type": "integer",
+          "maximum": 10
+        }
+      }
+    }
+  }
+}
