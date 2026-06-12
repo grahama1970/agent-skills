@@ -138,6 +138,34 @@ def _run_webgpt_preflight(
     proc, preflight = _run_webgpt_preflight_command(command, surf=surf)
 
     preflight_failed = proc.returncode != 0 or preflight.get("status") != "pass"
+    if preflight_failed and resolved_tab_id and url:
+        failures = set(preflight.get("failures") or [])
+        identity_failures = {
+            "tab_id_valid",
+            "tab_open_chatgpt",
+            "expected_url_matches_tab",
+            "tab_identity",
+            "url_resolve",
+            "url_ambiguous",
+        }
+        if failures & identity_failures:
+            retry_command = [str(surf), "webgpt.preflight", "--json", "--url", url]
+            if no_activate:
+                retry_command.append("--no-activate")
+            if foreground_allowed_by_env:
+                retry_command.append("--allow-foreground-controlled")
+            retry_proc, retry_preflight = _run_webgpt_preflight_command(retry_command, surf=surf)
+            if retry_proc.returncode == 0 and retry_preflight.get("status") == "pass":
+                retry_preflight["url_recovery_from_tab_id_failure"] = True
+                retry_preflight["initial_status"] = preflight.get("status")
+                retry_preflight["initial_failures"] = preflight.get("failures") or []
+                retry_preflight["initial_requested_tab_id"] = resolved_tab_id
+                return retry_preflight
+            preflight["url_recovery_attempted"] = True
+            preflight["url_recovery_status"] = retry_preflight.get("status")
+            preflight["url_recovery_failures"] = retry_preflight.get("failures") or []
+            preflight["url_recovery_stdout_tail"] = (retry_proc.stdout or "")[-1000:]
+
     if (
         preflight_failed
         and "not_foreground_controlled" in (preflight.get("failures") or [])
@@ -814,6 +842,17 @@ def call_webgpt(
             url=url,
             no_activate=no_activate,
         )
+        recovered_tab_id = str(preflight.get("requested_tab_id") or "").strip()
+        if preflight.get("url_recovery_from_tab_id_failure") and recovered_tab_id:
+            resolved_tab_id = recovered_tab_id
+            if "--tab-id" in command:
+                command[command.index("--tab-id") + 1] = resolved_tab_id
+            elif "--url" in command:
+                url_index = command.index("--url")
+                del command[url_index : url_index + 2]
+                command.extend(["--tab-id", resolved_tab_id])
+                if url:
+                    command.extend(["--expect-url", url])
         if (
             preflight.get("foreground_controlled_auto_allowed")
             and "--allow-foreground-controlled" not in command
@@ -872,10 +911,15 @@ def call_webgpt(
 
     if proc.returncode != 0 or meta.get("status") != "completed":
         raw_text = raw_path.read_text() if raw_path.exists() else ""
-        sentinel_match = _WEBGPT_DONE_RE.search(raw_text)
-        if sentinel_match:
-            sentinel_value = sentinel_match.group(0).strip()
-            response_text = _sanitize_clean_response(raw_text, sentinel=sentinel_value)
+        expected_sentinel = str(meta.get("sentinel", "")).strip()
+        if not expected_sentinel and submitted_path.exists():
+            submitted_text = submitted_path.read_text(encoding="utf-8", errors="replace")
+            submitted_match = _WEBGPT_DONE_RE.search(submitted_text)
+            if submitted_match:
+                expected_sentinel = submitted_match.group(0).strip()
+        can_recover = bool(expected_sentinel and expected_sentinel in raw_text)
+        if can_recover:
+            response_text = _sanitize_clean_response(raw_text, sentinel=expected_sentinel)
             response_path.write_text(response_text + "\n", encoding="utf-8")
             meta = {
                 **meta,
@@ -883,7 +927,7 @@ def call_webgpt(
                 "recovered_after_submit_failure": True,
                 "submit_returncode": proc.returncode,
                 "submit_stderr_tail": (proc.stderr or "")[-2000:],
-                "sentinel": sentinel_value,
+                "sentinel": expected_sentinel,
                 "controlled_tab_id": resolved_tab_id,
                 "requested_tab_id": resolved_tab_id,
                 "requested_url": url,

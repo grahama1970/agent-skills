@@ -1,0 +1,4 @@
+interface:
+  display_name: "WebGPT Review"
+  short_description: "Run deterministic ask-owned WebGPT reviews"
+  default_prompt: "Use $webgpt-review to submit a readable review bundle through the ask WebGPT review command."

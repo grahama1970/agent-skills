@@ -150,7 +150,7 @@ def test_oracle_prompt_inlines_single_concatenated_bundle_without_memory(
     assert len(prompt.encode("utf-8")) < 20_000
 
 
-def test_call_webgpt_passes_expect_url_for_explicit_tab_and_url(
+def test_call_webgpt_passes_url_for_explicit_tab_and_url(
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -340,6 +340,91 @@ def test_call_webgpt_fails_before_submit_when_preflight_fails(
     assert captured["submit_calls"] == 0
 
 
+def test_call_webgpt_recovers_stale_tab_id_by_unique_url(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    surf = tmp_path / "surf"
+    surf.write_text("#!/bin/sh\n", encoding="utf-8")
+    surf.chmod(0o755)
+    captured: dict[str, list[list[str]]] = {"preflight": [], "submit": []}
+
+    class _Result:
+        def __init__(self, *, returncode: int, stdout: str = "", stderr: str = ""):
+            self.returncode = returncode
+            self.stdout = stdout
+            self.stderr = stderr
+
+    def fake_run(cmd, **kwargs):
+        if "webgpt.preflight" in cmd:
+            captured["preflight"].append(list(cmd))
+            if "--tab-id" in cmd:
+                return _Result(
+                    returncode=5,
+                    stdout=json.dumps(
+                        {
+                            "status": "fail",
+                            "failures": ["tab_open_chatgpt", "tab_identity"],
+                            "requested_tab_id": "837352075",
+                        }
+                    ),
+                )
+            return _Result(
+                returncode=0,
+                stdout=json.dumps(
+                    {
+                        "status": "pass",
+                        "failures": [],
+                        "requested_tab_id": "837352146",
+                    }
+                ),
+            )
+        captured["submit"].append(list(cmd))
+        output = pathlib.Path(cmd[cmd.index("--output") + 1])
+        raw_output = pathlib.Path(cmd[cmd.index("--raw-output") + 1])
+        meta_output = pathlib.Path(cmd[cmd.index("--meta-output") + 1])
+        sentinel = "<<<WEBGPT_DONE:test>>>"
+        output.write_text("VERDICT: PASS\n", encoding="utf-8")
+        raw_output.write_text(f"VERDICT: PASS\n{sentinel}\n", encoding="utf-8")
+        meta_output.write_text(
+            json.dumps(
+                {
+                    "status": "completed",
+                    "sentinel": sentinel,
+                    "controlled_tab_id": "837352146",
+                    "requested_tab_id": "837352146",
+                    "requested_url": "https://chatgpt.com/c/example",
+                    "raw_contains_sentinel": True,
+                    "clean_contains_sentinel": False,
+                    "no_activate": True,
+                    "focus_changed": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        return _Result(returncode=0)
+
+    monkeypatch.setattr("ask.webgpt_runtime.check_and_record", lambda: None)
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    result = call_webgpt(
+        "Review this.",
+        tab_id="837352075",
+        url="https://chatgpt.com/c/example",
+        surf_run=surf,
+        artifact_dir=tmp_path / "artifacts",
+    )
+
+    assert result.response == "VERDICT: PASS"
+    assert len(captured["preflight"]) == 2
+    assert "--tab-id" in captured["preflight"][0]
+    assert "--url" in captured["preflight"][1]
+    assert len(captured["submit"]) == 1
+    submit_cmd = captured["submit"][0]
+    assert submit_cmd[submit_cmd.index("--tab-id") + 1] == "837352146"
+    assert submit_cmd[submit_cmd.index("--expect-url") + 1] == "https://chatgpt.com/c/example"
+
+
 def test_call_webgpt_auto_allows_foreground_controlled_preflight(
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -444,10 +529,12 @@ def test_call_webgpt_recovers_post_sentinel_submit_failure(
         if "webgpt.preflight" in cmd:
             return _PreflightResult()
         raw_output = pathlib.Path(cmd[cmd.index("--raw-output") + 1])
+        submitted_output = pathlib.Path(cmd[cmd.index("--submitted-output") + 1])
         raw_output.write_text(
             "VERDICT: PASS\n\nLooks fine.\n<<<WEBGPT_DONE:test>>>\n_\n",
             encoding="utf-8",
         )
+        submitted_output.write_text("Review this.\n<<<WEBGPT_DONE:test>>>\n", encoding="utf-8")
         return _SubmitResult()
 
     monkeypatch.setattr("ask.webgpt_runtime.check_and_record", lambda: None)

@@ -7,13 +7,28 @@ import argparse
 import json
 import sys
 
-from resolve_webgpt_tab import parse_tab_list, resolve_url
+from resolve_webgpt_tab import conversation_id, normalize_chatgpt_url, parse_tab_list, resolve_url
 
 
 def _tab_payload(tab: dict[str, str] | None) -> dict[str, str] | None:
     if not tab:
         return None
     return {"id": tab["id"], "title": tab["title"], "url": tab["url"]}
+
+
+def _tab_url_matches_expected(tab_url: str, expected_url: str) -> tuple[bool, dict[str, str | None]]:
+    tab_norm = normalize_chatgpt_url(tab_url)
+    expected_norm = normalize_chatgpt_url(expected_url)
+    tab_cid = conversation_id(tab_norm)
+    expected_cid = conversation_id(expected_norm)
+    ok = bool(tab_norm and expected_norm and (tab_norm == expected_norm or (tab_cid and tab_cid == expected_cid)))
+    return ok, {
+        "tab_url": tab_url,
+        "tab_normalized_url": tab_norm,
+        "expected_normalized_url": expected_norm,
+        "tab_conversation_id": tab_cid,
+        "expected_conversation_id": expected_cid,
+    }
 
 
 def check_identity(
@@ -65,15 +80,19 @@ def check_identity(
     title_verified = False
 
     if expected_url:
-        resolved = resolve_url(expected_url, all_chatgpt_tabs)
-        ok = bool(resolved.get("ok") and resolved.get("tab_id") == digits)
+        ok, url_match = _tab_url_matches_expected(tab["url"], expected_url)
         detail = (
             f"expected_url matched tab {digits}"
             if ok
-            else f"expected_url resolved {resolved.get('tab_id')} error={resolved.get('error')}"
+            else (
+                "expected_url did not match tab "
+                f"{digits}: tab={url_match['tab_normalized_url']} "
+                f"expected={url_match['expected_normalized_url']}"
+            )
         )
         add("expected_url_matches_tab", ok, detail)
         if not ok:
+            resolved = resolve_url(expected_url, all_chatgpt_tabs)
             return {
                 "ok": False,
                 "error": "expected_url_mismatch",
@@ -83,6 +102,7 @@ def check_identity(
                 "expected_url": expected_url,
                 "expected_title": expected_title or None,
                 "url_resolution": resolved,
+                "url_match": url_match,
                 "source": source,
                 "checks": checks,
             }
