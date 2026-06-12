@@ -123,13 +123,13 @@ def run_in_cwd(
     )
 
 
-def git_rev_parse(cwd: Path, rev: str) -> str:
-    cp = run_in_cwd(["git", "rev-parse", rev], cwd=cwd, check=False)
+def git_rev_parse(cwd: Path, *args: str) -> str:
+    cp = run_in_cwd(["git", "rev-parse", *args], cwd=cwd, check=False)
     return cp.stdout.strip() if cp.returncode == 0 else ""
 
 
 def git_worktree_or_branch(cwd: Path) -> str:
-    branch = git_rev_parse(cwd, "--abbrev-ref HEAD")
+    branch = git_rev_parse(cwd, "--abbrev-ref", "HEAD")
     if branch and branch != "HEAD":
         return branch
     return str(cwd)
@@ -611,6 +611,19 @@ def completed_worker_command(output_file: Path, *, phase: str, agent: str) -> li
     return ["python3", "-c", code]
 
 
+def codex_worker_command(prompt: str, final_message_file: Path) -> list[str]:
+    return [
+        "codex",
+        "exec",
+        "--dangerously-bypass-approvals-and-sandbox",
+        "--cd",
+        str(REPO_ROOT),
+        "--output-last-message",
+        str(final_message_file),
+        prompt,
+    ]
+
+
 def receipt_gate(receipt: dict[str, Any], *, phase: str) -> tuple[bool, str]:
     status = receipt.get("status")
     if status != "completed":
@@ -679,6 +692,30 @@ def build_subagent_specs(
     repair_output = issue_dir / "repair-response.json"
     verifier_output = issue_dir / "verifier-response.json"
     review_output = issue_dir / "review-response.json"
+    repair_prompt = subagent_prompt(
+        role=route["repair_agent"],
+        issue=issue,
+        route=route,
+        skills=skills,
+        packet=issue_dir / "repair-packet.json",
+        output_file=repair_output,
+    )
+    verifier_prompt = subagent_prompt(
+        role=route["verifier_agent"],
+        issue=issue,
+        route=route,
+        skills=skills,
+        packet=issue_dir / "verification-packet.json",
+        output_file=verifier_output,
+    )
+    review_prompt = subagent_prompt(
+        role=route["review_agent"],
+        issue=issue,
+        route=route,
+        skills=skills,
+        packet=issue_dir / "review-bundle.md",
+        output_file=review_output,
+    )
     specs = {
         "repair_spec": {
             "task_id": f"skill-maintainer-issue-{issue.get('number')}-repair",
@@ -692,16 +729,9 @@ def build_subagent_specs(
             "command": (
                 completed_worker_command(repair_output, phase="repair", agent=route["repair_agent"])
                 if command_fixture
-                else []
+                else codex_worker_command(repair_prompt, issue_dir / "repair-final-message.md")
             ),
-            "prompt": subagent_prompt(
-                role=route["repair_agent"],
-                issue=issue,
-                route=route,
-                skills=skills,
-                packet=issue_dir / "repair-packet.json",
-                output_file=repair_output,
-            ),
+            "prompt": repair_prompt,
         },
         "verifier_spec": {
             "task_id": f"skill-maintainer-issue-{issue.get('number')}-verify",
@@ -715,16 +745,9 @@ def build_subagent_specs(
             "command": (
                 completed_worker_command(verifier_output, phase="deterministic_verification", agent=route["verifier_agent"])
                 if command_fixture
-                else []
+                else codex_worker_command(verifier_prompt, issue_dir / "verifier-final-message.md")
             ),
-            "prompt": subagent_prompt(
-                role=route["verifier_agent"],
-                issue=issue,
-                route=route,
-                skills=skills,
-                packet=issue_dir / "verification-packet.json",
-                output_file=verifier_output,
-            ),
+            "prompt": verifier_prompt,
         },
         "review_spec": {
             "task_id": f"skill-maintainer-issue-{issue.get('number')}-review",
@@ -738,16 +761,9 @@ def build_subagent_specs(
             "command": (
                 completed_worker_command(review_output, phase="independent_review", agent=route["review_agent"])
                 if command_fixture
-                else []
+                else codex_worker_command(review_prompt, issue_dir / "review-final-message.md")
             ),
-            "prompt": subagent_prompt(
-                role=route["review_agent"],
-                issue=issue,
-                route=route,
-                skills=skills,
-                packet=issue_dir / "review-bundle.md",
-                output_file=review_output,
-            ),
+            "prompt": review_prompt,
         },
     }
     paths: dict[str, str] = {}
@@ -1487,6 +1503,10 @@ def main() -> int:
     parser.add_argument("--labels", default=",".join(DEFAULT_LABELS))
     parser.add_argument("--issue", type=int, help="Prepare packets for one explicit issue, including an active lease")
     parser.add_argument("--fixture-issue-json", help="Use a local issue fixture JSON instead of GitHub issue state")
+    parser.add_argument(
+        "--continue-issue-dir",
+        help="Continue one explicit local issue artifact directory, including github-dry-run fixture artifacts.",
+    )
     parser.add_argument("--require-webgpt", action="store_true")
     parser.add_argument("--refresh-baseline", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
@@ -1546,6 +1566,16 @@ def main() -> int:
         ], check=False)
         (run_root / "skills-ci.stdout").write_text(cp.stdout, encoding="utf-8")
         (run_root / "skills-ci.stderr").write_text(cp.stderr, encoding="utf-8")
+
+    if args.continue_issue_dir:
+        result = continue_pending_run(
+            Path(args.continue_issue_dir).expanduser().resolve(),
+            dry_run=args.dry_run,
+            github_dry_run=github_dry_run,
+            run_webgpt=args.run_webgpt,
+        )
+        print(json.dumps(result, indent=2))
+        return 0
 
     if args.issue is None and not args.fixture_issue_json:
         pending_issue_dir = latest_pending_issue_dir()

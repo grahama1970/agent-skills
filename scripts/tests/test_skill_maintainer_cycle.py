@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 
 
@@ -192,6 +193,9 @@ def test_dry_run_main_writes_prepared_only_blocked_result(tmp_path, monkeypatch,
         assert spec["cwd"]
         assert spec["output_dir"].endswith("subagent-sessions")
         assert str(output["issue"]) in spec["task_id"]
+        assert spec["command"][:2] == ["codex", "exec"]
+        assert "--dangerously-bypass-approvals-and-sandbox" in spec["command"]
+        assert "--ask-for-approval" not in spec["command"]
 
 
 def test_dry_run_dispatch_records_repair_subagent_start(tmp_path, monkeypatch, capsys):
@@ -392,6 +396,19 @@ def test_fixture_loop_repair_executor_records_safety_contract(tmp_path, monkeypa
     assert loop_calls[0]["repo"] == repo.resolve()
     assert loop_calls[0]["scope_include"] == ["duration_tool/**"]
     assert loop_calls[0]["check_commands"] == ["python -m unittest discover -s tests"]
+
+
+def test_git_worktree_or_branch_uses_actual_branch_name(tmp_path):
+    cycle = load_cycle_module()
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    (repo / "README.md").write_text("fixture\n")
+    subprocess.run(["git", "add", "README.md"], cwd=repo, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "initial"], cwd=repo, check=True)
+    subprocess.run(["git", "checkout", "-q", "-b", "fixture-proof"], cwd=repo, check=True)
+
+    assert cycle.git_worktree_or_branch(repo) == "fixture-proof"
 
 
 def test_live_dispatch_aborts_when_lease_fails(tmp_path, monkeypatch):
@@ -1064,6 +1081,40 @@ def test_latest_pending_issue_dir_skips_github_dry_run_artifacts(tmp_path, monke
     monkeypatch.setattr(cycle, "ARTIFACT_ROOT", tmp_path)
 
     assert cycle.latest_pending_issue_dir() == pending_issue_dir
+
+
+def test_main_can_continue_explicit_github_dry_run_artifact(tmp_path, monkeypatch, capsys):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-64"
+    issue_dir.mkdir(parents=True)
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "repair_subagent_started",
+        "created_github_dry_run": True,
+        "target_skills": ["scheduler"],
+        "subagent_dispatch": [],
+        "subagent_specs": {},
+    }))
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({"number": 64, "url": "https://example.invalid/64"}))
+    (issue_dir / "route-decision.json").write_text(json.dumps({
+        "route": "ops_or_scheduler",
+        "repair_agent": "devops",
+        "verifier_agent": "project-or-harness-verifier",
+        "review_agent": "code-reviewer",
+    }))
+    (issue_dir / "repair-response.json").write_text(json.dumps({"status": "running"}))
+    monkeypatch.setattr(cycle.sys, "argv", [
+        "skill_maintainer_cycle.py",
+        "--continue-issue-dir",
+        str(issue_dir),
+        "--github-dry-run",
+    ])
+
+    assert cycle.main() == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["status"] == "repair_subagent_started"
+    assert output["continuation_status"] == "waiting_for_repair_receipt"
+    assert output["last_invocation_dry_run"] is False
 
 
 def test_dry_run_continuation_does_not_poison_live_artifact(tmp_path):
