@@ -22,6 +22,9 @@ composes:
   - memory
   - task-monitor
 
+complies:
+  - best-practices-skills
+  - best-practices-python
 taxonomy:
   - distribution
   - synchronization
