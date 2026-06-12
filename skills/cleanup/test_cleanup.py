@@ -202,6 +202,36 @@ class TestCleanup:
         self.assert_in("Untracked Files", plan, "Plan should have untracked files section")
         self.assert_in("Potentially Dead Files", plan, "Plan should have dead files section")
         self.assert_in("junk.log", plan, "Plan should mention junk.log")
+
+    def test_parse_porcelain_status(self):
+        """Test git porcelain status parsing."""
+        print("\nTesting parse_porcelain_status...")
+
+        parsed = cleanup.parse_porcelain_status([
+            " M src/app.py",
+            "?? artifacts/proof.json",
+            "R  old.py -> new.py",
+        ])
+
+        self.assert_equal(parsed[0]["xy"], " M", "Should preserve XY status")
+        self.assert_equal(parsed[0]["path"], "src/app.py", "Should parse path")
+        self.assert_equal(parsed[1]["status"] if "status" in parsed[1] else parsed[1]["xy"], "??", "Should parse untracked")
+        self.assert_equal(parsed[2]["old_path"], "old.py", "Should parse rename old path")
+        self.assert_equal(parsed[2]["path"], "new.py", "Should parse rename new path")
+
+    def test_classify_worktree_entry(self):
+        """Test conservative dirty-worktree classification."""
+        print("\nTesting classify_worktree_entry...")
+
+        artifact = cleanup.classify_worktree_entry({"xy": "??", "path": "artifacts/proof.json", "raw": "?? artifacts/proof.json"})
+        source = cleanup.classify_worktree_entry({"xy": " M", "path": "src/app.py", "raw": " M src/app.py"})
+        deletion = cleanup.classify_worktree_entry({"xy": " D", "path": "docs/old.md", "raw": " D docs/old.md"})
+        agent_state = cleanup.classify_worktree_entry({"xy": "??", "path": ".codex/log.json", "raw": "?? .codex/log.json"})
+
+        self.assert_equal(artifact["bucket"], "generated_or_archive", "Artifacts should be archive bucket")
+        self.assert_equal(source["bucket"], "project_work_review", "Source edits require project work review")
+        self.assert_equal(deletion["bucket"], "tracked_deletion_review", "Tracked deletions require review")
+        self.assert_equal(agent_state["bucket"], "agent_runtime_state", "Agent state requires review/ignore")
     
     def test_find_file_references(self):
         """Test finding file references"""
@@ -262,6 +292,8 @@ class TestCleanup:
             self.test_get_untracked_files()
             self.test_get_all_tracked_files()
             self.test_generate_cleanup_plan()
+            self.test_parse_porcelain_status()
+            self.test_classify_worktree_entry()
             self.test_find_file_references()
             self.test_log_cleanup()
             
