@@ -1394,3 +1394,32 @@ def test_webgpt_terminal_retry_revalidates_missing_gate_marker(tmp_path, monkeyp
     assert result["receipt_gate_reason"] == "verifier:missing"
     assert result["status"] == "blocked_invalid_webgpt_retry_gate_receipt:verifier:missing"
     assert result["terminal_disposition_status"] == "completed"
+
+
+def test_webgpt_terminal_retry_handles_missing_disposition_status(tmp_path, monkeypatch):
+    cycle = load_cycle_module()
+    issue_dir = tmp_path / "20260612T000000Z" / "issue-73"
+    issue_dir.mkdir(parents=True)
+    (issue_dir / "cycle-result.json").write_text(json.dumps({
+        "status": "webgpt_review_attempted",
+        "target_skills": ["scheduler"],
+        "terminal_disposition_gate_validated": True,
+        "subagent_dispatch": [],
+        "subagent_specs": {},
+    }))
+    (issue_dir / "issue-snapshot.json").write_text(json.dumps({"number": 73, "url": "https://example.invalid/73"}))
+    (issue_dir / "route-decision.json").write_text(json.dumps({
+        "route": "ops_or_scheduler",
+        "repair_agent": "devops",
+        "verifier_agent": "project-or-harness-verifier",
+        "review_agent": "code-reviewer",
+    }))
+    (issue_dir / "ask-webgpt-result.json").write_text(json.dumps({"status": "completed"}))
+    mock_successful_github_terminal_disposition(monkeypatch, cycle)
+
+    result = cycle.continue_pending_run(issue_dir, dry_run=False, github_dry_run=False, run_webgpt=True)
+
+    assert result["terminal_disposition_retry"] is True
+    assert result["observed_webgpt_status"] == "completed"
+    assert result["closure_decision"] == "blocked_waiting_for_finding_disposition_and_closure_wiring"
+    assert result["terminal_disposition_status"] == "completed"

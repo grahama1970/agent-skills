@@ -1123,7 +1123,14 @@ def continue_pending_run(
     terminal_webgpt = load_json(issue_dir / "ask-webgpt-result.json", {})
     terminal_webgpt_status = terminal_webgpt.get("status")
     disposition_status = result.get("terminal_disposition_status")
-    if disposition_status in {"started", "failed", "github_dry_run"}:
+    if (
+        disposition_status in {"started", "failed", "github_dry_run"}
+        or (
+            terminal_webgpt_status in {"completed", "failed"}
+            and status in {"webgpt_review_attempted", "webgpt_review_failed"}
+            and disposition_status != "completed"
+        )
+    ):
         result["terminal_disposition_retry"] = True
         if terminal_webgpt_status in {"completed", "failed"}:
             failed = terminal_webgpt_status == "failed"
