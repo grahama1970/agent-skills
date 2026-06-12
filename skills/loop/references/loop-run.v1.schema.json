@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/loop-run.v1.schema.json",
+  "title": "Loop Run Receipt v1",
+  "type": "object",
+  "required": [
+    "receipt_type",
+    "loop_id",
+    "objective",
+    "artifact",
+    "max_attempts",
+    "attempts_used",
+    "nodes",
+    "node_receipts",
+    "checks_run",
+    "final_claim",
+    "stop_reason",
+    "remaining_risks"
+  ],
+  "properties": {
+    "receipt_type": {"const": "loop-run.v1"},
+    "loop_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "artifact": {
+      "type": "object",
+      "required": ["kind", "paths"],
+      "properties": {
+        "kind": {"type": "string", "minLength": 1},
+        "paths": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "max_attempts": {"type": "integer", "minimum": 1},
+    "attempts_used": {"type": "integer", "minimum": 0},
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "agent", "role", "mode", "depends_on"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "agent": {"type": "string", "minLength": 1},
+          "role": {"enum": ["explorer", "producer", "verifier"]},
+          "mode": {"enum": ["read_only", "write"]},
+          "depends_on": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          },
+          "attempt": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "node_receipts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["node_id", "status", "edited_files"],
+        "properties": {
+          "node_id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["PASS", "NEEDS_CHANGES", "BLOCKED", "COMPLETED"]},
+          "edited_files": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "verdict": {"enum": ["PASS", "NEEDS_CHANGES", "BLOCKED"]},
+          "receipt_path": {"type": "string"}
+        }
+      }
+    },
+    "checks_run": {"type": "array"},
+    "final_claim": {"enum": ["VERIFIER_PASS", "NEEDS_CHANGES", "BLOCKED", "MAX_ATTEMPTS"]},
+    "stop_reason": {"enum": ["VERIFIER_PASS", "VERIFIER_BLOCKED", "MAX_ATTEMPTS", "SCOPE_UNCLEAR", "VALIDATION_FAILED", "HUMAN_DECISION"]},
+    "remaining_risks": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Loop Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "loop_id",
+    "objective",
+    "run_dir",
+    "max_attempts",
+    "attempts_used",
+    "allowed_scope",
+    "agents",
+    "final_verdict",
+    "stop_reason",
+    "explorer_receipt",
+    "attempts",
+    "final_changed_files",
+    "final_tests_run",
+    "remaining_risks"
+  ],
+  "properties": {
+    "loop_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "run_dir": {"type": "string", "pattern": "^\\.loop/runs/[A-Za-z0-9_.-]+$"},
+    "max_attempts": {"type": "integer", "minimum": 1, "maximum": 10},
+    "attempts_used": {"type": "integer", "minimum": 0},
+    "allowed_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["include", "exclude"],
+      "properties": {
+        "include": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "exclude": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["explorer", "coder", "code_reviewer"],
+      "properties": {
+        "explorer": {"const": "explorer"},
+        "coder": {"const": "coder"},
+        "code_reviewer": {"const": "code-reviewer"}
+      }
+    },
+    "final_verdict": {"type": "string", "enum": ["PASS", "NEEDS_CHANGES", "BLOCKED"]},
+    "stop_reason": {"type": "string", "enum": ["REVIEWER_PASS", "REVIEWER_BLOCKED", "MAX_ATTEMPTS", "SCOPE_BLOCKED", "HUMAN_DECISION", "SCHEDULE_REGISTERED"]},
+    "explorer_receipt": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["agent", "mode", "objective", "target_files", "test_files", "risks", "recommended_plan"],
+      "properties": {
+        "agent": {"const": "explorer"},
+        "mode": {"const": "read_only"},
+        "objective": {"type": "string"},
+        "target_files": {"type": "array", "items": {"type": "string"}},
+        "test_files": {"type": "array", "items": {"type": "string"}},
+        "risks": {"type": "array", "items": {"type": "string"}},
+        "recommended_plan": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["attempt", "artifact_paths", "coder_receipt", "code_reviewer_receipt"],
+        "properties": {
+          "attempt": {"type": "integer", "minimum": 1},
+          "artifact_paths": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["changed_files", "diff", "tests_log", "coder_receipt", "code_reviewer_receipt"],
+            "properties": {
+              "changed_files": {"type": "string"},
+              "diff": {"type": "string"},
+              "tests_log": {"type": "string"},
+              "coder_receipt": {"type": "string"},
+              "code_reviewer_receipt": {"type": "string"}
+            }
+          },
+          "coder_receipt": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["agent", "attempt", "changed_files", "tests_run", "summary", "assumptions"],
+            "properties": {
+              "agent": {"const": "coder"},
+              "attempt": {"type": "integer", "minimum": 1},
+              "changed_files": {"type": "array", "items": {"type": "string"}},
+              "tests_run": {"type": "array", "items": {"type": "string"}},
+              "summary": {"type": "string"},
+              "assumptions": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "code_reviewer_receipt": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["agent", "attempt", "mode", "verdict", "findings", "required_fixes", "tests_checked", "edited_files"],
+            "properties": {
+              "agent": {"const": "code-reviewer"},
+              "attempt": {"type": "integer", "minimum": 1},
+              "mode": {"const": "fresh_read_only"},
+              "verdict": {"type": "string", "enum": ["PASS", "NEEDS_CHANGES", "BLOCKED"]},
+              "findings": {"type": "array", "items": {"type": "string"}},
+              "required_fixes": {"type": "array", "items": {"type": "string"}},
+              "tests_checked": {"type": "array", "items": {"type": "string"}},
+              "edited_files": {"type": "array", "items": {"type": "string"}, "maxItems": 0}
+            }
+          }
+        }
+      }
+    },
+    "final_changed_files": {"type": "array", "items": {"type": "string"}},
+    "final_tests_run": {"type": "array", "items": {"type": "string"}},
+    "remaining_risks": {"type": "array", "items": {"type": "string"}},
+    "no_test_explanation": {"type": "string"}
+  }
+}

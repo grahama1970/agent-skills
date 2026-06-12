@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Concurrency Proof Receipt",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "receipt_type",
+    "proof_id",
+    "objective",
+    "claim",
+    "stop_reason",
+    "agents",
+    "spawn_order",
+    "wait_order",
+    "close_order",
+    "overlap",
+    "checks_run",
+    "source_files_changed_outside_loop",
+    "runtime_stderr",
+    "remaining_risks"
+  ],
+  "properties": {
+    "receipt_type": {"const": "concurrency-proof.v1"},
+    "proof_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "claim": {"type": "string", "enum": ["HANDLE_CONCURRENCY_PROVEN", "OVERLAP_PROVEN", "BLOCKED"]},
+    "stop_reason": {
+      "type": "string",
+      "enum": ["HANDLES_CLOSED", "OVERLAP_CONFIRMED", "SOURCE_CHANGED", "HANDLE_FAILED", "VALIDATION_FAILED", "RUNTIME_ERROR"]
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "agent_name",
+          "agent_id",
+          "spawned_before_first_wait",
+          "wait_completed",
+          "handle_closed",
+          "started_at",
+          "stopped_at",
+          "edited_files",
+          "inspected_files",
+          "nested_subagents_spawned"
+        ]
+      }
+    },
+    "spawn_order": {"type": "array", "items": {"type": "string"}},
+    "wait_order": {"type": "array", "items": {"type": "string"}},
+    "close_order": {"type": "array", "items": {"type": "string"}},
+    "overlap": {
+      "type": "object",
+      "required": ["claimed", "proved", "reason"],
+      "properties": {
+        "claimed": {"type": "boolean"},
+        "proved": {"type": "boolean"},
+        "reason": {"type": "string"}
+      }
+    },
+    "checks_run": {"type": "array"},
+    "source_files_changed_outside_loop": {"type": "array", "items": {"type": "string"}},
+    "runtime_stderr": {
+      "type": "object",
+      "required": ["panic_detected", "waived", "waiver_reason"],
+      "properties": {
+        "panic_detected": {"type": "boolean"},
+        "waived": {"type": "boolean"},
+        "waiver_reason": {"type": "string"}
+      }
+    },
+    "remaining_risks": {"type": "array", "items": {"type": "string"}}
+  }
+}
