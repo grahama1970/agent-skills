@@ -312,6 +312,222 @@ def test_github_dry_run_allows_live_local_dispatch(tmp_path, monkeypatch, capsys
     assert output["subagent_dispatch"][0]["dry_run"] is False
 
 
+def test_controlled_live_mutation_fixture_posts_only_lease_comment_and_local_receipts(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    cycle = load_cycle_module()
+    issue = issue_fixture()
+    issue["labels"] = [{"name": "skill-maintenance"}]
+    issue["number"] = 5
+    issue["url"] = "https://github.com/owner/repo/issues/5"
+
+    monkeypatch.setattr(cycle, "ARTIFACT_ROOT", tmp_path)
+    monkeypatch.setattr(cycle, "issue_view", lambda number: issue)
+    monkeypatch.setattr(cycle, "git_repo_slug", lambda: "owner/repo")
+    monkeypatch.setattr(cycle, "ensure_ask_runtime", lambda: None)
+    monkeypatch.setattr(
+        cycle,
+        "gh_issue_edit",
+        lambda issue_number, *args, dry_run=False: {
+            "cmd": ["gh", "issue", "edit", str(issue_number), *args],
+            "dry_run": dry_run,
+            "returncode": 0,
+            "stdout": "https://github.com/owner/repo/issues/5\n",
+            "stderr": "",
+        },
+    )
+    monkeypatch.setattr(
+        cycle,
+        "gh_issue_comment",
+        lambda issue_number, body_path, dry_run=False: {
+            "cmd": ["gh", "issue", "comment", str(issue_number), "--body-file", str(body_path)],
+            "dry_run": dry_run,
+            "returncode": 0,
+            "stdout": "https://github.com/owner/repo/issues/5#issuecomment-1\n",
+            "stderr": "",
+        },
+    )
+    dispatch_calls = []
+    monkeypatch.setattr(cycle, "maybe_dispatch_subagent", lambda *args, **kwargs: dispatch_calls.append(args))
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "skill_maintainer_cycle.py",
+            "--issue",
+            "5",
+            "--require-webgpt",
+            "--controlled-live-mutation-fixture",
+        ],
+    )
+
+    assert cycle.main() == 0
+    output = json.loads(capsys.readouterr().out)
+    issue_dir = Path(output["artifact_dir"])
+
+    assert output["status"] == "controlled_live_mutation_fixture_completed"
+    assert output["scheduler_enabled"] is False
+    assert output["closure_attempted"] is False
+    assert output["closure_decision"] == "blocked_waiting_for_human_fixture_disposition"
+    assert dispatch_calls == []
+    assert [action["action"] for action in output["github_actions"]] == [
+        "lease_label",
+        "lease_comment",
+    ]
+    assert "blocked_comment" not in {action["action"] for action in output["github_actions"]}
+    assert "blocked_labels_release_lease" not in {action["action"] for action in output["github_actions"]}
+
+    proof = output["controlled_live_mutation_proof"]
+    assert proof["schema"] == "skill_maintainer.controlled_live_mutation_proof.v1"
+    assert proof["lease_label_present_before_run"] is False
+    assert proof["lease_label_mutation_observed"] is True
+    assert proof["lease_label_proven"] is True
+    assert proof["lease_comment_observed"] is True
+    assert proof["repair_verifier_reviewer_scope"] == "local_receipt_artifacts_only"
+    assert proof["webgpt_treated_as_deterministic_proof"] is False
+
+    for receipt_name in ("repair-response.json", "verifier-response.json", "review-response.json"):
+        receipt = json.loads((issue_dir / receipt_name).read_text())
+        assert receipt["status"] == "completed"
+        assert receipt["decision"] == "pass"
+        assert receipt["changed_files"] == []
+        assert receipt["controlled_live_mutation_proof"]["schema"] == proof["schema"]
+    webgpt = json.loads((issue_dir / "ask-webgpt-result.json").read_text())
+    assert webgpt["status"] == "not_run"
+    assert webgpt["reason"] == "controlled_live_mutation_fixture_stops_before_webgpt"
+
+
+def test_controlled_live_mutation_fixture_comments_when_issue_already_leased(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    cycle = load_cycle_module()
+    issue = issue_fixture()
+    issue["labels"] = [{"name": "skill-maintenance"}, {"name": "maintainer-active"}]
+    issue["number"] = 6
+
+    monkeypatch.setattr(cycle, "ARTIFACT_ROOT", tmp_path)
+    monkeypatch.setattr(cycle, "issue_view", lambda number: issue)
+    monkeypatch.setattr(cycle, "git_repo_slug", lambda: "owner/repo")
+    monkeypatch.setattr(cycle, "ensure_ask_runtime", lambda: None)
+    edit_calls = []
+    monkeypatch.setattr(cycle, "gh_issue_edit", lambda *args, **kwargs: edit_calls.append(args))
+    monkeypatch.setattr(
+        cycle,
+        "gh_issue_comment",
+        lambda issue_number, body_path, dry_run=False: {
+            "cmd": ["gh", "issue", "comment", str(issue_number), "--body-file", str(body_path)],
+            "dry_run": dry_run,
+            "returncode": 0,
+            "stdout": "https://github.com/owner/repo/issues/6#issuecomment-2\n",
+            "stderr": "",
+        },
+    )
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "skill_maintainer_cycle.py",
+            "--issue",
+            "6",
+            "--require-webgpt",
+            "--controlled-live-mutation-fixture",
+        ],
+    )
+
+    assert cycle.main() == 0
+    output = json.loads(capsys.readouterr().out)
+
+    assert edit_calls == []
+    assert [action["action"] for action in output["github_actions"]] == ["lease_comment"]
+    assert output["controlled_live_mutation_proof"]["lease_label_present_before_run"] is True
+    assert output["controlled_live_mutation_proof"]["lease_label_proven"] is True
+    assert output["controlled_live_mutation_proof"]["lease_comment_observed"] is True
+
+
+def test_controlled_live_mutation_fixture_rejects_fixture_source_before_github_mutation(
+    tmp_path,
+    monkeypatch,
+):
+    cycle = load_cycle_module()
+    issue = issue_fixture()
+    issue["labels"] = [{"name": "skill-maintenance"}]
+    fixture = tmp_path / "issue.json"
+    fixture.write_text(json.dumps(issue))
+
+    monkeypatch.setattr(cycle, "ARTIFACT_ROOT", tmp_path / "artifacts")
+    monkeypatch.setattr(cycle, "git_repo_slug", lambda: "owner/repo")
+    monkeypatch.setattr(cycle, "ensure_ask_runtime", lambda: None)
+    edit_calls = []
+    comment_calls = []
+    monkeypatch.setattr(cycle, "gh_issue_edit", lambda *args, **kwargs: edit_calls.append((args, kwargs)))
+    monkeypatch.setattr(cycle, "gh_issue_comment", lambda *args, **kwargs: comment_calls.append((args, kwargs)))
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "skill_maintainer_cycle.py",
+            "--fixture-issue-json",
+            str(fixture),
+            "--require-webgpt",
+            "--controlled-live-mutation-fixture",
+        ],
+    )
+
+    try:
+        cycle.main()
+    except SystemExit as exc:
+        assert str(exc) == "--controlled-live-mutation-fixture requires a real GitHub issue"
+    else:
+        raise AssertionError("expected SystemExit")
+
+    assert edit_calls == []
+    assert comment_calls == []
+
+
+def test_controlled_live_mutation_fixture_rejects_dispatch_before_github_mutation(
+    tmp_path,
+    monkeypatch,
+):
+    cycle = load_cycle_module()
+    issue = issue_fixture()
+    issue["labels"] = [{"name": "skill-maintenance"}]
+    issue["number"] = 7
+
+    monkeypatch.setattr(cycle, "ARTIFACT_ROOT", tmp_path)
+    monkeypatch.setattr(cycle, "issue_view", lambda number: issue)
+    monkeypatch.setattr(cycle, "git_repo_slug", lambda: "owner/repo")
+    monkeypatch.setattr(cycle, "ensure_ask_runtime", lambda: None)
+    edit_calls = []
+    comment_calls = []
+    dispatch_calls = []
+    monkeypatch.setattr(cycle, "gh_issue_edit", lambda *args, **kwargs: edit_calls.append((args, kwargs)))
+    monkeypatch.setattr(cycle, "gh_issue_comment", lambda *args, **kwargs: comment_calls.append((args, kwargs)))
+    monkeypatch.setattr(cycle, "maybe_dispatch_subagent", lambda *args, **kwargs: dispatch_calls.append((args, kwargs)))
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "skill_maintainer_cycle.py",
+            "--issue",
+            "7",
+            "--require-webgpt",
+            "--controlled-live-mutation-fixture",
+            "--dispatch-subagents",
+        ],
+    )
+
+    try:
+        cycle.main()
+    except SystemExit as exc:
+        assert str(exc) == "--controlled-live-mutation-fixture cannot be combined with --dispatch-subagents"
+    else:
+        raise AssertionError("expected SystemExit")
+
+    assert edit_calls == []
+    assert comment_calls == []
+    assert dispatch_calls == []
+
+
 def test_fixture_loop_repair_executor_records_safety_contract(tmp_path, monkeypatch, capsys):
     cycle = load_cycle_module()
     issue = issue_fixture()

@@ -611,6 +611,87 @@ def completed_worker_command(output_file: Path, *, phase: str, agent: str) -> li
     return ["python3", "-c", code]
 
 
+def write_controlled_live_mutation_receipts(
+    issue_dir: Path,
+    issue: dict[str, Any],
+    route: dict[str, str],
+    skills: list[str],
+    bundle: Path,
+    github_actions: list[dict[str, Any]],
+) -> dict[str, Any]:
+    proof = {
+        "schema": "skill_maintainer.controlled_live_mutation_proof.v1",
+        "issue": issue.get("number"),
+        "issue_url": issue.get("url"),
+        "artifact_dir": str(issue_dir),
+        "github_actions": github_actions,
+        "lease_label": LEASE_LABEL,
+        "lease_label_present_before_run": LEASE_LABEL in issue_labels(issue),
+        "lease_label_mutation_observed": any(
+            action.get("action") == "lease_label" and int(action.get("returncode", 1)) == 0
+            for action in github_actions
+        ),
+        "lease_comment_observed": any(
+            action.get("action") == "lease_comment" and int(action.get("returncode", 1)) == 0
+            for action in github_actions
+        ),
+        "scheduler_enabled": False,
+        "closure_attempted": False,
+        "blocked_labels_applied": False,
+        "webgpt_treated_as_deterministic_proof": False,
+        "repair_verifier_reviewer_scope": "local_receipt_artifacts_only",
+    }
+    proof["lease_label_proven"] = proof["lease_label_present_before_run"] or proof["lease_label_mutation_observed"]
+    common = {
+        "issue": issue.get("number"),
+        "issue_url": issue.get("url"),
+        "route": route["route"],
+        "target_skills": skills,
+        "artifact_dir": str(issue_dir),
+        "controlled_live_mutation_proof": proof,
+        "commands_run": ["skill-maintainer controlled live mutation fixture"],
+        "evidence_summary": (
+            "Controlled live fixture observed the lease/comment GitHub mutation and kept "
+            "repair, verification, and review work to local proof receipts."
+        ),
+        "changed_files": [],
+        "targeted_test_results": ["local receipt artifact generated"],
+        "blocking_findings": [],
+    }
+    write_json(issue_dir / "repair-response.json", {
+        **common,
+        "phase": "repair",
+        "agent": route["repair_agent"],
+        "status": "completed",
+        "decision": "pass",
+    })
+    write_json(issue_dir / "verifier-response.json", {
+        **common,
+        "phase": "deterministic_verification",
+        "agent": route["verifier_agent"],
+        "status": "completed",
+        "decision": "pass",
+    })
+    write_json(issue_dir / "review-response.json", {
+        **common,
+        "phase": "independent_review",
+        "agent": route["review_agent"],
+        "status": "completed",
+        "decision": "pass",
+    })
+    write_json(issue_dir / "ask-webgpt-result.json", {
+        "phase": "webgpt_external_review",
+        "status": "not_run",
+        "review_bundle": str(bundle),
+        "reason": "controlled_live_mutation_fixture_stops_before_webgpt",
+        "required_next_evidence": [
+            "optional external review after deterministic proof",
+            "human-approved fixture disposition",
+        ],
+    })
+    return proof
+
+
 def codex_worker_command(prompt: str, final_message_file: Path) -> list[str]:
     return [
         "codex",
@@ -1526,6 +1607,11 @@ def main() -> int:
         help="Use command-backed subagent specs that write completed receipts. For controlled local E2E proof only.",
     )
     parser.add_argument(
+        "--controlled-live-mutation-fixture",
+        action="store_true",
+        help="Mutate only the GitHub lease/comment path, then stop with local proof receipts. No dispatch, WebGPT, or closure.",
+    )
+    parser.add_argument(
         "--run-webgpt",
         action="store_true",
         help="After completed deterministic and review receipts, run the real $ask webgpt-review command.",
@@ -1733,6 +1819,12 @@ def main() -> int:
         print(json.dumps(result, indent=2))
         return 0 if loop_exec["ok"] else 2
 
+    if args.controlled_live_mutation_fixture:
+        if issue_source == "fixture":
+            raise SystemExit("--controlled-live-mutation-fixture requires a real GitHub issue")
+        if args.dispatch_subagents:
+            raise SystemExit("--controlled-live-mutation-fixture cannot be combined with --dispatch-subagents")
+
     if not already_leased:
         lease_action = gh_issue_edit(issue["number"], "--add-label", LEASE_LABEL, dry_run=github_dry_run)
         require_gh_ok(lease_action, "lease label")
@@ -1741,6 +1833,31 @@ def main() -> int:
         lease_comment_action = gh_issue_comment(issue["number"], lease_body, dry_run=github_dry_run)
         require_gh_ok(lease_comment_action, "lease comment")
         result["github_actions"].append({"action": "lease_comment", "body_file": str(lease_body), **lease_comment_action})
+    elif args.controlled_live_mutation_fixture:
+        lease_body = lease_comment(issue, route, skills, issue_dir)
+        lease_comment_action = gh_issue_comment(issue["number"], lease_body, dry_run=github_dry_run)
+        require_gh_ok(lease_comment_action, "lease comment")
+        result["github_actions"].append({"action": "lease_comment", "body_file": str(lease_body), **lease_comment_action})
+
+    if args.controlled_live_mutation_fixture:
+        proof = write_controlled_live_mutation_receipts(
+            issue_dir,
+            issue,
+            route,
+            skills,
+            bundle,
+            result["github_actions"],
+        )
+        result["status"] = "controlled_live_mutation_fixture_completed"
+        result["controlled_live_mutation_proof"] = proof
+        result["closure_decision"] = "blocked_waiting_for_human_fixture_disposition"
+        result["required_next_evidence"] = [
+            "human fixture disposition for the controlled live mutation proof",
+            "separate deterministic repair/verifier/reviewer run before any closure wiring",
+        ]
+        write_json(issue_dir / "cycle-result.json", result)
+        print(json.dumps(result, indent=2))
+        return 0
 
     if args.dispatch_subagents:
         dispatch = maybe_dispatch_subagent(spec_paths["repair_spec"], dry_run=args.dry_run)
