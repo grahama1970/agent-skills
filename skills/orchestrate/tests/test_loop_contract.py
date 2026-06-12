@@ -85,6 +85,89 @@ def test_build_scillm_exec_graph_uses_one_loop_node(tmp_path: Path) -> None:
     assert "--check-command" in command
 
 
+def test_loop_node_adapter_records_provenance_for_fresh_launch(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    scripts = repo / ".agents" / "skills" / "loop" / "scripts"
+    scripts.mkdir(parents=True)
+    validator = scripts / "validate_loop_receipt.py"
+    validator.write_text("print('LOOP RECEIPT VALID: PASS after 1 attempt(s)')\n", encoding="utf-8")
+    scope_checker = scripts / "check_changed_files.py"
+    scope_checker.write_text("print('CHANGED FILE SCOPE VALID (1 file(s))')\n", encoding="utf-8")
+    launch = repo / "launch_loop.py"
+    launch.write_text(
+        """
+import json
+from pathlib import Path
+run = Path('.loop/runs/run-001')
+(run / 'attempts/01').mkdir(parents=True)
+(run / 'attempts/01/changed-files.txt').write_text('duration_tool/parser.py\\n')
+(run / 'final-receipt.json').write_text(json.dumps({
+    'final_verdict': 'PASS',
+    'stop_reason': 'REVIEWER_PASS',
+    'attempts_used': 1,
+    'final_changed_files': ['duration_tool/parser.py'],
+    'final_tests_run': ['python -m unittest discover -s tests'],
+    'attempts': [{
+        'code_reviewer_receipt': {'verdict': 'PASS', 'edited_files': []}
+    }]
+}))
+""",
+        encoding="utf-8",
+    )
+    proof = tmp_path / "proof.json"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "skills" / "orchestrate" / "loop_node_adapter.py"),
+            "--repo",
+            str(repo),
+            "--launch-command",
+            f"{sys.executable} {launch}",
+            "--validator",
+            str(validator),
+            "--scope-checker",
+            str(scope_checker),
+            "--scope-include",
+            "duration_tool/**",
+            "--check-command",
+            f"{sys.executable} -c \"print('tests ok')\"",
+            "--package-or-git-sha",
+            "candidate-sha",
+            "--baseline-sha",
+            "baseline-sha",
+            "--worktree-or-branch",
+            "fixture-branch",
+            "--rollback-command",
+            "git reset --hard baseline-sha",
+            "--proof-out",
+            str(proof),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(proof.read_text(encoding="utf-8"))
+    assert payload["ok"] is True
+    provenance = payload["provenance"]
+    assert provenance["package_or_git_sha"] == "candidate-sha"
+    assert provenance["baseline_sha"] == "baseline-sha"
+    assert provenance["worktree_or_branch"] == "fixture-branch"
+    assert provenance["fresh_loop_id_created"] is True
+    assert provenance["loop_id"] == "run-001"
+    assert provenance["verifier_consumed_receipt"] is True
+    assert provenance["receipt_validation_output"]["ok"] is True
+    assert provenance["scope_check_output"]["ok"] is True
+    assert provenance["deterministic_checks_output"][0]["ok"] is True
+    assert provenance["rollback_command"] == "git reset --hard baseline-sha"
+    assert provenance["rollback_required"] is True
+    assert provenance["rollback_executed"] is False
+
+
 def test_structured_plan_accepts_loop_runner_with_artifact_transaction_mode(tmp_path: Path) -> None:
     plan = {
         "repo_root": str(tmp_path),

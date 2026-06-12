@@ -53,6 +53,13 @@ def _newest_receipt(repo: Path) -> Path | None:
     return max(receipts, key=lambda path: path.stat().st_mtime)
 
 
+def _run_ids(repo: Path) -> set[str]:
+    runs = repo / ".loop" / "runs"
+    if not runs.exists():
+        return set()
+    return {path.name for path in runs.iterdir() if path.is_dir()}
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -80,6 +87,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--scope-include", action="append", default=[])
     parser.add_argument("--scope-exclude", action="append", default=[])
     parser.add_argument("--check-command", action="append", default=[])
+    parser.add_argument("--package-or-git-sha", default="")
+    parser.add_argument("--baseline-sha", default="")
+    parser.add_argument("--worktree-or-branch", default="")
+    parser.add_argument("--rollback-command", default="")
     parser.add_argument("--proof-out")
     args = parser.parse_args(argv)
 
@@ -88,10 +99,12 @@ def main(argv: list[str] | None = None) -> int:
     errors: list[str] = []
 
     launch = None
+    run_ids_before = _run_ids(repo)
     if args.launch_command:
         launch = _run(args.launch_command, cwd=repo)
         if not launch["ok"]:
             errors.append("launch_command failed")
+    run_ids_after = _run_ids(repo)
 
     receipt_path = Path(args.receipt).expanduser() if args.receipt else None
     if receipt_path is not None and not receipt_path.is_absolute():
@@ -106,6 +119,7 @@ def main(argv: list[str] | None = None) -> int:
         receipt_path_text = str(receipt_path)
         validator = Path(args.validator).expanduser().resolve()
         result = _run([sys.executable, str(validator), str(receipt_path), "--print-summary"], cwd=repo)
+        receipt_validation = result
         checks.append(result)
         if not result["ok"]:
             errors.append("validate_loop_receipt failed")
@@ -114,6 +128,8 @@ def main(argv: list[str] | None = None) -> int:
         except json.JSONDecodeError as exc:
             receipt = {}
             errors.append(f"final receipt invalid JSON: {exc}")
+    if "receipt_validation" not in locals():
+        receipt_validation = None
 
     if args.scope_checker:
         scope_checker = Path(args.scope_checker).expanduser().resolve()
@@ -133,12 +149,17 @@ def main(argv: list[str] | None = None) -> int:
         for pattern in args.scope_exclude:
             scope_cmd.extend(["--exclude", pattern])
         result = _run(scope_cmd, cwd=repo)
+        scope_check = result
         checks.append(result)
         if not result["ok"]:
             errors.append("check_changed_files failed")
+    if "scope_check" not in locals():
+        scope_check = None
 
+    deterministic_checks: list[dict[str, Any]] = []
     for command in args.check_command:
         result = _run(command, cwd=repo)
+        deterministic_checks.append(result)
         checks.append(result)
         if not result["ok"]:
             errors.append(f"check command failed: {command}")
@@ -147,8 +168,12 @@ def main(argv: list[str] | None = None) -> int:
     final_reviewer = attempts[-1].get("code_reviewer_receipt", {}) if attempts else {}
     if receipt.get("final_verdict") != "PASS":
         errors.append(f"final_verdict is not PASS: {receipt.get('final_verdict')!r}")
-    if final_reviewer.get("verdict") != "PASS" or final_reviewer.get("edited_files") != []:
+    verifier_consumed_receipt = final_reviewer.get("verdict") == "PASS" and final_reviewer.get("edited_files") == []
+    if not verifier_consumed_receipt:
         errors.append("final code-reviewer PASS with edited_files=[] not found")
+
+    loop_id = receipt_path.parent.name if receipt_path and receipt_path.exists() else ""
+    fresh_loop_id_created = bool(args.launch_command and loop_id and loop_id not in run_ids_before and loop_id in run_ids_after)
 
     payload = {
         "schema": "orchestrate.loop_node_result.v1",
@@ -163,6 +188,22 @@ def main(argv: list[str] | None = None) -> int:
             "final_tests_run": receipt.get("final_tests_run", []),
         },
         "checks_run": checks,
+        "provenance": {
+            "package_or_git_sha": args.package_or_git_sha,
+            "baseline_sha": args.baseline_sha,
+            "worktree_or_branch": args.worktree_or_branch or str(repo),
+            "launch_command": args.launch_command or "",
+            "fresh_loop_id_created": fresh_loop_id_created,
+            "loop_id": loop_id,
+            "final_receipt_path": receipt_path_text,
+            "receipt_validation_output": receipt_validation,
+            "scope_check_output": scope_check,
+            "deterministic_checks_output": deterministic_checks,
+            "verifier_consumed_receipt": verifier_consumed_receipt,
+            "rollback_command": args.rollback_command,
+            "rollback_required": bool(args.rollback_command),
+            "rollback_executed": False,
+        },
         "errors": errors,
     }
     if args.proof_out:

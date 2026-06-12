@@ -123,6 +123,18 @@ def run_in_cwd(
     )
 
 
+def git_rev_parse(cwd: Path, rev: str) -> str:
+    cp = run_in_cwd(["git", "rev-parse", rev], cwd=cwd, check=False)
+    return cp.stdout.strip() if cp.returncode == 0 else ""
+
+
+def git_worktree_or_branch(cwd: Path) -> str:
+    branch = git_rev_parse(cwd, "--abbrev-ref HEAD")
+    if branch and branch != "HEAD":
+        return branch
+    return str(cwd)
+
+
 def git_repo_slug() -> str | None:
     try:
         cp = run(["git", "config", "--get", "remote.origin.url"], check=True)
@@ -963,6 +975,8 @@ def run_loop_repair_executor(
     proof_out = issue_dir / "loop-node-result.json"
     validator = repo / ".agents" / "skills" / "loop" / "scripts" / "validate_loop_receipt.py"
     scope_checker = repo / ".agents" / "skills" / "loop" / "scripts" / "check_changed_files.py"
+    package_or_git_sha = git_rev_parse(REPO_ROOT, "HEAD")
+    worktree_or_branch = git_worktree_or_branch(repo)
     cmd: list[str] = [
         sys.executable,
         str(adapter),
@@ -974,6 +988,14 @@ def run_loop_repair_executor(
         str(validator),
         "--scope-checker",
         str(scope_checker),
+        "--package-or-git-sha",
+        package_or_git_sha,
+        "--baseline-sha",
+        baseline_git_sha,
+        "--worktree-or-branch",
+        worktree_or_branch,
+        "--rollback-command",
+        rollback_command,
         "--proof-out",
         str(proof_out),
     ]
@@ -992,7 +1014,57 @@ def run_loop_repair_executor(
     checks_run = loop_result.get("checks_run", []) if isinstance(loop_result, dict) else []
     final_receipt = str(receipt_summary.get("path") or "")
     changed_files = receipt_summary.get("final_changed_files", [])
-    ok = cp.returncode == 0 and bool(loop_result.get("ok"))
+    adapter_ok = cp.returncode == 0 and bool(loop_result.get("ok"))
+    provenance = loop_result.get("provenance", {}) if isinstance(loop_result, dict) else {}
+    project_agent_fixture_proof = {
+        "schema": "skill_maintainer.loop_fixture_proof.v1",
+        "package_or_git_sha": package_or_git_sha,
+        "baseline_sha": baseline_git_sha,
+        "worktree_or_branch": worktree_or_branch,
+        "launch_command": launch_command,
+        "fresh_loop_id_created": bool(provenance.get("fresh_loop_id_created")),
+        "loop_id": provenance.get("loop_id", ""),
+        "final_receipt_path": final_receipt,
+        "receipt_validation_output": provenance.get("receipt_validation_output"),
+        "scope_check_output": provenance.get("scope_check_output"),
+        "deterministic_checks_output": provenance.get("deterministic_checks_output", []),
+        "verifier_consumed_receipt": bool(provenance.get("verifier_consumed_receipt")),
+        "rollback_command": rollback_command,
+        "rollback_required": True,
+        "rollback_executed": False,
+        "lease_released": True,
+        "no_lease_needed": True,
+        "closure_attempted": False,
+        "destructive_writes": [],
+        "scheduler_enabled": False,
+        "terminal_webgpt_disposition_status": "not_started",
+    }
+    proof_errors = []
+    if not package_or_git_sha:
+        proof_errors.append("missing package_or_git_sha")
+    if not baseline_git_sha:
+        proof_errors.append("missing baseline_sha")
+    if not worktree_or_branch:
+        proof_errors.append("missing worktree_or_branch")
+    if not launch_command:
+        proof_errors.append("missing launch_command")
+    if not project_agent_fixture_proof["fresh_loop_id_created"]:
+        proof_errors.append("fresh_loop_id_created is not true")
+    if not final_receipt:
+        proof_errors.append("missing final_receipt_path")
+    if not project_agent_fixture_proof["receipt_validation_output"]:
+        proof_errors.append("missing receipt_validation_output")
+    if not project_agent_fixture_proof["scope_check_output"]:
+        proof_errors.append("missing scope_check_output")
+    if not project_agent_fixture_proof["deterministic_checks_output"]:
+        proof_errors.append("missing deterministic_checks_output")
+    if not project_agent_fixture_proof["verifier_consumed_receipt"]:
+        proof_errors.append("verifier_consumed_receipt is not true")
+    if not rollback_command:
+        proof_errors.append("missing rollback_command")
+    project_agent_fixture_proof["proof_errors"] = proof_errors
+    ok = adapter_ok and not proof_errors
+    project_agent_fixture_proof["terminal_webgpt_disposition_status"] = "bundle_generated" if ok else "not_started"
 
     launch_record = {
         "cmd": cmd,
@@ -1007,6 +1079,7 @@ def run_loop_repair_executor(
         "loop_final_receipt": final_receipt,
         "baseline_git_sha": baseline_git_sha,
         "rollback_command": rollback_command,
+        "project_agent_fixture_proof": project_agent_fixture_proof,
     }
     if ok:
         write_json(issue_dir / "repair-response.json", {
@@ -1050,13 +1123,17 @@ def run_loop_repair_executor(
             "decision": "blocked",
             "commands_run": [launch_command],
             "evidence_summary": "Loop repair executor did not produce an accepted node result.",
-            "blocking_findings": loop_result.get("errors", ["loop executor failed"]) if isinstance(loop_result, dict) else ["loop executor failed"],
+            "blocking_findings": [
+                *(loop_result.get("errors", ["loop executor failed"]) if isinstance(loop_result, dict) else ["loop executor failed"]),
+                *proof_errors,
+            ],
         })
 
     return {
         "ok": ok,
         "launch": launch_record,
         "loop_node_result": loop_result,
+        "project_agent_fixture_proof": project_agent_fixture_proof,
         "proof_out": str(proof_out),
         "final_receipt": final_receipt,
         "changed_files": changed_files,
@@ -1593,6 +1670,7 @@ def main() -> int:
             rollback_command=args.rollback_command,
         )
         result["loop_repair_executor"] = loop_exec
+        result["project_agent_fixture_proof"] = loop_exec.get("project_agent_fixture_proof", {})
         result["repair_receipts"] = [str(issue_dir / "repair-response.json")]
         result["verifier_receipts"] = [str(issue_dir / "verifier-response.json")]
         result["review_receipts"] = [str(issue_dir / "review-response.json")]

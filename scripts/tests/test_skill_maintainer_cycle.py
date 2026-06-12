@@ -334,6 +334,15 @@ def test_fixture_loop_repair_executor_records_safety_contract(tmp_path, monkeypa
             "ok": True,
             "launch": {"cmd": ["loop"]},
             "loop_node_result": {"ok": True},
+            "project_agent_fixture_proof": {
+                "schema": "skill_maintainer.loop_fixture_proof.v1",
+                "package_or_git_sha": "candidate-sha",
+                "baseline_sha": "abc123",
+                "fresh_loop_id_created": True,
+                "verifier_consumed_receipt": True,
+                "rollback_command": "git -C /tmp/repo reset --hard abc123",
+                "proof_errors": [],
+            },
             "proof_out": str(issue_dir / "loop-node-result.json"),
             "final_receipt": str(repo / ".loop" / "runs" / "run" / "final-receipt.json"),
             "changed_files": ["duration_tool/parser.py"],
@@ -376,6 +385,10 @@ def test_fixture_loop_repair_executor_records_safety_contract(tmp_path, monkeypa
     assert output["github_actions"] == []
     assert output["baseline_git_sha"] == "abc123"
     assert output["rollback_command"] == "git -C /tmp/repo reset --hard abc123"
+    assert output["project_agent_fixture_proof"]["schema"] == "skill_maintainer.loop_fixture_proof.v1"
+    assert output["project_agent_fixture_proof"]["fresh_loop_id_created"] is True
+    assert output["project_agent_fixture_proof"]["verifier_consumed_receipt"] is True
+    assert output["project_agent_fixture_proof"]["proof_errors"] == []
     assert loop_calls[0]["repo"] == repo.resolve()
     assert loop_calls[0]["scope_include"] == ["duration_tool/**"]
     assert loop_calls[0]["check_commands"] == ["python -m unittest discover -s tests"]
