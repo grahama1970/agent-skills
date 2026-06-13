@@ -79,6 +79,7 @@ no_remember=0
 allow_foreground_controlled=0
 attach_file=""
 tab_state_file="${SURF_WEBGPT_TAB_STATE:-/tmp/surf-webgpt-controlled-tab-id}"
+browser_oracle_applied=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -133,6 +134,7 @@ if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
   bo_from="$(cd "${browser_oracle_from:-.}" 2>/dev/null && pwd || pwd)"
   bo_payload="$(browser_oracle_resolve_json "$bo_from" webgpt "$project" "" 2>/dev/null || true)"
   if [[ -n "$bo_payload" ]]; then
+    browser_oracle_applied=1
     if [[ -z "$project" ]]; then
       project="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("project") or "")' <<<"$bo_payload")"
     fi
@@ -212,6 +214,8 @@ if [[ -n "$tab_id" ]]; then
   args+=(--tab-id "$requested_tab_id" --target-tab-id "$requested_tab_id")
   if [[ "$create_tab" -eq 1 ]]; then
     requested_tab_source="create-tab"
+  elif [[ "$browser_oracle_applied" -eq 1 ]]; then
+    requested_tab_source="browser-oracle"
   else
     requested_tab_source="tab-id"
   fi
@@ -241,7 +245,11 @@ fi
 
 if [[ -n "${requested_tab_id:-}" ]]; then
   tab_list_text="${tab_list_text:-$("$RUN_SH" tab.list 2>/dev/null || true)}"
-  identity_args=(check --tab-id "$requested_tab_id" --source "${requested_tab_source:-tab-id}")
+  identity_source="${requested_tab_source:-tab-id}"
+  if [[ "$identity_source" == "browser-oracle" ]]; then
+    identity_source="tab-id"
+  fi
+  identity_args=(check --tab-id "$requested_tab_id" --source "$identity_source")
   if [[ -n "$target_url" && "${requested_tab_source:-}" == "url" ]]; then
     identity_args+=(--expect-url "$target_url")
   elif [[ -n "$expect_url" ]]; then
@@ -260,6 +268,76 @@ if [[ -n "${requested_tab_id:-}" ]]; then
   )"
   identity_status=$?
   set -e
+  if [[ "$identity_status" -ne 0 ]]; then
+    recovery_url="${expect_url:-$target_url}"
+    if [[ "${requested_tab_source:-}" == "browser-oracle" && -n "$recovery_url" ]]; then
+      if webgpt_resolve_url_from_list "$recovery_url" "$tab_list_text"; then
+        initial_requested_tab_id="$requested_tab_id"
+        requested_tab_id="$resolved_tab_id"
+        for i in "${!args[@]}"; do
+          if [[ "${args[$i]}" == "--tab-id" || "${args[$i]}" == "--target-tab-id" ]]; then
+            args[$((i + 1))]="$requested_tab_id"
+          fi
+        done
+        identity_args=(check --tab-id "$requested_tab_id" --source url --expect-url "$recovery_url")
+        if [[ -n "$expect_title" ]]; then
+          identity_args+=(--expect-title "$expect_title")
+        fi
+        set +e
+        recovered_identity_json="$(
+          printf '%s\n' "$tab_list_text" \
+            | python3 "${SCRIPT_DIR}/lib/webgpt_tab_identity.py" "${identity_args[@]}"
+        )"
+        recovered_identity_status=$?
+        set -e
+        if [[ "$recovered_identity_status" -eq 0 ]]; then
+          identity_preflight_json="$(
+            python3 - "$identity_preflight_json" "$recovered_identity_json" "$initial_requested_tab_id" <<'PY'
+import json, sys
+initial = json.loads(sys.argv[1]) if sys.argv[1] else {}
+recovered = json.loads(sys.argv[2]) if sys.argv[2] else {}
+recovered["url_recovery_from_browser_oracle_tab_id_failure"] = True
+recovered["initial_requested_tab_id"] = sys.argv[3] or None
+recovered["initial_error"] = initial.get("error")
+recovered["initial_checks"] = initial.get("checks") or []
+print(json.dumps(recovered, indent=2))
+PY
+          )"
+          identity_status=0
+        else
+          identity_preflight_json="$(
+            python3 - "$identity_preflight_json" "$recovered_identity_json" "$initial_requested_tab_id" "$requested_tab_id" <<'PY'
+import json, sys
+initial = json.loads(sys.argv[1]) if sys.argv[1] else {}
+recovered = json.loads(sys.argv[2]) if sys.argv[2] else {}
+initial["url_recovery_attempted"] = True
+initial["url_recovery_status"] = "failed"
+initial["url_recovery_initial_requested_tab_id"] = sys.argv[3] or None
+initial["url_recovery_requested_tab_id"] = sys.argv[4] or None
+initial["url_recovery_identity"] = recovered
+print(json.dumps(initial, indent=2))
+PY
+          )"
+        fi
+      else
+        identity_preflight_json="$(
+          python3 - "$identity_preflight_json" "${resolve_json:-}" "$recovery_url" <<'PY'
+import json, sys
+identity = json.loads(sys.argv[1]) if sys.argv[1] else {}
+try:
+    resolved = json.loads(sys.argv[2]) if sys.argv[2] else {}
+except Exception:
+    resolved = {"ok": False, "error": "resolver_failed"}
+identity["url_recovery_attempted"] = True
+identity["url_recovery_status"] = "failed"
+identity["url_recovery_url"] = sys.argv[3] or None
+identity["url_recovery_resolution"] = resolved
+print(json.dumps(identity, indent=2))
+PY
+        )"
+      fi
+    fi
+  fi
   if [[ "$identity_status" -ne 0 ]]; then
     failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$identity_preflight_json" "$failed_at" <<'PY'

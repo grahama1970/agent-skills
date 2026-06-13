@@ -425,6 +425,115 @@ def test_call_webgpt_recovers_stale_tab_id_by_unique_url(
     assert submit_cmd[submit_cmd.index("--expect-url") + 1] == "https://chatgpt.com/c/example"
 
 
+def test_call_webgpt_blocks_stale_tab_id_with_ambiguous_url_before_submit(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    surf = tmp_path / "surf"
+    surf.write_text("#!/bin/sh\n", encoding="utf-8")
+    surf.chmod(0o755)
+    captured: dict[str, object] = {"preflight": [], "submit_calls": 0}
+
+    class _Result:
+        def __init__(self, *, returncode: int, stdout: str = "", stderr: str = ""):
+            self.returncode = returncode
+            self.stdout = stdout
+            self.stderr = stderr
+
+    def fake_run(cmd, **kwargs):
+        if "webgpt.preflight" in cmd:
+            captured["preflight"].append(list(cmd))
+            if "--tab-id" in cmd:
+                return _Result(
+                    returncode=5,
+                    stdout=json.dumps(
+                        {
+                            "status": "fail",
+                            "error": "tab_not_open_chatgpt",
+                            "failures": ["tab_open_chatgpt", "tab_identity"],
+                            "requested_tab_id": "837352075",
+                        }
+                    ),
+                )
+            return _Result(
+                returncode=5,
+                stdout=json.dumps(
+                    {
+                        "status": "fail",
+                        "error": "ambiguous_url",
+                        "failures": ["url_resolve", "url_ambiguous"],
+                        "requested_tab_id": None,
+                    }
+                ),
+                stderr="webgpt.preflight: fail\n",
+            )
+        if "webgpt.submit" in cmd:
+            captured["submit_calls"] = int(captured["submit_calls"]) + 1
+        return _Result(returncode=0)
+
+    monkeypatch.setattr("ask.webgpt_runtime.check_and_record", lambda: None)
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    with pytest.raises(WebgptBackendError, match="webgpt.preflight failed"):
+        call_webgpt(
+            "Review this.",
+            tab_id="837352075",
+            url="https://chatgpt.com/c/example",
+            surf_run=surf,
+            artifact_dir=tmp_path / "artifacts",
+        )
+
+    assert captured["submit_calls"] == 0
+    assert len(captured["preflight"]) == 2
+    assert "--tab-id" in captured["preflight"][0]
+    assert "--url" in captured["preflight"][1]
+
+
+def test_call_webgpt_blocks_stale_tab_id_without_url_before_submit(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    surf = tmp_path / "surf"
+    surf.write_text("#!/bin/sh\n", encoding="utf-8")
+    surf.chmod(0o755)
+    captured: dict[str, object] = {"preflight": [], "submit_calls": 0}
+
+    class _Result:
+        returncode = 5
+        stdout = json.dumps(
+            {
+                "status": "fail",
+                "error": "tab_not_open_chatgpt",
+                "failures": ["tab_open_chatgpt", "tab_identity"],
+                "requested_tab_id": "837352075",
+            }
+        )
+        stderr = "webgpt.preflight: fail\n"
+
+    def fake_run(cmd, **kwargs):
+        if "webgpt.preflight" in cmd:
+            captured["preflight"].append(list(cmd))
+        if "webgpt.submit" in cmd:
+            captured["submit_calls"] = int(captured["submit_calls"]) + 1
+        return _Result()
+
+    monkeypatch.setattr("ask.webgpt_runtime.check_and_record", lambda: None)
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    with pytest.raises(WebgptBackendError, match="webgpt.preflight failed"):
+        call_webgpt(
+            "Review this.",
+            tab_id="837352075",
+            surf_run=surf,
+            artifact_dir=tmp_path / "artifacts",
+        )
+
+    assert captured["submit_calls"] == 0
+    assert len(captured["preflight"]) == 1
+    assert "--tab-id" in captured["preflight"][0]
+    assert "--url" not in captured["preflight"][0]
+
+
 def test_call_webgpt_auto_allows_foreground_controlled_preflight(
     tmp_path: pathlib.Path,
     monkeypatch: pytest.MonkeyPatch,

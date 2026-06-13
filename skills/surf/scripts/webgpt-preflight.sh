@@ -74,6 +74,9 @@ def surf(*args):
 
 checks = []
 failures = []
+primary_error = None
+url_resolution = None
+identity_result = None
 
 def add(name, ok, detail=""):
     checks.append({"name": name, "ok": bool(ok), "detail": detail})
@@ -123,10 +126,12 @@ if tab_id:
             identity = json.loads(ident.stdout)
         except json.JSONDecodeError:
             identity = {"ok": False, "error": "identity_checker_failed", "checks": []}
+        identity_result = identity
         requested_tab_id = identity.get("tab_id") or digits
         for check in identity.get("checks", []):
             add(check.get("name", "tab_identity"), check.get("ok"), check.get("detail", ""))
         if not identity.get("ok"):
+            primary_error = identity.get("error") or primary_error
             add("tab_identity", False, identity.get("error") or "failed")
 elif target_url:
     proc = subprocess.run(
@@ -139,6 +144,7 @@ elif target_url:
         resolved = json.loads(proc.stdout)
     except json.JSONDecodeError:
         resolved = {"ok": False, "error": "resolver_failed"}
+    url_resolution = resolved
     if resolved.get("ok"):
         requested_tab_id = resolved["tab_id"]
         add("url_resolve", True, f"tab_id={requested_tab_id}")
@@ -163,16 +169,20 @@ elif target_url:
             identity = json.loads(ident.stdout)
         except json.JSONDecodeError:
             identity = {"ok": False, "error": "identity_checker_failed", "checks": []}
+        identity_result = identity
         for check in identity.get("checks", []):
             add(check.get("name", "tab_identity"), check.get("ok"), check.get("detail", ""))
         if not identity.get("ok"):
+            primary_error = identity.get("error") or primary_error
             add("tab_identity", False, identity.get("error") or "failed")
     else:
         err = resolved.get("error") or "no_open_tab_for_url"
+        primary_error = err
         add("url_resolve", False, err)
         if err == "ambiguous_url":
             add("url_ambiguous", False, json.dumps(resolved.get("candidates") or []))
 else:
+    primary_error = "missing_explicit_target"
     add("explicit_target", False, "pass --tab-id or --url")
 
 if no_activate and requested_tab_id and not allow_foreground:
@@ -192,12 +202,18 @@ if no_activate and requested_tab_id and not allow_foreground:
 status = "pass" if not failures else "fail"
 result = {
     "status": status,
+    "error": None if status == "pass" else primary_error,
     "failures": failures,
     "requested_tab_id": requested_tab_id,
     "requested_url": target_url or None,
+    "expected_url": expect_url or None,
     "active_tab_id": active_tab or None,
     "checks": checks,
 }
+if url_resolution is not None:
+    result["url_resolution"] = url_resolution
+if identity_result is not None:
+    result["tab_identity"] = identity_result
 text = json.dumps(result, indent=2) + "\n"
 sys.stdout.write(text)
 if not json_only:
