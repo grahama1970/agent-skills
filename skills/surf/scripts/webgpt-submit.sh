@@ -161,6 +161,81 @@ meta_output="${meta_output:-${output}.meta.json}"
 submitted_output="${submitted_output:-${output}.submitted.md}"
 mkdir -p "$(dirname "$output")" "$(dirname "$raw_output")" "$(dirname "$meta_output")" "$(dirname "$submitted_output")"
 
+attach_file_abs=""
+if [[ -n "$attach_file" ]]; then
+  if [[ ! -f "$attach_file" ]]; then
+    echo "--attach-file: file not found: $attach_file" >&2
+    exit 2
+  fi
+  attach_file_abs="$(readlink -f "$attach_file")"
+  attach_ext="${attach_file_abs##*.}"
+  attach_ext="${attach_ext,,}"
+  if [[ "$attach_ext" == "zip" ]]; then
+    max_zip_files="${SURF_WEBGPT_MAX_ZIP_FILES:-5}"
+    set +e
+    zip_preflight_json="$(python3 - "$attach_file_abs" "$max_zip_files" <<'PY'
+import json
+import pathlib
+import sys
+import zipfile
+
+path = pathlib.Path(sys.argv[1])
+max_files = int(sys.argv[2])
+try:
+    with zipfile.ZipFile(path) as zf:
+        files = [info.filename for info in zf.infolist() if not info.is_dir()]
+except Exception as exc:
+    print(json.dumps({"ok": False, "file_count": 0, "max_files": max_files, "error": f"could not read zip archive: {exc}"}))
+    raise SystemExit(1)
+if not files:
+    print(json.dumps({"ok": False, "file_count": 0, "max_files": max_files, "error": "zip archive is empty"}))
+    raise SystemExit(1)
+if len(files) > max_files:
+    print(json.dumps({
+        "ok": False,
+        "file_count": len(files),
+        "max_files": max_files,
+        "error": f"zip contains {len(files)} files; maximum is {max_files}",
+        "files": files,
+    }))
+    raise SystemExit(1)
+print(json.dumps({"ok": True, "file_count": len(files), "max_files": max_files, "files": files}))
+PY
+)"
+    zip_preflight_status=$?
+    set -e
+    if [[ "$zip_preflight_status" -ne 0 ]]; then
+      failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$sentinel" "$attach_file_abs" "$zip_preflight_json" "$failed_at" <<'PY'
+import json
+import pathlib
+import sys
+
+meta, inp, submitted, out, raw, sentinel, attach_file, zip_s, failed_at = sys.argv[1:]
+try:
+    zip_info = json.loads(zip_s) if zip_s else {"ok": False, "error": "zip preflight did not return JSON"}
+except Exception:
+    zip_info = {"ok": False, "error": "zip preflight JSON parse failed"}
+pathlib.Path(meta).write_text(json.dumps({
+    "status": "failed",
+    "failure": "attach_file_preflight_failed",
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "sentinel": sentinel,
+    "attach_file": attach_file,
+    "attach_file_preflight": zip_info,
+    "started_at": failed_at,
+    "finished_at": failed_at,
+}, indent=2) + "\n")
+PY
+      python3 -c 'import json,sys; print(json.loads(sys.argv[1]).get("error") or "zip attachment preflight failed")' "$zip_preflight_json" >&2
+      exit 2
+    fi
+  fi
+fi
+
 prompt="$(cat "$input")"
 submitted_prompt="${prompt}
 
@@ -182,6 +257,11 @@ raw_tmp="$(mktemp /tmp/surf-webgpt-submit-raw.XXXXXX.md)"
 # the newest chatgpt.com tab (often the user's foreground conversation).
 if [[ "$create_tab" -eq 1 ]]; then
   no_remember=1
+  # Chrome may foreground a newly created tab even when the caller requested a
+  # no-activate WebGPT round. The created tab is still identity-safe because it
+  # is the tab this command just opened and verified; do not block solely on
+  # the foreground guard for this acquisition path.
+  allow_foreground_controlled=1
   create_out="$("$RUN_SH" tab.new "https://chatgpt.com/" 2>&1)" || {
     echo "webgpt.submit --create-tab failed: could not open ChatGPT tab" >&2
     echo "$create_out" >&2
@@ -194,6 +274,16 @@ if [[ "$create_tab" -eq 1 ]]; then
     exit 2
   fi
   tab_id="$requested_tab_id"
+  # The extension can return the created tab id before tab.list reflects the
+  # new ChatGPT tab. Wait briefly so the fail-closed identity gate checks the
+  # current browser state instead of a stale snapshot.
+  for _ in 1 2 3 4 5; do
+    tab_list_text="$("$RUN_SH" tab.list 2>/dev/null || true)"
+    if printf '%s\n' "$tab_list_text" | awk -F '\t' -v tid="$requested_tab_id" '$1 == tid && $3 ~ /chatgpt[.]com/ { found = 1 } END { exit found ? 0 : 1 }'; then
+      break
+    fi
+    sleep 0.5
+  done
 fi
 
 args=(chatgpt "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$timeout_s" --keep-tab)
@@ -315,12 +405,7 @@ if [[ "$no_activate" -eq 1 ]]; then
   args+=(--no-activate)
 fi
 
-if [[ -n "$attach_file" ]]; then
-  if [[ ! -f "$attach_file" ]]; then
-    echo "--attach-file: file not found: $attach_file" >&2
-    exit 2
-  fi
-  attach_file_abs="$(readlink -f "$attach_file")"
+if [[ -n "$attach_file_abs" ]]; then
   args+=(--file "$attach_file_abs")
 fi
 
@@ -397,6 +482,7 @@ PY
 fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
+  cp "$raw_output" "$output"
   python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" <<'PY'
 import json, pathlib, sys
 meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning, identity_s = sys.argv[1:]
@@ -404,8 +490,25 @@ try:
     identity = json.loads(identity_s) if identity_s else None
 except Exception:
     identity = {"ok": False, "error": "identity_meta_parse_failed"}
+raw_text = pathlib.Path(raw).read_text() if pathlib.Path(raw).exists() else ""
+out_text = pathlib.Path(out).read_text() if pathlib.Path(out).exists() else ""
+stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
+response_timed_out = None
+timeout_error = None
+response_source = None
+tab_id = None
+for line in reversed(stderr_text.splitlines()):
+    if line.startswith("ResponseTimedOut:") and response_timed_out is None:
+        response_timed_out = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("TimeoutError:") and timeout_error is None:
+        timeout_error = line.split(":", 1)[1].strip()
+    elif line.startswith("ResponseSource:") and response_source is None:
+        response_source = line.split(":", 1)[1].strip()
+    elif line.startswith("Tab ID:") and tab_id is None:
+        tab_id = line.split(":", 1)[1].strip()
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
+    "failure": "missing_sentinel",
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -417,6 +520,15 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
     "tab_identity_preflight": identity,
+    "controlled_tab_id": tab_id,
+    "response_source": response_source,
+    "response_timed_out": response_timed_out,
+    "timeout_error": timeout_error,
+    "raw_contains_sentinel": sentinel in raw_text,
+    "clean_contains_sentinel": sentinel in out_text,
+    "raw_chars": len(raw_text),
+    "clean_chars": len(out_text),
+    "raw_response_advisory": bool(raw_text),
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -452,6 +564,12 @@ stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else "
 tab_id = None
 activated = None
 tab_was_created = None
+response_source = None
+page_text_contains_sentinel = None
+document_hidden_at_completion = None
+visibility_state_at_completion = None
+background_hidden_polls = None
+background_poll_count = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -459,7 +577,34 @@ for line in reversed(stderr_text.splitlines()):
         activated = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TabWasCreated:") and tab_was_created is None:
         tab_was_created = line.split(":", 1)[1].strip() == "true"
-    if tab_id is not None and activated is not None and tab_was_created is not None:
+    elif line.startswith("ResponseSource:") and response_source is None:
+        response_source = line.split(":", 1)[1].strip()
+    elif line.startswith("PageTextContainsSentinel:") and page_text_contains_sentinel is None:
+        page_text_contains_sentinel = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("DocumentHiddenAtCompletion:") and document_hidden_at_completion is None:
+        document_hidden_at_completion = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("VisibilityStateAtCompletion:") and visibility_state_at_completion is None:
+        visibility_state_at_completion = line.split(":", 1)[1].strip()
+    elif line.startswith("BackgroundHiddenPolls:") and background_hidden_polls is None:
+        try:
+            background_hidden_polls = int(line.split(":", 1)[1].strip())
+        except Exception:
+            background_hidden_polls = None
+    elif line.startswith("BackgroundPollCount:") and background_poll_count is None:
+        try:
+            background_poll_count = int(line.split(":", 1)[1].strip())
+        except Exception:
+            background_poll_count = None
+    if (
+        tab_id is not None
+        and activated is not None
+        and tab_was_created is not None
+        and response_source is not None
+        and document_hidden_at_completion is not None
+        and visibility_state_at_completion is not None
+        and background_hidden_polls is not None
+        and background_poll_count is not None
+    ):
         break
 contamination = []
 for needle in [
@@ -551,6 +696,12 @@ pathlib.Path(meta).write_text(json.dumps({
     "focus_changed": focus_changed,
     "focus_stolen_mid_submit": focus_stolen_mid,
     "focus_mid_log": focus_mid_log,
+    "response_source": response_source,
+    "page_text_contains_sentinel": page_text_contains_sentinel,
+    "document_hidden_at_completion": document_hidden_at_completion,
+    "visibility_state_at_completion": visibility_state_at_completion,
+    "background_hidden_polls": background_hidden_polls,
+    "background_poll_count": background_poll_count,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")

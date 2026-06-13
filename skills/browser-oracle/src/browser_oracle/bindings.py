@@ -199,7 +199,18 @@ def verify(
             matched_url = url
             break
     if seen:
-        if matched_url and matched_url != state.conversation_url:
+        if matched_url and state.conversation_url and matched_url != state.conversation_url:
+            if state.bound_manually:
+                raise BindingError(
+                    f"Project {state.name!r} ({backend}) is manually bound to tab {state.tab_id}, "
+                    "but that tab now points at a different URL.\n"
+                    f"  bound_url: {state.conversation_url}\n"
+                    f"  current_url: {matched_url}\n"
+                    "Re-bind only after confirming the intended reviewer tab:\n"
+                    f"  browser-oracle bind {state.name} --backend {backend} --tab-id <id> --url <url> --manual"
+                )
+            state.conversation_url = matched_url
+        elif matched_url and matched_url != state.conversation_url:
             state.conversation_url = matched_url
         state.last_verified_at = _utc_now()
         save(state, root=root)

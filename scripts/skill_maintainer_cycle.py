@@ -123,6 +123,10 @@ def run_in_cwd(
     )
 
 
+def git_run(args: list[str], *, check: bool = False) -> subprocess.CompletedProcess[str]:
+    return run(["git", *args], check=check)
+
+
 def git_rev_parse(cwd: Path, *args: str) -> str:
     cp = run_in_cwd(["git", "rev-parse", *args], cwd=cwd, check=False)
     return cp.stdout.strip() if cp.returncode == 0 else ""
@@ -214,6 +218,20 @@ def gh_issue_edit(issue_number: int, *args: str, dry_run: bool = False) -> dict[
 
 def gh_issue_comment(issue_number: int, body_path: Path, *, dry_run: bool = False) -> dict[str, Any]:
     cmd = ["gh", "issue", "comment", str(issue_number), "--body-file", str(body_path)]
+    if dry_run:
+        return {"cmd": cmd, "dry_run": True, "returncode": 0, "stdout": "", "stderr": ""}
+    cp = run(cmd, check=False)
+    return {
+        "cmd": cmd,
+        "dry_run": False,
+        "returncode": cp.returncode,
+        "stdout": cp.stdout,
+        "stderr": cp.stderr,
+    }
+
+
+def gh_issue_close(issue_number: int, *, dry_run: bool = False) -> dict[str, Any]:
+    cmd = ["gh", "issue", "close", str(issue_number)]
     if dry_run:
         return {"cmd": cmd, "dry_run": True, "returncode": 0, "stdout": "", "stderr": ""}
     cp = run(cmd, check=False)
@@ -329,13 +347,41 @@ def target_skills(issue: dict[str, Any]) -> list[str]:
     found: list[str] = []
     for match in re.finditer(r"skills/([A-Za-z0-9_.-]+)(?=/|\s|$)", text):
         skill = match.group(1)
-        if (REPO_ROOT / "skills" / skill / "SKILL.md").exists() and skill not in found:
+        if skill not in found:
             found.append(skill)
     return found
 
 
+def target_paths(issue: dict[str, Any]) -> list[str]:
+    text = issue_section(issue, "Target paths")
+    if not text:
+        return []
+    found: list[str] = []
+    for line in text.splitlines():
+        cleaned = line.strip()
+        cleaned = re.sub(r"^[-*]\s+", "", cleaned)
+        cleaned = cleaned.strip("` ")
+        match = re.search(r"\b(?:skills|agents|scripts|docs|extensions|hooks)/[A-Za-z0-9_./-]+", cleaned)
+        if not match:
+            continue
+        candidate = match.group(0).rstrip(".,;:)")
+        if candidate not in found:
+            found.append(candidate)
+    return found
+
+
+def missing_target_paths(paths: list[str]) -> list[str]:
+    missing: list[str] = []
+    for rel_path in paths:
+        if not (REPO_ROOT / rel_path).exists():
+            missing.append(rel_path)
+    return missing
+
+
 def read_complies(skill: str) -> list[str]:
     path = REPO_ROOT / "skills" / skill / "SKILL.md"
+    if not path.exists():
+        return ["missing-skill-contract"]
     text = path.read_text(encoding="utf-8", errors="ignore")
     match = re.search(r"\ncomplies:\n((?:\s+- .+\n?)+)", text)
     if not match:
@@ -707,25 +753,39 @@ def codex_worker_command(prompt: str, final_message_file: Path) -> list[str]:
 
 def receipt_gate(receipt: dict[str, Any], *, phase: str) -> tuple[bool, str]:
     status = receipt.get("status")
+    if phase == "repair" and status == "repaired":
+        summary = str(receipt.get("summary") or receipt.get("evidence_summary") or "").strip()
+        files_changed = receipt.get("files_changed") or receipt.get("changed_files")
+        proof = receipt.get("proof") or receipt.get("targeted_test_results") or receipt.get("commands_run")
+        if not summary:
+            return False, "missing_repair_summary"
+        if not isinstance(files_changed, list) or not files_changed:
+            return False, "missing_files_changed"
+        if not isinstance(proof, list) or not proof:
+            return False, "missing_repair_proof"
+        return True, "pass"
     if status != "completed":
         return False, str(status or "missing")
     commands_run = receipt.get("commands_run")
     if not isinstance(commands_run, list) or not commands_run:
         return False, "missing_commands_run"
-    if not str(receipt.get("evidence_summary") or "").strip():
+    evidence_text = receipt.get("evidence_summary")
+    if phase == "repair" and not str(evidence_text or "").strip():
+        evidence_text = receipt.get("summary")
+    if not str(evidence_text or "").strip():
         return False, "missing_evidence_summary"
     if phase in {"deterministic_verification", "independent_review"}:
-        decision = str(receipt.get("decision") or "").lower()
+        decision = str(receipt.get("decision") or receipt.get("result") or "").lower()
         if decision not in {"pass", "passed", "no_findings"}:
             return False, f"nonpassing_decision:{decision or 'missing'}"
-        findings = receipt.get("blocking_findings", [])
+        findings = receipt.get("blocking_findings", receipt.get("findings", []))
         if findings:
             return False, "blocking_findings_present"
     return True, "pass"
 
 
 def terminal_receipt_status(status: Any) -> bool:
-    return str(status or "") in {"completed", "failed", "blocked"}
+    return str(status or "") in {"completed", "failed", "blocked", "repaired"}
 
 
 def terminal_block_status(phase: str, reason: str) -> str:
@@ -750,6 +810,116 @@ def terminal_webgpt_gate_valid(issue_dir: Path) -> tuple[bool, str]:
     if not review_ok:
         return False, f"review:{review_reason}"
     return True, "pass"
+
+
+def _repair_receipt_paths(repair: dict[str, Any]) -> list[str]:
+    paths: list[str] = []
+    for key in ("changed_files", "files_changed"):
+        for path in repair.get(key) or []:
+            if isinstance(path, str):
+                paths.append(path)
+    for item in repair.get("implementation_files_verified") or []:
+        if isinstance(item, dict) and isinstance(item.get("path"), str):
+            paths.append(item["path"])
+    return paths
+
+
+def scoped_publication_paths(result: dict[str, Any], repair: dict[str, Any]) -> list[str]:
+    candidates: list[str] = []
+    for path in result.get("target_paths") or []:
+        if isinstance(path, str):
+            candidates.append(path)
+    candidates.extend(_repair_receipt_paths(repair))
+
+    scoped: list[str] = []
+    seen: set[str] = set()
+    for raw in candidates:
+        path = raw.strip()
+        if not path or path.startswith("/"):
+            continue
+        norm = os.path.normpath(path)
+        if norm.startswith("..") or norm.startswith(".artifacts/") or norm == ".artifacts":
+            continue
+        abs_path = (REPO_ROOT / norm).resolve()
+        try:
+            abs_path.relative_to(REPO_ROOT.resolve())
+        except ValueError:
+            continue
+        if not abs_path.exists() or not abs_path.is_file():
+            continue
+        if norm not in seen:
+            scoped.append(norm)
+            seen.add(norm)
+    return scoped
+
+
+def publish_scoped_changes(
+    issue_dir: Path,
+    result: dict[str, Any],
+    repair: dict[str, Any],
+    *,
+    dry_run: bool,
+    github_dry_run: bool,
+) -> dict[str, Any]:
+    paths = scoped_publication_paths(result, repair)
+    publication: dict[str, Any] = {
+        "status": "dry_run" if (dry_run or github_dry_run) else "started",
+        "scoped_paths": paths,
+        "commit": "",
+        "commands": [],
+    }
+    if not paths:
+        publication["status"] = "failed"
+        publication["reason"] = "empty_scoped_path_allowlist"
+        write_json(issue_dir / "publication-result.json", publication)
+        return publication
+    if dry_run or github_dry_run:
+        write_json(issue_dir / "publication-result.json", publication)
+        return publication
+
+    add_cmd = ["add", "--", *paths]
+    add_cp = git_run(add_cmd)
+    publication["commands"].append({
+        "cmd": ["git", *add_cmd],
+        "returncode": add_cp.returncode,
+        "stdout": add_cp.stdout,
+        "stderr": add_cp.stderr,
+    })
+    if add_cp.returncode != 0:
+        publication["status"] = "failed"
+        publication["reason"] = "git_add_failed"
+        write_json(issue_dir / "publication-result.json", publication)
+        return publication
+
+    diff_cp = git_run(["diff", "--cached", "--name-only", "--", *paths])
+    staged = [line.strip() for line in diff_cp.stdout.splitlines() if line.strip()]
+    publication["staged_paths"] = staged
+    if not staged:
+        publication["status"] = "no_changes"
+        publication["reason"] = "no_scoped_staged_changes"
+        write_json(issue_dir / "publication-result.json", publication)
+        return publication
+
+    issue_number = result.get("issue")
+    commit_msg = f"Fix skill-maintainer issue #{issue_number}" if issue_number else "Fix skill-maintainer issue"
+    commit_cmd = ["commit", "-m", commit_msg, "--", *paths]
+    commit_cp = git_run(commit_cmd)
+    publication["commands"].append({
+        "cmd": ["git", *commit_cmd],
+        "returncode": commit_cp.returncode,
+        "stdout": commit_cp.stdout,
+        "stderr": commit_cp.stderr,
+    })
+    if commit_cp.returncode != 0:
+        publication["status"] = "failed"
+        publication["reason"] = "git_commit_failed"
+        write_json(issue_dir / "publication-result.json", publication)
+        return publication
+    head = git_run(["rev-parse", "HEAD"])
+    publication["status"] = "committed"
+    publication["commit"] = head.stdout.strip()
+    write_json(issue_dir / "publication-result.json", publication)
+    return publication
 
 
 def dry_run_simulation(result: dict[str, Any], *, action: str, would_update: dict[str, Any]) -> dict[str, Any]:
@@ -926,6 +1096,37 @@ def blocked_comment(
     return path
 
 
+def missing_target_comment(issue: dict[str, Any], issue_dir: Path, result: dict[str, Any]) -> Path:
+    path = issue_dir / "missing-target-comment.md"
+    missing = result.get("missing_target_paths", [])
+    write_text(
+        path,
+        "\n".join(
+            [
+                "Skill-maintainer status: BLOCKED",
+                "",
+                "The maintainer did not dispatch a repair worker because the issue names target paths that are absent from this checkout.",
+                "",
+                "Evidence:",
+                f"- Artifact dir: `{issue_dir}`",
+                f"- Issue: `#{issue.get('number')}`",
+                f"- Local status: `{result.get('status')}`",
+                f"- Missing target paths: `{', '.join(missing) if missing else '(none recorded)'}`",
+                "",
+                "Safety action:",
+                "- Adding `maintainer-blocked` and `needs-human`.",
+                "- Releasing `maintainer-active` so this ticket is not repeatedly dispatched into a checkout without the target files.",
+                "",
+                "Required next evidence:",
+                "- Commit or restore the missing target paths in the repository checkout, or retarget the issue to paths that exist.",
+                "- Rerun skill-maintainer after the target paths are present.",
+            ]
+        )
+        + "\n",
+    )
+    return path
+
+
 def terminal_block_comment(issue: dict[str, Any], issue_dir: Path, result: dict[str, Any]) -> Path:
     path = issue_dir / "terminal-block-comment.md"
     write_text(
@@ -948,6 +1149,46 @@ def terminal_block_comment(issue: dict[str, Any], issue_dir: Path, result: dict[
                 "- Releasing `maintainer-active` so the queue can inspect later eligible tickets.",
                 "",
                 "This issue must not be closed from WebGPT alone.",
+            ]
+        )
+        + "\n",
+    )
+    return path
+
+
+def terminal_success_comment(issue: dict[str, Any], issue_dir: Path, result: dict[str, Any]) -> Path:
+    path = issue_dir / "terminal-success-comment.md"
+    verifier = load_json(issue_dir / "verifier-response.json", {})
+    review = load_json(issue_dir / "review-response.json", {})
+    command_lines = [
+        f"- `{item.get('command')}` -> `{item.get('output_summary') or item.get('exit_code')}`"
+        for item in verifier.get("commands_run", [])
+        if isinstance(item, dict)
+    ]
+    write_text(
+        path,
+        "\n".join(
+            [
+                "Skill-maintainer status: FIXED_WITH_PROOF",
+                "",
+                "The maintainer completed the scoped repair with deterministic local proof and independent review.",
+                "",
+                "Evidence:",
+                f"- Artifact dir: `{issue_dir}`",
+                f"- Issue: `#{issue.get('number')}`",
+                f"- Local status: `{result.get('status')}`",
+                f"- Closure decision: `{result.get('closure_decision')}`",
+                f"- Repair receipt: `{issue_dir / 'repair-response.json'}`",
+                f"- Verifier receipt: `{issue_dir / 'verifier-response.json'}`",
+                f"- Review receipt: `{issue_dir / 'review-response.json'}`",
+                f"- Verifier result: `{verifier.get('result') or verifier.get('decision')}`",
+                f"- Review result: `{review.get('result') or review.get('decision')}`",
+                "",
+                "Deterministic command evidence:",
+                *(command_lines or ["- `(no verifier commands recorded)`"]),
+                "",
+                "WebGPT note:",
+                "- WebGPT was not treated as deterministic proof.",
             ]
         )
         + "\n",
@@ -998,6 +1239,63 @@ def terminal_dispose(
         result["required_next_evidence"] = ["successful GitHub terminal-disposition retry"]
         write_json(issue_dir / "cycle-result.json", result)
         return result
+    if not github_dry_run:
+        result["terminal_disposition_status"] = "completed"
+    write_json(issue_dir / "cycle-result.json", result)
+    return result
+
+
+def terminal_success_dispose(
+    issue_dir: Path,
+    result: dict[str, Any],
+    issue: dict[str, Any],
+    *,
+    dry_run: bool,
+    github_dry_run: bool,
+) -> dict[str, Any]:
+    if dry_run:
+        return dry_run_simulation(
+            result,
+            action="terminal_success_dispose",
+            would_update={
+                "comment": str(issue_dir / "terminal-success-comment.md"),
+                "labels_remove": [*BLOCKED_LABELS, LEASE_LABEL],
+                "close_issue": issue.get("number"),
+            },
+        )
+    mutate_dry_run = github_dry_run
+    result["terminal_disposition_status"] = "github_dry_run" if github_dry_run else "started"
+    write_json(issue_dir / "cycle-result.json", result)
+    actions = result.setdefault("github_actions", [])
+    comment_body = terminal_success_comment(issue, issue_dir, result)
+    comment_action = gh_issue_comment(int(issue["number"]), comment_body, dry_run=mutate_dry_run)
+    actions.append({"action": "terminal_success_comment", "body_file": str(comment_body), **comment_action})
+    if int(comment_action.get("returncode", 1)) != 0:
+        result["terminal_disposition_status"] = "failed"
+        result["terminal_disposition_failed_action"] = "terminal_success_comment"
+        result["required_next_evidence"] = ["successful GitHub success-disposition retry"]
+        write_json(issue_dir / "cycle-result.json", result)
+        return result
+    label_args: list[str] = []
+    for label in [*BLOCKED_LABELS, LEASE_LABEL]:
+        label_args.extend(["--remove-label", label])
+    label_action = gh_issue_edit(int(issue["number"]), *label_args, dry_run=mutate_dry_run)
+    actions.append({"action": "terminal_success_labels_release", **label_action})
+    if int(label_action.get("returncode", 1)) != 0:
+        result["terminal_disposition_status"] = "failed"
+        result["terminal_disposition_failed_action"] = "terminal_success_labels_release"
+        result["required_next_evidence"] = ["successful GitHub success-disposition retry"]
+        write_json(issue_dir / "cycle-result.json", result)
+        return result
+    close_action = gh_issue_close(int(issue["number"]), dry_run=mutate_dry_run)
+    actions.append({"action": "terminal_success_close_issue", **close_action})
+    if int(close_action.get("returncode", 1)) != 0:
+        result["terminal_disposition_status"] = "failed"
+        result["terminal_disposition_failed_action"] = "terminal_success_close_issue"
+        result["required_next_evidence"] = ["successful GitHub issue close retry"]
+        write_json(issue_dir / "cycle-result.json", result)
+        return result
+    result["closure_attempted"] = True
     if not github_dry_run:
         result["terminal_disposition_status"] = "completed"
     write_json(issue_dir / "cycle-result.json", result)
@@ -1284,6 +1582,7 @@ def continue_pending_run(
     dry_run: bool = False,
     github_dry_run: bool = False,
     run_webgpt: bool = False,
+    require_webgpt: bool = False,
 ) -> dict[str, Any]:
     result_path = issue_dir / "cycle-result.json"
     result = load_json(result_path, {})
@@ -1293,10 +1592,49 @@ def continue_pending_run(
     status = result.get("status")
     result["last_invocation_dry_run"] = dry_run
     result["run_webgpt"] = run_webgpt
+    result["require_webgpt"] = require_webgpt
 
     terminal_webgpt = load_json(issue_dir / "ask-webgpt-result.json", {})
     terminal_webgpt_status = terminal_webgpt.get("status")
     disposition_status = result.get("terminal_disposition_status")
+    if (
+        not require_webgpt
+        and status in {"webgpt_review_failed", "webgpt_review_attempted"}
+        and terminal_webgpt_status in {"failed", "completed"}
+    ):
+        gate_ok, gate_reason = terminal_webgpt_gate_valid(issue_dir)
+        result["terminal_disposition_gate_validated"] = gate_ok
+        result["receipt_gate_reason"] = gate_reason
+        if gate_ok:
+            repair = load_json(issue_dir / "repair-response.json", {})
+            publication = publish_scoped_changes(
+                issue_dir,
+                result,
+                repair,
+                dry_run=dry_run,
+                github_dry_run=github_dry_run,
+            )
+            result["publication"] = publication
+            if publication.get("status") not in {"committed", "no_changes", "dry_run"}:
+                blocked_status = f"blocked_publication:{publication.get('reason') or publication.get('status')}"
+                result["status"] = blocked_status
+                result["continuation_status"] = blocked_status
+                result["closure_decision"] = blocked_status
+                result["required_next_evidence"] = ["successful scoped publication commit before GitHub closure"]
+                write_json(result_path, result)
+                return result
+            result["status"] = "fixed_with_deterministic_proof"
+            result["continuation_status"] = "fixed_with_deterministic_proof"
+            result["closure_decision"] = "close_from_deterministic_proof_webgpt_advisory"
+            result["observed_webgpt_status"] = terminal_webgpt_status
+            result["required_next_evidence"] = []
+            return terminal_success_dispose(
+                issue_dir,
+                result,
+                issue,
+                dry_run=dry_run,
+                github_dry_run=github_dry_run,
+            )
     if (
         disposition_status in {"started", "failed", "github_dry_run"}
         or (
@@ -1337,6 +1675,22 @@ def continue_pending_run(
                 ]
             )
         return terminal_dispose(issue_dir, result, issue, dry_run=dry_run, github_dry_run=github_dry_run)
+
+    if str(status or "").startswith("blocked_invalid_repair_receipt"):
+        repair = load_json(issue_dir / "repair-response.json", {})
+        repair_ok, repair_reason = receipt_gate(repair, phase="repair")
+        if repair_ok:
+            result["status"] = "repair_subagent_started"
+            result["continuation_status"] = "resuming_after_repaired_repair_gate"
+            result["closure_decision"] = "waiting_for_verifier_subagent_receipt"
+            result["receipt_gate_reason"] = "pass"
+            result["terminal_disposition_status"] = "superseded_by_valid_repair_receipt"
+            status = result["status"]
+        else:
+            result["continuation_status"] = terminal_block_status("repair", repair_reason)
+            result["receipt_gate_reason"] = repair_reason
+            write_json(result_path, result)
+            return result
 
     if status == "repair_subagent_started":
         repair = load_json(issue_dir / "repair-response.json", {})
@@ -1517,17 +1871,6 @@ def continue_pending_run(
                         "bundle": str(issue_dir / "review-bundle.md"),
                     },
                 )
-            if github_dry_run and run_webgpt:
-                return dry_run_simulation(
-                    result,
-                    action="run_webgpt",
-                    would_update={
-                        "status": "webgpt_review_attempted",
-                        "closure_decision": "blocked_waiting_for_finding_disposition_and_closure_wiring",
-                        "bundle": str(issue_dir / "review-bundle.md"),
-                        "reason": "github_dry_run_does_not_write_terminal_webgpt_receipt",
-                    },
-                )
             if run_webgpt:
                 bundle = issue_dir / "review-bundle.md"
                 ask_result = maybe_run_webgpt(bundle, dry_run=dry_run)
@@ -1560,8 +1903,41 @@ def continue_pending_run(
                         "explicit close/no-close decision from deterministic local evidence",
                     ]
                 )
+                if github_dry_run:
+                    result["github_disposition_skipped"] = "github_dry_run"
+                    write_json(result_path, result)
+                    return result
                 result["terminal_disposition_gate_validated"] = True
                 return terminal_dispose(issue_dir, result, issue, dry_run=dry_run, github_dry_run=github_dry_run)
+            if not require_webgpt:
+                publication = publish_scoped_changes(
+                    issue_dir,
+                    result,
+                    repair,
+                    dry_run=dry_run,
+                    github_dry_run=github_dry_run,
+                )
+                result["publication"] = publication
+                if publication.get("status") not in {"committed", "no_changes", "dry_run"}:
+                    blocked_status = f"blocked_publication:{publication.get('reason') or publication.get('status')}"
+                    result["status"] = blocked_status
+                    result["continuation_status"] = blocked_status
+                    result["closure_decision"] = blocked_status
+                    result["required_next_evidence"] = ["successful scoped publication commit before GitHub closure"]
+                    write_json(result_path, result)
+                    return result
+                result["status"] = "fixed_with_deterministic_proof"
+                result["continuation_status"] = "fixed_with_deterministic_proof"
+                result["closure_decision"] = "close_from_deterministic_proof"
+                result["required_next_evidence"] = []
+                result["terminal_disposition_gate_validated"] = True
+                return terminal_success_dispose(
+                    issue_dir,
+                    result,
+                    issue,
+                    dry_run=dry_run,
+                    github_dry_run=github_dry_run,
+                )
             else:
                 result["closure_decision"] = "blocked_waiting_for_webgpt_and_closure_wiring"
                 result["required_next_evidence"] = [
@@ -1659,6 +2035,7 @@ def main() -> int:
             dry_run=args.dry_run,
             github_dry_run=github_dry_run,
             run_webgpt=args.run_webgpt,
+            require_webgpt=args.require_webgpt,
         )
         print(json.dumps(result, indent=2))
         return 0
@@ -1671,6 +2048,7 @@ def main() -> int:
                 dry_run=args.dry_run,
                 github_dry_run=github_dry_run,
                 run_webgpt=args.run_webgpt,
+                require_webgpt=args.require_webgpt,
             )
             print(json.dumps(result, indent=2))
             return 0
@@ -1692,6 +2070,8 @@ def main() -> int:
     issue = issues[0]
     route = classify(issue)
     skills = target_skills(issue)
+    targets = target_paths(issue)
+    missing_targets = missing_target_paths(targets)
     already_leased = LEASE_LABEL in issue_labels(issue)
     issue_dir = run_root / f"issue-{issue['number']}"
     issue_dir.mkdir(parents=True, exist_ok=True)
@@ -1727,6 +2107,8 @@ def main() -> int:
         "artifact_dir": str(issue_dir),
         "selected_route": route,
         "target_skills": skills,
+        "target_paths": targets,
+        "missing_target_paths": missing_targets,
         "require_webgpt": args.require_webgpt,
         "ask_webgpt_command": ask_webgpt_command(bundle),
         "dry_run": args.dry_run,
@@ -1838,6 +2220,34 @@ def main() -> int:
         lease_comment_action = gh_issue_comment(issue["number"], lease_body, dry_run=github_dry_run)
         require_gh_ok(lease_comment_action, "lease comment")
         result["github_actions"].append({"action": "lease_comment", "body_file": str(lease_body), **lease_comment_action})
+
+    if missing_targets:
+        result["status"] = "blocked_missing_target_paths"
+        result["closure_decision"] = "blocked_missing_target_paths"
+        result["required_next_evidence"] = [
+            "commit or restore the missing target paths before repair dispatch",
+            "rerun skill-maintainer after target paths exist",
+        ]
+        write_json(issue_dir / "missing-targets.json", {
+            "issue": issue.get("number"),
+            "target_paths": targets,
+            "missing_target_paths": missing_targets,
+            "repo_root": str(REPO_ROOT),
+        })
+        missing_body = missing_target_comment(issue, issue_dir, result)
+        missing_comment_action = gh_issue_comment(issue["number"], missing_body, dry_run=github_dry_run)
+        require_gh_ok(missing_comment_action, "missing target comment")
+        result["github_actions"].append({"action": "missing_target_comment", "body_file": str(missing_body), **missing_comment_action})
+        block_args: list[str] = []
+        for label in BLOCKED_LABELS:
+            block_args.extend(["--add-label", label])
+        block_args.extend(["--remove-label", LEASE_LABEL])
+        block_action = gh_issue_edit(issue["number"], *block_args, dry_run=github_dry_run)
+        require_gh_ok(block_action, "missing target blocked labels")
+        result["github_actions"].append({"action": "missing_target_labels_release_lease", **block_action})
+        write_json(issue_dir / "cycle-result.json", result)
+        print(json.dumps(result, indent=2))
+        return 0 if args.dry_run else 2
 
     if args.controlled_live_mutation_fixture:
         proof = write_controlled_live_mutation_receipts(
