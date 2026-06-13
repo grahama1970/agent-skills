@@ -1,0 +1,21 @@
+[project]
+name = "voice-segment-selector"
+version = "0.1.0"
+description = "Select clean gender-bucketed voice segments with transcripts for TTS training"
+requires-python = ">=3.11"
+dependencies = [
+  "typer>=0.12",
+  "librosa>=0.10",
+  "soundfile>=0.12",
+  "numpy>=1.26",
+  "pytest>=8.0",
+]
+
+[project.optional-dependencies]
+transcribe = ["faster-whisper>=1.0"]
+classify = ["transformers>=4.40", "torch>=2.2", "torchaudio>=2.2"]
+review = ["fastapi>=0.110", "uvicorn>=0.27"]
+all = ["faster-whisper>=1.0", "transformers>=4.40", "torch>=2.2", "torchaudio>=2.2", "fastapi>=0.110", "uvicorn>=0.27"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
