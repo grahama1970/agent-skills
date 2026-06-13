@@ -459,8 +459,34 @@ try:
     identity = json.loads(identity_s) if identity_s else None
 except Exception:
     identity = {"ok": False, "error": "identity_meta_parse_failed"}
+raw_path = pathlib.Path(raw)
+out_path = pathlib.Path(out)
+err_path = pathlib.Path(err)
+raw_text = raw_path.read_text() if raw_path.exists() else ""
+stderr_text = err_path.read_text() if err_path.exists() else ""
+if raw_text:
+    idx = raw_text.rfind(sentinel)
+    if idx >= 0:
+        out_path.write_text(raw_text[:idx].rstrip() + "\n")
+    else:
+        out_path.write_text(raw_text)
+out_text = out_path.read_text() if out_path.exists() else ""
+response_timed_out = None
+timeout_error = None
+response_source = None
+tab_id = None
+for line in reversed(stderr_text.splitlines()):
+    if line.startswith("ResponseTimedOut:") and response_timed_out is None:
+        response_timed_out = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("TimeoutError:") and timeout_error is None:
+        timeout_error = line.split(":", 1)[1].strip()
+    elif line.startswith("ResponseSource:") and response_source is None:
+        response_source = line.split(":", 1)[1].strip()
+    elif line.startswith("Tab ID:") and tab_id is None:
+        tab_id = line.split(":", 1)[1].strip()
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
+    "failure": "submit_failed",
     "exit_code": int(status),
     "input": inp,
     "submitted_output": submitted,
@@ -473,6 +499,15 @@ pathlib.Path(meta).write_text(json.dumps({
     "requested_model": model or None,
     "requested_reasoning": reasoning or None,
     "tab_identity_preflight": identity,
+    "controlled_tab_id": tab_id,
+    "response_source": response_source,
+    "response_timed_out": response_timed_out,
+    "timeout_error": timeout_error,
+    "raw_contains_sentinel": sentinel in raw_text,
+    "clean_contains_sentinel": sentinel in out_text,
+    "raw_chars": len(raw_text),
+    "clean_chars": len(out_text),
+    "raw_response_advisory": bool(raw_text),
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -645,14 +680,19 @@ no_activate = no_activate_s == "1"
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
 focus_stolen_mid = focus_stolen_mid_s == "1"
 focus_violation = no_activate and (focus_changed or focus_stolen_mid)
-status = "completed" if (
+response_integrity_ok = (
     tab_id
     and not tab_mismatch
     and not contamination
     and sentinel in raw_text
     and sentinel not in out_text
-    and not focus_violation
-) else "failed"
+)
+if response_integrity_ok and not focus_violation:
+    status = "completed"
+elif response_integrity_ok and focus_violation:
+    status = "recovered_focus_changed"
+else:
+    status = "failed"
 if status == "completed":
     failure = None
 elif focus_violation and focus_stolen_mid:
@@ -695,6 +735,9 @@ pathlib.Path(meta).write_text(json.dumps({
     "active_tab_after": focus_after["activeTabId"],
     "focus_changed": focus_changed,
     "focus_stolen_mid_submit": focus_stolen_mid,
+    "focus_invariant_ok": not focus_violation,
+    "transport_degraded": bool(status == "recovered_focus_changed"),
+    "recovered_output": bool(status == "recovered_focus_changed"),
     "focus_mid_log": focus_mid_log,
     "response_source": response_source,
     "page_text_contains_sentinel": page_text_contains_sentinel,
@@ -722,6 +765,6 @@ cat "$meta_output"
 python3 - "$meta_output" <<'PY'
 import json, pathlib, sys
 meta = json.loads(pathlib.Path(sys.argv[1]).read_text())
-if meta.get("status") != "completed":
+if meta.get("status") not in {"completed", "recovered_focus_changed"}:
     raise SystemExit(5)
 PY

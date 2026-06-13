@@ -94,6 +94,11 @@ composes:
   - fetcher
   - extractor
   - task-monitor
+complies:
+  - best-practices-skills
+  - best-practices-python
+  - best-practices-react
+  - best-practices-scillm
 ---
 
 > STOP. READ THIS ENTIRE SKILL.MD BEFORE CALLING ANY ENDPOINT.
@@ -105,6 +110,31 @@ composes:
 2. **CDP fallback**: Zero-config, but requires starting a separate Chrome instance
 
 If `/tmp/surf.sock` exists (extension installed), all commands route through surf-cli. Otherwise, commands use CDP.
+
+## Runtime Entrypoint And PATH
+
+The reliable agent entrypoint is the skill-local wrapper:
+
+```bash
+cd /home/graham/workspace/experiments/agent-skills/skills/surf
+./run.sh tab.list --json
+./run.sh webgpt.preflight --tab-id <id> --expect-url <url> --no-activate --json
+```
+
+Some interactive shells also have a bare `surf` command on `PATH`, but agents
+must not assume that. If `surf tab.list` returns `command not found`, that is a
+PATH/wrapper issue, not evidence that Surf transport, the extension, or Chrome
+automation is broken. Re-run the command through `skills/surf/run.sh` before
+diagnosing browser failure.
+
+Use this quick distinction:
+
+```text
+./sanity.sh passes + ./run.sh tab.list works = Surf transport operational
+bare surf command not found = PATH issue
+webgpt raw response has sentinel but parser reports degraded = sentinel/parser issue
+preflight fails = tab identity/focus/browser binding issue
+```
 
 ## First-Time Setup
 
@@ -129,6 +159,15 @@ surf read                        # Page content with element refs (e1, e2...)
 surf click e5                    # Click element
 surf type "hello" --ref e2       # Type into element
 surf snap                        # Screenshot
+```
+
+If the bare `surf` command is unavailable, use the wrapper form:
+
+```bash
+cd /home/graham/workspace/experiments/agent-skills/skills/surf
+./run.sh tab.list
+./run.sh read
+./run.sh snap
 ```
 
 ### Option B: CDP Fallback (Zero-config)
@@ -284,6 +323,9 @@ Behavior:
 - Raw output keeps the marker. Clean output strips the marker. Metadata records
   the sentinel, output paths, timeout, stability policy, and whether the marker
   appeared only in the raw output.
+- `raw_contains_sentinel: true` with `clean_contains_sentinel: false` is normal
+  when clean output correctly stripped the terminal marker. Do not diagnose this
+  as Surf failure.
 - The controlled ChatGPT tab id is required metadata. `controlled_tab_id=null`
   is a failed handoff, even if some page text contains the sentinel.
 - The clean output strips only a terminal sentinel from assistant-only text; it
@@ -325,6 +367,37 @@ Behavior:
 Do not infer WebGPT completion from spinner absence, button state, visual
 stillness, or page text outside the final assistant response. Use the sentinel
 contract for any workflow that copies WebGPT output into files.
+
+#### Transport vs parser failures
+
+For WebGPT review work, separate Surf transport evidence from the parser or
+wrapper that consumes it:
+
+- **Surf transport pass:** `webgpt.submit`/`$ask webgpt-review` metadata shows
+  the requested tab was controlled, `tab_identity_preflight.ok` is true,
+  `raw_contains_sentinel` is true, `focus_changed` is false, and raw output is
+  assistant-only text from the controlled tab.
+- **Normal clean-output state:** clean output does not contain the sentinel
+  because the terminal marker was stripped. Check raw output and metadata before
+  deciding anything failed.
+- **Parser degradation:** a wrapper may report `BLOCKED`, empty structured
+  `verdict_data`, or a missing parsed verdict even when raw output contains a
+  valid JSON verdict and terminal sentinel. In that case Surf completed the
+  transport; the consuming wrapper/parser degraded. Preserve the raw, clean,
+  and meta artifacts and reconcile the raw response explicitly.
+- **Recovered focus drift:** if the controlled tab returns assistant-only text
+  with the current sentinel and clean output is uncontaminated, but focus changed
+  during or after the run, Surf writes the raw/clean/meta artifacts and reports
+  `status: recovered_focus_changed`, `transport_degraded: true`, and
+  `focus_invariant_ok: false`. The response is usable, but it is not clean
+  background-mode proof.
+- **Transport failure:** missing/invalid controlled tab, failed preflight,
+  `controlled_tab_id` mismatch, timeout without the current sentinel in raw
+  assistant text, or page chrome/prompt echo in clean output.
+
+When a completed answer is visible in the controlled tab but the submit wrapper
+was interrupted or did not parse it, use `webgpt.extract` with the exact
+sentinel from the failed round rather than submitting a new prompt.
 
 #### WebGPT image mockups
 
@@ -605,7 +678,7 @@ surf webgpt.submit --input REQ.md --output RESP.md --no-activate
 
 # Explicit overrides
 surf webgpt.submit --input REQ.md --output RESP.md --project oc-subagent-personas --no-activate
-surf webgpt.submit --input REQ.md --output RESP.md --browser-oracle-from skills/oc-subagent/personas/mathematics --no-activate
+surf webgpt.submit --input REQ.md --output RESP.md --browser-oracle-from agents/mathematics --no-activate
 surf webgpt.submit --input REQ.md --output RESP.md --tab-id <id> --expect-url <url> --no-activate
 ```
 
@@ -933,14 +1006,17 @@ cropped = smart_crop(full_page_bytes, region="detail")
 
 | Problem                    | Solution                                        |
 | -------------------------- | ----------------------------------------------- |
+| `surf: command not found` | Use `cd /home/graham/workspace/experiments/agent-skills/skills/surf && ./run.sh ...`. This is a PATH issue, not proof that Surf transport is down. |
 | "Cannot connect to CDP"    | Run `surf cdp start` first                      |
 | Chrome not found           | Install Google Chrome or Chromium               |
 | Port already in use        | `surf cdp stop` then `surf cdp start`           |
 | Element not found          | Run `surf read` first to get current refs       |
 | Page not loading           | Check URL is valid, try with `https://`         |
 | Empty read output          | Page may still be loading - try `surf wait 2`   |
-| WebGPT submit hangs until I switch to the ChatGPT tab | Background tab: ChatGPT defers DOM updates while `document.hidden`. Use `webgpt.submit --tab-id … --no-activate` (blocks until done). Do **not** poll with `surf read` on the active tab. Rebuild surf-cli after vendor fix; optional `webgpt.extract` if already done. |
+| WebGPT submit hangs until I switch to the ChatGPT tab | Background tab: ChatGPT defers DOM updates while `document.hidden`. `webgpt.submit --no-activate` re-wakes tab lifecycle during polling, only accepts the **current** sentinel on the **post-submit assistant turn** (ignores stale markers / prompt echo), falls back to turn-level page text when assistant DOM lags, and records `document_hidden_at_completion` / `background_hidden_polls` in meta. Rebuild + `surf extension.reload` after surf-cli vendor changes. Optional `webgpt.extract` if ChatGPT already finished. |
 | Agent "doesn't see" sentinel on another tab | `surf read` without `--tab-id` reads the **foreground** tab only. Completion is detected inside `webgpt.submit`, not by the project agent watching Chrome. |
+| Raw response has the sentinel but clean response does not | Normal when clean output stripped the terminal marker. Check `raw_contains_sentinel`, `clean_contains_sentinel`, and the raw file before reporting failure. |
+| `$ask webgpt-review` shows `BLOCKED` but raw output contains a JSON verdict and sentinel | Surf transport likely succeeded and the ask/parser layer degraded. Preserve artifacts, reconcile raw reviewer output, and report the wrapper status separately. |
 
 ## Extension Setup (One-time)
 
