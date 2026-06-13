@@ -1,9 +1,9 @@
 ---
 name: html-bundler
 description: >
-  Capture and package a local HTML page or localhost URL into one WebGPT-ready
+  Bundle any web page (local HTML, localhost, or external URL) into one WebGPT-ready
   zip with screenshots, source/assets, and reports. Use when the user asks to
-  bundle, zip, screenshot, capture, or upload a local page for WebGPT analysis.
+  bundle, zip, screenshot, capture, html-bundler, or upload a page for WebGPT analysis.
 triggers:
   - bundle local page for webgpt
   - capture html page for webgpt
@@ -12,6 +12,7 @@ triggers:
   - upload local page to chatgpt
   - bundle external webpage
   - html bundler
+  - html-bundler
 provides:
   - html-bundle
   - webgpt-upload-package
@@ -28,9 +29,9 @@ taxonomy:
   - browser
 ---
 
-# Local Page Analysis Capture
+# html-bundler
 
-Prepare a local HTML file, static site, or localhost page for **manual WebGPT
+Prepare any web page (local file, dev server, or external URL) for **manual WebGPT
 upload**. This skill composes `/surf` for browser capture and optionally
 `/clipboard` for verified file paste of the output zip.
 

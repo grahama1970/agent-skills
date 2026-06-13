@@ -1,6 +1,6 @@
 # html-bundler
 
-Capture a local HTML page or localhost URL into one WebGPT-ready zip.
+Bundle any web page (local HTML, localhost, or external URL) into one WebGPT-ready zip.
 
 ## Quick start
 
