@@ -1,0 +1,14 @@
+[explorer]
+cmd = "codex exec -"
+writes = false
+timeout_seconds = 900
+
+[coder]
+cmd = "codex exec -"
+writes = true
+timeout_seconds = 1200
+
+[code-reviewer]
+cmd = "codex exec -"
+writes = false
+timeout_seconds = 900

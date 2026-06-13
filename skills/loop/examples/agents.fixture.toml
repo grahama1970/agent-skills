@@ -1,0 +1,14 @@
+[explorer]
+cmd = ["{python}", "{skill_dir}/tests/fixtures/explorer_agent.py"]
+writes = false
+timeout_seconds = 60
+
+[coder]
+cmd = ["{python}", "{skill_dir}/tests/fixtures/coder_agent.py"]
+writes = true
+timeout_seconds = 60
+
+[code-reviewer]
+cmd = ["{python}", "{skill_dir}/tests/fixtures/code_reviewer_agent.py"]
+writes = false
+timeout_seconds = 60

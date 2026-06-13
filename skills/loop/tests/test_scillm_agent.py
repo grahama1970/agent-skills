@@ -1,0 +1,164 @@
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import threading
+import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
+
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+ADAPTER = REPO_ROOT / "skills/loop/scripts/scillm_agent.py"
+
+
+class FakeScillmHandler(BaseHTTPRequestHandler):
+    requests: list[dict[str, Any]] = []
+    responses: dict[str, dict[str, Any]] = {}
+
+    def do_POST(self) -> None:
+        length = int(self.headers.get("Content-Length", "0"))
+        payload = json.loads(self.rfile.read(length).decode("utf-8"))
+        self.__class__.requests.append(
+            {
+                "path": self.path,
+                "headers": dict(self.headers),
+                "payload": payload,
+            }
+        )
+        body = self.__class__.responses.get(self.path, {"status": "completed", "result": {"ok": True, "result": {}}})
+        encoded = json.dumps(body).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
+    def log_message(self, _format: str, *_args: Any) -> None:
+        return
+
+
+class ScillmAgentTests(unittest.TestCase):
+    def setUp(self) -> None:
+        FakeScillmHandler.requests = []
+        FakeScillmHandler.responses = {}
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), FakeScillmHandler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.base_url = f"http://127.0.0.1:{self.server.server_port}"
+
+    def tearDown(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join(timeout=2)
+
+    def run_adapter(self, args: list[str], prompt: dict[str, Any] | None = None) -> subprocess.CompletedProcess[str]:
+        env = os.environ.copy()
+        env["LOOP_REPO"] = str(REPO_ROOT)
+        return subprocess.run(
+            [
+                sys.executable,
+                str(ADAPTER),
+                "--base-url",
+                self.base_url,
+                *args,
+            ],
+            input=json.dumps(prompt or {"objective": "implement parse_duration", "allowed_globs": ["sample-target/**"]}),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+            check=False,
+        )
+
+    def test_exec_explorer_uses_scillm_exec_contract(self) -> None:
+        FakeScillmHandler.responses["/v1/scillm/exec"] = {
+            "status": "completed",
+            "result": {"ok": True, "result": {"summary": "inspected", "target_files": ["sample-target/src/time/parse_duration.py"]}},
+        }
+        proc = self.run_adapter(["--role", "explorer", "--surface", "exec", "--exec-profile", "codex-gpt-5.5"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["summary"], "inspected")
+        request = FakeScillmHandler.requests[0]
+        self.assertEqual(request["path"], "/v1/scillm/exec")
+        self.assertEqual(request["headers"]["X-Caller-Skill"], "loop")
+        self.assertEqual(request["payload"]["type"], "codex_exec")
+        self.assertEqual(request["payload"]["model"], "codex-gpt-5.5")
+        self.assertEqual(request["payload"]["sandbox"], "read-only")
+        self.assertEqual(request["payload"]["cwd"], str(REPO_ROOT))
+
+    def test_exec_reviewer_normalizes_valid_reviewer_json_from_text(self) -> None:
+        FakeScillmHandler.responses["/v1/scillm/exec"] = {
+            "status": "completed",
+            "result": {"ok": True, "result": {"content": "```json\n{\"verdict\":\"PASS\",\"findings\":[]}\n```"}},
+        }
+        proc = self.run_adapter(["--role", "code-reviewer", "--surface", "exec"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        data = json.loads(proc.stdout)
+        self.assertEqual(data, {"verdict": "PASS", "findings": []})
+        request = FakeScillmHandler.requests[0]
+        self.assertEqual(request["payload"]["output_schema"]["required"], ["verdict", "findings"])
+        self.assertEqual(request["payload"]["output_schema"]["properties"]["verdict"]["enum"], ["PASS", "NEEDS_CHANGES", "BLOCKED"])
+
+    def test_exec_reviewer_blocks_invalid_reviewer_json_without_worker_failure(self) -> None:
+        FakeScillmHandler.responses["/v1/scillm/exec"] = {
+            "status": "completed",
+            "result": {"ok": True, "result": {"content": "looks good"}},
+        }
+        proc = self.run_adapter(["--role", "code-reviewer", "--surface", "exec"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["verdict"], "BLOCKED")
+        self.assertIn("valid reviewer JSON", data["findings"][0])
+
+    def test_exec_reviewer_blocks_embedded_json_in_prose(self) -> None:
+        FakeScillmHandler.responses["/v1/scillm/exec"] = {
+            "status": "completed",
+            "result": {"ok": True, "result": {"content": "Looks good. Example: {\"verdict\":\"PASS\",\"findings\":[]}"}},
+        }
+        proc = self.run_adapter(["--role", "code-reviewer", "--surface", "exec"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["verdict"], "BLOCKED")
+        self.assertIn("valid reviewer JSON", data["findings"][0])
+
+    def test_exec_reviewer_blocks_missing_findings(self) -> None:
+        FakeScillmHandler.responses["/v1/scillm/exec"] = {
+            "status": "completed",
+            "result": {"ok": True, "result": {"content": "{\"verdict\":\"PASS\"}"}},
+        }
+        proc = self.run_adapter(["--role", "code-reviewer", "--surface", "exec"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["verdict"], "BLOCKED")
+        self.assertIn("valid reviewer JSON", data["findings"][0])
+
+    def test_opencode_coder_uses_opencode_runs_contract(self) -> None:
+        FakeScillmHandler.responses["/v1/scillm/opencode/runs"] = {
+            "schema": "scillm.opencode_serve.run.v1",
+            "run_id": "run-1",
+            "session_id": "sess-1",
+            "status": "completed",
+            "assistant_text": "patched files",
+        }
+        proc = self.run_adapter(["--role", "coder", "--surface", "opencode", "--opencode-agent", "build", "--opencode-skills", "scillm"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["role"], "coder")
+        self.assertEqual(data["scillm_status"], "completed")
+        self.assertEqual(data["run_id"], "run-1")
+        request = FakeScillmHandler.requests[0]
+        self.assertEqual(request["path"], "/v1/scillm/opencode/runs")
+        self.assertEqual(request["headers"]["Authorization"], "Bearer sk-dev-proxy-123")
+        self.assertEqual(request["headers"]["X-Caller-Skill"], "loop")
+        self.assertEqual(request["payload"]["agent"], "build")
+        self.assertEqual(request["payload"]["skills"], ["scillm"])
+        self.assertEqual(request["payload"]["cwd"], str(REPO_ROOT))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -18,6 +18,17 @@ STOP_REASONS = {
     "HUMAN_DECISION",
     "SCHEDULE_REGISTERED",
 }
+FINAL_RECEIPT_STOP_REASONS = {
+    "CODE_REVIEWER_PASS",
+    "CODE_REVIEWER_BLOCKED",
+    "MAX_ATTEMPTS",
+    "DISALLOWED_FILE_CHANGE",
+    "REVIEWER_EDITED_FILES",
+    "CHECK_FAILED",
+    "INVALID_REVIEWER_OUTPUT",
+    "AGENT_FAILED",
+    "TIMEOUT",
+}
 REQUIRED_ROOT_KEYS = {
     "loop_id",
     "objective",
@@ -261,6 +272,124 @@ def validate_receipt(data: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_final_receipt(data: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    required = {
+        "schema",
+        "run_id",
+        "objective",
+        "final_verdict",
+        "stop_reason",
+        "attempts_used",
+        "max_attempts",
+        "allowed_globs",
+        "changed_files",
+        "checks",
+        "reviewer",
+        "artifacts",
+    }
+    for key in sorted(required):
+        if key not in data:
+            errors.append(f"receipt: missing required key {key!r}")
+
+    if data.get("schema") != "loop.final_receipt.v1":
+        errors.append("receipt.schema: expected 'loop.final_receipt.v1'")
+    if not isinstance(data.get("run_id"), str) or not data.get("run_id"):
+        errors.append("receipt.run_id: expected non-empty string")
+    if not isinstance(data.get("objective"), str) or not data.get("objective"):
+        errors.append("receipt.objective: expected non-empty string")
+
+    verdict = data.get("final_verdict")
+    stop_reason = data.get("stop_reason")
+    attempts_used = data.get("attempts_used")
+    max_attempts = data.get("max_attempts")
+    allowed = data.get("allowed_globs")
+    changed = data.get("changed_files")
+    checks = data.get("checks")
+    reviewer = data.get("reviewer")
+    artifacts = data.get("artifacts")
+
+    if verdict not in VERDICTS:
+        errors.append(f"receipt.final_verdict: must be one of {sorted(VERDICTS)}")
+    if stop_reason not in FINAL_RECEIPT_STOP_REASONS:
+        errors.append(f"receipt.stop_reason: must be one of {sorted(FINAL_RECEIPT_STOP_REASONS)}")
+    if not isinstance(attempts_used, int) or attempts_used < 0:
+        errors.append("receipt.attempts_used: expected non-negative integer")
+    if not isinstance(max_attempts, int) or max_attempts < 1:
+        errors.append("receipt.max_attempts: expected integer >= 1")
+    if isinstance(attempts_used, int) and isinstance(max_attempts, int) and attempts_used > max_attempts:
+        errors.append("receipt.attempts_used: must be <= max_attempts")
+
+    if not isinstance(allowed, list) or not allowed or not all(isinstance(x, str) for x in allowed):
+        errors.append("receipt.allowed_globs: expected non-empty list of strings")
+        allowed_list: list[str] = []
+    else:
+        allowed_list = allowed
+
+    if not isinstance(changed, list) or not all(isinstance(x, str) for x in changed):
+        errors.append("receipt.changed_files: expected list of strings")
+        changed_list: list[str] = []
+    else:
+        changed_list = changed
+        for path in changed_list:
+            if stop_reason != "DISALLOWED_FILE_CHANGE" and not changed_file_allowed(path, allowed_list, []):
+                errors.append(f"receipt.changed_files: {path!r} is outside allowed_globs")
+
+    if not isinstance(checks, list):
+        errors.append("receipt.checks: expected list")
+        checks_list: list[dict[str, Any]] = []
+    else:
+        checks_list = [x for x in checks if isinstance(x, dict)]
+        if len(checks_list) != len(checks):
+            errors.append("receipt.checks: all entries must be objects")
+        for idx, check in enumerate(checks_list):
+            if not isinstance(check.get("command"), str) or not check.get("command"):
+                errors.append(f"receipt.checks[{idx}].command: expected non-empty string")
+            if not isinstance(check.get("returncode"), int):
+                errors.append(f"receipt.checks[{idx}].returncode: expected integer")
+
+    if not isinstance(reviewer, dict):
+        errors.append("receipt.reviewer: expected object")
+        reviewer_obj: dict[str, Any] = {}
+    else:
+        reviewer_obj = reviewer
+        if reviewer_obj.get("verdict") not in VERDICTS:
+            errors.append(f"receipt.reviewer.verdict: must be one of {sorted(VERDICTS)}")
+        if not isinstance(reviewer_obj.get("edited_files"), bool):
+            errors.append("receipt.reviewer.edited_files: expected boolean")
+        if not isinstance(reviewer_obj.get("findings", []), list):
+            errors.append("receipt.reviewer.findings: expected list")
+
+    if not isinstance(artifacts, dict):
+        errors.append("receipt.artifacts: expected object")
+    else:
+        for key in ("run_dir", "final_diff"):
+            value = artifacts.get(key)
+            if value and (not isinstance(value, str) or not is_safe_relative_path(value)):
+                errors.append(f"receipt.artifacts.{key}: expected safe relative path")
+
+    checks_passed = bool(checks_list) and all(check.get("returncode") == 0 for check in checks_list)
+    reviewer_verdict = reviewer_obj.get("verdict")
+    reviewer_edited = reviewer_obj.get("edited_files")
+
+    if verdict == "PASS":
+        if reviewer_verdict != "PASS":
+            errors.append("receipt.final_verdict: PASS requires reviewer.verdict PASS")
+        if not checks_passed:
+            errors.append("receipt.final_verdict: PASS requires at least one check and all checks returncode 0")
+        if reviewer_edited is not False:
+            errors.append("receipt.final_verdict: PASS requires reviewer.edited_files false")
+        if stop_reason != "CODE_REVIEWER_PASS":
+            errors.append("receipt.stop_reason: PASS requires CODE_REVIEWER_PASS")
+
+    if verdict == "BLOCKED" and stop_reason == "CODE_REVIEWER_PASS":
+        errors.append("receipt.stop_reason: BLOCKED cannot use CODE_REVIEWER_PASS")
+    if verdict == "NEEDS_CHANGES" and stop_reason != "MAX_ATTEMPTS":
+        errors.append("receipt.stop_reason: NEEDS_CHANGES requires MAX_ATTEMPTS")
+
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a $loop receipt JSON file.")
     parser.add_argument("receipt", help="Path to loop receipt JSON")
@@ -278,7 +407,10 @@ def main() -> int:
         print("ERROR: receipt root must be a JSON object", file=sys.stderr)
         return 2
 
-    errors = validate_receipt(data)
+    if data.get("schema") == "loop.final_receipt.v1":
+        errors = validate_final_receipt(data)
+    else:
+        errors = validate_receipt(data)
     if errors:
         print("LOOP RECEIPT INVALID", file=sys.stderr)
         for err in errors:

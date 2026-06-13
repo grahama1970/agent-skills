@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Loop final receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "objective",
+    "final_verdict",
+    "stop_reason",
+    "attempts_used",
+    "max_attempts",
+    "allowed_globs",
+    "changed_files",
+    "checks",
+    "reviewer",
+    "artifacts"
+  ],
+  "properties": {
+    "schema": {"const": "loop.final_receipt.v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "objective": {"type": "string", "minLength": 1},
+    "final_verdict": {"enum": ["PASS", "NEEDS_CHANGES", "BLOCKED"]},
+    "stop_reason": {
+      "enum": [
+        "CODE_REVIEWER_PASS",
+        "CODE_REVIEWER_BLOCKED",
+        "MAX_ATTEMPTS",
+        "DISALLOWED_FILE_CHANGE",
+        "REVIEWER_EDITED_FILES",
+        "CHECK_FAILED",
+        "INVALID_REVIEWER_OUTPUT",
+        "AGENT_FAILED",
+        "TIMEOUT"
+      ]
+    },
+    "attempts_used": {"type": "integer", "minimum": 0},
+    "max_attempts": {"type": "integer", "minimum": 1},
+    "allowed_globs": {"type": "array", "items": {"type": "string"}},
+    "changed_files": {"type": "array", "items": {"type": "string"}},
+    "checks": {"type": "array"},
+    "reviewer": {"type": "object"},
+    "artifacts": {"type": "object"}
+  }
+}

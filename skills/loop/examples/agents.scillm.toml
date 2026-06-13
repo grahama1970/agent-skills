@@ -1,0 +1,14 @@
+[explorer]
+cmd = ["{python}", "{skill_dir}/scripts/scillm_agent.py", "--role", "explorer", "--surface", "exec", "--exec-profile", "codex-gpt-5.5", "--sandbox", "read-only", "--reasoning-effort", "high", "--timeout", "900"]
+writes = false
+timeout_seconds = 960
+
+[coder]
+cmd = ["{python}", "{skill_dir}/scripts/scillm_agent.py", "--role", "coder", "--surface", "opencode", "--opencode-agent", "build", "--opencode-skills", "scillm", "--timeout", "1200"]
+writes = true
+timeout_seconds = 1260
+
+[code-reviewer]
+cmd = ["{python}", "{skill_dir}/scripts/scillm_agent.py", "--role", "code-reviewer", "--surface", "exec", "--exec-profile", "codex-gpt-5.5", "--sandbox", "read-only", "--reasoning-effort", "high", "--timeout", "900"]
+writes = false
+timeout_seconds = 960

@@ -8,6 +8,13 @@ import subprocess
 import sys
 from pathlib import PurePosixPath
 
+DEFAULT_EXCLUDES = (
+    ".loop/**",
+    "**/__pycache__/**",
+    "**/*.pyc",
+    "**/*.pyo",
+)
+
 
 def safe_rel(path: str) -> bool:
     p = PurePosixPath(path.replace("\\", "/"))
@@ -70,13 +77,18 @@ def main() -> int:
         return 2
 
     violations = []
+    checked_files = []
     for f in files:
         if not safe_rel(f):
             violations.append((f, "not a safe relative path"))
+        elif match_any(f, list(DEFAULT_EXCLUDES)):
+            continue
         elif args.exclude and match_any(f, args.exclude):
             violations.append((f, "matches excluded pattern"))
         elif not match_any(f, args.include):
             violations.append((f, "does not match allowed include patterns"))
+        else:
+            checked_files.append(f)
 
     if violations:
         print("CHANGED FILE SCOPE INVALID", file=sys.stderr)
@@ -84,7 +96,7 @@ def main() -> int:
             print(f"- {f}: {reason}", file=sys.stderr)
         return 1
 
-    print(f"CHANGED FILE SCOPE VALID ({len(files)} file(s))")
+    print(f"CHANGED FILE SCOPE VALID ({len(checked_files)} file(s))")
     return 0
 
 
